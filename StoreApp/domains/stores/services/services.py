@@ -8,7 +8,6 @@ de verdad para forzar del lado del servidor qué puede editar cada
 cliente en su web pública.
 
 """
-SUSCRIPTION_STATUS_ACTIVE   =   'Suscripción activa'
 #=========================================
 # PLAN BENEFITS OF (dict {code: valor} del plan vigente)
 #=========================================
@@ -19,7 +18,8 @@ def plan_benefits_of(profile):
     'limit' -> int (None = ilimitado) | 'flag' -> bool.
     """
     suscription     =   getattr(profile, 'suscription', None)
-    if suscription is None or suscription.status != SUSCRIPTION_STATUS_ACTIVE:
+    #grants_access() fuerza status + vigencia (end_date + gracia si hay débito automático)
+    if suscription is None or not suscription.grants_access():
         return {}
     benefits        =   {}
     for plan_benefit in suscription.plan_suscription.benefits.select_related('benefit'):

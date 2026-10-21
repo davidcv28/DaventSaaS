@@ -35,6 +35,20 @@ export const paymentsApi = {
     return data
   },
 
+  // POST /payments/subscription/ {suscription?, plan_suscription} -> débito automático MP (preapproval):
+  // {status, auto_renew?, checkout_url, init_point, sandbox_init_point, preapproval_id}
+  // Si ya está autorizado (auto_renew) no hay redirect: el plan pendiente se aplica en el próximo débito.
+  async createSubscription({ suscription, planPk }) {
+    const { data } = await http.post('/payments/subscription/', { suscription, plan_suscription: planPk })
+    return data
+  },
+
+  // POST /payments/cancel-renewal/ -> baja del débito automático. El acceso sigue hasta end_date.
+  async cancelRenewal() {
+    const { data } = await http.post('/payments/cancel-renewal/')
+    return data
+  },
+
   // POST /payments/sync/ {payment_id?} -> {Exito, synced} — red de seguridad cuando el redirect de MP no vuelve.
   // Con payment_id se verifica ese pago directo en MP (acreditación instantánea).
   async syncPayments(paymentId = null) {

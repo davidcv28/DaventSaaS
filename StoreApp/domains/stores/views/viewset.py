@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
@@ -54,6 +55,9 @@ class StoreViewSet(StoreBaseViewSet):
             Store.objects.select_related('user__city', 'user__province', 'customization'),
             slug = slug, is_published = True,
         )
+        #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
+        if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
         serializer  =   StorePublicSerializer(store)
         return Response(serializer.data, status = status.HTTP_200_OK)
     #=========================================
@@ -69,6 +73,9 @@ class StoreViewSet(StoreBaseViewSet):
             Store.objects.select_related('user'),
             slug = slug, is_published = True,
         )
+        #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
+        if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
         category_id     =   request.query_params.get('category')
         brand_id        =   request.query_params.get('brand')

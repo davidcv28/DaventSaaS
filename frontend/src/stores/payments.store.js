@@ -66,6 +66,42 @@ export const usePaymentsStore = defineStore('payments', () => {
     }
   }
 
+  // Alta del débito automático (MP preapproval). Si ya está autorizado devuelve
+  // {auto_renew: true} sin redirect; si no, trae checkout_url para autorizar en MP.
+  async function subscribeAuto({ suscription, planPk } = {}) {
+    confirmStatus.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    try {
+      const data = await paymentsApi.createSubscription({ suscription, planPk })
+      confirmStatus.value = 'success'
+      return data
+    } catch (e) {
+      confirmStatus.value = 'error'
+      const parsed = extractApiError(e)
+      lastError.value = parsed.suscription?.[0] || parsed.plan_suscription?.[0] || parsed.preapproval_id?.[0] || parsed.nonField || 'No se pudo activar el débito automático.'
+      return null
+    }
+  }
+
+  // Baja del débito automático: el plan sigue vigente hasta el fin del período pago.
+  async function cancelRenewal() {
+    confirmStatus.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    try {
+      const data = await paymentsApi.cancelRenewal()
+      notice.value = data?.Exito || 'La renovación automática quedó desactivada.'
+      confirmStatus.value = 'success'
+      return true
+    } catch (e) {
+      confirmStatus.value = 'error'
+      const parsed = extractApiError(e)
+      lastError.value = parsed.suscription?.[0] || parsed.nonField || 'No se pudo cancelar la renovación.'
+      return false
+    }
+  }
+
   // Sincroniza con MP los pagos ya acreditados que no llegaron por el redirect.
   // Si se pasa paymentId, verifica ese pago directo (instantáneo, sin barrido).
   async function sync(paymentId = null) {
@@ -107,6 +143,6 @@ export const usePaymentsStore = defineStore('payments', () => {
     payments, status, confirmStatus, lastError, notice,
     dailyRevenues, monthlyRevenues, revenuesStatus,
     hasPayments,
-    loadPayments, confirm, checkout, sync, loadRevenues, reset
+    loadPayments, confirm, checkout, subscribeAuto, cancelRenewal, sync, loadRevenues, reset
   }
 })

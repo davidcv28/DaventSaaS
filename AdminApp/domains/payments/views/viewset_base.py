@@ -19,7 +19,7 @@ class PaymentBaseViewSet(viewsets.GenericViewSet):
             return 'update'
         if self.action == 'webhook':
             return 'webhook'
-        if self.action in ('checkout', 'sync', 'admin_summary'):
+        if self.action in ('checkout', 'sync', 'admin_summary', 'subscription', 'cancel_renewal'):
             return self.action
         return 'get'
     def get_serializer_class(self):

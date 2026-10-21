@@ -48,6 +48,16 @@ PaymentConfigs = {
         'queryset'      :   Payment.objects.all(),
         'permissions'   :   [IsAuthenticated],
     },
+    'subscription': {
+        'serializer'    :   PaymentSerializerList,
+        'queryset'      :   Payment.objects.all(),
+        'permissions'   :   [IsAuthenticated],
+    },
+    'cancel_renewal': {
+        'serializer'    :   PaymentSerializerList,
+        'queryset'      :   Payment.objects.all(),
+        'permissions'   :   [IsAuthenticated],
+    },
     'admin_summary': {
         'serializer'    :   PaymentSerializerList,
         'queryset'      :   Payment.objects.all(),

@@ -1,4 +1,5 @@
 import mercadopago
+import requests
 from decimal import Decimal
 from datetime import timedelta
 from decouple import config
@@ -21,9 +22,9 @@ MP_STATUS_MAP   =   {
     'refunded'      :   Payment.Status.REFUNDED,
     'charged_back'  :   Payment.Status.REFUNDED,
 }
-#ESTADOS DE SUSCRIPCIÓN
-SUSCRIPTION_STATUS_ACTIVE           =   'Suscripción activa'
-SUSCRIPTION_STATUS_PENDING_PAYMENT  =   'Pendiente de pago'
+#ESTADOS DE SUSCRIPCIÓN (fuente de verdad: constantes del modelo)
+SUSCRIPTION_STATUS_ACTIVE           =   Suscription.STATUS_ACTIVE
+SUSCRIPTION_STATUS_PENDING_PAYMENT  =   Suscription.STATUS_PENDING_PAYMENT
 #=================================
 # MERCADO PAGO HELPERS
 #=================================
@@ -236,3 +237,118 @@ def CreateCheckoutPreferenceQuery(suscription):
     if mp_result.get('status') not in (200, 201):
         raise serializers.ValidationError({'suscription': 'No se pudo iniciar el pago en Mercado Pago'})
     return mp_result['response']
+
+#=================================
+# MERCADO PAGO PREAPPROVAL (débito automático mensual)
+#=================================
+#GET PREAPPROVAL (estado real de la suscripción en MP)
+def GetPreapproval(preapproval_id) -> dict:
+    mp_result       =   sdk.preapproval().get(preapproval_id)
+    if mp_result.get('status') != 200:
+        raise serializers.ValidationError({'preapproval_id': 'No se pudo verificar el débito automático en Mercado Pago'})
+    return mp_result['response']
+
+#CREATE PREAPPROVAL QUERY (alta del débito: queda pending hasta que el cliente lo autoriza en MP)
+def CreatePreapprovalQuery(suscription) -> dict:
+    #Cobra el plan pendiente si existe; el vigente si no
+    plan                =   suscription.pending_plan_suscription or suscription.plan_suscription
+    preapproval_data    =   {
+        'reason'            :   f'DAVENT · {plan.name}',
+        'external_reference':   str(suscription.id),
+        'payer_email'       :   suscription.user.user.email,
+        'back_url'          :   f'{FRONTEND_URL}/dashboard?sub=return',
+        'status'            :   'pending',
+        'auto_recurring'    :   {
+            'frequency'         :   1,
+            'frequency_type'    :   'months',
+            'transaction_amount':   float(plan.price),
+            'currency_id'       :   'ARS',
+        },
+    }
+    #Si el período ya está pago, el primer débito se agenda al vencimiento:
+    #evita cobrar dos veces el mismo mes.
+    if suscription.status == SUSCRIPTION_STATUS_ACTIVE and suscription.end_date and suscription.end_date > timezone.now():
+        preapproval_data['auto_recurring']['start_date']    =   suscription.end_date.isoformat()
+    mp_result           =   sdk.preapproval().create(preapproval_data)
+    if mp_result.get('status') not in (200, 201):
+        raise serializers.ValidationError({'suscription': 'No se pudo iniciar el débito automático en Mercado Pago'})
+    response                    =   mp_result['response']
+    suscription.preapproval_id  =   response.get('id')
+    suscription.save(update_fields = ['preapproval_id'])
+    return response
+
+#UPDATE PREAPPROVAL PLAN QUERY (cambio de plan con débito activo: se ajusta el monto del próximo débito)
+def UpdatePreapprovalPlanQuery(suscription):
+    if not suscription.preapproval_id:
+        return
+    plan        =   suscription.pending_plan_suscription or suscription.plan_suscription
+    mp_result   =   sdk.preapproval().update(suscription.preapproval_id, {
+        'reason'        :   f'DAVENT · {plan.name}',
+        'auto_recurring':   {
+            'frequency'         :   1,
+            'frequency_type'    :   'months',
+            'transaction_amount':   float(plan.price),
+            'currency_id'       :   'ARS',
+        },
+    })
+    if mp_result.get('status') not in (200, 201):
+        raise serializers.ValidationError({'suscription': 'No se pudo actualizar el débito automático en Mercado Pago'})
+
+#SYNC PREAPPROVAL QUERY (refleja en auto_renew el estado real de MP; fallback cuando el webhook no llega)
+def SyncPreapprovalQuery(suscription):
+    if not suscription or not suscription.preapproval_id:
+        return None
+    mp_status       =   GetPreapproval(suscription.preapproval_id).get('status')
+    update_fields   =   []
+    auto_renew      =   mp_status == 'authorized'
+    if suscription.auto_renew != auto_renew:
+        suscription.auto_renew  =   auto_renew
+        update_fields.append('auto_renew')
+    if mp_status == 'cancelled' and suscription.cancelled_at is None:
+        suscription.cancelled_at    =   timezone.now()
+        update_fields.append('cancelled_at')
+    if update_fields:
+        suscription.save(update_fields = update_fields)
+    return mp_status
+
+#CANCEL PREAPPROVAL QUERY (baja del débito: el acceso sigue hasta end_date)
+def CancelPreapprovalQuery(suscription):
+    if not suscription.preapproval_id:
+        raise serializers.ValidationError({'suscription': 'No hay débito automático para cancelar'})
+    if SyncPreapprovalQuery(suscription) == 'cancelled':
+        return suscription
+    mp_result   =   sdk.preapproval().update(suscription.preapproval_id, {'status': 'cancelled'})
+    if mp_result.get('status') not in (200, 201):
+        raise serializers.ValidationError({'suscription': 'No se pudo cancelar el débito automático en Mercado Pago'})
+    suscription.auto_renew      =   False
+    suscription.cancelled_at    =   timezone.now()
+    suscription.save(update_fields = ['auto_renew', 'cancelled_at'])
+    return suscription
+
+#PREAPPROVAL WEBHOOK QUERY (topic subscription_preapproval: alta/pausa/baja del débito)
+def PreapprovalWebhookQuery(preapproval_id):
+    suscription     =   Suscription.objects.filter(preapproval_id = str(preapproval_id)).first()
+    if not suscription:
+        return None
+    return SyncPreapprovalQuery(suscription)
+
+#GET AUTHORIZED PAYMENT (el SDK no cubre /authorized_payments: consulta directa con el access token)
+def GetAuthorizedPayment(authorized_payment_id) -> dict:
+    response    =   requests.get(
+        f'https://api.mercadopago.com/authorized_payments/{authorized_payment_id}',
+        headers     =   {'Authorization': f'Bearer {config("SECRET_MP_KEY")}'},
+        timeout     =   15,
+    )
+    if response.status_code != 200:
+        raise serializers.ValidationError({'authorized_payment_id': 'No se pudo verificar el débito en Mercado Pago'})
+    return response.json()
+
+#AUTHORIZED PAYMENT WEBHOOK QUERY (topic subscription_authorized_payment: cada débito mensual)
+def AuthorizedPaymentWebhookQuery(authorized_payment_id):
+    authorized      =   GetAuthorizedPayment(authorized_payment_id)
+    payment_id      =   (authorized.get('payment') or {}).get('id') or authorized.get('payment_id')
+    if not payment_id:
+        #Débito aún agendado sin payment generado: la gracia cubre hasta que se ejecute.
+        return None
+    #El payment del débito hereda external_reference = suscription.id: entra por el flujo estándar
+    return PaymentWebhookQuery(payment_id)

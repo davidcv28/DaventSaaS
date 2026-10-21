@@ -48,6 +48,8 @@ const catalog = useCatalogStore()
 
 const section = ref('overview')
 const busyPlan = ref(null)
+const renewBusy = ref(false)
+const confirmCancel = ref(false)
 const passForm = reactive({ old_password: '', new_password: '', confirm_password: '' })
 const touched = reactive({})
 const passMsg = ref('')
@@ -226,6 +228,11 @@ function onNavigate(id) {
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
 const plan = computed(() => billing.currentPlan)
+// Gracia del débito: venció end_date pero el débito automático sigue reintentando.
+const inGrace = computed(() => {
+  const p = plan.value
+  return Boolean(p?.isCurrent && p.autoRenew && p.end && new Date(p.end).getTime() < Date.now())
+})
 const catalogLimit = computed(() => {
   if (!plan.value) return 'Activá un plan para habilitar tu catálogo'
   const max = plan.value.benefits?.max_products
@@ -653,6 +660,16 @@ async function onPaymentBroadcast(event) {
   if (event.key !== 'davent:last-payment' || !event.newValue) return
   let payload = null
   try { payload = JSON.parse(event.newValue) } catch { return }
+  if (payload?.sub) {
+    // Retorno de la autorización del débito automático en la otra pestaña.
+    await payments.sync()
+    await billing.loadMine()
+    if (billing.subscription?.auto_renew) {
+      showRenewalActivated()
+      stopCheckoutWatch()
+    }
+    return
+  }
   if (!payload?.payment_id) return
   const synced = await payments.sync(payload.payment_id)
   if (synced > 0 || payload.status === 'approved') {
@@ -670,9 +687,24 @@ function broadcastPaymentReturn(paymentId, pay) {
   }
 }
 
+function broadcastSubReturn() {
+  try {
+    localStorage.setItem('davent:last-payment', JSON.stringify({ sub: true, at: Date.now() }))
+  } catch {
+    // Si el navegador bloquea el storage, la pestaña original sigue con el polling.
+  }
+}
+
 // Retorno de Mercado Pago (Checkout Pro): back_urls -> /dashboard?pay=...&payment_id=...
 async function handlePaymentReturn() {
   const q = route.query
+  if (q.sub === 'return') {
+    // Retorno de la autorización del débito automático (preapproval).
+    broadcastSubReturn()
+    await handleSubscriptionReturn()
+    router.replace({ name: 'dashboard' })
+    return
+  }
   const paymentId = q.payment_id || q.collection_id
   const payStatus = q.pay || q.status || q.collection_status
   if (!payStatus && !paymentId) return
@@ -704,10 +736,29 @@ async function handlePaymentReturn() {
   router.replace({ name: 'dashboard' })
 }
 
+// Retorno de Mercado Pago (débito automático): back_url -> /dashboard?sub=return
+async function handleSubscriptionReturn() {
+  await payments.sync()
+  await billing.loadMine()
+  if (billing.subscription?.auto_renew) {
+    showRenewalActivated()
+  } else {
+    billing.notice = 'Estamos confirmando la autorización del débito automático con Mercado Pago.'
+    startRenewalWatch()
+  }
+}
+
 // Pago acreditado: lleva al Resumen con el plan ya actualizado.
 function showPlanActivated() {
   section.value = 'overview'
   billing.notice = 'Tu pago se acreditó y tu plan ya está activo.'
+  payments.notice = ''
+}
+
+// Débito automático autorizado: lleva al Resumen con la renovación activa.
+function showRenewalActivated() {
+  section.value = 'overview'
+  billing.notice = 'Débito automático activado: tu plan se renueva solo cada mes.'
   payments.notice = ''
 }
 
@@ -717,10 +768,29 @@ async function planAction(p) {
   billing.notice = ''
   payments.lastError = ''
   payments.notice = ''
+  // La pestaña se abre dentro del gesto del usuario para que el navegador no la bloquee.
+  const checkoutTab = window.open('about:blank', '_blank')
   try {
+    if (billing.subscription?.auto_renew) {
+      // Con débito automático activo, el cambio de plan se aplica en el próximo débito mensual.
+      const data = await payments.subscribeAuto({ suscription: billing.subscription.id, planPk: p.id })
+      if (data?.auto_renew) {
+        checkoutTab?.close()
+        await billing.loadMine()
+        billing.notice = `Cambio a ${p.name} programado: se aplica con el próximo débito automático.`
+        return
+      }
+      const renewUrl = data?.checkout_url || data?.init_point || data?.sandbox_init_point
+      if (!renewUrl) {
+        checkoutTab?.close()
+        return
+      }
+      checkoutTab.location.href = renewUrl
+      billing.notice = 'Abrimos Mercado Pago en otra pestaña para autorizar el débito automático.'
+      startRenewalWatch()
+      return
+    }
     // Todos los planes son pagos: la suscripción se establece cuando el pago se acredita.
-    // La pestaña se abre dentro del gesto del usuario para que el navegador no la bloquee.
-    const checkoutTab = window.open('about:blank', '_blank')
     const url = await payments.checkout({ suscription: billing.subscription?.id ?? null, planPk: p.id })
     if (!url) {
       checkoutTab?.close()
@@ -731,6 +801,49 @@ async function planAction(p) {
     startCheckoutWatch(p.id)
   } finally {
     busyPlan.value = null
+  }
+}
+
+// Alta del débito automático (MP preapproval): la autorización se hace en la pestaña de MP.
+async function activateAutoRenew() {
+  if (renewBusy.value) return
+  renewBusy.value = true
+  billing.lastError = ''
+  billing.notice = ''
+  payments.lastError = ''
+  payments.notice = ''
+  const tab = window.open('about:blank', '_blank')
+  try {
+    const data = await payments.subscribeAuto({ suscription: billing.subscription?.id ?? null, planPk: plan.value?.pk })
+    if (data?.auto_renew) {
+      tab?.close()
+      await billing.loadMine()
+      showRenewalActivated()
+      return
+    }
+    const url = data?.checkout_url || data?.init_point || data?.sandbox_init_point
+    if (!url) {
+      tab?.close()
+      return
+    }
+    tab.location.href = url
+    billing.notice = 'Abrimos Mercado Pago en otra pestaña para autorizar el débito automático.'
+    startRenewalWatch()
+  } finally {
+    renewBusy.value = false
+  }
+}
+
+// Baja del débito automático: el plan sigue vigente hasta el fin del período pago.
+async function doCancelRenewal() {
+  if (renewBusy.value) return
+  renewBusy.value = true
+  const ok = await payments.cancelRenewal()
+  renewBusy.value = false
+  if (ok) {
+    confirmCancel.value = false
+    await billing.loadMine()
+    billing.notice = payments.notice
   }
 }
 
@@ -761,6 +874,31 @@ function startCheckoutWatch(targetPlanId) {
       if (tries >= 36) {
         stopCheckoutWatch()
         billing.notice = 'Seguimos esperando la confirmación de Mercado Pago. Si ya pagaste, recargá la página.'
+      }
+    } catch {
+      // Reintenta en el próximo tick.
+    }
+  }, 5000)
+}
+
+// Polling a /payments/sync/: sincroniza también el preapproval; se corta cuando
+// MP marca el débito como autorizado (auto_renew).
+function startRenewalWatch() {
+  stopCheckoutWatch()
+  let tries = 0
+  checkoutWatch = setInterval(async () => {
+    tries += 1
+    try {
+      await payments.sync()
+      await billing.loadMine()
+      if (billing.subscription?.auto_renew) {
+        stopCheckoutWatch()
+        showRenewalActivated()
+        return
+      }
+      if (tries >= 36) {
+        stopCheckoutWatch()
+        billing.notice = 'Seguimos esperando la autorización de Mercado Pago. Si ya la completaste, recargá la página.'
       }
     } catch {
       // Reintenta en el próximo tick.
@@ -841,16 +979,34 @@ async function changePassword() {
           </div>
           <p class="hero-remaining"><strong>{{ plan.remaining }} días restantes</strong></p>
           <p v-if="billing.subscription?.pending_plan_name" class="hero-pending">Cambio a {{ billing.subscription.pending_plan_name }} pendiente: se aplica cuando se acredite el pago.</p>
+          <p v-if="plan.autoRenew" class="hero-pending"><AppIcon name="refresh" :size="14" /> Débito automático activo: se renueva el {{ fmtDate(plan.end) }}.</p>
+          <p v-else-if="plan.cancelledAt" class="hero-pending"><AppIcon name="calendar" :size="14" /> Renovación automática desactivada: tu plan termina el {{ fmtDate(plan.end) }}.</p>
         </div>
         <div class="hero-side">
-          <span class="badge-ok"><AppIcon name="dot" :size="12" /> {{ plan.status }}</span>
+          <span v-if="plan.isCurrent" class="badge-ok"><AppIcon name="dot" :size="12" /> {{ plan.status }}</span>
+          <span v-else-if="plan.status === 'Pendiente de pago'" class="badge-warn"><AppIcon name="dot" :size="12" /> {{ plan.status }}</span>
+          <span v-else class="badge-danger"><AppIcon name="dot" :size="12" /> Vencida</span>
           <div class="hero-price-wrap">
             <strong class="hero-price">{{ formatARS(plan.price) }}</strong>
             <span>por mes</span>
           </div>
           <button class="btn secondary btn-auto" @click="section = 'plans'">Cambiar plan</button>
+          <button v-if="plan.autoRenew" class="btn secondary btn-auto" :disabled="renewBusy" @click="confirmCancel = true">Cancelar renovación</button>
+          <button v-else class="btn secondary btn-auto" :disabled="renewBusy" @click="activateAutoRenew"><AppIcon name="refresh" :size="16" /> Activar débito automático</button>
         </div>
       </div>
+
+      <div v-if="confirmCancel" class="card confirm-card">
+        <h3><AppIcon name="triangle-alert" :size="18" /> Cancelar la renovación automática</h3>
+        <p>Vas a dejar de pagar el débito mensual. Tu plan sigue vigente hasta el <strong>{{ fmtDate(plan?.end) }}</strong>; después tu web pública y tu catálogo se desactivan. Podés reactivar el débito cuando quieras.</p>
+        <div class="btn-row">
+          <button class="btn danger btn-auto" :disabled="renewBusy" @click="doCancelRenewal"><span v-if="renewBusy" class="spinner"></span>Sí, cancelar la renovación</button>
+          <button class="btn ghost btn-auto" :disabled="renewBusy" @click="confirmCancel = false">Mantener activa</button>
+        </div>
+      </div>
+
+      <AlertMessage v-if="plan && !plan.isCurrent && plan.status !== 'Pendiente de pago'" kind="warn" message="Tu suscripción venció: tu web pública está pausada. Elegí un plan para reactivarla." />
+      <AlertMessage v-else-if="inGrace" kind="warn" message="Todavía no pudimos cobrar la renovación: Mercado Pago reintenta el débito durante unos días y tu plan sigue activo mientras tanto." />
 
       <div v-if="billing.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu suscripción…</p></div>
       <AlertMessage v-if="billing.notice" kind="success" :message="billing.notice" />

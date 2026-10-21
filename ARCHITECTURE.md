@@ -121,8 +121,14 @@ Suscription
     ├── pending_plan_suscription   ──FK──►       SuscriptionPlan (null, plan pendiente de pago)
     ├── start_date
     ├── end_date                   (auto: start_date + 30 días)
-    └── status
+    ├── status                     ('Suscripción activa' | 'Pendiente de pago')
+    ├── auto_renew                 (débito automático MP authorized)
+    ├── preapproval_id             (único, id de la suscripción en Mercado Pago)
+    └── cancelled_at               (baja del débito pedida por el cliente)
     UniqueConstraint: (user, plan_suscription)
+    access_until()  = end_date (+ GRACE_DAYS=5 si auto_renew)
+    grants_access() = status 'Suscripción activa' y now <= access_until()
+                    → única fuente de verdad para el gating de beneficios
 ```
 
 #### Patrón de serializers (lectura vs escritura)
@@ -197,6 +203,13 @@ Payment
 DailyRevenue      → date único + total_amount + payments_count
 MonthlyRevenue    → unique (year, month) + CheckConstraint month entre 1 y 12
 ```
+
+#### Cobro manual vs débito automático (services/services.py)
+- **Checkout Pro (manual)**: `CreateCheckoutPreferenceQuery` → preferencia MP; el pago vuelve por webhook `payment` o por `POST /api/payments/sync/`; `CreatePaymentQuery` verifica monto = precio del plan (pendiente si existe) y `ApplyPendingPlanQuery` acredita +30 días.
+- **Débito automático (preapproval)**: `CreatePreapprovalQuery` crea la suscripción en MP (`status: pending` + `init_point` para que el cliente autorice su tarjeta). Si el período ya está pago, `auto_recurring.start_date` = `end_date` para no cobrar dos veces. `SyncPreapprovalQuery` refleja `auto_renew` desde MP (`authorized` → true; `cancelled`/`paused` → false, sella `cancelled_at`). `CancelPreapprovalQuery` es la baja del débito (PUT `status: cancelled`). `UpdatePreapprovalPlanQuery` ajusta reason/monto del próximo débito: con débito activo el cambio de plan queda en `pending_plan_suscription` y se aplica cuando MP cobra.
+- **Webhooks** `POST /api/payments/webhook/` (AllowAny): `payment` → `PaymentWebhookQuery`; `subscription_preapproval` → `PreapprovalWebhookQuery`; `subscription_authorized_payment` → `AuthorizedPaymentWebhookQuery` (GET `/authorized_payments/{id}` vía `requests` — el SDK no lo cubre — extrae `payment.id` y entra por `PaymentWebhookQuery`; el `external_reference` del débito hereda el `suscription.id`). Los eventos de suscripciones se habilitan en el panel de webhooks de MP; en local el fallback es `/sync/`.
+- **Gracia**: si el débito de renovación falla al vencer, `grants_access()` sigue true durante `GRACE_DAYS` (5) mientras MP reintenta.
+- Acciones del viewset: `POST /api/payments/subscription/` (alta/retoma del débito o cambio de plan con débito activo → `{init_point}` o `{auto_renew: true}`) y `POST /api/payments/cancel-renewal/` (baja; el acceso sigue hasta `end_date`). `POST /api/payments/sync/` también devuelve `auto_renew`/`preapproval_status`.
 
 ---
 
@@ -389,9 +402,9 @@ StoreCarouselImage        (banners de portada, máx. 5)
 - `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding.
 - `PUT/PATCH /api/stores/<pk>/` (Bearer) — renombrar el slug o pausar el link (`is_published`).
 - `GET /api/stores/slug-available/?slug=x` (Bearer) — `{available, reason}` con reason `invalid | reserved | taken`.
-- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization`); 404 si no existe o `is_published=false`.
+- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`).
 - `GET /api/stores/customization/` (Bearer) — mi diseño (`get_or_create` con defaults).
-- `PUT/PATCH /api/stores/customization/` (Bearer) — edita el diseño. **403 si el plan vigente no incluye `has_customization`**: el gateo lo hace `services.profile_has_benefit` contra `Suscription.status='Suscripción activa'` → `PlanBenefit` (la misma fuente de verdad que `/api/plans/`).
+- `PUT/PATCH /api/stores/customization/` (Bearer) — edita el diseño. **403 si el plan vigente no incluye `has_customization`**: el gateo lo hace `services.profile_has_benefit` contra `Suscription.grants_access()` (status activa + vigencia con gracia) → `PlanBenefit` (la misma fuente de verdad que `/api/plans/`).
 - Reglas de slug: minúsculas/números/guiones internos, 3–60 chars, lista `RESERVED_SLUGS` (admin, api, planes, tienda...).
 - `POST/DELETE /api/stores/customization/logo/` (Bearer, multipart `{logo}`) — sube/reemplaza o quita el logo en R2. 403 sin `has_customization`; 400 si excede `max_storage_mb` o formato/peso inválido. Responde `{Exito, customization, storage:{used_bytes, max_mb}}`.
 - `POST /api/stores/customization/carousel/` (Bearer, multipart `{image}`) — agrega banner; `DELETE .../carousel/<id>/` lo borra; `PATCH .../carousel/order/` reordena `{order:[ids]}`.
@@ -410,7 +423,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 
 - `GET|POST /api/categories/`, `GET|PATCH|DELETE /api/categories/<pk>/` — CRUD; al borrar una categoría los productos quedan sin categoría (`SET_NULL`). Ídem `/api/brands/`.
 - `GET|POST /api/products/`, `GET|PATCH|DELETE /api/products/<pk>/` — CRUD del catálogo. POST/PATCH aceptan multipart con `image` (sube a R2 y consume cuota `max_storage_mb`; `image_clear=true` la quita). Responden `{Exito, item, storage, image_error?}`.
-- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, products}` con filtros `?category=&brand=&q=`.
+- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, products}` con filtros `?category=&brand=&q=`. 404 si la suscripción no otorga acceso.
 
 ---
 
@@ -427,7 +440,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/provinces/                 → ProvinceViewSet
 /api/cities/                    → CityViewSet
 /api/zipcodes/                  → ZipCodeViewSet
-/api/payments/                  → PaymentViewSet
+/api/payments/                  → PaymentViewSet (+ checkout · sync · subscription · cancel-renewal · webhook · admin-summary)
 /api/daily-revenues/            → DailyRevenueViewSet
 /api/monthly-revenues/          → MonthlyRevenueViewSet
 /api/invoices/                  → facturas del usuario (list/retrieve)
@@ -491,7 +504,7 @@ Convención de indexación (obligatoria al agregar relaciones):
 |---|---|
 | `users_userprofile` | `idx_type_document` (type_document, document) · `idx_userprofile_province` · `idx_userprofile_city` · unique: user, document, phone |
 | `locations_city` | `idx_city_province` · `idx_city_zipcode` |
-| `suscriptions_suscription` | `idx_suscription_plan` · `idx_suscription_pending_plan` · unique: user · unique (user, plan_suscription) |
+| `suscriptions_suscription` | `idx_suscription_plan` · `idx_suscription_pending_plan` · unique: user · unique: preapproval_id · unique (user, plan_suscription) |
 | `payments_payment` | `idx_payment_status_paidat` (status, paid_at) · `idx_payment_user` · `idx_payment_suscription` · unique: external_reference · check: amount >= 0 |
 | `invoices_invoice` | `idx_invoice_user_created` (user, created_at) · unique: payment · unique (type, pos, number) |
 | `legal_contentreport` | `idx_report_status_kind` (status, kind) · `idx_report_reported_by` |

@@ -17,6 +17,13 @@ from AdminApp.domains.payments.services import (
     ApplyPendingPlanQuery,
     SyncSuscriptionPaymentsQuery,
     UpdateRevenueRollupsQuery,
+    CreatePreapprovalQuery,
+    GetPreapproval,
+    UpdatePreapprovalPlanQuery,
+    SyncPreapprovalQuery,
+    CancelPreapprovalQuery,
+    PreapprovalWebhookQuery,
+    AuthorizedPaymentWebhookQuery,
     SUSCRIPTION_STATUS_PENDING_PAYMENT,
     SUSCRIPTION_STATUS_ACTIVE
 )
@@ -55,15 +62,18 @@ class PaymentViewSet(PaymentBaseViewSet):
     @action(detail = False, methods = ['post'], url_path = 'webhook')
     def webhook(self, request):
         topic       =   request.data.get('type') or request.query_params.get('topic')
-        payment_id  =   (request.data.get('data') or {}).get('id') or request.query_params.get('id')
-        if topic == 'payment' and payment_id:
-            PaymentWebhookQuery(payment_id)
+        resource_id =   (request.data.get('data') or {}).get('id') or request.query_params.get('id')
+        if topic == 'payment' and resource_id:
+            PaymentWebhookQuery(resource_id)
+        elif topic == 'subscription_preapproval' and resource_id:
+            PreapprovalWebhookQuery(resource_id)
+        elif topic == 'subscription_authorized_payment' and resource_id:
+            AuthorizedPaymentWebhookQuery(resource_id)
         return Response({'Exito': 'Notificación procesada'}, status = status.HTTP_200_OK)
     #=========================================
-    # CHECKOUT ACTION (crea preferencia MP y devuelve init_point)
+    # RESOLVE SUSCRIPTION (resuelve/crea la suscripción y deja el plan elegido pendiente)
     #=========================================
-    @action(detail = False, methods = ['post'], url_path = 'checkout')
-    def checkout(self, request):
+    def _resolve_suscription(self, request):
         suscription_id  =   request.data.get('suscription')
         plan_id         =   request.data.get('plan_suscription')
         if suscription_id:
@@ -101,6 +111,13 @@ class PaymentViewSet(PaymentBaseViewSet):
             #El plan se aplica recién cuando el pago se acredita
             suscription.pending_plan_suscription    =   target_plan
             suscription.save(update_fields = ['pending_plan_suscription'])
+        return suscription
+    #=========================================
+    # CHECKOUT ACTION (crea preferencia MP y devuelve init_point)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'checkout')
+    def checkout(self, request):
+        suscription     =   self._resolve_suscription(request)
         preference      =   CreateCheckoutPreferenceQuery(suscription)
         #Con credenciales TEST se usa el checkout sandbox; en prod el init_point real.
         is_sandbox      =   str(config('SECRET_MP_KEY', default = '')).startswith('TEST-')
@@ -111,6 +128,60 @@ class PaymentViewSet(PaymentBaseViewSet):
                 'init_point'        :   preference.get('init_point'),
                 'sandbox_init_point':   preference.get('sandbox_init_point'),
                 'preference_id'     :   preference.get('id'),
+            }, status = status.HTTP_200_OK)
+    #=========================================
+    # SUBSCRIPTION ACTION (débito automático MP: alta, retoma init_point o cambia el plan del débito)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'subscription')
+    def subscription(self, request):
+        suscription     =   self._resolve_suscription(request)
+        try:
+            mp_status   =   SyncPreapprovalQuery(suscription)
+        except serializers.ValidationError:
+            #Preapproval_id viejo/inválido en MP: se descarta y se crea uno nuevo
+            mp_status   =   None
+        #Ya autorizado: si hay plan pendiente nuevo, se actualiza el monto del próximo débito
+        if mp_status == 'authorized':
+            if suscription.pending_plan_suscription_id:
+                UpdatePreapprovalPlanQuery(suscription)
+            return Response(
+                {
+                    'status'        :   'authorized',
+                    'auto_renew'    :   True,
+                    'preapproval_id':   suscription.preapproval_id,
+                }, status = status.HTTP_200_OK)
+        if mp_status == 'pending':
+            #Autorización en curso: se retoma el mismo init_point con el monto al día
+            UpdatePreapprovalPlanQuery(suscription)
+            preapproval     =   GetPreapproval(suscription.preapproval_id)
+        else:
+            #Sin débito o cancelado/pausado: se crea uno nuevo
+            preapproval     =   CreatePreapprovalQuery(suscription)
+        is_sandbox      =   str(config('SECRET_MP_KEY', default = '')).startswith('TEST-')
+        return Response(
+            {
+                'status'            :   preapproval.get('status'),
+                'checkout_url'      :   preapproval.get('sandbox_init_point') if is_sandbox else preapproval.get('init_point'),
+                'init_point'        :   preapproval.get('init_point'),
+                'sandbox_init_point':   preapproval.get('sandbox_init_point'),
+                'preapproval_id'    :   suscription.preapproval_id,
+            }, status = status.HTTP_200_OK)
+    #=========================================
+    # CANCEL RENEWAL ACTION (baja del débito automático: el acceso sigue hasta end_date)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'cancel-renewal')
+    def cancel_renewal(self, request):
+        suscription =   Suscription.objects.filter(user__user = request.user).first()
+        if not suscription:
+            raise serializers.ValidationError({'suscription': 'No tenés una suscripción para dar de baja'})
+        if not suscription.auto_renew and suscription.cancelled_at:
+            return Response({'Exito': 'La renovación automática ya estaba desactivada', 'auto_renew': False}, status = status.HTTP_200_OK)
+        CancelPreapprovalQuery(suscription)
+        return Response(
+            {
+                'Exito'     :   'Renovación automática desactivada. Tu plan sigue vigente hasta el fin del período ya pago.',
+                'auto_renew':   False,
+                'end_date'  :   suscription.end_date,
             }, status = status.HTTP_200_OK)
     #=========================================
     # SYNC ACTION (registra pagos ya acreditados en MP sin depender del redirect)
@@ -124,10 +195,15 @@ class PaymentViewSet(PaymentBaseViewSet):
         except (TypeError, ValueError):
             payment_id = None
         payments    =   SyncSuscriptionPaymentsQuery(suscription, payment_id = payment_id) if suscription else []
+        #El débito automático también se sincroniza acá: cubre los casos en que
+        #el webhook de MP no puede llegar (localhost, red privada).
+        mp_status   =   SyncPreapprovalQuery(suscription)
         return Response(
             {
-                'Exito' :   'Pagos sincronizados',
-                'synced':   len(payments),
+                'Exito'             :   'Pagos sincronizados',
+                'synced'            :   len(payments),
+                'auto_renew'        :   bool(suscription and suscription.auto_renew),
+                'preapproval_status':   mp_status,
             }, status = status.HTTP_200_OK)
     #=========================================
     # ADMIN SUMMARY ACTION (KPIs del panel admin, calculado en vivo desde Payment)

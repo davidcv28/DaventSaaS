@@ -156,6 +156,8 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .btn.ghost:hover:not(:disabled) { background: var(--surface); border-color: var(--line-strong); }
 .btn.light { background: #fff; color: var(--brand-700); box-shadow: none; }
 .btn.light:hover:not(:disabled) { background: var(--brand-50); }
+.btn.danger { background: var(--danger); color: #fff; }
+.btn.danger:hover:not(:disabled) { filter: brightness(.92); }
 .btn-row { display: flex; gap: 10px; margin-top: 18px; }
 .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .4); border-top-color: #fff; animation: spin .8s linear infinite; }
 .btn.ghost .spinner { border-color: rgba(79, 70, 229, .25); border-top-color: var(--brand-ink); }
@@ -244,6 +246,11 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .hero-side { display: grid; gap: 14px; justify-items: end; align-content: center; padding-left: 24px; border-left: 1px solid rgba(255, 255, 255, .14); }
 .hero-side .btn { width: auto; }
 .badge-ok { display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, .2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, .4); font-size: 12px; font-weight: 600; border-radius: 99px; padding: 4px 12px 4px 8px; }
+.badge-warn { display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, .2); color: #fcd34d; border: 1px solid rgba(251, 191, 36, .4); font-size: 12px; font-weight: 600; border-radius: 99px; padding: 4px 12px 4px 8px; }
+.badge-danger { display: inline-flex; align-items: center; gap: 6px; background: rgba(220, 38, 38, .22); color: #fca5a5; border: 1px solid rgba(248, 113, 113, .4); font-size: 12px; font-weight: 600; border-radius: 99px; padding: 4px 12px 4px 8px; }
+.confirm-card { border-color: var(--danger-line); }
+.confirm-card h3 .icon { color: var(--danger); }
+.confirm-card > p { margin: 0; color: var(--ink-2); font-size: 14px; }
 .hero-price-wrap { display: grid; justify-items: end; line-height: 1.15; }
 .hero-price-wrap span { color: rgba(255, 255, 255, .65); font-size: 12.5px; margin-top: 2px; }
 .hero-price { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }

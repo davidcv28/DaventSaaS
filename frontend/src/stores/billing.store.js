@@ -25,7 +25,13 @@ export const useBillingStore = defineStore('billing', () => {
       status: subscription.value.status,
       start: subscription.value.start_date,
       end: subscription.value.end_date,
-      remaining: daysLeft(subscription.value.end_date),
+      // access_until incluye la gracia del débito automático si está activo
+      accessUntil: subscription.value.access_until || subscription.value.end_date,
+      remaining: daysLeft(subscription.value.access_until || subscription.value.end_date),
+      autoRenew: Boolean(subscription.value.auto_renew),
+      cancelledAt: subscription.value.cancelled_at || null,
+      hasPreapproval: Boolean(subscription.value.has_preapproval),
+      isCurrent: subscription.value.is_current !== false,
       slug: plan?.slug || '',
       benefits: plan?.benefits || null
     }
