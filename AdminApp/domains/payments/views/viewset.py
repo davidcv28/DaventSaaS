@@ -158,10 +158,11 @@ class PaymentViewSet(PaymentBaseViewSet):
             #Sin débito o cancelado/pausado: se crea uno nuevo
             preapproval     =   CreatePreapprovalQuery(suscription)
         is_sandbox      =   str(config('SECRET_MP_KEY', default = '')).startswith('TEST-')
+        #En preapprovals MP no devuelve sandbox_init_point: el init_point es uno solo.
         return Response(
             {
                 'status'            :   preapproval.get('status'),
-                'checkout_url'      :   preapproval.get('sandbox_init_point') if is_sandbox else preapproval.get('init_point'),
+                'checkout_url'      :   (preapproval.get('sandbox_init_point') or preapproval.get('init_point')) if is_sandbox else preapproval.get('init_point'),
                 'init_point'        :   preapproval.get('init_point'),
                 'sandbox_init_point':   preapproval.get('sandbox_init_point'),
                 'preapproval_id'    :   suscription.preapproval_id,

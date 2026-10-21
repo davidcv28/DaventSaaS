@@ -1011,6 +1011,8 @@ async function changePassword() {
       <div v-if="billing.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu suscripción…</p></div>
       <AlertMessage v-if="billing.notice" kind="success" :message="billing.notice" />
       <AlertMessage v-if="billing.lastError" kind="error" :message="billing.lastError" />
+      <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
+      <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
       <div class="stats">
         <div class="stat"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong>0</strong><small>Productos</small></div></div>
@@ -1505,6 +1507,10 @@ async function changePassword() {
           <p>Elegí el plan que acompaña el tamaño de tu negocio. Podés cambiarlo cuando quieras.</p>
         </div>
       </div>
+      <AlertMessage v-if="billing.notice" kind="success" :message="billing.notice" />
+      <AlertMessage v-if="billing.lastError" kind="error" :message="billing.lastError" />
+      <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
+      <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
       <div class="price-grid">
         <PlanCard
           v-for="p in billing.plans"

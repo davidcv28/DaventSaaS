@@ -15,6 +15,10 @@ from AdminApp.domains.invoices.services import IssueInvoiceQuery
 sdk             =   mercadopago.SDK(config('SECRET_MP_KEY'))
 FRONTEND_URL    =   config('FRONTEND_URL', default = 'http://localhost:5173')
 BACKEND_URL     =   config('BACKEND_URL', default = '')
+#Con credenciales TEST, MP exige que el payer del preapproval sea un usuario de
+#prueba del mismo site: MP_PAYER_EMAIL lo fuerza en dev; en prod queda vacío
+#y se usa el email de registro del cliente.
+MP_PAYER_EMAIL  =   config('MP_PAYER_EMAIL', default = '')
 
 MP_STATUS_MAP   =   {
     'approved'      :   Payment.Status.APPROVED,
@@ -263,10 +267,14 @@ def GetPreapproval(preapproval_id) -> dict:
 def CreatePreapprovalQuery(suscription) -> dict:
     #Cobra el plan pendiente si existe; el vigente si no
     plan                =   suscription.pending_plan_suscription or suscription.plan_suscription
+    #MP exige back_url pública https (obligatoria en preapprovals; rechaza
+    #localhost). En dev se usa una URL neutra y el retorno lo cubre /sync/.
+    back_url            =   f'{FRONTEND_URL}/dashboard?sub=return' if FRONTEND_URL.startswith('https://') else 'https://www.mercadopago.com.ar'
     preapproval_data    =   {
         'reason'            :   f'DAVENT · {plan.name}',
         'external_reference':   str(suscription.id),
-        'payer_email'       :   suscription.user.user.email,
+        'payer_email'       :   MP_PAYER_EMAIL or suscription.user.user.email,
+        'back_url'          :   back_url,
         'status'            :   'pending',
         'auto_recurring'    :   {
             'frequency'         :   1,
@@ -279,9 +287,6 @@ def CreatePreapprovalQuery(suscription) -> dict:
     #evita cobrar dos veces el mismo mes.
     if suscription.status == SUSCRIPTION_STATUS_ACTIVE and suscription.end_date and suscription.end_date > timezone.now():
         preapproval_data['auto_recurring']['start_date']    =   suscription.end_date.isoformat()
-    #MP valida que back_url sea una URL pública https: en localhost rechaza el alta.
-    if FRONTEND_URL.startswith('https://'):
-        preapproval_data['back_url']    =   f'{FRONTEND_URL}/dashboard?sub=return'
     mp_result           =   sdk.preapproval().create(preapproval_data)
     if mp_result.get('status') not in (200, 201):
         raise serializers.ValidationError({'suscription': 'No se pudo iniciar el débito automático en Mercado Pago'})
