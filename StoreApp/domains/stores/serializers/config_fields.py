@@ -33,6 +33,15 @@ StoresFields                =   {
 # CUSTOMIZATION FIELDS
 #=========================================
 CustomizationFields           =   {
+    'display_name'          :   {
+        'label'             :   'Nombre visible',
+        'style'             :   {'placeholder': 'El nombre que ven tus clientes'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   60,
+        'error_messages'    :   {'max_length': 'El nombre admite hasta 60 caracteres'},
+    },
     'headline'              :   {
         'label'             :   'Titular',
         'style'             :   {'placeholder': 'Ej. Indumentaria y calzado en Salta'},
@@ -65,5 +74,21 @@ CustomizationFields           =   {
         'allow_blank'       :   True,
         'trim_whitespace'   :   True,
         'max_length'        :   40,
+    },
+    'tiktok'                :   {
+        'label'             :   'TikTok',
+        'style'             :   {'placeholder': 'tu.negocio'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   40,
+    },
+    'facebook'              :   {
+        'label'             :   'Facebook',
+        'style'             :   {'placeholder': 'tu.negocio'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   60,
     },
 }

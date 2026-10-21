@@ -33,6 +33,10 @@ def validate_slug_available(slug):
 WHATSAPP_PATTERN   =   re.compile(r'^\+?\d{8,15}$')
 # Instagram: handle sin '@' (letras, números, puntos y guiones bajos).
 INSTAGRAM_PATTERN  =   re.compile(r'^[a-zA-Z0-9](?:[a-zA-Z0-9._]{0,28}[a-zA-Z0-9])?$')
+# TikTok: handle sin '@' (letras, números, puntos y guiones bajos).
+TIKTOK_PATTERN     =   re.compile(r'^[a-zA-Z0-9](?:[a-zA-Z0-9._]{0,23}[a-zA-Z0-9])?$')
+# Facebook: nombre de página/usuario (letras, números y puntos).
+FACEBOOK_PATTERN   =   re.compile(r'^[a-zA-Z0-9](?:[a-zA-Z0-9.]{0,58}[a-zA-Z0-9])?$')
 
 def validate_whatsapp(value):
     """Número público de contacto: 8 a 15 dígitos, '+' opcional al inicio."""
@@ -41,3 +45,11 @@ def validate_whatsapp(value):
 def validate_instagram(value):
     """Handle de Instagram sin '@', 2 a 30 caracteres."""
     return bool(INSTAGRAM_PATTERN.match(value))
+
+def validate_tiktok(value):
+    """Handle de TikTok sin '@', 2 a 24 caracteres."""
+    return bool(TIKTOK_PATTERN.match(value))
+
+def validate_facebook(value):
+    """Nombre de página/usuario de Facebook, 2 a 60 caracteres."""
+    return bool(FACEBOOK_PATTERN.match(value))

@@ -6,13 +6,20 @@ import { useBillingStore } from '../stores/billing.store.js'
 import { usePaymentsStore } from '../stores/payments.store.js'
 import { useInvoicesStore } from '../stores/invoices.store.js'
 import { useStoreStore } from '../stores/store.store.js'
+import { useCatalogStore } from '../stores/catalog.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
+import QRCode from 'qrcode'
 import {
   normalizeSlug, publicStoreUrl,
-  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, storeThemeVars,
-  validateHeadline, validateDescription, validateWhatsapp, validateInstagram,
-  normalizeWhatsapp, normalizeInstagram
+  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_FONTS, storeThemeVars, storeFontFamily,
+  validateDisplayName, validateHeadline, validateDescription,
+  validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
+  normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
+  validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, formatStorageMB
 } from '../api/stores.api.js'
+import {
+  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription
+} from '../api/catalog.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
@@ -37,6 +44,7 @@ const billing = useBillingStore()
 const payments = usePaymentsStore()
 const invoices = useInvoicesStore()
 const store = useStoreStore()
+const catalog = useCatalogStore()
 
 const section = ref('overview')
 const busyPlan = ref(null)
@@ -236,7 +244,7 @@ const planProgress = computed(() => {
 const nextSteps = computed(() => [
   { title: 'Reservá tu link público', text: 'Es la dirección de tu tienda.', done: store.hasStore },
   { title: 'Elegí un plan', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription },
-  { title: 'Cargá tus productos', text: 'Sumá fotos, precios y stock.', done: false },
+  { title: 'Cargá tus productos', text: 'Sumá fotos, precios y stock.', done: catalog.products.length > 0 },
   { title: 'Compartí tu link público', text: 'Enviáselo a tus clientes.', done: false }
 ])
 
@@ -246,6 +254,7 @@ function fmtDate(d) {
 }
 
 // --- Mi tienda: link público (copiar, abrir, pausar, renombrar) ---
+const host = window.location.host
 const renameSlug = ref('')
 const renameBusy = ref(false)
 const storeBusy = ref(false)
@@ -290,6 +299,170 @@ async function togglePublished() {
   storeBusy.value = false
 }
 
+// --- Mis catálogos: productos, categorías y marcas de la tienda ---
+// El catálogo se habilita con suscripción activa (el backend devuelve 403 sin plan).
+const catalogTab = ref('products') // products | categories | brands
+const catalogLoaded = ref(false)
+
+const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true })
+const productTouched = reactive({})
+const productBusy = ref(false)
+const productEditing = ref(null)
+const productImage = ref(null)
+const productImagePreview = ref('')
+const productImageInput = ref(null)
+const productImageCleared = ref(false)
+const productImageErr = ref('')
+
+const taxonomyForm = reactive({ category: '', brand: '' })
+const taxonomyBusy = reactive({ category: false, brand: false })
+const taxonomyErr = reactive({ category: '', brand: '' })
+
+async function ensureCatalog() {
+  if (!store.hasStore || !billing.hasSubscription) return
+  if (!catalogLoaded.value) {
+    catalogLoaded.value = true
+    await catalog.loadAll()
+  }
+}
+watch(section, (s) => { if (s === 'catalogs') ensureCatalog() })
+
+const productLimit = computed(() => plan.value?.benefits?.max_products)
+const productsCountText = computed(() => {
+  const max = productLimit.value
+  const total = catalog.products.length
+  return max === null || max === undefined ? `${total} productos` : `${total} de ${max} productos`
+})
+
+const productErrors = computed(() => {
+  const e = {}
+  const n = validateProductName(productForm.name)
+  const p = validateProductPrice(productForm.price)
+  const d = validateProductDescription(productForm.description.trim())
+  if (n) e.name = n
+  if (p) e.price = p
+  if (d) e.description = d
+  return e
+})
+
+function productFieldErr(name) {
+  return (productTouched[name] ? productErrors.value[name] || '' : '') || catalog.fieldErrors[name] || ''
+}
+
+function onProductImagePicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  productImageErr.value = validateImageFile(file)
+  if (productImageErr.value) return
+  productImage.value = file
+  productImageCleared.value = false
+  productImagePreview.value = URL.createObjectURL(file)
+}
+
+function resetProductForm() {
+  Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true })
+  Object.keys(productTouched).forEach((k) => { productTouched[k] = false })
+  productEditing.value = null
+  productImage.value = null
+  productImagePreview.value = ''
+  productImageCleared.value = false
+  productImageErr.value = ''
+}
+
+function editProduct(p) {
+  productEditing.value = p.id
+  Object.assign(productForm, {
+    name: p.name, price: p.price, category: p.category || '', brand: p.brand || '',
+    description: p.description || '', is_active: p.is_active
+  })
+  productImage.value = null
+  productImagePreview.value = p.image || ''
+  productImageCleared.value = false
+  productImageErr.value = ''
+  catalog.notice = ''
+  catalog.lastError = ''
+}
+
+async function saveProduct() {
+  Object.keys(productForm).forEach((k) => { productTouched[k] = true })
+  if (Object.keys(productErrors.value).length) return
+  productBusy.value = true
+  const res = await catalog.saveProduct(productEditing.value, {
+    fields: {
+      name: productForm.name.trim(),
+      price: productForm.price,
+      category: productForm.category,
+      brand: productForm.brand,
+      description: productForm.description.trim(),
+      is_active: productForm.is_active
+    },
+    image: productImage.value,
+    imageClear: productImageCleared.value
+  })
+  productBusy.value = false
+  if (res.ok) {
+    if (res.imageError) catalog.notice = `${res.imageError} (el producto se guardó sin imagen nueva).`
+    resetProductForm()
+  }
+}
+
+async function removeProduct(p) {
+  if (productBusy.value) return
+  productBusy.value = true
+  await catalog.removeProduct(p.id)
+  productBusy.value = false
+  if (productEditing.value === p.id) resetProductForm()
+}
+
+async function addTaxonomy(kind) {
+  const name = taxonomyForm[kind].trim()
+  taxonomyErr[kind] = validateTaxonomyName(name)
+  if (taxonomyErr[kind]) return
+  taxonomyBusy[kind] = true
+  const ok = kind === 'category'
+    ? await catalog.saveCategory(null, { name })
+    : await catalog.saveBrand(null, { name })
+  taxonomyBusy[kind] = false
+  if (ok) taxonomyForm[kind] = ''
+  else taxonomyErr[kind] = catalog.fieldErrors.name || catalog.lastError
+}
+
+async function removeTaxonomy(kind, item) {
+  const ok = kind === 'category' ? await catalog.removeCategory(item.id) : await catalog.removeBrand(item.id)
+  if (!ok) taxonomyErr[kind] = catalog.lastError
+}
+
+// --- QR y folletos (premium): QR del link público + folleto imprimible ---
+const qrDataUrl = ref('')
+const canQr = computed(() => Boolean(plan.value?.benefits?.has_qr))
+const canFlyers = computed(() => Boolean(plan.value?.benefits?.has_flyers))
+
+async function buildQr() {
+  if (!publicUrl.value || !canQr.value) return
+  try {
+    qrDataUrl.value = await QRCode.toDataURL(publicUrl.value, {
+      width: 480, margin: 1, color: { dark: '#0f172a', light: '#ffffff' }
+    })
+  } catch {
+    qrDataUrl.value = ''
+  }
+}
+watch([section, publicUrl], ([s]) => { if (s === 'tools') buildQr() })
+
+function downloadQr() {
+  if (!qrDataUrl.value) return
+  const a = document.createElement('a')
+  a.href = qrDataUrl.value
+  a.download = `qr-${store.store?.slug || 'tienda'}.png`
+  a.click()
+}
+
+function openFlyer() {
+  const href = router.resolve({ name: 'store-flyer' }).href
+  window.open(href, '_blank', 'noopener')
+}
+
 // --- Diseño web: personalización premium de la página pública ---
 // Editable solo con el beneficio has_customization (el backend lo fuerza en PATCH).
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS })
@@ -308,14 +481,20 @@ watch(() => store.store, (s) => {
 
 const designErrors = computed(() => {
   const e = {}
+  const dn = validateDisplayName(designForm.display_name.trim())
   const h = validateHeadline(designForm.headline.trim())
   const d = validateDescription(designForm.description.trim())
   const w = validateWhatsapp(designForm.whatsapp)
   const ig = validateInstagram(designForm.instagram)
+  const tt = validateTiktok(designForm.tiktok)
+  const fb = validateFacebook(designForm.facebook)
+  if (dn) e.display_name = dn
   if (h) e.headline = h
   if (d) e.description = d
   if (w) e.whatsapp = w
   if (ig) e.instagram = ig
+  if (tt) e.tiktok = tt
+  if (fb) e.facebook = fb
   return e
 })
 
@@ -328,14 +507,95 @@ async function saveDesign() {
   if (Object.keys(designErrors.value).length) return
   designBusy.value = true
   await store.saveCustomization({
+    display_name: designForm.display_name.trim(),
+    name_font: designForm.name_font,
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
     theme: designForm.theme,
     accent: designForm.accent,
     whatsapp: normalizeWhatsapp(designForm.whatsapp),
-    instagram: normalizeInstagram(designForm.instagram)
+    instagram: normalizeInstagram(designForm.instagram),
+    tiktok: normalizeTiktok(designForm.tiktok),
+    facebook: normalizeFacebook(designForm.facebook)
   })
   designBusy.value = false
+}
+
+// Carrusel de banners de la web pública (premium). Misma cuota que el logo.
+const carouselInput = ref(null)
+const carouselBusy = ref(false)
+const carouselErr = ref('')
+const carouselImages = computed(() => store.customization.carousel || [])
+const storeFonts = STORE_FONTS
+const designShopName = computed(() => designForm.display_name || business.value || 'Tu negocio')
+const designNameFont = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
+
+async function onCarouselPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  carouselErr.value = validateImageFile(file)
+  if (carouselErr.value) return
+  carouselBusy.value = true
+  const ok = await store.addCarouselImage(file)
+  carouselBusy.value = false
+  if (!ok) carouselErr.value = store.fieldErrors.image || store.fieldErrors.detail || store.lastError
+}
+
+async function onRemoveCarousel(imageId) {
+  if (carouselBusy.value) return
+  carouselErr.value = ''
+  carouselBusy.value = true
+  const ok = await store.removeCarouselImage(imageId)
+  carouselBusy.value = false
+  if (!ok) carouselErr.value = store.lastError
+}
+
+async function onMoveCarousel(imageId, direction) {
+  if (carouselBusy.value) return
+  carouselErr.value = ''
+  carouselBusy.value = true
+  const ok = await store.moveCarouselImage(imageId, direction)
+  carouselBusy.value = false
+  if (!ok) carouselErr.value = store.lastError
+}
+
+// Logo de la web pública (premium): sube directo a R2 vía /stores/customization/logo/.
+// Consume la cuota del beneficio max_storage_mb; el backend devuelve `storage` actualizado.
+const logoInput = ref(null)
+const logoBusy = ref(false)
+const logoErr = ref('')
+const LOGO_ACCEPT_TYPES = LOGO_ACCEPT
+
+const currentLogo = computed(() => store.customization.logo || '')
+const storageText = computed(() => {
+  const s = store.storage
+  if (!s) return ''
+  const used = formatStorageMB(s.used_bytes)
+  return s.max_mb === null
+    ? `Usás ${used} MB de almacenamiento de imágenes`
+    : `Usás ${used} MB de ${s.max_mb} MB de almacenamiento de imágenes`
+})
+
+async function onLogoPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  logoErr.value = validateLogoFile(file)
+  if (logoErr.value) return
+  logoBusy.value = true
+  const ok = await store.uploadLogo(file)
+  logoBusy.value = false
+  if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
+}
+
+async function onRemoveLogo() {
+  if (logoBusy.value) return
+  logoErr.value = ''
+  logoBusy.value = true
+  const ok = await store.removeLogo()
+  logoBusy.value = false
+  if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
 }
 
 onMounted(async () => {
@@ -344,6 +604,8 @@ onMounted(async () => {
   loadAccountProvinces()
   if (store.status === 'idle') store.loadMine()
   await Promise.all([billing.loadPlans(), billing.loadMine(), payments.loadPayments(), invoices.loadInvoices()])
+  // Precarga silenciosa del catálogo para los próximos pasos del resumen.
+  ensureCatalog()
   // Primero el retorno del checkout (trae payment_id en la URL): es la vía instantánea.
   await handlePaymentReturn()
   // Red de seguridad: registra pagos ya acreditados en MP que aún no estén en el sistema.
@@ -492,6 +754,7 @@ function logout() {
   payments.reset()
   invoices.reset()
   store.reset()
+  catalog.reset()
   auth.logout()
   router.push({ name: 'login' })
 }
@@ -590,17 +853,167 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Mi catálogo</h1>
-          <p>{{ catalogLimit }}</p>
+          <p>{{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
         </div>
-        <button class="btn btn-auto" disabled title="Disponible en el próximo dominio"><AppIcon name="plus" :size="16" /> Nuevo producto</button>
+        <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
       </div>
+
+      <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
+      <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
       <AlertMessage kind="info" message="Publicá únicamente imágenes, logos y textos propios o con autorización de uso: sos responsable del contenido de tu catálogo." />
-      <div class="empty">
-        <span class="empty-icon"><AppIcon name="library" :size="28" /></span>
-        <h3>{{ billing.hasSubscription ? 'Todavía no cargaste tu primer producto' : 'Necesitás una suscripción' }}</h3>
-        <p>El dominio de catálogo (productos, fotos, stock y link público) es el próximo módulo del sistema. Tu plan ya deja reservado el cupo.</p>
-        <button v-if="!billing.hasSubscription" class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
-      </div>
+
+      <template v-if="!billing.hasSubscription || catalog.denied">
+        <div class="empty">
+          <span class="empty-icon"><AppIcon name="library" :size="28" /></span>
+          <h3>Necesitás una suscripción</h3>
+          <p>El catálogo (productos, categorías y marcas de tu página pública) se habilita con un plan activo.</p>
+          <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="tabs">
+          <button type="button" class="tab" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
+            <AppIcon name="package" :size="16" /> Productos
+          </button>
+          <button type="button" class="tab" :class="{ active: catalogTab === 'categories' }" @click="catalogTab = 'categories'">
+            <AppIcon name="layout-grid" :size="16" /> Categorías
+          </button>
+          <button type="button" class="tab" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
+            <AppIcon name="tag" :size="16" /> Marcas
+          </button>
+        </div>
+
+        <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
+
+        <template v-else>
+          <!-- -------- Productos -------- -->
+          <div v-show="catalogTab === 'products'" class="grid-2">
+            <div class="card">
+              <h3><AppIcon name="pencil" :size="18" /> {{ productEditing ? 'Editar producto' : 'Nuevo producto' }}</h3>
+              <AppInput v-model="productForm.name" label="Nombre" name="prod_name" placeholder="Ej. Remera oversize" :error="productFieldErr('name')" @blur="productTouched.name = true" />
+              <div class="grid-2">
+                <AppInput v-model="productForm.price" label="Precio" name="prod_price" type="number" min="0" step="0.01" placeholder="0.00" :error="productFieldErr('price')" @blur="productTouched.price = true" />
+                <div class="field">
+                  <label for="prod-active">Visibilidad</label>
+                  <select id="prod-active" v-model="productForm.is_active" class="select">
+                    <option :value="true">Visible en mi web</option>
+                    <option :value="false">Oculto</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="prod-category">Categoría</label>
+                  <select id="prod-category" v-model="productForm.category" class="select">
+                    <option value="">Sin categoría</option>
+                    <option v-for="c in catalog.categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+                  </select>
+                  <p class="hint">Se cargan en la pestaña Categorías.</p>
+                </div>
+                <div class="field">
+                  <label for="prod-brand">Marca</label>
+                  <select id="prod-brand" v-model="productForm.brand" class="select">
+                    <option value="">Sin marca</option>
+                    <option v-for="b in catalog.brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="prod-description">Descripción</label>
+                <textarea
+                  id="prod-description"
+                  v-model="productForm.description"
+                  class="textarea"
+                  :class="{ invalid: productFieldErr('description') }"
+                  placeholder="Detalles del producto (opcional)"
+                  maxlength="600"
+                  rows="3"
+                  @blur="productTouched.description = true"
+                ></textarea>
+                <p class="hint">{{ productForm.description.length }}/600</p>
+                <p v-if="productFieldErr('description')" class="field-error" role="alert">{{ productFieldErr('description') }}</p>
+              </div>
+              <div class="field">
+                <label id="prod-image-label">Imagen</label>
+                <div class="logo-box">
+                  <span class="logo-thumb">
+                    <img v-if="productImagePreview" :src="productImagePreview" alt="Imagen del producto" />
+                    <AppIcon v-else name="image" :size="20" aria-hidden="true" />
+                  </span>
+                  <div class="logo-actions">
+                    <input ref="productImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="prod-image-label" @change="onProductImagePicked" />
+                    <button type="button" class="btn ghost btn-auto" @click="productImageInput?.click()">
+                      <AppIcon name="upload" :size="16" /> {{ productImagePreview ? 'Cambiar' : 'Subir imagen' }}
+                    </button>
+                    <button v-if="productImagePreview" type="button" class="btn ghost btn-auto" @click="productImage = null; productImagePreview = ''; productImageCleared = true">Quitar</button>
+                  </div>
+                </div>
+                <p class="hint">PNG, JPG, WebP o GIF de hasta 4 MB. Consume tu cuota de almacenamiento.</p>
+                <p v-if="productImageErr" class="field-error" role="alert">{{ productImageErr }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="productBusy" @click="saveProduct">{{ productEditing ? 'Guardar cambios' : 'Publicar producto' }}</AppButton>
+                <button v-if="productEditing" type="button" class="btn ghost btn-auto" @click="resetProductForm">Cancelar</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
+              <p v-if="!catalog.products.length" class="hint">Todavía no cargaste productos. Completá el formulario para publicar el primero.</p>
+              <ul v-else class="prod-list">
+                <li v-for="p in catalog.products" :key="p.id" class="prod-item">
+                  <span class="prod-thumb">
+                    <img v-if="p.image" :src="p.image" :alt="p.name" />
+                    <AppIcon v-else name="package" :size="16" aria-hidden="true" />
+                  </span>
+                  <div class="prod-info">
+                    <strong>{{ p.name }}</strong>
+                    <small>{{ formatARS(p.price) }}<template v-if="p.category_name"> · {{ p.category_name }}</template><template v-if="p.brand_name"> · {{ p.brand_name }}</template></small>
+                  </div>
+                  <span v-if="!p.is_active" class="pill muted">Oculto</span>
+                  <button type="button" class="icon-btn" aria-label="Editar producto" @click="editProduct(p)"><AppIcon name="pencil" :size="15" /></button>
+                  <button type="button" class="icon-btn danger" aria-label="Eliminar producto" @click="removeProduct(p)"><AppIcon name="trash" :size="15" /></button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- -------- Categorías -------- -->
+          <div v-show="catalogTab === 'categories'" class="card">
+            <h3><AppIcon name="layout-grid" :size="18" /> Categorías</h3>
+            <p>Agrupan tus productos en el menú de tu página pública.</p>
+            <div class="tax-add">
+              <AppInput v-model="taxonomyForm.category" label="Nueva categoría" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
+              <AppButton :loading="taxonomyBusy.category" @click="addTaxonomy('category')">Agregar</AppButton>
+            </div>
+            <ul v-if="catalog.categories.length" class="tax-list">
+              <li v-for="c in catalog.categories" :key="c.id">
+                <span>{{ c.name }} <small class="hint-inline">{{ c.products_count || 0 }} productos</small></span>
+                <button type="button" class="icon-btn danger" aria-label="Eliminar categoría" @click="removeTaxonomy('category', c)"><AppIcon name="trash" :size="15" /></button>
+              </li>
+            </ul>
+            <p v-else class="hint">Sin categorías todavía.</p>
+          </div>
+
+          <!-- -------- Marcas -------- -->
+          <div v-show="catalogTab === 'brands'" class="card">
+            <h3><AppIcon name="tag" :size="18" /> Marcas</h3>
+            <p>Filtran tus productos por marca en el menú de tu página pública.</p>
+            <div class="tax-add">
+              <AppInput v-model="taxonomyForm.brand" label="Nueva marca" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
+              <AppButton :loading="taxonomyBusy.brand" @click="addTaxonomy('brand')">Agregar</AppButton>
+            </div>
+            <ul v-if="catalog.brands.length" class="tax-list">
+              <li v-for="b in catalog.brands" :key="b.id">
+                <span>{{ b.name }} <small class="hint-inline">{{ b.products_count || 0 }} productos</small></span>
+                <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
+              </li>
+            </ul>
+            <p v-else class="hint">Sin marcas todavía.</p>
+          </div>
+        </template>
+      </template>
     </div>
     <!-- ================= MI TIENDA ================= -->
     <div v-show="section === 'store'">
@@ -634,7 +1047,7 @@ async function changePassword() {
           <div class="field">
             <label for="rename-slug">Nuevo link</label>
             <div class="slug-box" :class="{ invalid: renameKind === 'err' || !!store.fieldErrors.slug }">
-              <span class="slug-prefix">/tienda/</span>
+              <span class="slug-prefix">{{ host }}/</span>
               <input
                 id="rename-slug"
                 name="rename-slug"
@@ -662,7 +1075,7 @@ async function changePassword() {
 
         <div class="card">
           <h3><AppIcon name="palette" :size="18" /> Diseño de tu web</h3>
-          <p>Titular, descripción, colores y botones de contacto de tu página pública.</p>
+          <p>Logo, titular, descripción, colores y botones de contacto de tu página pública.</p>
           <AlertMessage v-if="!canCustomize" kind="info" message="La personalización de tu web está disponible en el Plan premium." />
           <div class="btn-row link-actions">
             <button class="btn btn-auto" @click="section = 'design'">
@@ -688,6 +1101,7 @@ async function changePassword() {
         <div class="grid-2">
           <div class="card">
             <h3><AppIcon name="pencil" :size="18" /> Contenido</h3>
+            <AppInput v-model="designForm.display_name" label="Nombre visible" name="design_display_name" :placeholder="business || 'Tu negocio'" hint="El nombre que aparece junto a tu logo. Vacío: se usa tu nombre de negocio." :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
             <AppInput v-model="designForm.headline" label="Titular" name="design_headline" placeholder="Ej. Indumentaria y calzado en Salta" hint="Frase corta bajo el nombre de tu negocio (opcional, hasta 140 caracteres)." :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
             <div class="field">
               <label for="design-description">Descripción</label>
@@ -705,10 +1119,82 @@ async function changePassword() {
               <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
             </div>
             <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
-            <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @. Genera un botón a tu perfil." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
+            <div class="grid-2">
+              <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
+              <AppInput v-model="designForm.tiktok" label="TikTok" name="design_tiktok" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
+            </div>
+            <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
           </div>
           <div class="card">
             <h3><AppIcon name="palette" :size="18" /> Apariencia</h3>
+            <div class="field">
+              <label id="design-logo-label">Logo</label>
+              <div class="logo-box">
+                <span class="logo-thumb">
+                  <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu tienda" />
+                  <AppIcon v-else name="image" :size="20" aria-hidden="true" />
+                </span>
+                <div class="logo-actions">
+                  <input
+                    ref="logoInput"
+                    type="file"
+                    class="sr-only"
+                    :accept="LOGO_ACCEPT_TYPES"
+                    aria-labelledby="design-logo-label"
+                    @change="onLogoPicked"
+                  />
+                  <button type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="logoInput?.click()">
+                    <span v-if="logoBusy" class="spinner" aria-hidden="true"></span>
+                    <AppIcon v-else name="upload" :size="16" />
+                    {{ currentLogo ? 'Cambiar logo' : 'Subir logo' }}
+                  </button>
+                  <button v-if="currentLogo" type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="onRemoveLogo">Quitar</button>
+                </div>
+              </div>
+              <p class="hint">PNG, JPG, WebP o GIF de hasta 2 MB. Aparece en la barra superior y la portada de tu web.</p>
+              <p v-if="storageText" class="hint">{{ storageText }}</p>
+              <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
+            </div>
+            <div class="field">
+              <label id="design-font-label">Fuente del nombre</label>
+              <div class="font-options" role="radiogroup" aria-labelledby="design-font-label">
+                <button
+                  v-for="(f, key) in storeFonts" :key="key" type="button"
+                  class="font-option" :class="{ active: designForm.name_font === key }"
+                  :style="{ fontFamily: f.family }"
+                  :aria-pressed="designForm.name_font === key"
+                  @click="designForm.name_font = key"
+                >
+                  {{ f.label }}
+                </button>
+              </div>
+              <p class="hint">Se aplica al nombre junto al logo en la barra superior y la portada.</p>
+            </div>
+            <div class="field">
+              <label id="design-carousel-label">Carrusel de portada</label>
+              <div class="carousel-box">
+                <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button
+                  v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
+                  type="button" class="carousel-add" :disabled="carouselBusy"
+                  @click="carouselInput?.click()"
+                >
+                  <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-carousel-label" @change="onCarouselPicked" />
+              <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Se muestran como banners en la portada de tu web.</p>
+              <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
+            </div>
             <div class="field">
               <label id="design-theme-label">Tema</label>
               <div class="theme-options" role="radiogroup" aria-labelledby="design-theme-label">
@@ -747,13 +1233,16 @@ async function changePassword() {
           <div class="design-preview" :data-store-theme="designForm.theme" :style="designPreviewVars">
             <div class="dp-cover"></div>
             <div class="dp-body">
-              <span class="dp-mono">{{ businessInitial }}</span>
-              <strong class="dp-name">{{ business || 'Tu negocio' }}</strong>
+              <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
+              <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>
+              <strong class="dp-name" :style="designNameFont">{{ designShopName }}</strong>
               <span class="dp-headline">{{ designForm.headline || 'El titular de tu tienda' }}</span>
               <span v-if="designForm.description" class="dp-desc">{{ designForm.description }}</span>
-              <div v-if="designForm.whatsapp || designForm.instagram" class="dp-cta">
+              <div v-if="designForm.whatsapp || designForm.instagram || designForm.tiktok || designForm.facebook" class="dp-cta">
                 <span v-if="designForm.whatsapp" class="dp-btn">WhatsApp</span>
                 <span v-if="designForm.instagram" class="dp-btn ghost">Instagram</span>
+                <span v-if="designForm.tiktok" class="dp-btn ghost">TikTok</span>
+                <span v-if="designForm.facebook" class="dp-btn ghost">Facebook</span>
               </div>
             </div>
           </div>
@@ -763,7 +1252,7 @@ async function changePassword() {
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
         <h3>La personalización es Premium</h3>
-        <p>Con el Plan premium podés editar el titular, la descripción, los colores y los botones de contacto de tu página pública.</p>
+        <p>Con el Plan premium podés editar el logo, el titular, la descripción, los colores y los botones de contacto de tu página pública.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>
@@ -788,11 +1277,27 @@ async function changePassword() {
           <h1>QR y folletos</h1>
           <p>Herramientas de difusión para tu link público.</p>
         </div>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
       </div>
-      <div class="empty">
-        <span class="empty-icon"><AppIcon name="qr-code" :size="28" /></span>
-        <h3>Disponible con el catálogo</h3>
-        <p>Tu plan ya incluye el código QR de tu tienda y folletos listos para imprimir. Se generan automáticamente cuando publiques tu primer catálogo.</p>
+      <div class="grid-2">
+        <div v-if="canQr" class="card">
+          <h3><AppIcon name="qr-code" :size="18" /> QR de tu tienda</h3>
+          <p>Apunta a tu link público: <span class="mono link-url">{{ publicUrl }}</span></p>
+          <div v-if="qrDataUrl" class="qr-box">
+            <img :src="qrDataUrl" alt="Código QR de tu tienda" />
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-auto" :disabled="!qrDataUrl" @click="downloadQr"><AppIcon name="download" :size="16" /> Descargar QR</button>
+            <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
+          </div>
+        </div>
+        <div v-if="canFlyers" class="card">
+          <h3><AppIcon name="file-text" :size="18" /> Folleto imprimible</h3>
+          <p>Se genera solo con tu logo, nombre, descripción, redes y el QR de tu link. Listo para imprimir o guardar como PDF.</p>
+          <div class="btn-row">
+            <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
+          </div>
+        </div>
       </div>
     </div>
     <!-- ================= PLANES ================= -->

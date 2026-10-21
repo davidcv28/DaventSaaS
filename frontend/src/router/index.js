@@ -13,6 +13,7 @@ const ReportView = () => import('../views/ReportView.vue')
 const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const StorePublicView = () => import('../views/StorePublicView.vue')
+const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -79,9 +80,20 @@ const routes = [
     component: ReportView,
     meta: { title: 'Denunciar contenido' }
   },
-  // Tienda pública del cliente: resuelve /tienda/<slug> sin auth
+  // Folleto imprimible de mi tienda: se abre en pestaña aparte (auth via localStorage)
+  {
+    path: '/folleto',
+    name: 'store-flyer',
+    component: StoreFlyerView,
+    meta: { requiresAuth: true, title: 'Folleto' }
+  },
+  // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias
   {
     path: '/tienda/:slug',
+    redirect: (to) => ({ name: 'store-public', params: { slug: to.params.slug } })
+  },
+  {
+    path: '/:slug([a-z0-9-]+)',
     name: 'store-public',
     component: StorePublicView,
     meta: { title: 'Tienda' }

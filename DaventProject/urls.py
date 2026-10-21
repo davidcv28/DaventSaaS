@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/', include('AdminApp.domains.legal.urls.urls')),
     path('api/', include('SuscriptionApp.domains.benefits.urls.urls')),
     path('api/', include('StoreApp.domains.stores.urls.urls')),
+    path('api/', include('StoreApp.domains.catalog.urls.urls')),
     #=================================
     # DJANGO AUTH
     #=================================

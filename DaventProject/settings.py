@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from decouple import config
 from pathlib import Path
 import dj_database_url
-import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,11 +25,6 @@ SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-CLOUDINARY_STORAGE = cloudinary.config(
-  cloud_name=config('CLOUD_CL_NAME'),
-  api_key=config('API_CL_KEY'),
-  api_secret=config('SECRET_CL_KEY')
-) 
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
 
@@ -88,7 +82,8 @@ INSTALLED_APPS = [
     #SUSCRIPTION APP (beneficios de los planes; mismo patrón: solo los dominios hijos)
     'SuscriptionApp.domains.benefits.apps.apps.BenefitsAppConfig',
     #STORE APP (web del cliente: link público, catálogo, personalización)
-    'StoreApp.domains.stores.apps.apps.StoresAppConfig'
+    'StoreApp.domains.stores.apps.apps.StoresAppConfig',
+    'StoreApp.domains.catalog.apps.apps.CatalogAppConfig'
 ]
 
 MIDDLEWARE = [

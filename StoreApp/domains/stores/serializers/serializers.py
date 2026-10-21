@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from StoreApp.domains.stores.models import Store, StoreCustomization
+from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage
+from StoreApp.domains.stores.services.storage import object_url
 from .config_fields import StoresFields, CustomizationFields
 from .mixins        import StoreMixinValidator, StoreCreateMixin
-from .validators    import validate_whatsapp, validate_instagram
+from .validators    import validate_whatsapp, validate_instagram, validate_tiktok, validate_facebook
 """
 
 Serializers del dominio Stores.
@@ -20,17 +21,40 @@ class StoreSerializer(StoreMixinValidator, StoreCreateMixin, serializers.ModelSe
         model                   =   Store
         fields                  =   ['id', 'user', 'slug', 'is_published']
 #=========================================
+# STORE CAROUSEL IMAGE SERIALIZER (banners de la web pública)
+#=========================================
+class StoreCarouselImageSerializer(serializers.ModelSerializer):
+    url                         =   serializers.SerializerMethodField()
+    class Meta:
+        model                   =   StoreCarouselImage
+        fields                  =   ['id', 'url', 'position']
+    def get_url(self, image):
+        return object_url(image.image_key)
+#=========================================
 # STORE CUSTOMIZATION SERIALIZER (diseño de la web pública)
 #=========================================
 class StoreCustomizationSerializer(serializers.ModelSerializer):
+    display_name                =   serializers.CharField(**CustomizationFields['display_name'])
     headline                    =   serializers.CharField(**CustomizationFields['headline'])
     description                 =   serializers.CharField(**CustomizationFields['description'])
     whatsapp                    =   serializers.CharField(**CustomizationFields['whatsapp'])
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
+    tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
+    facebook                    =   serializers.CharField(**CustomizationFields['facebook'])
+    logo                        =   serializers.SerializerMethodField()
+    carousel                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   StoreCustomization
-        fields                  =   ['headline', 'description', 'theme', 'accent', 'whatsapp', 'instagram', 'updated_at']
+        fields                  =   [
+            'display_name', 'name_font', 'headline', 'description', 'theme', 'accent',
+            'whatsapp', 'instagram', 'tiktok', 'facebook', 'logo', 'carousel', 'updated_at',
+        ]
         read_only_fields        =   ['updated_at']
+    def get_logo(self, customization):
+        return object_url(customization.logo_key)
+    def get_carousel(self, customization):
+        images                  =   customization.store.carousel_images.all()
+        return StoreCarouselImageSerializer(images, many = True).data
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')
         if value and not validate_whatsapp(value):
@@ -40,6 +64,18 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         value                   =   value.strip().lstrip('@').lower()
         if value and not validate_instagram(value):
             raise serializers.ValidationError('Ingresá solo el usuario, sin "@": letras, números, puntos o guiones bajos')
+        return value
+    def validate_tiktok(self, value):
+        value                   =   value.strip().lstrip('@').lower()
+        if value and not validate_tiktok(value):
+            raise serializers.ValidationError('Ingresá solo el usuario, sin "@": letras, números, puntos o guiones bajos')
+        return value
+    def validate_facebook(self, value):
+        value                   =   value.strip().strip('/')
+        if 'facebook.com/' in value:
+            value               =   value.split('facebook.com/', 1)[1].strip('/').split('/')[0]
+        if value and not validate_facebook(value):
+            raise serializers.ValidationError('Ingresá el nombre de tu página o usuario: letras, números y puntos')
         return value
 #=========================================
 # STORE SERIALIZER LIST
@@ -51,7 +87,7 @@ class StoreSerializerList(serializers.ModelSerializer):
         model                   =   Store
         fields                  =   ['id', 'slug', 'is_published', 'created_at', 'public_path', 'customization']
     def get_public_path(self, store):
-        return f'/tienda/{store.slug}'
+        return f'/{store.slug}'
 #=========================================
 # STORE PUBLIC SERIALIZER (datos que ve cualquier visitante)
 #=========================================

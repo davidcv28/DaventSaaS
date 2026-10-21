@@ -63,7 +63,7 @@ function logout() {
       <div class="field">
         <label for="slug">Tu link público <span aria-hidden="true">*</span></label>
         <div class="slug-box" :class="{ invalid: !!fieldError }">
-          <span class="slug-prefix">{{ host }}/tienda/</span>
+          <span class="slug-prefix">{{ host }}/</span>
           <input
             id="slug"
             name="slug"

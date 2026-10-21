@@ -338,7 +338,8 @@ stores/
 │   ├── mixins.py           # validate_slug (formato/reservado/único) + una tienda por perfil
 │   └── serializers.py      # StoreSerializer / List / Public / Customization
 ├── services/
-│   └── services.py         # plan_benefits_of / profile_has_benefit (entitlements)
+│   ├── services.py         # plan_benefits_of / profile_has_benefit (entitlements)
+│   └── storage.py          # Cloudflare R2: validación, upload/delete, cuota max_storage_mb
 ├── views/
 │   ├── viewset_base.py     # Base con get_queryset/permissions por acción
 │   ├── viewset_config.py
@@ -350,21 +351,38 @@ stores/
 #### Modelos
 ```
 Store
-    ├── user          ──OneToOne──► UserProfile
-    ├── slug          (único, elegido por el usuario)
-    ├── is_published  (apaga/enciende el link)
+    ├── user                ──OneToOne──► UserProfile
+    ├── slug                (único, elegido por el usuario)
+    ├── is_published        (apaga/enciende el link)
+    ├── storage_used_bytes  (cuota de imágenes consumida en R2)
     └── created_at
 
 StoreCustomization        (diseño de la web pública)
     ├── store        ──OneToOne──► Store (related_name='customization')
+    ├── display_name (≤60, nombre visible junto al logo)
+    ├── name_font    ('sans'|'serif'|'rounded'|'condensed')
     ├── headline     (≤140, titular bajo el nombre)
+    ├── logo_key     (key del objeto en R2) + logo_size (bytes)
     ├── description  (≤800)
     ├── theme        ('light' | 'dark')
     ├── accent       ('indigo'|'violet'|'emerald'|'amber'|'rose'|'sky')
     ├── whatsapp     (8-15 dígitos, '+' opcional → botón wa.me)
-    ├── instagram    (handle sin '@' → botón a instagram.com)
+    ├── instagram / tiktok / facebook  (handles → botones)
     └── updated_at
+
+StoreCarouselImage        (banners de portada, máx. 5)
+    ├── store        ──FK──► Store (related_name='carousel_images', idx_carousel_store)
+    ├── image_key    (key en R2) + image_size (bytes)
+    ├── position     (orden editable)
+    └── created_at
 ```
+
+#### Almacenamiento de imágenes (Cloudflare R2)
+- `services/storage.py` habla con R2 vía su API compatible con S3 (`boto3`, SigV4). Credenciales en `.env`: `S3_API` (endpoint), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` (dominio público del bucket; si falta, las URLs se sirven firmadas con TTL de 7 días).
+- Las keys son `stores/<store_id>/<logo|carousel|products>/<uuid>.<ext>` y se guardan en DB (`logo_key`/`image_key`); `object_url()` las resuelve a `R2_PUBLIC_URL/<key>`.
+- Validación por firma de bytes (PNG/JPG/WebP/GIF): logo ≤2 MB, imágenes ≤4 MB, carrusel ≤5 imágenes.
+- La cuota sale del beneficio `max_storage_mb` del plan vigente; `storage_used_bytes` acumula los bytes del logo + carrusel + productos. Al reemplazar/borrar se libera la cuota del archivo anterior.
+- Ojo: los servicios mutan la instancia `X.store` propia (no el `store` de la vista). Para devolver `storage` en la respuesta hay que usar `customization.store` / `image.store` / `product.store`, no el `store` resuelto por la vista.
 
 #### API
 - `POST /api/stores/` (Bearer) — claim del link en el onboarding; `{slug}`. Rechaza si ya tiene tienda.
@@ -375,7 +393,24 @@ StoreCustomization        (diseño de la web pública)
 - `GET /api/stores/customization/` (Bearer) — mi diseño (`get_or_create` con defaults).
 - `PUT/PATCH /api/stores/customization/` (Bearer) — edita el diseño. **403 si el plan vigente no incluye `has_customization`**: el gateo lo hace `services.profile_has_benefit` contra `Suscription.status='Suscripción activa'` → `PlanBenefit` (la misma fuente de verdad que `/api/plans/`).
 - Reglas de slug: minúsculas/números/guiones internos, 3–60 chars, lista `RESERVED_SLUGS` (admin, api, planes, tienda...).
+- `POST/DELETE /api/stores/customization/logo/` (Bearer, multipart `{logo}`) — sube/reemplaza o quita el logo en R2. 403 sin `has_customization`; 400 si excede `max_storage_mb` o formato/peso inválido. Responde `{Exito, customization, storage:{used_bytes, max_mb}}`.
+- `POST /api/stores/customization/carousel/` (Bearer, multipart `{image}`) — agrega banner; `DELETE .../carousel/<id>/` lo borra; `PATCH .../carousel/order/` reordena `{order:[ids]}`.
 - `theme`/`accent` son catálogos cerrados: el frontend los traduce a paletas CSS propias (`STORE_ACCENTS`/`STORE_THEMES` en `stores.api.js`); nunca se guarda CSS del usuario.
+
+### catalog (StoreApp)
+Catálogo del dueño de la tienda (productos, categorías y marcas). Todo cuelga del `Store` del usuario autenticado (scope server-side) y requiere suscripción activa: `catalog_enabled` fuerza `has_public_link`, `can_add_product` el límite `max_products` del plan (403).
+
+```
+Category  (store, name, position)          # carpetas del catálogo
+Brand     (store, name, position)          # marcas propias
+Product   (store, category?, brand?, name ≤120, description ≤600,
+           price ≥0 (ck_product_price_gte_0), image_key/image_size en R2,
+           is_active apaga visibilidad sin borrar)
+```
+
+- `GET|POST /api/categories/`, `GET|PATCH|DELETE /api/categories/<pk>/` — CRUD; al borrar una categoría los productos quedan sin categoría (`SET_NULL`). Ídem `/api/brands/`.
+- `GET|POST /api/products/`, `GET|PATCH|DELETE /api/products/<pk>/` — CRUD del catálogo. POST/PATCH aceptan multipart con `image` (sube a R2 y consume cuota `max_storage_mb`; `image_clear=true` la quita). Responden `{Exito, item, storage, image_error?}`.
+- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, products}` con filtros `?category=&brand=&q=`.
 
 ---
 
@@ -403,6 +438,12 @@ StoreCustomization        (diseño de la web pública)
 /api/stores/slug-available/     → check de disponibilidad de slug (Bearer)
 /api/stores/public/<slug>/      → resolución pública del link (AllowAny)
 /api/stores/customization/      → diseño de la web pública (GET; PUT/PATCH solo con has_customization)
+/api/stores/customization/logo/ → logo de la web (POST multipart/DELETE)
+/api/stores/customization/carousel/ → carrusel de banners (POST/DELETE/PATCH order)
+/api/stores/public/<slug>/catalog/ → catálogo visible de la web pública (AllowAny)
+/api/categories/                → categorías del catálogo (Bearer)
+/api/brands/                    → marcas del catálogo (Bearer)
+/api/products/                  → productos del catálogo (Bearer, multipart con image)
 /api-auth/                      → login de DRF
 /api/token/                     → JWT obtain
 /api/token/refresh/             → JWT refresh
@@ -428,7 +469,7 @@ Authorization: Bearer <access_token>
 | Servicio       | Uso                                      |
 |----------------|------------------------------------------|
 | Mercado Pago   | Pasarela de pago (en desarrollo)         |
-| Cloudinary     | Almacenamiento de imágenes               |
+| Cloudflare R2  | Almacenamiento de imágenes del cliente (logo, carrusel, productos), API compatible con S3 vía `boto3` |
 | PostgreSQL     | Base de datos principal                  |
 
 > Los datos de tarjeta nunca pasan por el backend. Mercado Pago los maneja

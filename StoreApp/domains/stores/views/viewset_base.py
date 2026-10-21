@@ -10,16 +10,20 @@ Base de los viewsets del dominio Stores.
 #=========================================
 class StoreBaseViewSet(viewsets.GenericViewSet):
     viewset_config  =   {}
+    def _action_key(self):
+        """PUT y PATCH comparten la config 'update'."""
+        return 'update' if self.action in ('update', 'partial_update') else self.action
     def get_serializer_class(self):
         if self.action == 'create':
             return self.viewset_config['create']['serializer']
-        if self.action == 'update':
+        if self._action_key() == 'update' and 'update' in self.viewset_config:
             return self.viewset_config['update']['serializer']
         return self.viewset_config['get']['serializer']
     def get_queryset(self):
+        key = self._action_key()
         if self.action == 'create':
             queryset = self.viewset_config['create']['queryset']
-        elif self.action == 'update':
+        elif key == 'update' and 'update' in self.viewset_config:
             queryset = self.viewset_config['update']['queryset']
         else:
             queryset = self.viewset_config['get']['queryset']
@@ -27,9 +31,10 @@ class StoreBaseViewSet(viewsets.GenericViewSet):
             return queryset(self)
         return queryset
     def get_permissions(self):
+        key = self._action_key()
         if self.action == 'create':
             permissions_get = self.viewset_config['create']['permissions']
-        elif self.action == 'update':
+        elif key == 'update' and 'update' in self.viewset_config:
             permissions_get = self.viewset_config['update']['permissions']
         else:
             permissions_get = self.viewset_config['get']['permissions']
@@ -77,3 +82,8 @@ class StoreBaseViewSet(viewsets.GenericViewSet):
                 'Exito' : self.viewset_config['update']['message']
             }
         )
+    #=========================================
+    # PARTIAL UPDATE METHOD (PATCH)
+    #=========================================
+    def partial_update(self, request, pk = None):
+        return self.update(request, pk)
