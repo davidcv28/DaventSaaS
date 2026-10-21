@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, CUSTOMIZATION_DEFAULTS
+  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { extractApiError } from '../api/http.js'
@@ -196,6 +196,7 @@ onMounted(async () => {
   try {
     store.value = await storesApi.publicStore(slug)
     status.value = 'success'
+    ensureStoreFont(custom.value.name_font)
     document.title = shopName.value
     restartSlideTimer()
     loadCatalog()

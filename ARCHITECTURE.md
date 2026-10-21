@@ -373,7 +373,8 @@ Store
 StoreCustomization        (diseño de la web pública)
     ├── store        ──OneToOne──► Store (related_name='customization')
     ├── display_name (≤60, nombre visible junto al logo)
-    ├── name_font    ('sans'|'serif'|'rounded'|'condensed')
+    ├── name_font    (catálogo Google Fonts: 'inter'|'montserrat'|...|'lobster')
+    ├── name_font_size (px, 20–64, default 32 → --store-name-size)
     ├── headline     (≤140, titular bajo el nombre)
     ├── logo_key     (key del objeto en R2) + logo_size (bytes)
     ├── description  (≤800)
@@ -408,7 +409,7 @@ StoreCarouselImage        (banners de portada, máx. 5)
 - Reglas de slug: minúsculas/números/guiones internos, 3–60 chars, lista `RESERVED_SLUGS` (admin, api, planes, tienda...).
 - `POST/DELETE /api/stores/customization/logo/` (Bearer, multipart `{logo}`) — sube/reemplaza o quita el logo en R2. 403 sin `has_customization`; 400 si excede `max_storage_mb` o formato/peso inválido. Responde `{Exito, customization, storage:{used_bytes, max_mb}}`.
 - `POST /api/stores/customization/carousel/` (Bearer, multipart `{image}`) — agrega banner; `DELETE .../carousel/<id>/` lo borra; `PATCH .../carousel/order/` reordena `{order:[ids]}`.
-- `theme`/`accent` son catálogos cerrados: el frontend los traduce a paletas CSS propias (`STORE_ACCENTS`/`STORE_THEMES` en `stores.api.js`); nunca se guarda CSS del usuario.
+- `theme`/`accent`/`name_font` son catálogos cerrados: el frontend los traduce a paletas/estilos CSS propios (`STORE_ACCENTS`/`STORE_THEMES`/`STORE_FONTS` en `stores.api.js`); nunca se guarda CSS del usuario. Las fuentes se cargan on-demand desde Google Fonts (`ensureStoreFont` para una, `ensureStoreFontList` para el selector completo). `name_font_size` viaja como `--store-name-size` dentro de `storeThemeVars` y el CSS la aplica en la portada (h1), la barra superior (proporcional, tope 20px), la vista previa del dashboard y el folleto.
 
 ### catalog (StoreApp)
 Catálogo del dueño de la tienda (productos, categorías y marcas). Todo cuelga del `Store` del usuario autenticado (scope server-side) y requiere suscripción activa: `catalog_enabled` fuerza `has_public_link`, `can_add_product` el límite `max_products` del plan (403).

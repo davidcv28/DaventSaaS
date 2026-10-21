@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from AdminApp.domains.users.models import UserProfile
 """
 
@@ -54,19 +55,44 @@ class StoreCustomization(models.Model):
         (ACCENT_ROSE,    'Rosa'),
         (ACCENT_SKY,     'Celeste'),
     ]
-    FONT_SANS                   =   'sans'
-    FONT_SERIF                  =   'serif'
-    FONT_ROUNDED                =   'rounded'
-    FONT_CONDENSED              =   'condensed'
+    FONT_INTER                  =   'inter'
+    # Catálogo cerrado de Google Fonts (espejo de STORE_FONTS en stores.api.js):
+    # el frontend las carga on-demand desde fonts.googleapis.com.
     FONT_CHOICES                =   [
-        (FONT_SANS,      'Moderna'),
-        (FONT_SERIF,     'Elegante'),
-        (FONT_ROUNDED,   'Redondeada'),
-        (FONT_CONDENSED, 'Condensada'),
+        (FONT_INTER,             'Inter'),
+        ('montserrat',           'Montserrat'),
+        ('poppins',              'Poppins'),
+        ('raleway',              'Raleway'),
+        ('nunito',               'Nunito'),
+        ('work-sans',            'Work Sans'),
+        ('dm-sans',              'DM Sans'),
+        ('sora',                 'Sora'),
+        ('space-grotesk',        'Space Grotesk'),
+        ('comfortaa',            'Comfortaa'),
+        ('quicksand',            'Quicksand'),
+        ('rubik',                'Rubik'),
+        ('oswald',               'Oswald'),
+        ('bebas-neue',           'Bebas Neue'),
+        ('anton',                'Anton'),
+        ('archivo-black',        'Archivo Black'),
+        ('righteous',            'Righteous'),
+        ('playfair-display',     'Playfair Display'),
+        ('merriweather',         'Merriweather'),
+        ('lora',                 'Lora'),
+        ('fraunces',             'Fraunces'),
+        ('cinzel',               'Cinzel'),
+        ('pacifico',             'Pacifico'),
+        ('dancing-script',       'Dancing Script'),
+        ('caveat',               'Caveat'),
+        ('lobster',              'Lobster'),
     ]
+    NAME_SIZE_MIN               =   20
+    NAME_SIZE_MAX               =   64
+    NAME_SIZE_DEFAULT           =   32
     store                       =   models.OneToOneField(Store, on_delete = models.CASCADE, related_name = 'customization')
     display_name                =   models.CharField(max_length = 60, blank = True, verbose_name = 'Nombre visible')
-    name_font                   =   models.CharField(max_length = 10, choices = FONT_CHOICES, default = FONT_SANS, verbose_name = 'Fuente del nombre')
+    name_font                   =   models.CharField(max_length = 40, choices = FONT_CHOICES, default = FONT_INTER, verbose_name = 'Fuente del nombre')
+    name_font_size              =   models.PositiveSmallIntegerField(default = NAME_SIZE_DEFAULT, validators = [MinValueValidator(NAME_SIZE_MIN), MaxValueValidator(NAME_SIZE_MAX)], verbose_name = 'Tamaño del nombre (px)')
     headline                    =   models.CharField(max_length = 140, blank = True, verbose_name = 'Titular')
     logo_key                    =   models.CharField(max_length = 200, blank = True, verbose_name = 'Logo (key en R2)')
     logo_size                   =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño del logo (bytes)')

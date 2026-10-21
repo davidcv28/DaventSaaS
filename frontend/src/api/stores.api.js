@@ -8,8 +8,8 @@ import { http } from './http.js'
 // GET  /api/stores/public/<slug>/        público  -> {slug, business_name, city_name, province_name, customization}
 // GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products} (?q=&category=&brand=)
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
-// PATCH /api/stores/customization/       Bearer {display_name?, name_font?, headline?, description?, theme?, accent?,
-//                                                whatsapp?, instagram?, tiktok?, facebook?}
+// PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
+//                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
@@ -125,7 +125,8 @@ export function publicStoreUrl(slug, origin = window.location.origin) {
 // paletas CSS. Nada de colores libres del usuario: la web siempre se ve bien.
 export const CUSTOMIZATION_DEFAULTS = {
   display_name: '',
-  name_font: 'sans',
+  name_font: 'inter',
+  name_font_size: 32,
   headline: '',
   description: '',
   theme: 'light',
@@ -176,17 +177,84 @@ export const STORE_THEMES = {
   dark:  { label: 'Oscuro' }
 }
 
-// Fuentes del nombre junto al logo: catálogo cerrado (espejo de
-// StoreCustomization.FONT_CHOICES). El CSS mapea cada código a su familia.
+// Fuentes del nombre junto al logo: catálogo cerrado de Google Fonts
+// (espejo de StoreCustomization.FONT_CHOICES). `google` es el query del
+// css2 de Google Fonts; null = ya viene cargada (Inter va en index.html).
 export const STORE_FONTS = {
-  sans:      { label: 'Moderna',    family: 'Inter, system-ui, sans-serif' },
-  serif:     { label: 'Elegante',   family: "'Playfair Display', Georgia, serif" },
-  rounded:   { label: 'Redondeada', family: 'Nunito, Inter, sans-serif' },
-  condensed: { label: 'Condensada', family: 'Oswald, Inter, sans-serif' }
+  'inter':            { label: 'Inter',            family: 'Inter, system-ui, sans-serif',        google: null },
+  'montserrat':       { label: 'Montserrat',       family: "'Montserrat', sans-serif",            google: 'Montserrat:wght@400..800' },
+  'poppins':          { label: 'Poppins',          family: "'Poppins', sans-serif",               google: 'Poppins:wght@400;600;700;800' },
+  'raleway':          { label: 'Raleway',          family: "'Raleway', sans-serif",               google: 'Raleway:wght@400..800' },
+  'nunito':           { label: 'Nunito',           family: "'Nunito', sans-serif",                google: 'Nunito:wght@400..800' },
+  'work-sans':        { label: 'Work Sans',        family: "'Work Sans', sans-serif",             google: 'Work+Sans:wght@400..800' },
+  'dm-sans':          { label: 'DM Sans',          family: "'DM Sans', sans-serif",               google: 'DM+Sans:wght@400..800' },
+  'sora':             { label: 'Sora',             family: "'Sora', sans-serif",                  google: 'Sora:wght@400..800' },
+  'space-grotesk':    { label: 'Space Grotesk',    family: "'Space Grotesk', sans-serif",         google: 'Space+Grotesk:wght@400..700' },
+  'comfortaa':        { label: 'Comfortaa',        family: "'Comfortaa', sans-serif",             google: 'Comfortaa:wght@400..700' },
+  'quicksand':        { label: 'Quicksand',        family: "'Quicksand', sans-serif",             google: 'Quicksand:wght@400..700' },
+  'rubik':            { label: 'Rubik',            family: "'Rubik', sans-serif",                 google: 'Rubik:wght@400..800' },
+  'oswald':           { label: 'Oswald',           family: "'Oswald', sans-serif",                google: 'Oswald:wght@400..700' },
+  'bebas-neue':       { label: 'Bebas Neue',       family: "'Bebas Neue', sans-serif",            google: 'Bebas+Neue' },
+  'anton':            { label: 'Anton',            family: "'Anton', sans-serif",                 google: 'Anton' },
+  'archivo-black':    { label: 'Archivo Black',    family: "'Archivo Black', sans-serif",         google: 'Archivo+Black' },
+  'righteous':        { label: 'Righteous',        family: "'Righteous', sans-serif",             google: 'Righteous' },
+  'playfair-display': { label: 'Playfair Display', family: "'Playfair Display', Georgia, serif",  google: 'Playfair+Display:wght@400..800' },
+  'merriweather':     { label: 'Merriweather',     family: "'Merriweather', Georgia, serif",      google: 'Merriweather:wght@400..800' },
+  'lora':             { label: 'Lora',             family: "'Lora', Georgia, serif",              google: 'Lora:wght@400..700' },
+  'fraunces':         { label: 'Fraunces',         family: "'Fraunces', Georgia, serif",          google: 'Fraunces:wght@400..800' },
+  'cinzel':           { label: 'Cinzel',           family: "'Cinzel', Georgia, serif",            google: 'Cinzel:wght@400..800' },
+  'pacifico':         { label: 'Pacifico',         family: "'Pacifico', cursive",                 google: 'Pacifico' },
+  'dancing-script':   { label: 'Dancing Script',   family: "'Dancing Script', cursive",           google: 'Dancing+Script:wght@400..700' },
+  'caveat':           { label: 'Caveat',           family: "'Caveat', cursive",                   google: 'Caveat:wght@400..700' },
+  'lobster':          { label: 'Lobster',          family: "'Lobster', cursive",                  google: 'Lobster' }
 }
 
 export function storeFontFamily(nameFont) {
-  return (STORE_FONTS[nameFont] || STORE_FONTS.sans).family
+  return (STORE_FONTS[nameFont] || STORE_FONTS.inter).family
+}
+
+// Carga on-demand de la fuente elegida: inyecta el <link> del css2 una sola
+// vez por familia. La web pública y el folleto solo piden la del diseño;
+// el selector del dashboard carga el listado completo (ensureStoreFontList).
+const loadedFonts = new Set()
+const FONT_CSS_BASE = 'https://fonts.googleapis.com/css2'
+
+function injectFontLink(id, href) {
+  if (document.getElementById(id)) return
+  const link = document.createElement('link')
+  link.id = id
+  link.rel = 'stylesheet'
+  link.href = href
+  document.head.appendChild(link)
+}
+
+export function ensureStoreFont(nameFont) {
+  const font = STORE_FONTS[nameFont]
+  if (!font || !font.google || loadedFonts.has(nameFont)) return
+  loadedFonts.add(nameFont)
+  injectFontLink(`store-font-${nameFont}`, `${FONT_CSS_BASE}?family=${font.google}&display=swap`)
+}
+
+export function ensureStoreFontList() {
+  if (loadedFonts.has('__all__')) return
+  loadedFonts.add('__all__')
+  Object.keys(STORE_FONTS).forEach((k) => loadedFonts.add(k))
+  const families = Object.values(STORE_FONTS)
+    .filter((f) => f.google)
+    .map((f) => `family=${f.google}`)
+    .sort()
+    .join('&')
+  injectFontLink('store-fonts-all', `${FONT_CSS_BASE}?${families}&display=swap`)
+}
+
+// Tamaño del nombre junto al logo (espejo de los validators del modelo).
+export const NAME_FONT_SIZE_MIN = 20
+export const NAME_FONT_SIZE_MAX = 64
+export const NAME_FONT_SIZE_DEFAULT = 32
+
+export function storeNameSize(size) {
+  const n = Number(size)
+  return Number.isFinite(n) ? Math.min(NAME_FONT_SIZE_MAX, Math.max(NAME_FONT_SIZE_MIN, n)) : NAME_FONT_SIZE_DEFAULT
 }
 
 export function accentMeta(accent) {
@@ -199,7 +267,8 @@ export function storeThemeVars(customization) {
   return {
     '--store-accent': a.hex,
     '--store-accent-ink': a.ink,
-    '--store-accent-soft': a.soft
+    '--store-accent-soft': a.soft,
+    '--store-name-size': `${storeNameSize(c.name_font_size)}px`
   }
 }
 

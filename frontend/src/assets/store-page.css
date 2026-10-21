@@ -37,7 +37,7 @@
 .sp-search-top { flex: 0 1 480px; min-width: 0; }
 .sp-search.sp-search-inline { display: none; }
 .sp-brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; color: inherit; text-decoration: none; }
-.sp-name { font-weight: 700; font-size: 16px; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-name { font-weight: 700; font-size: clamp(14px, calc(var(--store-name-size, 32px) * .5), 20px); letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp-burger { display: none; place-items: center; width: 38px; height: 38px; border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-card); color: var(--sp-accent-text); cursor: pointer; flex: none; transition: border-color .15s, color .15s; }
 .sp-burger:hover { border-color: var(--store-accent); color: var(--sp-accent-text); }
 
@@ -96,7 +96,9 @@
 
 .sp-identity { display: flex; align-items: center; gap: 28px; margin-top: 32px; padding: 0 16px 8px; flex-wrap: wrap; }
 .sp-identity-text { flex: 1; min-width: 220px; display: grid; gap: 8px; }
-.sp-identity-text h1 { margin: 0; font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
+/* El tamaño del nombre lo elige el dueño (name_font_size → --store-name-size);
+   el 7.5vw lo acota en pantallas chicas sin pisar la elección en desktop. */
+.sp-identity-text h1 { margin: 0; font-size: clamp(24px, 7.5vw, var(--store-name-size, 32px)); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
 .sp-headline { margin: 0; font-size: 16px; color: var(--sp-ink-2); }
 .sp-location { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--sp-muted); }
 .sp-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import QRCode from 'qrcode'
-import { storesApi, publicStoreUrl, storeThemeVars, storeFontFamily, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
+import { storesApi, publicStoreUrl, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { extractApiError } from '../api/http.js'
 import AppIcon from '../components/AppIcon.vue'
@@ -77,8 +77,11 @@ onMounted(async () => {
     place.value = pub
     qrDataUrl.value = qr
     status.value = 'ready'
+    // Trae la Google Font del nombre antes de imprimir para que salga en el PDF.
+    ensureStoreFont(custom.value.name_font)
     document.title = `Folleto · ${shopName.value}`
     await nextTick()
+    await Promise.race([document.fonts?.ready || Promise.resolve(), new Promise((r) => setTimeout(r, 1200))])
     setTimeout(() => window.print(), 450)
   } catch (e) {
     status.value = 'error'
@@ -110,7 +113,7 @@ function closeTab() {
 .flyer-head { display: flex; align-items: center; gap: 22px; padding: 42px 48px 30px; }
 .flyer-logo { width: 96px; height: 96px; border-radius: 22px; object-fit: cover; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 8px 24px rgba(15, 23, 42, .08); flex: none; }
 .flyer-mono { width: 96px; height: 96px; border-radius: 22px; display: grid; place-items: center; background: var(--store-accent-soft); color: var(--store-accent-ink); font-size: 40px; font-weight: 800; flex: none; }
-.flyer-name { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; color: #0f172a; }
+.flyer-name { margin: 0; font-size: var(--store-name-size, 34px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; color: #0f172a; }
 .flyer-headline { margin: 7px 0 0; font-size: 14.5px; line-height: 1.55; color: #475569; max-width: 58ch; }
 .flyer-loc { margin: 9px 0 0; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--store-accent-ink); }
 .flyer-rule { height: 5px; margin: 0 48px; border-radius: 3px; background: linear-gradient(90deg, var(--store-accent) 0%, var(--store-accent-ink) 55%, transparent 100%); }
@@ -159,7 +162,7 @@ function closeTab() {
   .flyer { min-height: 0; }
   .flyer-head { padding: 28px 22px 22px; gap: 14px; }
   .flyer-logo, .flyer-mono { width: 64px; height: 64px; font-size: 26px; border-radius: 16px; }
-  .flyer-name { font-size: 24px; }
+  .flyer-name { font-size: min(var(--store-name-size, 34px), 26px); }
   .flyer-rule { margin: 0 22px; }
   .flyer-body { padding: 24px 22px; }
   .flyer-cta { flex-direction: column; text-align: center; padding: 24px 22px; gap: 18px; }

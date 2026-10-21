@@ -46,7 +46,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model                   =   StoreCustomization
         fields                  =   [
-            'display_name', 'name_font', 'headline', 'description', 'theme', 'accent',
+            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'logo', 'carousel', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']

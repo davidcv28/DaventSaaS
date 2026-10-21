@@ -12,6 +12,7 @@ import QRCode from 'qrcode'
 import {
   normalizeSlug, publicStoreUrl,
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_FONTS, storeThemeVars, storeFontFamily,
+  ensureStoreFont, ensureStoreFontList, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
@@ -332,7 +333,15 @@ async function ensureCatalog() {
     await catalog.loadAll()
   }
 }
-watch(section, (s) => { if (s === 'catalogs') ensureCatalog() })
+watch(section, (s) => {
+  if (s === 'catalogs') ensureCatalog()
+  // Al entrar a Diseño: la fuente elegida ya tiene que estar; el resto del
+  // catálogo se trae en un único <link> para previsualizar cada opción.
+  if (s === 'design') {
+    ensureStoreFont(designForm.name_font)
+    ensureStoreFontList()
+  }
+})
 
 // Buscador del listado: filtra por nombre, categoría o marca (sin tildes).
 const productQuery = ref('')
@@ -527,6 +536,7 @@ async function saveDesign() {
   await store.saveCustomization({
     display_name: designForm.display_name.trim(),
     name_font: designForm.name_font,
+    name_font_size: Number(designForm.name_font_size),
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
     theme: designForm.theme,
@@ -549,8 +559,14 @@ const carouselBusy = ref(false)
 const carouselErr = ref('')
 const carouselImages = computed(() => store.customization.carousel || [])
 const storeFonts = STORE_FONTS
+const fontSizeMin = NAME_FONT_SIZE_MIN
+const fontSizeMax = NAME_FONT_SIZE_MAX
 const designShopName = computed(() => designForm.display_name || business.value || 'Tu negocio')
 const designNameFont = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
+
+// Si cambia la fuente elegida, traerla en el momento (la lista ya las carga
+// todas al entrar a Diseño; esto cubre selecciones previas al primer ingreso).
+watch(() => designForm.name_font, (f) => ensureStoreFont(f))
 
 async function onCarouselPicked(event) {
   const file = event.target.files?.[0]
@@ -1359,6 +1375,21 @@ async function changePassword() {
                 </button>
               </div>
               <p class="hint">Se aplica al nombre junto al logo en la barra superior y la portada.</p>
+            </div>
+            <div class="field">
+              <label for="design-name-size">Tamaño del nombre</label>
+              <div class="size-slider">
+                <input
+                  id="design-name-size"
+                  v-model.number="designForm.name_font_size"
+                  type="range"
+                  :min="fontSizeMin"
+                  :max="fontSizeMax"
+                  step="1"
+                />
+                <span class="size-value">{{ designForm.name_font_size }} px</span>
+              </div>
+              <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
             </div>
             <div class="field">
               <label id="design-carousel-label">Carrusel de portada</label>
