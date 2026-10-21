@@ -65,9 +65,10 @@
 .sp-banner { width: 100%; margin: 0 auto; border-radius: 24px; overflow: hidden; background: var(--sp-line); aspect-ratio: 4 / 1; min-height: 160px; max-height: 280px; box-shadow: var(--sp-shadow-sm); }
 .sp-cover { height: 100%; background: radial-gradient(700px 260px at 85% -20%, rgba(255, 255, 255, .28), transparent 60%), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
 .store-page[data-store-theme='dark'] .sp-cover { background: radial-gradient(700px 260px at 85% -20%, color-mix(in srgb, var(--store-accent) 45%, transparent), transparent 60%), linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 55%, #0d1220), #111631); }
-.sp-carousel { position: relative; height: 100%; overflow: hidden; }
-.sp-carousel-track { display: flex; height: 100%; transition: transform .45s ease; }
-.sp-carousel-img { width: 100%; height: 100%; flex: 0 0 100%; object-fit: cover; display: block; }
+.sp-carousel { position: relative; height: 100%; overflow: hidden; touch-action: pan-y; }
+.sp-carousel-track { display: flex; height: 100%; transition: transform .45s ease; cursor: grab; }
+.sp-carousel.dragging .sp-carousel-track { cursor: grabbing; }
+.sp-carousel-img { width: 100%; height: 100%; flex: 0 0 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; }
 .sp-carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(15, 23, 42, .5); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(4px); transition: background .15s; }
 .sp-carousel-arrow:hover { background: rgba(15, 23, 42, .75); }
 .sp-carousel-arrow.prev { left: 16px; }

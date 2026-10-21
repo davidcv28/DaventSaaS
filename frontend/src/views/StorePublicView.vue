@@ -73,6 +73,40 @@ function restartSlideTimer() {
   }
 }
 
+// Arrastre: el track sigue el puntero y al soltar hace snap a la imagen
+// siguiente/anterior si se supera el umbral. Sirve táctil y mouse.
+const carouselEl = ref(null)
+const dragging = ref(false)
+const dragX = ref(0)
+let dragStartX = 0
+const trackStyle = computed(() => ({
+  transform: `translateX(calc(-${slide.value * 100}% + ${dragX.value}px))`,
+  transition: dragging.value ? 'none' : ''
+}))
+function onSlideDragStart(event) {
+  if (carousel.value.length < 2 || event.target.closest('button')) return
+  dragging.value = true
+  dragStartX = event.clientX
+  dragX.value = 0
+  event.currentTarget.setPointerCapture?.(event.pointerId)
+  pauseSlideTimer()
+}
+function onSlideDragMove(event) {
+  if (!dragging.value) return
+  dragX.value = event.clientX - dragStartX
+}
+function onSlideDragEnd() {
+  if (!dragging.value) return
+  dragging.value = false
+  const width = carouselEl.value?.clientWidth || 1
+  const threshold = Math.min(80, width * 0.15)
+  const total = carousel.value.length
+  if (dragX.value <= -threshold) slide.value = (slide.value + 1) % total
+  else if (dragX.value >= threshold) slide.value = (slide.value - 1 + total) % total
+  dragX.value = 0
+  restartSlideTimer()
+}
+
 // --- Catálogo: buscador + filtros por categoría/marca ---
 async function loadCatalog() {
   const slug = normalizeSlug(route.params.slug)
@@ -209,9 +243,9 @@ onBeforeUnmount(() => {
       <section class="sp-hero">
         <div class="sp-container">
           <div class="sp-banner">
-            <div v-if="carousel.length" class="sp-carousel" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer">
-              <div class="sp-carousel-track" :style="{ transform: `translateX(-${slide * 100}%)` }">
-                <img v-for="img in carousel" :key="img.id" class="sp-carousel-img" :src="img.url" alt="" />
+            <div v-if="carousel.length" ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
+              <div class="sp-carousel-track" :style="trackStyle">
+                <img v-for="img in carousel" :key="img.id" class="sp-carousel-img" :src="img.url" alt="" draggable="false" />
               </div>
               <template v-if="carousel.length > 1">
                 <button type="button" class="sp-carousel-arrow prev" aria-label="Imagen anterior" @click="goSlide(slide - 1)">
