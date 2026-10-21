@@ -173,6 +173,14 @@ const scrollTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto
 const selected = ref(null)
 const openProduct = (p) => { selected.value = p }
 const closeProduct = () => { selected.value = null }
+const selectedTags = computed(() => {
+  const p = selected.value
+  if (!p) return []
+  return [
+    catalog.value.categories.find((c) => c.id === p.category)?.name,
+    catalog.value.brands.find((b) => b.id === p.brand)?.name
+  ].filter(Boolean)
+})
 
 const onKey = (e) => { if (e.key === 'Escape') { menuOpen.value = false; closeProduct() } }
 
@@ -408,12 +416,21 @@ onBeforeUnmount(() => {
           <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="48" /></span>
         </div>
         <div class="sp-modal-body">
+          <div v-if="selectedTags.length" class="sp-modal-tags">
+            <span v-for="t in selectedTags" :key="t" class="sp-modal-tag">{{ t }}</span>
+          </div>
           <h2 class="sp-modal-name">{{ selected.name }}</h2>
           <span class="sp-modal-price">{{ formatARS(selected.price) }}</span>
-          <p v-if="selected.description" class="sp-modal-desc">{{ selected.description }}</p>
-          <a v-if="productChat(selected)" class="sp-btn" :href="productChat(selected)" target="_blank" rel="noopener">
-            <AppIcon name="whatsapp" :size="16" /> Consultar por WhatsApp
-          </a>
+          <div v-if="selected.description" class="sp-modal-section">
+            <p class="sp-modal-label">Descripción</p>
+            <p class="sp-modal-desc">{{ selected.description }}</p>
+          </div>
+          <div class="sp-modal-actions">
+            <a v-if="productChat(selected)" class="sp-btn" :href="productChat(selected)" target="_blank" rel="noopener">
+              <AppIcon name="whatsapp" :size="16" /> Consultar por WhatsApp
+            </a>
+            <button type="button" class="sp-btn ghost" @click="closeProduct">Seguir viendo</button>
+          </div>
         </div>
       </div>
     </div>
