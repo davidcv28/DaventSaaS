@@ -116,6 +116,16 @@ class UserProfileValidatorsMixins:
         if errors:
             raise serializers.ValidationError(errors)
         return document_val
+    def validate_phone(self, value):
+        if not value:
+            return None
+        phone_val           =   value.strip()
+        queryset            =   UserProfile.objects.filter(phone = phone_val)
+        if self.instance:
+            queryset        =   queryset.exclude(pk = self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('El número de celular ingresado ya se encuentra en uso')
+        return phone_val
     def validate(self, attrs):
         tax_condition   =   attrs.get('tax_condition')
         type_document   =   attrs.get('type_document')

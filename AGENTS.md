@@ -20,6 +20,7 @@
 - `OneToOneField`: sin índice extra (su constraint `UNIQUE` ya indexa).
 - FK cubierto por la primera columna de un índice compuesto: sin índice propio (ej. `Invoice.user` ← `idx_invoice_user_created`).
 - Inventario completo de índices: `ARCHITECTURE.md`, sección "Base de datos e índices".
+- Todo campo `unique=True` del modelo necesita su check de unicidad en el serializer (`validate_<campo>` en el mixin, igual que `validate_document`/`validate_phone` de `UserProfileValidatorsMixins`). Sin eso, un duplicado escala a `IntegrityError` → 500 en lugar de 400 con error de campo.
 
 ## Documentación viva (obligatoria)
 - Al descubrir o establecer un patrón nuevo — modelos, relaciones, índices, servicios, endpoints, convenciones de código o flujo — actualizar en el mismo cambio:
