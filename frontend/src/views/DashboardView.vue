@@ -1316,7 +1316,7 @@ async function changePassword() {
         </div>
         <div v-if="canFlyers" class="card">
           <h3><AppIcon name="file-text" :size="18" /> Folleto imprimible</h3>
-          <p>Se genera solo con tu logo, nombre, descripción, redes y el QR de tu link. Listo para imprimir o guardar como PDF.</p>
+          <p>Panfleto para repartir en tu local: tu logo, tus datos de contacto, tu dirección y el QR de tu link. Listo para imprimir o guardar como PDF.</p>
           <div class="btn-row">
             <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
           </div>
