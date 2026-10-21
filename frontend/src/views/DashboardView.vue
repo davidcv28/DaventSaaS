@@ -1245,6 +1245,11 @@ async function changePassword() {
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
           <div class="design-preview" :data-store-theme="designForm.theme" :style="designPreviewVars">
+            <div class="dp-nav" aria-hidden="true">
+              <span class="dp-nav-item active">Inicio</span>
+              <span class="dp-nav-item">Catálogo</span>
+              <span class="dp-nav-item">Contacto</span>
+            </div>
             <div class="dp-cover">
               <div v-if="carouselImages.length" class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
                 <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />

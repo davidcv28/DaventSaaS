@@ -170,7 +170,11 @@ async function share() {
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
 
-const onKey = (e) => { if (e.key === 'Escape') menuOpen.value = false }
+const selected = ref(null)
+const openProduct = (p) => { selected.value = p }
+const closeProduct = () => { selected.value = null }
+
+const onKey = (e) => { if (e.key === 'Escape') { menuOpen.value = false; closeProduct() } }
 
 onMounted(async () => {
   const slug = normalizeSlug(route.params.slug)
@@ -220,8 +224,8 @@ onBeforeUnmount(() => {
           <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
         </label>
         <div class="sp-top-end">
-          <a v-if="whatsappUrl" class="sp-btn sm" :href="whatsappUrl" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
-            <AppIcon name="whatsapp" :size="15" /> <span class="sp-hide-xs">Contactar</span>
+          <a v-if="whatsappUrl" class="sp-icon-btn primary" :href="whatsappUrl" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp" title="WhatsApp">
+            <AppIcon name="whatsapp" :size="17" />
           </a>
         </div>
       </div>
@@ -276,9 +280,6 @@ onBeforeUnmount(() => {
               <p v-if="location" class="sp-location"><AppIcon name="map-pin" :size="14" /> {{ location }}</p>
             </div>
             <div class="sp-actions">
-              <a v-if="whatsappUrl" class="sp-btn" :href="whatsappUrl" target="_blank" rel="noopener">
-                <AppIcon name="whatsapp" :size="16" /> WhatsApp
-              </a>
               <a
                 v-for="s in socials" :key="s.key" class="sp-icon-btn"
                 :href="s.url" target="_blank" rel="noopener" :aria-label="s.label" :title="s.label"
@@ -378,14 +379,9 @@ onBeforeUnmount(() => {
                   <h3 class="sp-card-name">{{ p.name }}</h3>
                   <p v-if="p.description" class="sp-card-desc">{{ p.description }}</p>
                   <span class="sp-card-price">{{ formatARS(p.price) }}</span>
-                  <a
-                    v-if="productChat(p)"
-                    class="sp-card-cta"
-                    :href="productChat(p)"
-                    target="_blank" rel="noopener"
-                  >
-                    <AppIcon name="whatsapp" :size="15" /> Consultar
-                  </a>
+                  <button type="button" class="sp-card-cta" @click="openProduct(p)">
+                    <AppIcon name="eye" :size="15" /> Ver más
+                  </button>
                 </div>
               </article>
             </div>
@@ -400,6 +396,27 @@ onBeforeUnmount(() => {
         </div>
       </main>
     </template>
+
+    <!-- ===== Detalle de producto ===== -->
+    <div v-if="selected" class="sp-modal-overlay" @click.self="closeProduct">
+      <div class="sp-modal" role="dialog" aria-modal="true" :aria-label="selected.name">
+        <button type="button" class="sp-modal-close" aria-label="Cerrar" @click="closeProduct">
+          <AppIcon name="x" :size="18" />
+        </button>
+        <div class="sp-modal-img">
+          <img v-if="selected.image" :src="selected.image" :alt="selected.name" />
+          <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="48" /></span>
+        </div>
+        <div class="sp-modal-body">
+          <h2 class="sp-modal-name">{{ selected.name }}</h2>
+          <span class="sp-modal-price">{{ formatARS(selected.price) }}</span>
+          <p v-if="selected.description" class="sp-modal-desc">{{ selected.description }}</p>
+          <a v-if="productChat(selected)" class="sp-btn" :href="productChat(selected)" target="_blank" rel="noopener">
+            <AppIcon name="whatsapp" :size="16" /> Consultar por WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== Pie ===== -->
     <footer class="sp-foot">
