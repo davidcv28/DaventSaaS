@@ -1,0 +1,221 @@
+from decimal import Decimal
+from decouple import config
+from django.db import transaction
+from django.db.models import Sum, Count, Q
+from django.db.models.functions import TruncDate, TruncMonth, Coalesce
+from django.utils import timezone
+from rest_framework import status, serializers
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+from AdminApp.domains.users.models import UserProfile
+from AdminApp.domains.payments.models import Payment
+from AdminApp.domains.invoices.services import IssueInvoiceQuery
+from AdminApp.domains.payments.services import (
+    PaymentWebhookQuery,
+    CreateCheckoutPreferenceQuery,
+    ApplyPendingPlanQuery,
+    SyncSuscriptionPaymentsQuery,
+    UpdateRevenueRollupsQuery,
+    SUSCRIPTION_STATUS_PENDING_PAYMENT,
+    SUSCRIPTION_STATUS_ACTIVE
+)
+from .viewset_base      import  PaymentBaseViewSet
+from .viewset_config    import  PaymentConfigs, DailyRevenueConfigs, MonthlyRevenueConfigs
+"""
+
+Creamos los viewsets correspondientes al dominio payments
+
+"""
+
+#=========================================
+# PAYMENT VIEWSET
+#=========================================
+class PaymentViewSet(PaymentBaseViewSet):
+    viewset_config  =   PaymentConfigs
+    #=========================================
+    # APPROVE ACTION (solo admin - sella status y paid_at)
+    #=========================================
+    @action(detail = True, methods = ['post'])
+    def approve(self, request, pk = None):
+        #ATOMICIDAD: la acreditación se sella junto con el plan, los rollups y la factura
+        with transaction.atomic():
+            instance        =   self.get_object()
+            was_approved    =   instance.status == Payment.Status.APPROVED
+            instance.approve()
+            ApplyPendingPlanQuery(instance.suscription)
+            if not was_approved:
+                UpdateRevenueRollupsQuery(instance)
+                IssueInvoiceQuery(instance)
+        serializer  =   self.get_serializer(instance)
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    #=========================================
+    # WEBHOOK ACTION (notificaciones IPN de Mercado Pago)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'webhook')
+    def webhook(self, request):
+        topic       =   request.data.get('type') or request.query_params.get('topic')
+        payment_id  =   (request.data.get('data') or {}).get('id') or request.query_params.get('id')
+        if topic == 'payment' and payment_id:
+            PaymentWebhookQuery(payment_id)
+        return Response({'Exito': 'Notificación procesada'}, status = status.HTTP_200_OK)
+    #=========================================
+    # CHECKOUT ACTION (crea preferencia MP y devuelve init_point)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'checkout')
+    def checkout(self, request):
+        suscription_id  =   request.data.get('suscription')
+        plan_id         =   request.data.get('plan_suscription')
+        if suscription_id:
+            suscription =   Suscription.objects.select_related('plan_suscription', 'user__user').filter(pk = suscription_id).first()
+            if not suscription:
+                raise serializers.ValidationError({'suscription': 'La suscripción ingresada no existe'})
+            if suscription.user.user_id != request.user.id:
+                raise serializers.ValidationError({'suscription': 'La suscripción seleccionada no pertenece a tu usuario.'})
+        else:
+            suscription =   Suscription.objects.select_related('plan_suscription', 'user__user').filter(user__user = request.user).first()
+        target_plan     =   None
+        if plan_id:
+            target_plan =   SuscriptionPlan.objects.filter(pk = plan_id).first()
+            if not target_plan:
+                raise serializers.ValidationError({'plan_suscription': 'El plan seleccionado no existe'})
+        if not suscription:
+            if not target_plan:
+                raise serializers.ValidationError({'plan_suscription': 'Elegí un plan para iniciar el pago'})
+            profile     =   UserProfile.objects.filter(user = request.user).first()
+            if not profile:
+                raise serializers.ValidationError({'suscription': 'Tu usuario aún no tiene perfil comercial.'})
+            #La suscripción queda pendiente hasta que se acredite el pago
+            suscription =   Suscription.objects.create(
+                user                =   profile,
+                plan_suscription    =   target_plan,
+                status              =   SUSCRIPTION_STATUS_PENDING_PAYMENT,
+                start_date          =   timezone.now(),
+                end_date            =   timezone.now(),
+            )
+        elif target_plan and suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT:
+            #Reintento de checkout: solo se corrige el plan elegido, sigue pendiente
+            suscription.plan_suscription    =   target_plan
+            suscription.save(update_fields = ['plan_suscription'])
+        elif target_plan and target_plan.id != suscription.plan_suscription_id:
+            #El plan se aplica recién cuando el pago se acredita
+            suscription.pending_plan_suscription    =   target_plan
+            suscription.save(update_fields = ['pending_plan_suscription'])
+        preference      =   CreateCheckoutPreferenceQuery(suscription)
+        #Con credenciales TEST se usa el checkout sandbox; en prod el init_point real.
+        is_sandbox      =   str(config('SECRET_MP_KEY', default = '')).startswith('TEST-')
+        checkout_url    =   preference.get('sandbox_init_point') if is_sandbox else preference.get('init_point')
+        return Response(
+            {
+                'checkout_url'      :   checkout_url or preference.get('init_point'),
+                'init_point'        :   preference.get('init_point'),
+                'sandbox_init_point':   preference.get('sandbox_init_point'),
+                'preference_id'     :   preference.get('id'),
+            }, status = status.HTTP_200_OK)
+    #=========================================
+    # SYNC ACTION (registra pagos ya acreditados en MP sin depender del redirect)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'sync')
+    def sync(self, request):
+        suscription =   Suscription.objects.select_related('user', 'plan_suscription', 'pending_plan_suscription').filter(user__user = request.user).first()
+        raw_id      =   request.data.get('payment_id') or request.query_params.get('payment_id')
+        try:
+            payment_id = int(str(raw_id).strip()) if raw_id not in (None, '') else None
+        except (TypeError, ValueError):
+            payment_id = None
+        payments    =   SyncSuscriptionPaymentsQuery(suscription, payment_id = payment_id) if suscription else []
+        return Response(
+            {
+                'Exito' :   'Pagos sincronizados',
+                'synced':   len(payments),
+            }, status = status.HTTP_200_OK)
+    #=========================================
+    # ADMIN SUMMARY ACTION (KPIs del panel admin, calculado en vivo desde Payment)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'admin-summary')
+    def admin_summary(self, request):
+        today           =   timezone.localdate()
+        first_of_month  =   today.replace(day = 1)
+        approved_qs     =   Payment.objects.filter(status = Payment.Status.APPROVED).annotate(
+            effective   =   Coalesce('paid_at', 'created_at')
+        )
+        totals          =   approved_qs.aggregate(
+            total       =   Coalesce(Sum('amount'), Decimal('0')),
+            month_total =   Coalesce(Sum('amount', filter = Q(effective__date__gte = first_of_month)), Decimal('0')),
+            today_total =   Coalesce(Sum('amount', filter = Q(effective__date = today)), Decimal('0')),
+        )
+        #CONTEOS POR ESTADO DE PAGO
+        status_counts   =   {s: 0 for s in Payment.Status.values}
+        for row in Payment.objects.values('status').annotate(n = Count('id')):
+            status_counts[row['status']]    =   row['n']
+        #CONTEOS DE SUSCRIPCIONES (status es texto libre en el modelo)
+        subs_rows       =   list(Suscription.objects.values('status').annotate(n = Count('id')))
+        subs_active     =   sum(r['n'] for r in subs_rows if r['status'] == SUSCRIPTION_STATUS_ACTIVE)
+        subs_pending    =   sum(r['n'] for r in subs_rows if r['status'] == SUSCRIPTION_STATUS_PENDING_PAYMENT)
+        #INGRESOS AGRUPADOS (ventanas recientes para los gráficos del panel)
+        revenue_by_day  =   list(
+            approved_qs.annotate(day = TruncDate('effective'))
+                .values('day').annotate(total_amount = Sum('amount'), payments_count = Count('id'))
+                .order_by('-day')[:31]
+        )
+        revenue_by_month    =   list(
+            approved_qs.annotate(month = TruncMonth('effective'))
+                .values('month').annotate(total_amount = Sum('amount'), payments_count = Count('id'))
+                .order_by('-month')[:12]
+        )
+        #DISTRIBUCIÓN POR PLAN: ingresos aprobados + suscripciones vigentes
+        subs_per_plan   =   {
+            r['plan_suscription__name']: r['n']
+            for r in Suscription.objects.values('plan_suscription__name').annotate(n = Count('id'))
+        }
+        by_plan         =   [
+            {
+                'plan'          :   row['suscription__plan_suscription__name'],
+                'revenue'       :   row['revenue'],
+                'payments'      :   row['payments'],
+                'suscriptions'  :   subs_per_plan.get(row['suscription__plan_suscription__name'], 0),
+            }
+            for row in approved_qs.values('suscription__plan_suscription__name')
+                .annotate(revenue = Sum('amount'), payments = Count('id'))
+                .order_by('-revenue')
+        ]
+        #Planes con suscripciones pero aún sin pagos aprobados
+        for name, n in subs_per_plan.items():
+            if name and all(p['plan'] != name for p in by_plan):
+                by_plan.append({'plan': name, 'revenue': Decimal('0'), 'payments': 0, 'suscriptions': n})
+        return Response(
+            {
+                'total_revenue'         :   totals['total'],
+                'revenue_month'         :   totals['month_total'],
+                'revenue_today'         :   totals['today_total'],
+                'payments_total'        :   sum(status_counts.values()),
+                'payments_approved'     :   status_counts.get(Payment.Status.APPROVED, 0),
+                'payments_pending'      :   status_counts.get(Payment.Status.PENDING, 0),
+                'payments_rejected'     :   status_counts.get(Payment.Status.REJECTED, 0),
+                'payments_refunded'     :   status_counts.get(Payment.Status.REFUNDED, 0),
+                'suscriptions_total'    :   sum(r['n'] for r in subs_rows),
+                'suscriptions_active'   :   subs_active,
+                'suscriptions_pending'  :   subs_pending,
+                'customers'             :   UserProfile.objects.count(),
+                'revenue_by_day'        :   [
+                    {'date': r['day'], 'total_amount': r['total_amount'], 'payments_count': r['payments_count']}
+                    for r in revenue_by_day
+                ],
+                'revenue_by_month'      :   [
+                    {'year': r['month'].year, 'month': r['month'].month, 'total_amount': r['total_amount'], 'payments_count': r['payments_count']}
+                    for r in revenue_by_month
+                ],
+                'by_plan'               :   by_plan,
+            }, status = status.HTTP_200_OK)
+
+#=========================================
+# DAILY REVENUE VIEWSET (solo lectura)
+#=========================================
+class DailyRevenueViewSet(PaymentBaseViewSet):
+    viewset_config  =   DailyRevenueConfigs
+
+#=========================================
+# MONTHLY REVENUE VIEWSET (solo lectura)
+#=========================================
+class MonthlyRevenueViewSet(PaymentBaseViewSet):
+    viewset_config  =   MonthlyRevenueConfigs

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+
+# Django
+db.sqlite3
+/media/
+/staticfiles/
+
+# Env / secrets — nunca subir .env reales
+.env
+.env.*
+!*.env.example
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Basura de Windows / IDE
+nul
+%TEMP%/
+Thumbs.db
+.DS_Store
+.vscode/
+*.log
