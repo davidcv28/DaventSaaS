@@ -135,6 +135,33 @@ h1, h2, h3 { letter-spacing: -.02em; }
 @keyframes auth-orb-alt { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(50px, -36px, 0) scale(1.08); } }
 @keyframes auth-grid { from { background-position: 0 0; } to { background-position: 22px 22px; } }
 @keyframes auth-alert { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes scene-rise { from { opacity: 0; transform: translateY(18px) rotate(-5deg); } to { opacity: 1; transform: translateY(0) rotate(-5deg); } }
+@keyframes scene-float { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-10px) rotate(-5deg); } }
+@keyframes chip-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes chip-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, .55); } 50% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); } }
+
+/* Escena del panel de marca: mock de tienda + métricas flotando, solo en
+   pantallas anchas (el panel chico ya muestra el mensaje completo). */
+.brand-scene { position: absolute; right: -8px; top: 50%; width: 244px; transform: translateY(-46%); pointer-events: none; display: none; }
+@media (min-width: 1240px) { .auth-brand > .brand-scene { display: block; } }
+.scene-store { position: relative; width: 230px; margin-left: auto; padding: 10px; border-radius: 16px; background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .18); backdrop-filter: blur(10px); box-shadow: 0 26px 60px -22px rgba(10, 8, 40, .65); animation: scene-rise .6s ease-out .55s both, scene-float 7s ease-in-out 1.4s infinite; }
+.sc-top { display: flex; gap: 5px; margin-bottom: 8px; }
+.sc-top i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, .35); }
+.sc-banner { height: 56px; border-radius: 9px; background: linear-gradient(120deg, var(--brand-400), #22d3ee); margin-bottom: 10px; }
+.sc-head { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.sc-avatar { width: 26px; height: 26px; border-radius: 8px; flex: none; background: linear-gradient(135deg, var(--brand-400), var(--accent)); }
+.sc-lines { display: grid; gap: 4px; flex: 1; }
+.sc-lines i { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .4); }
+.sc-lines i.short { width: 60%; }
+.sc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.sc-grid i { height: 34px; border-radius: 7px; background: rgba(255, 255, 255, .16); }
+.scene-stat { position: absolute; left: -62px; top: 4px; display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-radius: 12px; background: var(--card); color: var(--ink); box-shadow: var(--shadow); animation: chip-rise .5s ease-out .8s both, chip-float 8s ease-in-out 2s infinite; }
+.scene-stat .sc-stat-ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--ok-bg); color: var(--ok); flex: none; }
+.scene-stat small { display: block; font-size: 11px; color: var(--muted); }
+.scene-stat strong { display: block; font-size: 16px; line-height: 1.1; }
+.scene-chip { position: absolute; right: 4px; bottom: -18px; display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 99px; background: #fff; color: var(--brand-700); font-size: 12px; font-weight: 700; box-shadow: var(--shadow-md); animation: chip-rise .5s ease-out 1s both, chip-float 6.5s ease-in-out 2.4s infinite; }
+.sc-live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: live-pulse 1.8s ease-in-out infinite; }
 
 .auth-brand::after {
   content: ''; position: absolute; width: 420px; height: 420px; right: -120px; top: 12%;
@@ -162,6 +189,8 @@ h1, h2, h3 { letter-spacing: -.02em; }
   animation: auth-orb-alt 18s ease-in-out infinite;
 }
 .auth-card { position: relative; animation: auth-rise .5s cubic-bezier(.22, .8, .3, 1) .05s both; }
+/* Línea de acento superior: detalle de marca que enmarca la tarjeta. */
+.auth-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 16px 16px 0 0; background: linear-gradient(90deg, var(--brand-500), var(--accent)); }
 .auth-card-logo, .auth-card h2, .auth-card .sub { animation: auth-rise .45s ease-out both; }
 .auth-card h2 { animation-delay: .12s; }
 .auth-card .sub { animation-delay: .17s; }
@@ -809,5 +838,6 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation-duration: .01ms !important; }
-  .auth-brand::before, .auth-brand::after, .auth-panel::before { animation: none !important; }
+  .auth-brand::before, .auth-brand::after, .auth-panel::before,
+  .scene-store, .scene-stat, .scene-chip, .sc-live { animation: none !important; }
 }

@@ -30,6 +30,23 @@ const features = [
         </ul>
       </div>
       <div class="brand-foot"><span>&copy; {{ new Date().getFullYear() }} DAVENT</span><span>Hecho en Argentina</span></div>
+      <!-- Escena decorativa: mock de una tienda DAVENT flotando (solo desktop ancho) -->
+      <div class="brand-scene" aria-hidden="true">
+        <div class="scene-store">
+          <div class="sc-top"><i></i><i></i><i></i></div>
+          <div class="sc-banner"></div>
+          <div class="sc-head">
+            <span class="sc-avatar"></span>
+            <div class="sc-lines"><i></i><i class="short"></i></div>
+          </div>
+          <div class="sc-grid"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="scene-stat">
+          <span class="sc-stat-ic"><AppIcon name="trending-up" :size="15" /></span>
+          <div><small>Visitas esta semana</small><strong>+48%</strong></div>
+        </div>
+        <div class="scene-chip"><span class="sc-live"></span>Tu tienda online</div>
+      </div>
     </aside>
     <main class="auth-panel">
       <section class="auth-card">
