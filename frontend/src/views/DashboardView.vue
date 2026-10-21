@@ -327,6 +327,17 @@ async function ensureCatalog() {
 }
 watch(section, (s) => { if (s === 'catalogs') ensureCatalog() })
 
+// Buscador del listado: filtra por nombre, categoría o marca (sin tildes).
+const productQuery = ref('')
+const filteredProducts = computed(() => {
+  const q = productQuery.value.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  if (!q) return catalog.products
+  return catalog.products.filter((p) =>
+    [p.name, p.category_name, p.brand_name]
+      .some((v) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').includes(q))
+  )
+})
+
 const productLimit = computed(() => plan.value?.benefits?.max_products)
 const productsCountText = computed(() => {
   const max = productLimit.value
@@ -975,8 +986,14 @@ async function changePassword() {
             <div class="card">
               <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
               <p v-if="!catalog.products.length" class="hint">Todavía no cargaste productos. Completá el formulario para publicar el primero.</p>
-              <ul v-else class="prod-list">
-                <li v-for="p in catalog.products" :key="p.id" class="prod-item">
+              <template v-else>
+                <label class="prod-search">
+                  <AppIcon name="search" :size="16" aria-hidden="true" />
+                  <input v-model="productQuery" type="search" placeholder="Buscar por nombre, categoría o marca" aria-label="Buscar productos" />
+                </label>
+                <p v-if="!filteredProducts.length" class="hint">No hay productos que coincidan con tu búsqueda.</p>
+                <ul v-else class="prod-list">
+                  <li v-for="p in filteredProducts" :key="p.id" class="prod-item">
                   <span class="prod-thumb">
                     <img v-if="p.image" :src="p.image" :alt="p.name" />
                     <AppIcon v-else name="package" :size="16" aria-hidden="true" />
@@ -988,8 +1005,9 @@ async function changePassword() {
                   <span v-if="!p.is_active" class="pill muted">Oculto</span>
                   <button type="button" class="icon-btn" aria-label="Editar producto" @click="editProduct(p)"><AppIcon name="pencil" :size="15" /></button>
                   <button type="button" class="icon-btn danger" aria-label="Eliminar producto" @click="removeProduct(p)"><AppIcon name="trash" :size="15" /></button>
-                </li>
-              </ul>
+                  </li>
+                </ul>
+              </template>
             </div>
           </div>
 

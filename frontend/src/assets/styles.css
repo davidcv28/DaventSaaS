@@ -548,6 +548,12 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .tax-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .tax-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); }
 .hint-inline { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.prod-search { display: flex; align-items: center; gap: 8px; height: 40px; margin-bottom: 12px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--muted); box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s; }
+.prod-search:focus-within { border-color: var(--brand-500); box-shadow: var(--ring); }
+.prod-search input { flex: 1; min-width: 0; border: none; background: transparent; padding: 0; font: inherit; font-size: 14px; color: var(--ink); }
+.prod-search input:focus { outline: none; }
+.prod-search input::placeholder { color: #94a3b8; }
+.prod-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .prod-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .prod-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); }
 .prod-thumb { width: 42px; height: 42px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: grid; place-items: center; overflow: hidden; flex: none; }
