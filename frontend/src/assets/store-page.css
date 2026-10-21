@@ -14,12 +14,13 @@
   --sp-shadow-sm: 0 1px 2px rgba(15, 23, 42, .08), 0 1px 1px rgba(15, 23, 42, .04);
   --sp-shadow-md: 0 1px 3px rgba(15, 23, 42, .08), 0 10px 28px -12px rgba(15, 23, 42, .28);
   --sp-radius: 16px;
+  --sp-card-solid: #fff;
   --sp-top-h: 64px;
   min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
-  background: var(--sp-bg); color: var(--sp-ink); font-size: 15px; line-height: 1.5;
+  background: var(--sp-bg); background-attachment: fixed; color: var(--sp-ink); font-size: 15px; line-height: 1.5;
 }
 .store-page[data-store-theme='dark'] {
-  --sp-bg: #0d1220; --sp-card: #151b2e; --sp-surface: #111729; --sp-ink: #e8ecf7; --sp-ink-2: #c3cbdf; --sp-muted: #93a0bd; --sp-line: #28304d;
+  --sp-bg: radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, var(--store-accent) 14%, transparent), transparent 70%), #0d1220; --sp-card: color-mix(in srgb, #1a2138 72%, transparent); --sp-card-solid: #151b2e; --sp-surface: color-mix(in srgb, #111729 80%, transparent); --sp-ink: #e8ecf7; --sp-ink-2: #c3cbdf; --sp-muted: #93a0bd; --sp-line: #28304d;
   --sp-soft: rgba(255, 255, 255, .08); --sp-accent-text: var(--store-accent);
   --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
   --sp-shadow-md: 0 1px 3px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .6);
@@ -158,7 +159,7 @@
 .sp-card-desc { margin: 0; font-size: 13px; color: var(--sp-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sp-card-price { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--sp-line); font-size: 18px; font-weight: 750; letter-spacing: -.02em; color: var(--sp-ink); }
 .sp-modal-overlay { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 24px; background: rgba(10, 12, 30, .6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); overflow-y: auto; }
-.sp-modal { position: relative; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); width: 100%; max-width: 1080px; min-height: min(560px, calc(100dvh - 48px)); max-height: calc(100dvh - 48px); overflow: hidden; background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: 24px; box-shadow: 0 32px 80px -24px rgba(15, 23, 42, .6); }
+.sp-modal { position: relative; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); width: 100%; max-width: 1080px; min-height: min(560px, calc(100dvh - 48px)); max-height: calc(100dvh - 48px); overflow: hidden; background: var(--sp-card-solid); border: 1px solid var(--sp-line); border-radius: 24px; box-shadow: 0 32px 80px -24px rgba(15, 23, 42, .6); }
 .sp-modal-close { position: absolute; top: 16px; right: 16px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--sp-line); border-radius: 50%; background: var(--sp-card); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); cursor: pointer; transition: border-color .15s, color .15s; }
 .sp-modal-close:hover { border-color: var(--store-accent); color: var(--sp-accent-text); }
 .sp-modal-img { position: relative; display: grid; place-items: center; background: var(--sp-soft); border-right: 1px solid var(--sp-line); overflow: hidden; }
@@ -215,12 +216,21 @@
 .sp-davent-badge:hover { border-color: var(--store-accent); }
 .sp-davent-badge strong { color: var(--sp-accent-text); }
 
+/* --- Tema oscuro: contenedores translúcidos --- */
+.store-page[data-store-theme='dark'] .sp-card,
+.store-page[data-store-theme='dark'] .sp-search,
+.store-page[data-store-theme='dark'] .sp-empty,
+.store-page[data-store-theme='dark'] .sp-drawer { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-color: color-mix(in srgb, var(--store-accent) 22%, rgba(255, 255, 255, .1)); }
+.store-page[data-store-theme='dark'] .sp-card-img { background: color-mix(in srgb, var(--store-accent) 10%, transparent); }
+.store-page[data-store-theme='dark'] .sp-modal-close { background: var(--sp-card-solid); }
+
 /* --- Responsive --- */
 @media (max-width: 960px) {
   .sp-layout.has-nav { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .sp-burger { display: grid; }
   .sp-overlay { display: block; position: fixed; inset: 0; z-index: 30; background: rgba(10, 12, 30, .45); opacity: 0; visibility: hidden; transition: opacity .15s, visibility .15s; }
   .sp-overlay.open { opacity: 1; visibility: visible; }
+  .store-page[data-store-theme='dark'] .sp-drawer { background: var(--sp-card-solid); }
   .sp-drawer { position: fixed; top: 0; left: 0; bottom: 0; z-index: 31; width: min(320px, 86vw); max-height: none; border-radius: 0; border-width: 0 1px 0 0; padding: 16px 14px 20px; box-shadow: 0 18px 50px -18px rgba(15, 23, 42, .45); transform: translateX(-102%); transition: transform .15s ease; overscroll-behavior: contain; }
   .sp-drawer.open { transform: none; }
   .sp-drawer-head { display: flex; }
