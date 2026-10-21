@@ -41,12 +41,11 @@ async function onSubmit() {
     <AlertMessage v-if="error" kind="error" :message="error" />
     <AlertMessage v-if="info" kind="warn" :message="info" />
 
-    <div class="alert info">
-      <strong>Estado de la API:</strong> el backend Django aún no expone un endpoint de
-      recuperación (<span class="mono">POST /api/password-reset/</span>). Este formulario ya está
-      cableado: cuando el backend lo implemente, se activará sin cambios visuales.
-      Mientras tanto, si tenés acceso, cambiá tu clave desde el panel autenticado.
-    </div>
+    <AlertMessage kind="info">
+      <strong>Esta función todavía no está disponible.</strong> El envío del enlace de
+      recuperación se activa próximamente. Mientras tanto, si tenés acceso a tu cuenta,
+      podés cambiar tu contraseña desde <em>Cuenta</em> en tu panel.
+    </AlertMessage>
 
     <form @submit.prevent="onSubmit" novalidate>
       <AppInput

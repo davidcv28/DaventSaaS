@@ -693,6 +693,8 @@ h1, h2, h3 { letter-spacing: -.02em; }
   .legal-main { padding: 28px 16px 48px; }
   .legal-head h1 { font-size: 24px; }
   .legal-doc { padding: 24px 18px; }
+  /* Alertas más compactas en pantallas chicas */
+  .alert { padding: 10px 12px; font-size: 12.5px; gap: 8px; margin: 12px 0; }
   .sp-top-inner { padding: 10px 16px; }
   .sp-cover { height: 150px; }
   .sp-carousel { height: 170px; }
