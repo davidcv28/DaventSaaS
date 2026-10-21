@@ -522,6 +522,10 @@ async function saveDesign() {
 }
 
 // Carrusel de banners de la web pública (premium). Misma cuota que el logo.
+// La vista previa rota las imágenes cargadas cada 3s como en la web real.
+const previewSlide = ref(0)
+let previewTimer = null
+const previewReduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
 const carouselInput = ref(null)
 const carouselBusy = ref(false)
 const carouselErr = ref('')
@@ -618,8 +622,18 @@ onMounted(async () => {
   window.addEventListener('storage', onPaymentBroadcast)
 })
 
+watch(() => carouselImages.value.length, (total) => {
+  previewSlide.value = 0
+  clearInterval(previewTimer)
+  previewTimer = null
+  if (total > 1 && !previewReduceMotion) {
+    previewTimer = setInterval(() => { previewSlide.value = (previewSlide.value + 1) % carouselImages.value.length }, 3000)
+  }
+})
+
 onUnmounted(() => {
   stopCheckoutWatch()
+  clearInterval(previewTimer)
   window.removeEventListener('storage', onPaymentBroadcast)
 })
 
@@ -1231,7 +1245,11 @@ async function changePassword() {
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
           <div class="design-preview" :data-store-theme="designForm.theme" :style="designPreviewVars">
-            <div class="dp-cover"></div>
+            <div class="dp-cover">
+              <div v-if="carouselImages.length" class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
+                <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
+              </div>
+            </div>
             <div class="dp-body">
               <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
               <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>
