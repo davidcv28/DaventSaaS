@@ -20,9 +20,9 @@ export const useLegalStore = defineStore('legal', () => {
     } catch (err) {
       status.value = 'error'
       const parsed = extractApiError(err)
-      lastError.value = parsed.nonField || 'Ocurrió un error'
       const { nonField, status: _s, pendingBackend, ...fields } = parsed
       fieldErrors.value = fields
+      lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
       if (err.response?.status === 404) {
         lastError.value = 'El servicio de denuncias no está disponible. Intentá nuevamente en unos minutos.'
       }

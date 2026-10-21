@@ -62,8 +62,12 @@ function goSlide(index) {
   slide.value = ((index % total) + total) % total
   restartSlideTimer()
 }
-function restartSlideTimer() {
+function pauseSlideTimer() {
   clearInterval(slideTimer)
+  slideTimer = null
+}
+function restartSlideTimer() {
+  pauseSlideTimer()
   if (carousel.value.length > 1 && !reduceMotion) {
     slideTimer = setInterval(() => { slide.value = (slide.value + 1) % carousel.value.length }, 5000)
   }
@@ -205,7 +209,7 @@ onBeforeUnmount(() => {
       <section class="sp-hero">
         <div class="sp-container">
           <div class="sp-banner">
-            <div v-if="carousel.length" class="sp-carousel">
+            <div v-if="carousel.length" class="sp-carousel" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer">
               <div class="sp-carousel-track" :style="{ transform: `translateX(-${slide * 100}%)` }">
                 <img v-for="img in carousel" :key="img.id" class="sp-carousel-img" :src="img.url" alt="" />
               </div>

@@ -23,8 +23,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   function setApiError(err) {
     const parsed = extractApiError(err)
-    lastError.value = parsed.nonField || 'Ocurrió un error'
     const { nonField, status: _s, pendingBackend, ...fields } = parsed
+    lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
     fieldErrors.value = fields
     return parsed
   }

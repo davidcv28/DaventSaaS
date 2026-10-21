@@ -31,9 +31,10 @@ export const useStoreStore = defineStore('store', () => {
 
   function setApiError(err) {
     const parsed = extractApiError(err)
-    lastError.value = parsed.nonField || 'Ocurrió un error'
     const { nonField, status: _s, pendingBackend, ...fields } = parsed
     fieldErrors.value = fields
+    // Sin nonField: mostrar el primer error de campo para no caer en el genérico.
+    lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
     return parsed
   }
 

@@ -19,9 +19,9 @@ export const useCatalogStore = defineStore('catalog', () => {
 
   function setApiError(err) {
     const parsed = extractApiError(err)
-    lastError.value = parsed.nonField || 'Ocurrió un error'
-    if (parsed.status === 403) denied.value = true
     const { nonField, status: _s, pendingBackend, ...fields } = parsed
+    lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
+    if (parsed.status === 403) denied.value = true
     fieldErrors.value = fields
     return parsed
   }
