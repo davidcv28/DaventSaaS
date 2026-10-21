@@ -972,7 +972,7 @@ async function changePassword() {
     @logout="logout"
   >
     <!-- ================= RESUMEN ================= -->
-    <div v-show="section === 'overview'">
+    <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
       <div class="page-head">
         <div>
           <h1>Hola{{ business ? `, ${business}` : '' }}</h1>
@@ -1048,7 +1048,7 @@ async function changePassword() {
     </div>
 
     <!-- ================= CATÁLOGO ================= -->
-    <div v-show="section === 'catalogs'">
+    <div v-show="section === 'catalogs'" :class="{ 'sec-on': section === 'catalogs' }">
       <div class="page-head">
         <div>
           <h1>Mi catálogo</h1>
@@ -1222,7 +1222,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= MI TIENDA ================= -->
-    <div v-show="section === 'store'">
+    <div v-show="section === 'store'" :class="{ 'sec-on': section === 'store' }">
       <div class="page-head">
         <div>
           <h1>Mi tienda</h1>
@@ -1292,7 +1292,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= DISEÑO WEB (premium) ================= -->
-    <div v-show="section === 'design'">
+    <div v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
         <div>
           <h1>Diseño web</h1>
@@ -1487,7 +1487,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= ESTADÍSTICAS (premium) ================= -->
-    <div v-show="section === 'stats'">
+    <div v-show="section === 'stats'" :class="{ 'sec-on': section === 'stats' }">
       <div class="page-head">
         <div>
           <h1>Estadísticas</h1>
@@ -1501,7 +1501,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= QR Y FOLLETOS (premium) ================= -->
-    <div v-show="section === 'tools'">
+    <div v-show="section === 'tools'" :class="{ 'sec-on': section === 'tools' }">
       <div class="page-head">
         <div>
           <h1>QR y folletos</h1>
@@ -1531,7 +1531,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= PLANES ================= -->
-    <div v-show="section === 'plans'">
+    <div v-show="section === 'plans'" :class="{ 'sec-on': section === 'plans' }">
       <div class="page-head">
         <div>
           <h1>Planes</h1>
@@ -1554,7 +1554,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= PAGOS ================= -->
-    <div v-show="section === 'payments'">
+    <div v-show="section === 'payments'" :class="{ 'sec-on': section === 'payments' }">
       <div class="page-head">
         <div>
           <h1>Pagos</h1>
@@ -1619,7 +1619,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= FACTURAS ================= -->
-    <div v-show="section === 'invoices'">
+    <div v-show="section === 'invoices'" :class="{ 'sec-on': section === 'invoices' }">
       <div class="page-head">
         <div>
           <h1>Facturas</h1>
@@ -1665,7 +1665,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= CUENTA ================= -->
-    <div v-show="section === 'settings'">
+    <div v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
       <div class="page-head">
         <div>
           <h1>Cuenta</h1>
