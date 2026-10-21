@@ -2,14 +2,22 @@
 import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { billingApi, formatARS } from '../api/billing.api.js'
+import { publicStoreUrl } from '../api/stores.api.js'
+import { useBillingStore } from '../stores/billing.store.js'
+import { useStoreStore } from '../stores/store.store.js'
 import AppIcon from './AppIcon.vue'
 import BrandLogo from './BrandLogo.vue'
 
-// Bot de ayuda para visitantes (no es IA: responde con opciones fijas).
-// Solo se muestra en rutas públicas (auth, legales, tienda del cliente);
-// dentro del panel autenticado no tiene sentido.
+// Bot de ayuda (no es IA: responde con opciones fijas). Dos modos:
+// - Páginas públicas (auth, legales, tienda del cliente): temas de venta.
+// - Panel autenticado: consultas sobre la cuenta (lee los stores Pinia).
+// Se oculta en las vistas de impresión (factura / folleto).
 const route = useRoute()
-const visible = computed(() => !route.meta?.requiresAuth)
+const billing = useBillingStore()
+const store = useStoreStore()
+const HIDDEN_ROUTES = new Set(['invoice-print', 'store-flyer'])
+const visible = computed(() => !HIDDEN_ROUTES.has(route.name))
+const isPanel = computed(() => Boolean(route.meta?.requiresAuth))
 
 const open = ref(false)
 const greeted = ref(false)
@@ -26,6 +34,54 @@ const TOPICS = [
   { id: 'pay', label: '¿Cómo se paga?' },
   { id: 'tech', label: '¿Necesito saber de tecnología?' }
 ]
+
+const PANEL_TOPICS = [
+  { id: 'sub', label: 'Mi suscripción' },
+  { id: 'link', label: 'Mi link público' },
+  { id: 'products', label: 'Cargar productos' },
+  { id: 'design', label: 'Diseño de mi web' },
+  { id: 'renew', label: 'Renovación del plan' },
+  { id: 'invoices', label: 'Pagos y facturas' }
+]
+
+const topics = computed(() => (isPanel.value ? PANEL_TOPICS : TOPICS))
+
+// Respuestas del modo panel: salen de los stores ya cargados por el dashboard.
+function panelAnswer(id) {
+  const plan = billing.currentPlan
+  switch (id) {
+    case 'sub': {
+      if (!plan) return 'Todavía no tenés una suscripción activa. En la sección Planes elegís el que mejor te quede y se activa cuando se acredita el pago.'
+      const parts = [`Tu plan actual es ${plan.name}.`]
+      if (plan.remaining != null) parts.push(`Te quedan ${plan.remaining} días.`)
+      if (plan.autoRenew) parts.push('El débito automático está activo: se renueva solo cada mes.')
+      else if (plan.cancelledAt) parts.push('La renovación automática está desactivada: al terminar el período vas a tener que pagar de nuevo.')
+      const pending = billing.subscription?.pending_plan_name
+      if (pending) parts.push(`Tenés un cambio a ${pending} pendiente.`)
+      if (!plan.isCurrent) parts.push('Ojo: tu suscripción está vencida. En Planes podés reactivarla.')
+      return parts.join(' ')
+    }
+    case 'link': {
+      const s = store.store
+      if (!s) return 'Todavía no reservaste tu link público.'
+      const state = s.is_published ? 'Está activo.' : 'Está pausado: podés reactivarlo desde "Mi tienda".'
+      return `Tu link público es ${publicStoreUrl(s.slug)} — ese es el que compartís con tus clientes. ${state}`
+    }
+    case 'products':
+      return 'En "Mis catálogos" cargás productos con foto, nombre, precio, categoría y marca. Todo lo que publiques aparece al instante en tu web pública. Las categorías y marcas se crean en las pestañas de ese mismo panel.'
+    case 'design': {
+      return plan?.benefits?.has_customization
+        ? 'En "Diseño web" (grupo Avanzado del menú) personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada y botones de WhatsApp y redes.'
+        : 'El diseño de tu web (logo, colores, fuentes, carrusel y botones de contacto) es un beneficio del plan premium. En "Planes" podés subir de plan cuando quieras.'
+    }
+    case 'renew':
+      return 'Podés pagar cada mes a mano desde "Planes", o activar el débito automático con Mercado Pago y el plan se renueva solo. Si un débito falla, Mercado Pago reintenta durante unos días y tu plan sigue activo mientras tanto.'
+    case 'invoices':
+      return 'En "Pagos" ves el historial de cobros con su estado; en "Facturas" están los comprobantes de cada pago acreditado, listos para imprimir o bajar en PDF.'
+    default:
+      return ''
+  }
+}
 
 const ANSWERS = {
   what: 'DAVENT es una plataforma para comercios: te creás una cuenta, elegís el link de tu tienda y publicás un catálogo con fotos y precios. Tus clientes entran al link, ven tus productos y te contactan directo. También nos ocupamos de la suscripción, los pagos y las facturas.',
@@ -45,14 +101,24 @@ function toggle() {
   open.value = !open.value
   if (open.value && !greeted.value) {
     greeted.value = true
-    messages.value.push({ from: 'bot', text: '¡Hola! Soy el asistente de DAVENT. Elegí una opción y te cuento cómo funciona la plataforma.' })
+    messages.value.push({ from: 'bot', text: greeting.value })
     scrollDown()
   }
 }
 
+const greeting = computed(() =>
+  isPanel.value
+    ? '¿En qué te ayudo? Elegí un tema y te explico cómo funciona.'
+    : '¡Hola! Soy el asistente de DAVENT. Elegí una opción y te cuento cómo funciona la plataforma.'
+)
+
+const publicUrl = computed(() => (store.store ? publicStoreUrl(store.store.slug) : ''))
+
 async function select(topic) {
   messages.value.push({ from: 'user', text: topic.label })
-  if (topic.id === 'plans') {
+  if (isPanel.value) {
+    messages.value.push({ from: 'bot', text: panelAnswer(topic.id) })
+  } else if (topic.id === 'plans') {
     await answerPlans()
   } else {
     messages.value.push({ from: 'bot', text: ANSWERS[topic.id] })
@@ -93,6 +159,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 // Al cambiar de ruta el panel se cierra para no tapar contenido.
 watch(() => route.fullPath, () => { open.value = false })
+
+// Si cambia el contexto (público ↔ panel) la conversación se reinicia.
+watch(isPanel, () => {
+  messages.value = []
+  greeted.value = false
+  open.value = false
+})
 </script>
 
 <template>
@@ -133,15 +206,18 @@ watch(() => route.fullPath, () => { open.value = false })
 
         <div class="bot-chips">
           <button
-            v-for="t in TOPICS" :key="t.id" type="button"
+            v-for="t in topics" :key="t.id" type="button"
             class="bot-chip"
             @click="select(t)"
           >
             {{ t.label }}
           </button>
         </div>
-        <footer class="bot-foot">
+        <footer v-if="!isPanel" class="bot-foot">
           <RouterLink to="/register" class="bot-cta">Crear mi cuenta <AppIcon name="arrow-right" :size="14" /></RouterLink>
+        </footer>
+        <footer v-else-if="publicUrl" class="bot-foot">
+          <a :href="publicUrl" target="_blank" rel="noopener" class="bot-cta">Ver mi web pública <AppIcon name="external-link" :size="14" /></a>
         </footer>
       </section>
     </Transition>
