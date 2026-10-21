@@ -143,8 +143,8 @@ h1, h2, h3 { letter-spacing: -.02em; }
 
 /* Escena del panel de marca: mock de tienda + métricas flotando, solo en
    pantallas anchas (el panel chico ya muestra el mensaje completo). */
-.brand-scene { position: absolute; right: -8px; top: 50%; width: 244px; transform: translateY(-46%); pointer-events: none; display: none; }
-@media (min-width: 1240px) { .auth-brand > .brand-scene { display: block; } }
+.brand-scene { position: absolute; right: -8px; bottom: 118px; width: 244px; pointer-events: none; display: none; }
+@media (min-width: 1240px) and (min-height: 760px) { .auth-brand > .brand-scene { display: block; } }
 .scene-store { position: relative; width: 230px; margin-left: auto; padding: 10px; border-radius: 16px; background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .18); backdrop-filter: blur(10px); box-shadow: 0 26px 60px -22px rgba(10, 8, 40, .65); animation: scene-rise .6s ease-out .55s both, scene-float 7s ease-in-out 1.4s infinite; }
 .sc-top { display: flex; gap: 5px; margin-bottom: 8px; }
 .sc-top i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, .35); }
