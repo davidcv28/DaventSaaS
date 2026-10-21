@@ -145,28 +145,19 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
 def ApplyPendingPlanQuery(suscription, renew = False):
     pending_plan        =   suscription.pending_plan_suscription
     is_pending_payment  =   suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT
+    if not pending_plan and not is_pending_payment and not renew:
+        return suscription
     now                 =   timezone.now()
-    if pending_plan or is_pending_payment:
-        #Alta o cambio de plan: el período nuevo arranca desde el cobro
-        update_fields       =   ['status', 'start_date', 'end_date']
-        if pending_plan:
-            suscription.plan_suscription            =   pending_plan
-            suscription.pending_plan_suscription    =   None
-            update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
-        suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
-        suscription.start_date  =   now
-        suscription.end_date    =   now + timedelta(days = 30)
-        suscription.save(update_fields = update_fields)
-        return suscription
-    if not renew:
-        return suscription
-    #RENOVACIÓN (débito o pago manual sobre suscripción vigente): se acumula
-    #sobre end_date si sigue vigente; si ya venció, el período arranca de nuevo.
-    base                    =   suscription.end_date if suscription.end_date and suscription.end_date > now else now
+    update_fields       =   ['status', 'start_date', 'end_date']
+    if pending_plan:
+        suscription.plan_suscription            =   pending_plan
+        suscription.pending_plan_suscription    =   None
+        update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
+    #Todo cobro aprobado reinicia el período: 30 días desde el cobro (máx. 30).
     suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
-    suscription.start_date  =   base
-    suscription.end_date    =   base + timedelta(days = 30)
-    suscription.save(update_fields = ['status', 'start_date', 'end_date'])
+    suscription.start_date  =   now
+    suscription.end_date    =   now + timedelta(days = 30)
+    suscription.save(update_fields = update_fields)
     return suscription
 
 #SYNC PAYMENTS QUERY (registra los pagos ya hechos en MP; no depende del redirect del checkout)
