@@ -253,7 +253,7 @@ onBeforeUnmount(() => {
     <template v-else>
       <!-- ===== Portada + identidad ===== -->
       <section class="sp-hero">
-        <div class="sp-hero-band"><div class="sp-container">
+        <div class="sp-container">
           <div class="sp-banner">
             <div v-if="carousel.length" ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
               <div class="sp-carousel-track" :style="trackStyle">
@@ -278,9 +278,7 @@ onBeforeUnmount(() => {
             </div>
             <div v-else class="sp-cover" aria-hidden="true"></div>
           </div>
-        </div></div>
 
-        <div class="sp-container">
           <div class="sp-identity">
             <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
             <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
