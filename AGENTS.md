@@ -1,6 +1,8 @@
 # SaaS DAVENT — Reglas para agentes
 
 ## Proyecto
+- Repo git: `main` en `origin` → https://github.com/davidcv28/DaventSaaS.git (privado). Auth por Git Credential Manager (Windows).
+- **Commits obligatorios**: al terminar cada cambio aplicado (feature, fix, doc), hacer `git commit` + `git push` a `main` en el mismo paso — nunca dejar trabajo sin commitear. Mensaje corto en inglés estilo conventional (`feat:`, `fix:`, `docs:`, `chore:`). Jamás commitear `.env`, `venv/`, `node_modules/` ni `dist/` (ya cubiertos por `.gitignore`).
 - Backend Django + DRF en la raíz (`manage.py`, `AdminApp/`, `DaventProject/`), puerto 8000. Dominios en `AdminApp/domains/` (users, suscriptions, locations, payments, invoices, legal); arquitectura detallada en `ARCHITECTURE.md`.
 - Comandos backend (desde la raíz): `venv/Scripts/python.exe manage.py <cmd>` — `runserver`, `makemigrations`, `migrate`, `check`, `createsuperuser`, `seed_locations` (repuebla provincias/ciudades/CP tras un `flush`), `suscriptions` (carga los planes por defecto), `seed_benefits` (carga/actualiza los beneficios de cada plan; requiere los planes cargados).
 - `SuscriptionApp/domains/benefits`: app exclusiva para los **beneficios de los planes** — `Benefit` (catálogo: limits vs flags), `PlanBenefit` (valor por plan; `value=null` = ilimitado) y `PlanPresentation` (copy de marketing: slug/tagline/cta/bullets JSON). `GET /api/plans/` devuelve la tarjeta pública completa (`benefits` como dict `{code: valor}`); es la fuente de verdad para tarjetas del frontend y cupos que forcen otros dominios.
