@@ -41,6 +41,7 @@
 .sp-burger { display: none; place-items: center; width: 38px; height: 38px; border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-card); color: var(--sp-accent-text); cursor: pointer; flex: none; transition: border-color .15s, color .15s; }
 .sp-burger:hover { border-color: var(--store-accent); color: var(--sp-accent-text); }
 
+.store-page[data-store-theme='dark'] .sp-top { background: linear-gradient(180deg, color-mix(in srgb, var(--store-accent-ink) 62%, transparent), color-mix(in srgb, var(--store-accent-ink) 42%, transparent)); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom-color: color-mix(in srgb, var(--store-accent) 35%, rgba(255, 255, 255, .1)); }
 .sp-top .sp-brand, .sp-top .sp-name { color: #fff; }
 .sp-top .sp-burger { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .35); color: #fff; }
 .sp-top .sp-burger:hover { background: rgba(255, 255, 255, .24); border-color: #fff; color: #fff; }
