@@ -182,8 +182,10 @@
 @media (max-width: 640px) {
   .sp-modal-overlay { padding: 12px; }
 }
-.sp-card-cta { cursor: pointer; border: 1px solid var(--store-accent); font-family: inherit; margin-top: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; border-radius: 10px; background: var(--sp-card); color: var(--sp-accent-text); font-size: 13px; font-weight: 600; text-decoration: none; transition: background .15s, color .15s; }
-.sp-card-cta:hover { background: var(--store-accent-ink); color: #fff; }
+.sp-card-cta { cursor: pointer; border: 1px solid var(--store-accent-ink); font-family: inherit; margin-top: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; border-radius: 10px; background: var(--store-accent-ink); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; transition: filter .15s; }
+.sp-card-cta:hover { filter: brightness(1.12); }
+
+.sp-more { display: flex; justify-content: center; margin-top: 32px; }
 
 /* --- Skeleton --- */
 .sp-skeleton { pointer-events: none; box-shadow: none; }
@@ -228,8 +230,7 @@
 @media (max-width: 640px) {
   .sp-container { padding: 0 20px; }
   .sp-hero { padding-top: 16px; }
-  .sp-banner { aspect-ratio: 16 / 8; min-height: 140px; border-radius: 18px; }
-  .sp-carousel-arrow { display: none; }
+  .sp-banner { display: none; }
   .sp-identity { flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 24px; padding: 0 4px; }
   .sp-mono.lg, .sp-logo.lg { width: 80px; height: 80px; border-radius: 20px; font-size: 32px; }
   .sp-identity-text { min-width: 0; width: 100%; }
@@ -241,11 +242,9 @@
   .sp-search.sp-search-inline { display: flex; flex-basis: 100%; }
   .sp-brand { flex: 1 1 auto; }
   .sp-top-end { flex: 0 0 auto; }
-  .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .sp-card-body { padding: 12px 14px 14px; }
-  .sp-card-name { font-size: 14px; }
-  .sp-card-desc { display: none; }
-  .sp-card-price { font-size: 16px; }
+  .sp-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .sp-card-img { aspect-ratio: 16 / 10; }
+  .sp-card-body { padding: 16px 18px 18px; }
   .sp-foot-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .sp-foot-bottom { flex-direction: column; align-items: flex-start; }
 }

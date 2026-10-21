@@ -108,7 +108,14 @@ function onSlideDragEnd() {
 }
 
 // --- Catálogo: buscador + filtros por categoría/marca ---
+const PAGE_SIZE = 12
+const visibleCount = ref(PAGE_SIZE)
+const visibleProducts = computed(() => catalog.value.products.slice(0, visibleCount.value))
+const hasMoreProducts = computed(() => catalog.value.products.length > visibleCount.value)
+const showMore = () => { visibleCount.value += PAGE_SIZE }
+
 async function loadCatalog() {
+  visibleCount.value = PAGE_SIZE
   const slug = normalizeSlug(route.params.slug)
   catalogStatus.value = 'loading'
   try {
@@ -378,7 +385,7 @@ onBeforeUnmount(() => {
             </div>
 
             <div v-else-if="catalog.products.length" class="sp-grid" :class="{ loading: catalogStatus === 'loading' }">
-              <article v-for="p in catalog.products" :key="p.id" class="sp-card">
+              <article v-for="p in visibleProducts" :key="p.id" class="sp-card">
                 <div class="sp-card-img">
                   <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
                   <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
@@ -399,6 +406,10 @@ onBeforeUnmount(() => {
               <strong>{{ hasFilters ? 'No hay productos con esos filtros' : 'Todavía no hay productos publicados' }}</strong>
               <p>{{ hasFilters ? 'Probá con otra búsqueda o quitá los filtros.' : 'Cuando el comercio cargue su catálogo, vas a poder verlo acá.' }}</p>
               <button v-if="hasFilters" type="button" class="sp-btn ghost" @click="clearFilters">Ver todo</button>
+            </div>
+
+            <div v-if="hasMoreProducts && catalogStatus !== 'error'" class="sp-more">
+              <button type="button" class="sp-btn" @click="showMore">Ver más productos</button>
             </div>
           </section>
         </div>
