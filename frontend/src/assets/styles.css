@@ -119,8 +119,8 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .brand-checks strong { display: block; font-size: 14px; font-weight: 600; }
 .brand-checks small { display: block; font-size: 13px; color: rgba(255, 255, 255, .7); margin-top: 2px; }
 .brand-foot { color: rgba(255, 255, 255, .6); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.auth-panel { display: grid; place-items: center; padding: 32px 20px; background: var(--bg); }
-.auth-card { width: min(480px, 100%); margin: auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 36px; }
+.auth-panel { display: grid; place-items: center; min-width: 0; padding: 32px 20px; background: var(--bg); }
+.auth-card { width: min(480px, 100%); min-width: 0; margin: auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 36px; }
 .auth-card-logo { display: none; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .14em; margin-bottom: 20px; }
 .auth-card h2 { margin: 0 0 6px; font-size: 24px; font-weight: 700; }
 .auth-card .sub { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
@@ -164,7 +164,7 @@ h1, h2, h3 { letter-spacing: -.02em; }
 /* ===== Alerts ===== */
 .alert { display: flex; gap: 10px; align-items: flex-start; border-radius: var(--radius-sm); padding: 11px 14px; font-size: 13.5px; margin: 14px 0; border: 1px solid; }
 .alert .alert-icon { margin-top: 2px; }
-.alert .alert-body { flex: 1; min-width: 0; }
+.alert .alert-body { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
 .alert.error { background: var(--danger-bg); border-color: var(--danger-line); color: var(--danger-ink); }
 .alert.success { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-ink); }
 .alert.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }

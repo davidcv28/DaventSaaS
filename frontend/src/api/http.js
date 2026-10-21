@@ -90,8 +90,22 @@ export function extractApiError(error) {
   const status = error.response?.status
   if (error.code === 'PENDING_BACKEND') return { nonField: error.message, pendingBackend: true }
   if (!error.response) return { nonField: 'No se pudo conectar con la API. Verifica que Django corra en 127.0.0.1:8000.' }
-  if (typeof data === 'string') return { nonField: data }
-  if (data?.detail) return { nonField: data.detail, status }
-  if (data && typeof data === 'object') return { ...data, status }
+  if (typeof data === 'string') {
+    // Django a veces responde páginas HTML (500/404 fuera de DRF): nunca volcarlas crudas a la UI.
+    const clean = data.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    const looksLikeHtml = /<(!doctype|html|head|body|div|p|title)[\s>]/i.test(data)
+    if (looksLikeHtml || clean.length > 280) {
+      return { nonField: `El servidor respondió con un error (${status || 'desconocido'}). Intentá de nuevo en unos minutos.`, status }
+    }
+    return { nonField: clean || `Error ${status || ''}`.trim(), status }
+  }
+  if (data?.detail) return { nonField: String(data.detail), status }
+  if (data && typeof data === 'object') {
+    const out = { status }
+    for (const [key, value] of Object.entries(data)) {
+      out[key] = Array.isArray(value) ? value.join(' ') : String(value)
+    }
+    return out
+  }
   return { nonField: `Error ${status || ''}`.trim() }
 }
