@@ -50,7 +50,7 @@ class PaymentViewSet(PaymentBaseViewSet):
             instance        =   self.get_object()
             was_approved    =   instance.status == Payment.Status.APPROVED
             instance.approve()
-            ApplyPendingPlanQuery(instance.suscription)
+            ApplyPendingPlanQuery(instance.suscription, renew = not was_approved)
             if not was_approved:
                 UpdateRevenueRollupsQuery(instance)
                 IssueInvoiceQuery(instance)

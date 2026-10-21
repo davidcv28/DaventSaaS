@@ -74,7 +74,7 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
             )
             #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
             if status == Payment.Status.APPROVED:
-                ApplyPendingPlanQuery(suscription)
+                ApplyPendingPlanQuery(suscription, renew = True)
                 UpdateRevenueRollupsQuery(new_payment)
                 #FACTURA: se emite dentro de la misma transacción que el cobro
                 IssueInvoiceQuery(new_payment)
@@ -109,8 +109,9 @@ def PaymentWebhookQuery(payment_id):
         payment.paid_at     =   paid_at
         payment.save(update_fields = ['status', 'paid_at', 'updated_at'])
         #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
+        #renew solo si el pago entra a approved ahora: un webhook repetido no vuelve a extender
         if new_status == Payment.Status.APPROVED:
-            ApplyPendingPlanQuery(payment.suscription)
+            ApplyPendingPlanQuery(payment.suscription, renew = old_status != Payment.Status.APPROVED)
         #ROLLUPS: solo se suma cuando el pago entra en approved; se descuenta si sale de approved
         if new_status == Payment.Status.APPROVED and old_status != Payment.Status.APPROVED:
             UpdateRevenueRollupsQuery(payment, sign = 1)
@@ -137,21 +138,31 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
     monthly.save(update_fields = ['total_amount', 'payments_count', 'updated_at'])
 
 #APPLY PENDING PLAN QUERY (establece el plan una vez acreditado el pago)
-def ApplyPendingPlanQuery(suscription):
+def ApplyPendingPlanQuery(suscription, renew = False):
     pending_plan        =   suscription.pending_plan_suscription
     is_pending_payment  =   suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT
-    if not pending_plan and not is_pending_payment:
-        return suscription
     now                 =   timezone.now()
-    update_fields       =   ['status', 'start_date', 'end_date']
-    if pending_plan:
-        suscription.plan_suscription            =   pending_plan
-        suscription.pending_plan_suscription    =   None
-        update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
+    if pending_plan or is_pending_payment:
+        #Alta o cambio de plan: el período nuevo arranca desde el cobro
+        update_fields       =   ['status', 'start_date', 'end_date']
+        if pending_plan:
+            suscription.plan_suscription            =   pending_plan
+            suscription.pending_plan_suscription    =   None
+            update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
+        suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
+        suscription.start_date  =   now
+        suscription.end_date    =   now + timedelta(days = 30)
+        suscription.save(update_fields = update_fields)
+        return suscription
+    if not renew:
+        return suscription
+    #RENOVACIÓN (débito o pago manual sobre suscripción vigente): se acumula
+    #sobre end_date si sigue vigente; si ya venció, el período arranca de nuevo.
+    base                    =   suscription.end_date if suscription.end_date and suscription.end_date > now else now
     suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
-    suscription.start_date  =   now
-    suscription.end_date    =   now + timedelta(days = 30)
-    suscription.save(update_fields = update_fields)
+    suscription.start_date  =   base
+    suscription.end_date    =   base + timedelta(days = 30)
+    suscription.save(update_fields = ['status', 'start_date', 'end_date'])
     return suscription
 
 #SYNC PAYMENTS QUERY (registra los pagos ya hechos en MP; no depende del redirect del checkout)
@@ -256,7 +267,6 @@ def CreatePreapprovalQuery(suscription) -> dict:
         'reason'            :   f'DAVENT · {plan.name}',
         'external_reference':   str(suscription.id),
         'payer_email'       :   suscription.user.user.email,
-        'back_url'          :   f'{FRONTEND_URL}/dashboard?sub=return',
         'status'            :   'pending',
         'auto_recurring'    :   {
             'frequency'         :   1,
@@ -269,6 +279,9 @@ def CreatePreapprovalQuery(suscription) -> dict:
     #evita cobrar dos veces el mismo mes.
     if suscription.status == SUSCRIPTION_STATUS_ACTIVE and suscription.end_date and suscription.end_date > timezone.now():
         preapproval_data['auto_recurring']['start_date']    =   suscription.end_date.isoformat()
+    #MP valida que back_url sea una URL pública https: en localhost rechaza el alta.
+    if FRONTEND_URL.startswith('https://'):
+        preapproval_data['back_url']    =   f'{FRONTEND_URL}/dashboard?sub=return'
     mp_result           =   sdk.preapproval().create(preapproval_data)
     if mp_result.get('status') not in (200, 201):
         raise serializers.ValidationError({'suscription': 'No se pudo iniciar el débito automático en Mercado Pago'})
