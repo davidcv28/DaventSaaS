@@ -5,6 +5,7 @@ import {
   storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
+import { env, storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import { vReveal } from '../directives/reveal.js'
@@ -20,7 +21,10 @@ const route = useRoute()
 const status = ref('loading') // loading | success | error
 const store = ref(null)
 const errorMsg = ref('')
-const slug = computed(() => normalizeSlug(route.params.slug))
+// El slug viene del path (dominio de plataforma /<slug>) o del subdominio
+// (<slug>.<dominio>, donde la tienda es la raíz y no hay param en la ruta).
+const slug = computed(() => normalizeSlug(route.params.slug || storeHostSlug || ''))
+const appUrl = env.appUrl
 
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
 const themeVars = computed(() => storeThemeVars(custom.value))
@@ -57,8 +61,8 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isHome = computed(() => route.name === 'store-public')
-const homeTo = computed(() => ({ name: 'store-public', params: { slug: slug.value } }))
-const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
+const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
+const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
@@ -202,15 +206,15 @@ onBeforeUnmount(() => {
           </div>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>
-            <RouterLink to="/terminos">Términos y condiciones</RouterLink>
-            <RouterLink to="/denuncias">Denunciar contenido</RouterLink>
+            <a :href="`${appUrl}/terminos`">Términos y condiciones</a>
+            <a :href="`${appUrl}/denuncias`">Denunciar contenido</a>
           </nav>
         </div>
         <div class="sp-foot-bottom">
           <p class="sp-foot-copy">© {{ year }} {{ shopName }}. Todos los derechos reservados.</p>
-          <RouterLink to="/register" class="sp-davent-badge">
+          <a :href="`${appUrl}/register`" class="sp-davent-badge">
             <BrandLogo :size="16" /> Publicado con <strong>DAVENT</strong>
-          </RouterLink>
+          </a>
         </div>
       </div>
     </footer>

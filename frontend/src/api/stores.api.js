@@ -1,4 +1,5 @@
 import { http } from './http.js'
+import { storeUrl } from '../config/env.js'
 
 // Dominio stores (StoreApp):
 // GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization,
@@ -175,8 +176,10 @@ export function validateSlugFormat(slug) {
   return ''
 }
 
-export function publicStoreUrl(slug, origin = window.location.origin) {
-  return `${origin}/${slug}`
+// Link público canónico: subdominio propio <slug>.<dominio> (env.js/storeUrl).
+// La variante <dominio>/<slug> sigue funcionando como alias.
+export function publicStoreUrl(slug) {
+  return storeUrl(slug)
 }
 
 // ===== Personalización de la web pública (espejo de StoreCustomization) =====

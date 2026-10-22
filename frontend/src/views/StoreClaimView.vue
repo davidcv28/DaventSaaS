@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth.store.js'
 import { useStoreStore } from '../stores/store.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import { normalizeSlug, validateSlugFormat } from '../api/stores.api.js'
+import { env } from '../config/env.js'
 import AuthLayout from '../components/AuthLayout.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
@@ -21,7 +22,8 @@ const touched = ref(false)
 const busy = ref(false)
 const { state: checkState, isAvailable, message: checkMessage, kind: checkKind, requestCheck } = useSlugCheck()
 
-const host = window.location.host
+const platformHost = env.platformHost
+const scheme = `${window.location.protocol}//`
 const normalized = computed(() => normalizeSlug(slug.value))
 const formatError = computed(() => (touched.value ? validateSlugFormat(normalized.value) : ''))
 const fieldError = computed(() => formatError.value || stores.fieldErrors.slug || '')
@@ -63,7 +65,7 @@ function logout() {
       <div class="field">
         <label for="slug">Tu link público <span aria-hidden="true">*</span></label>
         <div class="slug-box" :class="{ invalid: !!fieldError }">
-          <span class="slug-prefix">{{ host }}/</span>
+          <span class="slug-prefix">{{ scheme }}</span>
           <input
             id="slug"
             name="slug"
@@ -78,6 +80,7 @@ function logout() {
             @input="onInput"
             @blur="touched = true"
           />
+          <span class="slug-suffix">.{{ platformHost }}</span>
         </div>
         <p class="hint">Entre 3 y 60 caracteres: letras minúsculas, números y guiones.</p>
         <p v-if="fieldError" class="field-error" role="alert">{{ fieldError }}</p>

@@ -602,6 +602,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .slug-box.invalid { border-color: var(--danger); }
 .slug-box.invalid:focus-within { box-shadow: 0 0 0 4px rgba(220, 38, 38, .12); }
 .slug-prefix { display: flex; align-items: center; padding: 0 12px; background: var(--surface); border-right: 1px solid var(--line); color: var(--muted); font-size: 13px; white-space: nowrap; user-select: none; }
+.slug-suffix { display: flex; align-items: center; padding: 0 12px; background: var(--surface); border-left: 1px solid var(--line); color: var(--muted); font-size: 13px; white-space: nowrap; user-select: none; }
 .slug-input { flex: 1; min-width: 0; border: 0; box-shadow: none; border-radius: 0; }
 .slug-input:focus { border: 0; box-shadow: none; }
 .slug-check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; margin: 6px 0 0; min-height: 18px; }

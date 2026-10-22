@@ -2,6 +2,7 @@
 import { ref, computed, watch, watchEffect, inject, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { storesApi } from '../api/stores.api.js'
+import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
@@ -13,7 +14,7 @@ import { vReveal } from '../directives/reveal.js'
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
 const { slug, ui, custom, hasDesignAdvanced, shopName } = ctx
-const homeTo = computed(() => ({ name: 'store-public', params: { slug: slug.value } }))
+const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const route = useRoute()
 
 // La búsqueda también puede llegar por URL (?q=) — alimenta el buscador

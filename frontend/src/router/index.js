@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { env, storeHostSlug } from '../config/env.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useStoreStore } from '../stores/store.store.js'
 
@@ -17,8 +18,26 @@ const StorePublicView = () => import('../views/StorePublicView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 
+// Páginas de la web pública del cliente. En el dominio de la plataforma
+// cuelgan de /<slug>; en un subdominio de tienda (<slug>.<dominio>) son la
+// raíz misma (storeHostSlug lo detecta env.js desde location.hostname).
+const storeChildren = [
+  {
+    path: '',
+    name: 'store-public',
+    component: StorePublicView,
+    meta: { title: 'Tienda' }
+  },
+  {
+    path: 'catalogo',
+    name: 'store-catalog',
+    component: StoreCatalogView,
+    meta: { title: 'Catálogo' }
+  }
+]
+
 const routes = [
-  { path: '/', redirect: '/login' },
+  ...(storeHostSlug ? [] : [{ path: '/', redirect: '/login' }]),
   {
     path: '/login',
     name: 'login',
@@ -91,33 +110,25 @@ const routes = [
   },
   // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias.
   // El layout resuelve la tienda una vez; Inicio y Catálogo son páginas hijas.
-  {
-    path: '/tienda/:slug',
-    redirect: (to) => ({ name: 'store-public', params: { slug: to.params.slug } })
-  },
-  {
-    path: '/tienda/:slug/catalogo',
-    redirect: (to) => ({ name: 'store-catalog', params: { slug: to.params.slug } })
-  },
-  {
-    path: '/:slug([a-z0-9-]+)',
-    component: StorePublicLayout,
-    children: [
-      {
-        path: '',
-        name: 'store-public',
-        component: StorePublicView,
-        meta: { title: 'Tienda' }
-      },
-      {
-        path: 'catalogo',
-        name: 'store-catalog',
-        component: StoreCatalogView,
-        meta: { title: 'Catálogo' }
-      }
-    ]
-  },
-  { path: '/:pathMatch(.*)*', redirect: '/login' }
+  // En un subdominio de tienda la web es la raíz y no existe la variante /<slug>.
+  ...(storeHostSlug
+    ? [{ path: '/', component: StorePublicLayout, children: storeChildren }]
+    : [
+        {
+          path: '/tienda/:slug',
+          redirect: (to) => ({ name: 'store-public', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/catalogo',
+          redirect: (to) => ({ name: 'store-catalog', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/:slug([a-z0-9-]+)',
+          component: StorePublicLayout,
+          children: storeChildren
+        }
+      ]),
+  { path: '/:pathMatch(.*)*', redirect: storeHostSlug ? '/' : '/login' }
 ]
 
 export const router = createRouter({
@@ -145,6 +156,12 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+  // En un subdominio de tienda solo existe la web pública: cualquier ruta de
+  // plataforma (login, panel, legales) se resuelve en el dominio principal.
+  if (storeHostSlug && to.name !== 'store-public' && to.name !== 'store-catalog') {
+    window.location.assign(`${env.appUrl}${to.fullPath}`)
+    return false
+  }
   const auth = useAuthStore()
   document.title = to.meta?.title ? `DAVENT · ${to.meta.title}` : 'DAVENT · Acceso'
   if (to.meta?.requiresAuth && !auth.isAuthenticated) {
