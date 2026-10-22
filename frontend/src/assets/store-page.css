@@ -897,19 +897,27 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-theme='dark'] .sp-card-img { background: color-mix(in srgb, var(--store-accent) 10%, transparent); }
 .sp-skeleton .sp-card-img { aspect-ratio: 1 / 1; }
 
-@media (max-width: 760px) {
-  .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
-  .sp-card { width: auto; max-width: none; min-width: 0; border-radius: 16px; }
+@media (max-width: 900px) {
+  .sp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .sp-card { flex-direction: row; align-items: stretch; width: 100%; max-width: none; min-width: 0; border-radius: 18px; }
   .sp-card:hover { transform: none; }
-  .sp-card-img { margin: 6px 6px 0; border-radius: 11px; aspect-ratio: 1 / 1; }
-  .sp-card-body { padding: 10px 10px 12px; gap: 4px; min-width: 0; }
-  .sp-card-eyebrow { font-size: 9.5px; letter-spacing: .07em; }
-  .sp-card-name { font-size: 13.5px; line-height: 1.3; word-break: break-word; }
-  .sp-card-desc { display: none; }
-  .sp-card-foot { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 10px; }
-  .sp-card-foot .sp-card-price { font-size: 16px; overflow-wrap: anywhere; }
-  .sp-card-go { width: 100%; justify-content: center; height: 34px; padding: 0 10px; font-size: 12px; }
+  .sp-card-img { flex: none; width: clamp(112px, 34vw, 190px); aspect-ratio: auto; min-height: 140px; margin: 8px; border-radius: 13px; }
+  .sp-card-img img { height: 100%; }
+  .sp-card-quick { display: none; }
+  .sp-card-badge { top: 6px; left: 6px; font-size: 10px; padding: 3px 8px; }
+  .sp-card-body { flex: 1; min-width: 0; padding: 14px 16px 14px 6px; gap: 5px; justify-content: center; }
+  .sp-card-eyebrow { font-size: 10px; letter-spacing: .07em; }
+  .sp-card-name { font-size: 15.5px; line-height: 1.3; -webkit-line-clamp: 2; word-break: break-word; }
+  .sp-card-desc { display: -webkit-box; font-size: 12.5px; line-height: 1.45; -webkit-line-clamp: 2; }
+  .sp-card-foot { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 10px; }
+  .sp-card-foot .sp-card-price { font-size: 18px; overflow-wrap: anywhere; }
+  .sp-card-go { width: auto; height: 34px; padding: 0 14px; font-size: 12px; }
 }
-@media (max-width: 340px) {
-  .sp-grid { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 420px) {
+  .sp-card-img { width: 108px; min-height: 128px; margin: 6px; }
+  .sp-card-body { padding: 10px 12px 10px 4px; }
+  .sp-card-name { font-size: 14.5px; }
+  .sp-card-desc { display: none; }
+  .sp-card-foot .sp-card-price { font-size: 16px; }
+  .sp-card-go { padding: 0 12px; }
 }
