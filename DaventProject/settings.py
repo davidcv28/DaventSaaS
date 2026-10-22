@@ -40,8 +40,12 @@ SECURE_HSTS_SECONDS             = config('SECURE_HSTS_SECONDS', default = 0, cas
 SECURE_HSTS_INCLUDE_SUBDOMAINS  = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default = False, cast = bool)
 SECURE_HSTS_PRELOAD             = config('SECURE_HSTS_PRELOAD', default = False, cast = bool)
 SECURE_REFERRER_POLICY          = 'same-origin'
-# Detrás de nginx/Cloudflare: el proxy termina TLS y avisa por header.
-SECURE_PROXY_SSL_HEADER         = ('HTTP_X_FORWARDED_PROTO', 'https') if SECURE_SSL_REDIRECT else None
+# Detrás de nginx/Cloudflare: el proxy termina TLS y avisa por header
+# X-Forwarded-Proto. SECURE_SSL_REDIRECT ya lo habilita; si el redirect http→
+# https lo hace nginx (lo habitual con Docker), activar SECURE_PROXY_SSL=True
+# en .env para que request.is_secure() vea https real.
+SECURE_PROXY_SSL_HEADER         = ('HTTP_X_FORWARDED_PROTO', 'https') if (
+    SECURE_SSL_REDIRECT or config('SECURE_PROXY_SSL', default = False, cast = bool)) else None
 
 
 REST_FRAMEWORK = {
@@ -177,6 +181,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# collectstatic vuelca aquí; en Docker es un volumen que nginx sirve read-only.
+STATIC_ROOT = config('STATIC_ROOT', default = BASE_DIR / 'staticfiles')
+
+# Archivos de subida locales (los del cliente van a Cloudflare R2); en Docker
+# es un volumen que nginx sirve read-only bajo /media/.
+MEDIA_URL  = 'media/'
+MEDIA_ROOT = config('MEDIA_ROOT', default = BASE_DIR / 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -186,6 +197,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     cast=lambda v: [s.strip() for s in v.split(',')]
+)
+
+# Orígenes https confiables para CSRF (admin/formularios cross-origin). En
+# Docker: https://davent.com,https://*.davent.com — separados por coma.
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default = '',
+    cast = lambda v: [s.strip() for s in v.split(',') if s.strip()]
 )
 
 # Email
@@ -201,6 +220,23 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='DAVENT <no-reply@dave
 
 # Destinatario de las denuncias de contenido (copyright / ilegal)
 LEGAL_REPORTS_EMAIL = config('LEGAL_REPORTS_EMAIL', default='davidcv28@outlook.com')
+
+# Caché compartido en Redis: hace consistente el throttling de DRF entre los
+# workers de gunicorn y entre contenedores (sin esto cada proceso cuenta sus
+# propios requests y el rate limit se multiplica). Sin REDIS_URL se usa locmem.
+REDIS_URL = config('REDIS_URL', default = '')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND' : 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
+    }
+
+# Celery (tareas async): el worker corre en su propio contenedor con la misma
+# imagen de la API; el broker y el backend de resultados viven en Redis.
+CELERY_BROKER_URL     = config('CELERY_BROKER_URL', default = '')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default = '') or CELERY_BROKER_URL
 
 # Datos fiscales del emisor (DAVENT) que se imprimen en los comprobantes.
 # Completar en .env una vez dado de alta en ARCA. tax_condition:

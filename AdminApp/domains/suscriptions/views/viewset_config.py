@@ -1,4 +1,3 @@
-from ast import Lambda
 
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 

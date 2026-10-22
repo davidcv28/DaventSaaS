@@ -1,0 +1,241 @@
+# =============================================================================
+# DAVENT — CI/CD (GitHub Actions -> GHCR -> VPS Donweb por SSH)
+#
+#   lint   -> ruff (backend) + npm build del SPA (smoke, no hay eslint aún)
+#   test   -> check --deploy + migrate + test contra Postgres real (service)
+#   security -> bandit (código) + trivy fs (dependencias)
+#   build  -> imágenes api/web -> GHCR + trivy image scan (HIGH/CRITICAL)
+#   deploy -> SSH al VPS: pull + migrate + up -d (rolling, sin downtime)
+#
+# Secrets requeridos (repo Settings > Secrets):
+#   SSH_HOST, SSH_PORT, SSH_USERNAME, SSH_PRIVATE_KEY  -> acceso al VPS Donweb
+# Variables (repo Settings > Variables):
+#   PLATFORM_DOMAIN  -> dominio raíz (ej. davent.com) para el build de Vite
+# En el VPS (una sola vez): git clone del repo en /opt/davent + .env real +
+#   `docker login ghcr.io` con un PAT read:packages (imágenes privadas).
+# =============================================================================
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-api
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-web
+
+jobs:
+
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (ruff) + build smoke del SPA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Ruff (estilo + errores estáticos backend)
+        run: |
+          pip install ruff==0.8.6
+          ruff check --output-format=github .
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build del SPA (smoke test de compilación)
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: /api
+          VITE_PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+  # ---------------------------------------------------------------------------
+  test:
+    name: Django check + tests contra Postgres
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: davent_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d davent_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      SECRET_KEY: ci-not-secret
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/davent_test
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      SECRET_MP_KEY: TEST-dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Dependencias
+        run: pip install -r requirements.txt
+
+      - name: Checklist de despliegue de Django
+        run: python manage.py check --deploy
+
+      - name: Migraciones (detecta modelos sin migrar / rotos)
+        run: python manage.py migrate --noinput
+
+      - name: Tests
+        run: python manage.py test
+
+  # ---------------------------------------------------------------------------
+  security:
+    name: Bandit + Trivy (fs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bandit (SAST del código Python, severidad media+)
+        run: |
+          pip install bandit==1.8.3
+          bandit -r AdminApp StoreApp SuscriptionApp DaventProject -ll
+
+      - name: Trivy — vulnerabilidades en dependencias/archivos
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+          skip-dirs: venv,frontend/node_modules,.git
+
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build + push imágenes + Trivy (image)
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags imagen API (sha-<commit> siempre, +latest solo en main)
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.API_IMAGE }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Tags imagen WEB
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.WEB_IMAGE }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build API -> GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta-api.outputs.tags }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Build WEB -> GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ../docker/web/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta-web.outputs.tags }}
+          build-args: |
+            VITE_API_BASE_URL=/api
+            VITE_PLATFORM_DOMAIN=${{ vars.PLATFORM_DOMAIN }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Trivy — scan de la imagen API publicada
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.API_IMAGE }}:sha-${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Trivy — scan de la imagen WEB publicada
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy al VPS (SSH)
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: SSH -> pull imágenes + migrate + up rolling
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /opt/davent
+            git pull --ff-only
+            export API_IMAGE=${{ env.API_IMAGE }}:sha-${{ github.sha }}
+            export WEB_IMAGE=${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
+            docker compose pull
+            docker compose run --rm migrate          # migraciones ANTES de rotar
+            docker compose up -d --remove-orphans    # recreate rolling de api/celery/web
+            docker image prune -f

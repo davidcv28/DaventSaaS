@@ -1,14 +1,8 @@
-from pyexpat import model
-from attr import fields
-from django.core import validators
-from django.db.models import constraints
 from rest_framework import serializers
-from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 from .config_fields import SuscriptionsPlanFields, SuscriptionsFields
 from .mixins        import SuscriptionPlanMixinValidator, SuscriptionCreateMixin
 from AdminApp.domains.suscriptions.models import SuscriptionPlan, Suscription
-from django.contrib.auth.models import User
 from django.utils import timezone
 
 """

@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from AdminApp.domains.locations.models.models import City
 from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from django.contrib.auth.models import User

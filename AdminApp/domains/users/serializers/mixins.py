@@ -2,7 +2,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from AdminApp.domains.users.models import UserProfile
-from AdminApp.domains.users.serializers.validators import UserValidators
 from AdminApp.domains.users.services import (
     #USER QUERYS
     UpdateUserQuery, UpdatePasswordUserQuery, RegisterUserQuery

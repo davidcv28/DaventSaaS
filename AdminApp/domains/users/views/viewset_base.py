@@ -1,6 +1,5 @@
 from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
-from AdminApp.domains.users.views import viewset_config
 
 #================================
 # USER VIEWSET

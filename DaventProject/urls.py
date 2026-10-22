@@ -16,7 +16,14 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path, include
+
+
+def healthz(request):
+    # Healthcheck de contenedores (Docker/compose) y monitores: 200 si el
+    # proceso WSGI responde. No toca la DB a propósito.
+    return JsonResponse({'status': 'ok'})
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
@@ -24,6 +31,7 @@ from rest_framework_simplejwt.views import (
 from AdminApp.domains.users.views.auth_views import CustomTokenObtainPairView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
+    path('healthz/', healthz, name='healthz'),
     path('admin/', admin.site.urls),
     #=================================
     # DOMAINS URLS

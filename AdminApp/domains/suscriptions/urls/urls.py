@@ -1,4 +1,3 @@
-from django.urls import path
 from rest_framework import routers
 from AdminApp.domains.suscriptions.views import SuscriptionViewSet, SuscriptionPlanViewSet
 

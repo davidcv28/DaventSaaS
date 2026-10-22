@@ -1,10 +1,5 @@
-from email import message
-from os import name
 
-from attr import fields
-from django.contrib.postgres import constraints
 from django.db import models
-from rest_framework import status
 from AdminApp.domains.users.models import UserProfile
 from django.utils import timezone
 from datetime import timedelta

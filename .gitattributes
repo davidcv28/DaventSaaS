@@ -1,0 +1,6 @@
+# Los scripts y configs que corren DENTRO de contenedores Linux deben
+# commitearse con LF; un CRLF rompe el shebang del entrypoint.
+*.sh          text eol=lf
+Dockerfile    text eol=lf
+*.conf        text eol=lf
+*.template    text eol=lf

@@ -1,6 +1,5 @@
 from decimal import Decimal
 from rest_framework import serializers
-import re
 """
 
 Creamos validators para los campos correspondientes de cada serializer

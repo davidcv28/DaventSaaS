@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from AdminApp.domains.locations.models import Province, City, ZipCode
+from AdminApp.domains.locations.models import City
 """
 Mixins de validación a nivel objeto para el dominio Locations.
 La ciudad debe pertenecer a la provincia indicada (misma regla que users).
@@ -8,7 +8,6 @@ La ciudad debe pertenecer a la provincia indicada (misma regla que users).
 
 class LocationCityValidatorsMixin:
     def validate(self, attrs):
-        province = attrs.get('province', getattr(self.instance, 'province', None))
         city_qs = City.objects.all()
         errors = {}
         if self.instance:

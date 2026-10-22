@@ -1,0 +1,10 @@
+# Contexto de build del SPA (docker/web/Dockerfile).
+node_modules/
+dist/
+.env
+.env.*
+%TEMP%/
+nul
+*.log
+.DS_Store
+Thumbs.db

@@ -7,7 +7,6 @@ from django.db import transaction, IntegrityError
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import serializers
-from AdminApp.domains.invoices.models import Invoice
 from AdminApp.domains.payments.models import Payment, DailyRevenue, MonthlyRevenue
 from AdminApp.domains.suscriptions.models import Suscription
 from AdminApp.domains.invoices.services import IssueInvoiceQuery

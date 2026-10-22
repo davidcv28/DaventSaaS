@@ -1,5 +1,3 @@
-import re
-from AdminApp.domains.locations.models import Province, City
 """
 
 En este modulo se desarrollaran las operaciones logicas que ensucian el clean code en los modulos mixins.py

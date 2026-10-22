@@ -1,7 +1,6 @@
 
 from rest_framework import serializers
 from AdminApp.domains.users.models import UserProfile
-from AdminApp.domains.locations.models import Province, City
 from django.contrib.auth.models import User
 from .mixins import (
     #USER MODEL MIXINS
@@ -12,9 +11,7 @@ from .mixins import (
      UserRegisterValidate,UserRegisterCreateMethod)
 from .config_fields import (
     #USER FIELDS 
-    UserFieldsConfig, UserPasswordFieldsConfig, UserPasswordValidators,
-    #PROFILE FIELDS
-    UserProfileFieldsConfig)
+    UserFieldsConfig, UserPasswordFieldsConfig, UserProfileFieldsConfig)
 
 
 

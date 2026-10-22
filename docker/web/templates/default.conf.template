@@ -1,0 +1,118 @@
+# Vhosts DAVENT — nginx:alpine procesa este template con envsubst al arrancar
+# (solo se sustituye ${PLATFORM_DOMAIN}; las $vars de nginx no se tocan).
+
+server_tokens off;
+
+# Rate limit extra por IP para el endpoint de login JWT (además del throttle
+# 'login' de DRF): 5 req/min con burst corto.
+limit_req_zone $binary_remote_addr zone=api_token:10m rate=5r/m;
+
+upstream davent_api {
+    server api:8000;
+    keepalive 32;
+}
+
+# ---------- Vhost por defecto: descarta hosts desconocidos ----------
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    # Healthcheck interno de Docker (compose), sin logging ni datos.
+    location = /healthz { access_log off; return 200 'ok'; }
+
+    # Cualquier otro Host no autorizado -> conexión cortada sin respuesta.
+    location / { return 444; }
+}
+
+# ---------- HTTP del dominio: solo ACME + redirect a HTTPS ----------
+server {
+    listen 80;
+    listen [::]:80;
+    # ".dominio" cubre apex + todos los subdominios de tienda (<slug>.dominio).
+    server_name .${PLATFORM_DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---------- HTTPS: SPA + API + estáticos ----------
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name .${PLATFORM_DOMAIN};
+
+    # Certificado wildcard (*.dominio) -> requiere ACME DNS-01 (ver certbot
+    # en docker-compose.yml). Ruta estándar de Let's Encrypt.
+    ssl_certificate     /etc/letsencrypt/live/${PLATFORM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${PLATFORM_DOMAIN}/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    # Headers de seguridad para lo que NO pasa por Django (SPA + estáticos).
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy same-origin always;
+
+    root /usr/share/nginx/html;
+    index index.html;
+    client_max_body_size 10m;   # subidas de imágenes van por /api multipart
+
+    gzip on;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript application/json image/svg+xml application/wasm;
+
+    # ----- API -> gunicorn (red interna, jamás expuesta al host) -----
+    location /api/ {
+        include /etc/nginx/snippets/proxy_api.conf;
+    }
+
+    # Login JWT: capa extra de rate-limit por IP.
+    location = /api/token/ {
+        limit_req zone=api_token burst=3 nodelay;
+        include /etc/nginx/snippets/proxy_api.conf;
+    }
+
+    # Admin de Django vive detrás del mismo proxy.
+    location /admin/ {
+        include /etc/nginx/snippets/proxy_api.conf;
+    }
+
+    # Estáticos de Django (admin/DRF) y media local: volumen compartido ro.
+    location /static/ {
+        alias /srv/static/;
+        autoindex off;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+    location /media/ {
+        alias /srv/media/;
+        autoindex off;
+        expires 1h;
+    }
+
+    # Assets de Vite: fingerprinted -> caché largo e inmutable.
+    location /assets/ {
+        try_files $uri =404;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # index.html nunca cacheado: el deploy del SPA se ve al instante.
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    # SPA Vue Router (history mode): fallback a index.html.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

@@ -1,5 +1,4 @@
-from rest_framework import serializers
-from AdminApp.domains.locations.models import Province, City, ZipCode
+from AdminApp.domains.locations.models import Province, ZipCode
 from .validators import LocationValidators
 """
 Módulo de configuración de campos para los serializers del dominio Locations.

@@ -1,6 +1,5 @@
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from AdminApp.permissions import IsAnonimous
-from AdminApp.domains.locations.views import viewset_config
 from django.contrib.auth.models import User
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.serializers import (

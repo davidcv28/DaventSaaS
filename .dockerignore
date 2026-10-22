@@ -1,0 +1,23 @@
+# Contexto de build de la API: nada de secretos ni basura local.
+.git
+.gitattributes
+.env
+.env.*
+!*.env.example
+venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+db.sqlite3
+media/
+staticfiles/
+frontend/
+.dockerignore
+docker-compose*.yml
+.github/
+.vscode/
+*.log
+nul
+%TEMP%/
+Thumbs.db
+.DS_Store
