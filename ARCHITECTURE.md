@@ -248,7 +248,7 @@ Invoice
 
 #### API y comprobante
 - `InvoiceViewSet` (list/retrieve) devuelve **solo las facturas del usuario autenticado** (`user__user = request.user`); `InvoiceAdminViewSet` lista todas para staff.
-- `InvoiceSerializer` expone además campos derivados de solo lectura: `comprobante` (`pos-number` formateado), `type_display`, `plan_name`, `paid_at`, `currency` y los datos del cliente (`customer_name`, `document`, `type_document`, `tax_condition_display`, `address`, `city_name`, `province_name`) que alimentan el PDF.
+- `InvoiceSerializer` expone además campos derivados de solo lectura: `comprobante` (`pos-number` formateado), `type_display`, `plan_name`, `paid_at`, `currency`, los datos del cliente (`customer_name`, `document`, `type_document`, `tax_condition_display`, `address`, `city_name`, `province_name`) que alimentan el PDF, y el **desglose de IVA** `net_amount`/`iva_amount` (los precios incluyen IVA 21%: neto = total/1.21 redondeado a centavos, IVA = total − neto). En el comprobante el tipo A muestra el ítem neto y la B informa el IVA "incluido".
 - En el frontend el comprobante se imprime desde `/facturas/:id` (vista standalone sin `DashLayout`, abierta en pestaña nueva).
 
 ---

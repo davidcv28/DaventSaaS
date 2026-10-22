@@ -39,10 +39,13 @@ export const billingApi = {
   }
 }
 
-export function formatARS(value) {
+export function formatARS(value, digits = 0) {
   const n = Number(value ?? 0)
   if (n === 0) return 'Gratis'
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency', currency: 'ARS',
+    minimumFractionDigits: digits, maximumFractionDigits: digits
+  }).format(n)
 }
 
 export function daysLeft(endDate) {

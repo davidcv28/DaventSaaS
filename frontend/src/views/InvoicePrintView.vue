@@ -27,6 +27,11 @@ const docTitle = computed(() =>
   invoice.value ? `${invoice.value.type_display} ${invoice.value.comprobante}` : 'Factura'
 )
 
+// En Factura A el ítem va sin IVA (neto); en B el precio ya lo incluye.
+const itemAmount = computed(() =>
+  invoice.value?.type === 'A' ? invoice.value.net_amount : invoice.value?.total
+)
+
 onMounted(async () => {
   try {
     invoice.value = await invoicesApi.getInvoice(route.params.id)
@@ -126,16 +131,26 @@ function closeTab() {
           <tr>
             <td>Suscripción mensual — {{ invoice.plan_name || 'Plan DAVENT' }}</td>
             <td class="num">1</td>
-            <td class="num">{{ formatARS(invoice.total) }}</td>
-            <td class="num">{{ formatARS(invoice.total) }}</td>
+            <td class="num">{{ formatARS(itemAmount, 2) }}</td>
+            <td class="num">{{ formatARS(itemAmount, 2) }}</td>
           </tr>
         </tbody>
       </table>
 
       <div class="inv-totals">
-        <div class="inv-total-row">
-          <span>Total</span>
-          <strong>{{ formatARS(invoice.total) }}</strong>
+        <div class="inv-total-rows">
+          <div class="inv-total-row sub">
+            <span>{{ invoice.type === 'A' ? 'Neto gravado' : 'Subtotal' }}</span>
+            <span>{{ formatARS(invoice.net_amount, 2) }}</span>
+          </div>
+          <div class="inv-total-row sub">
+            <span>IVA 21%{{ invoice.type === 'A' ? '' : ' incluido' }}</span>
+            <span>{{ formatARS(invoice.iva_amount, 2) }}</span>
+          </div>
+          <div class="inv-total-row">
+            <span>Total</span>
+            <strong>{{ formatARS(invoice.total, 2) }}</strong>
+          </div>
         </div>
       </div>
 
@@ -209,10 +224,12 @@ function closeTab() {
 .inv-items .num { text-align: right; white-space: nowrap; }
 
 .inv-totals { display: flex; justify-content: flex-end; margin-top: 6px; }
+.inv-total-rows { min-width: 280px; }
 .inv-total-row {
-  display: flex; justify-content: space-between; gap: 40px; min-width: 260px;
+  display: flex; justify-content: space-between; gap: 40px;
   padding: 12px 14px; border-top: 2px solid #1e293b; font-size: 15px;
 }
+.inv-total-row.sub { padding: 5px 14px; border-top: none; font-size: 13.5px; color: #475569; }
 .inv-total-row strong { font-size: 18px; }
 
 .inv-foot {
