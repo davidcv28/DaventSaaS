@@ -16,8 +16,8 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.http import JsonResponse
-from django.urls import path, include
+from django.http import FileResponse, Http404, JsonResponse
+from django.urls import path, include, re_path
 
 
 def healthz(request):
@@ -76,3 +76,17 @@ if settings.DEBUG:
         path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     ]
+
+
+def spa(request):
+    # Catch-all del frontend empaquetado: los assets del build (fingerprint)
+    # los sirve whitenoise vía STATICFILES_DIRS; cualquier ruta de la SPA
+    # (/register, /dashboard, /<slug>) cae acá y devuelve index.html.
+    index = settings.FRONTEND_DIST / 'index.html'
+    if not index.is_file():
+        raise Http404
+    return FileResponse(index.open('rb'), content_type='text/html')
+
+
+if settings.FRONTEND_DIST.is_dir():
+    urlpatterns += [re_path(r'^(?!api/|admin/|static/|media/|healthz/).*$', spa, name='spa')]

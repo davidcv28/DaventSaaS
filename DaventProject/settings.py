@@ -213,6 +213,13 @@ STATIC_ROOT = config('STATIC_ROOT', default = BASE_DIR / 'staticfiles')
 MEDIA_URL  = 'media/'
 MEDIA_ROOT = config('MEDIA_ROOT', default = BASE_DIR / 'media')
 
+# Build de la SPA empaquetado dentro de la imagen (deploys serverless sin un
+# segundo host para el front). WHITENOISE_ROOT lo sirve en la raíz (/assets/…,
+# /index.html) y DaventProject.urls agrega el catch-all SPA si el dir existe.
+FRONTEND_DIST = BASE_DIR / 'frontend_dist'
+if FRONTEND_DIST.is_dir():
+    WHITENOISE_ROOT = FRONTEND_DIST
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

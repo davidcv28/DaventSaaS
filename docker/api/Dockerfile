@@ -16,6 +16,28 @@ WORKDIR /build
 COPY requirements.txt .
 RUN pip wheel --wheel-dir /wheels -r requirements.txt
 
+# ---------- Stage 1b: build de la SPA Vue (servida por el propio contenedor) ----------
+# En deploys serverless (Render free) no hay un segundo host para el front ni
+# proxy de confianza: la API sirve el dist estático ella misma. VITE_* se
+# hornean acá porque Vite las inyecta en build-time — para otro dominio hay
+# que rebuildear pasando --build-arg.
+FROM node:20-alpine AS frontend
+WORKDIR /fe
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+ARG VITE_API_BASE_URL=/api
+ARG VITE_PLATFORM_DOMAIN=daventsaas.onrender.com
+ARG VITE_APP_URL=https://daventsaas.onrender.com
+ARG VITE_APP_NAME=DAVENT
+ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
+    VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
+    VITE_APP_URL=$VITE_APP_URL \
+    VITE_APP_NAME=$VITE_APP_NAME \
+    VITE_APP_TAGLINE=$VITE_APP_TAGLINE
+RUN npm run build
+
 # ---------- Stage 2: runtime mínimo, sin toolchain ----------
 FROM python:3.11-slim-bookworm AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -44,6 +66,7 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-index --find-links=/wheels -r requirements.txt \
     && rm -rf /wheels
 COPY . .
+COPY --from=frontend /fe/dist /app/frontend_dist
 COPY docker/api/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh \
     && mkdir -p /app/staticfiles /app/media \
