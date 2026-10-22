@@ -296,7 +296,7 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .side-foot .link:hover { color: #fca5a5; background: rgba(255, 255, 255, .05); }
 .side-foot .link.theme-btn:hover { color: var(--brand-200); background: rgba(255, 255, 255, .05); }
 .theme-icon { display: none; }
-.main { padding: 32px 36px 60px; max-width: 1160px; width: 100%; min-width: 0; }
+.main { padding: 32px 36px 60px; max-width: 1400px; width: 100%; min-width: 0; }
 .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
 .page-head h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
 .page-head p { margin: 0; color: var(--muted); font-size: 14px; }
