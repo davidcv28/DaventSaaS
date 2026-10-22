@@ -171,7 +171,7 @@ function closeTab() {
 .print-bar-actions { display: flex; gap: 10px; }
 .print-status { display: grid; justify-items: center; gap: 12px; padding: 80px 20px; color: var(--muted); }
 
-.flyer { width: min(100%, 210mm); min-height: 297mm; background: #fff; color: #0f172a; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.flyer { width: min(100%, 210mm); min-height: 297mm; background: #fff; color: #0f172a; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: var(--store-font, inherit); }
 
 /* ----- Encabezado blanco: identidad del negocio ----- */
 .flyer-head { display: flex; align-items: center; gap: 22px; padding: 42px 48px 30px; }

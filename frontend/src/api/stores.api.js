@@ -341,7 +341,9 @@ export function storeThemeVars(customization) {
     '--store-accent': a.hex,
     '--store-accent-ink': a.ink,
     '--store-accent-soft': a.soft,
-    '--store-name-size': `${storeNameSize(c.name_font_size)}px`
+    '--store-name-size': `${storeNameSize(c.name_font_size)}px`,
+    //La fuente elegida aplica a TODO el texto de la web (herencia desde la raíz).
+    '--store-font': storeFontFamily(c.name_font)
   }
 }
 

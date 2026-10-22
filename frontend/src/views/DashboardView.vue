@@ -1600,7 +1600,7 @@ async function changePassword() {
               <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-font-label">Fuente del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <label id="design-font-label">Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="font-options" role="radiogroup" aria-labelledby="design-font-label">
                 <button
                   v-for="(f, key) in storeFonts" :key="key" type="button"
@@ -1613,7 +1613,7 @@ async function changePassword() {
                   {{ f.label }}
                 </button>
               </div>
-              <p class="hint">Se aplica al nombre junto al logo en la barra superior y la portada.</p>
+              <p class="hint">Se aplica a todo el texto de tu web: nombre, secciones y catálogo.</p>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
               <label for="design-name-size">Tamaño del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
