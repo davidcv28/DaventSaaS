@@ -587,39 +587,66 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <form v-reveal="180" class="sp-form" novalidate @submit.prevent="submitContact">
-              <div class="sp-field">
-                <label for="sp-contact-name">Tu nombre</label>
-                <input id="sp-contact-name" v-model="contactForm.name" class="sp-input" type="text" maxlength="80" autocomplete="name" required />
+              <div v-if="contactStatus === 'success'" class="sp-sent" role="status">
+                <span class="sp-sent-check" aria-hidden="true"><AppIcon name="check" :size="30" :stroke="2.25" /></span>
+                <strong>Mensaje enviado</strong>
+                <p>Gracias por escribirnos. Te respondemos a la brevedad al email que dejaste.</p>
+                <button type="button" class="sp-btn ghost sm" @click="contactStatus = 'idle'">Enviar otro mensaje</button>
               </div>
-              <div class="sp-field">
-                <label for="sp-contact-email">Tu email</label>
-                <input id="sp-contact-email" v-model="contactForm.email" class="sp-input" type="email" autocomplete="email" required />
-              </div>
-              <div class="sp-field">
-                <label for="sp-contact-message">Mensaje</label>
-                <textarea id="sp-contact-message" v-model="contactForm.message" class="sp-input sp-textarea" rows="4" maxlength="2000" required></textarea>
-              </div>
-              <div class="sp-field">
-                <label for="sp-contact-captcha">Verificación: {{ captcha?.question || 'Cargando…' }}</label>
-                <div class="sp-captcha-row">
-                  <input id="sp-contact-captcha" v-model="contactForm.captcha_answer" class="sp-input" type="text" inputmode="numeric" autocomplete="off" required />
-                  <button type="button" class="sp-icon-btn" :disabled="captchaLoading" aria-label="Nueva pregunta de verificación" title="Nueva pregunta" @click="loadCaptcha">
-                    <AppIcon name="refresh" :size="15" />
-                  </button>
+              <template v-else>
+                <div class="sp-form-head">
+                  <span class="sp-form-badge" aria-hidden="true"><AppIcon name="message-circle" :size="20" /></span>
+                  <div>
+                    <strong>Dejanos tu mensaje</strong>
+                    <span>Respondemos en el día, de lunes a sábado.</span>
+                  </div>
                 </div>
-              </div>
-              <!-- Honeypot: invisible para personas; los bots lo completan y se descartan. -->
-              <div class="sp-hp" aria-hidden="true">
-                <label for="sp-contact-website">Website</label>
-                <input id="sp-contact-website" v-model="contactForm.website" type="text" tabindex="-1" autocomplete="off" />
-              </div>
-              <p v-if="contactError" class="sp-form-error" role="alert">{{ contactError }}</p>
-              <p v-else-if="contactStatus === 'success'" class="sp-form-ok" role="status">Tu mensaje fue enviado. Te respondemos a la brevedad.</p>
-              <button type="submit" class="sp-btn" :disabled="contactStatus === 'loading' || !captcha">
-                <span v-if="contactStatus === 'loading'" class="spinner" aria-hidden="true"></span>
-                <AppIcon v-else name="mail" :size="16" />
-                Enviar mensaje
-              </button>
+                <div class="sp-form-row">
+                  <div class="sp-field">
+                    <label for="sp-contact-name">Tu nombre</label>
+                    <div class="sp-input-wrap">
+                      <AppIcon name="user" :size="16" aria-hidden="true" />
+                      <input id="sp-contact-name" v-model="contactForm.name" class="sp-input" type="text" maxlength="80" autocomplete="name" placeholder="Cómo te llamás" required />
+                    </div>
+                  </div>
+                  <div class="sp-field">
+                    <label for="sp-contact-email">Tu email</label>
+                    <div class="sp-input-wrap">
+                      <AppIcon name="mail" :size="16" aria-hidden="true" />
+                      <input id="sp-contact-email" v-model="contactForm.email" class="sp-input" type="email" autocomplete="email" placeholder="nombre@correo.com" required />
+                    </div>
+                  </div>
+                </div>
+                <div class="sp-field">
+                  <label for="sp-contact-message">Mensaje</label>
+                  <textarea id="sp-contact-message" v-model="contactForm.message" class="sp-input sp-textarea" rows="5" maxlength="2000" placeholder="Contanos en qué te podemos ayudar" required></textarea>
+                  <span class="sp-counter" aria-hidden="true">{{ contactForm.message.length }} / 2000</span>
+                </div>
+                <div class="sp-field">
+                  <label for="sp-contact-captcha">Verificación rápida</label>
+                  <div class="sp-captcha-row">
+                    <span class="sp-captcha-q"><AppIcon name="shield-check" :size="16" aria-hidden="true" /> {{ captcha?.question || 'Cargando…' }}</span>
+                    <input id="sp-contact-captcha" v-model="contactForm.captcha_answer" class="sp-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Respuesta" required />
+                    <button type="button" class="sp-icon-btn" :disabled="captchaLoading" aria-label="Nueva pregunta de verificación" title="Nueva pregunta" @click="loadCaptcha">
+                      <AppIcon name="refresh" :size="15" />
+                    </button>
+                  </div>
+                </div>
+                <!-- Honeypot: invisible para personas; los bots lo completan y se descartan. -->
+                <div class="sp-hp" aria-hidden="true">
+                  <label for="sp-contact-website">Website</label>
+                  <input id="sp-contact-website" v-model="contactForm.website" type="text" tabindex="-1" autocomplete="off" />
+                </div>
+                <p v-if="contactError" class="sp-form-error" role="alert">{{ contactError }}</p>
+                <div class="sp-form-foot">
+                  <button type="submit" class="sp-btn" :disabled="contactStatus === 'loading' || !captcha">
+                    <span v-if="contactStatus === 'loading'" class="spinner" aria-hidden="true"></span>
+                    <AppIcon v-else name="mail" :size="16" />
+                    Enviar mensaje
+                  </button>
+                  <span class="sp-form-note"><AppIcon name="lock" :size="13" aria-hidden="true" /> Tus datos solo se usan para responderte.</span>
+                </div>
+              </template>
             </form>
           </div>
           <div v-if="mapUrl" v-reveal="120" class="sp-map-frame">

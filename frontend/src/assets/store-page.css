@@ -460,3 +460,42 @@ html { scroll-behavior: smooth; }
   .sp-form { padding: 20px; }
   .sp-map-frame iframe { height: 280px; }
 }
+
+/* ===== Formulario de contacto: carácter propio ===== */
+.sp-form { position: relative; overflow: hidden; gap: 20px; padding: 36px; border-radius: 22px; }
+.sp-form::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: linear-gradient(90deg, var(--store-accent), var(--store-accent-ink) 60%, transparent); }
+.sp-form::after { content: ''; position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--store-accent) 16%, transparent), transparent); pointer-events: none; }
+.sp-form > * { position: relative; z-index: 1; }
+.sp-form-head { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; border-bottom: 1px dashed var(--sp-line); }
+.sp-form-head strong { display: block; font-size: 18px; letter-spacing: -.02em; }
+.sp-form-head span:not(.sp-form-badge) { display: block; font-size: 13px; color: var(--sp-muted); margin-top: 2px; }
+.sp-form-badge { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 8px 18px -8px var(--store-accent-ink); rotate: -6deg; transition: rotate .4s var(--sp-ease); }
+.sp-form:hover .sp-form-badge { rotate: 0deg; }
+.sp-form-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.sp-field label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--sp-muted); transition: color .2s; }
+.sp-field:focus-within label { color: var(--sp-accent-text); }
+.sp-input-wrap { position: relative; }
+.sp-input-wrap > svg { position: absolute; left: 14px; top: 50%; translate: 0 -50%; color: var(--sp-muted); pointer-events: none; transition: color .2s; }
+.sp-input-wrap:focus-within > svg { color: var(--store-accent); }
+.sp-input-wrap .sp-input { padding-left: 40px; }
+.sp-input { border-radius: 12px; padding: 13px 14px; background: var(--sp-surface); border-color: transparent; box-shadow: inset 0 0 0 1px var(--sp-line); }
+.sp-input:focus { background: var(--sp-card); box-shadow: inset 0 0 0 1.5px var(--store-accent), 0 0 0 4px color-mix(in srgb, var(--store-accent) 14%, transparent); }
+.sp-textarea { min-height: 130px; line-height: 1.6; }
+.sp-counter { justify-self: end; font-size: 11.5px; color: var(--sp-muted); font-variant-numeric: tabular-nums; }
+.sp-captcha-row { align-items: stretch; }
+.sp-captcha-q { display: inline-flex; align-items: center; gap: 8px; flex: none; padding: 0 14px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--store-accent) 55%, var(--sp-line)); background: color-mix(in srgb, var(--store-accent) 8%, transparent); color: var(--sp-accent-text); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sp-captcha-row .sp-input { flex: 1; min-width: 0; }
+.sp-captcha-row .sp-icon-btn { border-radius: 12px; height: auto; min-height: 44px; }
+.sp-form-foot { display: flex; align-items: center; gap: 16px 20px; flex-wrap: wrap; }
+.sp-form-foot .sp-btn { height: 48px; padding: 0 28px; font-size: 15px; }
+.sp-form-note { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--sp-muted); }
+.sp-sent { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 36px 8px; }
+.sp-sent strong { font-size: 22px; letter-spacing: -.02em; }
+.sp-sent p { margin: 0 0 8px; max-width: 36ch; color: var(--sp-muted); }
+.sp-sent-check { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 0 0 10px color-mix(in srgb, var(--store-accent) 14%, transparent); animation: sp-pop .6s cubic-bezier(.34, 1.56, .64, 1) both; }
+@media (max-width: 640px) {
+  .sp-form { padding: 24px 20px; }
+  .sp-form-row { grid-template-columns: minmax(0, 1fr); }
+  .sp-captcha-row { flex-wrap: wrap; }
+  .sp-captcha-q { flex: 1 1 100%; min-height: 44px; }
+}
