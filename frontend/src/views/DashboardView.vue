@@ -1847,7 +1847,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Facturas</h1>
-          <p>Tus comprobantes emitidos por cada pago acreditado.</p>
+          <p>Tus comprobantes emitidos por cada pago acreditado. También te los enviamos al correo registrado en tu cuenta.</p>
         </div>
         <button class="btn ghost btn-auto" @click="invoices.loadInvoices()"><AppIcon name="refresh" :size="16" /> Recargar</button>
       </div>
@@ -1884,7 +1884,7 @@ async function changePassword() {
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="file-text" :size="28" /></span>
         <h3>Todavía no tenés facturas</h3>
-        <p>Cuando se acredite un pago de tu suscripción, el comprobante se emite solo y aparece acá, listo para imprimir o guardar como PDF.</p>
+        <p>Cuando se acredite un pago de tu suscripción, el comprobante se emite solo, llega al correo de tu cuenta y aparece acá, listo para imprimir o guardar como PDF.</p>
         <button class="btn btn-auto" @click="section = 'payments'">Ver mis pagos</button>
       </div>
     </div>
