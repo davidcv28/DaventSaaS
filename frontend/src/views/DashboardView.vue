@@ -1658,51 +1658,64 @@ async function changePassword() {
             </div>
 
             <div v-else class="pos-body">
-              <div class="pos-invoice">
-                <div class="pos-inv-head">
-                  <span class="pos-inv-kind">B</span>
-                  <div>
-                    <strong>FACTURA</strong>
-                    <small>N° 0001-00000042</small>
+              <div class="pos-bill-form">
+                <span class="pos-cart-head">Nueva factura</span>
+                <div class="pos-field">
+                  <span class="pos-field-label">Tipo de comprobante</span>
+                  <div class="pos-chips">
+                    <span class="pos-chip">Ticket</span>
+                    <span class="pos-chip active">Factura B</span>
+                    <span class="pos-chip">Factura C</span>
                   </div>
                 </div>
-                <div class="pos-inv-issuer">
-                  <strong>{{ designShopName }}</strong>
-                  <small>{{ business || 'Tu razón social' }}</small>
-                  <small>{{ docKind }} {{ accountForm.document || '—' }}</small>
-                  <small v-if="posAddress">{{ posAddress }}</small>
-                </div>
-                <div class="pos-inv-table">
-                  <div class="pos-inv-row head"><span>Cant.</span><span>Detalle</span><span>Importe</span></div>
-                  <div v-for="(p, i) in posCartItems" :key="`inv-${p.id || i}`" class="pos-inv-row">
-                    <span>{{ posCartQty[i] }}</span>
-                    <span>{{ p.name }}</span>
-                    <span>{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
+                <div class="pos-field-row">
+                  <div class="pos-field">
+                    <span class="pos-field-label">Comprador</span>
+                    <span class="pos-input">Consumidor final</span>
                   </div>
+                  <div class="pos-field">
+                    <span class="pos-field-label">Documento</span>
+                    <span class="pos-input muted">—</span>
+                  </div>
+                </div>
+                <div class="pos-field-row">
+                  <div class="pos-field">
+                    <span class="pos-field-label">Condición fiscal</span>
+                    <span class="pos-input">Consumidor final</span>
+                  </div>
+                  <div class="pos-field">
+                    <span class="pos-field-label">Punto de venta</span>
+                    <span class="pos-input">0001</span>
+                  </div>
+                </div>
+                <div class="pos-field">
+                  <span class="pos-field-label">Domicilio</span>
+                  <span class="pos-input">{{ posAddress || '—' }}</span>
+                </div>
+                <div class="pos-field">
+                  <span class="pos-field-label">Medio de pago</span>
+                  <div class="pos-chips">
+                    <span class="pos-chip active">Efectivo</span>
+                    <span class="pos-chip">Tarjeta</span>
+                    <span class="pos-chip">Transferencia</span>
+                  </div>
+                </div>
+                <div class="pos-field">
+                  <span class="pos-field-label">Observaciones</span>
+                  <span class="pos-input muted">Opcional…</span>
+                </div>
+              </div>
+              <div class="pos-cart">
+                <span class="pos-cart-head">Ítems de la venta</span>
+                <div v-for="(p, i) in posCartItems" :key="`inv-${p.id || i}`" class="pos-cart-item">
+                  <span class="pos-cart-qty">{{ posCartQty[i] }}</span>
+                  <span class="pos-cart-name">{{ p.name }}</span>
+                  <span class="pos-cart-price">{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
                 </div>
                 <div class="pos-inv-totals">
                   <div><span>Subtotal</span><span>{{ posHasPrices ? formatARS(posSubtotal) : '—' }}</span></div>
                   <div><span>IVA 21%</span><span>{{ posIva }}</span></div>
                   <div class="pos-inv-grand"><span>Total</span><strong>{{ posInvoiceTotal }}</strong></div>
-                </div>
-                <div class="pos-inv-foot">
-                  <span class="pos-barcode" aria-hidden="true"></span>
-                  <small>Comprobante de ejemplo</small>
-                </div>
-              </div>
-              <div class="pos-cart">
-                <span class="pos-cart-head">Facturación</span>
-                <span class="pos-side-label">Comprobante</span>
-                <div class="pos-chips">
-                  <span class="pos-chip">Ticket</span>
-                  <span class="pos-chip active">Factura B</span>
-                  <span class="pos-chip">Factura C</span>
-                </div>
-                <span class="pos-side-label">Comprador</span>
-                <span class="pos-buyer">Consumidor final</span>
-                <div class="pos-cart-total">
-                  <span>Total</span>
-                  <strong>{{ posInvoiceTotal }}</strong>
                 </div>
                 <span class="pos-pay">Emitir factura</span>
               </div>

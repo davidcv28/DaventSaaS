@@ -698,9 +698,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-note { margin: -4px 0 14px; }
 
 /* Mockup estático del programa: es una "captura" de escritorio, así que
-   tiene paleta clara fija (no hereda el tema del panel); la marca del
+   tiene paleta oscura fija (no hereda el tema del panel); la marca del
    cliente entra por --store-accent* (storeThemeVars). */
-.pos-window { --pos-bg: #f4f6fb; --pos-card: #ffffff; --pos-ink: #0f172a; --pos-muted: #64748b; --pos-line: #e2e8f0; border: 1px solid var(--pos-line); border-radius: 12px; overflow: hidden; background: var(--pos-bg); color: var(--pos-ink); box-shadow: var(--shadow-md); margin-bottom: 12px; }
+.pos-window { --pos-bg: #0d1220; --pos-card: #151b2e; --pos-ink: #e8ecf7; --pos-muted: #93a0bd; --pos-line: #28304d; border: 1px solid var(--pos-line); border-radius: 12px; overflow: hidden; background: var(--pos-bg); color: var(--pos-ink); box-shadow: var(--shadow-md); margin-bottom: 12px; }
 .pos-titlebar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f1130; color: #a5b4d4; }
 .pos-dots { display: flex; gap: 5px; }
 .pos-dots i { width: 9px; height: 9px; border-radius: 50%; background: #3a4568; }
@@ -717,11 +717,11 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-prod-img { width: 100%; aspect-ratio: 4/3; border-radius: 6px; background: var(--pos-bg); border: 1px solid var(--pos-line); display: grid; place-items: center; color: var(--pos-muted); overflow: hidden; }
 .pos-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pos-prod-name { font-size: 11px; font-weight: 600; color: var(--pos-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.pos-prod-price { font-size: 11px; font-weight: 700; color: var(--store-accent-ink, #4338ca); }
+.pos-prod-price { font-size: 11px; font-weight: 700; color: color-mix(in srgb, var(--store-accent, #4f46e5) 55%, #ffffff); }
 .pos-cart { border-left: 1px solid var(--pos-line); background: var(--pos-card); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .pos-cart-head { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--pos-muted); }
 .pos-cart-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--pos-ink); }
-.pos-cart-qty { width: 18px; height: 18px; flex: none; display: grid; place-items: center; font-size: 10px; font-weight: 700; border-radius: 5px; background: var(--store-accent-soft, #eef2ff); color: var(--store-accent-ink, #4338ca); }
+.pos-cart-qty { width: 18px; height: 18px; flex: none; display: grid; place-items: center; font-size: 10px; font-weight: 700; border-radius: 5px; background: color-mix(in srgb, var(--store-accent, #4f46e5) 22%, transparent); color: #fff; }
 .pos-cart-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pos-cart-price { font-weight: 600; flex: none; }
 .pos-cart-total { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px dashed var(--pos-line); padding-top: 8px; font-size: 12px; color: var(--pos-muted); }
@@ -734,40 +734,28 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-tabs { display: flex; gap: 6px; padding: 8px 12px 0; }
 .pos-tab { border: 1px solid var(--pos-line); border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; color: var(--pos-muted); font: inherit; font-size: 11.5px; font-weight: 600; padding: 7px 14px; cursor: pointer; transition: color .15s, background .15s; }
 .pos-tab:hover { color: var(--pos-ink); }
-.pos-tab.active { background: var(--pos-card); color: var(--store-accent-ink, #4338ca); }
+.pos-tab.active { background: var(--pos-card); color: color-mix(in srgb, var(--store-accent, #4f46e5) 55%, #ffffff); }
 .pos-products { min-width: 0; }
 .pos-cats { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 12px 0; }
 .pos-cat { font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--pos-card); border: 1px solid var(--pos-line); color: var(--pos-muted); }
-.pos-cat.active { background: var(--store-accent-soft, #eef2ff); color: var(--store-accent-ink, #4338ca); border-color: transparent; }
+.pos-cat.active { background: color-mix(in srgb, var(--store-accent, #4f46e5) 22%, transparent); color: #fff; border-color: transparent; }
 .pos-side-label { display: block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--pos-muted); margin-top: 6px; }
 .pos-chips { display: flex; gap: 5px; flex-wrap: wrap; }
 .pos-chip { font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--pos-line); background: var(--pos-bg); color: var(--pos-muted); }
-.pos-chip.active { background: var(--store-accent-soft, #eef2ff); color: var(--store-accent-ink, #4338ca); border-color: var(--store-accent, #4f46e5); }
-.pos-buyer { display: block; font-size: 11.5px; padding: 7px 10px; border: 1px solid var(--pos-line); border-radius: 7px; background: var(--pos-bg); color: var(--pos-ink); }
-
-/* Comprobante "papel" de la pestaña Facturación. */
-.pos-invoice { align-self: start; margin: 12px; background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 8px; padding: 14px; display: grid; gap: 10px; box-shadow: var(--shadow-sm); }
-.pos-inv-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed var(--pos-line); padding-bottom: 10px; }
-.pos-inv-kind { width: 34px; height: 42px; display: grid; place-items: center; flex: none; border: 1.5px solid var(--pos-ink); border-radius: 5px; font-weight: 800; font-size: 18px; }
-.pos-inv-head strong { display: block; font-size: 12px; letter-spacing: .12em; }
-.pos-inv-head small { color: var(--pos-muted); font-size: 10.5px; }
-.pos-inv-issuer { display: grid; gap: 1px; }
-.pos-inv-issuer strong { font-size: 12.5px; }
-.pos-inv-issuer small { color: var(--pos-muted); font-size: 10.5px; }
-.pos-inv-table { display: grid; font-size: 11px; }
-.pos-inv-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 6px; padding: 5px 0; border-bottom: 1px dotted var(--pos-line); }
-.pos-inv-row.head { color: var(--pos-muted); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--pos-line); }
-.pos-inv-row span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pos-inv-row span:last-child { text-align: right; font-weight: 600; }
-.pos-inv-totals { display: grid; gap: 3px; font-size: 11px; }
+.pos-chip.active { background: color-mix(in srgb, var(--store-accent, #4f46e5) 22%, transparent); color: #fff; border-color: var(--store-accent, #4f46e5); }
+/* Formulario de la pestaña Facturación. */
+.pos-bill-form { align-self: start; margin: 12px; background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 8px; padding: 14px; display: grid; gap: 10px; box-shadow: var(--shadow-sm); }
+.pos-field { display: grid; gap: 4px; min-width: 0; }
+.pos-field-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--pos-muted); }
+.pos-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pos-input { display: block; font-size: 11.5px; padding: 7px 10px; border: 1px solid var(--pos-line); border-radius: 7px; background: var(--pos-bg); color: var(--pos-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pos-input.muted { color: var(--pos-muted); }
+.pos-inv-totals { display: grid; gap: 3px; font-size: 11px; margin-top: auto; }
 .pos-inv-totals div { display: flex; justify-content: space-between; gap: 10px; }
 .pos-inv-totals span { color: var(--pos-muted); }
 .pos-inv-totals span:last-child, .pos-inv-totals strong { color: var(--pos-ink); font-weight: 600; }
 .pos-inv-grand { border-top: 1px solid var(--pos-line); padding-top: 5px; margin-top: 3px; }
-.pos-inv-grand strong { font-size: 14px; color: var(--store-accent-ink, #4338ca); }
-.pos-inv-foot { display: grid; justify-items: center; gap: 5px; border-top: 1px dashed var(--pos-line); padding-top: 10px; }
-.pos-barcode { width: 130px; height: 24px; background: repeating-linear-gradient(90deg, var(--pos-ink) 0 1px, transparent 1px 3px, var(--pos-ink) 3px 4px, transparent 4px 6px); }
-.pos-inv-foot small { font-size: 9.5px; color: var(--pos-muted); }
+.pos-inv-grand strong { font-size: 14px; color: color-mix(in srgb, var(--store-accent, #4f46e5) 55%, #ffffff); }
 
 /* ===== Responsive ===== */
 .btn-auto { width: auto; }
