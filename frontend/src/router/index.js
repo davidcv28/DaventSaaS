@@ -12,7 +12,9 @@ const TermsView = () => import('../views/TermsView.vue')
 const ReportView = () => import('../views/ReportView.vue')
 const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
+const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StorePublicView = () => import('../views/StorePublicView.vue')
+const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 
 const routes = [
@@ -87,16 +89,33 @@ const routes = [
     component: StoreFlyerView,
     meta: { requiresAuth: true, title: 'Folleto' }
   },
-  // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias
+  // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias.
+  // El layout resuelve la tienda una vez; Inicio y Catálogo son páginas hijas.
   {
     path: '/tienda/:slug',
     redirect: (to) => ({ name: 'store-public', params: { slug: to.params.slug } })
   },
   {
+    path: '/tienda/:slug/catalogo',
+    redirect: (to) => ({ name: 'store-catalog', params: { slug: to.params.slug } })
+  },
+  {
     path: '/:slug([a-z0-9-]+)',
-    name: 'store-public',
-    component: StorePublicView,
-    meta: { title: 'Tienda' }
+    component: StorePublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'store-public',
+        component: StorePublicView,
+        meta: { title: 'Tienda' }
+      },
+      {
+        path: 'catalogo',
+        name: 'store-catalog',
+        component: StoreCatalogView,
+        meta: { title: 'Catálogo' }
+      }
+    ]
   },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
@@ -104,7 +123,25 @@ const routes = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior: () => ({ top: 0 })
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (!to.hash) return { top: 0 }
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    // Con la transición out-in entre páginas de la tienda el destino puede
+    // tardar unos ms en montarse: se reintenta hasta que el ancla exista.
+    return new Promise((resolve) => {
+      const attempt = (n) => {
+        if (document.querySelector(to.hash)) {
+          resolve({ el: to.hash, behavior: reduce ? 'auto' : 'smooth' })
+        } else if (n > 60) {
+          resolve({ top: 0 })
+        } else {
+          setTimeout(() => attempt(n + 1), 50)
+        }
+      }
+      attempt(0)
+    })
+  }
 })
 
 router.beforeEach(async (to) => {

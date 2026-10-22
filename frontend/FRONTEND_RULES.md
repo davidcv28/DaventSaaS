@@ -34,8 +34,9 @@ frontend/
     ├── validators/auth.validators.js (espejo de validadores Django)
     ├── composables/useFormErrors.js (mapea errores DRF a UI)
     ├── composables/useSlugCheck.js (check de slug con debounce)
+    ├── directives/reveal.js (vReveal: revelado en scroll compartido por las páginas públicas)
     ├── components/ (AppInput, AppButton, AlertMessage, PasswordStrength, AuthLayout, DashLayout, LegalLayout, PlanCard, AppIcon, BrandLogo)
-    ├── views/ (Login, Register, ForgotPassword, ResetPassword, Dashboard, Admin, Terms, Report, InvoicePrint, StoreClaim, StorePublic)
+    ├── views/ (Login, Register, ForgotPassword, ResetPassword, Dashboard, Admin, Terms, Report, InvoicePrint, StoreClaim, StorePublicLayout, StorePublic, StoreCatalog)
     └── assets/styles.css (tokens + componentes)
 ```
 
