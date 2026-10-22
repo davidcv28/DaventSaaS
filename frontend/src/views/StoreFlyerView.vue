@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import QRCode from 'qrcode'
 import { storesApi, publicStoreUrl, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
 import { useAuthStore } from '../stores/auth.store.js'
@@ -12,11 +13,33 @@ import BrandLogo from '../components/BrandLogo.vue'
 // negocio, contacto principal (WhatsApp, teléfono, dirección) como info
 // destacada, redes en una línea secundaria y pie oscuro con QR + link.
 const auth = useAuthStore()
+const route = useRoute()
 const store = ref(null)
 const place = ref(null) // datos públicos: city_name/province_name
 const status = ref('loading') // loading | ready | error
 const error = ref('')
 const qrDataUrl = ref('')
+
+// Diseños del folleto: mismo contenido, distinta composición/paleta. La clase
+// .flyer--{id} hace todo el cambio en CSS; la elección se persiste en
+// localStorage y también entra por ?d= (editorial es el diseño original).
+const FLYER_DESIGNS = [
+  { id: 'classic', name: 'Editorial', desc: 'Sobrio, tipo revista' },
+  { id: 'band', name: 'Banda', desc: 'Logo sobre banda de color' },
+  { id: 'center', name: 'Centrado', desc: 'Simétrico y prolijo' },
+  { id: 'frame', name: 'Marco', desc: 'Elegante, doble borde' },
+  { id: 'diagonal', name: 'Diagonal', desc: 'Moderno, corte en ángulo' },
+  { id: 'split', name: 'Lateral', desc: 'Panel de marca a la izquierda' },
+  { id: 'dark', name: 'Nocturno', desc: 'Fondo oscuro de impacto' },
+  { id: 'tearoff', name: 'Recortable', desc: 'Tiras de contacto abajo' }
+]
+const DESIGN_KEY = 'davent:flyer-design'
+const design = ref(
+  FLYER_DESIGNS.some((d) => d.id === route.query.d)
+    ? route.query.d
+    : (FLYER_DESIGNS.some((d) => d.id === localStorage.getItem(DESIGN_KEY)) ? localStorage.getItem(DESIGN_KEY) : 'classic')
+)
+watch(design, (v) => { try { localStorage.setItem(DESIGN_KEY, v) } catch (e) {} })
 
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
 const themeVars = computed(() => storeThemeVars(custom.value))
@@ -58,6 +81,11 @@ const socials = computed(() => {
 
 const hasContact = computed(() => channels.value.length > 0 || Boolean(addressLine.value))
 
+// Texto de las tiras recortables: el canal más directo que tenga el negocio.
+const stripText = computed(() =>
+  custom.value.whatsapp || auth.user?.profile?.phone || shortUrl.value
+)
+
 onMounted(async () => {
   try {
     if (!auth.user?.profile) await auth.fetchMe().catch(() => {})
@@ -82,7 +110,6 @@ onMounted(async () => {
     document.title = `Folleto · ${shopName.value}`
     await nextTick()
     await Promise.race([document.fonts?.ready || Promise.resolve(), new Promise((r) => setTimeout(r, 1200))])
-    setTimeout(() => window.print(), 450)
   } catch (e) {
     status.value = 'error'
     error.value = extractApiError(e).nonField || 'No se pudo generar el folleto.'
@@ -152,10 +179,157 @@ function closeTab() {
 
 .flyer-davent { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px; font-size: 11px; color: #94a3b8; border-top: 1px solid #eef2f7; }
 
+/* ===== Selector de diseño ===== */
+.design-strip { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 210mm; }
+.design-pick { display: grid; justify-items: center; gap: 7px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow-sm); cursor: pointer; font: inherit; text-align: center; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.design-pick:hover { transform: translateY(-2px); border-color: var(--brand-400); }
+.design-pick.active { border-color: var(--brand-500); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-500) 30%, transparent); }
+.design-pick-name { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.design-pick-desc { font-size: 11px; color: var(--muted); }
+
+/* Miniaturas del diseño (CSS puro, proporción A4). Usan el acento de la
+   tienda porque themeVars ahora cuelga de .print-page. */
+.dm { position: relative; display: block; width: 46px; height: 62px; border-radius: 5px; overflow: hidden; background: #fff; border: 1px solid var(--line); }
+.dm i { position: absolute; display: block; }
+.dm--classic i:nth-child(1) { top: 9px; left: 8px; width: 20px; height: 4px; border-radius: 2px; background: #0f172a; }
+.dm--classic i:nth-child(2) { top: 18px; left: 8px; right: 8px; height: 2px; background: var(--store-accent); }
+.dm--classic i:nth-child(3) { top: 24px; left: 8px; right: 8px; height: 16px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--classic i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 14px; background: #0f172a; }
+.dm--band i:nth-child(1) { top: 0; left: 0; right: 0; height: 20px; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
+.dm--band i:nth-child(2) { top: 26px; left: 8px; right: 8px; height: 2px; background: #cbd5e1; }
+.dm--band i:nth-child(3) { top: 31px; left: 8px; right: 8px; height: 12px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--band i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 12px; background: var(--store-accent-soft); }
+.dm--center i:nth-child(1) { top: 8px; left: 50%; transform: translateX(-50%); width: 9px; height: 9px; border-radius: 3px; background: var(--store-accent); }
+.dm--center i:nth-child(2) { top: 21px; left: 50%; transform: translateX(-50%); width: 22px; height: 4px; border-radius: 2px; background: #0f172a; }
+.dm--center i:nth-child(3) { top: 29px; left: 50%; transform: translateX(-50%); width: 30px; height: 14px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--center i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 13px; background: #0f172a; }
+.dm--dark { background: #0f172a; }
+.dm--dark i:nth-child(1) { top: 9px; left: 8px; width: 20px; height: 4px; border-radius: 2px; background: #fff; }
+.dm--dark i:nth-child(2) { top: 18px; left: 8px; right: 8px; height: 2px; background: var(--store-accent); }
+.dm--dark i:nth-child(3) { top: 24px; left: 8px; right: 8px; height: 16px; background: repeating-linear-gradient(rgba(255, 255, 255, .25) 0 2px, transparent 2px 5px); }
+.dm--dark i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 14px; background: rgba(255, 255, 255, .1); }
+.dm--split i:nth-child(1) { top: 0; left: 0; bottom: 0; width: 16px; background: linear-gradient(160deg, var(--store-accent), var(--store-accent-ink)); }
+.dm--split i:nth-child(2) { top: 11px; left: 21px; right: 7px; height: 2px; background: #cbd5e1; }
+.dm--split i:nth-child(3) { top: 18px; left: 21px; right: 7px; height: 26px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--split i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 6px; background: #eef2f7; }
+.dm--frame i:nth-child(1) { inset: 4px; border: 1px solid var(--store-accent-ink); }
+.dm--frame i:nth-child(2) { top: 13px; left: 50%; transform: translateX(-50%); width: 20px; height: 4px; border-radius: 2px; background: #0f172a; }
+.dm--frame i:nth-child(3) { top: 22px; left: 50%; transform: translateX(-50%); width: 26px; height: 16px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--frame i:nth-child(4) { bottom: 7px; left: 50%; transform: translateX(-50%); width: 12px; height: 5px; border-radius: 2px; background: var(--store-accent-ink); }
+.dm--diagonal i:nth-child(1) { top: 0; left: 0; right: 0; height: 22px; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); clip-path: polygon(0 0, 100% 0, 100% 55%, 0 100%); }
+.dm--diagonal i:nth-child(2) { top: 27px; left: 8px; right: 8px; height: 2px; background: #cbd5e1; }
+.dm--diagonal i:nth-child(3) { top: 32px; left: 8px; right: 8px; height: 12px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--diagonal i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 12px; background: #0f172a; }
+.dm--tearoff i:nth-child(1) { top: 8px; left: 8px; width: 20px; height: 4px; border-radius: 2px; background: #0f172a; }
+.dm--tearoff i:nth-child(2) { top: 16px; left: 8px; right: 8px; height: 2px; background: var(--store-accent); }
+.dm--tearoff i:nth-child(3) { top: 22px; left: 8px; right: 8px; height: 18px; background: repeating-linear-gradient(#e2e8f0 0 2px, transparent 2px 5px); }
+.dm--tearoff i:nth-child(4) { bottom: 0; left: 0; right: 0; height: 12px; border-top: 1px dashed #94a3b8; background: repeating-linear-gradient(90deg, #cbd5e1 0 1px, transparent 1px 4px); }
+
+/* ===== Diseño: Banda (banda de color con el logo superpuesto, clásico de
+   afiches comerciales: la marca corta el borde de la banda) ===== */
+.flyer--band .flyer-head { position: relative; padding: 48px 48px 74px; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.flyer--band .flyer-name { color: #fff; }
+.flyer--band .flyer-headline { color: rgba(255, 255, 255, .85); }
+.flyer--band .flyer-loc { color: #fff; }
+.flyer--band .flyer-logo, .flyer--band .flyer-mono { position: absolute; left: 48px; bottom: -36px; width: 92px; height: 92px; border-radius: 22px; z-index: 1; }
+.flyer--band .flyer-logo { border-color: #fff; box-shadow: 0 0 0 3px #fff, 0 14px 28px rgba(15, 23, 42, .22); }
+.flyer--band .flyer-mono { background: #fff; color: var(--store-accent-ink); box-shadow: 0 0 0 3px #fff, 0 14px 28px rgba(15, 23, 42, .22); }
+.flyer--band .flyer-rule { display: none; }
+.flyer--band .flyer-body { padding-top: 58px; }
+.flyer--band .flyer-cta { background: var(--store-accent-soft); color: #0f172a; }
+.flyer--band .flyer-cta-label { color: var(--store-accent-ink); }
+.flyer--band .flyer-url { color: var(--store-accent-ink); }
+.flyer--band .flyer-cta-hint { color: #475569; }
+
+/* ===== Diseño: Centrado (todo al eje, aire parejo) ===== */
+.flyer--center .flyer-head { flex-direction: column; text-align: center; gap: 20px; padding-top: 52px; }
+.flyer--center .flyer-loc { justify-content: center; }
+.flyer--center .flyer-rule { margin: 0 auto; width: 120px; }
+.flyer--center .flyer-body { align-items: center; }
+.flyer--center .flyer-body > section { width: 100%; max-width: 135mm; }
+.flyer--center .flyer-section-head { justify-content: center; }
+.flyer--center .flyer-section-head::before { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+.flyer--center .flyer-desc { text-align: center; }
+.flyer--center .flyer-row { flex-direction: column; text-align: center; gap: 8px; }
+.flyer--center .flyer-socials { justify-content: center; }
+.flyer--center .flyer-cta { flex-direction: column; text-align: center; }
+
+/* ===== Diseño: Nocturno (papel oscuro, acento como luz) ===== */
+.flyer--dark { background: #0f172a; color: #e8ecf7; }
+.flyer--dark .flyer-name { color: #fff; }
+.flyer--dark .flyer-headline { color: #94a3b8; }
+.flyer--dark .flyer-loc { color: var(--store-accent); }
+.flyer--dark .flyer-logo { border-color: rgba(255, 255, 255, .16); }
+.flyer--dark .flyer-rule { background: linear-gradient(90deg, var(--store-accent), transparent); }
+.flyer--dark .flyer-section-head h2 { color: var(--store-accent); }
+.flyer--dark .flyer-section-head::after { background: rgba(255, 255, 255, .12); }
+.flyer--dark .flyer-desc { color: #cbd5e1; }
+.flyer--dark .flyer-row { border-color: rgba(255, 255, 255, .08); }
+.flyer--dark .flyer-row-ico { background: rgba(255, 255, 255, .08); color: var(--store-accent); }
+.flyer--dark .flyer-row-val { color: #fff; }
+.flyer--dark .flyer-socials-lbl { color: #64748b; }
+.flyer--dark .flyer-social { color: #94a3b8; }
+.flyer--dark .flyer-nocontact { color: #94a3b8; }
+.flyer--dark .flyer-nocontact strong { color: #fff; }
+.flyer--dark .flyer-cta { background: rgba(255, 255, 255, .05); }
+.flyer--dark .flyer-davent { border-color: rgba(255, 255, 255, .08); }
+
+/* ===== Diseño: Marco (doble borde fino, elegante — restaurantes/boutiques) ===== */
+.flyer--frame { position: relative; }
+.flyer--frame::before { content: ''; position: absolute; inset: 11mm; border: 1.5px solid var(--store-accent-ink); pointer-events: none; }
+.flyer--frame::after { content: ''; position: absolute; inset: 12.5mm; border: .5px solid color-mix(in srgb, var(--store-accent-ink) 45%, transparent); pointer-events: none; }
+.flyer--frame .flyer-head { flex-direction: column; text-align: center; gap: 18px; padding: 28mm 28mm 10mm; }
+.flyer--frame .flyer-name { text-transform: uppercase; letter-spacing: .04em; font-size: min(var(--store-name-size, 34px), 30px); }
+.flyer--frame .flyer-loc { justify-content: center; }
+.flyer--frame .flyer-rule { height: auto; margin: 0; background: none; text-align: center; font-size: 14px; color: var(--store-accent-ink); letter-spacing: 10px; }
+.flyer--frame .flyer-rule::before { content: '◆ ◆ ◆'; padding-left: 10px; }
+.flyer--frame .flyer-body { padding: 16px 26mm 24mm; }
+.flyer--frame .flyer-section-head { justify-content: center; }
+.flyer--frame .flyer-section-head::before { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+.flyer--frame .flyer-cta { flex-direction: column; text-align: center; gap: 16px; background: transparent; color: #0f172a; border-top: 1px solid #e2e8f0; }
+.flyer--frame .flyer-cta-label { color: var(--store-accent-ink); }
+.flyer--frame .flyer-url { color: var(--store-accent-ink); }
+.flyer--frame .flyer-cta-hint { color: #64748b; }
+
+/* ===== Diseño: Diagonal (banda con corte en ángulo, estilo moderno) ===== */
+.flyer--diagonal .flyer-head { padding: 46px 48px 76px; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); color: #fff; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 40px), 0 100%); }
+.flyer--diagonal .flyer-name { color: #fff; }
+.flyer--diagonal .flyer-headline { color: rgba(255, 255, 255, .85); }
+.flyer--diagonal .flyer-loc { color: #fff; }
+.flyer--diagonal .flyer-logo { border-color: rgba(255, 255, 255, .5); }
+.flyer--diagonal .flyer-mono { background: rgba(255, 255, 255, .18); color: #fff; }
+.flyer--diagonal .flyer-rule { display: none; }
+.flyer--diagonal .flyer-body { padding-top: 14px; }
+
+/* ===== Diseño: Recortable (folleto callejero con tiras de contacto) ===== */
+.flyer--tearoff .flyer-cta { background: var(--store-accent-soft); color: #0f172a; }
+.flyer--tearoff .flyer-cta-label { color: var(--store-accent-ink); }
+.flyer--tearoff .flyer-url { color: var(--store-accent-ink); }
+.flyer--tearoff .flyer-cta-hint { color: #475569; }
+.flyer-strips { display: flex; padding: 12px 12px 0; border-top: 2px dashed #94a3b8; }
+.flyer-strip { flex: 1; height: 88px; display: flex; align-items: center; justify-content: center; border-left: 1px dashed #94a3b8; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; color: #334155; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; overflow: hidden; }
+.flyer-strip:first-child { border-left: none; }
+
+/* ===== Diseño: Lateral (panel de marca a la izquierda) ===== */
+.flyer--split { display: grid; grid-template-columns: 64mm 1fr; grid-template-rows: 1fr auto auto; grid-template-areas: 'head body' 'cta body' 'davent davent'; }
+.flyer--split .flyer-head { grid-area: head; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px; padding: 40px 30px; background: linear-gradient(160deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.flyer--split .flyer-name { color: #fff; font-size: min(var(--store-name-size, 34px), 30px); }
+.flyer--split .flyer-headline { color: rgba(255, 255, 255, .85); }
+.flyer--split .flyer-loc { color: #fff; }
+.flyer--split .flyer-logo { border-color: rgba(255, 255, 255, .5); }
+.flyer--split .flyer-mono { background: rgba(255, 255, 255, .18); color: #fff; }
+.flyer--split .flyer-rule { display: none; }
+.flyer--split .flyer-body { grid-area: body; }
+.flyer--split .flyer-cta { grid-area: cta; flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px 30px; background: color-mix(in srgb, var(--store-accent-ink) 88%, #000); }
+.flyer--split .flyer-qr-card img { width: 88px; height: 88px; }
+.flyer--split .flyer-url { font-size: 17px; }
+.flyer--split .flyer-cta-hint { font-size: 11.5px; }
+.flyer--split .flyer-davent { grid-area: davent; }
+
 @page { size: A4; margin: 0; }
 @media print {
   .print-page { background: #fff; padding: 0; }
-  .print-bar, .print-status { display: none; }
+  .print-bar, .print-status, .design-strip { display: none; }
   .flyer { border: none; box-shadow: none; border-radius: 0; width: 210mm; min-height: 297mm; }
 }
 @media (max-width: 640px) {
@@ -166,19 +340,47 @@ function closeTab() {
   .flyer-rule { margin: 0 22px; }
   .flyer-body { padding: 24px 22px; }
   .flyer-cta { flex-direction: column; text-align: center; padding: 24px 22px; gap: 18px; }
+  .flyer--split { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: 'head' 'body' 'cta' 'davent'; }
+  .flyer--split .flyer-head { padding: 28px 22px; }
+  .flyer--band .flyer-logo, .flyer--band .flyer-mono { left: 22px; bottom: -30px; width: 72px; height: 72px; border-radius: 18px; }
+  .flyer--band .flyer-head { padding-bottom: 62px; }
+  .flyer--diagonal .flyer-head { padding: 28px 22px 60px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%); }
+  .flyer--frame::before { inset: 8mm; }
+  .flyer--frame::after { inset: 9.5mm; }
+  .flyer--frame .flyer-head { padding: 40px 26px 14px; }
+  .flyer--frame .flyer-body { padding: 16px 26px 24px; }
+  .flyer-strips { padding: 10px 8px 0; }
+  .flyer-strip { height: 72px; font-size: 9px; }
 }
 </style>
 
 <template>
-  <div class="print-page">
+  <div class="print-page" :style="themeVars">
     <div class="print-bar">
-      <span class="print-bar-text">Folleto listo para imprimir o guardar como PDF</span>
+      <span class="print-bar-text">Elegí un diseño y descargalo como PDF o imprimilo</span>
       <div class="print-bar-actions">
         <button class="btn btn-auto" type="button" :disabled="status !== 'ready'" @click="print">
           <AppIcon name="printer" :size="16" /> Imprimir / PDF
         </button>
         <button class="btn ghost btn-auto" type="button" @click="closeTab">Cerrar pestaña</button>
       </div>
+    </div>
+
+    <div v-if="status === 'ready'" class="design-strip" role="radiogroup" aria-label="Diseño del folleto">
+      <button
+        v-for="d in FLYER_DESIGNS"
+        :key="d.id"
+        type="button"
+        class="design-pick"
+        :class="{ active: design === d.id }"
+        role="radio"
+        :aria-checked="design === d.id"
+        @click="design = d.id"
+      >
+        <span class="dm" :class="`dm--${d.id}`" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="design-pick-name">{{ d.name }}</span>
+        <span class="design-pick-desc">{{ d.desc }}</span>
+      </button>
     </div>
 
     <div v-if="status === 'loading'" class="print-status">
@@ -189,7 +391,7 @@ function closeTab() {
       <p>{{ error }}</p>
     </div>
 
-    <article v-else class="flyer" :style="themeVars">
+    <article v-else class="flyer" :class="`flyer--${design}`">
       <header class="flyer-head">
         <img v-if="custom.logo" class="flyer-logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
         <span v-else class="flyer-mono" aria-hidden="true">{{ initial }}</span>
@@ -253,6 +455,12 @@ function closeTab() {
 
       <div class="flyer-davent">
         <BrandLogo :size="13" /> Hecho con DAVENT
+      </div>
+
+      <!-- Tiras recortables (solo diseño Recortable): línea de corte punteada
+           y columnas con el contacto en vertical, como el folleto callejero. -->
+      <div v-if="design === 'tearoff'" class="flyer-strips" aria-hidden="true">
+        <span v-for="i in 10" :key="i" class="flyer-strip">{{ stripText }}</span>
       </div>
     </article>
   </div>
