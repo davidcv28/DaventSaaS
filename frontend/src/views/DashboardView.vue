@@ -28,7 +28,7 @@ import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
-import { env } from '../config/env.js'
+import { env, storeSubdomains } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
   validateDocument, validateBusinessName, validatePhone, validateAddress,
@@ -297,6 +297,9 @@ function fmtDate(d) {
 // --- Mi tienda: link público (copiar, abrir, pausar, renombrar) ---
 const platformHost = env.platformHost
 const scheme = `${window.location.protocol}//`
+// Sin wildcard (Render test) el link es path: https://host/[slug]; con dominio
+// propio el slug va de subdominio: https://[slug].host
+const slugPrefix = storeSubdomains ? scheme : `${scheme}${platformHost}/`
 const renameSlug = ref('')
 const renameBusy = ref(false)
 const storeBusy = ref(false)
@@ -1433,7 +1436,7 @@ async function changePassword() {
           <div class="field">
             <label for="rename-slug">Nuevo link</label>
             <div class="slug-box" :class="{ invalid: renameKind === 'err' || !!store.fieldErrors.slug }">
-              <span class="slug-prefix">{{ scheme }}</span>
+              <span class="slug-prefix">{{ slugPrefix }}</span>
               <input
                 id="rename-slug"
                 name="rename-slug"
@@ -1445,7 +1448,7 @@ async function changePassword() {
                 autocomplete="off"
                 @input="onRenameInput"
               />
-              <span class="slug-suffix">.{{ platformHost }}</span>
+              <span v-if="storeSubdomains" class="slug-suffix">.{{ platformHost }}</span>
             </div>
             <p class="hint">Al cambiarlo, el link anterior deja de funcionar.</p>
             <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>

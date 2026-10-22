@@ -6,7 +6,7 @@ import { useStoreStore } from '../stores/store.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import { normalizeSlug, validateSlugFormat } from '../api/stores.api.js'
 import { authApi } from '../api/auth.api.js'
-import { env } from '../config/env.js'
+import { env, storeSubdomains } from '../config/env.js'
 import AuthLayout from '../components/AuthLayout.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
@@ -25,6 +25,9 @@ const { state: checkState, isAvailable, message: checkMessage, kind: checkKind, 
 
 const platformHost = env.platformHost
 const scheme = `${window.location.protocol}//`
+// Sin wildcard (Render test) el link es path: https://host/[slug]; con dominio
+// propio el slug va de subdominio: https://[slug].host
+const slugPrefix = storeSubdomains ? scheme : `${scheme}${platformHost}/`
 const normalized = computed(() => normalizeSlug(slug.value))
 const formatError = computed(() => (touched.value ? validateSlugFormat(normalized.value) : ''))
 const fieldError = computed(() => formatError.value || stores.fieldErrors.slug || '')
@@ -100,7 +103,7 @@ function logout() {
       <div class="field">
         <label for="slug">Tu link público <span aria-hidden="true">*</span></label>
         <div class="slug-box" :class="{ invalid: !!fieldError }">
-          <span class="slug-prefix">{{ scheme }}</span>
+          <span class="slug-prefix">{{ slugPrefix }}</span>
           <input
             id="slug"
             name="slug"
@@ -115,7 +118,7 @@ function logout() {
             @input="onInput"
             @blur="touched = true"
           />
-          <span class="slug-suffix">.{{ platformHost }}</span>
+          <span v-if="storeSubdomains" class="slug-suffix">.{{ platformHost }}</span>
         </div>
         <p class="hint">Entre 3 y 60 caracteres: letras minúsculas, números y guiones.</p>
         <p v-if="fieldError" class="field-error" role="alert">{{ fieldError }}</p>

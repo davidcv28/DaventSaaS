@@ -31,8 +31,15 @@ export const storeHostSlug = (() => {
   return sub
 })()
 
-// Link público canónico de una tienda: subdominio propio (<slug>.<dominio>).
+// Render no enruta ni certifica subdominios wildcard en onrender.com (deploy
+// de test): los links públicos usan el alias de path <appUrl>/<slug> hasta
+// tener dominio propio con wildcard DNS+TLS en el VPS.
+export const storeSubdomains = !platformDomain.endsWith('onrender.com')
+
+// Link público canónico de una tienda: subdominio propio (<slug>.<dominio>)
+// cuando el hosting lo soporta; si no, alias de path sobre el dominio de plataforma.
 export function storeUrl(slug) {
+  if (!storeSubdomains) return `${env.appUrl}/${slug}`
   return `${protocol}//${slug}.${platformHost}`
 }
 
