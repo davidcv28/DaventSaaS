@@ -85,6 +85,22 @@ watch([status, () => route.name], ([s, name]) => {
   if (s === 'success') document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo` : shopName.value
 }, { immediate: true })
 
+// Favicon de la pestaña: mientras se visita la web, el icono es el logo de la
+// tienda (sin logo queda el de DAVENT). Al salir se restaura el original.
+const faviconEl = document.querySelector('link[rel="icon"]')
+const faviconDefault = faviconEl ? { href: faviconEl.getAttribute('href'), type: faviconEl.getAttribute('type') } : null
+function applyFavicon(logo) {
+  if (!faviconEl) return
+  if (logo) {
+    faviconEl.removeAttribute('type')
+    faviconEl.setAttribute('href', logo)
+  } else if (faviconDefault) {
+    if (faviconDefault.type) faviconEl.setAttribute('type', faviconDefault.type)
+    faviconEl.setAttribute('href', faviconDefault.href)
+  }
+}
+watch(() => custom.value.logo, applyFavicon)
+
 onMounted(async () => {
   try {
     store.value = await storesApi.publicStore(slug.value)
@@ -100,6 +116,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
+  applyFavicon(null)
 })
 </script>
 
