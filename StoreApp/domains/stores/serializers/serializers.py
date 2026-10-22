@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage
+from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.services        import profile_has_benefit, storage_payload
 from .config_fields import StoresFields, CustomizationFields
@@ -32,6 +32,16 @@ class StoreCarouselImageSerializer(serializers.ModelSerializer):
     def get_url(self, image):
         return object_url(image.image_key)
 #=========================================
+# STORE GALLERY IMAGE SERIALIZER (sección Galería de la web pública)
+#=========================================
+class StoreGalleryImageSerializer(serializers.ModelSerializer):
+    url                         =   serializers.SerializerMethodField()
+    class Meta:
+        model                   =   StoreGalleryImage
+        fields                  =   ['id', 'url', 'position']
+    def get_url(self, image):
+        return object_url(image.image_key)
+#=========================================
 # STORE CUSTOMIZATION SERIALIZER (diseño de la web pública)
 #=========================================
 class StoreCustomizationSerializer(serializers.ModelSerializer):
@@ -47,12 +57,14 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     facebook                    =   serializers.CharField(**CustomizationFields['facebook'])
     logo                        =   serializers.SerializerMethodField()
     carousel                    =   serializers.SerializerMethodField()
+    gallery                     =   serializers.SerializerMethodField()
     class Meta:
         model                   =   StoreCustomization
         fields                  =   [
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
-            'about_title', 'about_text', 'contact_email', 'show_contact',
-            'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'logo', 'carousel', 'updated_at',
+            'about_title', 'about_text', 'show_about', 'contact_email', 'show_contact',
+            'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery',
+            'logo', 'carousel', 'gallery', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
     def get_logo(self, customization):
@@ -60,6 +72,9 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     def get_carousel(self, customization):
         images                  =   customization.store.carousel_images.all()
         return StoreCarouselImageSerializer(images, many = True).data
+    def get_gallery(self, customization):
+        images                  =   customization.store.gallery_images.all()
+        return StoreGalleryImageSerializer(images, many = True).data
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')
         if value and not validate_whatsapp(value):

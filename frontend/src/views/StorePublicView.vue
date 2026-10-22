@@ -74,9 +74,24 @@ const socials = computed(() => [
 ].filter((s) => s.url))
 const hasContact = computed(() => Boolean(whatsappUrl.value || socials.value.length))
 
-// --- Sobre nosotros (se edita en Diseño web; la sección se oculta si está vacía) ---
-const hasAbout = computed(() => Boolean(custom.value.about_text?.trim()))
+// --- Sobre nosotros (se edita en Diseño web; el dueño la apaga con
+// show_about y además se oculta sola si el texto queda vacío) ---
+const hasAbout = computed(() => custom.value.show_about !== false && Boolean(custom.value.about_text?.trim()))
 const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nosotros')
+
+// --- Galería (imágenes propias del negocio; el dueño la apaga con
+// show_gallery y se oculta sola sin imágenes cargadas) ---
+const gallery = computed(() => custom.value.gallery || [])
+const showGallery = computed(() => status.value === 'success' && custom.value.show_gallery !== false && gallery.value.length > 0)
+const lightboxIndex = ref(-1)
+const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
+const openLightbox = (index) => { lightboxIndex.value = index }
+const closeLightbox = () => { lightboxIndex.value = -1 }
+function stepLightbox(direction) {
+  const total = gallery.value.length
+  if (total < 2) return
+  lightboxIndex.value = ((lightboxIndex.value + direction) % total + total) % total
+}
 
 // --- Contáctanos: formulario público (captcha + honeypot antispam), canales
 // y el mapa de ubicación, que vive dentro de esta sección. ---
@@ -298,7 +313,11 @@ const selectedTags = computed(() => {
   ].filter(Boolean)
 })
 
-const onKey = (e) => { if (e.key === 'Escape') { menuOpen.value = false; closeProduct() } }
+const onKey = (e) => {
+  if (e.key === 'Escape') { menuOpen.value = false; closeProduct(); closeLightbox() }
+  else if (lightboxIndex.value >= 0 && e.key === 'ArrowLeft') stepLightbox(-1)
+  else if (lightboxIndex.value >= 0 && e.key === 'ArrowRight') stepLightbox(1)
+}
 
 // --- Movimiento: revelado al hacer scroll, barra de progreso, header con
 // estado "scrolled" y foco de luz que sigue al puntero sobre las tarjetas.
@@ -492,6 +511,23 @@ onBeforeUnmount(() => {
           <h2 id="sp-about-title" v-reveal class="sp-section-title">{{ aboutTitle }}</h2>
           <div v-reveal="100" class="sp-about-card">
             <p class="sp-about-text">{{ custom.about_text }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Galería ===== -->
+      <section v-if="showGallery" class="sp-gallery" aria-labelledby="sp-gallery-title">
+        <div class="sp-container">
+          <h2 id="sp-gallery-title" v-reveal class="sp-section-title">Galería</h2>
+          <div class="sp-gallery-grid">
+            <button
+              v-for="(img, i) in gallery" :key="img.id" v-reveal="(i % 4) * 70"
+              type="button" class="sp-gallery-item"
+              :aria-label="`Ver imagen ${i + 1} en grande`"
+              @click="openLightbox(i)"
+            >
+              <img :src="img.url" :alt="`Imagen ${i + 1} de la galería de ${shopName}`" loading="lazy" />
+            </button>
           </div>
         </div>
       </section>
@@ -756,6 +792,23 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
+    </div>
+    </Transition>
+
+    <!-- ===== Galería: visor de imagen ===== -->
+    <Transition name="sp-modal">
+    <div v-if="lightboxImage" class="sp-lightbox" role="dialog" aria-modal="true" aria-label="Visor de la galería" @click.self="closeLightbox">
+      <button type="button" class="sp-modal-close" aria-label="Cerrar" @click="closeLightbox">
+        <AppIcon name="x" :size="18" />
+      </button>
+      <button v-if="gallery.length > 1" type="button" class="sp-lightbox-arrow prev" aria-label="Imagen anterior" @click="stepLightbox(-1)">
+        <AppIcon name="chevron-left" :size="22" />
+      </button>
+      <img :key="lightboxImage.id" class="sp-lightbox-img" :src="lightboxImage.url" :alt="`Imagen de la galería de ${shopName}`" />
+      <button v-if="gallery.length > 1" type="button" class="sp-lightbox-arrow next" aria-label="Imagen siguiente" @click="stepLightbox(1)">
+        <AppIcon name="chevron-right" :size="22" />
+      </button>
+      <span v-if="gallery.length > 1" class="sp-lightbox-count">{{ lightboxIndex + 1 }} / {{ gallery.length }}</span>
     </div>
     </Transition>
 

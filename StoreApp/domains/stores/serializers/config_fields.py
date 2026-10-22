@@ -75,6 +75,14 @@ CustomizationFields           =   {
         'max_length'        :   2000,
         'error_messages'    :   {'max_length': 'El texto admite hasta 2000 caracteres'},
     },
+    'show_about'            :   {
+        'label'             :   'Mostrar sección Sobre nosotros',
+        'required'          :   False,
+    },
+    'show_gallery'          :   {
+        'label'             :   'Mostrar sección Galería',
+        'required'          :   False,
+    },
     'contact_email'         :   {
         'label'             :   'Email de contacto público',
         'style'             :   {'placeholder': 'contacto@tunegocio.com'},

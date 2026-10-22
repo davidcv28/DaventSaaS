@@ -6,10 +6,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
-from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage
+from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage
 from StoreApp.domains.stores.serializers.serializers import (
     StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer,
-    StoreCarouselImageSerializer, StoreContactSerializer,
+    StoreCarouselImageSerializer, StoreGalleryImageSerializer, StoreContactSerializer,
 )
 from StoreApp.domains.stores.serializers.validators  import (
     RESERVED_SLUGS,
@@ -19,6 +19,7 @@ from StoreApp.domains.stores.serializers.validators  import (
 from StoreApp.domains.stores.services                import (
     profile_has_benefit, storage_payload, upload_logo, delete_logo,
     upload_carousel_image, delete_carousel_image,
+    upload_gallery_image, delete_gallery_image,
     issue_captcha, verify_captcha, send_contact_message, contact_target,
 )
 from .viewset_base   import StoreBaseViewSet
@@ -361,3 +362,72 @@ class StoreViewSet(StoreBaseViewSet):
                 image.save(update_fields = ['position'])
             position    +=  1
         return Response({'Exito': 'El orden del carrusel se actualizó'}, status = status.HTTP_200_OK)
+    #=========================================
+    # GALLERY (sección Galería de la web, tope max_gallery_images por plan)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'customization/gallery')
+    def gallery_add(self, request):
+        #El cupo por plan (Básico 0 / Estándar 5 / Premium 15) lo fuerza el
+        #servicio con ValueError -> 400; acá solo se exige suscripción activa.
+        store           =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La galería de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        upload          =   request.FILES.get('image')
+        if upload is None:
+            return Response({'image': 'Tenés que adjuntar una imagen.'}, status = status.HTTP_400_BAD_REQUEST)
+        try:
+            image       =   upload_gallery_image(store, upload)
+        except ValueError as error:
+            return Response({'image': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                'Exito' : 'La imagen se agregó a la galería',
+                'image' : StoreGalleryImageSerializer(image).data,
+                'storage'   : storage_payload(image.store, store.user),
+            },
+            status = status.HTTP_201_CREATED,
+        )
+
+    @action(detail = False, methods = ['delete'], url_path = r'customization/gallery/(?P<image_id>\d+)')
+    def gallery_remove(self, request, image_id = None):
+        store           =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La galería de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        image           =   get_object_or_404(StoreGalleryImage, pk = image_id, store = store)
+        delete_gallery_image(image)
+        return Response(
+            {
+                'Exito' : 'La imagen se eliminó de la galería',
+                'storage'   : storage_payload(image.store, store.user),
+            },
+            status = status.HTTP_200_OK,
+        )
+
+    @action(detail = False, methods = ['patch'], url_path = 'customization/gallery/order')
+    def gallery_order(self, request):
+        store           =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La galería de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        order           =   request.data.get('order')
+        if not isinstance(order, list):
+            return Response({'order': 'Enviá la lista de ids en el nuevo orden.'}, status = status.HTTP_400_BAD_REQUEST)
+        images          =   {image.id: image for image in store.gallery_images.all()}
+        position        =   0
+        for image_id in order:
+            image       =   images.get(image_id)
+            if image is None:
+                continue
+            if image.position != position:
+                image.position  =   position
+                image.save(update_fields = ['position'])
+            position    +=  1
+        return Response({'Exito': 'El orden de la galería se actualizó'}, status = status.HTTP_200_OK)

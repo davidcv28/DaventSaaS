@@ -24,8 +24,9 @@ import { http } from './http.js'
 //                                                        mensaje por email al dueño (throttle 10/h por IP)
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
-//                                                about_title?, about_text?, contact_email?, show_contact?,
-//                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?, show_location?}
+//                                                about_title?, about_text?, show_about?, contact_email?, show_contact?,
+//                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?, show_location?,
+//                                                show_gallery?}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
 //                                           name_font, name_font_size y accent del payload; sin
@@ -38,6 +39,12 @@ import { http } from './http.js'
 // DELETE /api/stores/customization/carousel/<id>/  Bearer -> {Exito, storage}
 // PATCH  /api/stores/customization/carousel/order/ Bearer {order:[ids]} -> {Exito}
 //                                        -> 403 en las 3 si falta has_design_advanced
+// POST   /api/stores/customization/gallery/        Bearer multipart {image} -> {Exito, image, storage}
+// DELETE /api/stores/customization/gallery/<id>/   Bearer -> {Exito, storage}
+// PATCH  /api/stores/customization/gallery/order/  Bearer {order:[ids]} -> {Exito}
+//                                        -> 403 en las 3 si falta has_customization; el tope
+//                                           max_gallery_images del plan (Básico 0 / Estándar 5 /
+//                                           Premium 15) responde 400 con mensaje
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -133,6 +140,25 @@ export const storesApi = {
   async reorderCarousel(order) {
     const { data } = await http.patch('/stores/customization/carousel/order/', { order })
     return data
+  },
+
+  async addGalleryImage(file) {
+    const form = new FormData()
+    form.append('image', file)
+    const { data } = await http.post('/stores/customization/gallery/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+  },
+
+  async removeGalleryImage(imageId) {
+    const { data } = await http.delete(`/stores/customization/gallery/${imageId}/`)
+    return data
+  },
+
+  async reorderGallery(order) {
+    const { data } = await http.patch('/stores/customization/gallery/order/', { order })
+    return data
   }
 }
 
@@ -164,6 +190,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   description: '',
   about_title: '',
   about_text: '',
+  show_about: true,
   contact_email: '',
   show_contact: true,
   theme: 'light',
@@ -173,8 +200,10 @@ export const CUSTOMIZATION_DEFAULTS = {
   tiktok: '',
   facebook: '',
   show_location: true,
+  show_gallery: true,
   logo: null,
-  carousel: []
+  carousel: [],
+  gallery: []
 }
 
 // Imágenes: límites por archivo (espejo del backend).

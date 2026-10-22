@@ -578,6 +578,8 @@ async function saveDesign() {
     description: designForm.description.trim(),
     about_title: designForm.about_title.trim(),
     about_text: designForm.about_text.trim(),
+    show_about: Boolean(designForm.show_about),
+    show_gallery: Boolean(designForm.show_gallery),
     contact_email: designForm.contact_email.trim(),
     show_contact: Boolean(designForm.show_contact),
     theme: designForm.theme,
@@ -647,6 +649,52 @@ async function onMoveCarousel(imageId, direction) {
   const ok = await store.moveCarouselImage(imageId, direction)
   carouselBusy.value = false
   if (!ok) carouselErr.value = store.lastError
+}
+
+// Galería de la web pública: la sección la activa el dueño (show_gallery) y
+// el cupo lo fija el beneficio max_gallery_images del plan (Básico 0,
+// Estándar 5, Premium 15). Misma cuota de imágenes que logo y carrusel;
+// borrar/reordenar sigue disponible aunque el plan baje el cupo.
+const galleryInput = ref(null)
+const galleryBusy = ref(false)
+const galleryErr = ref('')
+const galleryImages = computed(() => store.customization.gallery || [])
+const galleryMax = computed(() => plan.value?.benefits?.max_gallery_images)
+const canGallery = computed(() => galleryMax.value === null || Number(galleryMax.value) > 0)
+const galleryHint = computed(() => {
+  const base = 'Se muestran como una grilla en tu web y al hacer clic se ven en grande.'
+  if (!canGallery.value) return `La galería se habilita desde el Plan estándar (5 fotos; 15 en Premium). ${base}`
+  return galleryMax.value === null ? `Imágenes de hasta 4 MB. ${base}` : `Hasta ${galleryMax.value} imágenes de 4 MB. ${base}`
+})
+
+async function onGalleryPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file || !canGallery.value) return
+  galleryErr.value = validateImageFile(file)
+  if (galleryErr.value) return
+  galleryBusy.value = true
+  const ok = await store.addGalleryImage(file)
+  galleryBusy.value = false
+  if (!ok) galleryErr.value = store.fieldErrors.image || store.fieldErrors.detail || store.lastError
+}
+
+async function onRemoveGallery(imageId) {
+  if (galleryBusy.value) return
+  galleryErr.value = ''
+  galleryBusy.value = true
+  const ok = await store.removeGalleryImage(imageId)
+  galleryBusy.value = false
+  if (!ok) galleryErr.value = store.lastError
+}
+
+async function onMoveGallery(imageId, direction) {
+  if (galleryBusy.value) return
+  galleryErr.value = ''
+  galleryBusy.value = true
+  const ok = await store.moveGalleryImage(imageId, direction)
+  galleryBusy.value = false
+  if (!ok) galleryErr.value = store.lastError
 }
 
 // Logo de la web pública (has_customization): sube directo a R2 vía /stores/customization/logo/.
@@ -1404,6 +1452,18 @@ async function changePassword() {
               <p class="hint">Se muestra como una sección completa en tu web, después de la portada. Si queda vacío, la sección no aparece. {{ designForm.about_text.length }}/2000</p>
               <p v-if="designFieldErr('about_text')" class="field-error" role="alert">{{ designFieldErr('about_text') }}</p>
             </div>
+            <div class="field">
+              <label id="design-show-about-label">Sección Sobre nosotros</label>
+              <label class="check">
+                <input
+                  v-model="designForm.show_about"
+                  type="checkbox"
+                  aria-labelledby="design-show-about-label"
+                />
+                <span>Mostrar la sección Sobre nosotros en tu web</span>
+              </label>
+              <p class="hint">Aparece después de la portada. También se oculta sola si el texto queda vacío.</p>
+            </div>
             <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
             <div class="grid-2">
               <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
@@ -1422,6 +1482,43 @@ async function changePassword() {
                 <span>Mostrar en tu web el formulario de contacto con el mapa y tus canales</span>
               </label>
               <p class="hint">Incluye verificación antispam. Desactivala si no querés recibir mensajes.</p>
+            </div>
+            <div class="field" :class="{ locked: !canGallery }">
+              <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></label>
+              <div v-if="canGallery || galleryImages.length" class="carousel-box">
+                <div v-for="(img, i) in galleryImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen ${i + 1} de la galería`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || galleryBusy" @click="onMoveGallery(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === galleryImages.length - 1 || galleryBusy" @click="onMoveGallery(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button
+                  v-if="canGallery && (galleryMax === null || galleryImages.length < galleryMax)"
+                  type="button" class="carousel-add" :disabled="galleryBusy"
+                  @click="galleryInput?.click()"
+                >
+                  <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="galleryInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-gallery-label" @change="onGalleryPicked" />
+              <p class="hint">{{ galleryHint }}</p>
+              <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
+            </div>
+            <div class="field">
+              <label id="design-show-gallery-label">Sección Galería</label>
+              <label class="check">
+                <input
+                  v-model="designForm.show_gallery"
+                  type="checkbox"
+                  aria-labelledby="design-show-gallery-label"
+                />
+                <span>Mostrar la sección Galería en tu web</span>
+              </label>
+              <p class="hint">Aparece entre Sobre nosotros y el catálogo. También se oculta sola si no hay imágenes cargadas.</p>
             </div>
           </div>
           <div class="card">

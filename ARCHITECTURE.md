@@ -398,9 +398,11 @@ StoreCustomization        (diseño de la web pública)
     ├── instagram / tiktok / facebook  (handles → botones)
     ├── about_title  (≤80, default 'Sobre nosotros')
     ├── about_text   (≤2000; vacío = la sección no se muestra)
+    ├── show_about   (default true → toggle del dueño sobre la sección)
     ├── contact_email (destino del formulario Contáctanos; vacío = email de la cuenta)
     ├── show_contact  (default true → sección Contáctanos en la web)
     ├── show_location (default true → mapa Google embebido en Contáctanos, has_location_map)
+    ├── show_gallery  (default true → sección Galería en la web)
     └── updated_at
 
 StoreCarouselImage        (banners de portada, máx. 5)
@@ -408,13 +410,20 @@ StoreCarouselImage        (banners de portada, máx. 5)
     ├── image_key    (key en R2) + image_size (bytes)
     ├── position     (orden editable)
     └── created_at
+
+StoreGalleryImage         (sección Galería entre Sobre nosotros y el catálogo)
+    ├── store        ──FK──► Store (related_name='gallery_images', idx_gallery_store)
+    ├── image_key    (key en R2) + image_size (bytes)
+    ├── position     (orden editable)
+    └── created_at
 ```
 
 #### Almacenamiento de imágenes (Cloudflare R2)
 - `services/storage.py` habla con R2 vía su API compatible con S3 (`boto3`, SigV4). Credenciales en `.env`: `S3_API` (endpoint), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` (dominio público del bucket; si falta, las URLs se sirven firmadas con TTL de 7 días).
-- Las keys son `stores/<store_id>/<logo|carousel|products>/<uuid>.<ext>` y se guardan en DB (`logo_key`/`image_key`); `object_url()` las resuelve a `R2_PUBLIC_URL/<key>`.
+- Las keys son `stores/<store_id>/<logo|carousel|gallery|products>/<uuid>.<ext>` y se guardan en DB (`logo_key`/`image_key`); `object_url()` las resuelve a `R2_PUBLIC_URL/<key>`.
 - Validación por firma de bytes (PNG/JPG/WebP/GIF): logo ≤2 MB, imágenes ≤4 MB, carrusel ≤5 imágenes.
-- La cuota sale del beneficio `max_storage_mb` del plan vigente; `storage_used_bytes` acumula los bytes del logo + carrusel + productos. Al reemplazar/borrar se libera la cuota del archivo anterior. Además `max_images` (limit: Básico 120 / Estándar 600 / Premium `None` ilimitado) topea la **cantidad** de archivos (logo + carrusel + productos con imagen) — `_check_image_slot` la fuerza solo al subir una imagen nueva; `storage_payload` devuelve `{used_bytes, max_mb, images, max_images}` y viaja en `GET /stores/` y en cada subida/borrado para el `StorageMeter` del dashboard.
+- La cuota sale del beneficio `max_storage_mb` del plan vigente; `storage_used_bytes` acumula los bytes del logo + carrusel + galería + productos. Al reemplazar/borrar se libera la cuota del archivo anterior. Además `max_images` (limit: Básico 120 / Estándar 600 / Premium `None` ilimitado) topea la **cantidad** de archivos (logo + carrusel + galería + productos con imagen) — `_check_image_slot` la fuerza solo al subir una imagen nueva; `storage_payload` devuelve `{used_bytes, max_mb, images, max_images}` y viaja en `GET /stores/` y en cada subida/borrado para el `StorageMeter` del dashboard.
+- La galería tiene además su propio `limit` `max_gallery_images` (Básico 0 / Estándar 5 / Premium 15): `gallery_limit()` lo lee del plan vigente y `upload_gallery_image` lo fuerza antes de subir (0 → "disponible desde el Plan estándar").
 - Ojo: los servicios mutan la instancia `X.store` propia (no el `store` de la vista). Para devolver `storage` en la respuesta hay que usar `customization.store` / `image.store` / `product.store`, no el `store` resuelto por la vista.
 
 #### API
@@ -431,6 +440,7 @@ StoreCarouselImage        (banners de portada, máx. 5)
 - Reglas de slug: minúsculas/números/guiones internos, 3–60 chars, lista `RESERVED_SLUGS` (admin, api, planes, tienda...).
 - `POST/DELETE /api/stores/customization/logo/` (Bearer, multipart `{logo}`) — sube/reemplaza o quita el logo en R2. 403 sin `has_customization`; 400 si excede `max_storage_mb` o formato/peso inválido. Responde `{Exito, customization, storage:{used_bytes, max_mb}}`.
 - `POST /api/stores/customization/carousel/` (Bearer, multipart `{image}`) — agrega banner; `DELETE .../carousel/<id>/` lo borra; `PATCH .../carousel/order/` reordena `{order:[ids]}`. Las 3 acciones responden 403 sin `has_design_advanced` (Plan premium).
+- `POST /api/stores/customization/gallery/` (Bearer, multipart `{image}`) — agrega imagen a la galería; `DELETE .../gallery/<id>/` la borra; `PATCH .../gallery/order/` reordena `{order:[ids]}`. Las 3 exigen `has_customization` (403); el cupo `max_gallery_images` del plan responde 400 desde `upload_gallery_image` (Básico 0 → "disponible desde el Plan estándar"). Borrar/reordenar queda habilitado aunque el plan baje el cupo.
 - `theme`/`accent`/`name_font` son catálogos cerrados: el frontend los traduce a paletas/estilos CSS propios (`STORE_ACCENTS`/`STORE_THEMES`/`STORE_FONTS` en `stores.api.js`); nunca se guarda CSS del usuario. Las fuentes se cargan on-demand desde Google Fonts (`ensureStoreFont` para una, `ensureStoreFontList` para el selector completo). `name_font_size` viaja como `--store-name-size` dentro de `storeThemeVars` y el CSS la aplica en la portada (h1), la barra superior (proporcional, tope 20px), la vista previa del dashboard y el folleto.
 
 ### catalog (StoreApp)
@@ -477,6 +487,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/stores/customization/      → diseño de la web pública (GET; PUT/PATCH con has_customization; los campos de diseño avanzado se descartan sin has_design_advanced)
 /api/stores/customization/logo/ → logo de la web (POST multipart/DELETE)
 /api/stores/customization/carousel/ → carrusel de banners (POST/DELETE/PATCH order)
+/api/stores/customization/gallery/  → galería de la web (POST/DELETE/PATCH order; cupo max_gallery_images)
 /api/stores/public/<slug>/catalog/ → catálogo visible de la web pública (AllowAny)
 /api/stores/public/<slug>/contact/captcha/ → challenge antispam firmado para Contáctanos (GET AllowAny)
 /api/stores/public/<slug>/contact/        → formulario Contáctanos → email al dueño (POST AllowAny, throttle 10/h por IP)
@@ -508,7 +519,7 @@ Authorization: Bearer <access_token>
 | Servicio       | Uso                                      |
 |----------------|------------------------------------------|
 | Mercado Pago   | Pasarela de pago (en desarrollo)         |
-| Cloudflare R2  | Almacenamiento de imágenes del cliente (logo, carrusel, productos), API compatible con S3 vía `boto3` |
+| Cloudflare R2  | Almacenamiento de imágenes del cliente (logo, carrusel, galería, productos), API compatible con S3 vía `boto3` |
 | PostgreSQL     | Base de datos principal                  |
 
 > Los datos de tarjeta nunca pasan por el backend. Mercado Pago los maneja
@@ -542,6 +553,11 @@ Convención de indexación (obligatoria al agregar relaciones):
 | `benefits_planpresentation` | unique: plan · unique: slug |
 | `stores_store` | unique: user · unique: slug |
 | `stores_storecustomization` | unique: store |
+| `stores_storecarouselimage` | `idx_carousel_store` |
+| `stores_storegalleryimage` | `idx_gallery_store` |
+| `stores_category` | `idx_category_store` |
+| `stores_brand` | `idx_brand_store` |
+| `stores_product` | `idx_product_store_active` (store, is_active) · `idx_product_category` · `idx_product_brand` · check: price >= 0 |
 | `locations_province` | unique: name_province |
 
 ---

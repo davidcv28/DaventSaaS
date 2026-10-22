@@ -103,10 +103,12 @@ class StoreCustomization(models.Model):
     logo_key                    =   models.CharField(max_length = 200, blank = True, verbose_name = 'Logo (key en R2)')
     logo_size                   =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño del logo (bytes)')
     description                 =   models.TextField(max_length = 800, blank = True, verbose_name = 'Descripción')
-    #Sección "Sobre nosotros": la web pública la renderiza solo si about_text
-    #tiene contenido (about_title vacío -> título por defecto en el frontend).
+    #Sección "Sobre nosotros": la web pública la renderiza solo si show_about
+    #está activo y about_text tiene contenido (about_title vacío -> título
+    #por defecto en el frontend).
     about_title                 =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Sobre nosotros')
     about_text                  =   models.TextField(max_length = 2000, blank = True, verbose_name = 'Texto de la sección Sobre nosotros')
+    show_about                  =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Sobre nosotros')
     #Formulario de contacto: los mensajes llegan a contact_email o, si está
     #vacío, al email de la cuenta del dueño. show_contact apaga la sección.
     contact_email               =   models.EmailField(blank = True, verbose_name = 'Email de contacto público')
@@ -118,6 +120,10 @@ class StoreCustomization(models.Model):
     tiktok                      =   models.CharField(max_length = 40, blank = True, verbose_name = 'TikTok')
     facebook                    =   models.CharField(max_length = 60, blank = True, verbose_name = 'Facebook')
     show_location               =   models.BooleanField(default = True, verbose_name = 'Mostrar mapa de ubicación')
+    #Sección "Galería": grilla de imágenes propias del negocio. El dueño
+    #decide si aparece (además se oculta sola si no hay imágenes cargadas);
+    #el cupo lo fija el beneficio 'max_gallery_images' del plan.
+    show_gallery                =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Galería')
     updated_at                  =   models.DateTimeField(auto_now = True)
     class Meta:
         app_label               =   'stores'
@@ -149,3 +155,28 @@ class StoreCarouselImage(models.Model):
         ]
     def __str__(self):
         return f'carousel:{self.store.slug}#{self.position}'
+#=========================================
+# STORE GALLERY IMAGE MODEL
+#=========================================
+class StoreGalleryImage(models.Model):
+    """
+    Imagen de la sección Galería de la web pública. El tope lo fija el
+    beneficio 'max_gallery_images' del plan vigente (Básico 0, Estándar 5,
+    Premium 15); además consume la misma cuota max_storage_mb/max_images
+    que el logo, el carrusel y los productos.
+    """
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'gallery_images', db_index = False)
+    image_key                   =   models.CharField(max_length = 200, verbose_name = 'Imagen (key en R2)')
+    image_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño (bytes)')
+    position                    =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Imagen de galería'
+        verbose_name_plural     =   'Imágenes de galería'
+        ordering                =   ['position', 'id']
+        indexes                 =   [
+            models.Index(fields = ['store'], name = 'idx_gallery_store'),
+        ]
+    def __str__(self):
+        return f'gallery:{self.store.slug}#{self.position}'

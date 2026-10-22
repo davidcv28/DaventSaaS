@@ -130,9 +130,15 @@ def image_limit(profile):
     if 'max_images' not in benefits:
         return 0
     return benefits['max_images']
+def gallery_limit(profile):
+    """Tope de la galería del plan vigente (max_gallery_images). None = ilimitado, 0 = sin galería."""
+    benefits        =   plan_benefits_of(profile)
+    if 'max_gallery_images' not in benefits:
+        return 0
+    return benefits['max_gallery_images']
 def image_count(store):
-    """Cantidad de imágenes que ocupan cuota: logo + carrusel + productos."""
-    count           =   store.carousel_images.count() + store.products.exclude(image_key = '').count()
+    """Cantidad de imágenes que ocupan cuota: logo + carrusel + galería + productos."""
+    count           =   store.carousel_images.count() + store.gallery_images.count() + store.products.exclude(image_key = '').count()
     customization   =   getattr(store, 'customization', None)
     if customization and customization.logo_key:
         count       +=  1
@@ -263,6 +269,46 @@ def upload_carousel_image(store, upload):
     return image
 def delete_carousel_image(image):
     """Borra la imagen del carrusel en R2, libera cuota y la elimina."""
+    store       =   image.store
+    _delete_object(image.image_key)
+    size        =   image.image_size
+    image.delete()
+    _consume_quota(store, store.storage_used_bytes - size)
+#=========================================
+# GALLERY UPLOAD / DELETE (sección Galería de la web pública)
+#=========================================
+def upload_gallery_image(store, upload):
+    """
+    Sube una imagen de la galería a R2 y crea el StoreGalleryImage
+    al final del orden. El tope lo fija el beneficio max_gallery_images
+    del plan (0 = sin galería; None = ilimitado). Lanza ValueError si el
+    storage no está configurado, el archivo es inválido o no hay cupo/cuota.
+    """
+    from StoreApp.domains.stores.models import StoreGalleryImage
+    if not storage_configured():
+        raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
+    error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
+    if error:
+        raise ValueError(error)
+    limit       =   gallery_limit(store.user)
+    if limit == 0:
+        raise ValueError('La galería de imágenes está disponible desde el Plan estándar.')
+    if limit is not None and store.gallery_images.count() >= limit:
+        raise ValueError(f'Tu plan admite hasta {limit} imágenes en la galería. Pasá a un plan superior para sumar más.')
+    _check_image_slot(store, is_new = True)
+    new_used    =   _check_quota(store, upload.size)
+    key         =   _put_object(store, 'gallery', upload)
+    last        =   store.gallery_images.order_by('-position').first()
+    image       =   StoreGalleryImage.objects.create(
+        store       =   store,
+        image_key   =   key,
+        image_size  =   upload.size,
+        position    =   (last.position + 1) if last else 0,
+    )
+    _consume_quota(store, new_used)
+    return image
+def delete_gallery_image(image):
+    """Borra la imagen de la galería en R2, libera cuota y la elimina."""
     store       =   image.store
     _delete_object(image.image_key)
     size        =   image.image_size

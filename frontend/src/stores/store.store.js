@@ -181,6 +181,58 @@ export const useStoreStore = defineStore('store', () => {
     }
   }
 
+  // Galería de la web pública (tope max_gallery_images del plan: Básico 0,
+  // Estándar 5, Premium 15). Mismo patrón que el carrusel.
+  async function addGalleryImage(file) {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.addGalleryImage(file)
+      notice.value = data?.Exito || 'La imagen se agregó a la galería.'
+      if (data?.storage) storage.value = data.storage
+      await refreshCustomization()
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
+  async function removeGalleryImage(imageId) {
+    if (!store.value) return false
+    lastError.value = ''
+    notice.value = ''
+    try {
+      const data = await storesApi.removeGalleryImage(imageId)
+      notice.value = data?.Exito || 'La imagen se eliminó de la galería.'
+      if (data?.storage) storage.value = data.storage
+      await refreshCustomization()
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
+  async function moveGalleryImage(imageId, direction) {
+    const list = customization.value.gallery || []
+    const index = list.findIndex((img) => img.id === imageId)
+    const target = index + direction
+    if (index < 0 || target < 0 || target >= list.length) return false
+    const order = list.map((img) => img.id)
+    ;[order[index], order[target]] = [order[target], order[index]]
+    try {
+      await storesApi.reorderGallery(order)
+      await refreshCustomization()
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
   async function refreshCustomization() {
     try {
       const data = await storesApi.customization()
@@ -203,6 +255,7 @@ export const useStoreStore = defineStore('store', () => {
     store, status, lastError, notice, fieldErrors, hasStore, customization, storage,
     saveCustomization, uploadLogo, removeLogo,
     addCarouselImage, removeCarouselImage, moveCarouselImage, refreshCustomization,
+    addGalleryImage, removeGalleryImage, moveGalleryImage,
     loadMine, claim, update, reset
   }
 })
