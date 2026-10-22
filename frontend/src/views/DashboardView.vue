@@ -830,6 +830,7 @@ function showRenewalActivated() {
 }
 
 async function planAction(p) {
+  if (p.is_trial) return // plan de prueba: informativo, no se puede elegir
   busyPlan.value = p.id
   billing.lastError = ''
   billing.notice = ''
@@ -1045,6 +1046,7 @@ async function changePassword() {
             <span class="hero-progress-bar" :style="{ width: planProgress + '%' }"></span>
           </div>
           <p class="hero-remaining"><strong>{{ plan.remaining }} días restantes</strong></p>
+          <p v-if="plan.isTrial" class="hero-pending">Plan de prueba: al terminar los 10 días tenés que elegir un plan para seguir publicado.</p>
           <p v-if="billing.subscription?.pending_plan_name" class="hero-pending">Cambio a {{ billing.subscription.pending_plan_name }} pendiente: se aplica cuando se acredite el pago.</p>
           <p v-if="plan.autoRenew" class="hero-pending"><AppIcon name="refresh" :size="14" /> Débito automático activo: se renueva el {{ fmtDate(plan.end) }}.</p>
           <p v-else-if="plan.cancelledAt" class="hero-pending"><AppIcon name="calendar" :size="14" /> Renovación automática desactivada: tu plan termina el {{ fmtDate(plan.end) }}.</p>
@@ -1055,11 +1057,11 @@ async function changePassword() {
           <span v-else class="badge-danger"><AppIcon name="dot" :size="12" /> Vencida</span>
           <div class="hero-price-wrap">
             <strong class="hero-price">{{ formatARS(plan.price) }}</strong>
-            <span>por mes</span>
+            <span v-if="Number(plan.price) > 0">por mes</span>
           </div>
-          <button class="btn secondary btn-auto" @click="section = 'plans'">Cambiar plan</button>
+          <button class="btn secondary btn-auto" @click="section = 'plans'">{{ plan.isTrial ? 'Ver planes' : 'Cambiar plan' }}</button>
           <button v-if="plan.autoRenew" class="btn secondary btn-auto" :disabled="renewBusy" @click="confirmCancel = true">Cancelar renovación</button>
-          <button v-else class="btn secondary btn-auto" :disabled="renewBusy" @click="activateAutoRenew"><AppIcon name="refresh" :size="16" /> Activar débito automático</button>
+          <button v-else-if="!plan.isTrial" class="btn secondary btn-auto" :disabled="renewBusy" @click="activateAutoRenew"><AppIcon name="refresh" :size="16" /> Activar débito automático</button>
         </div>
       </div>
 
@@ -1293,9 +1295,14 @@ async function changePassword() {
       <template v-else-if="store.hasStore">
         <div class="card">
           <h3><AppIcon name="store" :size="18" /> Tu link público</h3>
+          <AlertMessage
+            v-if="store.store.is_blocked"
+            kind="error"
+            :message="`Tu web fue bloqueada por el equipo de DAVENT${store.store.blocked_reason ? ` — motivo: ${store.store.blocked_reason}` : ''}. Si creés que es un error, escribinos desde la sección de ayuda.`"
+          />
           <div class="link-bar">
             <code class="mono link-url">{{ publicUrl }}</code>
-            <span class="pill" :class="store.store.is_published ? 'ok' : 'muted'">{{ store.store.is_published ? 'Activo' : 'Pausado' }}</span>
+            <span class="pill" :class="store.store.is_blocked ? 'danger' : (store.store.is_published ? 'ok' : 'muted')">{{ store.store.is_blocked ? 'Bloqueada' : (store.store.is_published ? 'Activo' : 'Pausado') }}</span>
           </div>
           <div class="btn-row link-actions">
             <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>

@@ -91,7 +91,7 @@ transaction.atomic()
 ---
 
 ### suscriptions
-Gestiona los planes y suscripciones de los usuarios. Los planes por defecto (básico/estándar/premium) se cargan con `manage.py suscriptions` (datos en `management/commands/seeds.py`).
+Gestiona los planes y suscripciones de los usuarios. Los planes por defecto (prueba/básico/estándar/premium) se cargan con `manage.py suscriptions` (datos en `management/commands/seeds.py`; `get_or_create` por name, no pisa precios editados a mano pero sí corrige el flag `is_trial`).
 
 ```
 suscriptions/
@@ -113,7 +113,9 @@ suscriptions/
 ```
 SuscriptionPlan
     ├── name (único)
-    └── price
+    ├── price
+    ├── is_trial            (plan de prueba: solo se otorga en el registro)
+    └── TRIAL_DAYS = 10     (duración del trial; constante de clase)
 
 Suscription
     ├── user                       ──OneToOne──► UserProfile
@@ -131,8 +133,11 @@ Suscription
                     → única fuente de verdad para el gating de beneficios
 ```
 
+#### Plan de prueba (trial)
+Toda cuenta nueva arranca con el plan `is_trial=True` ("Plan de prueba", $0): `RegisterUserQuery` crea la `Suscription` con `end_date = now + TRIAL_DAYS` (10 días) y `status='Suscripción activa'`. Vencido ese plazo `grants_access()` deja de dar acceso (web pública 404, gating de beneficios off) y **no hay forma de reactivarlo**: el flag `is_trial` lo excluye de todo flujo de elección — queryset de `plan_suscription` en `SuscriptionSerializer`, `_resolve_suscription` de payments (400 "no está disponible"), `assign` (404) y el listado `GET /api/suscription-plans/` (que alimenta el dropdown de asignación del admin). Sí viaja en `GET /api/plans/` (con `is_trial` en el payload) para que el frontend resuelva los beneficios del plan vigente y muestre la tarjeta informativa no seleccionable. Sus beneficios son los del plan Premium salvo `max_images=50` y `max_storage_mb=200`. Un usuario con trial vencido que paga un plan entra por el flujo estándar (`pending_plan_suscription` → `ApplyPendingPlanQuery`).
+
 #### Asignación manual de plan (staff)
-`POST /api/suscriptions/assign/` (IsAdminUser) `{user_id, plan_id}`: upsert de la `Suscription` del usuario — crea la fila si no existe o la pisa: plan nuevo, `status='Suscripción activa'`, `start_date=now`, `end_date=now+30d`, `pending_plan_suscription=None`. No toca el débito automático de MP (si existe sigue su curso). `user_id` es el id del `User` de auth (requiere `UserProfile` cargado: 400 si no existe). La respuesta incluye la suscripción serializada con `auth_user_id` (mapea suscripción ↔ usuario en el panel admin).
+`POST /api/suscriptions/assign/` (IsAdminUser) `{user_id, plan_id}`: upsert de la `Suscription` del usuario — crea la fila si no existe o la pisa: plan nuevo, `status='Suscripción activa'`, `start_date=now`, `end_date=now+30d`, `pending_plan_suscription=None`. No toca el débito automático de MP (si existe sigue su curso). `user_id` es el id del `User` de auth (requiere `UserProfile` cargado: 400 si no existe). Los planes `is_trial` devuelven 404 (no reactivables). La respuesta incluye la suscripción serializada con `auth_user_id` (mapea suscripción ↔ usuario en el panel admin).
 
 #### Patrón de serializers (lectura vs escritura)
 ```
@@ -372,6 +377,9 @@ Store
     ├── user                ──OneToOne──► UserProfile
     ├── slug                (único, elegido por el usuario)
     ├── is_published        (apaga/enciende el link)
+    ├── is_blocked          (bloqueo de moderación staff → rutas públicas 404)
+    ├── blocked_reason      (motivo del bloqueo, ≤200)
+    ├── blocked_at          (fecha del bloqueo, null si no está bloqueada)
     ├── storage_used_bytes  (cuota de imágenes consumida en R2)
     └── created_at
 
@@ -410,10 +418,11 @@ StoreCarouselImage        (banners de portada, máx. 5)
 
 #### API
 - `POST /api/stores/` (Bearer) — claim del link en el onboarding; `{slug}`. Rechaza si ya tiene tienda.
-- `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding. Para staff devuelve **todas las webs** y el serializer suma `business_name`, `owner_id`, `owner_name`, `owner_email`, `plan_name` y `has_access` (alimenta la sección Webs del panel admin).
+- `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding. Para staff devuelve **todas las webs** y el serializer suma `business_name`, `owner_id`, `owner_name`, `owner_email`, `plan_name` y `has_access` (alimenta la sección Webs del panel admin); además expone `is_blocked`, `blocked_reason` y `blocked_at` de la moderación staff.
 - `PUT/PATCH /api/stores/<pk>/` (Bearer) — renombrar el slug o pausar el link (`is_published`).
 - `GET /api/stores/slug-available/?slug=x` (Bearer) — `{available, reason}` con reason `invalid | reserved | taken`.
-- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization, has_design_advanced`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`). `has_design_advanced` sale del plan del dueño: sin él la web pública no renderiza la portada (`.sp-banner` con carrusel/cover) y en cambio muestra un botón claro/oscuro en el nav para el visitante (tema solo de la visita, no persiste). El mapa de ubicación depende de `has_location_map` (Estándar y Premium): `location_address` solo viaja cuando `show_location` está activo y el plan incluye ese flag — es la dirección ya armada para geocodificar (`address, ciudad, provincia, Argentina`) que alimenta el iframe de Google Maps (`maps.google.com/maps?q=…&output=embed`); `null` en cualquier otro caso. La web pública usa `StoreCustomizationPublicSerializer`: mismo payload que `StoreCustomizationSerializer` **menos `contact_email`** (el formulario Contáctanos existe justamente para no exponer el email del dueño a scrapers).
+- `POST /api/stores/<id>/block/` y `POST /api/stores/<id>/unblock/` (IsAdminUser) — moderación de webs por infracción (derechos de autor, contenido ilegal, fraude...). `block` acepta `{reason?}` (≤200 chars, queda en `blocked_reason` + `blocked_at`); `unblock` limpia los tres campos. Responden `{Exito, store}` con la tienda serializada (`StoreSerializerList`). Una web bloqueada devuelve **404 en todas las rutas públicas** (`public`, `public/.../catalog`, `contact/captcha`, `contact` — el filtro `is_blocked=False` convive con `is_published`) sin importar la suscripción; el dueño sigue entrando a su panel y ve el motivo en "Mi tienda". La sección Webs del admin muestra la pill "Bloqueada" con motivo y fecha, y el formulario inline de motivo.
+- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization, has_design_advanced`); 404 si no existe, `is_published=false`, `is_blocked=true` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`). `has_design_advanced` sale del plan del dueño: sin él la web pública no renderiza la portada (`.sp-banner` con carrusel/cover) y en cambio muestra un botón claro/oscuro en el nav para el visitante (tema solo de la visita, no persiste). El mapa de ubicación depende de `has_location_map` (Estándar y Premium): `location_address` solo viaja cuando `show_location` está activo y el plan incluye ese flag — es la dirección ya armada para geocodificar (`address, ciudad, provincia, Argentina`) que alimenta el iframe de Google Maps (`maps.google.com/maps?q=…&output=embed`); `null` en cualquier otro caso. La web pública usa `StoreCustomizationPublicSerializer`: mismo payload que `StoreCustomizationSerializer` **menos `contact_email`** (el formulario Contáctanos existe justamente para no exponer el email del dueño a scrapers).
 - `GET /api/stores/public/<slug>/contact/captcha/` (AllowAny) — emite un challenge antispam para el formulario Contáctanos: `{challenge_id, question}` donde `question` es una suma ("4 + 3 = ?"). `challenge_id` viaja **firmado** (`TimestampSigner`, `stores.contact:<slug>` + timestamp + hash de la respuesta): nunca incluye la respuesta en claro ni la compara el frontend. 404 si la tienda no resuelve el link público o `show_contact` está apagado. TTL 10 min (`CONTACT_CHALLENGE_TTL_S`).
 - `POST /api/stores/public/<slug>/contact/` (AllowAny, throttle `10/hour` por IP — `AnonRateThrottle` scope `store_contact`) — envía el mensaje del visitante al dueño por email (`send_contact_message` en `services/contact.py`): `{name, email, message (≤2000), challenge_id, answer, website}`. `website` es **honeypot** (el template lo oculta con CSS): si viene con algo devuelve el mismo éxito genérico sin enviar nada. Anti-spam en capas: respuesta correcta + mínimo 2s entre captcha y envío (evita envíos instantáneos pre-armados) + throttle + honeypot. El email sale con `send_mail` al `contact_email` del diseño o al email de la cuenta del dueño (fallback), `reply_to` = email del visitante. 404 si `show_contact` está apagado o la tienda no tiene acceso vigente; 400 con error por campo si el captcha venció/falla.
 - `GET /api/stores/customization/` (Bearer) — mi diseño (`get_or_create` con defaults).

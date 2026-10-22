@@ -14,11 +14,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             self.stdout.write(self.style.HTTP_INFO('CARGANDO PLANES POR DEFECTO'))
-            bulk_suscriptions   =   []
             for suscription_item, value in dict_suscriptions.items():
-                new_suscription =   SuscriptionPlan(name = value['name'], price = value['price'])
-                bulk_suscriptions.append(new_suscription)
-            SuscriptionPlan.objects.bulk_create(bulk_suscriptions, ignore_conflicts = True)
+                plan, created   =   SuscriptionPlan.objects.get_or_create(
+                    name        =   value['name'],
+                    defaults    =   {'price': value['price'], 'is_trial': value.get('is_trial', False)},
+                )
+                #El flag trial forma parte del seed: si el plan ya existía se corrige acá
+                is_trial        =   value.get('is_trial', False)
+                if not created and plan.is_trial != is_trial:
+                    plan.is_trial   =   is_trial
+                    plan.save(update_fields = ['is_trial'])
             self.stdout.write(self.style.SUCCESS('LOS PLANES SE CARGARON CORRECTAMENTE'))
         except Exception as e:
             self.stdout.write(self.style.ERROR('ALGO SALIO MAL, NO SE LOGRARON CARGAR LOS PLANES'))

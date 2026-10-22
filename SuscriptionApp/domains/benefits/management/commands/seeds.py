@@ -25,6 +25,38 @@ dict_benefits = {
 }
 
 dict_plan_benefits = {
+    #Plan de prueba (is_trial): se otorga solo en el registro, dura
+    #SuscriptionPlan.TRIAL_DAYS y no es seleccionable ni reactivable.
+    #Beneficios full Premium salvo los topes de imágenes y almacenamiento.
+    'Plan de prueba':   {
+        'benefits'      :   {
+            'max_catalogs'      :   1,
+            'has_public_link'   :   True,
+            'has_qr'            :   True,
+            'max_products'      :   None,
+            'max_images'        :   50,
+            'max_storage_mb'    :   200,
+            'has_stats'         :   True,
+            'has_flyers'        :   True,
+            'has_customization' :   True,
+            'has_location_map'  :   True,
+            'has_design_advanced':  True,
+            'has_advanced_menu' :   True,
+        },
+        'presentation'  :   {
+            'slug'          :   'prueba',
+            'tagline'       :   'Probá todo gratis por 10 días',
+            'cta_label'     :   'Incluido al registrarte',
+            'featured'      :   False,
+            'display_order' :   0,
+            'bullets'       :   [
+                '10 días gratis, sin tarjeta ni débito automático',
+                'Todas las funciones del plan Premium',
+                'Hasta 50 imágenes y 200 MB de almacenamiento',
+                'Al vencer, elegí un plan para seguir publicado',
+            ],
+        },
+    },
     'Plan basico'   :   {
         'benefits'      :   {
             'max_catalogs'      :   1,

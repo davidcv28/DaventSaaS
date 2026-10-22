@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from AdminApp.domains.locations.models.models import City
 from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils import timezone
@@ -39,7 +42,7 @@ def RegisterUserQuery(validated_data : dict) -> User:
             email           =   email,
             password        =   password  
         )
-        UserProfile.objects.create(
+        profile = UserProfile.objects.create(
             user            =   new_user,
             #Sellamos la aceptación de TyC: fecha y versión vigente al momento del alta
             terms_accepted      =   bool(accept_terms),
@@ -47,4 +50,17 @@ def RegisterUserQuery(validated_data : dict) -> User:
             terms_version       =   TERMS_VERSION if accept_terms else None,
             **data
         )
+        #PLAN DE PRUEBA: toda cuenta nueva arranca con el plan trial (is_trial),
+        #vigente SuscriptionPlan.TRIAL_DAYS días. Al vencer pierde el acceso y no
+        #se puede reactivar: el plan no es seleccionable en ningún flujo.
+        trial_plan  =   SuscriptionPlan.objects.filter(is_trial = True).first()
+        if trial_plan:
+            now =   timezone.now()
+            Suscription.objects.create(
+                user                =   profile,
+                plan_suscription    =   trial_plan,
+                status              =   Suscription.STATUS_ACTIVE,
+                start_date          =   now,
+                end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
+            )
         return new_user

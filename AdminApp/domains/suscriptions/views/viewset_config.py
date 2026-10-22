@@ -59,7 +59,8 @@ SuscriptionPlanConfigs = {
     },
     'get': {
         'serializer'    :   SuscriptionPlanSerializer,
-        'queryset'      :   SuscriptionPlan.objects.all().order_by('price'),
+        #Sin planes de prueba: no son elegibles (ni desde el admin al asignar)
+        'queryset'      :   SuscriptionPlan.objects.filter(is_trial = False).order_by('price'),
         'permissions'   :   [AllowAny],
     },
 }

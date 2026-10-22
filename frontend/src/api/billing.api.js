@@ -2,10 +2,13 @@ import { http } from './http.js'
 
 // Dominio planes (SuscriptionApp/benefits):
 // GET  /api/plans/             público  -> tarjetas completas:
-//   [{id, name, price, slug, tagline, cta_label, bullets, featured, display_order,
+//   [{id, name, price, is_trial, slug, tagline, cta_label, bullets, featured, display_order,
 //     benefits: {max_catalogs, has_public_link, has_qr, max_products(null=ilimitado),
 //                max_storage_mb, has_stats, has_flyers, has_customization,
 //                has_design_advanced, has_advanced_menu}}]
+//   is_trial=true -> plan de prueba (10 días, solo se otorga en el registro):
+//   viaja en el catálogo para la tarjeta informativa y los beneficios del plan
+//   vigente, pero no es seleccionable (el backend también lo rechaza).
 // Dominio suscripciones (AdminApp):
 // GET  /api/suscriptions/      Bearer   -> mi suscripción (lista con 0..1)
 // POST /api/suscriptions/      Bearer {plan_suscription: <pk>} -> 201

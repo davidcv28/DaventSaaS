@@ -32,6 +32,7 @@ export const useBillingStore = defineStore('billing', () => {
       cancelledAt: subscription.value.cancelled_at || null,
       hasPreapproval: Boolean(subscription.value.has_preapproval),
       isCurrent: subscription.value.is_current !== false,
+      isTrial: Boolean(subscription.value.is_trial),
       slug: plan?.slug || '',
       benefits: plan?.benefits || null
     }

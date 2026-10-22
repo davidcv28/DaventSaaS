@@ -22,7 +22,7 @@ class PlanCatalogSerializer(serializers.ModelSerializer):
     benefits                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   SuscriptionPlan
-        fields                  =   ['id', 'name', 'price', 'slug', 'tagline', 'cta_label', 'bullets', 'featured', 'display_order', 'benefits']
+        fields                  =   ['id', 'name', 'price', 'is_trial', 'slug', 'tagline', 'cta_label', 'bullets', 'featured', 'display_order', 'benefits']
     def get_benefits(self, plan):
         out                     =   {}
         for plan_benefit in plan.benefits.all():

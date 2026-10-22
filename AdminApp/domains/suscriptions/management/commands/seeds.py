@@ -6,6 +6,11 @@ Creamos la estructura de datos base con las suscripciones default del sistema
 
 
 dict_suscriptions = {
+    'Trial'     :   {
+        'name'      :   'Plan de prueba',
+        'price'     :   0.00,
+        'is_trial'  :   True
+    },
     'Basic'      :   {
         'name'  :   'Plan basico',
         'price' :   30000.00

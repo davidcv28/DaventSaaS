@@ -443,6 +443,18 @@ body { transition: background-color .2s ease, color .2s ease; }
   padding: 3px 12px;
   z-index: 2;
 }
+.price-card.trial {
+  border-style: dashed;
+  border-color: var(--line-strong);
+}
+.price-card.trial:hover {
+  transform: none;
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+}
+.price-card .flag.trial {
+  background: var(--accent);
+}
 .price-card h3 {
   margin: 0 0 2px;
   font-size: 19px;
@@ -539,8 +551,13 @@ body { transition: background-color .2s ease, color .2s ease; }
 .bars .bar { width: 100%; max-width: 34px; min-height: 3px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, var(--brand-500), var(--accent)); transition: opacity .15s; }
 .bars .bar:hover { opacity: .82; }
 .bars .bar-label { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
-.assign-cell { display: flex; align-items: center; gap: 8px; }
+.assign-cell { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .assign-cell .select { width: auto; min-width: 130px; padding: 7px 10px; font-size: 13.5px; }
+.block-form-row td { background: var(--danger-bg); }
+.block-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.block-form label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.block-form .select { width: auto; min-width: 210px; padding: 7px 10px; font-size: 13.5px; }
+.block-form-note { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
 .plan-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line-soft); }
 .plan-row:last-child { border-bottom: none; }
 .plan-row strong { display: block; font-size: 14.5px; }

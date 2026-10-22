@@ -49,6 +49,7 @@ SuscriptionsFields                =   {
     },
     'plan_suscription'      :   {
         'label'             :   'Seleccionar plan',
-        'queryset'          :   SuscriptionPlan.objects.all()
+        #Los planes de prueba (is_trial) no se pueden elegir: solo se otorgan en el registro
+        'queryset'          :   SuscriptionPlan.objects.filter(is_trial = False)
     }
 }

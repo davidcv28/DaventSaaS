@@ -55,7 +55,8 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
                 {'user_id': 'El usuario no existe o todavía no completó su perfil.'},
                 status = status.HTTP_400_BAD_REQUEST,
             )
-        plan        =   get_object_or_404(SuscriptionPlan, pk = plan_id)
+        #El plan de prueba (is_trial) no se puede reasignar: 404 como si no existiera
+        plan        =   get_object_or_404(SuscriptionPlan, pk = plan_id, is_trial = False)
         now         =   timezone.now()
         suscription =   Suscription.objects.filter(user = profile).first() or Suscription(user = profile)
         suscription.plan_suscription            =   plan

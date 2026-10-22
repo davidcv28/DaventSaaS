@@ -86,9 +86,10 @@ class PaymentViewSet(PaymentBaseViewSet):
             suscription =   Suscription.objects.select_related('plan_suscription', 'user__user').filter(user__user = request.user).first()
         target_plan     =   None
         if plan_id:
-            target_plan =   SuscriptionPlan.objects.filter(pk = plan_id).first()
+            #Los planes de prueba (is_trial) no son pagables: solo se otorgan en el registro
+            target_plan =   SuscriptionPlan.objects.filter(pk = plan_id, is_trial = False).first()
             if not target_plan:
-                raise serializers.ValidationError({'plan_suscription': 'El plan seleccionado no existe'})
+                raise serializers.ValidationError({'plan_suscription': 'El plan seleccionado no está disponible'})
         if not suscription:
             if not target_plan:
                 raise serializers.ValidationError({'plan_suscription': 'Elegí un plan para iniciar el pago'})
