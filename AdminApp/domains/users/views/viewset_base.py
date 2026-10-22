@@ -15,6 +15,12 @@ class UserBaseViewSet(viewsets.GenericViewSet):
     def get_action_view(self):
         config          =   self.view_config.get(self.action)
         if not config:
+            #drf_spectacular introspecciona con actions sintéticas ('metadata')
+            #al generar el schema durante check --deploy; sin el fallback la
+            #introspección rompe el check. En requests reales la action siempre
+            #es una mapeada por el router, así que esto no abre nada.
+            config      =   next(iter(self.view_config.values()), None)
+        if not config:
             raise ValueError(f'No hay configuración disponible para la acción solicitada: {self.action}')
         return config
 
@@ -100,6 +106,10 @@ class UserProfileBaseVieSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, 
     view_config         =   {}
     def get_action_view(self):
         config          =   self.view_config.get(self.action)
+        if not config:
+            #Mismo fallback que UserBaseViewSet: drf_spectacular usa actions
+            #sintéticas al generar el schema (check --deploy).
+            config      =   next(iter(self.view_config.values()), None)
         if not config:
             raise ValueError('Acción no permitida')
         return config

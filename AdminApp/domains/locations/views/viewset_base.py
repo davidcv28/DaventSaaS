@@ -12,6 +12,10 @@ class LocationBaseViewSet(viewsets.GenericViewSet):
     def get_action_view(self):
         config = self.view_config.get(self.action)
         if not config:
+            #drf_spectacular introspecciona con actions sintéticas al generar
+            #el schema durante check --deploy; el fallback evita que rompa.
+            config = next(iter(self.view_config.values()), None)
+        if not config:
             raise ValueError(f'No hay configuración disponible para la acción solicitada: {self.action}')
         return config
 
