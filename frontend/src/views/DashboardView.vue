@@ -500,14 +500,21 @@ const POS_SAMPLE_PRODUCTS = ['Producto 1', 'Producto 2', 'Producto 3', 'Producto
   .map((name) => ({ name }))
 const POS_CART_QTY = [2, 1, 1]
 const posCartQty = POS_CART_QTY
+const posView = ref('sale') // sale | billing
 const posVars = computed(() => storeThemeVars(store.customization))
 const posProducts = computed(() => (catalog.products.length ? catalog.products.slice(0, 6) : POS_SAMPLE_PRODUCTS))
+const posCategories = computed(() => catalog.categories.slice(0, 3))
 const posCartItems = computed(() => posProducts.value.slice(0, POS_CART_QTY.length))
-const posTotal = computed(() => {
-  if (!posCartItems.value.some((p) => Number(p.price))) return '—'
-  const total = posCartItems.value.reduce((acc, p, i) => acc + (Number(p.price) || 0) * POS_CART_QTY[i], 0)
-  return formatARS(total)
+const posSubtotal = computed(() => posCartItems.value.reduce((acc, p, i) => acc + (Number(p.price) || 0) * POS_CART_QTY[i], 0))
+const posHasPrices = computed(() => posSubtotal.value > 0)
+const posTotal = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value) : '—'))
+const posIva = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value * 0.21) : '—'))
+const posInvoiceTotal = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value * 1.21) : '—'))
+const posCityName = computed(() => {
+  const found = cities.value.find((c) => Number(c.id) === Number(accountForm.city))
+  return found?.name || ''
 })
+const posAddress = computed(() => [accountForm.address, posCityName.value].filter(Boolean).join(', '))
 
 // --- Diseño web: personalización de la página pública ---
 // Contenido, logo y tema claro/oscuro: beneficio has_customization (en todos
@@ -1581,10 +1588,11 @@ async function changePassword() {
         <div>
           <div class="card">
             <h3><AppIcon name="monitor" :size="18" /> DAVENT Ventas</h3>
-            <p>Estamos desarrollando un programa de venta para instalar en la computadora de tu local. Cobrás en persona con el mismo catálogo que ya publicás en tu web, con tu logo y tu nombre.</p>
+            <p>Estamos desarrollando un programa de venta para instalar en la computadora de tu local. Cobrás en persona con el mismo catálogo que ya publicás en tu web, emitís el comprobante con tus datos fiscales y cerrás la caja del día.</p>
             <ul class="pos-feats">
               <li><AppIcon name="package" :size="16" /> <span>Productos, fotos y precios sincronizados con tu catálogo web.</span></li>
-              <li><AppIcon name="printer" :size="16" /> <span>Ticket de venta imprimible al momento de cobrar.</span></li>
+              <li><AppIcon name="receipt" :size="16" /> <span>Facturación integrada: tickets y facturas con tus datos fiscales.</span></li>
+              <li><AppIcon name="printer" :size="16" /> <span>Comprobante imprimible al momento de cobrar.</span></li>
               <li><AppIcon name="trending-up" :size="16" /> <span>Cierre de caja con el resumen de ventas del día.</span></li>
               <li><AppIcon name="circle-check" :size="16" /> <span>Funciona local: si se corta internet seguís vendiendo y sincroniza después.</span></li>
             </ul>
@@ -1595,7 +1603,7 @@ async function changePassword() {
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Así se va a ver</h3>
           <p class="pos-note">Vista de ejemplo: el programa sale con el logo y el nombre de tu tienda.</p>
-          <div class="pos-window" :style="posVars" role="img" :aria-label="`Vista previa del punto de venta de ${designShopName}`">
+          <div class="pos-window" :style="posVars">
             <div class="pos-titlebar">
               <span class="pos-dots"><i></i><i></i><i></i></span>
               <span class="pos-title">DAVENT Ventas</span>
@@ -1606,15 +1614,26 @@ async function changePassword() {
               <strong class="pos-shop">{{ designShopName }}</strong>
               <span class="pos-search"><AppIcon name="search" :size="13" /> Buscar producto…</span>
             </div>
-            <div class="pos-body">
-              <div class="pos-grid">
-                <div v-for="(p, i) in posProducts" :key="p.id || i" class="pos-prod">
-                  <span class="pos-prod-img">
-                    <img v-if="p.image" :src="p.image" alt="" />
-                    <AppIcon v-else name="package" :size="16" />
-                  </span>
-                  <span class="pos-prod-name">{{ p.name }}</span>
-                  <span class="pos-prod-price">{{ Number(p.price) ? formatARS(p.price) : '—' }}</span>
+            <div class="pos-tabs">
+              <button type="button" class="pos-tab" :class="{ active: posView === 'sale' }" :aria-pressed="posView === 'sale'" @click="posView = 'sale'">Nueva venta</button>
+              <button type="button" class="pos-tab" :class="{ active: posView === 'billing' }" :aria-pressed="posView === 'billing'" @click="posView = 'billing'">Facturación</button>
+            </div>
+
+            <div v-if="posView === 'sale'" class="pos-body">
+              <div class="pos-products">
+                <div class="pos-cats">
+                  <span class="pos-cat active">Todo</span>
+                  <span v-for="c in posCategories" :key="c.id" class="pos-cat">{{ c.name }}</span>
+                </div>
+                <div class="pos-grid">
+                  <div v-for="(p, i) in posProducts" :key="p.id || i" class="pos-prod">
+                    <span class="pos-prod-img">
+                      <img v-if="p.image" :src="p.image" alt="" />
+                      <AppIcon v-else name="package" :size="16" />
+                    </span>
+                    <span class="pos-prod-name">{{ p.name }}</span>
+                    <span class="pos-prod-price">{{ Number(p.price) ? formatARS(p.price) : '—' }}</span>
+                  </div>
                 </div>
               </div>
               <div class="pos-cart">
@@ -1624,11 +1643,68 @@ async function changePassword() {
                   <span class="pos-cart-name">{{ p.name }}</span>
                   <span class="pos-cart-price">{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
                 </div>
+                <span class="pos-side-label">Medio de pago</span>
+                <div class="pos-chips">
+                  <span class="pos-chip active">Efectivo</span>
+                  <span class="pos-chip">Tarjeta</span>
+                  <span class="pos-chip">QR</span>
+                </div>
                 <div class="pos-cart-total">
                   <span>Total</span>
                   <strong>{{ posTotal }}</strong>
                 </div>
                 <span class="pos-pay">Cobrar</span>
+              </div>
+            </div>
+
+            <div v-else class="pos-body">
+              <div class="pos-invoice">
+                <div class="pos-inv-head">
+                  <span class="pos-inv-kind">B</span>
+                  <div>
+                    <strong>FACTURA</strong>
+                    <small>N° 0001-00000042</small>
+                  </div>
+                </div>
+                <div class="pos-inv-issuer">
+                  <strong>{{ designShopName }}</strong>
+                  <small>{{ business || 'Tu razón social' }}</small>
+                  <small>{{ docKind }} {{ accountForm.document || '—' }}</small>
+                  <small v-if="posAddress">{{ posAddress }}</small>
+                </div>
+                <div class="pos-inv-table">
+                  <div class="pos-inv-row head"><span>Cant.</span><span>Detalle</span><span>Importe</span></div>
+                  <div v-for="(p, i) in posCartItems" :key="`inv-${p.id || i}`" class="pos-inv-row">
+                    <span>{{ posCartQty[i] }}</span>
+                    <span>{{ p.name }}</span>
+                    <span>{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
+                  </div>
+                </div>
+                <div class="pos-inv-totals">
+                  <div><span>Subtotal</span><span>{{ posHasPrices ? formatARS(posSubtotal) : '—' }}</span></div>
+                  <div><span>IVA 21%</span><span>{{ posIva }}</span></div>
+                  <div class="pos-inv-grand"><span>Total</span><strong>{{ posInvoiceTotal }}</strong></div>
+                </div>
+                <div class="pos-inv-foot">
+                  <span class="pos-barcode" aria-hidden="true"></span>
+                  <small>Comprobante de ejemplo</small>
+                </div>
+              </div>
+              <div class="pos-cart">
+                <span class="pos-cart-head">Facturación</span>
+                <span class="pos-side-label">Comprobante</span>
+                <div class="pos-chips">
+                  <span class="pos-chip">Ticket</span>
+                  <span class="pos-chip active">Factura B</span>
+                  <span class="pos-chip">Factura C</span>
+                </div>
+                <span class="pos-side-label">Comprador</span>
+                <span class="pos-buyer">Consumidor final</span>
+                <div class="pos-cart-total">
+                  <span>Total</span>
+                  <strong>{{ posInvoiceTotal }}</strong>
+                </div>
+                <span class="pos-pay">Emitir factura</span>
               </div>
             </div>
             <div class="pos-status"><span class="pos-dot"></span> Caja abierta · {{ displayName }}</div>

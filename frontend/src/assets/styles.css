@@ -712,7 +712,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-shop { font-size: 14px; font-weight: 700; letter-spacing: -.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pos-search { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 11.5px; color: var(--pos-muted); border: 1px solid var(--pos-line); border-radius: 8px; padding: 6px 10px; }
 .pos-body { display: grid; grid-template-columns: minmax(0, 1fr) 190px; min-height: 260px; }
-.pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; align-content: start; }
+.pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px 12px; align-content: start; }
 .pos-prod { background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 9px; padding: 8px; display: grid; gap: 6px; justify-items: start; min-width: 0; }
 .pos-prod-img { width: 100%; aspect-ratio: 4/3; border-radius: 6px; background: var(--pos-bg); border: 1px solid var(--pos-line); display: grid; place-items: center; color: var(--pos-muted); overflow: hidden; }
 .pos-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -729,6 +729,45 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-pay { display: block; text-align: center; background: var(--store-accent, #4f46e5); color: #fff; font-size: 12px; font-weight: 700; border-radius: 8px; padding: 8px; }
 .pos-status { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-top: 1px solid var(--pos-line); background: var(--pos-card); font-size: 10.5px; color: var(--pos-muted); }
 .pos-dot { width: 7px; height: 7px; border-radius: 50%; background: #059669; flex: none; }
+
+/* Pestañas internas del mockup: Nueva venta / Facturación. */
+.pos-tabs { display: flex; gap: 6px; padding: 8px 12px 0; }
+.pos-tab { border: 1px solid var(--pos-line); border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; color: var(--pos-muted); font: inherit; font-size: 11.5px; font-weight: 600; padding: 7px 14px; cursor: pointer; transition: color .15s, background .15s; }
+.pos-tab:hover { color: var(--pos-ink); }
+.pos-tab.active { background: var(--pos-card); color: var(--store-accent-ink, #4338ca); }
+.pos-products { min-width: 0; }
+.pos-cats { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 12px 0; }
+.pos-cat { font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--pos-card); border: 1px solid var(--pos-line); color: var(--pos-muted); }
+.pos-cat.active { background: var(--store-accent-soft, #eef2ff); color: var(--store-accent-ink, #4338ca); border-color: transparent; }
+.pos-side-label { display: block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--pos-muted); margin-top: 6px; }
+.pos-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.pos-chip { font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--pos-line); background: var(--pos-bg); color: var(--pos-muted); }
+.pos-chip.active { background: var(--store-accent-soft, #eef2ff); color: var(--store-accent-ink, #4338ca); border-color: var(--store-accent, #4f46e5); }
+.pos-buyer { display: block; font-size: 11.5px; padding: 7px 10px; border: 1px solid var(--pos-line); border-radius: 7px; background: var(--pos-bg); color: var(--pos-ink); }
+
+/* Comprobante "papel" de la pestaña Facturación. */
+.pos-invoice { align-self: start; margin: 12px; background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 8px; padding: 14px; display: grid; gap: 10px; box-shadow: var(--shadow-sm); }
+.pos-inv-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed var(--pos-line); padding-bottom: 10px; }
+.pos-inv-kind { width: 34px; height: 42px; display: grid; place-items: center; flex: none; border: 1.5px solid var(--pos-ink); border-radius: 5px; font-weight: 800; font-size: 18px; }
+.pos-inv-head strong { display: block; font-size: 12px; letter-spacing: .12em; }
+.pos-inv-head small { color: var(--pos-muted); font-size: 10.5px; }
+.pos-inv-issuer { display: grid; gap: 1px; }
+.pos-inv-issuer strong { font-size: 12.5px; }
+.pos-inv-issuer small { color: var(--pos-muted); font-size: 10.5px; }
+.pos-inv-table { display: grid; font-size: 11px; }
+.pos-inv-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 6px; padding: 5px 0; border-bottom: 1px dotted var(--pos-line); }
+.pos-inv-row.head { color: var(--pos-muted); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--pos-line); }
+.pos-inv-row span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pos-inv-row span:last-child { text-align: right; font-weight: 600; }
+.pos-inv-totals { display: grid; gap: 3px; font-size: 11px; }
+.pos-inv-totals div { display: flex; justify-content: space-between; gap: 10px; }
+.pos-inv-totals span { color: var(--pos-muted); }
+.pos-inv-totals span:last-child, .pos-inv-totals strong { color: var(--pos-ink); font-weight: 600; }
+.pos-inv-grand { border-top: 1px solid var(--pos-line); padding-top: 5px; margin-top: 3px; }
+.pos-inv-grand strong { font-size: 14px; color: var(--store-accent-ink, #4338ca); }
+.pos-inv-foot { display: grid; justify-items: center; gap: 5px; border-top: 1px dashed var(--pos-line); padding-top: 10px; }
+.pos-barcode { width: 130px; height: 24px; background: repeating-linear-gradient(90deg, var(--pos-ink) 0 1px, transparent 1px 3px, var(--pos-ink) 3px 4px, transparent 4px 6px); }
+.pos-inv-foot small { font-size: 9.5px; color: var(--pos-muted); }
 
 /* ===== Responsive ===== */
 .btn-auto { width: auto; }
