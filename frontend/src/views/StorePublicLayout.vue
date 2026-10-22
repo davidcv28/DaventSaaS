@@ -138,6 +138,9 @@ onBeforeUnmount(() => {
           <button v-if="ui.search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="ui.search = ''"><AppIcon name="x" :size="14" /></button>
         </label>
         <div class="sp-top-end">
+          <RouterLink v-if="status === 'success'" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
+            <AppIcon :name="isCatalog ? 'store' : 'package'" :size="16" /> {{ isCatalog ? 'Inicio' : 'Catálogo' }}
+          </RouterLink>
           <button
             v-if="showThemeToggle"
             type="button"
