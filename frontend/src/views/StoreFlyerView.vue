@@ -43,6 +43,22 @@ const design = ref(
 )
 watch(design, (v) => { try { localStorage.setItem(DESIGN_KEY, v) } catch (e) {} })
 
+// Tamaños del folleto: A4 hoja completa, A5 media hoja y A6 panfletito. La
+// clase .flyer--{formato} achica medidas y recorta secciones por CSS; el
+// @page nombrado hace que el PDF salga en el papel correcto.
+const FLYER_FORMATS = [
+  { id: 'a4', name: 'A4', desc: 'Hoja completa' },
+  { id: 'a5', name: 'A5', desc: 'Media hoja' },
+  { id: 'a6', name: 'A6', desc: 'Panfletito' }
+]
+const FORMAT_KEY = 'davent:flyer-format'
+const format = ref(
+  FLYER_FORMATS.some((f) => f.id === route.query.f)
+    ? route.query.f
+    : (FLYER_FORMATS.some((f) => f.id === localStorage.getItem(FORMAT_KEY)) ? localStorage.getItem(FORMAT_KEY) : 'a4')
+)
+watch(format, (v) => { try { localStorage.setItem(FORMAT_KEY, v) } catch (e) {} })
+
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
 const themeVars = computed(() => storeThemeVars(custom.value))
 const business = computed(() => auth.user?.profile?.business_name || '')
@@ -97,7 +113,7 @@ const specialties = computed(() => String(custom.value.about_specialties || '')
   .filter(Boolean)
   .slice(0, 8))
 const hasAbout = computed(() => Boolean(
-  custom.value.about_text?.trim() || specialties.value.length || custom.value.about_mission?.trim()
+  specialties.value.length || custom.value.about_mission?.trim()
 ))
 const galleryImgs = computed(() => (custom.value.gallery || []).slice(0, 3))
 
@@ -167,7 +183,7 @@ function closeTab() {
 .flyer-section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
 .flyer-section-head h2 { margin: 0; font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--store-accent-ink); }
 .flyer-section-head::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
-.flyer-desc { margin: 0; font-size: 14px; line-height: 1.75; color: #334155; white-space: pre-line; }
+.flyer-desc { margin: 0; font-size: 14px; line-height: 1.75; color: #334155; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* Contacto principal: filas limpias con divisor, legibles de lejos. */
 .flyer-rows { display: grid; }
@@ -188,10 +204,9 @@ function closeTab() {
 /* ----- Secciones de relleno: empresa, productos, fotos, marca de agua ----- */
 .flyer-years { display: inline-flex; align-items: center; margin-top: 10px; padding: 5px 13px; border-radius: 99px; background: var(--store-accent-soft); color: var(--store-accent-ink); font-size: 12px; font-weight: 800; }
 .flyer-about { display: grid; gap: 14px; }
-.flyer-about .flyer-desc { display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
 .flyer-feats { display: flex; flex-wrap: wrap; gap: 8px; }
 .flyer-feat { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 99px; background: var(--store-accent-soft); color: var(--store-accent-ink); font-size: 12px; font-weight: 700; }
-.flyer-mission { margin: 0; padding: 14px 18px; border-left: 3px solid var(--store-accent); border-radius: 0 12px 12px 0; background: var(--store-accent-soft); font-size: 14px; font-style: italic; line-height: 1.65; color: #334155; }
+.flyer-mission { margin: 0; padding: 14px 18px; border-left: 3px solid var(--store-accent); border-radius: 0 12px 12px 0; background: var(--store-accent-soft); font-size: 14px; font-style: italic; line-height: 1.65; color: #334155; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .flyer-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .flyer-prod { border: 1px solid #eef2f7; border-radius: 14px; overflow: hidden; background: #fff; }
 .flyer-prod img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #f1f5f9; }
@@ -221,6 +236,16 @@ function closeTab() {
 .design-pick.active { border-color: var(--brand-500); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-500) 30%, transparent); }
 .design-pick-name { font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .design-pick-desc { font-size: 11px; color: var(--muted); }
+
+/* Selector de tamaño: rectángulos proporcionales a cada formato. */
+.format-strip { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 210mm; }
+.format-pick { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow-sm); cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink); transition: border-color .2s, box-shadow .2s, transform .2s; }
+.format-pick:hover { transform: translateY(-2px); border-color: var(--brand-400); }
+.format-pick.active { border-color: var(--brand-500); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-500) 30%, transparent); }
+.fm { display: block; background: linear-gradient(160deg, var(--store-accent-soft), #fff); border: 1.5px solid var(--store-accent-ink); border-radius: 2px; }
+.fm--a4 { width: 26px; height: 36px; }
+.fm--a5 { width: 22px; height: 30px; }
+.fm--a6 { width: 17px; height: 24px; }
 
 /* Miniaturas del diseño (CSS puro, proporción A4). Usan el acento de la
    tienda porque themeVars ahora cuelga de .print-page. */
@@ -374,11 +399,92 @@ function closeTab() {
 .flyer--split .flyer-cta-hint { font-size: 11.5px; }
 .flyer--split .flyer-davent { grid-area: davent; }
 
+/* ===== Tamaños ===== */
+/* A5 (media hoja): misma información que el A4 pero sin las secciones
+   pesadas — descripción, especialidades/misión y fotos quedan afuera. */
+.flyer--a5 { width: min(100%, 148mm); min-height: 210mm; page: flyerA5; }
+.flyer--a5 .flyer-head { padding: 30px 32px 22px; gap: 14px; }
+.flyer--a5 .flyer-logo, .flyer--a5 .flyer-mono { width: 70px; height: 70px; font-size: 28px; border-radius: 17px; }
+.flyer--a5 .flyer-name { font-size: min(var(--store-name-size, 34px), 27px); }
+.flyer--a5 .flyer-headline { font-size: 12.5px; }
+.flyer--a5 .flyer-rule { margin: 0 32px; }
+.flyer--a5 .flyer-body { padding: 22px 32px; gap: 20px; }
+.flyer--a5 .flyer-sec-about, .flyer--a5 .flyer-sec-photos { display: none; }
+.flyer--a5 .flyer-prod:nth-child(n+4) { display: none; }
+.flyer--a5 .flyer-cta { padding: 20px 32px; gap: 18px; }
+.flyer--a5 .flyer-qr-card img { width: 84px; height: 84px; }
+.flyer--a5 .flyer-url { font-size: 18px; }
+.flyer--a5 .flyer-water { font-size: 100px; }
+.flyer--a5 .flyer-strips { padding-top: 8px; }
+.flyer--a5 .flyer-strip { height: 60px; font-size: 8.5px; }
+/* Combos A5 por diseño */
+.flyer--a5.flyer--split { grid-template-columns: 46mm 1fr; }
+.flyer--a5.flyer--split .flyer-head { padding: 26px 20px; }
+.flyer--a5.flyer--split .flyer-name { font-size: min(var(--store-name-size, 34px), 23px); }
+.flyer--a5.flyer--split .flyer-cta { padding: 16px 20px; }
+.flyer--a5.flyer--band .flyer-head { padding: 30px 32px 52px; }
+.flyer--a5.flyer--band .flyer-logo, .flyer--a5.flyer--band .flyer-mono { left: 32px; bottom: -28px; width: 70px; height: 70px; border-radius: 17px; }
+.flyer--a5.flyer--band .flyer-body { padding-top: 44px; }
+.flyer--a5.flyer--diagonal .flyer-head { padding: 30px 32px 54px; }
+.flyer--a5.flyer--frame::before { inset: 7mm; }
+.flyer--a5.flyer--frame::after { inset: 8mm; }
+.flyer--a5.flyer--frame .flyer-head { padding: 18mm 18mm 8mm; }
+.flyer--a5.flyer--frame .flyer-body { padding: 12px 16mm 16mm; }
+.flyer--a5.flyer--center .flyer-head { padding-top: 34px; }
+
+/* A6 (panfletito): solo lo esencial — marca, contacto directo y QR.
+   Todo lo demás se oculta por clase de sección. */
+.flyer--a6 { width: min(100%, 105mm); min-height: 148mm; page: flyerA6; }
+.flyer--a6 .flyer-head { padding: 20px 18px 14px; gap: 10px; }
+.flyer--a6 .flyer-logo, .flyer--a6 .flyer-mono { width: 46px; height: 46px; font-size: 19px; border-radius: 12px; }
+.flyer--a6 .flyer-name { font-size: min(var(--store-name-size, 34px), 19px); }
+.flyer--a6 .flyer-headline { margin-top: 4px; font-size: 11px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.flyer--a6 .flyer-loc { margin-top: 5px; font-size: 10.5px; }
+.flyer--a6 .flyer-years { margin-top: 6px; padding: 3px 9px; font-size: 9.5px; }
+.flyer--a6 .flyer-rule { margin: 0 18px; height: 3px; }
+.flyer--a6 .flyer-body { padding: 12px 18px; gap: 10px; }
+.flyer--a6 .flyer-sec-desc, .flyer--a6 .flyer-sec-about, .flyer--a6 .flyer-sec-prod,
+.flyer--a6 .flyer-sec-photos, .flyer--a6 .flyer-water { display: none; }
+.flyer--a6 .flyer-section-head { margin-bottom: 6px; }
+.flyer--a6 .flyer-section-head h2 { font-size: 10px; }
+.flyer--a6 .flyer-row { padding: 8px 0; gap: 10px; }
+.flyer--a6 .flyer-row-ico { width: 30px; height: 30px; border-radius: 8px; }
+.flyer--a6 .flyer-row-lbl { font-size: 8.5px; }
+.flyer--a6 .flyer-row-val { font-size: 12px; }
+.flyer--a6 .flyer-socials { gap: 4px 10px; margin-top: 8px; }
+.flyer--a6 .flyer-socials-lbl, .flyer--a6 .flyer-social { font-size: 9.5px; }
+.flyer--a6 .flyer-cta { flex-direction: column; text-align: center; gap: 10px; padding: 14px 18px; }
+.flyer--a6 .flyer-qr-card { padding: 6px 6px 5px; }
+.flyer--a6 .flyer-qr-card img { width: 62px; height: 62px; }
+.flyer--a6 .flyer-qr-card span { font-size: 8px; }
+.flyer--a6 .flyer-cta-label { font-size: 8.5px; }
+.flyer--a6 .flyer-url { font-size: 13.5px; }
+.flyer--a6 .flyer-cta-hint { display: none; }
+.flyer--a6 .flyer-davent { padding: 7px; font-size: 9px; }
+.flyer--a6 .flyer-nocontact { font-size: 11px; }
+.flyer--a6 .flyer-nocontact strong { font-size: 13px; }
+/* Combos A6 por diseño */
+.flyer--a6.flyer--split { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: 'head' 'body' 'cta' 'davent'; }
+.flyer--a6.flyer--split .flyer-head { padding: 20px 18px 14px; }
+.flyer--a6.flyer--band .flyer-head { padding: 20px 18px 40px; }
+.flyer--a6.flyer--band .flyer-logo, .flyer--a6.flyer--band .flyer-mono { left: 18px; bottom: -22px; width: 46px; height: 46px; border-radius: 12px; }
+.flyer--a6.flyer--band .flyer-body { padding-top: 30px; }
+.flyer--a6.flyer--diagonal .flyer-head { padding: 20px 18px 42px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), 0 100%); }
+.flyer--a6.flyer--frame::before { inset: 5mm; }
+.flyer--a6.flyer--frame::after { inset: 6mm; }
+.flyer--a6.flyer--frame .flyer-head { padding: 10mm 10mm 4mm; gap: 8px; }
+.flyer--a6.flyer--frame .flyer-body { padding: 8px 10mm 10mm; }
+.flyer--a6.flyer--center .flyer-head { padding-top: 26px; }
+
 @page { size: A4; margin: 0; }
+@page flyerA5 { size: A5; margin: 0; }
+@page flyerA6 { size: A6; margin: 0; }
 @media print {
   .print-page { background: #fff; padding: 0; }
-  .print-bar, .print-status, .design-strip { display: none; }
+  .print-bar, .print-status, .design-strip, .format-strip { display: none; }
   .flyer { border: none; box-shadow: none; border-radius: 0; width: 210mm; min-height: 297mm; }
+  .flyer--a5 { width: 148mm; min-height: 210mm; }
+  .flyer--a6 { width: 105mm; min-height: 148mm; }
 }
 @media (max-width: 640px) {
   .flyer { min-height: 0; }
@@ -401,6 +507,8 @@ function closeTab() {
   .flyer-strip { height: 72px; font-size: 9px; }
   .flyer-products { grid-template-columns: repeat(2, 1fr); }
   .flyer-water { font-size: 96px; }
+  .format-strip { width: min(100%, 420px); }
+  .format-pick { flex: 1 1 calc(33% - 12px); justify-content: center; }
 }
 </style>
 
@@ -414,6 +522,22 @@ function closeTab() {
         </button>
         <button class="btn ghost btn-auto" type="button" @click="closeTab">Cerrar pestaña</button>
       </div>
+    </div>
+
+    <div v-if="status === 'ready'" class="format-strip" role="radiogroup" aria-label="Tamaño del folleto">
+      <button
+        v-for="f in FLYER_FORMATS"
+        :key="f.id"
+        type="button"
+        class="format-pick"
+        :class="{ active: format === f.id }"
+        role="radio"
+        :aria-checked="format === f.id"
+        @click="format = f.id"
+      >
+        <span class="fm" :class="`fm--${f.id}`" aria-hidden="true"></span>
+        <span class="format-pick-name">{{ f.name }} · {{ f.desc }}</span>
+      </button>
     </div>
 
     <div v-if="status === 'ready'" class="design-strip" role="radiogroup" aria-label="Diseño del folleto">
@@ -441,7 +565,7 @@ function closeTab() {
       <p>{{ error }}</p>
     </div>
 
-    <article v-else class="flyer" :class="`flyer--${design}`">
+    <article v-else class="flyer" :class="[`flyer--${design}`, `flyer--${format}`]">
       <header class="flyer-head">
         <img v-if="custom.logo" class="flyer-logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
         <span v-else class="flyer-mono" aria-hidden="true">{{ initial }}</span>
@@ -455,15 +579,14 @@ function closeTab() {
       <div class="flyer-rule" aria-hidden="true"></div>
 
       <div class="flyer-body">
-        <section v-if="custom.description">
+        <section v-if="custom.description" class="flyer-sec-desc">
           <div class="flyer-section-head"><h2>Quiénes somos</h2></div>
           <p class="flyer-desc">{{ custom.description }}</p>
         </section>
 
-        <section v-if="hasAbout">
+        <section v-if="hasAbout" class="flyer-sec-about">
           <div class="flyer-section-head"><h2>{{ aboutTitle }}</h2></div>
           <div class="flyer-about">
-            <p v-if="custom.about_text" class="flyer-desc">{{ custom.about_text }}</p>
             <div v-if="specialties.length" class="flyer-feats">
               <span v-for="s in specialties" :key="s" class="flyer-feat"><AppIcon name="check" :size="13" /> {{ s }}</span>
             </div>
@@ -471,7 +594,7 @@ function closeTab() {
           </div>
         </section>
 
-        <section v-if="products.length">
+        <section v-if="products.length" class="flyer-sec-prod">
           <div class="flyer-section-head"><h2>Lo que vas a encontrar</h2></div>
           <div class="flyer-products">
             <div v-for="p in products" :key="p.id" class="flyer-prod">
@@ -485,7 +608,7 @@ function closeTab() {
           </div>
         </section>
 
-        <section v-if="galleryImgs.length">
+        <section v-if="galleryImgs.length" class="flyer-sec-photos">
           <div class="flyer-section-head"><h2>Nuestro espacio</h2></div>
           <div class="flyer-photos">
             <img v-for="g in galleryImgs" :key="g.id" :src="g.url" :alt="`Foto de ${shopName}`" />
@@ -545,7 +668,7 @@ function closeTab() {
 
       <!-- Tiras recortables (solo diseño Recortable): línea de corte punteada
            y columnas con el contacto en vertical, como el folleto callejero. -->
-      <div v-if="design === 'tearoff'" class="flyer-strips" aria-hidden="true">
+      <div v-if="design === 'tearoff' && format !== 'a6'" class="flyer-strips" aria-hidden="true">
         <span v-for="i in 10" :key="i" class="flyer-strip">{{ stripText }}</span>
       </div>
     </article>
