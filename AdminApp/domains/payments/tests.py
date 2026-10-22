@@ -9,7 +9,8 @@ import hmac
 import os
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from rest_framework.test import APIClient
 
 WEBHOOK_URL = '/api/payments/webhook/'
 SECRET      = 'test-webhook-secret'
@@ -26,6 +27,9 @@ def _signature_headers(resource_id, request_id = 'req-1', secret = SECRET):
 
 
 class MercadoPagoWebhookSignatureTests(TestCase):
+    #APIClient: el Client de Django ignora format='json' y form-encodea el
+    #body, dejando 'data' como string (y el endpoint real recibe JSON de MP).
+    client_class    =   APIClient
 
     def _post(self, signature_headers = None):
         return self.client.post(
@@ -34,6 +38,13 @@ class MercadoPagoWebhookSignatureTests(TestCase):
             format = 'json',
             **(signature_headers or {}),
         )
+
+    @override_settings(DEBUG = True)
+    @patch('AdminApp.domains.payments.views.viewset.config', lambda *a, **kw: kw.get('default', ''))
+    def test_malformed_data_does_not_crash(self):
+        #Body malformado (data no-dict): 401/200, jamás 500.
+        response    =   self.client.post(WEBHOOK_URL, {'type': 'payment', 'data': 'basura'}, format = 'json')
+        self.assertIn(response.status_code, (200, 401))
 
     @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
     def test_rejects_request_without_signature(self):
@@ -55,10 +66,21 @@ class MercadoPagoWebhookSignatureTests(TestCase):
         self.assertEqual(response.status_code, 200)
         webhook_query.assert_called_once_with('12345')
 
+    @override_settings(DEBUG = True)
     @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
-    def test_processes_unsigned_request_when_secret_missing(self, webhook_query):
-        #Sin MP_WEBHOOK_SECRET (dev) el evento se procesa con warning.
+    def test_processes_unsigned_request_when_secret_missing_in_debug(self, webhook_query):
+        #Sin MP_WEBHOOK_SECRET con DEBUG=True (dev) el evento se procesa con warning.
         with patch('AdminApp.domains.payments.views.viewset.config', lambda *a, **kw: kw.get('default', '')):
             response    =   self._post()
         self.assertEqual(response.status_code, 200)
         webhook_query.assert_called_once_with('12345')
+
+    @override_settings(DEBUG = False)
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_rejects_unsigned_request_when_secret_missing_in_prod(self, webhook_query):
+        #Sin MP_WEBHOOK_SECRET en producción el evento se rechaza: un webhook
+        #sin verificar permitiría forjar acreditaciones de pago.
+        with patch('AdminApp.domains.payments.views.viewset.config', lambda *a, **kw: kw.get('default', '')):
+            response    =   self._post()
+        self.assertEqual(response.status_code, 401)
+        webhook_query.assert_not_called()

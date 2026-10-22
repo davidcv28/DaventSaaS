@@ -3,6 +3,7 @@ import hmac
 import logging
 from decimal import Decimal
 from decouple import config
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncDate, TruncMonth, Coalesce
@@ -46,12 +47,17 @@ def _verify_mp_signature(request, resource_id) -> bool:
     Valida x-signature + x-request-id: el manifest es
     'id:<data.id>;request-id:<x-request-id>;ts:<ts>;' firmado con HMAC-SHA256
     y MP_WEBHOOK_SECRET -> debe matchear el v1= del header (compare_digest).
-    Sin secret configurado (dev) se loguea warning y se procesa igual.
+    Sin secret configurado se loguea warning y se procesa igual SOLO en dev
+    (DEBUG=True): en producción la falta de secret rechaza el evento — un
+    webhook sin verificar permite forjar acreditaciones de pago.
     """
     secret          =   config('MP_WEBHOOK_SECRET', default = '')
     if not secret:
-        logger.warning('MP_WEBHOOK_SECRET no configurado: webhook de MP procesado sin verificar firma')
-        return True
+        if settings.DEBUG:
+            logger.warning('MP_WEBHOOK_SECRET no configurado: webhook de MP procesado sin verificar firma')
+            return True
+        logger.error('MP_WEBHOOK_SECRET no configurado en producción: webhook de MP rechazado')
+        return False
     x_signature     =   request.headers.get('x-signature', '')
     x_request_id    =   request.headers.get('x-request-id', '')
     parts           =   {}
@@ -94,7 +100,10 @@ class PaymentViewSet(PaymentBaseViewSet):
     @action(detail = False, methods = ['post'], url_path = 'webhook')
     def webhook(self, request):
         topic       =   request.data.get('type') or request.query_params.get('topic')
-        resource_id =   (request.data.get('data') or {}).get('id') or request.query_params.get('id')
+        #'data' puede llegar no-dict en requests malformados -> evitar 500.
+        data        =   request.data.get('data')
+        resource_id =   data.get('id') if isinstance(data, dict) else None
+        resource_id =   resource_id or request.query_params.get('id')
         #Firma HMAC: sin ella cualquiera podría forjar acreditaciones de pago.
         if not _verify_mp_signature(request, resource_id):
             logger.warning('Webhook de MP rechazado: firma inválida (topic=%s id=%s)', topic, resource_id)
