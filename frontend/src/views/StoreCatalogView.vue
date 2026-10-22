@@ -12,7 +12,8 @@ import { vReveal } from '../directives/reveal.js'
 // (inject 'storePage'); el buscador del header y el burger comparten el
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
-const { slug, ui, custom, hasDesignAdvanced } = ctx
+const { slug, ui, custom, hasDesignAdvanced, shopName } = ctx
+const homeTo = computed(() => ({ name: 'store-public', params: { slug: slug.value } }))
 const route = useRoute()
 
 // La búsqueda también puede llegar por URL (?q=) — alimenta el buscador
@@ -123,6 +124,10 @@ const productCount = computed(() => {
   return hasFilters.value ? `${base}, ${activeFilterCount.value} ${activeFilterCount.value === 1 ? 'filtro' : 'filtros'}` : base
 })
 
+const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
+const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, catalog.value.products.length)} de ${catalog.value.products.length}`)
+const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, catalog.value.products.length) / Math.max(1, catalog.value.products.length)) * 100)}%`)
+
 const selected = ref(null)
 const openProduct = (p) => { selected.value = p }
 const closeProduct = () => { selected.value = null }
@@ -228,6 +233,35 @@ onBeforeUnmount(() => {
 
 <template>
 <div class="sp-page-root">
+  <div class="sp-hero-band sp-cat-hero">
+    <div class="sp-hero-decor" aria-hidden="true">
+      <span class="sp-orb o1"></span>
+      <span class="sp-orb o2"></span>
+      <span class="sp-float f1"><AppIcon name="package" :size="24" /></span>
+      <span class="sp-float f3"><AppIcon name="tag" :size="22" /></span>
+      <span class="sp-float f4"><AppIcon name="search" :size="20" /></span>
+    </div>
+    <div class="sp-container sp-cat-hero-inner">
+      <nav v-reveal class="sp-crumbs" aria-label="Ruta">
+        <RouterLink :to="homeTo">Inicio</RouterLink>
+        <AppIcon name="chevron-right" :size="14" aria-hidden="true" />
+        <span aria-current="page">Catálogo</span>
+      </nav>
+      <div v-reveal="80" class="sp-cat-head">
+        <span class="sp-cat-head-icon" aria-hidden="true"><AppIcon name="package" :size="26" /></span>
+        <div>
+          <h1 class="sp-cat-title">Catálogo</h1>
+          <p class="sp-cat-sub">Explorá todo lo que tiene {{ shopName }} para ofrecerte.</p>
+        </div>
+      </div>
+      <ul v-reveal="160" class="sp-cat-stats">
+        <li><AppIcon name="package" :size="14" /> <strong>{{ catalog.products.length }}</strong> {{ catalog.products.length === 1 ? 'producto' : 'productos' }}</li>
+        <li v-if="catalog.categories.length"><AppIcon name="layout-grid" :size="14" /> <strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</li>
+        <li v-if="catalog.brands.length"><AppIcon name="tag" :size="14" /> <strong>{{ catalog.brands.length }}</strong> {{ catalog.brands.length === 1 ? 'marca' : 'marcas' }}</li>
+      </ul>
+    </div>
+  </div>
+
   <main class="sp-container sp-main">
     <!-- Portada: carrusel de destacados (premium), vitrina sobre el catálogo -->
     <div v-if="hasDesignAdvanced && carousel.length" class="sp-catalog-banner">
@@ -294,9 +328,17 @@ onBeforeUnmount(() => {
       </aside>
 
       <section class="sp-catalog" aria-labelledby="sp-catalog-title">
+        <div v-if="catalog.categories.length" class="sp-quick" role="group" aria-label="Categorías rápidas">
+          <button type="button" class="sp-quick-pill" :class="{ active: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)">Todas</button>
+          <button
+            v-for="c in catalog.categories" :key="`q-${c.id}`" type="button"
+            class="sp-quick-pill" :class="{ active: activeCategory === c.id }" :aria-pressed="activeCategory === c.id"
+            @click="pickCategory(c.id)"
+          >{{ c.name }}</button>
+        </div>
         <div v-reveal class="sp-toolbar">
           <div class="sp-toolbar-title">
-            <h2 id="sp-catalog-title" class="sp-section-title">Catálogo</h2>
+            <h2 id="sp-catalog-title" class="sp-section-title">{{ hasFilters ? 'Resultados' : 'Todos los productos' }}</h2>
             <span v-if="catalogStatus === 'success'" class="sp-count" role="status" aria-live="polite">{{ productCount }}</span>
           </div>
           <label class="sp-search sp-search-inline">
@@ -363,17 +405,21 @@ onBeforeUnmount(() => {
 
         <div v-else-if="catalog.products.length" class="sp-grid" :class="{ loading: catalogStatus === 'loading' }" @pointermove="onCardMove">
           <article v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 70" class="sp-card">
-            <div class="sp-card-img">
+            <div class="sp-card-img" @click="openProduct(p)">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
+              <span v-if="categoryNameOf(p)" class="sp-card-badge"><AppIcon name="tag" :size="11" /> {{ categoryNameOf(p) }}</span>
+              <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Vista rápida</span>
             </div>
             <div class="sp-card-body">
               <h3 class="sp-card-name">{{ p.name }}</h3>
               <p v-if="p.description" class="sp-card-desc">{{ p.description }}</p>
-              <span class="sp-card-price">{{ formatARS(p.price) }}</span>
-              <button type="button" class="sp-card-cta" @click="openProduct(p)">
-                <AppIcon name="eye" :size="15" /> Ver más
-              </button>
+              <div class="sp-card-foot">
+                <span class="sp-card-price">{{ formatARS(p.price) }}</span>
+                <button type="button" class="sp-card-go" :aria-label="`Ver ${p.name}`" @click="openProduct(p)">
+                  <AppIcon name="arrow-right" :size="16" />
+                </button>
+              </div>
             </div>
           </article>
         </div>
@@ -386,7 +432,9 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-if="hasMoreProducts && catalogStatus !== 'error'" class="sp-more">
-          <button type="button" class="sp-btn" @click="showMore">Ver más productos</button>
+          <p class="sp-more-label">{{ shownLabel }}</p>
+          <span class="sp-more-bar" aria-hidden="true"><span :style="{ width: shownPct }"></span></span>
+          <button type="button" class="sp-btn" @click="showMore"><AppIcon name="plus" :size="16" /> Ver más productos</button>
         </div>
       </section>
     </div>
