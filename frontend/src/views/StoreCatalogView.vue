@@ -422,7 +422,7 @@ onBeforeUnmount(() => {
               <div class="sp-card-foot">
                 <span class="sp-card-price">{{ formatARS(p.price) }}</span>
                 <button type="button" class="sp-card-go" :aria-label="`Ver ${p.name}`" @click="openProduct(p)">
-                  Ver <AppIcon name="arrow-right" :size="15" />
+                  Ver más <AppIcon name="arrow-right" :size="15" />
                 </button>
               </div>
             </div>

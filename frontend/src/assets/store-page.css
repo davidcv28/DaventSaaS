@@ -650,7 +650,7 @@ html { scroll-behavior: smooth; }
 .store-page { color-scheme: light; }
 .store-page[data-store-theme='dark'] { color-scheme: dark; }
 .sp-filters { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin: -8px 0 24px; padding: 16px 20px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
-.sp-field { display: grid; gap: 6px; }
+.sp-field { display: grid; gap: 6px; min-width: 0; }
 .sp-field-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-muted); }
 .sp-filters .sp-price, .sp-filters .sp-sort { height: 40px; border-radius: 10px; background: var(--sp-surface); color: var(--sp-ink); box-shadow: none; }
 .store-page[data-store-theme='dark'] .sp-filters .sp-price, .store-page[data-store-theme='dark'] .sp-filters .sp-sort { background: color-mix(in srgb, #0d1220 70%, transparent); }
@@ -663,9 +663,9 @@ html { scroll-behavior: smooth; }
 .sp-chips { margin-top: -4px; }
 @media (max-width: 720px) {
   .sp-filters { padding: 14px; gap: 14px; }
-  .sp-field { flex: 1 1 100%; }
-  .sp-filters .sp-price input { flex: 1; width: auto; }
-  .sp-filters .sp-sort { min-width: 0; }
+  .sp-field { flex: 1 1 100%; min-width: 0; }
+  .sp-filters .sp-price, .sp-filters .sp-sort { min-width: 0; }
+  .sp-filters .sp-price input { flex: 1; width: 0; min-width: 0; }
 }
 
 /* ===== Galería: grilla de imágenes + visor (lightbox) =====
@@ -847,9 +847,9 @@ html { scroll-behavior: smooth; }
   .sp-hero-decor .sp-float { display: none; }
   .sp-toolbar { margin-bottom: 18px; }
   .sp-filters { margin: -6px 0 18px; gap: 10px; }
-  .sp-filters .sp-field { flex: 1 1 100%; }
-  .sp-filters .sp-price, .sp-filters .sp-sort { width: 100%; }
-  .sp-filters .sp-price input { flex: 1; width: auto; }
+  .sp-filters .sp-field { flex: 1 1 100%; min-width: 0; }
+  .sp-filters .sp-price, .sp-filters .sp-sort { width: 100%; min-width: 0; }
+  .sp-filters .sp-price input { flex: 1; width: 0; min-width: 0; }
   .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .sp-card { border-radius: 16px; }
   .sp-card-img { aspect-ratio: 1 / 1; }
@@ -887,10 +887,11 @@ html { scroll-behavior: smooth; }
 .sp-card-foot { margin-top: auto; padding-top: 14px; border-top: 1px dashed var(--sp-line); }
 .sp-card-foot .sp-card-price { font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
 .sp-card:hover .sp-card-price { color: var(--sp-accent-text); }
-.sp-card-go { width: auto; height: 36px; gap: 6px; padding: 0 14px 0 16px; border-radius: 99px; font: inherit; font-size: 13px; font-weight: 700; }
+.sp-card-go { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 36px; gap: 6px; padding: 0 15px; border: 1px solid color-mix(in srgb, var(--store-accent) 40%, var(--sp-line)); border-radius: 99px; background: color-mix(in srgb, var(--store-accent) 7%, transparent); color: var(--sp-accent-text); font: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; box-shadow: none; transition: background .25s var(--sp-ease), color .2s, border-color .2s, box-shadow .3s var(--sp-ease), transform .3s var(--sp-ease); }
 .sp-card-go svg { transition: transform .3s var(--sp-ease); }
-.sp-card:hover .sp-card-go { transform: none; box-shadow: 0 12px 22px -10px var(--store-accent-ink); }
-.sp-card:hover .sp-card-go svg { transform: translateX(3px); }
+.sp-card:hover .sp-card-go, .sp-card-go:hover { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; border-color: transparent; transform: none; box-shadow: 0 10px 20px -10px var(--store-accent-ink); }
+.sp-card:hover .sp-card-go svg, .sp-card-go:hover svg { transform: translateX(3px); }
+.sp-card-go:active { transform: scale(.96); }
 .sp-card-quick { bottom: 12px; }
 .store-page[data-store-theme='dark'] .sp-card { box-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 28px -20px rgba(0, 0, 0, .7); }
 .store-page[data-store-theme='dark'] .sp-card-img { background: color-mix(in srgb, var(--store-accent) 10%, transparent); }
