@@ -77,7 +77,7 @@ async function onSubmit() {
     <div v-if="done" class="empty">
       <span class="empty-icon"><AppIcon name="circle-check" :size="30" /></span>
       <h3>Denuncia registrada</h3>
-      <p>Recibimos tu reporte. Nuestro equipo lo revisará y, si corresponde, quitará el contenido y tomará medidas sobre la cuenta responsable. Podemos contactarte por correo si necesitamos más información.</p>
+      <p>Recibí tu reporte. Lo voy a revisar y, si corresponde, quitaré el contenido y tomaré medidas sobre la cuenta responsable. Puedo contactarte por correo si necesito más información.</p>
       <RouterLink class="btn btn-auto" to="/terminos">Ver términos y condiciones</RouterLink>
     </div>
 

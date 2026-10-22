@@ -23,7 +23,7 @@ ContentReportConfigs = {
         'serializer' :   ContentReportSerializer,
         'queryset'   :   ContentReport.objects.all(),
         'permissions':   [AllowAny],
-        'message'    :   'Denuncia registrada correctamente. Nuestro equipo la revisará a la brevedad.'
+        'message'    :   'Denuncia registrada correctamente. La voy a revisar a la brevedad.'
     },
     #Gestión interna: solo el staff cambia estado y notas
     'update': {

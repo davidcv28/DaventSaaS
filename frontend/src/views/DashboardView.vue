@@ -916,7 +916,7 @@ async function handleSubscriptionReturn() {
   if (billing.subscription?.auto_renew) {
     showRenewalActivated()
   } else {
-    billing.notice = 'Estamos confirmando la autorización del débito automático con Mercado Pago.'
+    billing.notice = 'Estoy confirmando la autorización del débito automático con Mercado Pago.'
     startRenewalWatch()
   }
 }
@@ -1417,7 +1417,7 @@ async function changePassword() {
           <AlertMessage
             v-if="store.store.is_blocked"
             kind="error"
-            :message="`Tu web fue bloqueada por el equipo de DAVENT${store.store.blocked_reason ? ` — motivo: ${store.store.blocked_reason}` : ''}. Si creés que es un error, escribinos desde la sección de ayuda.`"
+            :message="`Tu web fue bloqueada por DAVENT${store.store.blocked_reason ? ` — motivo: ${store.store.blocked_reason}` : ''}. Si creés que es un error, escribime desde la sección de ayuda.`"
           />
           <div class="link-bar">
             <code class="mono link-url">{{ publicUrl }}</code>
@@ -1884,7 +1884,7 @@ async function changePassword() {
         <div>
           <div class="card">
             <h3><AppIcon name="monitor" :size="18" /> DAVENT Ventas</h3>
-            <p>Estamos desarrollando un programa de venta para tu computadora. Cobrás en persona con el mismo catálogo que ya publicás en tu web, emitís el comprobante con tus datos y cerrás el día con el resumen de tus ventas.</p>
+            <p>Estoy desarrollando un programa de venta para tu computadora. Cobrás en persona con el mismo catálogo que ya publicás en tu web, emitís el comprobante con tus datos y cerrás el día con el resumen de tus ventas.</p>
             <ul class="pos-feats">
               <li><AppIcon name="package" :size="16" /> <span>Productos, fotos y precios sincronizados con tu catálogo web.</span></li>
               <li><AppIcon name="receipt" :size="16" /> <span>Facturación integrada: tickets y facturas con tus datos.</span></li>

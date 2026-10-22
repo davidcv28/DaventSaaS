@@ -58,7 +58,7 @@ import LegalLayout from '../components/LegalLayout.vue'
       <p>
         Si sos titular de un derecho (autor, marca, imagen u otro) o detectás contenido ilegal dentro de
         DAVENT, podés reportarlo desde
-        <RouterLink to="/denuncias">nuestro formulario de denuncias</RouterLink>, disponible también para
+        <RouterLink to="/denuncias">el formulario de denuncias</RouterLink>, disponible también para
         personas sin cuenta. Cada denuncia debe incluir:
       </p>
       <ul>
