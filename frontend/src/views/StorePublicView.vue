@@ -124,6 +124,9 @@ async function submitContact() {
 // --- Carrusel de portada ---
 const carousel = computed(() => custom.value.carousel || [])
 const slide = ref(0)
+// slideEpoch fuerza el remount de la barra de progreso cada vez que el
+// temporizador se reinicia (auto-avance, flechas, dots, hover out, drag).
+const slideEpoch = ref(0)
 let slideTimer = null
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
 
@@ -139,6 +142,7 @@ function pauseSlideTimer() {
 }
 function restartSlideTimer() {
   pauseSlideTimer()
+  slideEpoch.value += 1
   if (carousel.value.length > 1 && !reduceMotion) {
     slideTimer = setInterval(() => { slide.value = (slide.value + 1) % carousel.value.length }, 5000)
   }
@@ -291,7 +295,13 @@ const vReveal = {
     el.classList.add('sp-rv')
     if (binding.value) el.style.setProperty('--rv-d', `${binding.value}ms`)
     if (reduceMotion || !('IntersectionObserver' in window)) { el.classList.add('is-in'); return }
-    getObserver().observe(el)
+    // Doble rAF: garantiza que el estado oculto (sp-rv) llegó a un frame
+    // renderizado antes de que el observer pueda agregar is-in. Sin esto,
+    // la primera entrega del IntersectionObserver puede caer en el mismo
+    // ciclo de render y el navegador nunca registra la transición.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => getObserver().observe(el))
+    })
   },
   unmounted(el) { revealObserver?.unobserve(el) }
 }
@@ -409,14 +419,17 @@ onBeforeUnmount(() => {
                     @click="goSlide(i)"
                   ></button>
                 </div>
+                <span v-if="!reduceMotion" :key="`${slide}-${slideEpoch}`" class="sp-slide-progress" aria-hidden="true"></span>
               </template>
             </div>
             <div v-else class="sp-cover" aria-hidden="true"></div>
           </div>
 
           <div class="sp-identity">
-            <img v-if="custom.logo" v-reveal="80" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
-            <span v-else v-reveal="80" class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
+            <span v-reveal="80" class="sp-ava">
+              <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+              <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
+            </span>
             <div v-reveal="160" class="sp-identity-text">
               <h1 :style="nameFont">{{ shopName }}</h1>
               <p v-if="custom.headline" class="sp-headline">{{ custom.headline }}</p>
