@@ -1492,7 +1492,7 @@ async function changePassword() {
               <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
             </div>
             <div class="field" :class="{ locked: !canLocationMap }">
-              <label id="design-location-label">Mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Estándar</span></label>
+              <label id="design-location-label">Mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></label>
               <label class="check">
                 <input
                   v-model="designForm.show_location"
