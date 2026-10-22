@@ -619,7 +619,7 @@ onBeforeUnmount(() => {
                 </div>
                 <div class="sp-field">
                   <label for="sp-contact-message">Mensaje</label>
-                  <textarea id="sp-contact-message" v-model="contactForm.message" class="sp-input sp-textarea" rows="5" maxlength="2000" placeholder="Contanos en qué te podemos ayudar" required></textarea>
+                  <textarea id="sp-contact-message" v-model="contactForm.message" class="sp-input sp-textarea" rows="4" maxlength="2000" placeholder="Contanos en qué te podemos ayudar" required></textarea>
                   <span class="sp-counter" aria-hidden="true">{{ contactForm.message.length }} / 2000</span>
                 </div>
                 <div class="sp-field">
