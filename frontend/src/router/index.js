@@ -114,7 +114,9 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { next: to.fullPath } }
   }
   if (to.meta?.requiresGuest && auth.isAuthenticated) {
-    return { name: 'dashboard' }
+    // Un staff logueado vuelve a su panel, no al de clientes.
+    if (!auth.user) await auth.fetchMe().catch(() => {})
+    return { name: auth.user?.is_staff ? 'admin' : 'dashboard' }
   }
   if (to.meta?.requiresStaff) {
     // El usuario llega async desde initFromStorage: lo esperamos antes de decidir.

@@ -37,7 +37,8 @@ async function onSubmit() {
   if (!form.username.trim() || !form.password) return
   const ok = await auth.login(form)
   if (ok) {
-    const next = route.query.next || '/dashboard'
+    // El staff aterriza en su panel de administración; los clientes en el suyo.
+    const next = route.query.next || (auth.user?.is_staff ? '/admin' : '/dashboard')
     router.push(String(next))
   } else if (auth.lastError.includes('Demasiados intentos')) {
     startCooldown()
