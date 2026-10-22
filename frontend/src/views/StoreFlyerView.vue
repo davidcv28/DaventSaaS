@@ -48,8 +48,8 @@ watch(design, (v) => { try { localStorage.setItem(DESIGN_KEY, v) } catch (e) {} 
 // @page nombrado hace que el PDF salga en el papel correcto.
 const FLYER_FORMATS = [
   { id: 'a4', name: 'A4', desc: 'Hoja completa' },
-  { id: 'a5', name: 'A5', desc: 'Media hoja' },
-  { id: 'a6', name: 'A6', desc: 'Panfletito' }
+  { id: 'a5', name: 'A5', desc: 'Media hoja · 2 por A4' },
+  { id: 'a6', name: 'A6', desc: 'Panfletito · 4 por A4' }
 ]
 const FORMAT_KEY = 'davent:flyer-format'
 const format = ref(
@@ -58,6 +58,10 @@ const format = ref(
     : (FLYER_FORMATS.some((f) => f.id === localStorage.getItem(FORMAT_KEY)) ? localStorage.getItem(FORMAT_KEY) : 'a4')
 )
 watch(format, (v) => { try { localStorage.setItem(FORMAT_KEY, v) } catch (e) {} })
+
+// En pantalla se previsualiza 1 copia; al imprimir la hoja A4 sale llena:
+// A5 → 2 copias lado a lado en A4 apaisado, A6 → grilla 2×2 en A4 vertical.
+const printCopies = computed(() => (format.value === 'a5' ? 2 : format.value === 'a6' ? 4 : 1))
 
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
 const themeVars = computed(() => storeThemeVars(custom.value))
@@ -402,7 +406,14 @@ function closeTab() {
 /* ===== Tamaños ===== */
 /* A5 (media hoja): misma información que el A4 pero sin las secciones
    pesadas — descripción, especialidades/misión y fotos quedan afuera. */
-.flyer--a5 { width: min(100%, 148mm); min-height: 210mm; page: flyerA5; }
+/* Hoja que contiene las copias: en pantalla solo se ve la primera; al
+   imprimir se llena la A4 (2×A5 apaisada / 4×A6 en grilla 2×2). */
+.flyer-sheet { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.flyer-sheet .flyer + .flyer { display: none; }
+.sheet--a5 { page: flyerA5; }
+.sheet--a6 { page: flyerA6; }
+
+.flyer--a5 { width: min(100%, 148mm); min-height: 210mm; }
 .flyer--a5 .flyer-head { padding: 30px 32px 22px; gap: 14px; }
 .flyer--a5 .flyer-logo, .flyer--a5 .flyer-mono { width: 70px; height: 70px; font-size: 28px; border-radius: 17px; }
 .flyer--a5 .flyer-name { font-size: min(var(--store-name-size, 34px), 27px); }
@@ -434,7 +445,7 @@ function closeTab() {
 
 /* A6 (panfletito): solo lo esencial — marca, contacto directo y QR.
    Todo lo demás se oculta por clase de sección. */
-.flyer--a6 { width: min(100%, 105mm); min-height: 148mm; page: flyerA6; }
+.flyer--a6 { width: min(100%, 105mm); min-height: 148mm; }
 .flyer--a6 .flyer-head { padding: 20px 18px 14px; gap: 10px; }
 .flyer--a6 .flyer-logo, .flyer--a6 .flyer-mono { width: 46px; height: 46px; font-size: 19px; border-radius: 12px; }
 .flyer--a6 .flyer-name { font-size: min(var(--store-name-size, 34px), 19px); }
@@ -477,14 +488,20 @@ function closeTab() {
 .flyer--a6.flyer--center .flyer-head { padding-top: 26px; }
 
 @page { size: A4; margin: 0; }
-@page flyerA5 { size: A5; margin: 0; }
-@page flyerA6 { size: A6; margin: 0; }
+@page flyerA5 { size: A4 landscape; margin: 0; }
+@page flyerA6 { size: A4; margin: 0; }
 @media print {
   .print-page { background: #fff; padding: 0; }
   .print-bar, .print-status, .design-strip, .format-strip { display: none; }
   .flyer { border: none; box-shadow: none; border-radius: 0; width: 210mm; min-height: 297mm; }
-  .flyer--a5 { width: 148mm; min-height: 210mm; }
-  .flyer--a6 { width: 105mm; min-height: 148mm; }
+  /* Imposición: la hoja A4 sale llena con las copias listas para cortar. */
+  .flyer-sheet .flyer + .flyer { display: flex; }
+  .flyer-sheet .flyer { flex: none; }
+  .sheet--a5 { flex-direction: row; align-items: stretch; width: 296mm; height: 210mm; }
+  .sheet--a5 .flyer { width: 148mm; height: 210mm; min-height: 0; }
+  .sheet--a6 { display: grid; grid-template-columns: repeat(2, 105mm); grid-template-rows: repeat(2, 148mm); width: 210mm; height: 296mm; }
+  .sheet--a6 .flyer { width: 105mm; height: 148mm; min-height: 0; }
+  .sheet--a5 .flyer, .sheet--a6 .flyer { border: 1px dashed #cbd5e1; }
 }
 @media (max-width: 640px) {
   .flyer { min-height: 0; }
@@ -565,7 +582,8 @@ function closeTab() {
       <p>{{ error }}</p>
     </div>
 
-    <article v-else class="flyer" :class="[`flyer--${design}`, `flyer--${format}`]">
+    <div v-else class="flyer-sheet" :class="`sheet--${format}`">
+      <article v-for="n in printCopies" :key="n" class="flyer" :class="[`flyer--${design}`, `flyer--${format}`]" :aria-hidden="n > 1 || undefined">
       <header class="flyer-head">
         <img v-if="custom.logo" class="flyer-logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
         <span v-else class="flyer-mono" aria-hidden="true">{{ initial }}</span>
@@ -671,6 +689,7 @@ function closeTab() {
       <div v-if="design === 'tearoff' && format !== 'a6'" class="flyer-strips" aria-hidden="true">
         <span v-for="i in 10" :key="i" class="flyer-strip">{{ stripText }}</span>
       </div>
-    </article>
+      </article>
+    </div>
   </div>
 </template>
