@@ -9,14 +9,17 @@ import AppIcon from './AppIcon.vue'
 import BrandLogo from './BrandLogo.vue'
 
 // Bot de ayuda (no es IA: responde con opciones fijas). Dos modos:
-// - Páginas públicas (auth, legales, tienda del cliente): temas de venta.
+// - Plantilla de autenticación (login/registro/recupero): temas de venta.
 // - Panel autenticado: consultas sobre la cuenta (lee los stores Pinia).
-// Se oculta en las vistas de impresión (factura / folleto).
+// No aparece en la web pública del cliente ni en las páginas legales, y se
+// oculta en las vistas de impresión (factura / folleto).
 const route = useRoute()
 const billing = useBillingStore()
 const store = useStoreStore()
 const HIDDEN_ROUTES = new Set(['invoice-print', 'store-flyer'])
-const visible = computed(() => !HIDDEN_ROUTES.has(route.name))
+const visible = computed(() =>
+  Boolean(route.meta?.requiresAuth || route.meta?.requiresGuest) && !HIDDEN_ROUTES.has(route.name)
+)
 const isPanel = computed(() => Boolean(route.meta?.requiresAuth))
 
 const open = ref(false)
@@ -70,8 +73,9 @@ function panelAnswer(id) {
     case 'products':
       return 'En "Mis catálogos" cargás productos con foto, nombre, precio, categoría y marca. Todo lo que publiques aparece al instante en tu web pública. Las categorías y marcas se crean en las pestañas de ese mismo panel.'
     case 'design': {
-      if (plan?.benefits?.has_design_advanced) return 'En "Diseño web" personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada y botones de WhatsApp y redes.'
-      if (plan?.benefits?.has_customization) return 'En "Diseño web" personalizás el logo, el nombre, el titular, la descripción, el tema claro/oscuro y los botones de WhatsApp y redes. El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium.'
+      const mapa = plan?.benefits?.has_location_map ? ', el mapa de ubicación' : ''
+      if (plan?.benefits?.has_design_advanced) return 'En "Diseño web" personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada, mapa de ubicación y botones de WhatsApp y redes.'
+      if (plan?.benefits?.has_customization) return `En "Diseño web" personalizás el logo, el nombre, el titular, la descripción, el tema claro/oscuro${mapa} y los botones de WhatsApp y redes. El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium.`
       return 'Con una suscripción activa podés personalizar el diseño de tu web (logo, textos, tema y botones de contacto). El color de acento, las fuentes y el carrusel son del Plan premium. En "Planes" elegís el que mejor te quede.'
     }
     case 'renew':
