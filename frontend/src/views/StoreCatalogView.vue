@@ -124,6 +124,7 @@ const productCount = computed(() => {
   return hasFilters.value ? `${base}, ${activeFilterCount.value} ${activeFilterCount.value === 1 ? 'filtro' : 'filtros'}` : base
 })
 
+const brandNameOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
 const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, catalog.value.products.length)} de ${catalog.value.products.length}`)
 const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, catalog.value.products.length) / Math.max(1, catalog.value.products.length)) * 100)}%`)
@@ -408,16 +409,20 @@ onBeforeUnmount(() => {
             <div class="sp-card-img" @click="openProduct(p)">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
-              <span v-if="categoryNameOf(p)" class="sp-card-badge"><AppIcon name="tag" :size="11" /> {{ categoryNameOf(p) }}</span>
               <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Vista rápida</span>
             </div>
             <div class="sp-card-body">
+              <p v-if="categoryNameOf(p) || brandNameOf(p)" class="sp-card-eyebrow">
+                <span v-if="categoryNameOf(p)">{{ categoryNameOf(p) }}</span>
+                <i v-if="categoryNameOf(p) && brandNameOf(p)" aria-hidden="true"></i>
+                <span v-if="brandNameOf(p)">{{ brandNameOf(p) }}</span>
+              </p>
               <h3 class="sp-card-name">{{ p.name }}</h3>
               <p v-if="p.description" class="sp-card-desc">{{ p.description }}</p>
               <div class="sp-card-foot">
                 <span class="sp-card-price">{{ formatARS(p.price) }}</span>
                 <button type="button" class="sp-card-go" :aria-label="`Ver ${p.name}`" @click="openProduct(p)">
-                  <AppIcon name="arrow-right" :size="16" />
+                  Ver <AppIcon name="arrow-right" :size="15" />
                 </button>
               </div>
             </div>
