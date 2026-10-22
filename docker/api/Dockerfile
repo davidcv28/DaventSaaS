@@ -7,8 +7,11 @@ ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 # gcc/libpq por si alguna dependencia no trae wheel para py3.11.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends gcc libpq-dev ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+# pip actualizado: es el binario que descarga de PyPI en este stage.
+RUN python -m pip install --upgrade pip
 WORKDIR /build
 COPY requirements.txt .
 RUN pip wheel --wheel-dir /wheels -r requirements.txt
@@ -18,12 +21,17 @@ FROM python:3.11-slim-bookworm AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
+# Parcho la imagen base primero: la slim queda semanas atrás de los security
+# updates de Debian (openssl, libc, ca-certificates). Sin esto el contenedor
+# arranca con CVEs ya corregidos upstream y un store de CAs potencialmente
+# desactualizado para TLS saliente (R2, MercadoPago, SMTP).
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends wget gnupg ca-certificates
 # pg_dump para `manage.py backup_db` (cron del host -> compose exec api).
 # La imagen base solo ofrece el cliente 15 y el server de compose es 16:
 # se instala postgresql-client-16 desde el repo oficial PGDG.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget gnupg ca-certificates \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+RUN echo "deb https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg \
     && apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-16 \

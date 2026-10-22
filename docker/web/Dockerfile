@@ -21,6 +21,9 @@ RUN npm run build
 
 # ---------- Stage 2: nginx sirve el SPA y proxifica /api ----------
 FROM nginx:1.27-alpine
+# Parcheo los paquetes del runtime (openssl/musl/nginx): la imagen base
+# queda atrás de los fixes de Alpine ya publicados.
+RUN apk upgrade --no-cache
 COPY --from=build /src/dist /usr/share/nginx/html
 # Los vhosts se montan desde ./docker/web/templates y nginx:alpine los
 # procesa con envsubst (${PLATFORM_DOMAIN}) al arrancar.
