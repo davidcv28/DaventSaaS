@@ -52,7 +52,7 @@ frontend/
 | Planes | `GET /suscription-plans/` | público | `[{id,name,price}]` |
 | Mi suscripción | `GET /suscriptions/` | `Bearer` | `[{id,plan_suscription,plan_name,plan_price,start_date,end_date,status}]` |
 | Suscribirme | `POST /suscriptions/` | `{plan_suscription: <pk>}` | `201 {Exito}` (una por perfil) |
-| Cambiar plan | `PUT /suscriptions/<pk>/` | `{plan_suscription: <pk>}` | `200 {Exito}` |
+| Cambiar plan | `PUT /suscriptions/<pk>/` | `{plan_suscription: <pk>}` | `200 {Exito}` — deja el plan en `pending_plan`: se aplica recién cuando el cobro se acredita (nunca gratis) |
 | Mis pagos | `GET /payments/` | `Bearer` | `[{id,suscription,plan_name,amount,currency,status,status_display,external_reference,paid_at,created_at}]` |
 | Confirmar pago MP | `POST /payments/` | `{suscription:<pk>,payment_id:<int>}` | `201 {Exito}` (verifica monto vs plan en MP) |
 | Mis facturas | `GET /invoices/` | `Bearer` | `[{id,comprobante,type,type_display,total,issued_at,plan_name,paid_at,currency,customer_name,document,type_document,tax_condition_display,address,city_name,province_name}]` |

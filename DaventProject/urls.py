@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import (
@@ -37,20 +38,20 @@ urlpatterns = [
     path('api/', include('StoreApp.domains.stores.urls.urls')),
     path('api/', include('StoreApp.domains.catalog.urls.urls')),
     #=================================
-    # DJANGO AUTH
-    #=================================
-    path("api-auth/", include("rest_framework.urls")),
-    #=================================
     # JWT
     #=================================
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    #=================================
-    # SWAGGER
-    #=================================
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-
 ]
+
+# Solo en desarrollo: el schema OpenAPI y los docs interactivos exponen la
+# estructura completa de la API; en producción quedan cerrados (404). Lo
+# mismo para el login de la browsable API de DRF.
+if settings.DEBUG:
+    urlpatterns += [
+        path("api-auth/", include("rest_framework.urls")),
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    ]

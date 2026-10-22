@@ -30,7 +30,7 @@ SuscriptionConfigs = {
         'serializer' :   SuscriptionSerializer,
         'queryset'   :   lambda view : Suscription.objects.select_related('plan_suscription').filter(user__user = view.request.user),
         'permissions':   [IsAuthenticated],
-        'message'    :   'Tu plan se actualizó correctamente'
+        'message'    :   'El plan quedó seleccionado: se aplica cuando se acredite el pago'
     },
     'get': {
         'serializer'    :   SuscriptionSerializerList,

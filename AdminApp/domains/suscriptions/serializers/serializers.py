@@ -10,7 +10,6 @@ from .mixins        import SuscriptionPlanMixinValidator, SuscriptionCreateMixin
 from AdminApp.domains.suscriptions.models import SuscriptionPlan, Suscription
 from django.contrib.auth.models import User
 from django.utils import timezone
-from datetime import timedelta
 
 """
 
@@ -50,16 +49,32 @@ class SuscriptionSerializer(SuscriptionCreateMixin, serializers.ModelSerializer)
                 message     =   'Solo se admite una suscripción por usuario'  
             )
         ]
+    def create(self, validated_data):
+        #La suscripción nace IMPAGA: el acceso lo otorga la acreditación del
+        #cobro (ApplyPendingPlanQuery), nunca el alta en sí. Sin esto el
+        #default del modelo creaba una suscripción activa de 30 días gratis.
+        now                                     =   timezone.now()
+        validated_data['status']                =   Suscription.STATUS_PENDING_PAYMENT
+        validated_data['start_date']            =   now
+        validated_data['end_date']              =   now
+        return super().create(validated_data)
     def update(self, instance, validated_data):
-        #Cambio directo de plan (sin pasarela): descarta cualquier plan pendiente de pago
-        if 'plan_suscription' in validated_data:
-            validated_data['pending_plan_suscription']  =   None
-            if instance.status == 'Pendiente de pago':
-                now                                 =   timezone.now()
-                validated_data['status']            =   'Suscripción activa'
-                validated_data['start_date']        =   now
-                validated_data['end_date']          =   now + timedelta(days = 30)
-        return super().update(instance, validated_data)
+        #SEGURIDAD: el plan NUNCA se cambia directo desde este endpoint —
+        #eso otorgaba cualquier plan pago sin pasar por el cobro.
+        plan    =   validated_data.pop('plan_suscription', None)
+        if plan is None:
+            return instance
+        if instance.status == Suscription.STATUS_PENDING_PAYMENT:
+            #Suscripción impaga: el plan elegido se corrige libremente (no
+            #otorga acceso hasta que el pago se acredite).
+            instance.plan_suscription   =   plan
+            instance.save(update_fields = ['plan_suscription'])
+            return instance
+        #Suscripción vigente o pagada: el cambio queda pendiente y se aplica
+        #recién cuando el cobro se acredita (checkout o débito automático).
+        instance.pending_plan_suscription   =   plan
+        instance.save(update_fields = ['pending_plan_suscription'])
+        return instance
 
 #=========================================
 # SUSCRIPCION SERIALIZER LIST

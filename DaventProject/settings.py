@@ -24,9 +24,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Default SEGURO: sin DEBUG=True explícito en .env arranca en modo producción.
+DEBUG = config('DEBUG', default = False, cast = bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
+
+# Cabeceras de seguridad para producción (https detrás del proxy). En dev
+# quedan apagadas; se activan por .env al desplegar:
+#   SECURE_SSL_REDIRECT=True  SESSION_COOKIE_SECURE=True  CSRF_COOKIE_SECURE=True
+#   SECURE_HSTS_SECONDS=31536000  SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+SECURE_SSL_REDIRECT             = config('SECURE_SSL_REDIRECT', default = False, cast = bool)
+SESSION_COOKIE_SECURE           = config('SESSION_COOKIE_SECURE', default = False, cast = bool)
+CSRF_COOKIE_SECURE              = config('CSRF_COOKIE_SECURE', default = False, cast = bool)
+SECURE_HSTS_SECONDS             = config('SECURE_HSTS_SECONDS', default = 0, cast = int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS  = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default = False, cast = bool)
+SECURE_HSTS_PRELOAD             = config('SECURE_HSTS_PRELOAD', default = False, cast = bool)
+SECURE_REFERRER_POLICY          = 'same-origin'
+# Detrás de nginx/Cloudflare: el proxy termina TLS y avisa por header.
+SECURE_PROXY_SSL_HEADER         = ('HTTP_X_FORWARDED_PROTO', 'https') if SECURE_SSL_REDIRECT else None
 
 
 REST_FRAMEWORK = {
