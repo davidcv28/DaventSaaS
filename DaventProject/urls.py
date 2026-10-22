@@ -31,6 +31,8 @@ from AdminApp.domains.users.views.auth_views import (
     TokenLogoutView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
+    VerifyEmailView,
+    VerifyEmailResendView,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
@@ -60,6 +62,8 @@ urlpatterns = [
     #=================================
     path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset'),
     path('api/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('api/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
+    path('api/verify-email/resend/', VerifyEmailResendView.as_view(), name='verify_email_resend'),
 ]
 
 # Solo en desarrollo: el schema OpenAPI y los docs interactivos exponen la

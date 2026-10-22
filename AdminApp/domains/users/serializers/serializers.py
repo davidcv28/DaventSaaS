@@ -44,10 +44,14 @@ class UserProfileSerializer(UserProfileValidatorsMixins,serializers.ModelSeriali
     terms_accepted      =   serializers.BooleanField(read_only = True)
     terms_accepted_at   =   serializers.DateTimeField(read_only = True)
     terms_version       =   serializers.CharField(read_only = True)
+    #EMAIL VERIFICATION (solo lectura: se marca desde el link firmado del correo)
+    email_verified      =   serializers.BooleanField(read_only = True)
+    email_verified_at   =   serializers.DateTimeField(read_only = True)
     class Meta:
         model           =   UserProfile
         fields          =   ['user', 'tax_condition', 'business_name', 'type_document', 'document', 'first_name', 'last_name',
-                             'province', 'city', 'address', 'phone', 'terms_accepted', 'terms_accepted_at', 'terms_version']
+                             'province', 'city', 'address', 'phone', 'terms_accepted', 'terms_accepted_at', 'terms_version',
+                             'email_verified', 'email_verified_at']
 
     
 #=============================#=============================#=============================#=============================

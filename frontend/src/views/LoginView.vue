@@ -49,7 +49,7 @@ async function onSubmit() {
 <template>
   <AuthLayout title="Bienvenido de nuevo" subtitle="Ingresá con tu usuario DAVENT para gestionar tus tiendas.">
     <AlertMessage v-if="auth.lastError" kind="error" :message="auth.lastError" />
-    <AlertMessage v-if="route.query.registered" kind="success" message="Cuenta creada. Ahora iniciá sesión." />
+    <AlertMessage v-if="route.query.registered" kind="success" message="Cuenta creada. Te enviamos un correo para verificar tu email: revisá tu casilla (y el spam). Después podés iniciar sesión." />
 
     <form @submit.prevent="onSubmit" novalidate>
       <AppInput

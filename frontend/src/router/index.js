@@ -7,6 +7,7 @@ const LoginView = () => import('../views/LoginView.vue')
 const RegisterView = () => import('../views/RegisterView.vue')
 const ForgotPasswordView = () => import('../views/ForgotPasswordView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
+const VerifyEmailView = () => import('../views/VerifyEmailView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
 const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
@@ -61,6 +62,14 @@ const routes = [
     name: 'reset-password',
     component: ResetPasswordView,
     meta: { requiresGuest: true, title: 'Nueva contraseña' }
+  },
+  // Destino del link del correo de verificación: accesible logueado o no
+  // (por eso sin requiresGuest — el guard rebotaría al dashboard logueados).
+  {
+    path: '/verificar-email',
+    name: 'verify-email',
+    component: VerifyEmailView,
+    meta: { title: 'Verificación de correo' }
   },
   {
     path: '/dashboard',

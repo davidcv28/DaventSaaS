@@ -6,25 +6,35 @@ from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
-from django.utils.encoding import force_bytes
+from django.utils.encoding import force_bytes, force_str
 from django.utils.html import escape
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 logger          =   logging.getLogger(__name__)
 #Vacío en .env != ausente: un valor vacío también cae al default de dev.
 FRONTEND_URL    =   config('FRONTEND_URL', default = '') or 'http://localhost:5173'
+BACKEND_URL     =   config('BACKEND_URL', default = '') or 'http://127.0.0.1:8000'
 #=================================
 # USER MODEL QUERYS
 #=================================
 
 #USER UPDATE QUERY
 def UpdateUserQuery(user: User, validated_data : dict) -> User:
-    user.email = validated_data['email'].strip()
+    email       =   validated_data['email'].strip()
+    #Si cambia el correo hay que verificarlo de nuevo: la verificación anterior
+    #valía para la dirección vieja.
+    if email != user.email:
+        profile     =   getattr(user, 'profile', None)
+        if profile is not None and profile.email_verified:
+            profile.email_verified    =   False
+            profile.email_verified_at =   None
+            profile.save(update_fields = ['email_verified', 'email_verified_at'])
+    user.email  =   email
     user.save()
     return user
 
@@ -75,10 +85,26 @@ def RegisterUserQuery(validated_data : dict) -> User:
                 start_date          =   now,
                 end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
             )
+        #VERIFICACIÓN DE EMAIL: se agenda post-commit — si la transacción
+        #rollbackea el alta no existió y el mail no debe salir igual.
+        transaction.on_commit(lambda : SendVerificationEmailQuery(new_user))
         return new_user
 #=================================
 # ACCOUNT MAIL / TOKEN HELPERS
 #=================================
+class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
+    """
+    Token firmado para verificar el correo. El hash incluye email_verified:
+    una vez usado (o al re-verificar tras un cambio de correo) el link viejo
+    se inutiliza solo. El vencimiento lo fija settings.PASSWORD_RESET_TIMEOUT.
+    """
+    key_salt    =   'AdminApp.domains.users.email_verification'
+    def _make_hash_value(self, user, timestamp):
+        profile     =   getattr(user, 'profile', None)
+        verified    =   getattr(profile, 'email_verified', False)
+        return f'{user.pk}{user.password}{user.last_login}{timestamp}{verified}'
+email_verification_token    =   EmailVerificationTokenGenerator()
+
 def _uid_token(user : User, generator) -> tuple:
     return urlsafe_base64_encode(force_bytes(user.pk)), generator.make_token(user)
 
@@ -180,3 +206,49 @@ def ConfirmPasswordResetQuery(user : User, new_password : str) -> User:
     for token in OutstandingToken.objects.filter(user = user):
         BlacklistedToken.objects.get_or_create(token = token)
     return user
+#=================================
+# EMAIL VERIFICATION QUERYS
+#=================================
+def SendVerificationEmailQuery(user : User) -> None:
+    profile     =   getattr(user, 'profile', None)
+    if not (user.email or '').strip() or (profile and profile.email_verified):
+        return
+    uid, token      =   _uid_token(user, email_verification_token)
+    link            =   f'{BACKEND_URL}/api/verify-email/?uid={uid}&token={token}'
+    name            =   escape(_display_name(user))
+    _send_branded_mail(
+        user,
+        subject     =   'Verificá tu correo — DAVENT',
+        body        =   (
+            f'Hola {_display_name(user)},\n\n'
+            f'Gracias por registrarte en DAVENT. Para crear tu web pública necesitamos confirmar que este correo es tuyo.\n\n'
+            f'Verificá tu cuenta acá: {link}\n\n'
+            f'Si no creaste esta cuenta, ignorá este correo.'
+        ),
+        html        =   _mail_html(
+            title       =   'Verificá tu correo electrónico',
+            intro       =   f'Hola {name}, gracias por registrarte en DAVENT. Confirmá que este correo es tuyo para poder crear tu web pública.',
+            button_label=   'Verificar mi correo',
+            link        =   link,
+            note        =   'Hasta verificarlo podés usar tu panel, pero no crear tu web pública. Si no creaste esta cuenta, ignorá este correo.',
+        ),
+    )
+
+#VERIFY EMAIL (marca el correo del perfil; idempotente si ya estaba verificado)
+def VerifyEmailQuery(uid_b64 : str, token : str) -> bool:
+    try:
+        uid     =   force_str(urlsafe_base64_decode(uid_b64))
+        user    =   User.objects.get(pk = uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return False
+    profile     =   getattr(user, 'profile', None)
+    if profile and profile.email_verified:
+        #El link ya se usó (el token incluye el flag y queda viejo): no es error.
+        return True
+    if not email_verification_token.check_token(user, token):
+        return False
+    if profile:
+        profile.email_verified    =   True
+        profile.email_verified_at =   timezone.now()
+        profile.save(update_fields = ['email_verified', 'email_verified_at'])
+    return True

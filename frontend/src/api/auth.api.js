@@ -14,6 +14,7 @@ import { http } from './http.js'
 // POST /api/password-reset/   {email} -> 200 genérico (anti-enumeración)
 // POST /api/password-reset/confirm/ {uid, token, new_password, confirm_password}
 // GET  /api/verify-email/     ?uid&token -> backend marca y redirige al frontend
+// POST /api/verify-email/resend/ (Bearer) -> 200
 
 export const authApi = {
   async login({ username, password }) {
@@ -111,6 +112,12 @@ export const authApi = {
       new_password,
       confirm_password
     })
+    return data
+  },
+
+  // Reenvío del correo de verificación (usuario autenticado; throttled 5/hour).
+  async resendVerificationEmail() {
+    const { data } = await http.post('/verify-email/resend/')
     return data
   }
 }

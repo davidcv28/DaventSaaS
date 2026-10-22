@@ -1,11 +1,12 @@
 import secrets
 
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,6 +19,9 @@ from AdminApp.domains.users.serializers import (
 from AdminApp.domains.users.services import (
     RequestPasswordResetQuery,
     ConfirmPasswordResetQuery,
+    SendVerificationEmailQuery,
+    VerifyEmailQuery,
+    FRONTEND_URL,
 )
 
 # Sesión web: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ — el
@@ -42,6 +46,10 @@ class RefreshRateThrottle(AnonRateThrottle):
 class PasswordResetRateThrottle(AnonRateThrottle):
     """Scope 'password_reset' (settings): frena el abuso del envío de correos."""
     scope = 'password_reset'
+
+class VerifyEmailRateThrottle(UserRateThrottle):
+    """Scope 'email_verification' (settings): reenvío por usuario autenticado."""
+    scope = 'email_verification'
 
 
 def _secure():
@@ -185,3 +193,35 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception = True)
         ConfirmPasswordResetQuery(serializer.validated_data['user'], serializer.validated_data['new_password'])
         return Response({'Exito': 'Tu contraseña se actualizó. Ya podés iniciar sesión con la clave nueva.'}, status = status.HTTP_200_OK)
+
+
+class VerifyEmailView(APIView):
+    """
+    GET /api/verify-email/?uid=&token=: el link del correo de verificación
+    apunta al backend (firma del token), marca email_verified en el perfil y
+    redirige al frontend con el resultado. Idempotente.
+    """
+    permission_classes  =   [AllowAny]
+
+    def get(self, request):
+        ok      =   VerifyEmailQuery(
+            request.query_params.get('uid', ''),
+            request.query_params.get('token', ''),
+        )
+        return HttpResponseRedirect(f"{FRONTEND_URL}/verificar-email?status={'ok' if ok else 'error'}")
+
+
+class VerifyEmailResendView(APIView):
+    """
+    POST /api/verify-email/resend/: reenvía el correo de verificación al
+    usuario autenticado. Throttle por usuario (scope email_verification).
+    """
+    permission_classes  =   [IsAuthenticated]
+    throttle_classes    =   [VerifyEmailRateThrottle]
+
+    def post(self, request):
+        profile =   getattr(request.user, 'profile', None)
+        if profile and profile.email_verified:
+            return Response({'Exito': 'Tu correo ya está verificado.'}, status = status.HTTP_200_OK)
+        SendVerificationEmailQuery(request.user)
+        return Response({'Exito': 'Te reenviamos el correo de verificación. Revisá tu casilla (y el spam).'}, status = status.HTTP_200_OK)

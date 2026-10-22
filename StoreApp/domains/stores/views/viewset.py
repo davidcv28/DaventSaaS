@@ -77,6 +77,19 @@ class StoreViewSet(StoreBaseViewSet):
             return [IsAdminUser()]
         return super().get_permissions()
     #=========================================
+    # CREATE OVERRIDE (claim del link: exige correo verificado — anti-abuso trial)
+    #=========================================
+    def create(self, request):
+        #Sin email verificado cualquiera podría farmear tiendas con el plan de
+        #prueba. Solo el claim se bloquea: panel y cuenta siguen funcionando.
+        profile     =   getattr(request.user, 'profile', None)
+        if profile is not None and not profile.email_verified and not request.user.is_staff:
+            return Response(
+                {'detail': 'Antes de crear tu web pública tenés que verificar tu correo electrónico. Revisá tu casilla o pedí el reenvío desde tu panel.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        return super().create(request)
+    #=========================================
     # SLUG AVAILABLE (check de disponibilidad para el onboarding)
     #=========================================
     @action(detail = False, methods = ['get'], url_path = 'slug-available')

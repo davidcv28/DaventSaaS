@@ -27,6 +27,7 @@ import { formatARS } from '../api/billing.api.js'
 import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
 import { locationsApi } from '../api/locations.api.js'
+import { authApi } from '../api/auth.api.js'
 import { env } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
@@ -59,6 +60,31 @@ const passForm = reactive({ old_password: '', new_password: '', confirm_password
 const touched = reactive({})
 const passMsg = ref('')
 const passErr = ref('')
+
+// --- Verificación de email (anti-abuso trial: bloquea el claim de la web) ---
+const verifyBusy = ref(false)
+const verifyMsg = ref('')
+const verifyErr = ref('')
+// Solo perfiles comerciales sin verificar; el staff no tiene profile.
+const needsEmailVerification = computed(() => {
+  const p = auth.user?.profile
+  return Boolean(p) && p.email_verified === false
+})
+async function resendVerification() {
+  verifyBusy.value = true
+  verifyMsg.value = ''
+  verifyErr.value = ''
+  try {
+    const data = await authApi.resendVerificationEmail()
+    verifyMsg.value = data?.Exito || 'Te reenviamos el correo de verificación.'
+  } catch (e) {
+    verifyErr.value = e.response?.status === 429
+      ? 'Ya pediste varios reenvíos. Esperá un rato y revisá también el spam.'
+      : 'No se pudo reenviar el correo. Reintentá en unos minutos.'
+  } finally {
+    verifyBusy.value = false
+  }
+}
 
 // --- Cuenta: edición de correo + perfil fiscal ---
 const accountForm = reactive({
@@ -1100,6 +1126,19 @@ async function changePassword() {
     @navigate="onNavigate"
     @logout="logout"
   >
+    <!-- Banner global: correo sin verificar (bloquea crear la web pública) -->
+    <div v-if="needsEmailVerification" class="cta-banner">
+      <div>
+        <strong>Verificá tu correo electrónico.</strong><br />
+        Te enviamos un enlace a {{ auth.user?.email }}. Hasta confirmarlo no podés crear tu web pública.
+      </div>
+      <button class="btn light btn-auto" :disabled="verifyBusy" @click="resendVerification">
+        <span v-if="verifyBusy" class="spinner"></span>Reenviar correo
+      </button>
+    </div>
+    <AlertMessage v-if="verifyMsg" kind="success" :message="verifyMsg" />
+    <AlertMessage v-if="verifyErr" kind="error" :message="verifyErr" />
+
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
       <div class="page-head">

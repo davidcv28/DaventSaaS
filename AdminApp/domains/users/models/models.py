@@ -41,6 +41,9 @@ class UserProfile(models.Model):
     terms_accepted      =   models.BooleanField(default = False, verbose_name = 'Términos y condiciones aceptados')
     terms_accepted_at   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de aceptación de términos')
     terms_version       =   models.CharField(max_length = 20, null = True, blank = True, verbose_name = 'Versión de términos aceptada')
+    #EMAIL VERIFICATION (anti-abuso del trial: el claim de la web exige correo verificado)
+    email_verified      =   models.BooleanField(default = False, verbose_name = 'Correo verificado')
+    email_verified_at   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de verificación del correo')
     class Meta:
         app_label           =   'users'
         indexes             =   [

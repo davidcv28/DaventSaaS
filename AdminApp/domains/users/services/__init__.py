@@ -1,5 +1,6 @@
 from .services import (
     UpdateUserQuery, UpdatePasswordUserQuery, RegisterUserQuery,
     RequestPasswordResetQuery, ConfirmPasswordResetQuery, SendPasswordResetEmailQuery,
-    FRONTEND_URL,
+    SendVerificationEmailQuery, VerifyEmailQuery,
+    FRONTEND_URL, BACKEND_URL,
 )

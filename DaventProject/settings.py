@@ -71,6 +71,8 @@ REST_FRAMEWORK = {
         'store_contact': '10/hour',
         #Reset de contraseña por correo (por IP; la respuesta es genérica).
         'password_reset': '5/hour',
+        #Reenvío del correo de verificación (por usuario autenticado).
+        'email_verification': '5/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
