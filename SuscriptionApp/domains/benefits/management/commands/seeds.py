@@ -47,12 +47,12 @@ dict_plan_benefits = {
         },
         'presentation'  :   {
             'slug'          :   'prueba',
-            'tagline'       :   'Probá todo gratis por 10 días',
+            'tagline'       :   'Probá todo gratis por 1 día',
             'cta_label'     :   'Incluido al registrarte',
             'featured'      :   False,
             'display_order' :   0,
             'bullets'       :   [
-                '10 días gratis, sin tarjeta ni débito automático',
+                '1 día gratis, sin tarjeta ni débito automático',
                 'Todas las funciones del plan Premium',
                 'Hasta 50 imágenes y 200 MB de almacenamiento',
                 'Al vencer, elegí un plan para seguir publicado',

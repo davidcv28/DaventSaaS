@@ -1162,7 +1162,7 @@ async function changePassword() {
             <span class="hero-progress-bar" :style="{ width: planProgress + '%' }"></span>
           </div>
           <p class="hero-remaining"><strong>{{ plan.remaining }} días restantes</strong></p>
-          <p v-if="plan.isTrial" class="hero-pending">Plan de prueba: al terminar los 10 días tenés que elegir un plan para seguir publicado.</p>
+          <p v-if="plan.isTrial" class="hero-pending">Plan de prueba: al terminar el día de prueba tenés que elegir un plan para seguir publicado.</p>
           <p v-if="billing.subscription?.pending_plan_name" class="hero-pending">Cambio a {{ billing.subscription.pending_plan_name }} pendiente: se aplica cuando se acredite el pago.</p>
           <p v-if="plan.autoRenew" class="hero-pending"><AppIcon name="refresh" :size="14" /> Débito automático activo: se renueva el {{ fmtDate(plan.end) }}.</p>
           <p v-else-if="plan.cancelledAt" class="hero-pending"><AppIcon name="calendar" :size="14" /> Renovación automática desactivada: tu plan termina el {{ fmtDate(plan.end) }}.</p>

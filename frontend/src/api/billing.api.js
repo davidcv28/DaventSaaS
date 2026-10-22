@@ -6,7 +6,7 @@ import { http } from './http.js'
 //     benefits: {max_catalogs, has_public_link, has_qr, max_products(null=ilimitado),
 //                max_storage_mb, has_stats, has_flyers, has_customization,
 //                has_design_advanced, has_advanced_menu}}]
-//   is_trial=true -> plan de prueba (10 días, solo se otorga en el registro):
+//   is_trial=true -> plan de prueba (1 día, solo se otorga en el registro):
 //   viaja en el catálogo para la tarjeta informativa y los beneficios del plan
 //   vigente, pero no es seleccionable (el backend también lo rechaza).
 // Dominio suscripciones (AdminApp):

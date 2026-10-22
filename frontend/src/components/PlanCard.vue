@@ -13,7 +13,7 @@ const emit = defineEmits(['select'])
 
 <template>
   <div class="price-card" :class="{ featured: plan.featured, current, trial: plan.is_trial }">
-    <span v-if="plan.is_trial" class="flag trial">10 días gratis</span>
+    <span v-if="plan.is_trial" class="flag trial">1 día gratis</span>
     <span v-else-if="plan.featured" class="flag">Recomendado</span>
     <h3>{{ plan.name }}</h3>
     <p class="tagline">{{ plan.tagline }}</p>

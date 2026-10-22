@@ -86,7 +86,7 @@ RegisterSerializer (UsersValidatorsMixin + UserProfileValidatorsMixin)
 transaction.atomic()
         ├── User.objects.create_user(username, email, password)
         ├── UserProfile.objects.create(user, first_name, tax_condition, ...)
-        └── Suscription.objects.create(plan trial 10 días)
+        └── Suscription.objects.create(plan trial 1 día)
         └── transaction.on_commit → SendVerificationEmailQuery(user)
 ```
 
@@ -152,7 +152,7 @@ SuscriptionPlan
     ├── name (único)
     ├── price
     ├── is_trial            (plan de prueba: solo se otorga en el registro)
-    └── TRIAL_DAYS = 10     (duración del trial; constante de clase)
+    └── TRIAL_DAYS = 1      (duración del trial; constante de clase)
 
 Suscription
     ├── user                       ──OneToOne──► UserProfile
@@ -171,7 +171,7 @@ Suscription
 ```
 
 #### Plan de prueba (trial)
-Toda cuenta nueva arranca con el plan `is_trial=True` ("Plan de prueba", $0): `RegisterUserQuery` crea la `Suscription` con `end_date = now + TRIAL_DAYS` (10 días) y `status='Suscripción activa'`. Vencido ese plazo `grants_access()` deja de dar acceso (web pública 404, gating de beneficios off) y **no hay forma de reactivarlo**: el flag `is_trial` lo excluye de todo flujo de elección — queryset de `plan_suscription` en `SuscriptionSerializer`, `_resolve_suscription` de payments (400 "no está disponible"), `assign` (404) y el listado `GET /api/suscription-plans/` (que alimenta el dropdown de asignación del admin). Sí viaja en `GET /api/plans/` (con `is_trial` en el payload) para que el frontend resuelva los beneficios del plan vigente y muestre la tarjeta informativa no seleccionable. Sus beneficios son los del plan Premium salvo `max_images=50` y `max_storage_mb=200`. Un usuario con trial vencido que paga un plan entra por el flujo estándar (`pending_plan_suscription` → `ApplyPendingPlanQuery`).
+Toda cuenta nueva arranca con el plan `is_trial=True` ("Plan de prueba", $0): `RegisterUserQuery` crea la `Suscription` con `end_date = now + TRIAL_DAYS` (1 día) y `status='Suscripción activa'`. Vencido ese plazo `grants_access()` deja de dar acceso (web pública 404, gating de beneficios off) y **no hay forma de reactivarlo**: el flag `is_trial` lo excluye de todo flujo de elección — queryset de `plan_suscription` en `SuscriptionSerializer`, `_resolve_suscription` de payments (400 "no está disponible"), `assign` (404) y el listado `GET /api/suscription-plans/` (que alimenta el dropdown de asignación del admin). Sí viaja en `GET /api/plans/` (con `is_trial` en el payload) para que el frontend resuelva los beneficios del plan vigente y muestre la tarjeta informativa no seleccionable. Sus beneficios son los del plan Premium salvo `max_images=50` y `max_storage_mb=200`. Un usuario con trial vencido que paga un plan entra por el flujo estándar (`pending_plan_suscription` → `ApplyPendingPlanQuery`).
 
 #### Asignación manual de plan (staff)
 `POST /api/suscriptions/assign/` (IsAdminUser) `{user_id, plan_id}`: upsert de la `Suscription` del usuario — crea la fila si no existe o la pisa: plan nuevo, `status='Suscripción activa'`, `start_date=now`, `end_date=now+30d`, `pending_plan_suscription=None`. No toca el débito automático de MP (si existe sigue su curso). `user_id` es el id del `User` de auth (requiere `UserProfile` cargado: 400 si no existe). Los planes `is_trial` devuelven 404 (no reactivables). La respuesta incluye la suscripción serializada con `auth_user_id` (mapea suscripción ↔ usuario en el panel admin).

@@ -14,7 +14,7 @@ Creamos las suscripciones
 class SuscriptionPlan(models.Model):
     #Duración del plan de prueba (is_trial=True): se otorga solo en el registro
     #y al vencer no se puede reactivar (no es seleccionable ni asignable).
-    TRIAL_DAYS                  =   10
+    TRIAL_DAYS                  =   1
     name                        =   models.CharField(max_length = 60, null = False, blank = False, unique = True)
     price                       =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0.00, blank = False, null = False, verbose_name = 'Precio suscripción')
     is_trial                    =   models.BooleanField(default = False, verbose_name = 'Plan de prueba')
