@@ -207,12 +207,15 @@ async function loadCatalog() {
   const slug = normalizeSlug(route.params.slug)
   catalogStatus.value = 'loading'
   try {
+    let min = parsePrice(priceMin.value)
+    let max = parsePrice(priceMax.value)
+    if (min !== '' && max !== '' && min > max) [min, max] = [max, min]
     catalog.value = await storesApi.publicCatalog(slug, {
-      q: search.value,
+      q: search.value.trim(),
       category: activeCategory.value || '',
       brand: activeBrand.value || '',
-      min_price: parsePrice(priceMin.value),
-      max_price: parsePrice(priceMax.value),
+      min_price: min,
+      max_price: max,
       sort: sort.value
     })
     catalogStatus.value = 'success'
@@ -264,9 +267,11 @@ const hasFilters = computed(() => Boolean(activeCategory.value || activeBrand.va
 const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length))
 const activeCategoryName = computed(() => catalog.value.categories.find((c) => c.id === activeCategory.value)?.name)
 const activeBrandName = computed(() => catalog.value.brands.find((b) => b.id === activeBrand.value)?.name)
+const activeFilterCount = computed(() => [activeCategory.value, activeBrand.value, search.value.trim(), hasPriceFilter.value].filter(Boolean).length)
 const productCount = computed(() => {
   const n = catalog.value.products.length
-  return `${n} ${n === 1 ? 'producto' : 'productos'}`
+  const base = `${n} ${n === 1 ? 'producto' : 'productos'}`
+  return hasFilters.value ? `${base}, ${activeFilterCount.value} ${activeFilterCount.value === 1 ? 'filtro' : 'filtros'}` : base
 })
 
 async function share() {
@@ -401,7 +406,8 @@ onBeforeUnmount(() => {
         </a>
         <label v-if="status === 'success'" class="sp-search sp-search-top">
           <AppIcon name="search" :size="16" aria-hidden="true" />
-          <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
+          <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="search = ''" />
+          <button v-if="search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="search = ''"><AppIcon name="x" :size="14" /></button>
         </label>
         <div class="sp-top-end">
           <button
@@ -532,11 +538,12 @@ onBeforeUnmount(() => {
             <div v-reveal class="sp-toolbar">
               <div class="sp-toolbar-title">
                 <h2 id="sp-catalog-title" class="sp-section-title">Catálogo</h2>
-                <span v-if="catalogStatus === 'success'" class="sp-count">{{ productCount }}</span>
+                <span v-if="catalogStatus === 'success'" class="sp-count" role="status" aria-live="polite">{{ productCount }}</span>
               </div>
               <label class="sp-search sp-search-inline">
                 <AppIcon name="search" :size="16" aria-hidden="true" />
-                <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
+                <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="search = ''" />
+          <button v-if="search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="search = ''"><AppIcon name="x" :size="14" /></button>
               </label>
             </div>
 
@@ -559,7 +566,10 @@ onBeforeUnmount(() => {
               </label>
             </div>
 
-            <div v-if="hasFilters" class="sp-chips">
+            <div v-if="hasFilters" class="sp-chips" aria-label="Filtros activos">
+              <button v-if="search.trim()" type="button" class="sp-chip" @click="search = ''">
+                &ldquo;{{ search.trim() }}&rdquo; <AppIcon name="x" :size="12" />
+              </button>
               <button v-if="activeCategoryName" type="button" class="sp-chip" @click="pickCategory(activeCategory)">
                 {{ activeCategoryName }} <AppIcon name="x" :size="12" />
               </button>

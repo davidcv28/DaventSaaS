@@ -593,3 +593,10 @@ html { scroll-behavior: smooth; }
   .sp-ava.sp-rv.is-in { transform: none; }
   .sp-card.sp-rv { transition: opacity .8s var(--sp-ease) var(--rv-d, 0ms), transform .8s var(--sp-ease) var(--rv-d, 0ms), box-shadow .3s var(--sp-ease), border-color .3s; }
 }
+
+/* ===== Filtros: borrar búsqueda y resumen ===== */
+.sp-search-clear { flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0; border: none; border-radius: 50%; background: color-mix(in srgb, var(--sp-muted) 18%, transparent); color: var(--sp-muted); cursor: pointer; transition: background .15s, color .15s; }
+.sp-search-clear:hover { background: color-mix(in srgb, var(--sp-muted) 32%, transparent); color: var(--sp-ink); }
+.sp-search-clear:focus-visible { outline: 2px solid var(--store-accent); outline-offset: 1px; }
+.sp-price span.sp-price-sep + input, .sp-price input { font-variant-numeric: tabular-nums; }
+.sp-chips { align-items: center; }
