@@ -922,3 +922,24 @@ html { scroll-behavior: smooth; }
   .sp-card-foot .sp-card-price { font-size: 16px; }
   .sp-card-go { padding: 0 12px; }
 }
+
+/* ===== Timing uniforme (.3s) =====
+   Toda interacción de la web pública — hover, foco, reveal, transición de
+   página/modal y del carrusel — dura .3s para que el movimiento se sienta
+   consistente. Solo se excluye el Ken Burns de la portada (.sp-carousel-img),
+   cuyo zoom lento es parte del efecto; las animaciones con @keyframes
+   conservan su propio ritmo. */
+.store-page :is(a, button, input, select, textarea, summary,
+  .sp-card, .sp-card-img img, .sp-gallery-item, .sp-gallery-item img,
+  .sp-chip, .sp-nav-item, .sp-ava, .sp-mono, .sp-logo, .sp-form, .sp-about-card,
+  .sp-map-frame, .sp-top, .sp-top-inner, .sp-drawer, .sp-overlay,
+  .sp-carousel-track, .sp-carousel-arrow, .sp-carousel-dot,
+  .sp-rv, .sp-page-enter-active, .sp-page-leave-active,
+  .sp-modal-enter-active, .sp-modal-leave-active,
+  .sp-lightbox-arrow, .sp-lightbox .sp-modal-close):not(.sp-carousel-img),
+.store-page :is(.sp-btn, .sp-card-cta, .sp-ava, .sp-nav-item)::before,
+.store-page :is(.sp-btn, .sp-card-cta, .sp-ava)::after,
+.store-page .sp-modal-enter-active .sp-modal,
+.store-page .sp-modal-leave-active .sp-modal {
+  transition-duration: .3s !important;
+}
