@@ -710,14 +710,8 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-logo { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; border: 1px solid var(--pos-line); }
 .pos-mono { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; background: var(--store-accent, #4f46e5); color: #fff; font-weight: 800; font-size: 13px; }
 .pos-shop { font-size: 14px; font-weight: 700; letter-spacing: -.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pos-search { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 11.5px; color: var(--pos-muted); border: 1px solid var(--pos-line); border-radius: 8px; padding: 6px 10px; }
+.pos-date { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 11px; color: var(--pos-muted); border: 1px solid var(--pos-line); border-radius: 8px; padding: 5px 10px; }
 .pos-body { display: grid; grid-template-columns: minmax(0, 1fr) 190px; min-height: 260px; }
-.pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px 12px; align-content: start; }
-.pos-prod { background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 9px; padding: 8px; display: grid; gap: 6px; justify-items: start; min-width: 0; }
-.pos-prod-img { width: 100%; aspect-ratio: 4/3; border-radius: 6px; background: var(--pos-bg); border: 1px solid var(--pos-line); display: grid; place-items: center; color: var(--pos-muted); overflow: hidden; }
-.pos-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pos-prod-name { font-size: 11px; font-weight: 600; color: var(--pos-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.pos-prod-price { font-size: 11px; font-weight: 700; color: color-mix(in srgb, var(--store-accent, #4f46e5) 55%, #ffffff); }
 .pos-cart { border-left: 1px solid var(--pos-line); background: var(--pos-card); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .pos-cart-head { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--pos-muted); }
 .pos-cart-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--pos-ink); }
@@ -730,25 +724,23 @@ body { transition: background-color .2s ease, color .2s ease; }
 .pos-status { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-top: 1px solid var(--pos-line); background: var(--pos-card); font-size: 10.5px; color: var(--pos-muted); }
 .pos-dot { width: 7px; height: 7px; border-radius: 50%; background: #059669; flex: none; }
 
-/* Pestañas internas del mockup: Nueva venta / Facturación. */
-.pos-tabs { display: flex; gap: 6px; padding: 8px 12px 0; }
-.pos-tab { border: 1px solid var(--pos-line); border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; color: var(--pos-muted); font: inherit; font-size: 11.5px; font-weight: 600; padding: 7px 14px; cursor: pointer; transition: color .15s, background .15s; }
-.pos-tab:hover { color: var(--pos-ink); }
-.pos-tab.active { background: var(--pos-card); color: color-mix(in srgb, var(--store-accent, #4f46e5) 55%, #ffffff); }
-.pos-products { min-width: 0; }
-.pos-cats { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 12px 0; }
-.pos-cat { font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--pos-card); border: 1px solid var(--pos-line); color: var(--pos-muted); }
-.pos-cat.active { background: color-mix(in srgb, var(--store-accent, #4f46e5) 22%, transparent); color: #fff; border-color: transparent; }
 .pos-side-label { display: block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--pos-muted); margin-top: 6px; }
 .pos-chips { display: flex; gap: 5px; flex-wrap: wrap; }
 .pos-chip { font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--pos-line); background: var(--pos-bg); color: var(--pos-muted); }
 .pos-chip.active { background: color-mix(in srgb, var(--store-accent, #4f46e5) 22%, transparent); color: #fff; border-color: var(--store-accent, #4f46e5); }
 /* Formulario de la pestaña Facturación. */
 .pos-bill-form { align-self: start; margin: 12px; background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 8px; padding: 14px; display: grid; gap: 10px; box-shadow: var(--shadow-sm); }
+.pos-bill-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pos-bill-head strong { font-size: 13px; }
+.pos-inv-num { font-size: 10.5px; font-weight: 700; color: var(--pos-muted); border: 1px dashed var(--pos-line); border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+.pos-group-label { display: flex; align-items: center; gap: 8px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--pos-muted); margin-top: 4px; }
+.pos-group-label::after { content: ''; flex: 1; height: 1px; background: var(--pos-line); }
 .pos-field { display: grid; gap: 4px; min-width: 0; }
 .pos-field-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--pos-muted); }
 .pos-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pos-input { display: block; font-size: 11.5px; padding: 7px 10px; border: 1px solid var(--pos-line); border-radius: 7px; background: var(--pos-bg); color: var(--pos-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pos-input { display: flex; align-items: center; gap: 7px; font-size: 11.5px; padding: 7px 10px; border: 1px solid var(--pos-line); border-radius: 7px; background: var(--pos-bg); color: var(--pos-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .28); }
+.pos-input .icon { color: var(--pos-muted); flex: none; }
+.pos-input .icon:last-child { margin-left: auto; }
 .pos-input.muted { color: var(--pos-muted); }
 .pos-inv-totals { display: grid; gap: 3px; font-size: 11px; margin-top: auto; }
 .pos-inv-totals div { display: flex; justify-content: space-between; gap: 10px; }
@@ -871,9 +863,8 @@ body { transition: background-color .2s ease, color .2s ease; }
   .tax-add { grid-template-columns: 1fr; }
   .tabs { overflow-x: auto; }
   .pos-body { grid-template-columns: 1fr; }
-  .pos-grid { grid-template-columns: repeat(2, 1fr); }
   .pos-cart { border-left: 0; border-top: 1px solid var(--pos-line); }
-  .pos-search { display: none; }
+  .pos-date { display: none; }
 }
 @media (max-width: 640px) {
   .page-head { flex-direction: column; align-items: center; text-align: center; }

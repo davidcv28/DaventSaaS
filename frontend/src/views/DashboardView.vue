@@ -500,14 +500,12 @@ const POS_SAMPLE_PRODUCTS = ['Producto 1', 'Producto 2', 'Producto 3', 'Producto
   .map((name) => ({ name }))
 const POS_CART_QTY = [2, 1, 1]
 const posCartQty = POS_CART_QTY
-const posView = ref('sale') // sale | billing
+const posToday = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 const posVars = computed(() => storeThemeVars(store.customization))
 const posProducts = computed(() => (catalog.products.length ? catalog.products.slice(0, 6) : POS_SAMPLE_PRODUCTS))
-const posCategories = computed(() => catalog.categories.slice(0, 3))
 const posCartItems = computed(() => posProducts.value.slice(0, POS_CART_QTY.length))
 const posSubtotal = computed(() => posCartItems.value.reduce((acc, p, i) => acc + (Number(p.price) || 0) * POS_CART_QTY[i], 0))
 const posHasPrices = computed(() => posSubtotal.value > 0)
-const posTotal = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value) : '—'))
 const posIva = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value * 0.21) : '—'))
 const posInvoiceTotal = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value * 1.21) : '—'))
 const posCityName = computed(() => {
@@ -1612,97 +1610,52 @@ async function changePassword() {
               <img v-if="currentLogo" class="pos-logo" :src="currentLogo" alt="" />
               <span v-else class="pos-mono">{{ businessInitial }}</span>
               <strong class="pos-shop">{{ designShopName }}</strong>
-              <span class="pos-search"><AppIcon name="search" :size="13" /> Buscar producto…</span>
-            </div>
-            <div class="pos-tabs">
-              <button type="button" class="pos-tab" :class="{ active: posView === 'sale' }" :aria-pressed="posView === 'sale'" @click="posView = 'sale'">Nueva venta</button>
-              <button type="button" class="pos-tab" :class="{ active: posView === 'billing' }" :aria-pressed="posView === 'billing'" @click="posView = 'billing'">Facturación</button>
+              <span class="pos-date"><AppIcon name="calendar" :size="12" /> {{ posToday }}</span>
             </div>
 
-            <div v-if="posView === 'sale'" class="pos-body">
-              <div class="pos-products">
-                <div class="pos-cats">
-                  <span class="pos-cat active">Todo</span>
-                  <span v-for="c in posCategories" :key="c.id" class="pos-cat">{{ c.name }}</span>
-                </div>
-                <div class="pos-grid">
-                  <div v-for="(p, i) in posProducts" :key="p.id || i" class="pos-prod">
-                    <span class="pos-prod-img">
-                      <img v-if="p.image" :src="p.image" alt="" />
-                      <AppIcon v-else name="package" :size="16" />
-                    </span>
-                    <span class="pos-prod-name">{{ p.name }}</span>
-                    <span class="pos-prod-price">{{ Number(p.price) ? formatARS(p.price) : '—' }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="pos-cart">
-                <span class="pos-cart-head">Ticket actual</span>
-                <div v-for="(p, i) in posCartItems" :key="`pos-item-${p.id || i}`" class="pos-cart-item">
-                  <span class="pos-cart-qty">{{ posCartQty[i] }}</span>
-                  <span class="pos-cart-name">{{ p.name }}</span>
-                  <span class="pos-cart-price">{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
-                </div>
-                <span class="pos-side-label">Medio de pago</span>
-                <div class="pos-chips">
-                  <span class="pos-chip active">Efectivo</span>
-                  <span class="pos-chip">Tarjeta</span>
-                  <span class="pos-chip">QR</span>
-                </div>
-                <div class="pos-cart-total">
-                  <span>Total</span>
-                  <strong>{{ posTotal }}</strong>
-                </div>
-                <span class="pos-pay">Cobrar</span>
-              </div>
-            </div>
-
-            <div v-else class="pos-body">
+            <div class="pos-body">
               <div class="pos-bill-form">
-                <span class="pos-cart-head">Nueva factura</span>
+                <div class="pos-bill-head">
+                  <strong>Nueva factura</strong>
+                  <span class="pos-inv-num">N° 0001-00000042</span>
+                </div>
+                <span class="pos-group-label">Comprobante</span>
                 <div class="pos-field">
-                  <span class="pos-field-label">Tipo de comprobante</span>
+                  <span class="pos-field-label">Tipo</span>
                   <div class="pos-chips">
                     <span class="pos-chip">Ticket</span>
                     <span class="pos-chip active">Factura B</span>
                     <span class="pos-chip">Factura C</span>
                   </div>
                 </div>
-                <div class="pos-field-row">
-                  <div class="pos-field">
-                    <span class="pos-field-label">Comprador</span>
-                    <span class="pos-input">Consumidor final</span>
-                  </div>
-                  <div class="pos-field">
-                    <span class="pos-field-label">Documento</span>
-                    <span class="pos-input muted">—</span>
-                  </div>
+                <span class="pos-group-label">Comprador</span>
+                <div class="pos-field">
+                  <span class="pos-field-label">Nombre o razón social</span>
+                  <span class="pos-input"><AppIcon name="user" :size="12" /> Consumidor final</span>
                 </div>
                 <div class="pos-field-row">
                   <div class="pos-field">
-                    <span class="pos-field-label">Condición fiscal</span>
-                    <span class="pos-input">Consumidor final</span>
+                    <span class="pos-field-label">Documento</span>
+                    <span class="pos-input muted"><AppIcon name="search" :size="12" /> Opcional</span>
                   </div>
                   <div class="pos-field">
-                    <span class="pos-field-label">Punto de venta</span>
-                    <span class="pos-input">0001</span>
+                    <span class="pos-field-label">Condición fiscal</span>
+                    <span class="pos-input select-look">Consumidor final <AppIcon name="chevron-down" :size="12" /></span>
                   </div>
                 </div>
                 <div class="pos-field">
                   <span class="pos-field-label">Domicilio</span>
-                  <span class="pos-input">{{ posAddress || '—' }}</span>
+                  <span class="pos-input"><AppIcon name="map-pin" :size="12" /> {{ posAddress || '—' }}</span>
                 </div>
+                <span class="pos-group-label">Pago</span>
                 <div class="pos-field">
                   <span class="pos-field-label">Medio de pago</span>
                   <div class="pos-chips">
                     <span class="pos-chip active">Efectivo</span>
                     <span class="pos-chip">Tarjeta</span>
                     <span class="pos-chip">Transferencia</span>
+                    <span class="pos-chip">QR</span>
                   </div>
-                </div>
-                <div class="pos-field">
-                  <span class="pos-field-label">Observaciones</span>
-                  <span class="pos-input muted">Opcional…</span>
                 </div>
               </div>
               <div class="pos-cart">
