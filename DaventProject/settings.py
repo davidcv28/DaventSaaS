@@ -73,6 +73,8 @@ REST_FRAMEWORK = {
         'password_reset': '5/hour',
         #Reenvío del correo de verificación (por usuario autenticado).
         'email_verification': '5/hour',
+        #Alta de cuentas (por IP): cada registro dispara un mail y un trial.
+        'register': '10/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',

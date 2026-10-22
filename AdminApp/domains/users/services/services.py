@@ -43,6 +43,10 @@ def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
     new_password = validated_data['new_password']
     user.set_password(new_password)
     user.save()
+    #Igual que el reset: cualquier refresh emitido antes del cambio queda en
+    #blacklist — una sesión robada no sobrevive al cambio de contraseña.
+    for token in OutstandingToken.objects.filter(user = user):
+        BlacklistedToken.objects.get_or_create(token = token)
     return user
 
 

@@ -1,5 +1,10 @@
 from rest_framework import viewsets, status, mixins
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+#Si una config olvida 'permissions' se cae a IsAuthenticated (fail-closed):
+#un viewset sin permisos definidos nunca debe quedar abierto por accidente.
+DEFAULT_PERMISSIONS   =   [IsAuthenticated]
 
 #================================
 # USER VIEWSET
@@ -23,7 +28,7 @@ class UserBaseViewSet(viewsets.GenericViewSet):
         return queryset
 
     def get_permissions(self):
-        permissions     =   self.get_action_view().get('permissions', [])
+        permissions     =   self.get_action_view().get('permissions', DEFAULT_PERMISSIONS)
         return   [permission() for permission in permissions]
 
 
@@ -70,7 +75,7 @@ class UserPassWordBaseViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin,)
             return self.queryset(self)
         return self.queryset
     def get_permissions(self):
-        permissions     =   self.view_config['create']['permissions']
+        permissions     =   self.view_config['create'].get('permissions', DEFAULT_PERMISSIONS)
         return [permission() for permission in permissions]
     #///CREATE METHOD///
     def create(self,request,*args, **kwargs):
@@ -107,9 +112,9 @@ class UserProfileBaseVieSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, 
             return queryset(self)
         return queryset
     def get_permissions(self):
-        permissions     =   self.get_action_view().get('permissions', [])
+        permissions     =   self.get_action_view().get('permissions', DEFAULT_PERMISSIONS)
         return [permission() for permission in permissions]
-    
+
     #/// RETRIEVE METHOD ///
     def retrieve(self, request, *args, **kwargs):
         instance    =   self.get_queryset()
@@ -143,7 +148,7 @@ class RegisterUserBaseViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             return self.queryset(self)
         return self.queryset
     def get_permissions(self):
-        permissions     =   self.view_config['create'].get('permissions', [])
+        permissions     =   self.view_config['create'].get('permissions', DEFAULT_PERMISSIONS)
         return [permission() for permission in permissions]
 
     #/// CREATE METHOD ///

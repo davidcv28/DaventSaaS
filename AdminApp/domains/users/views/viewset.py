@@ -1,5 +1,12 @@
+from rest_framework.throttling import AnonRateThrottle
+
 from .viewset_base import UserBaseViewSet, UserPassWordBaseViewSet, UserProfileBaseVieSet, RegisterUserBaseViewSet
 from .viewset_config import UserViewSetConfig, UserPassWordViewSetConfig, UserProfileVieSetConfig, UserRegisterViewSetConfig
+
+
+class RegisterRateThrottle(AnonRateThrottle):
+    """Scope 'register' (settings): frena el alta masiva de cuentas/trials."""
+    scope = 'register'
 
 """
 
@@ -29,3 +36,4 @@ class UserProfileViewSet(UserProfileBaseVieSet):
 #=============================
 class RegisterUserViewSet(RegisterUserBaseViewSet):
     view_config = UserRegisterViewSetConfig
+    throttle_classes = [RegisterRateThrottle]

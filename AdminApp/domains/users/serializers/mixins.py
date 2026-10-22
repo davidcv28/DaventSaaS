@@ -1,6 +1,8 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.services import (
     #USER QUERYS
@@ -59,7 +61,9 @@ class UsersValidatorsMixins:
             errors['confirm_password'] = 'Las contraseñas no coinciden'
         if errors:
             raise serializers.ValidationError(errors)
-        attrs.pop('confirm_password')
+        #Default None: UserUpdateSerializer (solo email) comparte este mixin y
+        #sin el default explotaba con KeyError -> 500 al actualizar el correo.
+        attrs.pop('confirm_password', None)
         return attrs
 
 #=================================
@@ -84,6 +88,15 @@ class UserPasswordValidateMixin:
             errors['new_password']      =   'No puedes utilizar la contraseña actual como nueva'
         if new_password != confirm_password:
             errors['confirm_password']  =   'Las contraseñas no coinciden'
+        #Policy de contraseña (AUTH_PASSWORD_VALIDATORS): mismo criterio que
+        #el reset — sin esto se podía volver a una clave débil después del alta.
+        try:
+            validate_password(new_password, user = user)
+        except DjangoValidationError as exc:
+            if 'new_password' in errors:
+                errors['new_password']  =   [errors['new_password'], *exc.messages]
+            else:
+                errors['new_password']  =   exc.messages
         if errors:
             raise serializers.ValidationError(errors)
         attrs.pop('old_password')
@@ -94,6 +107,10 @@ class UserPasswordValidateMixin:
 # USER PASSWORD UPDATE METHOD
 #================================= 
 class UserPasswordUpdateMethod:
+    #El viewset pasa siempre instance -> save() despacha a update(), no a
+    #create(): sin este método el cambio de clave explotaba con 500.
+    def update(self, instance, validated_data):
+       return UpdatePasswordUserQuery(instance, validated_data)
     def create(self, instance, validated_data):
        return UpdatePasswordUserQuery(instance, validated_data)
 
@@ -152,6 +169,16 @@ class UserRegisterValidate:
     def validate(self, attrs):
         attrs       =   UsersValidatorsMixins.validate(self, attrs)
         attrs       =   UserProfileValidatorsMixins.validate(self, attrs)
+        #Policy de contraseña (AUTH_PASSWORD_VALIDATORS): igual que en reset y
+        #cambio de clave. Se evalúa contra un User no persistido para el
+        #validador de similitud (username/email).
+        try:
+            validate_password(
+                attrs['password'],
+                user = User(username = attrs['username'], email = attrs['email']),
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'password': exc.messages})
         return attrs
 
 #=================================

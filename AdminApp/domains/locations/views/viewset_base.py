@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 
@@ -24,7 +25,8 @@ class LocationBaseViewSet(viewsets.GenericViewSet):
         return queryset
 
     def get_permissions(self):
-        permissions = self.get_action_view().get('permissions', [])
+        #Sin 'permissions' en la config se cae a IsAuthenticated (fail-closed).
+        permissions = self.get_action_view().get('permissions', [IsAuthenticated])
         return [permission() for permission in permissions]
 
     #///LIST METHOD///

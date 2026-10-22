@@ -14,7 +14,9 @@ forwarded_allow_ips = "*"
 workers      = int(os.getenv("GUNICORN_WORKERS", "3"))
 threads      = int(os.getenv("GUNICORN_THREADS", "4"))
 worker_class = "gthread"
-worker_tmp_dir = "/dev/shm"
+# /dev/shm es el tmpfs recomendado por gunicorn para el heartbeat de workers
+# (el contenedor corre read_only + tmpfs; no es /tmp compartido del host).
+worker_tmp_dir = "/dev/shm"  # nosec B108
 
 timeout          = 60
 graceful_timeout = 30          # drain al hacer `compose up -d` (deploy sin corte)
