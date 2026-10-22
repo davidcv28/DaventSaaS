@@ -64,6 +64,9 @@ REST_FRAMEWORK = {
         'anon': '100/day',
         'user': '1000/day',
         'login': '5/min',
+        #Renovación de JWT por cookie (cada pestaña renueva al expirar el access;
+        #holgado para NAT oficinas pero acota brute-force del cookie de sesión).
+        'token_refresh': '120/hour',
         #Formulario de contacto de las webs públicas (antispam por IP).
         'store_contact': '10/hour',
     },
@@ -71,6 +74,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+# JWT: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ (el JS del
+# frontend nunca lo lee — anti-robo por XSS); el ACCESS va solo en memoria del
+# tab. Rotación obligatoria + blacklist: un refresh robado queda inservible al
+# primer uso legítimo y su replay se detecta.
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME'    : timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME'   : timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS'    : True,
+    'BLACKLIST_AFTER_ROTATION' : True,
+}
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Davent API - SaaS',
     'DESCRIPTION': 'Documentación interactiva de la API para la gestión multiweb de ecommerce tecnológicos.',
@@ -91,6 +106,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
     #ADMIN APP (dominios DDD: no instalar 'AdminApp' padre junto a los hijos,
     # porque Django atribuiria los modelos al padre y generaria 'AdminApp.city')
@@ -198,6 +214,9 @@ CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
+# Necesario para que un frontend cross-origin pueda enviar la cookie httpOnly
+# de refresh (mismo-origen no lo necesita; en prod/dev el proxy ya es same-origin).
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default = True, cast = bool)
 
 # Orígenes https confiables para CSRF (admin/formularios cross-origin). En
 # Docker: https://davent.com,https://*.davent.com — separados por coma.

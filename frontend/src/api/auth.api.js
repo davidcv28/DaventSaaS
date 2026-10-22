@@ -1,9 +1,10 @@
 import { http } from './http.js'
 
 // Contrato backend (ver ARCHITECTURE.md + users/viewset_config.py):
-// POST /api/token/            {username, password} -> {access, refresh}
-// POST /api/token/refresh/    {refresh}           -> {access}
-// POST /api/token/verify/     {token}             -> 200
+// POST /api/token/            {username, password} -> {access} (+cookie refresh httpOnly)
+// POST /api/token/refresh/    {} (cookie)          -> {access} — lo llama http.js, no las vistas
+// POST /api/token/logout/     {} (cookie + CSRF)   -> 200 — lo llama http.js (logoutSession)
+// POST /api/token/verify/     {token}              -> 200
 // POST /api/register/         RegisterUserSerializer -> 201 {Exito}
 // GET  /api/user/me/ + /api/profile/me/           (requiere Bearer, retrieve propio)
 // PUT  /api/user/me/          {email}             (UserUpdateSerializer, parcial ok)
@@ -17,6 +18,8 @@ export const authApi = {
     return data
   },
 
+  // El refresh real viaja por cookie y lo ejecuta http.js (tryRefresh);
+  // este método queda para clientes API con refresh explícito en body.
   async refresh(refresh) {
     const { data } = await http.post('/token/refresh/', { refresh })
     return data

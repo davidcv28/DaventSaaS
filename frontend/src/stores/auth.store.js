@@ -1,12 +1,12 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { authApi, buildRegisterPayload } from '../api/auth.api.js'
-import { http, tokenStorage, extractApiError } from '../api/http.js'
+import { http, tokenStorage, extractApiError, restoreSession, logoutSession } from '../api/http.js'
 
 // Única fuente de sesión (FRONTEND_RULES §3).
+// Access solo en memoria; el refresh es una cookie httpOnly que maneja http.js.
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(tokenStorage.getAccess())
-  const refreshToken = ref(tokenStorage.getRefresh())
   const user = ref(null)
   const status = ref('idle') // idle | loading | success | error
   const lastError = ref('')
@@ -15,10 +15,20 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => Boolean(accessToken.value))
 
-  function applyTokens({ access, refresh }) {
-    if (access) accessToken.value = access
-    if (refresh) refreshToken.value = refresh
-    tokenStorage.set(access, refresh)
+  function applyTokens({ access }) {
+    if (access) {
+      accessToken.value = access
+      tokenStorage.set(access)
+    }
+  }
+
+  // Al recargar el tab el access en memoria se pierde: intenta renovarlo con
+  // la cookie httpOnly (restoreSession no-ops si no hay cookie de sesión).
+  async function ensureSession() {
+    if (accessToken.value) return true
+    const ok = await restoreSession()
+    if (ok) accessToken.value = tokenStorage.getAccess()
+    return ok
   }
 
   function setApiError(err) {
@@ -126,31 +136,30 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
-    tokenStorage.clear()
+  async function logout() {
+    await logoutSession() // blacklist del refresh + borra cookies en backend
     accessToken.value = null
-    refreshToken.value = null
     user.value = null
     status.value = 'idle'
     lastError.value = ''
     fieldErrors.value = {}
   }
 
-  function initFromStorage() {
-    accessToken.value = tokenStorage.getAccess()
-    refreshToken.value = tokenStorage.getRefresh()
-    if (accessToken.value) fetchMe().catch(() => {})
+  function initSession() {
     window.addEventListener('davent:session-expired', () => {
-      logout()
+      accessToken.value = null
+      user.value = null
       const here = window.location.pathname
       if (!here.includes('/login')) window.location.assign('/login?expired=1')
     })
+    // Recupera la sesión desde la cookie si el tab se recargó.
+    ensureSession().then((ok) => { if (ok) fetchMe().catch(() => {}) })
   }
 
   return {
-    accessToken, refreshToken, user, status, lastError, fieldErrors,
+    accessToken, user, status, lastError, fieldErrors,
     isAuthenticated, usingApiFallback,
-    login, register, fetchMe, updateAccount, updatePassword, logout, initFromStorage,
+    login, register, fetchMe, updateAccount, updatePassword, logout, initSession, ensureSession,
     http
   }
 })

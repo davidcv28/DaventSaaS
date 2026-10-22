@@ -81,7 +81,7 @@ const routes = [
     component: AdminView,
     meta: { requiresAuth: true, requiresStaff: true, title: 'Administración' }
   },
-  // Comprobante imprimible: se abre en pestaña aparte (auth via localStorage)
+  // Comprobante imprimible: se abre en pestaña aparte (sesión vía cookie httpOnly)
   {
     path: '/facturas/:id',
     name: 'invoice-print',
@@ -101,7 +101,7 @@ const routes = [
     component: ReportView,
     meta: { title: 'Denunciar contenido' }
   },
-  // Folleto imprimible de mi tienda: se abre en pestaña aparte (auth via localStorage)
+  // Folleto imprimible de mi tienda: se abre en pestaña aparte (sesión vía cookie httpOnly)
   {
     path: '/folleto',
     name: 'store-flyer',
@@ -165,15 +165,23 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   document.title = to.meta?.title ? `DAVENT · ${to.meta.title}` : 'DAVENT · Acceso'
   if (to.meta?.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'login', query: { next: to.fullPath } }
+    // Tab recargado: el access en memoria se perdió pero puede quedar cookie.
+    await auth.ensureSession()
+    if (!auth.isAuthenticated) {
+      return { name: 'login', query: { next: to.fullPath } }
+    }
   }
-  if (to.meta?.requiresGuest && auth.isAuthenticated) {
-    // Un staff logueado vuelve a su panel, no al de clientes.
-    if (!auth.user) await auth.fetchMe().catch(() => {})
-    return { name: auth.user?.is_staff ? 'admin' : 'dashboard' }
+  if (to.meta?.requiresGuest) {
+    // Si queda cookie de sesión de una visita anterior, no mostrar el login.
+    await auth.ensureSession()
+    if (auth.isAuthenticated) {
+      // Un staff logueado vuelve a su panel, no al de clientes.
+      if (!auth.user) await auth.fetchMe().catch(() => {})
+      return { name: auth.user?.is_staff ? 'admin' : 'dashboard' }
+    }
   }
   if (to.meta?.requiresStaff) {
-    // El usuario llega async desde initFromStorage: lo esperamos antes de decidir.
+    // El usuario llega async desde initSession: lo esperamos antes de decidir.
     if (!auth.user) await auth.fetchMe().catch(() => {})
     if (!auth.user?.is_staff) return { name: 'dashboard' }
   }

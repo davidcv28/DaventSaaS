@@ -24,11 +24,12 @@ def healthz(request):
     # Healthcheck de contenedores (Docker/compose) y monitores: 200 si el
     # proceso WSGI responde. No toca la DB a propósito.
     return JsonResponse({'status': 'ok'})
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-    TokenVerifyView
+from rest_framework_simplejwt.views import TokenVerifyView
+from AdminApp.domains.users.views.auth_views import (
+    CustomTokenObtainPairView,
+    CookieTokenRefreshView,
+    TokenLogoutView,
 )
-from AdminApp.domains.users.views.auth_views import CustomTokenObtainPairView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
@@ -49,7 +50,8 @@ urlpatterns = [
     # JWT
     #=================================
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/logout/', TokenLogoutView.as_view(), name='token_logout'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
 

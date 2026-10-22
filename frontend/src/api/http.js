@@ -1,26 +1,48 @@
 import axios from 'axios'
 import { env } from '../config/env.js'
 
-const ACCESS_KEY = 'davent.access'
-const REFRESH_KEY = 'davent.refresh'
+// =============================================================================
+// Sesión JWT — modelo cookie-refresh (anti robo por XSS):
+//   - El REFRESH vive en una cookie httpOnly/Secure/SameSite=Lax scopeada a
+//     /api/token/ que setea el backend: el JS del frontend JAMÁS lo lee.
+//   - El ACCESS vive solo en memoria del módulo (nunca en localStorage):
+//     al recargar la pestaña se pierde y se renueva vía cookie (silent).
+//   - Los endpoints que consumen la cookie exigen doble-submit CSRF:
+//     cookie 'davent_csrf' (legible) == header X-CSRFToken.
+// =============================================================================
+const CSRF_COOKIE = 'davent_csrf'
+
+// Higiene: tokens que hayan quedado en localStorage de versiones anteriores
+// (pre cookie-refresh) se borran — un XSS no debería encontrar credenciales.
+try {
+  localStorage.removeItem('davent.access')
+  localStorage.removeItem('davent.refresh')
+} catch { /* storage bloqueado */ }
+
+let accessToken = null
 
 export const tokenStorage = {
-  getAccess: () => localStorage.getItem(ACCESS_KEY),
-  getRefresh: () => localStorage.getItem(REFRESH_KEY),
-  set: (access, refresh) => {
-    if (access) localStorage.setItem(ACCESS_KEY, access)
-    if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
-  },
-  clear: () => {
-    localStorage.removeItem(ACCESS_KEY)
-    localStorage.removeItem(REFRESH_KEY)
-  }
+  getAccess: () => accessToken,
+  set: (access) => { if (access) accessToken = access },
+  clear: () => { accessToken = null }
+}
+
+function csrfToken() {
+  const m = document.cookie.match(/(?:^|;\s*)davent_csrf=([^;]+)/)
+  return m ? decodeURIComponent(m[1]) : ''
+}
+
+// La cookie CSRF se setea junto al refresh httpOnly: su presencia es el hint
+// de que existe una sesión recuperable (la propia cookie refresh es ilegible).
+export function hasSessionCookie() {
+  return Boolean(csrfToken())
 }
 
 // Instancia única (FRONTEND_RULES §0: prohibido axios suelto en vistas)
 export const http = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: 15000,
+  withCredentials: true, // la cookie de sesión viaja en refresh/logout
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -41,21 +63,33 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-// Refresh single-flight: una sola petición de refresh aunque fallen N llamadas 401.
+const tokenEndpoint = (path) => `${env.apiBaseUrl.replace(/\/$/, '')}/token/${path}`
+
+async function refreshCall() {
+  const res = await axios.post(tokenEndpoint('refresh/'), {}, {
+    timeout: 15000,
+    withCredentials: true,
+    headers: { 'X-CSRFToken': csrfToken() }
+  })
+  const { access } = res.data || {}
+  if (!access) throw new Error('EMPTY_REFRESH')
+  tokenStorage.set(access)
+  return access
+}
+
+// Refresh single-flight POR TAB y entre tabs (Web Locks): con refresh
+// rotation+blacklist, dos tabs refrescando a la vez con la misma cookie harían
+// fallar a la segunda (token ya rotado) — el lock serializa y la segunda
+// petición sale ya con la cookie nueva.
 let refreshPromise = null
 
 async function tryRefresh() {
   if (!refreshPromise) {
-    const refresh = tokenStorage.getRefresh()
-    if (!refresh) return Promise.reject(new Error('NO_REFRESH'))
-    refreshPromise = axios
-      .post(`${env.apiBaseUrl.replace(/\/$/, '')}/token/refresh/`, { refresh }, { timeout: 15000 })
-      .then((res) => {
-        const { access, refresh: rotated } = res.data || {}
-        if (!access) throw new Error('EMPTY_REFRESH')
-        tokenStorage.set(access, rotated || refresh)
-        return access
-      })
+    if (!hasSessionCookie()) return Promise.reject(new Error('NO_SESSION'))
+    const job = navigator.locks?.request
+      ? () => navigator.locks.request('davent:refresh', refreshCall)
+      : refreshCall
+    refreshPromise = job()
       .catch((err) => {
         tokenStorage.clear()
         throw err
@@ -67,6 +101,33 @@ async function tryRefresh() {
   return refreshPromise
 }
 
+// Restaura la sesión al recargar el tab (el access en memoria se perdió).
+// Devuelve true si quedó un access válido.
+export async function restoreSession() {
+  if (tokenStorage.getAccess()) return true
+  try {
+    await tryRefresh()
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Cierre real: blacklist del refresh en backend + borrado de cookies, y limpia
+// el access en memoria. Falla silenciosamente si la cookie ya expiró.
+export async function logoutSession() {
+  try {
+    await axios.post(tokenEndpoint('logout/'), {}, {
+      timeout: 10000,
+      withCredentials: true,
+      headers: { 'X-CSRFToken': csrfToken() }
+    })
+  } catch {
+    // Sesión ya inválida/expirada en server: igual se limpia local.
+  }
+  tokenStorage.clear()
+}
+
 http.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -74,9 +135,12 @@ http.interceptors.response.use(
     const status = error.response?.status
     const url = original.url || ''
 
-    // No reintentar el propio refresh ni login.
-    const isAuthEndpoint = url.includes('/token/refresh/') || url.includes('/token/verify/')
-    if (status === 401 && !original._retried && !isAuthEndpoint && tokenStorage.getRefresh()) {
+    // No reintentar los propios endpoints de token.
+    const isAuthEndpoint =
+      url.includes('/token/refresh/') ||
+      url.includes('/token/verify/') ||
+      url.includes('/token/logout/')
+    if (status === 401 && !original._retried && !isAuthEndpoint && hasSessionCookie()) {
       original._retried = true
       try {
         const access = await tryRefresh()

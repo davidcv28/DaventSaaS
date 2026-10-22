@@ -10,8 +10,8 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
-// Restaura sesión desde localStorage antes del primer render (FRONTEND_RULES §3).
-useAuthStore().initFromStorage()
+// Restaura sesión desde la cookie httpOnly antes del primer render (FRONTEND_RULES §3).
+useAuthStore().initSession()
 useThemeStore().initTheme()
 
 app.mount('#app')
