@@ -25,6 +25,9 @@ const payQuery = ref('')
 const payFilter = ref('all')
 const planForm = reactive({ id: null, name: '', price: '' })
 const planTouched = ref(false)
+// Asignación manual de plan: select por fila de usuario (userId -> planId).
+const assignSel = reactive({})
+const assigningId = ref(null)
 
 const initial = computed(() => (auth.user?.username || auth.user?.email || 'A').slice(0, 1).toUpperCase())
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Administrador')
@@ -35,6 +38,7 @@ const navItems = [
   { id: 'overview', label: 'Resumen', icon: 'dashboard' },
   { id: 'payments', label: 'Movimientos', icon: 'receipt' },
   { id: 'suscriptions', label: 'Suscripciones', icon: 'credit-card' },
+  { id: 'webs', label: 'Webs', icon: 'monitor' },
   { id: 'plans', label: 'Planes', icon: 'package' },
   { id: 'users', label: 'Usuarios', icon: 'users' },
   { heading: 'Cuenta' },
@@ -77,6 +81,13 @@ const filteredPayments = computed(() => {
 
 const recentPayments = computed(() => admin.payments.slice(0, 5))
 const staffCount = computed(() => admin.users.filter(u => u.is_staff).length)
+// Suscripción vigente por usuario (auth user id): muestra el plan actual
+// en la tabla de usuarios junto al control de asignación.
+const suscriptionByUser = computed(() => {
+  const map = {}
+  for (const s of admin.suscriptions) map[s.auth_user_id] = s
+  return map
+})
 
 const planError = computed(() => {
   if (!planTouched.value) return ''
@@ -122,6 +133,22 @@ function suscriptionStatusMeta(status) {
   if (status === 'Suscripción activa') return { kind: 'ok', label: status }
   if (status === 'Pendiente de pago') return { kind: 'warn', label: status }
   return { kind: 'muted', label: status || '—' }
+}
+
+// Estado público de la web: publicada + suscripción vigente => en vivo.
+function webStatus(s) {
+  if (!s.is_published) return { kind: 'muted', label: 'Borrador' }
+  if (!s.has_access) return { kind: 'warn', label: 'Sin acceso' }
+  return { kind: 'ok', label: 'En vivo' }
+}
+
+async function assignTo(u) {
+  const planId = assignSel[u.id]
+  if (!planId) return
+  assigningId.value = u.id
+  const ok = await admin.assignPlan(u.id, planId)
+  if (ok) delete assignSel[u.id]
+  assigningId.value = null
 }
 
 async function approvePayment(p) {
@@ -396,6 +423,56 @@ function logout() {
       </div>
     </div>
 
+    <!-- ================= WEBS ================= -->
+    <div v-show="section === 'webs'">
+      <div class="page-head">
+        <div>
+          <h1>Webs de clientes</h1>
+          <p>Todas las webs creadas en el sistema: dueño, plan y acceso vigente.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="admin.loadStores()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+      </div>
+
+      <AlertMessage v-if="admin.notice" kind="success" :message="admin.notice" />
+      <AlertMessage v-if="admin.lastError && admin.storesStatus === 'error'" kind="error" :message="admin.lastError" />
+
+      <div v-if="admin.storesStatus === 'loading'" class="card"><p>Cargando las webs…</p></div>
+      <template v-else-if="admin.stores.length">
+        <p class="table-count">{{ admin.stores.length }} web(s)</p>
+        <div class="table-wrap">
+          <table class="pay-table">
+            <thead>
+              <tr>
+                <th>Web</th>
+                <th>Dueño</th>
+                <th>Plan</th>
+                <th>Estado</th>
+                <th>Creada</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in admin.stores" :key="s.id">
+                <td data-label="Web"><strong>{{ s.customization?.display_name || s.business_name || s.slug }}</strong><br /><small class="mono">/{{ s.slug }}</small></td>
+                <td data-label="Dueño">{{ s.owner_name }}<br /><small class="muted">{{ s.owner_email }}</small></td>
+                <td data-label="Plan">{{ s.plan_name || '—' }}</td>
+                <td data-label="Estado"><span class="pill" :class="webStatus(s).kind">{{ webStatus(s).label }}</span></td>
+                <td data-label="Creada">{{ fmtDate(s.created_at) }}</td>
+                <td data-label="Abrir">
+                  <a class="btn ghost sm" :href="`/${s.slug}`" target="_blank" rel="noopener" :aria-label="`Abrir la web ${s.slug}`"><AppIcon name="external-link" :size="14" /> Ver</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+      <div v-else class="empty">
+        <span class="empty-icon"><AppIcon name="monitor" :size="28" /></span>
+        <h3>Sin webs registradas</h3>
+        <p>Cuando un cliente cree su web, va a aparecer acá con su link público.</p>
+      </div>
+    </div>
+
     <!-- ================= PLANES ================= -->
     <div v-show="section === 'plans'">
       <div class="page-head">
@@ -446,6 +523,9 @@ function logout() {
         <button class="btn ghost btn-auto" @click="admin.loadUsers()"><AppIcon name="refresh" :size="16" /> Recargar</button>
       </div>
 
+      <AlertMessage v-if="admin.notice" kind="success" :message="admin.notice" />
+      <AlertMessage v-if="admin.lastError && admin.assignStatus === 'error'" kind="error" :message="admin.lastError" />
+
       <div v-if="admin.usersStatus === 'loading'" class="card"><p>Cargando usuarios…</p></div>
       <div v-else-if="admin.usersStatus === 'error'" class="card"><p>{{ admin.lastError }}</p></div>
       <template v-else-if="admin.users.length">
@@ -458,6 +538,8 @@ function logout() {
                 <th>Usuario</th>
                 <th>Email</th>
                 <th>Rol</th>
+                <th>Plan actual</th>
+                <th>Asignar plan</th>
               </tr>
             </thead>
             <tbody>
@@ -466,6 +548,27 @@ function logout() {
                 <td data-label="Usuario"><strong>{{ u.username }}</strong></td>
                 <td data-label="Email">{{ u.email || '—' }}</td>
                 <td data-label="Rol"><span class="pill" :class="u.is_staff ? 'ok' : 'muted'">{{ u.is_staff ? 'Administrador' : 'Cliente' }}</span></td>
+                <td data-label="Plan actual">
+                  <template v-if="suscriptionByUser[u.id]">
+                    {{ suscriptionByUser[u.id].plan_name }}
+                    <span class="pill" :class="suscriptionByUser[u.id].is_current ? 'ok' : 'muted'">{{ suscriptionByUser[u.id].is_current ? 'Vigente' : 'Vencido' }}</span>
+                  </template>
+                  <span v-else class="muted">Sin plan</span>
+                </td>
+                <td data-label="Asignar plan">
+                  <div v-if="!u.is_staff" class="assign-cell">
+                    <select v-model="assignSel[u.id]" class="select" :aria-label="`Plan para ${u.username}`">
+                      <option :value="undefined" disabled>Elegí un plan</option>
+                      <option v-for="p in admin.plans" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    </select>
+                    <button class="btn sm" :disabled="!assignSel[u.id] || assigningId === u.id" @click="assignTo(u)">
+                      <span v-if="assigningId === u.id" class="spinner"></span>
+                      <AppIcon v-else name="check" :size="14" />
+                      Asignar
+                    </button>
+                  </div>
+                  <span v-else class="muted">—</span>
+                </td>
               </tr>
             </tbody>
           </table>

@@ -29,7 +29,8 @@ StoreConfigs = {
     },
     'get': {
         'serializer'    :   StoreSerializerList,
-        'queryset'      :   lambda view : Store.objects.select_related('customization').order_by('-created_at')
+        #El listado staff suma dueño, plan y acceso vigente (panel admin).
+        'queryset'      :   lambda view : Store.objects.select_related('customization', 'user__user', 'user__suscription__plan_suscription').order_by('-created_at')
                                 if view.request.user.is_staff
                                 else Store.objects.select_related('customization').filter(user__user = view.request.user).order_by('-created_at'),
         'permissions'   :   [IsAuthenticated],

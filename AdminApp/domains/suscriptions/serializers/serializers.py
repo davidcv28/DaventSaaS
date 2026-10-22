@@ -65,6 +65,7 @@ class SuscriptionSerializer(SuscriptionCreateMixin, serializers.ModelSerializer)
 # SUSCRIPCION SERIALIZER LIST
 #=========================================
 class SuscriptionSerializerList(serializers.ModelSerializer):
+    auth_user_id        =   serializers.IntegerField(source = 'user.user_id', read_only = True)
     plan_name           =   serializers.CharField(source = 'plan_suscription.name', read_only = True)
     plan_price          =   serializers.DecimalField(source = 'plan_suscription.price', max_digits = 12, decimal_places = 2, read_only = True)
     pending_plan_name   =   serializers.CharField(source = 'pending_plan_suscription.name', read_only = True)
@@ -79,7 +80,7 @@ class SuscriptionSerializerList(serializers.ModelSerializer):
     is_current          =   serializers.SerializerMethodField()
     class Meta:
         model           =   Suscription
-        fields          =   ['id', 'user', 'user_name', 'user_email', 'business_name', 'plan_suscription', 'plan_name', 'plan_price', 'pending_plan_name', 'start_date', 'end_date', 'status', 'auto_renew', 'cancelled_at', 'access_until', 'has_preapproval', 'is_current']
+        fields          =   ['id', 'user', 'auth_user_id', 'user_name', 'user_email', 'business_name', 'plan_suscription', 'plan_name', 'plan_price', 'pending_plan_name', 'start_date', 'end_date', 'status', 'auto_renew', 'cancelled_at', 'access_until', 'has_preapproval', 'is_current']
     def get_access_until(self, obj):
         return obj.access_until()
     def get_has_preapproval(self, obj):

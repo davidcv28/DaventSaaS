@@ -131,6 +131,9 @@ Suscription
                     → única fuente de verdad para el gating de beneficios
 ```
 
+#### Asignación manual de plan (staff)
+`POST /api/suscriptions/assign/` (IsAdminUser) `{user_id, plan_id}`: upsert de la `Suscription` del usuario — crea la fila si no existe o la pisa: plan nuevo, `status='Suscripción activa'`, `start_date=now`, `end_date=now+30d`, `pending_plan_suscription=None`. No toca el débito automático de MP (si existe sigue su curso). `user_id` es el id del `User` de auth (requiere `UserProfile` cargado: 400 si no existe). La respuesta incluye la suscripción serializada con `auth_user_id` (mapea suscripción ↔ usuario en el panel admin).
+
 #### Patrón de serializers (lectura vs escritura)
 ```
 SuscriptionSerializer       → CREATE / UPDATE  (HiddenField user)
@@ -402,7 +405,7 @@ StoreCarouselImage        (banners de portada, máx. 5)
 
 #### API
 - `POST /api/stores/` (Bearer) — claim del link en el onboarding; `{slug}`. Rechaza si ya tiene tienda.
-- `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding.
+- `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding. Para staff devuelve **todas las webs** y el serializer suma `business_name`, `owner_id`, `owner_name`, `owner_email`, `plan_name` y `has_access` (alimenta la sección Webs del panel admin).
 - `PUT/PATCH /api/stores/<pk>/` (Bearer) — renombrar el slug o pausar el link (`is_published`).
 - `GET /api/stores/slug-available/?slug=x` (Bearer) — `{available, reason}` con reason `invalid | reserved | taken`.
 - `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization, has_design_advanced`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`). `has_design_advanced` sale del plan del dueño: sin él la web pública no renderiza la portada (`.sp-banner` con carrusel/cover) y en cambio muestra un botón claro/oscuro en el nav para el visitante (tema solo de la visita, no persiste). El mapa de ubicación depende de `has_location_map` (Estándar y Premium): `location_address` solo viaja cuando `show_location` está activo y el plan incluye ese flag — es la dirección ya armada para geocodificar (`address, ciudad, provincia, Argentina`) que alimenta el iframe de Google Maps (`maps.google.com/maps?q=…&output=embed`); `null` en cualquier otro caso.
@@ -439,6 +442,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/profile/                   → UserProfileViewSet
 /api/password_update/           → cambio de contraseña
 /api/suscriptions/              → SuscriptionViewSet
+/api/suscriptions/assign/       → asignación manual de plan a un usuario (POST IsAdminUser)
 /api/suscription-plans/         → SuscriptionPlanViewSet
 /api/provinces/                 → ProvinceViewSet
 /api/cities/                    → CityViewSet

@@ -11,14 +11,17 @@ export const useAdminStore = defineStore('admin', () => {
   const suscriptions = ref([])
   const plans = ref([])
   const users = ref([])
+  const stores = ref([])
 
   const summaryStatus = ref('idle') // idle | loading | success | error | forbidden
   const paymentsStatus = ref('idle')
   const suscriptionsStatus = ref('idle')
   const plansStatus = ref('idle')
   const usersStatus = ref('idle')
+  const storesStatus = ref('idle')
   const approveStatus = ref('idle')
   const planFormStatus = ref('idle')
+  const assignStatus = ref('idle')
 
   const lastError = ref('')
   const notice = ref('')
@@ -80,9 +83,19 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  async function loadStores() {
+    storesStatus.value = 'loading'
+    try {
+      stores.value = await adminApi.listAllStores()
+      storesStatus.value = 'success'
+    } catch (e) {
+      trackError(e, storesStatus, 'No se pudieron cargar las webs.')
+    }
+  }
+
   async function loadAll() {
     lastError.value = ''
-    await Promise.all([loadSummary(), loadPayments(), loadSuscriptions(), loadPlans(), loadUsers()])
+    await Promise.all([loadSummary(), loadPayments(), loadSuscriptions(), loadPlans(), loadUsers(), loadStores()])
   }
 
   // Aprobación manual de un pago pendiente: sella el cobro y acredita el plan.
@@ -99,6 +112,26 @@ export const useAdminStore = defineStore('admin', () => {
     } catch (e) {
       approveStatus.value = 'error'
       lastError.value = extractApiError(e).nonField || 'No se pudo aprobar el pago.'
+      return false
+    }
+  }
+
+  // Asignación manual de plan (superpoder del staff): otorga 30 días de
+  // vigencia sin pasar por el cobro. Crea o pisa la suscripción del usuario.
+  async function assignPlan(userId, planId) {
+    assignStatus.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    try {
+      const data = await adminApi.assignPlan(userId, planId)
+      notice.value = data?.Exito || 'Plan asignado correctamente.'
+      await Promise.all([loadSuscriptions(), loadStores()])
+      assignStatus.value = 'success'
+      return true
+    } catch (e) {
+      assignStatus.value = 'error'
+      const parsed = extractApiError(e)
+      lastError.value = parsed.user_id || parsed.plan_id || parsed.nonField || 'No se pudo asignar el plan.'
       return false
     }
   }
@@ -128,21 +161,24 @@ export const useAdminStore = defineStore('admin', () => {
     suscriptions.value = []
     plans.value = []
     users.value = []
+    stores.value = []
     summaryStatus.value = 'idle'
     paymentsStatus.value = 'idle'
     suscriptionsStatus.value = 'idle'
     plansStatus.value = 'idle'
     usersStatus.value = 'idle'
+    storesStatus.value = 'idle'
     approveStatus.value = 'idle'
     planFormStatus.value = 'idle'
+    assignStatus.value = 'idle'
     lastError.value = ''
     notice.value = ''
   }
 
   return {
-    summary, payments, suscriptions, plans, users,
-    summaryStatus, paymentsStatus, suscriptionsStatus, plansStatus, usersStatus, approveStatus, planFormStatus,
+    summary, payments, suscriptions, plans, users, stores,
+    summaryStatus, paymentsStatus, suscriptionsStatus, plansStatus, usersStatus, storesStatus, approveStatus, planFormStatus, assignStatus,
     lastError, notice, pendingPayments,
-    loadSummary, loadPayments, loadSuscriptions, loadPlans, loadUsers, loadAll, approve, savePlan, reset
+    loadSummary, loadPayments, loadSuscriptions, loadPlans, loadUsers, loadStores, loadAll, approve, assignPlan, savePlan, reset
   }
 })

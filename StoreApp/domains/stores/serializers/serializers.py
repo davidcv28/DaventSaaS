@@ -85,14 +85,29 @@ class StoreSerializerList(serializers.ModelSerializer):
     public_path                 =   serializers.SerializerMethodField()
     customization               =   StoreCustomizationSerializer(read_only = True)
     storage                     =   serializers.SerializerMethodField()
+    #Datos del dueño: alimentan la sección "Webs" del panel admin
+    #(para el dueño repiten su propia info, no suman exposición).
+    business_name               =   serializers.CharField(source = 'user.business_name', read_only = True)
+    owner_id                    =   serializers.IntegerField(source = 'user.user_id', read_only = True)
+    owner_name                  =   serializers.CharField(source = 'user.user.username', read_only = True)
+    owner_email                 =   serializers.CharField(source = 'user.user.email', read_only = True)
+    plan_name                   =   serializers.SerializerMethodField()
+    has_access                  =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['id', 'slug', 'is_published', 'created_at', 'public_path', 'customization', 'storage']
+        fields                  =   ['id', 'slug', 'is_published', 'created_at', 'public_path', 'customization', 'storage',
+                                     'business_name', 'owner_id', 'owner_name', 'owner_email', 'plan_name', 'has_access']
     def get_public_path(self, store):
         return f'/{store.slug}'
     def get_storage(self, store):
         # Cuota de imágenes del plan vigente ({used_bytes, max_mb, images, max_images}).
         return storage_payload(store, store.user)
+    def get_plan_name(self, store):
+        suscription             =   getattr(store.user, 'suscription', None)
+        return suscription.plan_suscription.name if suscription else None
+    def get_has_access(self, store):
+        suscription             =   getattr(store.user, 'suscription', None)
+        return bool(suscription and suscription.grants_access())
 #=========================================
 # STORE PUBLIC SERIALIZER (datos que ve cualquier visitante)
 #=========================================

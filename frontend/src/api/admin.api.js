@@ -10,6 +10,8 @@ import { http } from './http.js'
 // POST /api/suscription-plans/           Bearer admin {name, price} -> crear plan
 // PUT  /api/suscription-plans/<id>/      Bearer admin {name, price} -> actualizar plan
 // GET  /api/user/                        Bearer admin -> listado de usuarios [{id, username, email, is_staff}]
+// GET  /api/stores/                      Bearer staff -> TODAS las webs de clientes (slug, dueño, plan, acceso)
+// POST /api/suscriptions/assign/         Bearer admin {user_id, plan_id} -> asigna plan al usuario (30 días)
 
 // DRF pagina con PageNumberPagination (PAGE_SIZE=10). Recorremos todas las
 // páginas con ?page=N hasta que `next` sea null (tope de seguridad en 50).
@@ -59,5 +61,14 @@ export const adminApi = {
 
   async listUsers() {
     return fetchAllPages('/user/')
+  },
+
+  async listAllStores() {
+    return fetchAllPages('/stores/')
+  },
+
+  async assignPlan(userId, planId) {
+    const { data } = await http.post('/suscriptions/assign/', { user_id: userId, plan_id: planId })
+    return data
   }
 }
