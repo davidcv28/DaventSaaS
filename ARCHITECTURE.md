@@ -333,7 +333,7 @@ PlanPresentation        (copy de marketing de la tarjeta)
 
 #### Serializer y entitlements
 - `GET /api/plans/` devuelve la tarjeta completa: `id, name, price, slug, tagline, cta_label, bullets, featured, display_order` + `benefits` como dict `{code: valor}`.
-- El frontend consume este endpoint para las tarjetas (reemplaza el `PLAN_MARKETING` hardcodeado) y para gating de secciones por flag (`has_stats`, `has_customization`, ...).
+- El frontend consume este endpoint para las tarjetas (reemplaza el `PLAN_MARKETING` hardcodeado) y para gating de secciones por flag (`has_stats`, `has_customization`, `has_design_advanced`, ...).
 - Los límites (`max_products`, `max_storage_mb`, `max_catalogs`) son la fuente de verdad que futuros dominios (StoreApp) usan para forzar cupos del lado del servidor.
 
 ---
@@ -403,12 +403,12 @@ StoreCarouselImage        (banners de portada, máx. 5)
 - `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding.
 - `PUT/PATCH /api/stores/<pk>/` (Bearer) — renombrar el slug o pausar el link (`is_published`).
 - `GET /api/stores/slug-available/?slug=x` (Bearer) — `{available, reason}` con reason `invalid | reserved | taken`.
-- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`).
+- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization, has_design_advanced`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`). `has_design_advanced` sale del plan del dueño: sin él la web pública no renderiza la portada (`.sp-banner` con carrusel/cover) y en cambio muestra un botón claro/oscuro en el nav para el visitante (tema solo de la visita, no persiste).
 - `GET /api/stores/customization/` (Bearer) — mi diseño (`get_or_create` con defaults).
-- `PUT/PATCH /api/stores/customization/` (Bearer) — edita el diseño. **403 si el plan vigente no incluye `has_customization`**: el gateo lo hace `services.profile_has_benefit` contra `Suscription.grants_access()` (status activa + vigencia con gracia) → `PlanBenefit` (la misma fuente de verdad que `/api/plans/`).
+- `PUT/PATCH /api/stores/customization/` (Bearer) — edita el diseño. **403 si el plan vigente no incluye `has_customization`** (está en todos los planes: contenido + logo): el gateo lo hace `services.profile_has_benefit` contra `Suscription.grants_access()` (status activa + vigencia con gracia) → `PlanBenefit` (la misma fuente de verdad que `/api/plans/`). **Sin `has_design_advanced` (solo Plan premium) se descartan del payload** `name_font`, `name_font_size` y `accent` (`DESIGN_ADVANCED_FIELDS` en `viewset.py`; `theme` claro/oscuro es libre en todos los planes): no es un 403 — como el PATCH es parcial, los valores guardados se conservan y el resto del formulario se guarda igual.
 - Reglas de slug: minúsculas/números/guiones internos, 3–60 chars, lista `RESERVED_SLUGS` (admin, api, planes, tienda...).
 - `POST/DELETE /api/stores/customization/logo/` (Bearer, multipart `{logo}`) — sube/reemplaza o quita el logo en R2. 403 sin `has_customization`; 400 si excede `max_storage_mb` o formato/peso inválido. Responde `{Exito, customization, storage:{used_bytes, max_mb}}`.
-- `POST /api/stores/customization/carousel/` (Bearer, multipart `{image}`) — agrega banner; `DELETE .../carousel/<id>/` lo borra; `PATCH .../carousel/order/` reordena `{order:[ids]}`.
+- `POST /api/stores/customization/carousel/` (Bearer, multipart `{image}`) — agrega banner; `DELETE .../carousel/<id>/` lo borra; `PATCH .../carousel/order/` reordena `{order:[ids]}`. Las 3 acciones responden 403 sin `has_design_advanced` (Plan premium).
 - `theme`/`accent`/`name_font` son catálogos cerrados: el frontend los traduce a paletas/estilos CSS propios (`STORE_ACCENTS`/`STORE_THEMES`/`STORE_FONTS` en `stores.api.js`); nunca se guarda CSS del usuario. Las fuentes se cargan on-demand desde Google Fonts (`ensureStoreFont` para una, `ensureStoreFontList` para el selector completo). `name_font_size` viaja como `--store-name-size` dentro de `storeThemeVars` y el CSS la aplica en la portada (h1), la barra superior (proporcional, tope 20px), la vista previa del dashboard y el folleto.
 
 ### catalog (StoreApp)
@@ -451,7 +451,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/stores/                    → link público del cliente (claim/rename, Bearer)
 /api/stores/slug-available/     → check de disponibilidad de slug (Bearer)
 /api/stores/public/<slug>/      → resolución pública del link (AllowAny)
-/api/stores/customization/      → diseño de la web pública (GET; PUT/PATCH solo con has_customization)
+/api/stores/customization/      → diseño de la web pública (GET; PUT/PATCH con has_customization; los campos de diseño avanzado se descartan sin has_design_advanced)
 /api/stores/customization/logo/ → logo de la web (POST multipart/DELETE)
 /api/stores/customization/carousel/ → carrusel de banners (POST/DELETE/PATCH order)
 /api/stores/public/<slug>/catalog/ → catálogo visible de la web pública (AllowAny)

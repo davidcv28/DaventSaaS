@@ -192,8 +192,9 @@ const initial = computed(() => (auth.user?.username || auth.user?.email || 'U').
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Usuario DAVENT')
 
 // Menú del sidebar: el staff ve además la entrada al panel de administración.
-// El grupo "Avanzado" es el menú premium (flag has_advanced_menu); cada entrada
-// se muestra solo si el plan vigente habilita su beneficio.
+// "Diseño web" va en el grupo principal (has_customization está en todos los
+// planes). El grupo "Avanzado" sigue siendo premium (has_advanced_menu) y cada
+// entrada requiere además su propio flag.
 const navItems = computed(() => {
   const b = plan.value?.benefits || {}
   const items = [
@@ -201,8 +202,9 @@ const navItems = computed(() => {
     { id: 'store', label: 'Mi tienda', icon: 'store' },
     { id: 'catalogs', label: 'Mis catálogos', icon: 'library' }
   ]
+  if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
+  items.push({ id: 'pos', label: 'Venta en local', icon: 'monitor' })
   const advanced = []
-  if (b.has_customization) advanced.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
   if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
   if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
   if (b.has_advanced_menu && advanced.length) {
@@ -334,7 +336,7 @@ async function ensureCatalog() {
   }
 }
 watch(section, (s) => {
-  if (s === 'catalogs') ensureCatalog()
+  if (s === 'catalogs' || s === 'pos') ensureCatalog()
   // Al entrar a Diseño: la fuente elegida ya tiene que estar; el resto del
   // catálogo se trae en un único <link> para previsualizar cada opción.
   if (s === 'design') {
@@ -490,12 +492,33 @@ function openFlyer() {
   window.open(href, '_blank', 'noopener')
 }
 
-// --- Diseño web: personalización premium de la página pública ---
-// Editable solo con el beneficio has_customization (el backend lo fuerza en PATCH).
+// --- Venta en local (POS de escritorio, próximamente) ---
+// El mockup estático se dibuja con el logo, el nombre y el acento reales de
+// la tienda (storeThemeVars), y con los primeros productos del catálogo
+// cuando ya están cargados (placeholders si todavía no hay ninguno).
+const POS_SAMPLE_PRODUCTS = ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5', 'Producto 6']
+  .map((name) => ({ name }))
+const POS_CART_QTY = [2, 1, 1]
+const posCartQty = POS_CART_QTY
+const posVars = computed(() => storeThemeVars(store.customization))
+const posProducts = computed(() => (catalog.products.length ? catalog.products.slice(0, 6) : POS_SAMPLE_PRODUCTS))
+const posCartItems = computed(() => posProducts.value.slice(0, POS_CART_QTY.length))
+const posTotal = computed(() => {
+  if (!posCartItems.value.some((p) => Number(p.price))) return '—'
+  const total = posCartItems.value.reduce((acc, p, i) => acc + (Number(p.price) || 0) * POS_CART_QTY[i], 0)
+  return formatARS(total)
+})
+
+// --- Diseño web: personalización de la página pública ---
+// Contenido, logo y tema claro/oscuro: beneficio has_customization (en todos
+// los planes; el backend lo fuerza en PATCH). Fuente, tamaño, acento y
+// carrusel son premium (has_design_advanced): fuente/tamaño/acento se ven
+// bloqueados y el carrusel directamente no se muestra.
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS })
 const designTouched = reactive({})
 const designBusy = ref(false)
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
+const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
@@ -533,24 +556,30 @@ async function saveDesign() {
   Object.keys(designForm).forEach((k) => { designTouched[k] = true })
   if (Object.keys(designErrors.value).length) return
   designBusy.value = true
-  await store.saveCustomization({
+  const payload = {
     display_name: designForm.display_name.trim(),
-    name_font: designForm.name_font,
-    name_font_size: Number(designForm.name_font_size),
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
     theme: designForm.theme,
-    accent: designForm.accent,
     whatsapp: normalizeWhatsapp(designForm.whatsapp),
     instagram: normalizeInstagram(designForm.instagram),
     tiktok: normalizeTiktok(designForm.tiktok),
     facebook: normalizeFacebook(designForm.facebook)
-  })
+  }
+  // Sin has_design_advanced no se envían las opciones premium (el backend las descartaría igual).
+  if (canDesignAdvanced.value) {
+    Object.assign(payload, {
+      name_font: designForm.name_font,
+      name_font_size: Number(designForm.name_font_size),
+      accent: designForm.accent
+    })
+  }
+  await store.saveCustomization(payload)
   designBusy.value = false
 }
 
-// Carrusel de banners de la web pública (premium). Misma cuota que el logo.
-// La vista previa rota las imágenes cargadas cada 3s como en la web real.
+// Carrusel de banners de la web pública (premium, has_design_advanced). Misma
+// cuota que el logo. La vista previa rota las imágenes cada 3s como en la web real.
 const previewSlide = ref(0)
 let previewTimer = null
 const previewReduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
@@ -571,7 +600,7 @@ watch(() => designForm.name_font, (f) => ensureStoreFont(f))
 async function onCarouselPicked(event) {
   const file = event.target.files?.[0]
   event.target.value = ''
-  if (!file) return
+  if (!file || !canDesignAdvanced.value) return
   carouselErr.value = validateImageFile(file)
   if (carouselErr.value) return
   carouselBusy.value = true
@@ -581,7 +610,7 @@ async function onCarouselPicked(event) {
 }
 
 async function onRemoveCarousel(imageId) {
-  if (carouselBusy.value) return
+  if (carouselBusy.value || !canDesignAdvanced.value) return
   carouselErr.value = ''
   carouselBusy.value = true
   const ok = await store.removeCarouselImage(imageId)
@@ -590,7 +619,7 @@ async function onRemoveCarousel(imageId) {
 }
 
 async function onMoveCarousel(imageId, direction) {
-  if (carouselBusy.value) return
+  if (carouselBusy.value || !canDesignAdvanced.value) return
   carouselErr.value = ''
   carouselBusy.value = true
   const ok = await store.moveCarouselImage(imageId, direction)
@@ -598,7 +627,7 @@ async function onMoveCarousel(imageId, direction) {
   if (!ok) carouselErr.value = store.lastError
 }
 
-// Logo de la web pública (premium): sube directo a R2 vía /stores/customization/logo/.
+// Logo de la web pública (has_customization): sube directo a R2 vía /stores/customization/logo/.
 // Consume la cuota del beneficio max_storage_mb; el backend devuelve `storage` actualizado.
 const logoInput = ref(null)
 const logoBusy = ref(false)
@@ -1291,7 +1320,7 @@ async function changePassword() {
         </div>
       </template>
     </div>
-    <!-- ================= DISEÑO WEB (premium) ================= -->
+    <!-- ================= DISEÑO WEB ================= -->
     <div v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
         <div>
@@ -1361,13 +1390,18 @@ async function changePassword() {
               <p v-if="storageText" class="hint">{{ storageText }}</p>
               <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
             </div>
-            <div class="field">
-              <label id="design-font-label">Fuente del nombre</label>
+            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium." />
+            <div v-if="!canDesignAdvanced" class="btn-row">
+              <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
+            </div>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label id="design-font-label">Fuente del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="font-options" role="radiogroup" aria-labelledby="design-font-label">
                 <button
                   v-for="(f, key) in storeFonts" :key="key" type="button"
                   class="font-option" :class="{ active: designForm.name_font === key }"
                   :style="{ fontFamily: f.family }"
+                  :disabled="!canDesignAdvanced"
                   :aria-pressed="designForm.name_font === key"
                   @click="designForm.name_font = key"
                 >
@@ -1376,8 +1410,8 @@ async function changePassword() {
               </div>
               <p class="hint">Se aplica al nombre junto al logo en la barra superior y la portada.</p>
             </div>
-            <div class="field">
-              <label for="design-name-size">Tamaño del nombre</label>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label for="design-name-size">Tamaño del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="size-slider">
                 <input
                   id="design-name-size"
@@ -1386,12 +1420,13 @@ async function changePassword() {
                   :min="fontSizeMin"
                   :max="fontSizeMax"
                   step="1"
+                  :disabled="!canDesignAdvanced"
                 />
                 <span class="size-value">{{ designForm.name_font_size }} px</span>
               </div>
               <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
             </div>
-            <div class="field">
+            <div v-if="canDesignAdvanced" class="field">
               <label id="design-carousel-label">Carrusel de portada</label>
               <div class="carousel-box">
                 <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
@@ -1429,15 +1464,17 @@ async function changePassword() {
                   {{ t.label }}
                 </button>
               </div>
+              <p class="hint">Claro u oscuro: se aplica a la barra superior, la portada y todo tu catálogo.</p>
             </div>
-            <div class="field">
-              <label id="design-accent-label">Color de acento</label>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label id="design-accent-label">Color de acento <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="swatches" role="radiogroup" aria-labelledby="design-accent-label">
                 <button
                   v-for="(a, key) in storeAccents" :key="key" type="button"
                   class="swatch" :class="{ active: designForm.accent === key }"
                   :style="{ '--swatch': a.hex }"
                   :title="a.label" :aria-label="`Color ${a.label}`"
+                  :disabled="!canDesignAdvanced"
                   :aria-pressed="designForm.accent === key"
                   @click="designForm.accent = key"
                 >
@@ -1451,13 +1488,13 @@ async function changePassword() {
 
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
-          <div class="design-preview" :data-store-theme="designForm.theme" :style="designPreviewVars">
+          <div class="design-preview" :class="{ 'no-cover': !canDesignAdvanced }" :data-store-theme="designForm.theme" :style="designPreviewVars">
             <div class="dp-nav" aria-hidden="true">
               <span class="dp-nav-item active">Inicio</span>
               <span class="dp-nav-item">Catálogo</span>
               <span class="dp-nav-item">Contacto</span>
             </div>
-            <div class="dp-cover">
+            <div v-if="canDesignAdvanced" class="dp-cover">
               <div v-if="carouselImages.length" class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
                 <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
               </div>
@@ -1481,8 +1518,8 @@ async function changePassword() {
       </template>
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
-        <h3>La personalización es Premium</h3>
-        <p>Con el Plan premium podés editar el logo, el titular, la descripción, los colores y los botones de contacto de tu página pública.</p>
+        <h3>El diseño web viene con tu plan</h3>
+        <p>Activá una suscripción para personalizar el logo, el titular, la descripción y los botones de contacto de tu página pública.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>
@@ -1527,6 +1564,76 @@ async function changePassword() {
           <div class="btn-row">
             <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- ================= VENTA EN LOCAL (próximamente) ================= -->
+    <div v-show="section === 'pos'" :class="{ 'sec-on': section === 'pos' }">
+      <div class="page-head">
+        <div>
+          <h1>Venta en tu local</h1>
+          <p>Un punto de venta para cobrar en el mostrador: tu catálogo y tu marca, ya cargados.</p>
+        </div>
+        <span class="pill warn"><AppIcon name="clock" :size="14" /> Próximamente</span>
+      </div>
+
+      <div class="pos-layout">
+        <div>
+          <div class="card">
+            <h3><AppIcon name="monitor" :size="18" /> DAVENT Ventas</h3>
+            <p>Estamos desarrollando un programa de venta para instalar en la computadora de tu local. Cobrás en persona con el mismo catálogo que ya publicás en tu web, con tu logo y tu nombre.</p>
+            <ul class="pos-feats">
+              <li><AppIcon name="package" :size="16" /> <span>Productos, fotos y precios sincronizados con tu catálogo web.</span></li>
+              <li><AppIcon name="printer" :size="16" /> <span>Ticket de venta imprimible al momento de cobrar.</span></li>
+              <li><AppIcon name="trending-up" :size="16" /> <span>Cierre de caja con el resumen de ventas del día.</span></li>
+              <li><AppIcon name="circle-check" :size="16" /> <span>Funciona local: si se corta internet seguís vendiendo y sincroniza después.</span></li>
+            </ul>
+          </div>
+          <AlertMessage kind="info" message="Todavía está en desarrollo. Cuando salga, vas a poder sumarlo a tu suscripción desde esta misma sección." />
+        </div>
+
+        <div class="card">
+          <h3><AppIcon name="eye" :size="18" /> Así se va a ver</h3>
+          <p class="pos-note">Vista de ejemplo: el programa sale con el logo y el nombre de tu tienda.</p>
+          <div class="pos-window" :style="posVars" role="img" :aria-label="`Vista previa del punto de venta de ${designShopName}`">
+            <div class="pos-titlebar">
+              <span class="pos-dots"><i></i><i></i><i></i></span>
+              <span class="pos-title">DAVENT Ventas</span>
+            </div>
+            <div class="pos-topbar">
+              <img v-if="currentLogo" class="pos-logo" :src="currentLogo" alt="" />
+              <span v-else class="pos-mono">{{ businessInitial }}</span>
+              <strong class="pos-shop">{{ designShopName }}</strong>
+              <span class="pos-search"><AppIcon name="search" :size="13" /> Buscar producto…</span>
+            </div>
+            <div class="pos-body">
+              <div class="pos-grid">
+                <div v-for="(p, i) in posProducts" :key="p.id || i" class="pos-prod">
+                  <span class="pos-prod-img">
+                    <img v-if="p.image" :src="p.image" alt="" />
+                    <AppIcon v-else name="package" :size="16" />
+                  </span>
+                  <span class="pos-prod-name">{{ p.name }}</span>
+                  <span class="pos-prod-price">{{ Number(p.price) ? formatARS(p.price) : '—' }}</span>
+                </div>
+              </div>
+              <div class="pos-cart">
+                <span class="pos-cart-head">Ticket actual</span>
+                <div v-for="(p, i) in posCartItems" :key="`pos-item-${p.id || i}`" class="pos-cart-item">
+                  <span class="pos-cart-qty">{{ posCartQty[i] }}</span>
+                  <span class="pos-cart-name">{{ p.name }}</span>
+                  <span class="pos-cart-price">{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
+                </div>
+                <div class="pos-cart-total">
+                  <span>Total</span>
+                  <strong>{{ posTotal }}</strong>
+                </div>
+                <span class="pos-pay">Cobrar</span>
+              </div>
+            </div>
+            <div class="pos-status"><span class="pos-dot"></span> Caja abierta · {{ displayName }}</div>
+          </div>
+          <p class="hint">Imagen de referencia. El producto final puede variar.</p>
         </div>
       </div>
     </div>

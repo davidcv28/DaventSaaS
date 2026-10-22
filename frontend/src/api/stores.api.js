@@ -5,12 +5,16 @@ import { http } from './http.js'
 // POST /api/stores/                      Bearer {slug} -> claim del link (onboarding)
 // PATCH /api/stores/<pk>/                Bearer {slug?, is_published?} -> renombrar / pausar
 // GET  /api/stores/slug-available/?slug= Bearer   -> {slug, available, reason: invalid|reserved|taken}
-// GET  /api/stores/public/<slug>/        público  -> {slug, business_name, city_name, province_name, customization}
+// GET  /api/stores/public/<slug>/        público  -> {slug, business_name, city_name, province_name, customization,
+//                                                   has_design_advanced} — sin has_design_advanced la web no muestra
+//                                                   portada y expone un toggle claro/oscuro al visitante en el nav
 // GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products} (?q=&category=&brand=)
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
 //                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
+//                                        -> sin 'has_design_advanced' (premium) el backend descarta
+//                                           name_font, name_font_size y accent del payload
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/logo/ Bearer   -> quita el logo y libera la cuota
@@ -18,6 +22,7 @@ import { http } from './http.js'
 // POST   /api/stores/customization/carousel/       Bearer multipart {image} -> {Exito, image, storage}
 // DELETE /api/stores/customization/carousel/<id>/  Bearer -> {Exito, storage}
 // PATCH  /api/stores/customization/carousel/order/ Bearer {order:[ids]} -> {Exito}
+//                                        -> 403 en las 3 si falta has_design_advanced
 
 function unwrap(data) {
   if (Array.isArray(data)) return data

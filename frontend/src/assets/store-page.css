@@ -33,7 +33,11 @@
 /* --- Barra superior --- */
 .sp-top { position: sticky; top: 0; z-index: 20; background: linear-gradient(180deg, var(--store-accent-ink), color-mix(in srgb, var(--store-accent-ink) 82%, #000)); color: #fff; border-bottom: 1px solid rgba(0, 0, 0, .18); box-shadow: 0 1px 0 rgba(15, 23, 42, .03), 0 4px 16px -10px rgba(15, 23, 42, .25); }
 .sp-top-inner { height: var(--sp-top-h); display: flex; align-items: center; gap: 16px; }
-.sp-top-end { display: flex; justify-content: flex-end; flex: 1 1 0; min-width: 0; }
+.sp-top-end { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
+/* Botón de tema del visitante (webs sin diseño avanzado): círculo claro sobre
+   la barra de acento, igual que el WhatsApp. */
+.sp-top .sp-icon-btn { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .35); color: #fff; box-shadow: none; }
+.sp-top .sp-icon-btn:hover { background: rgba(255, 255, 255, .26); border-color: #fff; color: #fff; filter: none; }
 .sp-search-top { flex: 0 1 480px; min-width: 0; }
 .sp-search.sp-search-inline { display: none; }
 .sp-brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; color: inherit; text-decoration: none; }

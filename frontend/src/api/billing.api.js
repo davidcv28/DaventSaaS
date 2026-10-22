@@ -4,7 +4,8 @@ import { http } from './http.js'
 // GET  /api/plans/             público  -> tarjetas completas:
 //   [{id, name, price, slug, tagline, cta_label, bullets, featured, display_order,
 //     benefits: {max_catalogs, has_public_link, has_qr, max_products(null=ilimitado),
-//                max_storage_mb, has_stats, has_flyers, has_customization, has_advanced_menu}}]
+//                max_storage_mb, has_stats, has_flyers, has_customization,
+//                has_design_advanced, has_advanced_menu}}]
 // Dominio suscripciones (AdminApp):
 // GET  /api/suscriptions/      Bearer   -> mi suscripción (lista con 0..1)
 // POST /api/suscriptions/      Bearer {plan_suscription: <pk>} -> 201

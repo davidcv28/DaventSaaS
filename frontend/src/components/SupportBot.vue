@@ -70,9 +70,9 @@ function panelAnswer(id) {
     case 'products':
       return 'En "Mis catálogos" cargás productos con foto, nombre, precio, categoría y marca. Todo lo que publiques aparece al instante en tu web pública. Las categorías y marcas se crean en las pestañas de ese mismo panel.'
     case 'design': {
-      return plan?.benefits?.has_customization
-        ? 'En "Diseño web" (grupo Avanzado del menú) personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada y botones de WhatsApp y redes.'
-        : 'El diseño de tu web (logo, colores, fuentes, carrusel y botones de contacto) es un beneficio del plan premium. En "Planes" podés subir de plan cuando quieras.'
+      if (plan?.benefits?.has_design_advanced) return 'En "Diseño web" personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada y botones de WhatsApp y redes.'
+      if (plan?.benefits?.has_customization) return 'En "Diseño web" personalizás el logo, el nombre, el titular, la descripción, el tema claro/oscuro y los botones de WhatsApp y redes. El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium.'
+      return 'Con una suscripción activa podés personalizar el diseño de tu web (logo, textos, tema y botones de contacto). El color de acento, las fuentes y el carrusel son del Plan premium. En "Planes" elegís el que mejor te quede.'
     }
     case 'renew':
       return 'Podés pagar cada mes a mano desde "Planes", o activar el débito automático con Mercado Pago y el plan se renueva solo. Si un débito falla, Mercado Pago reintenta durante unos días y tu plan sigue activo mientras tanto.'

@@ -33,6 +33,17 @@ let searchTimer = null
 
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
 const themeVars = computed(() => storeThemeVars(custom.value))
+// Diseño avanzado (Plan premium): define si la web muestra portada (carrusel)
+// o, en su lugar, un botón de modo claro/oscuro para el visitante en el nav.
+const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
+// Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
+// visitante puede alternarlo con el botón del nav (solo para esta visita).
+const visitorTheme = ref(null) // null = tema de la tienda
+const pageTheme = computed(() => visitorTheme.value || custom.value.theme)
+const showThemeToggle = computed(() => status.value === 'success' && !hasDesignAdvanced.value)
+function togglePageTheme() {
+  visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
+}
 const shopName = computed(() => custom.value.display_name || store.value?.business_name || 'Tienda')
 const nameFont = computed(() => ({ fontFamily: storeFontFamily(custom.value.name_font) }))
 const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
@@ -215,7 +226,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :data-store-theme="custom.theme" :style="themeVars">
+  <div class="store-page" :data-store-theme="pageTheme" :style="themeVars">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top">
       <div class="sp-container sp-top-inner">
@@ -240,6 +251,17 @@ onBeforeUnmount(() => {
           <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
         </label>
         <div class="sp-top-end">
+          <button
+            v-if="showThemeToggle"
+            type="button"
+            class="sp-icon-btn"
+            :aria-label="pageTheme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+            :title="pageTheme === 'dark' ? 'Modo claro' : 'Modo oscuro'"
+            :aria-pressed="pageTheme === 'dark'"
+            @click="togglePageTheme"
+          >
+            <AppIcon :name="pageTheme === 'dark' ? 'sun' : 'moon'" :size="17" />
+          </button>
           <a v-if="whatsappUrl" class="sp-icon-btn primary" :href="whatsappUrl" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp" title="WhatsApp">
             <AppIcon name="whatsapp" :size="17" />
           </a>
@@ -262,7 +284,7 @@ onBeforeUnmount(() => {
       <!-- ===== Portada + identidad ===== -->
       <section class="sp-hero">
         <div class="sp-container">
-          <div class="sp-banner">
+          <div v-if="hasDesignAdvanced" class="sp-banner">
             <div v-if="carousel.length" ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
               <div class="sp-carousel-track" :style="trackStyle">
                 <img v-for="img in carousel" :key="img.id" class="sp-carousel-img" :src="img.url" alt="" draggable="false" />

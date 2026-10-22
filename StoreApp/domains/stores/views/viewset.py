@@ -24,6 +24,11 @@ from .viewset_config import StoreConfigs
 Viewsets del dominio Stores.
 
 """
+#Campos del diseño reservados a has_design_advanced (Plan premium): en un
+#PATCH/PUT de customization se descartan del payload en vez de rechazar la
+#request, así el resto del formulario (contenido, logo y tema) se guarda
+#igual y los valores ya guardados quedan intactos.
+DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #=========================================
 # STORE VIEWSET
 #=========================================
@@ -105,13 +110,18 @@ class StoreViewSet(StoreBaseViewSet):
         store           =   get_object_or_404(Store, user__user = request.user)
         if request.method != 'GET' and not profile_has_benefit(store.user, 'has_customization'):
             return Response(
-                {'detail': 'La personalización de tu web está disponible en el Plan premium.'},
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         customization, _    =   StoreCustomization.objects.get_or_create(store = store)
         if request.method == 'GET':
             return Response(StoreCustomizationSerializer(customization).data, status = status.HTTP_200_OK)
-        serializer        =   StoreCustomizationSerializer(customization, data = request.data, partial = (request.method == 'PATCH'))
+        data            =   request.data
+        if not profile_has_benefit(store.user, 'has_design_advanced'):
+            data        =   request.data.copy()
+            for field in DESIGN_ADVANCED_FIELDS:
+                data.pop(field, None)
+        serializer        =   StoreCustomizationSerializer(customization, data = data, partial = (request.method == 'PATCH'))
         serializer.is_valid(raise_exception = True)
         serializer.save()
         return Response(
@@ -123,14 +133,14 @@ class StoreViewSet(StoreBaseViewSet):
             status = status.HTTP_200_OK,
         )
     #=========================================
-    # LOGO (subir/quitar el logo de la web, premium, multipart)
+    # LOGO (subir/quitar el logo de la web, multipart)
     #=========================================
     @action(detail = False, methods = ['post', 'delete'], url_path = 'customization/logo')
     def customization_logo(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
         if not profile_has_benefit(store.user, 'has_customization'):
             return Response(
-                {'detail': 'El logo de tu web está disponible en el Plan premium.'},
+                {'detail': 'El logo de tu web requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         customization, _    =   StoreCustomization.objects.get_or_create(store = store)
@@ -165,7 +175,7 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['post'], url_path = 'customization/carousel')
     def carousel_add(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_customization'):
+        if not profile_has_benefit(store.user, 'has_design_advanced'):
             return Response(
                 {'detail': 'El carrusel de imágenes está disponible en el Plan premium.'},
                 status = status.HTTP_403_FORBIDDEN,
@@ -189,7 +199,7 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['delete'], url_path = r'customization/carousel/(?P<image_id>\d+)')
     def carousel_remove(self, request, image_id = None):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_customization'):
+        if not profile_has_benefit(store.user, 'has_design_advanced'):
             return Response(
                 {'detail': 'El carrusel de imágenes está disponible en el Plan premium.'},
                 status = status.HTTP_403_FORBIDDEN,
@@ -207,7 +217,7 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['patch'], url_path = 'customization/carousel/order')
     def carousel_order(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_customization'):
+        if not profile_has_benefit(store.user, 'has_design_advanced'):
             return Response(
                 {'detail': 'El carrusel de imágenes está disponible en el Plan premium.'},
                 status = status.HTTP_403_FORBIDDEN,

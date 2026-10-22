@@ -617,6 +617,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 .dp-body { display: grid; justify-items: center; text-align: center; padding: 0 18px 20px; }
 .dp-mono { width: 56px; height: 56px; margin-top: -28px; border-radius: 16px; border: 3px solid var(--sp-bg); display: grid; place-items: center; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; font-weight: 800; font-size: 22px; }
 .dp-logo { width: 56px; height: 56px; margin-top: -28px; border-radius: 16px; border: 3px solid var(--sp-bg); object-fit: cover; background: var(--sp-card); }
+/* Sin portada (planes sin carrusel): el logo no se superpone a nada. */
+.design-preview.no-cover .dp-body { padding-top: 20px; }
+.design-preview.no-cover .dp-logo, .design-preview.no-cover .dp-mono { margin-top: 0; }
 .logo-box { display: flex; align-items: center; gap: 14px; }
 .logo-thumb { width: 56px; height: 56px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: grid; place-items: center; overflow: hidden; flex: none; }
 .logo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -675,8 +678,56 @@ body { transition: background-color .2s ease, color .2s ease; }
 .carousel-add { width: 108px; height: 72px; border: 1.5px dashed var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 600; display: grid; place-items: center; gap: 4px; cursor: pointer; transition: border-color .15s, color .15s; }
 .carousel-add:hover { border-color: var(--brand-500); color: var(--brand-ink); }
 .carousel-add:disabled { opacity: .55; cursor: default; }
+/* Campos del diseño bloqueados por plan (has_design_advanced): se ven
+   atenuados con un badge "Premium" y los controles quedan deshabilitados. */
+.lock-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; background: var(--brand-50); color: var(--brand-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 1px; }
+.lock-badge .icon { color: var(--brand-500); }
+.field.locked .font-options, .field.locked .size-slider, .field.locked .swatches { opacity: .55; }
+.field.locked .font-option, .field.locked .swatch, .field.locked .size-slider input[type='range'] { cursor: default; }
+.field.locked .font-option:hover { border-color: var(--line); }
+.field.locked .swatch:hover { transform: none; }
 .qr-box { display: grid; place-items: center; margin: 8px 0 16px; }
 .qr-box img { width: 180px; height: 180px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; padding: 10px; }
+
+/* ===== Venta en local (promo del POS de escritorio) ===== */
+.pos-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; align-items: start; }
+.pos-feats { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.pos-feats li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--ink-2); }
+.pos-feats .icon { color: var(--brand-ink); margin-top: 2px; flex: none; }
+.pos-note { margin: -4px 0 14px; }
+
+/* Mockup estático del programa: es una "captura" de escritorio, así que
+   tiene paleta clara fija (no hereda el tema del panel); la marca del
+   cliente entra por --store-accent* (storeThemeVars). */
+.pos-window { --pos-bg: #f4f6fb; --pos-card: #ffffff; --pos-ink: #0f172a; --pos-muted: #64748b; --pos-line: #e2e8f0; border: 1px solid var(--pos-line); border-radius: 12px; overflow: hidden; background: var(--pos-bg); color: var(--pos-ink); box-shadow: var(--shadow-md); margin-bottom: 12px; }
+.pos-titlebar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f1130; color: #a5b4d4; }
+.pos-dots { display: flex; gap: 5px; }
+.pos-dots i { width: 9px; height: 9px; border-radius: 50%; background: #3a4568; }
+.pos-dots i:first-child { background: var(--store-accent, #4f46e5); }
+.pos-title { flex: 1; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: .08em; }
+.pos-topbar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--pos-card); border-bottom: 1px solid var(--pos-line); }
+.pos-logo { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; border: 1px solid var(--pos-line); }
+.pos-mono { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; background: var(--store-accent, #4f46e5); color: #fff; font-weight: 800; font-size: 13px; }
+.pos-shop { font-size: 14px; font-weight: 700; letter-spacing: -.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pos-search { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 11.5px; color: var(--pos-muted); border: 1px solid var(--pos-line); border-radius: 8px; padding: 6px 10px; }
+.pos-body { display: grid; grid-template-columns: minmax(0, 1fr) 190px; min-height: 260px; }
+.pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; align-content: start; }
+.pos-prod { background: var(--pos-card); border: 1px solid var(--pos-line); border-radius: 9px; padding: 8px; display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.pos-prod-img { width: 100%; aspect-ratio: 4/3; border-radius: 6px; background: var(--pos-bg); border: 1px solid var(--pos-line); display: grid; place-items: center; color: var(--pos-muted); overflow: hidden; }
+.pos-prod-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pos-prod-name { font-size: 11px; font-weight: 600; color: var(--pos-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.pos-prod-price { font-size: 11px; font-weight: 700; color: var(--store-accent-ink, #4338ca); }
+.pos-cart { border-left: 1px solid var(--pos-line); background: var(--pos-card); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.pos-cart-head { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--pos-muted); }
+.pos-cart-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--pos-ink); }
+.pos-cart-qty { width: 18px; height: 18px; flex: none; display: grid; place-items: center; font-size: 10px; font-weight: 700; border-radius: 5px; background: var(--store-accent-soft, #eef2ff); color: var(--store-accent-ink, #4338ca); }
+.pos-cart-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pos-cart-price { font-weight: 600; flex: none; }
+.pos-cart-total { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px dashed var(--pos-line); padding-top: 8px; font-size: 12px; color: var(--pos-muted); }
+.pos-cart-total strong { color: var(--pos-ink); font-size: 14px; }
+.pos-pay { display: block; text-align: center; background: var(--store-accent, #4f46e5); color: #fff; font-size: 12px; font-weight: 700; border-radius: 8px; padding: 8px; }
+.pos-status { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-top: 1px solid var(--pos-line); background: var(--pos-card); font-size: 10.5px; color: var(--pos-muted); }
+.pos-dot { width: 7px; height: 7px; border-radius: 50%; background: #059669; flex: none; }
 
 /* ===== Responsive ===== */
 .btn-auto { width: auto; }
@@ -697,6 +748,7 @@ body { transition: background-color .2s ease, color .2s ease; }
   .auth-card { padding: 28px 22px; box-shadow: var(--shadow-md); margin: 0 auto; }
   .auth-card-logo { display: flex; }
   .grid-2 { grid-template-columns: 1fr; }
+  .pos-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
   /* Barra superior fija; el menú se despliega a pantalla completa debajo de ella */
@@ -790,6 +842,10 @@ body { transition: background-color .2s ease, color .2s ease; }
   .theme-options { flex-direction: column; }
   .tax-add { grid-template-columns: 1fr; }
   .tabs { overflow-x: auto; }
+  .pos-body { grid-template-columns: 1fr; }
+  .pos-grid { grid-template-columns: repeat(2, 1fr); }
+  .pos-cart { border-left: 0; border-top: 1px solid var(--pos-line); }
+  .pos-search { display: none; }
 }
 @media (max-width: 640px) {
   .page-head { flex-direction: column; align-items: center; text-align: center; }

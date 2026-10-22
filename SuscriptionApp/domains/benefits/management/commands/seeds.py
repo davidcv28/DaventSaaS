@@ -17,7 +17,8 @@ dict_benefits = {
     'max_storage_mb'    :   {'label': 'Almacenamiento de imágenes (MB)',    'kind': 'limit'},
     'has_stats'         :   {'label': 'Estadísticas de visitas',            'kind': 'flag'},
     'has_flyers'        :   {'label': 'Folletos publicitarios imprimibles', 'kind': 'flag'},
-    'has_customization' :   {'label': 'Personalización web y logo',         'kind': 'flag'},
+    'has_customization' :   {'label': 'Diseño web: logo, textos y contacto',    'kind': 'flag'},
+    'has_design_advanced':  {'label': 'Diseño web avanzado: fuentes, color y carrusel', 'kind': 'flag'},
     'has_advanced_menu' :   {'label': 'Menú administrador avanzado',        'kind': 'flag'},
 }
 
@@ -31,7 +32,8 @@ dict_plan_benefits = {
             'max_storage_mb'    :   400,
             'has_stats'         :   False,
             'has_flyers'        :   False,
-            'has_customization' :   False,
+            'has_customization' :   True,
+            'has_design_advanced':  False,
             'has_advanced_menu' :   False,
         },
         'presentation'  :   {
@@ -44,6 +46,7 @@ dict_plan_benefits = {
                 '1 catálogo con link público',
                 'Hasta 100 productos',
                 '400 MB de almacenamiento de imágenes',
+                'Diseño web: logo, textos, modo oscuro y contacto',
             ],
         },
     },
@@ -56,7 +59,8 @@ dict_plan_benefits = {
             'max_storage_mb'    :   1024,
             'has_stats'         :   True,
             'has_flyers'        :   True,
-            'has_customization' :   False,
+            'has_customization' :   True,
+            'has_design_advanced':  False,
             'has_advanced_menu' :   False,
         },
         'presentation'  :   {
@@ -69,6 +73,7 @@ dict_plan_benefits = {
                 '1 catálogo con link público + QR',
                 'Hasta 500 productos',
                 '1 GB de almacenamiento de imágenes',
+                'Diseño web: logo, textos, modo oscuro y contacto',
                 'Estadísticas de visitas',
                 'Folletos publicitarios listos para imprimir',
             ],
@@ -84,6 +89,7 @@ dict_plan_benefits = {
             'has_stats'         :   True,
             'has_flyers'        :   True,
             'has_customization' :   True,
+            'has_design_advanced':  True,
             'has_advanced_menu' :   True,
         },
         'presentation'  :   {
@@ -98,7 +104,7 @@ dict_plan_benefits = {
                 '1.5 GB de almacenamiento de imágenes',
                 'Estadísticas de visitas',
                 'Folletos publicitarios listos para imprimir',
-                'Personalización web y logo',
+                'Diseño web completo: color, fuentes y carrusel',
                 'Menú administrador avanzado',
             ],
         },

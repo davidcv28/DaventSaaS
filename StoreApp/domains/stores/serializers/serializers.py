@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage
 from StoreApp.domains.stores.services.storage import object_url
+from StoreApp.domains.stores.services        import profile_has_benefit
 from .config_fields import StoresFields, CustomizationFields
 from .mixins        import StoreMixinValidator, StoreCreateMixin
 from .validators    import validate_whatsapp, validate_instagram, validate_tiktok, validate_facebook
@@ -96,6 +97,11 @@ class StorePublicSerializer(serializers.ModelSerializer):
     city_name                   =   serializers.CharField(source = 'user.city.name_city', read_only = True)
     province_name               =   serializers.CharField(source = 'user.province.name_province', read_only = True)
     customization               =   StoreCustomizationSerializer(read_only = True)
+    has_design_advanced         =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced']
+    def get_has_design_advanced(self, store):
+        #Solo premium: define si la web muestra portada (carrusel) o el
+        #botón de modo claro/oscuro para el visitante en el nav.
+        return profile_has_benefit(store.user, 'has_design_advanced')
