@@ -123,7 +123,9 @@ class StoreCustomization(models.Model):
     instagram                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Instagram')
     tiktok                      =   models.CharField(max_length = 40, blank = True, verbose_name = 'TikTok')
     facebook                    =   models.CharField(max_length = 60, blank = True, verbose_name = 'Facebook')
-    show_location               =   models.BooleanField(default = True, verbose_name = 'Mostrar mapa de ubicación')
+    #Default off por privacidad: el mapa expone el domicilio del perfil (que
+    #puede ser la casa del dueño) — opt-in consciente desde el dashboard.
+    show_location               =   models.BooleanField(default = False, verbose_name = 'Mostrar mapa de ubicación')
     #Sección "Galería": grilla de imágenes propias del negocio. El dueño
     #decide si aparece (además se oculta sola si no hay imágenes cargadas);
     #el cupo lo fija el beneficio 'max_gallery_images' del plan.
