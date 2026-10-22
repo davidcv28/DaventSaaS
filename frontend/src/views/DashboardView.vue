@@ -1669,6 +1669,7 @@ async function changePassword() {
                 <span class="dp-nav-name" :style="designNameFont">{{ designShopName }}</span>
               </span>
               <span class="dp-nav-links">
+                <span class="dp-nav-item">Inicio</span>
                 <span class="dp-nav-item">Catálogo</span>
                 <span class="dp-nav-item">Contacto</span>
               </span>
@@ -1684,9 +1685,12 @@ async function changePassword() {
                 <span class="dp-btn ghost">Contáctanos</span>
               </div>
             </div>
-            <div v-if="canDesignAdvanced && carouselImages.length" class="dp-carousel">
-              <div class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
-                <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
+            <div v-if="canDesignAdvanced && carouselImages.length" class="dp-catalog">
+              <span class="dp-section-label"><AppIcon name="layout-grid" :size="11" /> Página Catálogo</span>
+              <div class="dp-carousel">
+                <div class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
+                  <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
+                </div>
               </div>
             </div>
             <div v-if="canLocationMap && designForm.show_location" class="dp-map" aria-hidden="true">

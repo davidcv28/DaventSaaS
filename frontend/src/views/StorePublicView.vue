@@ -10,7 +10,7 @@ import { vReveal } from '../directives/reveal.js'
 // es una página aparte (StoreCatalogView) y la tienda la resuelve
 // StorePublicLayout (inject 'storePage').
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, hasDesignAdvanced, hasAbout, showContact } = ctx
+const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact } = ctx
 
 const copied = ref(false)
 const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
@@ -122,67 +122,6 @@ async function submitContact() {
   }
 }
 
-// --- Carrusel de destacados ---
-const carousel = computed(() => custom.value.carousel || [])
-const slide = ref(0)
-// slideEpoch fuerza el remount de la barra de progreso cada vez que el
-// temporizador se reinicia (auto-avance, flechas, dots, hover out, drag).
-const slideEpoch = ref(0)
-let slideTimer = null
-const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-
-function goSlide(index) {
-  const total = carousel.value.length
-  if (!total) return
-  slide.value = ((index % total) + total) % total
-  restartSlideTimer()
-}
-function pauseSlideTimer() {
-  clearInterval(slideTimer)
-  slideTimer = null
-}
-function restartSlideTimer() {
-  pauseSlideTimer()
-  slideEpoch.value += 1
-  if (carousel.value.length > 1 && !reduceMotion) {
-    slideTimer = setInterval(() => { slide.value = (slide.value + 1) % carousel.value.length }, 5000)
-  }
-}
-
-// Arrastre: el track sigue el puntero y al soltar hace snap a la imagen
-// siguiente/anterior si se supera el umbral. Sirve táctil y mouse.
-const carouselEl = ref(null)
-const dragging = ref(false)
-const dragX = ref(0)
-let dragStartX = 0
-const trackStyle = computed(() => ({
-  transform: `translateX(calc(-${slide.value * 100}% + ${dragX.value}px))`,
-  transition: dragging.value ? 'none' : ''
-}))
-function onSlideDragStart(event) {
-  if (carousel.value.length < 2 || event.target.closest('button')) return
-  dragging.value = true
-  dragStartX = event.clientX
-  dragX.value = 0
-  event.currentTarget.setPointerCapture?.(event.pointerId)
-  pauseSlideTimer()
-}
-function onSlideDragMove(event) {
-  if (!dragging.value) return
-  dragX.value = event.clientX - dragStartX
-}
-function onSlideDragEnd() {
-  if (!dragging.value) return
-  dragging.value = false
-  const width = carouselEl.value?.clientWidth || 1
-  const threshold = Math.min(80, width * 0.15)
-  const total = carousel.value.length
-  if (dragX.value <= -threshold) slide.value = (slide.value + 1) % total
-  else if (dragX.value >= threshold) slide.value = (slide.value - 1 + total) % total
-  dragX.value = 0
-  restartSlideTimer()
-}
-
 async function share() {
   try {
     await navigator.clipboard.writeText(window.location.href)
@@ -200,14 +139,11 @@ const onKey = (e) => {
 }
 
 onMounted(() => {
-  document.title = shopName.value
-  restartSlideTimer()
   if (showContact.value) loadCaptcha()
   window.addEventListener('keydown', onKey)
 })
 
 onBeforeUnmount(() => {
-  clearInterval(slideTimer)
   window.removeEventListener('keydown', onKey)
 })
 </script>
@@ -241,33 +177,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Carrusel de destacados (premium): queda debajo de la banda -->
-    <div v-if="hasDesignAdvanced && carousel.length" class="sp-container sp-hero-carousel">
-      <div v-reveal class="sp-banner">
-        <div ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
-          <div class="sp-carousel-track" :style="trackStyle">
-            <img v-for="(img, i) in carousel" :key="img.id" class="sp-carousel-img" :class="{ active: i === slide }" :src="img.url" alt="" draggable="false" />
-          </div>
-          <template v-if="carousel.length > 1">
-            <button type="button" class="sp-carousel-arrow prev" aria-label="Imagen anterior" @click="goSlide(slide - 1)">
-              <AppIcon name="chevron-left" :size="20" />
-            </button>
-            <button type="button" class="sp-carousel-arrow next" aria-label="Imagen siguiente" @click="goSlide(slide + 1)">
-              <AppIcon name="chevron-right" :size="20" />
-            </button>
-            <div class="sp-carousel-dots" role="group" aria-label="Imágenes del carrusel">
-              <button
-                v-for="(img, i) in carousel" :key="img.id" type="button"
-                class="sp-carousel-dot" :class="{ active: i === slide }"
-                :aria-label="`Ir a la imagen ${i + 1}`" :aria-current="i === slide"
-                @click="goSlide(i)"
-              ></button>
-            </div>
-            <span v-if="!reduceMotion" :key="`${slide}-${slideEpoch}`" class="sp-slide-progress" aria-hidden="true"></span>
-          </template>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->
