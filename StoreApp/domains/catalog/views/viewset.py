@@ -96,6 +96,17 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
             response.data['item']   =   ProductSerializerList(product).data
             response.data['storage']    =   storage_payload(product.store, store.user)
         return response
+    def destroy(self, request, pk = None):
+        denied  =   self._deny_without_catalog()
+        if denied: return denied
+        instance    =   self.get_object()
+        store       =   instance.store
+        self.perform_destroy(instance)
+        # Devuelve la cuota actualizada para que el medidor se refresque sin recargar.
+        return Response(
+            {'Exito': 'El producto se eliminó.', 'storage': storage_payload(store, store.user)},
+            status = status.HTTP_200_OK,
+        )
     def perform_destroy(self, instance):
         # Libera la imagen (R2 + cuota) antes de borrar el registro.
         if instance.image_key:

@@ -36,6 +36,7 @@ import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
 import PasswordStrength from '../components/PasswordStrength.vue'
+import StorageMeter from '../components/StorageMeter.vue'
 import AppIcon from '../components/AppIcon.vue'
 
 const router = useRouter()
@@ -431,6 +432,7 @@ async function saveProduct() {
   })
   productBusy.value = false
   if (res.ok) {
+    if (res.storage) store.storage = res.storage
     if (res.imageError) catalog.notice = `${res.imageError} (el producto se guardó sin imagen nueva).`
     resetProductForm()
   }
@@ -439,8 +441,9 @@ async function saveProduct() {
 async function removeProduct(p) {
   if (productBusy.value) return
   productBusy.value = true
-  await catalog.removeProduct(p.id)
+  const res = await catalog.removeProduct(p.id)
   productBusy.value = false
+  if (res?.storage) store.storage = res.storage
   if (productEditing.value === p.id) resetProductForm()
 }
 
@@ -1073,6 +1076,11 @@ async function changePassword() {
         <div class="stat"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong>{{ plan?.remaining ?? '—' }}</strong><small>Días restantes</small></div></div>
       </div>
 
+      <div v-if="store.hasStore" class="card">
+        <h3><AppIcon name="image" :size="18" /> Almacenamiento</h3>
+        <StorageMeter />
+      </div>
+
       <div class="card">
         <h3><AppIcon name="checklist" :size="18" /> Próximos pasos</h3>
         <ol class="steps-list">
@@ -1196,6 +1204,7 @@ async function changePassword() {
 
             <div class="card">
               <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
+              <StorageMeter />
               <p v-if="!catalog.products.length" class="hint">Todavía no cargaste productos. Completá el formulario para publicar el primero.</p>
               <template v-else>
                 <label class="prod-search">

@@ -124,12 +124,37 @@ def storage_limit_bytes(profile):
         return 0
     max_mb          =   benefits['max_storage_mb']
     return None if max_mb is None else max_mb * 1024 * 1024
+def image_limit(profile):
+    """Tope de imágenes del plan vigente (max_images). None = ilimitado, 0 = sin cuota."""
+    benefits        =   plan_benefits_of(profile)
+    if 'max_images' not in benefits:
+        return 0
+    return benefits['max_images']
+def image_count(store):
+    """Cantidad de imágenes que ocupan cuota: logo + carrusel + productos."""
+    count           =   store.carousel_images.count() + store.products.exclude(image_key = '').count()
+    customization   =   getattr(store, 'customization', None)
+    if customization and customization.logo_key:
+        count       +=  1
+    return count
+def _check_image_slot(store, is_new):
+    """
+    Verifica el tope max_images del plan al subir una imagen nueva
+    (reemplazar una existente no suma al contador). Lanza ValueError es-AR.
+    """
+    if not is_new:
+        return
+    limit       =   image_limit(store.user)
+    if limit is not None and image_count(store) >= limit:
+        raise ValueError(f'Tu plan admite hasta {limit} imágenes. Borrá alguna o pasá a un plan superior.')
 def storage_payload(store, profile):
-    """Resumen de cuota para respuestas de la API ({used_bytes, max_mb})."""
+    """Resumen de cuota para respuestas de la API ({used_bytes, max_mb, images, max_images})."""
     limit           =   storage_limit_bytes(profile)
     return {
         'used_bytes'    :   store.storage_used_bytes,
         'max_mb'        :   None if limit is None else limit // (1024 * 1024),
+        'images'        :   image_count(store),
+        'max_images'    :   image_limit(profile),
     }
 def _check_quota(store, incoming_bytes, replacing_bytes = 0):
     """
@@ -181,6 +206,7 @@ def upload_logo(customization, upload):
     if error:
         raise ValueError(error)
     store       =   customization.store
+    _check_image_slot(store, is_new = not customization.logo_key)
     new_used    =   _check_quota(store, upload.size, replacing_bytes = customization.logo_size)
     key         =   _put_object(store, 'logo', upload)
     old_key     =   customization.logo_key
@@ -223,6 +249,7 @@ def upload_carousel_image(store, upload):
         raise ValueError(error)
     if store.carousel_images.count() >= CAROUSEL_MAX_IMAGES:
         raise ValueError(f'El carrusel admite hasta {CAROUSEL_MAX_IMAGES} imágenes.')
+    _check_image_slot(store, is_new = True)
     new_used    =   _check_quota(store, upload.size)
     key         =   _put_object(store, 'carousel', upload)
     last        =   store.carousel_images.order_by('-position').first()
@@ -255,6 +282,7 @@ def upload_product_image(product, upload):
     if error:
         raise ValueError(error)
     store       =   product.store
+    _check_image_slot(store, is_new = not product.image_key)
     new_used    =   _check_quota(store, upload.size, replacing_bytes = product.image_size)
     key         =   _put_object(store, 'products', upload)
     old_key     =   product.image_key

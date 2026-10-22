@@ -1,7 +1,8 @@
 import { http } from './http.js'
 
 // Dominio stores (StoreApp):
-// GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization)
+// GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization y
+//                                                   storage: {used_bytes, max_mb, images, max_images})
 // POST /api/stores/                      Bearer {slug} -> claim del link (onboarding)
 // PATCH /api/stores/<pk>/                Bearer {slug?, is_published?} -> renombrar / pausar
 // GET  /api/stores/slug-available/?slug= Bearer   -> {slug, available, reason: invalid|reserved|taken}

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage
 from StoreApp.domains.stores.services.storage import object_url
-from StoreApp.domains.stores.services        import profile_has_benefit
+from StoreApp.domains.stores.services        import profile_has_benefit, storage_payload
 from .config_fields import StoresFields, CustomizationFields
 from .mixins        import StoreMixinValidator, StoreCreateMixin
 from .validators    import validate_whatsapp, validate_instagram, validate_tiktok, validate_facebook
@@ -84,11 +84,15 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
 class StoreSerializerList(serializers.ModelSerializer):
     public_path                 =   serializers.SerializerMethodField()
     customization               =   StoreCustomizationSerializer(read_only = True)
+    storage                     =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['id', 'slug', 'is_published', 'created_at', 'public_path', 'customization']
+        fields                  =   ['id', 'slug', 'is_published', 'created_at', 'public_path', 'customization', 'storage']
     def get_public_path(self, store):
         return f'/{store.slug}'
+    def get_storage(self, store):
+        # Cuota de imágenes del plan vigente ({used_bytes, max_mb, images, max_images}).
+        return storage_payload(store, store.user)
 #=========================================
 # STORE PUBLIC SERIALIZER (datos que ve cualquier visitante)
 #=========================================

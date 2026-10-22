@@ -108,8 +108,11 @@ export const useCatalogStore = defineStore('catalog', () => {
   }
   async function removeProduct(pk) {
     const res = await run(() => catalogApi.deleteProduct(pk), 'El producto se eliminó.')
-    if (res.ok) products.value = products.value.filter((p) => p.id !== pk)
-    return res.ok
+    if (res.ok) {
+      products.value = products.value.filter((p) => p.id !== pk)
+      return { ok: true, storage: res.data?.storage || null }
+    }
+    return { ok: false, storage: null }
   }
 
   function reset() {

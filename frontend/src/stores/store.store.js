@@ -22,6 +22,7 @@ export const useStoreStore = defineStore('store', () => {
     try {
       const rows = await storesApi.listMine()
       store.value = rows[0] || null
+      storage.value = rows[0]?.storage || null
       status.value = 'success'
     } catch (e) {
       status.value = 'error'
@@ -87,7 +88,8 @@ export const useStoreStore = defineStore('store', () => {
     }
   }
 
-  // Cuota de almacenamiento ({used_bytes, max_mb}) devuelta por las acciones de diseño/logo.
+  // Cuota de almacenamiento ({used_bytes, max_mb, images, max_images}):
+  // viaja en /stores/ al cargar y se refresca en cada subida/borrado.
   const storage = ref(null)
 
   function applyCustomizationData(data) {

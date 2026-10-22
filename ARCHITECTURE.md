@@ -396,7 +396,7 @@ StoreCarouselImage        (banners de portada, máx. 5)
 - `services/storage.py` habla con R2 vía su API compatible con S3 (`boto3`, SigV4). Credenciales en `.env`: `S3_API` (endpoint), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` (dominio público del bucket; si falta, las URLs se sirven firmadas con TTL de 7 días).
 - Las keys son `stores/<store_id>/<logo|carousel|products>/<uuid>.<ext>` y se guardan en DB (`logo_key`/`image_key`); `object_url()` las resuelve a `R2_PUBLIC_URL/<key>`.
 - Validación por firma de bytes (PNG/JPG/WebP/GIF): logo ≤2 MB, imágenes ≤4 MB, carrusel ≤5 imágenes.
-- La cuota sale del beneficio `max_storage_mb` del plan vigente; `storage_used_bytes` acumula los bytes del logo + carrusel + productos. Al reemplazar/borrar se libera la cuota del archivo anterior.
+- La cuota sale del beneficio `max_storage_mb` del plan vigente; `storage_used_bytes` acumula los bytes del logo + carrusel + productos. Al reemplazar/borrar se libera la cuota del archivo anterior. Además `max_images` (limit: Básico 120 / Estándar 600 / Premium `None` ilimitado) topea la **cantidad** de archivos (logo + carrusel + productos con imagen) — `_check_image_slot` la fuerza solo al subir una imagen nueva; `storage_payload` devuelve `{used_bytes, max_mb, images, max_images}` y viaja en `GET /stores/` y en cada subida/borrado para el `StorageMeter` del dashboard.
 - Ojo: los servicios mutan la instancia `X.store` propia (no el `store` de la vista). Para devolver `storage` en la respuesta hay que usar `customization.store` / `image.store` / `product.store`, no el `store` resuelto por la vista.
 
 #### API
