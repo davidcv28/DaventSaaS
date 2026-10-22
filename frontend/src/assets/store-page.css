@@ -783,3 +783,6 @@ html { scroll-behavior: smooth; }
 
 /* Nav transparente (cristal); el pie conserva el color sólido de la paleta */
 .sp-top, .store-page[data-store-theme='dark'] .sp-top { background: linear-gradient(180deg, color-mix(in srgb, var(--store-accent-ink) 55%, transparent), color-mix(in srgb, var(--store-accent-ink) 35%, transparent)); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom-color: rgba(255, 255, 255, .16); }
+
+/* Nav apenas translúcido: conserva casi todo el color de la paleta */
+.sp-top, .store-page[data-store-theme='dark'] .sp-top { background: linear-gradient(180deg, color-mix(in srgb, var(--store-accent-ink) 92%, transparent), color-mix(in srgb, var(--store-accent-ink) 82%, #000 8%)); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); border-bottom-color: rgba(255, 255, 255, .12); }
