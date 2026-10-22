@@ -3,6 +3,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { authApi } from '../api/auth.api.js'
 import { validatePassword } from '../validators/auth.validators.js'
+import { extractApiError } from '../api/http.js'
 import AuthLayout from '../components/AuthLayout.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
@@ -10,14 +11,20 @@ import AlertMessage from '../components/AlertMessage.vue'
 import PasswordStrength from '../components/PasswordStrength.vue'
 
 const route = useRoute()
-const form = reactive({ token: '', new_password: '', confirm: '' })
+// El link del correo llega como /reset-password?uid=...&token=...
+const form = reactive({ uid: '', token: '', new_password: '', confirm: '' })
 const touched = reactive({})
 const loading = ref(false)
 const error = ref('')
-const info = ref('')
+const fieldErrors = ref({})
+const success = ref('')
+
+const linkInvalid = ref(false)
 
 onMounted(() => {
-  form.token = route.query.token || route.query.uid || ''
+  form.uid = String(route.query.uid || '')
+  form.token = String(route.query.token || '')
+  linkInvalid.value = !form.uid || !form.token
 })
 
 const passError = computed(() => {
@@ -34,14 +41,25 @@ async function onSubmit() {
   touched.new_password = true
   touched.confirm = true
   error.value = ''
-  info.value = ''
+  fieldErrors.value = {}
+  success.value = ''
   if (passError.value || confirmError.value) return
   loading.value = true
   try {
-    await authApi.confirmPasswordReset({ token: form.token, new_password: form.new_password })
+    const data = await authApi.confirmPasswordReset({
+      uid: form.uid,
+      token: form.token,
+      new_password: form.new_password,
+      confirm_password: form.confirm
+    })
+    success.value = data?.Exito || 'Tu contraseña se actualizó. Ya podés iniciar sesión.'
   } catch (e) {
-    if (e.code === 'PENDING_BACKEND') info.value = e.message
-    else error.value = 'No se pudo restablecer la contraseña.'
+    const { nonField, status: _s, ...fields } = extractApiError(e)
+    fieldErrors.value = fields
+    error.value = nonField || ''
+    // Token inválido/vencido viaja en el campo token del serializer.
+    if (fields.token) error.value = fields.token
+    if (!error.value) error.value = 'No se pudo restablecer la contraseña. Pedí un enlace nuevo.'
   } finally {
     loading.value = false
   }
@@ -51,23 +69,15 @@ async function onSubmit() {
 <template>
   <AuthLayout title="Nueva contraseña" subtitle="Elegí una clave segura para tu cuenta DAVENT.">
     <AlertMessage v-if="error" kind="error" :message="error" />
-    <AlertMessage v-if="info" kind="warn" :message="info" />
+    <AlertMessage v-if="success" kind="success" :message="success" />
 
-    <div class="alert info">
-      <strong>Estado de la API:</strong> falta <span class="mono">POST /api/password-reset/confirm/</span>
-      en Django. El formulario valida en cliente y quedará activo cuando el backend lo implemente.
-    </div>
+    <AlertMessage
+      v-if="linkInvalid && !success"
+      kind="error"
+      message="El enlace está incompleto o es inválido. Pedí uno nuevo desde la recuperación de acceso."
+    />
 
-    <form @submit.prevent="onSubmit" novalidate>
-      <AppInput
-        v-model="form.token"
-        label="Token de recuperación"
-        name="token"
-        placeholder="Pegá el token del email"
-        hint="Normalmente llega como ?token=... en el enlace."
-        :error="touched.token && !form.token ? 'Este campo es obligatorio' : ''"
-        @blur="touched.token = true"
-      />
+    <form v-if="!linkInvalid && !success" @submit.prevent="onSubmit" novalidate>
       <AppInput
         v-model="form.new_password"
         label="Nueva contraseña"
@@ -76,7 +86,7 @@ async function onSubmit() {
         placeholder="Ej. Asdf@123"
         autocomplete="new-password"
         required
-        :error="passError"
+        :error="passError || fieldErrors.new_password || ''"
         @blur="touched.new_password = true"
       />
       <PasswordStrength :value="form.new_password" />
@@ -88,11 +98,17 @@ async function onSubmit() {
         placeholder="Repetir contraseña"
         autocomplete="new-password"
         required
-        :error="confirmError"
+        :error="confirmError || fieldErrors.confirm_password || ''"
         @blur="touched.confirm = true"
       />
       <AppButton :loading="loading">Guardar nueva contraseña</AppButton>
     </form>
+
+    <AlertMessage
+      v-if="!linkInvalid && !success"
+      kind="info"
+      message="Al cambiar la contraseña se cierran todas tus sesiones abiertas en otros dispositivos."
+    />
 
     <div class="auth-links">
       <RouterLink to="/login">Volver al login</RouterLink>

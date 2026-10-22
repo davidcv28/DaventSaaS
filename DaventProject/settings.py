@@ -69,6 +69,8 @@ REST_FRAMEWORK = {
         'token_refresh': '120/hour',
         #Formulario de contacto de las webs públicas (antispam por IP).
         'store_contact': '10/hour',
+        #Reset de contraseña por correo (por IP; la respuesta es genérica).
+        'password_reset': '5/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',

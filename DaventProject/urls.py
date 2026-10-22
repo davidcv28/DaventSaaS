@@ -29,6 +29,8 @@ from AdminApp.domains.users.views.auth_views import (
     CustomTokenObtainPairView,
     CookieTokenRefreshView,
     TokenLogoutView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
@@ -53,6 +55,11 @@ urlpatterns = [
     path('api/token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/logout/', TokenLogoutView.as_view(), name='token_logout'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    #=================================
+    # CUENTA (reset de contraseña + verificación de correo)
+    #=================================
+    path('api/password-reset/', PasswordResetRequestView.as_view(), name='password_reset'),
+    path('api/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 ]
 
 # Solo en desarrollo: el schema OpenAPI y los docs interactivos exponen la

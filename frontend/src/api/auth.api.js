@@ -11,6 +11,9 @@ import { http } from './http.js'
 // PUT  /api/profile/me/       UserProfileSerializer — el validate() del backend exige
 //                             el set completo (tax_condition, document, province, city…)
 // POST /api/password_update/  {old_password, new_password, confirm_password}
+// POST /api/password-reset/   {email} -> 200 genérico (anti-enumeración)
+// POST /api/password-reset/confirm/ {uid, token, new_password, confirm_password}
+// GET  /api/verify-email/     ?uid&token -> backend marca y redirige al frontend
 
 export const authApi = {
   async login({ username, password }) {
@@ -92,25 +95,23 @@ export const authApi = {
     return data
   },
 
-  // --- Recuperación: SIN backend (DaventProject no tiene endpoints) ---
-  // Se dejan cableadas para cuando exista POST /password-reset/ y /password-reset/confirm/.
-  // Hoy lanzan PENDING_BACKEND y las vistas muestran modo informativo (FRONTEND_RULES §3.6).
-  async requestPasswordReset(_email) {
-    const err = new Error(
-      'La recuperación por email aún no está habilitada en la API. ' +
-        'Cuando el backend exponga POST /api/password-reset/, este formulario se activará automáticamente.'
-    )
-    err.code = 'PENDING_BACKEND'
-    throw err
+  // --- Recuperación por correo (backend real desde users/auth_views.py) ---
+  // La respuesta de /password-reset/ es siempre genérica: no revela si el
+  // correo existe (anti-enumeración). El link llega como
+  // {FRONTEND_URL}/reset-password?uid=...&token=...
+  async requestPasswordReset(email) {
+    const { data } = await http.post('/password-reset/', { email })
+    return data
   },
 
-  async confirmPasswordReset(_payload) {
-    const err = new Error(
-      'El reseteo con token aún no está habilitado en la API. ' +
-        'Cuando el backend exponga POST /api/password-reset/confirm/, este formulario se activará.'
-    )
-    err.code = 'PENDING_BACKEND'
-    throw err
+  async confirmPasswordReset({ uid, token, new_password, confirm_password }) {
+    const { data } = await http.post('/password-reset/confirm/', {
+      uid,
+      token,
+      new_password,
+      confirm_password
+    })
+    return data
   }
 }
 

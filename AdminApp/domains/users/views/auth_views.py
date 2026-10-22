@@ -11,6 +11,15 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from AdminApp.domains.users.serializers import (
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
+)
+from AdminApp.domains.users.services import (
+    RequestPasswordResetQuery,
+    ConfirmPasswordResetQuery,
+)
+
 # Sesión web: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ — el
 # JavaScript del cliente jamás lo lee (anti-robo por XSS) y solo viaja a los
 # endpoints de token. El ACCESS va en el body y vive solo en memoria del tab.
@@ -29,6 +38,10 @@ class LoginRateThrottle(AnonRateThrottle):
 class RefreshRateThrottle(AnonRateThrottle):
     """Scope 'token_refresh' (settings): acota el brute-force del cookie."""
     scope = 'token_refresh'
+
+class PasswordResetRateThrottle(AnonRateThrottle):
+    """Scope 'password_reset' (settings): frena el abuso del envío de correos."""
+    scope = 'password_reset'
 
 
 def _secure():
@@ -136,3 +149,39 @@ class TokenLogoutView(APIView):
         response = Response({'Exito': 'Sesión cerrada'}, status = status.HTTP_200_OK)
         _clear_session_cookies(response)
         return response
+
+
+# Respuesta única del request de reseteo: nunca revela si el correo existe
+# (anti-enumeración de usuarios — el mail solo sale si la cuenta existe).
+RESET_RESPONSE  =   'Si el correo está registrado, te va a llegar un enlace para restablecer tu contraseña.'
+
+class PasswordResetRequestView(APIView):
+    """
+    POST /api/password-reset/ {email}: genera uid+token firmados y manda el
+    mail con el link al frontend. Siempre responde 200 con mensaje genérico.
+    """
+    permission_classes  =   [AllowAny]
+    throttle_classes    =   [PasswordResetRateThrottle]
+
+    def post(self, request):
+        serializer  =   PasswordResetRequestSerializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+        RequestPasswordResetQuery(serializer.validated_data['email'])
+        return Response({'Exito': RESET_RESPONSE}, status = status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST /api/password-reset/confirm/ {uid, token, new_password, confirm_password}:
+    valida el token (vencimiento = PASSWORD_RESET_TIMEOUT), aplica la policy de
+    contraseñas, setea la clave y blacklista todos los refresh del usuario —
+    cierra todas sus sesiones abiertas.
+    """
+    permission_classes  =   [AllowAny]
+    throttle_classes    =   [PasswordResetRateThrottle]
+
+    def post(self, request):
+        serializer  =   PasswordResetConfirmSerializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+        ConfirmPasswordResetQuery(serializer.validated_data['user'], serializer.validated_data['new_password'])
+        return Response({'Exito': 'Tu contraseña se actualizó. Ya podés iniciar sesión con la clave nueva.'}, status = status.HTTP_200_OK)

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { authApi } from '../api/auth.api.js'
 import { validateEmail } from '../validators/auth.validators.js'
+import { extractApiError } from '../api/http.js'
 import AuthLayout from '../components/AuthLayout.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
@@ -11,25 +12,20 @@ const email = ref('')
 const touched = ref(false)
 const loading = ref(false)
 const error = ref('')
-const info = ref('')
+const success = ref('')
 
 async function onSubmit() {
   touched.value = true
   error.value = ''
-  info.value = ''
+  success.value = ''
   const v = validateEmail(email.value)
   if (v) return
   loading.value = true
   try {
-    await authApi.requestPasswordReset(email.value.trim())
+    const data = await authApi.requestPasswordReset(email.value.trim())
+    success.value = data?.Exito || 'Si el correo está registrado, te va a llegar un enlace para restablecer tu contraseña.'
   } catch (e) {
-    // Modo pending-backend (FRONTEND_RULES §3.6): el backend aún no tiene endpoint.
-    // Mostramos panel informativo en lugar de fingir éxito.
-    if (e.code === 'PENDING_BACKEND') {
-      info.value = e.message
-    } else {
-      error.value = e.response?.data?.detail || 'No se pudo procesar la solicitud.'
-    }
+    error.value = extractApiError(e).nonField || 'No se pudo procesar la solicitud. Reintentá en unos minutos.'
   } finally {
     loading.value = false
   }
@@ -39,15 +35,9 @@ async function onSubmit() {
 <template>
   <AuthLayout title="Recuperá tu acceso" subtitle="Te enviamos un enlace para restablecer tu contraseña.">
     <AlertMessage v-if="error" kind="error" :message="error" />
-    <AlertMessage v-if="info" kind="warn" :message="info" />
+    <AlertMessage v-if="success" kind="success" :message="success" />
 
-    <AlertMessage kind="info">
-      <strong>Esta función todavía no está disponible.</strong> El envío del enlace de
-      recuperación se activa próximamente. Mientras tanto, si tenés acceso a tu cuenta,
-      podés cambiar tu contraseña desde <em>Cuenta</em> en tu panel.
-    </AlertMessage>
-
-    <form @submit.prevent="onSubmit" novalidate>
+    <form v-if="!success" @submit.prevent="onSubmit" novalidate>
       <AppInput
         v-model="email"
         label="Correo electrónico"
@@ -61,6 +51,8 @@ async function onSubmit() {
       />
       <AppButton :loading="loading">Enviar enlace</AppButton>
     </form>
+
+    <AlertMessage v-if="!success" kind="info" message="El enlace vence a las 72 horas. Si no ves el correo, revisá la carpeta de spam." />
 
     <div class="auth-links">
       <RouterLink to="/login">Volver al login</RouterLink>

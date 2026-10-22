@@ -2,6 +2,11 @@
 from rest_framework import serializers
 from AdminApp.domains.users.models import UserProfile
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from .mixins import (
     #USER MODEL MIXINS
     UsersValidatorsMixins, UserPasswordUpdateMethod, UserPasswordValidateMixin, UserUpdateMethod,
@@ -77,6 +82,45 @@ class UserUpdatePasswordSerializer(UserPasswordValidateMixin,UserPasswordUpdateM
     old_password        =   serializers.CharField(**UserPasswordFieldsConfig['old_password'])
     new_password        =   serializers.CharField(**UserPasswordFieldsConfig['new_password'])
     confirm_password    =   serializers.CharField(**UserPasswordFieldsConfig['confirm_password'])
+
+#=============================
+# PASSWORD RESET SERIALIZERS
+#=============================
+#REQUEST: pide el link por correo (la respuesta de la vista es siempre genérica)
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email               =   serializers.EmailField()
+
+#CONFIRM: valida uid+token firmado, policy de password y resuelve el User
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid                 =   serializers.CharField()
+    token               =   serializers.CharField()
+    new_password        =   serializers.CharField(trim_whitespace = False)
+    confirm_password    =   serializers.CharField(trim_whitespace = False)
+
+    def validate(self, attrs):
+        errors  =   {}
+        try:
+            uid     =   force_str(urlsafe_base64_decode(attrs['uid']))
+            user    =   User.objects.get(pk = uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user    =   None
+        if user is None or not default_token_generator.check_token(user, attrs['token']):
+            errors['token']             =   'El enlace es inválido o ya venció. Pedí uno nuevo.'
+        if attrs['new_password'] != attrs['confirm_password']:
+            errors['confirm_password']  =   'Las contraseñas no coinciden'
+        #Policy de contraseña de Django (AUTH_PASSWORD_VALIDATORS), igual que
+        #exige el frontend: largo, no común, no numérica, no similar al usuario.
+        if user is not None:
+            try:
+                validate_password(attrs['new_password'], user = user)
+            except DjangoValidationError as exc:
+                errors['new_password']  =   exc.messages
+        if errors:
+            raise serializers.ValidationError(errors)
+        attrs['user']   =   user
+        attrs.pop('confirm_password')
+        attrs.pop('token')
+        return attrs
 
 #=============================
 # REGISTER USER SERIALIZER
