@@ -6,15 +6,19 @@ import { http } from './http.js'
 // PATCH /api/stores/<pk>/                Bearer {slug?, is_published?} -> renombrar / pausar
 // GET  /api/stores/slug-available/?slug= Bearer   -> {slug, available, reason: invalid|reserved|taken}
 // GET  /api/stores/public/<slug>/        público  -> {slug, business_name, city_name, province_name, customization,
-//                                                   has_design_advanced} — sin has_design_advanced la web no muestra
-//                                                   portada y expone un toggle claro/oscuro al visitante en el nav
+//                                                   has_design_advanced, location_address} — sin has_design_advanced
+//                                                   la web no muestra portada y expone un toggle claro/oscuro
+//                                                   al visitante en el nav; location_address es null sin
+//                                                   has_location_map (Estándar+) o si el dueño apagó el mapa
+//                                                   (customization.show_location)
 // GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products} (?q=&category=&brand=)
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
-//                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?}
+//                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?, show_location?}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
-//                                           name_font, name_font_size y accent del payload
+//                                           name_font, name_font_size y accent del payload; sin
+//                                           'has_location_map' (Estándar+) descarta show_location
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/logo/ Bearer   -> quita el logo y libera la cuota
@@ -140,6 +144,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   instagram: '',
   tiktok: '',
   facebook: '',
+  show_location: true,
   logo: null,
   carousel: []
 }

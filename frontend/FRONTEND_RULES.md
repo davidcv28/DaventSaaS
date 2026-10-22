@@ -59,8 +59,8 @@ frontend/
 | Rollups admin | `GET /daily-revenues/` + `GET /monthly-revenues/` | `Bearer` solo staff (403 al resto) | listas de rollups |
 | Denuncia contenido | `POST /content-reports/` | `{reporter_name,reporter_email,kind,reported_url,original_work,description,good_faith}` público (AllowAny) | `201 {Exito}` |
 | Mi tienda | `GET /stores/` | `Bearer` | `[{id,slug,is_published,created_at,public_path,customization}]` (0..1) |
-| Diseño web | `GET/PATCH /stores/customization/` | `Bearer {headline?,description?,theme?,accent?,whatsapp?,instagram?}` | `200 {Exito,customization}` · 403 sin `has_customization` · sin `has_design_advanced` se descartan `name_font/name_font_size/accent` |
-| Tienda pública | `GET /stores/public/<slug>/` | público | `{slug,business_name,city_name,province_name,customization}` · 404 si pausada |
+| Diseño web | `GET/PATCH /stores/customization/` | `Bearer {headline?,description?,theme?,accent?,whatsapp?,instagram?,show_location?}` | `200 {Exito,customization}` · 403 sin `has_customization` · sin `has_design_advanced` se descartan `name_font/name_font_size/accent` · sin `has_location_map` se descarta `show_location` |
+| Tienda pública | `GET /stores/public/<slug>/` | público | `{slug,business_name,city_name,province_name,customization,location_address}` · 404 si pausada · `location_address` null sin `has_location_map` (Estándar+) o con el mapa apagado |
 | Recuperacion | **NO EXISTE en backend** | — | UI en modo `pending-backend` |
 
 > Hallazgos senior: `DaventProject/urls.py` hoy monta `suscriptions` + `users` + `locations` + JWT.

@@ -207,6 +207,14 @@
 .sp-empty strong { font-size: 16px; }
 .sp-empty p { margin: 0 0 8px; color: var(--sp-muted); font-size: 14px; max-width: 46ch; }
 
+/* --- Ubicación (mapa embebido, premium) --- */
+.sp-map { padding-bottom: 56px; }
+.sp-map-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 20px; flex-wrap: wrap; margin-bottom: 16px; }
+.sp-map-address { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13.5px; color: var(--sp-muted); }
+.sp-map-address .icon { flex: none; color: var(--sp-accent-text); }
+.sp-map-frame { border: 1px solid var(--sp-line); border-radius: var(--sp-radius); overflow: hidden; background: var(--sp-surface); box-shadow: var(--sp-shadow-md); }
+.sp-map-frame iframe { display: block; width: 100%; height: 340px; border: 0; }
+
 /* --- Pie --- */
 .sp-foot { border-top: 1px solid var(--sp-line); background: var(--sp-surface); padding: 56px 0 calc(24px + env(safe-area-inset-bottom)); }
 .sp-foot-grid { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 48px; padding-bottom: 40px; }

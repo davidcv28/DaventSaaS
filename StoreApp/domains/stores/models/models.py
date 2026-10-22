@@ -103,6 +103,7 @@ class StoreCustomization(models.Model):
     instagram                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Instagram')
     tiktok                      =   models.CharField(max_length = 40, blank = True, verbose_name = 'TikTok')
     facebook                    =   models.CharField(max_length = 60, blank = True, verbose_name = 'Facebook')
+    show_location               =   models.BooleanField(default = True, verbose_name = 'Mostrar mapa de ubicación')
     updated_at                  =   models.DateTimeField(auto_now = True)
     class Meta:
         app_label               =   'stores'

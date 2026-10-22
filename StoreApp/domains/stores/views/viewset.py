@@ -29,6 +29,9 @@ Viewsets del dominio Stores.
 #request, así el resto del formulario (contenido, logo y tema) se guarda
 #igual y los valores ya guardados quedan intactos.
 DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
+#El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
+#y Premium): se descarta igual que los campos premium, por separado.
+LOCATION_FIELDS         =   ('show_location',)
 #=========================================
 # STORE VIEWSET
 #=========================================
@@ -117,9 +120,14 @@ class StoreViewSet(StoreBaseViewSet):
         if request.method == 'GET':
             return Response(StoreCustomizationSerializer(customization).data, status = status.HTTP_200_OK)
         data            =   request.data
+        discard         =   []
         if not profile_has_benefit(store.user, 'has_design_advanced'):
+            discard.extend(DESIGN_ADVANCED_FIELDS)
+        if not profile_has_benefit(store.user, 'has_location_map'):
+            discard.extend(LOCATION_FIELDS)
+        if discard:
             data        =   request.data.copy()
-            for field in DESIGN_ADVANCED_FIELDS:
+            for field in discard:
                 data.pop(field, None)
         serializer        =   StoreCustomizationSerializer(customization, data = data, partial = (request.method == 'PATCH'))
         serializer.is_valid(raise_exception = True)

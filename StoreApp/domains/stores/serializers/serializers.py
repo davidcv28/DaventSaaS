@@ -48,7 +48,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         model                   =   StoreCustomization
         fields                  =   [
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
-            'whatsapp', 'instagram', 'tiktok', 'facebook', 'logo', 'carousel', 'updated_at',
+            'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'logo', 'carousel', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
     def get_logo(self, customization):
@@ -98,10 +98,29 @@ class StorePublicSerializer(serializers.ModelSerializer):
     province_name               =   serializers.CharField(source = 'user.province.name_province', read_only = True)
     customization               =   StoreCustomizationSerializer(read_only = True)
     has_design_advanced         =   serializers.SerializerMethodField()
+    location_address            =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'location_address']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
         return profile_has_benefit(store.user, 'has_design_advanced')
+    def get_location_address(self, store):
+        #Dirección lista para geocodificar (mapa embebido, has_location_map):
+        #None si el dueño la apagó en Diseño web o no tiene domicilio cargado.
+        customization         =   getattr(store, 'customization', None)
+        if not customization or not customization.show_location:
+            return None
+        if not profile_has_benefit(store.user, 'has_location_map'):
+            return None
+        user                  =   store.user
+        if not user.address:
+            return None
+        parts                 =   [user.address]
+        if user.city:
+            parts.append(user.city.name_city)
+        if user.province:
+            parts.append(user.province.name_province)
+        parts.append('Argentina')
+        return ', '.join(parts)

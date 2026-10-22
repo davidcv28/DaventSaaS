@@ -524,6 +524,7 @@ const designTouched = reactive({})
 const designBusy = ref(false)
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
+const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
@@ -579,6 +580,8 @@ async function saveDesign() {
       accent: designForm.accent
     })
   }
+  // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
+  if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   await store.saveCustomization(payload)
   designBusy.value = false
 }
@@ -1488,6 +1491,19 @@ async function changePassword() {
               </div>
               <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
             </div>
+            <div class="field" :class="{ locked: !canLocationMap }">
+              <label id="design-location-label">Mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Estándar</span></label>
+              <label class="check">
+                <input
+                  v-model="designForm.show_location"
+                  type="checkbox"
+                  :disabled="!canLocationMap"
+                  aria-labelledby="design-location-label"
+                />
+                <span>Mostrar en tu web un mapa con la ubicación de tu negocio</span>
+              </label>
+              <p class="hint">Usa el domicilio de tu cuenta{{ accountForm.address ? ` (${accountForm.address})` : '' }}. Podés actualizarlo desde "Mi cuenta".</p>
+            </div>
           </div>
         </div>
 
@@ -1516,6 +1532,9 @@ async function changePassword() {
                 <span v-if="designForm.tiktok" class="dp-btn ghost">TikTok</span>
                 <span v-if="designForm.facebook" class="dp-btn ghost">Facebook</span>
               </div>
+            </div>
+            <div v-if="canLocationMap && designForm.show_location" class="dp-map" aria-hidden="true">
+              <AppIcon name="map-pin" :size="13" /> Mapa con la ubicación de tu negocio
             </div>
           </div>
           <AppButton :loading="designBusy" @click="saveDesign">Guardar diseño</AppButton>

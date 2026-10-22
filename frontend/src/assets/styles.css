@@ -631,6 +631,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 .dp-cta { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
 .dp-btn { font-size: 11.5px; font-weight: 600; padding: 6px 14px; border-radius: 99px; background: var(--store-accent); color: #fff; }
 .dp-btn.ghost { background: var(--sp-card); color: var(--sp-ink-2); border: 1px solid var(--sp-line); }
+/* Tira que indica el mapa de ubicación en la vista previa del diseño. */
+.dp-map { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 18px 16px; padding: 10px; border: 1px dashed var(--sp-line); border-radius: 10px; background: var(--sp-soft); font-size: 11.5px; color: var(--sp-muted); }
+.dp-map .icon { color: var(--store-accent); }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }

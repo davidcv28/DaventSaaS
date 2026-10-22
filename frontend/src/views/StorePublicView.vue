@@ -50,6 +50,16 @@ const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
 const location = computed(() => [store.value?.city_name, store.value?.province_name].filter(Boolean).join(', '))
 const year = new Date().getFullYear()
 
+// Mapa de ubicación (beneficio has_location_map, Estándar y Premium): el
+// backend devuelve location_address ya armada para geocodificar, o null si
+// el dueño lo apagó en Diseño web.
+const mapAddress = computed(() => store.value?.location_address || '')
+const mapUrl = computed(() => (
+  mapAddress.value
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(mapAddress.value)}&output=embed&z=16`
+    : ''
+))
+
 const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
 const instagramUrl = computed(() => (custom.value.instagram ? `https://instagram.com/${custom.value.instagram}` : ''))
 const tiktokUrl = computed(() => (custom.value.tiktok ? `https://tiktok.com/@${custom.value.tiktok}` : ''))
@@ -437,6 +447,25 @@ onBeforeUnmount(() => {
           </section>
         </div>
       </main>
+
+      <!-- ===== Ubicación (premium, apagable desde Diseño web) ===== -->
+      <section v-if="mapUrl" class="sp-map" aria-labelledby="sp-map-title">
+        <div class="sp-container">
+          <div class="sp-map-head">
+            <h2 id="sp-map-title" class="sp-section-title">Dónde estamos</h2>
+            <p class="sp-map-address"><AppIcon name="map-pin" :size="14" /> {{ mapAddress }}</p>
+          </div>
+          <div class="sp-map-frame">
+            <iframe
+              :src="mapUrl"
+              title="Mapa con la ubicación del negocio"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      </section>
     </template>
 
     <!-- ===== Detalle de producto ===== -->
