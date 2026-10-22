@@ -2126,7 +2126,7 @@ async function changePassword() {
           <AlertMessage v-if="geoNotice" kind="warn" :message="geoNotice" />
           <AlertMessage v-if="geoErr" kind="error" :message="geoErr" />
           <form class="form-top" @submit.prevent="saveAccount" novalidate>
-            <AppInput v-model="accountForm.email" label="Correo electrónico" name="acc_email" type="email" autocomplete="email" placeholder="Ej. alfredito2026@outlook.com" hint="Solo: gmail, hotmail, outlook, yahoo, live." required :error="accountFieldErr('email')" @blur="accountTouched.email = true" />
+            <AppInput v-model="accountForm.email" label="Correo electrónico" name="acc_email" type="email" autocomplete="email" placeholder="Ej. alfredito2026@outlook.com" hint="Si lo cambiás, tenés que verificar el nuevo correo." required :error="accountFieldErr('email')" @blur="accountTouched.email = true" />
             <div class="grid-2">
               <AppInput v-model="accountForm.first_name" label="Nombre" name="acc_first_name" autocomplete="given-name" placeholder="Escribe tu nombre" required :error="accountFieldErr('first_name')" @blur="accountTouched.first_name = true" />
               <AppInput v-model="accountForm.last_name" label="Apellido/s" name="acc_last_name" autocomplete="family-name" placeholder="Escribe tu/s apellido/s" required :error="accountFieldErr('last_name')" @blur="accountTouched.last_name = true" />

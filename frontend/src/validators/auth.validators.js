@@ -1,7 +1,6 @@
 // Espejo de validadores Django (users/serializers/{validators,mixins,operations}.py).
 // Si backend cambia, cambiar aquí también (FRONTEND_RULES §4).
 
-export const ALLOWED_EMAIL_DOMAINS = ['@gmail.com', '@hotmail.com', '@outlook.com', '@yahoo.com', '@live.com']
 export const CUIT_PREFIXES = ['20', '23', '24', '27', '30', '33', '34']
 export const TAX_CONDITIONS = [
   { value: 'CF', label: 'Consumidor Final' },
@@ -24,9 +23,6 @@ export function validateEmail(v = '') {
   const s = v.trim()
   if (!s) return 'Este campo es obligatorio'
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return 'Ingresa un correo válido'
-  if (!ALLOWED_EMAIL_DOMAINS.some((d) => s.toLowerCase().endsWith(d))) {
-    return 'El dominio del correo ingresado no es válido (usa gmail, hotmail, outlook, yahoo o live)'
-  }
   return null
 }
 

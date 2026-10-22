@@ -180,7 +180,7 @@ const step3Errors = computed(() => validateStep3())
     <form @submit.prevent="step === 3 ? onSubmit() : next()" novalidate>
       <div v-show="step === 1">
         <AppInput v-model="form.username" label="Nombre de usuario" name="username" placeholder="Ej. alfredo27" required :error="err('username', step1Errors.username)" @blur="touched.username = true" />
-        <AppInput v-model="form.email" label="Correo electrónico" name="email" type="email" placeholder="Ej. alfredito2026@outlook.com" hint="Solo: gmail, hotmail, outlook, yahoo, live." required :error="err('email', step1Errors.email)" @blur="touched.email = true" />
+        <AppInput v-model="form.email" label="Correo electrónico" name="email" type="email" placeholder="Ej. alfredito2026@outlook.com" hint="Usá un correo real: te llega el link de verificación." required :error="err('email', step1Errors.email)" @blur="touched.email = true" />
         <AppInput v-model="form.password" label="Contraseña" name="password" type="password" placeholder="Ej. Asdf@123" hint="Mínimo 8: minúscula, mayúscula, número y especial." required :error="err('password', step1Errors.password)" @blur="touched.password = true" />
         <PasswordStrength :value="form.password" />
         <AppInput v-model="form.confirm_password" label="Confirmar contraseña" name="confirm_password" type="password" placeholder="Repetir contraseña" required :error="err('confirm_password', step1Errors.confirm_password)" @blur="touched.confirm_password = true" />

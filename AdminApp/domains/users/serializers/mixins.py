@@ -37,18 +37,11 @@ class UsersValidatorsMixins:
     def validate_email(self, value):
         email_val       =   value.strip()
         queryset        =   User.objects.filter(email = email_val)
-        allow_domains   =   ['@gmail.com', '@hotmail.com', '@outlook.com', '@yahoo.com', '@live.com']
-        domain_exist    =   False
         errors          =   []
         if self.instance:
             queryset    =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
             errors.append('El correo ingresado ya se encuentra en uso')
-        for domain in allow_domains:
-            if email_val.endswith(domain):
-                domain_exist    =   True
-        if not domain_exist:
-            errors.append('El dominio del correo ingresado no es valido')
         if errors:
             raise serializers.ValidationError(errors)
         return email_val
