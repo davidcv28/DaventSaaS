@@ -262,6 +262,54 @@ const selectedTags = computed(() => {
 
 const onKey = (e) => { if (e.key === 'Escape') { menuOpen.value = false; closeProduct() } }
 
+// --- Movimiento: revelado al hacer scroll, barra de progreso, header con
+// estado "scrolled" y foco de luz que sigue al puntero sobre las tarjetas.
+// Todo se desactiva con prefers-reduced-motion. ---
+const scrolled = ref(false)
+const progress = ref(0)
+let ticking = false
+function onScroll() {
+  if (ticking) return
+  ticking = true
+  requestAnimationFrame(() => {
+    const max = document.documentElement.scrollHeight - window.innerHeight
+    scrolled.value = window.scrollY > 8
+    progress.value = max > 0 ? Math.min(1, window.scrollY / max) : 0
+    ticking = false
+  })
+}
+
+let revealObserver = null
+function getObserver() {
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-in')
+        revealObserver.unobserve(entry.target)
+      })
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' })
+  }
+  return revealObserver
+}
+const vReveal = {
+  mounted(el, binding) {
+    el.classList.add('sp-rv')
+    if (binding.value) el.style.setProperty('--rv-d', `${binding.value}ms`)
+    if (reduceMotion || !('IntersectionObserver' in window)) { el.classList.add('is-in'); return }
+    getObserver().observe(el)
+  },
+  unmounted(el) { revealObserver?.unobserve(el) }
+}
+
+function onCardMove(event) {
+  const card = event.target.closest?.('.sp-card')
+  if (!card || reduceMotion) return
+  const rect = card.getBoundingClientRect()
+  card.style.setProperty('--mx', `${event.clientX - rect.left}px`)
+  card.style.setProperty('--my', `${event.clientY - rect.top}px`)
+}
+
 onMounted(async () => {
   const slug = normalizeSlug(route.params.slug)
   try {
@@ -277,9 +325,13 @@ onMounted(async () => {
     errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'
   }
   window.addEventListener('keydown', onKey)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  revealObserver?.disconnect()
   clearInterval(slideTimer)
   clearTimeout(searchTimer)
   window.removeEventListener('keydown', onKey)
@@ -289,7 +341,8 @@ onBeforeUnmount(() => {
 <template>
   <div class="store-page" :data-store-theme="pageTheme" :style="themeVars">
     <!-- ===== Barra superior ===== -->
-    <header class="sp-top">
+    <header class="sp-top" :class="{ scrolled }">
+      <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
       <div class="sp-container sp-top-inner">
         <button
           v-if="hasCatalogNav"
@@ -345,10 +398,10 @@ onBeforeUnmount(() => {
       <!-- ===== Portada + identidad ===== -->
       <section class="sp-hero">
         <div class="sp-container">
-          <div v-if="hasDesignAdvanced" class="sp-banner">
+          <div v-if="hasDesignAdvanced" v-reveal class="sp-banner">
             <div v-if="carousel.length" ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
               <div class="sp-carousel-track" :style="trackStyle">
-                <img v-for="img in carousel" :key="img.id" class="sp-carousel-img" :src="img.url" alt="" draggable="false" />
+                <img v-for="(img, i) in carousel" :key="img.id" class="sp-carousel-img" :class="{ active: i === slide }" :src="img.url" alt="" draggable="false" />
               </div>
               <template v-if="carousel.length > 1">
                 <button type="button" class="sp-carousel-arrow prev" aria-label="Imagen anterior" @click="goSlide(slide - 1)">
@@ -371,14 +424,14 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="sp-identity">
-            <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
-            <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
-            <div class="sp-identity-text">
+            <img v-if="custom.logo" v-reveal="80" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+            <span v-else v-reveal="80" class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
+            <div v-reveal="160" class="sp-identity-text">
               <h1 :style="nameFont">{{ shopName }}</h1>
               <p v-if="custom.headline" class="sp-headline">{{ custom.headline }}</p>
               <p v-if="location" class="sp-location"><AppIcon name="map-pin" :size="14" /> {{ location }}</p>
             </div>
-            <div class="sp-actions">
+            <div v-reveal="240" class="sp-actions">
               <a
                 v-for="s in socials" :key="s.key" class="sp-icon-btn"
                 :href="s.url" target="_blank" rel="noopener" :aria-label="s.label" :title="s.label"
@@ -390,15 +443,15 @@ onBeforeUnmount(() => {
               </button>
             </div>
           </div>
-          <p v-if="custom.description" class="sp-desc">{{ custom.description }}</p>
+          <p v-if="custom.description" v-reveal="320" class="sp-desc">{{ custom.description }}</p>
         </div>
       </section>
 
       <!-- ===== Sobre nosotros ===== -->
       <section v-if="hasAbout" class="sp-about" aria-labelledby="sp-about-title">
         <div class="sp-container">
-          <h2 id="sp-about-title" class="sp-section-title">{{ aboutTitle }}</h2>
-          <div class="sp-about-card">
+          <h2 id="sp-about-title" v-reveal class="sp-section-title">{{ aboutTitle }}</h2>
+          <div v-reveal="100" class="sp-about-card">
             <p class="sp-about-text">{{ custom.about_text }}</p>
           </div>
         </div>
@@ -443,7 +496,7 @@ onBeforeUnmount(() => {
           </aside>
 
           <section class="sp-catalog" aria-labelledby="sp-catalog-title">
-            <div class="sp-toolbar">
+            <div v-reveal class="sp-toolbar">
               <div class="sp-toolbar-title">
                 <h2 id="sp-catalog-title" class="sp-section-title">Catálogo</h2>
                 <span v-if="catalogStatus === 'success'" class="sp-count">{{ productCount }}</span>
@@ -478,8 +531,8 @@ onBeforeUnmount(() => {
               <button type="button" class="sp-btn ghost" @click="loadCatalog"><AppIcon name="refresh" :size="16" /> Reintentar</button>
             </div>
 
-            <div v-else-if="catalog.products.length" class="sp-grid" :class="{ loading: catalogStatus === 'loading' }">
-              <article v-for="p in visibleProducts" :key="p.id" class="sp-card">
+            <div v-else-if="catalog.products.length" class="sp-grid" :class="{ loading: catalogStatus === 'loading' }" @pointermove="onCardMove">
+              <article v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 70" class="sp-card">
                 <div class="sp-card-img">
                   <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
                   <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
@@ -512,12 +565,12 @@ onBeforeUnmount(() => {
       <!-- ===== Contáctanos (formulario + canales + mapa de ubicación) ===== -->
       <section v-if="showContact" id="contacto" class="sp-contact" aria-labelledby="sp-contact-title">
         <div class="sp-container">
-          <div class="sp-contact-head">
+          <div v-reveal class="sp-contact-head">
             <h2 id="sp-contact-title" class="sp-section-title">Contáctanos</h2>
             <p class="sp-contact-sub">Escribinos tu consulta y te respondemos a la brevedad.</p>
           </div>
           <div class="sp-contact-grid" :class="{ 'no-map': !mapUrl }">
-            <div class="sp-contact-info">
+            <div v-reveal="80" class="sp-contact-info">
               <p v-if="mapAddress" class="sp-map-address"><AppIcon name="map-pin" :size="14" /> {{ mapAddress }}</p>
               <div v-if="mapUrl" class="sp-map-frame">
                 <iframe
@@ -540,7 +593,7 @@ onBeforeUnmount(() => {
                 </a>
               </div>
             </div>
-            <form class="sp-form" novalidate @submit.prevent="submitContact">
+            <form v-reveal="180" class="sp-form" novalidate @submit.prevent="submitContact">
               <div class="sp-field">
                 <label for="sp-contact-name">Tu nombre</label>
                 <input id="sp-contact-name" v-model="contactForm.name" class="sp-input" type="text" maxlength="80" autocomplete="name" required />
@@ -581,6 +634,7 @@ onBeforeUnmount(() => {
     </template>
 
     <!-- ===== Detalle de producto ===== -->
+    <Transition name="sp-modal">
     <div v-if="selected" class="sp-modal-overlay" @click.self="closeProduct">
       <div class="sp-modal" role="dialog" aria-modal="true" :aria-label="selected.name">
         <button type="button" class="sp-modal-close" aria-label="Cerrar" @click="closeProduct">
@@ -609,10 +663,11 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+    </Transition>
 
     <!-- ===== Pie ===== -->
     <footer class="sp-foot">
-      <div class="sp-container">
+      <div v-reveal class="sp-container">
         <div class="sp-foot-grid">
           <div class="sp-foot-brand">
             <strong :style="nameFont">{{ shopName }}</strong>

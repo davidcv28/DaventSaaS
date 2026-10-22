@@ -310,3 +310,128 @@
 @media (prefers-reduced-motion: reduce) {
   .store-page *, .store-page *::before, .store-page *::after { transition: none !important; animation: none !important; }
 }
+
+/* ===== Movimiento y acabado (capa final) =====
+   Revelado en scroll con `translate` (propiedad independiente de `transform`,
+   para no pisar los hover). Todo se anula con prefers-reduced-motion. */
+.store-page { --sp-ease: cubic-bezier(.22, 1, .36, 1); }
+.sp-rv { opacity: 0; translate: 0 24px; transition: opacity .8s var(--sp-ease) var(--rv-d, 0ms), translate .8s var(--sp-ease) var(--rv-d, 0ms); will-change: opacity, translate; }
+.sp-rv.is-in { opacity: 1; translate: 0 0; will-change: auto; }
+.sp-banner.sp-rv { translate: 0 0; scale: .985; transition: opacity .9s var(--sp-ease), scale 1.1s var(--sp-ease); }
+.sp-banner.sp-rv.is-in { scale: 1; }
+.sp-logo.lg.sp-rv, .sp-mono.lg.sp-rv { scale: .8; transition: opacity .7s var(--sp-ease) var(--rv-d, 0ms), translate .7s var(--sp-ease) var(--rv-d, 0ms), scale .9s cubic-bezier(.34, 1.56, .64, 1) var(--rv-d, 0ms); }
+.sp-logo.lg.sp-rv.is-in, .sp-mono.lg.sp-rv.is-in { scale: 1; }
+.sp-card.sp-rv { transition: opacity .8s var(--sp-ease) var(--rv-d, 0ms), translate .8s var(--sp-ease) var(--rv-d, 0ms), box-shadow .3s var(--sp-ease), transform .3s var(--sp-ease), border-color .3s; }
+
+/* Barra superior: progreso de lectura y compactación al scrollear */
+.sp-top { transition: box-shadow .3s var(--sp-ease); }
+.sp-top-inner { transition: height .3s var(--sp-ease); }
+.sp-top.scrolled { box-shadow: 0 10px 30px -14px rgba(15, 23, 42, .45); }
+.sp-top.scrolled .sp-top-inner { height: 56px; }
+.sp-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, .35), #fff); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
+
+/* Estados de carga y entrada */
+.sp-state { animation: sp-fade-up .6s var(--sp-ease) both; }
+.sp-state-icon, .sp-empty-icon { animation: sp-float 4s ease-in-out infinite; }
+@keyframes sp-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes sp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.sp-empty { animation: sp-fade-up .5s var(--sp-ease) both; }
+
+/* Portada: Ken Burns en el slide activo, cover con luz animada y zoom suave */
+.sp-carousel-track { transition: transform .8s var(--sp-ease); }
+.sp-carousel-img { transform: scale(1.001); transition: transform 6s linear; }
+.sp-carousel-img.active { transform: scale(1.08); }
+.sp-carousel-arrow { opacity: 0; transition: opacity .25s, background .2s, transform .25s var(--sp-ease); }
+.sp-carousel:hover .sp-carousel-arrow, .sp-carousel-arrow:focus-visible { opacity: 1; }
+.sp-carousel-arrow:hover { transform: translateY(-50%) scale(1.08); }
+.sp-carousel-dot { transition: background .25s, width .35s var(--sp-ease); }
+.sp-cover { position: relative; background-size: 140% 140%; animation: sp-aurora 14s ease-in-out infinite alternate; }
+.sp-cover::after { content: ''; position: absolute; inset: 0; background: radial-gradient(420px 200px at 20% 120%, rgba(255, 255, 255, .22), transparent 70%); animation: sp-glow 7s ease-in-out infinite alternate; }
+@keyframes sp-aurora { from { background-position: 0% 40%; } to { background-position: 100% 60%; } }
+@keyframes sp-glow { from { opacity: .4; transform: translateX(-6%); } to { opacity: 1; transform: translateX(8%); } }
+
+/* Identidad: logo con anillo y nombre con subrayado de acento */
+.sp-mono.lg, .sp-logo.lg { transition: box-shadow .4s var(--sp-ease), rotate .5s var(--sp-ease); }
+.sp-mono.lg:hover, .sp-logo.lg:hover { rotate: -4deg; box-shadow: 0 0 0 1px var(--sp-line), 0 0 0 7px color-mix(in srgb, var(--store-accent) 18%, transparent), var(--sp-shadow-md); }
+.sp-identity-text h1::after { content: ''; display: block; width: 56px; height: 3px; margin-top: 12px; border-radius: 99px; background: linear-gradient(90deg, var(--store-accent), transparent); transform-origin: left; animation: sp-grow 1s var(--sp-ease) .5s both; }
+@keyframes sp-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.sp-section-title { position: relative; }
+.sp-section-title::after { content: ''; display: block; width: 28px; height: 3px; margin-top: 8px; border-radius: 99px; background: var(--store-accent); transition: width .5s var(--sp-ease); }
+.sp-rv.is-in .sp-section-title::after, .sp-section-title.is-in::after, .sp-toolbar-title:hover .sp-section-title::after { width: 48px; }
+
+/* Botones: brillo que cruza y respuesta táctil */
+.sp-btn, .sp-card-cta { position: relative; overflow: hidden; transition: filter .2s, border-color .2s, background .2s, transform .2s var(--sp-ease), box-shadow .3s var(--sp-ease); }
+.sp-btn:not(.ghost):hover, .sp-card-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 22px -10px var(--store-accent-ink); }
+.sp-btn:active, .sp-card-cta:active, .sp-icon-btn:active { transform: translateY(0) scale(.97); }
+.sp-btn:not(.ghost)::after, .sp-card-cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-20deg); transition: left .7s var(--sp-ease); pointer-events: none; }
+.sp-btn:not(.ghost):hover::after, .sp-card-cta:hover::after { left: 130%; }
+.sp-icon-btn { transition: border-color .2s, color .2s, filter .2s, transform .25s var(--sp-ease), background .2s; }
+.sp-icon-btn:hover { transform: translateY(-2px); }
+.sp-top .sp-icon-btn:hover { transform: translateY(-1px) scale(1.06); }
+
+/* Tarjetas: foco de luz que sigue al cursor, elevación y zoom de imagen */
+.sp-card { position: relative; isolation: isolate; }
+.sp-card::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; border-radius: inherit; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--store-accent) 16%, transparent), transparent 70%); transition: opacity .3s; }
+.sp-card:hover::before { opacity: 1; }
+.sp-card:hover { transform: translateY(-6px); }
+.sp-card-img img { transition: transform .7s var(--sp-ease); }
+.sp-card:hover .sp-card-img img { transform: scale(1.07); }
+.sp-card-cta { opacity: .96; }
+.sp-card-price { transition: color .25s; }
+.sp-card:hover .sp-card-price { color: var(--sp-accent-text); }
+.sp-grid { transition: opacity .25s; }
+
+/* Navegación, chips y buscador */
+.sp-nav-item { position: relative; transition: background .2s, color .2s, padding-left .25s var(--sp-ease); }
+.sp-nav-item:hover { padding-left: 16px; }
+.sp-nav-item.active::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px; border-radius: 99px; background: var(--store-accent); animation: sp-grow-y .35s var(--sp-ease) both; }
+@keyframes sp-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.sp-chip { animation: sp-pop .35s cubic-bezier(.34, 1.56, .64, 1) both; transition: transform .2s var(--sp-ease), background .2s; }
+.sp-chip:hover { transform: translateY(-1px); }
+@keyframes sp-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+.sp-search { transition: border-color .2s, box-shadow .3s var(--sp-ease), flex-basis .35s var(--sp-ease); }
+.sp-search:focus-within { box-shadow: 0 0 0 4px color-mix(in srgb, var(--store-accent) 18%, transparent); }
+.sp-top .sp-search { background: rgba(255, 255, 255, .96); }
+.store-page[data-store-theme='dark'] .sp-top .sp-search { background: color-mix(in srgb, #0d1220 70%, transparent); }
+
+/* Modal: entrada con escala y desenfoque */
+.sp-modal-enter-active, .sp-modal-leave-active { transition: opacity .3s var(--sp-ease); }
+.sp-modal-enter-active .sp-modal, .sp-modal-leave-active .sp-modal { transition: transform .45s var(--sp-ease), opacity .3s; }
+.sp-modal-enter-from, .sp-modal-leave-to { opacity: 0; }
+.sp-modal-enter-from .sp-modal { transform: translateY(24px) scale(.96); opacity: 0; }
+.sp-modal-leave-to .sp-modal { transform: translateY(12px) scale(.98); opacity: 0; }
+.sp-modal-img img { animation: sp-img-in 1s var(--sp-ease) both; }
+@keyframes sp-img-in { from { transform: scale(1.08); opacity: .6; } to { transform: none; opacity: 1; } }
+.sp-modal-body > * { animation: sp-fade-up .55s var(--sp-ease) both; }
+.sp-modal-body > :nth-child(2) { animation-delay: .06s; }
+.sp-modal-body > :nth-child(3) { animation-delay: .12s; }
+.sp-modal-body > :nth-child(4) { animation-delay: .18s; }
+.sp-modal-body > :nth-child(5) { animation-delay: .24s; }
+.sp-modal-close { transition: border-color .2s, color .2s, transform .35s var(--sp-ease); }
+.sp-modal-close:hover { transform: rotate(90deg); }
+
+/* Drawer móvil */
+@media (max-width: 960px) {
+  .sp-drawer { transition: transform .45s var(--sp-ease); }
+  .sp-overlay { transition: opacity .3s, visibility .3s; backdrop-filter: blur(2px); }
+}
+
+/* Mapa y formulario */
+.sp-map-frame, .sp-form, .sp-about-card { transition: box-shadow .4s var(--sp-ease), transform .4s var(--sp-ease), border-color .3s; }
+.sp-map-frame:hover, .sp-form:hover, .sp-about-card:hover { border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); }
+.sp-about-card { position: relative; overflow: hidden; }
+.sp-about-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--store-accent), transparent); }
+.sp-form-ok, .sp-form-error { animation: sp-fade-up .4s var(--sp-ease) both; }
+
+/* Pie */
+.sp-davent-badge { transition: border-color .2s, transform .25s var(--sp-ease), box-shadow .3s; }
+.sp-davent-badge:hover { transform: translateY(-2px); box-shadow: var(--sp-shadow-md); }
+.sp-foot-col a { position: relative; transition: color .2s, transform .25s var(--sp-ease); }
+.sp-foot-col a:hover { transform: translateX(3px); text-decoration: none; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .sp-rv { opacity: 1 !important; translate: none !important; scale: none !important; }
+  .sp-progress { display: none; }
+}
