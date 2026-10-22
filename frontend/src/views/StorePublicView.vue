@@ -41,6 +41,20 @@ const aboutSpecialties = computed(() => String(custom.value.about_specialties ||
 const hasAboutCard = computed(() => Boolean(custom.value.about_years || custom.value.about_mission?.trim()))
 const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nosotros')
 
+// --- Destacados: tarjetas con icono bajo el hero, armadas con lo que el
+// negocio realmente tiene cargado y completadas con valores genéricos. ---
+const highlights = computed(() => {
+  const list = [{ icon: 'package', title: 'Catálogo online', text: 'Explorá todos los productos con precios y detalles actualizados.', to: catalogTo.value }]
+  if (showContact.value) list.push({ icon: 'message-circle', title: 'Consultas directas', text: 'Escribinos y te respondemos a la brevedad.', href: '#contacto' })
+  if (location.value) list.push({ icon: 'map-pin', title: 'Dónde estamos', text: location.value })
+  if (custom.value.about_years) list.push({ icon: 'clock', title: `+${custom.value.about_years} años`, text: 'De trayectoria y experiencia en lo que hacemos.' })
+  list.push(
+    { icon: 'users', title: 'Atención personalizada', text: 'Te acompañamos en cada paso de tu compra.' },
+    { icon: 'shield-check', title: 'Información clara', text: 'Productos y precios claros, sin sorpresas.' }
+  )
+  return list.slice(0, 4)
+})
+
 // --- Galería (imágenes propias del negocio; el dueño la apaga con
 // show_gallery y se oculta sola sin imágenes cargadas) ---
 const gallery = computed(() => custom.value.gallery || [])
@@ -153,6 +167,16 @@ onBeforeUnmount(() => {
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <section class="sp-hero">
     <div class="sp-hero-band">
+      <div class="sp-hero-decor" aria-hidden="true">
+        <span class="sp-orb o1"></span>
+        <span class="sp-orb o2"></span>
+        <span class="sp-orb o3"></span>
+        <span class="sp-float f1"><AppIcon name="package" :size="26" /></span>
+        <span class="sp-float f2"><AppIcon name="tag" :size="22" /></span>
+        <span class="sp-float f3"><AppIcon name="shield-check" :size="24" /></span>
+        <span class="sp-float f4"><AppIcon name="trending-up" :size="22" /></span>
+        <span class="sp-float f5"><AppIcon name="store" :size="24" /></span>
+      </div>
       <div class="sp-container sp-hero-inner">
         <span v-reveal class="sp-ava">
           <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
@@ -165,8 +189,8 @@ onBeforeUnmount(() => {
         <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
         <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
         <div v-reveal="320" class="sp-hero-ctas">
-          <RouterLink class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo</RouterLink>
-          <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto">Contáctanos</a>
+          <RouterLink class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
           <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
             <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
           </button>
@@ -177,6 +201,16 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
+    <div class="sp-container sp-highlights">
+      <component
+        :is="h.to ? 'RouterLink' : h.href ? 'a' : 'div'" v-for="(h, i) in highlights" :key="h.title"
+        v-reveal="i * 90" class="sp-hl" :to="h.to" :href="h.href"
+      >
+        <span class="sp-hl-icon" aria-hidden="true"><AppIcon :name="h.icon" :size="22" /></span>
+        <strong>{{ h.title }}</strong>
+        <span class="sp-hl-text">{{ h.text }}</span>
+      </component>
+    </div>
   </section>
 
   <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->
@@ -315,6 +349,20 @@ onBeforeUnmount(() => {
           referrerpolicy="no-referrer-when-downgrade"
           allowfullscreen
         ></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Cierre: invitación al catálogo ===== -->
+  <section class="sp-cta" aria-label="Ver catálogo">
+    <div class="sp-container">
+      <div v-reveal class="sp-cta-card">
+        <span class="sp-orb o1" aria-hidden="true"></span>
+        <span class="sp-orb o2" aria-hidden="true"></span>
+        <span class="sp-cta-icon" aria-hidden="true"><AppIcon name="package" :size="26" /></span>
+        <h2>¿Listo para encontrar lo que buscás?</h2>
+        <p>Recorré el catálogo completo de {{ shopName }} y elegí con toda la información a mano.</p>
+        <RouterLink class="sp-btn sp-hero-btn" :to="catalogTo">Explorar catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
       </div>
     </div>
   </section>
