@@ -13,8 +13,13 @@ import { http } from './http.js'
 //                                                   has_location_map (Estándar+) o si el dueño apagó el mapa
 //                                                   (customization.show_location)
 // GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products} (?q=&category=&brand=)
+// GET  /api/stores/public/<slug>/contact/captcha/ público -> {challenge_id, question} (captcha antispam)
+// POST /api/stores/public/<slug>/contact/       público {name, email, message, website (honeypot),
+//                                                        challenge_id, captcha_answer} -> envía el
+//                                                        mensaje por email al dueño (throttle 10/h por IP)
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
+//                                                about_title?, about_text?, contact_email?, show_contact?,
 //                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?, show_location?}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
@@ -65,6 +70,16 @@ export const storesApi = {
     const { data } = await http.get(`/stores/public/${slug}/catalog/`, {
       params: { q: q || undefined, category: category || undefined, brand: brand || undefined }
     })
+    return data
+  },
+
+  async contactCaptcha(slug) {
+    const { data } = await http.get(`/stores/public/${slug}/contact/captcha/`)
+    return data
+  },
+
+  async sendContact(slug, payload) {
+    const { data } = await http.post(`/stores/public/${slug}/contact/`, payload)
     return data
   },
 
@@ -139,6 +154,10 @@ export const CUSTOMIZATION_DEFAULTS = {
   name_font_size: 32,
   headline: '',
   description: '',
+  about_title: '',
+  about_text: '',
+  contact_email: '',
+  show_contact: true,
   theme: 'light',
   accent: 'indigo',
   whatsapp: '',
@@ -300,6 +319,24 @@ export function validateHeadline(value) {
 
 export function validateDescription(value) {
   if (value && value.length > 800) return 'La descripción admite hasta 800 caracteres'
+  return ''
+}
+
+export function validateAboutTitle(value) {
+  if (value && value.length > 80) return 'El título admite hasta 80 caracteres'
+  return ''
+}
+
+export function validateAboutText(value) {
+  if (value && value.length > 2000) return 'El texto admite hasta 2000 caracteres'
+  return ''
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+export function validateContactEmail(value) {
+  const v = String(value || '').trim()
+  if (v && !EMAIL_PATTERN.test(v)) return 'Ingresá un email válido'
   return ''
 }
 

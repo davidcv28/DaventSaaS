@@ -4,9 +4,11 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage
 from StoreApp.domains.stores.serializers.serializers import (
     StorePublicSerializer, StoreCustomizationSerializer, StoreCarouselImageSerializer,
+    StoreContactSerializer,
 )
 from StoreApp.domains.stores.serializers.validators  import (
     RESERVED_SLUGS,
@@ -16,6 +18,7 @@ from StoreApp.domains.stores.serializers.validators  import (
 from StoreApp.domains.stores.services                import (
     profile_has_benefit, storage_payload, upload_logo, delete_logo,
     upload_carousel_image, delete_carousel_image,
+    issue_captcha, verify_captcha, send_contact_message, contact_target,
 )
 from .viewset_base   import StoreBaseViewSet
 from .viewset_config import StoreConfigs
@@ -33,13 +36,18 @@ DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)
 #=========================================
+# CONTACT THROTTLE (antispam del formulario público, rate en settings)
+#=========================================
+class StoreContactThrottle(AnonRateThrottle):
+    scope   =   'store_contact'
+#=========================================
 # STORE VIEWSET
 #=========================================
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
 
     def get_permissions(self):
-        if self.action in ('public', 'public_catalog'):
+        if self.action in ('public', 'public_catalog', 'contact_captcha', 'contact'):
             return [AllowAny()]
         return super().get_permissions()
     #=========================================
@@ -105,6 +113,47 @@ class StoreViewSet(StoreBaseViewSet):
             },
             status = status.HTTP_200_OK,
         )
+    #=========================================
+    # CONTACT (formulario "Contáctanos" de la web pública, antispam)
+    #=========================================
+    def _contact_store(self, slug):
+        #Mismas condiciones que la web pública + sección habilitada por el dueño.
+        store       =   get_object_or_404(
+            Store.objects.select_related('user__user', 'customization'),
+            slug = slug, is_published = True,
+        )
+        if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
+        if getattr(store.customization, 'show_contact', True) is False:
+            raise Http404
+        return store
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/contact/captcha')
+    def contact_captcha(self, request, slug = None):
+        self._contact_store(slug)
+        return Response(issue_captcha(slug), status = status.HTTP_200_OK)
+
+    @action(detail = False, methods = ['post'], url_path = r'public/(?P<slug>[a-z0-9-]+)/contact', throttle_classes = [StoreContactThrottle])
+    def contact(self, request, slug = None):
+        store       =   self._contact_store(slug)
+        serializer  =   StoreContactSerializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+        data        =   serializer.validated_data
+        #Honeypot: si el campo oculto viene completo es un bot — éxito falso.
+        if data.get('website'):
+            return Response({'Exito': 'Tu mensaje fue enviado.'}, status = status.HTTP_200_OK)
+        if not contact_target(store):
+            return Response(
+                {'detail': 'Esta tienda no puede recibir mensajes por ahora.'},
+                status = status.HTTP_400_BAD_REQUEST,
+            )
+        if not verify_captcha(slug, data['challenge_id'], data['captcha_answer']):
+            return Response(
+                {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
+                status = status.HTTP_400_BAD_REQUEST,
+            )
+        send_contact_message(store, name = data['name'], email = data['email'], message = data['message'])
+        return Response({'Exito': 'Tu mensaje fue enviado. El comercio te va a responder a la brevedad.'}, status = status.HTTP_200_OK)
     #=========================================
     # CUSTOMIZATION (diseño de la web pública, gated por el plan)
     #=========================================

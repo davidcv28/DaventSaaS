@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS
@@ -70,6 +70,56 @@ const socials = computed(() => [
   { key: 'facebook', label: 'Facebook', url: facebookUrl.value }
 ].filter((s) => s.url))
 const hasContact = computed(() => Boolean(whatsappUrl.value || socials.value.length))
+
+// --- Sobre nosotros (se edita en Diseño web; la sección se oculta si está vacía) ---
+const hasAbout = computed(() => Boolean(custom.value.about_text?.trim()))
+const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nosotros')
+
+// --- Contáctanos: formulario público (captcha + honeypot antispam), canales
+// y el mapa de ubicación, que vive dentro de esta sección. ---
+const showContact = computed(() => status.value === 'success' && custom.value.show_contact !== false)
+const contactForm = reactive({ name: '', email: '', message: '', website: '', captcha_answer: '' })
+const captcha = ref(null) // {challenge_id, question}
+const captchaLoading = ref(false)
+const contactStatus = ref('idle') // idle | loading | success | error
+const contactError = ref('')
+
+async function loadCaptcha() {
+  captchaLoading.value = true
+  try {
+    captcha.value = await storesApi.contactCaptcha(normalizeSlug(route.params.slug))
+    contactForm.captcha_answer = ''
+  } catch {
+    captcha.value = null
+  } finally {
+    captchaLoading.value = false
+  }
+}
+
+async function submitContact() {
+  if (contactStatus.value === 'loading') return
+  contactError.value = ''
+  contactStatus.value = 'loading'
+  try {
+    await storesApi.sendContact(normalizeSlug(route.params.slug), {
+      name: contactForm.name.trim(),
+      email: contactForm.email.trim(),
+      message: contactForm.message.trim(),
+      website: contactForm.website,
+      challenge_id: captcha.value?.challenge_id || '',
+      captcha_answer: contactForm.captcha_answer.trim()
+    })
+    contactStatus.value = 'success'
+    contactForm.name = contactForm.email = contactForm.message = contactForm.website = ''
+    loadCaptcha()
+  } catch (e) {
+    contactStatus.value = 'error'
+    const parsed = extractApiError(e)
+    contactError.value = parsed.captcha_answer || parsed.name || parsed.email || parsed.message
+      || parsed.detail || parsed.nonField || 'No se pudo enviar el mensaje. Intentá de nuevo.'
+    loadCaptcha()
+  }
+}
 
 // --- Carrusel de portada ---
 const carousel = computed(() => custom.value.carousel || [])
@@ -221,6 +271,7 @@ onMounted(async () => {
     document.title = shopName.value
     restartSlideTimer()
     loadCatalog()
+    if (showContact.value) loadCaptcha()
   } catch (e) {
     status.value = 'error'
     errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'
@@ -343,6 +394,16 @@ onBeforeUnmount(() => {
         </div>
       </section>
 
+      <!-- ===== Sobre nosotros ===== -->
+      <section v-if="hasAbout" class="sp-about" aria-labelledby="sp-about-title">
+        <div class="sp-container">
+          <h2 id="sp-about-title" class="sp-section-title">{{ aboutTitle }}</h2>
+          <div class="sp-about-card">
+            <p class="sp-about-text">{{ custom.about_text }}</p>
+          </div>
+        </div>
+      </section>
+
       <!-- ===== Catálogo ===== -->
       <main class="sp-container sp-main">
         <div class="sp-layout" :class="{ 'has-nav': hasCatalogNav }">
@@ -448,21 +509,72 @@ onBeforeUnmount(() => {
         </div>
       </main>
 
-      <!-- ===== Ubicación (premium, apagable desde Diseño web) ===== -->
-      <section v-if="mapUrl" class="sp-map" aria-labelledby="sp-map-title">
+      <!-- ===== Contáctanos (formulario + canales + mapa de ubicación) ===== -->
+      <section v-if="showContact" id="contacto" class="sp-contact" aria-labelledby="sp-contact-title">
         <div class="sp-container">
-          <div class="sp-map-head">
-            <h2 id="sp-map-title" class="sp-section-title">Dónde estamos</h2>
-            <p class="sp-map-address"><AppIcon name="map-pin" :size="14" /> {{ mapAddress }}</p>
+          <div class="sp-contact-head">
+            <h2 id="sp-contact-title" class="sp-section-title">Contáctanos</h2>
+            <p class="sp-contact-sub">Escribinos tu consulta y te respondemos a la brevedad.</p>
           </div>
-          <div class="sp-map-frame">
-            <iframe
-              :src="mapUrl"
-              title="Mapa con la ubicación del negocio"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              allowfullscreen
-            ></iframe>
+          <div class="sp-contact-grid" :class="{ 'no-map': !mapUrl }">
+            <div class="sp-contact-info">
+              <p v-if="mapAddress" class="sp-map-address"><AppIcon name="map-pin" :size="14" /> {{ mapAddress }}</p>
+              <div v-if="mapUrl" class="sp-map-frame">
+                <iframe
+                  :src="mapUrl"
+                  title="Mapa con la ubicación del negocio"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div v-if="hasContact" class="sp-contact-channels">
+                <a v-if="whatsappUrl" class="sp-btn" :href="whatsappUrl" target="_blank" rel="noopener">
+                  <AppIcon name="whatsapp" :size="16" /> WhatsApp
+                </a>
+                <a
+                  v-for="s in socials" :key="s.key" class="sp-icon-btn"
+                  :href="s.url" target="_blank" rel="noopener" :aria-label="s.label" :title="s.label"
+                >
+                  <AppIcon :name="s.key" :size="17" />
+                </a>
+              </div>
+            </div>
+            <form class="sp-form" novalidate @submit.prevent="submitContact">
+              <div class="sp-field">
+                <label for="sp-contact-name">Tu nombre</label>
+                <input id="sp-contact-name" v-model="contactForm.name" class="sp-input" type="text" maxlength="80" autocomplete="name" required />
+              </div>
+              <div class="sp-field">
+                <label for="sp-contact-email">Tu email</label>
+                <input id="sp-contact-email" v-model="contactForm.email" class="sp-input" type="email" autocomplete="email" required />
+              </div>
+              <div class="sp-field">
+                <label for="sp-contact-message">Mensaje</label>
+                <textarea id="sp-contact-message" v-model="contactForm.message" class="sp-input sp-textarea" rows="4" maxlength="2000" required></textarea>
+              </div>
+              <div class="sp-field">
+                <label for="sp-contact-captcha">Verificación: {{ captcha?.question || 'Cargando…' }}</label>
+                <div class="sp-captcha-row">
+                  <input id="sp-contact-captcha" v-model="contactForm.captcha_answer" class="sp-input" type="text" inputmode="numeric" autocomplete="off" required />
+                  <button type="button" class="sp-icon-btn" :disabled="captchaLoading" aria-label="Nueva pregunta de verificación" title="Nueva pregunta" @click="loadCaptcha">
+                    <AppIcon name="refresh" :size="15" />
+                  </button>
+                </div>
+              </div>
+              <!-- Honeypot: invisible para personas; los bots lo completan y se descartan. -->
+              <div class="sp-hp" aria-hidden="true">
+                <label for="sp-contact-website">Website</label>
+                <input id="sp-contact-website" v-model="contactForm.website" type="text" tabindex="-1" autocomplete="off" />
+              </div>
+              <p v-if="contactError" class="sp-form-error" role="alert">{{ contactError }}</p>
+              <p v-else-if="contactStatus === 'success'" class="sp-form-ok" role="status">Tu mensaje fue enviado. Te respondemos a la brevedad.</p>
+              <button type="submit" class="sp-btn" :disabled="contactStatus === 'loading' || !captcha">
+                <span v-if="contactStatus === 'loading'" class="spinner" aria-hidden="true"></span>
+                <AppIcon v-else name="mail" :size="16" />
+                Enviar mensaje
+              </button>
+            </form>
           </div>
         </div>
       </section>

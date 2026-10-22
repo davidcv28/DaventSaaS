@@ -38,6 +38,9 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     display_name                =   serializers.CharField(**CustomizationFields['display_name'])
     headline                    =   serializers.CharField(**CustomizationFields['headline'])
     description                 =   serializers.CharField(**CustomizationFields['description'])
+    about_title                 =   serializers.CharField(**CustomizationFields['about_title'])
+    about_text                  =   serializers.CharField(**CustomizationFields['about_text'])
+    contact_email               =   serializers.EmailField(**CustomizationFields['contact_email'])
     whatsapp                    =   serializers.CharField(**CustomizationFields['whatsapp'])
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
     tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
@@ -48,6 +51,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         model                   =   StoreCustomization
         fields                  =   [
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
+            'about_title', 'about_text', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'logo', 'carousel', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
@@ -78,6 +82,13 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         if value and not validate_facebook(value):
             raise serializers.ValidationError('Ingresá el nombre de tu página o usuario: letras, números y puntos')
         return value
+#=========================================
+# STORE CUSTOMIZATION PUBLIC SERIALIZER (web pública: oculta el email de
+# contacto — el formulario existe justamente para no exponerlo a scrapers)
+#=========================================
+class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
+    class Meta(StoreCustomizationSerializer.Meta):
+        fields              =   [f for f in StoreCustomizationSerializer.Meta.fields if f != 'contact_email']
 #=========================================
 # STORE SERIALIZER LIST
 #=========================================
@@ -115,7 +126,7 @@ class StorePublicSerializer(serializers.ModelSerializer):
     business_name               =   serializers.CharField(source = 'user.business_name', read_only = True)
     city_name                   =   serializers.CharField(source = 'user.city.name_city', read_only = True)
     province_name               =   serializers.CharField(source = 'user.province.name_province', read_only = True)
-    customization               =   StoreCustomizationSerializer(read_only = True)
+    customization               =   StoreCustomizationPublicSerializer(read_only = True)
     has_design_advanced         =   serializers.SerializerMethodField()
     location_address            =   serializers.SerializerMethodField()
     class Meta:
@@ -143,3 +154,15 @@ class StorePublicSerializer(serializers.ModelSerializer):
             parts.append(user.province.name_province)
         parts.append('Argentina')
         return ', '.join(parts)
+#=========================================
+# STORE CONTACT SERIALIZER (formulario público "Contáctanos")
+#=========================================
+class StoreContactSerializer(serializers.Serializer):
+    #El honeypot `website` queda oculto para humanos: los bots lo completan
+    #y el viewset les devuelve éxito falso sin enviar nada.
+    name                        =   serializers.CharField(min_length = 2, max_length = 80, trim_whitespace = True)
+    email                       =   serializers.EmailField()
+    message                     =   serializers.CharField(min_length = 10, max_length = 2000)
+    website                     =   serializers.CharField(required = False, allow_blank = True, write_only = True)
+    challenge_id                =   serializers.CharField(write_only = True)
+    captcha_answer              =   serializers.CharField(max_length = 8, write_only = True)

@@ -45,6 +45,8 @@ REST_FRAMEWORK = {
         'anon': '100/day',
         'user': '1000/day',
         'login': '5/min',
+        #Formulario de contacto de las webs públicas (antispam por IP).
+        'store_contact': '10/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',

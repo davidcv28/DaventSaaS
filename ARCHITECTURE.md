@@ -356,7 +356,8 @@ stores/
 │   └── serializers.py      # StoreSerializer / List / Public / Customization
 ├── services/
 │   ├── services.py         # plan_benefits_of / profile_has_benefit (entitlements)
-│   └── storage.py          # Cloudflare R2: validación, upload/delete, cuota max_storage_mb
+│   ├── storage.py          # Cloudflare R2: validación, upload/delete, cuota max_storage_mb
+│   └── contact.py          # Contáctanos: captcha firmado (TimestampSigner) + email al dueño
 ├── views/
 │   ├── viewset_base.py     # Base con get_queryset/permissions por acción
 │   ├── viewset_config.py
@@ -386,7 +387,11 @@ StoreCustomization        (diseño de la web pública)
     ├── accent       ('indigo'|'violet'|'emerald'|'amber'|'rose'|'sky')
     ├── whatsapp     (8-15 dígitos, '+' opcional → botón wa.me)
     ├── instagram / tiktok / facebook  (handles → botones)
-    ├── show_location (default true → mapa Google embebido en la web, has_location_map)
+    ├── about_title  (≤80, default 'Sobre nosotros')
+    ├── about_text   (≤2000; vacío = la sección no se muestra)
+    ├── contact_email (destino del formulario Contáctanos; vacío = email de la cuenta)
+    ├── show_contact  (default true → sección Contáctanos en la web)
+    ├── show_location (default true → mapa Google embebido en Contáctanos, has_location_map)
     └── updated_at
 
 StoreCarouselImage        (banners de portada, máx. 5)
@@ -408,7 +413,9 @@ StoreCarouselImage        (banners de portada, máx. 5)
 - `GET /api/stores/` (Bearer) — mi tienda (0..1) con `customization` anidada; el frontend la usa para saber si falta el onboarding. Para staff devuelve **todas las webs** y el serializer suma `business_name`, `owner_id`, `owner_name`, `owner_email`, `plan_name` y `has_access` (alimenta la sección Webs del panel admin).
 - `PUT/PATCH /api/stores/<pk>/` (Bearer) — renombrar el slug o pausar el link (`is_published`).
 - `GET /api/stores/slug-available/?slug=x` (Bearer) — `{available, reason}` con reason `invalid | reserved | taken`.
-- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization, has_design_advanced`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`). `has_design_advanced` sale del plan del dueño: sin él la web pública no renderiza la portada (`.sp-banner` con carrusel/cover) y en cambio muestra un botón claro/oscuro en el nav para el visitante (tema solo de la visita, no persiste). El mapa de ubicación depende de `has_location_map` (Estándar y Premium): `location_address` solo viaja cuando `show_location` está activo y el plan incluye ese flag — es la dirección ya armada para geocodificar (`address, ciudad, provincia, Argentina`) que alimenta el iframe de Google Maps (`maps.google.com/maps?q=…&output=embed`); `null` en cualquier otro caso.
+- `GET /api/stores/public/<slug>/` (AllowAny) — resuelve el link público (`slug, business_name, city_name, province_name, customization, has_design_advanced`); 404 si no existe, `is_published=false` o la suscripción no otorga acceso (`profile_has_benefit('has_public_link')` → `grants_access()`). `has_design_advanced` sale del plan del dueño: sin él la web pública no renderiza la portada (`.sp-banner` con carrusel/cover) y en cambio muestra un botón claro/oscuro en el nav para el visitante (tema solo de la visita, no persiste). El mapa de ubicación depende de `has_location_map` (Estándar y Premium): `location_address` solo viaja cuando `show_location` está activo y el plan incluye ese flag — es la dirección ya armada para geocodificar (`address, ciudad, provincia, Argentina`) que alimenta el iframe de Google Maps (`maps.google.com/maps?q=…&output=embed`); `null` en cualquier otro caso. La web pública usa `StoreCustomizationPublicSerializer`: mismo payload que `StoreCustomizationSerializer` **menos `contact_email`** (el formulario Contáctanos existe justamente para no exponer el email del dueño a scrapers).
+- `GET /api/stores/public/<slug>/contact/captcha/` (AllowAny) — emite un challenge antispam para el formulario Contáctanos: `{challenge_id, question}` donde `question` es una suma ("4 + 3 = ?"). `challenge_id` viaja **firmado** (`TimestampSigner`, `stores.contact:<slug>` + timestamp + hash de la respuesta): nunca incluye la respuesta en claro ni la compara el frontend. 404 si la tienda no resuelve el link público o `show_contact` está apagado. TTL 10 min (`CONTACT_CHALLENGE_TTL_S`).
+- `POST /api/stores/public/<slug>/contact/` (AllowAny, throttle `10/hour` por IP — `AnonRateThrottle` scope `store_contact`) — envía el mensaje del visitante al dueño por email (`send_contact_message` en `services/contact.py`): `{name, email, message (≤2000), challenge_id, answer, website}`. `website` es **honeypot** (el template lo oculta con CSS): si viene con algo devuelve el mismo éxito genérico sin enviar nada. Anti-spam en capas: respuesta correcta + mínimo 2s entre captcha y envío (evita envíos instantáneos pre-armados) + throttle + honeypot. El email sale con `send_mail` al `contact_email` del diseño o al email de la cuenta del dueño (fallback), `reply_to` = email del visitante. 404 si `show_contact` está apagado o la tienda no tiene acceso vigente; 400 con error por campo si el captcha venció/falla.
 - `GET /api/stores/customization/` (Bearer) — mi diseño (`get_or_create` con defaults).
 - `PUT/PATCH /api/stores/customization/` (Bearer) — edita el diseño. **403 si el plan vigente no incluye `has_customization`** (está en todos los planes: contenido + logo): el gateo lo hace `services.profile_has_benefit` contra `Suscription.grants_access()` (status activa + vigencia con gracia) → `PlanBenefit` (la misma fuente de verdad que `/api/plans/`). **Sin `has_design_advanced` (solo Plan premium) se descartan del payload** `name_font`, `name_font_size` y `accent` (`DESIGN_ADVANCED_FIELDS` en `viewset.py`; `theme` claro/oscuro es libre en todos los planes); **sin `has_location_map` (Estándar+) se descarta `show_location`** (`LOCATION_FIELDS`): no es un 403 — como el PATCH es parcial, los valores guardados se conservan y el resto del formulario se guarda igual.
 - Reglas de slug: minúsculas/números/guiones internos, 3–60 chars, lista `RESERVED_SLUGS` (admin, api, planes, tienda...).
@@ -461,6 +468,8 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/stores/customization/logo/ → logo de la web (POST multipart/DELETE)
 /api/stores/customization/carousel/ → carrusel de banners (POST/DELETE/PATCH order)
 /api/stores/public/<slug>/catalog/ → catálogo visible de la web pública (AllowAny)
+/api/stores/public/<slug>/contact/captcha/ → challenge antispam firmado para Contáctanos (GET AllowAny)
+/api/stores/public/<slug>/contact/        → formulario Contáctanos → email al dueño (POST AllowAny, throttle 10/h por IP)
 /api/categories/                → categorías del catálogo (Bearer)
 /api/brands/                    → marcas del catálogo (Bearer)
 /api/products/                  → productos del catálogo (Bearer, multipart con image)

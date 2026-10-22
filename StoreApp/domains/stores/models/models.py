@@ -97,6 +97,14 @@ class StoreCustomization(models.Model):
     logo_key                    =   models.CharField(max_length = 200, blank = True, verbose_name = 'Logo (key en R2)')
     logo_size                   =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño del logo (bytes)')
     description                 =   models.TextField(max_length = 800, blank = True, verbose_name = 'Descripción')
+    #Sección "Sobre nosotros": la web pública la renderiza solo si about_text
+    #tiene contenido (about_title vacío -> título por defecto en el frontend).
+    about_title                 =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Sobre nosotros')
+    about_text                  =   models.TextField(max_length = 2000, blank = True, verbose_name = 'Texto de la sección Sobre nosotros')
+    #Formulario de contacto: los mensajes llegan a contact_email o, si está
+    #vacío, al email de la cuenta del dueño. show_contact apaga la sección.
+    contact_email               =   models.EmailField(blank = True, verbose_name = 'Email de contacto público')
+    show_contact                =   models.BooleanField(default = True, verbose_name = 'Mostrar sección de contacto')
     theme                       =   models.CharField(max_length = 10, choices = THEME_CHOICES, default = THEME_LIGHT, verbose_name = 'Tema')
     accent                      =   models.CharField(max_length = 10, choices = ACCENT_CHOICES, default = ACCENT_INDIGO, verbose_name = 'Color de acento')
     whatsapp                    =   models.CharField(max_length = 20, blank = True, verbose_name = 'WhatsApp')

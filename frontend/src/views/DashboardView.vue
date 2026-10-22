@@ -14,6 +14,7 @@ import {
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_FONTS, storeThemeVars, storeFontFamily,
   ensureStoreFont, ensureStoreFontList, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
+  validateAboutTitle, validateAboutText, validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, formatStorageMB
@@ -543,6 +544,9 @@ const designErrors = computed(() => {
   const dn = validateDisplayName(designForm.display_name.trim())
   const h = validateHeadline(designForm.headline.trim())
   const d = validateDescription(designForm.description.trim())
+  const at = validateAboutTitle(designForm.about_title.trim())
+  const ax = validateAboutText(designForm.about_text.trim())
+  const ce = validateContactEmail(designForm.contact_email)
   const w = validateWhatsapp(designForm.whatsapp)
   const ig = validateInstagram(designForm.instagram)
   const tt = validateTiktok(designForm.tiktok)
@@ -550,6 +554,9 @@ const designErrors = computed(() => {
   if (dn) e.display_name = dn
   if (h) e.headline = h
   if (d) e.description = d
+  if (at) e.about_title = at
+  if (ax) e.about_text = ax
+  if (ce) e.contact_email = ce
   if (w) e.whatsapp = w
   if (ig) e.instagram = ig
   if (tt) e.tiktok = tt
@@ -569,6 +576,10 @@ async function saveDesign() {
     display_name: designForm.display_name.trim(),
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
+    about_title: designForm.about_title.trim(),
+    about_text: designForm.about_text.trim(),
+    contact_email: designForm.contact_email.trim(),
+    show_contact: Boolean(designForm.show_contact),
     theme: designForm.theme,
     whatsapp: normalizeWhatsapp(designForm.whatsapp),
     instagram: normalizeInstagram(designForm.instagram),
@@ -1370,12 +1381,41 @@ async function changePassword() {
               <p class="hint">Aparece debajo del titular. {{ designForm.description.length }}/800</p>
               <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
             </div>
+            <AppInput v-model="designForm.about_title" label="Título de la sección Sobre nosotros" name="design_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
+            <div class="field">
+              <label for="design-about-text">Texto de la sección Sobre nosotros</label>
+              <textarea
+                id="design-about-text"
+                v-model="designForm.about_text"
+                class="textarea"
+                :class="{ invalid: designFieldErr('about_text') }"
+                placeholder="Contá la historia de tu negocio: qué hacen, hace cuánto y qué los diferencia"
+                maxlength="2000"
+                rows="6"
+                @blur="designTouched.about_text = true"
+              ></textarea>
+              <p class="hint">Se muestra como una sección completa en tu web, después de la portada. Si queda vacío, la sección no aparece. {{ designForm.about_text.length }}/2000</p>
+              <p v-if="designFieldErr('about_text')" class="field-error" role="alert">{{ designFieldErr('about_text') }}</p>
+            </div>
             <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
             <div class="grid-2">
               <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
               <AppInput v-model="designForm.tiktok" label="TikTok" name="design_tiktok" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
             </div>
             <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
+            <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
+            <div class="field">
+              <label id="design-show-contact-label">Sección Contáctanos</label>
+              <label class="check">
+                <input
+                  v-model="designForm.show_contact"
+                  type="checkbox"
+                  aria-labelledby="design-show-contact-label"
+                />
+                <span>Mostrar en tu web el formulario de contacto con el mapa y tus canales</span>
+              </label>
+              <p class="hint">Incluye verificación antispam. Desactivala si no querés recibir mensajes.</p>
+            </div>
           </div>
           <div class="card">
             <h3><AppIcon name="palette" :size="18" /> Apariencia</h3>
@@ -1869,7 +1909,7 @@ async function changePassword() {
               <select id="acc_tax_condition" v-model="accountForm.tax_condition" class="select">
                 <option v-for="t in TAX_CONDITIONS" :key="t.value" :value="t.value">{{ t.label }}</option>
               </select>
-              <p class="hint">Tipo de documento automático: {{ docKind }} (CF → DNI, resto → CUIT).</p>
+              <p class="hint">Tipo de documento automático: {{ docKind }} (CF usa DNI; el resto, CUIT).</p>
             </div>
             <AppInput v-model="accountForm.business_name" label="Nombre de negocio" name="acc_business_name" placeholder="Escribe tu nombre de negocio" :hint="accountForm.tax_condition === 'CF' ? 'Opcional únicamente para consumidor final.' : 'Obligatorio para tu condición fiscal.'" :error="accountFieldErr('business_name')" @blur="accountTouched.business_name = true" />
             <AppInput v-model="accountForm.document" label="Documento" name="acc_document" placeholder="Escribe tu número de identificación" :hint="docHint" required :error="accountFieldErr('document')" @blur="accountTouched.document = true" />

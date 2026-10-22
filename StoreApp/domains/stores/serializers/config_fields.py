@@ -59,6 +59,32 @@ CustomizationFields           =   {
         'max_length'        :   800,
         'error_messages'    :   {'max_length': 'La descripción admite hasta 800 caracteres'},
     },
+    'about_title'           :   {
+        'label'             :   'Título de la sección Sobre nosotros',
+        'style'             :   {'placeholder': 'Ej. Sobre nosotros'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   80,
+        'error_messages'    :   {'max_length': 'El título admite hasta 80 caracteres'},
+    },
+    'about_text'            :   {
+        'label'             :   'Texto de la sección Sobre nosotros',
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'max_length'        :   2000,
+        'error_messages'    :   {'max_length': 'El texto admite hasta 2000 caracteres'},
+    },
+    'contact_email'         :   {
+        'label'             :   'Email de contacto público',
+        'style'             :   {'placeholder': 'contacto@tunegocio.com'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+    },
+    'show_contact'          :   {
+        'label'             :   'Mostrar sección de contacto',
+        'required'          :   False,
+    },
     'whatsapp'              :   {
         'label'             :   'WhatsApp',
         'style'             :   {'placeholder': '+5493871551234'},
