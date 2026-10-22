@@ -248,6 +248,8 @@ async function share() {
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
 
+const scrollToContact = () => document.getElementById('contacto')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+
 const selected = ref(null)
 const openProduct = (p) => { selected.value = p }
 const closeProduct = () => { selected.value = null }
@@ -365,6 +367,7 @@ onBeforeUnmount(() => {
           <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
         </label>
         <div class="sp-top-end">
+          <a v-if="showContact" class="sp-top-link" href="#contacto" @click.prevent="scrollToContact">Contacto</a>
           <button
             v-if="showThemeToggle"
             type="button"
@@ -565,22 +568,12 @@ onBeforeUnmount(() => {
       <!-- ===== Contáctanos (formulario + canales + mapa de ubicación) ===== -->
       <section v-if="showContact" id="contacto" class="sp-contact" aria-labelledby="sp-contact-title">
         <div class="sp-container">
-          <div v-reveal class="sp-contact-head">
-            <h2 id="sp-contact-title" class="sp-section-title">Contáctanos</h2>
-            <p class="sp-contact-sub">Escribinos tu consulta y te respondemos a la brevedad.</p>
-          </div>
-          <div class="sp-contact-grid" :class="{ 'no-map': !mapUrl }">
-            <div v-reveal="80" class="sp-contact-info">
+          <div class="sp-contact-grid">
+            <div v-reveal class="sp-contact-info">
+              <p class="sp-eyebrow">Contacto</p>
+              <h2 id="sp-contact-title" class="sp-contact-title">Contáctanos</h2>
+              <p class="sp-contact-sub">Escribinos tu consulta y te respondemos a la brevedad.</p>
               <p v-if="mapAddress" class="sp-map-address"><AppIcon name="map-pin" :size="14" /> {{ mapAddress }}</p>
-              <div v-if="mapUrl" class="sp-map-frame">
-                <iframe
-                  :src="mapUrl"
-                  title="Mapa con la ubicación del negocio"
-                  loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"
-                  allowfullscreen
-                ></iframe>
-              </div>
               <div v-if="hasContact" class="sp-contact-channels">
                 <a v-if="whatsappUrl" class="sp-btn" :href="whatsappUrl" target="_blank" rel="noopener">
                   <AppIcon name="whatsapp" :size="16" /> WhatsApp
@@ -628,6 +621,15 @@ onBeforeUnmount(() => {
                 Enviar mensaje
               </button>
             </form>
+          </div>
+          <div v-if="mapUrl" v-reveal="120" class="sp-map-frame">
+            <iframe
+              :src="mapUrl"
+              title="Mapa con la ubicación del negocio"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
           </div>
         </div>
       </section>

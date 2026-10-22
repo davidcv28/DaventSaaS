@@ -435,3 +435,28 @@ html { scroll-behavior: smooth; }
   .sp-rv { opacity: 1 !important; translate: none !important; scale: none !important; }
   .sp-progress { display: none; }
 }
+
+/* ===== Contáctanos: franja propia previa al pie ===== */
+.sp-contact { padding: 88px 0; border-top: 1px solid var(--sp-line); background: var(--sp-surface); scroll-margin-top: var(--sp-top-h); }
+.sp-contact-grid, .sp-contact-grid.no-map { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; max-width: none; }
+.sp-contact-info { gap: 16px; align-content: start; position: sticky; top: calc(var(--sp-top-h) + 32px); }
+.sp-eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sp-accent-text); }
+.sp-contact-title { margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.sp-contact-sub { font-size: 16px; line-height: 1.6; max-width: 40ch; }
+.sp-contact-channels { margin-top: 8px; }
+.sp-contact > .sp-container > .sp-map-frame { margin-top: 56px; }
+.sp-map-frame iframe { height: 380px; }
+.sp-form { padding: 32px; }
+.sp-top-link { color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; transition: background .2s; }
+.sp-top-link:hover { background: rgba(255, 255, 255, .18); }
+@media (max-width: 960px) {
+  .sp-contact { padding: 64px 0; }
+  .sp-contact-grid, .sp-contact-grid.no-map { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .sp-contact-info { position: static; }
+}
+@media (max-width: 640px) {
+  .sp-contact { padding: 48px 0; }
+  .sp-top-link { display: none; }
+  .sp-form { padding: 20px; }
+  .sp-map-frame iframe { height: 280px; }
+}
