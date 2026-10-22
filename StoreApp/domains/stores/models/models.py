@@ -16,6 +16,12 @@ class Store(models.Model):
     user                        =   models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name = 'store')
     slug                        =   models.SlugField(max_length = 60, unique = True, verbose_name = 'Link público')
     is_published                =   models.BooleanField(default = True, verbose_name = 'Link activo')
+    #Moderación staff: una web bloqueada devuelve 404 en todas las rutas
+    #públicas sin importar is_published ni la suscripción. El dueño sigue
+    #entrando a su panel; la causa queda registrada en blocked_reason.
+    is_blocked                  =   models.BooleanField(default = False, verbose_name = 'Web bloqueada por el administrador')
+    blocked_reason              =   models.CharField(max_length = 200, blank = True, verbose_name = 'Motivo del bloqueo')
+    blocked_at                  =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha del bloqueo')
     storage_used_bytes          =   models.BigIntegerField(default = 0, verbose_name = 'Almacenamiento usado (bytes)')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     class Meta:

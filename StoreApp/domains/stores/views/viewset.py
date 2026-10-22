@@ -1,14 +1,15 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage
 from StoreApp.domains.stores.serializers.serializers import (
-    StorePublicSerializer, StoreCustomizationSerializer, StoreCarouselImageSerializer,
-    StoreContactSerializer,
+    StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer,
+    StoreCarouselImageSerializer, StoreContactSerializer,
 )
 from StoreApp.domains.stores.serializers.validators  import (
     RESERVED_SLUGS,
@@ -49,6 +50,8 @@ class StoreViewSet(StoreBaseViewSet):
     def get_permissions(self):
         if self.action in ('public', 'public_catalog', 'contact_captcha', 'contact'):
             return [AllowAny()]
+        if self.action in ('block', 'unblock'):
+            return [IsAdminUser()]
         return super().get_permissions()
     #=========================================
     # SLUG AVAILABLE (check de disponibilidad para el onboarding)
@@ -63,13 +66,46 @@ class StoreViewSet(StoreBaseViewSet):
         available   =   validate_slug_available(slug)
         return Response({'slug': slug, 'available': available, 'reason': None if available else 'taken'}, status = status.HTTP_200_OK)
     #=========================================
+    # BLOCK / UNBLOCK (moderación staff: la web pública pasa a 404)
+    #=========================================
+    @action(detail = True, methods = ['post'])
+    def block(self, request, pk = None):
+        store                   =   self.get_object()
+        reason                  =   (request.data.get('reason') or '').strip()[:200]
+        store.is_blocked        =   True
+        store.blocked_reason    =   reason
+        store.blocked_at        =   timezone.now()
+        store.save(update_fields = ['is_blocked', 'blocked_reason', 'blocked_at'])
+        return Response(
+            {
+                'Exito' : 'La web se bloqueó correctamente',
+                'store' : StoreSerializerList(store).data,
+            },
+            status = status.HTTP_200_OK,
+        )
+
+    @action(detail = True, methods = ['post'])
+    def unblock(self, request, pk = None):
+        store                   =   self.get_object()
+        store.is_blocked        =   False
+        store.blocked_reason    =   ''
+        store.blocked_at        =   None
+        store.save(update_fields = ['is_blocked', 'blocked_reason', 'blocked_at'])
+        return Response(
+            {
+                'Exito' : 'La web se desbloqueó correctamente',
+                'store' : StoreSerializerList(store).data,
+            },
+            status = status.HTTP_200_OK,
+        )
+    #=========================================
     # PUBLIC (resolución pública del link, sin auth)
     #=========================================
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)')
     def public(self, request, slug = None):
         store       =   get_object_or_404(
             Store.objects.select_related('user__city', 'user__province', 'customization'),
-            slug = slug, is_published = True,
+            slug = slug, is_published = True, is_blocked = False,
         )
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
@@ -87,7 +123,7 @@ class StoreViewSet(StoreBaseViewSet):
         )
         store           =   get_object_or_404(
             Store.objects.select_related('user'),
-            slug = slug, is_published = True,
+            slug = slug, is_published = True, is_blocked = False,
         )
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
@@ -120,7 +156,7 @@ class StoreViewSet(StoreBaseViewSet):
         #Mismas condiciones que la web pública + sección habilitada por el dueño.
         store       =   get_object_or_404(
             Store.objects.select_related('user__user', 'customization'),
-            slug = slug, is_published = True,
+            slug = slug, is_published = True, is_blocked = False,
         )
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404

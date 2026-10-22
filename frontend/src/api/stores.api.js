@@ -1,8 +1,10 @@
 import { http } from './http.js'
 
 // Dominio stores (StoreApp):
-// GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization y
-//                                                   storage: {used_bytes, max_mb, images, max_images})
+// GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization,
+//                                                   storage: {used_bytes, max_mb, images, max_images} y
+//                                                   is_blocked/blocked_reason si el staff la bloqueó;
+//                                                   para staff devuelve TODAS las webs con datos del dueño)
 // POST /api/stores/                      Bearer {slug} -> claim del link (onboarding)
 // PATCH /api/stores/<pk>/                Bearer {slug?, is_published?} -> renombrar / pausar
 // GET  /api/stores/slug-available/?slug= Bearer   -> {slug, available, reason: invalid|reserved|taken}

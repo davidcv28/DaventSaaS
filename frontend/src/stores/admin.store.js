@@ -22,6 +22,7 @@ export const useAdminStore = defineStore('admin', () => {
   const approveStatus = ref('idle')
   const planFormStatus = ref('idle')
   const assignStatus = ref('idle')
+  const blockStatus = ref('idle')
 
   const lastError = ref('')
   const notice = ref('')
@@ -155,6 +156,28 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  // Moderación de webs (bloqueo por infracción): el backend devuelve la
+  // tienda ya serializada y se pisa la fila del listado sin recargar.
+  async function setStoreBlocked(store, reason) {
+    blockStatus.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    try {
+      const data = store.is_blocked
+        ? await adminApi.unblockStore(store.id)
+        : await adminApi.blockStore(store.id, reason)
+      const idx = stores.value.findIndex(s => s.id === store.id)
+      if (idx !== -1 && data?.store) stores.value[idx] = data.store
+      notice.value = data?.Exito || (store.is_blocked ? 'Web desbloqueada.' : 'Web bloqueada.')
+      blockStatus.value = 'success'
+      return true
+    } catch (e) {
+      blockStatus.value = 'error'
+      lastError.value = extractApiError(e).nonField || 'No se pudo actualizar el bloqueo de la web.'
+      return false
+    }
+  }
+
   function reset() {
     summary.value = null
     payments.value = []
@@ -171,14 +194,15 @@ export const useAdminStore = defineStore('admin', () => {
     approveStatus.value = 'idle'
     planFormStatus.value = 'idle'
     assignStatus.value = 'idle'
+    blockStatus.value = 'idle'
     lastError.value = ''
     notice.value = ''
   }
 
   return {
     summary, payments, suscriptions, plans, users, stores,
-    summaryStatus, paymentsStatus, suscriptionsStatus, plansStatus, usersStatus, storesStatus, approveStatus, planFormStatus, assignStatus,
+    summaryStatus, paymentsStatus, suscriptionsStatus, plansStatus, usersStatus, storesStatus, approveStatus, planFormStatus, assignStatus, blockStatus,
     lastError, notice, pendingPayments,
-    loadSummary, loadPayments, loadSuscriptions, loadPlans, loadUsers, loadStores, loadAll, approve, assignPlan, savePlan, reset
+    loadSummary, loadPayments, loadSuscriptions, loadPlans, loadUsers, loadStores, loadAll, approve, assignPlan, savePlan, setStoreBlocked, reset
   }
 })

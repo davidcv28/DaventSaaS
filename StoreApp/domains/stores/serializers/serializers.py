@@ -106,7 +106,8 @@ class StoreSerializerList(serializers.ModelSerializer):
     has_access                  =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['id', 'slug', 'is_published', 'created_at', 'public_path', 'customization', 'storage',
+        fields                  =   ['id', 'slug', 'is_published', 'is_blocked', 'blocked_reason', 'blocked_at', 'created_at',
+                                     'public_path', 'customization', 'storage',
                                      'business_name', 'owner_id', 'owner_name', 'owner_email', 'plan_name', 'has_access']
     def get_public_path(self, store):
         return f'/{store.slug}'

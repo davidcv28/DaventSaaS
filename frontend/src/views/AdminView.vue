@@ -28,6 +28,17 @@ const planTouched = ref(false)
 // Asignación manual de plan: select por fila de usuario (userId -> planId).
 const assignSel = reactive({})
 const assigningId = ref(null)
+// Moderación de webs: fila con el formulario de motivo abierto (storeId).
+const BLOCK_REASONS = [
+  'Derechos de autor',
+  'Contenido ilegal',
+  'Fraude o engaño',
+  'Incumplimiento de los términos',
+  'Otro motivo'
+]
+const blockingId = ref(null)
+const blockReason = ref(BLOCK_REASONS[0])
+const blockBusyId = ref(null)
 
 const initial = computed(() => (auth.user?.username || auth.user?.email || 'A').slice(0, 1).toUpperCase())
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Administrador')
@@ -135,11 +146,31 @@ function suscriptionStatusMeta(status) {
   return { kind: 'muted', label: status || '—' }
 }
 
-// Estado público de la web: publicada + suscripción vigente => en vivo.
+// Estado público de la web: el bloqueo staff pisa cualquier otro estado;
+// publicada + suscripción vigente => en vivo.
 function webStatus(s) {
+  if (s.is_blocked) return { kind: 'danger', label: 'Bloqueada' }
   if (!s.is_published) return { kind: 'muted', label: 'Borrador' }
   if (!s.has_access) return { kind: 'warn', label: 'Sin acceso' }
   return { kind: 'ok', label: 'En vivo' }
+}
+
+function startBlock(s) {
+  blockingId.value = s.id
+  blockReason.value = BLOCK_REASONS[0]
+}
+
+async function confirmBlock(s) {
+  blockBusyId.value = s.id
+  const ok = await admin.setStoreBlocked(s, blockReason.value)
+  if (ok) blockingId.value = null
+  blockBusyId.value = null
+}
+
+async function unblockStore(s) {
+  blockBusyId.value = s.id
+  await admin.setStoreBlocked(s)
+  blockBusyId.value = null
 }
 
 async function assignTo(u) {
@@ -452,16 +483,51 @@ function logout() {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="s in admin.stores" :key="s.id">
-                <td data-label="Web"><strong>{{ s.customization?.display_name || s.business_name || s.slug }}</strong><br /><small class="mono">/{{ s.slug }}</small></td>
-                <td data-label="Dueño">{{ s.owner_name }}<br /><small class="muted">{{ s.owner_email }}</small></td>
-                <td data-label="Plan">{{ s.plan_name || '—' }}</td>
-                <td data-label="Estado"><span class="pill" :class="webStatus(s).kind">{{ webStatus(s).label }}</span></td>
-                <td data-label="Creada">{{ fmtDate(s.created_at) }}</td>
-                <td data-label="Abrir">
-                  <a class="btn ghost sm" :href="`/${s.slug}`" target="_blank" rel="noopener" :aria-label="`Abrir la web ${s.slug}`"><AppIcon name="external-link" :size="14" /> Ver</a>
-                </td>
-              </tr>
+              <template v-for="s in admin.stores" :key="s.id">
+                <tr>
+                  <td data-label="Web"><strong>{{ s.customization?.display_name || s.business_name || s.slug }}</strong><br /><small class="mono">/{{ s.slug }}</small></td>
+                  <td data-label="Dueño">{{ s.owner_name }}<br /><small class="muted">{{ s.owner_email }}</small></td>
+                  <td data-label="Plan">{{ s.plan_name || '—' }}</td>
+                  <td data-label="Estado">
+                    <span class="pill" :class="webStatus(s).kind">{{ webStatus(s).label }}</span>
+                    <template v-if="s.is_blocked"><br /><small class="muted">{{ s.blocked_reason || 'Sin motivo cargado' }} · {{ fmtDate(s.blocked_at) }}</small></template>
+                  </td>
+                  <td data-label="Creada">{{ fmtDate(s.created_at) }}</td>
+                  <td data-label="Acciones">
+                    <div class="assign-cell">
+                      <a class="btn ghost sm" :href="`/${s.slug}`" target="_blank" rel="noopener" :aria-label="`Abrir la web ${s.slug}`"><AppIcon name="external-link" :size="14" /> Ver</a>
+                      <button
+                        v-if="s.is_blocked"
+                        class="btn ghost sm"
+                        :disabled="blockBusyId === s.id"
+                        @click="unblockStore(s)"
+                      >
+                        <span v-if="blockBusyId === s.id" class="spinner"></span>
+                        <AppIcon v-else name="shield-check" :size="14" />
+                        Desbloquear
+                      </button>
+                      <button v-else class="btn ghost sm" @click="startBlock(s)"><AppIcon name="lock" :size="14" /> Bloquear</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="blockingId === s.id" class="block-form-row">
+                  <td colspan="6">
+                    <div class="block-form">
+                      <label :for="`block-reason-${s.id}`">Motivo del bloqueo</label>
+                      <select :id="`block-reason-${s.id}`" v-model="blockReason" class="select">
+                        <option v-for="r in BLOCK_REASONS" :key="r" :value="r">{{ r }}</option>
+                      </select>
+                      <button class="btn danger sm" :disabled="blockBusyId === s.id" @click="confirmBlock(s)">
+                        <span v-if="blockBusyId === s.id" class="spinner"></span>
+                        <AppIcon v-else name="lock" :size="14" />
+                        Confirmar bloqueo
+                      </button>
+                      <button class="btn ghost sm" :disabled="blockBusyId === s.id" @click="blockingId = null">Cancelar</button>
+                    </div>
+                    <p class="block-form-note">La web pública queda fuera de línea de inmediato y lo sigue hasta que la desbloquees. El dueño conserva el acceso a su panel.</p>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>

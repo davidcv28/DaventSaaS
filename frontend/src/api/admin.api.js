@@ -10,7 +10,9 @@ import { http } from './http.js'
 // POST /api/suscription-plans/           Bearer admin {name, price} -> crear plan
 // PUT  /api/suscription-plans/<id>/      Bearer admin {name, price} -> actualizar plan
 // GET  /api/user/                        Bearer admin -> listado de usuarios [{id, username, email, is_staff}]
-// GET  /api/stores/                      Bearer staff -> TODAS las webs de clientes (slug, dueño, plan, acceso)
+// GET  /api/stores/                      Bearer staff -> TODAS las webs de clientes (slug, dueño, plan, acceso, bloqueo)
+// POST /api/stores/<id>/block/           Bearer admin {reason?} -> bloquea la web: sus rutas públicas pasan a 404
+// POST /api/stores/<id>/unblock/         Bearer admin -> levanta el bloqueo (la web vuelve a regirse por plan + is_published)
 // POST /api/suscriptions/assign/         Bearer admin {user_id, plan_id} -> asigna plan al usuario (30 días)
 
 // DRF pagina con PageNumberPagination (PAGE_SIZE=10). Recorremos todas las
@@ -65,6 +67,16 @@ export const adminApi = {
 
   async listAllStores() {
     return fetchAllPages('/stores/')
+  },
+
+  async blockStore(id, reason) {
+    const { data } = await http.post(`/stores/${id}/block/`, { reason })
+    return data
+  },
+
+  async unblockStore(id) {
+    const { data } = await http.post(`/stores/${id}/unblock/`)
+    return data
   },
 
   async assignPlan(userId, planId) {
