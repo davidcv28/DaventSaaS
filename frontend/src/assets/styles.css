@@ -626,30 +626,35 @@ body { transition: background-color .2s ease, color .2s ease; }
 .swatch.active { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--swatch); }
 .design-preview { --sp-bg: color-mix(in srgb, var(--store-accent-soft, #eef2ff) 74%, #f4f6fb); --sp-card: rgba(255, 255, 255, .58); --sp-ink: #0f172a; --sp-ink-2: #334155; --sp-muted: #64748b; --sp-line: color-mix(in srgb, var(--store-accent) 34%, #d7dce8); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--sp-bg); color: var(--sp-ink); margin-bottom: 18px; }
 .design-preview[data-store-theme='dark'] { --sp-bg: #0d1220; --sp-card: #151b2e; --sp-ink: #e8ecf7; --sp-ink-2: #c3cbdf; --sp-muted: #93a0bd; --sp-line: #28304d; }
-.dp-nav { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: color-mix(in srgb, var(--sp-card) 80%, var(--store-accent-soft)); border-bottom: 1px solid color-mix(in srgb, var(--store-accent) 30%, var(--sp-line)); }
-.design-preview[data-store-theme='dark'] .dp-nav { background: color-mix(in srgb, var(--store-accent) 12%, var(--sp-card)); }
-.dp-nav-item { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; color: var(--sp-ink-2); }
-.dp-nav-item.active { background: var(--store-accent-soft); color: var(--store-accent-ink); }
-.design-preview[data-store-theme='dark'] .dp-nav-item.active { background: color-mix(in srgb, var(--store-accent) 22%, transparent); color: #fff; }
-.dp-cover { position: relative; height: 84px; overflow: hidden; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
+/* Vista previa: miniatura de la web pública. Refleja la presentación real:
+   barra de acento con marca + links, banda hero con badge/título/CTAs y el
+   carrusel debajo (solo premium con imágenes). */
+.dp-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; background: linear-gradient(180deg, var(--store-accent-ink), color-mix(in srgb, var(--store-accent-ink) 82%, #000)); border-bottom: 1px solid rgba(0, 0, 0, .18); }
+.dp-nav-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dp-nav-logo { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; flex: none; }
+.dp-nav-mono { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; flex: none; background: #fff; color: var(--store-accent-ink); font-size: 10px; font-weight: 800; }
+.dp-nav-name { font-size: 12.5px; font-weight: 700; letter-spacing: -.01em; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-nav-links { display: flex; gap: 2px; flex: none; }
+.dp-nav-item { font-size: 10.5px; font-weight: 600; padding: 4px 9px; border-radius: 7px; color: rgba(255, 255, 255, .85); }
+.dp-hero { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 26px 18px 24px; color: #fff; background: radial-gradient(300px 150px at 85% -20%, rgba(255, 255, 255, .24), transparent 60%), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
+.design-preview[data-store-theme='dark'] .dp-hero { background: radial-gradient(300px 150px at 85% -20%, color-mix(in srgb, var(--store-accent) 40%, transparent), transparent 60%), linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 55%, #0d1220), #111631); }
+.dp-mono { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .35); color: #fff; font-weight: 800; font-size: 20px; }
+.dp-logo { width: 48px; height: 48px; border-radius: 14px; object-fit: cover; background: rgba(255, 255, 255, .92); }
+.dp-badge { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 11px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .42); background: rgba(255, 255, 255, .14); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-title { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
+/* Cuando el título es el nombre (sin titular) gobierna --store-name-size. */
+.dp-title.is-name { font-size: clamp(15px, calc(var(--store-name-size, 32px) * .55), 34px); }
+.dp-desc { font-size: 11.5px; line-height: 1.55; color: rgba(255, 255, 255, .85); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 46ch; }
+.dp-cta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+.dp-btn { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 99px; background: #fff; color: var(--store-accent-ink); }
+.dp-btn.ghost { background: transparent; border: 1px solid rgba(255, 255, 255, .55); color: #fff; }
+.dp-carousel { height: 84px; margin: 14px 14px 0; border-radius: 10px; overflow: hidden; background: var(--sp-line); }
 .dp-carousel-track { display: flex; height: 100%; transition: transform .5s ease; }
 .dp-carousel-img { width: 100%; height: 100%; flex: 0 0 100%; object-fit: cover; display: block; }
-.dp-body { display: grid; justify-items: center; text-align: center; padding: 0 18px 20px; }
-.dp-mono { width: 56px; height: 56px; margin-top: -28px; border-radius: 16px; border: 3px solid var(--sp-bg); display: grid; place-items: center; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; font-weight: 800; font-size: 22px; }
-.dp-logo { width: 56px; height: 56px; margin-top: -28px; border-radius: 16px; border: 3px solid var(--sp-bg); object-fit: cover; background: var(--sp-card); }
-/* Sin portada (planes sin carrusel): el logo no se superpone a nada. */
-.design-preview.no-cover .dp-body { padding-top: 20px; }
-.design-preview.no-cover .dp-logo, .design-preview.no-cover .dp-mono { margin-top: 0; }
 .logo-box { display: flex; align-items: center; gap: 14px; }
 .logo-thumb { width: 56px; height: 56px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: grid; place-items: center; overflow: hidden; flex: none; }
 .logo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .logo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.dp-name { margin-top: 10px; font-size: clamp(15px, calc(var(--store-name-size, 32px) * .52), 30px); font-weight: 800; letter-spacing: -.02em; }
-.dp-headline { font-size: 12.5px; color: var(--sp-ink-2); margin-top: 2px; }
-.dp-desc { font-size: 12px; color: var(--sp-muted); margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 46ch; }
-.dp-cta { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
-.dp-btn { font-size: 11.5px; font-weight: 600; padding: 6px 14px; border-radius: 99px; background: var(--store-accent); color: #fff; }
-.dp-btn.ghost { background: var(--sp-card); color: var(--sp-ink-2); border: 1px solid var(--sp-line); }
 /* Medidor de almacenamiento de imágenes (StorageMeter.vue): usado en
    Resumen y en la sección Mi catálogo. */
 .storage-meter { display: grid; gap: 8px; }
@@ -663,7 +668,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 @media (prefers-reduced-motion: reduce) { .storage-meter-bar { transition: none; } }
 
 /* Tira que indica el mapa de ubicación en la vista previa del diseño. */
-.dp-map { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 18px 16px; padding: 10px; border: 1px dashed var(--sp-line); border-radius: 10px; background: var(--sp-soft); font-size: 11.5px; color: var(--sp-muted); }
+.dp-map { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 14px 18px 16px; padding: 10px; border: 1px dashed var(--sp-line); border-radius: 10px; background: var(--sp-soft); font-size: 11.5px; color: var(--sp-muted); }
 .dp-map .icon { color: var(--store-accent); }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
@@ -885,12 +890,7 @@ body { transition: background-color .2s ease, color .2s ease; }
   /* Alertas más compactas en pantallas chicas */
   .alert { padding: 10px 12px; font-size: 12.5px; gap: 8px; margin: 12px 0; }
   .sp-top-inner { padding: 10px 16px; }
-  .sp-cover { height: 150px; }
-  .sp-carousel { height: 170px; }
-  .sp-mono.lg, .sp-logo.lg { width: 72px; height: 72px; font-size: 28px; margin-top: -36px; }
-  .sp-hero-body { padding: 0 18px 26px; }
   .sp-main { padding: 28px 16px 40px; }
-  .sp-catalog-head { flex-direction: column; align-items: stretch; }
   .sp-search { flex: none; width: 100%; }
   .sp-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .theme-options { flex-direction: column; }

@@ -38,6 +38,11 @@
    la barra de acento, igual que el WhatsApp. */
 .sp-top .sp-icon-btn { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .35); color: #fff; box-shadow: none; }
 .sp-top .sp-icon-btn:hover { background: rgba(255, 255, 255, .26); border-color: #fff; color: #fff; filter: none; }
+/* Links de sección de la barra superior (modelo de la landing de referencia):
+   anclas a Catálogo / Nosotros / Galería / Contacto. */
+.sp-top-links { display: flex; align-items: center; gap: 2px; }
+.sp-top-links a { padding: 7px 12px; border-radius: 8px; color: rgba(255, 255, 255, .85); font-size: 13.5px; font-weight: 600; text-decoration: none; transition: background .15s, color .15s; }
+.sp-top-links a:hover { color: #fff; background: rgba(255, 255, 255, .14); }
 .sp-search-top { flex: 0 1 480px; min-width: 0; }
 .sp-search.sp-search-inline { display: none; }
 .sp-brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; color: inherit; text-decoration: none; }
@@ -81,11 +86,31 @@
 .sp-state p { margin: 0; color: var(--sp-muted); max-width: 44ch; }
 .sp-state-icon, .sp-empty-icon { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--sp-soft); color: var(--sp-accent-text); }
 
-/* --- Portada --- */
-.sp-hero { padding-top: 32px; }
+/* --- Presentación (portada): banda de acento a todo lo ancho con la
+   identidad centrada (badge, título, subtítulo, CTAs, meta). El titular
+   (headline) es el h1 cuando existe; si no, lo es el nombre. --- */
+.sp-hero-band { position: relative; color: #fff; background-size: 150% 150%; background-image: radial-gradient(720px 340px at 82% -20%, rgba(255, 255, 255, .26), transparent 60%), radial-gradient(560px 340px at 6% 130%, rgba(255, 255, 255, .14), transparent 60%), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); animation: sp-aurora 16s ease-in-out infinite alternate; }
+.store-page[data-store-theme='dark'] .sp-hero-band { background-image: radial-gradient(720px 340px at 82% -20%, color-mix(in srgb, var(--store-accent) 42%, transparent), transparent 60%), radial-gradient(560px 340px at 6% 130%, color-mix(in srgb, var(--store-accent) 22%, transparent), transparent 60%), linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 55%, #0d1220), #111631); }
+.sp-hero-inner { display: grid; justify-items: center; text-align: center; padding: 76px 40px 68px; }
+.sp-hero-badge { display: inline-flex; align-items: center; gap: 7px; margin: 22px 0 0; padding: 6px 15px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .42); background: rgba(255, 255, 255, .14); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: 11.5px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
+.sp-hero-title { margin: 20px 0 0; max-width: 22ch; font-size: clamp(30px, 4.8vw, 50px); font-weight: 800; letter-spacing: -.03em; line-height: 1.12; overflow-wrap: anywhere; }
+/* Cuando el h1 es el nombre (sin titular) gobierna --store-name-size del
+   dueño; el mínimo evita una portada enana si elige 20px. */
+.sp-hero-title.is-name { font-size: clamp(28px, 6vw, var(--store-name-size, 48px)); }
+.sp-hero-sub { margin: 18px 0 0; max-width: 62ch; font-size: 15.5px; line-height: 1.75; color: rgba(255, 255, 255, .88); white-space: pre-line; overflow-wrap: anywhere; }
+.sp-hero-ctas { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.sp-hero-ctas .sp-btn { height: 46px; padding: 0 24px; font-size: 14.5px; }
+.sp-btn.sp-hero-btn { background: #fff; border-color: transparent; color: var(--store-accent-ink); }
+.sp-btn.sp-hero-btn:hover { background: rgba(255, 255, 255, .9); }
+.sp-btn.sp-hero-ghost { background: transparent; border-color: rgba(255, 255, 255, .55); color: #fff; }
+.sp-btn.sp-hero-ghost:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
+.sp-hero .sp-icon-btn { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .4); color: #fff; box-shadow: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.sp-hero .sp-icon-btn:hover { background: rgba(255, 255, 255, .26); border-color: #fff; color: #fff; filter: none; }
+.sp-hero-meta { list-style: none; display: flex; align-items: center; justify-content: center; gap: 10px 26px; flex-wrap: wrap; margin: 22px 0 0; padding: 0; font-size: 13px; color: rgba(255, 255, 255, .78); }
+.sp-hero-meta li { display: inline-flex; align-items: center; gap: 7px; }
+.sp-hero-carousel { margin-top: 48px; }
+
 .sp-banner { width: 100%; margin: 0 auto; border-radius: 24px; overflow: hidden; background: var(--sp-line); aspect-ratio: 4 / 1; min-height: 160px; max-height: 280px; box-shadow: var(--sp-shadow-sm); }
-.sp-cover { height: 100%; background: radial-gradient(700px 260px at 85% -20%, rgba(255, 255, 255, .28), transparent 60%), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
-.store-page[data-store-theme='dark'] .sp-cover { background: radial-gradient(700px 260px at 85% -20%, color-mix(in srgb, var(--store-accent) 45%, transparent), transparent 60%), linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 55%, #0d1220), #111631); }
 .sp-carousel { position: relative; height: 100%; overflow: hidden; touch-action: pan-y; }
 .sp-carousel-track { display: flex; height: 100%; transition: transform .45s ease; cursor: grab; }
 .sp-carousel.dragging .sp-carousel-track { cursor: grabbing; }
@@ -98,18 +123,8 @@
 .sp-carousel-dot { width: 8px; height: 8px; border-radius: 99px; border: none; padding: 0; background: rgba(255, 255, 255, .55); cursor: pointer; transition: background .15s, width .15s; }
 .sp-carousel-dot.active { background: #fff; width: 22px; }
 
-.sp-identity { display: flex; align-items: center; gap: 28px; margin-top: 32px; padding: 0 16px 8px; flex-wrap: wrap; }
-.sp-identity-text { flex: 1; min-width: 220px; display: grid; gap: 8px; }
-/* El tamaño del nombre lo elige el dueño (name_font_size → --store-name-size);
-   el 7.5vw lo acota en pantallas chicas sin pisar la elección en desktop. */
-.sp-identity-text h1 { margin: 0; font-size: clamp(24px, 7.5vw, var(--store-name-size, 32px)); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
-.sp-headline { margin: 0; font-size: 16px; color: var(--sp-ink-2); }
-.sp-location { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--sp-muted); }
-.sp-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.sp-desc { margin: 24px 16px 0; max-width: 76ch; font-size: 15px; line-height: 1.7; color: var(--sp-ink-2); white-space: pre-line; }
-
 /* --- Catálogo: layout --- */
-.sp-main { flex: 1; padding-top: 56px; padding-bottom: 88px; }
+.sp-main { flex: 1; padding-top: 64px; padding-bottom: 88px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
 .sp-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; align-items: start; }
 .sp-layout.has-nav { grid-template-columns: 260px minmax(0, 1fr); }
 .sp-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
@@ -221,20 +236,25 @@
 .sp-empty strong { font-size: 16px; }
 .sp-empty p { margin: 0 0 8px; color: var(--sp-muted); font-size: 14px; max-width: 46ch; }
 
-/* --- Sobre nosotros --- */
-.sp-about { padding: 8px 0 0; }
-.sp-about .sp-section-title { margin: 0 0 18px; }
-.sp-about-card { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); padding: 28px 32px; box-shadow: var(--sp-shadow-md); }
+/* --- Sobre nosotros: contenido a la izquierda (eyebrow + título con icono,
+   texto y especialidades como lista con checks), tarjeta destacada a la
+   derecha con años de trayectoria y la misión. --- */
+.sp-about { padding: 72px 0 0; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-about-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 56px; align-items: center; }
+.sp-about-grid.no-card { grid-template-columns: minmax(0, 720px); }
+.sp-about-info { display: grid; gap: 16px; justify-items: start; }
+.sp-about-heading { display: flex; align-items: center; gap: 16px; margin: 0; font-size: clamp(26px, 3.4vw, 36px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; overflow-wrap: anywhere; }
+.sp-about-heading-icon { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 16px; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 10px 22px -10px var(--store-accent-ink); }
 .sp-about-text { margin: 0; font-size: 15px; line-height: 1.75; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; }
-.sp-about-main { display: flex; gap: 32px; align-items: flex-start; }
-.sp-about-years { flex: 0 0 auto; margin: 0; display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 100px; padding: 16px 20px; border-radius: var(--sp-radius); background: var(--store-accent-soft); border: 1px solid color-mix(in srgb, var(--store-accent) 25%, var(--sp-line)); }
-.sp-about-years strong { font-size: 30px; font-weight: 800; letter-spacing: -.02em; color: var(--store-accent-ink); line-height: 1.1; }
+.sp-about-list { list-style: none; display: grid; gap: 12px; margin: 6px 0 0; padding: 0; }
+.sp-about-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 14.5px; line-height: 1.55; color: var(--sp-ink-2); }
+.sp-about-list .icon { flex: none; margin-top: 2px; color: var(--sp-accent-text); }
+.sp-about-card { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); padding: 28px 32px; box-shadow: var(--sp-shadow-md); display: grid; gap: 20px; align-content: start; }
+.sp-about-years { margin: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 18px 20px; border-radius: var(--sp-radius); background: var(--store-accent-soft); border: 1px solid color-mix(in srgb, var(--store-accent) 25%, var(--sp-line)); }
+.sp-about-years strong { font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--store-accent-ink); line-height: 1.1; }
 .sp-about-years span { font-size: 11.5px; font-weight: 600; color: var(--sp-ink-2); text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
-.sp-about-body { flex: 1; min-width: 0; }
-.sp-about-mission { margin: 16px 0 0; padding: 12px 16px; border-left: 3px solid var(--store-accent); background: var(--sp-soft); border-radius: 0 var(--sp-radius) var(--sp-radius) 0; font-size: 14px; line-height: 1.65; color: var(--sp-ink); white-space: pre-line; overflow-wrap: anywhere; }
+.sp-about-mission { margin: 0; padding: 12px 16px; border-left: 3px solid var(--store-accent); background: var(--sp-soft); border-radius: 0 var(--sp-radius) var(--sp-radius) 0; font-size: 14px; line-height: 1.65; color: var(--sp-ink); white-space: pre-line; overflow-wrap: anywhere; }
 .sp-about-mission-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--store-accent-ink); margin-bottom: 4px; }
-.sp-about-tags { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; }
-.sp-about-tag { font-size: 12.5px; font-weight: 600; color: var(--store-accent-ink); background: var(--store-accent-soft); border: 1px solid color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); padding: 5px 12px; border-radius: 999px; }
 
 /* --- Contáctanos (formulario + canales + mapa embebido) --- */
 .sp-contact { padding-bottom: 64px; }
@@ -294,8 +314,12 @@
 .store-page[data-store-theme='dark'] .sp-modal-close { background: var(--sp-card-solid); }
 
 /* --- Responsive --- */
+@media (max-width: 1100px) {
+  .sp-top-links { display: none; }
+}
 @media (max-width: 960px) {
   .sp-contact-grid { grid-template-columns: minmax(0, 1fr); }
+  .sp-about-grid, .sp-about-grid.no-card { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .sp-layout.has-nav { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .sp-burger { display: grid; }
   .sp-overlay { display: block; position: fixed; inset: 0; z-index: 30; background: rgba(10, 12, 30, .45); opacity: 0; visibility: hidden; transition: opacity .15s, visibility .15s; }
@@ -309,14 +333,12 @@
 }
 @media (max-width: 640px) {
   .sp-container { padding: 0 20px; }
-  .sp-hero { padding-top: 16px; }
+  .sp-hero-inner { padding: 56px 20px 48px; }
   .sp-banner { display: none; }
-  .sp-identity { flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 24px; padding: 0 4px; }
+  .sp-hero-carousel { margin-top: 0; }
   .sp-mono.lg, .sp-logo.lg { width: 80px; height: 80px; border-radius: 20px; font-size: 32px; }
-  .sp-identity-text { min-width: 0; width: 100%; }
-  .sp-actions { width: 100%; }
-  .sp-actions .sp-btn { flex: 1; }
-  .sp-desc { margin: 12px 4px 0; }
+  .sp-about { padding-top: 56px; }
+  .sp-about-heading-icon { width: 44px; height: 44px; border-radius: 13px; }
   .sp-main { padding-top: 36px; padding-bottom: 56px; }
   .sp-search.sp-search-top { display: none; }
   .sp-search.sp-search-inline { display: flex; flex-basis: 100%; }
@@ -329,9 +351,6 @@
   .sp-card-img { aspect-ratio: 16 / 10; }
   .sp-card-body { padding: 16px 18px 18px; }
   .sp-about-card, .sp-form { padding: 20px; }
-  .sp-about-main { flex-direction: column; gap: 18px; }
-  .sp-about-years { flex-direction: row; gap: 10px; align-items: baseline; min-width: 0; padding: 12px 16px; }
-  .sp-about-years strong { font-size: 22px; }
   .sp-contact { padding-bottom: 48px; }
   .sp-foot-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .sp-foot-bottom { flex-direction: column; align-items: flex-start; }
@@ -375,10 +394,7 @@
 .sp-carousel:hover .sp-carousel-arrow, .sp-carousel-arrow:focus-visible { opacity: 1; }
 .sp-carousel-arrow:hover { transform: translateY(-50%) scale(1.08); }
 .sp-carousel-dot { transition: background .25s, width .35s var(--sp-ease); }
-.sp-cover { position: relative; background-size: 140% 140%; animation: sp-aurora 14s ease-in-out infinite alternate; }
-.sp-cover::after { content: ''; position: absolute; inset: 0; background: radial-gradient(420px 200px at 20% 120%, rgba(255, 255, 255, .22), transparent 70%); animation: sp-glow 7s ease-in-out infinite alternate; }
 @keyframes sp-aurora { from { background-position: 0% 40%; } to { background-position: 100% 60%; } }
-@keyframes sp-glow { from { opacity: .4; transform: translateX(-6%); } to { opacity: 1; transform: translateX(8%); } }
 
 /* Identidad: logo con anillo cónico girando al hover + tilde del avatar */
 .sp-ava { position: relative; display: inline-block; flex: none; border-radius: 24px; }
@@ -387,7 +403,6 @@
 @keyframes sp-spin { to { transform: rotate(1turn); } }
 .sp-mono.lg, .sp-logo.lg { transition: box-shadow .4s var(--sp-ease), transform .5s var(--sp-ease); }
 .sp-ava:hover .sp-mono.lg, .sp-ava:hover .sp-logo.lg { transform: rotate(-4deg); box-shadow: 0 0 0 1px var(--sp-line), 0 0 0 7px color-mix(in srgb, var(--store-accent) 18%, transparent), var(--sp-shadow-md); }
-.sp-identity-text h1::after { content: ''; display: block; width: 56px; height: 3px; margin-top: 12px; border-radius: 99px; background: linear-gradient(90deg, var(--store-accent), transparent); transform-origin: left; animation: sp-grow 1s var(--sp-ease) .5s both; }
 @keyframes sp-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .sp-section-title { position: relative; }
 .sp-section-title::after { content: ''; display: block; width: 28px; height: 3px; margin-top: 8px; border-radius: 99px; background: var(--store-accent); transition: width .5s var(--sp-ease); }
@@ -556,8 +571,8 @@ html { scroll-behavior: smooth; }
 .sp-mono { background-size: 220% 220%; animation: sp-mono-pan 9s ease-in-out infinite alternate; }
 @keyframes sp-mono-pan { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
 
-/* Nombre de la tienda: halo suave en modo oscuro */
-.store-page[data-store-theme='dark'] .sp-identity-text h1 { text-shadow: 0 0 34px color-mix(in srgb, var(--store-accent) 28%, transparent); }
+/* Título del hero: halo suave en modo oscuro */
+.store-page[data-store-theme='dark'] .sp-hero-title { text-shadow: 0 0 34px color-mix(in srgb, var(--store-accent) 28%, transparent); }
 
 /* Títulos de sección: subrayado degradado */
 .sp-section-title::after { background: linear-gradient(90deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 30%, transparent)); }
@@ -638,7 +653,7 @@ html { scroll-behavior: smooth; }
 /* ===== Galería: grilla de imágenes + visor (lightbox) =====
    Las imágenes las sube el dueño desde Diseño web (cupo por plan vía el
    beneficio max_gallery_images); la sección se oculta sola sin imágenes. */
-.sp-gallery { padding: 40px 0 0; }
+.sp-gallery { padding: 64px 0 0; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
 .sp-gallery .sp-section-title { margin: 0 0 18px; }
 .sp-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
 .sp-gallery-item { display: block; padding: 0; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); overflow: hidden; background: var(--sp-soft); aspect-ratio: 4 / 3; cursor: zoom-in; box-shadow: var(--sp-shadow-sm); transition: box-shadow .2s, border-color .2s, transform .25s var(--sp-ease); }

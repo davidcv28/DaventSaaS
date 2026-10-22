@@ -1661,28 +1661,32 @@ async function changePassword() {
 
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
-          <div class="design-preview" :class="{ 'no-cover': !canDesignAdvanced }" :data-store-theme="designForm.theme" :style="designPreviewVars">
+          <div class="design-preview" :data-store-theme="designForm.theme" :style="designPreviewVars">
             <div class="dp-nav" aria-hidden="true">
-              <span class="dp-nav-item active">Inicio</span>
-              <span class="dp-nav-item">Catálogo</span>
-              <span class="dp-nav-item">Contacto</span>
+              <span class="dp-nav-brand">
+                <img v-if="currentLogo" class="dp-nav-logo" :src="currentLogo" alt="" />
+                <span v-else class="dp-nav-mono" aria-hidden="true">{{ businessInitial }}</span>
+                <span class="dp-nav-name" :style="designNameFont">{{ designShopName }}</span>
+              </span>
+              <span class="dp-nav-links">
+                <span class="dp-nav-item">Catálogo</span>
+                <span class="dp-nav-item">Contacto</span>
+              </span>
             </div>
-            <div v-if="canDesignAdvanced" class="dp-cover">
-              <div v-if="carouselImages.length" class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
-                <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
-              </div>
-            </div>
-            <div class="dp-body">
+            <div class="dp-hero">
               <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
               <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>
-              <strong class="dp-name" :style="designNameFont">{{ designShopName }}</strong>
-              <span class="dp-headline">{{ designForm.headline || 'El titular de tu tienda' }}</span>
+              <span class="dp-badge">{{ designForm.headline ? designShopName : 'Catálogo online' }}</span>
+              <strong class="dp-title" :class="{ 'is-name': !designForm.headline }" :style="designForm.headline ? null : designNameFont">{{ designForm.headline || designShopName }}</strong>
               <span v-if="designForm.description" class="dp-desc">{{ designForm.description }}</span>
-              <div v-if="designForm.whatsapp || designForm.instagram || designForm.tiktok || designForm.facebook" class="dp-cta">
-                <span v-if="designForm.whatsapp" class="dp-btn">WhatsApp</span>
-                <span v-if="designForm.instagram" class="dp-btn ghost">Instagram</span>
-                <span v-if="designForm.tiktok" class="dp-btn ghost">TikTok</span>
-                <span v-if="designForm.facebook" class="dp-btn ghost">Facebook</span>
+              <div class="dp-cta">
+                <span class="dp-btn">Ver catálogo</span>
+                <span class="dp-btn ghost">Contáctanos</span>
+              </div>
+            </div>
+            <div v-if="canDesignAdvanced && carouselImages.length" class="dp-carousel">
+              <div class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
+                <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
               </div>
             </div>
             <div v-if="canLocationMap && designForm.show_location" class="dp-map" aria-hidden="true">

@@ -88,6 +88,25 @@ const hasAbout = computed(() => custom.value.show_about !== false && Boolean(
   || custom.value.about_years
 ))
 const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nosotros')
+// Tarjeta destacada de la sección (columna derecha): solo existe si hay
+// años de trayectoria o misión cargados; sin ellos la info va a una columna.
+const hasAboutCard = computed(() => Boolean(custom.value.about_years || custom.value.about_mission?.trim()))
+
+// --- Presentación (hero): banda de acento con la identidad del negocio.
+// Si el dueño cargó un titular, el titular es el h1 y el nombre viaja en el
+// badge; si no, el h1 es el nombre y el badge muestra la ubicación. ---
+const heroTitleIsName = computed(() => !custom.value.headline?.trim())
+const heroTitle = computed(() => custom.value.headline?.trim() || shopName.value)
+const heroBadge = computed(() => (heroTitleIsName.value ? (location.value || 'Catálogo online') : shopName.value))
+const heroBadgeIcon = computed(() => (heroTitleIsName.value ? (location.value ? 'map-pin' : 'store') : ''))
+const heroMeta = computed(() => {
+  const items = []
+  if (!heroTitleIsName.value && location.value) items.push({ icon: 'map-pin', text: location.value })
+  if (custom.value.about_years) items.push({ icon: 'clock', text: `+${custom.value.about_years} años de trayectoria` })
+  const n = catalog.value.products.length
+  if (catalogStatus.value === 'success' && n) items.push({ icon: 'package', text: `${n} ${n === 1 ? 'producto' : 'productos'}` })
+  return items
+})
 
 // --- Galería (imágenes propias del negocio; el dueño la apaga con
 // show_gallery y se oculta sola sin imágenes cargadas) ---
@@ -433,6 +452,12 @@ onBeforeUnmount(() => {
           <span v-else class="sp-mono sm" aria-hidden="true">{{ initial }}</span>
           <span class="sp-name" :style="nameFont">{{ shopName }}</span>
         </a>
+        <nav v-if="status === 'success'" class="sp-top-links" aria-label="Secciones de la tienda">
+          <a href="#catalogo">Catálogo</a>
+          <a v-if="hasAbout" href="#nosotros">Nosotros</a>
+          <a v-if="showGallery" href="#galeria">Galería</a>
+          <a v-if="showContact" href="#contacto">Contacto</a>
+        </nav>
         <label v-if="status === 'success'" class="sp-search sp-search-top">
           <AppIcon name="search" :size="16" aria-hidden="true" />
           <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="search = ''" />
@@ -466,11 +491,37 @@ onBeforeUnmount(() => {
     </div>
 
     <template v-else>
-      <!-- ===== Portada + identidad ===== -->
+      <!-- ===== Presentación (portada de la empresa) ===== -->
       <section class="sp-hero">
-        <div class="sp-container">
-          <div v-if="hasDesignAdvanced" v-reveal class="sp-banner">
-            <div v-if="carousel.length" ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
+        <div class="sp-hero-band">
+          <div class="sp-container sp-hero-inner">
+            <span v-reveal class="sp-ava">
+              <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+              <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
+            </span>
+            <p v-reveal="80" class="sp-hero-badge">
+              <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
+              {{ heroBadge }}
+            </p>
+            <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
+            <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
+            <div v-reveal="320" class="sp-hero-ctas">
+              <a class="sp-btn sp-hero-btn" href="#catalogo">Ver catálogo</a>
+              <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto">Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
+              <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Carrusel de destacados (premium): queda debajo de la banda -->
+        <div v-if="hasDesignAdvanced && carousel.length" class="sp-container sp-hero-carousel">
+          <div v-reveal class="sp-banner">
+            <div ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
               <div class="sp-carousel-track" :style="trackStyle">
                 <img v-for="(img, i) in carousel" :key="img.id" class="sp-carousel-img" :class="{ active: i === slide }" :src="img.url" alt="" draggable="false" />
               </div>
@@ -492,56 +543,39 @@ onBeforeUnmount(() => {
                 <span v-if="!reduceMotion" :key="`${slide}-${slideEpoch}`" class="sp-slide-progress" aria-hidden="true"></span>
               </template>
             </div>
-            <div v-else class="sp-cover" aria-hidden="true"></div>
           </div>
-
-          <div class="sp-identity">
-            <span v-reveal="80" class="sp-ava">
-              <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
-              <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
-            </span>
-            <div v-reveal="160" class="sp-identity-text">
-              <h1 :style="nameFont">{{ shopName }}</h1>
-              <p v-if="custom.headline" class="sp-headline">{{ custom.headline }}</p>
-              <p v-if="location" class="sp-location"><AppIcon name="map-pin" :size="14" /> {{ location }}</p>
-            </div>
-            <div v-reveal="240" class="sp-actions">
-              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
-                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
-              </button>
-            </div>
-          </div>
-          <p v-if="custom.description" v-reveal="320" class="sp-desc">{{ custom.description }}</p>
         </div>
       </section>
 
-      <!-- ===== Sobre nosotros ===== -->
-      <section v-if="hasAbout" class="sp-about" aria-labelledby="sp-about-title">
-        <div class="sp-container">
-          <h2 id="sp-about-title" v-reveal class="sp-section-title">{{ aboutTitle }}</h2>
-          <div v-reveal="100" class="sp-about-card">
-            <div class="sp-about-main">
-              <p v-if="custom.about_years" class="sp-about-years">
-                <strong>{{ custom.about_years }}+</strong>
-                <span>años de trayectoria</span>
-              </p>
-              <div class="sp-about-body">
-                <p v-if="custom.about_text" class="sp-about-text">{{ custom.about_text }}</p>
-                <blockquote v-if="custom.about_mission" class="sp-about-mission">
-                  <span class="sp-about-mission-label">Nuestra misión</span>
-                  {{ custom.about_mission }}
-                </blockquote>
-              </div>
-            </div>
-            <ul v-if="aboutSpecialties.length" class="sp-about-tags">
-              <li v-for="s in aboutSpecialties" :key="s" class="sp-about-tag">{{ s }}</li>
+      <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->
+      <section v-if="hasAbout" id="nosotros" class="sp-about" aria-labelledby="sp-about-title">
+        <div class="sp-container sp-about-grid" :class="{ 'no-card': !hasAboutCard }">
+          <div v-reveal class="sp-about-info">
+            <p class="sp-eyebrow">Conocenos</p>
+            <h2 id="sp-about-title" class="sp-about-heading">
+              <span class="sp-about-heading-icon" aria-hidden="true"><AppIcon name="store" :size="26" /></span>
+              {{ aboutTitle }}
+            </h2>
+            <p v-if="custom.about_text" class="sp-about-text">{{ custom.about_text }}</p>
+            <ul v-if="aboutSpecialties.length" class="sp-about-list">
+              <li v-for="s in aboutSpecialties" :key="s"><AppIcon name="check" :size="16" /> <span>{{ s }}</span></li>
             </ul>
+          </div>
+          <div v-if="hasAboutCard" v-reveal="140" class="sp-about-card">
+            <p v-if="custom.about_years" class="sp-about-years">
+              <strong>+{{ custom.about_years }}</strong>
+              <span>años de trayectoria</span>
+            </p>
+            <blockquote v-if="custom.about_mission" class="sp-about-mission">
+              <span class="sp-about-mission-label">Nuestra misión</span>
+              {{ custom.about_mission }}
+            </blockquote>
           </div>
         </div>
       </section>
 
       <!-- ===== Galería ===== -->
-      <section v-if="showGallery" class="sp-gallery" aria-labelledby="sp-gallery-title">
+      <section v-if="showGallery" id="galeria" class="sp-gallery" aria-labelledby="sp-gallery-title">
         <div class="sp-container">
           <h2 id="sp-gallery-title" v-reveal class="sp-section-title">Galería</h2>
           <div class="sp-gallery-grid">
@@ -558,7 +592,7 @@ onBeforeUnmount(() => {
       </section>
 
       <!-- ===== Catálogo ===== -->
-      <main class="sp-container sp-main">
+      <main id="catalogo" class="sp-container sp-main">
         <div class="sp-layout" :class="{ 'has-nav': hasCatalogNav }">
           <div v-if="hasCatalogNav" class="sp-overlay" :class="{ open: menuOpen }" aria-hidden="true" @click="menuOpen = false"></div>
           <aside v-if="hasCatalogNav" id="sp-drawer" class="sp-drawer" :class="{ open: menuOpen }" aria-label="Categorías y marcas">
