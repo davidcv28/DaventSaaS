@@ -315,6 +315,12 @@
 .store-page[data-store-theme='dark'] .sp-modal-close { background: var(--sp-card-solid); }
 
 /* --- Responsive --- */
+/* En la página de Inicio la barra superior solo existe en móvil: en escritorio
+   el hero (banda de acento con sus CTAs) ya cumple ese rol de entrada. */
+@media (min-width: 1101px) {
+  .store-page.is-home { --sp-top-h: 0px; }
+  .store-page.is-home .sp-top { display: none; }
+}
 @media (max-width: 1100px) {
   .sp-top-links { display: none; }
 }

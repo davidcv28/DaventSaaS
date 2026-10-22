@@ -56,6 +56,7 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
 const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
 const isCatalog = computed(() => route.name === 'store-catalog')
+const isHome = computed(() => route.name === 'store-public')
 const homeTo = computed(() => ({ name: 'store-public', params: { slug: slug.value } }))
 const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
 
@@ -121,7 +122,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :data-store-theme="pageTheme" :style="themeVars">
+  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :style="themeVars">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
