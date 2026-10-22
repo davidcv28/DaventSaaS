@@ -242,8 +242,6 @@ async function share() {
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
 
-const scrollToContact = () => document.getElementById('contacto')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
-
 const selected = ref(null)
 const openProduct = (p) => { selected.value = p }
 const closeProduct = () => { selected.value = null }
@@ -361,7 +359,6 @@ onBeforeUnmount(() => {
           <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
         </label>
         <div class="sp-top-end">
-          <a v-if="showContact" class="sp-top-link" href="#contacto" @click.prevent="scrollToContact">Contacto</a>
           <button
             v-if="showThemeToggle"
             type="button"

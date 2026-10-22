@@ -447,8 +447,6 @@ html { scroll-behavior: smooth; }
 .sp-contact > .sp-container > .sp-map-frame { margin-top: 56px; }
 .sp-map-frame iframe { height: 380px; }
 .sp-form { padding: 32px; }
-.sp-top-link { color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; transition: background .2s; }
-.sp-top-link:hover { background: rgba(255, 255, 255, .18); }
 @media (max-width: 960px) {
   .sp-contact { padding: 64px 0; }
   .sp-contact-grid, .sp-contact-grid.no-map { grid-template-columns: minmax(0, 1fr); gap: 32px; }
@@ -456,7 +454,6 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 640px) {
   .sp-contact { padding: 48px 0; }
-  .sp-top-link { display: none; }
   .sp-form { padding: 20px; }
   .sp-map-frame iframe { height: 280px; }
 }
