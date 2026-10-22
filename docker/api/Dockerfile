@@ -18,6 +18,16 @@ FROM python:3.11-slim-bookworm AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
+# pg_dump para `manage.py backup_db` (cron del host -> compose exec api).
+# La imagen base solo ofrece el cliente 15 y el server de compose es 16:
+# se instala postgresql-client-16 desde el repo oficial PGDG.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends wget gnupg ca-certificates \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client-16 \
+    && rm -rf /var/lib/apt/lists/*
 # Usuario no-root: un RCE dentro del contenedor no es root.
 RUN groupadd -r app && useradd -r -g app -d /app -s /usr/sbin/nologin app
 WORKDIR /app
