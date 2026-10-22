@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import logging
 from decimal import Decimal
 from decouple import config
 from django.db import transaction
@@ -34,6 +37,35 @@ from .viewset_config    import  PaymentConfigs, DailyRevenueConfigs, MonthlyReve
 Creamos los viewsets correspondientes al dominio payments
 
 """
+logger              =   logging.getLogger(__name__)
+#=========================================
+# WEBHOOK SIGNATURE (HMAC-SHA256 según doc oficial de Mercado Pago)
+#=========================================
+def _verify_mp_signature(request, resource_id) -> bool:
+    """
+    Valida x-signature + x-request-id: el manifest es
+    'id:<data.id>;request-id:<x-request-id>;ts:<ts>;' firmado con HMAC-SHA256
+    y MP_WEBHOOK_SECRET -> debe matchear el v1= del header (compare_digest).
+    Sin secret configurado (dev) se loguea warning y se procesa igual.
+    """
+    secret          =   config('MP_WEBHOOK_SECRET', default = '')
+    if not secret:
+        logger.warning('MP_WEBHOOK_SECRET no configurado: webhook de MP procesado sin verificar firma')
+        return True
+    x_signature     =   request.headers.get('x-signature', '')
+    x_request_id    =   request.headers.get('x-request-id', '')
+    parts           =   {}
+    for pair in x_signature.split(','):
+        if '=' in pair:
+            key, value  =   pair.split('=', 1)
+            parts[key.strip()]  =   value.strip()
+    ts              =   parts.get('ts')
+    v1              =   parts.get('v1')
+    if not ts or not v1 or not x_request_id or not resource_id:
+        return False
+    manifest        =   f'id:{resource_id};request-id:{x_request_id};ts:{ts};'
+    expected        =   hmac.new(secret.encode(), manifest.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, v1)
 
 #=========================================
 # PAYMENT VIEWSET
@@ -63,6 +95,10 @@ class PaymentViewSet(PaymentBaseViewSet):
     def webhook(self, request):
         topic       =   request.data.get('type') or request.query_params.get('topic')
         resource_id =   (request.data.get('data') or {}).get('id') or request.query_params.get('id')
+        #Firma HMAC: sin ella cualquiera podría forjar acreditaciones de pago.
+        if not _verify_mp_signature(request, resource_id):
+            logger.warning('Webhook de MP rechazado: firma inválida (topic=%s id=%s)', topic, resource_id)
+            return Response({'detail': 'Firma de webhook inválida'}, status = status.HTTP_401_UNAUTHORIZED)
         if topic == 'payment' and resource_id:
             PaymentWebhookQuery(resource_id)
         elif topic == 'subscription_preapproval' and resource_id:
