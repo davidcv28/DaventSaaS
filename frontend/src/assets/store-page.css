@@ -243,7 +243,7 @@
 
 /* --- Pie --- */
 .sp-foot { border-top: 1px solid var(--sp-line); background: var(--sp-surface); padding: 56px 0 calc(24px + env(safe-area-inset-bottom)); }
-.sp-foot-grid { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 48px; padding-bottom: 40px; }
+.sp-foot-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 48px; padding-bottom: 40px; }
 .sp-foot-brand { display: grid; gap: 6px; align-content: start; }
 .sp-foot-brand strong { font-size: 17px; letter-spacing: -.01em; }
 .sp-foot-brand span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-muted); }

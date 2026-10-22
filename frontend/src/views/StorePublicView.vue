@@ -230,12 +230,6 @@ const productCount = computed(() => {
   return `${n} ${n === 1 ? 'producto' : 'productos'}`
 })
 
-function productChat(product) {
-  if (!whatsappUrl.value) return ''
-  const text = encodeURIComponent(`Hola, me interesa ${product.name} (${formatARS(product.price)})`)
-  return `${whatsappUrl.value}?text=${text}`
-}
-
 async function share() {
   try {
     await navigator.clipboard.writeText(window.location.href)
@@ -379,9 +373,6 @@ onBeforeUnmount(() => {
           >
             <AppIcon :name="pageTheme === 'dark' ? 'sun' : 'moon'" :size="17" />
           </button>
-          <a v-if="whatsappUrl" class="sp-icon-btn primary" :href="whatsappUrl" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp" title="WhatsApp">
-            <AppIcon name="whatsapp" :size="17" />
-          </a>
         </div>
       </div>
     </header>
@@ -435,12 +426,6 @@ onBeforeUnmount(() => {
               <p v-if="location" class="sp-location"><AppIcon name="map-pin" :size="14" /> {{ location }}</p>
             </div>
             <div v-reveal="240" class="sp-actions">
-              <a
-                v-for="s in socials" :key="s.key" class="sp-icon-btn"
-                :href="s.url" target="_blank" rel="noopener" :aria-label="s.label" :title="s.label"
-              >
-                <AppIcon :name="s.key" :size="17" />
-              </a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
               </button>
@@ -684,9 +669,6 @@ onBeforeUnmount(() => {
             <p class="sp-modal-desc">{{ selected.description }}</p>
           </div>
           <div class="sp-modal-actions">
-            <a v-if="productChat(selected)" class="sp-btn" :href="productChat(selected)" target="_blank" rel="noopener">
-              <AppIcon name="whatsapp" :size="16" /> Consultar por WhatsApp
-            </a>
             <button type="button" class="sp-btn ghost" @click="closeProduct">Seguir viendo</button>
           </div>
         </div>
@@ -702,11 +684,6 @@ onBeforeUnmount(() => {
             <strong :style="nameFont">{{ shopName }}</strong>
             <span v-if="location"><AppIcon name="map-pin" :size="13" /> {{ location }}</span>
           </div>
-          <nav v-if="hasContact" class="sp-foot-col" aria-label="Contacto">
-            <p class="sp-foot-heading">Contacto</p>
-            <a v-if="whatsappUrl" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="14" /> WhatsApp</a>
-            <a v-for="s in socials" :key="s.key" :href="s.url" target="_blank" rel="noopener"><AppIcon :name="s.key" :size="14" /> {{ s.label }}</a>
-          </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>
             <RouterLink to="/terminos">Términos y condiciones</RouterLink>
