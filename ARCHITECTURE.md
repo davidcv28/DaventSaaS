@@ -85,8 +85,45 @@ RegisterSerializer (UsersValidatorsMixin + UserProfileValidatorsMixin)
         ▼
 transaction.atomic()
         ├── User.objects.create_user(username, email, password)
-        └── UserProfile.objects.create(user, first_name, tax_condition, ...)
+        ├── UserProfile.objects.create(user, first_name, tax_condition, ...)
+        └── Suscription.objects.create(plan trial 10 días)
+        └── transaction.on_commit → SendVerificationEmailQuery(user)
 ```
+
+#### Verificación de email (anti-abuso del trial)
+```
+UserProfile.email_verified / email_verified_at (migration 0005)
+
+Registro → SendVerificationEmailQuery
+        link: {BACKEND_URL}/api/verify-email/?uid=<b64>&token=<firmado>
+        token: EmailVerificationTokenGenerator (PasswordResetTokenGenerator,
+        key_salt propio; el hash incluye email_verified → el link se
+        autoinvalida al usarse; vencimiento = PASSWORD_RESET_TIMEOUT)
+
+GET  /api/verify-email/?uid&token  → marca el flag y redirige a
+                                     {FRONTEND_URL}/verificar-email?status=ok|error
+POST /api/verify-email/resend/     → reenvío (Bearer; throttle 5/h por usuario)
+
+Regla: POST /api/stores/ (claim del link) exige email_verified → 403.
+El resto del panel sigue disponible sin verificar. Cambiar el email en
+UpdateUserQuery resetea el flag (hay que verificar la dirección nueva).
+```
+
+#### Reset de contraseña por correo
+```
+POST /api/password-reset/          {email} → 200 genérico SIEMPRE
+                                     (anti-enumeración; throttle 5/h por IP)
+                                     mail: {FRONTEND_URL}/reset-password?uid&token
+POST /api/password-reset/confirm/  {uid, token, new_password, confirm_password}
+        token = default_token_generator (vence en PASSWORD_RESET_TIMEOUT,
+        se autoinvalida al cambiar la clave porque el hash la incluye)
+        validate_password() → AUTH_PASSWORD_VALIDATORS
+        set_password + blacklist de TODOS los OutstandingToken del usuario
+        (cierra todas las sesiones abiertas)
+```
+
+#### Backup de la base a R2 (ops)
+`manage.py backup_db` (en `users/management/commands/`): `pg_dump` plain → gzip → `backups/davent-YYYYMMDD-HHMM.sql.gz` en R2 con el cliente boto3 de `stores/services/storage.py`; poda dumps con más de `BACKUP_RETENTION_DAYS` (default 14). Cron del host: `docker compose exec -T api python manage.py backup_db` (la imagen api trae `postgresql-client-16` de PGDG). Restore: `aws s3 cp s3://<bucket>/backups/<file> - | gunzip | docker compose exec -T db psql -U $POSTGRES_USER -d $POSTGRES_DB`.
 
 ---
 
@@ -215,7 +252,7 @@ MonthlyRevenue    → unique (year, month) + CheckConstraint month entre 1 y 12
 #### Cobro manual vs débito automático (services/services.py)
 - **Checkout Pro (manual)**: `CreateCheckoutPreferenceQuery` → preferencia MP; el pago vuelve por webhook `payment` o por `POST /api/payments/sync/`; `CreatePaymentQuery` verifica monto = precio del plan (pendiente si existe) y `ApplyPendingPlanQuery` acredita el período: todo cobro aprobado reinicia `start_date`/`end_date` a `now + 30d` (nunca se acumula, máximo 30 días restantes); el flag `renew` se pasa solo cuando el pago entra a approved, así webhooks repetidos no reescriben las fechas.
 - **Débito automático (preapproval)**: `CreatePreapprovalQuery` crea la suscripción en MP (`status: pending` + `init_point` para que el cliente autorice su tarjeta). Si el período ya está pago, `auto_recurring.start_date` = `end_date` para no cobrar dos veces. `back_url` es obligatoria y debe ser https pública (MP rechaza localhost: en dev se envía una URL neutra y el retorno lo cubre `/sync/`). `payer_email` = email del cliente, salvo `MP_PAYER_EMAIL` en `.env` (con credenciales TEST el payer debe ser un test user del mismo site). `SyncPreapprovalQuery` refleja `auto_renew` desde MP (`authorized` → true; `cancelled`/`paused` → false, sella `cancelled_at`). `CancelPreapprovalQuery` es la baja del débito (PUT `status: cancelled`). `UpdatePreapprovalPlanQuery` ajusta reason/monto del próximo débito: con débito activo el cambio de plan queda en `pending_plan_suscription` y se aplica cuando MP cobra.
-- **Webhooks** `POST /api/payments/webhook/` (AllowAny): `payment` → `PaymentWebhookQuery`; `subscription_preapproval` → `PreapprovalWebhookQuery`; `subscription_authorized_payment` → `AuthorizedPaymentWebhookQuery` (GET `/authorized_payments/{id}` vía `requests` — el SDK no lo cubre — extrae `payment.id` y entra por `PaymentWebhookQuery`; el `external_reference` del débito hereda el `suscription.id`). Los eventos de suscripciones se habilitan en el panel de webhooks de MP; en local el fallback es `/sync/`.
+- **Webhooks** `POST /api/payments/webhook/` (AllowAny): `payment` → `PaymentWebhookQuery`; `subscription_preapproval` → `PreapprovalWebhookQuery`; `subscription_authorized_payment` → `AuthorizedPaymentWebhookQuery` (GET `/authorized_payments/{id}` vía `requests` — el SDK no lo cubre — extrae `payment.id` y entra por `PaymentWebhookQuery`; el `external_reference` del débito hereda el `suscription.id`). Los eventos de suscripciones se habilitan en el panel de webhooks de MP; en local el fallback es `/sync/`. **Firma**: `_verify_mp_signature` valida `x-signature`+`x-request-id` (manifest `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` HMAC-SHA256 con `MP_WEBHOOK_SECRET` → `v1=` por `compare_digest`; inválida → 401). Sin secret (dev) loguea warning y procesa igual.
 - **Gracia**: si el débito de renovación falla al vencer, `grants_access()` sigue true durante `GRACE_DAYS` (5) mientras MP reintenta.
 - Acciones del viewset: `POST /api/payments/subscription/` (alta/retoma del débito o cambio de plan con débito activo → `{init_point}` o `{auto_renew: true}`) y `POST /api/payments/cancel-renewal/` (baja; el acceso sigue hasta `end_date`). `POST /api/payments/sync/` también devuelve `auto_renew`/`preapproval_status`.
 
@@ -474,6 +511,10 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/user/                      → UserViewSet
 /api/profile/                   → UserProfileViewSet
 /api/password_update/           → cambio de contraseña
+/api/password-reset/            → pide link de reseteo por correo (200 genérico, AllowAny, throttle 5/h)
+/api/password-reset/confirm/    → setea la clave con uid+token y cierra todas las sesiones (AllowAny)
+/api/verify-email/              → marca email_verified desde el link firmado y redirige al frontend (GET AllowAny)
+/api/verify-email/resend/       → reenvía el correo de verificación (Bearer, throttle 5/h por usuario)
 /api/suscriptions/              → SuscriptionViewSet
 /api/suscriptions/assign/       → asignación manual de plan a un usuario (POST IsAdminUser)
 /api/suscription-plans/         → SuscriptionPlanViewSet

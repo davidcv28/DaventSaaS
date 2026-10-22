@@ -62,7 +62,10 @@ frontend/
 | Mi tienda | `GET /stores/` | `Bearer` | `[{id,slug,is_published,created_at,public_path,customization,storage:{used_bytes,max_mb,images,max_images}}]` (0..1) |
 | Diseño web | `GET/PATCH /stores/customization/` | `Bearer {headline?,description?,theme?,accent?,whatsapp?,instagram?,show_location?}` | `200 {Exito,customization}` · 403 sin `has_customization` · sin `has_design_advanced` se descartan `name_font/name_font_size/accent` · sin `has_location_map` se descarta `show_location` |
 | Tienda pública | `GET /stores/public/<slug>/` | público | `{slug,business_name,city_name,province_name,customization,location_address}` · 404 si pausada · `location_address` null sin `has_location_map` (Estándar+) o con el mapa apagado |
-| Recuperacion | **NO EXISTE en backend** | — | UI en modo `pending-backend` |
+| Pedir reset | `POST /password-reset/` | `{email}` | `200 {Exito}` genérico (anti-enumeración) |
+| Confirmar reset | `POST /password-reset/confirm/` | `{uid,token,new_password,confirm_password}` | `200 {Exito}`; `400 {token/new_password}` |
+| Verificar email | `GET /verify-email/?uid&token` | backend marca y **redirige** a `/verificar-email?status=` | 302 |
+| Reenviar verificación | `POST /verify-email/resend/` | Bearer | `200 {Exito}` (throttle 5/h por usuario) |
 
 > Hallazgos senior: `DaventProject/urls.py` hoy monta `suscriptions` + `users` + `locations` + JWT.
 > Registro `POST /register/` y selects `GET /provinces/`, `GET /cities/?province=<id>` son reales
@@ -74,8 +77,8 @@ frontend/
 2. `http.js` inyecta `Bearer` y hace refresh single-flight: 401 + refresh -> reintenta 1 vez. Si falla -> `logout()` + `/login?expired=1`.
 3. Throttle login `5/min` -> vista deshabilita 60s tras `429`.
 4. Store expone: `accessToken, refreshToken, isAuthenticated, user, status, fieldErrors, login(), register(), logout(), fetchMe(), initFromStorage()`.
-5. Guards: `/dashboard` requiere auth; `/login /register /forgot-password /reset-password` requieren guest.
-6. Recuperacion sin backend: `requestPasswordReset/confirmPasswordReset` lanzan `Error('PENDING_BACKEND')`. Vistas con panel informativo, sin fingir exito.
+5. Guards: `/dashboard` requiere auth; `/login /register /forgot-password /reset-password` requieren guest. `/verificar-email` es pública (el link del correo puede abrirse logueado o no — sin requiresGuest).
+6. Recuperación real: `requestPasswordReset(email)`/`confirmPasswordReset({uid,token,new_password,confirm_password})` ya están cableadas a `/api/password-reset*/`. El link del correo llega como `/reset-password?uid&token` y la vista exige ambos. Email no verificado = banner + reenvío en Dashboard/`/bienvenida` (`auth.user.profile.email_verified`); el claim del slug da 403 en backend.
 
 ## 4. Formularios y validacion
 - Espejo backend: username >=6, email solo gmail/hotmail/outlook/yahoo/live, password >=8 + minuscula + mayuscula + numero + especial, document DNI 7-8 / CUIT 11 con checksum y prefijos 20,23,24,27,30,33,34, business_name obligatorio si tax!=CF, phone `+54...`, ciudad debe pertenecer a provincia.
