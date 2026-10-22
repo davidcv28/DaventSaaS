@@ -418,7 +418,6 @@ onBeforeUnmount(() => {
                 <span v-if="brandNameOf(p)">{{ brandNameOf(p) }}</span>
               </p>
               <h3 class="sp-card-name">{{ p.name }}</h3>
-              <p v-if="p.description" class="sp-card-desc">{{ p.description }}</p>
               <div class="sp-card-foot">
                 <span class="sp-card-price">{{ formatARS(p.price) }}</span>
                 <button type="button" class="sp-card-go" :aria-label="`Ver ${p.name}`" @click="openProduct(p)">
