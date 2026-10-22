@@ -17,6 +17,8 @@ db.sqlite3
 # Frontend
 node_modules/
 frontend/dist/
+# Páginas solo-dev (ej. set-token.html): jamás commitear ni shipear
+frontend/dev-tools/
 
 # Basura de Windows / IDE
 nul

@@ -24,10 +24,19 @@ export const http = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+// Origen al que apunta la API: '/api' (mismo origen) o URL absoluta (dev).
+const API_ORIGIN = new URL(env.apiBaseUrl, window.location.href).origin
+
 http.interceptors.request.use((config) => {
   const token = tokenStorage.getAccess()
   if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`
+    // Anti token-leak: el Bearer solo viaja al origen de la API. Una URL
+    // absoluta a otro dominio pasada por error no lleva credenciales.
+    const base = new URL(config.baseURL || '/', window.location.href)
+    const target = new URL(config.url || '', base)
+    if (target.origin === API_ORIGIN) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
   }
   return config
 })
