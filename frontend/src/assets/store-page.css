@@ -861,8 +861,8 @@ html { scroll-behavior: smooth; }
   .sp-card-foot { padding-top: 10px; }
   .sp-card-foot .sp-card-price { font-size: 16px; }
   .sp-card-go { width: 34px; height: 34px; }
-  .sp-modal-overlay { place-items: end center; padding: 0; }
-  .sp-modal { max-width: none; max-height: 92dvh; min-height: 0; border-radius: 24px 24px 0 0; }
+  .sp-modal-overlay { place-items: center; padding: 16px; }
+  .sp-modal { width: 100%; max-width: 520px; margin: auto; max-height: calc(100dvh - 32px); min-height: 0; border-radius: 22px; }
   .sp-modal-img { aspect-ratio: 4 / 3; }
 }
 @media (max-width: 380px) {
