@@ -74,9 +74,19 @@ const socials = computed(() => [
 ].filter((s) => s.url))
 const hasContact = computed(() => Boolean(whatsappUrl.value || socials.value.length))
 
-// --- Sobre nosotros (se edita en Diseño web; el dueño la apaga con
-// show_about y además se oculta sola si el texto queda vacío) ---
-const hasAbout = computed(() => custom.value.show_about !== false && Boolean(custom.value.about_text?.trim()))
+// --- Sobre nosotros (se edita en "Mi empresa" del dashboard; el dueño la
+// apaga con show_about y además se oculta sola si no cargó ningún contenido) ---
+const aboutSpecialties = computed(() => String(custom.value.about_specialties || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .slice(0, 12))
+const hasAbout = computed(() => custom.value.show_about !== false && Boolean(
+  custom.value.about_text?.trim()
+  || custom.value.about_mission?.trim()
+  || aboutSpecialties.value.length
+  || custom.value.about_years
+))
 const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nosotros')
 
 // --- Galería (imágenes propias del negocio; el dueño la apaga con
@@ -510,7 +520,22 @@ onBeforeUnmount(() => {
         <div class="sp-container">
           <h2 id="sp-about-title" v-reveal class="sp-section-title">{{ aboutTitle }}</h2>
           <div v-reveal="100" class="sp-about-card">
-            <p class="sp-about-text">{{ custom.about_text }}</p>
+            <div class="sp-about-main">
+              <p v-if="custom.about_years" class="sp-about-years">
+                <strong>{{ custom.about_years }}+</strong>
+                <span>años de trayectoria</span>
+              </p>
+              <div class="sp-about-body">
+                <p v-if="custom.about_text" class="sp-about-text">{{ custom.about_text }}</p>
+                <blockquote v-if="custom.about_mission" class="sp-about-mission">
+                  <span class="sp-about-mission-label">Nuestra misión</span>
+                  {{ custom.about_mission }}
+                </blockquote>
+              </div>
+            </div>
+            <ul v-if="aboutSpecialties.length" class="sp-about-tags">
+              <li v-for="s in aboutSpecialties" :key="s" class="sp-about-tag">{{ s }}</li>
+            </ul>
           </div>
         </div>
       </section>

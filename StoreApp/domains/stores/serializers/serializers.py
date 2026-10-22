@@ -50,6 +50,9 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     description                 =   serializers.CharField(**CustomizationFields['description'])
     about_title                 =   serializers.CharField(**CustomizationFields['about_title'])
     about_text                  =   serializers.CharField(**CustomizationFields['about_text'])
+    about_years                 =   serializers.IntegerField(**CustomizationFields['about_years'])
+    about_mission               =   serializers.CharField(**CustomizationFields['about_mission'])
+    about_specialties           =   serializers.CharField(**CustomizationFields['about_specialties'])
     contact_email               =   serializers.EmailField(**CustomizationFields['contact_email'])
     whatsapp                    =   serializers.CharField(**CustomizationFields['whatsapp'])
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
@@ -62,7 +65,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         model                   =   StoreCustomization
         fields                  =   [
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
-            'about_title', 'about_text', 'show_about', 'contact_email', 'show_contact',
+            'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
+            'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery',
             'logo', 'carousel', 'gallery', 'updated_at',
         ]

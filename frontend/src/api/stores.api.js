@@ -190,6 +190,9 @@ export const CUSTOMIZATION_DEFAULTS = {
   description: '',
   about_title: '',
   about_text: '',
+  about_years: null,
+  about_mission: '',
+  about_specialties: '',
   show_about: true,
   contact_email: '',
   show_contact: true,
@@ -366,6 +369,23 @@ export function validateAboutTitle(value) {
 
 export function validateAboutText(value) {
   if (value && value.length > 2000) return 'El texto admite hasta 2000 caracteres'
+  return ''
+}
+
+export function validateAboutYears(value) {
+  if (value === null || value === undefined || value === '') return ''
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 0 || n > 150) return 'Ingresá un número entero entre 0 y 150'
+  return ''
+}
+
+export function validateAboutMission(value) {
+  if (value && value.length > 400) return 'La misión admite hasta 400 caracteres'
+  return ''
+}
+
+export function validateAboutSpecialties(value) {
+  if (value && value.length > 300) return 'Las especialidades admiten hasta 300 caracteres'
   return ''
 }
 

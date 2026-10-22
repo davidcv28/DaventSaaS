@@ -14,7 +14,8 @@ import {
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_FONTS, storeThemeVars, storeFontFamily,
   ensureStoreFont, ensureStoreFontList, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
-  validateAboutTitle, validateAboutText, validateContactEmail,
+  validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
+  validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, formatStorageMB
@@ -205,6 +206,7 @@ const navItems = computed(() => {
     { id: 'catalogs', label: 'Mis catálogos', icon: 'library' }
   ]
   if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
+  if (b.has_customization) items.push({ id: 'company', label: 'Mi empresa', icon: 'building-2' })
   items.push({ id: 'pos', label: 'Venta en local', icon: 'monitor' })
   const advanced = []
   if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
@@ -546,6 +548,9 @@ const designErrors = computed(() => {
   const d = validateDescription(designForm.description.trim())
   const at = validateAboutTitle(designForm.about_title.trim())
   const ax = validateAboutText(designForm.about_text.trim())
+  const ay = validateAboutYears(designForm.about_years)
+  const am = validateAboutMission(designForm.about_mission.trim())
+  const asp = validateAboutSpecialties(designForm.about_specialties.trim())
   const ce = validateContactEmail(designForm.contact_email)
   const w = validateWhatsapp(designForm.whatsapp)
   const ig = validateInstagram(designForm.instagram)
@@ -556,6 +561,9 @@ const designErrors = computed(() => {
   if (d) e.description = d
   if (at) e.about_title = at
   if (ax) e.about_text = ax
+  if (ay) e.about_years = ay
+  if (am) e.about_mission = am
+  if (asp) e.about_specialties = asp
   if (ce) e.contact_email = ce
   if (w) e.whatsapp = w
   if (ig) e.instagram = ig
@@ -568,17 +576,36 @@ function designFieldErr(name) {
   return (designTouched[name] ? designErrors.value[name] || '' : '') || store.fieldErrors[name] || ''
 }
 
+// "Mi empresa" (sección propia): edita los campos de "Sobre nosotros" que se
+// renderizan en la web pública. PATCH parcial: manda solo estos campos.
+const COMPANY_FIELDS = ['about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties']
+const companyBusy = ref(false)
+
+async function saveCompany() {
+  COMPANY_FIELDS.forEach((k) => { designTouched[k] = true })
+  designTouched.show_about = true
+  if (COMPANY_FIELDS.some((k) => designErrors.value[k])) return
+  companyBusy.value = true
+  const years = designForm.about_years
+  await store.saveCustomization({
+    about_title: designForm.about_title.trim(),
+    about_text: designForm.about_text.trim(),
+    about_years: years === '' || years === null || years === undefined ? null : Number(years),
+    about_mission: designForm.about_mission.trim(),
+    about_specialties: designForm.about_specialties.trim(),
+    show_about: Boolean(designForm.show_about)
+  })
+  companyBusy.value = false
+}
+
 async function saveDesign() {
   Object.keys(designForm).forEach((k) => { designTouched[k] = true })
-  if (Object.keys(designErrors.value).length) return
+  if (Object.keys(designErrors.value).some((k) => !COMPANY_FIELDS.includes(k))) return
   designBusy.value = true
   const payload = {
     display_name: designForm.display_name.trim(),
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
-    about_title: designForm.about_title.trim(),
-    about_text: designForm.about_text.trim(),
-    show_about: Boolean(designForm.show_about),
     show_gallery: Boolean(designForm.show_gallery),
     contact_email: designForm.contact_email.trim(),
     show_contact: Boolean(designForm.show_contact),
@@ -1436,34 +1463,6 @@ async function changePassword() {
               <p class="hint">Aparece debajo del titular. {{ designForm.description.length }}/800</p>
               <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
             </div>
-            <AppInput v-model="designForm.about_title" label="Título de la sección Sobre nosotros" name="design_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
-            <div class="field">
-              <label for="design-about-text">Texto de la sección Sobre nosotros</label>
-              <textarea
-                id="design-about-text"
-                v-model="designForm.about_text"
-                class="textarea"
-                :class="{ invalid: designFieldErr('about_text') }"
-                placeholder="Contá la historia de tu negocio: qué hacen, hace cuánto y qué los diferencia"
-                maxlength="2000"
-                rows="6"
-                @blur="designTouched.about_text = true"
-              ></textarea>
-              <p class="hint">Se muestra como una sección completa en tu web, después de la portada. Si queda vacío, la sección no aparece. {{ designForm.about_text.length }}/2000</p>
-              <p v-if="designFieldErr('about_text')" class="field-error" role="alert">{{ designFieldErr('about_text') }}</p>
-            </div>
-            <div class="field">
-              <label id="design-show-about-label">Sección Sobre nosotros</label>
-              <label class="check">
-                <input
-                  v-model="designForm.show_about"
-                  type="checkbox"
-                  aria-labelledby="design-show-about-label"
-                />
-                <span>Mostrar la sección Sobre nosotros en tu web</span>
-              </label>
-              <p class="hint">Aparece después de la portada. También se oculta sola si el texto queda vacío.</p>
-            </div>
             <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
             <div class="grid-2">
               <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
@@ -1697,6 +1696,80 @@ async function changePassword() {
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
         <h3>El diseño web viene con tu plan</h3>
         <p>Activá una suscripción para personalizar el logo, el titular, la descripción y los botones de contacto de tu página pública.</p>
+        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+      </div>
+    </div>
+    <!-- ================= MI EMPRESA (Sobre nosotros) ================= -->
+    <div v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
+      <div class="page-head">
+        <div>
+          <h1>Mi empresa</h1>
+          <p>Contá quiénes son: esta información alimenta la sección Sobre nosotros de tu web.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+      </div>
+      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+
+      <template v-if="canCustomize">
+        <div class="card">
+          <h3><AppIcon name="building-2" :size="18" /> Información de tu empresa</h3>
+          <AppInput v-model="designForm.about_title" label="Título de la sección" name="company_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección en tu web. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
+          <div class="field">
+            <label for="company-about-text">Descripción de la empresa</label>
+            <textarea
+              id="company-about-text"
+              v-model="designForm.about_text"
+              class="textarea"
+              :class="{ invalid: designFieldErr('about_text') }"
+              placeholder="Contá la historia de tu negocio: qué hacen, hace cuánto y qué los diferencia"
+              maxlength="2000"
+              rows="6"
+              @blur="designTouched.about_text = true"
+            ></textarea>
+            <p class="hint">El texto principal de la sección. {{ designForm.about_text.length }}/2000</p>
+            <p v-if="designFieldErr('about_text')" class="field-error" role="alert">{{ designFieldErr('about_text') }}</p>
+          </div>
+          <div class="grid-2">
+            <AppInput v-model="designForm.about_years" label="Años de trayectoria" name="company_about_years" type="number" placeholder="Ej. 15" hint="Se muestra destacado en la sección. Vacío: no se muestra." :error="designFieldErr('about_years')" @blur="designTouched.about_years = true" />
+            <AppInput v-model="designForm.about_specialties" label="Especialidades" name="company_about_specialties" placeholder="Ej. Venta mayorista, Envíos, Atención personalizada" hint="Separadas por coma: aparecen como etiquetas en la sección." :error="designFieldErr('about_specialties')" @blur="designTouched.about_specialties = true" />
+          </div>
+          <div class="field">
+            <label for="company-about-mission">Misión</label>
+            <textarea
+              id="company-about-mission"
+              v-model="designForm.about_mission"
+              class="textarea"
+              :class="{ invalid: designFieldErr('about_mission') }"
+              placeholder="Qué busca lograr tu empresa cada día"
+              maxlength="400"
+              rows="3"
+              @blur="designTouched.about_mission = true"
+            ></textarea>
+            <p class="hint">Se muestra destacada debajo de la descripción. {{ designForm.about_mission.length }}/400</p>
+            <p v-if="designFieldErr('about_mission')" class="field-error" role="alert">{{ designFieldErr('about_mission') }}</p>
+          </div>
+          <div class="field">
+            <label id="company-show-about-label">Sección Sobre nosotros</label>
+            <label class="check">
+              <input
+                v-model="designForm.show_about"
+                type="checkbox"
+                aria-labelledby="company-show-about-label"
+              />
+              <span>Mostrar la sección Sobre nosotros en tu web</span>
+            </label>
+            <p class="hint">Aparece después de la portada. También se oculta sola si no cargaste ningún contenido.</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveCompany">Guardar información</AppButton>
+          </div>
+        </div>
+      </template>
+      <div v-else class="empty">
+        <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
+        <h3>La información de tu empresa viene con tu plan</h3>
+        <p>Activá una suscripción para completar la sección Sobre nosotros de tu página pública.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>

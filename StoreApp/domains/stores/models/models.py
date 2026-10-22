@@ -104,10 +104,14 @@ class StoreCustomization(models.Model):
     logo_size                   =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño del logo (bytes)')
     description                 =   models.TextField(max_length = 800, blank = True, verbose_name = 'Descripción')
     #Sección "Sobre nosotros": la web pública la renderiza solo si show_about
-    #está activo y about_text tiene contenido (about_title vacío -> título
-    #por defecto en el frontend).
+    #está activo y hay algún contenido cargado (texto, misión, especialidades
+    #o años). about_title vacío -> título por defecto en el frontend.
+    #Se edita desde la sección "Mi empresa" del dashboard.
     about_title                 =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Sobre nosotros')
     about_text                  =   models.TextField(max_length = 2000, blank = True, verbose_name = 'Texto de la sección Sobre nosotros')
+    about_years                 =   models.PositiveSmallIntegerField(null = True, blank = True, validators = [MinValueValidator(0), MaxValueValidator(150)], verbose_name = 'Años de trayectoria')
+    about_mission               =   models.TextField(max_length = 400, blank = True, verbose_name = 'Misión')
+    about_specialties           =   models.CharField(max_length = 300, blank = True, verbose_name = 'Especialidades')
     show_about                  =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Sobre nosotros')
     #Formulario de contacto: los mensajes llegan a contact_email o, si está
     #vacío, al email de la cuenta del dueño. show_contact apaga la sección.
