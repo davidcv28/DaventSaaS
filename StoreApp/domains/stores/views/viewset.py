@@ -234,7 +234,11 @@ class StoreViewSet(StoreBaseViewSet):
                 {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
                 status = status.HTTP_400_BAD_REQUEST,
             )
-        send_contact_message(store, name = data['name'], email = data['email'], message = data['message'])
+        if not send_contact_message(store, name = data['name'], email = data['email'], message = data['message']):
+            return Response(
+                {'detail': 'No pudimos enviar tu mensaje en este momento. Probá de nuevo más tarde.'},
+                status = status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         return Response({'Exito': 'Tu mensaje fue enviado. El comercio te va a responder a la brevedad.'}, status = status.HTTP_200_OK)
     #=========================================
     # CUSTOMIZATION (diseño de la web pública, gated por el plan)

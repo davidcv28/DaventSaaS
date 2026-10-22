@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import random
 import time
 
@@ -21,6 +22,7 @@ CAPTCHA_SALT            =   'stores.contact.captcha'
 CAPTCHA_MAX_AGE         =   600      # el challenge vence a los 10 minutos
 CAPTCHA_MIN_SECONDS     =   3        # envíos instantáneos = bot
 CONTACT_SUBJECT_PREFIX  =   '[Web] Mensaje de contacto'
+logger                  =   logging.getLogger(__name__)
 #=========================================
 # CAPTCHA
 #=========================================
@@ -74,11 +76,17 @@ def send_contact_message(store, *, name : str, email : str, message : str) -> bo
         f'Mensaje:\n{message}\n\n'
         f'---\nPodés responderle directamente a {email} (el botón Responder ya apunta a su correo).'
     )
-    EmailMessage(
-        subject     =   f'{CONTACT_SUBJECT_PREFIX} — {shop}',
-        body        =   body,
-        from_email  =   settings.DEFAULT_FROM_EMAIL,
-        to          =   [target],
-        reply_to    =   [email],
-    ).send(fail_silently = False)
+    try:
+        EmailMessage(
+            subject     =   f'{CONTACT_SUBJECT_PREFIX} — {shop}',
+            body        =   body,
+            from_email  =   settings.DEFAULT_FROM_EMAIL,
+            to          =   [target],
+            reply_to    =   [email],
+        ).send(fail_silently = False)
+    except Exception:
+        #SMTP caído o inalcanzable: se loguea y el visitante recibe un error
+        #genérico en vez de un 500 (o un request colgado sin EMAIL_TIMEOUT).
+        logger.exception('No se pudo enviar el mensaje de contacto de %s', store.slug)
+        return False
     return True

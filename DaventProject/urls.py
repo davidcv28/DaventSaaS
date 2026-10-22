@@ -37,7 +37,9 @@ from AdminApp.domains.users.views.auth_views import (
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
-    path('admin/', admin.site.urls),
+    #ADMIN_URL por env: en prod un path no obvio reduce el ruido de bots que
+    #escanean /admin/ (su login no tiene rate-limit propio). Default 'admin/'.
+    path(settings.ADMIN_URL, admin.site.urls),
     #=================================
     # DOMAINS URLS
     #=================================
@@ -85,7 +87,21 @@ def spa(request):
     index = settings.FRONTEND_DIST / 'index.html'
     if not index.is_file():
         raise Http404
-    return FileResponse(index.open('rb'), content_type='text/html')
+    resp = FileResponse(index.open('rb'), content_type='text/html')
+    # CSP del SPA: recursos propios + Google Fonts (estilos on-demand del catálogo
+    # de fuentes), iframe de Google Maps (mapa de ubicación), imágenes https (R2)
+    # y data: (favicon inline / QR). Los scripts son solo archivos del build.
+    resp['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self'; "
+        "frame-src https://maps.google.com https://www.google.com; "
+        "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    )
+    return resp
 
 
 if settings.FRONTEND_DIST.is_dir():
