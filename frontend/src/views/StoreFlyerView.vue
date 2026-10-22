@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import QRCode from 'qrcode'
 import { storesApi, publicStoreUrl, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
+import { formatARS } from '../api/billing.api.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { extractApiError } from '../api/http.js'
 import AppIcon from '../components/AppIcon.vue'
@@ -16,6 +17,7 @@ const auth = useAuthStore()
 const route = useRoute()
 const store = ref(null)
 const place = ref(null) // datos públicos: city_name/province_name
+const products = ref([]) // destacados del catálogo público
 const status = ref('loading') // loading | ready | error
 const error = ref('')
 const qrDataUrl = ref('')
@@ -86,6 +88,19 @@ const stripText = computed(() =>
   custom.value.whatsapp || auth.user?.profile?.phone || shortUrl.value
 )
 
+// --- Contenido extra para rellenar el A4 (solo aparece si el dueño lo cargó):
+// "Mi empresa" del dashboard + destacados del catálogo + fotos de la galería.
+const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nosotros')
+const specialties = computed(() => String(custom.value.about_specialties || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .slice(0, 8))
+const hasAbout = computed(() => Boolean(
+  custom.value.about_text?.trim() || specialties.value.length || custom.value.about_mission?.trim()
+))
+const galleryImgs = computed(() => (custom.value.gallery || []).slice(0, 3))
+
 onMounted(async () => {
   try {
     if (!auth.user?.profile) await auth.fetchMe().catch(() => {})
@@ -96,14 +111,16 @@ onMounted(async () => {
       error.value = 'Todavía no tenés una tienda. Elegí tu link público primero.'
       return
     }
-    const [pub, qr] = await Promise.all([
+    const [pub, qr, cat] = await Promise.all([
       storesApi.publicStore(store.value.slug).catch(() => null),
       QRCode.toDataURL(publicUrl.value, {
         width: 640, margin: 0, color: { dark: '#0f172a', light: '#ffffff' }
-      })
+      }),
+      storesApi.publicCatalog(store.value.slug).catch(() => null)
     ])
     place.value = pub
     qrDataUrl.value = qr
+    products.value = (cat?.products || []).slice(0, 6)
     status.value = 'ready'
     // Trae la Google Font del nombre antes de imprimir para que salga en el PDF.
     ensureStoreFont(custom.value.name_font)
@@ -167,6 +184,24 @@ function closeTab() {
 
 .flyer-nocontact { text-align: center; color: #64748b; font-size: 14px; line-height: 1.6; margin: auto 0; }
 .flyer-nocontact strong { display: block; font-size: 17px; color: #0f172a; margin-bottom: 4px; }
+
+/* ----- Secciones de relleno: empresa, productos, fotos, marca de agua ----- */
+.flyer-years { display: inline-flex; align-items: center; margin-top: 10px; padding: 5px 13px; border-radius: 99px; background: var(--store-accent-soft); color: var(--store-accent-ink); font-size: 12px; font-weight: 800; }
+.flyer-about { display: grid; gap: 14px; }
+.flyer-about .flyer-desc { display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+.flyer-feats { display: flex; flex-wrap: wrap; gap: 8px; }
+.flyer-feat { display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border-radius: 99px; background: var(--store-accent-soft); color: var(--store-accent-ink); font-size: 12px; font-weight: 700; }
+.flyer-mission { margin: 0; padding: 14px 18px; border-left: 3px solid var(--store-accent); border-radius: 0 12px 12px 0; background: var(--store-accent-soft); font-size: 14px; font-style: italic; line-height: 1.65; color: #334155; }
+.flyer-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.flyer-prod { border: 1px solid #eef2f7; border-radius: 14px; overflow: hidden; background: #fff; }
+.flyer-prod img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #f1f5f9; }
+.flyer-prod-mono { width: 100%; aspect-ratio: 1 / 1; display: grid; place-items: center; background: var(--store-accent-soft); color: var(--store-accent-ink); font-size: 30px; font-weight: 800; }
+.flyer-prod > div { padding: 9px 11px 11px; }
+.flyer-prod strong { display: block; font-size: 12.5px; font-weight: 700; line-height: 1.3; color: #0f172a; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.flyer-prod em { display: block; font-style: normal; margin-top: 3px; font-size: 13px; font-weight: 800; color: var(--store-accent-ink); }
+.flyer-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.flyer-photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; border-radius: 14px; border: 1px solid #eef2f7; }
+.flyer-water { flex: 1; display: grid; place-items: center; font-size: 150px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: color-mix(in srgb, var(--store-accent) 7%, transparent); user-select: none; }
 
 /* ----- Pie CTA: banda oscura con QR ----- */
 .flyer-cta { display: flex; align-items: center; gap: 26px; padding: 28px 48px; background: #0f172a; color: #fff; }
@@ -240,6 +275,7 @@ function closeTab() {
 .flyer--band .flyer-cta-label { color: var(--store-accent-ink); }
 .flyer--band .flyer-url { color: var(--store-accent-ink); }
 .flyer--band .flyer-cta-hint { color: #475569; }
+.flyer--band .flyer-years, .flyer--diagonal .flyer-years, .flyer--split .flyer-years { background: rgba(255, 255, 255, .18); color: #fff; }
 
 /* ===== Diseño: Centrado (todo al eje, aire parejo) ===== */
 .flyer--center .flyer-head { flex-direction: column; text-align: center; gap: 20px; padding-top: 52px; }
@@ -253,6 +289,8 @@ function closeTab() {
 .flyer--center .flyer-row { flex-direction: column; text-align: center; gap: 8px; }
 .flyer--center .flyer-socials { justify-content: center; }
 .flyer--center .flyer-cta { flex-direction: column; text-align: center; }
+.flyer--center .flyer-feats { justify-content: center; }
+.flyer--center .flyer-mission { text-align: center; border-left: none; border-top: 3px solid var(--store-accent); border-radius: 0 0 12px 12px; }
 
 /* ===== Diseño: Nocturno (papel oscuro, acento como luz) ===== */
 .flyer--dark { background: #0f172a; color: #e8ecf7; }
@@ -273,6 +311,16 @@ function closeTab() {
 .flyer--dark .flyer-nocontact strong { color: #fff; }
 .flyer--dark .flyer-cta { background: rgba(255, 255, 255, .05); }
 .flyer--dark .flyer-davent { border-color: rgba(255, 255, 255, .08); }
+.flyer--dark .flyer-years { background: rgba(255, 255, 255, .1); color: #fff; }
+.flyer--dark .flyer-feat { background: rgba(255, 255, 255, .08); color: var(--store-accent); }
+.flyer--dark .flyer-mission { background: rgba(255, 255, 255, .05); border-color: var(--store-accent); color: #cbd5e1; }
+.flyer--dark .flyer-prod { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .1); }
+.flyer--dark .flyer-prod img { background: rgba(255, 255, 255, .08); }
+.flyer--dark .flyer-prod-mono { background: rgba(255, 255, 255, .08); color: var(--store-accent); }
+.flyer--dark .flyer-prod strong { color: #fff; }
+.flyer--dark .flyer-prod em { color: var(--store-accent); }
+.flyer--dark .flyer-photos img { border-color: rgba(255, 255, 255, .12); }
+.flyer--dark .flyer-water { color: rgba(255, 255, 255, .045); }
 
 /* ===== Diseño: Marco (doble borde fino, elegante — restaurantes/boutiques) ===== */
 .flyer--frame { position: relative; }
@@ -351,6 +399,8 @@ function closeTab() {
   .flyer--frame .flyer-body { padding: 16px 26px 24px; }
   .flyer-strips { padding: 10px 8px 0; }
   .flyer-strip { height: 72px; font-size: 9px; }
+  .flyer-products { grid-template-columns: repeat(2, 1fr); }
+  .flyer-water { font-size: 96px; }
 }
 </style>
 
@@ -399,6 +449,7 @@ function closeTab() {
           <h1 class="flyer-name" :style="nameFont">{{ shopName }}</h1>
           <p v-if="custom.headline" class="flyer-headline">{{ custom.headline }}</p>
           <p v-if="shortPlace" class="flyer-loc"><AppIcon name="map-pin" :size="14" /> {{ shortPlace }}</p>
+          <span v-if="custom.about_years" class="flyer-years">+{{ custom.about_years }} años de trayectoria</span>
         </div>
       </header>
       <div class="flyer-rule" aria-hidden="true"></div>
@@ -407,6 +458,38 @@ function closeTab() {
         <section v-if="custom.description">
           <div class="flyer-section-head"><h2>Quiénes somos</h2></div>
           <p class="flyer-desc">{{ custom.description }}</p>
+        </section>
+
+        <section v-if="hasAbout">
+          <div class="flyer-section-head"><h2>{{ aboutTitle }}</h2></div>
+          <div class="flyer-about">
+            <p v-if="custom.about_text" class="flyer-desc">{{ custom.about_text }}</p>
+            <div v-if="specialties.length" class="flyer-feats">
+              <span v-for="s in specialties" :key="s" class="flyer-feat"><AppIcon name="check" :size="13" /> {{ s }}</span>
+            </div>
+            <blockquote v-if="custom.about_mission" class="flyer-mission">“{{ custom.about_mission }}”</blockquote>
+          </div>
+        </section>
+
+        <section v-if="products.length">
+          <div class="flyer-section-head"><h2>Lo que vas a encontrar</h2></div>
+          <div class="flyer-products">
+            <div v-for="p in products" :key="p.id" class="flyer-prod">
+              <img v-if="p.image" :src="p.image" :alt="p.name" />
+              <span v-else class="flyer-prod-mono" aria-hidden="true">{{ p.name.slice(0, 1).toUpperCase() }}</span>
+              <div>
+                <strong>{{ p.name }}</strong>
+                <em>{{ formatARS(p.price) }}</em>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section v-if="galleryImgs.length">
+          <div class="flyer-section-head"><h2>Nuestro espacio</h2></div>
+          <div class="flyer-photos">
+            <img v-for="g in galleryImgs" :key="g.id" :src="g.url" :alt="`Foto de ${shopName}`" />
+          </div>
         </section>
 
         <section v-if="hasContact || socials.length">
@@ -439,6 +522,9 @@ function closeTab() {
           <strong>Visitá nuestra tienda online</strong>
           Escaneá el código QR o entrá al link de abajo y conocé todo lo que tenemos para vos.
         </p>
+
+        <!-- Rellena el aire sobrante con la inicial de la marca en grande -->
+        <span class="flyer-water" aria-hidden="true">{{ initial }}</span>
       </div>
 
       <footer class="flyer-cta">
