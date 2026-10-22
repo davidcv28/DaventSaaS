@@ -3,6 +3,7 @@ INVOICES SERIALIZERS
 """
 from decimal import Decimal, ROUND_HALF_UP
 
+from django.conf import settings
 from rest_framework import serializers
 from AdminApp.domains.invoices.models import Invoice
 
@@ -27,6 +28,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
     province_name           = serializers.CharField(source = 'user.province.name_province', read_only = True)
     net_amount              = serializers.SerializerMethodField()
     iva_amount              = serializers.SerializerMethodField()
+    # Datos del emisor (settings.INVOICE_ISSUER): sin CUIT el comprobante
+    # se imprime como interno, sin validez fiscal.
+    issuer                  = serializers.SerializerMethodField()
 
     def get_comprobante(self, obj):
         return f'{obj.pos:04d}-{obj.number:08d}'
@@ -36,6 +40,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def get_iva_amount(self, obj):
         return obj.total - self.get_net_amount(obj)
+
+    def get_issuer(self, obj):
+        return settings.INVOICE_ISSUER
 
     def get_customer_name(self, obj):
         u = obj.user
@@ -48,5 +55,5 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'comprobante', 'total', 'net_amount', 'iva_amount', 'issued_at',
             'plan_name', 'paid_at', 'currency',
             'customer_name', 'document', 'type_document', 'tax_condition_display',
-            'address', 'city_name', 'province_name',
+            'address', 'city_name', 'province_name', 'issuer',
         ]

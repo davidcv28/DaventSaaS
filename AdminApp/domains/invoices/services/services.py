@@ -4,6 +4,7 @@ La factura se emite al acreditarse el pago (APPROVED), dentro de la misma
 transacción: el cobro se registra completo con su comprobante, o no se registra.
 """
 
+from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.utils import timezone
 from rest_framework import serializers
@@ -14,8 +15,14 @@ from AdminApp.domains.payments.models import Payment
 #=================================
 # INVOICE HELPERS
 #=================================
-def DeriveInvoiceTypeQuery(tax_condition : str) -> str:
-    return TypeInvoice.A if tax_condition == 'RI' else TypeInvoice.B
+def DeriveInvoiceTypeQuery(tax_condition : str, issuer_condition : str = None) -> str:
+    #El tipo depende de la condición fiscal del EMISOR (settings.INVOICE_ISSUER):
+    #monotributo -> siempre Factura C; responsable inscripto -> A si el
+    #comprador es RI, B en el resto de los casos.
+    issuer  =   (issuer_condition or settings.INVOICE_ISSUER['tax_condition']).upper()
+    if issuer == 'RI':
+        return TypeInvoice.A if tax_condition == 'RI' else TypeInvoice.B
+    return TypeInvoice.C
 
 #=================================
 # INVOICE MODEL QUERYS

@@ -184,3 +184,19 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='DAVENT <no-reply@dave
 
 # Destinatario de las denuncias de contenido (copyright / ilegal)
 LEGAL_REPORTS_EMAIL = config('LEGAL_REPORTS_EMAIL', default='davidcv28@outlook.com')
+
+# Datos fiscales del emisor (DAVENT) que se imprimen en los comprobantes.
+# Completar en .env una vez dado de alta en ARCA. tax_condition:
+#   'MO' -> monotributo: siempre se emite Factura C, sin discriminar IVA
+#   'RI' -> responsable inscripto: Factura A si el comprador es RI, sino B
+# Mientras ISSUER_CUIT esté vacío el comprobante se muestra como interno.
+INVOICE_ISSUER = {
+    'name'           : config('ISSUER_NAME', default = 'DAVENT'),
+    'tagline'        : 'Plataforma de catálogos digitales',
+    'cuit'           : config('ISSUER_CUIT', default = ''),
+    'address'        : config('ISSUER_ADDRESS', default = ''),
+    'email'          : config('ISSUER_EMAIL', default = ''),
+    'tax_condition'  : config('ISSUER_TAX_CONDITION', default = 'MO'),
+    'iibb'           : config('ISSUER_IIBB', default = ''),
+    'activity_start' : config('ISSUER_ACTIVITY_START', default = ''),
+}

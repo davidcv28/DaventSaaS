@@ -9,13 +9,16 @@ import BrandLogo from '../components/BrandLogo.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AlertMessage from '../components/AlertMessage.vue'
 
-// Datos fiscales del emisor (DAVENT). Completar CUIT/domicilio cuando estén definidos.
-const ISSUER = {
+// Datos fiscales del emisor: vienen del backend (settings.INVOICE_ISSUER,
+// configurable por .env). Sin CUIT el comprobante no tiene validez fiscal.
+const FALLBACK_ISSUER = {
   name: 'DAVENT',
   tagline: 'Plataforma de catálogos digitales',
   cuit: '',
   address: '',
-  email: ''
+  email: '',
+  iibb: '',
+  activity_start: ''
 }
 
 const route = useRoute()
@@ -23,14 +26,20 @@ const invoice = ref(null)
 const status = ref('loading') // loading | ready | error
 const error = ref('')
 
+const issuer = computed(() => invoice.value?.issuer || FALLBACK_ISSUER)
+// Sin CUIT del emisor todavía no se puede emitir un comprobante fiscal real.
+const isInternal = computed(() => !issuer.value.cuit)
+
 const docTitle = computed(() =>
   invoice.value ? `${invoice.value.type_display} ${invoice.value.comprobante}` : 'Factura'
 )
 
-// En Factura A el ítem va sin IVA (neto); en B el precio ya lo incluye.
+// En Factura A el ítem va sin IVA (neto); en B/C el precio ya es el final.
 const itemAmount = computed(() =>
   invoice.value?.type === 'A' ? invoice.value.net_amount : invoice.value?.total
 )
+// La Factura C no discrimina IVA: solo se muestra el total.
+const showsVat = computed(() => invoice.value?.type !== 'C')
 
 onMounted(async () => {
   try {
@@ -98,16 +107,19 @@ function closeTab() {
           <span>Comprobante N° {{ invoice.comprobante }}</span>
           <span>Fecha de emisión: {{ formatDate(invoice.issued_at) }}</span>
           <span v-if="invoice.paid_at">Pago acreditado: {{ formatDateTime(invoice.paid_at) }}</span>
+          <span v-if="isInternal" class="inv-internal">Documento interno</span>
         </div>
       </header>
 
       <section class="inv-parties">
         <div class="inv-party">
           <h4>Emisor</h4>
-          <strong>{{ ISSUER.name }}</strong>
-          <span v-if="ISSUER.cuit">CUIT: {{ ISSUER.cuit }}</span>
-          <span v-if="ISSUER.address">{{ ISSUER.address }}</span>
-          <span v-if="ISSUER.email">{{ ISSUER.email }}</span>
+          <strong>{{ issuer.name }}</strong>
+          <span v-if="issuer.cuit">CUIT: {{ issuer.cuit }}</span>
+          <span v-if="issuer.address">{{ issuer.address }}</span>
+          <span v-if="issuer.iibb">Ingresos Brutos: {{ issuer.iibb }}</span>
+          <span v-if="issuer.activity_start">Inicio de actividades: {{ issuer.activity_start }}</span>
+          <span v-if="issuer.email">{{ issuer.email }}</span>
         </div>
         <div class="inv-party">
           <h4>Facturar a</h4>
@@ -139,14 +151,16 @@ function closeTab() {
 
       <div class="inv-totals">
         <div class="inv-total-rows">
-          <div class="inv-total-row sub">
-            <span>{{ invoice.type === 'A' ? 'Neto gravado' : 'Subtotal' }}</span>
-            <span>{{ formatARS(invoice.net_amount, 2) }}</span>
-          </div>
-          <div class="inv-total-row sub">
-            <span>IVA 21%{{ invoice.type === 'A' ? '' : ' incluido' }}</span>
-            <span>{{ formatARS(invoice.iva_amount, 2) }}</span>
-          </div>
+          <template v-if="showsVat">
+            <div class="inv-total-row sub">
+              <span>{{ invoice.type === 'A' ? 'Neto gravado' : 'Subtotal' }}</span>
+              <span>{{ formatARS(invoice.net_amount, 2) }}</span>
+            </div>
+            <div class="inv-total-row sub">
+              <span>IVA 21%{{ invoice.type === 'A' ? '' : ' incluido' }}</span>
+              <span>{{ formatARS(invoice.iva_amount, 2) }}</span>
+            </div>
+          </template>
           <div class="inv-total-row">
             <span>Total</span>
             <strong>{{ formatARS(invoice.total, 2) }}</strong>
@@ -155,7 +169,8 @@ function closeTab() {
       </div>
 
       <footer class="inv-foot">
-        <span>Comprobante emitido digitalmente por {{ ISSUER.name }}.</span>
+        <span v-if="isInternal">Comprobante interno sin validez fiscal ante ARCA.</span>
+        <span v-else>Comprobante emitido digitalmente por {{ issuer.name }}.</span>
         <span v-if="invoice.currency">Moneda: {{ invoice.currency }}</span>
       </footer>
     </article>
@@ -203,6 +218,11 @@ function closeTab() {
 .inv-meta { display: grid; justify-items: end; gap: 3px; font-size: 13.5px; }
 .inv-meta strong { font-size: 17px; }
 .inv-meta span { color: #475569; }
+.inv-internal {
+  margin-top: 4px; padding: 3px 10px; border: 1px dashed #b45309; border-radius: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: #b45309;
+}
 
 .inv-parties {
   display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
