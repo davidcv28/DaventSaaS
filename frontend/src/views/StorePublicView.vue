@@ -353,20 +353,6 @@ onBeforeUnmount(() => {
     </div>
   </section>
 
-  <!-- ===== Cierre: invitación al catálogo ===== -->
-  <section class="sp-cta" aria-label="Ver catálogo">
-    <div class="sp-container">
-      <div v-reveal class="sp-cta-card">
-        <span class="sp-orb o1" aria-hidden="true"></span>
-        <span class="sp-orb o2" aria-hidden="true"></span>
-        <span class="sp-cta-icon" aria-hidden="true"><AppIcon name="package" :size="26" /></span>
-        <h2>¿Listo para encontrar lo que buscás?</h2>
-        <p>Recorré el catálogo completo de {{ shopName }} y elegí con toda la información a mano.</p>
-        <RouterLink class="sp-btn sp-hero-btn" :to="catalogTo">Explorar catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== Galería: visor de imagen ===== -->
   <Transition name="sp-modal">
   <div v-if="lightboxImage" class="sp-lightbox" role="dialog" aria-modal="true" aria-label="Visor de la galería" @click.self="closeLightbox">

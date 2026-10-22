@@ -740,16 +740,6 @@ html { scroll-behavior: smooth; }
 .sp-hl strong { margin-top: 6px; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
 .sp-hl-text { font-size: 13.5px; line-height: 1.55; color: var(--sp-muted); overflow-wrap: anywhere; }
 
-/* Cierre: tarjeta de acento con invitación al catálogo */
-.sp-cta { padding: 72px 0 0; }
-.sp-cta-card { position: relative; overflow: hidden; display: grid; justify-items: center; gap: 14px; text-align: center; padding: 56px 28px; border-radius: 28px; color: #fff; background-size: 160% 160%; background-image: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); animation: sp-aurora 14s ease-in-out infinite alternate; box-shadow: 0 30px 60px -30px var(--store-accent-ink); }
-.store-page[data-store-theme='dark'] .sp-cta-card { background-image: linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 55%, #0d1220), #111631); border: 1px solid var(--sp-line); }
-.sp-cta-card > * { position: relative; z-index: 1; }
-.sp-cta-card .sp-orb { z-index: 0; }
-.sp-cta-card h2 { margin: 0; max-width: 24ch; font-size: clamp(24px, 3.6vw, 36px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
-.sp-cta-card p { margin: 0; max-width: 52ch; font-size: 15.5px; line-height: 1.65; color: rgba(255, 255, 255, .88); overflow-wrap: anywhere; }
-.sp-cta-card .sp-btn { margin-top: 8px; height: 48px; padding: 0 28px; }
-.sp-cta-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 18px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .38); animation: sp-float 4s ease-in-out infinite; }
 .sp-about { padding-top: 88px; }
 
 @media (max-width: 760px) {
@@ -758,8 +748,6 @@ html { scroll-behavior: smooth; }
   .sp-float.f2 { left: 5%; } .sp-float.f4 { right: 5%; }
   .sp-highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: -56px; }
   .sp-hl { padding: 18px 16px; }
-  .sp-cta { padding-top: 56px; }
-  .sp-cta-card { padding: 40px 20px; }
 }
 @media (max-width: 460px) { .sp-highlights { grid-template-columns: minmax(0, 1fr); } }
 
@@ -787,17 +775,8 @@ html { scroll-behavior: smooth; }
 /* Nav apenas translúcido: conserva casi todo el color de la paleta */
 .sp-top, .store-page[data-store-theme='dark'] .sp-top { background: linear-gradient(180deg, color-mix(in srgb, var(--store-accent-ink) 92%, transparent), color-mix(in srgb, var(--store-accent-ink) 82%, #000 8%)); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); border-bottom-color: rgba(255, 255, 255, .12); }
 
-/* Cierre compacto: franja baja en una sola fila */
-.sp-cta { padding-top: 48px; }
-.sp-cta-card { grid-template-columns: auto minmax(0, 1fr) auto; justify-items: start; align-items: center; gap: 8px 20px; text-align: left; padding: 22px 28px; border-radius: 20px; }
-.sp-cta-icon { grid-row: 1 / span 2; width: 44px; height: 44px; border-radius: 13px; }
-.sp-cta-card h2 { grid-column: 2; max-width: none; font-size: clamp(17px, 2.2vw, 21px); }
-.sp-cta-card p { grid-column: 2; max-width: none; font-size: 13.5px; line-height: 1.5; }
-.sp-cta-card .sp-btn { grid-column: 3; grid-row: 1 / span 2; margin: 0; height: 42px; padding: 0 22px; }
-.sp-cta-card .sp-orb.o1 { width: 180px; height: 180px; }
-.sp-cta-card .sp-orb.o2 { width: 140px; height: 140px; }
-@media (max-width: 760px) {
-  .sp-cta { padding-top: 36px; }
-  .sp-cta-card { grid-template-columns: auto minmax(0, 1fr); padding: 18px; }
-  .sp-cta-card .sp-btn { grid-column: 1 / -1; grid-row: auto; width: 100%; }
-}
+
+/* Galería y Contáctanos: aire entre secciones y mismo fondo que el resto */
+.sp-gallery { padding-bottom: 72px; }
+.sp-contact { background: transparent; border-top: 0; padding-top: 24px; }
+@media (max-width: 760px) { .sp-gallery { padding-bottom: 48px; } }
