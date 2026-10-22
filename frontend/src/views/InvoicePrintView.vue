@@ -92,8 +92,8 @@ function closeTab() {
         <div class="inv-brand">
           <BrandLogo :size="46" />
           <div class="inv-brand-text">
-            <strong>{{ ISSUER.name }}</strong>
-            <span>{{ ISSUER.tagline }}</span>
+            <strong>{{ issuer.name }}</strong>
+            <span>{{ issuer.tagline }}</span>
           </div>
         </div>
 
