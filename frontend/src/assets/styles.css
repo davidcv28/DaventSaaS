@@ -366,7 +366,7 @@ body { transition: background-color .2s ease, color .2s ease; }
   padding: 28px 24px 24px;
   position: relative;
   display: flex;
-  flex: 1 1 300px;
+  flex: 1 1 230px;
   flex-direction: column;
   gap: 14px;
   box-shadow: var(--shadow-sm);
