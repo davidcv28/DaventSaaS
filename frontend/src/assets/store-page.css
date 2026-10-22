@@ -780,3 +780,6 @@ html { scroll-behavior: smooth; }
 @media (max-width: 760px) { .sp-foot { margin-top: 48px; } }
 .sp-foot .sp-davent-badge { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .35); }
 .sp-foot .sp-davent-badge:hover { border-color: #fff; background: rgba(255, 255, 255, .22); }
+
+/* Nav transparente (cristal); el pie conserva el color sólido de la paleta */
+.sp-top, .store-page[data-store-theme='dark'] .sp-top { background: linear-gradient(180deg, color-mix(in srgb, var(--store-accent-ink) 55%, transparent), color-mix(in srgb, var(--store-accent-ink) 35%, transparent)); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom-color: rgba(255, 255, 255, .16); }
