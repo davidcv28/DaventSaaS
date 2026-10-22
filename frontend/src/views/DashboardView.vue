@@ -234,7 +234,7 @@ const navItems = computed(() => {
   ]
   if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
   if (b.has_customization) items.push({ id: 'company', label: 'Mi empresa', icon: 'building-2' })
-  items.push({ id: 'pos', label: 'Venta en local', icon: 'monitor' })
+  items.push({ id: 'pos', label: 'Venta en persona', icon: 'monitor' })
   const advanced = []
   if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
   if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
@@ -1874,8 +1874,8 @@ async function changePassword() {
     <div v-show="section === 'pos'" :class="{ 'sec-on': section === 'pos' }">
       <div class="page-head">
         <div>
-          <h1>Venta en tu local</h1>
-          <p>Un punto de venta para cobrar en el mostrador: tu catálogo y tu marca, ya cargados.</p>
+          <h1>Venta en persona</h1>
+          <p>Un punto de venta para cobrar cara a cara: tu catálogo, ya cargado.</p>
         </div>
         <span class="pill warn"><AppIcon name="clock" :size="14" /> Próximamente</span>
       </div>
@@ -1884,13 +1884,13 @@ async function changePassword() {
         <div>
           <div class="card">
             <h3><AppIcon name="monitor" :size="18" /> DAVENT Ventas</h3>
-            <p>Estamos desarrollando un programa de venta para instalar en la computadora de tu local. Cobrás en persona con el mismo catálogo que ya publicás en tu web, emitís el comprobante con tus datos fiscales y cerrás la caja del día.</p>
+            <p>Estamos desarrollando un programa de venta para tu computadora. Cobrás en persona con el mismo catálogo que ya publicás en tu web, emitís el comprobante con tus datos y cerrás el día con el resumen de tus ventas.</p>
             <ul class="pos-feats">
               <li><AppIcon name="package" :size="16" /> <span>Productos, fotos y precios sincronizados con tu catálogo web.</span></li>
-              <li><AppIcon name="receipt" :size="16" /> <span>Facturación integrada: tickets y facturas con tus datos fiscales.</span></li>
+              <li><AppIcon name="receipt" :size="16" /> <span>Facturación integrada: tickets y facturas con tus datos.</span></li>
               <li><AppIcon name="printer" :size="16" /> <span>Comprobante imprimible al momento de cobrar.</span></li>
-              <li><AppIcon name="trending-up" :size="16" /> <span>Cierre de caja con el resumen de ventas del día.</span></li>
-              <li><AppIcon name="circle-check" :size="16" /> <span>Funciona local: si se corta internet seguís vendiendo y sincroniza después.</span></li>
+              <li><AppIcon name="trending-up" :size="16" /> <span>Resumen de ventas del día al cierre.</span></li>
+              <li><AppIcon name="circle-check" :size="16" /> <span>Funciona sin internet: si se corta seguís vendiendo y sincroniza después.</span></li>
             </ul>
           </div>
           <AlertMessage kind="info" message="Todavía está en desarrollo. Cuando salga, vas a poder sumarlo a tu suscripción desde esta misma sección." />
@@ -1898,7 +1898,7 @@ async function changePassword() {
 
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Así se va a ver</h3>
-          <p class="pos-note">Vista de ejemplo: el programa sale con el logo y el nombre de tu tienda.</p>
+          <p class="pos-note">Vista de ejemplo: el programa sale con tu logo y el nombre de tu web.</p>
           <div class="pos-window" :style="posVars">
             <div class="pos-titlebar">
               <span class="pos-dots"><i></i><i></i><i></i></span>
@@ -1928,7 +1928,7 @@ async function changePassword() {
                 </div>
                 <span class="pos-group-label">Comprador</span>
                 <div class="pos-field">
-                  <span class="pos-field-label">Nombre o razón social</span>
+                  <span class="pos-field-label">Nombre</span>
                   <span class="pos-input"><AppIcon name="user" :size="12" /> Consumidor final</span>
                 </div>
                 <div class="pos-field-row">
