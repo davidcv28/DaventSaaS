@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 # Imagen web = build del SPA Vue + nginx (reverse proxy + TLS + estáticos).
-# Contexto de build: ./frontend
+# Contexto de build: raíz del repo (.) — buildx exige que el Dockerfile viva
+# dentro del contexto; los COPY referencian frontend/.
 
 # ---------- Stage 1: build del SPA ----------
 FROM node:20-alpine AS build
 WORKDIR /src
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
-COPY . .
+COPY frontend/ .
 # Vars Vite se hornean en el bundle en build-time (no en runtime).
 ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN

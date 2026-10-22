@@ -156,8 +156,8 @@ services:
   web:
     image: ${WEB_IMAGE:-ghcr.io/davidcv28/daventsaas-web:latest}
     build:
-      context: ./frontend
-      dockerfile: ../docker/web/Dockerfile
+      context: .
+      dockerfile: docker/web/Dockerfile
       args:
         VITE_PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
         VITE_API_BASE_URL: /api

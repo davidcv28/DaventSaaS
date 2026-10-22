@@ -183,8 +183,8 @@ jobs:
       - name: Build WEB -> GHCR
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
-          file: ../docker/web/Dockerfile
+          context: .
+          file: docker/web/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta-web.outputs.tags }}
