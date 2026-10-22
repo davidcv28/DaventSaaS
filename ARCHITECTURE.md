@@ -446,7 +446,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 
 - `GET|POST /api/categories/`, `GET|PATCH|DELETE /api/categories/<pk>/` — CRUD; al borrar una categoría los productos quedan sin categoría (`SET_NULL`). Ídem `/api/brands/`.
 - `GET|POST /api/products/`, `GET|PATCH|DELETE /api/products/<pk>/` — CRUD del catálogo. POST/PATCH aceptan multipart con `image` (sube a R2 y consume cuota `max_storage_mb`; `image_clear=true` la quita). Responden `{Exito, item, storage, image_error?}`.
-- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, products}` con filtros `?category=&brand=&q=`. 404 si la suscripción no otorga acceso.
+- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, products}` con filtros `?category=&brand=&q=&min_price=&max_price=` (bounds inválidos/negativos se ignoran vía `_price_bound`) y orden `?sort=name|recent|price_asc|price_desc` (whitelist `CATALOG_SORTS` en el viewset; sin sort válido queda el ordering del Meta). 404 si la suscripción no otorga acceso.
 
 ---
 

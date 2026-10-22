@@ -146,6 +146,20 @@
 .sp-nav-clear { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 4px 0 4px 2px; padding: 8px 12px; border: 1px dashed var(--sp-line); border-radius: 9px; background: transparent; color: var(--sp-muted); font: inherit; font-size: 12.5px; cursor: pointer; }
 .sp-nav-clear:hover { color: var(--sp-accent-text); border-color: var(--store-accent); }
 
+/* --- Filtros del catálogo: rango de precios + orden --- */
+.sp-filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: -14px 0 26px; }
+.sp-price, .sp-sort { display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px; border: 1px solid var(--sp-line); border-radius: 99px; background: var(--sp-card); color: var(--sp-muted); box-shadow: var(--sp-shadow-sm); transition: border-color .15s, box-shadow .3s var(--sp-ease); }
+.sp-price:focus-within, .sp-sort:focus-within { border-color: var(--store-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--store-accent) 18%, transparent); }
+.sp-price input { width: 84px; min-width: 0; border: none; background: transparent; padding: 0; font: inherit; font-size: 14px; color: var(--sp-ink); }
+.sp-price input:focus, .sp-price input:focus-visible { outline: none; }
+.sp-price input::placeholder { color: var(--sp-muted); }
+.sp-price-sep { flex: none; width: 10px; height: 1.5px; border-radius: 2px; background: var(--sp-line); }
+.sp-sort { position: relative; cursor: pointer; }
+.sp-sort select { appearance: none; -webkit-appearance: none; border: none; background: transparent; padding: 0 22px 0 0; font: inherit; font-size: 14px; color: var(--sp-ink); cursor: pointer; }
+.sp-sort select:focus, .sp-sort select:focus-visible { outline: none; }
+.sp-sort-caret { position: absolute; right: 14px; pointer-events: none; }
+.store-page[data-store-theme='dark'] .sp-price, .store-page[data-store-theme='dark'] .sp-sort { background: color-mix(in srgb, var(--store-accent) 8%, transparent); }
+
 /* --- Chips de filtros --- */
 .sp-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: -8px 0 28px; }
 .sp-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--store-accent); background: var(--store-accent-soft); color: var(--store-accent-ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
@@ -297,6 +311,9 @@
   .sp-main { padding-top: 36px; padding-bottom: 56px; }
   .sp-search.sp-search-top { display: none; }
   .sp-search.sp-search-inline { display: flex; flex-basis: 100%; }
+  .sp-price, .sp-sort { flex: 1 1 auto; }
+  .sp-price input { flex: 1; }
+  .sp-sort select { flex: 1; }
   .sp-brand { flex: 1 1 auto; }
   .sp-top-end { flex: 0 0 auto; }
   .sp-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }

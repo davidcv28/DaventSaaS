@@ -14,7 +14,10 @@ import { http } from './http.js'
 //                                                   al visitante en el nav; location_address es null sin
 //                                                   has_location_map (Estándar+) o si el dueño apagó el mapa
 //                                                   (customization.show_location)
-// GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products} (?q=&category=&brand=)
+// GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products}
+//                                                   (?q=&category=&brand=&min_price=&max_price=&sort=
+//                                                     name|recent|price_asc|price_desc; valores
+//                                                     inválidos se ignoran en el backend)
 // GET  /api/stores/public/<slug>/contact/captcha/ público -> {challenge_id, question} (captcha antispam)
 // POST /api/stores/public/<slug>/contact/       público {name, email, message, website (honeypot),
 //                                                        challenge_id, captcha_answer} -> envía el
@@ -68,9 +71,12 @@ export const storesApi = {
     return data
   },
 
-  async publicCatalog(slug, { q = '', category = '', brand = '' } = {}) {
+  async publicCatalog(slug, { q = '', category = '', brand = '', min_price = '', max_price = '', sort = '' } = {}) {
     const { data } = await http.get(`/stores/public/${slug}/catalog/`, {
-      params: { q: q || undefined, category: category || undefined, brand: brand || undefined }
+      params: {
+        q: q || undefined, category: category || undefined, brand: brand || undefined,
+        min_price: min_price || undefined, max_price: max_price || undefined, sort: sort || undefined
+      }
     })
     return data
   },

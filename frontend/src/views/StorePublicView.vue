@@ -28,6 +28,9 @@ const catalogStatus = ref('idle') // idle | loading | success | error
 const search = ref('')
 const activeCategory = ref(null)
 const activeBrand = ref(null)
+const priceMin = ref('')
+const priceMax = ref('')
+const sort = ref('name')
 const menuOpen = ref(false)
 let searchTimer = null
 
@@ -182,7 +185,17 @@ function onSlideDragEnd() {
   restartSlideTimer()
 }
 
-// --- Catálogo: buscador + filtros por categoría/marca ---
+// --- Catálogo: buscador + filtros por categoría/marca/precio + orden ---
+// parsePrice acepta formato es-AR ("1.500,50") y punto decimal: lo que no
+// sea un número >= 0 se ignora (el backend también descarta bounds inválidos).
+function parsePrice(value) {
+  const raw = String(value || '').trim().replace(/\s/g, '')
+  if (!raw) return ''
+  const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw
+  const n = Number(normalized)
+  return Number.isFinite(n) && n >= 0 ? n : ''
+}
+
 const PAGE_SIZE = 12
 const visibleCount = ref(PAGE_SIZE)
 const visibleProducts = computed(() => catalog.value.products.slice(0, visibleCount.value))
@@ -197,7 +210,10 @@ async function loadCatalog() {
     catalog.value = await storesApi.publicCatalog(slug, {
       q: search.value,
       category: activeCategory.value || '',
-      brand: activeBrand.value || ''
+      brand: activeBrand.value || '',
+      min_price: parsePrice(priceMin.value),
+      max_price: parsePrice(priceMax.value),
+      sort: sort.value
     })
     catalogStatus.value = 'success'
   } catch {
@@ -209,6 +225,13 @@ watch(search, () => {
   clearTimeout(searchTimer)
   searchTimer = setTimeout(loadCatalog, 300)
 })
+// El rango de precios también es debounceado (el visitante escribe a su ritmo);
+// el orden recarga al instante porque el select ya entrega el valor final.
+watch([priceMin, priceMax], () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(loadCatalog, 400)
+})
+watch(sort, loadCatalog)
 
 function pickCategory(id) {
   activeCategory.value = activeCategory.value === id ? null : id
@@ -222,10 +245,22 @@ function clearFilters() {
   activeCategory.value = null
   activeBrand.value = null
   search.value = ''
+  priceMin.value = ''
+  priceMax.value = ''
   loadCatalog()
 }
 
-const hasFilters = computed(() => Boolean(activeCategory.value || activeBrand.value || search.value))
+// El orden no entra en hasFilters ni se resetea con "Limpiar": ordenar no
+// filtra resultados y el visitante espera que se mantenga.
+const hasPriceFilter = computed(() => parsePrice(priceMin.value) !== '' || parsePrice(priceMax.value) !== '')
+const priceRangeLabel = computed(() => {
+  const min = parsePrice(priceMin.value)
+  const max = parsePrice(priceMax.value)
+  if (min !== '' && max !== '') return `${formatARS(min)} – ${formatARS(max)}`
+  if (min !== '') return `Desde ${formatARS(min)}`
+  return `Hasta ${formatARS(max)}`
+})
+const hasFilters = computed(() => Boolean(activeCategory.value || activeBrand.value || search.value || hasPriceFilter.value))
 const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length))
 const activeCategoryName = computed(() => catalog.value.categories.find((c) => c.id === activeCategory.value)?.name)
 const activeBrandName = computed(() => catalog.value.brands.find((b) => b.id === activeBrand.value)?.name)
@@ -505,12 +540,34 @@ onBeforeUnmount(() => {
               </label>
             </div>
 
+            <div v-reveal="60" class="sp-filters">
+              <div class="sp-price" role="group" aria-label="Filtrar por rango de precios">
+                <AppIcon name="wallet" :size="15" aria-hidden="true" />
+                <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Mín." aria-label="Precio mínimo" />
+                <span class="sp-price-sep" aria-hidden="true"></span>
+                <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Máx." aria-label="Precio máximo" />
+              </div>
+              <label class="sp-sort">
+                <AppIcon name="arrow-down-wide-narrow" :size="15" aria-hidden="true" />
+                <select v-model="sort" aria-label="Ordenar productos">
+                  <option value="name">Nombre (A–Z)</option>
+                  <option value="recent">Más recientes</option>
+                  <option value="price_asc">Menor precio</option>
+                  <option value="price_desc">Mayor precio</option>
+                </select>
+                <AppIcon name="chevron-down" :size="14" class="sp-sort-caret" aria-hidden="true" />
+              </label>
+            </div>
+
             <div v-if="hasFilters" class="sp-chips">
               <button v-if="activeCategoryName" type="button" class="sp-chip" @click="pickCategory(activeCategory)">
                 {{ activeCategoryName }} <AppIcon name="x" :size="12" />
               </button>
               <button v-if="activeBrandName" type="button" class="sp-chip" @click="pickBrand(activeBrand)">
                 {{ activeBrandName }} <AppIcon name="x" :size="12" />
+              </button>
+              <button v-if="hasPriceFilter" type="button" class="sp-chip" @click="priceMin = ''; priceMax = ''">
+                {{ priceRangeLabel }} <AppIcon name="x" :size="12" />
               </button>
               <button type="button" class="sp-chip clear" @click="clearFilters">Limpiar</button>
             </div>

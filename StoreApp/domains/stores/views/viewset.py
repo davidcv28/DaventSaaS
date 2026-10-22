@@ -36,6 +36,28 @@ DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)
+#Ordenamientos admitidos por el catálogo público (whitelist cerrada: el
+#param ?sort= jamás llega crudo al order_by). Sin sort válido queda el
+#ordering del Meta de Product (name, id).
+CATALOG_SORTS           =   {
+    'price_asc'     :   ('price', 'name'),
+    'price_desc'    :   ('-price', 'name'),
+    'recent'        :   ('-created_at', '-id'),
+    'name'          :   ('name', 'id'),
+}
+#=========================================
+# HELPERS
+#=========================================
+def _price_bound(raw):
+    #Parseo defensivo de ?min_price=/max_price= del catálogo público: un
+    #valor inválido o negativo se ignora (no filtra), como hacen los ids
+    #no numéricos de category/brand.
+    from decimal import Decimal, InvalidOperation
+    try:
+        value   =   Decimal(str(raw).strip())
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+    return value if value.is_finite() and value >= 0 else None
 #=========================================
 # CONTACT THROTTLE (antispam del formulario público, rate en settings)
 #=========================================
@@ -132,6 +154,9 @@ class StoreViewSet(StoreBaseViewSet):
         category_id     =   request.query_params.get('category')
         brand_id        =   request.query_params.get('brand')
         search          =   (request.query_params.get('q') or '').strip()
+        min_price       =   _price_bound(request.query_params.get('min_price'))
+        max_price       =   _price_bound(request.query_params.get('max_price'))
+        sort            =   (request.query_params.get('sort') or '').strip()
         if category_id and category_id.isdigit():
             products    =   products.filter(category_id = int(category_id))
         if brand_id and brand_id.isdigit():
@@ -139,6 +164,13 @@ class StoreViewSet(StoreBaseViewSet):
         if search:
             from django.db.models import Q
             products    =   products.filter(Q(name__icontains = search) | Q(description__icontains = search))
+        if min_price is not None:
+            products    =   products.filter(price__gte = min_price)
+        if max_price is not None:
+            products    =   products.filter(price__lte = max_price)
+        ordering        =   CATALOG_SORTS.get(sort)
+        if ordering:
+            products    =   products.order_by(*ordering)
         categories      =   store.categories.all()
         brands          =   store.brands.all()
         return Response(
