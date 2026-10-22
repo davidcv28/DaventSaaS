@@ -543,27 +543,33 @@ onBeforeUnmount(() => {
               <label class="sp-search sp-search-inline">
                 <AppIcon name="search" :size="16" aria-hidden="true" />
                 <input v-model="search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="search = ''" />
-          <button v-if="search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="search = ''"><AppIcon name="x" :size="14" /></button>
+                <button v-if="search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="search = ''"><AppIcon name="x" :size="14" /></button>
               </label>
             </div>
 
-            <div v-reveal="60" class="sp-filters">
-              <div class="sp-price" role="group" aria-label="Filtrar por rango de precios">
-                <AppIcon name="wallet" :size="15" aria-hidden="true" />
-                <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Mín." aria-label="Precio mínimo" />
-                <span class="sp-price-sep" aria-hidden="true"></span>
-                <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Máx." aria-label="Precio máximo" />
+            <div v-reveal="60" class="sp-filters" role="group" aria-label="Filtros del catálogo">
+              <div class="sp-field">
+                <span class="sp-field-label">Precio</span>
+                <div class="sp-price" role="group" aria-label="Filtrar por rango de precios">
+                  <span class="sp-currency" aria-hidden="true">$</span>
+                  <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Mínimo" aria-label="Precio mínimo" />
+                  <span class="sp-price-sep" aria-hidden="true"></span>
+                  <span class="sp-currency" aria-hidden="true">$</span>
+                  <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Máximo" aria-label="Precio máximo" />
+                </div>
               </div>
-              <label class="sp-sort">
-                <AppIcon name="arrow-down-wide-narrow" :size="15" aria-hidden="true" />
-                <select v-model="sort" aria-label="Ordenar productos">
-                  <option value="name">Nombre (A–Z)</option>
-                  <option value="recent">Más recientes</option>
-                  <option value="price_asc">Menor precio</option>
-                  <option value="price_desc">Mayor precio</option>
-                </select>
-                <AppIcon name="chevron-down" :size="14" class="sp-sort-caret" aria-hidden="true" />
-              </label>
+              <div class="sp-field">
+                <label class="sp-field-label" for="sp-sort-select">Ordenar por</label>
+                <div class="sp-sort">
+                  <select id="sp-sort-select" v-model="sort">
+                    <option value="name">Nombre (A-Z)</option>
+                    <option value="recent">Más recientes</option>
+                    <option value="price_asc">Menor precio</option>
+                    <option value="price_desc">Mayor precio</option>
+                  </select>
+                  <AppIcon name="chevron-down" :size="14" class="sp-sort-caret" aria-hidden="true" />
+                </div>
+              </div>
             </div>
 
             <div v-if="hasFilters" class="sp-chips" aria-label="Filtros activos">
