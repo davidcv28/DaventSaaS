@@ -349,19 +349,9 @@ async function togglePublished() {
 const catalogTab = ref('products') // products | categories | brands
 const catalogLoaded = ref(false)
 
-// Catálogo opcional en la web pública (customization.show_catalog): el dueño
-// lo apaga para usar su web solo como vidriera del negocio. La gestión sigue
-// disponible acá y los productos se conservan; se guarda al instante.
-const catalogWebBusy = ref(false)
-const catalogWebOn = computed(() => store.customization.show_catalog !== false)
-async function toggleCatalogWeb(event) {
-  const next = event.target.checked
-  catalogWebBusy.value = true
-  const ok = await store.saveCustomization({ show_catalog: next })
-  catalogWebBusy.value = false
-  // PATCH rechazado (plan caído, etc.): el checkbox vuelve al estado real.
-  if (!ok) event.target.checked = !next
-}
+// El interruptor del catálogo público (customization.show_catalog) vive en
+// Diseño web, dentro del grupo "Secciones de tu web", y se guarda con
+// "Guardar diseño" como el resto de las secciones.
 
 const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true })
 const productTouched = reactive({})
@@ -628,7 +618,6 @@ const companyBusy = ref(false)
 
 async function saveCompany() {
   COMPANY_FIELDS.forEach((k) => { designTouched[k] = true })
-  designTouched.show_about = true
   if (COMPANY_FIELDS.some((k) => designErrors.value[k])) return
   companyBusy.value = true
   const years = designForm.about_years
@@ -637,8 +626,7 @@ async function saveCompany() {
     about_text: designForm.about_text.trim(),
     about_years: years === '' || years === null || years === undefined ? null : Number(years),
     about_mission: designForm.about_mission.trim(),
-    about_specialties: designForm.about_specialties.trim(),
-    show_about: Boolean(designForm.show_about)
+    about_specialties: designForm.about_specialties.trim()
   })
   companyBusy.value = false
 }
@@ -651,6 +639,8 @@ async function saveDesign() {
     display_name: designForm.display_name.trim(),
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
+    show_catalog: Boolean(designForm.show_catalog),
+    show_about: Boolean(designForm.show_about),
     show_gallery: Boolean(designForm.show_gallery),
     contact_email: designForm.contact_email.trim(),
     show_contact: Boolean(designForm.show_contact),
@@ -1253,27 +1243,7 @@ async function changePassword() {
 
       <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
       <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
-      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
-      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
       <AlertMessage kind="info" message="Publicá únicamente imágenes, logos y textos propios o con autorización de uso: sos responsable del contenido de tu catálogo." />
-
-      <div class="card">
-        <h3><AppIcon name="store" :size="18" /> Catálogo en tu web</h3>
-        <div class="field">
-          <label id="catalog-web-label">Página Catálogo</label>
-          <label class="check">
-            <input
-              type="checkbox"
-              :checked="catalogWebOn"
-              :disabled="catalogWebBusy"
-              aria-labelledby="catalog-web-label"
-              @change="toggleCatalogWeb"
-            />
-            <span>Mostrar la página Catálogo en tu web pública</span>
-          </label>
-          <p class="hint">Apagalo para usar tu web solo como vidriera de tu negocio: desaparecen el link del menú, el botón "Ver catálogo" y la página /catalogo. Tus productos se conservan y podés reactivarlo cuando quieras.</p>
-        </div>
-      </div>
 
       <template v-if="!billing.hasSubscription || catalog.denied">
         <div class="empty">
@@ -1552,18 +1522,6 @@ async function changePassword() {
             </div>
             <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
             <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
-            <div class="field">
-              <label id="design-show-contact-label">Sección Contáctanos</label>
-              <label class="check">
-                <input
-                  v-model="designForm.show_contact"
-                  type="checkbox"
-                  aria-labelledby="design-show-contact-label"
-                />
-                <span>Mostrar en tu web el formulario de contacto con el mapa y tus canales</span>
-              </label>
-              <p class="hint">Incluye verificación antispam. Desactivala si no querés recibir mensajes.</p>
-            </div>
             <div class="field" :class="{ locked: !canGallery }">
               <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></label>
               <div v-if="canGallery || galleryImages.length" class="carousel-box">
@@ -1590,16 +1548,44 @@ async function changePassword() {
               <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
             </div>
             <div class="field">
-              <label id="design-show-gallery-label">Sección Galería</label>
-              <label class="check">
-                <input
-                  v-model="designForm.show_gallery"
-                  type="checkbox"
-                  aria-labelledby="design-show-gallery-label"
-                />
-                <span>Mostrar la sección Galería en tu web</span>
-              </label>
-              <p class="hint">Aparece entre Sobre nosotros y el catálogo. También se oculta sola si no hay imágenes cargadas.</p>
+              <label id="design-sections-label">Secciones de tu web</label>
+              <div class="check-list" role="group" aria-labelledby="design-sections-label">
+                <label class="check-item">
+                  <input v-model="designForm.show_catalog" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Página Catálogo</strong>
+                    <small>Tus productos a la vista. Apagala para usar tu web solo como vidriera del negocio.</small>
+                  </span>
+                </label>
+                <label class="check-item">
+                  <input v-model="designForm.show_about" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Sobre nosotros</strong>
+                    <small>Historia, especialidades y misión. El contenido se edita en "Mi empresa".</small>
+                  </span>
+                </label>
+                <label class="check-item">
+                  <input v-model="designForm.show_gallery" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Galería</strong>
+                    <small>Grilla de imágenes del negocio. Se oculta sola si no hay ninguna cargada.</small>
+                  </span>
+                </label>
+                <label class="check-item">
+                  <input v-model="designForm.show_contact" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Contáctanos</strong>
+                    <small>Formulario con verificación antispam, tus canales y el mapa.</small>
+                  </span>
+                </label>
+                <label class="check-item" :class="{ disabled: !canLocationMap }">
+                  <input v-model="designForm.show_location" type="checkbox" :disabled="!canLocationMap" />
+                  <span class="check-text">
+                    <strong>Mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></strong>
+                    <small>Tu domicilio dentro de Contáctanos. Se carga desde "Mi cuenta".</small>
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
           <div class="card">
@@ -1725,19 +1711,6 @@ async function changePassword() {
               </div>
               <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
             </div>
-            <div class="field" :class="{ locked: !canLocationMap }">
-              <label id="design-location-label">Mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></label>
-              <label class="check">
-                <input
-                  v-model="designForm.show_location"
-                  type="checkbox"
-                  :disabled="!canLocationMap"
-                  aria-labelledby="design-location-label"
-                />
-                <span>Mostrar en tu web un mapa con la ubicación de tu negocio</span>
-              </label>
-              <p class="hint">Usa el domicilio de tu cuenta{{ accountForm.address ? ` (${accountForm.address})` : '' }}. Podés actualizarlo desde "Mi cuenta".</p>
-            </div>
           </div>
         </div>
 
@@ -1839,18 +1812,7 @@ async function changePassword() {
             <p class="hint">Se muestra destacada debajo de la descripción. {{ designForm.about_mission.length }}/400</p>
             <p v-if="designFieldErr('about_mission')" class="field-error" role="alert">{{ designFieldErr('about_mission') }}</p>
           </div>
-          <div class="field">
-            <label id="company-show-about-label">Sección Sobre nosotros</label>
-            <label class="check">
-              <input
-                v-model="designForm.show_about"
-                type="checkbox"
-                aria-labelledby="company-show-about-label"
-              />
-              <span>Mostrar la sección Sobre nosotros en tu web</span>
-            </label>
-            <p class="hint">Aparece después de la portada. También se oculta sola si no cargaste ningún contenido.</p>
-          </div>
+          <p class="hint">La sección se apaga desde Diseño web, en "Secciones de tu web". También se oculta sola si no cargaste ningún contenido.</p>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveCompany">Guardar información</AppButton>
           </div>

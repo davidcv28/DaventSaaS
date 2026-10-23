@@ -578,6 +578,18 @@ body { transition: background-color .2s ease, color .2s ease; }
 .check input[type='checkbox'] { width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--brand-600); cursor: pointer; }
 .check a { color: var(--brand-ink); font-weight: 600; text-decoration: none; }
 .check a:hover { text-decoration: underline; }
+/* Lista de interruptores de secciones (Diseño web): cada fila es una
+   sección de la web pública con título + descripción, en un solo bloque. */
+.check-list { display: grid; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.check-item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; cursor: pointer; transition: background .15s; }
+.check-item + .check-item { border-top: 1px solid var(--line-soft); }
+.check-item:hover { background: var(--brand-50); }
+.check-item input[type='checkbox'] { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--brand-600); cursor: pointer; }
+.check-item .check-text strong { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.check-item .check-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.45; }
+.check-item.disabled { opacity: .55; cursor: default; }
+.check-item.disabled:hover { background: transparent; }
+.check-item.disabled input[type='checkbox'] { cursor: default; }
 
 /* ===== Auth legal links ===== */
 .auth-legal { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line-soft); font-size: 12.5px; }
