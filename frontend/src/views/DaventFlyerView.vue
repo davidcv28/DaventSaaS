@@ -94,7 +94,11 @@ function closeTab() {
 .df-perks li { display: flex; gap: 8px; align-items: center; font-size: 10.5px; font-weight: 700; line-height: 1.3; color: #000; }
 .df-tick { flex: none; width: 15px; height: 15px; border-radius: 50%; background: #000; color: #fff; display: grid; place-items: center; }
 
-.df-plans { flex: 1; padding: 13px 18px 14px; align-content: start; display: grid; gap: 6px; }
+.df-trial { margin: 12px 18px 0; border: 1.5px dashed #000; border-radius: 7px; padding: 6px 10px; text-align: center; }
+.df-trial strong { display: block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+.df-trial span { display: block; font-size: 9px; color: #333; margin-top: 1px; }
+
+.df-plans { flex: 1; padding: 12px 18px 14px; align-content: start; display: grid; gap: 6px; }
 .df-plans-head { display: flex; align-items: center; gap: 8px; margin: 0 0 1px; font-size: 9px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #000; }
 .df-plans-head::after { content: ''; flex: 1; height: 1.5px; background: #000; }
 .df-plan { border: 1.5px solid #000; border-radius: 7px; padding: 6px 9px; }
@@ -154,6 +158,11 @@ function closeTab() {
         <ul class="df-perks">
           <li v-for="p in perks" :key="p"><span class="df-tick"><AppIcon name="check" :size="10" /></span> {{ p }}</li>
         </ul>
+
+        <div class="df-trial">
+          <strong>1 día gratis con funciones Premium</strong>
+          <span>Registrate y probá todo el sistema, sin tarjeta.</span>
+        </div>
 
         <div v-if="paidPlans.length" class="df-plans">
           <p class="df-plans-head">Elegí tu plan</p>
