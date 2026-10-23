@@ -19,6 +19,7 @@ const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StorePublicView = () => import('../views/StorePublicView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
+const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
 
 // Páginas de la web pública del cliente. En el dominio de la plataforma
 // cuelgan de /<slug>; en un subdominio de tienda (<slug>.<dominio>) son la
@@ -123,6 +124,13 @@ const routes = [
     name: 'store-flyer',
     component: StoreFlyerView,
     meta: { requiresAuth: true, title: 'Folleto' }
+  },
+  // Folleto promocional de la plataforma (staff): mismo formato de pestaña aparte
+  {
+    path: '/folleto-davent',
+    name: 'davent-flyer',
+    component: DaventFlyerView,
+    meta: { requiresAuth: true, requiresStaff: true, title: 'Folleto promo' }
   },
   // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias.
   // El layout resuelve la tienda una vez; Inicio y Catálogo son páginas hijas.
