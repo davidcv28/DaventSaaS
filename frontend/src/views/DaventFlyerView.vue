@@ -80,8 +80,8 @@ function closeTab() {
 .df-top { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 60%, #8b5cf6 100%); color: #fff; padding: 12px 16px 13px; position: relative; overflow: hidden; }
 .df-top::after { content: ''; position: absolute; right: -34px; top: -34px; width: 110px; height: 110px; border-radius: 50%; border: 14px solid #fff; opacity: .12; }
 .df-brand { display: flex; align-items: center; gap: 9px; position: relative; z-index: 1; }
-/* Logo en blanco puro sobre la banda negra. */
-.df-brand :deep(.brand-logo) { filter: brightness(0) invert(1); }
+/* Logo original con marco blanco para que se distinga sobre la banda de color. */
+.df-brand :deep(.brand-logo) { display: block; background: #fff; padding: 2px; border-radius: 12px; box-shadow: 0 2px 6px rgba(30, 27, 75, .35); }
 .df-brand strong { display: block; font-size: 14px; font-weight: 800; letter-spacing: .2em; line-height: 1; }
 .df-brand span { display: block; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; color: #ddd6fe; margin-top: 3px; }
 .df-hook { margin: 9px 0 0; font-size: 21px; font-weight: 900; line-height: 1.08; letter-spacing: -.03em; color: #fff; position: relative; z-index: 1; }
