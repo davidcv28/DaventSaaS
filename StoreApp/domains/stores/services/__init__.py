@@ -1,4 +1,4 @@
-from .services import plan_benefits_of, profile_has_benefit
+from .services import plan_benefits_of, profile_has_benefit, record_store_visit, visit_stats_of
 from .contact import issue_captcha, verify_captcha, contact_target, send_contact_message
 from .storage import (
     object_url, storage_configured, storage_limit_bytes, storage_payload,

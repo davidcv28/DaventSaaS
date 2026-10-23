@@ -17,8 +17,10 @@ import { http } from './http.js'
 // POST /api/verify-email/resend/ (Bearer) -> 200
 
 export const authApi = {
-  async login({ username, password }) {
-    const { data } = await http.post('/token/', { username, password })
+  async login({ username, password, remember = false }) {
+    // remember=true -> refresh de 30 días + cookie persistente ("mantener
+    // sesión iniciada"); false -> cookie de sesión del navegador.
+    const { data } = await http.post('/token/', { username, password, remember })
     return data
   },
 

@@ -517,6 +517,15 @@ async function removeTaxonomy(kind, item) {
 
 // --- QR y folletos (premium): QR del link público + folleto imprimible ---
 const qrDataUrl = ref('')
+const canStats = computed(() => Boolean(plan.value?.benefits?.has_stats))
+// Visitas de la web pública (endpoint /stores/stats/: 1 por visitante/día).
+const visitDays = computed(() => store.visitStats?.days || [])
+const visitMax = computed(() => Math.max(1, ...visitDays.value.map((d) => d.count)))
+const visitAvg = computed(() => {
+  if (!visitDays.value.length) return '0'
+  const sum = visitDays.value.reduce((a, d) => a + d.count, 0)
+  return (sum / visitDays.value.length).toFixed(1)
+})
 const canQr = computed(() => Boolean(plan.value?.benefits?.has_qr))
 const canFlyers = computed(() => Boolean(plan.value?.benefits?.has_flyers))
 
@@ -818,6 +827,7 @@ onMounted(async () => {
   loadAccountProvinces()
   if (store.status === 'idle') store.loadMine()
   await Promise.all([billing.loadPlans(), billing.loadMine(), payments.loadPayments(), invoices.loadInvoices()])
+  if (canStats.value) store.loadStats()
   // Precarga silenciosa del catálogo para los próximos pasos del resumen.
   ensureCatalog()
   // Primero el retorno del checkout (trae payment_id en la URL): es la vía instantánea.
@@ -1223,7 +1233,7 @@ async function changePassword() {
 
       <div class="stats">
         <div class="stat"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong>0</strong><small>Productos</small></div></div>
-        <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>—</strong><small>Visitas (próximamente)</small></div></div>
+        <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ canStats ? (store.visitStats?.total ?? '0') : '—' }}</strong><small>{{ canStats ? 'Visitas totales' : 'Visitas (desde Estándar)' }}</small></div></div>
         <div class="stat"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong>{{ plan?.remaining ?? '—' }}</strong><small>Días restantes</small></div></div>
       </div>
 
@@ -1845,10 +1855,30 @@ async function changePassword() {
           <p>Métricas de tu tienda y de tu link público.</p>
         </div>
       </div>
-      <div class="empty">
+      <template v-if="store.visitStats">
+        <div class="stats">
+          <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ store.visitStats.total }}</strong><small>Visitas totales</small></div></div>
+          <div class="stat"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong>{{ store.visitStats.today }}</strong><small>Visitas hoy</small></div></div>
+          <div class="stat"><span class="stat-icon"><AppIcon name="calendar" :size="20" /></span><div><strong>{{ visitAvg }}</strong><small>Promedio diario (30 días)</small></div></div>
+        </div>
+        <div class="card">
+          <h3><AppIcon name="trending-up" :size="18" /> Últimos 30 días</h3>
+          <div class="stats-chart" role="img" aria-label="Visitas por día">
+            <span
+              v-for="d in visitDays" :key="d.date" class="stats-bar"
+              :class="{ today: d.date === visitDays[visitDays.length - 1]?.date }"
+              :style="{ height: `${Math.max(2, (d.count / visitMax) * 100)}%` }"
+              :title="`${d.date}: ${d.count} visita${d.count === 1 ? '' : 's'}`"
+            ></span>
+          </div>
+          <div class="stats-chart-axis"><span>{{ visitDays[0]?.date?.slice(5) }}</span><span>{{ visitDays[visitDays.length - 1]?.date?.slice(5) }}</span></div>
+          <p class="hint">Se cuenta una visita por persona por día en tu link público.</p>
+        </div>
+      </template>
+      <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="trending-up" :size="28" /></span>
-        <h3>Las estadísticas llegan con el catálogo</h3>
-        <p>Tu plan ya incluye estadísticas de visitas. Cuando el catálogo esté disponible vas a ver acá las visitas a tu link, los productos más vistos y la evolución por día.</p>
+        <h3>Todavía no hay visitas registradas</h3>
+        <p>En cuanto alguien entre a tu link público vas a ver acá las visitas por día. Compartí tu web para empezar a medir.</p>
       </div>
     </div>
     <!-- ================= QR Y FOLLETOS (premium) ================= -->

@@ -21,6 +21,7 @@ from StoreApp.domains.stores.services                import (
     upload_carousel_image, delete_carousel_image,
     upload_gallery_image, delete_gallery_image,
     issue_captcha, verify_captcha, send_contact_message, contact_target,
+    record_store_visit, visit_stats_of,
 )
 from .viewset_base   import StoreBaseViewSet
 from .viewset_config import StoreConfigs
@@ -146,8 +147,21 @@ class StoreViewSet(StoreBaseViewSet):
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
+        record_store_visit(store, request)
         serializer  =   StorePublicSerializer(store)
         return Response(serializer.data, status = status.HTTP_200_OK)
+    #=========================================
+    # STATS (visitas de la web del dueño, beneficio has_stats: Estándar+)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'stats')
+    def stats(self, request):
+        profile     =   getattr(request.user, 'profile', None)
+        store       =   getattr(profile, 'store', None)
+        if store is None:
+            return Response({'detail': 'Todavía no tenés una web creada.'}, status = status.HTTP_404_NOT_FOUND)
+        if not profile_has_benefit(profile, 'has_stats'):
+            return Response({'detail': 'Las estadísticas de visitas están disponibles desde el plan Estándar.'}, status = status.HTTP_403_FORBIDDEN)
+        return Response(visit_stats_of(store), status = status.HTTP_200_OK)
     #=========================================
     # PUBLIC CATALOG (productos/categorías/marcas visibles, con buscador)
     #=========================================

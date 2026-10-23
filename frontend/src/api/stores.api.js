@@ -9,6 +9,9 @@ import { storeUrl } from '../config/env.js'
 // POST /api/stores/                      Bearer {slug} -> claim del link (onboarding)
 // PATCH /api/stores/<pk>/                Bearer {slug?, is_published?} -> renombrar / pausar
 // GET  /api/stores/slug-available/?slug= Bearer   -> {slug, available, reason: invalid|reserved|taken}
+// GET  /api/stores/stats/                  Bearer   -> {total, today, days:[{date,count}] últimos 30 días;
+//                                                   cuenta una visita por visitante/día en la web pública}
+//                                                   -> 403 sin el beneficio has_stats (plan Básico)
 // GET  /api/stores/public/<slug>/        público  -> {slug, business_name, city_name, province_name, customization,
 //                                                   has_design_advanced, location_address} — sin has_design_advanced
 //                                                   la web no muestra portada y expone un toggle claro/oscuro
@@ -73,6 +76,12 @@ export const storesApi = {
 
   async slugAvailable(slug) {
     const { data } = await http.get('/stores/slug-available/', { params: { slug } })
+    return data
+  },
+
+  async stats() {
+    // 403 sin el beneficio has_stats (Básico), 404 si aún no hay web creada.
+    const { data } = await http.get('/stores/stats/')
     return data
   },
 

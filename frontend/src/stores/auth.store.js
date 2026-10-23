@@ -40,12 +40,12 @@ export const useAuthStore = defineStore('auth', () => {
     return parsed
   }
 
-  async function login({ username, password }) {
+  async function login({ username, password, remember = false }) {
     status.value = 'loading'
     lastError.value = ''
     fieldErrors.value = {}
     try {
-      const data = await authApi.login({ username: username.trim(), password })
+      const data = await authApi.login({ username: username.trim(), password, remember })
       // Cuenta nueva = estado limpio: nada de la sesión anterior (tienda, plan, pagos).
       resetSessionStores()
       applyTokens(data)

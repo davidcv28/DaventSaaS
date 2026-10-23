@@ -190,3 +190,29 @@ class StoreGalleryImage(models.Model):
         ]
     def __str__(self):
         return f'gallery:{self.store.slug}#{self.position}'
+#=========================================
+# STORE DAILY VISIT MODEL
+#=========================================
+class StoreDailyVisit(models.Model):
+    """
+    Contador diario de visitas a la web pública (sección Estadísticas,
+    beneficio 'has_stats'). Una fila por tienda y día: el incremento se
+    hace con F() para no perder hits concurrentes. No guarda IPs ni
+    ningún dato del visitante.
+    """
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'daily_visits')
+    date                        =   models.DateField(verbose_name = 'Día')
+    count                       =   models.PositiveIntegerField(default = 0, verbose_name = 'Visitas')
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Visita diaria'
+        verbose_name_plural     =   'Visitas diarias'
+        ordering                =   ['-date']
+        constraints             =   [
+            models.UniqueConstraint(fields = ['store', 'date'], name = 'uniq_visit_store_date'),
+        ]
+        indexes                 =   [
+            models.Index(fields = ['store', 'date'], name = 'idx_visit_store_date'),
+        ]
+    def __str__(self):
+        return f'{self.store.slug}@{self.date}:{self.count}'

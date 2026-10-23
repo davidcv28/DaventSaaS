@@ -1,4 +1,5 @@
 import secrets
+from datetime import timedelta
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -30,7 +31,12 @@ from AdminApp.domains.users.services import (
 # Los clientes API (Bearer en body) siguen funcionando igual que antes.
 REFRESH_COOKIE = 'davent_refresh'
 CSRF_COOKIE    = 'davent_csrf'
+REMEMBER_COOKIE = 'davent_remember'
 COOKIE_PATH    = '/api/token/'
+# "Mantener sesión iniciada": el refresh dura 30 días y las cookies son
+# persistentes; sin el flag la cookie de refresh es de sesión del browser
+# (expira el JWT normal de 7d, pero al cerrar el navegador ya no viaja).
+REMEMBER_LIFETIME = timedelta(days = 30)
 
 class LoginRateThrottle(AnonRateThrottle):
     """
@@ -56,29 +62,41 @@ def _secure():
     # Secure solo bajo HTTPS real (prod); en dev http://localhost se omite.
     return settings.SESSION_COOKIE_SECURE
 
-def _cookie_max_age():
-    return int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
+def _remember_of(request):
+    # Hint legible seteado en el login: en el refresh la rotación conserva
+    # la persistencia original (sin el flag se degradaría a cookie de sesión).
+    return request.COOKIES.get(REMEMBER_COOKIE) == '1'
 
-def _set_refresh_cookie(response, refresh_token):
+def _set_refresh_cookie(response, refresh_token, remember = False):
     response.set_cookie(
         REFRESH_COOKIE, str(refresh_token),
-        max_age = _cookie_max_age(), path = COOKIE_PATH,
+        max_age = int(REMEMBER_LIFETIME.total_seconds()) if remember else None,
+        path = COOKIE_PATH,
         httponly = True, secure = _secure(), samesite = 'Lax',
     )
 
-def _set_csrf_cookie(response):
+def _set_csrf_cookie(response, remember = False):
     # Doble-submit: el frontend la lee (document.cookie) y la devuelve en
     # X-CSRFToken. Path=/ porque document.cookie solo ve cookies cuyo path
     # cubre la página actual — con /api/token/ no la leería desde /dashboard.
     response.set_cookie(
         CSRF_COOKIE, secrets.token_urlsafe(32),
-        max_age = _cookie_max_age(), path = '/',
+        max_age = int(REMEMBER_LIFETIME.total_seconds()) if remember else None,
+        path = '/',
+        secure = _secure(), samesite = 'Lax',
+    )
+
+def _set_remember_cookie(response):
+    response.set_cookie(
+        REMEMBER_COOKIE, '1',
+        max_age = int(REMEMBER_LIFETIME.total_seconds()), path = '/',
         secure = _secure(), samesite = 'Lax',
     )
 
 def _clear_session_cookies(response):
     response.delete_cookie(REFRESH_COOKIE, path = COOKIE_PATH)
     response.delete_cookie(CSRF_COOKIE, path = '/')
+    response.delete_cookie(REMEMBER_COOKIE, path = '/')
 
 def _require_csrf(request):
     """Doble-submit: X-CSRFToken debe matchear la cookie CSRF. Sin ella, un
@@ -101,8 +119,13 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         if response.status_code == 200:
             refresh = response.data.pop('refresh', None)
             if refresh:
-                _set_refresh_cookie(response, refresh)
-                _set_csrf_cookie(response)
+                remember    =   bool(request.data.get('remember'))
+                token       =   RefreshToken(refresh)
+                if remember:
+                    token.set_exp(lifetime = REMEMBER_LIFETIME)
+                    _set_remember_cookie(response)
+                _set_refresh_cookie(response, str(token), remember)
+                _set_csrf_cookie(response, remember)
         return response
 
 
@@ -133,9 +156,18 @@ class CookieTokenRefreshView(TokenRefreshView):
             raise InvalidToken(e.args[0])
         response = Response(serializer.validated_data, status = status.HTTP_200_OK)
         if from_cookie:
+            remember = _remember_of(request)
+            if remember:
+                _set_remember_cookie(response)
             rotated = response.data.pop('refresh', None)
-            _set_refresh_cookie(response, rotated or refresh)
-            _set_csrf_cookie(response)
+            if remember and rotated:
+                #El rotado sale con la vida estándar de 7d: se vuelve a
+                #extender a REMEMBER_LIFETIME para no degradar la sesión.
+                token = RefreshToken(rotated)
+                token.set_exp(lifetime = REMEMBER_LIFETIME)
+                rotated = str(token)
+            _set_refresh_cookie(response, rotated or refresh, remember)
+            _set_csrf_cookie(response, remember)
         return response
 
 

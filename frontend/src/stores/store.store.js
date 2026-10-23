@@ -249,13 +249,26 @@ export const useStoreStore = defineStore('store', () => {
     notice.value = ''
     fieldErrors.value = {}
     storage.value = null
+    visitStats.value = null
+  }
+
+  // Visitas de la web pública (beneficio has_stats: Estándar+). null = sin
+  // dato o sin permiso (403 Básico).
+  const visitStats = ref(null) // {total, today, days: [{date, count}]}
+
+  async function loadStats() {
+    try {
+      visitStats.value = await storesApi.stats()
+    } catch {
+      visitStats.value = null
+    }
   }
 
   return {
-    store, status, lastError, notice, fieldErrors, hasStore, customization, storage,
+    store, status, lastError, notice, fieldErrors, hasStore, customization, storage, visitStats,
     saveCustomization, uploadLogo, removeLogo,
     addCarouselImage, removeCarouselImage, moveCarouselImage, refreshCustomization,
     addGalleryImage, removeGalleryImage, moveGalleryImage,
-    loadMine, claim, update, reset
+    loadMine, claim, update, reset, loadStats
   }
 })

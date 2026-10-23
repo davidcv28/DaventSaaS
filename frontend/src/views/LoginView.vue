@@ -11,7 +11,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-const form = reactive({ username: '', password: '' })
+const form = reactive({ username: '', password: '', remember: true })
 const touched = reactive({ username: false, password: false })
 const cooldown = ref(0)
 let timer = null
@@ -73,6 +73,13 @@ async function onSubmit() {
         :error="touched.password && !form.password ? 'Este campo es obligatorio' : ''"
         @blur="touched.password = true"
       />
+
+      <div class="field">
+        <label class="check">
+          <input v-model="form.remember" type="checkbox" />
+          <span>Mantener sesión iniciada en este dispositivo (hasta 30 días)</span>
+        </label>
+      </div>
 
       <AppButton :loading="auth.status === 'loading'" :disabled="cooldown > 0">
         {{ cooldown > 0 ? `Reintentar en ${cooldown}s` : 'Iniciar sesión' }}
