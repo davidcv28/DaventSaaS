@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { authApi, buildRegisterPayload } from '../api/auth.api.js'
 import { http, tokenStorage, extractApiError, restoreSession, logoutSession } from '../api/http.js'
+import { resetSessionStores } from './session.js'
 
 // Única fuente de sesión (FRONTEND_RULES §3).
 // Access solo en memoria; el refresh es una cookie httpOnly que maneja http.js.
@@ -45,6 +46,8 @@ export const useAuthStore = defineStore('auth', () => {
     fieldErrors.value = {}
     try {
       const data = await authApi.login({ username: username.trim(), password })
+      // Cuenta nueva = estado limpio: nada de la sesión anterior (tienda, plan, pagos).
+      resetSessionStores()
       applyTokens(data)
       status.value = 'success'
       await fetchMe().catch(() => {})
@@ -146,6 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
     lastError.value = ''
     fieldErrors.value = {}
     tokenStorage.clear()
+    resetSessionStores()
     await logoutSession() // blacklist del refresh + borra cookies en backend
   }
 

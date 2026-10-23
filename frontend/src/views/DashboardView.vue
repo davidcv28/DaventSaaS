@@ -247,17 +247,10 @@ const navItems = computed(() => {
     { id: 'invoices', label: 'Facturas', icon: 'file-text' },
     { id: 'settings', label: 'Cuenta', icon: 'user' }
   )
-  if (auth.user?.is_staff) {
-    items.push({ heading: 'Administración' }, { id: 'admin', label: 'Panel admin', icon: 'shield-check' })
-  }
   return items
 })
 
 function onNavigate(id) {
-  if (id === 'admin') {
-    router.push({ name: 'admin' })
-    return
-  }
   section.value = id
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
@@ -813,8 +806,6 @@ onMounted(async () => {
   // Red de seguridad: registra pagos ya acreditados en MP que aún no estén en el sistema.
   const synced = await payments.sync()
   if (synced > 0) await Promise.all([billing.loadMine(), payments.loadPayments()])
-  // Rollups de ingresos: solo existen para admin (el store detecta 403).
-  if (auth.user?.is_staff) payments.loadRevenues()
   // Puente entre pestañas: el retorno de MP cae en la pestaña del checkout,
   // esta escucha avisa a la pestaña original para acreditar al instante.
   window.addEventListener('storage', onPaymentBroadcast)

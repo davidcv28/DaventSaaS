@@ -56,8 +56,7 @@ const navItems = [
   { id: 'plans', label: 'Planes', icon: 'package' },
   { id: 'users', label: 'Usuarios', icon: 'users' },
   { heading: 'Cuenta' },
-  { id: 'flyer', label: 'Folleto promo', icon: 'printer' },
-  { id: 'back', label: 'Mi panel', icon: 'store' }
+  { id: 'flyer', label: 'Folleto promo', icon: 'printer' }
 ]
 
 const kpis = computed(() => {
@@ -122,10 +121,6 @@ onMounted(async () => {
 })
 
 function onNavigate(id) {
-  if (id === 'back') {
-    router.push({ name: 'dashboard' })
-    return
-  }
   // Folleto promo de DAVENT: se abre en pestaña aparte (vista imprimible).
   if (id === 'flyer') {
     window.open(router.resolve({ name: 'davent-flyer' }).href, '_blank', 'noopener')

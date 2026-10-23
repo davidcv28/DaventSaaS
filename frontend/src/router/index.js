@@ -77,14 +77,14 @@ const routes = [
     path: '/dashboard',
     name: 'dashboard',
     component: DashboardView,
-    meta: { requiresAuth: true, title: 'Panel' }
+    meta: { requiresAuth: true, customerOnly: true, title: 'Panel' }
   },
   // Onboarding: claim del link público en el primer ingreso
   {
     path: '/bienvenida',
     name: 'onboarding',
     component: StoreClaimView,
-    meta: { requiresAuth: true, title: 'Elegí tu link' }
+    meta: { requiresAuth: true, customerOnly: true, title: 'Elegí tu link' }
   },
   {
     path: '/admin',
@@ -123,7 +123,7 @@ const routes = [
     path: '/folleto',
     name: 'store-flyer',
     component: StoreFlyerView,
-    meta: { requiresAuth: true, title: 'Folleto' }
+    meta: { requiresAuth: true, customerOnly: true, title: 'Folleto' }
   },
   // Folleto promocional de la plataforma (staff): mismo formato de pestaña aparte
   {
@@ -208,6 +208,12 @@ router.beforeEach(async (to) => {
     // El usuario llega async desde initSession: lo esperamos antes de decidir.
     if (!auth.user) await auth.fetchMe().catch(() => {})
     if (!auth.user?.is_staff) return { name: 'dashboard' }
+  }
+  // Panel de usuario, onboarding y folleto de tienda son solo de clientes: un
+  // admin (staff) no es un perfil comercial y se queda en /admin.
+  if (to.meta?.customerOnly) {
+    if (!auth.user) await auth.fetchMe().catch(() => {})
+    if (auth.user?.is_staff) return { name: 'admin' }
   }
   // Onboarding: todo usuario autenticado sin tienda elige su link primero.
   // El staff queda exento (no es un perfil comercial).
