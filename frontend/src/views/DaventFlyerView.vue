@@ -22,7 +22,7 @@ const aboutUrl = `${env.appUrl}/acerca-de`
 const shortUrl = aboutUrl.replace(/^https?:\/\//, '')
 
 const perks = [
-  'Tu propio link para compartir por WhatsApp',
+  'Tu propio link para compartir en redes e internet',
   'Catálogo con fotos y precios — o solo vidriera',
   'Contacto directo con tus clientes',
   'QR y folletos para tu local'
