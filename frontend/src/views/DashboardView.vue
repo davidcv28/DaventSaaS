@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useBillingStore } from '../stores/billing.store.js'
@@ -376,6 +376,25 @@ watch(section, (s) => {
     ensureStoreFontList()
   }
 })
+
+// Los avisos se renderizan arriba de cada sección y el botón de guardar puede
+// quedar muy abajo: cuando aparece un mensaje nuevo, scrollear hasta él.
+watch(
+  [
+    () => store.notice, () => store.lastError,
+    () => catalog.notice, () => catalog.lastError,
+    () => billing.notice, () => billing.lastError,
+    () => payments.notice, () => payments.lastError,
+    () => invoices.lastError,
+    accountMsg, accountErr, geoNotice, geoErr, verifyMsg, verifyErr
+  ],
+  async (vals, prev) => {
+    if (!vals.some((v, i) => v && v !== prev[i])) return
+    await nextTick()
+    const alertEl = document.querySelector('.sec-on .alert') || document.querySelector('.main > .alert')
+    alertEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
+)
 
 // Buscador del listado: filtra por nombre, categoría o marca (sin tildes).
 const productQuery = ref('')

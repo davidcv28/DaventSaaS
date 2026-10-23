@@ -61,7 +61,7 @@
 - Cards: borde `--line`, `--shadow-md`, títulos `h3` con icono de 18px en `--brand-600`.
 - Estados vacíos: icono en recuadro `--brand-50`, título, texto corto y un único CTA.
 - Comprobantes/PDF: vista standalone tipo `InvoicePrintView` (ruta `/facturas/:id`, sin `DashLayout`, paleta clara fija porque es "papel", `window.print()` automático + `@media print`). Se abre en pestaña nueva con `window.open(router.resolve({name, params}).href, '_blank', 'noopener')`.
-- Alertas: nunca `alert()`; usar `AlertMessage`. Estados de carga con `.spinner`.
+- Alertas: nunca `alert()`; usar `AlertMessage` (van arriba de cada sección; `DashboardView` tiene un `watch` sobre los `notice`/`lastError` de los stores que scrollea al `.alert` visible de la sección activa — `.alert` lleva `scroll-margin-top` por el header fijo <860px). Estados de carga con `.spinner`.
 - Sidebar oscuro (`#0f1130`) con ítem activo resaltado; en <860px la navegación pasa a horizontal.
 
 ### Calidad
