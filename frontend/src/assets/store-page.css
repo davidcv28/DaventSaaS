@@ -213,6 +213,10 @@
 .sp-modal-section { display: grid; gap: 8px; }
 .sp-modal-label { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-muted); }
 .sp-modal-desc { margin: 0; font-size: 15px; line-height: 1.7; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+.sp-specs { display: grid; gap: 6px; margin: 0; }
+.sp-spec { display: flex; align-items: baseline; gap: 12px; padding: 9px 14px; border: 1px solid var(--sp-line); border-radius: 12px; background: var(--sp-soft); }
+.sp-spec dt { min-width: 0; font-size: 13px; font-weight: 650; color: var(--sp-ink-2); overflow-wrap: anywhere; }
+.sp-spec dd { margin: 0 0 0 auto; font-size: 13px; color: var(--sp-muted); text-align: right; overflow-wrap: anywhere; }
 .sp-modal-actions { display: grid; gap: 10px; margin-top: auto; padding-top: 20px; }
 .sp-modal-actions .sp-btn { height: 48px; font-size: 15px; }
 @media (max-width: 860px) {

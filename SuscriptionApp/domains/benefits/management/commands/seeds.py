@@ -23,6 +23,7 @@ dict_benefits = {
     'has_location_map'  :   {'label': 'Mapa con la ubicación del negocio',      'kind': 'flag'},
     'has_design_advanced':  {'label': 'Diseño web avanzado: fuentes, color y carrusel', 'kind': 'flag'},
     'has_advanced_menu' :   {'label': 'Menú administrador avanzado',        'kind': 'flag'},
+    'has_chatbot'       :   {'label': 'Chatbot con tus respuestas en la web', 'kind': 'flag'},
 }
 
 dict_plan_benefits = {
@@ -44,6 +45,7 @@ dict_plan_benefits = {
             'has_location_map'  :   True,
             'has_design_advanced':  True,
             'has_advanced_menu' :   True,
+            'has_chatbot'       :   True,
         },
         'presentation'  :   {
             'slug'          :   'prueba',
@@ -74,6 +76,7 @@ dict_plan_benefits = {
             'has_location_map'  :   False,
             'has_design_advanced':  False,
             'has_advanced_menu' :   False,
+            'has_chatbot'       :   False,
         },
         'presentation'  :   {
             'slug'          :   'basico',
@@ -104,6 +107,7 @@ dict_plan_benefits = {
             'has_location_map'  :   True,
             'has_design_advanced':  False,
             'has_advanced_menu' :   False,
+            'has_chatbot'       :   True,
         },
         'presentation'  :   {
             'slug'          :   'estandar',
@@ -120,6 +124,7 @@ dict_plan_benefits = {
                 'Mapa con la ubicación de tu negocio en la web',
                 'Estadísticas de visitas',
                 'Folletos publicitarios listos para imprimir',
+                'Chatbot con tus respuestas para las visitas',
             ],
         },
     },
@@ -138,6 +143,7 @@ dict_plan_benefits = {
             'has_location_map'  :   True,
             'has_design_advanced':  True,
             'has_advanced_menu' :   True,
+            'has_chatbot'       :   True,
         },
         'presentation'  :   {
             'slug'          :   'premium',
@@ -155,6 +161,7 @@ dict_plan_benefits = {
                 'Folletos publicitarios listos para imprimir',
                 'Diseño web completo: color, fuentes y carrusel',
                 'Menú administrador avanzado',
+                'Chatbot con tus respuestas para las visitas',
             ],
         },
     },

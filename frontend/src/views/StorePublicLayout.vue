@@ -8,6 +8,7 @@ import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
+import StoreBot from '../components/StoreBot.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-page.css'
 
@@ -61,6 +62,9 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 // Catálogo opcional: el dueño puede apagarlo (vidriera sin productos). La
 // página /catalogo redirige al inicio y desaparecen todos sus accesos.
 const showCatalog = computed(() => status.value === 'success' && custom.value.show_catalog !== false)
+// Chatbot (beneficio has_chatbot, Estándar+): el serializer público lo manda
+// solo si el dueño lo activó y el plan lo incluye — None = sin widget.
+const botConfig = computed(() => (status.value === 'success' ? store.value?.chatbot || null : null))
 
 // Estado compartido con la vista del catálogo: buscador del header, burger y
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
@@ -224,5 +228,14 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </footer>
+
+    <!-- Chatbot del negocio (has_chatbot): burbuja robot abajo a la derecha -->
+    <StoreBot
+      v-if="botConfig"
+      :config="botConfig"
+      :name="shopName"
+      :logo="custom.logo"
+      :initial="initial"
+    />
   </div>
 </template>

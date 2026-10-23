@@ -14,6 +14,7 @@ Cloudinary (misma cuota max_storage_mb que logo/carrusel).
 class Category(models.Model):
     store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'categories', db_index = False)
     name                        =   models.CharField(max_length = 60, verbose_name = 'Nombre')
+    feature_schema              =   models.JSONField(default = list, blank = True, verbose_name = 'Plantilla de características')
     position                    =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     class Meta:
@@ -65,6 +66,7 @@ class Product(models.Model):
     name                        =   models.CharField(max_length = 120, verbose_name = 'Nombre')
     description                 =   models.TextField(max_length = 600, blank = True, verbose_name = 'Descripción')
     price                       =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Precio')
+    features                    =   models.JSONField(default = dict, blank = True, verbose_name = 'Características')
     image_key                   =   models.CharField(max_length = 200, blank = True, verbose_name = 'Imagen (key en R2)')
     image_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño de imagen (bytes)')
     is_active                   =   models.BooleanField(default = True, verbose_name = 'Visible')

@@ -250,6 +250,7 @@ export const useStoreStore = defineStore('store', () => {
     fieldErrors.value = {}
     storage.value = null
     visitStats.value = null
+    chatbot.value = null
   }
 
   // Visitas de la web pública (beneficio has_stats: Estándar+). null = sin
@@ -264,11 +265,41 @@ export const useStoreStore = defineStore('store', () => {
     }
   }
 
+  // Chatbot de la web pública (beneficio has_chatbot: Estándar+). El dueño
+  // carga pares {q, a} que el widget responde a las visitas; PATCH da 403
+  // sin el beneficio (el backend lo fuerza igual que el diseño).
+  const chatbot = ref(null) // {is_enabled, greeting, qa:[{q,a}]} | null
+
+  async function loadChatbot() {
+    if (!store.value) return
+    try {
+      chatbot.value = await storesApi.chatbot()
+    } catch {
+      chatbot.value = null
+    }
+  }
+
+  async function saveChatbot(payload) {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.updateChatbot(payload)
+      notice.value = data?.Exito || 'El chatbot se actualizó correctamente.'
+      if (data?.chatbot) chatbot.value = data.chatbot
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
   return {
     store, status, lastError, notice, fieldErrors, hasStore, customization, storage, visitStats,
     saveCustomization, uploadLogo, removeLogo,
     addCarouselImage, removeCarouselImage, moveCarouselImage, refreshCustomization,
     addGalleryImage, removeGalleryImage, moveGalleryImage,
-    loadMine, claim, update, reset, loadStats
+    loadMine, claim, update, reset, loadStats, chatbot, loadChatbot, saveChatbot
   }
 })

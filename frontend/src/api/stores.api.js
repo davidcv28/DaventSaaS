@@ -50,6 +50,13 @@ import { storeUrl } from '../config/env.js'
 //                                        -> 403 en las 3 si falta has_customization; el tope
 //                                           max_gallery_images del plan (Básico 0 / Estándar 5 /
 //                                           Premium 15) responde 400 con mensaje
+// GET/PATCH /api/stores/chatbot/         Bearer   -> config del chatbot {is_enabled, greeting,
+//                                                  qa:[{q,a}] (máx 12, q≤120, a≤500; pares
+//                                                  incompletos se descartan en el backend)}
+//                                        -> PATCH 403 sin el beneficio has_chatbot (Estándar+)
+//                                        -> la web pública lo recibe en `chatbot` del payload
+//                                           de /public/<slug>/ solo si está habilitado y el
+//                                           plan lo incluye (None en otro caso)
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -171,8 +178,25 @@ export const storesApi = {
   async reorderGallery(order) {
     const { data } = await http.patch('/stores/customization/gallery/order/', { order })
     return data
+  },
+
+  async chatbot() {
+    // Config del dueño; PATCH 403 sin has_chatbot (Estándar+).
+    const { data } = await http.get('/stores/chatbot/')
+    return data
+  },
+
+  async updateChatbot(payload) {
+    const { data } = await http.patch('/stores/chatbot/', payload)
+    return data
   }
 }
+
+// Chatbot de la web pública (espejo de StoreChatbot): pares {q, a} que el
+// widget responde por coincidencia de palabras. Sin has_chatbot el PATCH da
+// 403 y la web pública nunca lo recibe (serializer lo devuelve None).
+export const CHATBOT_DEFAULTS = { is_enabled: false, greeting: '', qa: [] }
+export const CHATBOT_QA_MAX = 12
 
 // Espejo del validador del backend (StoreApp/stores/validators.py).
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?$/

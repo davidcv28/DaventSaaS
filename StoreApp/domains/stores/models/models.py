@@ -202,6 +202,31 @@ class StoreGalleryImage(models.Model):
     def __str__(self):
         return f'gallery:{self.store.slug}#{self.position}'
 #=========================================
+# STORE CHATBOT MODEL
+#=========================================
+class StoreChatbot(models.Model):
+    """
+    Chatbot de la web pública del cliente (beneficio 'has_chatbot':
+    Estándar y Premium). No es IA: responde a las visitas con los
+    pares pregunta/respuesta que el dueño carga desde su panel.
+    `qa` es una lista JSON de {'q': pregunta, 'a': respuesta}
+    (el serializer limita cantidad y longitudes).
+    """
+    QA_MAX_ITEMS                =   12
+    QA_MAX_QUESTION             =   120
+    QA_MAX_ANSWER               =   500
+    store                       =   models.OneToOneField(Store, on_delete = models.CASCADE, related_name = 'chatbot')
+    is_enabled                  =   models.BooleanField(default = False, verbose_name = 'Chatbot activo')
+    greeting                    =   models.CharField(max_length = 200, blank = True, verbose_name = 'Mensaje de bienvenida')
+    qa                          =   models.JSONField(default = list, blank = True, verbose_name = 'Preguntas y respuestas')
+    updated_at                  =   models.DateTimeField(auto_now = True)
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Chatbot de tienda'
+        verbose_name_plural     =   'Chatbots de tiendas'
+    def __str__(self):
+        return f'chatbot:{self.store.slug}'
+#=========================================
 # STORE DAILY VISIT MODEL
 #=========================================
 class StoreDailyVisit(models.Model):

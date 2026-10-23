@@ -490,12 +490,15 @@ StoreGalleryImage         (sección Galería entre Sobre nosotros y el catálogo
 Catálogo del dueño de la tienda (productos, categorías y marcas). Todo cuelga del `Store` del usuario autenticado (scope server-side) y requiere suscripción activa: `catalog_enabled` fuerza `has_public_link`, `can_add_product` el límite `max_products` del plan (403).
 
 ```
-Category  (store, name, position)          # carpetas del catálogo
+Category  (store, name, feature_schema[], position)  # carpetas del catálogo
 Brand     (store, name, position)          # marcas propias
 Product   (store, category?, brand?, name ≤120, description ≤600,
            price ≥0 (ck_product_price_gte_0), image_key/image_size en R2,
+           features {} características nombre→valor,
            is_active apaga visibilidad sin borrar)
 ```
+
+**Características del producto** (`Category.feature_schema` + `Product.features`, JSONField): la categoría define una **plantilla** de nombres de atributos (ej. `['Talle','Color','Material']`, se edita junto a la categoría separados por coma); al cargar un producto de esa categoría el form precarga esas filas y el dueño puede sumar otras libres — el resultado se guarda como dict `{nombre: valor}` (máx 15 nombres de ≤40 chars en el schema; máx 20 pares por producto, clave ≤40 / valor ≤120; trim + anti-repetidos en `CategorySchemaMixinValidator`/`ProductMixinValidator`, límites en `FeatureLimits`). En multipart `features` viaja como string JSON (`JSONField(binary=True)` lo parsea; `''`→`{}` en `_normalize_relations`). En la web pública el modal del producto los lista bajo "Características", ordenados por el schema de su categoría y luego los libres (`.sp-specs`).
 
 - `GET|POST /api/categories/`, `GET|PATCH|DELETE /api/categories/<pk>/` — CRUD; al borrar una categoría los productos quedan sin categoría (`SET_NULL`). Ídem `/api/brands/`.
 - `GET|POST /api/products/`, `GET|PATCH|DELETE /api/products/<pk>/` — CRUD del catálogo. POST/PATCH aceptan multipart con `image` (sube a R2 y consume cuota `max_storage_mb`; `image_clear=true` la quita). Responden `{Exito, item, storage, image_error?}`.

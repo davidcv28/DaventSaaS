@@ -18,6 +18,7 @@ const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StorePublicView = () => import('../views/StorePublicView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
+const StoreProductView = () => import('../views/StoreProductView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
 
@@ -36,6 +37,13 @@ const storeChildren = [
     name: 'store-catalog',
     component: StoreCatalogView,
     meta: { title: 'Catálogo' }
+  },
+  // Publicación de producto estilo marketplace (ficha completa).
+  {
+    path: 'producto/:productId(\\d+)',
+    name: 'store-product',
+    component: StoreProductView,
+    meta: { title: 'Producto' }
   }
 ]
 
@@ -147,6 +155,10 @@ const routes = [
           redirect: (to) => ({ name: 'store-catalog', params: { slug: to.params.slug } })
         },
         {
+          path: '/tienda/:slug/producto/:productId(\\d+)',
+          redirect: (to) => ({ name: 'store-product', params: { slug: to.params.slug, productId: to.params.productId } })
+        },
+        {
           path: '/:slug([a-z0-9-]+)',
           component: StorePublicLayout,
           children: storeChildren
@@ -182,7 +194,7 @@ export const router = createRouter({
 router.beforeEach(async (to) => {
   // En un subdominio de tienda solo existe la web pública: cualquier ruta de
   // plataforma (login, panel, legales) se resuelve en el dominio principal.
-  if (storeHostSlug && to.name !== 'store-public' && to.name !== 'store-catalog') {
+  if (storeHostSlug && !['store-public', 'store-catalog', 'store-product'].includes(to.name)) {
     window.location.assign(`${env.appUrl}${to.fullPath}`)
     return false
   }

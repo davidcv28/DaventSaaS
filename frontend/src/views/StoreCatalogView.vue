@@ -8,8 +8,9 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 
 // Página de catálogo de la web pública (/<slug>/catalogo): navegación por
-// categorías/marcas, buscador, filtro de precios, orden y detalle de
-// producto en modal. La tienda la resuelve StorePublicLayout
+// categorías/marcas, buscador, filtro de precios y orden. Cada tarjeta
+// abre la ficha completa del producto (/<slug>/producto/<id>, estilo
+// marketplace). La tienda la resuelve StorePublicLayout
 // (inject 'storePage'); el buscador del header y el burger comparten el
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
@@ -148,6 +149,17 @@ const selectedTags = computed(() => {
     catalog.value.categories.find((c) => c.id === p.category)?.name,
     catalog.value.brands.find((b) => b.id === p.brand)?.name
   ].filter(Boolean)
+})
+// Características del producto: primero las de la plantilla de su categoría
+// (en el orden que la definió el dueño), después las libres.
+const selectedSpecs = computed(() => {
+  const p = selected.value
+  if (!p?.features) return []
+  const schema = catalog.value.categories.find((c) => c.id === p.category)?.feature_schema || []
+  const order = new Map(schema.map((name, i) => [name.toLowerCase(), i]))
+  return Object.entries(p.features).sort(
+    (a, b) => (order.get(a[0].toLowerCase()) ?? schema.length) - (order.get(b[0].toLowerCase()) ?? schema.length)
+  )
 })
 
 const onKey = (e) => {
@@ -414,11 +426,15 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-else-if="catalog.products.length" class="sp-grid" :class="{ loading: catalogStatus === 'loading' }" @pointermove="onCardMove">
-          <article v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 70" class="sp-card">
-            <div class="sp-card-img" @click="openProduct(p)">
+          <article
+            v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 70"
+            class="sp-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
+            @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
+          >
+            <div class="sp-card-img">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
-              <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Vista rápida</span>
+              <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Ver producto</span>
             </div>
             <div class="sp-card-body">
               <p v-if="categoryNameOf(p) || brandNameOf(p)" class="sp-card-eyebrow">
@@ -429,9 +445,9 @@ onBeforeUnmount(() => {
               <h3 class="sp-card-name">{{ p.name }}</h3>
               <div class="sp-card-foot">
                 <span class="sp-card-price">{{ formatARS(p.price) }}</span>
-                <button type="button" class="sp-card-go" :aria-label="`Ver ${p.name}`" @click="openProduct(p)">
+                <span class="sp-card-go" aria-hidden="true">
                   Ver más <AppIcon name="arrow-right" :size="15" />
-                </button>
+                </span>
               </div>
             </div>
           </article>
@@ -473,6 +489,15 @@ onBeforeUnmount(() => {
         <div v-if="selected.description" class="sp-modal-section">
           <p class="sp-modal-label">Descripción</p>
           <p class="sp-modal-desc">{{ selected.description }}</p>
+        </div>
+        <div v-if="selectedSpecs.length" class="sp-modal-section">
+          <p class="sp-modal-label">Características</p>
+          <dl class="sp-specs">
+            <div v-for="[name, value] in selectedSpecs" :key="name" class="sp-spec">
+              <dt>{{ name }}</dt>
+              <dd>{{ value }}</dd>
+            </div>
+          </dl>
         </div>
         <div class="sp-modal-actions">
           <button type="button" class="sp-btn ghost" @click="closeProduct">Seguir viendo</button>

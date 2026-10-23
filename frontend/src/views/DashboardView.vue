@@ -18,10 +18,12 @@ import {
   validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
-  validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, formatStorageMB
+  validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, formatStorageMB,
+  CHATBOT_DEFAULTS, CHATBOT_QA_MAX
 } from '../api/stores.api.js'
 import {
-  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription
+  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
+  FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures
 } from '../api/catalog.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { formatDate as formatInvDate } from '../api/invoices.api.js'
@@ -245,6 +247,7 @@ const navItems = computed(() => {
     if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
     if (b.has_customization) items.push({ id: 'company', label: 'Mi empresa', icon: 'building-2' })
     items.push({ id: 'pos', label: 'Venta en persona', icon: 'monitor' })
+    if (b.has_chatbot) items.push({ id: 'bot', label: 'Chatbot', icon: 'bot' })
     const advanced = []
     if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
     if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
@@ -372,9 +375,49 @@ const productImageInput = ref(null)
 const productImageCleared = ref(false)
 const productImageErr = ref('')
 
-const taxonomyForm = reactive({ category: '', brand: '' })
+const taxonomyForm = reactive({ category: '', categoryFeatures: '', brand: '' })
 const taxonomyBusy = reactive({ category: false, brand: false })
 const taxonomyErr = reactive({ category: '', brand: '' })
+// Edición de categoría: el mismo form agrega o guarda según haya id cargado.
+const taxonomyEditing = ref(null)
+
+// Características del producto: filas {name, value}. Al elegir categoría se
+// precargan los atributos de su feature_schema; el resto se agrega libre.
+const productFeatures = ref([])
+
+function applyCategorySchema(categoryId) {
+  const schema = catalog.categories.find((c) => c.id === categoryId)?.feature_schema || []
+  const present = new Set(productFeatures.value.map((r) => r.name.trim().toLowerCase()))
+  schema.forEach((name) => {
+    if (!present.has(name.toLowerCase())) productFeatures.value.push({ name, value: '' })
+  })
+}
+
+watch(() => productForm.category, (categoryId) => {
+  if (categoryId) applyCategorySchema(categoryId)
+})
+
+function addFeatureRow() {
+  if (productFeatures.value.length >= FEATURE_LIMITS.entriesMax) return
+  productFeatures.value.push({ name: '', value: '' })
+}
+
+function removeFeatureRow(index) {
+  productFeatures.value.splice(index, 1)
+}
+
+// Filas -> objeto {nombre: valor} que viaja como features (JSON) al backend.
+function featuresToDict() {
+  const dict = {}
+  for (const row of productFeatures.value) {
+    const name = row.name.trim()
+    const value = row.value.trim()
+    if (name && value) dict[name] = value
+  }
+  return dict
+}
+
+const featuresErr = computed(() => validateProductFeatures(productFeatures.value))
 
 async function ensureCatalog() {
   if (!store.hasStore || !billing.hasSubscription) return
@@ -391,6 +434,7 @@ watch(section, (s) => {
     ensureStoreFont(designForm.name_font)
     ensureStoreFontList()
   }
+  if (s === 'bot') ensureBot()
 })
 
 // Los avisos se renderizan arriba de cada sección y el botón de guardar puede
@@ -438,6 +482,7 @@ const productErrors = computed(() => {
   if (n) e.name = n
   if (p) e.price = p
   if (d) e.description = d
+  if (featuresErr.value) e.features = featuresErr.value
   return e
 })
 
@@ -458,6 +503,7 @@ function onProductImagePicked(event) {
 
 function resetProductForm() {
   Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true })
+  productFeatures.value = []
   Object.keys(productTouched).forEach((k) => { productTouched[k] = false })
   productEditing.value = null
   productImage.value = null
@@ -472,6 +518,8 @@ function editProduct(p) {
     name: p.name, price: p.price, category: p.category || '', brand: p.brand || '',
     description: p.description || '', is_active: p.is_active
   })
+  productFeatures.value = Object.entries(p.features || {}).map(([name, value]) => ({ name, value }))
+  if (p.category) applyCategorySchema(p.category)
   productImage.value = null
   productImagePreview.value = p.image || ''
   productImageCleared.value = false
@@ -482,6 +530,7 @@ function editProduct(p) {
 
 async function saveProduct() {
   Object.keys(productForm).forEach((k) => { productTouched[k] = true })
+  productTouched.features = true
   if (Object.keys(productErrors.value).length) return
   productBusy.value = true
   const res = await catalog.saveProduct(productEditing.value, {
@@ -491,7 +540,8 @@ async function saveProduct() {
       category: productForm.category,
       brand: productForm.brand,
       description: productForm.description.trim(),
-      is_active: productForm.is_active
+      is_active: productForm.is_active,
+      features: featuresToDict()
     },
     image: productImage.value,
     imageClear: productImageCleared.value
@@ -517,18 +567,44 @@ async function addTaxonomy(kind) {
   const name = taxonomyForm[kind].trim()
   taxonomyErr[kind] = validateTaxonomyName(name)
   if (taxonomyErr[kind]) return
+  const payload = { name }
+  if (kind === 'category') {
+    const schema = parseFeatureSchema(taxonomyForm.categoryFeatures)
+    const schemaErr = validateFeatureSchema(schema)
+    if (schemaErr) { taxonomyErr.category = schemaErr; return }
+    payload.feature_schema = schema
+  }
   taxonomyBusy[kind] = true
   const ok = kind === 'category'
-    ? await catalog.saveCategory(null, { name })
-    : await catalog.saveBrand(null, { name })
+    ? await catalog.saveCategory(taxonomyEditing.value, payload)
+    : await catalog.saveBrand(null, payload)
   taxonomyBusy[kind] = false
-  if (ok) taxonomyForm[kind] = ''
-  else taxonomyErr[kind] = catalog.fieldErrors.name || catalog.lastError
+  if (ok) {
+    taxonomyForm[kind] = ''
+    if (kind === 'category') cancelCategoryEdit()
+  } else taxonomyErr[kind] = catalog.fieldErrors.name || catalog.fieldErrors.feature_schema || catalog.lastError
+}
+
+// Carga la categoría en el form para editar nombre y plantilla de
+// características (misma vista que "Agregar", con botón Guardar).
+function editCategory(c) {
+  taxonomyEditing.value = c.id
+  taxonomyForm.category = c.name
+  taxonomyForm.categoryFeatures = (c.feature_schema || []).join(', ')
+  taxonomyErr.category = ''
+}
+
+function cancelCategoryEdit() {
+  taxonomyEditing.value = null
+  taxonomyForm.category = ''
+  taxonomyForm.categoryFeatures = ''
+  taxonomyErr.category = ''
 }
 
 async function removeTaxonomy(kind, item) {
   const ok = kind === 'category' ? await catalog.removeCategory(item.id) : await catalog.removeBrand(item.id)
   if (!ok) taxonomyErr[kind] = catalog.lastError
+  else if (kind === 'category' && taxonomyEditing.value === item.id) cancelCategoryEdit()
 }
 
 // --- QR y folletos (premium): QR del link público + folleto imprimible ---
@@ -591,6 +667,52 @@ const posCityName = computed(() => {
   return found?.name || ''
 })
 const posAddress = computed(() => [accountForm.address, posCityName.value].filter(Boolean).join(', '))
+
+// --- Chatbot (Estándar+, beneficio has_chatbot): el asistente de la web
+// pública responde a las visitas con los pares pregunta/respuesta que el
+// dueño carga acá. PATCH /api/stores/chatbot/ da 403 sin el beneficio y la
+// web pública solo lo recibe cuando is_enabled está prendido.
+const canChatbot = computed(() => Boolean(plan.value?.benefits?.has_chatbot))
+const botForm = reactive({ ...CHATBOT_DEFAULTS, qa: [] })
+const botBusy = ref(false)
+const botErr = ref('')
+const botLoaded = ref(false)
+
+// El store Pinia guarda la config cargada/guardada; espeja al form.
+watch(() => store.chatbot, (cfg) => {
+  if (!cfg) return
+  botForm.is_enabled = Boolean(cfg.is_enabled)
+  botForm.greeting = cfg.greeting || ''
+  botForm.qa = (cfg.qa || []).map((i) => ({ q: i.q || '', a: i.a || '' }))
+})
+
+function ensureBot() {
+  if (botLoaded.value || !canChatbot.value || !store.hasStore) return
+  botLoaded.value = true
+  store.loadChatbot()
+}
+
+function addBotQa() {
+  if (botForm.qa.length < CHATBOT_QA_MAX) botForm.qa.push({ q: '', a: '' })
+}
+
+async function saveBot() {
+  if (botBusy.value) return
+  botErr.value = ''
+  const qa = botForm.qa.map((i) => ({ q: String(i.q || '').trim(), a: String(i.a || '').trim() }))
+  if (qa.some((i) => (i.q && !i.a) || (!i.q && i.a))) {
+    botErr.value = 'Cada pregunta necesita su respuesta. Completá la fila o borrala con el tachito.'
+    return
+  }
+  botBusy.value = true
+  const ok = await store.saveChatbot({
+    is_enabled: botForm.is_enabled,
+    greeting: botForm.greeting.trim(),
+    qa: qa.filter((i) => i.q && i.a)
+  })
+  botBusy.value = false
+  if (!ok) botErr.value = store.fieldErrors.detail || store.lastError || 'No se pudo guardar el chatbot.'
+}
 
 // --- Diseño web: personalización de la página pública ---
 // Contenido, logo y tema claro/oscuro: beneficio has_customization (en todos
@@ -1361,6 +1483,19 @@ async function changePassword() {
                 <p v-if="productFieldErr('description')" class="field-error" role="alert">{{ productFieldErr('description') }}</p>
               </div>
               <div class="field">
+                <label id="prod-features-label">Características</label>
+                <ul v-if="productFeatures.length" class="feat-rows" aria-labelledby="prod-features-label">
+                  <li v-for="(row, i) in productFeatures" :key="i" class="feat-row">
+                    <input v-model="row.name" class="input" type="text" maxlength="40" placeholder="Atributo (ej. Talle)" :aria-label="`Nombre de la característica ${i + 1}`" />
+                    <input v-model="row.value" class="input" type="text" maxlength="120" placeholder="Valor (ej. M)" :aria-label="`Valor de la característica ${i + 1}`" />
+                    <button type="button" class="icon-btn danger" aria-label="Quitar característica" @click="removeFeatureRow(i)"><AppIcon name="trash" :size="15" /></button>
+                  </li>
+                </ul>
+                <button type="button" class="btn ghost btn-auto" :disabled="productFeatures.length >= FEATURE_LIMITS.entriesMax" @click="addFeatureRow"><AppIcon name="plus" :size="15" /> Agregar característica</button>
+                <p class="hint">La categoría sugiere atributos (se cargan desde la pestaña Categorías); podés sumar otros propios.</p>
+                <p v-if="productTouched.features && featuresErr" class="field-error" role="alert">{{ featuresErr }}</p>
+              </div>
+              <div class="field">
                 <label id="prod-image-label">Imagen</label>
                 <div class="logo-box">
                   <span class="logo-thumb">
@@ -1418,13 +1553,25 @@ async function changePassword() {
             <h3><AppIcon name="layout-grid" :size="18" /> Categorías</h3>
             <p>Agrupan tus productos en el menú de tu página pública.</p>
             <div class="tax-add">
-              <AppInput v-model="taxonomyForm.category" label="Nueva categoría" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
-              <AppButton :loading="taxonomyBusy.category" @click="addTaxonomy('category')">Agregar</AppButton>
+              <div class="tax-fields">
+                <AppInput v-model="taxonomyForm.category" :label="taxonomyEditing ? 'Editar categoría' : 'Nueva categoría'" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
+                <AppInput v-model="taxonomyForm.categoryFeatures" label="Características (opcional)" name="cat_features" placeholder="Ej. Talle, Color, Material" hint="Separalas con comas: se sugieren al cargar productos de esta categoría." />
+              </div>
+              <div class="tax-actions">
+                <AppButton :loading="taxonomyBusy.category" @click="addTaxonomy('category')">{{ taxonomyEditing ? 'Guardar' : 'Agregar' }}</AppButton>
+                <button v-if="taxonomyEditing" type="button" class="btn ghost btn-auto" @click="cancelCategoryEdit">Cancelar</button>
+              </div>
             </div>
             <ul v-if="catalog.categories.length" class="tax-list">
               <li v-for="c in catalog.categories" :key="c.id">
-                <span>{{ c.name }} <small class="hint-inline">{{ c.products_count || 0 }} productos</small></span>
-                <button type="button" class="icon-btn danger" aria-label="Eliminar categoría" @click="removeTaxonomy('category', c)"><AppIcon name="trash" :size="15" /></button>
+                <span>{{ c.name }}
+                  <small class="hint-inline">{{ c.products_count || 0 }} productos</small>
+                  <small v-if="c.feature_schema?.length" class="tax-schema">{{ c.feature_schema.join(' · ') }}</small>
+                </span>
+                <span class="tax-item-actions">
+                  <button type="button" class="icon-btn" aria-label="Editar categoría" @click="editCategory(c)"><AppIcon name="pencil" :size="15" /></button>
+                  <button type="button" class="icon-btn danger" aria-label="Eliminar categoría" @click="removeTaxonomy('category', c)"><AppIcon name="trash" :size="15" /></button>
+                </span>
               </li>
             </ul>
             <p v-else class="hint">Sin categorías todavía.</p>
@@ -2053,6 +2200,60 @@ async function changePassword() {
           </div>
           <p class="hint">Imagen de referencia. El producto final puede variar.</p>
         </div>
+      </div>
+    </div>
+    <!-- ================= CHATBOT (Estándar+) ================= -->
+    <div v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
+      <div class="page-head">
+        <div>
+          <h1>Chatbot</h1>
+          <p>Un asistente con la cara de tu negocio que responde solito a las visitas de tu web.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+      </div>
+      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+      <AlertMessage v-if="botErr" kind="error" :message="botErr" />
+
+      <div class="card">
+        <h3><AppIcon name="bot" :size="18" /> Tu asistente</h3>
+        <div class="field">
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="botForm.is_enabled" type="checkbox" />
+              <span class="check-text">
+                <strong>Chatbot activo</strong>
+                <small>Aparece como burbuja flotante abajo a la derecha de tu web pública, con el nombre y el logo de tu negocio.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+        <AppInput
+          v-model="botForm.greeting"
+          label="Mensaje de bienvenida"
+          maxlength="200"
+          placeholder="¡Hola! Soy el asistente de tu negocio. ¿En qué te puedo ayudar?"
+          hint="Es lo primero que ve la visita al abrir el chat. Si lo dejás vacío se usa uno genérico con el nombre de tu negocio."
+        />
+        <div class="field">
+          <label>Preguntas y respuestas <span class="hint-inline">({{ botForm.qa.length }}/{{ CHATBOT_QA_MAX }})</span></label>
+          <p class="hint">Las visitas las tocan como sugerencias o escriben algo parecido: el bot contesta con tu respuesta. Si no entiende, las deriva a la sección Contáctanos.</p>
+          <div v-if="botForm.qa.length" class="qa-list">
+            <div v-for="(item, i) in botForm.qa" :key="i" class="qa-item">
+              <div class="qa-fields">
+                <input v-model="item.q" class="input" type="text" maxlength="120" placeholder="Pregunta frecuente. Ej: ¿Hacen envíos?" :aria-label="`Pregunta ${i + 1}`" />
+                <textarea v-model="item.a" class="textarea" rows="2" maxlength="500" placeholder="Respuesta que da el bot" :aria-label="`Respuesta ${i + 1}`"></textarea>
+              </div>
+              <button type="button" class="icon-btn danger" :aria-label="`Borrar la pregunta ${i + 1}`" @click="botForm.qa.splice(i, 1)">
+                <AppIcon name="trash" :size="15" />
+              </button>
+            </div>
+          </div>
+          <button type="button" class="btn ghost btn-auto" :disabled="botForm.qa.length >= CHATBOT_QA_MAX" @click="addBotQa">
+            <AppIcon name="plus" :size="15" /> Agregar pregunta
+          </button>
+        </div>
+        <AppButton :loading="botBusy" @click="saveBot">Guardar chatbot</AppButton>
       </div>
     </div>
     <!-- ================= PLANES ================= -->

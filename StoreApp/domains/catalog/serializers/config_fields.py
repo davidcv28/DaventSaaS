@@ -20,6 +20,17 @@ TaxonomyFields              =   {
             'max_length'    :   'El nombre admite hasta 60 caracteres',
         },
     },
+    'feature_schema'        :   {'required': False},
+}
+#=========================================
+# FEATURE LIMITS (espejo en frontend/src/api/catalog.api.js)
+#=========================================
+FeatureLimits               =   {
+    'schema_max'            :   15,   # máx. atributos en la plantilla de la categoría
+    'schema_name_max'       :   40,   # largo máx. del nombre del atributo
+    'entries_max'           :   20,   # máx. pares nombre/valor por producto
+    'name_max'              :   40,   # largo máx. de la clave
+    'value_max'             :   120,  # largo máx. del valor
 }
 ProductFields               =   {
     'name'                  :   {
@@ -56,4 +67,5 @@ ProductFields               =   {
     'category'              :   {'required': False, 'allow_null': True},
     'brand'                 :   {'required': False, 'allow_null': True},
     'is_active'             :   {'required': False},
+    'features'              :   {'required': False},
 }

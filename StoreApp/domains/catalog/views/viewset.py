@@ -52,6 +52,8 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
         """
         En multipart los selects vacíos llegan como ''/none: se mapean a
         None para que category/brand (allow_null) los acepten y limpien.
+        features viaja como string JSON (JSONField binary): el vacío se
+        mapea a '{}' para que limpie en vez de romper el parseo.
         """
         data    =   request.data
         if not hasattr(data, 'get'):
@@ -66,6 +68,9 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
             if value in ('', 'null', 'none', 'None'):
                 mutable[field]  =   None
                 changed         =   True
+        if mutable.get('features') in ('', 'null', 'none', 'None'):
+            mutable['features'] =   '{}'
+            changed             =   True
         if changed:
             request._full_data  =   mutable
     def create(self, request):

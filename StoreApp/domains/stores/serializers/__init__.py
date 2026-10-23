@@ -1,1 +1,1 @@
-from .serializers import StoreSerializer, StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer
+from .serializers import StoreSerializer, StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer, StoreChatbotSerializer

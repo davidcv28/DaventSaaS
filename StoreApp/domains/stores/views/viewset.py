@@ -6,10 +6,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
-from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage
+from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
 from StoreApp.domains.stores.serializers.serializers import (
     StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer,
     StoreCarouselImageSerializer, StoreGalleryImageSerializer, StoreContactSerializer,
+    StoreChatbotSerializer,
 )
 from StoreApp.domains.stores.serializers.validators  import (
     RESERVED_SLUGS,
@@ -162,6 +163,30 @@ class StoreViewSet(StoreBaseViewSet):
         if not profile_has_benefit(profile, 'has_stats'):
             return Response({'detail': 'Las estadísticas de visitas están disponibles desde el plan Estándar.'}, status = status.HTTP_403_FORBIDDEN)
         return Response(visit_stats_of(store), status = status.HTTP_200_OK)
+    #=========================================
+    # CHATBOT (asistente de la web pública, beneficio has_chatbot: Estándar+)
+    #=========================================
+    @action(detail = False, methods = ['get', 'patch'], url_path = 'chatbot')
+    def chatbot(self, request):
+        store           =   get_object_or_404(Store, user__user = request.user)
+        if request.method != 'GET' and not profile_has_benefit(store.user, 'has_chatbot'):
+            return Response(
+                {'detail': 'El chatbot de tu web está disponible desde el plan Estándar.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        cfg, _          =   StoreChatbot.objects.get_or_create(store = store)
+        if request.method == 'GET':
+            return Response(StoreChatbotSerializer(cfg).data, status = status.HTTP_200_OK)
+        serializer      =   StoreChatbotSerializer(cfg, data = request.data, partial = True)
+        serializer.is_valid(raise_exception = True)
+        serializer.save()
+        return Response(
+            {
+                'Exito'     : 'El chatbot se actualizó correctamente',
+                'chatbot'   : serializer.data,
+            },
+            status = status.HTTP_200_OK,
+        )
     #=========================================
     # PUBLIC CATALOG (productos/categorías/marcas visibles, con buscador)
     #=========================================

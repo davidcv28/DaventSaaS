@@ -1,1 +1,1 @@
-from .models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreDailyVisit
+from .models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreDailyVisit, StoreChatbot

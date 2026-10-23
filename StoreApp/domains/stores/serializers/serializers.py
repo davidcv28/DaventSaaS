@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage
+from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.services        import profile_has_benefit, storage_payload
 from .config_fields import StoresFields, CustomizationFields
@@ -41,6 +41,32 @@ class StoreGalleryImageSerializer(serializers.ModelSerializer):
         fields                  =   ['id', 'url', 'position']
     def get_url(self, image):
         return object_url(image.image_key)
+#=========================================
+# STORE CHATBOT SERIALIZER (asistente de la web pública)
+#=========================================
+class StoreChatbotSerializer(serializers.ModelSerializer):
+    """
+    Config del chatbot (beneficio 'has_chatbot': Estándar y Premium).
+    `qa` llega como lista de {'q', 'a'}: se recorta a QA_MAX_ITEMS y
+    se descartan pares sin pregunta o sin respuesta.
+    """
+    class Meta:
+        model                   =   StoreChatbot
+        fields                  =   ['is_enabled', 'greeting', 'qa']
+    def validate_greeting(self, value):
+        return (value or '').strip()
+    def validate_qa(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Debe ser una lista de preguntas y respuestas.')
+        clean                   =   []
+        for item in value[:StoreChatbot.QA_MAX_ITEMS]:
+            if not isinstance(item, dict):
+                continue
+            q                   =   str(item.get('q') or '').strip()[:StoreChatbot.QA_MAX_QUESTION]
+            a                   =   str(item.get('a') or '').strip()[:StoreChatbot.QA_MAX_ANSWER]
+            if q and a:
+                clean.append({'q': q, 'a': a})
+        return clean
 #=========================================
 # STORE CUSTOMIZATION SERIALIZER (diseño de la web pública)
 #=========================================
@@ -149,9 +175,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     customization               =   StoreCustomizationPublicSerializer(read_only = True)
     has_design_advanced         =   serializers.SerializerMethodField()
     location_address            =   serializers.SerializerMethodField()
+    chatbot                     =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'location_address']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'location_address', 'chatbot']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -174,6 +201,15 @@ class StorePublicSerializer(serializers.ModelSerializer):
             parts.append(user.province.name_province)
         parts.append('Argentina')
         return ', '.join(parts)
+    def get_chatbot(self, store):
+        #{'greeting', 'qa'} solo si el plan tiene 'has_chatbot' y el
+        #dueño lo activó; el widget público no se renderiza con None.
+        if not profile_has_benefit(store.user, 'has_chatbot'):
+            return None
+        cfg                     =   getattr(store, 'chatbot', None)
+        if not cfg or not cfg.is_enabled:
+            return None
+        return {'greeting': cfg.greeting, 'qa': cfg.qa or []}
 #=========================================
 # STORE CONTACT SERIALIZER (formulario público "Contáctanos")
 #=========================================
