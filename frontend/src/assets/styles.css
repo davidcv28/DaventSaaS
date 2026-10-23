@@ -118,6 +118,11 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .brand-checks .feat-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: rgba(255, 255, 255, .12); color: #fff; flex: none; }
 .brand-checks strong { display: block; font-size: 14px; font-weight: 600; }
 .brand-checks small { display: block; font-size: 13px; color: rgba(255, 255, 255, .7); margin-top: 2px; }
+.brand-founder { display: flex; gap: 14px; align-items: flex-start; margin-top: 30px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .14); max-width: 460px; }
+.founder-mono { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); font-weight: 800; font-size: 17px; color: #fff; flex: none; }
+.brand-founder strong { font-size: 14px; font-weight: 700; }
+.brand-founder .founder-role { font-weight: 500; color: var(--brand-200); font-size: 12.5px; }
+.brand-founder p { font-size: 13px; color: rgba(255, 255, 255, .68); margin: 6px 0 0; line-height: 1.55; }
 .brand-foot { color: rgba(255, 255, 255, .6); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .auth-panel { display: grid; place-items: center; min-width: 0; padding: 32px 20px; background: var(--bg); }
 .auth-card { width: min(480px, 100%); min-width: 0; margin: auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 36px; }
@@ -165,8 +170,10 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .brand-checks li:nth-child(1) { animation-delay: .3s; }
 .brand-checks li:nth-child(2) { animation-delay: .4s; }
 .brand-checks li:nth-child(3) { animation-delay: .5s; }
+.brand-checks li:nth-child(4) { animation-delay: .6s; }
 .brand-checks li:hover { transform: translateX(4px); background: rgba(255, 255, 255, .11); border-color: rgba(255, 255, 255, .22); }
-.auth-brand .brand-foot { animation: auth-fade .6s ease-out .6s both; }
+.auth-brand .brand-founder { animation: auth-fade .6s ease-out .7s both; }
+.auth-brand .brand-foot { animation: auth-fade .6s ease-out .78s both; }
 
 .auth-panel { position: relative; overflow: hidden; }
 .auth-panel::before {

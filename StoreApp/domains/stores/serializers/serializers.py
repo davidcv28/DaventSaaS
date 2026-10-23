@@ -67,7 +67,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'show_about', 'contact_email', 'show_contact',
-            'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery',
+            'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
             'logo', 'carousel', 'gallery', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']

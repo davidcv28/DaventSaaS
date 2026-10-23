@@ -158,11 +158,16 @@ class StoreViewSet(StoreBaseViewSet):
             CategorySerializer, BrandSerializer, ProductPublicSerializer,
         )
         store           =   get_object_or_404(
-            Store.objects.select_related('user'),
+            Store.objects.select_related('user', 'customization'),
             slug = slug, is_published = True, is_blocked = False,
         )
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
+        #El dueño puede apagar el catálogo y usar su web solo como vidriera:
+        #mismo criterio que show_contact en el formulario (404, no vacío).
+        customization     =   getattr(store, 'customization', None)
+        if customization is not None and customization.show_catalog is False:
             raise Http404
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
         category_id     =   request.query_params.get('category')

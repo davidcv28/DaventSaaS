@@ -130,6 +130,10 @@ class StoreCustomization(models.Model):
     #decide si aparece (además se oculta sola si no hay imágenes cargadas);
     #el cupo lo fija el beneficio 'max_gallery_images' del plan.
     show_gallery                =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Galería')
+    #Página "Catálogo": el dueño puede apagarla para usar su web solo como
+    #vidriera del negocio. No borra productos ni gestión del panel: la ruta
+    #/<slug>/catalogo y el endpoint público devuelven 404 hasta reactivarla.
+    show_catalog                =   models.BooleanField(default = True, verbose_name = 'Mostrar página de catálogo')
     updated_at                  =   models.DateTimeField(auto_now = True)
     class Meta:
         app_label               =   'stores'

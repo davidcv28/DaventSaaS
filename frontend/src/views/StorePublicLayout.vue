@@ -55,6 +55,9 @@ const hasAbout = computed(() => custom.value.show_about !== false && Boolean(
 const gallery = computed(() => custom.value.gallery || [])
 const showGallery = computed(() => status.value === 'success' && custom.value.show_gallery !== false && gallery.value.length > 0)
 const showContact = computed(() => status.value === 'success' && custom.value.show_contact !== false)
+// Catálogo opcional: el dueño puede apagarlo (vidriera sin productos). La
+// página /catalogo redirige al inicio y desaparecen todos sus accesos.
+const showCatalog = computed(() => status.value === 'success' && custom.value.show_catalog !== false)
 
 // Estado compartido con la vista del catálogo: buscador del header, burger y
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
@@ -81,7 +84,7 @@ function onScroll() {
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, hasAbout, showGallery, showContact, ui
+  hasDesignAdvanced, hasAbout, showGallery, showContact, showCatalog, ui
 })
 
 // Título de pestaña por página: "<tienda>" en Inicio, "<tienda> · Catálogo"
@@ -149,7 +152,7 @@ onBeforeUnmount(() => {
         </RouterLink>
         <nav v-if="status === 'success'" class="sp-top-links" aria-label="Secciones de la tienda">
           <RouterLink :to="homeTo">Inicio</RouterLink>
-          <RouterLink :to="catalogTo">Catálogo</RouterLink>
+          <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
           <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
           <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
           <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
@@ -160,7 +163,7 @@ onBeforeUnmount(() => {
           <button v-if="ui.search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="ui.search = ''"><AppIcon name="x" :size="14" /></button>
         </label>
         <div class="sp-top-end">
-          <RouterLink v-if="status === 'success'" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
+          <RouterLink v-if="status === 'success' && (isCatalog || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
             <AppIcon :name="isCatalog ? 'store' : 'package'" :size="16" /> {{ isCatalog ? 'Inicio' : 'Catálogo' }}
           </RouterLink>
           <button

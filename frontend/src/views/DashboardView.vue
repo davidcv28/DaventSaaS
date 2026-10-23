@@ -349,6 +349,20 @@ async function togglePublished() {
 const catalogTab = ref('products') // products | categories | brands
 const catalogLoaded = ref(false)
 
+// Catálogo opcional en la web pública (customization.show_catalog): el dueño
+// lo apaga para usar su web solo como vidriera del negocio. La gestión sigue
+// disponible acá y los productos se conservan; se guarda al instante.
+const catalogWebBusy = ref(false)
+const catalogWebOn = computed(() => store.customization.show_catalog !== false)
+async function toggleCatalogWeb(event) {
+  const next = event.target.checked
+  catalogWebBusy.value = true
+  const ok = await store.saveCustomization({ show_catalog: next })
+  catalogWebBusy.value = false
+  // PATCH rechazado (plan caído, etc.): el checkbox vuelve al estado real.
+  if (!ok) event.target.checked = !next
+}
+
 const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true })
 const productTouched = reactive({})
 const productBusy = ref(false)
@@ -673,6 +687,9 @@ const storeFonts = STORE_FONTS
 const fontSizeMin = NAME_FONT_SIZE_MIN
 const fontSizeMax = NAME_FONT_SIZE_MAX
 const designShopName = computed(() => designForm.display_name || business.value || 'Tu negocio')
+// Espejo del catálogo público (se apaga desde "Mi catálogo"): la vista previa
+// oculta el link, el CTA y la página Catálogo igual que la web real.
+const designCatalogOn = computed(() => designForm.show_catalog !== false)
 const designNameFont = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
 
 // Si cambia la fuente elegida, traerla en el momento (la lista ya las carga
@@ -1236,7 +1253,27 @@ async function changePassword() {
 
       <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
       <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
+      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
       <AlertMessage kind="info" message="Publicá únicamente imágenes, logos y textos propios o con autorización de uso: sos responsable del contenido de tu catálogo." />
+
+      <div class="card">
+        <h3><AppIcon name="store" :size="18" /> Catálogo en tu web</h3>
+        <div class="field">
+          <label id="catalog-web-label">Página Catálogo</label>
+          <label class="check">
+            <input
+              type="checkbox"
+              :checked="catalogWebOn"
+              :disabled="catalogWebBusy"
+              aria-labelledby="catalog-web-label"
+              @change="toggleCatalogWeb"
+            />
+            <span>Mostrar la página Catálogo en tu web pública</span>
+          </label>
+          <p class="hint">Apagalo para usar tu web solo como vidriera de tu negocio: desaparecen el link del menú, el botón "Ver catálogo" y la página /catalogo. Tus productos se conservan y podés reactivarlo cuando quieras.</p>
+        </div>
+      </div>
 
       <template v-if="!billing.hasSubscription || catalog.denied">
         <div class="empty">
@@ -1715,22 +1752,22 @@ async function changePassword() {
               </span>
               <span class="dp-nav-links">
                 <span class="dp-nav-item">Inicio</span>
-                <span class="dp-nav-item">Catálogo</span>
+                <span v-if="designCatalogOn" class="dp-nav-item">Catálogo</span>
                 <span class="dp-nav-item">Contacto</span>
               </span>
             </div>
             <div class="dp-hero">
               <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
               <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>
-              <span class="dp-badge">{{ designForm.headline ? designShopName : 'Catálogo online' }}</span>
+              <span class="dp-badge">{{ designForm.headline ? designShopName : (designCatalogOn ? 'Catálogo online' : 'Sitio oficial') }}</span>
               <strong class="dp-title" :class="{ 'is-name': !designForm.headline }" :style="designForm.headline ? null : designNameFont">{{ designForm.headline || designShopName }}</strong>
               <span v-if="designForm.description" class="dp-desc">{{ designForm.description }}</span>
               <div class="dp-cta">
-                <span class="dp-btn">Ver catálogo</span>
+                <span v-if="designCatalogOn" class="dp-btn">Ver catálogo</span>
                 <span class="dp-btn ghost">Contáctanos</span>
               </div>
             </div>
-            <div v-if="canDesignAdvanced && carouselImages.length" class="dp-catalog">
+            <div v-if="designCatalogOn && canDesignAdvanced && carouselImages.length" class="dp-catalog">
               <span class="dp-section-label"><AppIcon name="layout-grid" :size="11" /> Página Catálogo</span>
               <div class="dp-carousel">
                 <div class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">

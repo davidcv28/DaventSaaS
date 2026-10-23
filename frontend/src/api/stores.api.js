@@ -27,7 +27,8 @@ import { storeUrl } from '../config/env.js'
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
 //                                                about_title?, about_text?, show_about?, contact_email?, show_contact?,
 //                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?, show_location?,
-//                                                show_gallery?}
+//                                                show_gallery?, show_catalog? (apaga la página Catálogo de la
+//                                                web: queda como vidriera del negocio; no borra productos)}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
 //                                           name_font, name_font_size y accent del payload; sin
@@ -207,6 +208,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   facebook: '',
   show_location: true,
   show_gallery: true,
+  show_catalog: true,
   logo: null,
   carousel: [],
   gallery: []

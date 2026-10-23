@@ -3,12 +3,18 @@ Tests de seguridad del dominio stores.
 
 El claim del slug exige correo verificado (anti-abuso del plan de prueba).
 """
+from datetime import timedelta
+
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
+from StoreApp.domains.stores.models import Store, StoreCustomization
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 STORES_URL = '/api/stores/'
 
@@ -46,3 +52,42 @@ class StoreClaimVerificationTests(TestCase):
         user, _     =   _make_user(verified = True)
         response    =   self._claim(user)
         self.assertEqual(response.status_code, 201)
+
+
+class StoreCatalogToggleTests(TestCase):
+    """
+    Catálogo opcional (customization.show_catalog): apagado, el endpoint
+    público del catálogo devuelve 404 y la web queda como vidriera — sin
+    borrar productos ni bloquear la gestión del panel.
+    """
+
+    def _make_store(self, show_catalog):
+        _, profile      =   _make_user(verified = True)
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan test')
+        benefit         =   Benefit.objects.create(code = 'has_public_link', label = 'Link público', kind = Benefit.FLAG)
+        PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        StoreCustomization.objects.create(store = store, show_catalog = show_catalog)
+
+    def test_public_catalog_ok_when_enabled(self):
+        self._make_store(show_catalog = True)
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_public_catalog_404_when_disabled(self):
+        self._make_store(show_catalog = False)
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_public_store_still_ok_when_catalog_disabled(self):
+        #Solo se apaga la página Catálogo: la web pública sigue respondiendo.
+        self._make_store(show_catalog = False)
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['customization']['show_catalog'])

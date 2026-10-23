@@ -10,7 +10,7 @@ import { vReveal } from '../directives/reveal.js'
 // es una página aparte (StoreCatalogView) y la tienda la resuelve
 // StorePublicLayout (inject 'storePage').
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact } = ctx
+const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog } = ctx
 
 const copied = ref(false)
 const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
@@ -20,7 +20,8 @@ const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.
 // badge; si no, el h1 es el nombre y el badge muestra la ubicación. ---
 const heroTitleIsName = computed(() => !custom.value.headline?.trim())
 const heroTitle = computed(() => custom.value.headline?.trim() || shopName.value)
-const heroBadge = computed(() => (heroTitleIsName.value ? (location.value || 'Catálogo online') : shopName.value))
+// Sin catálogo la web es una vidriera: el badge de fallback es "Sitio oficial".
+const heroBadge = computed(() => (heroTitleIsName.value ? (location.value || (showCatalog.value ? 'Catálogo online' : 'Sitio oficial')) : shopName.value))
 const heroBadgeIcon = computed(() => (heroTitleIsName.value ? (location.value ? 'map-pin' : 'store') : ''))
 const heroMeta = computed(() => {
   const items = []
@@ -44,7 +45,8 @@ const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nos
 // --- Destacados: tarjetas con icono bajo el hero, armadas con lo que el
 // negocio realmente tiene cargado y completadas con valores genéricos. ---
 const highlights = computed(() => {
-  const list = [{ icon: 'package', title: 'Catálogo online', text: 'Explorá todos los productos con precios y detalles actualizados.', to: catalogTo.value }]
+  const list = []
+  if (showCatalog.value) list.push({ icon: 'package', title: 'Catálogo online', text: 'Explorá todos los productos con precios y detalles actualizados.', to: catalogTo.value })
   if (showContact.value) list.push({ icon: 'message-circle', title: 'Consultas directas', text: 'Escribinos y te respondemos a la brevedad.', href: '#contacto' })
   if (location.value) list.push({ icon: 'map-pin', title: 'Dónde estamos', text: location.value })
   if (custom.value.about_years) list.push({ icon: 'clock', title: `+${custom.value.about_years} años`, text: 'De trayectoria y experiencia en lo que hacemos.' })
@@ -189,7 +191,7 @@ onBeforeUnmount(() => {
         <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
         <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
         <div v-reveal="320" class="sp-hero-ctas">
-          <RouterLink class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
           <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
           <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
             <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />

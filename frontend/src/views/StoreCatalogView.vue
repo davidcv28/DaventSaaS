@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, watchEffect, inject, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { storesApi } from '../api/stores.api.js'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
@@ -16,6 +16,14 @@ const ctx = inject('storePage')
 const { slug, ui, custom, hasDesignAdvanced, shopName } = ctx
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const route = useRoute()
+const router = useRouter()
+
+// Catálogo opcional: si el dueño lo apagó la web queda como vidriera y esta
+// página no existe (el endpoint público también devuelve 404). Se resuelve
+// async en el layout, así que se espera a que customization llegue.
+watch(() => custom.value.show_catalog, (v) => {
+  if (v === false) router.replace(homeTo.value)
+}, { immediate: true })
 
 // La búsqueda también puede llegar por URL (?q=) — alimenta el buscador
 // compartido con el header.
@@ -220,7 +228,7 @@ function onCardMove(event) {
 
 onMounted(() => {
   restartSlideTimer()
-  loadCatalog()
+  if (custom.value.show_catalog !== false) loadCatalog()
   window.addEventListener('keydown', onKey)
 })
 
