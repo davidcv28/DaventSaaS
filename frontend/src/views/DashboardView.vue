@@ -52,7 +52,13 @@ const invoices = useInvoicesStore()
 const store = useStoreStore()
 const catalog = useCatalogStore()
 
-const section = ref('overview')
+// Sección activa con setter validado: un botón interno (o una sección que
+// desaparece del menú cuando vence el plan) jamás deja una vista vacía.
+const sectionInner = ref('overview')
+const section = computed({
+  get: () => sectionInner.value,
+  set: (id) => { sectionInner.value = navItems.value.some((i) => i.id === id) ? id : 'overview' }
+})
 const busyPlan = ref(null)
 const renewBusy = ref(false)
 const confirmCancel = ref(false)
@@ -222,24 +228,29 @@ const initial = computed(() => (auth.user?.username || auth.user?.email || 'U').
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Usuario DAVENT')
 
 // Menú del sidebar: el staff ve además la entrada al panel de administración.
-// "Diseño web" va en el grupo principal (has_customization está en todos los
-// planes). El grupo "Avanzado" sigue siendo premium (has_advanced_menu) y cada
-// entrada requiere además su propio flag.
+// Sin acceso vigente (is_current = grants_access del backend: suscripción
+// activa dentro de vigencia + gracia) solo quedan las secciones de cuenta;
+// catálogos, diseño, empresa, POS y el grupo Avanzado desaparecen. Dentro
+// del acceso, "Diseño web"/"Mi empresa" piden has_customization (todos los
+// planes) y el grupo "Avanzado" es premium (has_advanced_menu + flag propio).
 const navItems = computed(() => {
   const b = plan.value?.benefits || {}
+  const hasAccess = Boolean(plan.value?.isCurrent)
   const items = [
     { id: 'overview', label: 'Resumen', icon: 'dashboard' },
-    { id: 'store', label: 'Mi tienda', icon: 'store' },
-    { id: 'catalogs', label: 'Mis catálogos', icon: 'library' }
+    { id: 'store', label: 'Mi tienda', icon: 'store' }
   ]
-  if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
-  if (b.has_customization) items.push({ id: 'company', label: 'Mi empresa', icon: 'building-2' })
-  items.push({ id: 'pos', label: 'Venta en persona', icon: 'monitor' })
-  const advanced = []
-  if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
-  if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
-  if (b.has_advanced_menu && advanced.length) {
-    items.push({ heading: 'Avanzado' }, ...advanced)
+  if (hasAccess) {
+    items.push({ id: 'catalogs', label: 'Mis catálogos', icon: 'library' })
+    if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
+    if (b.has_customization) items.push({ id: 'company', label: 'Mi empresa', icon: 'building-2' })
+    items.push({ id: 'pos', label: 'Venta en persona', icon: 'monitor' })
+    const advanced = []
+    if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
+    if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
+    if (b.has_advanced_menu && advanced.length) {
+      items.push({ heading: 'Avanzado' }, ...advanced)
+    }
   }
   items.push(
     { id: 'plans', label: 'Planes', icon: 'credit-card' },
@@ -248,6 +259,11 @@ const navItems = computed(() => {
     { id: 'settings', label: 'Cuenta', icon: 'user' }
   )
   return items
+})
+
+// Si la sección activa desaparece del menú (venció el plan), volver a Resumen.
+watch(navItems, (items) => {
+  if (!items.some((i) => i.id === section.value)) section.value = 'overview'
 })
 
 function onNavigate(id) {
