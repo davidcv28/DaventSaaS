@@ -17,9 +17,14 @@ const features = [
 // Bloque "Quién está detrás" del panel de marca: los datos viven acá para
 // ajustarlos sin tocar el template.
 const founder = {
-  name: 'David',
+  name: 'David Cervantes',
   role: 'Fundador y desarrollador de DAVENT',
-  bio: 'Creé DAVENT para que cualquier comercio pueda tener su propia web: simple, rápida y sin depender de nadie.'
+  bio: 'Técnico en Análisis de Sistemas, de Salta. Hace más de 3 años que desarrollo software y creé DAVENT para que cualquier comercio pueda tener su propia web: simple, rápida y sin depender de nadie.',
+  links: [
+    { icon: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/in/david-cervantes-68a419186' },
+    { icon: 'github', label: 'GitHub', url: 'https://github.com/davidcv28' },
+    { icon: 'mail', label: 'davidcv28@outlook.com', url: 'mailto:davidcv28@outlook.com' }
+  ]
 }
 </script>
 
@@ -48,6 +53,11 @@ const founder = {
           <div class="founder-info">
             <strong>{{ founder.name }} <span class="founder-role">· {{ founder.role }}</span></strong>
             <p>{{ founder.bio }}</p>
+            <div class="founder-links">
+              <a v-for="l in founder.links" :key="l.label" :href="l.url" target="_blank" rel="noopener">
+                <AppIcon :name="l.icon" :size="13" /> {{ l.label }}
+              </a>
+            </div>
           </div>
         </div>
       </div>
