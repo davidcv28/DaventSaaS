@@ -10,7 +10,11 @@ import { vReveal } from '../directives/reveal.js'
 // es una página aparte (StoreCatalogView) y la tienda la resuelve
 // StorePublicLayout (inject 'storePage').
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog } = ctx
+const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog } = ctx
+// Diseño activo de la portada ('classic' | 'editorial' | 'impact'): la
+// estructura del hero se reordena por CSS (grid-areas); solo la cinta de
+// marca de 'impact' es markup extra.
+const tpl = pageTemplate
 
 const copied = ref(false)
 const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
@@ -200,6 +204,15 @@ onBeforeUnmount(() => {
         <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
           <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
         </ul>
+      </div>
+      <!-- Cinta de marca del diseño Impacto: marquee infinito (dos secuencias
+           idénticas, el track se desplaza -50% en loop). Solo decoración. -->
+      <div v-if="tpl === 'impact'" class="sp-hero-marquee" aria-hidden="true">
+        <div class="sp-hero-marquee-track">
+          <span v-for="n in 2" :key="n" class="sp-hero-marquee-seq">
+            {{ shopName }} <i></i> {{ heroTitle }} <i></i> {{ location || 'Tienda online' }} <i></i>
+          </span>
+        </div>
       </div>
     </div>
 

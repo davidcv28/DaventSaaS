@@ -34,7 +34,7 @@ Viewsets del dominio Stores.
 #PATCH/PUT de customization se descartan del payload en vez de rechazar la
 #request, así el resto del formulario (contenido, logo y tema) se guarda
 #igual y los valores ya guardados quedan intactos.
-DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
+DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent', 'template')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)

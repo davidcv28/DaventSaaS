@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, CUSTOMIZATION_DEFAULTS
+  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, storeTemplate, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -31,6 +31,9 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // Diseño avanzado (Plan premium): define si la web muestra el carrusel de
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
 const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
+// Diseño de la web (template): los diseños alternativos son premium; sin
+// has_design_advanced se fuerza 'classic' aunque quede otro valor guardado.
+const pageTemplate = computed(() => (hasDesignAdvanced.value ? storeTemplate(custom.value.template) : 'classic'))
 // Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
 // visitante puede alternarlo con el botón del nav (solo para esta visita).
 const visitorTheme = ref(null) // null = tema de la tienda
@@ -84,7 +87,7 @@ function onScroll() {
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, hasAbout, showGallery, showContact, showCatalog, ui
+  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, ui
 })
 
 // Título de pestaña por página: "<tienda>" en Inicio, "<tienda> · Catálogo"
@@ -129,7 +132,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :style="themeVars">
+  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>

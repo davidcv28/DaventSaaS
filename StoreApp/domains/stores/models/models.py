@@ -92,6 +92,16 @@ class StoreCustomization(models.Model):
         ('caveat',               'Caveat'),
         ('lobster',              'Lobster'),
     ]
+    TEMPLATE_CLASSIC            =   'classic'
+    #Diseños de la web pública (catálogo cerrado): clásico es el diseño base
+    #y los dos restantes se habilitan con has_design_advanced (Plan premium).
+    #El viewset descarta el campo del payload sin ese beneficio y el frontend
+    #además lo fuerza a 'classic' si la tienda pierde el plan premium.
+    TEMPLATE_CHOICES            =   [
+        (TEMPLATE_CLASSIC,   'Clásico'),
+        ('editorial',        'Editorial'),
+        ('impact',           'Impacto'),
+    ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
     NAME_SIZE_DEFAULT           =   32
@@ -118,6 +128,7 @@ class StoreCustomization(models.Model):
     contact_email               =   models.EmailField(blank = True, verbose_name = 'Email de contacto público')
     show_contact                =   models.BooleanField(default = True, verbose_name = 'Mostrar sección de contacto')
     theme                       =   models.CharField(max_length = 10, choices = THEME_CHOICES, default = THEME_LIGHT, verbose_name = 'Tema')
+    template                    =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_CLASSIC, verbose_name = 'Diseño de la web')
     accent                      =   models.CharField(max_length = 10, choices = ACCENT_CHOICES, default = ACCENT_INDIGO, verbose_name = 'Color de acento')
     whatsapp                    =   models.CharField(max_length = 20, blank = True, verbose_name = 'WhatsApp')
     instagram                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Instagram')

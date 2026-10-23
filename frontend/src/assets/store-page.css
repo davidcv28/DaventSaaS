@@ -947,3 +947,173 @@ html { scroll-behavior: smooth; }
 .store-page .sp-modal-leave-active .sp-modal {
   transition-duration: .3s !important;
 }
+
+/* ===== Diseños de la web (customization.template, Plan premium) =====
+   'classic' es el diseño base. 'editorial' e 'impact' se activan con
+   data-store-template en .store-page (lo setea StorePublicLayout; sin
+   has_design_advanced se fuerza 'classic'). El hero se reordena por
+   grid-areas sobre el mismo DOM: solo 'impact' suma markup (la cinta
+   de marca). Las reglas van al final para ganar por cascada en empates
+   de especificidad con los temas claro/oscuro. */
+
+/* ---------- Editorial: estilo revista ----------
+   Banda clara con texto tinta, titular a la izquierda, marca enmarcada
+   con sombra-bloque, esquinas rectas, barra y pie claros. */
+.store-page[data-store-template='editorial'] { --sp-radius: 10px; }
+.store-page[data-store-template='editorial'] .sp-hero-band {
+  color: var(--sp-ink);
+  background: linear-gradient(165deg, color-mix(in srgb, var(--store-accent-soft) 70%, var(--sp-card-solid)), var(--sp-card-solid) 80%);
+  border-bottom: 1px solid var(--sp-line);
+  border-radius: 0 0 clamp(20px, 4vw, 40px) clamp(20px, 4vw, 40px);
+  animation: none;
+}
+.store-page[data-store-template='editorial'][data-store-theme='dark'] .sp-hero-band {
+  background: linear-gradient(165deg, color-mix(in srgb, var(--store-accent) 18%, var(--sp-card-solid)), var(--sp-card-solid) 80%);
+}
+/* Dos columnas: contenido a la izquierda, marca (logo/monograma) a la derecha. */
+.store-page[data-store-template='editorial'] .sp-hero-inner {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-areas:
+    'badge visual'
+    'title visual'
+    'sub   visual'
+    'ctas  visual'
+    'meta  visual';
+  align-items: center;
+  column-gap: 64px;
+  justify-items: start;
+  text-align: left;
+  padding: 80px 40px 88px;
+}
+.store-page[data-store-template='editorial'] .sp-ava { grid-area: visual; justify-self: center; }
+.store-page[data-store-template='editorial'] .sp-hero-badge { grid-area: badge; margin: 0; color: var(--sp-accent-text); background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
+.store-page[data-store-template='editorial'][data-store-theme='dark'] .sp-hero-badge { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='editorial'] .sp-hero-title { grid-area: title; margin-top: 22px; max-width: 20ch; color: var(--sp-ink); text-shadow: none; }
+.store-page[data-store-template='editorial'] .sp-hero-sub { grid-area: sub; color: var(--sp-muted); }
+.store-page[data-store-template='editorial'] .sp-hero-ctas { grid-area: ctas; justify-content: flex-start; }
+.store-page[data-store-template='editorial'] .sp-hero-meta { grid-area: meta; justify-content: flex-start; color: var(--sp-muted); }
+.store-page[data-store-template='editorial'] .sp-hero-meta .icon { color: var(--sp-accent-text); }
+/* Controles de la portada sobre banda clara: primario de acento, resto neutro. */
+.store-page[data-store-template='editorial'] .sp-btn.sp-hero-btn { background: var(--store-accent-ink); color: #fff; box-shadow: 0 12px 24px -12px var(--store-accent-ink); }
+.store-page[data-store-template='editorial'] .sp-btn.sp-hero-btn:hover { background: var(--store-accent-ink); filter: brightness(1.12); }
+.store-page[data-store-template='editorial'] .sp-btn.sp-hero-ghost { background: transparent; border-color: var(--sp-line); color: var(--sp-ink-2); }
+.store-page[data-store-template='editorial'] .sp-btn.sp-hero-ghost:hover { border-color: var(--store-accent); color: var(--sp-accent-text); background: color-mix(in srgb, var(--store-accent) 8%, transparent); }
+.store-page[data-store-template='editorial'] .sp-hero .sp-icon-btn { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='editorial'] .sp-hero .sp-icon-btn:hover { border-color: var(--store-accent); color: var(--sp-accent-text); background: var(--sp-card); }
+/* Decor: trama de puntos teñida por el acento, orbes suaves, sin chips flotantes. */
+.store-page[data-store-template='editorial'] .sp-hero-decor::before { background-image: radial-gradient(color-mix(in srgb, var(--store-accent) 22%, transparent) 1px, transparent 1.4px); -webkit-mask-image: radial-gradient(ellipse 60% 80% at 82% 40%, #000 20%, transparent 78%); mask-image: radial-gradient(ellipse 60% 80% at 82% 40%, #000 20%, transparent 78%); }
+.store-page[data-store-template='editorial'] .sp-orb { background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--store-accent) 24%, transparent), transparent 70%); filter: none; }
+.store-page[data-store-template='editorial'] .sp-float { display: none; }
+/* Marca enmarcada: esquinas rectas y sombra-bloque corrida (rasgo editorial). */
+.store-page[data-store-template='editorial'] .sp-hero .sp-mono.lg,
+.store-page[data-store-template='editorial'] .sp-hero .sp-logo.lg { border-radius: 18px; border: 1px solid var(--sp-line); box-shadow: 16px 16px 0 color-mix(in srgb, var(--store-accent) 26%, transparent), var(--sp-shadow-md); animation: none; }
+.store-page[data-store-template='editorial'] .sp-ava::after { border-radius: 24px; }
+/* Esquinas rectas en toda la página. */
+.store-page[data-store-template='editorial'] .sp-btn,
+.store-page[data-store-template='editorial'] .sp-card-cta,
+.store-page[data-store-template='editorial'] .sp-chip,
+.store-page[data-store-template='editorial'] .sp-quick-pill,
+.store-page[data-store-template='editorial'] .sp-nav-clear,
+.store-page[data-store-template='editorial'] .sp-davent-badge,
+.store-page[data-store-template='editorial'] .sp-cat-stats li { border-radius: 8px; }
+.store-page[data-store-template='editorial'] .sp-icon-btn,
+.store-page[data-store-template='editorial'] .sp-search,
+.store-page[data-store-template='editorial'] .sp-price,
+.store-page[data-store-template='editorial'] .sp-sort { border-radius: 10px; }
+/* Barra superior clara con links tinta. */
+.store-page[data-store-template='editorial'] .sp-top,
+.store-page[data-store-template='editorial'][data-store-theme='dark'] .sp-top {
+  background: color-mix(in srgb, var(--sp-card-solid) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom-color: var(--sp-line);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+}
+.store-page[data-store-template='editorial'] .sp-top .sp-brand,
+.store-page[data-store-template='editorial'] .sp-top .sp-name { color: var(--sp-ink); }
+.store-page[data-store-template='editorial'] .sp-top-links a { color: var(--sp-ink-2); }
+.store-page[data-store-template='editorial'] .sp-top-links a:hover,
+.store-page[data-store-template='editorial'] .sp-top-links a.router-link-exact-active { color: var(--sp-accent-text); background: var(--store-accent-soft); }
+.store-page[data-store-template='editorial'][data-store-theme='dark'] .sp-top-links a:hover,
+.store-page[data-store-template='editorial'][data-store-theme='dark'] .sp-top-links a.router-link-exact-active { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='editorial'] .sp-top .sp-icon-btn,
+.store-page[data-store-template='editorial'] .sp-top .sp-burger { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); }
+.store-page[data-store-template='editorial'] .sp-top .sp-icon-btn:hover,
+.store-page[data-store-template='editorial'] .sp-top .sp-burger:hover { background: var(--sp-card); border-color: var(--store-accent); color: var(--sp-accent-text); }
+.store-page[data-store-template='editorial'] .sp-top .sp-mono { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.store-page[data-store-template='editorial'] .sp-top .sp-logo.sm { border-color: var(--sp-line); }
+.store-page[data-store-template='editorial'] .sp-progress { background: linear-gradient(90deg, var(--store-accent), var(--store-accent-ink)); }
+.store-page[data-store-template='editorial'] .sp-top-cta { background: var(--store-accent-ink); color: #fff; }
+.store-page[data-store-template='editorial'] .sp-top-cta:hover { background: var(--store-accent-ink); filter: brightness(1.12); }
+/* Pie claro acorde a la barra. */
+.store-page[data-store-template='editorial'] .sp-foot { background: var(--sp-surface); color: var(--sp-ink); }
+.store-page[data-store-template='editorial'] .sp-foot::before { background: linear-gradient(90deg, transparent 8%, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent 92%); }
+.store-page[data-store-template='editorial'] .sp-foot-brand strong { color: var(--sp-ink); }
+.store-page[data-store-template='editorial'] .sp-foot-brand span,
+.store-page[data-store-template='editorial'] .sp-foot-copy { color: var(--sp-muted); }
+.store-page[data-store-template='editorial'] .sp-foot-heading { color: var(--sp-accent-text); }
+.store-page[data-store-template='editorial'] .sp-foot-col a { color: var(--sp-ink-2); }
+.store-page[data-store-template='editorial'] .sp-foot-col a:hover { color: var(--sp-accent-text); }
+.store-page[data-store-template='editorial'] .sp-foot-bottom { border-top-color: var(--sp-line); }
+.store-page[data-store-template='editorial'] .sp-foot .sp-davent-badge { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); }
+.store-page[data-store-template='editorial'] .sp-foot .sp-davent-badge:hover { border-color: var(--store-accent); }
+.store-page[data-store-template='editorial'] .sp-foot .sp-davent-badge strong { color: var(--sp-accent-text); }
+/* Cabecera del catálogo sobre la misma banda clara. */
+.store-page[data-store-template='editorial'] .sp-crumbs { color: var(--sp-muted); }
+.store-page[data-store-template='editorial'] .sp-crumbs a { color: var(--sp-accent-text); }
+.store-page[data-store-template='editorial'] .sp-crumbs span { color: var(--sp-ink); }
+.store-page[data-store-template='editorial'] .sp-cat-head-icon { background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); color: var(--sp-accent-text); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
+.store-page[data-store-template='editorial'] .sp-cat-title { color: var(--sp-ink); text-shadow: none; }
+.store-page[data-store-template='editorial'] .sp-cat-sub { color: var(--sp-muted); }
+.store-page[data-store-template='editorial'] .sp-cat-stats li { border-color: var(--sp-line); background: var(--sp-card); color: var(--sp-ink-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='editorial'] .sp-cat-stats strong { color: var(--sp-accent-text); }
+@media (max-width: 960px) {
+  .store-page[data-store-template='editorial'] .sp-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'visual' 'badge' 'title' 'sub' 'ctas' 'meta';
+    justify-items: center;
+    text-align: center;
+    padding: 56px 20px 72px;
+  }
+  .store-page[data-store-template='editorial'] .sp-ava { margin-bottom: 26px; }
+  .store-page[data-store-template='editorial'] .sp-hero-ctas { justify-content: center; }
+  .store-page[data-store-template='editorial'] .sp-hero-meta { justify-content: center; }
+}
+
+/* ---------- Impacto: portada oscura de alto contraste ----------
+   Banda siempre oscura con halos del acento, titular grande a la
+   izquierda, meta como chips y cinta de marca en marquee al pie. */
+.store-page[data-store-template='impact'] .sp-hero-band {
+  background:
+    radial-gradient(860px 480px at 84% -16%, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent 62%),
+    radial-gradient(640px 400px at 6% 112%, color-mix(in srgb, var(--store-accent-ink) 60%, transparent), transparent 62%),
+    #0a0e1a;
+  animation: none;
+}
+.store-page[data-store-template='impact'] .sp-hero-inner { justify-items: start; text-align: left; padding: 76px 40px 60px; }
+.store-page[data-store-template='impact'] .sp-hero .sp-mono.lg,
+.store-page[data-store-template='impact'] .sp-hero .sp-logo.lg { width: 80px; height: 80px; border-radius: 22px; font-size: 32px; border-color: transparent; box-shadow: 0 0 0 5px rgba(255, 255, 255, .16), 0 18px 40px -14px rgba(0, 0, 0, .6); animation: none; }
+.store-page[data-store-template='impact'] .sp-hero-badge { background: var(--store-accent); border-color: transparent; color: #fff; animation: none; box-shadow: 0 8px 22px -8px var(--store-accent-ink); }
+.store-page[data-store-template='impact'] .sp-hero-title { max-width: 16ch; font-size: clamp(38px, 6.8vw, 72px); line-height: 1.04; }
+.store-page[data-store-template='impact'] .sp-hero-title.is-name { font-size: clamp(36px, 7vw, calc(var(--store-name-size, 48px) * 1.15)); }
+.store-page[data-store-template='impact'] .sp-hero-sub { max-width: 58ch; color: rgba(255, 255, 255, .72); }
+.store-page[data-store-template='impact'] .sp-hero-ctas { justify-content: flex-start; }
+.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn:hover { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); filter: brightness(1.15); }
+.store-page[data-store-template='impact'] .sp-btn.sp-hero-ghost { border-color: rgba(255, 255, 255, .4); }
+.store-page[data-store-template='impact'] .sp-hero-meta { justify-content: flex-start; }
+.store-page[data-store-template='impact'] .sp-hero-meta li { padding: 6px 14px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); }
+/* Cinta de marca: marquee infinito (dos secuencias idénticas, -50% loop). */
+.sp-hero-marquee { position: relative; z-index: 1; border-top: 1px solid rgba(255, 255, 255, .14); overflow: hidden; padding: 15px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.sp-hero-marquee-track { display: flex; width: max-content; animation: sp-marquee 24s linear infinite; }
+.sp-hero-marquee-seq { display: inline-flex; align-items: center; gap: 26px; padding-right: 26px; font-size: 12.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: rgba(255, 255, 255, .55); white-space: nowrap; }
+.sp-hero-marquee-seq i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--store-accent); }
+@keyframes sp-marquee { to { transform: translateX(-50%); } }
+/* Barra y pie oscuros, en sintonía con la banda. */
+.store-page[data-store-template='impact'] .sp-top,
+.store-page[data-store-template='impact'][data-store-theme='dark'] .sp-top { background: color-mix(in srgb, #0a0e1a 86%, transparent); border-bottom-color: rgba(255, 255, 255, .14); backdrop-filter: saturate(140%) blur(12px); -webkit-backdrop-filter: saturate(140%) blur(12px); }
+.store-page[data-store-template='impact'] .sp-foot { background: #0a0e1a; }
+@media (max-width: 760px) {
+  .store-page[data-store-template='impact'] .sp-hero-inner { padding: 56px 20px 44px; }
+  .store-page[data-store-template='impact'] .sp-hero-title { font-size: clamp(32px, 9vw, 48px); }
+}

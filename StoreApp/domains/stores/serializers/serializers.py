@@ -64,7 +64,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model                   =   StoreCustomization
         fields                  =   [
-            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent',
+            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent', 'template',
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',

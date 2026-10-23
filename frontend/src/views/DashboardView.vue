@@ -11,7 +11,7 @@ import { useSlugCheck } from '../composables/useSlugCheck.js'
 import QRCode from 'qrcode'
 import {
   normalizeSlug, publicStoreUrl,
-  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_FONTS, storeThemeVars, storeFontFamily,
+  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily, storeTemplate,
   ensureStoreFont, ensureStoreFontList, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
@@ -591,6 +591,10 @@ const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpp
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
 const storeThemes = STORE_THEMES
+// Diseños de la web (classic/editorial/impact): los dos últimos son premium.
+// La vista previa fuerza 'classic' sin has_design_advanced, igual que la web.
+const storeTemplates = STORE_TEMPLATES
+const designTemplate = computed(() => (canDesignAdvanced.value ? storeTemplate(designForm.template) : 'classic'))
 
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
@@ -676,7 +680,8 @@ async function saveDesign() {
     Object.assign(payload, {
       name_font: designForm.name_font,
       name_font_size: Number(designForm.name_font_size),
-      accent: designForm.accent
+      accent: designForm.accent,
+      template: designForm.template
     })
   }
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
@@ -1640,7 +1645,23 @@ async function changePassword() {
               <p v-if="storageText" class="hint">{{ storageText }}</p>
               <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
             </div>
-            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium." />
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label id="design-template-label">Diseño de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="tpl-options" role="radiogroup" aria-labelledby="design-template-label">
+                <button
+                  v-for="(t, key) in storeTemplates" :key="key" type="button"
+                  class="tpl-option" :class="{ active: designForm.template === key }"
+                  :disabled="!canDesignAdvanced"
+                  :aria-pressed="designForm.template === key"
+                  @click="designForm.template = key"
+                >
+                  <span class="tpl-thumb" :data-tpl="key" aria-hidden="true"><i></i></span>
+                  <span class="tpl-text"><strong>{{ t.label }}</strong><small>{{ t.desc }}</small></span>
+                </button>
+              </div>
+              <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido.</p>
+            </div>
+            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="Los diseños, el color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium." />
             <div v-if="!canDesignAdvanced" class="btn-row">
               <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
             </div>
@@ -1738,7 +1759,7 @@ async function changePassword() {
 
         <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
-          <div class="design-preview" :data-store-theme="designForm.theme" :style="designPreviewVars">
+          <div class="design-preview" :data-store-theme="designForm.theme" :data-store-template="designTemplate" :style="designPreviewVars">
             <div class="dp-nav" aria-hidden="true">
               <span class="dp-nav-brand">
                 <img v-if="currentLogo" class="dp-nav-logo" :src="currentLogo" alt="" />

@@ -29,12 +29,12 @@ import { storeUrl } from '../config/env.js'
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
 //                                                about_title?, about_text?, show_about?, contact_email?, show_contact?,
-//                                                theme?, accent?, whatsapp?, instagram?, tiktok?, facebook?, show_location?,
+//                                                theme?, accent?, template?, whatsapp?, instagram?, tiktok?, facebook?, show_location?,
 //                                                show_gallery?, show_catalog? (apaga la página Catálogo de la
 //                                                web: queda como vidriera del negocio; no borra productos)}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
-//                                           name_font, name_font_size y accent del payload; sin
+//                                           name_font, name_font_size, accent y template del payload; sin
 //                                           'has_location_map' (Estándar+) descarta show_location
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
@@ -212,6 +212,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_contact: true,
   theme: 'light',
   accent: 'indigo',
+  template: 'classic',
   whatsapp: '',
   instagram: '',
   tiktok: '',
@@ -260,6 +261,20 @@ export const STORE_ACCENTS = {
 export const STORE_THEMES = {
   light: { label: 'Claro' },
   dark:  { label: 'Oscuro' }
+}
+
+// Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
+// 'classic' es el diseño base; 'editorial' e 'impact' se habilitan con el
+// beneficio has_design_advanced (Plan premium). El frontend fuerza 'classic'
+// cuando la tienda no tiene ese beneficio aunque haya otro valor guardado.
+export const STORE_TEMPLATES = {
+  classic:   { label: 'Clásico',   desc: 'Portada centrada con banda de color y tarjetas de destacados.' },
+  editorial: { label: 'Editorial', desc: 'Estilo revista: titular a la izquierda y marca enmarcada.' },
+  impact:    { label: 'Impacto',   desc: 'Portada oscura de alto contraste con cinta de marca animada.' }
+}
+
+export function storeTemplate(value) {
+  return STORE_TEMPLATES[value] ? value : 'classic'
 }
 
 // Fuentes del nombre junto al logo: catálogo cerrado de Google Fonts
