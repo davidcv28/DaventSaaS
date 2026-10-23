@@ -88,6 +88,10 @@ def spa(request):
     if not index.is_file():
         raise Http404
     resp = FileResponse(index.open('rb'), content_type='text/html')
+    # El HTML jamás se cachea: referencia los chunks hasheados del deploy
+    # vigente. Si el browser guardara uno viejo, pediría assets que ya no
+    # existen y la app quedaría en blanco tras cada deploy.
+    resp['Cache-Control'] = 'no-cache, must-revalidate'
     # CSP del SPA: recursos propios + Google Fonts (estilos on-demand del catálogo
     # de fuentes), iframe de Google Maps (mapa de ubicación), imágenes https (R2)
     # y data: (favicon inline / QR). Los scripts son solo archivos del build.
@@ -105,4 +109,7 @@ def spa(request):
 
 
 if settings.FRONTEND_DIST.is_dir():
-    urlpatterns += [re_path(r'^(?!api/|admin/|static/|media/|healthz/).*$', spa, name='spa')]
+    # Las rutas con pinta de archivo (…/x.js, /robots.txt) NO caen al SPA: si
+    # el asset no existe es un 404 real — devolver index.html con MIME
+    # text/html rompe los imports dinámicos (chunk viejo tras un deploy).
+    urlpatterns += [re_path(r'^(?!api/|admin/|static/|media/|healthz/|.*\.[a-z0-9]{2,8}$).*$', spa, name='spa')]

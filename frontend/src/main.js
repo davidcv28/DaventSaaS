@@ -6,6 +6,16 @@ import { useAuthStore } from './stores/auth.store.js'
 import { useThemeStore } from './stores/theme.store.js'
 import './assets/styles.css'
 
+// Deploy con HTML viejo en caché: un chunk lazy pedido ya no existe en el
+// servidor y el import falla. Recargar una vez trae el index.html nuevo.
+window.addEventListener('vite:preloadError', (e) => {
+  e.preventDefault()
+  if (!sessionStorage.getItem('spa:chunk-reload')) {
+    sessionStorage.setItem('spa:chunk-reload', '1')
+    window.location.reload()
+  }
+})
+
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)

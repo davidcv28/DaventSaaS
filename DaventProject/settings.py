@@ -219,6 +219,10 @@ MEDIA_ROOT = config('MEDIA_ROOT', default = BASE_DIR / 'media')
 FRONTEND_DIST = BASE_DIR / 'frontend_dist'
 if FRONTEND_DIST.is_dir():
     WHITENOISE_ROOT = FRONTEND_DIST
+# Los assets de Vite llevan fingerprint en el nombre (/assets/*-<hash>.<ext>):
+# el contenido nunca cambia, así que van con Cache-Control immutable (1 año).
+# El default de whitenoise solo reconoce hashes hex estilo webpack.
+WHITENOISE_IMMUTABLE_FILE_TEST = r'/assets/.+-[a-zA-Z0-9_-]{8,}\.[a-z0-9]+$'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
