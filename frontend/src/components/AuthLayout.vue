@@ -13,19 +13,6 @@ const features = [
   { icon: 'store', title: 'Web con o sin catálogo', text: 'Publicá tus productos o usala como vidriera de tu local: el catálogo es opcional.' },
   { icon: 'map-pin', title: 'Datos validados', text: 'Provincias, ciudades y documentos verificados.' }
 ]
-
-// Bloque "Quién está detrás" del panel de marca: los datos viven acá para
-// ajustarlos sin tocar el template.
-const founder = {
-  name: 'David Cervantes',
-  role: 'Fundador y desarrollador de DAVENT',
-  bio: 'Técnico en Análisis de Sistemas, de Salta. Hace más de 3 años que desarrollo software y creé DAVENT para que cualquier comercio pueda tener su propia web: simple, rápida y sin depender de nadie.',
-  links: [
-    { icon: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com/in/david-cervantes-68a419186' },
-    { icon: 'github', label: 'GitHub', url: 'https://github.com/davidcv28' },
-    { icon: 'mail', label: 'davidcv28@outlook.com', url: 'mailto:davidcv28@outlook.com' }
-  ]
-}
 </script>
 
 <template>
@@ -48,20 +35,11 @@ const founder = {
             <span><strong>{{ f.title }}</strong><small>{{ f.text }}</small></span>
           </li>
         </ul>
-        <div class="brand-founder">
-          <span class="founder-mono" aria-hidden="true">{{ founder.name.slice(0, 1) }}</span>
-          <div class="founder-info">
-            <strong>{{ founder.name }} <span class="founder-role">· {{ founder.role }}</span></strong>
-            <p>{{ founder.bio }}</p>
-            <div class="founder-links">
-              <a v-for="l in founder.links" :key="l.label" :href="l.url" target="_blank" rel="noopener">
-                <AppIcon :name="l.icon" :size="13" /> {{ l.label }}
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
-      <div class="brand-foot"><span>&copy; {{ new Date().getFullYear() }} DAVENT</span><span>Hecho en Argentina</span></div>
+      <div class="brand-foot">
+        <span>&copy; {{ new Date().getFullYear() }} DAVENT · Hecho en Argentina</span>
+        <RouterLink to="/acerca-de" class="brand-foot-link">Conocé DAVENT</RouterLink>
+      </div>
     </aside>
     <main class="auth-panel">
       <section class="auth-card">
@@ -70,6 +48,7 @@ const founder = {
         <p v-if="subtitle" class="sub">{{ subtitle }}</p>
         <slot />
         <footer class="auth-legal">
+          <RouterLink to="/acerca-de">Sobre DAVENT</RouterLink>
           <RouterLink to="/terminos">Términos y condiciones</RouterLink>
           <RouterLink to="/denuncias">Denunciar contenido</RouterLink>
         </footer>

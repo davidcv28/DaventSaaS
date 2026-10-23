@@ -12,6 +12,7 @@ const DashboardView = () => import('../views/DashboardView.vue')
 const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
 const ReportView = () => import('../views/ReportView.vue')
+const AboutView = () => import('../views/AboutView.vue')
 const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
@@ -97,7 +98,13 @@ const routes = [
     component: InvoicePrintView,
     meta: { requiresAuth: true, title: 'Factura' }
   },
-  // Páginas legales: públicas para invitados y usuarios logueados
+  // Sobre DAVENT y páginas legales: públicas para invitados y logueados
+  {
+    path: '/acerca-de',
+    name: 'about',
+    component: AboutView,
+    meta: { title: 'Sobre DAVENT' }
+  },
   {
     path: '/terminos',
     name: 'terms',

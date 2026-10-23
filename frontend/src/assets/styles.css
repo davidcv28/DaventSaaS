@@ -118,15 +118,9 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .brand-checks .feat-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: rgba(255, 255, 255, .12); color: #fff; flex: none; }
 .brand-checks strong { display: block; font-size: 14px; font-weight: 600; }
 .brand-checks small { display: block; font-size: 13px; color: rgba(255, 255, 255, .7); margin-top: 2px; }
-.brand-founder { display: flex; gap: 14px; align-items: flex-start; margin-top: 30px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .14); max-width: 460px; }
-.founder-mono { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .24); font-weight: 800; font-size: 17px; color: #fff; flex: none; }
-.brand-founder strong { font-size: 14px; font-weight: 700; }
-.brand-founder .founder-role { font-weight: 500; color: var(--brand-200); font-size: 12.5px; }
-.brand-founder p { font-size: 13px; color: rgba(255, 255, 255, .68); margin: 6px 0 0; line-height: 1.55; }
-.founder-links { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
-.founder-links a { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--brand-200); text-decoration: none; font-weight: 500; }
-.founder-links a:hover { color: #fff; text-decoration: underline; }
 .brand-foot { color: rgba(255, 255, 255, .6); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand-foot-link { color: rgba(255, 255, 255, .75); font-weight: 600; text-decoration: none; }
+.brand-foot-link:hover { color: #fff; text-decoration: underline; }
 .auth-panel { display: grid; place-items: center; min-width: 0; padding: 32px 20px; background: var(--bg); }
 .auth-card { width: min(480px, 100%); min-width: 0; margin: auto; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 36px; }
 .auth-card-logo { display: none; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .14em; margin-bottom: 20px; }
@@ -175,7 +169,6 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .brand-checks li:nth-child(3) { animation-delay: .5s; }
 .brand-checks li:nth-child(4) { animation-delay: .6s; }
 .brand-checks li:hover { transform: translateX(4px); background: rgba(255, 255, 255, .11); border-color: rgba(255, 255, 255, .22); }
-.auth-brand .brand-founder { animation: auth-fade .6s ease-out .7s both; }
 .auth-brand .brand-foot { animation: auth-fade .6s ease-out .78s both; }
 
 .auth-panel { position: relative; overflow: hidden; }
@@ -616,6 +609,18 @@ body { transition: background-color .2s ease, color .2s ease; }
 .legal-foot { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 14px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .legal-foot a { color: var(--brand-ink); font-weight: 600; text-decoration: none; }
 .legal-foot a:hover { text-decoration: underline; }
+/* Sobre DAVENT: tarjeta del fundador y links dentro del legal-doc */
+.about-founder { display: flex; gap: 16px; align-items: flex-start; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.about-mono { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-50); border: 1px solid var(--brand-200); color: var(--brand-ink); font-weight: 800; font-size: 20px; flex: none; }
+.about-name { display: block; font-size: 15.5px; font-weight: 700; color: var(--ink); }
+.about-role { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+.about-founder p { margin: 8px 0 0; }
+.about-links { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+.about-links a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--brand-ink); font-weight: 600; text-decoration: none; }
+.about-links a:hover { text-decoration: underline; }
+/* Los RouterLink con .btn heredarían color/subrayado de .legal-doc a */
+.about-doc .btn { color: #fff; text-decoration: none; }
+.about-doc .btn.ghost { color: var(--ink-2); }
 
 /* ===== Mi tienda / link público ===== */
 .slug-box { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow-sm); overflow: hidden; transition: border-color .15s, box-shadow .15s; }
