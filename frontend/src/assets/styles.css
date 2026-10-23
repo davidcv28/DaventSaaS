@@ -655,7 +655,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .dp-title { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
 /* Cuando el título es el nombre (sin titular) gobierna --store-name-size. */
 .dp-title.is-name { font-size: clamp(15px, calc(var(--store-name-size, 32px) * .55), 34px); }
-.dp-desc { font-size: 11.5px; line-height: 1.55; color: rgba(255, 255, 255, .85); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 46ch; }
+.dp-desc { font-size: 11.5px; line-height: 1.55; color: rgba(255, 255, 255, .85); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 46ch; }
 .dp-cta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
 .dp-btn { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 99px; background: #fff; color: var(--store-accent-ink); }
 .dp-btn.ghost { background: transparent; border: 1px solid rgba(255, 255, 255, .55); color: #fff; }
