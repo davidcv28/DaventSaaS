@@ -238,7 +238,8 @@ const plan = computed(() => billing.currentPlan)
 // activa dentro de vigencia + gracia) solo quedan las secciones de cuenta;
 // catálogos, diseño, empresa, POS y el grupo Avanzado desaparecen. Dentro
 // del acceso, "Diseño web"/"Mi empresa" piden has_customization (todos los
-// planes) y el grupo "Avanzado" es premium (has_advanced_menu + flag propio).
+// planes). Estadísticas/QR-folletos van por flag propio; has_advanced_menu
+// (Premium) solo decide si se agrupan bajo el heading "Avanzado".
 const navItems = computed(() => {
   const b = plan.value?.benefits || {}
   const hasAccess = Boolean(plan.value?.isCurrent)
@@ -255,8 +256,12 @@ const navItems = computed(() => {
     const advanced = []
     if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
     if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
+    // Con has_advanced_menu (Premium) van agrupados; si no, aparecen sueltos
+    // según su flag propio (Básico tiene stats; Estándar stats + QR/folletos).
     if (b.has_advanced_menu && advanced.length) {
       items.push({ heading: 'Avanzado' }, ...advanced)
+    } else {
+      items.push(...advanced)
     }
   }
   items.push(
@@ -438,6 +443,7 @@ watch(section, (s) => {
     ensureStoreFontList()
   }
   if (s === 'bot') ensureBot()
+  if (s === 'stats' && canStats.value) store.loadStats()
 })
 
 // Los avisos se renderizan arriba de cada sección y el botón de guardar puede
@@ -895,7 +901,7 @@ const galleryMax = computed(() => plan.value?.benefits?.max_gallery_images)
 const canGallery = computed(() => galleryMax.value === null || Number(galleryMax.value) > 0)
 const galleryHint = computed(() => {
   const base = 'Se muestran como una grilla en tu web y al hacer clic se ven en grande.'
-  if (!canGallery.value) return `La galería se habilita desde el Plan estándar (5 fotos; 15 en Premium). ${base}`
+  if (!canGallery.value) return `La galería se habilita con una suscripción activa. ${base}`
   return galleryMax.value === null ? `Imágenes de hasta 4 MB. ${base}` : `Hasta ${galleryMax.value} imágenes de 4 MB. ${base}`
 })
 
@@ -1379,7 +1385,7 @@ async function changePassword() {
 
       <div class="stats">
         <div class="stat"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong>0</strong><small>Productos</small></div></div>
-        <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ canStats ? (store.visitStats?.total ?? '0') : '—' }}</strong><small>{{ canStats ? 'Visitas totales' : 'Visitas (desde Estándar)' }}</small></div></div>
+        <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ canStats ? (store.visitStats?.total ?? '0') : '—' }}</strong><small>{{ canStats ? 'Visitas totales' : 'Visitas' }}</small></div></div>
         <div class="stat"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong>{{ plan?.remaining ?? '—' }}</strong><small>Días restantes</small></div></div>
       </div>
 
@@ -1716,7 +1722,7 @@ async function changePassword() {
             <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
             <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
             <div class="field" :class="{ locked: !canGallery }">
-              <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></label>
+              <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Con plan activo</span></label>
               <div v-if="canGallery || galleryImages.length" class="carousel-box">
                 <div v-for="(img, i) in galleryImages" :key="img.id" class="carousel-thumb">
                   <img :src="img.url" :alt="`Imagen ${i + 1} de la galería`" />
