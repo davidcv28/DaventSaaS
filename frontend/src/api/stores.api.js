@@ -56,7 +56,8 @@ function unwrap(data) {
 
 export const storesApi = {
   async listMine() {
-    const { data } = await http.get('/stores/')
+    // mine=1: un staff también recibe solo su tienda (sin él, /stores/ lista todas).
+    const { data } = await http.get('/stores/', { params: { mine: 1 } })
     return unwrap(data)
   },
 

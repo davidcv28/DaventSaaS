@@ -91,3 +91,32 @@ class StoreCatalogToggleTests(TestCase):
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.data['customization']['show_catalog'])
+
+
+class StoreListMineTests(TestCase):
+    """
+    El listado /stores/ de un staff trae todas las webs (panel admin); con
+    ?mine=1 trae solo la suya, para que el panel de usuario no tome la web
+    de otro cliente como propia (y todo PATCH diera 404).
+    """
+
+    def _setup(self):
+        _, owner_profile    =   _make_user(verified = True)
+        Store.objects.create(user = owner_profile, slug = 'cliente')
+        admin               =   User.objects.create_user(username = 'admin', email = 'admin@gmail.com', password = 'Xq7#mP2vL9bT', is_staff = True)
+        client              =   APIClient()
+        client.force_authenticate(user = admin)
+        return client
+
+    def test_staff_list_returns_all_stores(self):
+        client      =   self._setup()
+        response    =   client.get(STORES_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['results'] if isinstance(response.data, dict) else response.data), 1)
+
+    def test_staff_list_mine_excludes_other_users_stores(self):
+        client      =   self._setup()
+        response    =   client.get(STORES_URL, {'mine': 1})
+        self.assertEqual(response.status_code, 200)
+        rows        =   response.data['results'] if isinstance(response.data, dict) else response.data
+        self.assertEqual(len(rows), 0)
