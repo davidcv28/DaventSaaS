@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import QRCode from 'qrcode'
-import { storesApi, publicStoreUrl, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
+import { storesApi, publicStoreUrl, storeThemeVars, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { extractApiError } from '../api/http.js'
@@ -20,6 +20,8 @@ const error = ref('')
 const qrDataUrl = ref('')
 
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
+// Color de la web (accent del Diseño web) -> --store-accent/-ink: tiñe banda, pie y detalles.
+const themeVars = computed(() => storeThemeVars(custom.value))
 const business = computed(() => auth.user?.profile?.business_name || '')
 const shopName = computed(() => custom.value.display_name || business.value || 'Mi tienda')
 const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
@@ -86,8 +88,10 @@ function closeTab() {
 </script>
 
 <style scoped>
-/* Paleta de marca fija (índigo/violeta + amarillo de acento), igual al
-   folleto promocional de DAVENT, independiente del tema de la tienda. */
+/* Misma composición que el folleto promocional de DAVENT, pero los colores
+   de fondo (banda, pie, bordes, precios) siguen el acento que el dueño eligió
+   en Diseño web (--store-accent / --store-accent-ink, ver themeVars). El
+   amarillo de realce y el verde de los tildes/WhatsApp quedan fijos. */
 .print-page { min-height: 100vh; background: var(--bg); padding: 24px 16px 48px; display: grid; justify-items: center; align-content: start; gap: 18px; }
 .print-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; width: 100%; max-width: 210mm; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 12px 18px; }
 .print-bar-text { color: var(--muted); font-size: 13.5px; }
@@ -100,16 +104,16 @@ function closeTab() {
 
 .sf { width: min(100%, 105mm); min-height: 148mm; background: #fff; color: #000; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-.sf-top { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 60%, #8b5cf6 100%); color: #fff; padding: 12px 16px 13px; position: relative; overflow: hidden; }
+.sf-top { background: linear-gradient(135deg, var(--store-accent-ink) 0%, var(--store-accent) 60%, color-mix(in srgb, var(--store-accent) 72%, #fff) 100%); color: #fff; padding: 12px 16px 13px; position: relative; overflow: hidden; }
 .sf-top::after { content: ''; position: absolute; right: -34px; top: -34px; width: 110px; height: 110px; border-radius: 50%; border: 14px solid #fff; opacity: .12; }
 .sf-brand { display: flex; align-items: center; gap: 9px; position: relative; z-index: 1; }
 .sf-logo, .sf-mono { flex: none; width: 30px; height: 30px; border-radius: 10px; background: #fff; box-shadow: 0 2px 6px rgba(30, 27, 75, .35); }
 .sf-logo { object-fit: cover; display: block; }
-.sf-mono { display: grid; place-items: center; font-size: 15px; font-weight: 900; color: #4338ca; }
+.sf-mono { display: grid; place-items: center; font-size: 15px; font-weight: 900; color: var(--store-accent-ink); }
 .sf-name { font-size: 15px; font-weight: 900; letter-spacing: -.01em; line-height: 1.15; color: #fff; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
 .sf-hook { margin: 9px 0 0; font-size: 21px; font-weight: 900; line-height: 1.08; letter-spacing: -.03em; color: #fff; position: relative; z-index: 1; }
-.sf-hook em { font-style: normal; background: #fde047; color: #1e1b4b; padding: 0 5px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.sf-sub { margin: 6px 0 0; font-size: 9.5px; line-height: 1.4; color: #ede9fe; position: relative; z-index: 1; }
+.sf-hook em { font-style: normal; background: #fde047; color: #1c1917; padding: 0 5px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.sf-sub { margin: 6px 0 0; font-size: 9.5px; line-height: 1.4; color: rgba(255, 255, 255, .88); position: relative; z-index: 1; }
 
 .sf-perks { list-style: none; margin: 0; padding: 9px 16px 0; display: grid; gap: 4px; }
 .sf-perks li { display: flex; gap: 7px; align-items: center; font-size: 9.5px; font-weight: 700; line-height: 1.25; color: #000; }
@@ -117,20 +121,20 @@ function closeTab() {
 
 .sf-prods { flex: 1; padding: 9px 16px 10px; align-content: start; display: grid; gap: 5px; }
 .sf-prods-head { display: flex; align-items: center; gap: 8px; margin: 0 0 1px; font-size: 9px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #000; }
-.sf-prods-head::after { content: ''; flex: 1; height: 1.5px; background: #6d28d9; }
+.sf-prods-head::after { content: ''; flex: 1; height: 1.5px; background: var(--store-accent); }
 .sf-prods-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.sf-prod { border: 1.5px solid #6d28d9; border-radius: 7px; overflow: hidden; }
+.sf-prod { border: 1.5px solid var(--store-accent); border-radius: 7px; overflow: hidden; }
 .sf-prod img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
 .sf-prod strong { display: block; padding: 3px 5px 1px; font-size: 7.5px; font-weight: 800; line-height: 1.25; color: #000; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
-.sf-prod em { display: block; font-style: normal; padding: 0 5px 4px; font-size: 8px; font-weight: 900; color: #6d28d9; }
+.sf-prod em { display: block; font-style: normal; padding: 0 5px 4px; font-size: 8px; font-weight: 900; color: var(--store-accent-ink); }
 
-.sf-cta { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #1e1b4b; color: #fff; border-top: 4px solid #fde047; }
+.sf-cta { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: color-mix(in srgb, var(--store-accent-ink) 55%, #000); color: #fff; border-top: 4px solid #fde047; }
 .sf-qr { flex: none; background: #fff; border-radius: 8px; padding: 6px 6px 4px; display: grid; justify-items: center; gap: 2px; }
 .sf-qr img { width: 62px; height: 62px; display: block; }
 .sf-qr span { font-size: 8px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #000; }
 .sf-cta-label { display: block; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fde047; margin-bottom: 3px; }
 .sf-url { display: block; font-size: 13.5px; font-weight: 900; letter-spacing: -.01em; color: #fff; overflow-wrap: anywhere; }
-.sf-hint { margin: 3px 0 0; font-size: 8.5px; line-height: 1.45; color: #ddd6fe; }
+.sf-hint { margin: 3px 0 0; font-size: 8.5px; line-height: 1.45; color: rgba(255, 255, 255, .78); }
 .sf-contact { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; padding: 2px 8px; background: #16a34a; border-radius: 99px; font-size: 10px; font-weight: 800; color: #fff; }
 
 .sf-davent { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px; font-size: 8.5px; font-weight: 700; letter-spacing: .04em; color: #777; border-top: 1px solid #eee; }
@@ -148,7 +152,7 @@ function closeTab() {
 </style>
 
 <template>
-  <div class="print-page">
+  <div class="print-page" :style="themeVars">
     <div class="print-bar">
       <span class="print-bar-text">Folleto de tu tienda A6 · salen 4 por hoja A4, a color</span>
       <div class="print-bar-actions">
