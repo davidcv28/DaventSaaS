@@ -229,6 +229,10 @@ async function reloadAccount() {
 const initial = computed(() => (auth.user?.username || auth.user?.email || 'U').slice(0, 1).toUpperCase())
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Usuario DAVENT')
 
+// Plan vigente: declarado antes de navItems porque su watcher evalúa el
+// computed apenas se registra (TDZ si queda debajo).
+const plan = computed(() => billing.currentPlan)
+
 // Menú del sidebar: el staff ve además la entrada al panel de administración.
 // Sin acceso vigente (is_current = grants_access del backend: suscripción
 // activa dentro de vigencia + gracia) solo quedan las secciones de cuenta;
@@ -273,7 +277,6 @@ function onNavigate(id) {
   section.value = id
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
-const plan = computed(() => billing.currentPlan)
 // Gracia del débito: venció end_date pero el débito automático sigue reintentando.
 const inGrace = computed(() => {
   const p = plan.value
