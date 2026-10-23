@@ -615,9 +615,10 @@ body { transition: background-color .2s ease, color .2s ease; }
 .about-name { display: block; font-size: 15.5px; font-weight: 700; color: var(--ink); }
 .about-role { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
 .about-founder p { margin: 8px 0 0; }
-.about-links { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
-.about-links a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--brand-ink); font-weight: 600; text-decoration: none; }
-.about-links a:hover { text-decoration: underline; }
+/* Email de contacto ofuscado: el usuario lo lee pero no puede copiarlo,
+   y los scrapers extraen los señuelos (.obf) intercalados. */
+.about-mail { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 13px; color: var(--brand-ink); font-weight: 600; user-select: none; }
+.about-mail .obf { display: none; font-style: normal; }
 /* Los RouterLink con .btn heredarían color/subrayado de .legal-doc a */
 .about-doc .btn { color: #fff; text-decoration: none; }
 .about-doc .btn.ghost { color: var(--ink-2); }
