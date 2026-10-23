@@ -39,6 +39,9 @@ const BLOCK_REASONS = [
 const blockingId = ref(null)
 const blockReason = ref(BLOCK_REASONS[0])
 const blockBusyId = ref(null)
+// Búsqueda local del listado de webs: texto libre + filtro por estado.
+const storesQuery = ref('')
+const storesStatusFilter = ref('all')
 
 const initial = computed(() => (auth.user?.username || auth.user?.email || 'A').slice(0, 1).toUpperCase())
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Administrador')
@@ -149,11 +152,25 @@ function suscriptionStatusMeta(status) {
 // Estado público de la web: el bloqueo staff pisa cualquier otro estado;
 // publicada + suscripción vigente => en vivo.
 function webStatus(s) {
-  if (s.is_blocked) return { kind: 'danger', label: 'Bloqueada' }
-  if (!s.is_published) return { kind: 'muted', label: 'Borrador' }
-  if (!s.has_access) return { kind: 'warn', label: 'Sin acceso' }
-  return { kind: 'ok', label: 'En vivo' }
+  if (s.is_blocked) return { key: 'blocked', kind: 'danger', label: 'Bloqueada' }
+  if (!s.is_published) return { key: 'draft', kind: 'muted', label: 'Borrador' }
+  if (!s.has_access) return { key: 'no_access', kind: 'warn', label: 'Sin acceso' }
+  return { key: 'live', kind: 'ok', label: 'En vivo' }
 }
+
+// Filtra por nombre de la web, slug, dueño, email o plan (sin importar
+// acentos), y por el estado público que muestra webStatus().
+const filteredStores = computed(() => {
+  const norm = (v) => String(v).toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  const q = norm(storesQuery.value.trim())
+  return admin.stores.filter((s) => {
+    if (storesStatusFilter.value !== 'all' && webStatus(s).key !== storesStatusFilter.value) return false
+    if (!q) return true
+    return [s.customization?.display_name, s.business_name, s.slug, s.owner_name, s.owner_email, s.plan_name]
+      .filter(Boolean)
+      .some((v) => norm(v).includes(q))
+  })
+})
 
 function startBlock(s) {
   blockingId.value = s.id
@@ -471,8 +488,19 @@ async function logout() {
 
       <div v-if="admin.storesStatus === 'loading'" class="card"><p>Cargando las webs…</p></div>
       <template v-else-if="admin.stores.length">
-        <p class="table-count">{{ admin.stores.length }} web(s)</p>
-        <div class="table-wrap">
+        <div class="toolbar">
+          <input v-model="storesQuery" class="input" type="search" placeholder="Buscar por web, slug, dueño o email" aria-label="Buscar webs" />
+          <select v-model="storesStatusFilter" class="select" aria-label="Filtrar por estado de la web">
+            <option value="all">Todos los estados</option>
+            <option value="live">En vivo</option>
+            <option value="draft">Borrador</option>
+            <option value="no_access">Sin acceso</option>
+            <option value="blocked">Bloqueadas</option>
+          </select>
+        </div>
+        <p class="table-count">{{ filteredStores.length }} de {{ admin.stores.length }} web(s)</p>
+        <p v-if="!filteredStores.length" class="hint">Ninguna web coincide con los filtros.</p>
+        <div v-else class="table-wrap">
           <table class="pay-table">
             <thead>
               <tr>
@@ -485,7 +513,7 @@ async function logout() {
               </tr>
             </thead>
             <tbody>
-              <template v-for="s in admin.stores" :key="s.id">
+              <template v-for="s in filteredStores" :key="s.id">
                 <tr>
                   <td data-label="Web"><strong>{{ s.customization?.display_name || s.business_name || s.slug }}</strong><br /><small class="mono">/{{ s.slug }}</small></td>
                   <td data-label="Dueño">{{ s.owner_name }}<br /><small class="muted">{{ s.owner_email }}</small></td>
