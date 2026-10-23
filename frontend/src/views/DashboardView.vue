@@ -1093,13 +1093,15 @@ function openInvoice(id) {
   window.open(href, '_blank', 'noopener')
 }
 
-function logout() {
+async function logout() {
   billing.reset()
   payments.reset()
   invoices.reset()
   store.reset()
   catalog.reset()
-  auth.logout()
+  // Esperar al logout: si el push corre con el request en vuelo, la cookie
+  // de refresh sigue viva y ensureSession puede revivir la sesión.
+  await auth.logout()
   router.push({ name: 'login' })
 }
 

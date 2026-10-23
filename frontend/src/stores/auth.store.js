@@ -137,12 +137,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    await logoutSession() // blacklist del refresh + borra cookies en backend
+    // El estado local se limpia ANTES del request: mientras el POST viaja,
+    // ningún guard de navegación debe seguir viendo la sesión como activa
+    // (si no, el push a /login rebota al usuario de vuelta al panel).
     accessToken.value = null
     user.value = null
     status.value = 'idle'
     lastError.value = ''
     fieldErrors.value = {}
+    tokenStorage.clear()
+    await logoutSession() // blacklist del refresh + borra cookies en backend
   }
 
   function initSession() {

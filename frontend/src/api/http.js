@@ -20,10 +20,14 @@ try {
 } catch { /* storage bloqueado */ }
 
 let accessToken = null
+// Una vez iniciado el logout la cookie de refresh puede seguir viva unos ms
+// (request en vuelo): bloquea cualquier intento de refresh que "reviviría"
+// la sesión. Se libera al setear un access nuevo (login).
+let sessionEnded = false
 
 export const tokenStorage = {
   getAccess: () => accessToken,
-  set: (access) => { if (access) accessToken = access },
+  set: (access) => { if (access) { accessToken = access; sessionEnded = false } },
   clear: () => { accessToken = null }
 }
 
@@ -35,6 +39,7 @@ function csrfToken() {
 // La cookie CSRF se setea junto al refresh httpOnly: su presencia es el hint
 // de que existe una sesión recuperable (la propia cookie refresh es ilegible).
 export function hasSessionCookie() {
+  if (sessionEnded) return false
   return Boolean(csrfToken())
 }
 
@@ -116,6 +121,7 @@ export async function restoreSession() {
 // Cierre real: blacklist del refresh en backend + borrado de cookies, y limpia
 // el access en memoria. Falla silenciosamente si la cookie ya expiró.
 export async function logoutSession() {
+  sessionEnded = true // ningún refresh puede resucitar la sesión saliente
   try {
     await axios.post(tokenEndpoint('logout/'), {}, {
       timeout: 10000,

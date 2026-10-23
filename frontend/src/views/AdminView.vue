@@ -209,11 +209,13 @@ async function submitPlan() {
   if (ok) resetPlanForm()
 }
 
-function logout() {
+async function logout() {
   billing.reset()
   payments.reset()
   admin.reset()
-  auth.logout()
+  // Esperar al logout: si el push corre con el request en vuelo, la cookie
+  // de refresh sigue viva y ensureSession puede revivir la sesión.
+  await auth.logout()
   router.push({ name: 'login' })
 }
 </script>

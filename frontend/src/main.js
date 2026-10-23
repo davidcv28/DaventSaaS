@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router/index.js'
@@ -11,7 +11,19 @@ app.use(createPinia())
 app.use(router)
 
 // Restaura sesión desde la cookie httpOnly antes del primer render (FRONTEND_RULES §3).
-useAuthStore().initSession()
+const auth = useAuthStore()
+auth.initSession()
 useThemeStore().initTheme()
+
+// Si la sesión cae estando dentro de una ruta protegida (logout o limpieza
+// sin navegación), el guard no re-corre solo: forzar la salida al login.
+watch(
+  () => auth.isAuthenticated,
+  (authed) => {
+    if (!authed && router.currentRoute.value.meta?.requiresAuth) {
+      router.push({ name: 'login' })
+    }
+  }
+)
 
 app.mount('#app')
