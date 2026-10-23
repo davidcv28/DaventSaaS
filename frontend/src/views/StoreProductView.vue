@@ -38,7 +38,17 @@ const copied = ref(false)
 const product = computed(() => catalog.value.products.find((p) => String(p.id) === String(route.params.productId)) || null)
 const categoryName = computed(() => catalog.value.categories.find((c) => c.id === product.value?.category)?.name || '')
 const brandName = computed(() => catalog.value.brands.find((b) => b.id === product.value?.brand)?.name || '')
-const featureRows = computed(() => Object.entries(product.value?.features || {}))
+// Características del producto: primero las de la plantilla de su categoría
+// (en el orden que la definió el dueño), después las libres.
+const featureRows = computed(() => {
+  const p = product.value
+  if (!p?.features) return []
+  const schema = catalog.value.categories.find((c) => c.id === p.category)?.feature_schema || []
+  const order = new Map(schema.map((name, i) => [name.toLowerCase(), i]))
+  return Object.entries(p.features).sort(
+    (a, b) => (order.get(a[0].toLowerCase()) ?? schema.length) - (order.get(b[0].toLowerCase()) ?? schema.length)
+  )
+})
 // Relacionados: primero los de la misma categoría, luego la misma marca y
 // después el resto, hasta 4 — mismo criterio de sugerencia de un marketplace.
 const related = computed(() => {

@@ -139,31 +139,17 @@ const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.ca
 const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, catalog.value.products.length)} de ${catalog.value.products.length}`)
 const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, catalog.value.products.length) / Math.max(1, catalog.value.products.length)) * 100)}%`)
 
-const selected = ref(null)
-const openProduct = (p) => { selected.value = p }
-const closeProduct = () => { selected.value = null }
-const selectedTags = computed(() => {
-  const p = selected.value
-  if (!p) return []
-  return [
-    catalog.value.categories.find((c) => c.id === p.category)?.name,
-    catalog.value.brands.find((b) => b.id === p.brand)?.name
-  ].filter(Boolean)
+// La tarjeta entera navega a la ficha del producto (página aparte, como
+// en un marketplace): en dominio de plataforma lleva el slug, en
+// subdominio de tienda la ruta es /producto/<id> sin params extra.
+const productTo = (p) => ({
+  name: 'store-product',
+  params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id }
 })
-// Características del producto: primero las de la plantilla de su categoría
-// (en el orden que la definió el dueño), después las libres.
-const selectedSpecs = computed(() => {
-  const p = selected.value
-  if (!p?.features) return []
-  const schema = catalog.value.categories.find((c) => c.id === p.category)?.feature_schema || []
-  const order = new Map(schema.map((name, i) => [name.toLowerCase(), i]))
-  return Object.entries(p.features).sort(
-    (a, b) => (order.get(a[0].toLowerCase()) ?? schema.length) - (order.get(b[0].toLowerCase()) ?? schema.length)
-  )
-})
+const openProduct = (p) => router.push(productTo(p))
 
 const onKey = (e) => {
-  if (e.key === 'Escape') { ui.menuOpen = false; closeProduct() }
+  if (e.key === 'Escape') ui.menuOpen = false
 }
 
 // --- Portada: carrusel de destacados (premium), abre la página del
@@ -468,43 +454,5 @@ onBeforeUnmount(() => {
       </section>
     </div>
   </main>
-
-  <!-- ===== Detalle de producto ===== -->
-  <Transition name="sp-modal">
-  <div v-if="selected" class="sp-modal-overlay" @click.self="closeProduct">
-    <div class="sp-modal" role="dialog" aria-modal="true" :aria-label="selected.name">
-      <button type="button" class="sp-modal-close" aria-label="Cerrar" @click="closeProduct">
-        <AppIcon name="x" :size="18" />
-      </button>
-      <div class="sp-modal-img">
-        <img v-if="selected.image" :src="selected.image" :alt="selected.name" />
-        <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="48" /></span>
-      </div>
-      <div class="sp-modal-body">
-        <div v-if="selectedTags.length" class="sp-modal-tags">
-          <span v-for="t in selectedTags" :key="t" class="sp-modal-tag">{{ t }}</span>
-        </div>
-        <h2 class="sp-modal-name">{{ selected.name }}</h2>
-        <span class="sp-modal-price">{{ formatARS(selected.price) }}</span>
-        <div v-if="selected.description" class="sp-modal-section">
-          <p class="sp-modal-label">Descripción</p>
-          <p class="sp-modal-desc">{{ selected.description }}</p>
-        </div>
-        <div v-if="selectedSpecs.length" class="sp-modal-section">
-          <p class="sp-modal-label">Características</p>
-          <dl class="sp-specs">
-            <div v-for="[name, value] in selectedSpecs" :key="name" class="sp-spec">
-              <dt>{{ name }}</dt>
-              <dd>{{ value }}</dd>
-            </div>
-          </dl>
-        </div>
-        <div class="sp-modal-actions">
-          <button type="button" class="sp-btn ghost" @click="closeProduct">Seguir viendo</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  </Transition>
 </div>
 </template>

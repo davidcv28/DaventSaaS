@@ -70,6 +70,7 @@ const botConfig = computed(() => (status.value === 'success' ? store.value?.chat
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
 const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
 const isCatalog = computed(() => route.name === 'store-catalog')
+const isProduct = computed(() => route.name === 'store-product')
 const isHome = computed(() => route.name === 'store-public')
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
@@ -170,7 +171,7 @@ onBeforeUnmount(() => {
           <button v-if="ui.search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="ui.search = ''"><AppIcon name="x" :size="14" /></button>
         </label>
         <div class="sp-top-end">
-          <RouterLink v-if="status === 'success' && (isCatalog || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
+          <RouterLink v-if="status === 'success' && (isCatalog || isProduct || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
             <AppIcon :name="isCatalog ? 'store' : 'package'" :size="16" /> {{ isCatalog ? 'Inicio' : 'Catálogo' }}
           </RouterLink>
           <button
