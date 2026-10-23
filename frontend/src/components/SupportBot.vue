@@ -16,7 +16,7 @@ import BrandLogo from './BrandLogo.vue'
 const route = useRoute()
 const billing = useBillingStore()
 const store = useStoreStore()
-const HIDDEN_ROUTES = new Set(['invoice-print', 'store-flyer'])
+const HIDDEN_ROUTES = new Set(['invoice-print', 'store-flyer', 'davent-flyer'])
 const visible = computed(() =>
   Boolean(route.meta?.requiresAuth || route.meta?.requiresGuest) && !HIDDEN_ROUTES.has(route.name)
 )
