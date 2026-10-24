@@ -3,6 +3,7 @@ import boto3
 from botocore.config import Config as BotoConfig
 from decouple import config
 from .services import plan_benefits_of
+from .imaging  import normalize_image
 """
 
 Almacenamiento de archivos en Cloudflare R2 (imágenes del cliente),
@@ -27,6 +28,7 @@ bytes subidos (logo, carrusel e imágenes de productos).
 LOGO_MAX_BYTES          =   2 * 1024 * 1024   # 2 MB por archivo de logo
 IMAGE_MAX_BYTES         =   4 * 1024 * 1024   # 4 MB por imagen de carrusel/producto
 CAROUSEL_MAX_IMAGES     =   5                 # tope de imágenes del carrusel
+DECOR_MAX_IMAGES        =   3                 # imágenes ilustrativas de la portada (premium); consumen cupo de galería
 PRESIGNED_TTL_SECONDS   =   7 * 24 * 60 * 60  # máximo que permite SigV4
 
 _IMAGE_SIGNATURES       =   {
@@ -96,18 +98,23 @@ def _delete_object(key):
     except Exception:
         # El objeto huérfano no bloquea el flujo; la cuota ya se liberó en DB.
         pass
-def _put_object(store, folder, upload):
+def _put_object(store, folder, upload, processed = None):
     """
     Sube un archivo ya validado a R2 y devuelve la key persistible.
+    `processed` = (bytes, ext, content_type) si la imagen se recodificó.
     Lanza ValueError si la subida falla.
     """
-    ext, content_type   =   _IMAGE_CONTENT_TYPES[upload.content_type]
+    if processed is None:
+        ext, content_type   =   _IMAGE_CONTENT_TYPES[upload.content_type]
+        body                =   upload.read()
+    else:
+        body, ext, content_type =   processed
     key                 =   f'stores/{store.id}/{folder}/{uuid.uuid4().hex}.{ext}'
     try:
         _client().put_object(
             Bucket          =   _bucket(),
             Key             =   key,
-            Body            =   upload.read(),
+            Body            =   body,
             ContentType     =   content_type,
             CacheControl    =   'public, max-age=31536000, immutable',
         )
@@ -277,32 +284,45 @@ def delete_carousel_image(image):
 #=========================================
 # GALLERY UPLOAD / DELETE (sección Galería de la web pública)
 #=========================================
-def upload_gallery_image(store, upload):
+def upload_gallery_image(store, upload, kind = 'gallery'):
     """
-    Sube una imagen de la galería a R2 y crea el StoreGalleryImage
-    al final del orden. El tope lo fija el beneficio max_gallery_images
-    del plan (0 = sin galería; None = ilimitado). Lanza ValueError si el
-    storage no está configurado, el archivo es inválido o no hay cupo/cuota.
+    Sube una imagen de la galería (kind 'gallery') o una decoración de la
+    portada (kind 'decor', solo premium, hasta DECOR_MAX_IMAGES) a R2. La
+    imagen se normaliza automáticamente (orientación, tamaño, proporción,
+    WebP). El tope lo fija el beneficio max_gallery_images del plan
+    (0 = sin galería; None = ilimitado) y las decoraciones consumen ese
+    mismo cupo. Lanza ValueError si el storage no está configurado, el
+    archivo es inválido o no hay cupo/cuota.
     """
     from StoreApp.domains.stores.models import StoreGalleryImage
     if not storage_configured():
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
+    if kind not in StoreGalleryImage.KINDS:
+        raise ValueError('Tipo de imagen no válido.')
     error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
     if error:
         raise ValueError(error)
     limit       =   gallery_limit(store.user)
     if limit == 0:
         raise ValueError('La galería de imágenes está disponible desde el Plan estándar.')
+    if kind == StoreGalleryImage.KIND_DECOR:
+        if not plan_benefits_of(store.user).get('has_design_advanced'):
+            raise ValueError('Las imágenes decorativas están disponibles en el Plan premium.')
+        if store.gallery_images.filter(kind = kind).count() >= DECOR_MAX_IMAGES:
+            raise ValueError(f'Podés cargar hasta {DECOR_MAX_IMAGES} imágenes decorativas.')
     if limit is not None and store.gallery_images.count() >= limit:
-        raise ValueError(f'Tu plan admite hasta {limit} imágenes en la galería. Pasá a un plan superior para sumar más.')
+        raise ValueError(f'Tu plan admite hasta {limit} imágenes entre galería y decoración. Pasá a un plan superior para sumar más.')
+    processed   =   normalize_image(upload, 'decor' if kind == StoreGalleryImage.KIND_DECOR else 'gallery')
+    size        =   len(processed[0])
     _check_image_slot(store, is_new = True)
-    new_used    =   _check_quota(store, upload.size)
-    key         =   _put_object(store, 'gallery', upload)
-    last        =   store.gallery_images.order_by('-position').first()
+    new_used    =   _check_quota(store, size)
+    key         =   _put_object(store, 'decor' if kind == StoreGalleryImage.KIND_DECOR else 'gallery', upload, processed)
+    last        =   store.gallery_images.filter(kind = kind).order_by('-position').first()
     image       =   StoreGalleryImage.objects.create(
         store       =   store,
+        kind        =   kind,
         image_key   =   key,
-        image_size  =   upload.size,
+        image_size  =   size,
         position    =   (last.position + 1) if last else 0,
     )
     _consume_quota(store, new_used)
@@ -328,12 +348,14 @@ def upload_product_image(product, upload):
     if error:
         raise ValueError(error)
     store       =   product.store
+    processed   =   normalize_image(upload, 'product')
+    size        =   len(processed[0])
     _check_image_slot(store, is_new = not product.image_key)
-    new_used    =   _check_quota(store, upload.size, replacing_bytes = product.image_size)
-    key         =   _put_object(store, 'products', upload)
+    new_used    =   _check_quota(store, size, replacing_bytes = product.image_size)
+    key         =   _put_object(store, 'products', upload, processed)
     old_key     =   product.image_key
     product.image_key   =   key
-    product.image_size  =   upload.size
+    product.image_size  =   size
     product.save(update_fields = ['image_key', 'image_size'])
     _consume_quota(store, new_used)
     if old_key:

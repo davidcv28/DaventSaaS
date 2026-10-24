@@ -10,7 +10,7 @@ import { vReveal } from '../directives/reveal.js'
 // es una página aparte (StoreCatalogView) y la tienda la resuelve
 // StorePublicLayout (inject 'storePage').
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog } = ctx
+const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
 // Diseño activo de la portada ('classic' | 'editorial' | 'impact'): la
 // estructura del hero se reordena por CSS (grid-areas); solo la cinta de
 // marca de 'impact' es markup extra.
@@ -74,6 +74,8 @@ const highlights = computed(() => {
 // show_gallery y se oculta sola sin imágenes cargadas) ---
 const gallery = computed(() => custom.value.gallery || [])
 const showGallery = computed(() => ctx.showGallery.value)
+// Imágenes ilustrativas de la portada (premium, hasta 3): franja bajo el hero.
+const decor = computed(() => (hasDesignAdvanced.value ? (custom.value.decor || []).slice(0, 3) : []))
 const lightboxIndex = ref(-1)
 const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
 const openLightbox = (index) => { lightboxIndex.value = index }
@@ -249,6 +251,12 @@ onBeforeUnmount(() => {
           </span>
         </div>
       </div>
+    </div>
+
+    <div v-if="decor.length" class="sp-container sp-decor" :data-count="decor.length">
+      <figure v-for="(img, i) in decor" :key="img.id" v-reveal="i * 100" class="sp-decor-item">
+        <img :src="img.url" alt="" loading="lazy" />
+      </figure>
     </div>
 
     <div class="sp-container sp-highlights">

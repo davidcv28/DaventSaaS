@@ -440,12 +440,12 @@ class StoreViewSet(StoreBaseViewSet):
         if upload is None:
             return Response({'image': 'Tenés que adjuntar una imagen.'}, status = status.HTTP_400_BAD_REQUEST)
         try:
-            image       =   upload_gallery_image(store, upload)
+            image       =   upload_gallery_image(store, upload, request.data.get('kind') or 'gallery')
         except ValueError as error:
             return Response({'image': str(error)}, status = status.HTTP_400_BAD_REQUEST)
         return Response(
             {
-                'Exito' : 'La imagen se agregó a la galería',
+                'Exito' : 'La imagen se agregó a la galería' if image.kind == 'gallery' else 'La imagen decorativa se agregó a tu portada',
                 'image' : StoreGalleryImageSerializer(image).data,
                 'storage'   : storage_payload(image.store, store.user),
             },

@@ -185,9 +185,14 @@ class StoreGalleryImage(models.Model):
     Imagen de la sección Galería de la web pública. El tope lo fija el
     beneficio 'max_gallery_images' del plan vigente (Básico 0, Estándar 5,
     Premium 15); además consume la misma cuota max_storage_mb/max_images
-    que el logo, el carrusel y los productos.
+    que el logo, el carrusel y los productos. `kind='decor'`: hasta 3 imágenes
+    ilustrativas de la portada (premium) que gastan cupo de la galería.
     """
+    KIND_GALLERY                =   'gallery'
+    KIND_DECOR                  =   'decor'
+    KINDS                       =   (KIND_GALLERY, KIND_DECOR)
     store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'gallery_images', db_index = False)
+    kind                        =   models.CharField(max_length = 10, choices = [(KIND_GALLERY, 'Galería'), (KIND_DECOR, 'Decoración de portada')], default = KIND_GALLERY, verbose_name = 'Tipo')
     image_key                   =   models.CharField(max_length = 200, verbose_name = 'Imagen (key en R2)')
     image_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño (bytes)')
     position                    =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')

@@ -44,7 +44,9 @@ import { storeUrl } from '../config/env.js'
 // DELETE /api/stores/customization/carousel/<id>/  Bearer -> {Exito, storage}
 // PATCH  /api/stores/customization/carousel/order/ Bearer {order:[ids]} -> {Exito}
 //                                        -> 403 en las 3 si falta has_design_advanced
-// POST   /api/stores/customization/gallery/        Bearer multipart {image} -> {Exito, image, storage}
+// POST   /api/stores/customization/gallery/        Bearer multipart {image, kind?: 'gallery'|'decor'} -> {Exito, image, storage}
+//                                           kind=decor: hasta 3 imágenes ilustrativas de la portada (solo premium),
+//                                           gastan cupo de la galería. El backend normaliza la imagen (WebP, tamaño, proporción).
 // DELETE /api/stores/customization/gallery/<id>/   Bearer -> {Exito, storage}
 // PATCH  /api/stores/customization/gallery/order/  Bearer {order:[ids]} -> {Exito}
 //                                        -> 403 en las 3 si falta has_customization; el tope
@@ -161,9 +163,10 @@ export const storesApi = {
     return data
   },
 
-  async addGalleryImage(file) {
+  async addGalleryImage(file, kind = 'gallery') {
     const form = new FormData()
     form.append('image', file)
+    form.append('kind', kind)
     const { data } = await http.post('/stores/customization/gallery/', form, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
@@ -246,13 +249,15 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_catalog: true,
   logo: null,
   carousel: [],
-  gallery: []
+  gallery: [],
+  decor: []
 }
 
 // Imágenes: límites por archivo (espejo del backend).
 export const LOGO_MAX_BYTES = 2 * 1024 * 1024
 export const IMAGE_MAX_BYTES = 4 * 1024 * 1024
 export const CAROUSEL_MAX_IMAGES = 5
+export const DECOR_MAX_IMAGES = 3
 export const LOGO_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif'
 
 export function validateLogoFile(file) {

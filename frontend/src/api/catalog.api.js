@@ -25,6 +25,17 @@ function unwrap(data) {
 }
 
 export const catalogApi = {
+  // Editor de imagen: quita el fondo y lo reemplaza por blanco. Devuelve un File PNG (no guarda nada).
+  async removeProductBackground(file) {
+    const form = new FormData()
+    form.append('image', file)
+    const { data } = await http.post('/products/remove-background/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      responseType: 'blob',
+      timeout: 120000
+    })
+    return new File([data], 'producto.png', { type: 'image/png' })
+  },
   // ----- Categorías -----
   async listCategories() {
     const { data } = await http.get('/categories/')

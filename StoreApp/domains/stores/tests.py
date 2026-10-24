@@ -120,3 +120,40 @@ class StoreListMineTests(TestCase):
         self.assertEqual(response.status_code, 200)
         rows        =   response.data['results'] if isinstance(response.data, dict) else response.data
         self.assertEqual(len(rows), 0)
+
+
+class ImageNormalizationTests(TestCase):
+    """Procesado automático de imágenes (galería/decoración/producto)."""
+
+    @staticmethod
+    def _upload(size, mode = 'RGB', color = (200, 30, 30), fmt = 'PNG'):
+        import io
+        from PIL import Image
+        buffer  =   io.BytesIO()
+        Image.new(mode, size, color).save(buffer, format = fmt)
+        buffer.seek(0)
+        return buffer
+
+    def test_gallery_clamps_extreme_ratio_and_outputs_webp(self):
+        import io
+        from PIL import Image
+        from StoreApp.domains.stores.services.imaging import normalize_image
+        body, ext, content_type =   normalize_image(self._upload((4000, 500)), 'gallery')
+        width, height           =   Image.open(io.BytesIO(body)).size
+        self.assertEqual((ext, content_type), ('webp', 'image/webp'))
+        self.assertLessEqual(width, 1600)
+        self.assertLessEqual(width / height, 16 / 9 + 0.02)
+
+    def test_product_flattens_transparency_on_white(self):
+        import io
+        from PIL import Image
+        from StoreApp.domains.stores.services.imaging import normalize_image
+        body, _, _  =   normalize_image(self._upload((300, 300), 'RGBA', (0, 0, 0, 0)), 'product')
+        pixel       =   Image.open(io.BytesIO(body)).convert('RGB').getpixel((10, 10))
+        self.assertTrue(all(channel >= 250 for channel in pixel))
+
+    def test_invalid_file_is_rejected(self):
+        import io
+        from StoreApp.domains.stores.services.imaging import normalize_image
+        with self.assertRaises(ValueError):
+            normalize_image(io.BytesIO(b'no soy una imagen'), 'gallery')

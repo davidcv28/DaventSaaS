@@ -18,12 +18,12 @@ import {
   validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
-  validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, formatStorageMB,
+  validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES, formatStorageMB,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX
 } from '../api/stores.api.js'
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
-  FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures
+  catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures
 } from '../api/catalog.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { formatDate as formatInvDate } from '../api/invoices.api.js'
@@ -552,11 +552,47 @@ function onProductImagePicked(event) {
   productImageErr.value = validateImageFile(file)
   if (productImageErr.value) return
   productImage.value = file
+  productOriginal.value = null
   productImageCleared.value = false
   productImagePreview.value = URL.createObjectURL(file)
 }
 
+const productBgBusy = ref(false)
+const productOriginal = ref(null)
+async function removeProductBg() {
+  if (!productImage.value || productBgBusy.value) return
+  productImageErr.value = ''
+  productBgBusy.value = true
+  try {
+    const source = productImage.value
+    const result = await catalogApi.removeProductBackground(source)
+    productOriginal.value = source
+    productImage.value = result
+    productImagePreview.value = URL.createObjectURL(result)
+  } catch (e) {
+    productImageErr.value = await bgErrorMessage(e)
+  } finally {
+    productBgBusy.value = false
+  }
+}
+async function bgErrorMessage(e) {
+  try {
+    const body = e?.response?.data
+    const parsed = body instanceof Blob ? JSON.parse(await body.text()) : body
+    return parsed?.image || parsed?.detail || 'No pudimos quitar el fondo. Probá con otra foto.'
+  } catch {
+    return 'No pudimos quitar el fondo. Probá con otra foto.'
+  }
+}
+function restoreProductOriginal() {
+  if (!productOriginal.value) return
+  productImage.value = productOriginal.value
+  productImagePreview.value = URL.createObjectURL(productOriginal.value)
+  productOriginal.value = null
+}
+
 function resetProductForm() {
+  productOriginal.value = null
   Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true })
   productFeatures.value = []
   Object.keys(productTouched).forEach((k) => { productTouched[k] = false })
@@ -943,12 +979,17 @@ const galleryInput = ref(null)
 const galleryBusy = ref(false)
 const galleryErr = ref('')
 const galleryImages = computed(() => store.customization.gallery || [])
+const decorImages = computed(() => store.customization.decor || [])
+const galleryUsed = computed(() => galleryImages.value.length + decorImages.value.length)
+const canAddGallery = computed(() => canGallery.value && (galleryMax.value === null || galleryUsed.value < galleryMax.value))
+const canAddDecor = computed(() => canDesignAdvanced.value && decorImages.value.length < DECOR_MAX_IMAGES && canAddGallery.value)
+const decorInput = ref(null)
 const galleryMax = computed(() => plan.value?.benefits?.max_gallery_images)
 const canGallery = computed(() => galleryMax.value === null || Number(galleryMax.value) > 0)
 const galleryHint = computed(() => {
   const base = 'Se muestran como una grilla en tu web y al hacer clic se ven en grande.'
   if (!canGallery.value) return `La galería se habilita con una suscripción activa. ${base}`
-  return galleryMax.value === null ? `Imágenes de hasta 4 MB. ${base}` : `Hasta ${galleryMax.value} imágenes de 4 MB. ${base}`
+  return galleryMax.value === null ? `Imágenes de hasta 4 MB. Las ajustamos automáticamente para que se vean bien. ${base}` : `Hasta ${galleryMax.value} imágenes de 4 MB entre galería e imágenes decorativas (usadas: ${galleryUsed.value}). Las ajustamos automáticamente para que se vean bien. ${base}`
 })
 
 async function onGalleryPicked(event) {
@@ -959,6 +1000,18 @@ async function onGalleryPicked(event) {
   if (galleryErr.value) return
   galleryBusy.value = true
   const ok = await store.addGalleryImage(file)
+  galleryBusy.value = false
+  if (!ok) galleryErr.value = store.fieldErrors.image || store.fieldErrors.detail || store.lastError
+}
+
+async function onDecorPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file || !canAddDecor.value) return
+  galleryErr.value = validateImageFile(file)
+  if (galleryErr.value) return
+  galleryBusy.value = true
+  const ok = await store.addGalleryImage(file, 'decor')
   galleryBusy.value = false
   if (!ok) galleryErr.value = store.fieldErrors.image || store.fieldErrors.detail || store.lastError
 }
@@ -1562,10 +1615,14 @@ async function changePassword() {
                     <button type="button" class="btn ghost btn-auto" @click="productImageInput?.click()">
                       <AppIcon name="upload" :size="16" /> {{ productImagePreview ? 'Cambiar' : 'Subir imagen' }}
                     </button>
-                    <button v-if="productImagePreview" type="button" class="btn ghost btn-auto" @click="productImage = null; productImagePreview = ''; productImageCleared = true">Quitar</button>
+                    <button v-if="productImage && !productOriginal" type="button" class="btn ghost btn-auto" :disabled="productBgBusy" @click="removeProductBg">
+                      <span v-if="productBgBusy" class="spinner" aria-hidden="true"></span><AppIcon v-else name="sparkles" :size="16" /> {{ productBgBusy ? 'Procesando…' : 'Quitar fondo' }}
+                    </button>
+                    <button v-if="productOriginal" type="button" class="btn ghost btn-auto" @click="restoreProductOriginal">Volver al original</button>
+                    <button v-if="productImagePreview" type="button" class="btn ghost btn-auto" @click="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true">Quitar</button>
                   </div>
                 </div>
-                <p class="hint">PNG, JPG, WebP o GIF de hasta 4 MB. Consume tu cuota de almacenamiento.</p>
+                <p class="hint">PNG, JPG, WebP o GIF de hasta 4 MB. Ajustamos la imagen automáticamente; con «Quitar fondo» lo reemplazamos por blanco y centramos el producto. Consume tu cuota de almacenamiento.</p>
                 <p v-if="productImageErr" class="field-error" role="alert">{{ productImageErr }}</p>
               </div>
               <div class="btn-row">
@@ -1779,7 +1836,7 @@ async function changePassword() {
                   </div>
                 </div>
                 <button
-                  v-if="canGallery && (galleryMax === null || galleryImages.length < galleryMax)"
+                  v-if="canAddGallery"
                   type="button" class="carousel-add" :disabled="galleryBusy"
                   @click="galleryInput?.click()"
                 >
@@ -1791,6 +1848,24 @@ async function changePassword() {
               <input ref="galleryInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-gallery-label" @change="onGalleryPicked" />
               <p class="hint">{{ galleryHint }}</p>
               <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
+            </div>
+            <div v-if="canDesignAdvanced || decorImages.length" class="field" :class="{ locked: !canDesignAdvanced }">
+              <label id="design-decor-label">Imágenes decorativas de la portada <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="carousel-box">
+                <div v-for="(img, i) in decorImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen decorativa ${i + 1}`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button v-if="canAddDecor" type="button" class="carousel-add" :disabled="galleryBusy" @click="decorInput?.click()">
+                  <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-decor-label" @change="onDecorPicked" />
+              <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} imágenes ilustrativas que decoran tu página principal, justo debajo de la portada. Gastan cupo de tu galería ({{ galleryUsed }}{{ galleryMax === null ? '' : ` de ${galleryMax}` }} usadas).</p>
             </div>
             <div class="field">
               <label id="design-sections-label">Secciones de tu web</label>

@@ -183,13 +183,13 @@ export const useStoreStore = defineStore('store', () => {
 
   // Galería de la web pública (tope max_gallery_images del plan: Básico 0,
   // Estándar 5, Premium 15). Mismo patrón que el carrusel.
-  async function addGalleryImage(file) {
+  async function addGalleryImage(file, kind = 'gallery') {
     if (!store.value) return false
     lastError.value = ''
     fieldErrors.value = {}
     notice.value = ''
     try {
-      const data = await storesApi.addGalleryImage(file)
+      const data = await storesApi.addGalleryImage(file, kind)
       notice.value = data?.Exito || 'La imagen se agregó a la galería.'
       if (data?.storage) storage.value = data.storage
       await refreshCustomization()

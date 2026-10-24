@@ -1,8 +1,11 @@
+from django.http import HttpResponse
 from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.response import Response
 from StoreApp.domains.catalog.services.services   import catalog_enabled, can_add_product, products_limit
 from StoreApp.domains.catalog.serializers.serializers import ProductSerializerList
-from StoreApp.domains.stores.services             import upload_product_image, delete_product_image, storage_payload
+from StoreApp.domains.stores.services             import upload_product_image, delete_product_image, storage_payload, validate_image_file, remove_background
 from .viewset_base   import CatalogBaseViewSet
 from .viewset_config import CategoryConfigs, BrandConfigs, ProductConfigs
 """
@@ -44,10 +47,35 @@ class CategoryViewSet(CatalogGateMixin, CatalogBaseViewSet):
 class BrandViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   BrandConfigs
 #=========================================
+# BACKGROUND REMOVAL THROTTLE (inferencia en CPU: acotada por usuario)
+#=========================================
+class BackgroundRemovalThrottle(UserRateThrottle):
+    scope   =   'bg_removal'
+#=========================================
 # PRODUCT VIEWSET (imagen multipart + cupo max_products)
 #=========================================
 class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   ProductConfigs
+    @action(detail = False, methods = ['post'], url_path = 'remove-background', throttle_classes = [BackgroundRemovalThrottle])
+    def remove_background(self, request):
+        """
+        Editor de imagen del catálogo: devuelve (sin guardar nada) la foto del
+        producto sin fondo, centrada sobre un lienzo blanco, para que el dueño
+        la previsualice y la adjunte al guardar el producto.
+        """
+        denied      =   self._deny_without_catalog()
+        if denied: return denied
+        upload      =   request.FILES.get('image')
+        if upload is None:
+            return Response({'image': 'Tenés que adjuntar una imagen.'}, status = status.HTTP_400_BAD_REQUEST)
+        try:
+            error   =   validate_image_file(upload)
+            if error:
+                raise ValueError(error)
+            body, _, content_type   =   remove_background(upload)
+        except ValueError as error:
+            return Response({'image': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(body, content_type = content_type)
     def _normalize_relations(self, request):
         """
         En multipart los selects vacíos llegan como ''/none: se mapean a

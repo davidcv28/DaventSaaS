@@ -87,6 +87,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     logo                        =   serializers.SerializerMethodField()
     carousel                    =   serializers.SerializerMethodField()
     gallery                     =   serializers.SerializerMethodField()
+    decor                       =   serializers.SerializerMethodField()
     class Meta:
         model                   =   StoreCustomization
         fields                  =   [
@@ -94,7 +95,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
-            'logo', 'carousel', 'gallery', 'updated_at',
+            'logo', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
     def get_logo(self, customization):
@@ -103,7 +104,10 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         images                  =   customization.store.carousel_images.all()
         return StoreCarouselImageSerializer(images, many = True).data
     def get_gallery(self, customization):
-        images                  =   customization.store.gallery_images.all()
+        images                  =   customization.store.gallery_images.filter(kind = StoreGalleryImage.KIND_GALLERY)
+        return StoreGalleryImageSerializer(images, many = True).data
+    def get_decor(self, customization):
+        images                  =   customization.store.gallery_images.filter(kind = StoreGalleryImage.KIND_DECOR)
         return StoreGalleryImageSerializer(images, many = True).data
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')
