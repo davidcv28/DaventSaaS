@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from .config_fields import SuscriptionsPlanFields, SuscriptionsFields
 from .mixins        import SuscriptionPlanMixinValidator, SuscriptionCreateMixin
-from AdminApp.domains.suscriptions.models import SuscriptionPlan, Suscription
+from AdminApp.domains.suscriptions.models import SuscriptionPlan, Suscription, Coupon, CouponRedemption
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -103,3 +103,58 @@ class SuscriptionSerializerList(serializers.ModelSerializer):
         return bool(obj.preapproval_id)
     def get_is_current(self, obj):
         return obj.grants_access()
+
+#=========================================
+# COUPON SERIALIZER (alta/edición desde el admin)
+#=========================================
+class CouponSerializer(serializers.ModelSerializer):
+    #El plan de prueba no es elegible para promos (no es reactivable).
+    plan                =   serializers.PrimaryKeyRelatedField(queryset = SuscriptionPlan.objects.filter(is_trial = False))
+    class Meta:
+        model           =   Coupon
+        fields          =   ['id', 'code', 'plan', 'days', 'max_uses', 'expires_at', 'is_active']
+        extra_kwargs    =   {
+            'max_uses'      :   {'required': False, 'allow_null': True},
+            'expires_at'    :   {'required': False, 'allow_null': True},
+            'is_active'     :   {'required': False},
+        }
+    def validate_code(self, value):
+        #El canje es case-insensitive: el código se normaliza a mayúsculas
+        #para que 'flyer7' y 'FLYER7' no coexistan como cupones distintos.
+        code            =   str(value or '').strip().upper()
+        if len(code) < 3:
+            raise serializers.ValidationError('El código debe tener al menos 3 caracteres.')
+        queryset        =   Coupon.objects.filter(code__iexact = code)
+        if self.instance:
+            queryset    =   queryset.exclude(pk = self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('Ya existe un cupón con ese código.')
+        return code
+    def validate_days(self, value):
+        if value < 1:
+            raise serializers.ValidationError('Los días deben ser al menos 1.')
+        return value
+
+#=========================================
+# COUPON REDEMPTION SERIALIZER LIST (auditoría de canjes)
+#=========================================
+class CouponRedemptionSerializerList(serializers.ModelSerializer):
+    user_name           =   serializers.CharField(source = 'user.user.username', read_only = True)
+    user_email          =   serializers.CharField(source = 'user.user.email', read_only = True)
+    business_name       =   serializers.CharField(source = 'user.business_name', read_only = True)
+    class Meta:
+        model           =   CouponRedemption
+        fields          =   ['id', 'user_name', 'user_email', 'business_name', 'redeemed_at']
+
+#=========================================
+# COUPON SERIALIZER LIST (panel admin)
+#=========================================
+class CouponSerializerList(serializers.ModelSerializer):
+    plan_name           =   serializers.CharField(source = 'plan.name', read_only = True)
+    uses                =   serializers.SerializerMethodField()
+    redemptions         =   CouponRedemptionSerializerList(many = True, read_only = True)
+    class Meta:
+        model           =   Coupon
+        fields          =   ['id', 'code', 'plan', 'plan_name', 'days', 'max_uses', 'expires_at', 'is_active', 'uses', 'created_at', 'redemptions']
+    def get_uses(self, obj):
+        return len(obj.redemptions.all())

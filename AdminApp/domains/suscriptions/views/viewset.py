@@ -5,7 +5,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .viewset_base      import  SuscriptionBaseViewSet
-from .viewset_config    import  SuscriptionConfigs, SuscriptionPlanConfigs
+from .viewset_config    import  SuscriptionConfigs, SuscriptionPlanConfigs, CouponConfigs
 from rest_framework     import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
@@ -146,5 +146,11 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
 #=========================================
 class SuscriptionPlanViewSet(SuscriptionBaseViewSet):
     viewset_config  =   SuscriptionPlanConfigs
+
+#=========================================
+# COUPON VIEWSET (admin: alta/edición/listado con auditoría de canjes)
+#=========================================
+class CouponViewSet(SuscriptionBaseViewSet):
+    viewset_config  =   CouponConfigs
 
     

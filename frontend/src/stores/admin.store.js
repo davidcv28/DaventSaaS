@@ -12,6 +12,7 @@ export const useAdminStore = defineStore('admin', () => {
   const plans = ref([])
   const users = ref([])
   const stores = ref([])
+  const coupons = ref([])
 
   const summaryStatus = ref('idle') // idle | loading | success | error | forbidden
   const paymentsStatus = ref('idle')
@@ -23,6 +24,8 @@ export const useAdminStore = defineStore('admin', () => {
   const planFormStatus = ref('idle')
   const assignStatus = ref('idle')
   const blockStatus = ref('idle')
+  const couponsStatus = ref('idle')
+  const couponFormStatus = ref('idle')
 
   const lastError = ref('')
   const notice = ref('')
@@ -94,9 +97,19 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  async function loadCoupons() {
+    couponsStatus.value = 'loading'
+    try {
+      coupons.value = await adminApi.listCoupons()
+      couponsStatus.value = 'success'
+    } catch (e) {
+      trackError(e, couponsStatus, 'No se pudieron cargar los cupones.')
+    }
+  }
+
   async function loadAll() {
     lastError.value = ''
-    await Promise.all([loadSummary(), loadPayments(), loadSuscriptions(), loadPlans(), loadUsers(), loadStores()])
+    await Promise.all([loadSummary(), loadPayments(), loadSuscriptions(), loadPlans(), loadUsers(), loadStores(), loadCoupons()])
   }
 
   // Aprobación manual de un pago pendiente: sella el cobro y acredita el plan.
@@ -178,6 +191,50 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  // Alta/edición de cupón promocional. id null -> crea; id numérico -> actualiza.
+  async function saveCoupon({ id = null, code, plan, days, max_uses, expires_at }) {
+    couponFormStatus.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    const payload = {
+      code: String(code || '').trim(),
+      plan: Number(plan),
+      days: Number(days),
+      max_uses: max_uses ? Number(max_uses) : null,
+      expires_at: expires_at ? new Date(`${expires_at}T23:59:59`).toISOString() : null
+    }
+    try {
+      const data = id ? await adminApi.updateCoupon(id, payload) : await adminApi.createCoupon(payload)
+      notice.value = data?.Exito || (id ? 'Cupón actualizado.' : 'Cupón creado correctamente.')
+      await loadCoupons()
+      couponFormStatus.value = 'success'
+      return true
+    } catch (e) {
+      couponFormStatus.value = 'error'
+      const parsed = extractApiError(e)
+      lastError.value = parsed.code || parsed.plan || parsed.days || parsed.nonField || 'No se pudo guardar el cupón.'
+      return false
+    }
+  }
+
+  // Activar/desactivar un cupón: PUT parcial (el update del viewset es partial).
+  async function toggleCoupon(coupon) {
+    couponFormStatus.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    try {
+      await adminApi.updateCoupon(coupon.id, { is_active: !coupon.is_active })
+      notice.value = coupon.is_active ? `Cupón ${coupon.code} desactivado.` : `Cupón ${coupon.code} activado.`
+      await loadCoupons()
+      couponFormStatus.value = 'success'
+      return true
+    } catch (e) {
+      couponFormStatus.value = 'error'
+      lastError.value = extractApiError(e).nonField || 'No se pudo actualizar el cupón.'
+      return false
+    }
+  }
+
   function reset() {
     summary.value = null
     payments.value = []
@@ -185,6 +242,7 @@ export const useAdminStore = defineStore('admin', () => {
     plans.value = []
     users.value = []
     stores.value = []
+    coupons.value = []
     summaryStatus.value = 'idle'
     paymentsStatus.value = 'idle'
     suscriptionsStatus.value = 'idle'
@@ -195,14 +253,16 @@ export const useAdminStore = defineStore('admin', () => {
     planFormStatus.value = 'idle'
     assignStatus.value = 'idle'
     blockStatus.value = 'idle'
+    couponsStatus.value = 'idle'
+    couponFormStatus.value = 'idle'
     lastError.value = ''
     notice.value = ''
   }
 
   return {
-    summary, payments, suscriptions, plans, users, stores,
-    summaryStatus, paymentsStatus, suscriptionsStatus, plansStatus, usersStatus, storesStatus, approveStatus, planFormStatus, assignStatus, blockStatus,
+    summary, payments, suscriptions, plans, users, stores, coupons,
+    summaryStatus, paymentsStatus, suscriptionsStatus, plansStatus, usersStatus, storesStatus, approveStatus, planFormStatus, assignStatus, blockStatus, couponsStatus, couponFormStatus,
     lastError, notice, pendingPayments,
-    loadSummary, loadPayments, loadSuscriptions, loadPlans, loadUsers, loadStores, loadAll, approve, assignPlan, savePlan, setStoreBlocked, reset
+    loadSummary, loadPayments, loadSuscriptions, loadPlans, loadUsers, loadStores, loadCoupons, loadAll, approve, assignPlan, savePlan, saveCoupon, toggleCoupon, setStoreBlocked, reset
   }
 })

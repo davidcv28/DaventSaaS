@@ -340,3 +340,71 @@ class CouponRedeemTests(TestCase):
         self._coupon()
         response        =   APIClient().post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
         self.assertEqual(response.status_code, 401)
+
+
+class CouponAdminTests(TestCase):
+    """Gestión de cupones desde el panel admin: solo staff."""
+
+    COUPONS_URL     =   '/api/coupons/'
+
+    def _staff(self):
+        admin, _        =   _make_user('admin', staff = True)
+        client          =   APIClient()
+        client.force_authenticate(user = admin)
+        return client
+
+    def test_list_forbidden_for_non_staff(self):
+        user, _         =   _make_user('cliente')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        self.assertEqual(client.get(self.COUPONS_URL).status_code, 403)
+
+    def test_create_forbidden_for_non_staff(self):
+        user, _         =   _make_user('cliente')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.post(
+            self.COUPONS_URL, {'code': 'X1A', 'plan': _plan().pk, 'days': 7}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_normalizes_code_uppercase(self):
+        client          =   self._staff()
+        response        =   client.post(
+            self.COUPONS_URL, {'code': '  flyer7  ', 'plan': _plan().pk, 'days': 7}, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Coupon.objects.get().code, 'FLYER7')
+
+    def test_create_rejects_duplicate_code_case_insensitive(self):
+        client          =   self._staff()
+        plan            =   _plan()
+        Coupon.objects.create(code = 'FLYER7', plan = plan, days = 7)
+        response        =   client.post(
+            self.COUPONS_URL, {'code': 'flyer7', 'plan': plan.pk, 'days': 7}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_create_rejects_trial_plan(self):
+        client          =   self._staff()
+        trial           =   _plan(name = 'Trial', price = 0, is_trial = True)
+        response        =   client.post(
+            self.COUPONS_URL, {'code': 'X1A', 'plan': trial.pk, 'days': 7}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_update_deactivates_coupon(self):
+        client          =   self._staff()
+        coupon          =   Coupon.objects.create(code = 'FLYER7', plan = _plan(), days = 7)
+        response        =   client.put(
+            f'{self.COUPONS_URL}{coupon.pk}/', {'is_active': False}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        coupon.refresh_from_db()
+        self.assertFalse(coupon.is_active)
+
+    def test_list_includes_redemptions(self):
+        client          =   self._staff()
+        _, profile      =   _make_user('cliente')
+        coupon          =   Coupon.objects.create(code = 'FLYER7', plan = _plan(), days = 7)
+        CouponRedemption.objects.create(coupon = coupon, user = profile)
+        response        =   client.get(self.COUPONS_URL)
+        self.assertEqual(response.status_code, 200)
+        rows            =   response.data['results'] if isinstance(response.data, dict) else response.data
+        self.assertEqual(rows[0]['uses'], 1)
+        self.assertEqual(rows[0]['redemptions'][0]['user_name'], 'cliente')

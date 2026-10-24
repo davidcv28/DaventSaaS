@@ -1,11 +1,13 @@
 
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 
-from AdminApp.domains.suscriptions.models                   import SuscriptionPlan, Suscription
+from AdminApp.domains.suscriptions.models                   import SuscriptionPlan, Suscription, Coupon
 from AdminApp.domains.suscriptions.serializers.serializers  import (
     SuscriptionPlanSerializer,
     SuscriptionSerializer,
-    SuscriptionSerializerList
+    SuscriptionSerializerList,
+    CouponSerializer,
+    CouponSerializerList
 )
 
 """
@@ -61,6 +63,29 @@ SuscriptionPlanConfigs = {
         #Sin planes de prueba: no son elegibles (ni desde el admin al asignar)
         'queryset'      :   SuscriptionPlan.objects.filter(is_trial = False).order_by('price'),
         'permissions'   :   [AllowAny],
+    },
+}
+
+#=========================================
+# COUPON CONFIGS (admin: alta/edición/listado con canjes)
+#=========================================
+CouponConfigs = {
+    'create': {
+        'serializer' :   CouponSerializer,
+        'queryset'   :   Coupon.objects.all(),
+        'permissions':   [IsAdminUser],
+        'message'    :   'Cupón creado correctamente'
+    },
+    'update': {
+        'serializer' :   CouponSerializer,
+        'queryset'   :   Coupon.objects.all(),
+        'permissions':   [IsAdminUser],
+        'message'    :   'Cupón actualizado correctamente'
+    },
+    'get': {
+        'serializer'    :   CouponSerializerList,
+        'queryset'      :   Coupon.objects.select_related('plan').prefetch_related('redemptions__user__user').order_by('-created_at'),
+        'permissions'   :   [IsAdminUser],
     },
 }
 

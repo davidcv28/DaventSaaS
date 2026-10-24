@@ -1,1 +1,1 @@
-from .viewset import SuscriptionViewSet, SuscriptionPlanViewSet
+from .viewset import SuscriptionViewSet, SuscriptionPlanViewSet, CouponViewSet

@@ -42,6 +42,11 @@ const blockBusyId = ref(null)
 // Búsqueda local del listado de webs: texto libre + filtro por estado.
 const storesQuery = ref('')
 const storesStatusFilter = ref('all')
+// Cupones: formulario de alta/edición y fila expandida con el detalle de canjes.
+const couponForm = reactive({ id: null, code: '', plan: '', days: 7, max_uses: '', expires_at: '' })
+const couponTouched = ref(false)
+const expandedCoupon = ref(null)
+const couponBusyId = ref(null)
 
 const initial = computed(() => (auth.user?.username || auth.user?.email || 'A').slice(0, 1).toUpperCase())
 const displayName = computed(() => auth.user?.username || auth.user?.email || 'Administrador')
@@ -54,6 +59,7 @@ const navItems = [
   { id: 'suscriptions', label: 'Suscripciones', icon: 'credit-card' },
   { id: 'webs', label: 'Webs', icon: 'monitor' },
   { id: 'plans', label: 'Planes', icon: 'package' },
+  { id: 'coupons', label: 'Cupones', icon: 'gift' },
   { id: 'users', label: 'Usuarios', icon: 'users' },
   { heading: 'Cuenta' },
   { id: 'flyer', label: 'Folleto promo', icon: 'printer' }
@@ -225,6 +231,79 @@ async function submitPlan() {
   if (planError.value || priceError.value) return
   const ok = await admin.savePlan({ id: planForm.id, name: planForm.name, price: planForm.price })
   if (ok) resetPlanForm()
+}
+
+// ============ CUPONES ============
+const couponCodeError = computed(() => {
+  if (!couponTouched.value) return ''
+  if (couponForm.code.trim().length < 3) return 'Ingresá un código de al menos 3 caracteres'
+  return ''
+})
+const couponPlanError = computed(() => {
+  if (!couponTouched.value) return ''
+  if (!couponForm.plan) return 'Elegí el plan que otorga el cupón'
+  return ''
+})
+const couponDaysError = computed(() => {
+  if (!couponTouched.value) return ''
+  const n = Number(couponForm.days)
+  if (!Number.isInteger(n) || n < 1) return 'Ingresá los días de acceso (mínimo 1)'
+  return ''
+})
+
+// Estado efectivo del cupón para la tabla: vencido/agotado pisan "activo".
+function couponStatus(c) {
+  if (c.expires_at && new Date(c.expires_at).getTime() <= Date.now()) return { kind: 'warn', label: 'Vencido' }
+  if (c.max_uses !== null && c.uses >= c.max_uses) return { kind: 'warn', label: 'Agotado' }
+  return c.is_active ? { kind: 'ok', label: 'Activo' } : { kind: 'muted', label: 'Inactivo' }
+}
+
+function couponUsesLabel(c) {
+  return c.max_uses === null ? `${c.uses} de ∞` : `${c.uses} de ${c.max_uses}`
+}
+
+function editCoupon(c) {
+  couponForm.id = c.id
+  couponForm.code = c.code
+  couponForm.plan = c.plan
+  couponForm.days = c.days
+  couponForm.max_uses = c.max_uses ?? ''
+  couponForm.expires_at = c.expires_at ? c.expires_at.slice(0, 10) : ''
+  couponTouched.value = false
+}
+
+function resetCouponForm() {
+  couponForm.id = null
+  couponForm.code = ''
+  couponForm.plan = ''
+  couponForm.days = 7
+  couponForm.max_uses = ''
+  couponForm.expires_at = ''
+  couponTouched.value = false
+}
+
+async function submitCoupon() {
+  couponTouched.value = true
+  if (couponCodeError.value || couponPlanError.value || couponDaysError.value) return
+  const ok = await admin.saveCoupon({
+    id: couponForm.id,
+    code: couponForm.code,
+    plan: couponForm.plan,
+    days: couponForm.days,
+    max_uses: couponForm.max_uses,
+    expires_at: couponForm.expires_at
+  })
+  if (ok) resetCouponForm()
+}
+
+async function toggleCoupon(c) {
+  couponBusyId.value = c.id
+  await admin.toggleCoupon(c)
+  couponBusyId.value = null
+}
+
+function toggleCouponDetail(c) {
+  expandedCoupon.value = expandedCoupon.value === c.id ? null : c.id
 }
 
 async function logout() {
@@ -606,6 +685,99 @@ async function logout() {
             </div>
           </template>
           <p v-else>Todavía no hay planes cargados.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= CUPONES ================= -->
+    <div v-show="section === 'coupons'">
+      <div class="page-head">
+        <div>
+          <h1>Cupones</h1>
+          <p>Códigos promocionales canjeables: otorgan días de acceso a un plan sin cobro.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="admin.loadCoupons()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+      </div>
+
+      <AlertMessage v-if="admin.notice" kind="success" :message="admin.notice" />
+      <AlertMessage v-if="admin.lastError && admin.couponFormStatus === 'error'" kind="error" :message="admin.lastError" />
+
+      <div class="grid-2">
+        <div class="card">
+          <h3><AppIcon :name="couponForm.id ? 'pencil' : 'plus'" :size="18" /> {{ couponForm.id ? 'Editar cupón' : 'Nuevo cupón' }}</h3>
+          <form @submit.prevent="submitCoupon" novalidate>
+            <AppInput v-model="couponForm.code" label="Código" name="coupon_code" type="text" placeholder="Ej. SEMANA7" hint="Se normaliza a mayúsculas. El canje no distingue mayúsculas." :error="couponCodeError" @blur="couponTouched = true" />
+            <div class="field">
+              <label for="coupon_plan">Plan que otorga</label>
+              <select id="coupon_plan" v-model="couponForm.plan" class="select" @blur="couponTouched = true">
+                <option value="" disabled>Elegí un plan</option>
+                <option v-for="p in admin.plans" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+              <p v-if="couponPlanError" class="field-error" role="alert">{{ couponPlanError }}</p>
+            </div>
+            <AppInput v-model="couponForm.days" label="Días de acceso" name="coupon_days" type="number" placeholder="Ej. 7" :error="couponDaysError" @blur="couponTouched = true" />
+            <AppInput v-model="couponForm.max_uses" label="Máximo de canjes (opcional)" name="coupon_max_uses" type="number" placeholder="Vacío = ilimitado" />
+            <AppInput v-model="couponForm.expires_at" label="Vencimiento (opcional)" name="coupon_expires" type="date" />
+            <div class="btn-row">
+              <AppButton :loading="admin.couponFormStatus === 'loading'">{{ couponForm.id ? 'Guardar cambios' : 'Crear cupón' }}</AppButton>
+              <button v-if="couponForm.id" type="button" class="btn ghost" @click="resetCouponForm">Cancelar</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h3><AppIcon name="gift" :size="18" /> Cupones cargados</h3>
+          <div v-if="admin.couponsStatus === 'loading'"><p>Cargando cupones…</p></div>
+          <template v-else-if="admin.coupons.length">
+            <div class="table-wrap">
+              <table class="pay-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Otorga</th>
+                    <th>Canjes</th>
+                    <th>Vence</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-for="c in admin.coupons" :key="c.id">
+                    <tr>
+                      <td data-label="Código"><strong class="mono">{{ c.code }}</strong></td>
+                      <td data-label="Otorga">{{ c.plan_name }} · {{ c.days }}d</td>
+                      <td data-label="Canjes">
+                        <button class="btn ghost sm" @click="toggleCouponDetail(c)">{{ couponUsesLabel(c) }}</button>
+                      </td>
+                      <td data-label="Vence">{{ c.expires_at ? fmtDate(c.expires_at) : '—' }}</td>
+                      <td data-label="Estado"><span class="pill" :class="couponStatus(c).kind">{{ couponStatus(c).label }}</span></td>
+                      <td data-label="Acciones">
+                        <div class="assign-cell">
+                          <button class="btn ghost sm" @click="editCoupon(c)"><AppIcon name="pencil" :size="14" /> Editar</button>
+                          <button class="btn ghost sm" :disabled="couponBusyId === c.id" @click="toggleCoupon(c)">
+                            <span v-if="couponBusyId === c.id" class="spinner"></span>
+                            {{ c.is_active ? 'Desactivar' : 'Activar' }}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr v-if="expandedCoupon === c.id" class="coupon-detail-row">
+                      <td colspan="6">
+                        <div v-if="c.redemptions?.length" class="coupon-detail">
+                          <strong>Canjes de {{ c.code }}</strong>
+                          <div v-for="r in c.redemptions" :key="r.id" class="coupon-redemption">
+                            <span>{{ r.business_name || r.user_name }} <small class="muted">{{ r.user_email }}</small></span>
+                            <small class="muted">{{ formatDateTime(r.redeemed_at) }}</small>
+                          </div>
+                        </div>
+                        <p v-else class="muted">Nadie canjeó este cupón todavía.</p>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+          <p v-else>Todavía no hay cupones cargados.</p>
         </div>
       </div>
     </div>

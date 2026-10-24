@@ -14,6 +14,9 @@ import { http } from './http.js'
 // POST /api/stores/<id>/block/           Bearer admin {reason?} -> bloquea la web: sus rutas públicas pasan a 404
 // POST /api/stores/<id>/unblock/         Bearer admin -> levanta el bloqueo (la web vuelve a regirse por plan + is_published)
 // POST /api/suscriptions/assign/         Bearer admin {user_id, plan_id} -> asigna plan al usuario (30 días)
+// GET  /api/coupons/                     Bearer admin -> cupones con auditoría de canjes
+// POST /api/coupons/                     Bearer admin {code, plan, days, max_uses?, expires_at?} -> crear cupón
+// PUT  /api/coupons/<id>/                Bearer admin {campos parciales} -> editar/activar/desactivar cupón
 
 // DRF pagina con PageNumberPagination (PAGE_SIZE=10). Recorremos todas las
 // páginas con ?page=N hasta que `next` sea null (tope de seguridad en 50).
@@ -81,6 +84,20 @@ export const adminApi = {
 
   async assignPlan(userId, planId) {
     const { data } = await http.post('/suscriptions/assign/', { user_id: userId, plan_id: planId })
+    return data
+  },
+
+  async listCoupons() {
+    return fetchAllPages('/coupons/')
+  },
+
+  async createCoupon(payload) {
+    const { data } = await http.post('/coupons/', payload)
+    return data
+  },
+
+  async updateCoupon(id, payload) {
+    const { data } = await http.put(`/coupons/${id}/`, payload)
     return data
   }
 }

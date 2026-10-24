@@ -1,11 +1,12 @@
 from rest_framework import routers
-from AdminApp.domains.suscriptions.views import SuscriptionViewSet, SuscriptionPlanViewSet
+from AdminApp.domains.suscriptions.views import SuscriptionViewSet, SuscriptionPlanViewSet, CouponViewSet
 
 router  =   routers.DefaultRouter()
 
 #SUSCRIPTION ROUTER
 router.register(r'suscriptions', SuscriptionViewSet, basename = 'Suscriptions')
 router.register(r'suscription-plans', SuscriptionPlanViewSet, basename = 'SuscriptionPlans')
+router.register(r'coupons', CouponViewSet, basename = 'Coupons')
 
 
 #PATTNERS
