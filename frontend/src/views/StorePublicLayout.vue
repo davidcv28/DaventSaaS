@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import {
   storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, storeTemplate, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
@@ -19,7 +19,6 @@ import '../assets/store-page.css'
 // tema claro/oscuro que el visitante haya elegido para el dashboard.
 // Estilos en assets/store-page.css (única hoja de la web pública).
 const route = useRoute()
-const router = useRouter()
 const status = ref('loading') // loading | success | error
 const store = ref(null)
 const errorMsg = ref('')
@@ -76,20 +75,6 @@ const isHome = computed(() => route.name === 'store-public')
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 
-// Diseño "Catálogo exclusivo": franja de anuncio sobre la barra y buscador
-// grande en el header (en Inicio y ficha lleva al catálogo con ?q=).
-const isCatalogTpl = computed(() => pageTemplate.value === 'catalog')
-const showHeaderSearch = computed(() => isCatalogTpl.value && showCatalog.value && !isCatalog.value)
-const headerQuery = ref('')
-function submitHeaderSearch() {
-  const q = headerQuery.value.trim()
-  router.push({ path: catalogTo.value.path, query: q ? { q } : {} })
-  headerQuery.value = ''
-}
-const announceText = computed(() => (custom.value.whatsapp
-  ? `Consultanos por WhatsApp · ${shopName.value}`
-  : `Catálogo exclusivo de ${shopName.value}${location.value ? ` · ${location.value}` : ''}`))
-
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
 const progress = ref(0)
@@ -137,11 +122,12 @@ onMounted(async () => {
     store.value = await storesApi.publicStore(slug.value)
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
-    // Fuente propia de la plantilla (titulares): serif de revista en
-    // 'editorial', condensada de letrero en 'perspective'. Misma carga
-    // on-demand que name_font; el resto del texto sigue con la fuente elegida.
-    const TEMPLATE_FONTS = { editorial: 'playfair-display', perspective: 'oswald' }
-    ensureStoreFont(TEMPLATE_FONTS[pageTemplate.value])
+    // Fuentes propias de la plantilla (titulares): serif de pasarela en
+    // 'atelier', condensada de letrero en 'perspective' y peso pesado de
+    // streetwear en 'street'. Misma carga on-demand que name_font; el resto
+    // del texto sigue con la fuente elegida por el dueño.
+    const TEMPLATE_FONTS = { atelier: ['fraunces'], perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'] }
+    TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'
     errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'
@@ -158,9 +144,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
-    <div v-if="status === 'success' && isCatalogTpl" class="sp-cx-announce">
-      <div class="sp-container"><AppIcon name="sparkles" :size="13" /> {{ announceText }}</div>
-    </div>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
@@ -188,11 +171,6 @@ onBeforeUnmount(() => {
           <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
           <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
         </nav>
-        <form v-if="showHeaderSearch" class="sp-search sp-search-top sp-cx-search" role="search" @submit.prevent="submitHeaderSearch">
-          <AppIcon name="search" :size="16" aria-hidden="true" />
-          <input v-model="headerQuery" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
-          <button type="submit" class="sp-cx-search-btn">Buscar</button>
-        </form>
         <label v-if="isCatalog" class="sp-search sp-search-top">
           <AppIcon name="search" :size="16" aria-hidden="true" />
           <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''" />

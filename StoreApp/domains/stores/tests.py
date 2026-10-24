@@ -222,12 +222,12 @@ class StoreCoverGatingTests(TestCase):
         response    =   self._client(premium = True).post(f'{STORES_URL}customization/cover/', {}, format = 'multipart')
         self.assertEqual(response.status_code, 400)
 
-    def test_catalog_template_discarded_without_premium(self):
-        response    =   self._client(premium = False).patch(f'{STORES_URL}customization/', {'template': 'catalog'}, format = 'json')
+    def test_premium_template_discarded_without_premium(self):
+        response    =   self._client(premium = False).patch(f'{STORES_URL}customization/', {'template': 'atelier'}, format = 'json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['customization']['template'], 'classic')
 
-    def test_catalog_template_saved_with_premium(self):
-        response    =   self._client(premium = True).patch(f'{STORES_URL}customization/', {'template': 'catalog'}, format = 'json')
-        self.assertEqual(response.data['customization']['template'], 'catalog')
+    def test_premium_template_saved_with_premium(self):
+        response    =   self._client(premium = True).patch(f'{STORES_URL}customization/', {'template': 'street'}, format = 'json')
+        self.assertEqual(response.data['customization']['template'], 'street')
         self.assertIn('cover', response.data['customization'])

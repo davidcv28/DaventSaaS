@@ -311,16 +311,16 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
-// 'classic' es el diseño base; 'editorial', 'perspective', 'promo' y 'catalog'
+// 'classic' es el diseño base; 'perspective', 'promo', 'atelier' y 'street'
 // se habilitan con el beneficio has_design_advanced (Plan premium). El frontend
 // fuerza 'classic' cuando la tienda no tiene ese beneficio aunque haya otro
 // valor guardado.
 export const STORE_TEMPLATES = {
   classic:   { label: 'Clásico',    desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
-  editorial: { label: 'Editorial',  desc: 'Revista de papel: serif de tapa, filetes finos, índice numerado y marca enmarcada.' },
   perspective: { label: 'Perspectiva', desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
   promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
-  catalog:   { label: 'Catálogo exclusivo', desc: 'Tienda estilo marketplace: buscador grande, categorías en tiles, novedades en vitrina, filtros fijos y barra de confianza.' }
+  atelier:   { label: 'Atelier',    desc: 'Alta costura digital: serif de pasarela, portada tipo campaña enmarcada, índice numerado y fichas minimalistas.' },
+  street:    { label: 'Urbano',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' }
 }
 
 export function storeTemplate(value) {
@@ -351,7 +351,7 @@ export const STORE_FONTS = {
   'playfair-display': { label: 'Playfair Display', family: "'Playfair Display', Georgia, serif",  google: 'Playfair+Display:wght@400..800' },
   'merriweather':     { label: 'Merriweather',     family: "'Merriweather', Georgia, serif",      google: 'Merriweather:wght@400..800' },
   'lora':             { label: 'Lora',             family: "'Lora', Georgia, serif",              google: 'Lora:wght@400..700' },
-  'fraunces':         { label: 'Fraunces',         family: "'Fraunces', Georgia, serif",          google: 'Fraunces:wght@400..800' },
+  'fraunces':         { label: 'Fraunces',         family: "'Fraunces', Georgia, serif",          google: 'Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900' },
   'cinzel':           { label: 'Cinzel',           family: "'Cinzel', Georgia, serif",            google: 'Cinzel:wght@400..800' },
   'pacifico':         { label: 'Pacifico',         family: "'Pacifico', cursive",                 google: 'Pacifico' },
   'dancing-script':   { label: 'Dancing Script',   family: "'Dancing Script', cursive",           google: 'Dancing+Script:wght@400..700' },

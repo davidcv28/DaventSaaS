@@ -99,10 +99,10 @@ class StoreCustomization(models.Model):
     #además lo fuerza a 'classic' si la tienda pierde el plan premium.
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
-        ('editorial',        'Editorial'),
         ('perspective',      'Perspectiva'),
         ('promo',            'Publicidad'),
-        ('catalog',          'Catálogo exclusivo'),
+        ('atelier',          'Atelier'),
+        ('street',           'Urbano'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

@@ -15,7 +15,9 @@ import { vReveal } from '../directives/reveal.js'
 // (inject 'storePage'); el buscador del header y el burger comparten el
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
-const { slug, ui, custom, hasDesignAdvanced, shopName } = ctx
+const { slug, ui, custom, hasDesignAdvanced, shopName, pageTemplate } = ctx
+// Diseño activo ('atelier'/'street' suman decor propia a la cabecera).
+const tpl = pageTemplate
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const route = useRoute()
 const router = useRouter()
@@ -252,6 +254,11 @@ onBeforeUnmount(() => {
       <span class="sp-float f1"><AppIcon name="package" :size="24" /></span>
       <span class="sp-float f3"><AppIcon name="tag" :size="22" /></span>
       <span class="sp-float f4"><AppIcon name="search" :size="20" /></span>
+      <template v-if="tpl === 'street'">
+        <span class="sp-st-ghost">Catálogo</span>
+        <span class="sp-st-barcode"><i></i><em>{{ shopName }}</em></span>
+      </template>
+      <span v-else-if="tpl === 'atelier'" class="sp-at-letter">{{ shopName.slice(0, 1).toUpperCase() }}</span>
     </div>
     <div class="sp-container sp-cat-hero-inner">
       <nav v-reveal class="sp-crumbs" aria-label="Ruta">
