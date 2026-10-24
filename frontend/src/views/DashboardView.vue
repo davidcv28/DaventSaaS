@@ -824,13 +824,6 @@ async function saveBot() {
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [] })
 const designTouched = reactive({})
 const designBusy = ref(false)
-const designTab = ref('content')
-const designTabs = [
-  { id: 'content', label: 'Contenido', icon: 'pencil' },
-  { id: 'look', label: 'Apariencia', icon: 'palette' },
-  { id: 'images', label: 'Imágenes', icon: 'images' },
-  { id: 'sections', label: 'Secciones', icon: 'layout-grid' }
-]
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
@@ -2075,14 +2068,8 @@ async function changePassword() {
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
       <template v-if="canCustomize">
-        <div class="dsg-layout">
-          <div class="dsg-main">
-          <nav class="dsg-tabs" role="tablist" aria-label="Opciones de diseño">
-            <button v-for="t in designTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
-              <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
-            </button>
-          </nav>
-          <div v-show="designTab === 'content'" class="card dsg-card">
+        <div class="grid-2">
+          <div class="card">
             <h3><AppIcon name="pencil" :size="18" /> Contenido</h3>
             <AppInput v-model="designForm.display_name" label="Nombre visible" name="design_display_name" :placeholder="business || 'Tu negocio'" hint="El nombre que aparece junto a tu logo. Vacío: se usa tu nombre de negocio." :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
             <AppInput v-model="designForm.headline" label="Titular" name="design_headline" placeholder="Ej. Indumentaria y calzado en Salta" hint="Frase corta bajo el nombre de tu negocio (opcional, hasta 140 caracteres)." :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
@@ -2108,9 +2095,6 @@ async function changePassword() {
             </div>
             <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
             <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
-          </div>
-          <div v-show="designTab === 'images'" class="card dsg-card">
-            <h3><AppIcon name="images" :size="18" /> Imágenes</h3>
             <div class="field" :class="{ locked: !canGallery }">
               <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Con plan activo</span></label>
               <div v-if="canGallery || galleryImages.length" class="carousel-box">
@@ -2154,9 +2138,6 @@ async function changePassword() {
               <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-decor-label" @change="onDecorPicked" />
               <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} imágenes ilustrativas que decoran tu página principal: una enmarca Sobre nosotros, otra abre una banda a lo ancho y el resto va bajo la portada. Gastan cupo de tu galería ({{ galleryUsed }}{{ galleryMax === null ? '' : ` de ${galleryMax}` }} usadas).</p>
             </div>
-          </div>
-          <div v-show="designTab === 'sections'" class="card dsg-card">
-            <h3><AppIcon name="layout-grid" :size="18" /> Secciones</h3>
             <div class="field">
               <label id="design-sections-label">Secciones de tu web</label>
               <div class="check-list" role="group" aria-labelledby="design-sections-label">
@@ -2191,7 +2172,7 @@ async function changePassword() {
               </div>
             </div>
           </div>
-          <div v-show="designTab === 'look'" class="card dsg-card">
+          <div class="card">
             <h3><AppIcon name="palette" :size="18" /> Apariencia</h3>
             <div class="field">
               <label id="design-logo-label">Logo</label>
@@ -2340,9 +2321,9 @@ async function changePassword() {
               <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
             </div>
           </div>
-          </div>
+        </div>
 
-        <aside class="card dsg-preview">
+        <div class="card">
           <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
           <div class="design-preview" :data-store-theme="designForm.theme" :data-store-template="designTemplate" :style="designPreviewVars">
             <div class="dp-nav" aria-hidden="true">
@@ -2381,7 +2362,6 @@ async function changePassword() {
             </div>
           </div>
           <AppButton :loading="designBusy" @click="saveDesign">Guardar diseño</AppButton>
-        </aside>
         </div>
       </template>
       <div v-else class="empty">
