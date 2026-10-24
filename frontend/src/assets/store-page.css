@@ -4429,7 +4429,7 @@ html { scroll-behavior: smooth; }
 
 /* --- Galería: mosaico de colección --- */
 .store-page[data-store-template='cobre'] .sp-gallery-grid {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
   background: transparent; border: 0;
 }
 .store-page[data-store-template='cobre'] .sp-gallery-item {
@@ -4603,6 +4603,8 @@ html { scroll-behavior: smooth; }
   background: var(--cb-stone); box-shadow: none; font-size: 15px;
 }
 .store-page[data-store-template='cobre'][data-store-theme='dark'] .sp-input { background: var(--cb-tile); }
+.store-page[data-store-template='cobre'] .sp-input-wrap .sp-input { padding-left: 44px; }
+.store-page[data-store-template='cobre'] .sp-input-wrap > svg { left: 15px; }
 .store-page[data-store-template='cobre'] .sp-input:focus {
   background: var(--cb-stone); box-shadow: none; border-color: var(--store-accent);
 }
