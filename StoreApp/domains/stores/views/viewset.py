@@ -1,3 +1,4 @@
+import logging
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -37,6 +38,7 @@ Viewsets del dominio Stores.
 #request, así el resto del formulario (contenido, logo y tema) se guarda
 #igual y los valores ya guardados quedan intactos. Las plantillas se
 #validan aparte, por nivel de plan (allowed_templates_of del servicio).
+logger                  =   logging.getLogger(__name__)
 DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
@@ -63,7 +65,39 @@ def _price_bound(raw):
         value   =   Decimal(str(raw).strip())
     except (InvalidOperation, TypeError, ValueError):
         return None
-    return value if value.is_finite() and value >= 0 else None
+    if not value.is_finite() or value < 0:
+        return None
+    #Sin tope, un bound astronómico (p.ej. '1e999') desborda la columna
+    #numeric(12,2) y devuelve un 500 público. Se clampea al máximo del
+    #campo: gte deja el resultado vacío y lte lo deja completo — la
+    #semántica del filtro se conserva sin romper la query.
+    return min(value, Decimal('9999999999.99'))
+
+def _apply_order(queryset, order):
+    """
+    Reasigna `position` según la lista de ids recibida. Las imágenes que
+    el payload no menciona conservan su orden relativo y van al final —
+    sin esto quedaban pisando posiciones ya asignadas (orden duplicado
+    en el carrusel/galería pública). Los ids repetidos del payload se
+    ignoran (moverlos dos veces también dejaba el orden inconsistente).
+    """
+    images      =   {image.id: image for image in queryset}
+    seen        =   set()
+    position    =   0
+    for image_id in order:
+        image   =   images.get(image_id)
+        if image is None or image.id in seen:
+            continue
+        seen.add(image.id)
+        if image.position != position:
+            image.position  =   position
+            image.save(update_fields = ['position'])
+        position    +=  1
+    for image in sorted((i for i in images.values() if i.id not in seen), key = lambda i: (i.position, i.id)):
+        if image.position != position:
+            image.position  =   position
+            image.save(update_fields = ['position'])
+        position    +=  1
 #=========================================
 # CONTACT THROTTLE (antispam del formulario público, rate en settings)
 #=========================================
@@ -117,6 +151,7 @@ class StoreViewSet(StoreBaseViewSet):
         store.blocked_reason    =   reason
         store.blocked_at        =   timezone.now()
         store.save(update_fields = ['is_blocked', 'blocked_reason', 'blocked_at'])
+        logger.warning('Web bloqueada: slug=%s admin=%s reason=%s', store.slug, request.user.pk, reason or '-')
         return Response(
             {
                 'Exito' : 'La web se bloqueó correctamente',
@@ -132,6 +167,7 @@ class StoreViewSet(StoreBaseViewSet):
         store.blocked_reason    =   ''
         store.blocked_at        =   None
         store.save(update_fields = ['is_blocked', 'blocked_reason', 'blocked_at'])
+        logger.info('Web desbloqueada: slug=%s admin=%s', store.slug, request.user.pk)
         return Response(
             {
                 'Exito' : 'La web se desbloqueó correctamente',
@@ -458,16 +494,7 @@ class StoreViewSet(StoreBaseViewSet):
         order           =   request.data.get('order')
         if not isinstance(order, list):
             return Response({'order': 'Enviá la lista de ids en el nuevo orden.'}, status = status.HTTP_400_BAD_REQUEST)
-        images          =   {image.id: image for image in store.carousel_images.all()}
-        position        =   0
-        for image_id in order:
-            image       =   images.get(image_id)
-            if image is None:
-                continue
-            if image.position != position:
-                image.position  =   position
-                image.save(update_fields = ['position'])
-            position    +=  1
+        _apply_order(store.carousel_images.all(), order)
         return Response({'Exito': 'El orden del carrusel se actualizó'}, status = status.HTTP_200_OK)
     #=========================================
     # GALLERY (sección Galería de la web, tope max_gallery_images por plan)
@@ -527,14 +554,5 @@ class StoreViewSet(StoreBaseViewSet):
         order           =   request.data.get('order')
         if not isinstance(order, list):
             return Response({'order': 'Enviá la lista de ids en el nuevo orden.'}, status = status.HTTP_400_BAD_REQUEST)
-        images          =   {image.id: image for image in store.gallery_images.all()}
-        position        =   0
-        for image_id in order:
-            image       =   images.get(image_id)
-            if image is None:
-                continue
-            if image.position != position:
-                image.position  =   position
-                image.save(update_fields = ['position'])
-            position    +=  1
+        _apply_order(store.gallery_images.all(), order)
         return Response({'Exito': 'El orden de la galería se actualizó'}, status = status.HTTP_200_OK)

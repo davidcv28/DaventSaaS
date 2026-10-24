@@ -21,7 +21,10 @@ class SuscriptionPlanMixinValidator:
             queryset    =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
             errors.append('El nombre del plan ingresado ya existe')
-        if re.search(r'^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]', name_obj):
+        #El ^ anclado invertía el chequeo: rechazaba todo nombre que EMPIEZA
+        #con letra (o sea, cualquier nombre válido). Se buscan caracteres
+        #prohibidos (números/símbolos) en cualquier posición.
+        if re.search(r'[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]', name_obj):
             errors.append('En este campo no se admiten números ni caracteres especiales')
         if errors:
             raise serializers.ValidationError(errors)

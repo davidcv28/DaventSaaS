@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db import IntegrityError
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.services        import profile_has_benefit, allowed_templates_of, storage_payload
@@ -21,6 +22,12 @@ class StoreSerializer(StoreMixinValidator, StoreCreateMixin, serializers.ModelSe
     class Meta:
         model                   =   Store
         fields                  =   ['id', 'user', 'slug', 'is_published']
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            #El unique de slug/user le gana al pre-check en claims concurrentes.
+            raise serializers.ValidationError({'slug': 'Ese link ya está en uso. Elegí otro.'})
 #=========================================
 # STORE CAROUSEL IMAGE SERIALIZER (banners de la web pública)
 #=========================================

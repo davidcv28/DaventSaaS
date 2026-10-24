@@ -69,6 +69,17 @@ def _verify_mp_signature(request, resource_id) -> bool:
     v1              =   parts.get('v1')
     if not ts or not v1 or not x_request_id or not resource_id:
         return False
+    #Ventana de frescura: sin ella, una firma válida capturada (logs, proxy)
+    #rejugaba el mismo evento para siempre. La doc de MP muestra ts en
+    #segundos, pero hay despliegues en milisegundos: se aceptan ambos.
+    try:
+        ts_value    =   int(ts)
+    except (TypeError, ValueError):
+        return False
+    if ts_value > 100_000_000_000:          # > año 5138 en segundos -> ms
+        ts_value    =   ts_value / 1000
+    if abs(timezone.now().timestamp() - ts_value) > 600:
+        return False
     manifest        =   f'id:{resource_id};request-id:{x_request_id};ts:{ts};'
     expected        =   hmac.new(secret.encode(), manifest.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, v1)
@@ -92,6 +103,7 @@ class PaymentViewSet(PaymentBaseViewSet):
             if not was_approved:
                 UpdateRevenueRollupsQuery(instance)
                 IssueInvoiceQuery(instance)
+                logger.info('Pago aprobado manualmente: payment=%s admin=%s', instance.pk, request.user.pk)
         serializer  =   self.get_serializer(instance)
         return Response(serializer.data, status = status.HTTP_200_OK)
     #=========================================
@@ -122,8 +134,10 @@ class PaymentViewSet(PaymentBaseViewSet):
         suscription_id  =   request.data.get('suscription')
         plan_id         =   request.data.get('plan_suscription')
         if suscription_id:
-            suscription =   Suscription.objects.select_related('plan_suscription', 'user__user').filter(pk = suscription_id).first()
-            if not suscription:
+            #ids no numéricos devolvían ValueError -> 500: se parsean defensivo.
+            try:
+                suscription =   Suscription.objects.select_related('plan_suscription', 'user__user').get(pk = int(suscription_id))
+            except (Suscription.DoesNotExist, TypeError, ValueError):
                 raise serializers.ValidationError({'suscription': 'La suscripción ingresada no existe'})
             if suscription.user.user_id != request.user.id:
                 raise serializers.ValidationError({'suscription': 'La suscripción seleccionada no pertenece a tu usuario.'})
@@ -132,8 +146,9 @@ class PaymentViewSet(PaymentBaseViewSet):
         target_plan     =   None
         if plan_id:
             #Los planes de prueba (is_trial) no son pagables: solo se otorgan en el registro
-            target_plan =   SuscriptionPlan.objects.filter(pk = plan_id, is_trial = False).first()
-            if not target_plan:
+            try:
+                target_plan =   SuscriptionPlan.objects.get(pk = int(plan_id), is_trial = False)
+            except (SuscriptionPlan.DoesNotExist, TypeError, ValueError):
                 raise serializers.ValidationError({'plan_suscription': 'El plan seleccionado no está disponible'})
         if not suscription:
             if not target_plan:

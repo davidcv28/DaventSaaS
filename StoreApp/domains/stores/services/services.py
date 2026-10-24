@@ -22,15 +22,24 @@ def plan_benefits_of(profile):
     Beneficios del plan de la suscripción activa del perfil.
     Devuelve {} si no hay suscripción o está pendiente de pago:
     'limit' -> int (None = ilimitado) | 'flag' -> bool.
+
+    Se memoiza en la instancia: el serializer público lo llama ~5 veces
+    por request y cada llamada reconsultaba suscripción + beneficios
+    (los gating checks del mismo request comparten el resultado).
     """
+    cached  =   getattr(profile, '_plan_benefits_cache', None)
+    if cached is not None:
+        return cached
     suscription     =   getattr(profile, 'suscription', None)
     #grants_access() fuerza status + vigencia (end_date + gracia si hay débito automático)
     if suscription is None or not suscription.grants_access():
+        profile._plan_benefits_cache    =   {}
         return {}
     benefits        =   {}
     for plan_benefit in suscription.plan_suscription.benefits.select_related('benefit'):
         code                =   plan_benefit.benefit.code
         benefits[code]      =   plan_benefit.value if plan_benefit.benefit.kind == Benefit.LIMIT else plan_benefit.enabled
+    profile._plan_benefits_cache        =   benefits
     return benefits
 #=========================================
 # PROFILE HAS BENEFIT (flag o límite habilitado)
@@ -72,7 +81,10 @@ def record_store_visit(store, request):
     guardar su IP. El update con F() no pierde hits concurrentes.
     """
     today           =   timezone.localdate()
-    ip              =   (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[0].strip() or request.META.get('REMOTE_ADDR') or ''
+    #Último segmento de X-Forwarded-For: el proxy confiable (Render/CF)
+    #appendea la IP real del cliente al final — el primero es spoofeable
+    #por el propio visitante e inflaría el dedupe en su favor.
+    ip              =   (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[-1].strip() or request.META.get('REMOTE_ADDR') or ''
     ua              =   request.META.get('HTTP_USER_AGENT', '')[:200]
     key             =   'visit:%s:%s' % (store.pk, hashlib.sha256(f'{ip}|{ua}|{today}'.encode()).hexdigest()[:32])
     if not cache.add(key, 1, 86400):

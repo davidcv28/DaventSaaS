@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import action
@@ -106,13 +107,17 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
         denied  =   self._deny_without_catalog()
         if denied: return denied
         self._normalize_relations(request)
-        if not can_add_product(store):
-            limit   =   products_limit(store.user)
-            return Response(
-                {'detail': f'Tu plan admite hasta {limit} productos. Pasate a un plan superior para sumar más.'},
-                status = status.HTTP_403_FORBIDDEN,
-            )
-        response    =   super().create(request)
+        #El cupo se rechequea bajo lock de la fila de la tienda: dos creates
+        #concurrentes ya no pueden pasar ambos el límite max_products.
+        with transaction.atomic():
+            locked      =   type(store).objects.select_for_update().get(pk = store.pk)
+            if not can_add_product(locked):
+                limit   =   products_limit(locked.user)
+                return Response(
+                    {'detail': f'Tu plan admite hasta {limit} productos. Pasate a un plan superior para sumar más.'},
+                    status = status.HTTP_403_FORBIDDEN,
+                )
+            response    =   super().create(request)
         product     =   self._product_from_response(request, response)
         if product is not None:
             response.data['item']   =   ProductSerializerList(product).data

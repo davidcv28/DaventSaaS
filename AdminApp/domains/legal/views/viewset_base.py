@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 """
 
@@ -8,10 +9,20 @@ Creamos la base de los viewsets que utilizaremos del dominio Legal
 """
 
 #=========================================
+# CONTENT REPORT THROTTLE (denuncia pública -> email a legal: antispam)
+#=========================================
+class ContentReportRateThrottle(AnonRateThrottle):
+    #Cada create válido dispara un correo a LEGAL_REPORTS_EMAIL: sin scope
+    #propio quedaba limitado solo por el anon genérico (100/día) — vector
+    #de email-bombing al buzón legal. Scope 'content_report' en settings.
+    scope   =   'content_report'
+
+#=========================================
 # CONTENT REPORT BASE VIEWSET
 #=========================================
 class ContentReportBaseViewSet(viewsets.GenericViewSet):
     viewset_config  =   {}
+    throttle_classes =  [ContentReportRateThrottle]
     def get_action_key(self):
         if self.action == 'create':
             return 'create'
@@ -71,3 +82,7 @@ class ContentReportBaseViewSet(viewsets.GenericViewSet):
                 'Exito' :   self.viewset_config['update']['message']
             }, status = status.HTTP_200_OK
         )
+    def partial_update(self, request, pk = None):
+        #Sin este método el PATCH del panel admin devolvía 405: la gestión
+        #de denuncias solo respondía a PUT.
+        return self.update(request, pk)

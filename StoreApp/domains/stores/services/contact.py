@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import logging
 import random
 import time
@@ -53,7 +54,7 @@ def verify_captcha(slug : str, challenge_id : str, answer : str) -> bool:
         answer_int  =   int(str(answer).strip())
     except (TypeError, ValueError):
         return False
-    return payload.get('h') == _answer_hash(slug, answer_int)
+    return hmac.compare_digest(str(payload.get('h') or ''), _answer_hash(slug, answer_int))
 #=========================================
 # CONTACT MAIL
 #=========================================

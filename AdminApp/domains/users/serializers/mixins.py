@@ -24,7 +24,7 @@ Configuramos los mixins para el dominio users
 class UsersValidatorsMixins:
     def validate_username(self, value):
         username_val    =   value.strip()
-        queryset        =   User.objects.filter(username = username_val)
+        queryset        =   User.objects.filter(username__iexact = username_val)
         errors          =   []
         if self.instance:
             queryset    =   queryset.exclude(pk = self.instance.pk)
@@ -36,7 +36,7 @@ class UsersValidatorsMixins:
 
     def validate_email(self, value):
         email_val       =   value.strip()
-        queryset        =   User.objects.filter(email = email_val)
+        queryset        =   User.objects.filter(email__iexact = email_val)
         errors          =   []
         if self.instance:
             queryset    =   queryset.exclude(pk = self.instance.pk)

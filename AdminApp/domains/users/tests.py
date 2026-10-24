@@ -12,13 +12,16 @@ from unittest.mock import patch, Mock
 
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
+from django.core.cache import cache
 from django.test import TestCase
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.services.services import email_verification_token
 
@@ -37,9 +40,9 @@ VERIFY_PHONE_STATUS = '/api/verify-phone/status/'
 
 
 def _location():
-    province    =   Province.objects.create(name_province = 'Buenos Aires')
-    zipcode     =   ZipCode.objects.create(zipcode = '1702')
-    city        =   City.objects.create(name_city = 'Ciudadela', province = province, zipcode = zipcode)
+    province    =   Province.objects.get_or_create(name_province = 'Buenos Aires')[0]
+    zipcode     =   ZipCode.objects.get_or_create(zipcode = '1702')[0]
+    city        =   City.objects.get_or_create(name_city = 'Ciudadela', province = province, zipcode = zipcode)[0]
     return province, city
 
 
@@ -320,3 +323,182 @@ class PhoneVerificationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         profile.refresh_from_db()
         self.assertFalse(profile.phone_verified)
+
+
+class SessionCookieTests(TestCase):
+    """
+    Sesión web: el refresh viaja en cookie httpOnly scopeada a /api/token/
+    y el refresh por cookie exige CSRF de doble-submit. El flag "mantener
+    sesión" define si las cookies son persistentes o de sesión del browser.
+    """
+    LOGIN_URL   =   '/api/token/'
+    LOGOUT_URL  =   '/api/token/logout/'
+
+    def setUp(self):
+        #El throttle del login corre sobre el cache locmem compartido de
+        #toda la suite: sin limpiarlo, los logins de otros tests consumen
+        #el cupo por IP y el endpoint respondería 429.
+        cache.clear()
+
+    def _login(self, remember = None):
+        payload     =   {'username': 'cliente', 'password': STRONG_PASSWORD}
+        if remember is not None:
+            payload['remember'] =   remember
+        return self.client.post(self.LOGIN_URL, payload, format = 'json')
+
+    def test_login_sets_http_only_refresh_and_csrf_cookies(self):
+        _make_user()
+        response        =   self._login()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.json())
+        #El refresh jamás viaja en el body: solo cookie httpOnly (anti-XSS).
+        self.assertNotIn('refresh', response.json())
+        refresh         =   response.cookies.get('davent_refresh')
+        self.assertIsNotNone(refresh)
+        self.assertTrue(refresh['httponly'])
+        self.assertEqual(refresh['path'], '/api/token/')
+        self.assertIsNotNone(response.cookies.get('davent_csrf'))
+
+    def test_remember_true_makes_cookies_persistent(self):
+        _make_user()
+        response        =   self._login(remember = True)
+        refresh         =   response.cookies['davent_refresh']
+        self.assertTrue(int(refresh['max-age'] or 0) > 0)
+        self.assertEqual(response.cookies['davent_remember'].value, '1')
+
+    def test_remember_string_false_stays_session_cookie(self):
+        #Regresión de seguridad: bool('false') era True — un POST form-encoded
+        #con remember='false' convertía la sesión efímera en persistente.
+        _make_user()
+        response        =   self._login(remember = 'false')
+        refresh         =   response.cookies['davent_refresh']
+        self.assertFalse(refresh['max-age'])
+        self.assertIsNone(response.cookies.get('davent_remember'))
+
+    def test_login_failure_sets_no_cookies(self):
+        _make_user()
+        response        =   self.client.post(self.LOGIN_URL, {'username': 'cliente', 'password': 'clave-mala'}, format = 'json')
+        self.assertEqual(response.status_code, 401)
+        self.assertIsNone(response.cookies.get('davent_refresh'))
+
+    def test_cookie_refresh_requires_csrf(self):
+        #Sin X-CSRFToken el POST por cookie se rechaza (doble-submit).
+        _make_user()
+        self._login()
+        response        =   self.client.post(REFRESH_URL)
+        self.assertEqual(response.status_code, 403)
+
+    def test_cookie_refresh_with_csrf_returns_access(self):
+        _make_user()
+        login           =   self._login()
+        csrf            =   login.cookies['davent_csrf'].value
+        response        =   self.client.post(REFRESH_URL, HTTP_X_CSRFTOKEN = csrf)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.json())
+
+    def test_logout_blacklists_refresh_cookie(self):
+        _make_user()
+        login           =   self._login()
+        csrf            =   login.cookies['davent_csrf'].value
+        stale           =   login.cookies['davent_refresh'].value
+        out             =   self.client.post(self.LOGOUT_URL, HTTP_X_CSRFTOKEN = csrf)
+        self.assertEqual(out.status_code, 200)
+        #El refresh que viajaba en la cookie quedó en blacklist (replay: 401).
+        refresh         =   APIClient().post(REFRESH_URL, {'refresh': stale}, format = 'json')
+        self.assertEqual(refresh.status_code, 401)
+
+    def test_logout_without_cookie_is_idempotent(self):
+        response        =   self.client.post(self.LOGOUT_URL)
+        self.assertEqual(response.status_code, 200)
+
+
+class RegisterSecurityTests(TestCase):
+    """
+    Anti multi-cuenta del alta: solo anónimos, unicidad case-insensitive
+    de email/username y trial automático de un día.
+    """
+
+    def setUp(self):
+        #Throttle 'register' 10/h sobre cache compartido: reset por test.
+        cache.clear()
+
+    def _payload(self, **overrides):
+        province, city  =   _location()
+        payload         =   {
+            'username'          :   'nuevo.cliente',
+            'email'             :   'nuevo@gmail.com',
+            'password'          :   STRONG_PASSWORD,
+            'confirm_password'  :   STRONG_PASSWORD,
+            'first_name'        :   'Ana',
+            'last_name'         :   'Perez',
+            'tax_condition'     :   'CF',
+            'type_document'     :   'DNI',
+            'document'          :   '28123456',
+            'province'          :   province.pk,
+            'city'              :   city.pk,
+            'address'           :   'Calle 123',
+            'phone'             :   '+5491122334455',
+            'accept_terms'      :   True,
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_register_rejects_authenticated_user(self):
+        user, _         =   _make_user()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.post(REGISTER_URL, self._payload(), format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_register_rejects_case_variant_email(self):
+        #Regresión: la unicidad era case-sensitive — NUEVO@GMAIL.COM abría
+        #una segunda cuenta con el mismo correo (bypass anti multi-cuenta).
+        self.client.post(REGISTER_URL, self._payload(phone = '+5491100000001', document = '28000001'), format = 'json')
+        response        =   self.client.post(REGISTER_URL, self._payload(
+            email = 'NUEVO@GMAIL.COM', phone = '+5491100000002', document = '28000002'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_register_rejects_case_variant_username(self):
+        self.client.post(REGISTER_URL, self._payload(phone = '+5491100000001', document = '28000001'), format = 'json')
+        response        =   self.client.post(REGISTER_URL, self._payload(
+            username = 'NUEVO.CLIENTE', phone = '+5491100000002', document = '28000002'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_register_grants_one_day_trial(self):
+        trial           =   SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+        response        =   self.client.post(REGISTER_URL, self._payload(), format = 'json')
+        self.assertEqual(response.status_code, 201)
+        suscription     =   Suscription.objects.get(user__user__username = 'nuevo.cliente')
+        self.assertEqual(suscription.plan_suscription, trial)
+        self.assertTrue(suscription.grants_access())
+        self.assertLess((suscription.end_date - suscription.start_date).days, 2)
+
+
+class EmailVerificationTokenTests(TestCase):
+    """El link de verificación no debe romperse con el primer login."""
+
+    def test_verification_token_survives_first_login(self):
+        #Regresión: el hash incluía last_login — loguearse después del alta
+        #(antes de abrir el mail) invalidaba el link de verificación.
+        user, profile   =   _make_user(verified = False)
+        token           =   email_verification_token.make_token(user)
+        user.last_login =   timezone.now()
+        user.save(update_fields = ['last_login'])
+        uid             =   urlsafe_base64_encode(force_bytes(user.pk))
+        response        =   self.client.get(VERIFY_URL, {'uid': uid, 'token': token})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('status=ok', response['Location'])
+        profile.refresh_from_db()
+        self.assertTrue(profile.email_verified)
+
+
+class EmailUniquenessTests(TestCase):
+    """La unicidad del correo es case-insensitive también en el update."""
+
+    def test_user_update_rejects_case_variant_email(self):
+        _make_user()
+        user2, _        =   _make_user(username = 'otro', email = 'otro@gmail.com', document = '30999888')
+        client          =   APIClient()
+        client.force_authenticate(user = user2)
+        response        =   client.put(USER_UPDATE_URL, {'email': 'CLIENTE@GMAIL.COM'}, format = 'json')
+        self.assertEqual(response.status_code, 400)

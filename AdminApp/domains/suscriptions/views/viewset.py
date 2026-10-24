@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django.shortcuts import get_object_or_404
@@ -24,6 +25,7 @@ Creamos los viewsets correspondientes al dominio suscriptions
 #=========================================
 class SuscriptionViewSet(SuscriptionBaseViewSet):
     viewset_config  =   SuscriptionConfigs
+    logger          =   logging.getLogger(__name__)
 
     def get_permissions(self):
         #La asignación manual de planes es exclusiva del staff.
@@ -47,14 +49,20 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
             errors['plan_id']   =   'Indicá el plan.'
         if errors:
             return Response(errors, status = status.HTTP_400_BAD_REQUEST)
-        profile     =   UserProfile.objects.filter(user_id = user_id).select_related('user').first()
+        #ids no numéricos tiraban ValueError en el ORM -> 500 en un endpoint admin.
+        try:
+            user_pk     =   int(user_id)
+            plan_pk     =   int(plan_id)
+        except (TypeError, ValueError):
+            return Response({'detail': 'user_id y plan_id deben ser numéricos.'}, status = status.HTTP_400_BAD_REQUEST)
+        profile     =   UserProfile.objects.filter(user_id = user_pk).select_related('user').first()
         if profile is None:
             return Response(
                 {'user_id': 'El usuario no existe o todavía no completó su perfil.'},
                 status = status.HTTP_400_BAD_REQUEST,
             )
         #El plan de prueba (is_trial) no se puede reasignar: 404 como si no existiera
-        plan        =   get_object_or_404(SuscriptionPlan, pk = plan_id, is_trial = False)
+        plan        =   get_object_or_404(SuscriptionPlan, pk = plan_pk, is_trial = False)
         now         =   timezone.now()
         suscription =   Suscription.objects.filter(user = profile).first() or Suscription(user = profile)
         suscription.plan_suscription            =   plan
@@ -63,6 +71,7 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
         suscription.start_date                  =   now
         suscription.end_date                    =   now + timedelta(days = 30)
         suscription.save()
+        self.logger.info('Plan asignado manualmente: plan=%s target_user=%s admin=%s', plan.name, user_pk, request.user.pk)
         return Response(
             {
                 'Exito'         : f'Plan {plan.name} asignado a {profile.user.username} por 30 días.',

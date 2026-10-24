@@ -2,6 +2,8 @@ import uuid
 import boto3
 from botocore.config import Config as BotoConfig
 from decouple import config
+from django.db import transaction
+from StoreApp.domains.stores.models import Store
 from .services import plan_benefits_of
 from .imaging  import normalize_image
 """
@@ -183,6 +185,13 @@ def _check_quota(store, incoming_bytes, replacing_bytes = 0):
         raise ValueError(f'Tu plan no tiene espacio suficiente ({restante} MB disponibles).')
     return new_used
 def _consume_quota(store, new_used):
+    """
+    Persiste storage_used_bytes. Debe llamarse sobre la instancia BLOQUEADA
+    (select_for_update) dentro del atomic del upload/delete: los cupos se
+    recalculan sobre el valor real de la fila y los commits quedan
+    serializados por tienda — dos requests concurrentes ya no pueden
+    leer el mismo storage_used_bytes y pisarse el update.
+    """
     store.storage_used_bytes    =   max(0, new_used)
     store.save(update_fields = ['storage_used_bytes'])
 #=========================================
@@ -224,27 +233,52 @@ def upload_logo(customization, upload):
     store       =   customization.store
     processed   =   normalize_image(upload, 'logo')
     size        =   len(processed[0])
+    #Fast path: evita subir el objeto cuando el cupo claramente no da.
     _check_image_slot(store, is_new = not customization.logo_key)
-    new_used    =   _check_quota(store, size, replacing_bytes = customization.logo_size)
+    _check_quota(store, size, replacing_bytes = customization.logo_size)
     key         =   _put_object(store, 'logo', upload, processed)
-    old_key     =   customization.logo_key
-    customization.logo_key      =   key
-    customization.logo_size     =   size
-    customization.save(update_fields = ['logo_key', 'logo_size', 'updated_at'])
-    _consume_quota(store, new_used)
+    try:
+        with transaction.atomic():
+            #Los cupos se rechequean bajo lock de la fila de la tienda:
+            #cierra la carrera check->put->consume entre uploads concurrentes.
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            locked_cust =   locked.customization
+            _check_image_slot(locked, is_new = not locked_cust.logo_key)
+            new_used    =   _check_quota(locked, size, replacing_bytes = locked_cust.logo_size)
+            old_key     =   locked_cust.logo_key
+            locked_cust.logo_key      =   key
+            locked_cust.logo_size     =   size
+            locked_cust.save(update_fields = ['logo_key', 'logo_size', 'updated_at'])
+            _consume_quota(locked, new_used)
+    except ValueError:
+        #El objeto ya subido quedaría huérfano: se borra antes de propagar.
+        _delete_object(key)
+        raise
+    customization.logo_key          =   key
+    customization.logo_size         =   size
+    store.storage_used_bytes        =   locked.storage_used_bytes
     if old_key:
         _delete_object(old_key)
     return customization
 def delete_logo(customization):
     """Borra el logo de R2 y libera la cuota."""
     store       =   customization.store
-    if customization.logo_key:
-        _delete_object(customization.logo_key)
-    freed                       =   customization.logo_size
-    customization.logo_key      =   ''
-    customization.logo_size     =   0
-    customization.save(update_fields = ['logo_key', 'logo_size', 'updated_at'])
-    _consume_quota(store, store.storage_used_bytes - freed)
+    with transaction.atomic():
+        locked      =   Store.objects.select_for_update().get(pk = store.pk)
+        locked_cust =   locked.customization
+        #La key se toma de la fila bloqueada (no del objeto del caller):
+        #un reemplazo concurrente no puede hacernos borrar el logo nuevo.
+        old_key     =   locked_cust.logo_key
+        freed       =   locked_cust.logo_size
+        locked_cust.logo_key      =   ''
+        locked_cust.logo_size     =   0
+        locked_cust.save(update_fields = ['logo_key', 'logo_size', 'updated_at'])
+        _consume_quota(locked, locked.storage_used_bytes - freed)
+    if old_key:
+        _delete_object(old_key)
+    customization.logo_key          =   ''
+    customization.logo_size         =   0
+    store.storage_used_bytes        =   locked.storage_used_bytes
     return customization
 #=========================================
 # COVER UPLOAD / DELETE (imagen de portada de la web pública, premium)
@@ -262,27 +296,47 @@ def upload_cover(customization, upload):
     store       =   customization.store
     processed   =   normalize_image(upload, 'cover')
     size        =   len(processed[0])
+    #Fast path: evita subir el objeto cuando el cupo claramente no da.
     _check_image_slot(store, is_new = not customization.cover_key)
-    new_used    =   _check_quota(store, size, replacing_bytes = customization.cover_size)
+    _check_quota(store, size, replacing_bytes = customization.cover_size)
     key         =   _put_object(store, 'cover', upload, processed)
-    old_key     =   customization.cover_key
-    customization.cover_key     =   key
-    customization.cover_size    =   size
-    customization.save(update_fields = ['cover_key', 'cover_size', 'updated_at'])
-    _consume_quota(store, new_used)
+    try:
+        with transaction.atomic():
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            locked_cust =   locked.customization
+            _check_image_slot(locked, is_new = not locked_cust.cover_key)
+            new_used    =   _check_quota(locked, size, replacing_bytes = locked_cust.cover_size)
+            old_key     =   locked_cust.cover_key
+            locked_cust.cover_key     =   key
+            locked_cust.cover_size    =   size
+            locked_cust.save(update_fields = ['cover_key', 'cover_size', 'updated_at'])
+            _consume_quota(locked, new_used)
+    except ValueError:
+        _delete_object(key)
+        raise
+    customization.cover_key         =   key
+    customization.cover_size        =   size
+    store.storage_used_bytes        =   locked.storage_used_bytes
     if old_key:
         _delete_object(old_key)
     return customization
 def delete_cover(customization):
     """Borra la portada de R2 y libera la cuota."""
     store       =   customization.store
-    if customization.cover_key:
-        _delete_object(customization.cover_key)
-    freed                       =   customization.cover_size
-    customization.cover_key     =   ''
-    customization.cover_size    =   0
-    customization.save(update_fields = ['cover_key', 'cover_size', 'updated_at'])
-    _consume_quota(store, store.storage_used_bytes - freed)
+    with transaction.atomic():
+        locked      =   Store.objects.select_for_update().get(pk = store.pk)
+        locked_cust =   locked.customization
+        old_key     =   locked_cust.cover_key
+        freed       =   locked_cust.cover_size
+        locked_cust.cover_key     =   ''
+        locked_cust.cover_size    =   0
+        locked_cust.save(update_fields = ['cover_key', 'cover_size', 'updated_at'])
+        _consume_quota(locked, locked.storage_used_bytes - freed)
+    if old_key:
+        _delete_object(old_key)
+    customization.cover_key         =   ''
+    customization.cover_size        =   0
+    store.storage_used_bytes        =   locked.storage_used_bytes
     return customization
 #=========================================
 # CAROUSEL UPLOAD / DELETE (banners de la web pública)
@@ -308,25 +362,44 @@ def upload_carousel_image(store, upload):
         raise ValueError(f'El carrusel admite hasta {CAROUSEL_MAX_IMAGES} imágenes.')
     processed   =   normalize_image(upload, 'carousel')
     size        =   len(processed[0])
+    #Fast path: evita subir el objeto cuando el cupo claramente no da.
     _check_image_slot(store, is_new = True)
-    new_used    =   _check_quota(store, size)
+    _check_quota(store, size)
     key         =   _put_object(store, 'carousel', upload, processed)
-    last        =   store.carousel_images.order_by('-position').first()
-    image       =   StoreCarouselImage.objects.create(
-        store       =   store,
-        image_key   =   key,
-        image_size  =   size,
-        position    =   (last.position + 1) if last else 0,
-    )
-    _consume_quota(store, new_used)
+    try:
+        with transaction.atomic():
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            if locked.carousel_images.count() >= CAROUSEL_MAX_IMAGES:
+                raise ValueError(f'El carrusel admite hasta {CAROUSEL_MAX_IMAGES} imágenes.')
+            _check_image_slot(locked, is_new = True)
+            new_used    =   _check_quota(locked, size)
+            last        =   locked.carousel_images.order_by('-position').first()
+            image       =   StoreCarouselImage.objects.create(
+                store       =   locked,
+                image_key   =   key,
+                image_size  =   size,
+                position    =   (last.position + 1) if last else 0,
+            )
+            _consume_quota(locked, new_used)
+    except ValueError:
+        _delete_object(key)
+        raise
+    store.storage_used_bytes        =   locked.storage_used_bytes
     return image
 def delete_carousel_image(image):
     """Borra la imagen del carrusel en R2, libera cuota y la elimina."""
     store       =   image.store
-    _delete_object(image.image_key)
-    size        =   image.image_size
-    image.delete()
-    _consume_quota(store, store.storage_used_bytes - size)
+    with transaction.atomic():
+        locked      =   Store.objects.select_for_update().get(pk = store.pk)
+        locked_img  =   locked.carousel_images.filter(pk = image.pk).first()
+        if locked_img is None:
+            return
+        key         =   locked_img.image_key
+        size        =   locked_img.image_size
+        locked_img.delete()
+        _consume_quota(locked, locked.storage_used_bytes - size)
+    _delete_object(key)
+    store.storage_used_bytes        =   locked.storage_used_bytes
 #=========================================
 # GALLERY UPLOAD / DELETE (sección Galería de la web pública)
 #=========================================
@@ -348,6 +421,41 @@ def upload_gallery_image(store, upload, kind = 'gallery'):
     error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
     if error:
         raise ValueError(error)
+    #Fast path: evita subir el objeto cuando el cupo claramente no da.
+    _check_gallery_slot(store, kind)
+    processed   =   normalize_image(upload, 'decor' if kind == StoreGalleryImage.KIND_DECOR else 'gallery')
+    size        =   len(processed[0])
+    _check_image_slot(store, is_new = True)
+    _check_quota(store, size)
+    key         =   _put_object(store, 'decor' if kind == StoreGalleryImage.KIND_DECOR else 'gallery', upload, processed)
+    try:
+        with transaction.atomic():
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            _check_gallery_slot(locked, kind)
+            _check_image_slot(locked, is_new = True)
+            new_used    =   _check_quota(locked, size)
+            last        =   locked.gallery_images.filter(kind = kind).order_by('-position').first()
+            image       =   StoreGalleryImage.objects.create(
+                store       =   locked,
+                kind        =   kind,
+                image_key   =   key,
+                image_size  =   size,
+                position    =   (last.position + 1) if last else 0,
+            )
+            _consume_quota(locked, new_used)
+    except ValueError:
+        _delete_object(key)
+        raise
+    store.storage_used_bytes        =   locked.storage_used_bytes
+    return image
+def _check_gallery_slot(store, kind):
+    """
+    Cupo de la galería/decoración bajo el plan vigente (beneficio
+    max_gallery_images + flag has_design_advanced para 'decor'). Se usa
+    como fast path antes de subir el objeto y otra vez bajo lock de la
+    fila — dos requests concurrentes no pueden pasar el tope.
+    """
+    from StoreApp.domains.stores.models import StoreGalleryImage
     limit       =   gallery_limit(store.user)
     if limit == 0:
         raise ValueError('La galería de imágenes está disponible desde el Plan estándar.')
@@ -358,28 +466,20 @@ def upload_gallery_image(store, upload, kind = 'gallery'):
             raise ValueError(f'Podés cargar hasta {DECOR_MAX_IMAGES} imágenes decorativas.')
     if limit is not None and store.gallery_images.count() >= limit:
         raise ValueError(f'Tu plan admite hasta {limit} imágenes entre galería y decoración. Pasá a un plan superior para sumar más.')
-    processed   =   normalize_image(upload, 'decor' if kind == StoreGalleryImage.KIND_DECOR else 'gallery')
-    size        =   len(processed[0])
-    _check_image_slot(store, is_new = True)
-    new_used    =   _check_quota(store, size)
-    key         =   _put_object(store, 'decor' if kind == StoreGalleryImage.KIND_DECOR else 'gallery', upload, processed)
-    last        =   store.gallery_images.filter(kind = kind).order_by('-position').first()
-    image       =   StoreGalleryImage.objects.create(
-        store       =   store,
-        kind        =   kind,
-        image_key   =   key,
-        image_size  =   size,
-        position    =   (last.position + 1) if last else 0,
-    )
-    _consume_quota(store, new_used)
-    return image
 def delete_gallery_image(image):
     """Borra la imagen de la galería en R2, libera cuota y la elimina."""
     store       =   image.store
-    _delete_object(image.image_key)
-    size        =   image.image_size
-    image.delete()
-    _consume_quota(store, store.storage_used_bytes - size)
+    with transaction.atomic():
+        locked      =   Store.objects.select_for_update().get(pk = store.pk)
+        locked_img  =   locked.gallery_images.filter(pk = image.pk).first()
+        if locked_img is None:
+            return
+        key         =   locked_img.image_key
+        size        =   locked_img.image_size
+        locked_img.delete()
+        _consume_quota(locked, locked.storage_used_bytes - size)
+    _delete_object(key)
+    store.storage_used_bytes        =   locked.storage_used_bytes
 #=========================================
 # PRODUCT IMAGE UPLOAD / DELETE (catálogo)
 #=========================================
@@ -396,25 +496,49 @@ def upload_product_image(product, upload):
     store       =   product.store
     processed   =   normalize_image(upload, 'product')
     size        =   len(processed[0])
+    #Fast path: evita subir el objeto cuando el cupo claramente no da.
     _check_image_slot(store, is_new = not product.image_key)
-    new_used    =   _check_quota(store, size, replacing_bytes = product.image_size)
+    _check_quota(store, size, replacing_bytes = product.image_size)
     key         =   _put_object(store, 'products', upload, processed)
-    old_key     =   product.image_key
-    product.image_key   =   key
-    product.image_size  =   size
-    product.save(update_fields = ['image_key', 'image_size'])
-    _consume_quota(store, new_used)
+    try:
+        with transaction.atomic():
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            locked_prod =   locked.products.filter(pk = product.pk).first()
+            if locked_prod is None:
+                raise ValueError('El producto ya no existe.')
+            _check_image_slot(locked, is_new = not locked_prod.image_key)
+            new_used    =   _check_quota(locked, size, replacing_bytes = locked_prod.image_size)
+            old_key     =   locked_prod.image_key
+            locked_prod.image_key   =   key
+            locked_prod.image_size  =   size
+            locked_prod.save(update_fields = ['image_key', 'image_size'])
+            _consume_quota(locked, new_used)
+    except ValueError:
+        _delete_object(key)
+        raise
+    product.image_key               =   key
+    product.image_size              =   size
+    store.storage_used_bytes        =   locked.storage_used_bytes
     if old_key:
         _delete_object(old_key)
     return product
 def delete_product_image(product):
     """Borra la imagen del producto en R2 y libera la cuota."""
     store       =   product.store
-    if product.image_key:
-        _delete_object(product.image_key)
-    freed       =   product.image_size
-    product.image_key   =   ''
-    product.image_size  =   0
-    product.save(update_fields = ['image_key', 'image_size'])
-    _consume_quota(store, store.storage_used_bytes - freed)
+    with transaction.atomic():
+        locked      =   Store.objects.select_for_update().get(pk = store.pk)
+        locked_prod =   locked.products.filter(pk = product.pk).first()
+        if locked_prod is None:
+            return
+        old_key     =   locked_prod.image_key
+        freed       =   locked_prod.image_size
+        locked_prod.image_key   =   ''
+        locked_prod.image_size  =   0
+        locked_prod.save(update_fields = ['image_key', 'image_size'])
+        _consume_quota(locked, locked.storage_used_bytes - freed)
+    if old_key:
+        _delete_object(old_key)
+    product.image_key               =   ''
+    product.image_size              =   0
+    store.storage_used_bytes        =   locked.storage_used_bytes
     return product

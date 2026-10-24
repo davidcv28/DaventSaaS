@@ -4,6 +4,8 @@ from decimal import Decimal
 from datetime import timedelta
 from decouple import config
 from django.db import transaction, IntegrityError
+from django.db.models import F
+from django.db.models.functions import Greatest
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from rest_framework import serializers
@@ -49,11 +51,21 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
     #IDEMPOTENCIA: el id de pago de Mercado Pago es único
     payment_exists      =   Payment.objects.select_related('suscription__pending_plan_suscription').filter(external_reference = str(payment_id)).first()
     if payment_exists:
+        #El pago ya registrado pertenece a otra suscripción: no se devuelve
+        #el objeto ajeno (IDOR mínimo) ni se le aplica el plan pendiente.
+        if payment_exists.suscription_id != suscription.id:
+            raise serializers.ValidationError({'payment_id': 'El pago no corresponde a esta suscripción.'})
         if payment_exists.status == Payment.Status.APPROVED:
             ApplyPendingPlanQuery(payment_exists.suscription)
         return payment_exists
     if mp_payment is None:
         mp_payment      =   GetMercadoPagoPayment(payment_id)
+    #OWNERSHIP DEL COBRO: la preferencia se crea con external_reference = id de
+    #la suscripción. Sin este chequeo, un payment_id ajeno (el monto solo se
+    #compara con el precio del plan) podía registrarse en la suscripción de
+    #otro usuario — misma regla que aplica PaymentWebhookQuery.
+    if str(mp_payment.get('external_reference') or '') != str(suscription.id):
+        raise serializers.ValidationError({'payment_id': 'El pago no corresponde a esta suscripción.'})
     #VERIFICACIÓN DE MONTO: debe coincidir con el precio del plan (pendiente si existe)
     amount              =   Decimal(str(mp_payment.get('transaction_amount', '0')))
     plan_price          =   (suscription.pending_plan_suscription or suscription.plan_suscription).price
@@ -131,14 +143,21 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
     effective           =   payment.paid_at or payment.created_at or timezone.now()
     day                 =   timezone.localtime(effective).date() if timezone.is_aware(effective) else effective.date()
     amount              =   payment.amount * sign
+    #Updates atómicos con F(): el read-modify-write anterior perdía pagos
+    #concurrentes del mismo día/mes (típico con webhooks y confirmaciones
+    #en paralelo). Greatest evita que un refund deje el contador negativo.
     daily, _            =   DailyRevenue.objects.get_or_create(date = day)
-    daily.total_amount      =   (daily.total_amount or 0) + amount
-    daily.payments_count    =   max(0, (daily.payments_count or 0) + sign)
-    daily.save(update_fields = ['total_amount', 'payments_count', 'updated_at'])
+    DailyRevenue.objects.filter(pk = daily.pk).update(
+        total_amount    =   F('total_amount') + amount,
+        payments_count  =   Greatest(F('payments_count') + sign, 0),
+        updated_at      =   timezone.now(),
+    )
     monthly, _          =   MonthlyRevenue.objects.get_or_create(year = day.year, month = day.month)
-    monthly.total_amount    =   (monthly.total_amount or 0) + amount
-    monthly.payments_count  =   max(0, (monthly.payments_count or 0) + sign)
-    monthly.save(update_fields = ['total_amount', 'payments_count', 'updated_at'])
+    MonthlyRevenue.objects.filter(pk = monthly.pk).update(
+        total_amount    =   F('total_amount') + amount,
+        payments_count  =   Greatest(F('payments_count') + sign, 0),
+        updated_at      =   timezone.now(),
+    )
 
 #APPLY PENDING PLAN QUERY (establece el plan una vez acreditado el pago)
 def ApplyPendingPlanQuery(suscription, renew = False):

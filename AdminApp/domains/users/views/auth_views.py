@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import timedelta
 
@@ -39,6 +40,23 @@ COOKIE_PATH    = '/api/token/'
 # persistentes; sin el flag la cookie de refresh es de sesión del browser
 # (expira el JWT normal de 7d, pero al cerrar el navegador ya no viaja).
 REMEMBER_LIFETIME = timedelta(days = 30)
+
+logger = logging.getLogger(__name__)
+
+
+def _remember_requested(request) -> bool:
+    """
+    Parseo estricto del flag "mantener sesión": bool(request.data.get(...))
+    trataba el string 'false' de un POST form-encoded como truthy y
+    convertía una sesión efímera en persistente. Solo cuentan como sí
+    el booleano JSON o sus equivalentes textuales.
+    """
+    return request.data.get('remember') in (True, 1, '1', 'true', 'True')
+
+
+def _client_ip(request) -> str:
+    forwarded     =   request.META.get('HTTP_X_FORWARDED_FOR') or ''
+    return forwarded.split(',')[-1].strip() or request.META.get('REMOTE_ADDR') or '-'
 
 class LoginRateThrottle(AnonRateThrottle):
     """
@@ -122,16 +140,20 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            refresh = response.data.pop('refresh', None)
-            if refresh:
-                remember    =   bool(request.data.get('remember'))
-                token       =   RefreshToken(refresh)
-                if remember:
-                    token.set_exp(lifetime = REMEMBER_LIFETIME)
-                    _set_remember_cookie(response)
-                _set_refresh_cookie(response, str(token), remember)
-                _set_csrf_cookie(response, remember)
+        if response.status_code != 200:
+            #Auditoría de fuerza bruta: nunca se loguea la contraseña.
+            logger.warning('Login rechazado (status=%s user=%s ip=%s)',
+                           response.status_code, request.data.get('username'), _client_ip(request))
+            return response
+        refresh = response.data.pop('refresh', None)
+        if refresh:
+            remember    =   _remember_requested(request)
+            token       =   RefreshToken(refresh)
+            if remember:
+                token.set_exp(lifetime = REMEMBER_LIFETIME)
+                _set_remember_cookie(response)
+            _set_refresh_cookie(response, str(token), remember)
+            _set_csrf_cookie(response, remember)
         return response
 
 

@@ -101,15 +101,18 @@ def spa(request):
     resp['Cache-Control'] = 'no-cache, must-revalidate'
     # CSP del SPA: recursos propios + Google Fonts (estilos on-demand del catálogo
     # de fuentes), iframe de Google Maps (mapa de ubicación), imágenes https (R2)
-    # y data: (favicon inline / QR). Los scripts son solo archivos del build.
+    # y data: (favicon inline / QR). Los scripts son solo archivos del build más
+    # los de Firebase Phone Auth (gstatic/recaptcha) — sin ellos la verificación
+    # de celular quedaba rota únicamente en el deploy empaquetado (en dev la CSP
+    # no aplica porque la SPA la sirve Vite).
     resp['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self'; "
+        "script-src 'self' https://www.gstatic.com https://www.google.com https://apis.google.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
-        "connect-src 'self'; "
-        "frame-src https://maps.google.com https://www.google.com; "
+        "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://www.google.com; "
+        "frame-src https://maps.google.com https://www.google.com https://recaptcha.google.com; "
         "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     )
     return resp

@@ -79,6 +79,9 @@ REST_FRAMEWORK = {
         'register': '10/hour',
         #Editor de fondo de imágenes de producto (inferencia en CPU, por usuario).
         'bg_removal': '60/hour',
+        #Denuncias públicas de contenido: cada POST válido envía un mail a
+        #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
+        'content_report': '5/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -301,4 +304,36 @@ INVOICE_ISSUER = {
     'tax_condition'  : config('ISSUER_TAX_CONDITION', default = 'MO'),
     'iibb'           : config('ISSUER_IIBB', default = ''),
     'activity_start' : config('ISSUER_ACTIVITY_START', default = ''),
+}
+
+# Logging: sin esta sección Django no tiene handlers configurados y los
+# logger.warning/exception del proyecto (webhooks de MP, fallos de email,
+# auditoría de seguridad) se perdían en producción. stdout lo captura
+# gunicorn/Docker/Render; LOG_LEVEL se ajusta por .env si hace falta.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'plain': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'plain',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': config('LOG_LEVEL', default = 'INFO'),
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
 }

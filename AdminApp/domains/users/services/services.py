@@ -10,11 +10,12 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
 from django.core.mail import EmailMultiAlternatives
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.html import escape
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework import serializers
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 logger          =   logging.getLogger(__name__)
@@ -49,6 +50,7 @@ def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
     #blacklist — una sesión robada no sobrevive al cambio de contraseña.
     for token in OutstandingToken.objects.filter(user = user):
         BlacklistedToken.objects.get_or_create(token = token)
+    logger.info('Cambio de contraseña: sesiones revocadas (user_id=%s)', user.pk)
     return user
 
 #PROFILE UPDATE QUERY
@@ -70,43 +72,49 @@ def UpdateProfileQuery(profile : UserProfile, validated_data : dict) -> UserProf
 #=================================
 
 def RegisterUserQuery(validated_data : dict) -> User:
-    with transaction.atomic():
-        data                =   validated_data.copy()
-        username            =   data.pop('username')
-        email               =   data.pop('email')
-        password            =   data.pop('password')
-        accept_terms        =   data.pop('accept_terms', False)
-        #USER REGISTER
-        new_user = User.objects.create_user(
-            username        =   username,
-            email           =   email,
-            password        =   password  
-        )
-        profile = UserProfile.objects.create(
-            user            =   new_user,
-            #Sellamos la aceptación de TyC: fecha y versión vigente al momento del alta
-            terms_accepted      =   bool(accept_terms),
-            terms_accepted_at   =   timezone.now() if accept_terms else None,
-            terms_version       =   TERMS_VERSION if accept_terms else None,
-            **data
-        )
-        #PLAN DE PRUEBA: toda cuenta nueva arranca con el plan trial (is_trial),
-        #vigente SuscriptionPlan.TRIAL_DAYS días. Al vencer pierde el acceso y no
-        #se puede reactivar: el plan no es seleccionable en ningún flujo.
-        trial_plan  =   SuscriptionPlan.objects.filter(is_trial = True).first()
-        if trial_plan:
-            now =   timezone.now()
-            Suscription.objects.create(
-                user                =   profile,
-                plan_suscription    =   trial_plan,
-                status              =   Suscription.STATUS_ACTIVE,
-                start_date          =   now,
-                end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
+    try:
+        with transaction.atomic():
+            data                =   validated_data.copy()
+            username            =   data.pop('username')
+            email               =   data.pop('email')
+            password            =   data.pop('password')
+            accept_terms        =   data.pop('accept_terms', False)
+            #USER REGISTER
+            new_user = User.objects.create_user(
+                username        =   username,
+                email           =   email,
+                password        =   password
             )
-        #VERIFICACIÓN DE EMAIL: se agenda post-commit — si la transacción
-        #rollbackea el alta no existió y el mail no debe salir igual.
-        transaction.on_commit(lambda : SendVerificationEmailQuery(new_user))
-        return new_user
+            profile = UserProfile.objects.create(
+                user            =   new_user,
+                #Sellamos la aceptación de TyC: fecha y versión vigente al momento del alta
+                terms_accepted      =   bool(accept_terms),
+                terms_accepted_at   =   timezone.now() if accept_terms else None,
+                terms_version       =   TERMS_VERSION if accept_terms else None,
+                **data
+            )
+            #PLAN DE PRUEBA: toda cuenta nueva arranca con el plan trial (is_trial),
+            #vigente SuscriptionPlan.TRIAL_DAYS días. Al vencer pierde el acceso y no
+            #se puede reactivar: el plan no es seleccionable en ningún flujo.
+            trial_plan  =   SuscriptionPlan.objects.filter(is_trial = True).first()
+            if trial_plan:
+                now =   timezone.now()
+                Suscription.objects.create(
+                    user                =   profile,
+                    plan_suscription    =   trial_plan,
+                    status              =   Suscription.STATUS_ACTIVE,
+                    start_date          =   now,
+                    end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
+                )
+            #VERIFICACIÓN DE EMAIL: se agenda post-commit — si la transacción
+            #rollbackea el alta no existió y el mail no debe salir igual.
+            transaction.on_commit(lambda : SendVerificationEmailQuery(new_user))
+            return new_user
+    except IntegrityError:
+        #La validación ya revisa duplicados, pero dos requests concurrentes
+        #pueden ganarle la carrera al pre-check: en vez de un 500, devolvemos
+        #un 400 genérico que el frontend puede mostrar.
+        raise serializers.ValidationError({'detail': 'Ya existe una cuenta con esos datos.'})
 #=================================
 # ACCOUNT MAIL / TOKEN HELPERS
 #=================================
@@ -120,7 +128,11 @@ class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
     def _make_hash_value(self, user, timestamp):
         profile     =   getattr(user, 'profile', None)
         verified    =   getattr(profile, 'email_verified', False)
-        return f'{user.pk}{user.password}{user.last_login}{timestamp}{verified}'
+        #last_login NO entra en el hash: el link se manda en el alta y el
+        #primer login del usuario no debe romperlo. Sí entran pk (uid),
+        #password (se invalida si cambia la clave) y email_verified
+        #(se autoinvalida al verificar).
+        return f'{user.pk}{user.password}{timestamp}{verified}'
 email_verification_token    =   EmailVerificationTokenGenerator()
 
 def _uid_token(user : User, generator) -> tuple:
@@ -223,6 +235,7 @@ def ConfirmPasswordResetQuery(user : User, new_password : str) -> User:
     #robo de sesión que motivó el reseteo se corta en todos los dispositivos.
     for token in OutstandingToken.objects.filter(user = user):
         BlacklistedToken.objects.get_or_create(token = token)
+    logger.info('Reset de contraseña confirmado: sesiones revocadas (user_id=%s)', user.pk)
     return user
 #=================================
 # EMAIL VERIFICATION QUERYS

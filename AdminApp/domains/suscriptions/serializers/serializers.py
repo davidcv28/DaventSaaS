@@ -3,6 +3,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from .config_fields import SuscriptionsPlanFields, SuscriptionsFields
 from .mixins        import SuscriptionPlanMixinValidator, SuscriptionCreateMixin
 from AdminApp.domains.suscriptions.models import SuscriptionPlan, Suscription
+from django.db import IntegrityError
 from django.utils import timezone
 
 """
@@ -51,7 +52,12 @@ class SuscriptionSerializer(SuscriptionCreateMixin, serializers.ModelSerializer)
         validated_data['status']                =   Suscription.STATUS_PENDING_PAYMENT
         validated_data['start_date']            =   now
         validated_data['end_date']              =   now
-        return super().create(validated_data)
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            #Doble POST concurrente: el unique de user le gana al pre-check
+            #del mixin — 400 en vez de 500.
+            raise serializers.ValidationError({'plan_suscription': 'Ya tienes una suscripción activa. Usa "Cambiar plan".'})
     def update(self, instance, validated_data):
         #SEGURIDAD: el plan NUNCA se cambia directo desde este endpoint —
         #eso otorgaba cualquier plan pago sin pasar por el cobro.
