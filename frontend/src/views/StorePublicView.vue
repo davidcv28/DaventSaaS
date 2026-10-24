@@ -716,9 +716,11 @@ onBeforeUnmount(() => {
     </div>
   </section>
 
-  <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->
+  <!-- ===== Sobre nosotros: contenido a la izquierda con la foto decorativa
+       al costado; la tarjeta de trayectoria/misión baja a una banda a todo
+       lo ancho para que no quede flotando contra el texto ===== -->
   <section v-if="hasAbout" id="nosotros" class="sp-about" :style="{ order: sectionPos.about }" aria-labelledby="sp-about-title">
-    <div class="sp-container sp-about-grid" :class="{ 'no-card': !hasAboutCard && !decorAbout }">
+    <div class="sp-container sp-about-grid" :class="{ 'no-side': !decorAbout }">
       <div v-reveal class="sp-about-info">
         <p class="sp-eyebrow">Conócenos</p>
         <h2 id="sp-about-title" class="sp-about-heading">
@@ -730,20 +732,20 @@ onBeforeUnmount(() => {
           <li v-for="s in aboutSpecialties" :key="s"><AppIcon name="check" :size="16" /> <span>{{ s }}</span></li>
         </ul>
       </div>
-      <div v-if="hasAboutCard || decorAbout" class="sp-about-side">
-        <figure v-if="decorAbout" v-reveal="140" class="sp-about-photo">
+      <div v-if="decorAbout" class="sp-about-side">
+        <figure v-reveal="140" class="sp-about-photo">
           <img :src="decorAbout.url" :alt="`Imagen de ${shopName}`" loading="lazy" />
         </figure>
-        <div v-if="hasAboutCard" v-reveal="140" class="sp-about-card">
-          <p v-if="custom.about_years" class="sp-about-years">
-            <strong>+{{ custom.about_years }}</strong>
-            <span>años de trayectoria</span>
-          </p>
-          <blockquote v-if="custom.about_mission" class="sp-about-mission">
-            <span class="sp-about-mission-label">Nuestra misión</span>
-            {{ custom.about_mission }}
-          </blockquote>
-        </div>
+      </div>
+      <div v-if="hasAboutCard" v-reveal="140" class="sp-about-card">
+        <p v-if="custom.about_years" class="sp-about-years">
+          <strong>+{{ custom.about_years }}</strong>
+          <span>años de trayectoria</span>
+        </p>
+        <blockquote v-if="custom.about_mission" class="sp-about-mission">
+          <span class="sp-about-mission-label">Nuestra misión</span>
+          {{ custom.about_mission }}
+        </blockquote>
       </div>
     </div>
   </section>
