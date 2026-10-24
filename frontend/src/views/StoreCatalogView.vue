@@ -7,6 +7,7 @@
 import { computed, inject, defineAsyncComponent } from 'vue'
 import CatalogClassic from './catalog/CatalogClassic.vue'
 import '../assets/store-catalog.css'
+import '../assets/store-catalog-responsive.css'
 
 const ctx = inject('storePage')
 const VARIANTS = {
