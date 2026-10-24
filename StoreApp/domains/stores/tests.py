@@ -93,6 +93,107 @@ class StoreCatalogToggleTests(TestCase):
         self.assertFalse(response.data['customization']['show_catalog'])
 
 
+class StoreCatalogFacetTests(TestCase):
+    """
+    Filtros por características del catálogo público (param ?feat= JSON
+    nombre → valores, estilo marketplace): OR dentro de un atributo, AND
+    entre atributos, y facetas nombre → valores con conteo calculadas sin
+    los filtros de características. El schema de la categoría activa ordena
+    sus atributos primero.
+    """
+
+    def _make_store(self):
+        from StoreApp.domains.catalog.models import Category, Product
+        _, profile      =   _make_user(verified = True)
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan test')
+        benefit         =   Benefit.objects.create(code = 'has_public_link', label = 'Link público', kind = Benefit.FLAG)
+        PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        category        =   Category.objects.create(store = store, name = 'Remeras', feature_schema = ['Talle', 'Color'])
+        Product.objects.create(store = store, category = category, name = 'Remera M roja', price = 100, features = {'Talle': 'M', 'Color': 'Rojo'})
+        Product.objects.create(store = store, category = category, name = 'Remera L azul', price = 120, features = {'Talle': 'L', 'Color': 'Azul'})
+        Product.objects.create(store = store, name = 'Gorra', price = 50, features = {'Material': 'Algodón'})
+        return store, category
+
+    def test_facets_list_feature_groups_with_counts(self):
+        self._make_store()
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/')
+        self.assertEqual(response.status_code, 200)
+        facets          =   {f['name']: f for f in response.data['facets']}
+        self.assertIn('Talle', facets)
+        self.assertEqual({v['value']: v['count'] for v in facets['Talle']['values']}, {'M': 1, 'L': 1})
+        self.assertIn('Material', facets)
+
+    def test_feature_filter_matches_exact_value(self):
+        self._make_store()
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/', {'feat': '{"Talle":["M"]}'})
+        names           =   [p['name'] for p in response.data['products']]
+        self.assertEqual(names, ['Remera M roja'])
+
+    def test_feature_filter_or_within_group(self):
+        self._make_store()
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/', {'feat': '{"Talle":["M","L"]}'})
+        names           =   sorted(p['name'] for p in response.data['products'])
+        self.assertEqual(names, ['Remera L azul', 'Remera M roja'])
+
+    def test_feature_filter_and_across_groups(self):
+        self._make_store()
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/', {'feat': '{"Talle":["M"],"Color":["Azul"]}'})
+        self.assertEqual(response.data['products'], [])
+
+    def test_feature_filter_combines_with_category(self):
+        _, category     =   self._make_store()
+        response        =   APIClient().get(
+            f'{STORES_URL}public/mi-tienda/catalog/',
+            {'category': category.id, 'feat': '{"Material":["Algodón"]}'},
+        )
+        self.assertEqual(response.data['products'], [])
+
+    def test_invalid_feat_is_ignored(self):
+        self._make_store()
+        for bad in ('{roto', '123', '"texto"', '{"Talle":"M"}', '{"":["x"]}'):
+            response    =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/', {'feat': bad})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.data['products']), 3, bad)
+
+    def test_facets_do_not_leak_other_stores(self):
+        from StoreApp.domains.catalog.models import Product
+        self._make_store()
+        city            =   City.objects.first()
+        other_user      =   User.objects.create_user(username = 'otro', email = 'otro@gmail.com', password = 'Xq7#mP2vL9bT')
+        other_profile   =   UserProfile.objects.create(
+            user = other_user, first_name = 'Bob', last_name = 'Rex',
+            document = '30999999', province = city.province, city = city, email_verified = True,
+        )
+        other_store     =   Store.objects.create(user = other_profile, slug = 'otra-tienda')
+        Product.objects.create(store = other_store, name = 'Ajeno', price = 10, features = {'Secreto': 'sí'})
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/')
+        names           =   [f['name'] for f in response.data['facets']]
+        self.assertNotIn('Secreto', names)
+        products        =   [p['name'] for p in response.data['products']]
+        self.assertNotIn('Ajeno', products)
+
+    def test_inactive_products_excluded_from_facets(self):
+        from StoreApp.domains.catalog.models import Product
+        store, _        =   self._make_store()
+        Product.objects.create(store = store, name = 'Oculto', price = 10, is_active = False, features = {'Talle': 'XXL'})
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/')
+        facets          =   {f['name']: f for f in response.data['facets']}
+        self.assertEqual({v['value'] for v in facets['Talle']['values']}, {'M', 'L'})
+
+    def test_active_category_schema_orders_facets_first(self):
+        _, category     =   self._make_store()
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/', {'category': category.id})
+        names           =   [f['name'] for f in response.data['facets']]
+        self.assertEqual(names[:2], ['Talle', 'Color'])
+
+
 class StoreListMineTests(TestCase):
     """
     El listado /stores/ de un staff trae todas las webs (panel admin); con

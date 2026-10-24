@@ -107,11 +107,12 @@ export const storesApi = {
     return data
   },
 
-  async publicCatalog(slug, { q = '', category = '', brand = '', min_price = '', max_price = '', sort = '' } = {}) {
+  async publicCatalog(slug, { q = '', category = '', brand = '', min_price = '', max_price = '', sort = '', feat = '' } = {}) {
     const { data } = await http.get(`/stores/public/${slug}/catalog/`, {
       params: {
         q: q || undefined, category: category || undefined, brand: brand || undefined,
-        min_price: min_price || undefined, max_price: max_price || undefined, sort: sort || undefined
+        min_price: min_price || undefined, max_price: max_price || undefined, sort: sort || undefined,
+        feat: feat || undefined
       }
     })
     return data

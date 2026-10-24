@@ -64,6 +64,82 @@ def _price_bound(raw):
     except (InvalidOperation, TypeError, ValueError):
         return None
     return value if value.is_finite() and value >= 0 else None
+#Límites del param ?feat= del catálogo público (JSON {"Talle":["M","L"]}):
+#espejo de FeatureLimits del dominio catalog — todo lo que se pase se ignora.
+FEATURE_FILTER_MAX_GROUPS   =   15   # atributos distintos por request
+FEATURE_FILTER_MAX_VALUES   =   20   # valores por atributo (OR dentro del grupo)
+FEATURE_FILTER_NAME_MAX     =   40
+FEATURE_FILTER_VALUE_MAX    =   120
+FACET_MAX_GROUPS            =   15   # grupos que viaja la respuesta
+FACET_MAX_VALUES            =   10   # valores por grupo
+def _feature_filters(raw):
+    """
+    Parsea el param ?feat= (JSON objeto nombre → lista de valores). Cualquier
+    cosa inválida se ignora — jamás rechaza la request ni llega crudo al ORM
+    (los filtros se arman como Q(features__contains={nombre: valor})).
+    """
+    import json
+    try:
+        parsed  =   json.loads(raw or '')
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(parsed, dict):
+        return []
+    filters     =   []
+    for name, values in parsed.items():
+        if len(filters) >= FEATURE_FILTER_MAX_GROUPS:
+            break
+        if not isinstance(name, str) or not isinstance(values, list):
+            continue
+        name    =   name.strip()
+        if not name or len(name) > FEATURE_FILTER_NAME_MAX:
+            continue
+        values  =   [str(v).strip() for v in values[:FEATURE_FILTER_MAX_VALUES]]
+        values  =   [v for v in dict.fromkeys(values) if v and len(v) <= FEATURE_FILTER_VALUE_MAX]
+        if values:
+            filters.append((name, values))
+    return filters
+def _catalog_facets(products, categories, category_id):
+    """
+    Arma las facetas del catálogo: grupos atributo → valores con conteo,
+    calculados en Python sobre el queryset YA filtrado por q/categoría/marca/
+    precio (antes de los filtros de características, para que sigan viéndose
+    las opciones disponibles). La categoría activa ordena primero los
+    atributos de su feature_schema; el resto va por volumen.
+    """
+    from collections import Counter
+    counters    =   {}
+    order       =   []
+    for feats in products.values_list('features', flat = True):
+        if not isinstance(feats, dict):
+            continue
+        for raw_name, raw_val in feats.items():
+            name    =   str(raw_name).strip()
+            value   =   str(raw_val).strip()
+            if not name or not value or len(name) > FEATURE_FILTER_NAME_MAX or len(value) > FEATURE_FILTER_VALUE_MAX:
+                continue
+            if name not in counters:
+                counters[name]  =   Counter()
+                order.append(name)
+            counters[name][value]   +=  1
+    if not counters:
+        return []
+    #La plantilla de la categoría activa pone sus atributos primero.
+    schema      =   []
+    if category_id and str(category_id).isdigit():
+        category    =   next((c for c in categories if c.id == int(category_id)), None)
+        if category is not None and isinstance(category.feature_schema, list):
+            schema      =   [s.strip() for s in category.feature_schema if isinstance(s, str) and s.strip()]
+    rank        =   {n.lower(): i for i, n in enumerate(schema)}
+    order.sort(key = lambda n: (rank.get(n.lower(), len(rank)), -sum(counters[n].values())))
+    facets      =   []
+    for name in order[:FACET_MAX_GROUPS]:
+        values  =   [
+            {'value': value, 'count': count}
+            for value, count in counters[name].most_common(FACET_MAX_VALUES)
+        ]
+        facets.append({'name': name, 'values': values})
+    return facets
 #=========================================
 # CONTACT THROTTLE (antispam del formulario público, rate en settings)
 #=========================================
@@ -226,8 +302,8 @@ class StoreViewSet(StoreBaseViewSet):
             products    =   products.filter(category_id = int(category_id))
         if brand_id and brand_id.isdigit():
             products    =   products.filter(brand_id = int(brand_id))
+        from django.db.models import Q
         if search:
-            from django.db.models import Q
             products    =   products.filter(Q(name__icontains = search) | Q(description__icontains = search))
         if min_price is not None:
             products    =   products.filter(effective_price__gte = min_price)
@@ -238,10 +314,23 @@ class StoreViewSet(StoreBaseViewSet):
             products    =   products.order_by(*ordering)
         categories      =   store.categories.all()
         brands          =   store.brands.all()
+        #Facetas estilo marketplace (param ?feat=<json> {"Talle":["M","L"]}):
+        #los grupos se calculan ANTES de aplicarlas, sobre el conjunto ya
+        #acotado por búsqueda/categoría/marca/precio — los conteos reflejan
+        #el resto de los filtros, como en Mercado Libre. La categoría activa
+        #ordena sus atributos primero según su feature_schema.
+        feature_filters =   _feature_filters(request.query_params.get('feat'))
+        facets          =   _catalog_facets(products, categories, category_id)
+        for name, values in feature_filters:
+            clause      =   Q()
+            for value in values:
+                clause      |=  Q(features__contains = {name: value})
+            products        =   products.filter(clause)
         return Response(
             {
                 'categories'    :   CategorySerializer(categories, many = True).data,
                 'brands'        :   BrandSerializer(brands, many = True).data,
+                'facets'        :   facets,
                 'products'      :   ProductPublicSerializer(products, many = True).data,
             },
             status = status.HTTP_200_OK,
