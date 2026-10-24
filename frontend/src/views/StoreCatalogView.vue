@@ -296,8 +296,10 @@ onBeforeUnmount(() => {
   </div>
 
   <main class="sp-container sp-main">
-    <!-- Portada: carrusel de destacados (premium), vitrina sobre el catálogo -->
-    <div v-if="hasDesignAdvanced && carousel.length" class="sp-catalog-banner">
+    <!-- Portada: carrusel de destacados (premium), vitrina sobre el catálogo.
+         Tienda Pro no lo repite: la portada ya es el banner de la home y acá
+         el catálogo tiene que entrar directo, sin una franja de imágenes. -->
+    <div v-if="hasDesignAdvanced && carousel.length && tpl !== 'shop'" class="sp-catalog-banner">
       <div v-reveal class="sp-banner">
         <div ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
           <div class="sp-carousel-track" :style="trackStyle">

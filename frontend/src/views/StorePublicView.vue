@@ -47,14 +47,36 @@ const cover = computed(() => (hasDesignAdvanced.value ? custom.value.cover || ''
 const shopImgs = computed(() => (custom.value.carousel || []).map((i) => i.url))
 const shopSlideImg = computed(() => cover.value || shopImgs.value[0] || '')
 const shopPromoImgs = computed(() => shopImgs.value.slice(cover.value ? 0 : 1, cover.value ? 2 : 3))
-// Productos destacados: vitrina del catálogo en la portada (primeros 8,
-// los más recientes). Solo existe en Tienda Pro con catálogo activo.
+// Productos destacados: vitrina del catálogo en la portada (primeros 8 en
+// Tienda Pro, primeros 4 como selección de pliegos en Lookbook).
 const shopCatalog = ref({ categories: [], brands: [], products: [] })
-const shopProducts = computed(() => shopCatalog.value.products.slice(0, 8))
+const shopProducts = computed(() => shopCatalog.value.products.slice(0, tpl.value === 'lookbook' ? 4 : 8))
+const lbPlateImg = computed(() => cover.value || shopImgs.value[0] || shopCatalog.value.products.find((p) => p.image)?.image || '')
 const shopBrandOf = (p) => shopCatalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 const shopCatOf = (p) => shopCatalog.value.categories.find((c) => c.id === p.category)?.name || ''
+// Departamentos: categorías reales con productos, en el orden que definió
+// el dueño, con el conteo y la primera foto disponible como miniatura (la
+// fila de accesos de la portada de un marketplace). Sin categorías cae a
+// los destacados.
+const shopDepts = computed(() => shopCatalog.value.categories
+  .map((c) => {
+    const items = shopCatalog.value.products.filter((p) => p.category === c.id)
+    return { id: c.id, name: c.name, count: items.length, image: items.find((p) => p.image)?.image || '' }
+  })
+  .filter((d) => d.count > 0)
+  .slice(0, 6))
+const deptTo = (id) => ({ ...catalogTo.value, query: { category: id } })
+// Ofertas activas: alimentan el copy del acceso promo del hero (nunca se
+// anuncia una oferta que la tienda no tiene).
+const shopOffers = computed(() => shopCatalog.value.products.filter((p) => productOffer(p) != null).length)
+const shopPromoEyebrow = computed(() => {
+  if (!showCatalog.value) return 'Atención personalizada'
+  return shopOffers.value
+    ? `${shopOffers.value} ${shopOffers.value === 1 ? 'oferta activa' : 'ofertas activas'}`
+    : 'Catálogo completo'
+})
 async function loadShopFeatured() {
-  if (tpl.value !== 'shop' || !showCatalog.value) return
+  if ((tpl.value !== 'shop' && tpl.value !== 'lookbook') || !showCatalog.value) return
   try {
     shopCatalog.value = await storesApi.publicCatalog(slug.value, { sort: 'recent' })
   } catch {
@@ -154,6 +176,12 @@ const testimonialsTitle = computed(() => custom.value.testimonials_title?.trim()
 const faqs = computed(() => listOf(custom.value.faqs))
 const showFaqs = computed(() => custom.value.show_faq !== false && faqs.value.length > 0)
 const faqsTitle = computed(() => custom.value.faqs_title?.trim() || 'Preguntas frecuentes')
+// El eyebrow repite el título cuando el dueño dejó el texto por defecto
+// ("DUDAS FRECUENTES / Dudas frecuentes"): en ese caso no se muestra.
+const eyebrowUnless = (label, title) => (String(title || '').trim().toLowerCase() === label.toLowerCase() ? '' : label)
+const faqEyebrow = computed(() => eyebrowUnless('Dudas frecuentes', faqsTitle.value))
+const servicesEyebrow = computed(() => eyebrowUnless('Servicios', servicesTitle.value))
+const testimonialsEyebrow = computed(() => eyebrowUnless('Clientes', testimonialsTitle.value))
 const contactHours = computed(() => listOf(custom.value.hours))
 const showHours = computed(() => custom.value.show_hours !== false && contactHours.value.length > 0)
 // Orden efectivo de las secciones (posición CSS order; 0 queda para el hero).
@@ -207,6 +235,8 @@ const mapUrl = computed(() => (
     ? `https://maps.google.com/maps?q=${encodeURIComponent(mapAddress.value)}&output=embed&z=16`
     : ''
 ))
+// Enlace directo al mapa: sirve de salida si el navegador bloquea el embed.
+const mapLink = computed(() => (mapAddress.value ? `https://maps.google.com/?q=${encodeURIComponent(mapAddress.value)}` : ''))
 
 async function loadCaptcha() {
   captchaLoading.value = true
@@ -352,52 +382,65 @@ onBeforeUnmount(() => {
               <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
           </div>
-          <figure v-reveal="120" class="sp-lb-plate" :class="{ 'is-logo': !cover && custom.logo }">
+          <figure v-reveal="120" class="sp-lb-plate" :class="{ 'is-logo': !lbPlateImg && custom.logo }">
             <div class="sp-lb-plate-frame">
-              <img v-if="cover" :src="cover" alt="" fetchpriority="high" />
+              <img v-if="lbPlateImg" :src="lbPlateImg" alt="" fetchpriority="high" />
               <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
               <span v-else class="sp-lb-plate-initial" aria-hidden="true">{{ initial }}</span>
             </div>
-            <figcaption><span>Fig. 01</span> {{ shopName }}</figcaption>
+            <figcaption><span>Fig. 01</span><i></i><span>{{ shopName }}</span></figcaption>
             <span class="sp-lb-plate-seal" aria-hidden="true">Nº<br />01</span>
           </figure>
         </template>
         <template v-else-if="tpl === 'shop'">
           <!-- Tienda Pro (marketplace): banner principal + dos tarjetas
-               promo apiladas, como la portada de un e-commerce. -->
-          <div v-reveal class="sp-shop-slide" :class="{ 'has-img': shopSlideImg }">
+               promo apiladas, como la portada de un e-commerce. La foto va
+               como fondo del banner; en las promos la imagen ocupa el panel
+               derecho para que el texto siempre quede sobre color sólido. -->
+          <div v-reveal class="sp-shop-slide" :class="{ 'has-img': shopSlideImg, 'is-bare': !shopSlideImg && !custom.description }">
             <img v-if="shopSlideImg" class="sp-shop-slide-img" :src="shopSlideImg" alt="" fetchpriority="high" />
             <div class="sp-shop-slide-copy">
-              <p class="sp-shop-eyebrow">Nuevas colecciones {{ year }}</p>
+              <p class="sp-shop-eyebrow">
+                <AppIcon :name="heroBadgeIcon || 'store'" :size="13" :stroke="2.25" /> {{ heroBadge }}
+              </p>
               <h1 class="sp-hero-title sp-shop-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <mark class="sp-shop-mark">{{ titleSplit.last }}</mark></h1>
               <p v-if="custom.description" class="sp-hero-sub sp-shop-sub">{{ custom.description }}</p>
               <div class="sp-hero-ctas">
-                <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Compra ahora <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+                <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
                 <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
-                <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
-                  <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
-                </button>
               </div>
               <ul v-if="heroMeta.length" class="sp-hero-meta">
                 <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
               </ul>
             </div>
+            <button type="button" class="sp-icon-btn sp-shop-share" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+              <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+            </button>
           </div>
           <div class="sp-shop-side">
             <component
-              :is="showCatalog ? 'RouterLink' : 'a'" v-reveal="120" class="sp-shop-promo" :class="{ 'has-img': shopPromoImgs[0] }"
+              :is="showCatalog ? 'RouterLink' : 'a'" v-reveal="120" class="sp-shop-promo"
+              :class="{ 'has-img': shopPromoImgs[0] }"
               :to="showCatalog ? catalogTo : null" :href="showCatalog ? null : '#contacto'"
             >
-              <img v-if="shopPromoImgs[0]" class="sp-shop-promo-img" :src="shopPromoImgs[0]" alt="" loading="lazy" />
-              <span class="sp-shop-promo-eyebrow"><AppIcon name="percent" :size="12" :stroke="2.5" /> Ofertas y novedades</span>
-              <strong>{{ showCatalog ? 'Explorá el catálogo' : 'Escribinos tu consulta' }}</strong>
-              <span class="sp-shop-promo-go">{{ showCatalog ? 'Ver ahora' : 'Contáctanos' }} <AppIcon name="arrow-right" :size="13" /></span>
+              <span class="sp-shop-promo-copy">
+                <span class="sp-shop-promo-eyebrow"><AppIcon name="percent" :size="12" :stroke="2.5" /> {{ shopPromoEyebrow }}</span>
+                <strong>{{ showCatalog ? 'Explorá el catálogo' : 'Escribinos tu consulta' }}</strong>
+                <span class="sp-shop-promo-go">{{ showCatalog ? 'Ver ahora' : 'Contáctanos' }} <AppIcon name="arrow-right" :size="13" /></span>
+              </span>
+              <span v-if="shopPromoImgs[0]" class="sp-shop-promo-media" aria-hidden="true">
+                <img :src="shopPromoImgs[0]" alt="" loading="lazy" />
+              </span>
             </component>
             <a v-reveal="200" class="sp-shop-promo alt" :class="{ 'has-img': shopPromoImgs[1] }" :href="hasAbout ? '#nosotros' : '#contacto'">
-              <img v-if="shopPromoImgs[1]" class="sp-shop-promo-img" :src="shopPromoImgs[1]" alt="" loading="lazy" />
-              <span class="sp-shop-promo-eyebrow"><AppIcon :name="heroBadgeIcon || 'store'" :size="12" :stroke="2.5" /> {{ heroBadge }}</span>
-              <strong>{{ hasAbout ? aboutTitle : 'Hablemos de lo que buscás' }}</strong>
-              <span class="sp-shop-promo-go">Conocenos <AppIcon name="arrow-right" :size="13" /></span>
+              <span class="sp-shop-promo-copy">
+                <span class="sp-shop-promo-eyebrow"><AppIcon :name="location ? 'map-pin' : 'store'" :size="12" :stroke="2.5" /> {{ location || shopName }}</span>
+                <strong>{{ hasAbout ? aboutTitle : 'Hablemos de lo que buscás' }}</strong>
+                <span class="sp-shop-promo-go">{{ hasAbout ? 'Conócenos' : 'Contacto' }} <AppIcon name="arrow-right" :size="13" /></span>
+              </span>
+              <span v-if="shopPromoImgs[1]" class="sp-shop-promo-media" aria-hidden="true">
+                <img :src="shopPromoImgs[1]" alt="" loading="lazy" />
+              </span>
             </a>
           </div>
         </template>
@@ -449,7 +492,27 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div class="sp-container sp-highlights">
+    <!-- Tienda Pro: departamentos reales del catálogo (categorías con
+         productos, miniatura del primer producto y conteo). Sin catálogo
+         se mantiene la fila de destacados del resto de los diseños. -->
+    <div v-if="tpl === 'shop' && shopDepts.length" class="sp-container">
+      <div class="sp-shop-depts" :style="{ maxWidth: `${(shopDepts.length + (showCatalog ? 1 : 0)) * 156}px` }" aria-label="Departamentos del catálogo">
+        <RouterLink v-for="d in shopDepts" :key="d.id" v-reveal class="sp-shop-dept" :to="deptTo(d.id)">
+          <span class="sp-shop-dept-thumb">
+            <img v-if="d.image" :src="d.image" alt="" loading="lazy" />
+            <span v-else class="sp-shop-dept-initial" aria-hidden="true">{{ d.name.slice(0, 1) }}</span>
+          </span>
+          <span class="sp-shop-dept-name">{{ d.name }}</span>
+          <span class="sp-shop-dept-count">{{ d.count }} {{ d.count === 1 ? 'producto' : 'productos' }}</span>
+        </RouterLink>
+        <RouterLink v-if="showCatalog" v-reveal="80" class="sp-shop-dept all" :to="catalogTo">
+          <span class="sp-shop-dept-thumb"><AppIcon name="layout-grid" :size="22" /></span>
+          <span class="sp-shop-dept-name">Ver todo</span>
+          <span class="sp-shop-dept-count">Catálogo completo</span>
+        </RouterLink>
+      </div>
+    </div>
+    <div v-else class="sp-container sp-highlights">
       <component
         :is="h.to ? 'RouterLink' : h.href ? 'a' : 'div'" v-for="(h, i) in highlights" :key="h.title"
         v-reveal="i * 90" class="sp-hl" :to="h.to" :href="h.href"
@@ -460,12 +523,15 @@ onBeforeUnmount(() => {
       </component>
     </div>
 
-    <!-- Tienda Pro: vitrina de productos destacados (primeros 8 del
-         catálogo); cada tarjeta abre la ficha como en un marketplace. -->
-    <div v-if="tpl === 'shop' && shopProducts.length" class="sp-container sp-shop-featured">
+    <!-- Tienda Pro y Lookbook: vitrina de productos destacados en la portada
+         (8 en marketplace, 4 pliegos numerados en Lookbook). -->
+    <div v-if="(tpl === 'shop' || tpl === 'lookbook') && shopProducts.length" class="sp-container sp-shop-featured">
       <div class="sp-shop-featured-head">
-        <h2 class="sp-shop-featured-title"><AppIcon name="flame" :size="20" /> Productos destacados</h2>
-        <RouterLink class="sp-shop-viewall" :to="catalogTo">Ver todos <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
+        <div class="sp-shop-featured-copy">
+          <p class="sp-shop-featured-eyebrow">{{ tpl === 'lookbook' ? 'Selección de la edición' : 'Recién llegados' }}</p>
+          <h2 class="sp-shop-featured-title">{{ tpl === 'lookbook' ? 'Pliegos destacados' : 'Productos destacados' }}</h2>
+        </div>
+        <RouterLink class="sp-shop-viewall" :to="catalogTo">{{ tpl === 'lookbook' ? 'Ver índice completo' : 'Ver todo el catálogo' }} <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
       </div>
       <div class="sp-shop-featured-grid">
         <article
@@ -489,7 +555,7 @@ onBeforeUnmount(() => {
             <h3 class="sp-card-name">{{ p.name }}</h3>
             <div class="sp-card-foot">
               <span class="sp-card-price"><s v-if="productOffer(p) != null" class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-              <span class="sp-card-go" aria-hidden="true">Ver más <AppIcon name="arrow-right" :size="15" /></span>
+              <span class="sp-card-go" aria-hidden="true">Ver más <AppIcon name="arrow-right" :size="16" /></span>
             </div>
           </div>
         </article>
@@ -501,7 +567,7 @@ onBeforeUnmount(() => {
   <section v-if="hasAbout" id="nosotros" class="sp-about" :style="{ order: sectionPos.about }" aria-labelledby="sp-about-title">
     <div class="sp-container sp-about-grid" :class="{ 'no-card': !hasAboutCard && !decorAbout }">
       <div v-reveal class="sp-about-info">
-        <p class="sp-eyebrow">Conocenos</p>
+        <p class="sp-eyebrow">Conócenos</p>
         <h2 id="sp-about-title" class="sp-about-heading">
           <span class="sp-about-heading-icon" aria-hidden="true"><AppIcon name="store" :size="26" /></span>
           {{ aboutTitle }}
@@ -569,7 +635,7 @@ onBeforeUnmount(() => {
   <!-- ===== Qué ofrecemos: tarjetas de servicios/ventajas con ícono ===== -->
   <section v-if="showServices" class="sp-services" :style="{ order: sectionPos.services }" aria-labelledby="sp-services-title">
     <div class="sp-container">
-      <p class="sp-eyebrow">Servicios</p>
+      <p v-if="servicesEyebrow" class="sp-eyebrow">{{ servicesEyebrow }}</p>
       <h2 id="sp-services-title" v-reveal class="sp-section-title">{{ servicesTitle }}</h2>
       <div class="sp-services-grid">
         <article v-for="(s, i) in services" :key="i" v-reveal="(i % 3) * 80" class="sp-service">
@@ -594,7 +660,7 @@ onBeforeUnmount(() => {
   <!-- ===== Testimonios ===== -->
   <section v-if="showTestimonials" class="sp-testimonials" :style="{ order: sectionPos.testimonials }" aria-labelledby="sp-testimonials-title">
     <div class="sp-container">
-      <p class="sp-eyebrow">Clientes</p>
+      <p v-if="testimonialsEyebrow" class="sp-eyebrow">{{ testimonialsEyebrow }}</p>
       <h2 id="sp-testimonials-title" v-reveal class="sp-section-title">{{ testimonialsTitle }}</h2>
       <div class="sp-testimonials-grid">
         <figure v-for="(t, i) in testimonials" :key="i" v-reveal="(i % 3) * 80" class="sp-testimonial">
@@ -611,9 +677,15 @@ onBeforeUnmount(() => {
 
   <!-- ===== Preguntas frecuentes: respuestas desplegables ===== -->
   <section v-if="showFaqs" class="sp-faq" :style="{ order: sectionPos.faq }" aria-labelledby="sp-faq-title">
-    <div class="sp-container">
-      <p class="sp-eyebrow">Dudas frecuentes</p>
-      <h2 id="sp-faq-title" v-reveal class="sp-section-title">{{ faqsTitle }}</h2>
+    <div class="sp-container sp-faq-wrap">
+      <div class="sp-faq-intro">
+        <p v-if="faqEyebrow" class="sp-eyebrow">{{ faqEyebrow }}</p>
+        <h2 id="sp-faq-title" v-reveal class="sp-section-title">{{ faqsTitle }}</h2>
+        <p v-if="tpl === 'shop'" class="sp-faq-note">
+          ¿No encontrás lo que buscás?
+          <a v-if="showContact" href="#contacto">Escribinos</a><template v-else>Consultanos por WhatsApp.</template>
+        </p>
+      </div>
       <div class="sp-faq-list">
         <details v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item">
           <summary>{{ f.q }}<span class="sp-faq-caret" aria-hidden="true"><AppIcon name="chevron-down" :size="16" /></span></summary>
@@ -740,6 +812,9 @@ onBeforeUnmount(() => {
           referrerpolicy="no-referrer-when-downgrade"
           allowfullscreen
         ></iframe>
+        <a class="sp-map-open" :href="mapLink" target="_blank" rel="noopener">
+          <AppIcon name="map-pin" :size="14" /> Abrir en Google Maps <AppIcon name="arrow-up-right" :size="13" />
+        </a>
       </div>
     </div>
   </section>

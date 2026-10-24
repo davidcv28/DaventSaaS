@@ -78,6 +78,15 @@ const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isProduct = computed(() => route.name === 'store-product')
 const isHome = computed(() => route.name === 'store-public')
+// Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
+// las anclas de la home (#nosotros, #galeria, #contacto) comparten el path y
+// quedarían todas marcadas a la vez.
+const shopCurrent = computed(() => {
+  if (isCatalog.value || isProduct.value) return 'catalog'
+  if (!isHome.value) return ''
+  const hash = route.hash.replace('#', '')
+  return ['nosotros', 'galeria', 'contacto'].includes(hash) ? hash : 'home'
+})
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 
@@ -163,17 +172,6 @@ onBeforeUnmount(() => {
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
-      <!-- Tienda Pro (marketplace): franja fina de bienvenida sobre el
-           masthead; se repliega al hacer scroll para compactar la barra. -->
-      <div v-if="isShop && status === 'success'" class="sp-shop-topbar">
-        <div class="sp-container sp-shop-topbar-inner">
-          <span class="sp-shop-welcome"><AppIcon name="store" :size="12" /> ¡Bienvenido a {{ shopName }}!</span>
-          <nav class="sp-shop-toplinks" aria-label="Enlaces de la tienda">
-            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
-            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
-          </nav>
-        </div>
-      </div>
       <div class="sp-container sp-top-inner">
         <button
           v-if="isCatalog && ui.hasCatalogNav"
@@ -189,7 +187,15 @@ onBeforeUnmount(() => {
         <RouterLink class="sp-brand" :to="homeTo" aria-label="Ir al inicio">
           <img v-if="custom.logo" class="sp-logo sm" :src="custom.logo" :alt="`Logo de ${shopName}`" />
           <span v-else class="sp-mono sm" aria-hidden="true">{{ initial }}</span>
-          <span class="sp-name" :style="nameFont">{{ shopName }}</span>
+          <span class="sp-brand-copy">
+            <span class="sp-name" :style="nameFont">{{ shopName }}</span>
+            <!-- Tienda Pro: la ubicación viaja bajo el nombre (identidad de
+                 marketplace) en vez de ocupar una franja propia arriba. -->
+            <span v-if="isShop" class="sp-shop-brand-meta">
+              <AppIcon :name="location ? 'map-pin' : 'store'" :size="11" />
+              {{ location || (showCatalog ? 'Catálogo online' : 'Sitio oficial') }}
+            </span>
+          </span>
         </RouterLink>
         <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
           <RouterLink :to="homeTo">Inicio</RouterLink>
@@ -224,17 +230,17 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <!-- Tienda Pro: fila de secciones bajo el masthead (el menú clásico
-           del marketplace); en pantallas chicas se esconde por CSS. -->
+           del marketplace). En móvil sigue visible y scrollea en horizontal. -->
       <nav v-if="isShop && status === 'success'" class="sp-shop-nav" aria-label="Secciones de la tienda">
         <div class="sp-container sp-shop-nav-inner">
-          <span class="sp-shop-nav-tag"><AppIcon name="layout-grid" :size="14" /> Secciones</span>
           <div class="sp-shop-nav-links">
-            <RouterLink :to="homeTo">Inicio</RouterLink>
-            <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
-            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+            <RouterLink :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
+            <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
+            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
+            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
           </div>
+          <span class="sp-shop-nav-note">Precios en pesos argentinos</span>
         </div>
       </nav>
     </header>
@@ -264,7 +270,16 @@ onBeforeUnmount(() => {
           <div class="sp-foot-brand">
             <strong :style="nameFont">{{ shopName }}</strong>
             <span v-if="location"><AppIcon name="map-pin" :size="13" /> {{ location }}</span>
+            <p v-if="isShop && custom.description" class="sp-foot-desc">{{ custom.description }}</p>
           </div>
+          <nav v-if="isShop && status === 'success'" class="sp-foot-col" aria-label="Secciones de la tienda">
+            <p class="sp-foot-heading">Tienda</p>
+            <RouterLink :to="homeTo">Inicio</RouterLink>
+            <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
+            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
+            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+          </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>
             <a :href="`${appUrl}/terminos`">Términos y condiciones</a>
