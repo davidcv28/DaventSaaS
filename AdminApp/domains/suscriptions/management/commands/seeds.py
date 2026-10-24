@@ -13,11 +13,11 @@ dict_suscriptions = {
     },
     'Basic'      :   {
         'name'  :   'Plan basico',
-        'price' :   30000.00
+        'price' :   25000.00
     },
     'Standar'   :   {
         'name'  :   'Plan estandar',
-        'price' :   35000.00
+        'price' :   30000.00
     },
     'Premium'   :   {
         'name'  :   'Plan premium',
