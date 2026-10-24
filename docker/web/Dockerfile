@@ -14,12 +14,16 @@ ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN
 ARG VITE_APP_NAME
 ARG VITE_APP_TAGLINE
-# Firebase Phone Auth (verificación de celular — config pública de cliente;
-# vacío = feature deshabilitada en el bundle).
-ARG VITE_FIREBASE_API_KEY
-ARG VITE_FIREBASE_AUTH_DOMAIN
-ARG VITE_FIREBASE_PROJECT_ID
-ARG VITE_FIREBASE_APP_ID
+# Firebase Phone Auth (verificación de celular — la config web es PÚBLICA por
+# diseño: viaja en el bundle que sirve cualquier browser; la protección real
+# son los Authorized domains del proyecto + la cuota Spark, no la clave).
+# Van como defaults del ARG para que el build en Render (que no recibe las
+# env vars del dashboard en build-time) hornee la feature sin plomería extra;
+# un --build-arg las sobreescribe si algún día hay otro proyecto Firebase.
+ARG VITE_FIREBASE_API_KEY=AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
+ARG VITE_FIREBASE_AUTH_DOMAIN=davent-f089b.firebaseapp.com
+ARG VITE_FIREBASE_PROJECT_ID=davent-f089b
+ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_NAME=$VITE_APP_NAME \
