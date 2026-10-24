@@ -111,6 +111,25 @@ let confirmationResult = null
 const phoneVerified = computed(() => auth.user?.profile?.phone_verified === true)
 const hasPhone = computed(() => Boolean(auth.user?.profile?.phone))
 
+// Errores conocidos del SDK de Firebase -> mensaje accionable. Cualquier otro
+// cae al genérico con el code entre paréntesis para poder reportarlo.
+const PHONE_VERIFY_ERRORS = {
+  'auth/invalid-phone-number': 'El número del perfil no es válido. Tiene que estar en formato internacional (+549…).',
+  'auth/too-many-requests': 'Demasiados intentos seguidos. Esperá un rato y probá de nuevo.',
+  'auth/quota-exceeded': 'Se alcanzó el límite diario de SMS del servicio. Probá mañana.',
+  'auth/operation-not-allowed': 'El proveedor de SMS no está habilitado en Firebase.',
+  'auth/invalid-app-credential': 'El reCAPTCHA fue rechazado. Recargá la página y probá de nuevo.',
+  'auth/captcha-check-failed': 'No se pudo validar el reCAPTCHA. Recargá la página y probá de nuevo.',
+  'auth/network-request-failed': 'Sin conexión. Revisá tu red y probá de nuevo.',
+  'auth/missing-phone-number': 'Cargá tu número de celular arriba y guardá los cambios.',
+  'auth/invalid-verification-code': 'El código no es válido. Revisá los 6 dígitos y probá de nuevo.',
+  'auth/code-expired': 'El código venció. Pedí un SMS nuevo.',
+}
+function phoneVerifyErrorMessage(e, fallback) {
+  console.error('Phone verification failed:', e)
+  return PHONE_VERIFY_ERRORS[e?.code] || `${fallback} (${e?.code || 'error desconocido'})`
+}
+
 async function startPhoneVerify() {
   phoneVerifyBusy.value = true
   phoneVerifyErr.value = ''
@@ -119,7 +138,7 @@ async function startPhoneVerify() {
     phoneVerifySent.value = true
     phoneVerifyCode.value = ''
   } catch (e) {
-    phoneVerifyErr.value = 'No se pudo enviar el SMS. Reintentá en unos minutos.'
+    phoneVerifyErr.value = phoneVerifyErrorMessage(e, 'No se pudo enviar el SMS. Reintentá en unos minutos.')
   } finally {
     phoneVerifyBusy.value = false
   }
@@ -137,7 +156,7 @@ async function confirmPhoneVerify() {
   } catch (e) {
     phoneVerifyErr.value = e.response?.status === 429
       ? 'Demasiados intentos. Esperá un rato y probá de nuevo.'
-      : e.response?.data?.detail || 'El código no es válido o ya venció. Pedí un SMS nuevo.'
+      : e.response?.data?.detail || phoneVerifyErrorMessage(e, 'El código no es válido o ya venció. Pedí un SMS nuevo.')
   } finally {
     phoneVerifyBusy.value = false
   }
