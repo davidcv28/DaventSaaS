@@ -169,6 +169,26 @@ class ImageNormalizationTests(TestCase):
         body, _, _      =   normalize_image(self._upload((5000, 2000)), 'cover')
         self.assertLessEqual(max(Image.open(io.BytesIO(body)).size), 2200)
 
+    def test_logo_keeps_transparency_and_outputs_webp(self):
+        import io
+        from PIL import Image
+        from StoreApp.domains.stores.services.imaging import normalize_image
+        body, ext, content_type =   normalize_image(self._upload((1600, 1600), 'RGBA', (10, 20, 30, 0)), 'logo')
+        out                     =   Image.open(io.BytesIO(body))
+        self.assertEqual((ext, content_type), ('webp', 'image/webp'))
+        self.assertLessEqual(max(out.size), 800)
+        self.assertIn('A', out.getbands())
+        self.assertLess(out.getpixel((5, 5))[3], 16)
+
+    def test_carousel_behaves_like_cover(self):
+        import io
+        from PIL import Image
+        from StoreApp.domains.stores.services.imaging import normalize_image
+        body, ext, _    =   normalize_image(self._upload((1000, 3000)), 'carousel')
+        width, height   =   Image.open(io.BytesIO(body)).size
+        self.assertEqual(ext, 'webp')
+        self.assertLessEqual(width / height, 1.01)
+
 
 class StoreCoverGatingTests(TestCase):
     """Imagen de portada: solo con has_design_advanced (Plan premium)."""

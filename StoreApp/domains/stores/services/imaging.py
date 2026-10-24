@@ -10,7 +10,9 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 Procesado automático de imágenes del cliente (Pillow, server-side).
 
 - normalize_image: corrige orientación EXIF, acota el tamaño, aplana la
-  transparencia sobre blanco (productos) y recodifica a WebP optimizado. La
+  transparencia sobre blanco (productos/portada/carrusel; el logo conserva
+  el alfa) y recodifica a WebP optimizado — toda imagen del cliente entra
+  a R2 ya comprimida en el formato estándar de la web. La
   galería/decoración además acota la proporción (paisajes/capturas extremas)
   para que siempre encajen en la grilla de la web pública.
 - remove_background: quita el fondo de un producto con U²-Net (onnxruntime,
@@ -24,6 +26,7 @@ MAX_SIDE_GALLERY        =   1600
 MAX_SIDE_PRODUCT        =   1200
 PRODUCT_CANVAS          =   1000
 MAX_SIDE_COVER          =   2200
+MAX_SIDE_LOGO           =   800
 COVER_MIN_RATIO         =   1.0               # portadas verticales se recortan a cuadrado (el hero es apaisado)
 GALLERY_RATIO           =   (3 / 4, 16 / 9)   # (alto máximo relativo, ancho máximo relativo)
 BG_MODEL_URL            =   'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx'
@@ -56,19 +59,25 @@ def _clamp_ratio(image):
     return image
 def _encode(image):
     buffer          =   io.BytesIO()
-    image.save(buffer, format = 'WEBP', quality = WEBP_QUALITY, method = 4)
+    # method=6: máximo esfuerzo de compresión (más lento, archivos menores).
+    image.save(buffer, format = 'WEBP', quality = WEBP_QUALITY, method = 6)
     return buffer.getvalue()
 def normalize_image(upload, kind = 'gallery'):
     """
     Devuelve (bytes, 'webp', 'image/webp') listo para subir a R2.
-    kind: 'gallery' | 'decor' (acota proporción, conserva color) o 'product'
+    kind: 'gallery' | 'decor' (acota proporción, conserva color), 'logo'
+    (conserva la transparencia) o 'product' | 'cover' | 'carousel'
     (aplana sobre blanco). Lanza ValueError si no es una imagen legible.
     """
     image           =   _open(upload)
     if kind == 'product':
         image       =   _flatten_white(image)
         max_side    =   MAX_SIDE_PRODUCT
-    elif kind == 'cover':
+    elif kind == 'logo':
+        # Los logos suelen venir en PNG transparente: el alfa viaja al WebP.
+        image       =   image.convert('RGBA') if 'A' in image.getbands() else image.convert('RGB')
+        max_side    =   MAX_SIDE_LOGO
+    elif kind in ('cover', 'carousel'):
         image       =   _flatten_white(image)
         width, height   =   image.size
         if width / height < COVER_MIN_RATIO:

@@ -211,9 +211,10 @@ def validate_logo_file(upload):
 #=========================================
 def upload_logo(customization, upload):
     """
-    Sube el logo a R2, libera el anterior y descuenta/actualiza la
-    cuota de la tienda. Lanza ValueError con mensaje para el cliente si
-    falla la cuota o el storage no está configurado.
+    Sube el logo a R2 (normalizado a WebP, conserva la transparencia),
+    libera el anterior y descuenta/actualiza la cuota de la tienda.
+    Lanza ValueError con mensaje para el cliente si falla la cuota o el
+    storage no está configurado.
     """
     if not storage_configured():
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
@@ -221,12 +222,14 @@ def upload_logo(customization, upload):
     if error:
         raise ValueError(error)
     store       =   customization.store
+    processed   =   normalize_image(upload, 'logo')
+    size        =   len(processed[0])
     _check_image_slot(store, is_new = not customization.logo_key)
-    new_used    =   _check_quota(store, upload.size, replacing_bytes = customization.logo_size)
-    key         =   _put_object(store, 'logo', upload)
+    new_used    =   _check_quota(store, size, replacing_bytes = customization.logo_size)
+    key         =   _put_object(store, 'logo', upload, processed)
     old_key     =   customization.logo_key
     customization.logo_key      =   key
-    customization.logo_size     =   upload.size
+    customization.logo_size     =   size
     customization.save(update_fields = ['logo_key', 'logo_size', 'updated_at'])
     _consume_quota(store, new_used)
     if old_key:
@@ -290,9 +293,10 @@ def carousel_usage(store):
     return images.count(), sum(image.image_size for image in images)
 def upload_carousel_image(store, upload):
     """
-    Sube una imagen del carrusel a R2 y crea el StoreCarouselImage
-    al final del orden. Lanza ValueError si el storage no está configurado,
-    el archivo es inválido, se llegó al tope o no hay cuota.
+    Sube una imagen del carrusel a R2 (normalizada a WebP como la portada)
+    y crea el StoreCarouselImage al final del orden. Lanza ValueError si
+    el storage no está configurado, el archivo es inválido, se llegó al
+    tope o no hay cuota.
     """
     from StoreApp.domains.stores.models import StoreCarouselImage
     if not storage_configured():
@@ -302,14 +306,16 @@ def upload_carousel_image(store, upload):
         raise ValueError(error)
     if store.carousel_images.count() >= CAROUSEL_MAX_IMAGES:
         raise ValueError(f'El carrusel admite hasta {CAROUSEL_MAX_IMAGES} imágenes.')
+    processed   =   normalize_image(upload, 'carousel')
+    size        =   len(processed[0])
     _check_image_slot(store, is_new = True)
-    new_used    =   _check_quota(store, upload.size)
-    key         =   _put_object(store, 'carousel', upload)
+    new_used    =   _check_quota(store, size)
+    key         =   _put_object(store, 'carousel', upload, processed)
     last        =   store.carousel_images.order_by('-position').first()
     image       =   StoreCarouselImage.objects.create(
         store       =   store,
         image_key   =   key,
-        image_size  =   upload.size,
+        image_size  =   size,
         position    =   (last.position + 1) if last else 0,
     )
     _consume_quota(store, new_used)
