@@ -41,6 +41,7 @@ import {
 } from '../validators/auth.validators.js'
 import DashLayout from '../components/DashLayout.vue'
 import PlanCard from '../components/PlanCard.vue'
+import SectionTabs from '../components/SectionTabs.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
@@ -63,7 +64,7 @@ const catalog = useCatalogStore()
 const sectionInner = ref('overview')
 const section = computed({
   get: () => sectionInner.value,
-  set: (id) => { sectionInner.value = navItems.value.some((i) => i.id === id) ? id : 'overview' }
+  set: (id) => { sectionInner.value = validIds.value.has(id) ? id : 'overview' }
 })
 const busyPlan = ref(null)
 const couponCode = ref('')
@@ -310,42 +311,71 @@ const plan = computed(() => billing.currentPlan)
 // del acceso, "Diseño web"/"Mi empresa" piden has_customization (todos los
 // planes). Estadísticas/QR-folletos van por flag propio; has_advanced_menu
 // (Premium) solo decide si se agrupan bajo el heading "Avanzado".
+// Apartados agrupados (pestañas dentro de una misma entrada del menú): el
+// menú queda corto y con nombres de lo que la persona quiere hacer.
+const tabGroups = computed(() => {
+  const b = plan.value?.benefits || {}
+  const hasAccess = Boolean(plan.value?.isCurrent)
+  const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
+  if (hasAccess && b.has_customization) {
+    web.push(
+      { id: 'design', label: 'Cómo se ve', icon: 'palette', hint: 'Textos, colores e imágenes' },
+      { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
+    )
+  }
+  const promo = []
+  if (hasAccess) {
+    if (b.has_qr || b.has_flyers) promo.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code', hint: 'Para imprimir y repartir' })
+    if (b.has_stats) promo.push({ id: 'stats', label: 'Mis visitas', icon: 'trending-up', hint: 'Cuánta gente te mira' })
+  }
+  const billingTabs = [
+    { id: 'plans', label: 'Mi plan', icon: 'crown', hint: 'Elegir o cambiar plan' },
+    { id: 'payments', label: 'Pagos', icon: 'receipt', hint: 'Lo que pagaste' },
+    { id: 'invoices', label: 'Facturas', icon: 'file-text', hint: 'Tus comprobantes' }
+  ]
+  return { web, promo, billing: billingTabs }
+})
+
+// Menú del sidebar. Cada entrada con pestañas apunta a su primer apartado.
 const navItems = computed(() => {
   const b = plan.value?.benefits || {}
   const hasAccess = Boolean(plan.value?.isCurrent)
-  const items = [
-    { id: 'overview', label: 'Resumen', icon: 'dashboard' },
-    { id: 'store', label: 'Mi tienda', icon: 'store' }
-  ]
+  const g = tabGroups.value
+  const items = [{ id: 'overview', label: 'Inicio', icon: 'dashboard' }, { heading: 'Mi negocio' }]
+  if (hasAccess) items.push({ id: 'catalogs', label: 'Mis productos', icon: 'package' })
+  items.push({ id: 'store', label: 'Mi página web', icon: 'store' })
   if (hasAccess) {
-    items.push({ id: 'catalogs', label: 'Mis catálogos', icon: 'library' })
-    if (b.has_customization) items.push({ id: 'design', label: 'Diseño web', icon: 'palette' })
-    if (b.has_customization) items.push({ id: 'company', label: 'Mi empresa', icon: 'building-2' })
-    items.push({ id: 'pos', label: 'Venta en persona', icon: 'monitor' })
-    if (b.has_chatbot) items.push({ id: 'bot', label: 'Chatbot', icon: 'bot' })
-    const advanced = []
-    if (b.has_stats) advanced.push({ id: 'stats', label: 'Estadísticas', icon: 'trending-up' })
-    if (b.has_qr || b.has_flyers) advanced.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code' })
-    // Con has_advanced_menu (Premium) van agrupados; si no, aparecen sueltos
-    // según su flag propio (Básico tiene stats; Estándar stats + QR/folletos).
-    if (b.has_advanced_menu && advanced.length) {
-      items.push({ heading: 'Avanzado' }, ...advanced)
-    } else {
-      items.push(...advanced)
-    }
+    items.push({ id: 'pos', label: 'Vender en persona', icon: 'monitor' })
+    if (b.has_chatbot) items.push({ id: 'bot', label: 'Asistente de chat', icon: 'bot' })
+    if (g.promo.length) items.push({ id: g.promo[0].id, label: 'Promocionar', icon: 'megaphone' })
   }
   items.push(
-    { id: 'plans', label: 'Planes', icon: 'credit-card' },
-    { id: 'payments', label: 'Pagos', icon: 'receipt' },
-    { id: 'invoices', label: 'Facturas', icon: 'file-text' },
-    { id: 'settings', label: 'Cuenta', icon: 'user' }
+    { heading: 'Mi suscripción' },
+    { id: 'plans', label: 'Plan y pagos', icon: 'credit-card' },
+    { id: 'settings', label: 'Mi cuenta', icon: 'user' }
   )
   return items
 })
 
-// Si la sección activa desaparece del menú (venció el plan), volver a Resumen.
-watch(navItems, (items) => {
-  if (!items.some((i) => i.id === section.value)) section.value = 'overview'
+const validIds = computed(() => {
+  const ids = new Set(navItems.value.filter((i) => i.id).map((i) => i.id))
+  Object.values(tabGroups.value).forEach((tabs) => tabs.forEach((t) => ids.add(t.id)))
+  return ids
+})
+
+// Entrada del menú que corresponde a la sección actual (las pestañas comparten una).
+const navActive = computed(() => {
+  for (const tabs of Object.values(tabGroups.value)) {
+    if (tabs.some((t) => t.id === section.value)) {
+      return navItems.value.find((i) => i.id && tabs.some((t) => t.id === i.id))?.id || section.value
+    }
+  }
+  return section.value
+})
+
+// Si la sección activa desaparece (venció el plan), volver a Inicio.
+watch(validIds, (ids) => {
+  if (!ids.has(section.value)) section.value = 'overview'
 })
 
 function onNavigate(id) {
@@ -872,10 +902,10 @@ const designTouched = reactive({})
 const designBusy = ref(false)
 const designTab = ref('content')
 const designTabs = [
-  { id: 'content', label: 'Contenido', icon: 'pencil' },
-  { id: 'look', label: 'Apariencia', icon: 'palette' },
-  { id: 'images', label: 'Imágenes', icon: 'images' },
-  { id: 'sections', label: 'Secciones', icon: 'layout-grid' }
+  { id: 'content', label: 'Mis datos', icon: 'pencil' },
+  { id: 'look', label: 'Logo y colores', icon: 'palette' },
+  { id: 'images', label: 'Fotos', icon: 'images' },
+  { id: 'sections', label: 'Qué mostrar', icon: 'layout-grid' }
 ]
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
@@ -1715,7 +1745,7 @@ async function changePassword() {
 
 <template>
   <DashLayout
-    :active="section"
+    :active="navActive"
     :items="navItems"
     :plan-name="plan?.name || ''"
     :user-name="displayName"
@@ -1841,75 +1871,31 @@ async function changePassword() {
     <div v-if="seen.catalogs" v-show="section === 'catalogs'" :class="{ 'sec-on': section === 'catalogs' }">
       <div class="page-head">
         <div>
-          <h1>Mi catálogo</h1>
-          <p>{{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
+          <h1>Mis productos</h1>
+          <p>Acá cargás lo que vendés: aparece solo en tu página web. {{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
         </div>
         <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
       </div>
 
       <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
       <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
-      <AlertMessage kind="info" message="Publicá únicamente imágenes, logos y textos propios o con autorización de uso: sos responsable del contenido de tu catálogo." />
 
       <template v-if="!billing.hasSubscription || catalog.denied">
         <div class="empty">
           <span class="empty-icon"><AppIcon name="library" :size="28" /></span>
-          <h3>Necesitás una suscripción</h3>
-          <p>El catálogo (productos, categorías y marcas de tu página pública) se habilita con un plan activo.</p>
+          <h3>Para cargar productos necesitás un plan activo</h3>
+          <p>Elegí un plan y en un minuto podés empezar a publicar tus productos.</p>
           <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
         </div>
       </template>
 
       <template v-else>
-        <div class="card">
-          <h3><AppIcon name="store" :size="18" /> Tu página de catálogo</h3>
-          <p>Tu catálogo tiene su propia página pública. Acá controlás su visibilidad y su carrusel de portada, por separado del diseño general de tu web.</p>
-          <div class="field">
-            <label id="site-mode-label-cat">Tipo de web</label>
-            <div class="check-list" role="radiogroup" aria-labelledby="site-mode-label-cat">
-              <label v-for="m in SITE_MODES" :key="m.id" class="check-item">
-                <input type="radio" name="site-mode-cat" :value="m.id" :checked="designForm.site_mode === m.id" :disabled="catalogPageBusy" @change="setSiteMode(m.id)" />
-                <span class="check-text">
-                  <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-                  <small>{{ m.hint }}</small>
-                </span>
-              </label>
-            </div>
-          </div>
-          <div v-if="canDesignAdvanced" class="field">
-            <label id="catalog-carousel-label">Carrusel de portada</label>
-            <div class="carousel-box">
-              <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
-                <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
-                <div class="carousel-thumb-actions">
-                  <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
-                  <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
-                  <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
-                </div>
-              </div>
-              <button
-                v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
-                type="button" class="carousel-add" :disabled="carouselBusy"
-                @click="carouselInput?.click()"
-              >
-                <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
-                <AppIcon v-else name="images" :size="20" />
-                Agregar
-              </button>
-            </div>
-            <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="catalog-carousel-label" @change="onCarouselPicked" />
-            <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Se muestran como banners sobre tu catálogo.</p>
-            <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
-          </div>
-          <p v-else class="hint">El carrusel de portada del catálogo se habilita con el Plan premium.</p>
-        </div>
-
         <div class="tabs">
           <button type="button" class="tab" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
-            <AppIcon name="package" :size="16" /> Productos
+            <AppIcon name="package" :size="16" /> Mis productos
           </button>
           <button type="button" class="tab" :class="{ active: catalogTab === 'categories' }" @click="catalogTab = 'categories'">
-            <AppIcon name="layout-grid" :size="16" /> Categorías
+            <AppIcon name="layout-grid" :size="16" /> Categorías <small class="tab-sub">para ordenarlos</small>
           </button>
           <button type="button" class="tab" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
             <AppIcon name="tag" :size="16" /> Marcas
@@ -1922,12 +1908,39 @@ async function changePassword() {
           <!-- -------- Productos -------- -->
           <div v-show="catalogTab === 'products'" class="grid-2">
             <div class="card">
-              <h3><AppIcon name="pencil" :size="18" /> {{ productEditing ? 'Editar producto' : 'Nuevo producto' }}</h3>
+              <h3><AppIcon :name="productEditing ? 'pencil' : 'plus'" :size="18" /> {{ productEditing ? 'Editar producto' : 'Agregar un producto' }}</h3>
+              <p class="lead">Completá lo básico y tocá «Publicar». Después lo podés cambiar cuando quieras.</p>
+              <div class="form-step"><span class="form-step-num">1</span> ¿Qué vendés?</div>
               <AppInput v-model="productForm.name" label="Nombre" name="prod_name" placeholder="Ej. Remera oversize" :error="productFieldErr('name')" @blur="productTouched.name = true" />
               <div class="grid-2">
                 <AppInput v-model="productForm.price" label="Precio" name="prod_price" type="number" min="0" step="0.01" placeholder="0.00" :error="productFieldErr('price')" @blur="productTouched.price = true" />
                 <AppInput v-model="productForm.offer_price" label="Precio de oferta" name="prod_offer" type="number" min="0" step="0.01" placeholder="Opcional" hint="Si es menor que el precio, tu web lo muestra tachado con el descuento." :error="productFieldErr('offer_price')" @blur="productTouched.offer_price = true" />
               </div>
+              <div class="form-step"><span class="form-step-num">2</span> Sumá una foto</div>
+              <div class="field">
+                <label id="prod-image-label">Imagen</label>
+                <div class="logo-box">
+                  <span class="logo-thumb">
+                    <img v-if="productImagePreview" :src="productImagePreview" alt="Imagen del producto" />
+                    <AppIcon v-else name="image" :size="20" aria-hidden="true" />
+                  </span>
+                  <div class="logo-actions">
+                    <input ref="productImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="prod-image-label" @change="onProductImagePicked" />
+                    <button type="button" class="btn ghost btn-auto" @click="productImageInput?.click()">
+                      <AppIcon name="upload" :size="16" /> {{ productImagePreview ? 'Cambiar' : 'Subir imagen' }}
+                    </button>
+                    <button v-if="productImage && !productOriginal" type="button" class="btn ghost btn-auto" :disabled="productBgBusy" @click="removeProductBg">
+                      <span v-if="productBgBusy" class="spinner" aria-hidden="true"></span><AppIcon v-else name="sparkles" :size="16" /> {{ productBgBusy ? 'Procesando…' : 'Quitar fondo' }}
+                    </button>
+                    <button v-if="productOriginal" type="button" class="btn ghost btn-auto" @click="restoreProductOriginal">Volver al original</button>
+                    <button v-if="productImagePreview" type="button" class="btn ghost btn-auto" @click="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true">Quitar</button>
+                  </div>
+                </div>
+                <p class="hint">Una foto clara vende más. Si el fondo molesta, usá «Quitar fondo». Máximo 4 MB. Usá solo fotos propias o con permiso.</p>
+                <p v-if="productImageErr" class="field-error" role="alert">{{ productImageErr }}</p>
+              </div>
+              <details class="more-opts" :open="productEditing">
+                <summary><span class="form-step-num">3</span> Más detalles <small>(opcional: categoría, descripción, características)</small></summary>
               <div class="grid-2">
                 <div class="field">
                   <label for="prod-active">Visibilidad</label>
@@ -1982,28 +1995,7 @@ async function changePassword() {
                 <p class="hint">La categoría sugiere atributos (se cargan desde la pestaña Categorías); podés sumar otros propios.</p>
                 <p v-if="productTouched.features && featuresErr" class="field-error" role="alert">{{ featuresErr }}</p>
               </div>
-              <div class="field">
-                <label id="prod-image-label">Imagen</label>
-                <div class="logo-box">
-                  <span class="logo-thumb">
-                    <img v-if="productImagePreview" :src="productImagePreview" alt="Imagen del producto" />
-                    <AppIcon v-else name="image" :size="20" aria-hidden="true" />
-                  </span>
-                  <div class="logo-actions">
-                    <input ref="productImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="prod-image-label" @change="onProductImagePicked" />
-                    <button type="button" class="btn ghost btn-auto" @click="productImageInput?.click()">
-                      <AppIcon name="upload" :size="16" /> {{ productImagePreview ? 'Cambiar' : 'Subir imagen' }}
-                    </button>
-                    <button v-if="productImage && !productOriginal" type="button" class="btn ghost btn-auto" :disabled="productBgBusy" @click="removeProductBg">
-                      <span v-if="productBgBusy" class="spinner" aria-hidden="true"></span><AppIcon v-else name="sparkles" :size="16" /> {{ productBgBusy ? 'Procesando…' : 'Quitar fondo' }}
-                    </button>
-                    <button v-if="productOriginal" type="button" class="btn ghost btn-auto" @click="restoreProductOriginal">Volver al original</button>
-                    <button v-if="productImagePreview" type="button" class="btn ghost btn-auto" @click="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true">Quitar</button>
-                  </div>
-                </div>
-                <p class="hint">PNG, JPG, WebP o GIF de hasta 4 MB. Ajustamos la imagen automáticamente; con «Quitar fondo» lo reemplazamos por blanco y centramos el producto. Consume tu cuota de almacenamiento.</p>
-                <p v-if="productImageErr" class="field-error" role="alert">{{ productImageErr }}</p>
-              </div>
+              </details>
               <div class="btn-row">
                 <AppButton :loading="productBusy" @click="saveProduct">{{ productEditing ? 'Guardar cambios' : 'Publicar producto' }}</AppButton>
                 <button v-if="productEditing" type="button" class="btn ghost btn-auto" @click="resetProductForm">Cancelar</button>
@@ -2013,7 +2005,7 @@ async function changePassword() {
             <div class="card">
               <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
               <StorageMeter />
-              <p v-if="!catalog.products.length" class="hint">Todavía no cargaste productos. Completá el formulario para publicar el primero.</p>
+              <div v-if="!catalog.products.length" class="empty-mini"><AppIcon name="package" :size="22" /><p>Todavía no cargaste productos. Completá el formulario de al lado para publicar el primero.</p></div>
               <template v-else>
                 <label class="prod-search">
                   <AppIcon name="search" :size="16" aria-hidden="true" />
@@ -2085,6 +2077,48 @@ async function changePassword() {
             </ul>
             <p v-else class="hint">Sin marcas todavía.</p>
           </div>
+          <!-- -------- Opciones avanzadas -------- -->
+          <details class="card more-card">
+            <summary><AppIcon name="store" :size="18" /> Opciones avanzadas de tu catálogo <small>Tipo de web y carrusel de portada</small></summary>
+            <div class="field">
+              <label id="site-mode-label-cat">Tipo de web</label>
+              <div class="check-list" role="radiogroup" aria-labelledby="site-mode-label-cat">
+                <label v-for="m in SITE_MODES" :key="m.id" class="check-item">
+                  <input type="radio" name="site-mode-cat" :value="m.id" :checked="designForm.site_mode === m.id" :disabled="catalogPageBusy" @change="setSiteMode(m.id)" />
+                  <span class="check-text">
+                    <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                    <small>{{ m.hint }}</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div v-if="canDesignAdvanced" class="field">
+              <label id="catalog-carousel-label">Carrusel de portada</label>
+              <div class="carousel-box">
+                <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button
+                  v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
+                  type="button" class="carousel-add" :disabled="carouselBusy"
+                  @click="carouselInput?.click()"
+                >
+                  <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="catalog-carousel-label" @change="onCarouselPicked" />
+              <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Se muestran como banners sobre tu catálogo.</p>
+              <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
+            </div>
+            <p v-else class="hint">El carrusel de portada del catálogo se habilita con el Plan premium.</p>
+          </details>
         </template>
       </template>
     </div>
@@ -2092,17 +2126,19 @@ async function changePassword() {
     <div v-if="seen.store" v-show="section === 'store'" :class="{ 'sec-on': section === 'store' }">
       <div class="page-head">
         <div>
-          <h1>Mi tienda</h1>
-          <p>Tu link público es la dirección que compartís con tus clientes.</p>
+          <h1>Mi página web</h1>
+          <p>Esta es la dirección de tu negocio en internet. Compartila por WhatsApp, Instagram o donde quieras.</p>
         </div>
       </div>
+      <SectionTabs :tabs="tabGroups.web" active="store" @select="section = $event" />
+
       <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
       <div v-if="store.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu tienda…</p></div>
       <template v-else-if="store.hasStore">
         <div class="card">
-          <h3><AppIcon name="store" :size="18" /> Tu link público</h3>
+          <h3><AppIcon name="share-2" :size="18" /> Tu dirección web</h3>
           <AlertMessage
             v-if="store.store.is_blocked"
             kind="error"
@@ -2113,16 +2149,15 @@ async function changePassword() {
             <span class="pill" :class="store.store.is_blocked ? 'danger' : (store.store.is_published ? 'ok' : 'muted')">{{ store.store.is_blocked ? 'Bloqueada' : (store.store.is_published ? 'Activo' : 'Pausado') }}</span>
           </div>
           <div class="btn-row link-actions">
-            <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
-            <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Abrir tienda</button>
-            <button class="btn ghost btn-auto" @click="openPreview"><AppIcon name="eye" :size="16" /> Vista previa Dúo</button>
-            <button class="btn ghost btn-auto" :disabled="storeBusy" @click="togglePublished">{{ store.store.is_published ? 'Pausar link' : 'Activar link' }}</button>
+            <button class="btn btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
+            <button class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+            <button class="btn ghost btn-auto" :disabled="storeBusy" @click="togglePublished">{{ store.store.is_published ? 'Pausar mi página' : 'Volver a publicarla' }}</button>
           </div>
-          <p class="hint">Con el link pausado, la página pública muestra “tienda no disponible”.</p>
+          <p class="hint">Si la pausás, tus clientes ven un cartel de “tienda no disponible” hasta que la vuelvas a publicar.</p>
         </div>
 
-        <div class="card">
-          <h3><AppIcon name="pencil" :size="18" /> Cambiar tu link</h3>
+        <details class="card more-card">
+          <summary><AppIcon name="pencil" :size="18" /> Cambiar mi dirección <small>Solo si de verdad lo necesitás</small></summary>
           <div class="field">
             <label for="rename-slug">Nuevo link</label>
             <div class="slug-box" :class="{ invalid: renameKind === 'err' || !!store.fieldErrors.slug }">
@@ -2140,7 +2175,7 @@ async function changePassword() {
               />
               <span v-if="storeSubdomains" class="slug-suffix">.{{ platformHost }}</span>
             </div>
-            <p class="hint">Al cambiarlo, el link anterior deja de funcionar.</p>
+            <p class="hint">Ojo: la dirección anterior deja de funcionar, y tendrás que avisarle a tus clientes.</p>
             <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>
             <p v-else-if="renameMsg" class="slug-check" :class="renameKind" role="status">
               <AppIcon v-if="renameCheck === 'available'" name="circle-check" :size="14" />
@@ -2149,19 +2184,19 @@ async function changePassword() {
             </p>
           </div>
           <button class="btn btn-auto" :disabled="!canRename" @click="saveRename">
-            <span v-if="renameBusy" class="spinner" aria-hidden="true"></span>Guardar nuevo link
+            <span v-if="renameBusy" class="spinner" aria-hidden="true"></span>Guardar nueva dirección
           </button>
-        </div>
+        </details>
 
-        <div class="card">
-          <h3><AppIcon name="palette" :size="18" /> Diseño de tu web</h3>
-          <p>Logo, titular, descripción, colores y botones de contacto de tu página pública.</p>
-          <AlertMessage v-if="!canCustomize" kind="info" message="La personalización de tu web está disponible en el Plan premium." />
-          <div class="btn-row link-actions">
-            <button class="btn btn-auto" @click="section = 'design'">
-              <AppIcon :name="canCustomize ? 'pencil' : 'lock'" :size="16" /> {{ canCustomize ? 'Editar diseño' : 'Conocer el diseño web' }}
-            </button>
-          </div>
+        <div v-if="canCustomize" class="next-card">
+          <span class="next-icon"><AppIcon name="palette" :size="22" /></span>
+          <div><strong>Dale tu estilo a tu página</strong><small>Poné tu logo, tus colores y contá qué hacés.</small></div>
+          <button class="btn btn-auto" @click="section = 'design'">Personalizar <AppIcon name="arrow-right" :size="16" /></button>
+        </div>
+        <div class="next-card">
+          <span class="next-icon"><AppIcon name="package" :size="22" /></span>
+          <div><strong>Cargá tus productos</strong><small>Es lo primero que ven tus clientes al entrar.</small></div>
+          <button class="btn secondary btn-auto" @click="section = 'catalogs'">Ir a mis productos <AppIcon name="arrow-right" :size="16" /></button>
         </div>
       </template>
     </div>
@@ -2169,11 +2204,13 @@ async function changePassword() {
     <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
         <div>
-          <h1>Diseño web</h1>
-          <p>Personalizá cómo se ve tu página pública. Los cambios se aplican en el momento.</p>
+          <h1>Cómo se ve mi página</h1>
+          <p>Elegí textos, colores e imágenes. Cuando guardás, tu página se actualiza al instante.</p>
         </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
+      <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
+
       <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
@@ -2271,7 +2308,7 @@ async function changePassword() {
                   </span>
                 </label>
               </div>
-              <p class="hint">Se guarda al instante. El catálogo se gestiona en "Mis catálogos".</p>
+              <p class="hint">Se guarda al instante. Tus productos se cargan en "Mis productos".</p>
             </div>
             <div v-if="designForm.site_mode !== 'catalog'" class="field">
               <label id="design-sections-label">Secciones de tu web</label>
@@ -2287,7 +2324,7 @@ async function changePassword() {
                   <input v-model="designForm.show_about" type="checkbox" />
                   <span class="check-text">
                     <strong>Sobre nosotros</strong>
-                    <small>Historia, especialidades y misión. El contenido se edita en "Mi empresa".</small>
+                    <small>Historia, especialidades y misión. El contenido se edita en "Sobre mi negocio".</small>
                   </span>
                 </label>
                 <label class="check-item">
@@ -2518,11 +2555,13 @@ async function changePassword() {
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
       <div class="page-head">
         <div>
-          <h1>Mi empresa</h1>
-          <p>El contenido de marketing de tu página principal: cada bloque se publica al guardarlo y se oculta solo si quedó vacío o lo apagás.</p>
+          <h1>Sobre mi negocio</h1>
+          <p>Contale a tus clientes quién sos, qué ofrecés y cuándo atendés. Cada bloque es opcional: si lo dejás vacío, no se muestra.</p>
         </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
+      <SectionTabs :tabs="tabGroups.web" active="company" @select="section = $event" />
+
       <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
@@ -2569,7 +2608,7 @@ async function changePassword() {
             <p class="hint">Se muestra destacada debajo de la descripción. {{ designForm.about_mission.length }}/400</p>
             <p v-if="designFieldErr('about_mission')" class="field-error" role="alert">{{ designFieldErr('about_mission') }}</p>
           </div>
-          <p class="hint">La sección se apaga desde Diseño web, en "Secciones de tu web". También se oculta sola si no cargaste ningún contenido.</p>
+          <p class="hint">La sección se apaga desde "Cómo se ve", en la pestaña "Qué mostrar". También se oculta sola si no cargaste ningún contenido.</p>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveCompany">Guardar información</AppButton>
           </div>
@@ -2768,7 +2807,7 @@ async function changePassword() {
             <button type="button" class="btn ghost btn-auto" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
               <AppIcon name="plus" :size="15" /> Agregar horario
             </button>
-            <p class="hint">Si apagás la sección Contáctanos desde Diseño web, los horarios también se ocultan.</p>
+            <p class="hint">Si apagás la sección Contáctanos desde "Cómo se ve", los horarios también se ocultan.</p>
             <p v-if="companyErrs.hours" class="field-error" role="alert">{{ companyErrs.hours }}</p>
           </div>
           <div class="btn-row">
@@ -2829,18 +2868,20 @@ async function changePassword() {
     <div v-if="seen.stats" v-show="section === 'stats'" :class="{ 'sec-on': section === 'stats' }">
       <div class="page-head">
         <div>
-          <h1>Estadísticas</h1>
-          <p>Métricas de tu tienda y de tu link público.</p>
+          <h1>Mis visitas</h1>
+          <p>Cuánta gente entró a tu página web.</p>
         </div>
       </div>
+      <SectionTabs :tabs="tabGroups.promo" active="stats" @select="section = $event" />
+
       <template v-if="store.visitStats">
         <div class="stats">
           <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ store.visitStats.total }}</strong><small>Visitas totales</small></div></div>
           <div class="stat"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong>{{ store.visitStats.today }}</strong><small>Visitas hoy</small></div></div>
-          <div class="stat"><span class="stat-icon"><AppIcon name="calendar" :size="20" /></span><div><strong>{{ visitAvg }}</strong><small>Promedio diario (30 días)</small></div></div>
+          <div class="stat"><span class="stat-icon"><AppIcon name="calendar" :size="20" /></span><div><strong>{{ visitAvg }}</strong><small>Promedio por día (último mes)</small></div></div>
         </div>
         <div class="card">
-          <h3><AppIcon name="trending-up" :size="18" /> Últimos 30 días</h3>
+          <h3><AppIcon name="trending-up" :size="18" /> Visitas de los últimos 30 días</h3>
           <div class="stats-chart" role="img" aria-label="Visitas por día">
             <span
               v-for="d in visitDays" :key="d.date" class="stats-bar"
@@ -2850,13 +2891,14 @@ async function changePassword() {
             ></span>
           </div>
           <div class="stats-chart-axis"><span>{{ visitDays[0]?.date?.slice(5) }}</span><span>{{ visitDays[visitDays.length - 1]?.date?.slice(5) }}</span></div>
-          <p class="hint">Se cuenta una visita por persona por día en tu link público.</p>
+          <p class="hint">Cada barra es un día; cuanto más alta, más visitas. Contamos una visita por persona por día.</p>
         </div>
       </template>
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="trending-up" :size="28" /></span>
-        <h3>Todavía no hay visitas registradas</h3>
-        <p>En cuanto alguien entre a tu link público vas a ver acá las visitas por día. Compartí tu web para empezar a medir.</p>
+        <h3>Todavía nadie visitó tu página</h3>
+        <p>Compartí tu dirección web con tus clientes: apenas alguien entre, lo vas a ver acá.</p>
+        <button class="btn btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar mi dirección</button>
       </div>
     </div>
     <!-- ================= QR Y FOLLETOS (premium) ================= -->
@@ -2864,25 +2906,27 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>QR y folletos</h1>
-          <p>Herramientas de difusión para tu link público.</p>
+          <p>Material listo para imprimir o compartir, para que más gente llegue a tu página.</p>
         </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
+      <SectionTabs :tabs="tabGroups.promo" active="tools" @select="section = $event" />
+
       <div class="grid-2">
         <div v-if="canQr" class="card">
-          <h3><AppIcon name="qr-code" :size="18" /> QR de tu tienda</h3>
-          <p>Apunta a tu link público: <span class="mono link-url">{{ publicUrl }}</span></p>
+          <h3><AppIcon name="qr-code" :size="18" /> Tu código QR</h3>
+          <p>Quien lo escanee con el celular entra directo a tu página. Pegalo en tu vidriera, mostrador o paquetes.</p>
           <div v-if="qrDataUrl" class="qr-box">
             <img :src="qrDataUrl" alt="Código QR de tu tienda" />
           </div>
           <div class="btn-row">
             <button class="btn btn-auto" :disabled="!qrDataUrl" @click="downloadQr"><AppIcon name="download" :size="16" /> Descargar QR</button>
-            <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
+            <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
           </div>
         </div>
         <div v-if="canFlyers" class="card">
           <h3><AppIcon name="file-text" :size="18" /> Folleto imprimible</h3>
-          <p>Panfletito A6 a color para repartir: tu logo, tus productos destacados, tu contacto y el QR de tu link. Salen 4 por hoja A4, listos para cortar, imprimir o guardar como PDF.</p>
+          <p>Un folleto a color con tu logo, tus productos, tu contacto y el QR. Salen 4 por hoja: imprimilos, cortalos y repartilos (o guardalos como PDF).</p>
           <div class="btn-row">
             <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
           </div>
@@ -2894,7 +2938,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Venta en persona</h1>
-          <p>Un punto de venta para cobrar cara a cara: tu catálogo, ya cargado.</p>
+          <p>Un programa para cobrar en tu local, con tus productos ya cargados.</p>
         </div>
         <span class="pill warn"><AppIcon name="clock" :size="14" /> Próximamente</span>
       </div>
@@ -3000,8 +3044,8 @@ async function changePassword() {
     <div v-if="seen.bot" v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
       <div class="page-head">
         <div>
-          <h1>Chatbot</h1>
-          <p>Un asistente con la cara de tu negocio que responde solito a las visitas de tu web.</p>
+          <h1>Asistente de chat</h1>
+          <p>Un ayudante que responde solo las preguntas más comunes de quienes visitan tu página.</p>
         </div>
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
       </div>
@@ -3010,14 +3054,14 @@ async function changePassword() {
       <AlertMessage v-if="botErr" kind="error" :message="botErr" />
 
       <div class="card">
-        <h3><AppIcon name="bot" :size="18" /> Tu asistente</h3>
+        <h3><AppIcon name="bot" :size="18" /> Configurá tu asistente</h3>
         <div class="field">
           <div class="check-list">
             <label class="check-item">
               <input v-model="botForm.is_enabled" type="checkbox" />
               <span class="check-text">
-                <strong>Chatbot activo</strong>
-                <small>Aparece como burbuja flotante abajo a la derecha de tu web pública, con el nombre y el logo de tu negocio.</small>
+                <strong>Encender el asistente</strong>
+                <small>Aparece como un globito de chat abajo a la derecha de tu página, con tu logo y el nombre de tu negocio.</small>
               </span>
             </label>
           </div>
@@ -3027,11 +3071,11 @@ async function changePassword() {
           label="Mensaje de bienvenida"
           maxlength="200"
           placeholder="¡Hola! Soy el asistente de tu negocio. ¿En qué te puedo ayudar?"
-          hint="Es lo primero que ve la visita al abrir el chat. Si lo dejás vacío se usa uno genérico con el nombre de tu negocio."
+          hint="Es lo primero que lee la persona al abrir el chat. Si lo dejás vacío, usamos uno automático."
         />
         <div class="field">
           <label>Preguntas y respuestas <span class="hint-inline">({{ botForm.qa.length }}/{{ CHATBOT_QA_MAX }})</span></label>
-          <p class="hint">Las visitas las tocan como sugerencias o escriben algo parecido: el bot contesta con tu respuesta. Si no entiende, las deriva a la sección Contáctanos.</p>
+          <p class="hint">Ejemplo: pregunta «¿Hacen envíos?» y respuesta «Sí, a todo el país». Si el asistente no sabe responder, invita a escribirte desde Contáctanos.</p>
           <div v-if="botForm.qa.length" class="qa-list">
             <div v-for="(item, i) in botForm.qa" :key="i" class="qa-item">
               <div class="qa-fields">
@@ -3047,17 +3091,19 @@ async function changePassword() {
             <AppIcon name="plus" :size="15" /> Agregar pregunta
           </button>
         </div>
-        <AppButton :loading="botBusy" @click="saveBot">Guardar chatbot</AppButton>
+        <AppButton :loading="botBusy" @click="saveBot">Guardar cambios</AppButton>
       </div>
     </div>
     <!-- ================= PLANES ================= -->
     <div v-if="seen.plans" v-show="section === 'plans'" :class="{ 'sec-on': section === 'plans' }">
       <div class="page-head">
         <div>
-          <h1>Planes</h1>
-          <p>Elegí el plan que acompaña el tamaño de tu negocio. Podés cambiarlo cuando quieras.</p>
+          <h1>Plan y pagos</h1>
+          <p>Elegí el plan que mejor te viene. Podés cambiarlo cuando quieras.</p>
         </div>
       </div>
+      <SectionTabs :tabs="tabGroups.billing" active="plans" @select="section = $event" />
+
       <AlertMessage v-if="billing.notice" kind="success" :message="billing.notice" />
       <AlertMessage v-if="billing.lastError" kind="error" :message="billing.lastError" />
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
@@ -3097,11 +3143,13 @@ async function changePassword() {
     <div v-if="seen.payments" v-show="section === 'payments'" :class="{ 'sec-on': section === 'payments' }">
       <div class="page-head">
         <div>
-          <h1>Pagos</h1>
-          <p>Historial de pagos de tu suscripción. Se acreditan solos cuando Mercado Pago los confirma.</p>
+          <h1>Plan y pagos</h1>
+          <p>Todo lo que pagaste por tu suscripción. Se acredita solo cuando Mercado Pago lo confirma.</p>
         </div>
-        <button class="btn ghost btn-auto" @click="payments.loadPayments()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+        <button class="btn ghost btn-auto" @click="payments.loadPayments()"><AppIcon name="refresh" :size="16" /> Actualizar</button>
       </div>
+      <SectionTabs :tabs="tabGroups.billing" active="payments" @select="section = $event" />
+
 
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
@@ -3131,8 +3179,9 @@ async function changePassword() {
       </div>
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="receipt" :size="28" /></span>
-        <h3>Todavía no hay pagos registrados</h3>
-        <p>Cuando registres tu primer cobro de Mercado Pago, va a aparecer acá con su estado y referencia.</p>
+        <h3>Todavía no hiciste ningún pago</h3>
+        <p>Cuando pagues tu plan, el pago va a aparecer acá.</p>
+        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
 
       <div v-if="payments.revenuesStatus === 'success'" class="grid-2 section-gap">
@@ -3162,11 +3211,13 @@ async function changePassword() {
     <div v-if="seen.invoices" v-show="section === 'invoices'" :class="{ 'sec-on': section === 'invoices' }">
       <div class="page-head">
         <div>
-          <h1>Facturas</h1>
-          <p>Tus comprobantes emitidos por cada pago acreditado. También te los enviamos al correo registrado en tu cuenta.</p>
+          <h1>Plan y pagos</h1>
+          <p>Tus comprobantes por cada pago. También te los mandamos por correo.</p>
         </div>
-        <button class="btn ghost btn-auto" @click="invoices.loadInvoices()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+        <button class="btn ghost btn-auto" @click="invoices.loadInvoices()"><AppIcon name="refresh" :size="16" /> Actualizar</button>
       </div>
+      <SectionTabs :tabs="tabGroups.billing" active="invoices" @select="section = $event" />
+
 
       <AlertMessage v-if="invoices.lastError" kind="error" :message="invoices.lastError" />
 
@@ -3208,15 +3259,15 @@ async function changePassword() {
     <div v-if="seen.settings" v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
       <div class="page-head">
         <div>
-          <h1>Cuenta</h1>
-          <p>Tus datos comerciales y de acceso.</p>
+          <h1>Mi cuenta</h1>
+          <p>Tus datos personales y tu contraseña. Mantenelos al día para poder facturarte bien.</p>
         </div>
         <button class="btn ghost btn-auto" @click="reloadAccount"><AppIcon name="refresh" :size="16" /> Recargar</button>
       </div>
       <div class="grid-2">
         <div class="card">
-          <h3><AppIcon name="user" :size="18" /> Tu perfil</h3>
-          <p>Actualizá tu correo de acceso y tus datos fiscales. Usamos estos datos para tu facturación.</p>
+          <h3><AppIcon name="user" :size="18" /> Mis datos</h3>
+          <p>Con estos datos armamos tus facturas y te contactamos si hace falta.</p>
           <AlertMessage v-if="accountMsg" kind="success" :message="accountMsg" />
           <AlertMessage v-if="accountErr" kind="error" :message="accountErr" />
           <AlertMessage v-if="geoNotice" kind="warn" :message="geoNotice" />
@@ -3293,15 +3344,16 @@ async function changePassword() {
           </div>
         </div>
         <div class="card">
-          <h3><AppIcon name="key" :size="18" /> Cambiar contraseña</h3>
+          <h3><AppIcon name="key" :size="18" /> Cambiar mi contraseña</h3>
+          <p class="lead">Por seguridad, al cambiarla se cierra tu sesión en los demás dispositivos.</p>
           <AlertMessage v-if="passMsg" kind="success" :message="passMsg" />
           <AlertMessage v-if="passErr" kind="error" :message="passErr" />
           <form @submit.prevent="changePassword" novalidate>
-            <AppInput v-model="passForm.old_password" label="Actual" name="old_password" type="password" autocomplete="current-password" :error="touched.old_password && !passForm.old_password ? 'Obligatorio' : ''" @blur="touched.old_password = true" />
-            <AppInput v-model="passForm.new_password" label="Nueva" name="new_password" type="password" autocomplete="new-password" :error="touched.new_password ? (validatePassword(passForm.new_password) || '') : ''" @blur="touched.new_password = true" />
+            <AppInput v-model="passForm.old_password" label="Contraseña actual" name="old_password" type="password" autocomplete="current-password" :error="touched.old_password && !passForm.old_password ? 'Obligatorio' : ''" @blur="touched.old_password = true" />
+            <AppInput v-model="passForm.new_password" label="Contraseña nueva" name="new_password" type="password" autocomplete="new-password" :error="touched.new_password ? (validatePassword(passForm.new_password) || '') : ''" @blur="touched.new_password = true" />
             <PasswordStrength :value="passForm.new_password" />
-            <AppInput v-model="passForm.confirm_password" label="Confirmar" name="confirm_password" type="password" autocomplete="new-password" @blur="touched.confirm_password = true" />
-            <AppButton :loading="auth.status === 'loading'">Actualizar</AppButton>
+            <AppInput v-model="passForm.confirm_password" label="Repetí la contraseña nueva" name="confirm_password" type="password" autocomplete="new-password" @blur="touched.confirm_password = true" />
+            <AppButton :loading="auth.status === 'loading'">Cambiar contraseña</AppButton>
           </form>
         </div>
       </div>
