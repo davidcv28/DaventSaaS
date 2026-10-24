@@ -825,8 +825,9 @@ const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpp
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
 const storeThemes = STORE_THEMES
-// Diseños de la web (classic/editorial/impact): los dos últimos son premium.
-// La vista previa fuerza 'classic' sin has_design_advanced, igual que la web.
+// Diseños de la web (STORE_TEMPLATES): las alternativas a 'classic' son
+// premium. La vista previa fuerza 'classic' sin has_design_advanced, igual
+// que la web.
 const storeTemplates = STORE_TEMPLATES
 const designTemplate = computed(() => (canDesignAdvanced.value ? storeTemplate(designForm.template) : 'classic'))
 

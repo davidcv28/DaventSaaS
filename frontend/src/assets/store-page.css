@@ -949,12 +949,13 @@ html { scroll-behavior: smooth; }
 }
 
 /* ===== Diseños de la web (customization.template, Plan premium) =====
-   'classic' es el diseño base. 'editorial' e 'impact' se activan con
-   data-store-template en .store-page (lo setea StorePublicLayout; sin
-   has_design_advanced se fuerza 'classic'). El hero se reordena por
-   grid-areas sobre el mismo DOM: solo 'impact' suma markup (la cinta
-   de marca). Las reglas van al final para ganar por cascada en empates
-   de especificidad con los temas claro/oscuro. */
+   'classic' es el diseño base. 'editorial', 'perspective', 'promo' y
+   'catalog' se activan con data-store-template en .store-page (lo setea
+   StorePublicLayout; sin has_design_advanced se fuerza 'classic'). El hero
+   se reordena por grid-areas sobre el mismo DOM: 'perspective' suma el
+   piso isométrico + planos flotantes y comparte la cinta de marca con
+   'promo'. Las reglas van al final para ganar por cascada en empates de
+   especificidad con los temas claro/oscuro. */
 
 /* ---------- Editorial: estilo revista ----------
    Banda clara con texto tinta, titular a la izquierda, marca enmarcada
@@ -1080,48 +1081,97 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='editorial'] .sp-hero-meta { justify-content: center; }
 }
 
-/* ---------- Impacto: portada oscura de alto contraste ----------
-   Banda siempre oscura con halos del acento, titular grande a la
-   izquierda, meta como chips y cinta de marca en marquee al pie. */
-.store-page[data-store-template='impact'] .sp-hero-band {
+/* ---------- Perspectiva: portada clara con profundidad espacial ----------
+   Banda clara con halo del acento, piso isométrico y planos flotantes en
+   capas (markup propio), titular extruido con sombras apiladas y cinta de
+   marca en marquee al pie. Los elementos se "elevan" con sombras corridas. */
+.store-page[data-store-template='perspective'] { --sp-px-ink: #111827; }
+.store-page[data-store-template='perspective'] .sp-hero-band {
+  color: var(--sp-ink);
   background:
-    radial-gradient(860px 480px at 84% -16%, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent 62%),
-    radial-gradient(640px 400px at 6% 112%, color-mix(in srgb, var(--store-accent-ink) 60%, transparent), transparent 62%),
-    #0a0e1a;
+    radial-gradient(760px 380px at 82% -18%, color-mix(in srgb, var(--store-accent) 18%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--store-accent-soft) 62%, #f8fafd), var(--sp-card-solid) 88%);
+  border-bottom: 1px solid var(--sp-line);
   animation: none;
 }
-.store-page[data-store-template='impact'] .sp-hero-inner { justify-items: start; text-align: left; padding: 76px 40px 60px; }
-.store-page[data-store-template='impact'] .sp-hero .sp-mono.lg,
-.store-page[data-store-template='impact'] .sp-hero .sp-logo.lg { width: 80px; height: 80px; border-radius: 22px; font-size: 32px; border-color: transparent; box-shadow: 0 0 0 5px rgba(255, 255, 255, .16), 0 18px 40px -14px rgba(0, 0, 0, .6); animation: none; }
-.store-page[data-store-template='impact'] .sp-hero-badge { background: var(--store-accent); border-color: transparent; color: #fff; animation: none; box-shadow: 0 8px 22px -8px var(--store-accent-ink); }
-.store-page[data-store-template='impact'] .sp-hero-title { max-width: 16ch; font-size: clamp(38px, 6.8vw, 72px); line-height: 1.04; }
-.store-page[data-store-template='impact'] .sp-hero-title.is-name { font-size: clamp(36px, 7vw, calc(var(--store-name-size, 48px) * 1.15)); }
-.store-page[data-store-template='impact'] .sp-hero-sub { max-width: 58ch; color: rgba(255, 255, 255, .72); }
-.store-page[data-store-template='impact'] .sp-hero-ctas { justify-content: flex-start; }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn:hover { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); filter: brightness(1.15); }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-ghost { border-color: rgba(255, 255, 255, .4); }
-.store-page[data-store-template='impact'] .sp-hero-meta { justify-content: flex-start; }
-.store-page[data-store-template='impact'] .sp-hero-meta li { padding: 6px 14px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-hero-band {
+  background:
+    radial-gradient(760px 380px at 82% -18%, color-mix(in srgb, var(--store-accent) 24%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--store-accent) 12%, var(--sp-card-solid)), var(--sp-card-solid) 88%);
+}
+.store-page[data-store-template='perspective'] .sp-hero-inner { padding: 80px 40px 66px; }
+/* Marca como placa inclinada con capa de acento debajo (efecto isométrico). */
+.store-page[data-store-template='perspective'] .sp-hero .sp-mono.lg,
+.store-page[data-store-template='perspective'] .sp-hero .sp-logo.lg { width: 88px; height: 88px; border-radius: 20px; font-size: 34px; border-color: var(--sp-card-solid); box-shadow: 10px 12px 0 -4px color-mix(in srgb, var(--store-accent) 42%, transparent), 0 24px 44px -18px rgba(17, 24, 39, .4); transform: rotate(-4deg); animation: none; }
+.store-page[data-store-template='perspective'] .sp-hero-badge { color: var(--sp-accent-text); background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 38%, var(--sp-line)); backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent) 26%, transparent); }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-hero-badge { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-title { max-width: 15ch; font-size: clamp(40px, 7vw, 84px); line-height: 1.02; letter-spacing: -.01em; text-transform: uppercase; color: var(--sp-ink); text-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent) 34%, transparent), 9px 9px 0 color-mix(in srgb, var(--store-accent) 13%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-title.is-name { font-size: clamp(36px, 7vw, calc(var(--store-name-size, 48px) * 1.4)); }
+.store-page[data-store-template='perspective'] .sp-hero-sub { max-width: 56ch; color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-btn { background: var(--store-accent-ink); border-color: transparent; color: #fff; box-shadow: 5px 5px 0 color-mix(in srgb, var(--store-accent-ink) 32%, rgba(17, 24, 39, .5)); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-btn:hover { background: var(--store-accent-ink); filter: none; transform: translate(-2px, -2px); box-shadow: 7px 7px 0 color-mix(in srgb, var(--store-accent-ink) 36%, rgba(17, 24, 39, .5)); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-ghost { background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-ghost:hover { background: var(--sp-card-solid); border-color: var(--store-accent); color: var(--sp-accent-text); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 color-mix(in srgb, var(--store-accent) 30%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero .sp-icon-btn { background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='perspective'] .sp-hero .sp-icon-btn:hover { background: var(--sp-card-solid); border-color: var(--store-accent); color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-hero-meta { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-hero-meta li { padding: 6px 14px; border-radius: 10px; border: 1px solid var(--sp-line); background: var(--sp-card-solid); box-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent) 20%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-meta .icon { color: var(--sp-accent-text); }
 /* Cinta de marca: marquee infinito (dos secuencias idénticas, -50% loop). */
 .sp-hero-marquee { position: relative; z-index: 1; border-top: 1px solid rgba(255, 255, 255, .14); overflow: hidden; padding: 15px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .sp-hero-marquee-track { display: flex; width: max-content; animation: sp-marquee 24s linear infinite; }
 .sp-hero-marquee-seq { display: inline-flex; align-items: center; gap: 26px; padding-right: 26px; font-size: 12.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: rgba(255, 255, 255, .55); white-space: nowrap; }
 .sp-hero-marquee-seq i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--store-accent); }
 @keyframes sp-marquee { to { transform: translateX(-50%); } }
-/* Barra y pie oscuros, en sintonía con la banda. */
-.store-page[data-store-template='impact'] .sp-top,
-.store-page[data-store-template='impact'][data-store-theme='dark'] .sp-top { background: color-mix(in srgb, #0a0e1a 86%, transparent); border-bottom-color: rgba(255, 255, 255, .14); backdrop-filter: saturate(140%) blur(12px); -webkit-backdrop-filter: saturate(140%) blur(12px); }
-.store-page[data-store-template='impact'] .sp-foot { background: #0a0e1a; }
+.store-page[data-store-template='perspective'] .sp-hero-marquee { border-top-color: var(--sp-line); }
+.store-page[data-store-template='perspective'] .sp-hero-marquee-seq { color: var(--sp-muted); }
+/* Barra superior y pie claros, en sintonía con la banda espacial. */
+.store-page[data-store-template='perspective'] .sp-top,
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-top {
+  background: color-mix(in srgb, var(--sp-card-solid) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom-color: var(--sp-line);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+}
+.store-page[data-store-template='perspective'] .sp-top .sp-brand,
+.store-page[data-store-template='perspective'] .sp-top .sp-name { color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-top-links a { color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-top-links a:hover,
+.store-page[data-store-template='perspective'] .sp-top-links a.router-link-exact-active { color: var(--sp-accent-text); background: var(--store-accent-soft); }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-top-links a:hover,
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-top-links a.router-link-exact-active { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-top .sp-icon-btn,
+.store-page[data-store-template='perspective'] .sp-top .sp-burger { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); }
+.store-page[data-store-template='perspective'] .sp-top .sp-icon-btn:hover,
+.store-page[data-store-template='perspective'] .sp-top .sp-burger:hover { background: var(--sp-card); border-color: var(--store-accent); color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-top .sp-mono { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.store-page[data-store-template='perspective'] .sp-top .sp-logo.sm { border-color: var(--sp-line); }
+.store-page[data-store-template='perspective'] .sp-progress { background: linear-gradient(90deg, var(--store-accent), var(--store-accent-ink)); }
+.store-page[data-store-template='perspective'] .sp-top-cta { background: var(--store-accent-ink); color: #fff; }
+.store-page[data-store-template='perspective'] .sp-top-cta:hover { background: var(--store-accent-ink); filter: brightness(1.12); }
+.store-page[data-store-template='perspective'] .sp-foot { background: var(--sp-surface); color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-foot::before { background: linear-gradient(90deg, transparent 8%, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent 92%); }
+.store-page[data-store-template='perspective'] .sp-foot-brand strong { color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-foot-brand span,
+.store-page[data-store-template='perspective'] .sp-foot-copy { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-foot-heading { color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-foot-col a { color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-foot-col a:hover { color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-foot-bottom { border-top-color: var(--sp-line); }
+.store-page[data-store-template='perspective'] .sp-foot .sp-davent-badge { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-foot .sp-davent-badge:hover { border-color: var(--store-accent); }
+.store-page[data-store-template='perspective'] .sp-foot .sp-davent-badge strong { color: var(--sp-accent-text); }
 @media (max-width: 760px) {
-  .store-page[data-store-template='impact'] .sp-hero-inner { padding: 56px 20px 44px; }
-  .store-page[data-store-template='impact'] .sp-hero-title { font-size: clamp(32px, 9vw, 48px); }
+  .store-page[data-store-template='perspective'] .sp-hero-inner { padding: 56px 20px 48px; }
+  .store-page[data-store-template='perspective'] .sp-hero-title { font-size: clamp(30px, 9vw, 46px); }
 }
 
 /* ===== Diseños v2: cada plantilla con identidad propia =====
-   Editorial = revista de papel · Impacto = tech oscuro · Publicidad =
-   afiche promocional. Van después de los bloques base para ganar por
-   cascada; todo el movimiento se apaga con prefers-reduced-motion. */
+   Editorial = revista de papel · Perspectiva = profundidad espacial
+   isométrica · Publicidad = afiche promocional. Van después de los bloques
+   base para ganar por cascada; todo el movimiento se apaga con
+   prefers-reduced-motion. */
 
 /* ---------- Editorial v2 ---------- */
 .sp-ed-masthead { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; padding-top: 24px; font-size: 11.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--sp-muted); }
@@ -1169,57 +1219,51 @@ html { scroll-behavior: smooth; }
   .sp-ed-masthead span:nth-of-type(3), .sp-ed-masthead i:nth-of-type(2) { display: none; }
 }
 
-/* ---------- Impacto v2 ---------- */
-.sp-hero-band { --sp-cut: 12px; }
-.sp-im-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px); background-size: 52px 52px; -webkit-mask-image: radial-gradient(ellipse 80% 90% at 70% 40%, #000 15%, transparent 75%); mask-image: radial-gradient(ellipse 80% 90% at 70% 40%, #000 15%, transparent 75%); animation: sp-im-pan 14s linear infinite; }
-@keyframes sp-im-pan { to { background-position: 52px 52px; } }
-.sp-im-beam { position: absolute; top: -30%; width: 240px; height: 170%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--store-accent) 34%, transparent), transparent); transform: rotate(18deg); filter: blur(10px); animation: sp-im-sweep 11s ease-in-out infinite alternate; }
-.sp-im-beam.b1 { left: -10%; }
-.sp-im-beam.b2 { left: 30%; width: 120px; opacity: .6; animation-duration: 15s; animation-delay: -6s; }
-@keyframes sp-im-sweep { from { translate: -4vw 0; } to { translate: 46vw 0; } }
-.store-page[data-store-template='impact'] .sp-hero-decor::before { background-image: none; }
-.store-page[data-store-template='impact'] .sp-float { border-radius: 0; background: rgba(255, 255, 255, .05); border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); color: var(--store-accent); box-shadow: 0 0 28px -6px var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-orb { display: none; }
-.store-page[data-store-template='impact'] .sp-hero-title { max-width: 12ch; font-size: clamp(44px, 8vw, 96px); font-weight: 900; line-height: .98; letter-spacing: -.05em; text-transform: uppercase; background: linear-gradient(180deg, #fff 30%, rgba(255, 255, 255, .6)); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
-.store-page[data-store-template='impact'] .sp-hero-title.is-name { font-size: clamp(40px, 8vw, calc(var(--store-name-size, 48px) * 1.7)); }
-.store-page[data-store-template='impact'] .sp-hero-title::after { content: '_'; margin-left: 4px; color: var(--store-accent); -webkit-text-fill-color: var(--store-accent); animation: sp-im-blink 1s steps(2, start) infinite; }
-@keyframes sp-im-blink { to { visibility: hidden; } }
-.store-page[data-store-template='impact'] .sp-hero-badge { position: relative; gap: 9px; border-radius: 0; clip-path: polygon(var(--sp-cut) 0, 100% 0, 100% calc(100% - var(--sp-cut)), calc(100% - var(--sp-cut)) 100%, 0 100%, 0 var(--sp-cut)); letter-spacing: .18em; }
-.store-page[data-store-template='impact'] .sp-hero-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0 rgba(255, 255, 255, .7); animation: sp-im-ping 1.8s ease-out infinite; }
-@keyframes sp-im-ping { to { box-shadow: 0 0 0 9px rgba(255, 255, 255, 0); } }
-.store-page[data-store-template='impact'] .sp-hero .sp-mono.lg,
-.store-page[data-store-template='impact'] .sp-hero .sp-logo.lg { border-radius: 4px; clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); box-shadow: none; }
-.store-page[data-store-template='impact'] .sp-ava::before { content: ''; position: absolute; inset: -14px; background: radial-gradient(closest-side, color-mix(in srgb, var(--store-accent) 60%, transparent), transparent); filter: blur(10px); animation: sp-im-glow 3.2s ease-in-out infinite alternate; }
-@keyframes sp-im-glow { from { opacity: .45; transform: scale(.9); } to { opacity: 1; transform: scale(1.15); } }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn,
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-ghost { border-radius: 0; clip-path: polygon(var(--sp-cut) 0, 100% 0, 100% calc(100% - var(--sp-cut)), calc(100% - var(--sp-cut)) 100%, 0 100%, 0 var(--sp-cut)); height: 50px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; font-size: 13px; }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn { box-shadow: none; }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-ghost { background: rgba(255, 255, 255, .06); border: 0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4); }
-.store-page[data-store-template='impact'] .sp-btn.sp-hero-btn:hover .sp-arrow { transform: translateX(4px); }
-.store-page[data-store-template='impact'] .sp-hero-meta li { border-radius: 0; border: 0; border-left: 2px solid var(--store-accent); background: rgba(255, 255, 255, .06); font-weight: 600; letter-spacing: .04em; }
-.store-page[data-store-template='impact'] .sp-hero-meta .icon { color: var(--store-accent); }
+/* ---------- Perspectiva v2 ---------- */
+/* Piso isométrico: grilla del acento rotada en perspectiva que converge
+   hacia el horizonte y se desplaza hacia el visitante (punto de fuga). */
+.sp-px-floor { position: absolute; left: -15%; right: -15%; bottom: -14%; height: 82%; background-image: linear-gradient(color-mix(in srgb, var(--store-accent) 30%, transparent) 1.5px, transparent 1.5px), linear-gradient(90deg, color-mix(in srgb, var(--store-accent) 30%, transparent) 1.5px, transparent 1.5px); background-size: 54px 54px; transform: perspective(900px) rotateX(60deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(180deg, transparent, #000 60%); mask-image: linear-gradient(180deg, transparent, #000 60%); animation: sp-px-scroll 14s linear infinite; }
+@keyframes sp-px-scroll { to { background-position: 0 54px, 0 0; } }
+/* Planos flotantes: tarjetas translúcidas inclinadas en capas, cada una
+   con su "piso" de acento apilado debajo (profundidad por capas). */
+.sp-px-plane { position: absolute; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); background: linear-gradient(150deg, color-mix(in srgb, #fff 82%, var(--store-accent-soft)), color-mix(in srgb, var(--store-accent-soft) 80%, transparent)); box-shadow: 12px 14px 0 -5px color-mix(in srgb, var(--store-accent) 26%, transparent), 0 26px 44px -22px rgba(17, 24, 39, .3); transform: rotate(-7deg) skewX(-6deg); animation: sp-px-bob 7s ease-in-out infinite alternate; }
+.sp-px-plane.p1 { width: 150px; height: 96px; right: 13%; top: 15%; }
+.sp-px-plane.p2 { width: 92px; height: 62px; right: 27%; top: 52%; opacity: .75; animation-delay: -3.2s; }
+@keyframes sp-px-bob { from { transform: rotate(-7deg) skewX(-6deg) translateY(0); } to { transform: rotate(-7deg) skewX(-6deg) translateY(-13px); } }
+.store-page[data-store-theme='dark'][data-store-template='perspective'] .sp-px-plane { background: linear-gradient(150deg, color-mix(in srgb, var(--store-accent) 20%, var(--sp-card-solid)), var(--sp-card-solid)); }
+/* La trama de puntos base estorba al piso: la reemplaza la grilla 3D. */
+.store-page[data-store-template='perspective'] .sp-hero-decor::before { background-image: none; }
+.store-page[data-store-template='perspective'] .sp-orb { display: none; }
+.store-page[data-store-template='perspective'] .sp-float { border-radius: 14px; background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-accent-text); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 6px 7px 0 -2px color-mix(in srgb, var(--store-accent) 24%, transparent), var(--sp-shadow-sm); }
 .sp-hero-marquee-seq .icon { flex: none; color: var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-highlights { margin-top: -44px; gap: 14px; }
-.store-page[data-store-template='impact'] .sp-hl { padding: 26px 22px; border: 1px solid rgba(255, 255, 255, .12); border-radius: 0; background: linear-gradient(160deg, #141c38, #0a0e1a); color: #fff; box-shadow: none; clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
-.store-page[data-store-template='impact'] .sp-hl::before { content: ''; position: absolute; inset: 0; background: radial-gradient(300px 140px at 100% 0, color-mix(in srgb, var(--store-accent) 30%, transparent), transparent 70%); opacity: 0; transition: opacity .4s; pointer-events: none; }
-.store-page[data-store-template='impact'] .sp-hl:hover { transform: translateY(-6px); border-color: var(--store-accent); box-shadow: none; }
-.store-page[data-store-template='impact'] .sp-hl:hover::before { opacity: 1; }
-.store-page[data-store-template='impact'] .sp-hl-icon { border-radius: 0; background: transparent; color: var(--store-accent); border: 1px solid color-mix(in srgb, var(--store-accent) 60%, transparent); box-shadow: 0 0 22px -4px var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-hl strong { color: #fff; text-transform: uppercase; letter-spacing: .02em; font-weight: 800; font-size: 15px; }
-.store-page[data-store-template='impact'] .sp-hl-text { color: rgba(255, 255, 255, .64); }
-.store-page[data-store-template='impact'] .sp-section-title,
-.store-page[data-store-template='impact'] .sp-about-heading,
-.store-page[data-store-template='impact'] .sp-contact-title { font-weight: 900; letter-spacing: -.04em; text-transform: uppercase; }
-.store-page[data-store-template='impact'] .sp-eyebrow { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; }
-.store-page[data-store-template='impact'] .sp-eyebrow::before { content: '//'; width: auto; height: auto; background: none; color: var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-about-heading-icon { border-radius: 0; box-shadow: 0 0 24px -4px var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-about-card { border-radius: 0; border-color: rgba(255, 255, 255, .12); background: linear-gradient(160deg, #141c38, #0a0e1a); color: #fff; clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%); box-shadow: none; }
-.store-page[data-store-template='impact'] .sp-about-mission { background: rgba(255, 255, 255, .06); color: #fff; border-radius: 0; }
-.store-page[data-store-template='impact'] .sp-about-mission-label { color: var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-about-years { border-radius: 0; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 0 34px -8px var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-form { border-radius: 0; border-color: color-mix(in srgb, var(--store-accent) 40%, var(--sp-line)); clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%); }
-.store-page[data-store-template='impact'] .sp-gallery-item { border-radius: 0; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
-.store-page[data-store-template='impact'] .sp-gallery-item:hover { border-color: var(--store-accent); box-shadow: 0 0 0 2px var(--store-accent); }
+/* Destacados como placas elevadas: tarjeta clara con capa de acento
+   corrida abajo a la derecha; en hover la capa "crece". */
+.store-page[data-store-template='perspective'] .sp-highlights { margin-top: -42px; gap: 18px; }
+.store-page[data-store-template='perspective'] .sp-hl { padding: 26px 24px; border: 1px solid var(--sp-line); border-radius: 18px; background: var(--sp-card-solid); box-shadow: 8px 9px 0 -3px color-mix(in srgb, var(--store-accent) 24%, transparent), var(--sp-shadow-md); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='perspective'] .sp-hl:hover { transform: translate(-3px, -4px); border-color: color-mix(in srgb, var(--store-accent) 50%, var(--sp-line)); box-shadow: 12px 13px 0 -3px color-mix(in srgb, var(--store-accent) 32%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .sp-hl-icon { border-radius: 13px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 30%, var(--sp-line)); box-shadow: none; }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-hl-icon { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hl:hover .sp-hl-icon { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; border-color: transparent; }
+/* Titulares de letrero (Oswald mayúscula, vía bloque v3) y eyebrow con
+   marca isométrica: rombo de acento en vez del filete base. */
+.store-page[data-store-template='perspective'] .sp-section-title,
+.store-page[data-store-template='perspective'] .sp-about-heading,
+.store-page[data-store-template='perspective'] .sp-contact-title { font-weight: 700; letter-spacing: 0; text-transform: uppercase; }
+.store-page[data-store-template='perspective'] .sp-section-title::after { height: 5px; border-radius: 2px; transform: skewX(-24deg); }
+.store-page[data-store-template='perspective'] .sp-eyebrow { letter-spacing: .22em; }
+.store-page[data-store-template='perspective'] .sp-eyebrow::before { width: 8px; height: 8px; border-radius: 2px; background: var(--store-accent); transform: rotate(45deg); }
+.store-page[data-store-template='perspective'] .sp-about-heading-icon { border-radius: 14px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 30%, var(--sp-line)); box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent) 22%, transparent); }
+.store-page[data-store-template='perspective'] .sp-about-card,
+.store-page[data-store-template='perspective'] .sp-form { border-radius: 18px; box-shadow: 12px 12px 0 -4px color-mix(in srgb, var(--store-accent) 22%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .sp-about-mission { border-radius: 12px; }
+.store-page[data-store-template='perspective'] .sp-about-mission-label { letter-spacing: .2em; }
+.store-page[data-store-template='perspective'] .sp-about-years { border-radius: 14px; transform: rotate(-1.5deg); box-shadow: 8px 9px 0 -3px color-mix(in srgb, var(--store-accent-ink) 30%, transparent); }
+.store-page[data-store-template='perspective'] .sp-form-badge { border-radius: 14px; }
+/* La galería se "acuesta" al pasar el puntero: tilt 3D con relieve. */
+.store-page[data-store-template='perspective'] .sp-gallery-item:hover { transform: perspective(700px) rotateX(4deg) rotateY(-5deg); border-color: var(--store-accent); box-shadow: 16px 20px 34px -18px rgba(17, 24, 39, .42); }
+@media (max-width: 960px) {
+  .sp-px-plane.p2 { display: none; }
+}
 
 /* ---------- Publicidad: afiche promocional ---------- */
 .store-page[data-store-template='promo'] { --sp-yellow: #ffe14d; --sp-ink-hard: #111827; }
@@ -1302,12 +1346,9 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='promo'] .sp-hl:nth-child(odd), .store-page[data-store-template='promo'] .sp-hl:nth-child(even) { rotate: 0deg; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sp-ed-masthead i, .sp-ed-letter, .sp-im-grid, .sp-im-beam, .sp-pr-burst, .sp-pr-spark, .sp-pr-tag, .sp-pr-mark, .sp-pr-seal-ring, .sp-pr-seal-core, .sp-btn.sp-pr-wa,
+  .sp-ed-masthead i, .sp-ed-letter, .sp-px-floor, .sp-px-plane, .sp-pr-burst, .sp-pr-spark, .sp-pr-tag, .sp-pr-mark, .sp-pr-seal-ring, .sp-pr-seal-core, .sp-btn.sp-pr-wa,
   .store-page[data-store-template='promo'] .sp-hero-band, .sp-hero-marquee-track,
-  .store-page[data-store-template='editorial'] .sp-hero-title::after,
-  .store-page[data-store-template='impact'] .sp-hero-title::after,
-  .store-page[data-store-template='impact'] .sp-hero-badge::before,
-  .store-page[data-store-template='impact'] .sp-ava::before { animation: none !important; }
+  .store-page[data-store-template='editorial'] .sp-hero-title::after { animation: none !important; }
 }
 
 /* ===== Ficha de producto (/producto/<id>, estilo marketplace) =====
@@ -1413,9 +1454,21 @@ html { scroll-behavior: smooth; }
 .sp-hero-band.has-cover { background-image: none; animation: none; background-color: var(--store-accent-ink); }
 .sp-hero-band.has-cover .sp-hero-decor::before { opacity: .55; }
 .sp-hero-band.has-cover .sp-hero-title, .sp-hero-band.has-cover .sp-hero-sub { text-shadow: 0 2px 22px rgba(0, 0, 0, .38); }
-.store-page[data-store-template='impact'] .sp-hero-cover img { filter: saturate(.85) contrast(1.05); }
-.store-page[data-store-template='impact'] .sp-hero-cover::after { background: linear-gradient(95deg, rgba(10, 14, 26, .95) 0%, rgba(10, 14, 26, .68) 52%, rgba(10, 14, 26, .3) 100%), radial-gradient(700px 360px at 85% -10%, color-mix(in srgb, var(--store-accent) 40%, transparent), transparent 62%); }
-.store-page[data-store-template='impact'] .sp-hero-band.has-cover { background-color: #0a0e1a; }
+/* Perspectiva con portada: la banda clara cede a la foto — el velo se
+   oscurece y los textos vuelven a blanco para conservar el contraste. */
+.store-page[data-store-template='perspective'] .sp-hero-cover::after { background: linear-gradient(96deg, rgba(15, 23, 42, .9) 0%, rgba(15, 23, 42, .6) 52%, rgba(15, 23, 42, .22) 100%), radial-gradient(700px 360px at 85% -10%, color-mix(in srgb, var(--store-accent) 45%, transparent), transparent 62%); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover { background-color: #0f172a; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-title { color: #fff; text-shadow: 3px 3px 0 rgba(0, 0, 0, .4), 8px 8px 0 color-mix(in srgb, var(--store-accent) 42%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-sub { color: rgba(255, 255, 255, .85); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-badge { background: var(--store-accent); border-color: transparent; color: #fff; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-meta { color: rgba(255, 255, 255, .8); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-meta li { border-color: rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .12); box-shadow: none; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-meta .icon { color: #fff; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-btn.sp-hero-ghost { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .45); color: #fff; box-shadow: none; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero .sp-icon-btn { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .4); color: #fff; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-marquee { border-top-color: rgba(255, 255, 255, .2); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-marquee-seq { color: rgba(255, 255, 255, .6); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-px-plane { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .3); box-shadow: none; }
 .store-page[data-store-template='promo'] .sp-hero-cover::after { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 16px, transparent 16px 32px), linear-gradient(112deg, color-mix(in srgb, var(--store-accent-ink) 90%, transparent), color-mix(in srgb, var(--store-accent) 70%, transparent)); }
 .store-page[data-store-template='promo'] .sp-hero-band.has-cover { animation: none; }
 .store-page[data-store-template='editorial'] .sp-hero-band.has-cover { background-color: transparent; background-image: linear-gradient(165deg, color-mix(in srgb, var(--store-accent-soft) 70%, var(--sp-card-solid)), var(--sp-card-solid) 80%); }
@@ -1453,15 +1506,12 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='editorial'] .sp-hl-text { font-size: 14.5px; line-height: 1.7; }
 .store-page[data-store-template='editorial'] .sp-contact-title::after { content: '.'; color: var(--store-accent); }
 .store-page[data-store-template='editorial'] .sp-section-title { text-wrap: balance; }
-/* Impacto: bajada tipo terminal, titulares con neón, texto técnico. */
-.store-page[data-store-template='impact'] .sp-hero-sub { position: relative; padding-left: 22px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14.5px; line-height: 1.8; border-left: 2px solid var(--store-accent); }
-.store-page[data-store-template='impact'] .sp-hero-badge { text-shadow: 0 0 12px rgba(255, 255, 255, .5); }
-.store-page[data-store-template='impact'] .sp-section-title, .store-page[data-store-template='impact'] .sp-about-heading, .store-page[data-store-template='impact'] .sp-contact-title { text-shadow: 0 0 28px color-mix(in srgb, var(--store-accent) 55%, transparent); }
-.store-page[data-store-template='impact'] .sp-about-text { padding-left: 18px; border-left: 2px solid color-mix(in srgb, var(--store-accent) 55%, transparent); }
-.store-page[data-store-template='impact'] .sp-contact-sub { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
-.store-page[data-store-template='impact'] .sp-contact-sub::before { content: '// '; color: var(--store-accent); font-weight: 800; }
-.store-page[data-store-template='impact'] .sp-hl-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
-.store-page[data-store-template='impact'] .sp-about-mission-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .16em; }
+/* Perspectiva: bajada amplia en Poppins y textos limpios de alto contraste. */
+.store-page[data-store-template='perspective'] .sp-hero-sub { font-family: var(--sp-body); font-size: 16.5px; line-height: 1.75; text-wrap: pretty; }
+.store-page[data-store-template='perspective'] .sp-contact-sub { font-size: 16px; color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-hl-text { font-size: 14px; line-height: 1.65; }
+.store-page[data-store-template='perspective'] .sp-about-text { font-size: 15.5px; text-wrap: pretty; }
+.store-page[data-store-template='perspective'] .sp-about-mission-label { letter-spacing: .2em; }
 /* Publicidad: texto-sticker, resaltador amarillo en títulos y bajadas en negrita. */
 .store-page[data-store-template='promo'] .sp-hero-sub { display: inline-block; padding: 10px 16px; border-radius: 12px; background: rgba(0, 0, 0, .2); font-weight: 600; text-wrap: pretty; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .store-page[data-store-template='promo'] .sp-hero-badge { font-weight: 900; letter-spacing: .14em; }
@@ -1691,7 +1741,7 @@ html { scroll-behavior: smooth; }
 /* ===== Diseños v3: refinamiento moderno por plantilla =====
    Clásico = contemporary limpio (iconos suaves, ritmo aireado) ·
    Editorial = revista con serif de display (Playfair Display on-demand)
-   · Impacto = tech con Space Grotesk y detalles mono · Catálogo =
+   · Perspectiva = profundidad espacial con Oswald y Poppins · Catálogo =
    vitrina ordenada tipo bento (tiles consistentes, imagen inset).
    Van al final para ganar por cascada; 'promo' no se toca. */
 
@@ -1738,33 +1788,57 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='editorial'] .sp-about-years strong { font-family: var(--sp-serif); }
 .store-page[data-store-template='editorial'] .spd-price { font-family: var(--sp-serif); font-weight: 700; }
 
-/* ---------- Impacto v3: Space Grotesk + mono de terminal ---------- */
-.store-page[data-store-template='impact'] { --sp-tech: 'Space Grotesk', var(--store-font), sans-serif; --sp-tech-mono: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.store-page[data-store-template='impact'] .sp-hero-title,
-.store-page[data-store-template='impact'] .sp-section-title,
-.store-page[data-store-template='impact'] .sp-about-heading,
-.store-page[data-store-template='impact'] .sp-contact-title,
-.store-page[data-store-template='impact'] .sp-cat-title,
-.store-page[data-store-template='impact'] .sp-showcase-title,
-.store-page[data-store-template='impact'] .spd-name,
-.store-page[data-store-template='impact'] .spd-sec-title,
-.store-page[data-store-template='impact'] .sp-hl strong { font-family: var(--sp-tech); font-weight: 700; letter-spacing: -.03em; }
-/* Ornamentos más finos: grilla más abierta y haces más suaves. */
-.store-page[data-store-template='impact'] .sp-im-grid { background-image: linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px); background-size: 64px 64px; }
-.store-page[data-store-template='impact'] .sp-im-beam { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--store-accent) 26%, transparent), transparent); filter: blur(14px); }
-.store-page[data-store-template='impact'] .sp-hero-badge,
-.store-page[data-store-template='impact'] .sp-hero-meta li { font-family: var(--sp-tech-mono); }
-.store-page[data-store-template='impact'] .sp-hero-meta li { font-size: 12.5px; }
-/* Catálogo bajo la misma identidad oscura: cabecera, icono y chips. */
-.store-page[data-store-template='impact'] .sp-cat-head-icon { background: rgba(255, 255, 255, .06); border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); color: var(--store-accent); box-shadow: 0 0 22px -6px var(--store-accent); animation: none; }
-.store-page[data-store-template='impact'] .sp-cat-stats li { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .16); border-radius: 4px; font-family: var(--sp-tech-mono); font-size: 12px; }
-.store-page[data-store-template='impact'] .sp-chip,
-.store-page[data-store-template='impact'] .sp-quick-pill { border-radius: 4px; }
-/* Tarjetas y CTA de ficha con la misma esquina cortada del hero. */
-.store-page[data-store-template='impact'] .sp-card { border-radius: 6px; }
-.store-page[data-store-template='impact'] .sp-card-img { border-radius: 4px; }
-.store-page[data-store-template='impact'] .spd-buy .sp-btn { border-radius: 0; clip-path: polygon(var(--sp-cut, 12px) 0, 100% 0, 100% calc(100% - var(--sp-cut, 12px)), calc(100% - var(--sp-cut, 12px)) 100%, 0 100%, 0 var(--sp-cut, 12px)); text-transform: uppercase; letter-spacing: .06em; font-weight: 800; }
-.store-page[data-store-template='impact'] .spd-specs-wrap { border-radius: 6px; }
+/* ---------- Perspectiva v3: Oswald de letrero + Poppins ---------- */
+.store-page[data-store-template='perspective'] { --sp-display: 'Oswald', var(--store-font), sans-serif; --sp-body: 'Poppins', var(--store-font), sans-serif; }
+/* Titulares condensados de letrero; el nombre conserva la fuente del
+   dueño (inline style cuando el h1 es el nombre). */
+.store-page[data-store-template='perspective'] .sp-hero-title,
+.store-page[data-store-template='perspective'] .sp-section-title,
+.store-page[data-store-template='perspective'] .sp-about-heading,
+.store-page[data-store-template='perspective'] .sp-contact-title,
+.store-page[data-store-template='perspective'] .sp-cat-title,
+.store-page[data-store-template='perspective'] .sp-showcase-title,
+.store-page[data-store-template='perspective'] .spd-name,
+.store-page[data-store-template='perspective'] .spd-sec-title,
+.store-page[data-store-template='perspective'] .sp-hl strong { font-family: var(--sp-display); font-weight: 700; letter-spacing: -.01em; }
+.store-page[data-store-template='perspective'] .sp-hero-badge,
+.store-page[data-store-template='perspective'] .sp-hero-meta li,
+.store-page[data-store-template='perspective'] .sp-eyebrow,
+.store-page[data-store-template='perspective'] .sp-cat-stats li { font-family: var(--sp-body); }
+/* ---------- Catálogo bajo la misma identidad espacial ----------
+   La página /catalogo toma la misma banda clara del hero: el piso
+   isométrico se recrea en su decor, las migas vuelven a tinta y los
+   controles/tarjetas heredan radios y relieve del sistema. */
+.store-page[data-store-template='perspective'] .sp-cat-hero .sp-hero-decor::before { background-image: linear-gradient(color-mix(in srgb, var(--store-accent) 28%, transparent) 1.5px, transparent 1.5px), linear-gradient(90deg, color-mix(in srgb, var(--store-accent) 28%, transparent) 1.5px, transparent 1.5px); background-size: 54px 54px; transform: perspective(900px) rotateX(60deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(180deg, transparent, #000 58%); mask-image: linear-gradient(180deg, transparent, #000 58%); }
+.store-page[data-store-template='perspective'] .sp-cat-hero .sp-float { border-radius: 14px; background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-accent-text); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 6px 7px 0 -2px color-mix(in srgb, var(--store-accent) 24%, transparent), var(--sp-shadow-sm); }
+.store-page[data-store-template='perspective'] .sp-cat-hero .sp-orb { display: none; }
+.store-page[data-store-template='perspective'] .sp-crumbs { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-crumbs a { color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-crumbs span { color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-crumbs svg { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-cat-head-icon { background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); color: var(--sp-accent-text); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 6px 7px 0 -2px color-mix(in srgb, var(--store-accent) 26%, transparent), var(--sp-shadow-sm); animation: none; }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-cat-head-icon { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-cat-title { color: var(--sp-ink); text-transform: uppercase; text-shadow: 2px 2px 0 color-mix(in srgb, var(--store-accent) 26%, transparent); }
+.store-page[data-store-template='perspective'] .sp-cat-sub { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-cat-stats li { border-color: var(--sp-line); border-radius: 10px; background: var(--sp-card-solid); color: var(--sp-ink-2); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent) 18%, transparent); }
+.store-page[data-store-template='perspective'] .sp-cat-stats strong { color: var(--sp-accent-text); }
+/* Tarjetas, chips y filtros: mismos radios (12px) y relieve en hover. */
+.store-page[data-store-template='perspective'] .sp-card { border-radius: 14px; }
+.store-page[data-store-template='perspective'] .sp-card:hover { transform: translate(-3px, -4px); border-color: color-mix(in srgb, var(--store-accent) 50%, var(--sp-line)); box-shadow: 10px 11px 0 -4px color-mix(in srgb, var(--store-accent) 20%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .sp-card-img { border-radius: 10px; margin: 10px 10px 0; border-bottom: 0; }
+.store-page[data-store-template='perspective'] .sp-chip,
+.store-page[data-store-template='perspective'] .sp-quick-pill { border-radius: 10px; }
+.store-page[data-store-template='perspective'] .sp-search,
+.store-page[data-store-template='perspective'] .sp-price,
+.store-page[data-store-template='perspective'] .sp-sort { border-radius: 12px; }
+.store-page[data-store-template='perspective'] .sp-drawer { border-radius: 18px; }
+.store-page[data-store-template='perspective'] .sp-nav-item { border-radius: 10px; }
+/* Ficha de producto: sheet elevado y CTA con relieve del hero. */
+.store-page[data-store-template='perspective'] .spd-sheet { border-radius: 18px; box-shadow: 12px 12px 0 -4px color-mix(in srgb, var(--store-accent) 18%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .spd-buy .sp-btn { box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent-ink) 26%, rgba(17, 24, 39, .35)); }
+.store-page[data-store-template='perspective'] .spd-buy .sp-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 color-mix(in srgb, var(--store-accent-ink) 30%, rgba(17, 24, 39, .4)); }
+.store-page[data-store-template='perspective'] .spd-specs-wrap { border-radius: 12px; }
+.store-page[data-store-template='perspective'] .spd-rel:hover { transform: translate(-2px, -3px); border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: 7px 8px 0 -3px color-mix(in srgb, var(--store-accent) 22%, transparent), var(--sp-shadow-md); }
 
 /* ---------- Catálogo exclusivo v3: vitrina ordenada tipo bento ---------- */
 /* Ritmo de 4/8/16/20: mismas distancias entre bloques, mismos radios. */

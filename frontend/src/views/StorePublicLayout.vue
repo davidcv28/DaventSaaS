@@ -138,9 +138,9 @@ onMounted(async () => {
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
     // Fuente propia de la plantilla (titulares): serif de revista en
-    // 'editorial', geométrica tech en 'impact'. Misma carga on-demand que
-    // name_font; el resto del texto sigue con la fuente elegida.
-    const TEMPLATE_FONTS = { editorial: 'playfair-display', impact: 'space-grotesk' }
+    // 'editorial', condensada de letrero en 'perspective'. Misma carga
+    // on-demand que name_font; el resto del texto sigue con la fuente elegida.
+    const TEMPLATE_FONTS = { editorial: 'playfair-display', perspective: 'oswald' }
     ensureStoreFont(TEMPLATE_FONTS[pageTemplate.value])
   } catch (e) {
     status.value = 'error'

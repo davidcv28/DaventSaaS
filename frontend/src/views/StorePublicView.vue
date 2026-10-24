@@ -14,9 +14,9 @@ import { vReveal } from '../directives/reveal.js'
 // StorePublicLayout (inject 'storePage').
 const ctx = inject('storePage')
 const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
-// Diseño activo de la portada ('classic' | 'editorial' | 'impact'): la
-// estructura del hero se reordena por CSS (grid-areas); solo la cinta de
-// marca de 'impact' es markup extra.
+// Diseño activo de la portada ('classic' | 'editorial' | 'perspective' |
+// 'promo' | 'catalog'): la estructura del hero se reordena por CSS
+// (grid-areas); solo la cinta de marca de 'perspective'/'promo' es markup extra.
 const tpl = pageTemplate
 
 const year = new Date().getFullYear()
@@ -359,10 +359,10 @@ onBeforeUnmount(() => {
         <template v-if="tpl === 'editorial'">
           <span class="sp-ed-letter">{{ initial }}</span>
         </template>
-        <template v-else-if="tpl === 'impact'">
-          <span class="sp-im-grid"></span>
-          <span class="sp-im-beam b1"></span>
-          <span class="sp-im-beam b2"></span>
+        <template v-else-if="tpl === 'perspective'">
+          <span class="sp-px-floor"></span>
+          <span class="sp-px-plane p1"></span>
+          <span class="sp-px-plane p2"></span>
         </template>
         <template v-else-if="tpl === 'promo'">
           <span class="sp-pr-burst"></span>
@@ -408,9 +408,10 @@ onBeforeUnmount(() => {
           <span class="sp-pr-seal-core"><AppIcon name="gift" :size="46" :stroke="1.75" /></span>
         </div>
       </div>
-      <!-- Cinta de marca del diseño Impacto: marquee infinito (dos secuencias
-           idénticas, el track se desplaza -50% en loop). Solo decoración. -->
-      <div v-if="tpl === 'impact' || tpl === 'promo'" class="sp-hero-marquee" aria-hidden="true">
+      <!-- Cinta de marca de Perspectiva y Publicidad: marquee infinito (dos
+           secuencias idénticas, el track se desplaza -50% en loop).
+           Solo decoración. -->
+      <div v-if="tpl === 'perspective' || tpl === 'promo'" class="sp-hero-marquee" aria-hidden="true">
         <div class="sp-hero-marquee-track">
           <span v-for="n in 2" :key="n" class="sp-hero-marquee-seq">
             <template v-for="(m, i) in marqueeItems" :key="i"><AppIcon :name="m.icon" :size="15" :stroke="2.25" /> {{ m.text }} <i></i></template>

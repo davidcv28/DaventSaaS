@@ -100,7 +100,7 @@ class StoreCustomization(models.Model):
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('editorial',        'Editorial'),
-        ('impact',           'Impacto'),
+        ('perspective',      'Perspectiva'),
         ('promo',            'Publicidad'),
         ('catalog',          'Catálogo exclusivo'),
     ]
