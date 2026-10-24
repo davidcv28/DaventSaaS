@@ -258,7 +258,10 @@ onBeforeUnmount(() => {
         <span class="sp-st-ghost">Catálogo</span>
         <span class="sp-st-barcode"><i></i><em>{{ shopName }}</em></span>
       </template>
-      <span v-else-if="tpl === 'atelier'" class="sp-at-letter">{{ shopName.slice(0, 1).toUpperCase() }}</span>
+      <template v-else-if="tpl === 'atelier'">
+        <span class="sp-at-letter">{{ shopName.slice(0, 1).toUpperCase() }}</span>
+        <span class="sp-at-rail">Catálogo · {{ shopName }}</span>
+      </template>
       <template v-else-if="tpl === 'terminal'">
         <span class="sp-tm-ghost">~/catalogo</span>
         <span class="sp-tm-log">

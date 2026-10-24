@@ -219,6 +219,7 @@ onBeforeUnmount(() => {
         <span class="sp-float f5"><AppIcon name="store" :size="24" /></span>
         <template v-if="tpl === 'atelier'">
           <span class="sp-at-letter">{{ initial }}</span>
+          <span class="sp-at-rail">Edición {{ year }} · {{ shopName }}</span>
         </template>
         <template v-else-if="tpl === 'street'">
           <span class="sp-st-ghost">{{ shopName }}</span>

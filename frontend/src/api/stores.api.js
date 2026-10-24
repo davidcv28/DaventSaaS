@@ -319,7 +319,7 @@ export const STORE_TEMPLATES = {
   classic:   { label: 'Clásico',    desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
   perspective: { label: 'Perspectiva', desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
   promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
-  atelier:   { label: 'Atelier',    desc: 'Alta costura digital: serif de pasarela, portada tipo campaña enmarcada, índice numerado y fichas minimalistas.' },
+  atelier:   { label: 'Atelier',    desc: 'Portada de revista: papel crema, masthead serif en mayúsculas, caja «En esta edición» con las acciones, índice de contenidos y fichas de gaceta.' },
   street:    { label: 'Urbano',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
   terminal:  { label: 'Terminal',   desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' }
 }

@@ -957,128 +957,207 @@ html { scroll-behavior: smooth; }
    'promo' y 'street'. Las reglas van al final para ganar por cascada en
    empates de especificidad con los temas claro/oscuro. */
 
-/* ---------- Atelier: estilo revista ----------
-   Banda clara con texto tinta, titular a la izquierda, marca enmarcada
-   con sombra-bloque, esquinas rectas, barra y pie claros. */
-.store-page[data-store-template='atelier'] { --sp-radius: 10px; }
+/* ---------- Atelier: portada de revista ----------
+   La tienda se presenta como la tapa de una edición impresa: papel crema
+   teñido por el acento, tira de edición arriba, sello de marca junto a la
+   línea de datos, una "cover line" enmarcada entre reglas, el nombre como
+   masthead serif en mayúsculas a todo lo ancho, la bajada como lead de
+   artículo y las acciones en una caja «En esta edición» — la zona de
+   conversión del diseño. La portada de foto baja como pliego completo. */
+.store-page[data-store-template='atelier'] {
+  --sp-radius: 2px;
+  --at-paper: color-mix(in srgb, #f6f1e6 88%, var(--store-accent-soft));
+  --at-ink: #241f18;
+  --at-line: color-mix(in srgb, #241f18 26%, transparent);
+  --at-dim: color-mix(in srgb, #241f18 58%, transparent);
+}
+.store-page[data-store-template='atelier'][data-store-theme='dark'] {
+  --at-paper: color-mix(in srgb, #17130f 88%, var(--store-accent));
+  --at-ink: #efe7d7;
+  --at-line: color-mix(in srgb, #efe7d7 24%, transparent);
+  --at-dim: color-mix(in srgb, #efe7d7 56%, transparent);
+}
+/* En claro la página entera es papel: las secciones heredan el fondo. */
+.store-page[data-store-template='atelier'][data-store-theme='light'] { --sp-surface: color-mix(in srgb, #f8f4ea 82%, var(--store-accent-soft)); }
 .store-page[data-store-template='atelier'] .sp-hero-band {
-  color: var(--sp-ink);
-  background: linear-gradient(165deg, color-mix(in srgb, var(--store-accent-soft) 70%, var(--sp-card-solid)), var(--sp-card-solid) 80%);
-  border-bottom: 1px solid var(--sp-line);
-  border-radius: 0 0 clamp(20px, 4vw, 40px) clamp(20px, 4vw, 40px);
+  color: var(--at-ink);
+  background: var(--at-paper);
+  border-bottom: 3px double var(--at-ink);
+  border-radius: 0;
   animation: none;
 }
-.store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-hero-band {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--store-accent) 18%, var(--sp-card-solid)), var(--sp-card-solid) 80%);
-}
-/* Dos columnas: contenido a la izquierda, marca (logo/monograma) a la derecha. */
+/* Maquetación de tapa: sello + línea de datos, cover line, masthead a lo
+   ancho, bajada junto a la caja de acciones y la foto como pliego abajo. */
 .store-page[data-store-template='atelier'] .sp-hero-inner {
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   grid-template-areas:
-    'badge visual'
-    'title visual'
-    'sub   visual'
-    'ctas  visual'
-    'meta  visual';
+    'ava    meta'
+    'badge  badge'
+    'title  title'
+    'sub    ctas'
+    'visual visual';
   align-items: center;
   column-gap: 64px;
+  row-gap: 24px;
   justify-items: start;
   text-align: left;
-  padding: 80px 40px 88px;
+  padding: 34px 56px 76px;
 }
-.store-page[data-store-template='atelier'] .sp-ava { grid-area: visual; justify-self: center; }
-.store-page[data-store-template='atelier'] .sp-hero-badge { grid-area: badge; margin: 0; color: var(--sp-accent-text); background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
-.store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-hero-badge { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
-.store-page[data-store-template='atelier'] .sp-hero-title { grid-area: title; margin-top: 22px; max-width: 20ch; color: var(--sp-ink); text-shadow: none; }
-.store-page[data-store-template='atelier'] .sp-hero-sub { grid-area: sub; color: var(--sp-muted); }
-.store-page[data-store-template='atelier'] .sp-hero-ctas { grid-area: ctas; justify-content: flex-start; }
-.store-page[data-store-template='atelier'] .sp-hero-meta { grid-area: meta; justify-content: flex-start; color: var(--sp-muted); }
-.store-page[data-store-template='atelier'] .sp-hero-meta .icon { color: var(--sp-accent-text); }
-/* Controles de la portada sobre banda clara: primario de acento, resto neutro. */
-.store-page[data-store-template='atelier'] .sp-btn.sp-hero-btn { background: var(--store-accent-ink); color: #fff; box-shadow: 0 12px 24px -12px var(--store-accent-ink); }
-.store-page[data-store-template='atelier'] .sp-btn.sp-hero-btn:hover { background: var(--store-accent-ink); filter: brightness(1.12); }
-.store-page[data-store-template='atelier'] .sp-btn.sp-hero-ghost { background: transparent; border-color: var(--sp-line); color: var(--sp-ink-2); }
-.store-page[data-store-template='atelier'] .sp-btn.sp-hero-ghost:hover { border-color: var(--store-accent); color: var(--sp-accent-text); background: color-mix(in srgb, var(--store-accent) 8%, transparent); }
-.store-page[data-store-template='atelier'] .sp-hero .sp-icon-btn { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); backdrop-filter: none; -webkit-backdrop-filter: none; }
-.store-page[data-store-template='atelier'] .sp-hero .sp-icon-btn:hover { border-color: var(--store-accent); color: var(--sp-accent-text); background: var(--sp-card); }
-/* Decor: trama de puntos teñida por el acento, orbes suaves, sin chips flotantes. */
-.store-page[data-store-template='atelier'] .sp-hero-decor::before { background-image: radial-gradient(color-mix(in srgb, var(--store-accent) 22%, transparent) 1px, transparent 1.4px); -webkit-mask-image: radial-gradient(ellipse 60% 80% at 82% 40%, #000 20%, transparent 78%); mask-image: radial-gradient(ellipse 60% 80% at 82% 40%, #000 20%, transparent 78%); }
-.store-page[data-store-template='atelier'] .sp-orb { background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--store-accent) 24%, transparent), transparent 70%); filter: none; }
-.store-page[data-store-template='atelier'] .sp-float { display: none; }
-/* Marca enmarcada: esquinas rectas y sombra-bloque corrida (rasgo atelier). */
+/* Sello de imprenta: marca chica, cuadrada, tinta sobre papel. */
+.store-page[data-store-template='atelier'] .sp-ava { grid-area: ava; justify-self: start; }
+.store-page[data-store-template='atelier'] .sp-ava::after { display: none; }
 .store-page[data-store-template='atelier'] .sp-hero .sp-mono.lg,
-.store-page[data-store-template='atelier'] .sp-hero .sp-logo.lg { border-radius: 18px; border: 1px solid var(--sp-line); box-shadow: 16px 16px 0 color-mix(in srgb, var(--store-accent) 26%, transparent), var(--sp-shadow-md); animation: none; }
-.store-page[data-store-template='atelier'] .sp-ava::after { border-radius: 24px; }
-/* Esquinas rectas en toda la página. */
+.store-page[data-store-template='atelier'] .sp-hero .sp-logo.lg { width: 76px; height: 76px; border-radius: 0; font-size: 30px; border: 1px solid var(--at-ink); box-shadow: 6px 6px 0 var(--at-line); animation: none; }
+.store-page[data-store-template='atelier'] .sp-hero .sp-mono.lg { background: var(--at-ink); color: var(--at-paper); }
+/* Línea de datos arriba a la derecha (el «dateline» de la edición). */
+.store-page[data-store-template='atelier'] .sp-hero-meta { grid-area: meta; justify-self: end; align-self: center; color: var(--at-dim); }
+.store-page[data-store-template='atelier'] .sp-hero-meta li { padding: 0; border: 0; background: none; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.store-page[data-store-template='atelier'] .sp-hero-meta li:not(:last-child)::after { content: '·'; margin-left: 14px; color: var(--at-ink); }
+.store-page[data-store-template='atelier'] .sp-hero-meta .icon { display: none; }
+/* Cover line: la promesa de la tapa, enmarcada entre reglas de imprenta. */
+.store-page[data-store-template='atelier'] .sp-hero-badge { grid-area: badge; justify-self: stretch; margin: 8px 0 0; padding: 12px 0; border: 0; border-top: 1px solid var(--at-ink); border-bottom: 1px solid var(--at-ink); border-radius: 0; background: none; color: var(--at-dim); font-size: 11.5px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; text-align: center; backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
+.store-page[data-store-template='atelier'] .sp-hero-badge::after { content: ' —'; }
+.store-page[data-store-template='atelier'] .sp-hero-badge .icon { color: var(--sp-accent-text); }
+/* Masthead: el titular es el nombre de la revista, caps y a lo ancho. */
+.store-page[data-store-template='atelier'] .sp-hero-title { grid-area: title; margin-top: 6px; max-width: none; color: var(--at-ink); text-shadow: none; text-transform: uppercase; }
+.store-page[data-store-template='atelier'] .sp-hero-title.is-name { text-transform: none; }
+/* Lead de artículo en serif cursiva junto a la caja de acciones. */
+.store-page[data-store-template='atelier'] .sp-hero-sub { grid-area: sub; align-self: start; max-width: 56ch; padding-top: 10px; color: var(--at-dim); }
+/* «En esta edición»: la caja de acciones de la tapa — zona de conversión
+   (botones como entradas de índice, el primario en video inverso). */
+.store-page[data-store-template='atelier'] .sp-hero-ctas { grid-area: ctas; justify-self: end; align-self: start; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 0; width: min(100%, 360px); margin: 0; padding: 0; border: 1px solid var(--at-ink); background: color-mix(in srgb, var(--sp-card-solid) 55%, transparent); }
+.store-page[data-store-template='atelier'] .sp-hero-ctas::before { content: '✦ En esta edición'; display: flex; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--at-ink); font-size: 10.5px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: var(--at-ink); }
+.store-page[data-store-template='atelier'] .sp-hero-ctas .sp-btn { width: 100%; justify-content: space-between; height: 52px; padding: 0 18px; border: 0; border-bottom: 1px solid var(--at-line); border-radius: 0; background: transparent; color: var(--at-ink); font-size: 12.5px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-hero-ctas > *:last-child { border-bottom: 0; }
+.store-page[data-store-template='atelier'] .sp-btn.sp-hero-btn { background: var(--at-ink); color: var(--at-paper); }
+.store-page[data-store-template='atelier'] .sp-btn.sp-hero-btn:hover { background: var(--store-accent-ink); color: #fff; filter: none; }
+.store-page[data-store-template='atelier'] .sp-btn.sp-hero-ghost { color: var(--at-ink); }
+.store-page[data-store-template='atelier'] .sp-btn.sp-hero-ghost:hover { color: var(--sp-accent-text); background: color-mix(in srgb, var(--store-accent) 8%, transparent); filter: none; }
+.store-page[data-store-template='atelier'] .sp-hero .sp-icon-btn { width: 100%; height: 52px; padding: 0 18px; justify-content: flex-start; gap: 12px; border: 0; border-bottom: 1px solid var(--at-line); border-radius: 0; background: transparent; color: var(--at-ink); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='atelier'] .sp-hero .sp-icon-btn::after { content: 'Compartir'; font-size: 12.5px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.store-page[data-store-template='atelier'] .sp-hero .sp-icon-btn:hover { color: var(--sp-accent-text); background: color-mix(in srgb, var(--store-accent) 8%, transparent); }
+/* Decor: papel rayado sutil a la derecha, letra-marca como ornamento
+   tipográfico colgando del borde superior y lomo de edición vertical. */
+.store-page[data-store-template='atelier'] .sp-hero-decor::before { background-image: repeating-linear-gradient(0deg, var(--at-line) 0 1px, transparent 1px 34px); opacity: .5; -webkit-mask-image: linear-gradient(105deg, transparent 34%, #000 78%); mask-image: linear-gradient(105deg, transparent 34%, #000 78%); }
+.store-page[data-store-template='atelier'] .sp-orb,
+.store-page[data-store-template='atelier'] .sp-float { display: none; }
+.sp-at-rail { position: absolute; right: 16px; top: 50%; transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; font-size: 10.5px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--at-dim); white-space: nowrap; }
+/* Esquinas rectas en toda la página (tinta de imprenta). */
 .store-page[data-store-template='atelier'] .sp-btn,
 .store-page[data-store-template='atelier'] .sp-card-cta,
 .store-page[data-store-template='atelier'] .sp-chip,
 .store-page[data-store-template='atelier'] .sp-quick-pill,
 .store-page[data-store-template='atelier'] .sp-nav-clear,
 .store-page[data-store-template='atelier'] .sp-davent-badge,
-.store-page[data-store-template='atelier'] .sp-cat-stats li { border-radius: 8px; }
+.store-page[data-store-template='atelier'] .sp-cat-stats li,
+.store-page[data-store-template='atelier'] .sp-card-flag,
+.store-page[data-store-template='atelier'] .sp-card-quick { border-radius: 0; }
 .store-page[data-store-template='atelier'] .sp-icon-btn,
 .store-page[data-store-template='atelier'] .sp-search,
 .store-page[data-store-template='atelier'] .sp-price,
-.store-page[data-store-template='atelier'] .sp-sort { border-radius: 10px; }
-/* Barra superior clara con links tinta. */
+.store-page[data-store-template='atelier'] .sp-sort { border-radius: 0; }
+/* Barra superior sobre papel con links tinta. */
 .store-page[data-store-template='atelier'] .sp-top,
 .store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-top {
-  background: color-mix(in srgb, var(--sp-card-solid) 88%, transparent);
+  background: color-mix(in srgb, var(--at-paper) 88%, transparent);
   backdrop-filter: saturate(140%) blur(12px);
   -webkit-backdrop-filter: saturate(140%) blur(12px);
-  border-bottom-color: var(--sp-line);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+  border-bottom: 1px solid var(--at-ink);
+  box-shadow: none;
 }
 .store-page[data-store-template='atelier'] .sp-top .sp-brand,
-.store-page[data-store-template='atelier'] .sp-top .sp-name { color: var(--sp-ink); }
-.store-page[data-store-template='atelier'] .sp-top-links a { color: var(--sp-ink-2); }
+.store-page[data-store-template='atelier'] .sp-top .sp-name { color: var(--at-ink); }
+.store-page[data-store-template='atelier'] .sp-top-links a { color: var(--at-dim); border-radius: 0; }
 .store-page[data-store-template='atelier'] .sp-top-links a:hover,
-.store-page[data-store-template='atelier'] .sp-top-links a.router-link-exact-active { color: var(--sp-accent-text); background: var(--store-accent-soft); }
-.store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-top-links a:hover,
-.store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-top-links a.router-link-exact-active { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='atelier'] .sp-top-links a.router-link-exact-active { color: var(--sp-accent-text); background: color-mix(in srgb, var(--store-accent) 10%, transparent); }
 .store-page[data-store-template='atelier'] .sp-top .sp-icon-btn,
-.store-page[data-store-template='atelier'] .sp-top .sp-burger { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); }
+.store-page[data-store-template='atelier'] .sp-top .sp-burger { background: transparent; border-color: var(--at-line); border-radius: 0; color: var(--at-ink); box-shadow: none; }
 .store-page[data-store-template='atelier'] .sp-top .sp-icon-btn:hover,
-.store-page[data-store-template='atelier'] .sp-top .sp-burger:hover { background: var(--sp-card); border-color: var(--store-accent); color: var(--sp-accent-text); }
-.store-page[data-store-template='atelier'] .sp-top .sp-mono { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
-.store-page[data-store-template='atelier'] .sp-top .sp-logo.sm { border-color: var(--sp-line); }
-.store-page[data-store-template='atelier'] .sp-progress { background: linear-gradient(90deg, var(--store-accent), var(--store-accent-ink)); }
-.store-page[data-store-template='atelier'] .sp-top-cta { background: var(--store-accent-ink); color: #fff; }
-.store-page[data-store-template='atelier'] .sp-top-cta:hover { background: var(--store-accent-ink); filter: brightness(1.12); }
-/* Pie claro acorde a la barra. */
-.store-page[data-store-template='atelier'] .sp-foot { background: var(--sp-surface); color: var(--sp-ink); }
+.store-page[data-store-template='atelier'] .sp-top .sp-burger:hover { background: transparent; border-color: var(--at-ink); color: var(--sp-accent-text); }
+.store-page[data-store-template='atelier'] .sp-top .sp-mono { background: var(--at-ink); color: var(--at-paper); border-radius: 0; }
+.store-page[data-store-template='atelier'] .sp-top .sp-logo.sm { border-color: var(--at-line); border-radius: 0; }
+.store-page[data-store-template='atelier'] .sp-progress { background: var(--store-accent); }
+.store-page[data-store-template='atelier'] .sp-top-cta { border-radius: 0; background: var(--at-ink); color: var(--at-paper); }
+.store-page[data-store-template='atelier'] .sp-top-cta:hover { background: var(--store-accent-ink); color: #fff; filter: none; }
+/* Colofón: el pie se imprime en tinta (siempre oscuro, también en claro). */
+.store-page[data-store-template='atelier'] .sp-foot { background: #1c1814; color: #ece5d8; border-top: 3px double var(--at-ink); }
 .store-page[data-store-template='atelier'] .sp-foot::before { background: linear-gradient(90deg, transparent 8%, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent 92%); }
-.store-page[data-store-template='atelier'] .sp-foot-brand strong { color: var(--sp-ink); }
+.store-page[data-store-template='atelier'] .sp-foot-brand strong { color: #ece5d8; }
 .store-page[data-store-template='atelier'] .sp-foot-brand span,
-.store-page[data-store-template='atelier'] .sp-foot-copy { color: var(--sp-muted); }
-.store-page[data-store-template='atelier'] .sp-foot-heading { color: var(--sp-accent-text); }
-.store-page[data-store-template='atelier'] .sp-foot-col a { color: var(--sp-ink-2); }
-.store-page[data-store-template='atelier'] .sp-foot-col a:hover { color: var(--sp-accent-text); }
-.store-page[data-store-template='atelier'] .sp-foot-bottom { border-top-color: var(--sp-line); }
-.store-page[data-store-template='atelier'] .sp-foot .sp-davent-badge { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); }
-.store-page[data-store-template='atelier'] .sp-foot .sp-davent-badge:hover { border-color: var(--store-accent); }
-.store-page[data-store-template='atelier'] .sp-foot .sp-davent-badge strong { color: var(--sp-accent-text); }
-/* Cabecera del catálogo sobre la misma banda clara. */
-.store-page[data-store-template='atelier'] .sp-crumbs { color: var(--sp-muted); }
+.store-page[data-store-template='atelier'] .sp-foot-copy { color: color-mix(in srgb, #ece5d8 56%, #1c1814); }
+.store-page[data-store-template='atelier'] .sp-foot-heading { color: color-mix(in srgb, var(--store-accent) 62%, #ece5d8); }
+.store-page[data-store-template='atelier'] .sp-foot-col a { color: color-mix(in srgb, #ece5d8 82%, #1c1814); }
+.store-page[data-store-template='atelier'] .sp-foot-col a:hover { color: color-mix(in srgb, var(--store-accent) 62%, #ece5d8); }
+.store-page[data-store-template='atelier'] .sp-foot-bottom { border-top-color: color-mix(in srgb, #ece5d8 18%, transparent); }
+.store-page[data-store-template='atelier'] .sp-foot .sp-davent-badge { background: transparent; border-color: color-mix(in srgb, #ece5d8 28%, transparent); border-radius: 0; color: #ece5d8; }
+.store-page[data-store-template='atelier'] .sp-foot .sp-davent-badge:hover { border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); }
+.store-page[data-store-template='atelier'] .sp-foot .sp-davent-badge strong { color: color-mix(in srgb, var(--store-accent) 62%, #ece5d8); }
+/* ===== Catálogo: interior de la misma edición =====
+   Cabecera de papel con lomo vertical, migas en versalitas, título-folio
+   serif y fichas de gaceta (hairlines, texto centrado, sin tarjeta). */
+.store-page[data-store-template='atelier'] .sp-cat-hero,
+.store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-cat-hero {
+  color: var(--at-ink);
+  background: var(--at-paper);
+  border-bottom: 3px double var(--at-ink);
+  border-radius: 0;
+  animation: none;
+}
+.store-page[data-store-template='atelier'] .sp-cat-hero .sp-hero-decor::before { background-image: repeating-linear-gradient(0deg, var(--at-line) 0 1px, transparent 1px 34px); opacity: .5; -webkit-mask-image: linear-gradient(105deg, transparent 34%, #000 78%); mask-image: linear-gradient(105deg, transparent 34%, #000 78%); }
+.store-page[data-store-template='atelier'] .sp-cat-hero .sp-orb,
+.store-page[data-store-template='atelier'] .sp-cat-hero .sp-float { display: none; }
+.store-page[data-store-template='atelier'] .sp-cat-hero .sp-at-letter { top: auto; bottom: -18%; right: 3%; left: auto; transform: none; font-size: clamp(120px, 20vw, 260px); }
+.store-page[data-store-template='atelier'] .sp-crumbs { color: var(--at-dim); letter-spacing: .1em; }
 .store-page[data-store-template='atelier'] .sp-crumbs a { color: var(--sp-accent-text); }
-.store-page[data-store-template='atelier'] .sp-crumbs span { color: var(--sp-ink); }
-.store-page[data-store-template='atelier'] .sp-cat-head-icon { background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); color: var(--sp-accent-text); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
-.store-page[data-store-template='atelier'] .sp-cat-title { color: var(--sp-ink); text-shadow: none; }
-.store-page[data-store-template='atelier'] .sp-cat-sub { color: var(--sp-muted); }
-.store-page[data-store-template='atelier'] .sp-cat-stats li { border-color: var(--sp-line); background: var(--sp-card); color: var(--sp-ink-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
-.store-page[data-store-template='atelier'] .sp-cat-stats strong { color: var(--sp-accent-text); }
+.store-page[data-store-template='atelier'] .sp-crumbs span { color: var(--at-ink); }
+.store-page[data-store-template='atelier'] .sp-crumbs svg { color: var(--at-dim); }
+.store-page[data-store-template='atelier'] .sp-cat-head-icon { border-radius: 0; background: var(--at-ink); border: 1px solid var(--at-ink); color: var(--at-paper); box-shadow: 6px 6px 0 var(--at-line); backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; }
+.store-page[data-store-template='atelier'] .sp-cat-title { color: var(--at-ink); text-shadow: none; text-transform: uppercase; letter-spacing: -.03em; }
+.store-page[data-store-template='atelier'] .sp-cat-sub { color: var(--at-dim); font-style: italic; }
+.store-page[data-store-template='atelier'] .sp-cat-stats li { border: 1px solid var(--at-line); background: transparent; color: var(--at-dim); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='atelier'] .sp-cat-stats strong { color: var(--at-ink); }
+/* Fichas de gaceta: imagen enmarcada, nombre serif centrado, sin tarjeta. */
+.store-page[data-store-template='atelier'] .sp-card { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-card::before,
+.store-page[data-store-template='atelier'] .sp-card::after { display: none; }
+.store-page[data-store-template='atelier'] .sp-card:hover { transform: none; box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-card-img { border: 1px solid var(--at-line); border-bottom: 1px solid var(--at-line); }
+.store-page[data-store-template='atelier'] .sp-card:hover .sp-card-img { border-color: var(--at-ink); }
+.store-page[data-store-template='atelier'] .sp-card-img img { transition: transform .8s var(--sp-ease); }
+.store-page[data-store-template='atelier'] .sp-card:hover .sp-card-img img { transform: scale(1.05); }
+.store-page[data-store-template='atelier'] .sp-card-body { align-items: center; text-align: center; gap: 5px; padding: 16px 8px 8px; }
+.store-page[data-store-template='atelier'] .sp-card-name { font-family: var(--sp-serif); font-weight: 700; letter-spacing: -.01em; text-align: center; }
+.store-page[data-store-template='atelier'] .sp-card:hover .sp-card-name { text-decoration: underline; text-decoration-color: var(--store-accent); text-underline-offset: 4px; }
+.store-page[data-store-template='atelier'] .sp-card-price { font-family: var(--sp-serif); letter-spacing: 0; }
+.store-page[data-store-template='atelier'] .sp-card-foot { justify-content: center; align-items: baseline; gap: 14px; }
+.store-page[data-store-template='atelier'] .sp-card-go { gap: 6px; padding: 0 0 2px; border: 0; border-bottom: 1px solid currentColor; border-radius: 0; background: none; color: var(--sp-accent-text); font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+/* Controles del catálogo: rectos, versalitas y video inverso al activar. */
+.store-page[data-store-template='atelier'] .sp-quick-pill { font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-quick-pill.active { background: var(--sp-ink); border-color: var(--sp-ink); color: var(--sp-card); box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-chip { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; }
+.store-page[data-store-template='atelier'] .sp-drawer,
+.store-page[data-store-template='atelier'] .sp-nav-item,
+.store-page[data-store-template='atelier'] .sp-filters,
+.store-page[data-store-template='atelier'] .sp-empty { border-radius: 0; }
+/* Ficha de producto: página interior, sheet recto con hairline de tinta. */
+.store-page[data-store-template='atelier'] .spd-sheet { border-radius: 0; }
+.store-page[data-store-template='atelier'] .spd-buy .sp-btn { border-radius: 0; }
+.store-page[data-store-template='atelier'] .spd-specs-wrap,
+.store-page[data-store-template='atelier'] .spd-rel { border-radius: 0; }
+/* Formularios como carta: campos de línea, sello del sobre. */
+.store-page[data-store-template='atelier'] .sp-form .sp-input { border-color: transparent; border-bottom-color: var(--at-line); border-radius: 0; background: transparent; box-shadow: none; padding-left: 2px; }
+.store-page[data-store-template='atelier'] .sp-form .sp-input:focus { border-color: transparent; border-bottom-color: var(--store-accent); box-shadow: none; }
 @media (max-width: 960px) {
   .store-page[data-store-template='atelier'] .sp-hero-inner {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'visual' 'badge' 'title' 'sub' 'ctas' 'meta';
+    grid-template-areas: 'ava' 'badge' 'title' 'sub' 'ctas' 'meta' 'visual';
     justify-items: center;
     text-align: center;
-    padding: 56px 20px 72px;
+    padding: 40px 20px 64px;
   }
-  .store-page[data-store-template='atelier'] .sp-ava { margin-bottom: 26px; }
-  .store-page[data-store-template='atelier'] .sp-hero-ctas { justify-content: center; }
-  .store-page[data-store-template='atelier'] .sp-hero-meta { justify-content: center; }
+  .store-page[data-store-template='atelier'] .sp-hero-meta { justify-self: center; flex-wrap: wrap; justify-content: center; }
+  .store-page[data-store-template='atelier'] .sp-hero-ctas { justify-self: center; margin-top: 8px; }
+  .sp-at-rail { display: none; }
 }
 
 /* ---------- Perspectiva: portada clara con profundidad espacial ----------
@@ -1173,50 +1252,61 @@ html { scroll-behavior: smooth; }
    Van después de los bloques base para ganar por cascada; todo el
    movimiento se apaga con prefers-reduced-motion. */
 
-/* ---------- Atelier v2 ---------- */
-.sp-at-masthead { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; padding-top: 24px; font-size: 11.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--sp-muted); }
-.sp-at-masthead i { flex: 1; height: 1px; background: var(--sp-ink); opacity: .35; transform-origin: left; animation: sp-grow 1.1s var(--sp-ease) both; }
+/* ---------- Atelier v2: detalle de imprenta ---------- */
+/* Tira de edición: número, colección y sede entre reglas. */
+.sp-at-masthead { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; padding-top: 22px; font-size: 11px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; color: var(--at-dim); }
+.sp-at-masthead i { flex: 1; height: 1px; background: var(--at-ink); opacity: .5; transform-origin: left; animation: sp-grow 1.1s var(--sp-ease) both; }
 .sp-at-masthead span { white-space: nowrap; }
-.sp-at-letter { position: absolute; right: 3%; bottom: -14%; font-size: clamp(260px, 40vw, 560px); font-weight: 900; line-height: .8; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--store-accent) 30%, transparent); user-select: none; animation: sp-at-drift 14s ease-in-out infinite alternate; }
-@keyframes sp-at-drift { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-18px) rotate(1deg); } }
-.store-page[data-store-template='atelier'] .sp-hero-inner { padding-top: 48px; }
-.store-page[data-store-template='atelier'] .sp-hero-title { max-width: 13ch; font-size: clamp(42px, 6.4vw, 84px); font-weight: 800; line-height: 1; letter-spacing: -.045em; }
-.store-page[data-store-template='atelier'] .sp-hero-title.is-name { font-size: clamp(40px, 7vw, calc(var(--store-name-size, 48px) * 1.5)); }
-.store-page[data-store-template='atelier'] .sp-hero-title::after { content: ''; display: block; width: 84px; height: 4px; margin-top: 22px; background: var(--store-accent); transform-origin: left; animation: sp-grow 1.2s var(--sp-ease) .5s both; }
-.store-page[data-store-template='atelier'] .sp-hero-sub { max-width: 52ch; padding-left: 18px; border-left: 2px solid var(--store-accent); font-size: 16.5px; }
-.store-page[data-store-template='atelier'] .sp-hero-badge { border-radius: 0; letter-spacing: .2em; }
-.store-page[data-store-template='atelier'] .sp-btn { border-radius: 0; }
-.store-page[data-store-template='atelier'] .sp-hero .sp-mono.lg,
-.store-page[data-store-template='atelier'] .sp-hero .sp-logo.lg { width: clamp(140px, 18vw, 200px); height: clamp(140px, 18vw, 200px); font-size: clamp(56px, 8vw, 84px); border-radius: 4px; box-shadow: 18px 18px 0 color-mix(in srgb, var(--store-accent) 30%, transparent), 0 0 0 10px var(--sp-card-solid), 0 0 0 11px var(--sp-line); }
-.store-page[data-store-template='atelier'] .sp-highlights { margin-top: 0; padding-top: 44px; gap: 0; counter-reset: sp-ed; }
-.store-page[data-store-template='atelier'] .sp-hl { counter-increment: sp-ed; padding: 22px 24px 8px 0; margin-right: 24px; border: 0; border-top: 2px solid var(--sp-ink); border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
-.store-page[data-store-template='atelier'] .sp-hl::before { content: counter(sp-ed, decimal-leading-zero); font-size: 12px; font-weight: 800; letter-spacing: .2em; color: var(--sp-accent-text); }
-.store-page[data-store-template='atelier'] .sp-hl:hover { transform: translateY(-4px); border-top-color: var(--store-accent); box-shadow: none; }
-.store-page[data-store-template='atelier'] .sp-hl-icon { width: 40px; height: 40px; border-radius: 50%; color: var(--sp-accent-text); background: transparent; border: 1px solid var(--sp-line); box-shadow: none; }
-.store-page[data-store-template='atelier'] .sp-hl:hover .sp-hl-icon { background: var(--store-accent-ink); color: #fff; border-color: transparent; }
-.store-page[data-store-template='atelier'] .sp-hl strong { font-size: 19px; letter-spacing: -.02em; }
+/* Letra-marca: ornamento tipográfico que cuelga del borde superior. */
+.sp-at-letter { position: absolute; right: 4%; top: -10%; font-size: clamp(220px, 34vw, 480px); font-weight: 900; line-height: .8; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--store-accent) 34%, transparent); user-select: none; animation: sp-at-drift 14s ease-in-out infinite alternate; }
+@keyframes sp-at-drift { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-16px) rotate(1deg); } }
+/* Masthead: caps serif a todo lo ancho; el nombre conserva la fuente del
+   dueño y su propia caja (no se le impone la mayúscula). */
+.store-page[data-store-template='atelier'] .sp-hero-title { font-size: clamp(44px, 7.6vw, 100px); font-weight: 800; line-height: .95; letter-spacing: -.035em; }
+.store-page[data-store-template='atelier'] .sp-hero-title.is-name { font-size: clamp(38px, 8.5vw, calc(var(--store-name-size, 48px) * 1.9)); }
+/* «En esta edición»: los destacados son el índice de la revista — filas de
+   puntos con número de nota, título serif, bajada y sello (no tarjetas). */
+.store-page[data-store-template='atelier'] .sp-highlights { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); column-gap: 72px; margin-top: 0; padding: 60px 0 8px; border-top: 1px solid var(--sp-ink); counter-reset: sp-ed; }
+.store-page[data-store-template='atelier'] .sp-highlights::before { content: 'En esta edición'; font-size: 11.5px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; color: var(--sp-accent-text); }
+.store-page[data-store-template='atelier'] .sp-hl { grid-column: 2; counter-increment: sp-ed; display: flex; align-items: center; gap: 18px; padding: 15px 4px; margin: 0; border: 0; border-bottom: 1px dotted var(--at-line); border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; color: var(--sp-ink); }
+.store-page[data-store-template='atelier'] .sp-hl::before { content: counter(sp-ed, decimal-leading-zero); font-size: 12px; font-weight: 800; letter-spacing: .16em; color: var(--sp-accent-text); }
+.store-page[data-store-template='atelier'] .sp-hl::after { display: none; }
+.store-page[data-store-template='atelier'] .sp-hl:hover { transform: none; background: color-mix(in srgb, var(--store-accent) 7%, transparent); box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-hl strong { margin: 0; font-family: var(--sp-serif); font-size: 17px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
+.store-page[data-store-template='atelier'] .sp-hl-text { flex: 1; min-width: 0; font-size: 13px; font-style: italic; color: var(--sp-muted); text-align: right; }
+.store-page[data-store-template='atelier'] .sp-hl-icon { order: 4; flex: none; width: 36px; height: 36px; border-radius: 0; color: var(--sp-accent-text); background: transparent; border: 1px solid var(--at-line); box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-hl:hover .sp-hl-icon { transform: none; background: var(--at-ink); border-color: var(--at-ink); color: var(--at-paper); }
+/* Titulares con doble regla de imprenta y eyebrow entre filetes. */
 .store-page[data-store-template='atelier'] .sp-section-title,
 .store-page[data-store-template='atelier'] .sp-about-heading,
 .store-page[data-store-template='atelier'] .sp-contact-title { font-weight: 800; letter-spacing: -.045em; }
-.store-page[data-store-template='atelier'] .sp-eyebrow { letter-spacing: .24em; }
+.store-page[data-store-template='atelier'] .sp-section-title::after,
+.store-page[data-store-template='atelier'] :is(.sp-rv.is-in, .sp-toolbar-title:hover) .sp-section-title::after { width: 84px; height: 5px; margin-top: 12px; border: 0; border-top: 1px solid var(--sp-ink); border-bottom: 1px solid var(--sp-ink); border-radius: 0; background: none; animation: none; }
+.store-page[data-store-template='atelier'] .sp-eyebrow { letter-spacing: .28em; }
 .store-page[data-store-template='atelier'] .sp-eyebrow::before { width: 40px; height: 1px; background: var(--sp-ink); }
-.store-page[data-store-template='atelier'] .sp-about-heading-icon { border-radius: 0; background: transparent; color: var(--sp-accent-text); border: 1px solid var(--sp-ink); box-shadow: none; }
+.store-page[data-store-template='atelier'] .sp-eyebrow::after { content: ''; width: 40px; height: 1px; background: var(--sp-ink); }
+/* «La maison»: capitular serif, tarjeta de papel y bloque de años en tinta. */
+.store-page[data-store-template='atelier'] .sp-about-heading-icon { border-radius: 0; background: transparent; color: var(--sp-accent-text); border: 1px solid var(--sp-ink); box-shadow: none; transform: none; }
 .store-page[data-store-template='atelier'] .sp-about-text::first-letter { float: left; margin: 6px 12px 0 0; font-size: 3.8em; font-weight: 800; line-height: .8; color: var(--sp-accent-text); }
 .store-page[data-store-template='atelier'] .sp-about-card,
-.store-page[data-store-template='atelier'] .sp-form { border-radius: 2px; border-color: var(--sp-ink); box-shadow: 10px 10px 0 color-mix(in srgb, var(--store-accent) 24%, transparent); }
+.store-page[data-store-template='atelier'] .sp-form { border-radius: 0; border: 1px solid var(--sp-ink); box-shadow: 10px 10px 0 color-mix(in srgb, var(--store-accent) 22%, transparent); }
 .store-page[data-store-template='atelier'] .sp-about-years { border-radius: 0; background: var(--sp-ink); box-shadow: none; }
 .store-page[data-store-template='atelier'] .sp-about-years strong { color: var(--sp-card-solid); font-size: 52px; letter-spacing: -.05em; }
 .store-page[data-store-template='atelier'] .sp-about-years span { color: var(--sp-card-solid); opacity: .75; }
 .store-page[data-store-template='atelier'] .sp-form-badge { border-radius: 0; }
-.store-page[data-store-template='atelier'] .sp-gallery-item { border-radius: 2px; filter: grayscale(.85) contrast(1.05); transition: filter .5s, transform .35s var(--sp-ease), box-shadow .3s; }
-.store-page[data-store-template='atelier'] .sp-gallery-item:hover { filter: none; }
+/* Lookbook: fotos enmarcadas en blanco y negro que toman color al pasar. */
+.store-page[data-store-template='atelier'] .sp-gallery-item { border-radius: 0; border: 1px solid var(--at-line); filter: grayscale(.85) contrast(1.05); transition: filter .5s, transform .35s var(--sp-ease), box-shadow .3s; }
+.store-page[data-store-template='atelier'] .sp-gallery-item:hover { filter: none; border-color: var(--at-ink); }
 @media (max-width: 960px) {
   .sp-at-masthead { font-size: 10px; letter-spacing: .16em; }
-  .store-page[data-store-template='atelier'] .sp-hero-title::after { margin-inline: auto; }
-  .store-page[data-store-template='atelier'] .sp-hero-sub { border-left: 0; padding-left: 0; }
+  .store-page[data-store-template='atelier'] .sp-highlights { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='atelier'] .sp-hl { grid-column: 1; }
+  .store-page[data-store-template='atelier'] .sp-hl-text { text-align: left; }
 }
 @media (max-width: 760px) {
   .sp-at-masthead span:nth-of-type(3), .sp-at-masthead i:nth-of-type(2) { display: none; }
+  .store-page[data-store-template='atelier'] .sp-hl { flex-wrap: wrap; }
+  .store-page[data-store-template='atelier'] .sp-hl-text { flex-basis: 100%; }
 }
 
 /* ---------- Perspectiva v2 ---------- */
@@ -1471,16 +1561,16 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-px-plane { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .3); box-shadow: none; }
 .store-page[data-store-template='promo'] .sp-hero-cover::after { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 16px, transparent 16px 32px), linear-gradient(112deg, color-mix(in srgb, var(--store-accent-ink) 90%, transparent), color-mix(in srgb, var(--store-accent) 70%, transparent)); }
 .store-page[data-store-template='promo'] .sp-hero-band.has-cover { animation: none; }
-.store-page[data-store-template='atelier'] .sp-hero-band.has-cover { background-color: transparent; background-image: linear-gradient(165deg, color-mix(in srgb, var(--store-accent-soft) 70%, var(--sp-card-solid)), var(--sp-card-solid) 80%); }
-.store-page[data-store-template='atelier'][data-store-theme='dark'] .sp-hero-band.has-cover { background-image: linear-gradient(165deg, color-mix(in srgb, var(--store-accent) 18%, var(--sp-card-solid)), var(--sp-card-solid) 80%); }
+.store-page[data-store-template='atelier'] .sp-hero-band.has-cover { background-color: var(--at-paper); background-image: none; }
 .store-page[data-store-template='atelier'] .sp-hero-band.has-cover .sp-hero-title, .store-page[data-store-template='atelier'] .sp-hero-band.has-cover .sp-hero-sub { text-shadow: none; }
-/* Atelier: la portada es la tapa de la revista (marco y sombra-bloque). */
-.sp-at-cover { grid-area: visual; justify-self: center; align-self: center; position: relative; margin: 0; width: min(100%, 440px); aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--sp-ink); border-radius: 4px; background: var(--sp-soft); box-shadow: 18px 18px 0 color-mix(in srgb, var(--store-accent) 30%, transparent), 0 0 0 10px var(--sp-card-solid), 0 0 0 11px var(--sp-line); }
+/* Atelier: la portada baja como pliego fotográfico a todo el ancho de la
+   tapa — la imagen de campaña de la edición, enmarcada en tinta. */
+.sp-at-cover { grid-area: visual; justify-self: stretch; align-self: end; position: relative; margin: 18px 0 0; width: 100%; aspect-ratio: 21 / 9; overflow: hidden; border: 1px solid var(--at-ink); border-radius: 0; background: var(--sp-soft); box-shadow: 14px 14px 0 color-mix(in srgb, var(--store-accent) 26%, transparent), 0 0 0 8px var(--at-paper), 0 0 0 9px var(--at-line); }
 .sp-at-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--sp-ease); }
 .sp-at-cover:hover img { transform: scale(1.04); }
 .sp-at-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(15, 23, 42, .28)); pointer-events: none; }
 .store-page[data-store-template='atelier'] .sp-hero-band.has-cover .sp-ava { display: none; }
-@media (max-width: 960px) { .sp-at-cover { width: min(100%, 420px); aspect-ratio: 16 / 11; margin-bottom: 26px; box-shadow: 10px 10px 0 color-mix(in srgb, var(--store-accent) 30%, transparent), 0 0 0 8px var(--sp-card-solid), 0 0 0 9px var(--sp-line); } }
+@media (max-width: 960px) { .sp-at-cover { aspect-ratio: 16 / 10; margin-top: 20px; box-shadow: 10px 10px 0 color-mix(in srgb, var(--store-accent) 28%, transparent), 0 0 0 6px var(--at-paper), 0 0 0 7px var(--at-line); } }
 
 /* ---------- Tipografía v3: cada modelo con voz propia ---------- */
 /* Clásico: titular con regla de acento, bajada más legible, secciones con degradé. */
@@ -1495,7 +1585,7 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='classic'] .sp-hl strong { transition: color .25s; }
 .store-page[data-store-template='classic'] .sp-hl:hover strong { color: var(--sp-accent-text); }
 /* Atelier: bajada cursiva, cita con comillas gigantes, texto justificado. */
-.store-page[data-store-template='atelier'] .sp-hero-sub { font-style: italic; font-weight: 400; text-wrap: pretty; }
+.store-page[data-store-template='atelier'] .sp-hero-sub { font-style: italic; font-weight: 400; font-size: clamp(16.5px, 1.7vw, 19.5px); line-height: 1.75; text-wrap: pretty; }
 .store-page[data-store-template='atelier'] .sp-hero-badge::before { content: '— '; }
 .store-page[data-store-template='atelier'] .sp-hero-title { text-wrap: balance; }
 .store-page[data-store-template='atelier'] .sp-about-text { text-align: justify; hyphens: auto; font-size: 16px; line-height: 1.85; }
@@ -1503,7 +1593,6 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='atelier'] .sp-about-mission::before { content: '\201C'; position: absolute; left: 12px; top: -2px; font-size: 84px; font-style: normal; font-weight: 800; line-height: 1; color: var(--store-accent); }
 .store-page[data-store-template='atelier'] .sp-about-mission-label { font-style: normal; letter-spacing: .24em; }
 .store-page[data-store-template='atelier'] .sp-contact-sub { font-style: italic; font-size: 17px; }
-.store-page[data-store-template='atelier'] .sp-hl-text { font-size: 14.5px; line-height: 1.7; }
 .store-page[data-store-template='atelier'] .sp-contact-title::after { content: '.'; color: var(--store-accent); }
 .store-page[data-store-template='atelier'] .sp-section-title { text-wrap: balance; }
 /* Perspectiva: bajada amplia en Poppins y textos limpios de alto contraste. */
@@ -1679,7 +1768,7 @@ html { scroll-behavior: smooth; }
 
 /* ---------- Atelier: detalles de alta costura ---------- */
 /* Última palabra del titular en itálica de display (contraste de revista). */
-.sp-at-em { font-style: italic; font-weight: 500; color: var(--store-accent); }
+.sp-at-em { font-style: italic; font-weight: 500; color: var(--store-accent); text-transform: none; }
 /* Marbete de la foto de campaña enmarcada. */
 .sp-at-cover-tag { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); padding: 6px 16px; background: var(--sp-card-solid); border: 1px solid var(--sp-ink); font-size: 10px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--sp-ink-2); white-space: nowrap; }
 
