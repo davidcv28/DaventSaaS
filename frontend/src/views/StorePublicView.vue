@@ -644,7 +644,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="sp-shop-featured-grid">
         <article
-          v-for="p in shopProducts" :key="p.id" v-reveal
+          v-for="(p, i) in shopProducts" :key="p.id" v-reveal="(i % 4) * 80"
           class="sp-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
           @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
         >

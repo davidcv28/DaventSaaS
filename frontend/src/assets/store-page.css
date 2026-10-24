@@ -6120,3 +6120,24 @@ html { scroll-behavior: smooth; }
   .sp-open.is-open .sp-live-dot::after { animation: none; }
   .sp-skip { transition: none; }
 }
+
+/* Pulido visual de la portada: titulares balanceados, skeleton de imágenes,
+   ritmo entre secciones y scrim de legibilidad sobre la portada. */
+.sp-hero-title, .sp-section-title, .sp-about-heading, .sp-shop-featured-title { text-wrap: balance; }
+.sp-hero-sub, .sp-about-text { text-wrap: pretty; }
+.sp-hero-title:not(.is-name) { max-width: 20ch; }
+.sp-hero-sub { max-width: 60ch; }
+@keyframes sp-skel { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
+.sp-card-img, .sp-gallery-item {
+  background-image: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--store-accent) 10%, transparent) 50%, transparent 70%);
+  background-size: 220% 100%;
+  animation: sp-skel 1.6s linear infinite;
+}
+.sp-card-img img, .sp-gallery-item img { position: relative; background: var(--sp-soft); }
+.sp-hero-band.has-cover .sp-hero-inner::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, .12) 45%, rgba(0, 0, 0, .34)); pointer-events: none; }
+.sp-services, .sp-testimonials { padding-bottom: 72px; }
+.sp-services, .sp-faq { background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--store-accent) 4%, transparent) 40%, transparent); }
+.sp-card:hover .sp-card-img img, .sp-gallery-item:hover img { transform: scale(1.06); }
+@media (prefers-reduced-motion: reduce) {
+  .sp-card-img, .sp-gallery-item { animation: none; }
+}
