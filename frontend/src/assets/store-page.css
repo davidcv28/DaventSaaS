@@ -814,7 +814,7 @@ html { scroll-behavior: smooth; }
 .sp-catalog-banner { margin-top: -4px; }
 
 /* Categorías rápidas (solo donde el sidebar pasa a drawer) */
-.sp-quick { display: none; gap: 8px; overflow-x: auto; margin: 0 -20px 18px; padding: 2px 20px 8px; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.sp-quick { display: none; gap: 8px; overflow-x: auto; margin: 0 0 18px; padding: 2px 0 8px; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
 .sp-quick::-webkit-scrollbar { display: none; }
 .sp-quick-pill { flex: none; scroll-snap-align: start; height: 38px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-ink-2); font: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: var(--sp-shadow-sm); transition: background .2s, color .2s, border-color .2s, transform .2s var(--sp-ease); }
 .sp-quick-pill:active { transform: scale(.96); }
@@ -860,18 +860,27 @@ html { scroll-behavior: smooth; }
   .sp-filters .sp-price, .sp-filters .sp-sort { width: 100%; min-width: 0; }
   .sp-filters .sp-price input { flex: 1; width: 0; min-width: 0; }
   .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .sp-card { border-radius: 16px; }
-  .sp-card-img { aspect-ratio: 1 / 1; }
+  /* La tarjeta vuelve a vertical: la regla ≤900px la ponía en fila para el
+     listado de una columna y, si quedaba en dos columnas, la foto clavada
+     a la izquierda aplastaba el texto — ahora la imagen va arriba a todo
+     el ancho del tile, centrada como en el resto de las plantillas. */
+  .sp-card { flex-direction: column; border-radius: 16px; }
+  .sp-card-img { width: auto; align-self: stretch; margin: 8px 8px 0; aspect-ratio: 1 / 1; }
   .sp-card-badge { top: 8px; left: 8px; padding: 4px 9px; font-size: 10.5px; }
   .sp-card-quick { display: none; }
-  .sp-card-body { padding: 12px 12px 14px; gap: 6px; }
+  .sp-card-body { align-self: stretch; justify-content: flex-start; padding: 12px 12px 14px; gap: 6px; }
   .sp-card-name { font-size: 14px; }
   .sp-card-foot { padding-top: 10px; }
   .sp-card-foot .sp-card-price { font-size: 16px; }
-  .sp-card-go { width: 34px; height: 34px; }
+  .sp-card-go { width: 34px; height: 34px; padding: 0; font-size: 0; }
   .sp-modal-overlay { place-items: center; padding: 16px; }
   .sp-modal { width: 100%; max-width: 520px; margin: auto; max-height: calc(100dvh - 32px); min-height: 0; border-radius: 22px; }
   .sp-modal-img { aspect-ratio: 4 / 3; }
+}
+@media (max-width: 640px) {
+  /* Las píldoras sangran hasta el borde de la pantalla para ganar
+     recorrido táctil (el container lleva 20px de padding a este ancho). */
+  .sp-quick { margin: 0 -20px 18px; padding: 2px 20px 8px; }
 }
 @media (max-width: 380px) {
   .sp-grid { gap: 10px; }
@@ -920,11 +929,11 @@ html { scroll-behavior: smooth; }
   .sp-card-go { width: auto; height: 34px; padding: 0 14px; font-size: 12px; }
 }
 @media (max-width: 420px) {
-  .sp-card-img { width: 104px; margin: 6px; }
-  .sp-card-body { padding: 10px 12px 10px 4px; }
+  .sp-card-img { width: auto; margin: 6px 6px 0; }
+  .sp-card-body { padding: 10px 10px 12px; }
   .sp-card-name { font-size: 14.5px; }
   .sp-card-foot .sp-card-price { font-size: 16px; }
-  .sp-card-go { padding: 0 12px; }
+  .sp-card-go { padding: 0; }
 }
 
 /* ===== Timing uniforme (.3s) =====
@@ -1254,8 +1263,16 @@ html { scroll-behavior: smooth; }
   .spd-name { font-size: 21px; }
   .spd-price { font-size: 28px; }
   .spd-sec { padding: 22px 18px; }
+  .spd-specs th, .spd-specs td { padding: 10px 12px; }
   .spd-specs th { width: 130px; }
   .spd-rel-grid { gap: 12px; }
+  /* iOS hace zoom sobre el viewport al enfocar inputs con fuente <16px:
+     en el teléfono todos los campos de texto suben a 16px para que el
+     foco no deforme la página. */
+  .store-page[data-store-template] .sp-input,
+  .store-page[data-store-template] .sp-search input,
+  .store-page[data-store-template] .sp-filters :is(input, select),
+  .store-page[data-store-template] .sp-bot-input input { font-size: 16px !important; }
 }
 
 
@@ -2603,7 +2620,8 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='lookbook'] .sp-contact-hours { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--sp-line); }
 .store-page[data-store-template='lookbook'] .sp-contact-hours li {
   display: flex; align-items: baseline; gap: 10px; padding: 10px 0;
-  border-bottom: 1px solid var(--sp-line);
+  border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
+  background: transparent;
   font-size: 12px; letter-spacing: .06em; color: var(--sp-muted);
 }
 .store-page[data-store-template='lookbook'] .sp-contact-hours li strong { margin-left: auto; font-weight: 600; color: var(--sp-ink); }
@@ -2856,7 +2874,7 @@ html { scroll-behavior: smooth; }
 
 /* Controles del índice: texto subrayado, nunca píldoras */
 .store-page[data-store-template='lookbook'] .sp-quick {
-  gap: 24px; margin: 0 -20px 30px; padding: 0 20px;
+  gap: 24px; margin: 0 0 30px; padding: 0 0;
   border-bottom: 1px solid var(--sp-line);
 }
 .store-page[data-store-template='lookbook'] .sp-quick-pill {
@@ -3154,13 +3172,15 @@ html { scroll-behavior: smooth; }
     padding: 44px 20px 32px;
   }
   .store-page[data-store-template='lookbook'] .sp-hero-title { max-width: 18ch; font-size: clamp(38px, 9vw, 64px); }
-  .store-page[data-store-template='lookbook'] .sp-lb-plate { margin-top: 28px; }
+  .store-page[data-store-template='lookbook'] .sp-lb-plate { width: min(100%, 460px); justify-self: center; margin-top: 28px; }
   .store-page[data-store-template='lookbook'] .sp-lb-plate-frame { aspect-ratio: 4 / 5; }
   .store-page[data-store-template='lookbook'] .sp-lb-plate-seal { top: -12px; right: -12px; width: 64px; height: 64px; font-size: 14px; }
   .store-page[data-store-template='lookbook'] .sp-hero-sub { margin-top: 20px; }
   .store-page[data-store-template='lookbook'] .sp-about-grid,
   .store-page[data-store-template='lookbook'] .sp-contact-grid { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='lookbook'] .sp-about-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* La foto lateral se oculta a este ancho: una sola columna para que la
+     tarjeta no quede comprimida a la mitad. */
+  .store-page[data-store-template='lookbook'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='lookbook'] .sp-showcase-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='lookbook'] .sp-showcase-frame { aspect-ratio: 16 / 10; }
   .store-page[data-store-template='lookbook'] .sp-layout.has-nav { grid-template-columns: minmax(0, 1fr); }
@@ -3214,10 +3234,14 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='lookbook'] .sp-cat-hero-inner { padding: 30px 20px 28px; gap: 16px; }
   .store-page[data-store-template='lookbook'] .sp-cat-title { font-size: clamp(40px, 13vw, 64px); }
   .store-page[data-store-template='lookbook'] .sp-cat-stats li { padding-right: 12px; margin-right: 12px; font-size: 8.5px; }
-  .store-page[data-store-template='lookbook'] .sp-quick { gap: 18px; }
+  .store-page[data-store-template='lookbook'] .sp-quick { gap: 18px; margin: 0 -20px 30px; padding: 0 20px; }
+  .store-page[data-store-template='lookbook'] .sp-shop-featured-head { flex-wrap: wrap; gap: 10px 18px; }
   .store-page[data-store-template='lookbook'] .sp-toolbar { align-items: stretch; }
   .store-page[data-store-template='lookbook'] .sp-filters { gap: 14px; }
   .store-page[data-store-template='lookbook'] .sp-form-row { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .spd-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .store-page[data-store-template='lookbook'] .spd-specs th,
+  .store-page[data-store-template='lookbook'] .spd-specs td { padding: 10px 12px; }
   .store-page[data-store-template='lookbook'] .spd-specs th { width: 130px; }
 }
 @media (max-width: 520px) {
@@ -3231,6 +3255,15 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='lookbook'] .sp-cat-stats { flex-wrap: wrap; gap: 10px 0; }
   .store-page[data-store-template='lookbook'] .sp-grid { gap: 26px 12px; }
   .store-page[data-store-template='lookbook'] .sp-card-name { font-size: 15px; }
+  /* El índice de destacados pasa a una columna: las dos columnas de
+     ≤760px dejaban celdas de ~160px con el texto roto en pantallas
+     chicas; ahora cada ítem es una fila con filete inferior. */
+  .store-page[data-store-template='lookbook'] .sp-highlights { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-hl {
+    padding: 20px 0 24px; border-right: 0;
+    border-bottom: 1px solid var(--sp-line);
+  }
+  .store-page[data-store-template='lookbook'] .sp-hl:last-child { border-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-store-template='lookbook'] .sp-card,
@@ -4569,7 +4602,8 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='cobre'] .sp-map-address { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--sp-muted); }
 .store-page[data-store-template='cobre'] .sp-contact-hours { margin-top: 14px; }
 .store-page[data-store-template='cobre'] .sp-contact-hours li {
-  padding: 10px 0; border-bottom: 1px solid var(--sp-line);
+  padding: 10px 0; border: 0; border-bottom: 1px solid var(--sp-line);
+  border-radius: 0; background: transparent;
   font-size: 14px; color: var(--sp-muted);
 }
 .store-page[data-store-template='cobre'] .sp-contact-hours li:first-child { border-top: 1px solid var(--sp-line); }
@@ -4926,7 +4960,9 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='cobre'] .sp-cb-tile.alt { width: 100%; height: 100%; min-height: 320px; }
   .store-page[data-store-template='cobre'] .sp-highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 28px; }
   .store-page[data-store-template='cobre'] .sp-hl, .store-page[data-store-template='cobre'] .sp-hl:first-child { padding: 0; border-left: 0; }
-  .store-page[data-store-template='cobre'] .sp-about-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* La foto lateral se oculta a este ancho: una sola columna para que la
+     tarjeta no quede comprimida a la mitad. */
+  .store-page[data-store-template='cobre'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='cobre'] .sp-services > .sp-container { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='cobre'] .sp-services .sp-services-grid { grid-column: 1; grid-row: auto; }
   .store-page[data-store-template='cobre'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
