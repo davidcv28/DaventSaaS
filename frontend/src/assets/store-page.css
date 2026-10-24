@@ -1173,16 +1173,40 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='promo'] .sp-gallery-item:nth-child(odd) { rotate: -1deg; }
 .store-page[data-store-template='promo'] .sp-gallery-item:nth-child(even) { rotate: 1deg; }
 .store-page[data-store-template='promo'] .sp-gallery-item:hover { rotate: 0deg; }
+.store-page[data-store-template='promo'] .sp-hero-inner { row-gap: 0; }
+.store-page[data-store-template='promo'] .sp-hero-title { max-width: 14ch; overflow-wrap: anywhere; text-wrap: balance; }
+.store-page[data-store-template='promo'] .sp-hero-sub { display: block; width: fit-content; max-width: min(52ch, 100%); box-sizing: border-box; margin-top: 20px; }
+.store-page[data-store-template='promo'] .sp-hero-ctas { gap: 14px; }
+.store-page[data-store-template='promo'] .sp-hero-meta { margin-top: 26px; }
+.store-page[data-store-template='promo'] .sp-ava .sp-logo.lg, .store-page[data-store-template='promo'] .sp-ava .sp-mono.lg { box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); border: 2px solid var(--sp-ink-hard, #111827); }
 @media (max-width: 960px) {
-  .store-page[data-store-template='promo'] .sp-hero-inner { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'ava' 'tag' 'badge' 'title' 'sub' 'ctas' 'meta' 'seal'; justify-items: center; text-align: center; padding: 52px 20px 96px; }
+  .store-page[data-store-template='promo'] .sp-hero-inner { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'ava seal' 'tag tag' 'badge badge' 'title title' 'sub sub' 'ctas ctas' 'meta meta'; align-items: start; column-gap: 16px; padding: 44px 24px 96px; }
+  .store-page[data-store-template='promo'] .sp-hero-title { max-width: 16ch; font-size: clamp(38px, 9vw, 68px); }
   .store-page[data-store-template='promo'] .sp-hero-ctas,
-  .store-page[data-store-template='promo'] .sp-hero-meta { justify-content: center; }
-  .sp-pr-seal { width: 170px; margin-top: 30px; }
+  .store-page[data-store-template='promo'] .sp-hero-meta { justify-content: flex-start; }
+  .sp-pr-seal { width: clamp(96px, 20vw, 140px); margin: 0; align-self: start; justify-self: end; }
+  .sp-pr-seal-core { box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); }
+  .sp-pr-seal-core .icon { width: 55%; height: 55%; }
   .sp-pr-spark.s1 { display: none; }
 }
 @media (max-width: 760px) {
-  .store-page[data-store-template='promo'] .sp-highlights { margin-top: -18px; }
+  .store-page[data-store-template='promo'] .sp-highlights { margin-top: -18px; gap: 14px; }
   .store-page[data-store-template='promo'] .sp-hl:nth-child(odd), .store-page[data-store-template='promo'] .sp-hl:nth-child(even) { rotate: 0deg; }
+  .store-page[data-store-template='promo'] .sp-gallery-item:nth-child(odd), .store-page[data-store-template='promo'] .sp-gallery-item:nth-child(even) { rotate: 0deg; }
+  .store-page[data-store-template='promo'] .sp-hero-ctas { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: 100%; gap: 12px; }
+  .store-page[data-store-template='promo'] .sp-hero-ctas .sp-btn { grid-column: 1 / -1; width: 100%; justify-content: center; box-sizing: border-box; }
+  .store-page[data-store-template='promo'] .sp-hero-ctas .sp-icon-btn { grid-column: auto; justify-self: start; }
+  .store-page[data-store-template='promo'] .sp-hero-meta { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 20px; }
+  .store-page[data-store-template='promo'] .sp-about-card, .store-page[data-store-template='promo'] .sp-form { box-shadow: 5px 5px 0 var(--store-accent-ink); }
+  .store-page[data-store-template='promo'] .sp-hero-marquee { bottom: 10px; padding: 8px 0; }
+  .store-page[data-store-template='promo'] .sp-hero-marquee-seq { font-size: 12px; gap: 14px; }
+}
+@media (max-width: 460px) {
+  .store-page[data-store-template='promo'] .sp-hero-inner { padding: 36px 18px 88px; }
+  .store-page[data-store-template='promo'] .sp-hero-title { font-size: clamp(34px, 11.5vw, 48px); letter-spacing: -.04em; }
+  .store-page[data-store-template='promo'] .sp-hero-sub { font-size: 15px; padding: 9px 14px; }
+  .store-page[data-store-template='promo'] .sp-pr-tag { font-size: 12px; padding: 6px 12px; }
+  .sp-pr-spark.s3 { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sp-px-floor, .sp-px-plane, .sp-pr-burst, .sp-pr-spark, .sp-pr-tag, .sp-pr-mark, .sp-pr-seal-ring, .sp-pr-seal-core, .sp-btn.sp-pr-wa,
