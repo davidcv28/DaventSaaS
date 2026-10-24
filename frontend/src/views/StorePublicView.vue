@@ -134,7 +134,7 @@ const decor = computed(() => (hasDesignAdvanced.value ? (custom.value.decor || [
 const decorAbout = computed(() => (!isCatalogTpl.value && hasAbout.value ? decor.value[0] || null : null))
 const decorPool = computed(() => decor.value.slice(decorAbout.value ? 1 : 0))
 const decorBand = computed(() => (isCatalogTpl.value ? null : decorPool.value[0] || null))
-const decorStrip = computed(() => decorPool.value.slice(decorBand.value ? 1 : 0))
+const decorContact = computed(() => (showContact.value ? decorPool.value[decorBand.value ? 1 : 0] || null : null))
 const lightboxIndex = ref(-1)
 const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
 const openLightbox = (index) => { lightboxIndex.value = index }
@@ -415,12 +415,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div v-if="decorStrip.length" class="sp-container sp-decor" :data-count="decorStrip.length">
-      <figure v-for="(img, i) in decorStrip" :key="img.id" v-reveal="i * 100" class="sp-decor-item">
-        <img :src="img.url" alt="" loading="lazy" />
-      </figure>
-    </div>
-
     <div class="sp-container sp-highlights">
       <component
         :is="h.to ? 'RouterLink' : h.href ? 'a' : 'div'" v-for="(h, i) in highlights" :key="h.title"
@@ -513,6 +507,9 @@ onBeforeUnmount(() => {
               <AppIcon :name="s.key" :size="17" />
             </a>
           </div>
+          <figure v-if="decorContact" class="sp-contact-photo" aria-hidden="true">
+            <img :src="decorContact.url" alt="" loading="lazy" />
+          </figure>
         </div>
         <form v-reveal="180" class="sp-form" novalidate @submit.prevent="submitContact">
           <div v-if="contactStatus === 'success'" class="sp-sent" role="status">
