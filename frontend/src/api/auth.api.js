@@ -121,6 +121,20 @@ export const authApi = {
   async resendVerificationEmail() {
     const { data } = await http.post('/verify-email/resend/')
     return data
+  },
+
+  // --- Verificación de celular por WhatsApp (gratis: service messages) ---
+  // POST /api/verify-phone/ -> {code, whatsapp_url, expires_in}: el usuario
+  // abre el link, le manda el código al número business y el webhook marca.
+  async startPhoneVerification() {
+    const { data } = await http.post('/verify-phone/')
+    return data
+  },
+
+  // GET /api/verify-phone/status/ -> {phone_verified} (polling mientras espera)
+  async fetchPhoneStatus() {
+    const { data } = await http.get('/verify-phone/status/')
+    return data
   }
 }
 

@@ -96,7 +96,7 @@ export function validateBusinessName(v = '', tax = 'CF') {
 
 export function validatePhone(v = '') {
   const s = (v || '').trim()
-  if (!s) return null // opcional en backend (allow_null)
+  if (!s) return 'Ingresá tu número de celular' // requerido: ancla anti-abuso
   if (!/^\+54\d{10,13}$/.test(s)) return 'Ingresa un número válido en formato internacional. Ej. +5493871551234'
   return null
 }

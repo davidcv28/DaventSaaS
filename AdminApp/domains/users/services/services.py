@@ -1,5 +1,8 @@
 import logging
+import re
+import secrets
 from datetime import timedelta
+from urllib.parse import quote
 
 from decouple import config
 from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
@@ -7,6 +10,7 @@ from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
@@ -48,6 +52,18 @@ def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
     for token in OutstandingToken.objects.filter(user = user):
         BlacklistedToken.objects.get_or_create(token = token)
     return user
+
+#PROFILE UPDATE QUERY
+def UpdateProfileQuery(profile : UserProfile, validated_data : dict) -> UserProfile:
+    #Si cambia el celular hay que verificarlo de nuevo: la verificación anterior
+    #valía para el número viejo (misma regla que el cambio de correo).
+    if validated_data.get('phone') != profile.phone:
+        profile.phone_verified    =   False
+        profile.phone_verified_at =   None
+    for field, value in validated_data.items():
+        setattr(profile, field, value)
+    profile.save()
+    return profile
 
 
 
@@ -255,4 +271,66 @@ def VerifyEmailQuery(uid_b64 : str, token : str) -> bool:
         profile.email_verified    =   True
         profile.email_verified_at =   timezone.now()
         profile.save(update_fields = ['email_verified', 'email_verified_at'])
+    return True
+#=================================
+# PHONE VERIFICATION QUERYS (WhatsApp entrante — costo $0)
+#=================================
+#El usuario le escribe un código al número business de DAVENT por WhatsApp:
+#la conversación la inicia él (service message → gratis en la Cloud API de
+#Meta, sin SMS ni tarjetas de por medio). El webhook /api/webhooks/whatsapp/
+#recibe el mensaje y confirma que el 'from' matchea profile.phone.
+#WHATSAPP_VERIFY_NUMBER: número business en formato E.164 sin '+' (wa.me).
+#Vacío = feature apagada: el endpoint de inicio responde 503.
+WHATSAPP_VERIFY_NUMBER  =   config('WHATSAPP_VERIFY_NUMBER', default = '')
+#Handshake del webhook (GET ?hub.verify_token) y firma HMAC de los POST
+#entrantes (X-Hub-Signature-256). El secret vacío salta la firma SOLO en dev —
+#en prod es obligatorio, sin él cualquiera forja "mensajes entrantes".
+WHATSAPP_WEBHOOK_TOKEN  =   config('WHATSAPP_WEBHOOK_TOKEN', default = '')
+WHATSAPP_APP_SECRET     =   config('WHATSAPP_APP_SECRET', default = '')
+PHONE_CODE_TTL          =   600  #El código de verificación vive 10 minutos.
+#Sin 0/O ni 1/I: el usuario copia el código a mano si el link no abre.
+_PHONE_CODE_ALPHABET    =   'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+_PHONE_CODE_KEY         =   'phone_verify:{}'
+_PHONE_CODE_RE          =   re.compile(r'DAVENT[^0-9A-Z]*([0-9A-Z]{6})')
+
+def StartPhoneVerificationQuery(profile : UserProfile) -> tuple:
+    """Genera el código de un solo uso y devuelve (code, link wa.me)."""
+    code        =   ''.join(secrets.choice(_PHONE_CODE_ALPHABET) for _ in range(6))
+    cache.set(_PHONE_CODE_KEY.format(code), profile.user_id, PHONE_CODE_TTL)
+    text        =   f'DAVENT {code}'
+    link        =   f'https://wa.me/{WHATSAPP_VERIFY_NUMBER}?text={quote(text)}'
+    return code, link
+
+def _national_phone(raw : str) -> str:
+    #Normaliza a número nacional argentino: el perfil guarda +549... y Meta
+    #reporta el 'from' como 549... — y un 54... sin el 9 debe matchear igual.
+    digits  =   re.sub(r'\D', '', raw or '')
+    if digits.startswith('54'):
+        digits  =   digits[2:]
+    if digits.startswith('9') and len(digits) > 10:
+        digits  =   digits[1:]
+    return digits
+
+def ConfirmPhoneVerificationQuery(wa_from : str, text : str) -> bool:
+    """
+    Confirma el código recibido por el webhook: tiene que existir en cache
+    (un solo uso, TTL) y el 'from' de WhatsApp tiene que ser el celular del
+    perfil — verificar es probar posesión DEL número registrado, no de otro.
+    """
+    match   =   _PHONE_CODE_RE.search((text or '').upper())
+    if not match:
+        return False
+    key     =   _PHONE_CODE_KEY.format(match.group(1))
+    user_id =   cache.get(key)
+    if not user_id:
+        return False
+    profile =   UserProfile.objects.filter(user_id = user_id).first()
+    if not profile or not profile.phone:
+        return False
+    if _national_phone(profile.phone) != _national_phone(wa_from):
+        return False
+    profile.phone_verified    =   True
+    profile.phone_verified_at =   timezone.now()
+    profile.save(update_fields = ['phone_verified', 'phone_verified_at'])
+    cache.delete(key)
     return True

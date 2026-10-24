@@ -94,6 +94,49 @@ async function resendVerification() {
   }
 }
 
+// --- Verificación de celular (WhatsApp entrante: gratis, ancla anti-abuso) ---
+const phoneVerifyBusy = ref(false)
+const phoneVerifyErr = ref('')
+const phoneVerifyCode = ref('')
+const phoneVerifyUrl = ref('')
+let phonePoll = null
+const phoneVerified = computed(() => auth.user?.profile?.phone_verified === true)
+const hasPhone = computed(() => Boolean(auth.user?.profile?.phone))
+
+function stopPhonePoll() {
+  if (phonePoll) { clearInterval(phonePoll); phonePoll = null }
+}
+async function startPhoneVerify() {
+  phoneVerifyBusy.value = true
+  phoneVerifyErr.value = ''
+  try {
+    const data = await authApi.startPhoneVerification()
+    phoneVerifyCode.value = data?.code || ''
+    phoneVerifyUrl.value = data?.whatsapp_url || ''
+    //Polling liviano: el webhook de Meta marca el perfil cuando llega el
+    //mensaje y acá lo reflejamos solo (sin recargar la página).
+    stopPhonePoll()
+    phonePoll = setInterval(async () => {
+      try {
+        const s = await authApi.fetchPhoneStatus()
+        if (s?.phone_verified) {
+          stopPhonePoll()
+          phoneVerifyCode.value = ''
+          phoneVerifyUrl.value = ''
+          if (auth.user?.profile) auth.user.profile.phone_verified = true
+        }
+      } catch { /* polling tolerante: reintenta en el próximo tick */ }
+    }, 4000)
+  } catch (e) {
+    phoneVerifyErr.value = e.response?.status === 429
+      ? 'Generaste varios códigos. Esperá un rato y probá de nuevo.'
+      : e.response?.data?.detail || 'No se pudo iniciar la verificación. Reintentá en unos minutos.'
+  } finally {
+    phoneVerifyBusy.value = false
+  }
+}
+onUnmounted(stopPhonePoll)
+
 // --- Cuenta: edición de correo + perfil fiscal ---
 const accountForm = reactive({
   email: '', first_name: '', last_name: '', tax_condition: 'CF', business_name: '',
@@ -2450,9 +2493,30 @@ async function changePassword() {
               </div>
             </div>
             <AppInput v-model="accountForm.address" label="Domicilio" name="acc_address" autocomplete="street-address" placeholder="Escribe tu domicilio" :error="accountFieldErr('address')" @blur="accountTouched.address = true" />
-            <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
+            <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
             <AppButton :loading="accountBusy">Guardar cambios</AppButton>
           </form>
+          <!-- Verificación del celular: WhatsApp entrante (service message = gratis).
+               El usuario manda el código y el webhook lo marca; acá se pollea. -->
+          <div class="verify-phone">
+            <template v-if="phoneVerified">
+              <p class="badge-ok"><AppIcon name="badge-check" :size="16" /> Celular verificado</p>
+            </template>
+            <template v-else>
+              <p class="verify-phone-text">Verificá tu celular mandando un código por WhatsApp. Nos ayuda a confirmar que la cuenta es de una persona real.</p>
+              <button type="button" class="btn ghost btn-auto" :disabled="!hasPhone || phoneVerifyBusy" @click="startPhoneVerify">
+                <span v-if="phoneVerifyBusy" class="spinner"></span><AppIcon name="whatsapp" :size="16" /> Verificar por WhatsApp
+              </button>
+              <p v-if="!hasPhone" class="hint">Cargá tu número de celular arriba y guardá los cambios para poder verificarlo.</p>
+              <div v-if="phoneVerifyCode" class="verify-phone-pending">
+                <p>Enviá este código desde tu WhatsApp:</p>
+                <p class="verify-phone-code">{{ phoneVerifyCode }}</p>
+                <a class="btn btn-auto" :href="phoneVerifyUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="16" /> Abrir WhatsApp</a>
+                <p class="hint"><span class="spinner spinner-brand"></span> Esperando tu mensaje… el panel se actualiza solo.</p>
+              </div>
+              <AlertMessage v-if="phoneVerifyErr" kind="error" :message="phoneVerifyErr" />
+            </template>
+          </div>
         </div>
         <div class="card">
           <h3><AppIcon name="key" :size="18" /> Cambiar contraseña</h3>

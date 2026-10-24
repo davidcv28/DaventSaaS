@@ -230,9 +230,9 @@ UserProfileFieldsConfig     =   {
     'phone'                 :   {
         'label'             :   'Número de celular',
         'style'             :   {'placeholder'  :   'Número sin 0 ni 15'},
-        'required'          :   False,
-        'allow_null'        :   True,
-        'allow_blank'       :   True,
+        #Obligatorio desde la verificación por WhatsApp: el celular único es el
+        #ancla anti-abuso multi-cuenta (un email nuevo es gratis, un número no).
+        'required'          :   True,
         'max_length'        :   16,
         'validators'        :   [UserProfileValidators['phone']]
     }

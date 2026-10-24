@@ -44,6 +44,10 @@ class UserProfile(models.Model):
     #EMAIL VERIFICATION (anti-abuso del trial: el claim de la web exige correo verificado)
     email_verified      =   models.BooleanField(default = False, verbose_name = 'Correo verificado')
     email_verified_at   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de verificación del correo')
+    #PHONE VERIFICATION (anti-abuso multi-cuenta: prueba de posesión del celular
+    #vía WhatsApp entrante — el usuario le manda un código al número business)
+    phone_verified      =   models.BooleanField(default = False, verbose_name = 'Celular verificado')
+    phone_verified_at   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de verificación del celular')
     class Meta:
         app_label           =   'users'
         indexes             =   [

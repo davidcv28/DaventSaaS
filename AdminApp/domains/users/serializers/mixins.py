@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.services import (
     #USER QUERYS
-    UpdateUserQuery, UpdatePasswordUserQuery, RegisterUserQuery
+    UpdateUserQuery, UpdatePasswordUserQuery, UpdateProfileQuery, RegisterUserQuery
 )
 from .operations import ProvinceAndCityComparation, DocumentFormat, TypeDocumentSelect, BusinessNameRequired
 import re
@@ -153,6 +153,13 @@ class UserProfileValidatorsMixins:
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
+#=================================
+# USER PROFILE UPDATE METHOD
+#=================================
+class UserProfileUpdateMethod:
+    #Resetea phone_verified si cambia el celular (UpdateProfileQuery).
+    def update(self, instance, validated_data):
+        return UpdateProfileQuery(instance, validated_data)
 #=================================#=================================#=================================#=================================
 
 #=================================

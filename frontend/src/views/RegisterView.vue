@@ -222,7 +222,7 @@ const step3Errors = computed(() => validateStep3())
           </div>
         </div>
         <AppInput v-model="form.address" label="Domicilio" name="address" placeholder="Escribe tu domicilio" :error="err('address', step3Errors.address)" @blur="touched.address = true" />
-        <AppInput v-model="form.phone" label="Número de celular" name="phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" :error="err('phone', step3Errors.phone)" @blur="touched.phone = true" />
+        <AppInput v-model="form.phone" label="Número de celular" name="phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="err('phone', step3Errors.phone)" @blur="touched.phone = true" />
         <AlertMessage kind="info" message="Revisá que la ciudad pertenezca a la provincia: el backend lo exige." />
         <div class="field">
           <label class="check">

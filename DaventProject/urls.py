@@ -33,6 +33,9 @@ from AdminApp.domains.users.views.auth_views import (
     PasswordResetConfirmView,
     VerifyEmailView,
     VerifyEmailResendView,
+    VerifyPhoneStartView,
+    VerifyPhoneStatusView,
+    WhatsappWebhookView,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
@@ -66,6 +69,12 @@ urlpatterns = [
     path('api/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('api/verify-email/resend/', VerifyEmailResendView.as_view(), name='verify_email_resend'),
+    #=================================
+    # CELULAR (verificación por WhatsApp entrante + webhook de la Cloud API)
+    #=================================
+    path('api/verify-phone/', VerifyPhoneStartView.as_view(), name='verify_phone'),
+    path('api/verify-phone/status/', VerifyPhoneStatusView.as_view(), name='verify_phone_status'),
+    path('api/webhooks/whatsapp/', WhatsappWebhookView.as_view(), name='whatsapp_webhook'),
 ]
 
 # Solo en desarrollo: el schema OpenAPI y los docs interactivos exponen la
