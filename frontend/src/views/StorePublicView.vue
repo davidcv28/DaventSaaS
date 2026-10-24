@@ -8,6 +8,7 @@ import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/cat
 import { storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
+import { openStatus } from '../utils/storeHours.js'
 
 // Página de inicio de la web pública: presentación (hero), carrusel de
 // destacados (premium), Sobre nosotros, Galería y Contáctanos. El catálogo
@@ -120,10 +121,16 @@ const heroTitle = computed(() => custom.value.headline?.trim() || shopName.value
 // Sin catálogo la web es una vidriera: el badge de fallback es "Sitio oficial".
 const heroBadge = computed(() => (heroTitleIsName.value ? (location.value || (showCatalog.value ? 'Catálogo online' : 'Sitio oficial')) : shopName.value))
 const heroBadgeIcon = computed(() => (heroTitleIsName.value ? (location.value ? 'map-pin' : 'store') : ''))
+// "Abierto ahora / Cerrado": sale de los horarios cargados (texto libre); si
+// no se pueden interpretar no se muestra nada. Se recalcula cada minuto.
+const now = ref(new Date())
+let clock = null
+const openNow = computed(() => (custom.value.show_hours !== false ? openStatus(custom.value.hours, now.value) : null))
 const heroMeta = computed(() => {
   const items = []
-  if (!heroTitleIsName.value && location.value) items.push({ icon: 'map-pin', text: location.value })
-  if (custom.value.about_years) items.push({ icon: 'clock', text: `+${custom.value.about_years} años de trayectoria` })
+  if (!heroTitleIsName.value && location.value) items.push({ key: 'loc', icon: 'map-pin', text: location.value })
+  if (openNow.value) items.push({ key: 'open', state: openNow.value.state, text: openNow.value.text })
+  if (custom.value.about_years) items.push({ key: 'years', icon: 'clock', text: `+${custom.value.about_years} años de trayectoria` })
   return items
 })
 
@@ -300,6 +307,15 @@ async function submitContact() {
 }
 
 async function share() {
+  const data = { title: shopName.value, text: custom.value.description?.trim() || `Mirá ${shopName.value}`, url: window.location.href }
+  if (navigator.share) {
+    try {
+      await navigator.share(data)
+      return
+    } catch (e) {
+      if (e?.name === 'AbortError') return
+    }
+  }
   try {
     await navigator.clipboard.writeText(window.location.href)
     copied.value = true
@@ -319,9 +335,11 @@ onMounted(() => {
   if (showContact.value) loadCaptcha()
   loadShopFeatured()
   window.addEventListener('keydown', onKey)
+  clock = setInterval(() => { now.value = new Date() }, 60000)
 })
 
 onBeforeUnmount(() => {
+  clearInterval(clock)
   window.removeEventListener('keydown', onKey)
 })
 </script>
@@ -405,7 +423,7 @@ onBeforeUnmount(() => {
               </button>
             </div>
             <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
-              <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
           </div>
           <figure v-reveal="120" class="sp-lb-plate" :class="{ 'is-logo': !lbPlateImg && custom.logo }">
@@ -436,7 +454,7 @@ onBeforeUnmount(() => {
               </button>
             </div>
             <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
-              <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
           </div>
           <div v-reveal="120" class="sp-cb-art">
@@ -472,7 +490,7 @@ onBeforeUnmount(() => {
               </button>
             </div>
             <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
-              <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
           </div>
           <figure v-reveal="120" class="sp-mn-art" :class="{ 'is-logo': !mnArtImg && custom.logo }">
@@ -500,7 +518,7 @@ onBeforeUnmount(() => {
                 <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               </div>
               <ul v-if="heroMeta.length" class="sp-hero-meta">
-                <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
+                <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
               </ul>
             </div>
             <button type="button" class="sp-icon-btn sp-shop-share" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
@@ -554,7 +572,7 @@ onBeforeUnmount(() => {
             </button>
           </div>
           <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
-            <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
+            <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
           </ul>
           <div v-if="tpl === 'promo'" class="sp-pr-seal" aria-hidden="true">
             <svg class="sp-pr-seal-ring" viewBox="0 0 200 200">

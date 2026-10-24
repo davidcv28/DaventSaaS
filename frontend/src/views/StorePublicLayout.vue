@@ -10,6 +10,8 @@ import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import StoreBot from '../components/StoreBot.vue'
 import { vReveal } from '../directives/reveal.js'
+import { applySeo } from '../utils/seo.js'
+import { schemaHours } from '../utils/storeHours.js'
 import '../assets/store-page.css'
 
 // Layout de la web pública del cliente (sin auth): barra superior + pie +
@@ -54,6 +56,13 @@ const nameFont = computed(() => ({ fontFamily: storeFontFamily(custom.value.name
 const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
 const location = computed(() => [store.value?.city_name, store.value?.province_name].filter(Boolean).join(', '))
 const year = new Date().getFullYear()
+const mainAnchor = ref(null)
+function skipToContent() {
+  const target = document.querySelector('.sp-page-root') || mainAnchor.value
+  if (!target) return
+  mainAnchor.value?.focus({ preventScroll: true })
+  target.scrollIntoView({ block: 'start' })
+}
 
 // Visibilidad de las secciones del inicio: alimenta los links del nav.
 const hasAbout = computed(() => custom.value.show_about !== false && Boolean(
@@ -129,6 +138,66 @@ watch([status, () => route.name], ([s, name]) => {
   if (s === 'success') document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo` : shopName.value
 }, { immediate: true })
 
+// Canales de contacto (pie y barra fija móvil).
+const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const socials = computed(() => [
+  { key: 'instagram', label: 'Instagram', url: custom.value.instagram && `https://instagram.com/${custom.value.instagram}` },
+  { key: 'tiktok', label: 'TikTok', url: custom.value.tiktok && `https://tiktok.com/@${custom.value.tiktok}` },
+  { key: 'facebook', label: 'Facebook', url: custom.value.facebook && `https://facebook.com/${custom.value.facebook}` }
+].filter((s) => s.url))
+const footAddress = computed(() => store.value?.location_address || '')
+const hasFootContact = computed(() => Boolean(whatsappUrl.value || footAddress.value || socials.value.length))
+// Barra fija móvil: WhatsApp + acceso cruzado Catálogo/Inicio. No aparece en
+// la ficha de producto (ya tiene su propio CTA a WhatsApp).
+const dockCatalog = computed(() => showCatalog.value && !catalogOnly.value && !isCatalog.value && !isProduct.value)
+const dockHome = computed(() => isCatalog.value && !catalogOnly.value)
+const showDock = computed(() => status.value === 'success' && !isProduct.value && Boolean(whatsappUrl.value || dockCatalog.value || dockHome.value))
+
+// SEO y previews: Open Graph / Twitter / theme-color + JSON-LD (Store o
+// LocalBusiness) con nombre, dirección, horarios y redes.
+let clearSeo = null
+function syncSeo() {
+  clearSeo?.()
+  clearSeo = null
+  if (status.value !== 'success') return
+  const c = custom.value
+  const s = store.value
+  const url = `${window.location.origin}${route.path}`
+  const description = c.description?.trim() || `${shopName.value}${location.value ? ` en ${location.value}` : ''}. ${showCatalog.value ? 'Mirá el catálogo online y consultá por WhatsApp.' : 'Sitio oficial.'}`
+  const image = (hasDesignAdvanced.value && c.cover) || c.carousel?.[0]?.url || c.logo || ''
+  const phone = c.whatsapp ? `+${c.whatsapp.replace(/\D/g, '')}` : undefined
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': showCatalog.value ? 'Store' : 'LocalBusiness',
+    name: shopName.value,
+    description,
+    url,
+    image: image ? new URL(image, window.location.origin).href : undefined,
+    logo: c.logo ? new URL(c.logo, window.location.origin).href : undefined,
+    telephone: phone,
+    address: location.value || s?.location_address ? {
+      '@type': 'PostalAddress',
+      streetAddress: s?.location_address || undefined,
+      addressLocality: s?.city_name || undefined,
+      addressRegion: s?.province_name || undefined,
+      addressCountry: 'AR'
+    } : undefined,
+    openingHoursSpecification: c.show_hours !== false ? schemaHours(c.hours) : [],
+    sameAs: socials.value.map((x) => x.url)
+  }
+  if (!jsonLd.openingHoursSpecification.length) delete jsonLd.openingHoursSpecification
+  if (!jsonLd.sameAs.length) delete jsonLd.sameAs
+  clearSeo = applySeo({
+    title: document.title,
+    description,
+    image,
+    url,
+    themeColor: themeVars.value['--store-accent-ink'],
+    jsonLd: JSON.parse(JSON.stringify(jsonLd))
+  })
+}
+watch([status, () => route.path, custom], syncSeo, { flush: 'post' })
+
 // Favicon de la pestaña: mientras se visita la web, el icono es el logo de la
 // tienda (sin logo queda el de DAVENT). Al salir se restaura el original.
 const faviconEl = document.querySelector('link[rel="icon"]')
@@ -167,12 +236,14 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
+  clearSeo?.()
   applyFavicon(null)
 })
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
+  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
+    <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
@@ -249,9 +320,19 @@ onBeforeUnmount(() => {
       </nav>
     </header>
 
-    <div v-if="status === 'loading'" class="sp-state">
-      <span class="spinner spinner-brand" aria-hidden="true"></span>
-      <p>Cargando la tienda…</p>
+    <span id="sp-main" ref="mainAnchor" tabindex="-1" class="sp-main-anchor"></span>
+
+    <div v-if="status === 'loading'" class="sp-boot" role="status" aria-live="polite" aria-busy="true">
+      <span class="sp-sr-only">Cargando la tienda…</span>
+      <div class="sp-boot-hero" aria-hidden="true">
+        <span class="sp-sk-line sp-boot-badge"></span>
+        <span class="sp-sk-line sp-boot-title"></span>
+        <span class="sp-sk-line sp-boot-sub"></span>
+        <span class="sp-boot-ctas"><span class="sp-sk-line"></span><span class="sp-sk-line"></span></span>
+      </div>
+      <div class="sp-container sp-boot-grid" aria-hidden="true">
+        <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
+      </div>
     </div>
 
     <div v-else-if="status === 'error'" class="sp-state">
@@ -275,6 +356,13 @@ onBeforeUnmount(() => {
             <strong :style="nameFont">{{ shopName }}</strong>
             <span v-if="location"><AppIcon name="map-pin" :size="13" /> {{ location }}</span>
             <p v-if="isShop && custom.description" class="sp-foot-desc">{{ custom.description }}</p>
+            <ul v-if="status === 'success' && hasFootContact" class="sp-foot-contact" aria-label="Contacto">
+              <li v-if="footAddress"><AppIcon name="map-pin" :size="14" /> {{ footAddress }}</li>
+              <li v-if="whatsappUrl"><a :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="14" /> {{ custom.whatsapp }}</a></li>
+            </ul>
+            <div v-if="status === 'success' && socials.length" class="sp-foot-social">
+              <a v-for="s in socials" :key="s.key" :href="s.url" target="_blank" rel="noopener" :aria-label="`${s.label} de ${shopName}`" :title="s.label"><AppIcon :name="s.key" :size="17" /></a>
+            </div>
           </div>
           <nav v-if="isShop && status === 'success'" class="sp-foot-col" aria-label="Secciones de la tienda">
             <p class="sp-foot-heading">Tienda</p>
@@ -298,6 +386,13 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </footer>
+
+    <!-- Barra fija de contacto (solo móvil): el CTA principal siempre a mano -->
+    <nav v-if="showDock" class="sp-dock" aria-label="Acciones rápidas">
+      <a v-if="whatsappUrl" class="sp-dock-btn is-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> WhatsApp</a>
+      <RouterLink v-if="dockCatalog" class="sp-dock-btn" :to="catalogTo"><AppIcon name="package" :size="18" /> Catálogo</RouterLink>
+      <RouterLink v-if="dockHome" class="sp-dock-btn" :to="homeTo"><AppIcon name="store" :size="18" /> Inicio</RouterLink>
+    </nav>
 
     <!-- Chatbot del negocio (has_chatbot): burbuja robot abajo a la derecha -->
     <StoreBot
