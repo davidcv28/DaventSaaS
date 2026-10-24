@@ -47,6 +47,7 @@ import AlertMessage from '../components/AlertMessage.vue'
 import PasswordStrength from '../components/PasswordStrength.vue'
 import StorageMeter from '../components/StorageMeter.vue'
 import AppIcon from '../components/AppIcon.vue'
+import CountUp from '../components/CountUp.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -351,6 +352,19 @@ function onNavigate(id) {
   section.value = id
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
+
+// Render diferido: cada sección se monta recién la primera vez que se visita
+// (después queda montada con v-show, así conserva estado y no re-renderiza).
+const seen = reactive({ overview: true })
+watch(section, (s) => { seen[s] = true }, { flush: 'sync', immediate: true })
+
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  return h < 6 ? 'Buenas noches' : h < 13 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches'
+})
+const RING_R = 44
+const RING_C = 2 * Math.PI * RING_R
+const ringOffset = computed(() => RING_C * (1 - planProgress.value / 100))
 // Gracia del débito: venció end_date pero el débito automático sigue reintentando.
 const inGrace = computed(() => {
   const p = plan.value
@@ -376,7 +390,10 @@ const nextSteps = computed(() => [
   { title: 'Elegí un plan', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription },
   { title: 'Cargá tus productos', text: 'Sumá fotos, precios y stock.', done: catalog.products.length > 0 },
   { title: 'Compartí tu link público', text: 'Enviáselo a tus clientes.', done: false }
-])
+].map((s, i) => ({ ...s, target: ['store', 'plans', 'catalogs', 'store'][i] })))
+const stepsDone = computed(() => nextSteps.value.filter((s) => s.done).length)
+const stepsPct = computed(() => Math.round((stepsDone.value / nextSteps.value.length) * 100))
+const nextStepIdx = computed(() => nextSteps.value.findIndex((s) => !s.done))
 
 function fmtDate(d) {
   if (!d) return '—'
@@ -1721,10 +1738,14 @@ async function changePassword() {
 
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
-      <div class="page-head">
+      <div class="page-head ov-head">
         <div>
-          <h1>Hola{{ business ? `, ${business}` : '' }}</h1>
-          <p>Este es el centro de tu negocio: suscripción, catálogos y cuenta.</p>
+          <h1>{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></h1>
+          <p>Así va tu negocio hoy: suscripción, visitas y lo que sigue.</p>
+        </div>
+        <div v-if="billing.hasSubscription && store.hasStore" class="ov-actions">
+          <a class="btn secondary btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="16" /> Ver mi tienda</a>
+          <button class="btn btn-auto" @click="section = 'catalogs'"><AppIcon name="plus" :size="16" /> Cargar productos</button>
         </div>
       </div>
 
@@ -1739,13 +1760,20 @@ async function changePassword() {
           <h2>{{ plan.name }}</h2>
           <p class="hero-meta"><AppIcon name="calendar" :size="16" /> Vigente del {{ fmtDate(plan.start) }} al {{ fmtDate(plan.end) }}</p>
           <div class="hero-progress" role="progressbar" aria-label="Tiempo transcurrido de la suscripción" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="planProgress">
-            <span class="hero-progress-bar" :style="{ width: planProgress + '%' }"></span>
+            <span class="hero-progress-bar" :style="{ transform: `scaleX(${planProgress / 100})` }"></span>
           </div>
           <p class="hero-remaining"><strong>{{ plan.remaining }} días restantes</strong></p>
           <p v-if="plan.isTrial" class="hero-pending">Plan de prueba: al terminar el día de prueba tenés que elegir un plan para seguir publicado.</p>
           <p v-if="billing.subscription?.pending_plan_name" class="hero-pending">Cambio a {{ billing.subscription.pending_plan_name }} pendiente: se aplica cuando se acredite el pago.</p>
           <p v-if="plan.autoRenew" class="hero-pending"><AppIcon name="refresh" :size="14" /> Débito automático activo: se renueva el {{ fmtDate(plan.end) }}.</p>
           <p v-else-if="plan.cancelledAt" class="hero-pending"><AppIcon name="calendar" :size="14" /> Renovación automática desactivada: tu plan termina el {{ fmtDate(plan.end) }}.</p>
+        </div>
+        <div class="hero-ring" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" :r="RING_R" />
+            <circle class="ring-fg" cx="50" cy="50" :r="RING_R" :stroke-dasharray="RING_C" :stroke-dashoffset="ringOffset" />
+          </svg>
+          <span><strong><CountUp :value="plan.remaining ?? 0" /></strong><small>días</small></span>
         </div>
         <div class="hero-side">
           <span v-if="plan.isCurrent" class="badge-ok"><AppIcon name="dot" :size="12" /> {{ plan.status }}</span>
@@ -1773,16 +1801,22 @@ async function changePassword() {
       <AlertMessage v-if="plan && !plan.isCurrent && plan.status !== 'Pendiente de pago'" kind="warn" message="Tu suscripción venció: tu web pública está pausada. Elegí un plan para reactivarla." />
       <AlertMessage v-else-if="inGrace" kind="warn" message="Todavía no pudimos cobrar la renovación: Mercado Pago reintenta el débito durante unos días y tu plan sigue activo mientras tanto." />
 
-      <div v-if="billing.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu suscripción…</p></div>
+      <div v-if="billing.status === 'loading' && !plan" class="skel-hero" aria-busy="true" aria-label="Cargando tu suscripción">
+        <span class="skel" style="width: 120px; height: 12px"></span>
+        <span class="skel" style="width: 220px; height: 30px"></span>
+        <span class="skel" style="width: 60%; height: 12px"></span>
+        <span class="skel" style="width: 100%; max-width: 420px; height: 6px"></span>
+      </div>
       <AlertMessage v-if="billing.notice" kind="success" :message="billing.notice" />
       <AlertMessage v-if="billing.lastError" kind="error" :message="billing.lastError" />
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
       <div class="stats">
-        <div class="stat"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong>{{ billing.hasSubscription ? catalog.products.length : '—' }}</strong><small>Productos</small></div></div>
-        <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ canStats ? (store.visitStats?.total ?? '0') : '—' }}</strong><small>{{ canStats ? 'Visitas totales' : 'Visitas' }}</small></div></div>
-        <div class="stat"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong>{{ plan?.remaining ?? '—' }}</strong><small>Días restantes</small></div></div>
+        <button type="button" class="stat stat-link" @click="section = 'catalogs'"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong><CountUp :value="billing.hasSubscription ? catalog.products.length : '—'" /></strong><small>Productos</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link" :disabled="!canStats" @click="section = 'stats'"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong><CountUp :value="canStats ? (store.visitStats?.total ?? 0) : '—'" /></strong><small>{{ canStats ? 'Visitas totales' : 'Visitas' }}</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link" :disabled="!canStats" @click="section = 'stats'"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong><CountUp :value="canStats ? (store.visitStats?.today ?? 0) : '—'" /></strong><small>Visitas hoy</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link" @click="section = 'plans'"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong><CountUp :value="plan?.remaining ?? '—'" /></strong><small>Días restantes</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
       </div>
 
       <div v-if="store.hasStore" class="card">
@@ -1791,18 +1825,20 @@ async function changePassword() {
       </div>
 
       <div class="card">
-        <h3><AppIcon name="checklist" :size="18" /> Próximos pasos</h3>
+        <h3><AppIcon name="checklist" :size="18" /> Próximos pasos <span class="steps-count">{{ stepsDone }} de {{ nextSteps.length }}</span></h3>
+        <div class="steps-bar" role="progressbar" aria-label="Pasos completados" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
         <ol class="steps-list">
-          <li v-for="(s, i) in nextSteps" :key="s.title" :class="{ done: s.done }">
+          <li v-for="(s, i) in nextSteps" :key="s.title" :class="{ done: s.done, next: i === nextStepIdx }" :style="{ '--i': i }">
             <span class="steps-num" aria-hidden="true"><AppIcon v-if="s.done" name="check" :size="14" :stroke="2.25" /><template v-else>{{ i + 1 }}</template></span>
             <div><strong>{{ s.title }}</strong><small>{{ s.text }}</small></div>
+            <button v-if="!s.done" type="button" class="steps-go" :aria-label="`Ir a: ${s.title}`" @click="section = s.target"><AppIcon name="arrow-right" :size="16" /></button>
           </li>
         </ol>
       </div>
     </div>
 
     <!-- ================= CATÁLOGO ================= -->
-    <div v-show="section === 'catalogs'" :class="{ 'sec-on': section === 'catalogs' }">
+    <div v-if="seen.catalogs" v-show="section === 'catalogs'" :class="{ 'sec-on': section === 'catalogs' }">
       <div class="page-head">
         <div>
           <h1>Mi catálogo</h1>
@@ -2053,7 +2089,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= MI TIENDA ================= -->
-    <div v-show="section === 'store'" :class="{ 'sec-on': section === 'store' }">
+    <div v-if="seen.store" v-show="section === 'store'" :class="{ 'sec-on': section === 'store' }">
       <div class="page-head">
         <div>
           <h1>Mi tienda</h1>
@@ -2130,7 +2166,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= DISEÑO WEB ================= -->
-    <div v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
+    <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
         <div>
           <h1>Diseño web</h1>
@@ -2479,7 +2515,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
-    <div v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
+    <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
       <div class="page-head">
         <div>
           <h1>Mi empresa</h1>
@@ -2790,7 +2826,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= ESTADÍSTICAS (premium) ================= -->
-    <div v-show="section === 'stats'" :class="{ 'sec-on': section === 'stats' }">
+    <div v-if="seen.stats" v-show="section === 'stats'" :class="{ 'sec-on': section === 'stats' }">
       <div class="page-head">
         <div>
           <h1>Estadísticas</h1>
@@ -2824,7 +2860,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= QR Y FOLLETOS (premium) ================= -->
-    <div v-show="section === 'tools'" :class="{ 'sec-on': section === 'tools' }">
+    <div v-if="seen.tools" v-show="section === 'tools'" :class="{ 'sec-on': section === 'tools' }">
       <div class="page-head">
         <div>
           <h1>QR y folletos</h1>
@@ -2854,7 +2890,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= VENTA EN LOCAL (próximamente) ================= -->
-    <div v-show="section === 'pos'" :class="{ 'sec-on': section === 'pos' }">
+    <div v-if="seen.pos" v-show="section === 'pos'" :class="{ 'sec-on': section === 'pos' }">
       <div class="page-head">
         <div>
           <h1>Venta en persona</h1>
@@ -2961,7 +2997,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= CHATBOT (solo Premium) ================= -->
-    <div v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
+    <div v-if="seen.bot" v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
       <div class="page-head">
         <div>
           <h1>Chatbot</h1>
@@ -3015,7 +3051,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= PLANES ================= -->
-    <div v-show="section === 'plans'" :class="{ 'sec-on': section === 'plans' }">
+    <div v-if="seen.plans" v-show="section === 'plans'" :class="{ 'sec-on': section === 'plans' }">
       <div class="page-head">
         <div>
           <h1>Planes</h1>
@@ -3058,7 +3094,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= PAGOS ================= -->
-    <div v-show="section === 'payments'" :class="{ 'sec-on': section === 'payments' }">
+    <div v-if="seen.payments" v-show="section === 'payments'" :class="{ 'sec-on': section === 'payments' }">
       <div class="page-head">
         <div>
           <h1>Pagos</h1>
@@ -3123,7 +3159,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= FACTURAS ================= -->
-    <div v-show="section === 'invoices'" :class="{ 'sec-on': section === 'invoices' }">
+    <div v-if="seen.invoices" v-show="section === 'invoices'" :class="{ 'sec-on': section === 'invoices' }">
       <div class="page-head">
         <div>
           <h1>Facturas</h1>
@@ -3169,7 +3205,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= CUENTA ================= -->
-    <div v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
+    <div v-if="seen.settings" v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
       <div class="page-head">
         <div>
           <h1>Cuenta</h1>
