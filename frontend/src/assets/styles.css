@@ -1154,3 +1154,19 @@ body { transition: background-color .2s ease, color .2s ease; }
   * { transition: none !important; animation-duration: .01ms !important; }
   .auth-brand::before, .auth-panel::before, .brand-fx i, .fx-orb { animation: none !important; }
 }
+
+/* Diseño web: pestañas a la izquierda + vista previa fija a la derecha. */
+.dsg-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); gap: 18px; align-items: start; }
+.dsg-main { min-width: 0; display: grid; gap: 14px; }
+.dsg-tabs { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow-x: auto; scrollbar-width: thin; }
+.dsg-tab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 14px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
+.dsg-tab:hover { background: var(--surface); }
+.dsg-tab.active { background: var(--brand-500); color: #fff; }
+.dsg-card { margin-bottom: 0; }
+.dsg-card .pick-strip.tpl-thumbs, .dsg-card .pick-strip.font-chips, .dsg-card .pick-strip.swatches { flex-wrap: wrap; overflow-x: visible; }
+.dsg-preview { position: sticky; top: 16px; margin-bottom: 0; }
+.dsg-preview .design-preview { max-height: 60vh; overflow-y: auto; }
+@media (max-width: 1100px) {
+  .dsg-layout { grid-template-columns: 1fr; }
+  .dsg-preview { position: static; }
+}
