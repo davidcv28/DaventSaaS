@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
@@ -19,6 +19,7 @@ import '../assets/store-page.css'
 // tema claro/oscuro que el visitante haya elegido para el dashboard.
 // Estilos en assets/store-page.css (única hoja de la web pública).
 const route = useRoute()
+const router = useRouter()
 const status = ref('loading') // loading | success | error
 const store = ref(null)
 const errorMsg = ref('')
@@ -37,6 +38,9 @@ const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advance
 // Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
 // plan o plantilla retirada — se fuerza 'classic'.
 const pageTemplate = computed(() => resolveStoreTemplate(custom.value.template, store.value?.allowed_templates))
+// Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
+// en todas las páginas y fuera del catálogo envía a /catalogo?q=.
+const isShop = computed(() => pageTemplate.value === 'shop')
 // Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
 // visitante puede alternarlo con el botón del nav (solo para esta visita).
 const visitorTheme = ref(null) // null = tema de la tienda
@@ -76,6 +80,15 @@ const isProduct = computed(() => route.name === 'store-product')
 const isHome = computed(() => route.name === 'store-public')
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+
+// Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
+// resto de las páginas Enter/botón navega al catálogo con ?q= (la vista lo
+// toma como búsqueda inicial).
+function submitTopSearch() {
+  if (isCatalog.value) return
+  const q = ui.search.trim()
+  router.push(q ? { ...catalogTo.value, query: { q } } : catalogTo.value)
+}
 
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
@@ -129,7 +142,7 @@ onMounted(async () => {
     // monospace de 'terminal' y el serif editorial de 'lookbook'. Misma
     // carga on-demand que name_font; el resto del texto sigue con la fuente
     // elegida por el dueño.
-    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'] }
+    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'], shop: ['rubik'] }
     TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'
@@ -150,6 +163,17 @@ onBeforeUnmount(() => {
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
+      <!-- Tienda Pro (marketplace): franja fina de bienvenida sobre el
+           masthead; se repliega al hacer scroll para compactar la barra. -->
+      <div v-if="isShop && status === 'success'" class="sp-shop-topbar">
+        <div class="sp-container sp-shop-topbar-inner">
+          <span class="sp-shop-welcome"><AppIcon name="store" :size="12" /> ¡Bienvenido a {{ shopName }}!</span>
+          <nav class="sp-shop-toplinks" aria-label="Enlaces de la tienda">
+            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
+            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+          </nav>
+        </div>
+      </div>
       <div class="sp-container sp-top-inner">
         <button
           v-if="isCatalog && ui.hasCatalogNav"
@@ -167,17 +191,20 @@ onBeforeUnmount(() => {
           <span v-else class="sp-mono sm" aria-hidden="true">{{ initial }}</span>
           <span class="sp-name" :style="nameFont">{{ shopName }}</span>
         </RouterLink>
-        <nav v-if="status === 'success'" class="sp-top-links" aria-label="Secciones de la tienda">
+        <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
           <RouterLink :to="homeTo">Inicio</RouterLink>
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
           <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
           <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
           <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
         </nav>
-        <label v-if="isCatalog" class="sp-search sp-search-top">
+        <!-- Tienda Pro: el buscador del masthead también existe fuera del
+             catálogo — Enter o la lupa navegan a /catalogo?q= -->
+        <label v-if="isCatalog || (isShop && showCatalog)" class="sp-search sp-search-top" :class="{ 'is-shop': isShop }">
           <AppIcon name="search" :size="16" aria-hidden="true" />
-          <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''" />
+          <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''" @keydown.enter="submitTopSearch" />
           <button v-if="ui.search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="ui.search = ''"><AppIcon name="x" :size="14" /></button>
+          <button v-if="isShop && !isCatalog" type="button" class="sp-search-go" aria-label="Buscar en el catálogo" @click="submitTopSearch"><AppIcon name="arrow-right" :size="15" /></button>
         </label>
         <div class="sp-top-end">
           <RouterLink v-if="status === 'success' && (isCatalog || isProduct || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
@@ -196,6 +223,20 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </div>
+      <!-- Tienda Pro: fila de secciones bajo el masthead (el menú clásico
+           del marketplace); en pantallas chicas se esconde por CSS. -->
+      <nav v-if="isShop && status === 'success'" class="sp-shop-nav" aria-label="Secciones de la tienda">
+        <div class="sp-container sp-shop-nav-inner">
+          <span class="sp-shop-nav-tag"><AppIcon name="layout-grid" :size="14" /> Secciones</span>
+          <div class="sp-shop-nav-links">
+            <RouterLink :to="homeTo">Inicio</RouterLink>
+            <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
+            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
+            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+          </div>
+        </div>
+      </nav>
     </header>
 
     <div v-if="status === 'loading'" class="sp-state">

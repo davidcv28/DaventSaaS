@@ -435,7 +435,8 @@ export const STORE_TEMPLATES = {
   street:      { label: 'Urbano',      tier: 'plus',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
   promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
   terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' },
-  lookbook:    { label: 'Lookbook',    tier: 'advanced', desc: 'Editorial de moda: papel cálido, titulares serif de revista, pliegos de imagen numerados y catálogo como índice de colección.' }
+  lookbook:    { label: 'Lookbook',    tier: 'advanced', desc: 'Editorial de moda: papel cálido, titulares serif de revista, pliegos de imagen numerados y catálogo como índice de colección.' },
+  shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Estilo marketplace: barra superior con buscador, menú de secciones, portada tipo banner con promos y productos destacados.' }
 }
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de

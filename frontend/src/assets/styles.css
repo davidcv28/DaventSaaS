@@ -836,6 +836,25 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='lookbook'] .dp-hero.has-cover { background: linear-gradient(180deg, color-mix(in srgb, var(--sp-bg) 58%, transparent), var(--sp-bg) 88%), var(--dp-cover) center / cover no-repeat; color: var(--sp-ink); }
 .design-preview[data-store-template='lookbook'] .dp-hero.has-cover .dp-title,
 .design-preview[data-store-template='lookbook'] .dp-hero.has-cover .dp-desc { color: var(--sp-ink); }
+/* Tienda Pro: masthead de acento con buscador blanco, menú claro y banner. */
+.tpl-thumb[data-tpl='shop'] { background: linear-gradient(180deg, var(--brand-500) 0 34%, var(--card) 34% 44%, #f1f4fa 44%); }
+.tpl-thumb[data-tpl='shop']::before { content: ''; position: absolute; left: 30%; right: 10%; top: 9%; height: 7px; border-radius: 3px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .18); }
+.tpl-thumb[data-tpl='shop']::after { content: ''; position: absolute; left: 8%; top: 54%; width: 40%; height: 6px; border-radius: 2px; background: #111827; box-shadow: 0 10px 0 #94a3b8; }
+.tpl-thumb[data-tpl='shop'] i { left: auto; right: 9%; top: 52%; bottom: auto; width: 22%; height: 28%; border-radius: 3px; background: var(--card); border: 1px solid var(--line); opacity: 1; }
+.design-preview[data-store-template='shop'] .dp-nav { border-bottom: 9px solid var(--sp-card); }
+.design-preview[data-store-template='shop'] .dp-hero { justify-items: start; text-align: left; color: var(--sp-ink); background: radial-gradient(240px 130px at 88% -24%, color-mix(in srgb, var(--store-accent) 14%, transparent), transparent 62%), linear-gradient(180deg, color-mix(in srgb, var(--store-accent-soft) 60%, #f5f7fc), var(--sp-bg) 96%); border-bottom: 1px solid var(--sp-line); padding: 24px 20px 22px; }
+.design-preview[data-store-theme='dark'][data-store-template='shop'] .dp-hero { background: radial-gradient(240px 130px at 88% -24%, color-mix(in srgb, var(--store-accent) 20%, transparent), transparent 62%), linear-gradient(180deg, color-mix(in srgb, var(--store-accent) 10%, var(--sp-card)), var(--sp-bg) 96%); }
+.design-preview[data-store-template='shop'] .dp-badge { padding: 0; border: 0; border-radius: 0; background: none; color: var(--sp-accent-text); font-size: 8.5px; font-weight: 800; letter-spacing: .2em; }
+.design-preview[data-store-template='shop'] .dp-title { font-family: 'Rubik', var(--store-font), sans-serif; text-transform: uppercase; letter-spacing: -.01em; }
+.design-preview[data-store-template='shop'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='shop'] .dp-desc { color: var(--sp-muted); }
+.design-preview[data-store-template='shop'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='shop'] .dp-btn { border-radius: 7px; background: var(--store-accent-ink); color: #fff; }
+.design-preview[data-store-template='shop'] .dp-btn.ghost { background: transparent; border-color: var(--sp-line); color: var(--sp-ink-2); }
+.design-preview[data-store-template='shop'] .dp-hero.has-cover { background: linear-gradient(92deg, rgba(11, 15, 30, .85), rgba(11, 15, 30, .45) 55%, rgba(11, 15, 30, .15)), var(--dp-cover) center / cover no-repeat; color: #fff; }
+.design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-badge { color: rgba(255, 255, 255, .85); }
+.design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-desc { color: rgba(255, 255, 255, .85); }
+.design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .55); color: #fff; }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
