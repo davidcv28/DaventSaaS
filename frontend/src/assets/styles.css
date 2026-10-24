@@ -754,6 +754,30 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='impact'] .dp-btn, .design-preview[data-store-template='impact'] .dp-badge { border-radius: 0; }
 .design-preview[data-store-template='editorial'] .dp-title { letter-spacing: -.04em; font-weight: 800; }
 .design-preview[data-store-template='editorial'] .dp-badge { border-radius: 0; }
+/* Catálogo exclusivo: marketplace con buscador, rejilla de productos y barra de confianza */
+.tpl-thumb[data-tpl='catalog'] { background: linear-gradient(180deg, #fff 0 18%, var(--surface) 18%); }
+.tpl-thumb[data-tpl='catalog']::before { content: ''; position: absolute; left: 10%; right: 10%; top: 5%; height: 7px; border-radius: 99px; background: #e2e8f0; box-shadow: inset 0 0 0 1px #cbd5e1; }
+.tpl-thumb[data-tpl='catalog']::after { content: ''; position: absolute; left: 10%; right: 10%; top: 28%; height: 28%; border-radius: 4px; background: linear-gradient(120deg, var(--brand-500), color-mix(in srgb, var(--brand-500) 40%, #fff)); box-shadow: 0 17px 0 -2px #e2e8f0; }
+.tpl-thumb[data-tpl='catalog'] i { left: 10%; right: 10%; bottom: 8%; height: 8px; border-radius: 2px; opacity: 1; background: repeating-linear-gradient(90deg, #cbd5e1 0 18%, transparent 18% 24%); }
+.design-preview[data-store-template='catalog'] .dp-nav { background: #fff; border-bottom-color: var(--line); }
+.design-preview[data-store-template='catalog'] .dp-nav-name { color: var(--sp-ink); }
+.design-preview[data-store-template='catalog'] .dp-nav-item { color: var(--sp-muted); }
+.design-preview[data-store-template='catalog'] .dp-hero { justify-items: start; text-align: left; border-radius: 0; background: linear-gradient(115deg, var(--store-accent-soft), color-mix(in srgb, var(--store-accent) 22%, #fff)); color: var(--sp-ink); }
+.design-preview[data-store-template='catalog'] .dp-badge { background: var(--store-accent); border-color: transparent; color: #fff; border-radius: 4px; }
+.design-preview[data-store-template='catalog'] .dp-desc { color: var(--sp-muted); }
+.design-preview[data-store-template='catalog'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='catalog'] .dp-btn { background: var(--store-accent-ink); color: #fff; border-radius: 4px; }
+.design-preview[data-store-template='catalog'] .dp-btn.ghost { background: transparent; border-color: var(--sp-line); color: var(--sp-ink-2); }
+/* Imagen de portada: fondo del hero con velo del acento; los textos siguen claros. */
+.cover-box { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cover-thumb { display: grid; place-items: center; width: 128px; aspect-ratio: 16 / 9; flex: none; border: 1px dashed var(--line-strong); border-radius: 8px; overflow: hidden; background: var(--surface); color: var(--muted); }
+.cover-thumb:not(.empty) { border-style: solid; border-color: var(--line); }
+.cover-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dp-hero.has-cover { background: linear-gradient(120deg, color-mix(in srgb, var(--store-accent-ink) 82%, transparent), color-mix(in srgb, var(--store-accent) 48%, transparent)), var(--dp-cover) center / cover no-repeat; color: #fff; }
+.design-preview[data-store-template='editorial'] .dp-hero.has-cover,
+.design-preview[data-store-template='catalog'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(15, 23, 42, .78), rgba(15, 23, 42, .3)), var(--dp-cover) center / cover no-repeat; color: #fff; }
+.design-preview .dp-hero.has-cover .dp-title, .design-preview .dp-hero.has-cover .dp-desc { color: #fff; }
+.design-preview .dp-hero.has-cover .dp-btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .6); }
 @media (max-width: 640px) { .tpl-options { grid-template-columns: minmax(0, 1fr); } }
 
 /* Vista previa por diseño (data-store-template): refleja la portada real. */

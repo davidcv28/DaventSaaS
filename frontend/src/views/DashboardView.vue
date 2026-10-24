@@ -759,7 +759,7 @@ const posCityName = computed(() => {
 })
 const posAddress = computed(() => [accountForm.address, posCityName.value].filter(Boolean).join(', '))
 
-// --- Chatbot (Estándar+, beneficio has_chatbot): el asistente de la web
+// --- Chatbot (solo Premium, beneficio has_chatbot): el asistente de la web
 // pública responde a las visitas con los pares pregunta/respuesta que el
 // dueño carga acá. PATCH /api/stores/chatbot/ da 403 sin el beneficio y la
 // web pública solo lo recibe cuando is_enabled está prendido.
@@ -1070,6 +1070,34 @@ async function onRemoveLogo() {
   const ok = await store.removeLogo()
   logoBusy.value = false
   if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
+}
+
+// Imagen de portada (premium, has_design_advanced): fondo del hero de la web.
+// Comparte cuota con logo/galería; el backend la normaliza a WebP.
+const coverInput = ref(null)
+const coverBusy = ref(false)
+const coverErr = ref('')
+const currentCover = computed(() => store.customization.cover || '')
+
+async function onCoverPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file || !canDesignAdvanced.value) return
+  coverErr.value = validateImageFile(file)
+  if (coverErr.value) return
+  coverBusy.value = true
+  const ok = await store.uploadCover(file)
+  coverBusy.value = false
+  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
+}
+
+async function onRemoveCover() {
+  if (coverBusy.value || !canDesignAdvanced.value) return
+  coverErr.value = ''
+  coverBusy.value = true
+  const ok = await store.removeCover()
+  coverBusy.value = false
+  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
 }
 
 onMounted(async () => {
@@ -1939,6 +1967,26 @@ async function changePassword() {
               <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label id="design-cover-label">Imagen de portada <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="cover-box">
+                <span class="cover-thumb" :class="{ empty: !currentCover }">
+                  <img v-if="currentCover" :src="currentCover" alt="Portada actual de tu web" />
+                  <AppIcon v-else name="image" :size="22" aria-hidden="true" />
+                </span>
+                <div class="logo-actions">
+                  <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-cover-label" :disabled="!canDesignAdvanced" @change="onCoverPicked" />
+                  <button type="button" class="btn ghost btn-auto" :disabled="coverBusy || !canDesignAdvanced" @click="coverInput?.click()">
+                    <span v-if="coverBusy" class="spinner" aria-hidden="true"></span>
+                    <AppIcon v-else name="upload" :size="16" />
+                    {{ currentCover ? 'Cambiar portada' : 'Subir portada' }}
+                  </button>
+                  <button v-if="currentCover && canDesignAdvanced" type="button" class="btn ghost btn-auto" :disabled="coverBusy" @click="onRemoveCover">Quitar</button>
+                </div>
+              </div>
+              <p class="hint">Foto de hasta 4 MB que decora el fondo de tu página principal. La ajustamos automáticamente; elegí una imagen apaisada y luminosa.</p>
+              <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
+            </div>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
               <label id="design-template-label">Diseño de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="tpl-options" role="radiogroup" aria-labelledby="design-template-label">
                 <button
@@ -2065,7 +2113,7 @@ async function changePassword() {
                 <span class="dp-nav-item">Contacto</span>
               </span>
             </div>
-            <div class="dp-hero">
+            <div class="dp-hero" :class="{ 'has-cover': canDesignAdvanced && currentCover }" :style="canDesignAdvanced && currentCover ? { '--dp-cover': `url(${currentCover})` } : null">
               <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
               <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>
               <span class="dp-badge">{{ designForm.headline ? designShopName : (designCatalogOn ? 'Catálogo online' : 'Sitio oficial') }}</span>
@@ -2332,7 +2380,7 @@ async function changePassword() {
         </div>
       </div>
     </div>
-    <!-- ================= CHATBOT (Estándar+) ================= -->
+    <!-- ================= CHATBOT (solo Premium) ================= -->
     <div v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
       <div class="page-head">
         <div>

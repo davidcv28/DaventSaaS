@@ -157,3 +157,57 @@ class ImageNormalizationTests(TestCase):
         from StoreApp.domains.stores.services.imaging import normalize_image
         with self.assertRaises(ValueError):
             normalize_image(io.BytesIO(b'no soy una imagen'), 'gallery')
+
+    def test_cover_crops_portrait_to_square_and_caps_size(self):
+        import io
+        from PIL import Image
+        from StoreApp.domains.stores.services.imaging import normalize_image
+        body, ext, _    =   normalize_image(self._upload((1000, 3000)), 'cover')
+        width, height   =   Image.open(io.BytesIO(body)).size
+        self.assertEqual(ext, 'webp')
+        self.assertLessEqual(width / height, 1.01)
+        body, _, _      =   normalize_image(self._upload((5000, 2000)), 'cover')
+        self.assertLessEqual(max(Image.open(io.BytesIO(body)).size), 2200)
+
+
+class StoreCoverGatingTests(TestCase):
+    """Imagen de portada: solo con has_design_advanced (Plan premium)."""
+
+    def _client(self, premium):
+        _, profile      =   _make_user(verified = True)
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan test')
+        for code in ('has_public_link', 'has_customization') + (('has_design_advanced',) if premium else ()):
+            benefit     =   Benefit.objects.create(code = code, label = code, kind = Benefit.FLAG)
+            PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = profile.user)
+        return client
+
+    def test_cover_upload_forbidden_without_premium(self):
+        response    =   self._client(premium = False).post(f'{STORES_URL}customization/cover/', {}, format = 'multipart')
+        self.assertEqual(response.status_code, 403)
+
+    def test_cover_delete_forbidden_without_premium(self):
+        response    =   self._client(premium = False).delete(f'{STORES_URL}customization/cover/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_cover_upload_requires_file_with_premium(self):
+        response    =   self._client(premium = True).post(f'{STORES_URL}customization/cover/', {}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+
+    def test_catalog_template_discarded_without_premium(self):
+        response    =   self._client(premium = False).patch(f'{STORES_URL}customization/', {'template': 'catalog'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['template'], 'classic')
+
+    def test_catalog_template_saved_with_premium(self):
+        response    =   self._client(premium = True).patch(f'{STORES_URL}customization/', {'template': 'catalog'}, format = 'json')
+        self.assertEqual(response.data['customization']['template'], 'catalog')
+        self.assertIn('cover', response.data['customization'])

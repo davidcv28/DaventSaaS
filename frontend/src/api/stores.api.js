@@ -40,6 +40,9 @@ import { storeUrl } from '../config/env.js'
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/logo/ Bearer   -> quita el logo y libera la cuota
 //                                        -> 403 si falta has_customization; 400 si excede max_storage_mb
+// POST   /api/stores/customization/cover/ Bearer multipart {cover: archivo} -> {Exito, customization, storage}
+// DELETE /api/stores/customization/cover/ Bearer   -> quita la portada y libera la cuota
+//                                        -> 403 sin has_design_advanced (solo premium); el backend normaliza a WebP
 // POST   /api/stores/customization/carousel/       Bearer multipart {image} -> {Exito, image, storage}
 // DELETE /api/stores/customization/carousel/<id>/  Bearer -> {Exito, storage}
 // PATCH  /api/stores/customization/carousel/order/ Bearer {order:[ids]} -> {Exito}
@@ -55,7 +58,7 @@ import { storeUrl } from '../config/env.js'
 // GET/PATCH /api/stores/chatbot/         Bearer   -> config del chatbot {is_enabled, greeting,
 //                                                  qa:[{q,a}] (máx 12, q≤120, a≤500; pares
 //                                                  incompletos se descartan en el backend)}
-//                                        -> PATCH 403 sin el beneficio has_chatbot (Estándar+)
+//                                        -> PATCH 403 sin el beneficio has_chatbot (solo Premium)
 //                                        -> la web pública lo recibe en `chatbot` del payload
 //                                           de /public/<slug>/ solo si está habilitado y el
 //                                           plan lo incluye (None en otro caso)
@@ -144,6 +147,20 @@ export const storesApi = {
     return data
   },
 
+  async uploadCover(file) {
+    const form = new FormData()
+    form.append('cover', file)
+    const { data } = await http.post('/stores/customization/cover/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+  },
+
+  async removeCover() {
+    const { data } = await http.delete('/stores/customization/cover/')
+    return data
+  },
+
   async addCarouselImage(file) {
     const form = new FormData()
     form.append('image', file)
@@ -184,7 +201,7 @@ export const storesApi = {
   },
 
   async chatbot() {
-    // Config del dueño; PATCH 403 sin has_chatbot (Estándar+).
+    // Config del dueño; PATCH 403 sin has_chatbot (solo Premium).
     const { data } = await http.get('/stores/chatbot/')
     return data
   },
@@ -248,6 +265,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_gallery: true,
   show_catalog: true,
   logo: null,
+  cover: null,
   carousel: [],
   gallery: [],
   decor: []
@@ -300,7 +318,8 @@ export const STORE_TEMPLATES = {
   classic:   { label: 'Clásico',    desc: 'El diseño base, pensado para catálogos: portada centrada y tarjetas de destacados.' },
   editorial: { label: 'Editorial',  desc: 'Revista de papel: tipografía grande, filetes finos, índice numerado y marca enmarcada.' },
   impact:    { label: 'Impacto',    desc: 'Tecnológico y oscuro: título gigante, grilla animada, neón y esquinas cortadas.' },
-  promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' }
+  promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
+  catalog:   { label: 'Catálogo exclusivo', desc: 'Tienda estilo marketplace: buscador grande, categorías, novedades en vitrina, filtros fijos y barra de confianza.' }
 }
 
 export function storeTemplate(value) {

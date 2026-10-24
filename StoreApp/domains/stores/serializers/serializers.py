@@ -46,7 +46,7 @@ class StoreGalleryImageSerializer(serializers.ModelSerializer):
 #=========================================
 class StoreChatbotSerializer(serializers.ModelSerializer):
     """
-    Config del chatbot (beneficio 'has_chatbot': Estándar y Premium).
+    Config del chatbot (beneficio 'has_chatbot': solo Premium).
     `qa` llega como lista de {'q', 'a'}: se recorta a QA_MAX_ITEMS y
     se descartan pares sin pregunta o sin respuesta.
     """
@@ -85,6 +85,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
     facebook                    =   serializers.CharField(**CustomizationFields['facebook'])
     logo                        =   serializers.SerializerMethodField()
+    cover                       =   serializers.SerializerMethodField()
     carousel                    =   serializers.SerializerMethodField()
     gallery                     =   serializers.SerializerMethodField()
     decor                       =   serializers.SerializerMethodField()
@@ -95,11 +96,13 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
-            'logo', 'carousel', 'gallery', 'decor', 'updated_at',
+            'logo', 'cover', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
     def get_logo(self, customization):
         return object_url(customization.logo_key)
+    def get_cover(self, customization):
+        return object_url(customization.cover_key)
     def get_carousel(self, customization):
         images                  =   customization.store.carousel_images.all()
         return StoreCarouselImageSerializer(images, many = True).data

@@ -129,6 +129,38 @@ export const useStoreStore = defineStore('store', () => {
     }
   }
 
+  async function uploadCover(file) {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.uploadCover(file)
+      notice.value = data?.Exito || 'La imagen de portada se actualizó correctamente.'
+      applyCustomizationData(data)
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
+  async function removeCover() {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.removeCover()
+      notice.value = data?.Exito || 'La imagen de portada se eliminó correctamente.'
+      applyCustomizationData(data)
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
   // Carrusel de banners de la web pública (premium). Cada acción devuelve
   // customization/storage actualizados o solo storage; acá se renormaliza.
   async function addCarouselImage(file) {
@@ -265,7 +297,7 @@ export const useStoreStore = defineStore('store', () => {
     }
   }
 
-  // Chatbot de la web pública (beneficio has_chatbot: Estándar+). El dueño
+  // Chatbot de la web pública (beneficio has_chatbot: solo Premium). El dueño
   // carga pares {q, a} que el widget responde a las visitas; PATCH da 403
   // sin el beneficio (el backend lo fuerza igual que el diseño).
   const chatbot = ref(null) // {is_enabled, greeting, qa:[{q,a}]} | null
@@ -297,7 +329,7 @@ export const useStoreStore = defineStore('store', () => {
 
   return {
     store, status, lastError, notice, fieldErrors, hasStore, customization, storage, visitStats,
-    saveCustomization, uploadLogo, removeLogo,
+    saveCustomization, uploadLogo, removeLogo, uploadCover, removeCover,
     addCarouselImage, removeCarouselImage, moveCarouselImage, refreshCustomization,
     addGalleryImage, removeGalleryImage, moveGalleryImage,
     loadMine, claim, update, reset, loadStats, chatbot, loadChatbot, saveChatbot

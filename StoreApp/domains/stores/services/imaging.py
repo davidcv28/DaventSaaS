@@ -23,6 +23,8 @@ WEBP_QUALITY            =   86
 MAX_SIDE_GALLERY        =   1600
 MAX_SIDE_PRODUCT        =   1200
 PRODUCT_CANVAS          =   1000
+MAX_SIDE_COVER          =   2200
+COVER_MIN_RATIO         =   1.0               # portadas verticales se recortan a cuadrado (el hero es apaisado)
 GALLERY_RATIO           =   (3 / 4, 16 / 9)   # (alto máximo relativo, ancho máximo relativo)
 BG_MODEL_URL            =   'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx'
 BG_MODEL_SIZE           =   320
@@ -66,6 +68,12 @@ def normalize_image(upload, kind = 'gallery'):
     if kind == 'product':
         image       =   _flatten_white(image)
         max_side    =   MAX_SIDE_PRODUCT
+    elif kind == 'cover':
+        image       =   _flatten_white(image)
+        width, height   =   image.size
+        if width / height < COVER_MIN_RATIO:
+            image   =   ImageOps.fit(image, (width, int(width / COVER_MIN_RATIO)), method = Image.LANCZOS, centering = (0.5, 0.4))
+        max_side    =   MAX_SIDE_COVER
     else:
         image       =   image.convert('RGBA') if 'A' in image.getbands() else image.convert('RGB')
         image       =   _clamp_ratio(image)

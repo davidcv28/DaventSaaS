@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, storeTemplate, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
@@ -19,6 +19,7 @@ import '../assets/store-page.css'
 // tema claro/oscuro que el visitante haya elegido para el dashboard.
 // Estilos en assets/store-page.css (única hoja de la web pública).
 const route = useRoute()
+const router = useRouter()
 const status = ref('loading') // loading | success | error
 const store = ref(null)
 const errorMsg = ref('')
@@ -62,7 +63,7 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 // Catálogo opcional: el dueño puede apagarlo (vidriera sin productos). La
 // página /catalogo redirige al inicio y desaparecen todos sus accesos.
 const showCatalog = computed(() => status.value === 'success' && custom.value.show_catalog !== false)
-// Chatbot (beneficio has_chatbot, Estándar+): el serializer público lo manda
+// Chatbot (beneficio has_chatbot, solo Premium): el serializer público lo manda
 // solo si el dueño lo activó y el plan lo incluye — None = sin widget.
 const botConfig = computed(() => (status.value === 'success' ? store.value?.chatbot || null : null))
 
@@ -74,6 +75,20 @@ const isProduct = computed(() => route.name === 'store-product')
 const isHome = computed(() => route.name === 'store-public')
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+
+// Diseño "Catálogo exclusivo": franja de anuncio sobre la barra y buscador
+// grande en el header (en Inicio y ficha lleva al catálogo con ?q=).
+const isCatalogTpl = computed(() => pageTemplate.value === 'catalog')
+const showHeaderSearch = computed(() => isCatalogTpl.value && showCatalog.value && !isCatalog.value)
+const headerQuery = ref('')
+function submitHeaderSearch() {
+  const q = headerQuery.value.trim()
+  router.push({ path: catalogTo.value.path, query: q ? { q } : {} })
+  headerQuery.value = ''
+}
+const announceText = computed(() => (custom.value.whatsapp
+  ? `Consultanos por WhatsApp · ${shopName.value}`
+  : `Catálogo exclusivo de ${shopName.value}${location.value ? ` · ${location.value}` : ''}`))
 
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
@@ -138,6 +153,9 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
+    <div v-if="status === 'success' && isCatalogTpl" class="sp-cx-announce">
+      <div class="sp-container"><AppIcon name="sparkles" :size="13" /> {{ announceText }}</div>
+    </div>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
@@ -165,6 +183,11 @@ onBeforeUnmount(() => {
           <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
           <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
         </nav>
+        <form v-if="showHeaderSearch" class="sp-search sp-search-top sp-cx-search" role="search" @submit.prevent="submitHeaderSearch">
+          <AppIcon name="search" :size="16" aria-hidden="true" />
+          <input v-model="headerQuery" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
+          <button type="submit" class="sp-cx-search-btn">Buscar</button>
+        </form>
         <label v-if="isCatalog" class="sp-search sp-search-top">
           <AppIcon name="search" :size="16" aria-hidden="true" />
           <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''" />

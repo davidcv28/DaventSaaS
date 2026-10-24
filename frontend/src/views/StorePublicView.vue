@@ -2,6 +2,8 @@
 import { ref, reactive, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { storesApi } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
+import { storeHostSlug } from '../config/env.js'
+import { formatARS } from '../api/billing.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 
@@ -26,7 +28,54 @@ const titleSplit = computed(() => {
 })
 
 const copied = ref(false)
-const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
+const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
+const catalogToQuery = (query) => ({ ...catalogTo.value, query })
+
+// Imagen de portada (premium): fondo del hero. Sin diseño avanzado no se usa
+// aunque haya quedado una guardada.
+const cover = computed(() => (hasDesignAdvanced.value ? custom.value.cover || '' : ''))
+
+// --- Diseño "Catálogo exclusivo": vitrina estilo marketplace. Carga el
+// catálogo (más recientes primero) para armar categorías, novedades y marcas. ---
+const isCatalogTpl = computed(() => tpl.value === 'catalog')
+const shelf = ref({ categories: [], brands: [], products: [] })
+const shelfStatus = ref('idle') // idle | loading | success | error
+const shelfProducts = computed(() => shelf.value.products.slice(0, 8))
+const shelfCategories = computed(() => shelf.value.categories
+  .map((c) => {
+    const items = shelf.value.products.filter((p) => p.category === c.id)
+    return { ...c, count: items.length, image: items.find((p) => p.image)?.image || '' }
+  })
+  .filter((c) => c.count)
+  .slice(0, 6))
+const shelfBrands = computed(() => shelf.value.brands.slice(0, 8))
+const brandNameOf = (p) => shelf.value.brands.find((b) => b.id === p.brand)?.name || ''
+const categoryNameOf = (p) => shelf.value.categories.find((c) => c.id === p.category)?.name || ''
+const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
+const trustItems = computed(() => [
+  { icon: 'shield-check', title: 'Compra segura', text: 'Información clara y precios sin sorpresas.' },
+  { icon: 'message-circle', title: 'Atención directa', text: whatsappUrl.value ? 'Respondemos por WhatsApp.' : 'Escribinos y te respondemos.' },
+  { icon: 'package', title: shelf.value.products.length ? `${shelf.value.products.length} productos` : 'Catálogo online', text: 'Siempre actualizado por el comercio.' },
+  { icon: 'users', title: 'Atención personalizada', text: 'Te acompañamos en cada compra.' }
+])
+// Tiles laterales del banner: imágenes decorativas si existen, si no tarjetas de acento.
+const sideTiles = computed(() => {
+  const tiles = decor.value.slice(0, 2).map((img) => ({ key: img.id, image: img.url }))
+  const fallback = [
+    { key: 'new', icon: 'sparkles', title: 'Novedades', text: 'Lo último que llegó', to: catalogToQuery({ sort: 'recent' }) },
+    { key: 'wa', icon: 'whatsapp', title: 'Consultanos', text: 'Respondemos al instante', href: whatsappUrl.value || '#contacto' }
+  ]
+  return [...tiles, ...fallback].slice(0, 2)
+})
+async function loadShelf() {
+  shelfStatus.value = 'loading'
+  try {
+    shelf.value = await storesApi.publicCatalog(slug.value, { sort: 'recent' })
+    shelfStatus.value = 'success'
+  } catch {
+    shelfStatus.value = 'error'
+  }
+}
 
 // --- Presentación (hero): banda de acento con la identidad del negocio.
 // Si el dueño cargó un titular, el titular es el h1 y el nombre viaja en el
@@ -171,6 +220,7 @@ const onKey = (e) => {
 
 onMounted(() => {
   if (showContact.value) loadCaptcha()
+  if (isCatalogTpl.value && showCatalog.value) loadShelf()
   window.addEventListener('keydown', onKey)
 })
 
@@ -183,7 +233,105 @@ onBeforeUnmount(() => {
 <div class="sp-page-root">
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <section class="sp-hero">
-    <div class="sp-hero-band">
+    <!-- ===== Diseño Catálogo exclusivo: vitrina estilo marketplace ===== -->
+    <template v-if="isCatalogTpl">
+      <div class="sp-container sp-cx-hero">
+        <div class="sp-cx-banner" :class="{ 'has-cover': cover }">
+          <img v-if="cover" class="sp-cx-banner-img" :src="cover" alt="" fetchpriority="high" />
+          <span v-else class="sp-cx-banner-art" aria-hidden="true"><AppIcon name="package" :size="120" :stroke="1" /></span>
+          <div class="sp-cx-banner-copy">
+            <p v-reveal class="sp-cx-kicker"><AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" /> {{ heroBadge }}</p>
+            <h1 v-reveal="80" class="sp-cx-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
+            <p v-if="custom.description" v-reveal="160" class="sp-cx-sub">{{ custom.description }}</p>
+            <div v-reveal="240" class="sp-cx-ctas">
+              <RouterLink v-if="showCatalog" class="sp-btn sp-cx-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <a v-if="showContact" class="sp-btn sp-cx-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <span v-if="custom.logo" class="sp-cx-logo"><img class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" /></span>
+          </div>
+        </div>
+        <div class="sp-cx-side">
+          <component
+            :is="t.to ? 'RouterLink' : t.href ? 'a' : 'div'" v-for="(t, i) in sideTiles" :key="t.key" v-reveal="i * 100"
+            class="sp-cx-tile" :class="{ 'has-img': t.image }" :to="t.image ? catalogTo : t.to" :href="t.href"
+          >
+            <img v-if="t.image" :src="t.image" alt="" loading="lazy" />
+            <template v-else>
+              <span class="sp-cx-tile-icon" aria-hidden="true"><AppIcon :name="t.icon" :size="22" /></span>
+              <strong>{{ t.title }}</strong>
+              <span>{{ t.text }}</span>
+            </template>
+          </component>
+        </div>
+      </div>
+
+      <div class="sp-container">
+        <ul class="sp-cx-trust">
+          <li v-for="(t, i) in trustItems" :key="t.title" v-reveal="i * 70">
+            <span class="sp-cx-trust-icon" aria-hidden="true"><AppIcon :name="t.icon" :size="20" /></span>
+            <span><strong>{{ t.title }}</strong><small>{{ t.text }}</small></span>
+          </li>
+        </ul>
+      </div>
+
+      <div v-if="showCatalog && shelfCategories.length" class="sp-container sp-cx-block">
+        <header v-reveal class="sp-cx-head">
+          <h2 class="sp-cx-h2">Comprá por categoría</h2>
+        </header>
+        <div class="sp-cx-cats">
+          <RouterLink v-for="(c, i) in shelfCategories" :key="c.id" v-reveal="(i % 6) * 60" class="sp-cx-cat" :to="catalogToQuery({ category: c.id })">
+            <span class="sp-cx-cat-img">
+              <img v-if="c.image" :src="c.image" :alt="c.name" loading="lazy" />
+              <AppIcon v-else name="layout-grid" :size="26" />
+            </span>
+            <strong>{{ c.name }}</strong>
+            <small>{{ c.count }} {{ c.count === 1 ? 'producto' : 'productos' }}</small>
+          </RouterLink>
+        </div>
+      </div>
+
+      <div v-if="showCatalog && (shelfProducts.length || shelfStatus === 'loading')" class="sp-container sp-cx-block">
+        <header v-reveal class="sp-cx-head">
+          <h2 class="sp-cx-h2">Novedades</h2>
+          <RouterLink class="sp-cx-more" :to="catalogToQuery({ sort: 'recent' })">Ver todo <AppIcon name="arrow-right" :size="15" /></RouterLink>
+        </header>
+        <div v-if="shelfStatus === 'loading'" class="sp-cx-grid" aria-busy="true">
+          <div v-for="n in 4" :key="n" class="sp-cx-card sp-skeleton" aria-hidden="true"><div class="sp-cx-card-img"></div><div class="sp-cx-card-body"><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div></div>
+        </div>
+        <div v-else class="sp-cx-grid">
+          <RouterLink v-for="(p, i) in shelfProducts" :key="p.id" v-reveal="(i % 4) * 70" class="sp-cx-card" :to="productTo(p)">
+            <span class="sp-cx-card-img">
+              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
+              <AppIcon v-else name="package" :size="30" />
+              <span v-if="i < 3" class="sp-cx-flag">Nuevo</span>
+            </span>
+            <span class="sp-cx-card-body">
+              <small v-if="categoryNameOf(p) || brandNameOf(p)" class="sp-cx-card-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</small>
+              <span class="sp-cx-card-name">{{ p.name }}</span>
+              <span class="sp-cx-card-price">{{ formatARS(p.price) }}</span>
+            </span>
+          </RouterLink>
+        </div>
+      </div>
+
+      <div v-if="showCatalog && shelfBrands.length" class="sp-container sp-cx-block">
+        <header v-reveal class="sp-cx-head"><h2 class="sp-cx-h2">Marcas</h2></header>
+        <ul class="sp-cx-brands">
+          <li v-for="(b, i) in shelfBrands" :key="b.id" v-reveal="(i % 8) * 40">
+            <RouterLink :to="catalogToQuery({ brand: b.id })"><AppIcon name="tag" :size="14" /> {{ b.name }}</RouterLink>
+          </li>
+        </ul>
+      </div>
+    </template>
+
+    <template v-else>
+    <div class="sp-hero-band" :class="{ 'has-cover': cover }">
+      <div v-if="cover && tpl !== 'editorial'" class="sp-hero-cover" aria-hidden="true">
+        <img :src="cover" alt="" fetchpriority="high" />
+      </div>
       <div class="sp-hero-decor" aria-hidden="true">
         <span class="sp-orb o1"></span>
         <span class="sp-orb o2"></span>
@@ -212,6 +360,9 @@ onBeforeUnmount(() => {
         <span>Nº 01</span><i></i><span>Edición {{ year }}</span><i></i><span>{{ location || (showCatalog ? 'Catálogo' : 'Sitio oficial') }}</span>
       </div>
       <div class="sp-container sp-hero-inner">
+        <figure v-if="cover && tpl === 'editorial'" v-reveal="120" class="sp-ed-cover">
+          <img :src="cover" alt="" fetchpriority="high" />
+        </figure>
         <span v-if="tpl === 'promo'" class="sp-pr-tag"><AppIcon name="megaphone" :size="15" :stroke="2.25" /> ¡Novedad!</span>
         <span v-reveal class="sp-ava">
           <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
@@ -269,6 +420,7 @@ onBeforeUnmount(() => {
         <span class="sp-hl-text">{{ h.text }}</span>
       </component>
     </div>
+    </template>
   </section>
 
   <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->

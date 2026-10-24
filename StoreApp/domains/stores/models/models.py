@@ -102,6 +102,7 @@ class StoreCustomization(models.Model):
         ('editorial',        'Editorial'),
         ('impact',           'Impacto'),
         ('promo',            'Publicidad'),
+        ('catalog',          'Catálogo exclusivo'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
@@ -113,6 +114,10 @@ class StoreCustomization(models.Model):
     headline                    =   models.CharField(max_length = 140, blank = True, verbose_name = 'Titular')
     logo_key                    =   models.CharField(max_length = 200, blank = True, verbose_name = 'Logo (key en R2)')
     logo_size                   =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño del logo (bytes)')
+    #Imagen de portada (premium, has_design_advanced): fondo del hero de la
+    #web pública. Una sola imagen, normalizada a WebP; consume la misma cuota.
+    cover_key                   =   models.CharField(max_length = 200, blank = True, verbose_name = 'Portada (key en R2)')
+    cover_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño de la portada (bytes)')
     description                 =   models.TextField(max_length = 800, blank = True, verbose_name = 'Descripción')
     #Sección "Sobre nosotros": la web pública la renderiza solo si show_about
     #está activo y hay algún contenido cargado (texto, misión, especialidades
@@ -213,7 +218,7 @@ class StoreGalleryImage(models.Model):
 class StoreChatbot(models.Model):
     """
     Chatbot de la web pública del cliente (beneficio 'has_chatbot':
-    Estándar y Premium). No es IA: responde a las visitas con los
+    solo Premium). No es IA: responde a las visitas con los
     pares pregunta/respuesta que el dueño carga desde su panel.
     `qa` es una lista JSON de {'q': pregunta, 'a': respuesta}
     (el serializer limita cantidad y longitudes).

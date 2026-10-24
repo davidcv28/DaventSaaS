@@ -149,6 +149,8 @@ def image_count(store):
     customization   =   getattr(store, 'customization', None)
     if customization and customization.logo_key:
         count       +=  1
+    if customization and customization.cover_key:
+        count       +=  1
     return count
 def _check_image_slot(store, is_new):
     """
@@ -239,6 +241,44 @@ def delete_logo(customization):
     customization.logo_key      =   ''
     customization.logo_size     =   0
     customization.save(update_fields = ['logo_key', 'logo_size', 'updated_at'])
+    _consume_quota(store, store.storage_used_bytes - freed)
+    return customization
+#=========================================
+# COVER UPLOAD / DELETE (imagen de portada de la web pública, premium)
+#=========================================
+def upload_cover(customization, upload):
+    """
+    Sube la portada (normalizada a WebP) a R2, libera la anterior y ajusta la
+    cuota. Lanza ValueError con mensaje es-AR si falla storage, archivo o cuota.
+    """
+    if not storage_configured():
+        raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
+    error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
+    if error:
+        raise ValueError(error)
+    store       =   customization.store
+    processed   =   normalize_image(upload, 'cover')
+    size        =   len(processed[0])
+    _check_image_slot(store, is_new = not customization.cover_key)
+    new_used    =   _check_quota(store, size, replacing_bytes = customization.cover_size)
+    key         =   _put_object(store, 'cover', upload, processed)
+    old_key     =   customization.cover_key
+    customization.cover_key     =   key
+    customization.cover_size    =   size
+    customization.save(update_fields = ['cover_key', 'cover_size', 'updated_at'])
+    _consume_quota(store, new_used)
+    if old_key:
+        _delete_object(old_key)
+    return customization
+def delete_cover(customization):
+    """Borra la portada de R2 y libera la cuota."""
+    store       =   customization.store
+    if customization.cover_key:
+        _delete_object(customization.cover_key)
+    freed                       =   customization.cover_size
+    customization.cover_key     =   ''
+    customization.cover_size    =   0
+    customization.save(update_fields = ['cover_key', 'cover_size', 'updated_at'])
     _consume_quota(store, store.storage_used_bytes - freed)
     return customization
 #=========================================

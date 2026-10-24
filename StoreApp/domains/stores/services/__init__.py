@@ -3,7 +3,7 @@ from .imaging import remove_background
 from .contact import issue_captcha, verify_captcha, contact_target, send_contact_message
 from .storage import (
     object_url, storage_configured, storage_limit_bytes, storage_payload,
-    upload_logo, delete_logo, validate_logo_file, validate_image_file,
+    upload_logo, delete_logo, upload_cover, delete_cover, validate_logo_file, validate_image_file,
     carousel_usage, upload_carousel_image, delete_carousel_image,
     gallery_limit, upload_gallery_image, delete_gallery_image,
     upload_product_image, delete_product_image,

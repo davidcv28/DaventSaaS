@@ -18,7 +18,7 @@ from StoreApp.domains.stores.serializers.validators  import (
     validate_slug_available,
 )
 from StoreApp.domains.stores.services                import (
-    profile_has_benefit, storage_payload, upload_logo, delete_logo,
+    profile_has_benefit, storage_payload, upload_logo, delete_logo, upload_cover, delete_cover,
     upload_carousel_image, delete_carousel_image,
     upload_gallery_image, delete_gallery_image,
     issue_captcha, verify_captcha, send_contact_message, contact_target,
@@ -164,14 +164,14 @@ class StoreViewSet(StoreBaseViewSet):
             return Response({'detail': 'Las estadísticas de visitas están disponibles desde el plan Estándar.'}, status = status.HTTP_403_FORBIDDEN)
         return Response(visit_stats_of(store), status = status.HTTP_200_OK)
     #=========================================
-    # CHATBOT (asistente de la web pública, beneficio has_chatbot: Estándar+)
+    # CHATBOT (asistente de la web pública, beneficio has_chatbot: solo Premium)
     #=========================================
     @action(detail = False, methods = ['get', 'patch'], url_path = 'chatbot')
     def chatbot(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
         if request.method != 'GET' and not profile_has_benefit(store.user, 'has_chatbot'):
             return Response(
-                {'detail': 'El chatbot de tu web está disponible desde el plan Estándar.'},
+                {'detail': 'El chatbot de tu web está disponible con el plan Premium.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         cfg, _          =   StoreChatbot.objects.get_or_create(store = store)
@@ -351,6 +351,38 @@ class StoreViewSet(StoreBaseViewSet):
         return Response(
             {
                 'Exito'         : 'El logo se actualizó correctamente',
+                'customization' : StoreCustomizationSerializer(customization).data,
+                'storage'       : storage_payload(customization.store, store.user),
+            },
+            status = status.HTTP_200_OK,
+        )
+    #=========================================
+    # COVER (imagen de portada de la web, premium, multipart)
+    #=========================================
+    @action(detail = False, methods = ['post', 'delete'], url_path = 'customization/cover')
+    def customization_cover(self, request):
+        store           =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_design_advanced'):
+            return Response(
+                {'detail': 'La imagen de portada está disponible en el Plan premium.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        customization, _    =   StoreCustomization.objects.get_or_create(store = store)
+        if request.method == 'DELETE':
+            delete_cover(customization)
+            message     =   'La imagen de portada se eliminó correctamente'
+        else:
+            upload      =   request.FILES.get('cover')
+            if upload is None:
+                return Response({'cover': 'Tenés que adjuntar una imagen.'}, status = status.HTTP_400_BAD_REQUEST)
+            try:
+                upload_cover(customization, upload)
+            except ValueError as error:
+                return Response({'cover': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+            message     =   'La imagen de portada se actualizó correctamente'
+        return Response(
+            {
+                'Exito'         : message,
                 'customization' : StoreCustomizationSerializer(customization).data,
                 'storage'       : storage_payload(customization.store, store.user),
             },

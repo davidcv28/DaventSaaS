@@ -38,11 +38,14 @@ const catalogStatus = ref('idle') // idle | loading | success | error
 
 // --- Filtros de la tienda (el texto de búsqueda vive en ui.search para
 // compartirlo con el buscador del header) ---
-const activeCategory = ref(null)
-const activeBrand = ref(null)
+// Los accesos de la portada (categoría, marca, orden) llegan por query.
+const queryId = (v) => (/^\d+$/.test(String(v || '')) ? Number(v) : null)
+const SORTS = ['name', 'recent', 'price_asc', 'price_desc']
+const activeCategory = ref(queryId(route.query.category))
+const activeBrand = ref(queryId(route.query.brand))
 const priceMin = ref('')
 const priceMax = ref('')
-const sort = ref('name')
+const sort = ref(SORTS.includes(route.query.sort) ? route.query.sort : 'name')
 let searchTimer = null
 
 // parsePrice acepta formato es-AR ("1.500,50") y punto decimal: lo que no
