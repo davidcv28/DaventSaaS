@@ -171,7 +171,10 @@ export const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition
+    // history.state.scroll sobrevive al reload (vue-router lo persiste en cada
+    // scroll): sin este chequeo un F5 restaura la posición anterior y la página
+    // arranca en el pie. Solo se honra savedPosition en back/forward internos.
+    if (savedPosition && from.matched.length) return savedPosition
     if (!to.hash) return { top: 0 }
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
     // Con la transición out-in entre páginas de la tienda el destino puede
