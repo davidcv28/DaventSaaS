@@ -142,11 +142,11 @@ a.sp2-strip-item:hover { background: var(--store-accent-soft); }
 .sp2-testimonials-head { position: sticky; top: calc(var(--sp-top-h) + 24px); }
 .sp2-testimonials-head .sp2-eyebrow { margin-bottom: 8px; }
 .sp2-testimonials-list { display: grid; gap: 16px; min-width: 0; }
-.sp2-quote { margin: 0; padding: 20px 22px; background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); box-shadow: var(--sp-shadow-sm); }
+.sp2-quote { display: flex; flex-direction: column; margin: 0; padding: 20px 22px; background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); box-shadow: var(--sp-shadow-sm); }
 .sp2-quote.featured { border-left: 3px solid var(--store-accent); }
 .sp2-quote-text { margin: 0; font-size: 14.5px; line-height: 1.7; color: var(--sp-ink-2); overflow-wrap: anywhere; }
 .sp2-quote.featured .sp2-quote-text { font-size: 16.5px; color: var(--sp-ink); }
-.sp2-quote-by { display: flex; align-items: baseline; gap: 8px; margin-top: 12px; font-size: 13px; }
+.sp2-quote-by { display: flex; align-items: baseline; gap: 8px; margin-top: auto; padding-top: 12px; font-size: 13px; }
 .sp2-quote-by strong { font-size: 13.5px; }
 .sp2-quote-by span { color: var(--sp-muted); }
 

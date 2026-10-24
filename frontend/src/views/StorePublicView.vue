@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, inject, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, inject, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { storesApi, resolveSectionOrder, SERVICE_ICONS } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
@@ -230,6 +230,27 @@ const eyebrowUnless = (label, title) => (String(title || '').trim().toLowerCase(
 const faqEyebrow = computed(() => eyebrowUnless('Dudas frecuentes', faqsTitle.value))
 const servicesEyebrow = computed(() => eyebrowUnless('Servicios', servicesTitle.value))
 const testimonialsEyebrow = computed(() => eyebrowUnless('Clientes', testimonialsTitle.value))
+// Tarjetas de testimonios 100% iguales: el grid solo estira por fila, así
+// que se mide la tarjeta más alta y se iguala el resto con min-height
+// (offsetHeight ignora el transform de la animación de entrada). Se
+// recalcula al cambiar el tamaño del grid, la lista o al montar.
+const testiGrid = ref(null)
+let testiRO = null
+function equalizeTestimonials() {
+  const grid = testiGrid.value
+  if (!grid) return
+  const cards = grid.querySelectorAll('.sp-testimonial')
+  cards.forEach((c) => { c.style.minHeight = '' })
+  const max = Math.ceil(Math.max(0, ...[...cards].map((c) => c.offsetHeight)))
+  if (max) cards.forEach((c) => { c.style.minHeight = `${max}px` })
+}
+watch(testiGrid, (el) => {
+  testiRO?.disconnect()
+  testiRO = null
+  if (el && 'ResizeObserver' in window) { testiRO = new ResizeObserver(equalizeTestimonials); testiRO.observe(el) }
+  nextTick(equalizeTestimonials)
+})
+watch(testimonials, () => nextTick(equalizeTestimonials))
 const contactHours = computed(() => listOf(custom.value.hours))
 const showHours = computed(() => custom.value.show_hours !== false && contactHours.value.length > 0)
 // Orden efectivo de las secciones (posición CSS order; 0 queda para el hero).
@@ -357,6 +378,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearInterval(clock)
+  testiRO?.disconnect()
   window.removeEventListener('keydown', onKey)
 })
 </script>
@@ -915,7 +937,7 @@ onBeforeUnmount(() => {
     <div class="sp-container">
       <p v-if="testimonialsEyebrow" class="sp-eyebrow">{{ testimonialsEyebrow }}</p>
       <h2 id="sp-testimonials-title" v-reveal class="sp-section-title">{{ testimonialsTitle }}</h2>
-      <div class="sp-testimonials-grid">
+      <div ref="testiGrid" class="sp-testimonials-grid">
         <figure v-for="(t, i) in testimonials" :key="i" v-reveal="(i % 3) * 80" class="sp-testimonial">
           <span class="sp-testimonial-quote" aria-hidden="true"><AppIcon name="quote" :size="20" /></span>
           <blockquote class="sp-testimonial-text">{{ t.text }}</blockquote>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, inject, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, inject, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storesApi, SERVICE_ICONS } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
@@ -134,6 +134,25 @@ const testimonials = computed(() => listOf(custom.value.testimonials))
 const showTestimonials = computed(() => custom.value.show_testimonials !== false && testimonials.value.length > 0)
 const testimonialsTitle = computed(() => custom.value.testimonials_title?.trim() || 'Lo que dicen nuestros clientes')
 const testimonialsEyebrow = computed(() => eyebrowUnless('Clientes', testimonialsTitle.value))
+// Citas de testimonios 100% iguales: se mide la más alta y se iguala el
+// resto con min-height; se recalcula al cambiar el tamaño o la lista.
+const testiList = ref(null)
+let testiRO = null
+function equalizeTestimonials() {
+  const list = testiList.value
+  if (!list) return
+  const cards = list.querySelectorAll('.sp2-quote')
+  cards.forEach((c) => { c.style.minHeight = '' })
+  const max = Math.ceil(Math.max(0, ...[...cards].map((c) => c.offsetHeight)))
+  if (max) cards.forEach((c) => { c.style.minHeight = `${max}px` })
+}
+watch(testiList, (el) => {
+  testiRO?.disconnect()
+  testiRO = null
+  if (el && 'ResizeObserver' in window) { testiRO = new ResizeObserver(equalizeTestimonials); testiRO.observe(el) }
+  nextTick(equalizeTestimonials)
+})
+watch(testimonials, () => nextTick(equalizeTestimonials))
 
 // --- Galería en tira horizontal (misma fuente que la grilla de la opción 1).
 const gallery = computed(() => custom.value.gallery || [])
@@ -267,6 +286,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearInterval(clock)
+  testiRO?.disconnect()
   window.removeEventListener('keydown', onKey)
 })
 </script>
@@ -439,7 +459,7 @@ onBeforeUnmount(() => {
         <p v-if="testimonialsEyebrow" class="sp2-eyebrow">{{ testimonialsEyebrow }}</p>
         <h2 id="sp2-testimonials-title" class="sp2-title">{{ testimonialsTitle }}</h2>
       </div>
-      <div class="sp2-testimonials-list">
+      <div ref="testiList" class="sp2-testimonials-list">
         <figure v-for="(t, i) in testimonials" :key="i" v-reveal="i * 80" class="sp2-quote" :class="{ featured: i === 0 }">
           <blockquote class="sp2-quote-text">{{ t.text }}</blockquote>
           <figcaption class="sp2-quote-by">

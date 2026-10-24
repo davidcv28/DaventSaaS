@@ -1494,11 +1494,13 @@ html { scroll-behavior: smooth; }
 .sp-testimonials { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
 .sp-testimonials .sp-section-title { margin: 6px 0 26px; }
 .sp-testimonials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-.sp-testimonial { position: relative; display: grid; gap: 14px; align-content: start; margin: 0; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
+.sp-testimonial { position: relative; display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
 .sp-testimonial-quote { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--store-accent-soft); color: var(--sp-accent-text); }
 .store-page[data-store-theme='dark'] .sp-testimonial-quote { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
 .sp-testimonial-text { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--sp-ink-2); overflow-wrap: anywhere; }
-.sp-testimonial-by { display: grid; gap: 1px; }
+/* La firma se ancla al pie de la tarjeta: todas las citas terminan en la
+   misma línea y los separadores quedan simétricos entre columnas. */
+.sp-testimonial-by { display: grid; gap: 1px; margin-top: auto; }
 .sp-testimonial-by strong { font-size: 14px; font-weight: 700; }
 .sp-testimonial-by span { font-size: 12.5px; color: var(--sp-muted); }
 
@@ -2698,7 +2700,7 @@ html { scroll-behavior: smooth; }
   gap: 0; border-bottom: 1px solid var(--sp-line);
 }
 .store-page[data-store-template='lookbook'] .sp-testimonial {
-  display: grid; gap: 14px; margin: 0; padding: 30px 34px 34px 0;
+  display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 30px 34px 34px 0;
   border-top: 1px solid var(--sp-line);
 }
 .store-page[data-store-template='lookbook'] .sp-testimonial + .sp-testimonial { padding-left: 34px; border-left: 1px solid var(--sp-line); }
