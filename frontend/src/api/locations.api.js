@@ -1,5 +1,4 @@
 import { http } from './http.js'
-import { env } from '../config/env.js'
 
 // Dominio locations — endpoints reales (AllowAny, paginados DRF):
 // GET /api/provinces/            -> lista ordenada
@@ -69,30 +68,29 @@ export const locationsApi = {
   usingFallback: false,
 
   async fetchAllPages(url, params = {}) {
-    // Recorre todas las páginas DRF (?page=1..N) y devuelve lista completa.
-    const rows = []
-    let nextUrl = url
-    let nextParams = { ...params }
-    let guard = 0
-    while (nextUrl && guard < 50) {
-      guard += 1
-      const { data } = await http.get(nextUrl, { params: nextParams })
-      rows.push(...unwrap(data))
-      const next = data?.next
-      if (!next) break
-      // data.next llega como URL absoluta del backend (127.0.0.1:8000). La reescribimos
-      // al mismo origen para seguir por el proxy de Vite y no depender de CORS.
-      const u = new URL(next, 'http://local')
-      const basePath = new URL(env.apiBaseUrl, 'http://local').pathname.replace(/\/$/, '')
-      nextUrl = (u.pathname + u.search).replace(new RegExp(`^${basePath}`), '') || null
-      nextParams = {}
-    }
+    // Pide la primera página y, si hay más, las trae TODAS en paralelo usando
+    // el `count` de DRF. Antes encadenaba página por página: una provincia con
+    // ~14 páginas de ciudades tardaba más de un segundo por cada una.
+    const { data } = await http.get(url, { params })
+    const rows = [...unwrap(data)]
+    const total = Number(data?.count)
+    if (!data?.next || !Number.isFinite(total) || total <= rows.length) return rows
+    const pageSize = rows.length || 10
+    const remaining = Math.min(Math.ceil(total / pageSize), 50) - 1
+    const rest = await Promise.all(
+      Array.from({ length: remaining }, (_, i) =>
+        http.get(url, { params: { ...params, page: i + 2 } })
+          .then((res) => unwrap(res.data))
+          .catch(() => [])
+      )
+    )
+    rest.forEach((pageRows) => rows.push(...pageRows))
     return rows
   },
 
   async getProvinces() {
     try {
-      const rows = normalize(await this.fetchAllPages('/provinces/'))
+      const rows = normalize(await this.fetchAllPages('/provinces/', { page_size: 200 }))
       if (rows.length) {
         this.usingFallback = false
         return rows
@@ -111,7 +109,7 @@ export const locationsApi = {
   async getCities(provinceId) {
     if (!provinceId) return []
     try {
-      const rows = normalize(await this.fetchAllPages('/cities/', { province: provinceId }))
+      const rows = normalize(await this.fetchAllPages('/cities/', { province: provinceId, page_size: 200 }))
       if (rows.length) {
         this.usingFallback = false
         return rows

@@ -2,6 +2,7 @@ import logging
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.cache import patch_cache_control
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -189,7 +190,12 @@ class StoreViewSet(StoreBaseViewSet):
             raise Http404
         record_store_visit(store, request)
         serializer  =   StorePublicSerializer(store)
-        return Response(serializer.data, status = status.HTTP_200_OK)
+        response    =   Response(serializer.data, status = status.HTTP_200_OK)
+        #Cache corta: la misma visita no repide la ficha al navegar entre
+        #Inicio/Catálogo/Producto ni al volver atrás. El conteo de visitas no
+        #se ve afectado (la dedup por visitante/día ya corre en cache.add).
+        patch_cache_control(response, public = True, max_age = 30)
+        return response
     #=========================================
     # STATS (visitas de la web del dueño, beneficio has_stats: Estándar+)
     #=========================================
@@ -274,7 +280,7 @@ class StoreViewSet(StoreBaseViewSet):
             products    =   products.order_by(*ordering)
         categories      =   store.categories.all()
         brands          =   store.brands.all()
-        return Response(
+        response        =   Response(
             {
                 'categories'    :   CategorySerializer(categories, many = True).data,
                 'brands'        :   BrandSerializer(brands, many = True).data,
@@ -282,6 +288,10 @@ class StoreViewSet(StoreBaseViewSet):
             },
             status = status.HTTP_200_OK,
         )
+        #Idem /public/<slug>/: el visitante que pasa de la portada al catálogo
+        #o a una ficha no vuelve a pegarle a la API por el mismo listado.
+        patch_cache_control(response, public = True, max_age = 30)
+        return response
     #=========================================
     # CONTACT (formulario "Contáctanos" de la web pública, antispam)
     #=========================================

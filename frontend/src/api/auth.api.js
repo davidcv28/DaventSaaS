@@ -54,24 +54,24 @@ export const authApi = {
   async fetchMe() {
     // Los retrieve de user/profile ignoran el pk y devuelven lo propio
     // (ver UserBaseViewSet.retrieve y UserProfileBaseVieSet.retrieve).
-    // Combinamos cuenta + perfil comercial para el dashboard.
+    // Combinamos cuenta + perfil comercial para el dashboard. Van en
+    // paralelo: son independientes y eran el primer cuello de botella.
+    const optional = async (path, assign) => {
+      try {
+        const { data } = await http.get(path)
+        assign(data)
+        return true
+      } catch (e) {
+        if (![404, 403].includes(e.response?.status)) throw e
+        return false
+      }
+    }
     const out = {}
-    let ok = false
-    try {
-      const { data } = await http.get('/user/me/')
-      Object.assign(out, data?.results ? data.results[0] : data)
-      ok = true
-    } catch (e) {
-      if (![404, 403].includes(e.response?.status)) throw e
-    }
-    try {
-      const { data } = await http.get('/profile/me/')
-      out.profile = data
-      ok = true
-    } catch (e) {
-      if (![404, 403].includes(e.response?.status)) throw e
-    }
-    if (!ok) {
+    const [userOk, profileOk] = await Promise.all([
+      optional('/user/me/', (data) => Object.assign(out, data?.results ? data.results[0] : data)),
+      optional('/profile/me/', (data) => { out.profile = data }),
+    ])
+    if (!userOk && !profileOk) {
       const err = new Error('Perfil no disponible')
       err.response = { status: 404, data: { detail: 'Perfil no disponible' } }
       throw err

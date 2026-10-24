@@ -16,7 +16,7 @@ function unwrap(data) {
 
 export const paymentsApi = {
   async listPayments() {
-    const { data } = await http.get('/payments/')
+    const { data } = await http.get('/payments/', { params: { page_size: 200 } })
     return unwrap(data)
   },
 

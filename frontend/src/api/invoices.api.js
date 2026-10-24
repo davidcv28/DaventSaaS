@@ -14,7 +14,7 @@ function unwrap(data) {
 
 export const invoicesApi = {
   async listInvoices() {
-    const { data } = await http.get('/invoices/')
+    const { data } = await http.get('/invoices/', { params: { page_size: 200 } })
     return unwrap(data)
   },
 

@@ -38,7 +38,7 @@ export const catalogApi = {
   },
   // ----- Categorías -----
   async listCategories() {
-    const { data } = await http.get('/categories/')
+    const { data } = await http.get('/categories/', { params: { page_size: 200 } })
     return unwrap(data)
   },
   async createCategory(payload) {
@@ -56,7 +56,7 @@ export const catalogApi = {
 
   // ----- Marcas -----
   async listBrands() {
-    const { data } = await http.get('/brands/')
+    const { data } = await http.get('/brands/', { params: { page_size: 200 } })
     return unwrap(data)
   },
   async createBrand(payload) {
@@ -74,7 +74,7 @@ export const catalogApi = {
 
   // ----- Productos -----
   async listProducts() {
-    const { data } = await http.get('/products/')
+    const { data } = await http.get('/products/', { params: { page_size: 200 } })
     return unwrap(data)
   },
   async saveProduct(pk, { fields, image, imageClear }) {

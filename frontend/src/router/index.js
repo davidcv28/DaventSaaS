@@ -243,9 +243,13 @@ router.beforeEach(async (to) => {
   // Onboarding: todo usuario autenticado sin tienda elige su link primero.
   // El staff queda exento (no es un perfil comercial).
   if (to.meta?.requiresAuth) {
-    if (!auth.user) await auth.fetchMe().catch(() => {})
     const stores = useStoreStore()
-    if (stores.status === 'idle') await stores.loadMine()
+    // Perfil y tienda se resuelven en paralelo: en serie duplicaban el tiempo
+    // que tarda en abrir cualquier ruta del panel.
+    await Promise.all([
+      auth.user ? Promise.resolve() : auth.fetchMe().catch(() => {}),
+      stores.status === 'idle' ? stores.loadMine() : Promise.resolve()
+    ])
     const needsOnboarding = stores.status === 'success' && !stores.hasStore && !auth.user?.is_staff
     if (to.name === 'onboarding') {
       if (!needsOnboarding) return { name: 'dashboard' }

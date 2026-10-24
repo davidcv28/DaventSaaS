@@ -84,7 +84,7 @@ REST_FRAMEWORK = {
         'content_report': '5/hour',
     },
 
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'DaventProject.pagination.DaventPageNumberPagination',
     'PAGE_SIZE': 10,
 }
 # JWT: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ (el JS del

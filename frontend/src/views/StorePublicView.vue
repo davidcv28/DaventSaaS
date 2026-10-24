@@ -15,7 +15,7 @@ import { openStatus } from '../utils/storeHours.js'
 // es una página aparte (StoreCatalogView) y la tienda la resuelve
 // StorePublicLayout (inject 'storePage').
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
+const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced, loadPublicCatalog } = ctx
 // Diseño activo de la portada ('classic' | 'perspective' | 'promo' |
 // 'street' | 'terminal'): la estructura del hero se reordena por CSS
 // (grid-areas); el decor propio de cada diseño es el único markup extra.
@@ -120,7 +120,7 @@ const shopPromoEyebrow = computed(() => {
 async function loadShopFeatured() {
   if (!['shop', 'lookbook', 'cobre', 'minimal', 'classic', 'boutique'].includes(tpl.value) || !showCatalog.value) return
   try {
-    shopCatalog.value = await storesApi.publicCatalog(slug.value, { sort: 'recent' })
+    shopCatalog.value = await loadPublicCatalog({ sort: 'recent' })
   } catch {
     shopCatalog.value = { categories: [], brands: [], products: [] }
   }

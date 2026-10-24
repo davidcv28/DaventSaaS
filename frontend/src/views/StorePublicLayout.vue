@@ -133,9 +133,31 @@ function onScroll() {
   })
 }
 
+// Catálogo público compartido entre las páginas de la tienda: se pide una
+// sola vez por combinación de filtros y las vistas hijas lo consumen por
+// provide — antes cada página esperaba a la ficha y recién pedía el suyo.
+const catalogCache = new Map()
+function loadPublicCatalog(params = {}) {
+  const { q = '', category = '', brand = '', min_price = '', max_price = '', sort = '' } = params
+  const key = [q, category, brand, min_price, max_price, sort].join('|')
+  let req = catalogCache.get(key)
+  if (!req) {
+    req = storesApi.publicCatalog(slug.value, params).catch((e) => {
+      catalogCache.delete(key) // un error transitorio no queda cacheado
+      throw e
+    })
+    // El prefetch puede rechazar (catálogo apagado, tienda caída): marca el
+    // rechazo como atendido; la vista que lo consuma recibe el error igual.
+    req.catch(() => {})
+    catalogCache.set(key, req)
+  }
+  return req
+}
+
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, ui
+  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, ui,
+  loadPublicCatalog
 })
 
 // Título de pestaña por página: "<tienda>" en Inicio, "<tienda> · Catálogo"
@@ -223,6 +245,13 @@ function applyFavicon(logo) {
 watch(() => custom.value.logo, applyFavicon)
 
 onMounted(async () => {
+  // El catálogo vuela en paralelo con la ficha de la tienda: en Inicio es la
+  // vitrina de destacados ({sort:'recent'}), en Catálogo el listado inicial
+  // ({sort:'name'}) y en la ficha de producto el catálogo completo. La vista
+  // hija recibe la misma promesa por loadPublicCatalog — cero espera extra.
+  if (isHome.value) loadPublicCatalog({ sort: 'recent' })
+  else if (isCatalog.value) loadPublicCatalog({ sort: 'name' })
+  else if (isProduct.value) loadPublicCatalog()
   try {
     store.value = await storesApi.publicStore(slug.value)
     status.value = 'success'

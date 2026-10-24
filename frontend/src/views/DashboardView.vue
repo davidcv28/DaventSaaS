@@ -8,7 +8,6 @@ import { useInvoicesStore } from '../stores/invoices.store.js'
 import { useStoreStore } from '../stores/store.store.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
-import QRCode from 'qrcode'
 import {
   normalizeSlug, publicStoreUrl,
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily,
@@ -749,6 +748,8 @@ const canFlyers = computed(() => Boolean(plan.value?.benefits?.has_flyers))
 async function buildQr() {
   if (!publicUrl.value || !canQr.value) return
   try {
+    // La lib del QR solo se descarga al abrir la sección Herramientas.
+    const QRCode = (await import('qrcode')).default
     qrDataUrl.value = await QRCode.toDataURL(publicUrl.value, {
       width: 480, margin: 1, color: { dark: '#0f172a', light: '#ffffff' }
     })
@@ -1347,8 +1348,13 @@ async function onRemoveCover() {
 }
 
 onMounted(async () => {
-  await auth.fetchMe()
-  fillAccountForm()
+  // Puente entre pestañas: el retorno de MP cae en la pestaña del checkout,
+  // esta escucha avisa a la pestaña original para acreditar al instante.
+  window.addEventListener('storage', onPaymentBroadcast)
+  // Todo en paralelo: ninguna lectura del panel depende de otra. El perfil ya
+  // llegó por el guard del router; este refetch actualiza los flags de
+  // verificación y alimenta el formulario de Cuenta sin frenar el resto.
+  auth.fetchMe().then(() => fillAccountForm())
   loadAccountProvinces()
   if (store.status === 'idle') store.loadMine()
   await Promise.all([billing.loadPlans(), billing.loadMine(), payments.loadPayments(), invoices.loadInvoices()])
@@ -1357,12 +1363,13 @@ onMounted(async () => {
   ensureCatalog()
   // Primero el retorno del checkout (trae payment_id en la URL): es la vía instantánea.
   await handlePaymentReturn()
-  // Red de seguridad: registra pagos ya acreditados en MP que aún no estén en el sistema.
-  const synced = await payments.sync()
-  if (synced > 0) await Promise.all([billing.loadMine(), payments.loadPayments()])
-  // Puente entre pestañas: el retorno de MP cae en la pestaña del checkout,
-  // esta escucha avisa a la pestaña original para acreditar al instante.
-  window.addEventListener('storage', onPaymentBroadcast)
+  // Red de seguridad en segundo plano (registra pagos ya acreditados en MP
+  // que aún no estén en el sistema): el barrido contra la API de MP tarda
+  // ~1s, así que ya no se espera — el backend además lo acota a uno cada
+  // 15s por usuario, así re-entradas al panel no repiden el barrido.
+  payments.sync().then(async (synced) => {
+    if (synced > 0) await Promise.all([billing.loadMine(), payments.loadPayments()])
+  })
 })
 
 watch(() => carouselImages.value.length, (total) => {

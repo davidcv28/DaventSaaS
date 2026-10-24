@@ -4,6 +4,7 @@ import logging
 from decimal import Decimal
 from decouple import config
 from django.conf import settings
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncDate, TruncMonth, Coalesce
@@ -39,6 +40,9 @@ Creamos los viewsets correspondientes al dominio payments
 
 """
 logger              =   logging.getLogger(__name__)
+#Ventana mínima entre barridos reales contra la API de Mercado Pago en
+#/payments/sync/ (ver el action sync): el payment_id puntual nunca se acota.
+SYNC_SWEEP_SECONDS      =   15
 #=========================================
 # WEBHOOK SIGNATURE (HMAC-SHA256 según doc oficial de Mercado Pago)
 #=========================================
@@ -256,6 +260,20 @@ class PaymentViewSet(PaymentBaseViewSet):
             payment_id = int(str(raw_id).strip()) if raw_id not in (None, '') else None
         except (TypeError, ValueError):
             payment_id = None
+        #El barrido completo contra la API de MP (search + preapproval) tarda
+        #~1s por request y el frontend lo llama al montar el panel y cada 5s
+        #en los watchers de checkout/débito: con cache.add se acota a un
+        #barrido real cada SYNC_SWEEP_SECONDS por usuario. El payment_id
+        #puntual (retorno del checkout) nunca se acota — es la vía instantánea.
+        if payment_id is None and not cache.add(f'payments:sync-sweep:{request.user.pk}', 1, SYNC_SWEEP_SECONDS):
+            return Response(
+                {
+                    'Exito'             :   'Pagos sincronizados',
+                    'synced'            :   0,
+                    'auto_renew'        :   bool(suscription and suscription.auto_renew),
+                    'preapproval_status':   None,
+                    'throttled'         :   True,
+                }, status = status.HTTP_200_OK)
         payments    =   SyncSuscriptionPaymentsQuery(suscription, payment_id = payment_id) if suscription else []
         #El débito automático también se sincroniza acá: cubre los casos en que
         #el webhook de MP no puede llegar (localhost, red privada).

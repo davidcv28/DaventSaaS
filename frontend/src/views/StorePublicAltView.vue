@@ -21,7 +21,7 @@ import '../assets/store-page-v2.css'
 // (StoreHomeView la monta) y sigue abierta como vista previa en /<slug>/v2
 // (ruta store-alt): solo en ese caso se muestra la barra .sp2-preview.
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
+const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced, loadPublicCatalog } = ctx
 
 const router = useRouter()
 const route = useRoute()
@@ -76,7 +76,7 @@ const heroChip = computed(() => (openNow.value
 async function loadCatalog() {
   if (!showCatalog.value) return
   try {
-    catalog.value = await storesApi.publicCatalog(slug.value, { sort: 'recent' })
+    catalog.value = await loadPublicCatalog({ sort: 'recent' })
   } catch {
     catalog.value = { categories: [], brands: [], products: [] }
   }

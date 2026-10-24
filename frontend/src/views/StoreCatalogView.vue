@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, watch, watchEffect, inject, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { storesApi } from '../api/stores.api.js'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
@@ -15,7 +14,7 @@ import { vReveal } from '../directives/reveal.js'
 // (inject 'storePage'); el buscador del header y el burger comparten el
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
-const { slug, ui, custom, hasDesignAdvanced, shopName, pageTemplate } = ctx
+const { slug, ui, custom, hasDesignAdvanced, shopName, pageTemplate, loadPublicCatalog } = ctx
 // Diseño activo ('street'/'terminal' suman decor propia a la cabecera;
 // 'lookbook' la replantea como índice de edición).
 const tpl = pageTemplate
@@ -76,7 +75,7 @@ async function loadCatalog() {
     let min = parsePrice(priceMin.value)
     let max = parsePrice(priceMax.value)
     if (min !== '' && max !== '' && min > max) [min, max] = [max, min]
-    catalog.value = await storesApi.publicCatalog(slug.value, {
+    catalog.value = await loadPublicCatalog({
       q: ui.search.trim(),
       category: activeCategory.value || '',
       brand: activeBrand.value || '',

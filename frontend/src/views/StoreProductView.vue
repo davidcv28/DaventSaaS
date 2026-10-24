@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, watch, inject, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { storesApi } from '../api/stores.api.js'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
@@ -14,7 +13,7 @@ import { vReveal } from '../directives/reveal.js'
 // relacionados. Los datos salen del catálogo público (el backend solo
 // devuelve productos activos de la tienda).
 const ctx = inject('storePage')
-const { slug, custom, shopName, location } = ctx
+const { slug, custom, shopName, location, loadPublicCatalog } = ctx
 const route = useRoute()
 const router = useRouter()
 
@@ -83,7 +82,7 @@ async function share() {
 async function load() {
   status.value = 'loading'
   try {
-    catalog.value = await storesApi.publicCatalog(slug.value, {})
+    catalog.value = await loadPublicCatalog()
     status.value = product.value ? 'ready' : 'missing'
     if (product.value) document.title = `${product.value.name} · ${shopName.value}`
   } catch {
