@@ -287,12 +287,12 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .plan-badge .icon { color: #34d399; }
 .side-panel { display: flex; flex-direction: column; gap: 18px; flex: 1; min-height: 0; }
 .menu-toggle { display: none; }
-.sidebar nav { display: grid; gap: 4px; }
+.sidebar nav { display: grid; gap: 4px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .18) transparent; }
 .sidebar nav button { display: flex; align-items: center; gap: 12px; background: transparent; border: none; color: #a5b4d4; font: inherit; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; text-align: left; transition: background .15s, color .15s, box-shadow .15s; }
 .sidebar nav button:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 .sidebar nav button.active { background: rgba(99, 102, 241, .22); color: #fff; box-shadow: inset 2px 0 0 var(--brand-400); }
 .sidebar nav button.active .icon { color: var(--brand-200); }
-.side-foot { margin-top: auto; display: grid; gap: 6px; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 14px; }
+.side-foot { margin-top: auto; flex-shrink: 0; display: grid; gap: 6px; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 14px; }
 .side-foot .who { display: flex; align-items: center; gap: 10px; padding: 0 6px; overflow: hidden; }
 .side-foot .who-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e2e8f0; font-weight: 500; }
 .side-foot .link { display: flex; align-items: center; gap: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; text-align: left; padding: 8px 6px; font: inherit; font-size: 13px; border-radius: 8px; transition: color .15s, background .15s; }
