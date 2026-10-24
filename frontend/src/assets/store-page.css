@@ -972,6 +972,574 @@ html { scroll-behavior: smooth; }
    la cinta de marca con 'promo' y 'street'. Las reglas van al final para
    ganar por cascada en empates de especificidad con los temas claro/oscuro. */
 
+/* ---------- Perspectiva: portada clara con profundidad espacial ----------
+   Banda clara con halo del acento, piso isométrico y planos flotantes en
+   capas (markup propio), titular extruido con sombras apiladas y cinta de
+   marca en marquee al pie. Los elementos se "elevan" con sombras corridas. */
+.store-page[data-store-template='perspective'] { --sp-px-ink: #111827; }
+.store-page[data-store-template='perspective'] .sp-hero-band {
+  color: var(--sp-ink);
+  background:
+    radial-gradient(760px 380px at 82% -18%, color-mix(in srgb, var(--store-accent) 18%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--store-accent-soft) 62%, #f8fafd), var(--sp-card-solid) 88%);
+  border-bottom: 1px solid var(--sp-line);
+  animation: none;
+}
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-hero-band {
+  background:
+    radial-gradient(760px 380px at 82% -18%, color-mix(in srgb, var(--store-accent) 24%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--store-accent) 12%, var(--sp-card-solid)), var(--sp-card-solid) 88%);
+}
+.store-page[data-store-template='perspective'] .sp-hero-inner { padding: 80px 40px 66px; }
+/* Marca como placa inclinada con capa de acento debajo (efecto isométrico). */
+.store-page[data-store-template='perspective'] .sp-hero .sp-mono.lg,
+.store-page[data-store-template='perspective'] .sp-hero .sp-logo.lg { width: 88px; height: 88px; border-radius: 20px; font-size: 34px; border-color: var(--sp-card-solid); box-shadow: 10px 12px 0 -4px color-mix(in srgb, var(--store-accent) 42%, transparent), 0 24px 44px -18px rgba(17, 24, 39, .4); transform: rotate(-4deg); animation: none; }
+.store-page[data-store-template='perspective'] .sp-hero-badge { color: var(--sp-accent-text); background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 38%, var(--sp-line)); backdrop-filter: none; -webkit-backdrop-filter: none; animation: none; box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent) 26%, transparent); }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-hero-badge { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-title { max-width: 15ch; font-size: clamp(40px, 7vw, 84px); line-height: 1.02; letter-spacing: -.01em; text-transform: uppercase; color: var(--sp-ink); text-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent) 34%, transparent), 9px 9px 0 color-mix(in srgb, var(--store-accent) 13%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-title.is-name { font-size: clamp(36px, 7vw, calc(var(--store-name-size, 48px) * 1.4)); }
+.store-page[data-store-template='perspective'] .sp-hero-sub { max-width: 56ch; color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-btn { background: var(--store-accent-ink); border-color: transparent; color: #fff; box-shadow: 5px 5px 0 color-mix(in srgb, var(--store-accent-ink) 32%, rgba(17, 24, 39, .5)); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-btn:hover { background: var(--store-accent-ink); filter: none; transform: translate(-2px, -2px); box-shadow: 7px 7px 0 color-mix(in srgb, var(--store-accent-ink) 36%, rgba(17, 24, 39, .5)); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-ghost { background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); }
+.store-page[data-store-template='perspective'] .sp-btn.sp-hero-ghost:hover { background: var(--sp-card-solid); border-color: var(--store-accent); color: var(--sp-accent-text); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 color-mix(in srgb, var(--store-accent) 30%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero .sp-icon-btn { background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='perspective'] .sp-hero .sp-icon-btn:hover { background: var(--sp-card-solid); border-color: var(--store-accent); color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-hero-meta { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-hero-meta li { padding: 6px 14px; border-radius: 10px; border: 1px solid var(--sp-line); background: var(--sp-card-solid); box-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent) 20%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-meta .icon { color: var(--sp-accent-text); }
+/* Cinta de marca: marquee infinito (dos secuencias idénticas, -50% loop). */
+.sp-hero-marquee { position: relative; z-index: 1; border-top: 1px solid rgba(255, 255, 255, .14); overflow: hidden; padding: 15px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.sp-hero-marquee-track { display: flex; width: max-content; animation: sp-marquee 24s linear infinite; }
+.sp-hero-marquee-seq { display: inline-flex; align-items: center; gap: 26px; padding-right: 26px; font-size: 12.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: rgba(255, 255, 255, .55); white-space: nowrap; }
+.sp-hero-marquee-seq i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--store-accent); }
+@keyframes sp-marquee { to { transform: translateX(-50%); } }
+.store-page[data-store-template='perspective'] .sp-hero-marquee { border-top-color: var(--sp-line); }
+.store-page[data-store-template='perspective'] .sp-hero-marquee-seq { color: var(--sp-muted); }
+/* Barra superior y pie claros, en sintonía con la banda espacial. */
+.store-page[data-store-template='perspective'] .sp-top,
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-top {
+  background: color-mix(in srgb, var(--sp-card-solid) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom-color: var(--sp-line);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+}
+.store-page[data-store-template='perspective'] .sp-top .sp-brand,
+.store-page[data-store-template='perspective'] .sp-top .sp-name { color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-top-links a { color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-top-links a:hover,
+.store-page[data-store-template='perspective'] .sp-top-links a.router-link-exact-active { color: var(--sp-accent-text); background: var(--store-accent-soft); }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-top-links a:hover,
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-top-links a.router-link-exact-active { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-top .sp-icon-btn,
+.store-page[data-store-template='perspective'] .sp-top .sp-burger { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: var(--sp-shadow-sm); }
+.store-page[data-store-template='perspective'] .sp-top .sp-icon-btn:hover,
+.store-page[data-store-template='perspective'] .sp-top .sp-burger:hover { background: var(--sp-card); border-color: var(--store-accent); color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-top .sp-mono { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.store-page[data-store-template='perspective'] .sp-top .sp-logo.sm { border-color: var(--sp-line); }
+.store-page[data-store-template='perspective'] .sp-progress { background: linear-gradient(90deg, var(--store-accent), var(--store-accent-ink)); }
+.store-page[data-store-template='perspective'] .sp-top-cta { background: var(--store-accent-ink); color: #fff; }
+.store-page[data-store-template='perspective'] .sp-top-cta:hover { background: var(--store-accent-ink); filter: brightness(1.12); }
+.store-page[data-store-template='perspective'] .sp-foot { background: var(--sp-surface); color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-foot::before { background: linear-gradient(90deg, transparent 8%, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent 92%); }
+.store-page[data-store-template='perspective'] .sp-foot-brand strong { color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-foot-brand span,
+.store-page[data-store-template='perspective'] .sp-foot-copy { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-foot-heading { color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-foot-col a { color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-foot-col a:hover { color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-foot-bottom { border-top-color: var(--sp-line); }
+.store-page[data-store-template='perspective'] .sp-foot .sp-davent-badge { background: var(--sp-card); border-color: var(--sp-line); color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-foot .sp-davent-badge:hover { border-color: var(--store-accent); }
+.store-page[data-store-template='perspective'] .sp-foot .sp-davent-badge strong { color: var(--sp-accent-text); }
+@media (max-width: 760px) {
+  .store-page[data-store-template='perspective'] .sp-hero-inner { padding: 56px 20px 48px; }
+  .store-page[data-store-template='perspective'] .sp-hero-title { font-size: clamp(30px, 9vw, 46px); }
+}
+
+/* ===== Diseños v2: cada plantilla con identidad propia =====
+   isométrica · Publicidad = afiche promocional · Urbano = streetwear.
+   Van después de los bloques base para ganar por cascada; todo el
+   movimiento se apaga con prefers-reduced-motion. */
+/* ---------- Perspectiva v2 ---------- */
+/* Piso isométrico: grilla del acento rotada en perspectiva que converge
+   hacia el horizonte y se desplaza hacia el visitante (punto de fuga). */
+.sp-px-floor { position: absolute; left: -15%; right: -15%; bottom: -14%; height: 82%; background-image: linear-gradient(color-mix(in srgb, var(--store-accent) 30%, transparent) 1.5px, transparent 1.5px), linear-gradient(90deg, color-mix(in srgb, var(--store-accent) 30%, transparent) 1.5px, transparent 1.5px); background-size: 54px 54px; transform: perspective(900px) rotateX(60deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(180deg, transparent, #000 60%); mask-image: linear-gradient(180deg, transparent, #000 60%); animation: sp-px-scroll 14s linear infinite; }
+@keyframes sp-px-scroll { to { background-position: 0 54px, 0 0; } }
+/* Planos flotantes: tarjetas translúcidas inclinadas en capas, cada una
+   con su "piso" de acento apilado debajo (profundidad por capas). */
+.sp-px-plane { position: absolute; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); background: linear-gradient(150deg, color-mix(in srgb, #fff 82%, var(--store-accent-soft)), color-mix(in srgb, var(--store-accent-soft) 80%, transparent)); box-shadow: 12px 14px 0 -5px color-mix(in srgb, var(--store-accent) 26%, transparent), 0 26px 44px -22px rgba(17, 24, 39, .3); transform: rotate(-7deg) skewX(-6deg); animation: sp-px-bob 7s ease-in-out infinite alternate; }
+.sp-px-plane.p1 { width: 150px; height: 96px; right: 13%; top: 15%; }
+.sp-px-plane.p2 { width: 92px; height: 62px; right: 27%; top: 52%; opacity: .75; animation-delay: -3.2s; }
+@keyframes sp-px-bob { from { transform: rotate(-7deg) skewX(-6deg) translateY(0); } to { transform: rotate(-7deg) skewX(-6deg) translateY(-13px); } }
+.store-page[data-store-theme='dark'][data-store-template='perspective'] .sp-px-plane { background: linear-gradient(150deg, color-mix(in srgb, var(--store-accent) 20%, var(--sp-card-solid)), var(--sp-card-solid)); }
+/* La trama de puntos base estorba al piso: la reemplaza la grilla 3D. */
+.store-page[data-store-template='perspective'] .sp-hero-decor::before { background-image: none; }
+.store-page[data-store-template='perspective'] .sp-orb { display: none; }
+.store-page[data-store-template='perspective'] .sp-float { border-radius: 14px; background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-accent-text); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 6px 7px 0 -2px color-mix(in srgb, var(--store-accent) 24%, transparent), var(--sp-shadow-sm); }
+.sp-hero-marquee-seq .icon { flex: none; color: var(--store-accent); }
+/* Destacados como placas elevadas: tarjeta clara con capa de acento
+   corrida abajo a la derecha; en hover la capa "crece". */
+.store-page[data-store-template='perspective'] .sp-highlights { margin-top: -42px; gap: 18px; }
+.store-page[data-store-template='perspective'] .sp-hl { padding: 26px 24px; border: 1px solid var(--sp-line); border-radius: 18px; background: var(--sp-card-solid); box-shadow: 8px 9px 0 -3px color-mix(in srgb, var(--store-accent) 24%, transparent), var(--sp-shadow-md); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.store-page[data-store-template='perspective'] .sp-hl:hover { transform: translate(-3px, -4px); border-color: color-mix(in srgb, var(--store-accent) 50%, var(--sp-line)); box-shadow: 12px 13px 0 -3px color-mix(in srgb, var(--store-accent) 32%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .sp-hl-icon { border-radius: 13px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 30%, var(--sp-line)); box-shadow: none; }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-hl-icon { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hl:hover .sp-hl-icon { background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; border-color: transparent; }
+/* Titulares de letrero (Oswald mayúscula, vía bloque v3) y eyebrow con
+   marca isométrica: rombo de acento en vez del filete base. */
+.store-page[data-store-template='perspective'] .sp-section-title,
+.store-page[data-store-template='perspective'] .sp-about-heading,
+.store-page[data-store-template='perspective'] .sp-contact-title { font-weight: 700; letter-spacing: 0; text-transform: uppercase; }
+.store-page[data-store-template='perspective'] .sp-section-title::after { height: 5px; border-radius: 2px; transform: skewX(-24deg); }
+.store-page[data-store-template='perspective'] .sp-eyebrow { letter-spacing: .22em; }
+.store-page[data-store-template='perspective'] .sp-eyebrow::before { width: 8px; height: 8px; border-radius: 2px; background: var(--store-accent); transform: rotate(45deg); }
+.store-page[data-store-template='perspective'] .sp-about-heading-icon { border-radius: 14px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 30%, var(--sp-line)); box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent) 22%, transparent); }
+.store-page[data-store-template='perspective'] .sp-about-card,
+.store-page[data-store-template='perspective'] .sp-form { border-radius: 18px; box-shadow: 12px 12px 0 -4px color-mix(in srgb, var(--store-accent) 22%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .sp-about-mission { border-radius: 12px; }
+.store-page[data-store-template='perspective'] .sp-about-mission-label { letter-spacing: .2em; }
+.store-page[data-store-template='perspective'] .sp-about-years { border-radius: 14px; transform: rotate(-1.5deg); box-shadow: 8px 9px 0 -3px color-mix(in srgb, var(--store-accent-ink) 30%, transparent); }
+.store-page[data-store-template='perspective'] .sp-form-badge { border-radius: 14px; }
+/* La galería se "acuesta" al pasar el puntero: tilt 3D con relieve. */
+.store-page[data-store-template='perspective'] .sp-gallery-item:hover { transform: perspective(700px) rotateX(4deg) rotateY(-5deg); border-color: var(--store-accent); box-shadow: 16px 20px 34px -18px rgba(17, 24, 39, .42); }
+@media (max-width: 960px) {
+  .sp-px-plane.p2 { display: none; }
+}
+
+/* ---------- Publicidad: afiche promocional ---------- */
+.store-page[data-store-template='promo'] { --sp-yellow: #ffe14d; --sp-ink-hard: #111827; }
+.store-page[data-store-template='promo'] .sp-hero-band { overflow: hidden; background-size: auto; background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 16px, transparent 16px 32px), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); animation: sp-pr-stripes 6s linear infinite; }
+.store-page[data-store-template='promo'][data-store-theme='dark'] .sp-hero-band { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .06) 0 16px, transparent 16px 32px), linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 70%, #0d1220), var(--store-accent-ink)); }
+@keyframes sp-pr-stripes { to { background-position: 45px 0, 0 0; } }
+.sp-pr-burst { position: absolute; right: -8%; top: 50%; width: 130vmax; height: 130vmax; margin-top: -65vmax; background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .13) 0 8deg, transparent 8deg 16deg); -webkit-mask-image: radial-gradient(closest-side, #000 10%, transparent 62%); mask-image: radial-gradient(closest-side, #000 10%, transparent 62%); animation: sp-spin 80s linear infinite; }
+.sp-pr-spark { position: absolute; color: var(--sp-yellow, #ffe14d); filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .25)); animation: sp-pr-twinkle 3.2s ease-in-out infinite; }
+.sp-pr-spark.s1 { left: 46%; top: 12%; }
+.sp-pr-spark.s2 { left: 6%; bottom: 22%; animation-delay: -1.2s; }
+.sp-pr-spark.s3 { right: 6%; top: 14%; animation-delay: -2.2s; }
+@keyframes sp-pr-twinkle { 0%, 100% { transform: scale(.8) rotate(-10deg); opacity: .8; } 50% { transform: scale(1.2) rotate(12deg); opacity: 1; } }
+.store-page[data-store-template='promo'] .sp-hero-decor::before,
+.store-page[data-store-template='promo'] .sp-orb,
+.store-page[data-store-template='promo'] .sp-float { display: none; }
+.store-page[data-store-template='promo'] .sp-hero-inner { grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr); grid-template-areas: 'ava seal' 'tag seal' 'badge seal' 'title seal' 'sub seal' 'ctas seal' 'meta seal'; justify-items: start; align-content: center; column-gap: 48px; text-align: left; padding: 64px 40px 84px; }
+.store-page[data-store-template='promo'] .sp-ava { grid-area: ava; }
+.sp-pr-tag { grid-area: tag; display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 7px 14px; border: 2px solid var(--sp-ink-hard, #111827); border-radius: 8px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); font-size: 13px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); transform: rotate(-3deg); animation: sp-pr-wobble 3.4s ease-in-out infinite; }
+@keyframes sp-pr-wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(2deg) scale(1.05); } }
+.store-page[data-store-template='promo'] .sp-hero-badge { grid-area: badge; margin-top: 12px; }
+.store-page[data-store-template='promo'] .sp-hero-title { grid-area: title; max-width: 13ch; margin-top: 14px; font-size: clamp(44px, 7vw, 92px); font-weight: 900; line-height: .98; letter-spacing: -.05em; text-shadow: 0 5px 0 rgba(0, 0, 0, .18); }
+.store-page[data-store-template='promo'] .sp-hero-title.is-name { font-size: clamp(42px, 7vw, calc(var(--store-name-size, 48px) * 1.7)); }
+.sp-pr-mark { display: inline-block; padding: 0 .16em; border-radius: 6px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); text-shadow: none; box-shadow: 5px 5px 0 rgba(0, 0, 0, .28); transform: rotate(-2deg); animation: sp-pop .7s cubic-bezier(.34, 1.56, .64, 1) .5s both; }
+.store-page[data-store-template='promo'] .sp-hero-sub { grid-area: sub; max-width: 48ch; font-size: 17px; font-weight: 500; color: #fff; }
+.store-page[data-store-template='promo'] .sp-hero-ctas { grid-area: ctas; justify-content: flex-start; margin-top: 28px; }
+.store-page[data-store-template='promo'] .sp-hero-meta { grid-area: meta; justify-content: flex-start; color: rgba(255, 255, 255, .9); font-weight: 600; }
+.store-page[data-store-template='promo'] .sp-hero-ctas .sp-btn { height: 52px; padding: 0 26px; font-size: 15px; font-weight: 800; border-radius: 14px; }
+.store-page[data-store-template='promo'] .sp-btn.sp-hero-btn { background: #fff; color: var(--store-accent-ink); box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); border: 2px solid var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-btn.sp-hero-btn:hover { background: #fff; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-btn.sp-hero-ghost { border: 2px solid #fff; }
+.sp-btn.sp-pr-wa { background: #25d366; color: #052e16; border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); animation: sp-pr-pulse 2.2s ease-out infinite; }
+.sp-btn.sp-pr-wa:hover { background: #2fe172; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--sp-ink-hard, #111827); }
+@keyframes sp-pr-pulse { 0% { outline: 0 solid rgba(37, 211, 102, .6); outline-offset: 2px; } 70%, 100% { outline: 14px solid rgba(37, 211, 102, 0); outline-offset: 2px; } }
+.sp-pr-seal { grid-area: seal; position: relative; align-self: center; justify-self: center; width: clamp(180px, 22vw, 280px); aspect-ratio: 1; display: grid; place-items: center; }
+.sp-pr-seal-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; animation: sp-spin 18s linear infinite; }
+.sp-pr-seal-ring text { fill: #fff; font-size: 19px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.sp-pr-seal-core { display: grid; place-items: center; width: 52%; aspect-ratio: 1; border: 3px solid var(--sp-ink-hard, #111827); border-radius: 50%; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); box-shadow: 6px 6px 0 var(--sp-ink-hard, #111827); animation: sp-pr-bounce 2.6s ease-in-out infinite; }
+@keyframes sp-pr-bounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-10px) rotate(6deg); } }
+.store-page[data-store-template='promo'] .sp-hero-marquee { position: absolute; left: -2%; right: -2%; bottom: 14px; padding: 11px 0; border-block: 3px solid var(--sp-ink-hard, #111827); background: var(--sp-yellow, #ffe14d); -webkit-mask-image: none; mask-image: none; transform: rotate(-1.2deg); box-shadow: 0 8px 0 rgba(0, 0, 0, .18); }
+.store-page[data-store-template='promo'] .sp-hero-marquee-track { animation-duration: 18s; }
+.store-page[data-store-template='promo'] .sp-hero-marquee-seq { gap: 18px; font-size: 14px; font-weight: 900; letter-spacing: .14em; color: var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-hero-marquee-seq .icon { color: var(--store-accent-ink); }
+.store-page[data-store-template='promo'] .sp-hero-marquee-seq i { width: 8px; height: 8px; border-radius: 1px; background: var(--sp-ink-hard, #111827); transform: rotate(45deg); }
+.store-page[data-store-template='promo'] .sp-top { border-bottom: 3px solid var(--sp-yellow, #ffe14d); }
+.store-page[data-store-template='promo'] .sp-highlights { margin-top: -22px; gap: 22px; }
+.store-page[data-store-template='promo'] .sp-hl { padding: 24px 22px; border: 2px solid var(--sp-ink-hard, #111827); border-radius: 16px; background: var(--sp-card-solid); box-shadow: 6px 6px 0 var(--store-accent-ink); }
+.store-page[data-store-template='promo'][data-store-theme='dark'] .sp-hl { border-color: #fff; box-shadow: 6px 6px 0 var(--store-accent); }
+.store-page[data-store-template='promo'] .sp-hl:nth-child(odd) { rotate: -1deg; }
+.store-page[data-store-template='promo'] .sp-hl:nth-child(even) { rotate: 1deg; }
+.store-page[data-store-template='promo'] .sp-hl:hover { rotate: 0deg; transform: translate(-3px, -5px); border-color: var(--sp-ink-hard, #111827); box-shadow: 10px 10px 0 var(--store-accent-ink); }
+.store-page[data-store-template='promo'] .sp-hl::after { display: none; }
+.store-page[data-store-template='promo'] .sp-hl-icon { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 12px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-hl strong { font-size: 17px; font-weight: 850; }
+.store-page[data-store-template='promo'] .sp-section-title,
+.store-page[data-store-template='promo'] .sp-about-heading,
+.store-page[data-store-template='promo'] .sp-contact-title { font-weight: 900; letter-spacing: -.045em; }
+.store-page[data-store-template='promo'] .sp-section-title::after { width: 64px; height: 7px; background: var(--sp-yellow, #ffe14d); border-radius: 2px; box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-eyebrow { display: inline-flex; padding: 5px 12px; border: 2px solid var(--sp-ink-hard, #111827); border-radius: 6px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); transform: rotate(-2deg); }
+.store-page[data-store-template='promo'] .sp-eyebrow::before { display: none; }
+.store-page[data-store-template='promo'] .sp-about-heading-icon { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 14px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-about-card,
+.store-page[data-store-template='promo'] .sp-form { border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 8px 8px 0 var(--store-accent-ink); }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .sp-about-card,
+.store-page[data-store-theme='dark'][data-store-template='promo'] .sp-form { border-color: #fff; box-shadow: 8px 8px 0 var(--store-accent); }
+.store-page[data-store-template='promo'] .sp-about-years { border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); transform: rotate(-1.5deg); }
+.store-page[data-store-template='promo'] .sp-form-badge { border: 2px solid var(--sp-ink-hard, #111827); background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sp-gallery-item { border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 5px 5px 0 var(--store-accent-ink); }
+.store-page[data-store-template='promo'] .sp-gallery-item:nth-child(odd) { rotate: -1deg; }
+.store-page[data-store-template='promo'] .sp-gallery-item:nth-child(even) { rotate: 1deg; }
+.store-page[data-store-template='promo'] .sp-gallery-item:hover { rotate: 0deg; }
+@media (max-width: 960px) {
+  .store-page[data-store-template='promo'] .sp-hero-inner { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'ava' 'tag' 'badge' 'title' 'sub' 'ctas' 'meta' 'seal'; justify-items: center; text-align: center; padding: 52px 20px 96px; }
+  .store-page[data-store-template='promo'] .sp-hero-ctas,
+  .store-page[data-store-template='promo'] .sp-hero-meta { justify-content: center; }
+  .sp-pr-seal { width: 170px; margin-top: 30px; }
+  .sp-pr-spark.s1 { display: none; }
+}
+@media (max-width: 760px) {
+  .store-page[data-store-template='promo'] .sp-highlights { margin-top: -18px; }
+  .store-page[data-store-template='promo'] .sp-hl:nth-child(odd), .store-page[data-store-template='promo'] .sp-hl:nth-child(even) { rotate: 0deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-px-floor, .sp-px-plane, .sp-pr-burst, .sp-pr-spark, .sp-pr-tag, .sp-pr-mark, .sp-pr-seal-ring, .sp-pr-seal-core, .sp-btn.sp-pr-wa,
+  .store-page[data-store-template='promo'] .sp-hero-band, .sp-hero-marquee-track { animation: none !important; }
+}
+
+/* ===== Ficha de producto (/producto/<id>, estilo marketplace) =====
+   Sheet tipo publicación: galería a la izquierda y panel de compra a la
+   derecha (precio, CTA de contacto, vendedor); abajo las características
+   en tabla cebra (orden = feature_schema de la categoría) y la
+   descripción. Los relacionados son tarjetas-link a otras fichas. */
+.spd-main { flex: 1; padding-top: 28px; padding-bottom: 88px; }
+.spd-crumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; font-size: 13px; color: var(--sp-muted); }
+.spd-crumbs a { color: var(--sp-accent-text); text-decoration: none; }
+.spd-crumbs a:hover { text-decoration: underline; }
+.spd-crumbs svg { flex: none; color: var(--sp-muted); }
+.spd-crumb-here { max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sp-ink-2); font-weight: 600; }
+
+.spd-sheet { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); box-shadow: var(--sp-shadow-md); overflow: hidden; }
+.spd-top { display: grid; grid-template-columns: minmax(0, 1fr) 380px; align-items: stretch; }
+.spd-gallery { display: grid; place-items: center; min-height: 480px; padding: 40px; border-right: 1px solid var(--sp-line); background: var(--sp-card-solid, var(--sp-card)); }
+.spd-gallery img { max-width: 100%; max-height: 540px; object-fit: contain; display: block; }
+.spd-buy { display: flex; flex-direction: column; gap: 14px; padding: 30px 28px; }
+.spd-buy-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.spd-cond { margin: 0; font-size: 13px; font-weight: 650; color: #00a650; }
+.spd-share { width: 36px; height: 36px; }
+.spd-name { margin: 0; font-size: 25px; font-weight: 650; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
+.spd-brand { margin: -6px 0 0; font-size: 13.5px; color: var(--sp-muted); }
+.spd-pricebox { display: grid; gap: 8px; padding: 16px 0; border-top: 1px solid var(--sp-line); }
+.spd-price { font-size: 34px; font-weight: 700; letter-spacing: -.03em; color: var(--sp-ink); font-variant-numeric: tabular-nums; }
+.spd-pay { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted); }
+.spd-pay svg { flex: none; margin-top: 2px; color: #00a650; }
+.spd-ctas { display: grid; gap: 10px; }
+.spd-buy-btn { height: 48px; font-size: 15px; }
+.spd-backlink { display: inline-flex; align-items: center; gap: 6px; justify-self: start; font-size: 13.5px; font-weight: 600; color: var(--sp-accent-text); text-decoration: none; }
+.spd-backlink:hover { text-decoration: underline; }
+.spd-seller { list-style: none; display: grid; gap: 10px; margin: 6px 0 0; padding: 16px 0 0; border-top: 1px solid var(--sp-line); font-size: 13.5px; color: var(--sp-ink-2); }
+.spd-seller li { display: flex; align-items: flex-start; gap: 9px; }
+.spd-seller svg { flex: none; margin-top: 2px; color: var(--sp-accent-text); }
+
+.spd-sec { padding: 28px 32px; border-top: 1px solid var(--sp-line); }
+.spd-sec-title { margin: 0 0 16px; font-size: 19px; font-weight: 750; letter-spacing: -.02em; }
+.spd-specs-wrap { border: 1px solid var(--sp-line); border-radius: 12px; overflow: hidden; }
+.spd-specs { width: 100%; border-collapse: collapse; font-size: 14px; }
+.spd-specs th, .spd-specs td { padding: 12px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--sp-line); overflow-wrap: anywhere; }
+.spd-specs th { width: 240px; font-weight: 600; color: var(--sp-ink-2); background: var(--sp-soft); }
+.spd-specs tr:last-child th, .spd-specs tr:last-child td { border-bottom: 0; }
+.spd-specs tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--sp-soft) 45%, transparent); }
+.spd-desc { margin: 0; font-size: 15px; line-height: 1.75; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+
+.spd-related { margin-top: 28px; }
+.spd-rel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.spd-rel { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--sp-line); border-radius: 14px; background: var(--sp-card); color: var(--sp-ink); text-decoration: none; box-shadow: var(--sp-shadow-sm); transition: border-color .2s, box-shadow .3s var(--sp-ease), transform .3s var(--sp-ease); }
+.spd-rel:hover { border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: var(--sp-shadow-md); transform: translateY(-3px); }
+.spd-rel-img { display: grid; place-items: center; aspect-ratio: 1 / 1; border-radius: 10px; background: var(--sp-soft); color: var(--sp-accent-text); overflow: hidden; }
+.spd-rel-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.spd-rel-name { font-size: 13.5px; font-weight: 600; line-height: 1.35; color: var(--sp-ink-2); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.spd-rel-price { margin-top: auto; font-size: 16px; font-weight: 750; letter-spacing: -.02em; }
+
+.spd-sk-block { background: linear-gradient(90deg, var(--sp-soft) 25%, color-mix(in srgb, var(--sp-soft) 50%, var(--sp-card)) 50%, var(--sp-soft) 75%); background-size: 200% 100%; animation: sp-shimmer 1.4s linear infinite; }
+.store-page[data-store-theme='dark'] .spd-gallery { background: color-mix(in srgb, var(--store-accent) 8%, transparent); }
+.store-page[data-store-theme='dark'] .spd-rel { background: var(--sp-card-solid); }
+
+/* Las tarjetas del catálogo son clicables (navegan a la ficha). */
+.sp-card { cursor: pointer; }
+.sp-card:focus-visible { outline: 2px solid var(--store-accent); outline-offset: 2px; }
+
+@media (max-width: 960px) {
+  .spd-top { grid-template-columns: minmax(0, 1fr); }
+  .spd-gallery { min-height: 0; aspect-ratio: 4 / 3; padding: 24px; border-right: 0; border-bottom: 1px solid var(--sp-line); }
+  .spd-gallery img { max-height: 420px; }
+  .spd-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .spd-main { padding-top: 20px; padding-bottom: 64px; }
+  .spd-crumb-here { max-width: 100%; white-space: normal; }
+  .spd-buy { padding: 22px 20px; }
+  .spd-name { font-size: 21px; }
+  .spd-price { font-size: 28px; }
+  .spd-sec { padding: 22px 18px; }
+  .spd-specs th { width: 130px; }
+  .spd-rel-grid { gap: 12px; }
+}
+
+
+/* ===== Imagen de portada (premium) + tipografía por diseño =====
+   Va al final para ganar por cascada. La portada es el fondo del hero con un
+   como foto de campaña. Todo el movimiento se apaga con prefers-reduced-motion. */
+
+/* ---------- Portada: fondo del hero ---------- */
+.sp-hero-cover { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.sp-hero-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.04); animation: sp-cover-drift 24s ease-in-out infinite alternate; }
+.sp-hero-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, color-mix(in srgb, var(--store-accent-ink) 82%, transparent) 0%, color-mix(in srgb, var(--store-accent-ink) 52%, transparent) 42%, color-mix(in srgb, var(--store-accent) 10%, transparent) 100%), linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .28)); }
+/* La portada no es un hero a pantalla: alto acotado tipo portada de
+   Facebook (~2.7:1). El contenido puede estirarla, pero la banda sola
+   nunca ocupa medio viewport. */
+.sp-hero-band.has-cover { min-height: clamp(300px, 36vw, 430px); display: flex; flex-direction: column; justify-content: center; }
+.sp-hero-band.has-cover .sp-hero-inner { padding-top: 56px; padding-bottom: 96px; }
+@media (max-width: 760px) { .sp-hero-band.has-cover .sp-hero-inner { padding-top: 40px; padding-bottom: 88px; } }
+.sp-hero-band.has-cover .sp-hero-decor .sp-float, .sp-hero-band.has-cover .sp-hero-decor .sp-orb { display: none; }
+.sp-contact-photo { margin: 6px 0 0; aspect-ratio: 16 / 10; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
+.sp-contact-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 960px) { .sp-contact-photo { display: none; } }
+@keyframes sp-cover-drift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.12) translate3d(-1.2%, -1%, 0); } }
+.sp-hero-band.has-cover { background-image: none; animation: none; background-color: var(--store-accent-ink); }
+.sp-hero-band.has-cover .sp-hero-decor::before { opacity: .55; }
+.sp-hero-band.has-cover .sp-hero-title, .sp-hero-band.has-cover .sp-hero-sub { text-shadow: 0 2px 22px rgba(0, 0, 0, .38); }
+/* Perspectiva con portada: la banda clara cede a la foto — el velo se
+   oscurece y los textos vuelven a blanco para conservar el contraste. */
+.store-page[data-store-template='perspective'] .sp-hero-cover::after { background: linear-gradient(96deg, rgba(15, 23, 42, .9) 0%, rgba(15, 23, 42, .6) 52%, rgba(15, 23, 42, .22) 100%), radial-gradient(700px 360px at 85% -10%, color-mix(in srgb, var(--store-accent) 45%, transparent), transparent 62%); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover { background-color: #0f172a; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-title { color: #fff; text-shadow: 3px 3px 0 rgba(0, 0, 0, .4), 8px 8px 0 color-mix(in srgb, var(--store-accent) 42%, transparent); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-sub { color: rgba(255, 255, 255, .85); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-badge { background: var(--store-accent); border-color: transparent; color: #fff; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-meta { color: rgba(255, 255, 255, .8); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-meta li { border-color: rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .12); box-shadow: none; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-meta .icon { color: #fff; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-btn.sp-hero-ghost { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .45); color: #fff; box-shadow: none; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero .sp-icon-btn { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .4); color: #fff; }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-marquee { border-top-color: rgba(255, 255, 255, .2); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-hero-marquee-seq { color: rgba(255, 255, 255, .6); }
+.store-page[data-store-template='perspective'] .sp-hero-band.has-cover .sp-px-plane { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .3); box-shadow: none; }
+.store-page[data-store-template='promo'] .sp-hero-cover::after { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 16px, transparent 16px 32px), linear-gradient(112deg, color-mix(in srgb, var(--store-accent-ink) 90%, transparent), color-mix(in srgb, var(--store-accent) 70%, transparent)); }
+.store-page[data-store-template='promo'] .sp-hero-band.has-cover { animation: none; }
+
+/* ---------- Tipografía v3: cada modelo con voz propia ---------- */
+/* Clásico: titular con regla de acento, bajada más legible, secciones con degradé. */
+.store-page[data-store-template='classic'] .sp-hero-title { text-wrap: balance; text-shadow: 0 2px 26px rgba(0, 0, 0, .22); }
+.store-page[data-store-template='classic'] .sp-hero-title::after { content: ''; display: block; width: 64px; height: 4px; margin: 18px auto 0; border-radius: 99px; background: linear-gradient(90deg, #fff, rgba(255, 255, 255, .35)); }
+.store-page[data-store-template='classic'] .sp-hero-sub { font-size: 17px; font-weight: 500; text-wrap: pretty; text-shadow: 0 1px 14px rgba(0, 0, 0, .18); }
+.store-page[data-store-template='classic'] .sp-hero-badge { box-shadow: 0 6px 20px -10px rgba(0, 0, 0, .4); }
+.store-page[data-store-template='classic'] .sp-about-heading, .store-page[data-store-template='classic'] .sp-contact-title { background: linear-gradient(100deg, var(--sp-ink) 55%, var(--sp-accent-text)); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.store-page[data-store-template='classic'] .sp-about-text::first-line { font-weight: 650; color: var(--sp-ink); }
+.store-page[data-store-template='classic'] .sp-about-text { text-wrap: pretty; font-size: 15.5px; }
+.store-page[data-store-template='classic'] .sp-about-mission { font-style: italic; font-size: 15px; }
+.store-page[data-store-template='classic'] .sp-hl strong { transition: color .25s; }
+.store-page[data-store-template='classic'] .sp-hl:hover strong { color: var(--sp-accent-text); }
+/* Perspectiva: bajada amplia en Poppins y textos limpios de alto contraste. */
+.store-page[data-store-template='perspective'] .sp-hero-sub { font-family: var(--sp-body); font-size: 16.5px; line-height: 1.75; text-wrap: pretty; }
+.store-page[data-store-template='perspective'] .sp-contact-sub { font-size: 16px; color: var(--sp-ink-2); }
+.store-page[data-store-template='perspective'] .sp-hl-text { font-size: 14px; line-height: 1.65; }
+.store-page[data-store-template='perspective'] .sp-about-text { font-size: 15.5px; text-wrap: pretty; }
+.store-page[data-store-template='perspective'] .sp-about-mission-label { letter-spacing: .2em; }
+/* Publicidad: texto-sticker, resaltador amarillo en títulos y bajadas en negrita. */
+.store-page[data-store-template='promo'] .sp-hero-sub { display: inline-block; padding: 10px 16px; border-radius: 12px; background: rgba(0, 0, 0, .2); font-weight: 600; text-wrap: pretty; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.store-page[data-store-template='promo'] .sp-hero-badge { font-weight: 900; letter-spacing: .14em; }
+.store-page[data-store-template='promo'] .sp-section-title, .store-page[data-store-template='promo'] .sp-about-heading span:not(.sp-about-heading-icon), .store-page[data-store-template='promo'] .sp-contact-title { background: linear-gradient(transparent 62%, color-mix(in srgb, var(--sp-yellow, #ffe14d) 85%, transparent) 62% 92%, transparent 92%); background-repeat: no-repeat; width: fit-content; max-width: 100%; padding: 0 .1em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.store-page[data-store-template='promo'] .sp-about-text { font-weight: 500; font-size: 16px; }
+.store-page[data-store-template='promo'] .sp-about-mission { border-left-width: 6px; font-weight: 700; transform: rotate(-.6deg); }
+.store-page[data-store-template='promo'] .sp-contact-sub { font-weight: 700; font-size: 17px; color: var(--sp-ink-2); }
+.store-page[data-store-template='promo'] .sp-hl-text { font-weight: 500; color: var(--sp-ink-2); }
+
+/* Ofertas y novedades: precio de lista tachado + badges sobre la imagen.
+   "Nuevo" va arriba a la izquierda (verde) y el -% de oferta a la derecha
+   (color de acento de la tienda). */
+.sp-price-old { margin-right: 7px; font-size: .72em; font-weight: 550; letter-spacing: 0; color: var(--sp-muted); text-decoration: line-through; }
+.sp-card-flag { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 3px 9px; border-radius: 5px; background: #00a650; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; box-shadow: var(--sp-shadow-sm); }
+.sp-card-flag.offer { left: auto; right: 10px; background: var(--store-accent-ink); }
+.spd-rel-img { position: relative; }
+.spd-price-old { font-size: 15px; font-weight: 500; color: var(--sp-muted); text-decoration: line-through; }
+.spd-price-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.spd-offer-pill { padding: 4px 10px; border-radius: 99px; background: var(--store-accent-ink); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-hero-cover img { animation: none !important; transform: none; }
+}
+
+/* ---------- Distribución de imágenes decorativas (premium) ----------
+   Las fotos siempre van junto a un texto, nunca sueltas a todo lo ancho
+   ni superpuestas a otros contenedores: una enmarca Sobre nosotros (con
+   la tarjeta de trayectoria/misión debajo, sin pisarla), otra acompaña la
+   banda de invitación antes del cierre y la última va en la columna de
+   contacto. En móvil (≤960px) todas se ocultan. */
+.sp-about-side { display: grid; align-content: start; gap: 18px; }
+.sp-about-photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); background: var(--sp-soft); box-shadow: var(--sp-shadow-md); }
+.sp-about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .8s var(--sp-ease); }
+.sp-about-photo:hover img { transform: scale(1.05); }
+
+/* Banda decorativa: imagen al lado de la invitación con CTAs (el texto
+   ocupa la columna ancha; la foto respira con el mismo drift de la
+   portada y lleva un velo suave del acento hacia el borde inferior). */
+.sp-showcase { padding-top: 72px; }
+.sp-showcase-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
+.sp-showcase-frame { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--sp-radius) + 8px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
+.sp-showcase-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.05); animation: sp-cover-drift 26s ease-in-out infinite alternate; }
+.sp-showcase-frame::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--store-accent-ink) 42%, transparent)); pointer-events: none; }
+.sp-showcase-copy { display: grid; gap: 14px; justify-items: start; }
+.sp-showcase-title { margin: 0; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; overflow-wrap: anywhere; }
+.sp-showcase-text { margin: 0; font-size: 15px; line-height: 1.7; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.sp-showcase-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+
+@media (max-width: 960px) {
+  .sp-about-photo, .sp-showcase-frame { display: none; }
+  .sp-about-side:not(:has(.sp-about-card)) { display: none; }
+  .sp-showcase-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .sp-showcase { padding-top: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-showcase-frame img { animation: none; transform: none; }
+  .sp-about-photo img { transition: none; }
+}
+
+/* ===== Bloques de marketing de la portada ("Mi empresa") =====
+   Cada bloque se ordena con CSS order (section_order) y se oculta solo
+   cuando quedó sin contenido o el dueño apagó su interruptor. */
+
+/* Qué ofrecemos: tarjetas de servicios/ventajas con ícono (hermana de
+   los destacados del hero, pero dentro del flujo normal de la página). */
+.sp-services { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-services .sp-section-title { margin: 6px 0 26px; }
+.sp-services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.sp-service { position: relative; display: grid; gap: 8px; align-content: start; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); transition: box-shadow .2s, border-color .2s, transform .25s var(--sp-ease); }
+.sp-service:hover { border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: var(--sp-shadow-md); transform: translateY(-3px); }
+.sp-service-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 10px 20px -10px var(--store-accent-ink); }
+.sp-service strong { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.sp-service p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--sp-muted); overflow-wrap: anywhere; }
+
+/* Tus números: banda de acento con cifras grandes. */
+.sp-stats { padding-top: 64px; }
+.sp-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; padding: 30px clamp(20px, 3vw, 40px); border-radius: var(--sp-radius); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: var(--sp-shadow-md); }
+.sp-stat { display: grid; gap: 4px; justify-items: center; text-align: center; color: #fff; }
+.sp-stat strong { font-size: clamp(26px, 3.4vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; overflow-wrap: anywhere; }
+.sp-stat span { font-size: 12.5px; font-weight: 600; letter-spacing: .04em; color: rgb(255 255 255 / .82); text-transform: uppercase; overflow-wrap: anywhere; }
+
+/* Testimonios: tarjetas con la cita, el nombre y un detalle opcional. */
+.sp-testimonials { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-testimonials .sp-section-title { margin: 6px 0 26px; }
+.sp-testimonials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.sp-testimonial { position: relative; display: grid; gap: 14px; align-content: start; margin: 0; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
+.sp-testimonial-quote { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--store-accent-soft); color: var(--sp-accent-text); }
+.store-page[data-store-theme='dark'] .sp-testimonial-quote { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.sp-testimonial-text { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--sp-ink-2); overflow-wrap: anywhere; }
+.sp-testimonial-by { display: grid; gap: 1px; }
+.sp-testimonial-by strong { font-size: 14px; font-weight: 700; }
+.sp-testimonial-by span { font-size: 12.5px; color: var(--sp-muted); }
+
+/* Preguntas frecuentes: <details> nativos, el caret rota al abrir. */
+.sp-faq { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-faq .sp-section-title { margin: 6px 0 26px; }
+.sp-faq-list { display: grid; gap: 12px; max-width: 780px; }
+.sp-faq-item { border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow: hidden; }
+.sp-faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 20px; font-size: 14.5px; font-weight: 650; cursor: pointer; list-style: none; transition: color .15s; }
+.sp-faq-item summary::-webkit-details-marker { display: none; }
+.sp-faq-item summary:hover { color: var(--sp-accent-text); }
+.sp-faq-caret { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--store-accent-soft); color: var(--sp-accent-text); transition: transform .25s var(--sp-ease); }
+.store-page[data-store-theme='dark'] .sp-faq-caret { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.sp-faq-item[open] .sp-faq-caret { transform: rotate(180deg); }
+.sp-faq-answer { margin: 0; padding: 0 20px 18px; font-size: 14px; line-height: 1.65; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+
+/* Llamado a la acción: banda de acento que cierra la portada. */
+.sp-cta { padding-top: 72px; }
+.sp-cta-inner { position: relative; display: grid; justify-items: center; gap: 14px; padding: 52px clamp(24px, 4vw, 64px); border-radius: calc(var(--sp-radius) + 8px); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: var(--sp-shadow-md); text-align: center; color: #fff; overflow: hidden; }
+.sp-cta-inner::after { content: ''; position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(closest-side, rgb(255 255 255 / .16), transparent); pointer-events: none; }
+.sp-cta-title { position: relative; margin: 0; font-size: clamp(24px, 3.4vw, 38px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; max-width: 24ch; overflow-wrap: anywhere; }
+.sp-cta-text { position: relative; margin: 0; font-size: 15px; line-height: 1.65; max-width: 52ch; color: rgb(255 255 255 / .88); overflow-wrap: anywhere; }
+.sp-cta-btn { position: relative; height: 46px; padding: 0 26px; margin-top: 6px; background: #fff; color: var(--store-accent-ink); }
+
+/* Horarios dentro de Contáctanos: renglón días → franja. */
+.sp-contact-hours { list-style: none; display: grid; gap: 8px; margin: 4px 0 0; padding: 0; }
+.sp-contact-hours li { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-card); font-size: 13.5px; }
+.sp-contact-hours .icon { flex: none; color: var(--sp-accent-text); }
+.sp-contact-hours span { flex: 1; min-width: 0; color: var(--sp-ink-2); }
+.sp-contact-hours strong { flex: none; font-weight: 650; color: var(--sp-ink); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .sp-services, .sp-testimonials, .sp-faq, .sp-cta { padding-top: 56px; }
+  .sp-stats { padding-top: 48px; }
+  .sp-stats-grid { padding: 24px 18px; gap: 18px; }
+  .sp-cta-inner { padding: 40px 22px; }
+}
+
+/* ===== Diseños v3: refinamiento moderno por plantilla =====
+   Clásico = contemporary limpio (iconos suaves, ritmo aireado) ·
+   Perspectiva = profundidad espacial con Oswald y Poppins ·
+   Urbano = streetwear con Archivo Black y Space Grotesk.
+   Van al final para ganar por cascada; 'promo' no se toca. */
+
+/* ---------- Clásico v3 ---------- */
+/* Titular más grande y aireado; el nombre sigue gobernado por
+   --store-name-size cuando el h1 es el nombre. */
+.store-page[data-store-template='classic'] .sp-hero-title { font-size: clamp(34px, 5.4vw, 58px); letter-spacing: -.035em; }
+/* Iconos del hero más discretos: menos cristal, más descanso visual. */
+.store-page[data-store-template='classic'] .sp-float { border-radius: 18px; background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .3); }
+.store-page[data-store-template='classic'] .sp-hero-badge { letter-spacing: .12em; }
+/* Destacados y cabeceras: tiles de acento suave en vez de gradiente
+   lleno — la marca se siente moderna sin competir con el hero. */
+.store-page[data-store-template='classic'] .sp-highlights { gap: 16px; }
+.store-page[data-store-template='classic'] .sp-hl { padding: 26px 24px; border-radius: 18px; gap: 10px; }
+.store-page[data-store-template='classic'] .sp-hl-icon { width: 50px; height: 50px; border-radius: 15px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); box-shadow: none; }
+.store-page[data-store-template='classic'][data-store-theme='dark'] .sp-hl-icon { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='classic'] .sp-hl:hover .sp-hl-icon { transform: translateY(-2px); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; border-color: transparent; }
+.store-page[data-store-template='classic'] .sp-about-heading-icon,
+.store-page[data-store-template='classic'] .sp-form-badge { border-radius: 16px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); box-shadow: none; transform: none; }
+.store-page[data-store-template='classic'][data-store-theme='dark'] .sp-about-heading-icon,
+.store-page[data-store-template='classic'][data-store-theme='dark'] .sp-form-badge { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='classic'] .sp-form:hover .sp-form-badge { transform: translateY(-2px); }
+/* Secciones con más aire y títulos con subrayado de acento más marcado. */
+.store-page[data-store-template='classic'] .sp-section-title::after { height: 4px; }
+
+/* ---------- Perspectiva v3: Oswald de letrero + Poppins ---------- */
+.store-page[data-store-template='perspective'] { --sp-display: 'Oswald', var(--store-font), sans-serif; --sp-body: 'Poppins', var(--store-font), sans-serif; }
+/* Titulares condensados de letrero; el nombre conserva la fuente del
+   dueño (inline style cuando el h1 es el nombre). */
+.store-page[data-store-template='perspective'] .sp-hero-title,
+.store-page[data-store-template='perspective'] .sp-section-title,
+.store-page[data-store-template='perspective'] .sp-about-heading,
+.store-page[data-store-template='perspective'] .sp-contact-title,
+.store-page[data-store-template='perspective'] .sp-cat-title,
+.store-page[data-store-template='perspective'] .sp-showcase-title,
+.store-page[data-store-template='perspective'] .spd-name,
+.store-page[data-store-template='perspective'] .spd-sec-title,
+.store-page[data-store-template='perspective'] .sp-hl strong { font-family: var(--sp-display); font-weight: 700; letter-spacing: -.01em; }
+.store-page[data-store-template='perspective'] .sp-hero-badge,
+.store-page[data-store-template='perspective'] .sp-hero-meta li,
+.store-page[data-store-template='perspective'] .sp-eyebrow,
+.store-page[data-store-template='perspective'] .sp-cat-stats li { font-family: var(--sp-body); }
+/* ---------- Catálogo bajo la misma identidad espacial ----------
+   La página /catalogo toma la misma banda clara del hero: el piso
+   isométrico se recrea en su decor, las migas vuelven a tinta y los
+   controles/tarjetas heredan radios y relieve del sistema. */
+.store-page[data-store-template='perspective'] .sp-cat-hero .sp-hero-decor::before { background-image: linear-gradient(color-mix(in srgb, var(--store-accent) 28%, transparent) 1.5px, transparent 1.5px), linear-gradient(90deg, color-mix(in srgb, var(--store-accent) 28%, transparent) 1.5px, transparent 1.5px); background-size: 54px 54px; transform: perspective(900px) rotateX(60deg); transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(180deg, transparent, #000 58%); mask-image: linear-gradient(180deg, transparent, #000 58%); }
+.store-page[data-store-template='perspective'] .sp-cat-hero .sp-float { border-radius: 14px; background: var(--sp-card-solid); border-color: var(--sp-line); color: var(--sp-accent-text); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 6px 7px 0 -2px color-mix(in srgb, var(--store-accent) 24%, transparent), var(--sp-shadow-sm); }
+.store-page[data-store-template='perspective'] .sp-cat-hero .sp-orb { display: none; }
+.store-page[data-store-template='perspective'] .sp-crumbs { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-crumbs a { color: var(--sp-accent-text); }
+.store-page[data-store-template='perspective'] .sp-crumbs span { color: var(--sp-ink); }
+.store-page[data-store-template='perspective'] .sp-crumbs svg { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-cat-head-icon { background: var(--store-accent-soft); border-color: color-mix(in srgb, var(--store-accent) 35%, var(--sp-line)); color: var(--sp-accent-text); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 6px 7px 0 -2px color-mix(in srgb, var(--store-accent) 26%, transparent), var(--sp-shadow-sm); animation: none; }
+.store-page[data-store-template='perspective'][data-store-theme='dark'] .sp-cat-head-icon { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='perspective'] .sp-cat-title { color: var(--sp-ink); text-transform: uppercase; text-shadow: 2px 2px 0 color-mix(in srgb, var(--store-accent) 26%, transparent); }
+.store-page[data-store-template='perspective'] .sp-cat-sub { color: var(--sp-muted); }
+.store-page[data-store-template='perspective'] .sp-cat-stats li { border-color: var(--sp-line); border-radius: 10px; background: var(--sp-card-solid); color: var(--sp-ink-2); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent) 18%, transparent); }
+.store-page[data-store-template='perspective'] .sp-cat-stats strong { color: var(--sp-accent-text); }
+/* Tarjetas, chips y filtros: mismos radios (12px) y relieve en hover. */
+.store-page[data-store-template='perspective'] .sp-card { border-radius: 14px; }
+.store-page[data-store-template='perspective'] .sp-card:hover { transform: translate(-3px, -4px); border-color: color-mix(in srgb, var(--store-accent) 50%, var(--sp-line)); box-shadow: 10px 11px 0 -4px color-mix(in srgb, var(--store-accent) 20%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .sp-card-img { border-radius: 10px; margin: 10px 10px 0; border-bottom: 0; }
+.store-page[data-store-template='perspective'] .sp-chip,
+.store-page[data-store-template='perspective'] .sp-quick-pill { border-radius: 10px; }
+.store-page[data-store-template='perspective'] .sp-search,
+.store-page[data-store-template='perspective'] .sp-price,
+.store-page[data-store-template='perspective'] .sp-sort { border-radius: 12px; }
+.store-page[data-store-template='perspective'] .sp-drawer { border-radius: 18px; }
+.store-page[data-store-template='perspective'] .sp-nav-item { border-radius: 10px; }
+/* Ficha de producto: sheet elevado y CTA con relieve del hero. */
+.store-page[data-store-template='perspective'] .spd-sheet { border-radius: 18px; box-shadow: 12px 12px 0 -4px color-mix(in srgb, var(--store-accent) 18%, transparent), var(--sp-shadow-md); }
+.store-page[data-store-template='perspective'] .spd-buy .sp-btn { box-shadow: 4px 4px 0 color-mix(in srgb, var(--store-accent-ink) 26%, rgba(17, 24, 39, .35)); }
+.store-page[data-store-template='perspective'] .spd-buy .sp-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 color-mix(in srgb, var(--store-accent-ink) 30%, rgba(17, 24, 39, .4)); }
+.store-page[data-store-template='perspective'] .spd-specs-wrap { border-radius: 12px; }
+.store-page[data-store-template='perspective'] .spd-rel:hover { transform: translate(-2px, -3px); border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: 7px 8px 0 -3px color-mix(in srgb, var(--store-accent) 22%, transparent), var(--sp-shadow-md); }
+
 /* ---------- Urbano: streetwear premium ----------
    Papel claro con tinta dura: titulares XXL en Archivo Black, palabra
    fantasma outlineada, pegatina giratoria, código de barras, cinta de
