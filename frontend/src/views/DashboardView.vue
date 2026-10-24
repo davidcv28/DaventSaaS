@@ -1737,7 +1737,7 @@ async function changePassword() {
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
       <div class="stats">
-        <div class="stat"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong>0</strong><small>Productos</small></div></div>
+        <div class="stat"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong>{{ billing.hasSubscription ? catalog.products.length : '—' }}</strong><small>Productos</small></div></div>
         <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ canStats ? (store.visitStats?.total ?? '0') : '—' }}</strong><small>{{ canStats ? 'Visitas totales' : 'Visitas' }}</small></div></div>
         <div class="stat"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong>{{ plan?.remaining ?? '—' }}</strong><small>Días restantes</small></div></div>
       </div>
