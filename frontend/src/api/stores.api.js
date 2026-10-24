@@ -291,6 +291,8 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_location: true,
   show_gallery: true,
   show_catalog: true,
+  site_mode: 'both',
+  show_highlights: true,
   logo: null,
   cover: null,
   carousel: [],

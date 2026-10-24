@@ -165,6 +165,21 @@ class StoreCustomization(models.Model):
     #vidriera del negocio. No borra productos ni gestión del panel: la ruta
     #/<slug>/catalogo y el endpoint público devuelven 404 hasta reactivarla.
     show_catalog                =   models.BooleanField(default = True, verbose_name = 'Mostrar página de catálogo')
+    #Tipo de web que elige el dueño: 'marketing' (solo la página principal,
+    #catálogo apagado), 'catalog' (solo el catálogo: la portada redirige a
+    #él) o 'both'. show_catalog se mantiene sincronizado desde el serializer
+    #(marketing -> False, resto -> True) para que backend y 404 sigan igual.
+    SITE_MODE_MARKETING         =   'marketing'
+    SITE_MODE_CATALOG           =   'catalog'
+    SITE_MODE_BOTH              =   'both'
+    SITE_MODE_CHOICES           =   [
+        (SITE_MODE_MARKETING, 'Solo web de marketing'),
+        (SITE_MODE_CATALOG, 'Solo catálogo'),
+        (SITE_MODE_BOTH, 'Marketing y catálogo'),
+    ]
+    site_mode                   =   models.CharField(max_length = 10, choices = SITE_MODE_CHOICES, default = SITE_MODE_BOTH, verbose_name = 'Tipo de web')
+    #Franja de etiquetas bajo la portada (destacados): el dueño decide si aparece.
+    show_highlights             =   models.BooleanField(default = True, verbose_name = 'Mostrar franja de etiquetas')
     #===== Secciones de marketing de la portada ("Mi empresa") =====
     #Bloques de contenido rico para que la web funcione como landing
     #completa, no solo como vidriera: servicios, cifras, testimonios,

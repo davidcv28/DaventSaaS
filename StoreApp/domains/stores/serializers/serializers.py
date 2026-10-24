@@ -112,6 +112,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
+            'site_mode', 'show_highlights',
             'logo', 'cover', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
@@ -195,6 +196,13 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
                 seen.add(key)
                 order.append(key)
         return order + [k for k in StoreCustomization.SECTION_ORDER if k not in seen]
+
+    def validate(self, attrs):
+        #site_mode manda sobre show_catalog: se derivan siempre juntos.
+        mode                    =   attrs.get('site_mode')
+        if mode:
+            attrs['show_catalog']   =   mode != StoreCustomization.SITE_MODE_MARKETING
+        return attrs
 
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')

@@ -68,6 +68,9 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 // Catálogo opcional: el dueño puede apagarlo (vidriera sin productos). La
 // página /catalogo redirige al inicio y desaparecen todos sus accesos.
 const showCatalog = computed(() => status.value === 'success' && custom.value.show_catalog !== false)
+// Modo "solo catálogo": no hay página principal; la portada redirige al
+// catálogo y el menú no ofrece Inicio ni las secciones de marketing.
+const catalogOnly = computed(() => status.value === 'success' && custom.value.site_mode === 'catalog' && showCatalog.value)
 // Chatbot (beneficio has_chatbot, solo Premium): el serializer público lo manda
 // solo si el dueño lo activó y el plan lo incluye — None = sin widget.
 const botConfig = computed(() => (status.value === 'success' ? store.value?.chatbot || null : null))
@@ -89,6 +92,7 @@ const shopCurrent = computed(() => {
 })
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+watch([catalogOnly, isHome], ([only, home]) => { if (only && home) router.replace(catalogTo.value) }, { immediate: true })
 
 // Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
 // resto de las páginas Enter/botón navega al catálogo con ?q= (la vista lo
@@ -198,11 +202,11 @@ onBeforeUnmount(() => {
           </span>
         </RouterLink>
         <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
-          <RouterLink :to="homeTo">Inicio</RouterLink>
+          <RouterLink v-if="!catalogOnly" :to="homeTo">Inicio</RouterLink>
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-          <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
-          <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+          <RouterLink v-if="hasAbout && !catalogOnly" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
+          <RouterLink v-if="showGallery && !catalogOnly" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
+          <RouterLink v-if="showContact && !catalogOnly" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
@@ -213,7 +217,7 @@ onBeforeUnmount(() => {
           <button v-if="isShop && !isCatalog" type="button" class="sp-search-go" aria-label="Buscar en el catálogo" @click="submitTopSearch"><AppIcon name="arrow-right" :size="15" /></button>
         </label>
         <div class="sp-top-end">
-          <RouterLink v-if="status === 'success' && (isCatalog || isProduct || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
+          <RouterLink v-if="status === 'success' && !catalogOnly && (isCatalog || isProduct || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
             <AppIcon :name="isCatalog ? 'store' : 'package'" :size="16" /> {{ isCatalog ? 'Inicio' : 'Catálogo' }}
           </RouterLink>
           <button
@@ -234,11 +238,11 @@ onBeforeUnmount(() => {
       <nav v-if="isShop && status === 'success'" class="sp-shop-nav" aria-label="Secciones de la tienda">
         <div class="sp-container sp-shop-nav-inner">
           <div class="sp-shop-nav-links">
-            <RouterLink :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
+            <RouterLink v-if="!catalogOnly" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
-            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !catalogOnly" :to="{ ...homeTo, hash: '#nosotros' }" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !catalogOnly" :to="{ ...homeTo, hash: '#galeria' }" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
+            <RouterLink v-if="showContact && !catalogOnly" :to="{ ...homeTo, hash: '#contacto' }" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
           </div>
           <span class="sp-shop-nav-note">Precios en pesos argentinos</span>
         </div>
@@ -274,11 +278,11 @@ onBeforeUnmount(() => {
           </div>
           <nav v-if="isShop && status === 'success'" class="sp-foot-col" aria-label="Secciones de la tienda">
             <p class="sp-foot-heading">Tienda</p>
-            <RouterLink :to="homeTo">Inicio</RouterLink>
+            <RouterLink v-if="!catalogOnly" :to="homeTo">Inicio</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
-            <RouterLink v-if="showContact" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !catalogOnly" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !catalogOnly" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
+            <RouterLink v-if="showContact && !catalogOnly" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>

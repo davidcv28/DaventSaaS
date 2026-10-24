@@ -276,8 +276,8 @@ onBeforeUnmount(() => {
     </div>
     <div class="sp-container sp-cat-hero-inner">
       <nav v-reveal class="sp-crumbs" aria-label="Ruta">
-        <RouterLink :to="homeTo">Inicio</RouterLink>
-        <AppIcon name="chevron-right" :size="14" aria-hidden="true" />
+        <RouterLink v-if="custom.site_mode !== 'catalog'" :to="homeTo">Inicio</RouterLink>
+        <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="14" aria-hidden="true" />
         <span aria-current="page">Catálogo</span>
       </nav>
       <p v-if="tpl === 'lookbook'" v-reveal="40" class="sp-lb-cat-issue">

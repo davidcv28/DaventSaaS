@@ -100,8 +100,8 @@ onMounted(() => {
 <div class="sp-page-root">
   <main class="sp-container spd-main">
     <nav v-reveal class="spd-crumbs" aria-label="Ruta">
-      <RouterLink :to="homeTo">Inicio</RouterLink>
-      <AppIcon name="chevron-right" :size="13" aria-hidden="true" />
+      <RouterLink v-if="custom.site_mode !== 'catalog'" :to="homeTo">Inicio</RouterLink>
+      <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="13" aria-hidden="true" />
       <RouterLink :to="catalogTo">Catálogo</RouterLink>
       <template v-if="categoryName">
         <AppIcon name="chevron-right" :size="13" aria-hidden="true" />

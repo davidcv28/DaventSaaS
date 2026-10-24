@@ -556,7 +556,7 @@ onBeforeUnmount(() => {
         </RouterLink>
       </div>
     </div>
-    <div v-else class="sp-container sp-highlights">
+    <div v-else-if="custom.show_highlights !== false" class="sp-container sp-highlights">
       <component
         :is="h.to ? 'RouterLink' : h.href ? 'a' : 'div'" v-for="(h, i) in highlights" :key="h.title"
         v-reveal="i * 90" class="sp-hl" :to="h.to" :href="h.href"

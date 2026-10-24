@@ -1090,6 +1090,7 @@ async function saveDesign() {
     description: designForm.description.trim(),
     show_about: Boolean(designForm.show_about),
     show_gallery: Boolean(designForm.show_gallery),
+    show_highlights: Boolean(designForm.show_highlights),
     contact_email: designForm.contact_email.trim(),
     show_contact: Boolean(designForm.show_contact),
     theme: designForm.theme,
@@ -1118,12 +1119,23 @@ async function saveDesign() {
 // La página Catálogo se controla desde "Mis catálogos" (tarjeta "Tu
 // página de catálogo"), separada del diseño general: el interruptor
 // guarda show_catalog al instante con su propio PATCH.
+const SITE_MODES = [
+  { id: 'both', label: 'Marketing y catálogo', hint: 'Página principal con tu presentación y, aparte, tu catálogo de productos.', icon: 'layout-grid' },
+  { id: 'marketing', label: 'Solo web de marketing', hint: 'Una vidriera del negocio: portada, secciones y contacto, sin catálogo.', icon: 'megaphone' },
+  { id: 'catalog', label: 'Solo catálogo', hint: 'Tu web abre directo en el catálogo de productos, sin página principal.', icon: 'package' }
+]
 const catalogPageBusy = ref(false)
-async function toggleCatalogPage() {
-  if (catalogPageBusy.value) return
+async function setSiteMode(mode) {
+  if (catalogPageBusy.value || designForm.site_mode === mode) return
+  const prev = designForm.site_mode
+  designForm.site_mode = mode
+  designForm.show_catalog = mode !== 'marketing'
   catalogPageBusy.value = true
-  const ok = await store.saveCustomization({ show_catalog: Boolean(designForm.show_catalog) })
-  if (!ok) designForm.show_catalog = store.customization?.show_catalog !== false
+  const ok = await store.saveCustomization({ site_mode: mode })
+  if (!ok) {
+    designForm.site_mode = prev
+    designForm.show_catalog = prev !== 'marketing'
+  }
   catalogPageBusy.value = false
 }
 
@@ -1767,13 +1779,18 @@ async function changePassword() {
         <div class="card">
           <h3><AppIcon name="store" :size="18" /> Tu página de catálogo</h3>
           <p>Tu catálogo tiene su propia página pública. Acá controlás su visibilidad y su carrusel de portada, por separado del diseño general de tu web.</p>
-          <label class="check-item">
-            <input v-model="designForm.show_catalog" type="checkbox" :disabled="catalogPageBusy" @change="toggleCatalogPage" />
-            <span class="check-text">
-              <strong>Página Catálogo <span v-if="catalogPageBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-              <small>Tus productos a la vista. Apagala para usar tu web solo como vidriera del negocio.</small>
-            </span>
-          </label>
+          <div class="field">
+            <label id="site-mode-label-cat">Tipo de web</label>
+            <div class="check-list" role="radiogroup" aria-labelledby="site-mode-label-cat">
+              <label v-for="m in SITE_MODES" :key="m.id" class="check-item">
+                <input type="radio" name="site-mode-cat" :value="m.id" :checked="designForm.site_mode === m.id" :disabled="catalogPageBusy" @change="setSiteMode(m.id)" />
+                <span class="check-text">
+                  <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                  <small>{{ m.hint }}</small>
+                </span>
+              </label>
+            </div>
+          </div>
           <div v-if="canDesignAdvanced" class="field">
             <label id="catalog-carousel-label">Carrusel de portada</label>
             <div class="carousel-box">
@@ -2158,8 +2175,28 @@ async function changePassword() {
           <div v-show="designTab === 'sections'" class="card dsg-card">
             <h3><AppIcon name="layout-grid" :size="18" /> Secciones</h3>
             <div class="field">
+              <label id="site-mode-label">¿Qué tipo de web querés?</label>
+              <div class="check-list" role="radiogroup" aria-labelledby="site-mode-label">
+                <label v-for="m in SITE_MODES" :key="m.id" class="check-item">
+                  <input type="radio" name="site-mode" :value="m.id" :checked="designForm.site_mode === m.id" :disabled="catalogPageBusy" @change="setSiteMode(m.id)" />
+                  <span class="check-text">
+                    <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                    <small>{{ m.hint }}</small>
+                  </span>
+                </label>
+              </div>
+              <p class="hint">Se guarda al instante. El catálogo se gestiona en "Mis catálogos".</p>
+            </div>
+            <div v-if="designForm.site_mode !== 'catalog'" class="field">
               <label id="design-sections-label">Secciones de tu web</label>
               <div class="check-list" role="group" aria-labelledby="design-sections-label">
+                <label class="check-item">
+                  <input v-model="designForm.show_highlights" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Franja de etiquetas</strong>
+                    <small>Cuatro destacados breves bajo la portada (catálogo, consultas, ubicación, trayectoria).</small>
+                  </span>
+                </label>
                 <label class="check-item">
                   <input v-model="designForm.show_about" type="checkbox" />
                   <span class="check-text">
