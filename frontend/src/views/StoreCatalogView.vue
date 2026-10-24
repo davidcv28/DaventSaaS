@@ -16,8 +16,10 @@ import { vReveal } from '../directives/reveal.js'
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
 const { slug, ui, custom, hasDesignAdvanced, shopName, pageTemplate } = ctx
-// Diseño activo ('street'/'terminal' suman decor propia a la cabecera).
+// Diseño activo ('street'/'terminal' suman decor propia a la cabecera;
+// 'lookbook' la replantea como índice de edición).
 const tpl = pageTemplate
+const year = new Date().getFullYear()
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const route = useRoute()
 const router = useRouter()
@@ -299,6 +301,9 @@ onBeforeUnmount(() => {
           <i class="dim">cargando índice<span class="sp-tm-caret"></span></i>
         </span>
       </template>
+      <template v-else-if="tpl === 'lookbook'">
+        <span class="sp-lb-ghost">Nº 01</span>
+      </template>
     </div>
     <div class="sp-container sp-cat-hero-inner">
       <nav v-reveal class="sp-crumbs" aria-label="Ruta">
@@ -306,6 +311,9 @@ onBeforeUnmount(() => {
         <AppIcon name="chevron-right" :size="14" aria-hidden="true" />
         <span aria-current="page">Catálogo</span>
       </nav>
+      <p v-if="tpl === 'lookbook'" v-reveal="40" class="sp-lb-cat-issue">
+        <span>Índice de la colección</span><i aria-hidden="true"></i><span>{{ year }}</span>
+      </p>
       <div v-reveal="80" class="sp-cat-head">
         <span class="sp-cat-head-icon" aria-hidden="true"><AppIcon name="package" :size="26" /></span>
         <div>

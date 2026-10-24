@@ -246,8 +246,8 @@ onBeforeUnmount(() => {
 <div class="sp-page-root">
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <section class="sp-hero">
-    <div class="sp-hero-band" :class="{ 'has-cover': cover }">
-      <div v-if="cover" class="sp-hero-cover" aria-hidden="true">
+    <div class="sp-hero-band" :class="{ 'has-cover': cover && tpl !== 'lookbook' }">
+      <div v-if="cover && tpl !== 'lookbook'" class="sp-hero-cover" aria-hidden="true">
         <img :src="cover" alt="" fetchpriority="high" />
       </div>
       <div class="sp-hero-decor" aria-hidden="true">
@@ -290,6 +290,9 @@ onBeforeUnmount(() => {
             <i class="dim">$ esperando visitante<span class="sp-tm-caret"></span></i>
           </span>
         </template>
+        <template v-else-if="tpl === 'lookbook'">
+          <span class="sp-lb-rail">Lookbook</span>
+        </template>
       </div>
       <div v-if="tpl === 'terminal'" class="sp-container sp-tm-bar" aria-hidden="true">
         <span class="sp-tm-dots"><i></i><i></i><i></i></span>
@@ -298,6 +301,9 @@ onBeforeUnmount(() => {
       </div>
       <div class="sp-container sp-hero-inner">
         <span v-if="tpl === 'promo'" class="sp-pr-tag"><AppIcon name="megaphone" :size="15" :stroke="2.25" /> ¡Novedad!</span>
+        <p v-if="tpl === 'lookbook'" v-reveal class="sp-lb-dateline">
+          <span>Nº 01</span><i aria-hidden="true"></i><span>{{ year }}</span><i aria-hidden="true"></i><span>{{ location || 'Tienda online' }}</span>
+        </p>
         <span v-reveal class="sp-ava">
           <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
           <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
@@ -306,7 +312,7 @@ onBeforeUnmount(() => {
           <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
           {{ heroBadge }}
         </p>
-        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'street'">{{ titleSplit.head }} <mark class="sp-st-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'terminal'">{{ titleSplit.head }} <mark class="sp-tm-mark">{{ titleSplit.last }}</mark></template><template v-else>{{ heroTitle }}</template></h1>
+        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'street'">{{ titleSplit.head }} <mark class="sp-st-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'terminal'">{{ titleSplit.head }} <mark class="sp-tm-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'lookbook'">{{ titleSplit.head }} <em class="sp-lb-mark">{{ titleSplit.last }}</em></template><template v-else>{{ heroTitle }}</template></h1>
         <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
         <div v-reveal="320" class="sp-hero-ctas">
           <a v-if="tpl === 'promo' && whatsappUrl" class="sp-btn sp-pr-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> Escribinos ahora</a>
@@ -326,6 +332,15 @@ onBeforeUnmount(() => {
           </svg>
           <span class="sp-pr-seal-core"><AppIcon name="gift" :size="46" :stroke="1.75" /></span>
         </div>
+        <figure v-if="tpl === 'lookbook'" v-reveal="120" class="sp-lb-plate" :class="{ 'is-logo': !cover && custom.logo }">
+          <div class="sp-lb-plate-frame">
+            <img v-if="cover" :src="cover" alt="" fetchpriority="high" />
+            <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+            <span v-else class="sp-lb-plate-initial" aria-hidden="true">{{ initial }}</span>
+          </div>
+          <figcaption><span>Fig. 01</span> {{ shopName }}</figcaption>
+          <span class="sp-lb-plate-seal" aria-hidden="true">Nº<br />01</span>
+        </figure>
       </div>
       <!-- Cinta de marca de Perspectiva, Publicidad, Urbano y Terminal:
            marquee infinito (dos secuencias idénticas, el track se desplaza
@@ -336,6 +351,11 @@ onBeforeUnmount(() => {
             <template v-for="(m, i) in marqueeItems" :key="i"><AppIcon :name="m.icon" :size="15" :stroke="2.25" /> {{ m.text }} <i></i></template>
           </span>
         </div>
+      </div>
+      <!-- Lookbook: pie de edición (regla + número + temporada), sin marquee. -->
+      <div v-if="tpl === 'lookbook'" class="sp-container sp-lb-hero-foot" aria-hidden="true">
+        <span>Edición Nº 01</span><i></i><span>{{ year }}</span>
+        <span class="sp-lb-hero-foot-note">Colección de temporada</span>
       </div>
     </div>
 

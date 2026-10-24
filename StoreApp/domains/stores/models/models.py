@@ -107,13 +107,14 @@ class StoreCustomization(models.Model):
     #la web fuerza 'classic' si el guardado deja de estar permitido.
     TEMPLATE_BASE               =   ('classic', 'perspective')
     TEMPLATE_PLUS               =   ('street', 'promo')
-    TEMPLATE_ADVANCED           =   ('terminal',)
+    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
         ('promo',            'Publicidad'),
         ('street',           'Urbano'),
         ('terminal',         'Terminal'),
+        ('lookbook',         'Lookbook'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

@@ -1474,3 +1474,1157 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='terminal'] .sp-cat-title::after,
   .store-page[data-store-template='terminal'] .sp-section-title::after { animation: none !important; opacity: 1; }
 }
+/* ---------- Lookbook: la web como cuaderno de colección ----------
+   Una tienda de ropa presentada como editorial impreso: papel cálido,
+   titulares serif de alto contraste (Fraunces) con la última palabra en
+   cursiva, cuerpo Work Sans, reglas hairline en lugar de tarjetas, pliegos
+   de imagen numerados y el acento usado como sello, nunca como fondo.
+   La portada es un pliego asimétrico (texto a la izquierda, imagen a la
+   derecha); el catálogo es el índice de la edición: grilla de pliegos
+   3:4 sin cromo, numerados con contador, y navegación tipográfica.
+   Sin gradientes, sin glow, sin sombras: el diseño lo sostienen la
+   tipografía, el aire y las reglas. Funciona en tema claro (papel) y
+   oscuro (noche de atelier); el nombre conserva la fuente del dueño. */
+.store-page[data-store-template='lookbook'] {
+  --lb-paper: #f4f0e7;
+  --lb-paper-2: #ece5d8;
+  --lb-ink: #1a1613;
+  --lb-dim: #6f665b;
+  --lb-rule: color-mix(in srgb, #1a1613 18%, transparent);
+  --sp-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --sp-body: 'Work Sans', var(--store-font), system-ui, sans-serif;
+  --sp-bg: var(--lb-paper);
+  --sp-card: #faf7f0;
+  --sp-card-solid: #faf7f0;
+  --sp-surface: var(--lb-paper-2);
+  --sp-ink: var(--lb-ink);
+  --sp-ink-2: #453d35;
+  --sp-muted: var(--lb-dim);
+  --sp-line: var(--lb-rule);
+  --sp-soft: #e9e2d4;
+  --sp-accent-text: var(--store-accent-ink);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-radius: 2px;
+  font-family: var(--sp-body);
+  font-size: 15.5px;
+  color-scheme: light;
+}
+.store-page[data-store-template='lookbook'][data-store-theme='dark'] {
+  --lb-paper: #14110e;
+  --lb-paper-2: #1d1915;
+  --lb-ink: #f2ebdf;
+  --lb-dim: #a99d8d;
+  --lb-rule: color-mix(in srgb, #f2ebdf 18%, transparent);
+  --sp-bg: var(--lb-paper);
+  --sp-card: #1a1613;
+  --sp-card-solid: #1a1613;
+  --sp-surface: var(--lb-paper-2);
+  --sp-ink: var(--lb-ink);
+  --sp-ink-2: #d8cdbd;
+  --sp-muted: var(--lb-dim);
+  --sp-line: var(--lb-rule);
+  --sp-soft: #241f1a;
+  --sp-accent-text: var(--store-accent);
+  color-scheme: dark;
+}
+/* El lookbook no respira con glows ni anillos: papel y tinta. */
+.store-page[data-store-template='lookbook']::before,
+.store-page[data-store-template='lookbook']::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-mono { animation: none; }
+.store-page[data-store-template='lookbook'] .sp-ava::after { display: none; }
+.store-page[data-store-template='lookbook'] ::selection { background: color-mix(in srgb, var(--store-accent) 28%, transparent); }
+
+/* --- Portada: pliego editorial asimétrico --- */
+.store-page[data-store-template='lookbook'] .sp-hero-band {
+  color: var(--sp-ink);
+  background: var(--lb-paper);
+  border-bottom: 1px solid var(--sp-line);
+  border-radius: 0;
+  animation: none;
+  overflow: hidden;
+}
+.store-page[data-store-template='lookbook'] .sp-hero-decor::before { background-image: none; }
+.store-page[data-store-template='lookbook'] .sp-hero-decor .sp-orb,
+.store-page[data-store-template='lookbook'] .sp-hero-decor .sp-float { display: none; }
+.sp-lb-rail {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  writing-mode: vertical-rl; font-family: var(--sp-body);
+  font-size: 10px; font-weight: 600; letter-spacing: .44em; text-transform: uppercase;
+  color: var(--sp-muted); user-select: none;
+}
+.sp-lb-rail::after { content: ''; display: block; width: 1px; height: 46px; margin: 14px auto 0; background: var(--sp-line); }
+@media (max-width: 1280px) { .sp-lb-rail { display: none; } }
+
+.store-page[data-store-template='lookbook'] .sp-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  grid-template-areas:
+    'badge plate'
+    'title plate'
+    'sub   plate'
+    'ctas  plate'
+    'meta  plate';
+  align-items: start;
+  justify-items: stretch;
+  text-align: left;
+  column-gap: clamp(32px, 5vw, 80px);
+  row-gap: 0;
+  padding: 68px 40px 40px;
+}
+.store-page[data-store-template='lookbook'] .sp-hero .sp-ava,
+.store-page[data-store-template='lookbook'] .sp-hero-badge { display: none; }
+.sp-lb-dateline {
+  grid-area: badge; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin: 0 0 22px; font-family: var(--sp-body);
+  font-size: 10px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.sp-lb-dateline span:first-child { color: var(--sp-accent-text); }
+.sp-lb-dateline i { width: 28px; height: 1px; background: var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-hero-title {
+  grid-area: title;
+  max-width: 15ch; margin: 0;
+  font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(42px, 6.6vw, 94px); line-height: .98; letter-spacing: -.035em;
+  color: var(--sp-ink); text-shadow: none; text-wrap: balance;
+}
+.store-page[data-store-template='lookbook'][data-store-theme='dark'] .sp-hero-title { text-shadow: none; }
+.store-page[data-store-template='lookbook'] .sp-hero-title.is-name { font-size: clamp(38px, 6vw, var(--store-name-size, 64px)); }
+.sp-lb-mark {
+  font-style: italic; font-weight: 300; color: var(--sp-ink);
+  text-decoration: underline; text-decoration-thickness: 1px;
+  text-underline-offset: .1em; text-decoration-color: var(--store-accent);
+}
+.store-page[data-store-template='lookbook'] .sp-hero-sub {
+  grid-area: sub; width: 100%; max-width: min(48ch, 100%); margin: 24px 0 0;
+  font-size: 16px; line-height: 1.85; color: var(--sp-ink-2);
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.store-page[data-store-template='lookbook'] .sp-hero-ctas {
+  grid-area: ctas; justify-content: flex-start; align-items: center;
+  gap: 28px; margin-top: 32px;
+}
+.store-page[data-store-template='lookbook'] .sp-hero-ctas .sp-btn {
+  height: auto; padding: 0 0 7px; border: 0; border-bottom: 1px solid var(--sp-ink);
+  border-radius: 0; background: none; color: var(--sp-ink);
+  font-family: var(--sp-body); font-size: 11px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-hero-ctas .sp-btn::after { display: none; }
+/* Los enlaces editoriales conservan su línea fina pero ganan área táctil
+   de 44px con un pseudo-elemento invisible (no cambia el dibujo). */
+.store-page[data-store-template='lookbook'] :is(.sp-hero-ctas .sp-btn, .sp-showcase-ctas .sp-btn, .sp-cta-btn, .sp-contact-channels > .sp-btn, .sp-more .sp-btn, .sp-top-cta) { position: relative; overflow: visible; }
+.store-page[data-store-template='lookbook'] :is(.sp-hero-ctas .sp-btn, .sp-showcase-ctas .sp-btn, .sp-cta-btn, .sp-contact-channels > .sp-btn, .sp-more .sp-btn, .sp-top-cta)::before { content: ''; position: absolute; inset: -13px -6px; }
+.store-page[data-store-template='lookbook'] .sp-hero-ctas .sp-btn:hover {
+  color: var(--sp-accent-text); border-color: var(--store-accent);
+  filter: none; transform: none; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-hero .sp-icon-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--sp-line); color: var(--sp-ink);
+  box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.store-page[data-store-template='lookbook'] .sp-hero .sp-icon-btn:hover {
+  background: transparent; border-color: var(--store-accent); color: var(--sp-accent-text);
+  filter: none; transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-hero-meta {
+  grid-area: meta; justify-content: flex-start; gap: 0;
+  width: 100%; max-width: 520px; margin: 34px 0 0; padding: 16px 0 0;
+  border-top: 1px solid var(--sp-line);
+  font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-hero-meta li {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0 18px 0 0; margin: 0 18px 0 0;
+  border-right: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-hero-meta li:last-child { padding-right: 0; margin-right: 0; border-right: 0; }
+.store-page[data-store-template='lookbook'] .sp-hero-meta .icon { color: var(--sp-accent-text); }
+
+/* Pliego de imagen: portada, logo o inicial; sello de edición al pie. */
+.sp-lb-plate { grid-area: plate; position: relative; align-self: start; width: 100%; margin: 0; }
+.sp-lb-plate-frame {
+  position: relative; display: grid; place-items: center;
+  aspect-ratio: 3 / 4; overflow: hidden;
+  background: var(--sp-soft); border: 1px solid var(--sp-line);
+}
+.sp-lb-plate-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-lb-plate.is-logo .sp-lb-plate-frame img { object-fit: contain; padding: 22%; }
+.sp-lb-plate-initial {
+  font-family: var(--sp-display); font-style: italic; font-weight: 300;
+  font-size: clamp(110px, 14vw, 190px); line-height: 1;
+  color: color-mix(in srgb, var(--sp-ink) 22%, transparent);
+}
+.sp-lb-plate figcaption {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  font-size: 10px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.sp-lb-plate figcaption span { color: var(--sp-accent-text); }
+.sp-lb-plate-seal {
+  position: absolute; left: -22px; bottom: 48px;
+  display: grid; place-items: center; width: 78px; height: 78px;
+  border: 1px solid var(--sp-line); border-radius: 50%;
+  background: var(--lb-paper); color: var(--sp-ink);
+  font-family: var(--sp-display); font-style: italic; font-size: 17px; line-height: 1.05;
+  text-align: center; box-shadow: 0 0 0 6px var(--lb-paper);
+}
+.sp-lb-hero-foot {
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 40px 22px;
+  font-size: 9.5px; font-weight: 500; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.sp-lb-hero-foot i { flex: 1; height: 1px; background: var(--sp-line); }
+.sp-lb-hero-foot-note { margin-left: auto; }
+
+/* Destacados: índice de la edición, sin tarjetas. */
+.store-page[data-store-template='lookbook'] .sp-highlights {
+  margin-top: 0; gap: 0; counter-reset: lb-hl;
+  border-bottom: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-hl {
+  padding: 26px 24px 30px; border: 0; border-right: 1px solid var(--sp-line);
+  border-radius: 0; background: transparent; box-shadow: none;
+  counter-increment: lb-hl;
+}
+.store-page[data-store-template='lookbook'] .sp-hl:last-child { border-right: 0; }
+.store-page[data-store-template='lookbook'] .sp-hl::before {
+  content: counter(lb-hl, decimal-leading-zero);
+  font-family: var(--sp-display); font-size: 12px; letter-spacing: .08em;
+  color: var(--sp-accent-text);
+}
+.store-page[data-store-template='lookbook'] .sp-hl::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-hl:hover {
+  transform: none; border-color: var(--sp-line); box-shadow: none;
+  background: color-mix(in srgb, var(--sp-ink) 3%, transparent);
+}
+.store-page[data-store-template='lookbook'] .sp-hl-icon {
+  width: auto; height: auto; margin: 4px 0 2px;
+  background: none; border: 0; box-shadow: none; color: var(--sp-ink-2);
+}
+.store-page[data-store-template='lookbook'] .sp-hl:hover .sp-hl-icon { transform: none; background: none; }
+.store-page[data-store-template='lookbook'] .sp-hl strong {
+  margin-top: 4px; font-family: var(--sp-display); font-size: 19px;
+  font-weight: 400; letter-spacing: -.01em;
+}
+.store-page[data-store-template='lookbook'] .sp-hl-text { font-size: 13px; line-height: 1.7; }
+
+/* --- Ritmo editorial de las secciones --- */
+.store-page[data-store-template='lookbook'] .sp-about,
+.store-page[data-store-template='lookbook'] .sp-showcase,
+.store-page[data-store-template='lookbook'] .sp-gallery,
+.store-page[data-store-template='lookbook'] .sp-services,
+.store-page[data-store-template='lookbook'] .sp-testimonials,
+.store-page[data-store-template='lookbook'] .sp-faq,
+.store-page[data-store-template='lookbook'] .sp-cta {
+  padding-top: clamp(56px, 7vw, 100px);
+}
+.store-page[data-store-template='lookbook'] .sp-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--sp-body); font-size: 10px; font-weight: 600;
+  letter-spacing: .3em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='lookbook'] .sp-eyebrow::before {
+  width: 22px; height: 1px; border-radius: 0; background: var(--store-accent);
+}
+.store-page[data-store-template='lookbook'] .sp-section-title {
+  margin: 6px 0 30px; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(28px, 3.6vw, 44px); line-height: 1.08; letter-spacing: -.025em;
+}
+.store-page[data-store-template='lookbook'] .sp-section-title::after {
+  width: 56px; height: 1px; margin-top: 14px; border-radius: 0;
+  background: var(--store-accent);
+}
+.store-page[data-store-template='lookbook'] :is(.sp-rv.is-in, .sp-toolbar-title:hover) .sp-section-title::after { width: 56px; }
+
+/* --- Sobre nosotros: texto con capitular + ficha al costado --- */
+.store-page[data-store-template='lookbook'] .sp-about { padding-bottom: 0; }
+.store-page[data-store-template='lookbook'] .sp-about-grid {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  gap: clamp(32px, 5vw, 84px); align-items: start;
+}
+.store-page[data-store-template='lookbook'] .sp-about-heading {
+  display: block; margin: 4px 0 18px;
+  font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(30px, 4vw, 50px); line-height: 1.06; letter-spacing: -.025em;
+}
+.store-page[data-store-template='lookbook'] .sp-about-heading-icon { display: none; }
+.store-page[data-store-template='lookbook'] .sp-about-info { justify-items: stretch; }
+.store-page[data-store-template='lookbook'] .sp-about-text {
+  width: 100%; max-width: min(62ch, 100%); font-size: 16px; line-height: 1.85; color: var(--sp-ink-2);
+}
+.store-page[data-store-template='lookbook'] .sp-about-text::first-letter {
+  float: left; padding: .06em .14em 0 0;
+  font-family: var(--sp-display); font-weight: 300; font-size: 3.2em; line-height: .82;
+  color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-about-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px;
+  margin: 22px 0 0; border-top: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-about-list li {
+  padding: 12px 0; border-bottom: 1px solid var(--sp-line);
+  font-size: 12.5px; letter-spacing: .06em;
+}
+.store-page[data-store-template='lookbook'] .sp-about-list .icon { color: var(--store-accent); }
+.store-page[data-store-template='lookbook'] .sp-about-side { display: grid; align-content: start; gap: 26px; }
+.store-page[data-store-template='lookbook'] .sp-about-photo {
+  margin: 0; aspect-ratio: 4 / 5; overflow: hidden;
+  border: 1px solid var(--sp-line); border-radius: 0; background: var(--sp-soft); box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .9s var(--sp-ease); }
+.store-page[data-store-template='lookbook'] .sp-about-photo:hover img { transform: scale(1.03); }
+.store-page[data-store-template='lookbook'] .sp-about-card {
+  padding: 22px 0 0; border: 0; border-top: 1px solid var(--sp-ink);
+  border-radius: 0; background: transparent; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-about-card::before { display: none; }
+.store-page[data-store-template='lookbook'] .sp-about-card:hover { border-color: var(--sp-ink); box-shadow: none; transform: none; }
+.store-page[data-store-template='lookbook'] .sp-about-years {
+  display: block; padding: 0; border: 0; border-radius: 0; background: none;
+  box-shadow: none; text-align: left;
+}
+.store-page[data-store-template='lookbook'] .sp-about-years strong {
+  display: block; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(56px, 7vw, 88px); line-height: .88; letter-spacing: -.04em; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-about-years span {
+  display: block; margin-top: 10px; font-size: 9.5px; font-weight: 600;
+  letter-spacing: .24em; text-transform: uppercase; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-about-mission {
+  margin: 22px 0 0; padding: 4px 0 4px 18px;
+  border-left: 2px solid var(--store-accent); border-radius: 0; background: none;
+  font-family: var(--sp-display); font-style: italic; font-weight: 300;
+  font-size: 18px; line-height: 1.6; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-about-mission-label {
+  margin-bottom: 6px; font-family: var(--sp-body); font-size: 9px;
+  letter-spacing: .24em; color: var(--sp-accent-text);
+}
+
+/* --- Banda de invitación: pliego + texto --- */
+.store-page[data-store-template='lookbook'] .sp-showcase-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: clamp(28px, 5vw, 76px); align-items: center;
+}
+.store-page[data-store-template='lookbook'] .sp-showcase-frame {
+  margin: 0; aspect-ratio: 4 / 5; overflow: hidden;
+  border: 1px solid var(--sp-line); border-radius: 0; background: var(--sp-soft); box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-showcase-frame img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  animation: none; transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-showcase-frame::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-showcase-copy { display: grid; justify-items: stretch; gap: 16px; }
+.store-page[data-store-template='lookbook'] .sp-showcase-title {
+  margin: 0; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(28px, 3.6vw, 46px); line-height: 1.08; letter-spacing: -.025em;
+}
+.store-page[data-store-template='lookbook'] .sp-showcase-text {
+  font-size: 15.5px; line-height: 1.85; color: var(--sp-ink-2);
+  display: block; overflow: visible;
+}
+.store-page[data-store-template='lookbook'] .sp-showcase-ctas { margin-top: 8px; gap: 22px; }
+.store-page[data-store-template='lookbook'] .sp-showcase-ctas .sp-btn {
+  height: auto; padding: 0 0 6px; border: 0; border-bottom: 1px solid var(--sp-ink);
+  border-radius: 0; background: none; color: var(--sp-ink);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-showcase-ctas .sp-btn.ghost { border-bottom-color: var(--sp-line); color: var(--sp-muted); }
+.store-page[data-store-template='lookbook'] .sp-showcase-ctas .sp-btn:hover {
+  filter: none; transform: none; color: var(--sp-accent-text); border-color: var(--store-accent);
+}
+
+/* --- Galería: hoja de contactos con reglas de 1px --- */
+.store-page[data-store-template='lookbook'] .sp-gallery-grid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1px; background: var(--sp-line); border: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-gallery-item {
+  aspect-ratio: 4 / 5; border: 0; border-radius: 0; box-shadow: none; background: var(--sp-soft);
+}
+.store-page[data-store-template='lookbook'] .sp-gallery-item:hover {
+  transform: none; box-shadow: none; border-color: transparent;
+}
+.store-page[data-store-template='lookbook'] .sp-gallery-item:hover img { transform: scale(1.03); }
+
+/* --- Servicios: índice de dos columnas --- */
+.store-page[data-store-template='lookbook'] .sp-services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0;
+  border-top: 1px solid var(--sp-line); counter-reset: lb-svc;
+}
+.store-page[data-store-template='lookbook'] .sp-service {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 18px; padding: 26px 40px 30px 0;
+  border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
+  background: transparent; box-shadow: none; counter-increment: lb-svc;
+}
+.store-page[data-store-template='lookbook'] .sp-service:nth-child(odd) { border-right: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-service:nth-child(even) { padding-left: 40px; padding-right: 0; }
+.store-page[data-store-template='lookbook'] .sp-service::before {
+  content: counter(lb-svc, decimal-leading-zero); grid-row: 1 / span 2;
+  font-family: var(--sp-display); font-size: 12px; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='lookbook'] .sp-service:hover {
+  transform: none; box-shadow: none; border-color: var(--sp-line);
+  background: color-mix(in srgb, var(--sp-ink) 3%, transparent);
+}
+.store-page[data-store-template='lookbook'] .sp-service-icon { display: none; }
+.store-page[data-store-template='lookbook'] .sp-service strong {
+  font-family: var(--sp-display); font-size: 20px; font-weight: 400; letter-spacing: -.01em;
+}
+.store-page[data-store-template='lookbook'] .sp-service p { margin: 4px 0 0; font-size: 13.5px; line-height: 1.7; color: var(--sp-muted); }
+
+/* --- Cifras: pliego invertido (tinta sobre papel / papel sobre tinta) --- */
+.store-page[data-store-template='lookbook'] .sp-stats {
+  margin-top: clamp(56px, 7vw, 100px); padding: clamp(44px, 6vw, 76px) 0;
+  background: var(--sp-ink); color: var(--sp-bg);
+}
+.store-page[data-store-template='lookbook'] .sp-stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0; padding: 0;
+}
+.store-page[data-store-template='lookbook'] .sp-stat {
+  padding: 0 clamp(18px, 3vw, 36px);
+  border-right: 1px solid color-mix(in srgb, var(--sp-bg) 24%, transparent);
+}
+.store-page[data-store-template='lookbook'] .sp-stat:first-child { padding-left: 0; }
+.store-page[data-store-template='lookbook'] .sp-stat:last-child { border-right: 0; }
+.store-page[data-store-template='lookbook'] .sp-stat strong {
+  font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(42px, 5.2vw, 68px); line-height: 1; letter-spacing: -.04em;
+  color: var(--sp-bg);
+}
+.store-page[data-store-template='lookbook'] .sp-stat span {
+  display: block; margin-top: 10px; font-size: 9.5px; font-weight: 600;
+  letter-spacing: .24em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--sp-bg) 62%, transparent);
+}
+
+/* --- Testimonios: citas de revista --- */
+.store-page[data-store-template='lookbook'] .sp-testimonials-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0; border-bottom: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-testimonial {
+  display: grid; gap: 14px; margin: 0; padding: 30px 34px 34px 0;
+  border-top: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-testimonial + .sp-testimonial { padding-left: 34px; border-left: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-testimonial-quote { display: none; }
+.store-page[data-store-template='lookbook'] .sp-testimonial-text {
+  margin: 0; font-family: var(--sp-display); font-style: italic; font-weight: 300;
+  font-size: 20px; line-height: 1.6; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-testimonial-text::before {
+  content: '\201C'; display: block; margin-bottom: 6px;
+  font-size: 44px; line-height: .6; color: var(--store-accent);
+}
+.store-page[data-store-template='lookbook'] .sp-testimonial-by {
+  display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-testimonial-by strong {
+  font-size: 10px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-testimonial-by span { font-size: 12.5px; color: var(--sp-muted); }
+
+/* --- Preguntas: índice con filetes --- */
+.store-page[data-store-template='lookbook'] .sp-faq-list { border-top: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-faq-item {
+  border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
+  background: transparent; padding: 0;
+}
+.store-page[data-store-template='lookbook'] .sp-faq-item summary {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  padding: 20px 0; cursor: pointer; list-style: none;
+  font-family: var(--sp-display); font-size: 20px; font-weight: 400;
+  letter-spacing: -.01em; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-faq-item summary::-webkit-details-marker { display: none; }
+.store-page[data-store-template='lookbook'] .sp-faq-caret {
+  flex: none; display: grid; place-items: center; width: 26px; height: 26px;
+  border: 1px solid var(--sp-line); border-radius: 50%; color: var(--sp-muted);
+  transition: transform .3s var(--sp-ease), color .2s, border-color .2s;
+}
+.store-page[data-store-template='lookbook'] .sp-faq-item[open] .sp-faq-caret {
+  transform: rotate(180deg); color: var(--sp-accent-text); border-color: var(--store-accent);
+}
+.store-page[data-store-template='lookbook'] .sp-faq-answer {
+  max-width: min(72ch, 100%); margin: 0; padding: 0 46px 24px 0;
+  font-size: 15px; line-height: 1.85; color: var(--sp-ink-2);
+}
+
+/* --- Cierre: titular grande entre reglas --- */
+.store-page[data-store-template='lookbook'] .sp-cta-inner {
+  display: grid; justify-items: center; text-align: center; gap: 16px;
+  padding: clamp(48px, 6vw, 80px) 24px;
+  border-top: 1px solid var(--sp-line); border-bottom: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-cta-title {
+  margin: 0; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(32px, 4.6vw, 58px); line-height: 1.05; letter-spacing: -.03em;
+}
+.store-page[data-store-template='lookbook'] .sp-cta-text {
+  max-width: min(52ch, 100%); margin: 0; font-size: 15px; line-height: 1.8; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-cta-btn {
+  height: auto; margin-top: 10px; padding: 0 0 8px;
+  border: 0; border-bottom: 1px solid var(--sp-ink); border-radius: 0;
+  background: none; color: var(--sp-ink);
+  font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+  box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-cta-btn:hover {
+  filter: none; transform: none; color: var(--sp-accent-text); border-color: var(--store-accent);
+}
+
+/* --- Contacto: formulario de líneas, horas con filetes --- */
+.store-page[data-store-template='lookbook'] .sp-contact {
+  padding: clamp(56px, 7vw, 100px) 0; background: transparent; border-top: 0;
+}
+.store-page[data-store-template='lookbook'] .sp-contact-grid {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  gap: clamp(32px, 5vw, 76px);
+}
+.store-page[data-store-template='lookbook'] .sp-form-row {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;
+}
+.store-page[data-store-template='lookbook'] .sp-contact-title {
+  margin: 4px 0 10px; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(32px, 4.2vw, 50px); line-height: 1.06; letter-spacing: -.025em;
+}
+.store-page[data-store-template='lookbook'] .sp-contact-sub { max-width: min(46ch, 100%); font-size: 15px; line-height: 1.8; color: var(--sp-muted); }
+.store-page[data-store-template='lookbook'] .sp-map-address { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--sp-muted); }
+.store-page[data-store-template='lookbook'] .sp-contact-hours { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-contact-hours li {
+  display: flex; align-items: baseline; gap: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--sp-line);
+  font-size: 12px; letter-spacing: .06em; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-contact-hours li strong { margin-left: auto; font-weight: 600; color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-contact-channels { margin-top: 18px; gap: 16px; }
+.store-page[data-store-template='lookbook'] .sp-contact-channels > .sp-btn {
+  height: auto; padding: 0 0 6px; border: 0; border-bottom: 1px solid var(--sp-ink);
+  border-radius: 0; background: none; color: var(--sp-ink);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  box-shadow: none; animation: none;
+}
+.store-page[data-store-template='lookbook'] .sp-contact-channels .sp-icon-btn { width: 34px; height: 34px; border-radius: 50%; }
+.store-page[data-store-template='lookbook'] .sp-contact-photo {
+  margin: 22px 0 0; aspect-ratio: 16 / 10; overflow: hidden;
+  border: 1px solid var(--sp-line); border-radius: 0; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-form {
+  padding: 26px 0 0; gap: 18px;
+  border: 0; border-top: 1px solid var(--sp-ink);
+  border-radius: 0; background: transparent; box-shadow: none; overflow: visible;
+}
+.store-page[data-store-template='lookbook'] .sp-form::before,
+.store-page[data-store-template='lookbook'] .sp-form::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-form:hover { border-color: var(--sp-ink); box-shadow: none; transform: none; }
+.store-page[data-store-template='lookbook'] .sp-form-head { padding-bottom: 16px; border-bottom: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-form-head strong { font-family: var(--sp-display); font-size: 22px; font-weight: 400; letter-spacing: -.01em; }
+.store-page[data-store-template='lookbook'] .sp-form-badge {
+  width: auto; height: auto; border-radius: 0; background: none; border: 0;
+  box-shadow: none; color: var(--sp-accent-text); transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-form:hover .sp-form-badge { transform: none; }
+.store-page[data-store-template='lookbook'] .sp-field label { font-size: 9.5px; letter-spacing: .22em; color: var(--sp-muted); }
+.store-page[data-store-template='lookbook'] .sp-input {
+  padding: 10px 0; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
+  background: transparent; box-shadow: none; font-size: 15px;
+}
+.store-page[data-store-template='lookbook'] .sp-input:focus {
+  background: transparent; box-shadow: none; border-bottom-color: var(--store-accent);
+}
+.store-page[data-store-template='lookbook'] .sp-input-wrap > svg { left: 0; }
+.store-page[data-store-template='lookbook'] .sp-input-wrap .sp-input { padding-left: 28px; }
+.store-page[data-store-template='lookbook'] .sp-textarea {
+  min-height: 110px; padding: 12px; border: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-captcha-q {
+  border: 1px solid var(--sp-line); border-radius: 0; background: transparent;
+}
+.store-page[data-store-template='lookbook'] .sp-captcha-row .sp-icon-btn { border-radius: 0; }
+.store-page[data-store-template='lookbook'] .sp-form .sp-btn {
+  height: 46px; padding: 0 28px; border-radius: 0;
+  background: var(--sp-ink); color: var(--sp-bg);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-form .sp-btn::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-form .sp-btn:hover { background: var(--store-accent-ink); color: #fff; box-shadow: none; transform: none; }
+.store-page[data-store-template='lookbook'] .sp-form .sp-btn.ghost { background: transparent; color: var(--sp-ink); border: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-form-note { font-size: 11px; letter-spacing: .04em; }
+.store-page[data-store-template='lookbook'] .sp-sent-check { border-radius: 50%; background: var(--sp-ink); box-shadow: none; }
+.store-page[data-store-template='lookbook'] .sp-map-frame { border: 1px solid var(--sp-line); border-radius: 0; box-shadow: none; }
+.store-page[data-store-template='lookbook'] .sp-map-frame:hover { border-color: var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-map-frame iframe { filter: grayscale(.35) contrast(1.02); }
+
+/* --- Barra superior: cabecera de revista --- */
+.store-page[data-store-template='lookbook'] .sp-top,
+.store-page[data-store-template='lookbook'][data-store-theme='dark'] .sp-top {
+  background: color-mix(in srgb, var(--lb-paper) 94%, transparent);
+  border-bottom: 1px solid var(--sp-line); box-shadow: none;
+  backdrop-filter: saturate(120%) blur(8px); -webkit-backdrop-filter: saturate(120%) blur(8px);
+}
+.store-page[data-store-template='lookbook'] .sp-top .sp-brand,
+.store-page[data-store-template='lookbook'] .sp-top .sp-name { color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-name {
+  font-family: var(--sp-display); font-weight: 400; letter-spacing: -.01em;
+}
+.store-page[data-store-template='lookbook'] .sp-top-links { gap: 6px; }
+.store-page[data-store-template='lookbook'] .sp-top-links a {
+  padding: 8px 10px; border-radius: 0; color: var(--sp-muted);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-top-links a:hover {
+  color: var(--sp-ink); background: transparent;
+  box-shadow: inset 0 -1px 0 var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-top-links a.router-link-exact-active {
+  color: var(--sp-ink); background: transparent;
+  box-shadow: inset 0 -1px 0 var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-top .sp-icon-btn,
+.store-page[data-store-template='lookbook'] .sp-top .sp-burger {
+  background: transparent; border: 1px solid var(--sp-line); border-radius: 0;
+  color: var(--sp-ink); box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-top .sp-icon-btn:hover,
+.store-page[data-store-template='lookbook'] .sp-top .sp-burger:hover {
+  background: transparent; border-color: var(--store-accent); color: var(--sp-accent-text);
+  transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-top .sp-mono { background: var(--sp-ink); color: var(--sp-bg); border-radius: 0; }
+.store-page[data-store-template='lookbook'] .sp-top .sp-logo.sm { border-radius: 0; border-color: var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-top .sp-search {
+  background: transparent; border: 0; border-bottom: 1px solid var(--sp-line);
+  border-radius: 0; box-shadow: none; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-top .sp-search input { color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-top .sp-search:focus-within { border-color: var(--store-accent); box-shadow: none; }
+.store-page[data-store-template='lookbook'] .sp-top-cta {
+  display: inline-flex; align-items: center; gap: 7px; height: auto;
+  padding: 0 0 4px; border-radius: 0; background: transparent; color: var(--sp-ink);
+  border-bottom: 1px solid var(--sp-ink);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-top-cta:hover {
+  background: transparent; color: var(--sp-accent-text); border-color: var(--store-accent); transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-progress { background: var(--store-accent); }
+
+/* --- Pie: colofón --- */
+.store-page[data-store-template='lookbook'] .sp-foot {
+  margin-top: clamp(56px, 7vw, 100px); padding-top: 48px;
+  background: var(--sp-ink); color: var(--sp-bg); border-top: 0;
+}
+.store-page[data-store-template='lookbook'] .sp-foot::before { display: none; }
+.store-page[data-store-template='lookbook'] .sp-foot-brand strong {
+  font-family: var(--sp-display); font-weight: 300; font-size: 30px;
+  letter-spacing: -.02em; color: var(--sp-bg);
+}
+.store-page[data-store-template='lookbook'] .sp-foot-brand span,
+.store-page[data-store-template='lookbook'] .sp-foot-copy {
+  color: color-mix(in srgb, var(--sp-bg) 62%, transparent);
+}
+.store-page[data-store-template='lookbook'] .sp-foot-heading {
+  color: var(--store-accent); font-size: 9px; letter-spacing: .26em;
+}
+.store-page[data-store-template='lookbook'] .sp-foot-col a {
+  color: color-mix(in srgb, var(--sp-bg) 84%, transparent);
+  font-size: 13px; letter-spacing: .02em;
+}
+.store-page[data-store-template='lookbook'] .sp-foot-col a:hover {
+  color: var(--sp-bg); text-decoration: underline; transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-foot-bottom {
+  border-top-color: color-mix(in srgb, var(--sp-bg) 22%, transparent);
+}
+.store-page[data-store-template='lookbook'] .sp-foot .sp-davent-badge {
+  background: transparent; border-color: color-mix(in srgb, var(--sp-bg) 30%, transparent);
+  border-radius: 0; color: var(--sp-bg);
+}
+.store-page[data-store-template='lookbook'] .sp-foot .sp-davent-badge:hover {
+  border-color: var(--store-accent); box-shadow: none; transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-foot .sp-davent-badge strong { color: var(--store-accent); }
+
+/* ===== Catálogo: el índice de la edición ===== */
+.store-page[data-store-template='lookbook'] .sp-cat-hero,
+.store-page[data-store-template='lookbook'][data-store-theme='dark'] .sp-cat-hero {
+  color: var(--sp-ink); background: var(--lb-paper);
+  border-bottom: 1px solid var(--sp-line); border-radius: 0; animation: none;
+}
+.store-page[data-store-template='lookbook'] .sp-cat-hero .sp-hero-decor::before { background-image: none; }
+.store-page[data-store-template='lookbook'] .sp-cat-hero .sp-orb,
+.store-page[data-store-template='lookbook'] .sp-cat-hero .sp-float { display: none; }
+.sp-lb-ghost {
+  position: absolute; right: 1%; top: -14%;
+  font-family: var(--sp-display); font-style: italic; font-weight: 300;
+  font-size: clamp(110px, 18vw, 260px); line-height: .8; white-space: nowrap;
+  color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--sp-ink) 14%, transparent);
+  user-select: none; pointer-events: none;
+}
+.store-page[data-store-template='lookbook'] .sp-cat-hero-inner { padding: 44px 40px 38px; gap: 20px; }
+.store-page[data-store-template='lookbook'] .sp-crumbs {
+  gap: 8px; font-size: 9.5px; font-weight: 600; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-crumbs a { color: var(--sp-muted); font-weight: 600; }
+.store-page[data-store-template='lookbook'] .sp-crumbs a:hover { color: var(--sp-ink); text-decoration: none; }
+.store-page[data-store-template='lookbook'] .sp-crumbs span { color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-crumbs svg { width: 9px; height: 9px; color: var(--sp-line); }
+.sp-lb-cat-issue {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin: 0; font-size: 9.5px; font-weight: 600; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--sp-muted);
+}
+.sp-lb-cat-issue span:first-child { color: var(--sp-accent-text); }
+.sp-lb-cat-issue i { width: 28px; height: 1px; background: var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-cat-head { gap: 0; }
+.store-page[data-store-template='lookbook'] .sp-cat-head-icon { display: none; }
+.store-page[data-store-template='lookbook'] .sp-cat-title {
+  margin: 0; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(46px, 7.4vw, 100px); line-height: .92; letter-spacing: -.04em;
+  color: var(--sp-ink); text-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-cat-head > div { min-width: 0; }
+.store-page[data-store-template='lookbook'] .sp-cat-sub {
+  margin: 12px 0 0; max-width: min(52ch, 100%); font-size: 15px; line-height: 1.75; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-cat-stats {
+  gap: 0; padding-top: 16px; border-top: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-cat-stats li {
+  padding: 0 20px 0 0; margin: 0 20px 0 0;
+  border: 0; border-right: 1px solid var(--sp-line); border-radius: 0;
+  background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-cat-stats li:last-child { padding-right: 0; margin-right: 0; border-right: 0; }
+.store-page[data-store-template='lookbook'] .sp-cat-stats strong {
+  margin-right: 4px; font-family: var(--sp-display); font-size: 17px;
+  font-weight: 400; letter-spacing: 0; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-cat-stats .icon { color: var(--sp-accent-text); }
+
+/* Layout: índice lateral tipográfico */
+.store-page[data-store-template='lookbook'] .sp-main { padding-top: clamp(40px, 5vw, 64px); padding-bottom: 96px; }
+.store-page[data-store-template='lookbook'] .sp-layout.has-nav {
+  grid-template-columns: 218px minmax(0, 1fr); gap: clamp(28px, 4vw, 60px);
+}
+.store-page[data-store-template='lookbook'] .sp-drawer {
+  position: sticky; top: calc(var(--sp-top-h) + 24px);
+  padding: 0 0 0 18px; border: 0; border-left: 1px solid var(--sp-line);
+  border-radius: 0; background: transparent; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-drawer-head { padding: 0 0 12px; border-bottom: 1px solid var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-drawer-head strong {
+  font-family: var(--sp-display); font-size: 19px; font-weight: 400; letter-spacing: -.01em;
+}
+.store-page[data-store-template='lookbook'] .sp-nav-group { gap: 2px; padding-bottom: 16px; }
+.store-page[data-store-template='lookbook'] .sp-nav-group + .sp-nav-group { padding-top: 18px; }
+.store-page[data-store-template='lookbook'] .sp-nav-heading {
+  margin: 0 0 8px; font-family: var(--sp-body); font-size: 9px; font-weight: 600;
+  letter-spacing: .26em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='lookbook'] .sp-nav-item {
+  padding: 7px 0; border-radius: 0; font-size: 13.5px; font-weight: 400; color: var(--sp-ink-2);
+}
+.store-page[data-store-template='lookbook'] .sp-nav-item:hover {
+  padding-left: 8px; background: transparent; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-nav-item.active {
+  background: transparent; color: var(--sp-ink); font-weight: 600;
+}
+.store-page[data-store-template='lookbook'] .sp-nav-item.active::before {
+  left: -18px; top: 50%; bottom: auto; width: 10px; height: 1px;
+  border-radius: 0; background: var(--sp-ink); animation: none;
+}
+.store-page[data-store-template='lookbook'] .sp-facet-name {
+  margin: 10px 0 4px; font-family: var(--sp-display); font-size: 15px; font-weight: 400;
+}
+.store-page[data-store-template='lookbook'] .sp-facet-item { padding: 6px 0; border-radius: 0; font-size: 12.5px; }
+.store-page[data-store-template='lookbook'] .sp-facet-item:hover { background: transparent; color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-facet-check { border-radius: 0; }
+.store-page[data-store-template='lookbook'] .sp-facet-item.active .sp-facet-check {
+  background: var(--sp-ink); border-color: var(--sp-ink); color: var(--sp-bg);
+}
+.store-page[data-store-template='lookbook'] .sp-nav-clear {
+  padding: 6px 0; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-nav-clear:hover { border-color: var(--sp-ink); color: var(--sp-ink); }
+
+/* Controles del índice: texto subrayado, nunca píldoras */
+.store-page[data-store-template='lookbook'] .sp-quick {
+  gap: 24px; margin: 0 -20px 30px; padding: 0 20px;
+  border-bottom: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-quick-pill {
+  height: auto; padding: 0 0 13px; border: 0; border-radius: 0;
+  background: none; box-shadow: none; color: var(--sp-muted);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-quick-pill.active {
+  background: none; color: var(--sp-ink); box-shadow: inset 0 -2px 0 var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-toolbar {
+  align-items: flex-end; padding-bottom: 16px; margin-bottom: 22px;
+  border-bottom: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-toolbar-title { gap: 14px; }
+.store-page[data-store-template='lookbook'] .sp-toolbar .sp-section-title { margin-bottom: 0; }
+.store-page[data-store-template='lookbook'] .sp-toolbar .sp-section-title::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-count {
+  font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-search,
+.store-page[data-store-template='lookbook'] .sp-search-inline {
+  height: 38px; border: 0; border-bottom: 1px solid var(--sp-line);
+  border-radius: 0; background: transparent; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-search:focus-within {
+  border-color: var(--store-accent); box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-search input { font-size: 13.5px; }
+.store-page[data-store-template='lookbook'] .sp-filters {
+  padding: 0 0 16px; margin: 0 0 22px;
+  border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
+  background: transparent; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-field-label {
+  font-size: 9px; letter-spacing: .24em; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-filters .sp-price,
+.store-page[data-store-template='lookbook'] .sp-filters .sp-sort {
+  height: 34px; padding: 0; border: 0; border-bottom: 1px solid var(--sp-line);
+  border-radius: 0; background: transparent; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-filters .sp-price:focus-within,
+.store-page[data-store-template='lookbook'] .sp-filters .sp-sort:focus-within {
+  border-color: var(--store-accent); box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-filters .sp-price input { font-size: 13.5px; }
+.store-page[data-store-template='lookbook'] .sp-filters .sp-sort select { font-size: 13.5px; }
+.store-page[data-store-template='lookbook'] .sp-chips { gap: 14px; margin: -6px 0 26px; }
+.store-page[data-store-template='lookbook'] .sp-chip {
+  padding: 5px 0; border: 0; border-bottom: 1px solid var(--sp-line);
+  border-radius: 0; background: transparent; color: var(--sp-ink-2);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  animation: none;
+}
+.store-page[data-store-template='lookbook'] .sp-chip:hover {
+  transform: none; color: var(--sp-ink); border-color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-chip.clear { border-bottom-style: dotted; color: var(--sp-muted); }
+
+/* Grilla de pliegos: sin tarjeta, numerada, imagen 3:4 */
+.store-page[data-store-template='lookbook'] .sp-grid {
+  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+  gap: 44px 28px; counter-reset: lb-card;
+}
+.store-page[data-store-template='lookbook'] .sp-card {
+  display: flex; flex-direction: column; overflow: visible;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  counter-increment: lb-card;
+}
+.store-page[data-store-template='lookbook'] .sp-card::before,
+.store-page[data-store-template='lookbook'] .sp-card::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-card:hover {
+  transform: none; border: 0; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-card-img {
+  position: relative; width: 100%; aspect-ratio: 3 / 4; margin: 0;
+  border: 0; border-radius: 0; background: var(--sp-soft); overflow: hidden;
+}
+.store-page[data-store-template='lookbook'] .sp-card-img::before {
+  content: counter(lb-card, decimal-leading-zero);
+  position: absolute; top: 0; left: 0; z-index: 2;
+  padding: 7px 9px; background: var(--lb-paper);
+  font-family: var(--sp-display); font-size: 11px; letter-spacing: .06em; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-card-img::after {
+  content: ''; position: absolute; inset: 0; opacity: 0;
+  background: linear-gradient(180deg, transparent 68%, color-mix(in srgb, var(--sp-ink) 22%, transparent));
+  transition: opacity .4s var(--sp-ease);
+}
+.store-page[data-store-template='lookbook'] .sp-card:hover .sp-card-img::after { opacity: 1; }
+.store-page[data-store-template='lookbook'] .sp-card-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.store-page[data-store-template='lookbook'] .sp-card:hover .sp-card-img img { transform: scale(1.03); }
+.store-page[data-store-template='lookbook'] .sp-card-quick { display: none; }
+.store-page[data-store-template='lookbook'] .sp-card-flag {
+  top: auto; bottom: 10px; left: 10px; padding: 3px 8px;
+  border: 1px solid var(--sp-line); border-radius: 0;
+  background: var(--lb-paper); color: var(--sp-ink);
+  font-size: 8.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-card-flag.offer { left: auto; right: 10px; background: var(--sp-ink); color: var(--sp-bg); border-color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-card-body { flex: 1; gap: 5px; padding: 14px 0 0; }
+.store-page[data-store-template='lookbook'] .sp-card-eyebrow {
+  gap: 6px; font-size: 8.5px; font-weight: 600; letter-spacing: .2em; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-card-eyebrow i { width: 1px; height: 8px; border-radius: 0; background: var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-card-name {
+  font-family: var(--sp-display); font-size: 19px; font-weight: 400;
+  line-height: 1.25; letter-spacing: -.01em;
+}
+.store-page[data-store-template='lookbook'] .sp-card-foot {
+  flex-direction: row; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .sp-card-foot .sp-card-price {
+  font-size: 13.5px; font-weight: 500; letter-spacing: .04em; color: var(--sp-ink);
+}
+.store-page[data-store-template='lookbook'] .sp-card:hover .sp-card-price { color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-card-price .sp-price-old,
+.store-page[data-store-template='lookbook'] .sp-price-old {
+  display: block; margin-bottom: 2px; font-size: 10.5px; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .sp-card-go {
+  width: auto; height: auto; padding: 0; border: 0; border-radius: 0;
+  background: none; box-shadow: none; color: var(--sp-muted);
+  font-size: 8.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-card:hover .sp-card-go,
+.store-page[data-store-template='lookbook'] .sp-card-go:hover {
+  background: none; color: var(--sp-ink); box-shadow: none; transform: none;
+}
+.store-page[data-store-template='lookbook'] .sp-card:hover .sp-card-go svg { transform: translateX(3px); }
+.store-page[data-store-template='lookbook'] .sp-card-placeholder {
+  width: 100%; height: 100%; border-radius: 0; background: transparent;
+  color: color-mix(in srgb, var(--sp-ink) 24%, transparent);
+}
+.store-page[data-store-template='lookbook'] .sp-skeleton { border: 0; box-shadow: none; }
+.store-page[data-store-template='lookbook'] .sp-skeleton .sp-card-img::before { display: none; }
+.store-page[data-store-template='lookbook'] .sp-skeleton .sp-card-img,
+.store-page[data-store-template='lookbook'] .sp-sk-line { border-radius: 0; }
+.store-page[data-store-template='lookbook'] .sp-empty {
+  border: 1px solid var(--sp-line); border-radius: 0; background: transparent;
+}
+.store-page[data-store-template='lookbook'] .sp-empty-icon { border-radius: 0; background: transparent; color: var(--sp-accent-text); }
+.store-page[data-store-template='lookbook'] .sp-more { gap: 14px; margin-top: 46px; }
+.store-page[data-store-template='lookbook'] .sp-more-label {
+  font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .sp-more-bar { height: 1px; border-radius: 0; background: var(--sp-line); }
+.store-page[data-store-template='lookbook'] .sp-more-bar span { border-radius: 0; background: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-more .sp-btn {
+  height: auto; padding: 0 0 6px; border: 0; border-bottom: 1px solid var(--sp-ink);
+  border-radius: 0; background: none; color: var(--sp-ink);
+  font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-more .sp-btn::after { display: none; }
+.store-page[data-store-template='lookbook'] .sp-more .sp-btn:hover {
+  background: none; color: var(--sp-accent-text); border-color: var(--store-accent);
+  filter: none; transform: none; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .sp-banner { border-radius: 0; box-shadow: none; }
+.store-page[data-store-template='lookbook'] .sp-carousel-arrow { border-radius: 0; }
+.store-page[data-store-template='lookbook'] .sp-carousel-dot { border-radius: 0; }
+
+/* ===== Ficha de producto: pliego de catálogo ===== */
+.store-page[data-store-template='lookbook'] .spd-main { flex: 1; padding-top: 26px; padding-bottom: 88px; }
+.store-page[data-store-template='lookbook'] .spd-crumbs {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 22px;
+  font-size: 9.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .spd-crumbs a { color: var(--sp-muted); text-decoration: none; }
+.store-page[data-store-template='lookbook'] .spd-crumbs a:hover { color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .spd-crumb-here { color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .spd-sheet {
+  background: transparent; border: 0; border-top: 1px solid var(--sp-line);
+  border-bottom: 1px solid var(--sp-line); border-radius: 0; box-shadow: none;
+}
+.store-page[data-store-template='lookbook'] .spd-top {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: stretch;
+}
+.store-page[data-store-template='lookbook'] .spd-gallery {
+  display: grid; place-items: center; min-height: 440px; padding: 40px;
+  border-right: 1px solid var(--sp-line); background: var(--sp-soft);
+}
+.store-page[data-store-template='lookbook'] .spd-gallery img { max-width: 100%; max-height: 560px; object-fit: contain; display: block; }
+.store-page[data-store-template='lookbook'] .spd-buy { display: flex; flex-direction: column; gap: 14px; padding: 40px 0 40px 40px; }
+.store-page[data-store-template='lookbook'] .spd-cond {
+  font-size: 9px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='lookbook'] .spd-name {
+  margin: 0; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(30px, 3.6vw, 46px); line-height: 1.06; letter-spacing: -.025em;
+}
+.store-page[data-store-template='lookbook'] .spd-brand {
+  margin: 0; font-size: 9.5px; font-weight: 600; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .spd-pricebox {
+  padding: 16px 0; border-top: 1px solid var(--sp-line); border-bottom: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lookbook'] .spd-price {
+  font-family: var(--sp-display); font-size: 32px; font-weight: 400; letter-spacing: -.02em;
+}
+.store-page[data-store-template='lookbook'] .spd-offer-pill {
+  border-radius: 0; font-size: 8.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .spd-buy .sp-btn {
+  height: 48px; border-radius: 0; background: var(--sp-ink); color: var(--sp-bg);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .spd-ctas { display: grid; gap: 10px; }
+.store-page[data-store-template='lookbook'] .spd-ctas .sp-btn { width: 100%; }
+.store-page[data-store-template='lookbook'] .spd-seller {
+  list-style: none; display: grid; gap: 7px;
+  margin: 8px 0 0; padding: 14px 0 0;
+  border-top: 1px solid var(--sp-line);
+  font-size: 12.5px; line-height: 1.5; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .spd-seller li { display: flex; align-items: baseline; gap: 8px; }
+.store-page[data-store-template='lookbook'] .spd-seller svg { flex: none; color: var(--sp-accent-text); }
+.store-page[data-store-template='lookbook'] .spd-buy .sp-btn:hover { background: var(--store-accent-ink); color: #fff; }
+.store-page[data-store-template='lookbook'] .spd-backlink {
+  font-size: 9.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+}
+.store-page[data-store-template='lookbook'] .spd-sec { margin-top: 46px; }
+.store-page[data-store-template='lookbook'] .spd-sec-title {
+  margin: 0 0 16px; font-family: var(--sp-display); font-weight: 300;
+  font-size: clamp(24px, 2.8vw, 34px); letter-spacing: -.02em;
+}
+.store-page[data-store-template='lookbook'] .spd-specs-wrap { border: 1px solid var(--sp-line); border-radius: 0; overflow: hidden; }
+.store-page[data-store-template='lookbook'] .spd-specs { width: 100%; border-collapse: collapse; }
+.store-page[data-store-template='lookbook'] .spd-specs th,
+.store-page[data-store-template='lookbook'] .spd-specs td {
+  padding: 12px 16px; border-bottom: 1px solid var(--sp-line); text-align: left;
+}
+.store-page[data-store-template='lookbook'] .spd-specs th {
+  width: 180px; font-size: 9px; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--sp-muted);
+}
+.store-page[data-store-template='lookbook'] .spd-specs tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--sp-ink) 3%, transparent); }
+.store-page[data-store-template='lookbook'] .spd-desc { max-width: min(72ch, 100%); font-size: 15px; line-height: 1.85; color: var(--sp-ink-2); }
+.store-page[data-store-template='lookbook'] .spd-related { margin-top: 56px; }
+.store-page[data-store-template='lookbook'] .spd-rel-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 28px;
+}
+.store-page[data-store-template='lookbook'] .spd-rel {
+  display: grid; gap: 10px; color: inherit; text-decoration: none;
+  border: 0; border-radius: 0; background: transparent;
+}
+.store-page[data-store-template='lookbook'] .spd-rel-img {
+  aspect-ratio: 3 / 4; overflow: hidden; background: var(--sp-soft); border-radius: 0;
+}
+.store-page[data-store-template='lookbook'] .spd-rel-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.store-page[data-store-template='lookbook'] .spd-rel-name { font-family: var(--sp-display); font-size: 17px; font-weight: 400; letter-spacing: -.01em; }
+.store-page[data-store-template='lookbook'] .spd-rel-price { font-size: 12.5px; color: var(--sp-muted); }
+
+/* --- Responsive del Lookbook --- */
+@media (max-width: 1100px) {
+  .sp-lb-ghost { font-size: clamp(80px, 16vw, 170px); top: -6%; }
+}
+@media (max-width: 960px) {
+  .store-page[data-store-template='lookbook'] .sp-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'badge'
+      'title'
+      'plate'
+      'sub'
+      'ctas'
+      'meta';
+    padding: 44px 20px 32px;
+  }
+  .store-page[data-store-template='lookbook'] .sp-hero-title { max-width: 18ch; font-size: clamp(38px, 9vw, 64px); }
+  .store-page[data-store-template='lookbook'] .sp-lb-plate { margin-top: 28px; }
+  .store-page[data-store-template='lookbook'] .sp-lb-plate-frame { aspect-ratio: 4 / 5; }
+  .sp-lb-plate-seal { left: -10px; bottom: 42px; width: 64px; height: 64px; font-size: 14px; }
+  .store-page[data-store-template='lookbook'] .sp-hero-sub { margin-top: 20px; }
+  .store-page[data-store-template='lookbook'] .sp-about-grid,
+  .store-page[data-store-template='lookbook'] .sp-contact-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-about-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-showcase-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-showcase-frame { aspect-ratio: 16 / 10; }
+  .store-page[data-store-template='lookbook'] .sp-layout.has-nav { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-drawer {
+    position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 86vw);
+    padding: 18px 18px 24px; border-left: 0; border-right: 1px solid var(--sp-line);
+    background: var(--lb-paper); transform: translateX(-102%);
+  }
+  .store-page[data-store-template='lookbook'] .sp-drawer.open { transform: none; }
+  .store-page[data-store-template='lookbook'] .spd-top { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .spd-gallery { border-right: 0; border-bottom: 1px solid var(--sp-line); min-height: 0; padding: 24px; }
+  .store-page[data-store-template='lookbook'] .spd-buy { padding: 26px 0; }
+}
+@media (max-width: 900px) {
+  .store-page[data-store-template='lookbook'] .sp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 14px;
+  }
+  .store-page[data-store-template='lookbook'] .sp-card { flex-direction: column; }
+  .store-page[data-store-template='lookbook'] .sp-card-img { width: 100%; margin: 0; aspect-ratio: 3 / 4; }
+  .store-page[data-store-template='lookbook'] .sp-card-body { padding: 10px 0 0; }
+  .store-page[data-store-template='lookbook'] .sp-card-name { font-size: 16px; }
+  .store-page[data-store-template='lookbook'] .sp-card-go { font-size: 0; }
+  .store-page[data-store-template='lookbook'] .sp-card-go svg { width: 15px; height: 15px; }
+  .store-page[data-store-template='lookbook'] .sp-card-flag { top: auto; left: 8px; bottom: 8px; font-size: 8px; }
+  .store-page[data-store-template='lookbook'] .sp-card-flag.offer { right: 8px; }
+}
+@media (max-width: 760px) {
+  .store-page[data-store-template='lookbook'] .sp-container { padding: 0 20px; }
+  .store-page[data-store-template='lookbook'] .sp-highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-store-template='lookbook'] .sp-hl { padding: 20px 16px 24px; }
+  .store-page[data-store-template='lookbook'] .sp-hl:nth-child(2n) { border-right: 0; }
+  .store-page[data-store-template='lookbook'] .sp-hl:nth-child(-n+2) { border-bottom: 1px solid var(--sp-line); }
+  .store-page[data-store-template='lookbook'] .sp-about-list { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-services-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .sp-service:nth-child(odd) { border-right: 0; padding-right: 0; }
+  .store-page[data-store-template='lookbook'] .sp-service:nth-child(even) { padding-left: 0; }
+  .store-page[data-store-template='lookbook'] .sp-service { padding-right: 32px; }
+  .store-page[data-store-template='lookbook'] .sp-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 0; }
+  .store-page[data-store-template='lookbook'] .sp-stat { padding: 0 16px; }
+  .store-page[data-store-template='lookbook'] .sp-stat:first-child { padding-left: 0; }
+  .store-page[data-store-template='lookbook'] .sp-stat:nth-child(2n) { border-right: 0; }
+  .store-page[data-store-template='lookbook'] .sp-testimonial { padding: 24px 0 26px; }
+  .store-page[data-store-template='lookbook'] .sp-testimonial + .sp-testimonial { padding-left: 0; border-left: 0; }
+  .store-page[data-store-template='lookbook'] .sp-faq-item summary { font-size: 18px; }
+  .store-page[data-store-template='lookbook'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-store-template='lookbook'] .sp-lb-hero-foot { padding: 0 20px 18px; }
+  .store-page[data-store-template='lookbook'] .sp-lb-hero-foot-note { display: none; }
+  .store-page[data-store-template='lookbook'] .sp-cat-hero-inner { padding: 30px 20px 28px; gap: 16px; }
+  .store-page[data-store-template='lookbook'] .sp-cat-title { font-size: clamp(40px, 13vw, 64px); }
+  .store-page[data-store-template='lookbook'] .sp-cat-stats li { padding-right: 12px; margin-right: 12px; font-size: 8.5px; }
+  .store-page[data-store-template='lookbook'] .sp-quick { gap: 18px; }
+  .store-page[data-store-template='lookbook'] .sp-toolbar { align-items: stretch; }
+  .store-page[data-store-template='lookbook'] .sp-filters { gap: 14px; }
+  .store-page[data-store-template='lookbook'] .sp-form-row { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='lookbook'] .spd-specs th { width: 130px; }
+}
+@media (max-width: 520px) {
+  .store-page[data-store-template='lookbook'] .sp-hero-title { font-size: clamp(34px, 10.5vw, 46px); }
+  .store-page[data-store-template='lookbook'] .sp-hero-ctas { gap: 20px; }
+  .store-page[data-store-template='lookbook'] .sp-hero-meta li { padding-right: 12px; margin-right: 12px; }
+  .store-page[data-store-template='lookbook'] .sp-lb-plate-seal { width: 56px; height: 56px; font-size: 12px; }
+  .store-page[data-store-template='lookbook'] .sp-stats-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .store-page[data-store-template='lookbook'] .sp-stat { padding: 0 0 20px; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--sp-bg) 24%, transparent); }
+  .store-page[data-store-template='lookbook'] .sp-stat:last-child { border-bottom: 0; padding-bottom: 0; }
+  .store-page[data-store-template='lookbook'] .sp-cat-stats { flex-wrap: wrap; gap: 10px 0; }
+  .store-page[data-store-template='lookbook'] .sp-grid { gap: 26px 12px; }
+  .store-page[data-store-template='lookbook'] .sp-card-name { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-store-template='lookbook'] .sp-card,
+  .store-page[data-store-template='lookbook'] .sp-card-img img,
+  .store-page[data-store-template='lookbook'] .sp-gallery-item img,
+  .store-page[data-store-template='lookbook'] .sp-about-photo img { transition: none !important; }
+}

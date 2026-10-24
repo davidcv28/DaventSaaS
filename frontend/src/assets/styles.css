@@ -812,6 +812,30 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='terminal'] .dp-btn { background: var(--store-accent); border: 1px solid var(--store-accent); color: #0b0f0c; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
 .design-preview[data-store-template='terminal'] .dp-btn.ghost { background: transparent; border-color: color-mix(in srgb, var(--store-accent) 45%, transparent); color: #e9f3ec; }
 .design-preview[data-store-template='terminal'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(7, 10, 8, .88), rgba(7, 10, 8, .5)), var(--dp-cover) center / cover no-repeat; color: #e9f3ec; }
+/* Lookbook: papel cálido, titular serif y pliego de imagen (editorial de moda). */
+.tpl-thumb[data-tpl='lookbook'] { background: #f4f0e7; }
+.tpl-thumb[data-tpl='lookbook']::before { content: ''; position: absolute; right: 8%; top: 11%; bottom: 14%; width: 32%; background: #e2dacb; border: 1px solid #1a1613; }
+.tpl-thumb[data-tpl='lookbook']::after { content: ''; position: absolute; left: 8%; top: 16%; width: 44%; height: 4px; background: #1a1613; box-shadow: 0 9px 0 -1px #1a1613, 0 18px 0 -1px #1a1613, 0 34px 0 -1px #8c8375; }
+.tpl-thumb[data-tpl='lookbook'] i { left: 8%; right: auto; bottom: 12%; width: 44%; height: 1px; border-radius: 0; background: #1a1613; opacity: .5; }
+.design-preview[data-store-template='lookbook'] { --sp-bg: #f4f0e7; --sp-card: #faf7f0; --sp-ink: #1a1613; --sp-ink-2: #453d35; --sp-muted: #6f665b; --sp-line: #d9d0c0; }
+.design-preview[data-store-theme='dark'][data-store-template='lookbook'] { --sp-bg: #14110e; --sp-card: #1a1613; --sp-ink: #f2ebdf; --sp-ink-2: #d8cdbd; --sp-muted: #a99d8d; --sp-line: #3a332b; }
+.design-preview[data-store-template='lookbook'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
+.design-preview[data-store-template='lookbook'] .dp-nav-name { color: var(--sp-ink); font-family: 'Fraunces', Georgia, serif; font-weight: 400; letter-spacing: -.01em; }
+.design-preview[data-store-template='lookbook'] .dp-nav-item { color: var(--sp-muted); font-size: 9px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; padding: 4px 7px; }
+.design-preview[data-store-template='lookbook'] .dp-nav-mono { background: var(--sp-ink); color: var(--sp-bg); border-radius: 0; }
+.design-preview[data-store-template='lookbook'] .dp-hero { justify-items: start; text-align: left; color: var(--sp-ink); background: var(--sp-bg); padding: 22px 18px 20px; }
+.design-preview[data-store-template='lookbook'] .dp-mono { background: var(--sp-ink); color: var(--sp-bg); border-radius: 0; }
+.design-preview[data-store-template='lookbook'] .dp-badge { padding: 0; border: 0; border-radius: 0; background: none; color: var(--sp-muted); font-size: 8.5px; font-weight: 600; letter-spacing: .22em; }
+.design-preview[data-store-template='lookbook'] .dp-badge::before { content: 'Nº 01 — '; color: var(--store-accent-ink); }
+.design-preview[data-store-template='lookbook'] .dp-title { font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: 23px; line-height: 1; letter-spacing: -.03em; }
+.design-preview[data-store-template='lookbook'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='lookbook'] .dp-desc { color: var(--sp-muted); font-family: 'Work Sans', var(--store-font), sans-serif; line-height: 1.7; }
+.design-preview[data-store-template='lookbook'] .dp-cta { justify-content: flex-start; gap: 16px; }
+.design-preview[data-store-template='lookbook'] .dp-btn { padding: 0 0 3px; border: 0; border-bottom: 1px solid var(--sp-ink); border-radius: 0; background: none; color: var(--sp-ink); font-size: 8.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
+.design-preview[data-store-template='lookbook'] .dp-btn.ghost { border-bottom-color: var(--sp-line); color: var(--sp-muted); }
+.design-preview[data-store-template='lookbook'] .dp-hero.has-cover { background: linear-gradient(180deg, color-mix(in srgb, var(--sp-bg) 58%, transparent), var(--sp-bg) 88%), var(--dp-cover) center / cover no-repeat; color: var(--sp-ink); }
+.design-preview[data-store-template='lookbook'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='lookbook'] .dp-hero.has-cover .dp-desc { color: var(--sp-ink); }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
