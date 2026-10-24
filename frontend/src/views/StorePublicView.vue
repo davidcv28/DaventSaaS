@@ -91,6 +91,18 @@ const shopDepts = computed(() => shopCatalog.value.categories
   .filter((d) => d.count > 0)
   .slice(0, 6))
 const deptTo = (id) => ({ ...catalogTo.value, query: { category: id } })
+// Clásico: placa del hero (carrusel o primer producto con foto; sin
+// imágenes cae al logo) y chips con datos reales del negocio.
+const clImg = computed(() => shopImgs.value[0] || shopCatalog.value.products.find((p) => p.image)?.image || '')
+const clChipA = computed(() => (openNow.value
+  ? { icon: 'clock', text: openNow.value.text }
+  : { icon: location.value ? 'map-pin' : 'store', text: location.value || shopName.value }))
+const clChipB = computed(() => {
+  const n = shopCatalog.value.products.length
+  if (showCatalog.value && n) return { icon: 'package', text: `${n} ${n === 1 ? 'producto' : 'productos'}` }
+  if (custom.value.about_years) return { icon: 'star', text: `+${custom.value.about_years} años` }
+  return { icon: 'shield-check', text: 'Atención personalizada' }
+})
 // Ofertas activas: alimentan el copy del acceso promo del hero (nunca se
 // anuncia una oferta que la tienda no tiene).
 const shopOffers = computed(() => shopCatalog.value.products.filter((p) => productOffer(p) != null).length)
@@ -101,7 +113,7 @@ const shopPromoEyebrow = computed(() => {
     : 'Catálogo completo'
 })
 async function loadShopFeatured() {
-  if (!['shop', 'lookbook', 'cobre', 'minimal'].includes(tpl.value) || !showCatalog.value) return
+  if (!['shop', 'lookbook', 'cobre', 'minimal', 'classic'].includes(tpl.value) || !showCatalog.value) return
   try {
     shopCatalog.value = await storesApi.publicCatalog(slug.value, { sort: 'recent' })
   } catch {
@@ -550,6 +562,38 @@ onBeforeUnmount(() => {
                 <img :src="shopPromoImgs[1]" alt="" loading="lazy" />
               </span>
             </a>
+          </div>
+        </template>
+        <template v-else-if="tpl === 'classic'">
+          <!-- Clásico: hero partido — copy alineado a la izquierda y una
+               placa de presentación (foto o logo) con chips flotantes de
+               datos reales del negocio. -->
+          <div class="sp-cl-copy">
+            <p v-reveal class="sp-hero-badge">
+              <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
+              {{ heroBadge }}
+            </p>
+            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
+            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
+            <div v-reveal="280" class="sp-hero-ctas">
+              <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+            </ul>
+          </div>
+          <div v-reveal="140" class="sp-cl-art">
+            <figure class="sp-cl-frame" :class="{ 'is-logo': !clImg }">
+              <img v-if="clImg" :src="clImg" alt="" fetchpriority="high" />
+              <img v-else-if="custom.logo" class="sp-cl-logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+              <span v-else class="sp-cl-initial" aria-hidden="true">{{ initial }}</span>
+            </figure>
+            <span class="sp-cl-chip c1"><span class="sp-cl-chip-ico"><AppIcon :name="clChipA.icon" :size="15" :stroke="2.25" /></span>{{ clChipA.text }}</span>
+            <span class="sp-cl-chip c2"><span class="sp-cl-chip-ico"><AppIcon :name="clChipB.icon" :size="15" :stroke="2.25" /></span>{{ clChipB.text }}</span>
           </div>
         </template>
         <template v-else>
