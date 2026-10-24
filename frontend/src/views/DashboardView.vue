@@ -22,7 +22,7 @@ import {
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX
 } from '../api/stores.api.js'
 import {
-  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
+  validateTaxonomyName, validateProductName, validateProductPrice, validateProductOffer, validateProductDescription,
   catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures
 } from '../api/catalog.api.js'
 import { formatARS } from '../api/billing.api.js'
@@ -415,11 +415,12 @@ async function togglePublished() {
 const catalogTab = ref('products') // products | categories | brands
 const catalogLoaded = ref(false)
 
-// El interruptor del catálogo público (customization.show_catalog) vive en
-// Diseño web, dentro del grupo "Secciones de tu web", y se guarda con
-// "Guardar diseño" como el resto de las secciones.
+// El interruptor del catálogo público (customization.show_catalog) y el
+// carrusel de portada viven en esta misma sección, en la tarjeta "Tu
+// página de catálogo": el dueño controla el catálogo por separado del
+// diseño general de su web.
 
-const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true })
+const productForm = reactive({ name: '', price: '', offer_price: '', category: '', brand: '', description: '', is_active: true })
 const productTouched = reactive({})
 const productBusy = ref(false)
 const productEditing = ref(null)
@@ -533,9 +534,11 @@ const productErrors = computed(() => {
   const e = {}
   const n = validateProductName(productForm.name)
   const p = validateProductPrice(productForm.price)
+  const o = validateProductOffer(productForm.offer_price, productForm.price)
   const d = validateProductDescription(productForm.description.trim())
   if (n) e.name = n
   if (p) e.price = p
+  if (o) e.offer_price = o
   if (d) e.description = d
   if (featuresErr.value) e.features = featuresErr.value
   return e
@@ -593,7 +596,7 @@ function restoreProductOriginal() {
 
 function resetProductForm() {
   productOriginal.value = null
-  Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true })
+  Object.assign(productForm, { name: '', price: '', offer_price: '', category: '', brand: '', description: '', is_active: true })
   productFeatures.value = []
   Object.keys(productTouched).forEach((k) => { productTouched[k] = false })
   productEditing.value = null
@@ -606,7 +609,7 @@ function resetProductForm() {
 function editProduct(p) {
   productEditing.value = p.id
   Object.assign(productForm, {
-    name: p.name, price: p.price, category: p.category || '', brand: p.brand || '',
+    name: p.name, price: p.price, offer_price: p.offer_price ?? '', category: p.category || '', brand: p.brand || '',
     description: p.description || '', is_active: p.is_active
   })
   productFeatures.value = Object.entries(p.features || {}).map(([name, value]) => ({ name, value }))
@@ -628,6 +631,8 @@ async function saveProduct() {
     fields: {
       name: productForm.name.trim(),
       price: productForm.price,
+      // '' viaja como vacío y el backend lo mapea a None (quita la oferta).
+      offer_price: productForm.offer_price,
       category: productForm.category,
       brand: productForm.brand,
       description: productForm.description.trim(),
@@ -893,7 +898,6 @@ async function saveDesign() {
     display_name: designForm.display_name.trim(),
     headline: designForm.headline.trim(),
     description: designForm.description.trim(),
-    show_catalog: Boolean(designForm.show_catalog),
     show_about: Boolean(designForm.show_about),
     show_gallery: Boolean(designForm.show_gallery),
     contact_email: designForm.contact_email.trim(),
@@ -917,6 +921,18 @@ async function saveDesign() {
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   await store.saveCustomization(payload)
   designBusy.value = false
+}
+
+// La página Catálogo se controla desde "Mis catálogos" (tarjeta "Tu
+// página de catálogo"), separada del diseño general: el interruptor
+// guarda show_catalog al instante con su propio PATCH.
+const catalogPageBusy = ref(false)
+async function toggleCatalogPage() {
+  if (catalogPageBusy.value) return
+  catalogPageBusy.value = true
+  const ok = await store.saveCustomization({ show_catalog: Boolean(designForm.show_catalog) })
+  if (!ok) designForm.show_catalog = store.customization?.show_catalog !== false
+  catalogPageBusy.value = false
 }
 
 // Carrusel de banners de la web pública (premium, has_design_advanced). Misma
@@ -1556,6 +1572,44 @@ async function changePassword() {
       </template>
 
       <template v-else>
+        <div class="card">
+          <h3><AppIcon name="store" :size="18" /> Tu página de catálogo</h3>
+          <p>Tu catálogo tiene su propia página pública. Acá controlás su visibilidad y su carrusel de portada, por separado del diseño general de tu web.</p>
+          <label class="check-item">
+            <input v-model="designForm.show_catalog" type="checkbox" :disabled="catalogPageBusy" @change="toggleCatalogPage" />
+            <span class="check-text">
+              <strong>Página Catálogo <span v-if="catalogPageBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+              <small>Tus productos a la vista. Apagala para usar tu web solo como vidriera del negocio.</small>
+            </span>
+          </label>
+          <div v-if="canDesignAdvanced" class="field">
+            <label id="catalog-carousel-label">Carrusel de portada</label>
+            <div class="carousel-box">
+              <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
+                <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
+                <div class="carousel-thumb-actions">
+                  <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                  <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                  <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
+                </div>
+              </div>
+              <button
+                v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
+                type="button" class="carousel-add" :disabled="carouselBusy"
+                @click="carouselInput?.click()"
+              >
+                <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
+                <AppIcon v-else name="images" :size="20" />
+                Agregar
+              </button>
+            </div>
+            <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="catalog-carousel-label" @change="onCarouselPicked" />
+            <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Se muestran como banners sobre tu catálogo.</p>
+            <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
+          </div>
+          <p v-else class="hint">El carrusel de portada del catálogo se habilita con el Plan premium.</p>
+        </div>
+
         <div class="tabs">
           <button type="button" class="tab" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
             <AppIcon name="package" :size="16" /> Productos
@@ -1578,6 +1632,9 @@ async function changePassword() {
               <AppInput v-model="productForm.name" label="Nombre" name="prod_name" placeholder="Ej. Remera oversize" :error="productFieldErr('name')" @blur="productTouched.name = true" />
               <div class="grid-2">
                 <AppInput v-model="productForm.price" label="Precio" name="prod_price" type="number" min="0" step="0.01" placeholder="0.00" :error="productFieldErr('price')" @blur="productTouched.price = true" />
+                <AppInput v-model="productForm.offer_price" label="Precio de oferta" name="prod_offer" type="number" min="0" step="0.01" placeholder="Opcional" hint="Si es menor que el precio, tu web lo muestra tachado con el descuento." :error="productFieldErr('offer_price')" @blur="productTouched.offer_price = true" />
+              </div>
+              <div class="grid-2">
                 <div class="field">
                   <label for="prod-active">Visibilidad</label>
                   <select id="prod-active" v-model="productForm.is_active" class="select">
@@ -1677,8 +1734,9 @@ async function changePassword() {
                   </span>
                   <div class="prod-info">
                     <strong>{{ p.name }}</strong>
-                    <small>{{ formatARS(p.price) }}<template v-if="p.category_name"> · {{ p.category_name }}</template><template v-if="p.brand_name"> · {{ p.brand_name }}</template></small>
+                    <small><template v-if="p.offer_price != null"><s class="prod-old">{{ formatARS(p.price) }}</s> {{ formatARS(p.offer_price) }}</template><template v-else>{{ formatARS(p.price) }}</template><template v-if="p.category_name"> · {{ p.category_name }}</template><template v-if="p.brand_name"> · {{ p.brand_name }}</template></small>
                   </div>
+                  <span v-if="p.offer_price != null" class="pill ok">Oferta</span>
                   <span v-if="!p.is_active" class="pill muted">Oculto</span>
                   <button type="button" class="icon-btn" aria-label="Editar producto" @click="editProduct(p)"><AppIcon name="pencil" :size="15" /></button>
                   <button type="button" class="icon-btn danger" aria-label="Eliminar producto" @click="removeProduct(p)"><AppIcon name="trash" :size="15" /></button>
@@ -1899,13 +1957,6 @@ async function changePassword() {
               <label id="design-sections-label">Secciones de tu web</label>
               <div class="check-list" role="group" aria-labelledby="design-sections-label">
                 <label class="check-item">
-                  <input v-model="designForm.show_catalog" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Página Catálogo</strong>
-                    <small>Tus productos a la vista. Apagala para usar tu web solo como vidriera del negocio.</small>
-                  </span>
-                </label>
-                <label class="check-item">
                   <input v-model="designForm.show_about" type="checkbox" />
                   <span class="check-text">
                     <strong>Sobre nosotros</strong>
@@ -2002,7 +2053,7 @@ async function changePassword() {
               </div>
               <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido.</p>
             </div>
-            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="Los diseños, el color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium." />
+            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="Los diseños, el color de acento, la fuente, la imagen de portada y las decoraciones se habilitan con el Plan premium." />
             <div v-if="!canDesignAdvanced" class="btn-row">
               <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
             </div>
@@ -2037,31 +2088,6 @@ async function changePassword() {
                 <span class="size-value">{{ designForm.name_font_size }} px</span>
               </div>
               <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
-            </div>
-            <div v-if="canDesignAdvanced" class="field">
-              <label id="design-carousel-label">Carrusel de portada</label>
-              <div class="carousel-box">
-                <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
-                  <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
-                  <div class="carousel-thumb-actions">
-                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
-                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
-                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
-                  </div>
-                </div>
-                <button
-                  v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
-                  type="button" class="carousel-add" :disabled="carouselBusy"
-                  @click="carouselInput?.click()"
-                >
-                  <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="images" :size="20" />
-                  Agregar
-                </button>
-              </div>
-              <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-carousel-label" @change="onCarouselPicked" />
-              <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Se muestran como banners en la portada de tu web.</p>
-              <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
             </div>
             <div class="field">
               <label id="design-theme-label">Tema</label>

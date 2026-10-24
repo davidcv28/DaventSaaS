@@ -9,8 +9,8 @@ import { http } from './http.js'
 // PATCH  /api/categories/<pk>/            Bearer {name?, feature_schema?[]} -> {Exito,item}
 // DELETE /api/categories/<pk>/            Bearer -> {Exito}  (productos quedan sin categoría)
 // Ídem   /api/brands/  (sin feature_schema)
-// GET    /api/products/                   Bearer -> [{id,name,description,price,category,category_name,brand,brand_name,is_active,features,image,created_at}]
-// POST   /api/products/                   Bearer multipart {name,price,category?,brand?,description?,is_active?,features?{},image?} -> {Exito,item,storage,image_error?}
+// GET    /api/products/                   Bearer -> [{id,name,description,price,offer_price,category,category_name,brand,brand_name,is_active,features,image,created_at}]
+// POST   /api/products/                   Bearer multipart {name,price,offer_price?,category?,brand?,description?,is_active?,features?{},image?} -> {Exito,item,storage,image_error?}
 // PATCH  /api/products/<pk>/              Bearer idem parcial (+image_clear=true) -> {Exito,item,storage,image_error?}
 // feature_schema = plantilla de atributos de la categoría (['Talle','Color']);
 // features = objeto nombre/valor del producto ({Talle:'M'}) — la plantilla
@@ -127,6 +127,47 @@ export function validateProductPrice(value) {
   if (n < 0) return 'El precio no puede ser negativo'
   if (n > 9999999999) return 'El precio es demasiado grande'
   return ''
+}
+
+// Oferta opcional: si existe tiene que ser menor que el precio de lista
+// (el backend fuerza la misma regla en ProductMixinValidator).
+export function validateProductOffer(value, price) {
+  if (value === '' || value === null || value === undefined) return ''
+  const n = Number(value)
+  if (Number.isNaN(n)) return 'Ingresá una oferta válida'
+  if (n < 0) return 'La oferta no puede ser negativa'
+  if (n > 9999999999) return 'La oferta es demasiado grande'
+  const p = Number(price)
+  if (!Number.isNaN(p) && n >= p) return 'La oferta tiene que ser menor que el precio'
+  return ''
+}
+
+// ===== Helpers para mostrar precios/ofertas en la web pública =====
+// La oferta aplica solo si existe y es menor que el precio (misma regla que
+// el backend). effectivePrice es el número que ordena y se muestra grande.
+export function productOffer(p) {
+  const offer = Number(p?.offer_price)
+  const price = Number(p?.price)
+  return p?.offer_price != null && Number.isFinite(offer) && Number.isFinite(price) && offer < price ? offer : null
+}
+
+export function effectivePrice(p) {
+  return productOffer(p) ?? Number(p?.price ?? 0)
+}
+
+// Descuento redondeado para el badge "-25%": 0 si no hay oferta.
+export function offerPct(p) {
+  const offer = productOffer(p)
+  if (offer === null) return 0
+  const price = Number(p.price)
+  return price > 0 ? Math.max(1, Math.round((1 - offer / price) * 100)) : 0
+}
+
+// "Nuevo": publicado hace menos de PRODUCT_NEW_DAYS días (created_at ISO).
+export const PRODUCT_NEW_DAYS = 7
+export function isNewProduct(p) {
+  const created = Date.parse(p?.created_at || '')
+  return Number.isFinite(created) && Date.now() - created < PRODUCT_NEW_DAYS * 864e5
 }
 
 // ===== Características (espejo de FeatureLimits en config_fields.py) =====

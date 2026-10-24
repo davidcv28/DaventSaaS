@@ -86,4 +86,11 @@ class ProductMixinValidator:
             related     =   attrs.get(field)
             if related is not None and related.store_id != store.id:
                 raise serializers.ValidationError({field: 'No pertenece a tu tienda.'})
+        #La oferta existe solo si es menor que el precio de lista (en un PATCH
+        #el precio puede venir del registro actual).
+        if 'offer_price' in attrs or 'price' in attrs:
+            offer       =   attrs.get('offer_price', getattr(self.instance, 'offer_price', None))
+            price       =   attrs.get('price', getattr(self.instance, 'price', None))
+            if offer is not None and price is not None and offer >= price:
+                raise serializers.ValidationError({'offer_price': 'La oferta tiene que ser menor que el precio.'})
         return attrs

@@ -66,6 +66,7 @@ class Product(models.Model):
     name                        =   models.CharField(max_length = 120, verbose_name = 'Nombre')
     description                 =   models.TextField(max_length = 600, blank = True, verbose_name = 'Descripción')
     price                       =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Precio')
+    offer_price                 =   models.DecimalField(max_digits = 12, decimal_places = 2, null = True, blank = True, verbose_name = 'Precio de oferta')
     features                    =   models.JSONField(default = dict, blank = True, verbose_name = 'Características')
     image_key                   =   models.CharField(max_length = 200, blank = True, verbose_name = 'Imagen (key en R2)')
     image_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño de imagen (bytes)')
@@ -83,6 +84,7 @@ class Product(models.Model):
         ]
         constraints             =   [
             models.CheckConstraint(condition = models.Q(price__gte = 0), name = 'ck_product_price_gte_0'),
+            models.CheckConstraint(condition = models.Q(offer_price__isnull = True) | models.Q(offer_price__gte = 0), name = 'ck_product_offer_price_gte_0'),
         ]
     def __str__(self):
         return f'{self.name} ({self.store.slug})'

@@ -833,6 +833,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .prod-info { flex: 1; min-width: 0; display: grid; }
 .prod-info strong { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prod-info small { color: var(--muted); font-size: 12px; }
+.prod-old { text-decoration: line-through; opacity: .75; }
 .icon-btn { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink-2); cursor: pointer; flex: none; transition: border-color .15s, color .15s; }
 .icon-btn:hover { border-color: var(--brand-500); color: var(--brand-ink); }
 .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }

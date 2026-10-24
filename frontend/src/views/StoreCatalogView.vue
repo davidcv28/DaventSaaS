@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storesApi } from '../api/stores.api.js'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
+import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 
@@ -424,6 +425,8 @@ onBeforeUnmount(() => {
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
               <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Ver producto</span>
+              <span v-if="isNewProduct(p)" class="sp-card-flag">Nuevo</span>
+              <span v-if="productOffer(p) != null" class="sp-card-flag offer">-{{ offerPct(p) }}%</span>
             </div>
             <div class="sp-card-body">
               <p v-if="categoryNameOf(p) || brandNameOf(p)" class="sp-card-eyebrow">
@@ -433,7 +436,7 @@ onBeforeUnmount(() => {
               </p>
               <h3 class="sp-card-name">{{ p.name }}</h3>
               <div class="sp-card-foot">
-                <span class="sp-card-price">{{ formatARS(p.price) }}</span>
+                <span class="sp-card-price"><s v-if="productOffer(p) != null" class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
                 <span class="sp-card-go" aria-hidden="true">
                   Ver más <AppIcon name="arrow-right" :size="15" />
                 </span>

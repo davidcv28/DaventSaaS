@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storesApi } from '../api/stores.api.js'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
+import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 
@@ -65,7 +66,7 @@ const related = computed(() => {
 const whatsappUrl = computed(() => {
   const num = String(custom.value.whatsapp || '').replace(/\D/g, '')
   if (!num || !product.value) return ''
-  const text = `Hola ${shopName.value}, me interesa "${product.value.name}" (${formatARS(product.value.price)}) que vi en tu catálogo.`
+  const text = `Hola ${shopName.value}, me interesa "${product.value.name}" (${formatARS(effectivePrice(product.value))}) que vi en tu catálogo.`
   return `https://wa.me/${num}?text=${encodeURIComponent(text)}`
 })
 
@@ -137,7 +138,7 @@ onMounted(() => {
           <!-- Panel de compra -->
           <aside class="spd-buy" aria-label="Información del producto">
             <div class="spd-buy-head">
-              <p class="spd-cond">Disponible</p>
+              <p class="spd-cond">{{ isNewProduct(product) ? 'Nuevo · ' : '' }}Disponible</p>
               <button type="button" class="sp-icon-btn spd-share" :aria-label="copied ? 'Link copiado' : 'Compartir producto'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="16" />
               </button>
@@ -146,7 +147,11 @@ onMounted(() => {
             <p v-if="brandName" class="spd-brand">Marca: {{ brandName }}</p>
 
             <div class="spd-pricebox">
-              <span class="spd-price">{{ formatARS(product.price) }}</span>
+              <s v-if="productOffer(product) != null" class="spd-price-old">{{ formatARS(product.price) }}</s>
+              <div class="spd-price-row">
+                <span class="spd-price">{{ formatARS(effectivePrice(product)) }}</span>
+                <span v-if="productOffer(product) != null" class="spd-offer-pill">-{{ offerPct(product) }}% OFF</span>
+              </div>
               <p class="spd-pay">
                 <AppIcon name="credit-card" :size="15" aria-hidden="true" />
                 Medios de pago, cuotas y envío se coordinan con el vendedor
@@ -215,9 +220,10 @@ onMounted(() => {
             <span class="spd-rel-img">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <AppIcon v-else name="package" :size="24" aria-hidden="true" />
+              <span v-if="productOffer(p) != null" class="sp-card-flag offer">-{{ offerPct(p) }}%</span>
             </span>
             <span class="spd-rel-name">{{ p.name }}</span>
-            <span class="spd-rel-price">{{ formatARS(p.price) }}</span>
+            <span class="spd-rel-price"><s v-if="productOffer(p) != null" class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
           </RouterLink>
         </div>
       </section>

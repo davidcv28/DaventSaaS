@@ -41,10 +41,11 @@ DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent', 'template'
 LOCATION_FIELDS         =   ('show_location',)
 #Ordenamientos admitidos por el catálogo público (whitelist cerrada: el
 #param ?sort= jamás llega crudo al order_by). Sin sort válido queda el
-#ordering del Meta de Product (name, id).
+#ordering del Meta de Product (name, id). Los precios ordenan/filtran por
+#el efectivo (la oferta cuando existe): effective_price se anota en el query.
 CATALOG_SORTS           =   {
-    'price_asc'     :   ('price', 'name'),
-    'price_desc'    :   ('-price', 'name'),
+    'price_asc'     :   ('effective_price', 'name'),
+    'price_desc'    :   ('-effective_price', 'name'),
     'recent'        :   ('-created_at', '-id'),
     'name'          :   ('name', 'id'),
 }
@@ -208,7 +209,11 @@ class StoreViewSet(StoreBaseViewSet):
         customization     =   getattr(store, 'customization', None)
         if customization is not None and customization.show_catalog is False:
             raise Http404
-        products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
+        from django.db.models.functions import Coalesce
+        #El precio efectivo es la oferta cuando existe: filtros y orden lo usan.
+        products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand').annotate(
+            effective_price =   Coalesce('offer_price', 'price'),
+        )
         category_id     =   request.query_params.get('category')
         brand_id        =   request.query_params.get('brand')
         search          =   (request.query_params.get('q') or '').strip()
@@ -223,9 +228,9 @@ class StoreViewSet(StoreBaseViewSet):
             from django.db.models import Q
             products    =   products.filter(Q(name__icontains = search) | Q(description__icontains = search))
         if min_price is not None:
-            products    =   products.filter(price__gte = min_price)
+            products    =   products.filter(effective_price__gte = min_price)
         if max_price is not None:
-            products    =   products.filter(price__lte = max_price)
+            products    =   products.filter(effective_price__lte = max_price)
         ordering        =   CATALOG_SORTS.get(sort)
         if ordering:
             products    =   products.order_by(*ordering)

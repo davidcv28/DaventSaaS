@@ -1542,6 +1542,17 @@ html { scroll-behavior: smooth; }
 .sp-cx-card-img img { width: 100%; height: 100%; object-fit: contain; transition: transform .6s var(--sp-ease); }
 .sp-cx-card:hover .sp-cx-card-img img { transform: scale(1.06); }
 .sp-cx-flag { position: absolute; left: 10px; top: 10px; padding: 3px 9px; border-radius: 5px; background: #00a650; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+
+/* Ofertas y novedades: precio de lista tachado + badges sobre la imagen.
+   "Nuevo" va arriba a la izquierda (verde) y el -% de oferta a la derecha
+   (color de acento de la tienda). */
+.sp-price-old { margin-right: 7px; font-size: .72em; font-weight: 550; letter-spacing: 0; color: var(--sp-muted); text-decoration: line-through; }
+.sp-card-flag { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 3px 9px; border-radius: 5px; background: #00a650; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; box-shadow: var(--sp-shadow-sm); }
+.sp-card-flag.offer, .sp-cx-flag.offer { left: auto; right: 10px; background: var(--store-accent-ink); }
+.spd-rel-img { position: relative; }
+.spd-price-old { font-size: 15px; font-weight: 500; color: var(--sp-muted); text-decoration: line-through; }
+.spd-price-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.spd-offer-pill { padding: 4px 10px; border-radius: 99px; background: var(--store-accent-ink); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
 .sp-cx-card-body { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 18px; border-top: 1px solid var(--sp-line); }
 .sp-cx-card-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-muted); }
 .sp-cx-card-name { font-size: 14.5px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }

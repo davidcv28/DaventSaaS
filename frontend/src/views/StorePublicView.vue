@@ -4,6 +4,7 @@ import { storesApi } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
+import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 
@@ -315,12 +316,13 @@ onBeforeUnmount(() => {
             <span class="sp-cx-card-img">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <AppIcon v-else name="package" :size="30" />
-              <span v-if="i < 3" class="sp-cx-flag">Nuevo</span>
+              <span v-if="isNewProduct(p)" class="sp-cx-flag">Nuevo</span>
+              <span v-if="productOffer(p) != null" class="sp-cx-flag offer">-{{ offerPct(p) }}%</span>
             </span>
             <span class="sp-cx-card-body">
               <small v-if="categoryNameOf(p) || brandNameOf(p)" class="sp-cx-card-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</small>
               <span class="sp-cx-card-name">{{ p.name }}</span>
-              <span class="sp-cx-card-price">{{ formatARS(p.price) }}</span>
+              <span class="sp-cx-card-price"><s v-if="productOffer(p) != null" class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
             </span>
           </RouterLink>
         </div>

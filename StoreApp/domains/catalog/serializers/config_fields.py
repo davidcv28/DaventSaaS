@@ -64,6 +64,17 @@ ProductFields               =   {
             'min_value'     :   'El precio no puede ser negativo',
         },
     },
+    'offer_price'           :   {
+        'label'             :   'Precio de oferta',
+        'required'          :   False,
+        'allow_null'        :   True,
+        'min_value'         :   0,
+        'max_digits'        :   12,
+        'decimal_places'    :   2,
+        'error_messages'    :   {
+            'min_value'     :   'La oferta no puede ser negativa',
+        },
+    },
     'category'              :   {'required': False, 'allow_null': True},
     'brand'                 :   {'required': False, 'allow_null': True},
     'is_active'             :   {'required': False},

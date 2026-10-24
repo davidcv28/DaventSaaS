@@ -37,6 +37,7 @@ class ProductSerializer(ProductMixinValidator, serializers.ModelSerializer):
     name                        =   serializers.CharField(**ProductFields['name'])
     description                 =   serializers.CharField(**ProductFields['description'])
     price                       =   serializers.DecimalField(**ProductFields['price'])
+    offer_price                 =   serializers.DecimalField(**ProductFields['offer_price'])
     category                    =   serializers.PrimaryKeyRelatedField(queryset = Category.objects.all(), **ProductFields['category'])
     brand                       =   serializers.PrimaryKeyRelatedField(queryset = Brand.objects.all(), **ProductFields['brand'])
     is_active                   =   serializers.BooleanField(**ProductFields['is_active'])
@@ -44,7 +45,7 @@ class ProductSerializer(ProductMixinValidator, serializers.ModelSerializer):
     features                    =   serializers.JSONField(binary = True, **ProductFields['features'])
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'category', 'brand', 'is_active', 'features']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'category', 'brand', 'is_active', 'features']
 #=========================================
 # PRODUCT SERIALIZER LIST (mi catálogo, con imagen y nombres)
 #=========================================
@@ -55,7 +56,7 @@ class ProductSerializerList(serializers.ModelSerializer):
     class Meta:
         model                   =   Product
         fields                  =   [
-            'id', 'name', 'description', 'price', 'category', 'category_name',
+            'id', 'name', 'description', 'price', 'offer_price', 'category', 'category_name',
             'brand', 'brand_name', 'is_active', 'features', 'image', 'created_at',
         ]
     def get_image(self, product):
@@ -67,6 +68,6 @@ class ProductPublicSerializer(serializers.ModelSerializer):
     image                       =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'features', 'image', 'category', 'brand']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at']
     def get_image(self, product):
         return object_url(product.image_key)
