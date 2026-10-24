@@ -172,8 +172,10 @@ WSGI_APPLICATION = 'DaventProject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# conn_max_age: reutiliza la conexión a Postgres entre requests — en producción
+# la DB es externa (Neon) y cada handshake TLS nuevo suma ~300ms por request.
 DATABASES = {
-    'default': config('DATABASE_URL', cast=dj_database_url.parse)
+    'default': config('DATABASE_URL', cast=lambda v: dj_database_url.parse(v, conn_max_age=60))
 }
 
 
