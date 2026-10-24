@@ -38,7 +38,7 @@ watch(() => route.query.q, (q) => {
   if (next !== ui.search) ui.search = next
 }, { immediate: true })
 
-const catalog = ref({ categories: [], brands: [], products: [], facets: [] })
+const catalog = ref({ categories: [], brands: [], products: [] })
 const catalogStatus = ref('idle') // idle | loading | success | error
 
 // --- Filtros de la tienda (el texto de búsqueda vive en ui.search para
@@ -51,10 +51,6 @@ const activeBrand = ref(queryId(route.query.brand))
 const priceMin = ref('')
 const priceMax = ref('')
 const sort = ref(SORTS.includes(route.query.sort) ? route.query.sort : 'name')
-// Filtros de características estilo marketplace: {nombre: [valores]} — OR
-// dentro de un atributo, AND entre atributos. Viajan al backend como
-// ?feat=<json>; las facetas disponibles llegan en catalog.facets.
-const featureSel = ref({})
 let searchTimer = null
 
 // parsePrice acepta formato es-AR ("1.500,50") y punto decimal: lo que no
@@ -80,24 +76,14 @@ async function loadCatalog() {
     let min = parsePrice(priceMin.value)
     let max = parsePrice(priceMax.value)
     if (min !== '' && max !== '' && min > max) [min, max] = [max, min]
-    const featEntries = Object.entries(featureSel.value).filter(([, v]) => v.length)
     catalog.value = await storesApi.publicCatalog(slug.value, {
       q: ui.search.trim(),
       category: activeCategory.value || '',
       brand: activeBrand.value || '',
       min_price: min,
       max_price: max,
-      sort: sort.value,
-      feat: featEntries.length ? JSON.stringify(Object.fromEntries(featEntries)) : ''
+      sort: sort.value
     })
-    // Si un atributo seleccionado desapareció de las facetas (los productos
-    // restantes ya no lo tienen), la selección muerta se descarta.
-    const facetNames = new Set((catalog.value.facets || []).map((f) => f.name))
-    const kept = {}
-    for (const [name, values] of Object.entries(featureSel.value)) {
-      if (values.length && facetNames.has(name)) kept[name] = values
-    }
-    featureSel.value = kept
     catalogStatus.value = 'success'
   } catch {
     catalogStatus.value = 'error'
@@ -124,32 +110,12 @@ function pickBrand(id) {
   activeBrand.value = activeBrand.value === id ? null : id
   loadCatalog()
 }
-// Alterna un valor de característica (los grupos se recalculan solos:
-// el backend los arma sobre el conjunto filtrado sin los filtros de
-// características, igual que los conteos de Mercado Libre).
-function pickFeature(name, value) {
-  const sel = { ...featureSel.value }
-  const values = new Set(sel[name] || [])
-  if (values.has(value)) values.delete(value)
-  else values.add(value)
-  if (values.size) sel[name] = [...values]
-  else delete sel[name]
-  featureSel.value = sel
-  loadCatalog()
-}
-const isFeatureOn = (name, value) => (featureSel.value[name] || []).includes(value)
-const featureChipList = computed(() =>
-  Object.entries(featureSel.value).flatMap(([name, values]) =>
-    values.map((value) => ({ name, value }))
-  )
-)
 function clearFilters() {
   activeCategory.value = null
   activeBrand.value = null
   ui.search = ''
   priceMin.value = ''
   priceMax.value = ''
-  featureSel.value = {}
   loadCatalog()
 }
 
@@ -163,13 +129,13 @@ const priceRangeLabel = computed(() => {
   if (min !== '') return `Desde ${formatARS(min)}`
   return `Hasta ${formatARS(max)}`
 })
-const hasFilters = computed(() => Boolean(activeCategory.value || activeBrand.value || ui.search || hasPriceFilter.value || featureChipList.value.length))
-const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length || catalog.value.facets.length))
+const hasFilters = computed(() => Boolean(activeCategory.value || activeBrand.value || ui.search || hasPriceFilter.value))
+const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length))
 // El burger del header solo aparece cuando hay categorías o marcas.
 watchEffect(() => { ui.hasCatalogNav = hasCatalogNav.value })
 const activeCategoryName = computed(() => catalog.value.categories.find((c) => c.id === activeCategory.value)?.name)
 const activeBrandName = computed(() => catalog.value.brands.find((b) => b.id === activeBrand.value)?.name)
-const activeFilterCount = computed(() => [activeCategory.value, activeBrand.value, ui.search.trim(), hasPriceFilter.value].filter(Boolean).length + featureChipList.value.length)
+const activeFilterCount = computed(() => [activeCategory.value, activeBrand.value, ui.search.trim(), hasPriceFilter.value].filter(Boolean).length)
 const productCount = computed(() => {
   const n = catalog.value.products.length
   const base = `${n} ${n === 1 ? 'producto' : 'productos'}`
@@ -389,22 +355,6 @@ onBeforeUnmount(() => {
             <AppIcon name="tag" :size="15" /> <span>{{ b.name }}</span>
           </button>
         </nav>
-        <nav v-if="catalog.facets.length" class="sp-nav-group" aria-label="Características">
-          <p class="sp-nav-heading">Características</p>
-          <div v-for="f in catalog.facets" :key="`f-${f.name}`" class="sp-facet">
-            <p class="sp-facet-name">{{ f.name }}</p>
-            <button
-              v-for="v in f.values" :key="`f-${f.name}-${v.value}`" type="button"
-              class="sp-facet-item" :class="{ active: isFeatureOn(f.name, v.value) }"
-              :aria-pressed="isFeatureOn(f.name, v.value)"
-              @click="pickFeature(f.name, v.value)"
-            >
-              <span class="sp-facet-check" aria-hidden="true"><AppIcon name="check" :size="12" /></span>
-              <span class="sp-facet-value">{{ v.value }}</span>
-              <em class="sp-facet-count">{{ v.count }}</em>
-            </button>
-          </div>
-        </nav>
         <button v-if="hasFilters" type="button" class="sp-nav-clear" @click="clearFilters(); ui.menuOpen = false">
           <AppIcon name="x" :size="14" /> Limpiar filtros
         </button>
@@ -468,12 +418,6 @@ onBeforeUnmount(() => {
           </button>
           <button v-if="hasPriceFilter" type="button" class="sp-chip" @click="priceMin = ''; priceMax = ''">
             {{ priceRangeLabel }} <AppIcon name="x" :size="12" />
-          </button>
-          <button
-            v-for="chip in featureChipList" :key="`fc-${chip.name}-${chip.value}`" type="button"
-            class="sp-chip" @click="pickFeature(chip.name, chip.value)"
-          >
-            {{ chip.name }}: {{ chip.value }} <AppIcon name="x" :size="12" />
           </button>
           <button type="button" class="sp-chip clear" @click="clearFilters">Limpiar</button>
         </div>

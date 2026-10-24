@@ -166,19 +166,6 @@
 .store-page[data-store-theme='dark'] .sp-nav-item.active { background: color-mix(in srgb, var(--store-accent) 22%, transparent); color: #fff; }
 .sp-nav-clear { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 4px 0 4px 2px; padding: 8px 12px; border: 1px dashed var(--sp-line); border-radius: 9px; background: transparent; color: var(--sp-muted); font: inherit; font-size: 12.5px; cursor: pointer; }
 .sp-nav-clear:hover { color: var(--sp-accent-text); border-color: var(--store-accent); }
-/* Facetas de características (estilo marketplace): grupos atributo → valores con conteo */
-.sp-facet { display: grid; gap: 2px; }
-.sp-facet + .sp-facet { margin-top: 8px; }
-.sp-facet-name { margin: 2px 12px 4px; font-size: 12.5px; font-weight: 650; color: var(--sp-ink); }
-.sp-facet-item { display: flex; align-items: center; gap: 9px; padding: 7px 12px; border: none; border-radius: 8px; background: transparent; color: var(--sp-ink-2); font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; transition: background .12s, color .12s; }
-.sp-facet-item:hover { background: var(--store-accent-soft); color: var(--store-accent-ink); }
-.store-page[data-store-theme='dark'] .sp-facet-item:hover { background: color-mix(in srgb, var(--store-accent) 16%, transparent); color: #fff; }
-.sp-facet-check { flex: none; display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--sp-line); border-radius: 5px; color: transparent; transition: background .12s, border-color .12s, color .12s; }
-.sp-facet-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sp-facet-count { flex: none; font-style: normal; font-size: 12px; color: var(--sp-muted); }
-.sp-facet-item.active { color: var(--sp-accent-text); font-weight: 600; }
-.sp-facet-item.active .sp-facet-check { background: var(--store-accent); border-color: var(--store-accent); color: #fff; }
-.sp-facet-item.active .sp-facet-count { color: var(--sp-accent-text); }
 
 /* --- Filtros del catálogo: rango de precios + orden --- */
 .sp-filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: -14px 0 26px; }
@@ -2819,15 +2806,6 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='lookbook'] .sp-nav-item.active::before {
   left: -18px; top: 50%; bottom: auto; width: 10px; height: 1px;
   border-radius: 0; background: var(--sp-ink); animation: none;
-}
-.store-page[data-store-template='lookbook'] .sp-facet-name {
-  margin: 10px 0 4px; font-family: var(--sp-display); font-size: 15px; font-weight: 400;
-}
-.store-page[data-store-template='lookbook'] .sp-facet-item { padding: 6px 0; border-radius: 0; font-size: 12.5px; }
-.store-page[data-store-template='lookbook'] .sp-facet-item:hover { background: transparent; color: var(--sp-ink); }
-.store-page[data-store-template='lookbook'] .sp-facet-check { border-radius: 0; }
-.store-page[data-store-template='lookbook'] .sp-facet-item.active .sp-facet-check {
-  background: var(--sp-ink); border-color: var(--sp-ink); color: var(--sp-bg);
 }
 .store-page[data-store-template='lookbook'] .sp-nav-clear {
   padding: 6px 0; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0;
