@@ -8,7 +8,6 @@ lock — dos emisiones concurrentes no pisan el correlativo.
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework import serializers
