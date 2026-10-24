@@ -13,8 +13,8 @@ import { vReveal } from '../directives/reveal.js'
 const ctx = inject('storePage')
 const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
 // Diseño activo de la portada ('classic' | 'perspective' | 'promo' |
-// 'atelier' | 'street'): la estructura del hero se reordena por CSS
-// (grid-areas); el decor propio de cada diseño es el único markup extra.
+// 'atelier' | 'street' | 'terminal'): la estructura del hero se reordena
+// por CSS (grid-areas); el decor propio de cada diseño es el único markup extra.
 const tpl = pageTemplate
 
 const year = new Date().getFullYear()
@@ -22,7 +22,9 @@ const marqueeItems = computed(() => (tpl.value === 'promo'
   ? [{ icon: 'flame', text: 'Ofertas' }, { icon: 'sparkles', text: 'Novedades' }, { icon: 'percent', text: 'Promos' }, { icon: 'zap', text: 'Consultá ya' }]
   : tpl.value === 'street'
     ? [{ icon: 'zap', text: shopName.value }, { icon: 'flame', text: 'Nueva colección' }, { icon: 'tag', text: heroTitle.value }, { icon: 'map-pin', text: location.value || 'Tienda online' }]
-    : [{ icon: 'zap', text: shopName.value }, { icon: 'star', text: heroTitle.value }, { icon: 'map-pin', text: location.value || 'Tienda online' }]))
+    : tpl.value === 'terminal'
+      ? [{ icon: 'terminal', text: shopName.value }, { icon: 'check', text: 'status: ok' }, { icon: 'package', text: heroTitle.value }, { icon: 'map-pin', text: location.value || 'tienda online' }]
+      : [{ icon: 'zap', text: shopName.value }, { icon: 'star', text: heroTitle.value }, { icon: 'map-pin', text: location.value || 'Tienda online' }]))
 const titleSplit = computed(() => {
   const words = heroTitle.value.split(/\s+/)
   return words.length > 1 ? { head: words.slice(0, -1).join(' '), last: words[words.length - 1] } : { head: '', last: heroTitle.value }
@@ -240,6 +242,20 @@ onBeforeUnmount(() => {
           <span class="sp-pr-spark s2"><AppIcon name="star" :size="22" :stroke="2" /></span>
           <span class="sp-pr-spark s3"><AppIcon name="zap" :size="26" :stroke="2" /></span>
         </template>
+        <template v-else-if="tpl === 'terminal'">
+          <span class="sp-tm-ghost">&gt;_</span>
+          <span class="sp-tm-log">
+            <i><b>[ ok ]</b> tienda inicializada</i>
+            <i><b>[ ok ]</b> identidad cargada</i>
+            <i><b>[ ok ]</b> catálogo indexado</i>
+            <i class="dim">$ esperando visitante<span class="sp-tm-caret"></span></i>
+          </span>
+        </template>
+      </div>
+      <div v-if="tpl === 'terminal'" class="sp-container sp-tm-bar" aria-hidden="true">
+        <span class="sp-tm-dots"><i></i><i></i><i></i></span>
+        <span class="sp-tm-path">tienda@davent:~/{{ slug }}</span>
+        <span class="sp-tm-live">[ en línea ]</span>
       </div>
       <div v-if="tpl === 'atelier'" class="sp-container sp-at-masthead" aria-hidden="true">
         <span>Nº 01</span><i></i><span>Colección {{ year }}</span><i></i><span>{{ location || (showCatalog ? 'Catálogo' : 'Sitio oficial') }}</span>
@@ -258,7 +274,7 @@ onBeforeUnmount(() => {
           <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
           {{ heroBadge }}
         </p>
-        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'street'">{{ titleSplit.head }} <mark class="sp-st-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'atelier'">{{ titleSplit.head }} <em class="sp-at-em">{{ titleSplit.last }}</em></template><template v-else>{{ heroTitle }}</template></h1>
+        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'street'">{{ titleSplit.head }} <mark class="sp-st-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'atelier'">{{ titleSplit.head }} <em class="sp-at-em">{{ titleSplit.last }}</em></template><template v-else-if="tpl === 'terminal'">{{ titleSplit.head }} <mark class="sp-tm-mark">{{ titleSplit.last }}</mark></template><template v-else>{{ heroTitle }}</template></h1>
         <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
         <div v-reveal="320" class="sp-hero-ctas">
           <a v-if="tpl === 'promo' && whatsappUrl" class="sp-btn sp-pr-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> Escribinos ahora</a>
@@ -279,10 +295,10 @@ onBeforeUnmount(() => {
           <span class="sp-pr-seal-core"><AppIcon name="gift" :size="46" :stroke="1.75" /></span>
         </div>
       </div>
-      <!-- Cinta de marca de Perspectiva, Publicidad y Urbano: marquee
-           infinito (dos secuencias idénticas, el track se desplaza -50%
-           en loop). Solo decoración. -->
-      <div v-if="tpl === 'perspective' || tpl === 'promo' || tpl === 'street'" class="sp-hero-marquee" aria-hidden="true">
+      <!-- Cinta de marca de Perspectiva, Publicidad, Urbano y Terminal:
+           marquee infinito (dos secuencias idénticas, el track se desplaza
+           -50% en loop). Solo decoración. -->
+      <div v-if="tpl === 'perspective' || tpl === 'promo' || tpl === 'street' || tpl === 'terminal'" class="sp-hero-marquee" aria-hidden="true">
         <div class="sp-hero-marquee-track">
           <span v-for="n in 2" :key="n" class="sp-hero-marquee-seq">
             <template v-for="(m, i) in marqueeItems" :key="i"><AppIcon :name="m.icon" :size="15" :stroke="2.25" /> {{ m.text }} <i></i></template>

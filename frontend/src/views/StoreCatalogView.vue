@@ -259,6 +259,13 @@ onBeforeUnmount(() => {
         <span class="sp-st-barcode"><i></i><em>{{ shopName }}</em></span>
       </template>
       <span v-else-if="tpl === 'atelier'" class="sp-at-letter">{{ shopName.slice(0, 1).toUpperCase() }}</span>
+      <template v-else-if="tpl === 'terminal'">
+        <span class="sp-tm-ghost">~/catalogo</span>
+        <span class="sp-tm-log">
+          <i><b>$</b> ls ./productos</i>
+          <i class="dim">cargando índice<span class="sp-tm-caret"></span></i>
+        </span>
+      </template>
     </div>
     <div class="sp-container sp-cat-hero-inner">
       <nav v-reveal class="sp-crumbs" aria-label="Ruta">

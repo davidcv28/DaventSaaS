@@ -763,6 +763,11 @@ body { transition: background-color .2s ease, color .2s ease; }
 .tpl-thumb[data-tpl='street']::before { content: ''; position: absolute; right: 10%; top: 12%; width: 19px; height: 19px; border-radius: 50%; background: var(--brand-500); border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
 .tpl-thumb[data-tpl='street']::after { content: ''; position: absolute; left: 9%; top: 26%; width: 52%; height: 7px; border-radius: 1px; background: #111827; box-shadow: 0 11px 0 -3px transparent, 0 12px 0 #94a3b8; }
 .tpl-thumb[data-tpl='street'] i { left: -4%; right: -4%; bottom: 10%; height: 8px; border-radius: 0; opacity: 1; background: var(--brand-500); border-block: 2px solid #111827; transform: rotate(-2.5deg); }
+/* Terminal: pantalla oscura con puntos de ventana, líneas de salida y cursor. */
+.tpl-thumb[data-tpl='terminal'] { background: linear-gradient(180deg, #0b0f0c 0 62%, var(--card) 62%); }
+.tpl-thumb[data-tpl='terminal']::before { content: ''; position: absolute; left: 9%; top: 10%; width: 6px; height: 6px; border-radius: 50%; background: #ff5f57; box-shadow: 9px 0 0 #febc2e, 18px 0 0 var(--brand-500); }
+.tpl-thumb[data-tpl='terminal']::after { content: ''; position: absolute; left: 9%; top: 30%; width: 52%; height: 5px; border-radius: 1px; background: #4a5a4f; box-shadow: 0 10px 0 -1px #2c362f; }
+.tpl-thumb[data-tpl='terminal'] i { left: auto; right: 30%; top: 31%; bottom: auto; width: 9px; height: 8px; border-radius: 1px; background: var(--brand-500); opacity: 1; }
 .design-preview[data-store-template='street'] .dp-nav { background: #fff; border-bottom: 2px solid var(--sp-ink); }
 .design-preview[data-store-template='street'] .dp-nav-name { color: var(--sp-ink); }
 .design-preview[data-store-template='street'] .dp-nav-item { color: var(--sp-muted); }
@@ -814,6 +819,21 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='perspective'] .dp-desc { color: var(--sp-muted); }
 .design-preview[data-store-template='perspective'] .dp-btn { background: var(--store-accent-ink); color: #fff; border-radius: 8px; }
 .design-preview[data-store-template='perspective'] .dp-btn.ghost { background: transparent; border-color: var(--sp-line); color: var(--sp-ink-2); box-shadow: none; }
+/* Terminal: pantalla de fósforo con prompt y cursor, igual que la web real. */
+.design-preview[data-store-template='terminal'] .dp-nav { background: #0b0f0c; border-bottom: 1px solid color-mix(in srgb, var(--store-accent) 30%, transparent); }
+.design-preview[data-store-template='terminal'] .dp-nav-name { color: #e9f3ec; }
+.design-preview[data-store-template='terminal'] .dp-nav-item { color: color-mix(in srgb, #e9f3ec 55%, #0b0f0c); }
+.design-preview[data-store-template='terminal'] .dp-nav-mono { background: var(--store-accent); color: #0b0f0c; border-radius: 4px; }
+.design-preview[data-store-template='terminal'] .dp-hero { justify-items: start; text-align: left; color: #e9f3ec; background: radial-gradient(300px 140px at 80% -20%, color-mix(in srgb, var(--store-accent) 22%, transparent), transparent 62%), repeating-linear-gradient(0deg, rgba(255, 255, 255, .03) 0 1px, transparent 1px 4px), #0b0f0c; }
+.design-preview[data-store-template='terminal'] .dp-badge { padding: 0; border: 0; border-radius: 0; background: none; color: color-mix(in srgb, #e9f3ec 58%, #0b0f0c); font-family: 'JetBrains Mono', monospace; }
+.design-preview[data-store-template='terminal'] .dp-badge::before { content: '// '; color: var(--store-accent); }
+.design-preview[data-store-template='terminal'] .dp-title { font-family: 'Space Mono', 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: -.02em; }
+.design-preview[data-store-template='terminal'] .dp-title::after { content: ''; display: inline-block; width: .58ch; height: .85em; margin-left: .16em; background: var(--store-accent); }
+.design-preview[data-store-template='terminal'] .dp-desc { color: color-mix(in srgb, #e9f3ec 62%, #0b0f0c); font-family: 'JetBrains Mono', monospace; }
+.design-preview[data-store-template='terminal'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='terminal'] .dp-btn { background: var(--store-accent); border: 1px solid var(--store-accent); color: #0b0f0c; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.design-preview[data-store-template='terminal'] .dp-btn.ghost { background: transparent; border-color: color-mix(in srgb, var(--store-accent) 45%, transparent); color: #e9f3ec; }
+.design-preview[data-store-template='terminal'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(7, 10, 8, .88), rgba(7, 10, 8, .5)), var(--dp-cover) center / cover no-repeat; color: #e9f3ec; }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }

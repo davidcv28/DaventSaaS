@@ -91,10 +91,12 @@ class StoreCustomization(models.Model):
         ('dancing-script',       'Dancing Script'),
         ('caveat',               'Caveat'),
         ('lobster',              'Lobster'),
+        ('space-mono',           'Space Mono'),
+        ('jetbrains-mono',       'JetBrains Mono'),
     ]
     TEMPLATE_CLASSIC            =   'classic'
     #Diseños de la web pública (catálogo cerrado): clásico es el diseño base
-    #y los dos restantes se habilitan con has_design_advanced (Plan premium).
+    #y las restantes se habilitan con has_design_advanced (Plan premium).
     #El viewset descarta el campo del payload sin ese beneficio y el frontend
     #además lo fuerza a 'classic' si la tienda pierde el plan premium.
     TEMPLATE_CHOICES            =   [
@@ -103,6 +105,7 @@ class StoreCustomization(models.Model):
         ('promo',            'Publicidad'),
         ('atelier',          'Atelier'),
         ('street',           'Urbano'),
+        ('terminal',         'Terminal'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

@@ -123,10 +123,11 @@ onMounted(async () => {
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
     // Fuentes propias de la plantilla (titulares): serif de pasarela en
-    // 'atelier', condensada de letrero en 'perspective' y peso pesado de
-    // streetwear en 'street'. Misma carga on-demand que name_font; el resto
-    // del texto sigue con la fuente elegida por el dueño.
-    const TEMPLATE_FONTS = { atelier: ['fraunces'], perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'] }
+    // 'atelier', condensada de letrero en 'perspective', peso pesado de
+    // streetwear en 'street' y el par monospace de 'terminal'. Misma carga
+    // on-demand que name_font; el resto del texto sigue con la fuente
+    // elegida por el dueño.
+    const TEMPLATE_FONTS = { atelier: ['fraunces'], perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'] }
     TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'

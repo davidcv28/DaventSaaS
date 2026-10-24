@@ -311,16 +311,17 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
-// 'classic' es el diseño base; 'perspective', 'promo', 'atelier' y 'street'
-// se habilitan con el beneficio has_design_advanced (Plan premium). El frontend
-// fuerza 'classic' cuando la tienda no tiene ese beneficio aunque haya otro
-// valor guardado.
+// 'classic' es el diseño base; 'perspective', 'promo', 'atelier', 'street' y
+// 'terminal' se habilitan con el beneficio has_design_advanced (Plan premium).
+// El frontend fuerza 'classic' cuando la tienda no tiene ese beneficio aunque
+// haya otro valor guardado.
 export const STORE_TEMPLATES = {
   classic:   { label: 'Clásico',    desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
   perspective: { label: 'Perspectiva', desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
   promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
   atelier:   { label: 'Atelier',    desc: 'Alta costura digital: serif de pasarela, portada tipo campaña enmarcada, índice numerado y fichas minimalistas.' },
-  street:    { label: 'Urbano',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' }
+  street:    { label: 'Urbano',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
+  terminal:  { label: 'Terminal',   desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' }
 }
 
 export function storeTemplate(value) {
@@ -356,7 +357,9 @@ export const STORE_FONTS = {
   'pacifico':         { label: 'Pacifico',         family: "'Pacifico', cursive",                 google: 'Pacifico' },
   'dancing-script':   { label: 'Dancing Script',   family: "'Dancing Script', cursive",           google: 'Dancing+Script:wght@400..700' },
   'caveat':           { label: 'Caveat',           family: "'Caveat', cursive",                   google: 'Caveat:wght@400..700' },
-  'lobster':          { label: 'Lobster',          family: "'Lobster', cursive",                  google: 'Lobster' }
+  'lobster':          { label: 'Lobster',          family: "'Lobster', cursive",                  google: 'Lobster' },
+  'space-mono':       { label: 'Space Mono',       family: "'Space Mono', monospace",             google: 'Space+Mono:ital,wght@0,400;0,700;1,400;1,700' },
+  'jetbrains-mono':   { label: 'JetBrains Mono',   family: "'JetBrains Mono', monospace",         google: 'JetBrains+Mono:ital,wght@0,400..800;1,400..800' }
 }
 
 export function storeFontFamily(nameFont) {
