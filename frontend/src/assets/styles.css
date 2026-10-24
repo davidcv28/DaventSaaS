@@ -855,6 +855,33 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-badge { color: rgba(255, 255, 255, .85); }
 .design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-desc { color: rgba(255, 255, 255, .85); }
 .design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .55); color: #fff; }
+/* Cobre: retail de indumentaria — piedra y tinta, titular Bebas condensado
+   en mayúsculas, botón como bloque de acento y placa de imagen a un lado. */
+.tpl-thumb[data-tpl='cobre'] { background: #e9e8e4; }
+.tpl-thumb[data-tpl='cobre']::before { content: ''; position: absolute; right: 8%; top: 12%; width: 30%; height: 52%; border-radius: 3px; background: var(--brand-500); }
+.tpl-thumb[data-tpl='cobre']::after { content: ''; position: absolute; left: 8%; top: 16%; width: 46%; height: 8px; border-radius: 1px; background: #101318; box-shadow: 0 14px 0 -2px #101318, 0 34px 0 -2px #8a8d94; }
+.tpl-thumb[data-tpl='cobre'] i { left: auto; right: 16%; bottom: 14%; width: 26%; height: 34%; border-radius: 3px; background: #101318; opacity: 1; }
+.design-preview[data-store-template='cobre'] { --sp-bg: #e9e8e4; --sp-card: #f2f1ed; --sp-ink: #101318; --sp-ink-2: #2a2e36; --sp-muted: #454a52; --sp-line: color-mix(in srgb, #101318 14%, transparent); }
+.design-preview[data-store-theme='dark'][data-store-template='cobre'] { --sp-bg: #141619; --sp-card: #1b1e23; --sp-ink: #eceee9; --sp-ink-2: #c9cdd3; --sp-muted: #a9aeb6; --sp-line: color-mix(in srgb, #eceee9 14%, transparent); }
+.design-preview[data-store-template='cobre'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
+.design-preview[data-store-template='cobre'] .dp-nav-name { color: var(--sp-ink); font-family: 'Bebas Neue', var(--store-font), sans-serif; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.design-preview[data-store-template='cobre'] .dp-nav-item { color: var(--sp-muted); font-size: 8.5px; font-weight: 600; letter-spacing: .06em; }
+.design-preview[data-store-template='cobre'] .dp-nav-mono { background: var(--store-accent); color: #fff; border-radius: 3px; }
+.design-preview[data-store-template='cobre'] .dp-hero { justify-items: start; text-align: left; color: var(--sp-ink); background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); padding: 22px 18px 20px; }
+.design-preview[data-store-template='cobre'] .dp-mono { background: var(--store-accent); color: #fff; border-radius: 3px; }
+.design-preview[data-store-template='cobre'] .dp-badge { padding: 0; border: 0; border-radius: 0; background: none; color: var(--store-accent-ink); font-size: 8.5px; font-weight: 700; letter-spacing: .05em; text-transform: none; }
+.design-preview[data-store-theme='dark'][data-store-template='cobre'] .dp-badge { color: var(--store-accent); }
+.design-preview[data-store-template='cobre'] .dp-title { font-family: 'Bebas Neue', var(--store-font), sans-serif; font-weight: 400; font-size: 34px; line-height: .88; letter-spacing: .01em; text-transform: uppercase; color: var(--sp-ink); }
+.design-preview[data-store-template='cobre'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='cobre'] .dp-desc { color: var(--sp-muted); font-family: 'DM Sans', var(--store-font), sans-serif; line-height: 1.6; }
+.design-preview[data-store-template='cobre'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='cobre'] .dp-btn { border-radius: 3px; background: var(--store-accent); color: #fff; font-weight: 600; box-shadow: none; }
+.design-preview[data-store-template='cobre'] .dp-btn.ghost { background: transparent; border: 1.5px solid var(--sp-ink); color: var(--sp-ink); }
+.design-preview[data-store-template='cobre'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(16, 19, 24, .82), rgba(16, 19, 24, .4)), var(--dp-cover) center / cover no-repeat; color: #fff; }
+.design-preview[data-store-template='cobre'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='cobre'] .dp-hero.has-cover .dp-desc { color: #fff; }
+.design-preview[data-store-template='cobre'] .dp-hero.has-cover .dp-badge { color: rgba(255, 255, 255, .9); }
+.design-preview[data-store-template='cobre'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .7); color: #fff; }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }

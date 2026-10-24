@@ -270,6 +270,9 @@ onBeforeUnmount(() => {
       <template v-else-if="tpl === 'lookbook'">
         <span class="sp-lb-ghost">Nº 01</span>
       </template>
+      <template v-else-if="tpl === 'cobre'">
+        <span class="sp-cb-ghost">Colección</span>
+      </template>
     </div>
     <div class="sp-container sp-cat-hero-inner">
       <nav v-reveal class="sp-crumbs" aria-label="Ruta">

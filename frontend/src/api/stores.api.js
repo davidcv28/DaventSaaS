@@ -436,7 +436,8 @@ export const STORE_TEMPLATES = {
   promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
   terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' },
   lookbook:    { label: 'Lookbook',    tier: 'advanced', desc: 'Editorial de moda: papel cálido, titulares serif de revista, pliegos de imagen numerados y catálogo como índice de colección.' },
-  shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Estilo marketplace: barra superior con buscador, menú de secciones, portada tipo banner con promos y productos destacados.' }
+  shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Estilo marketplace: barra superior con buscador, menú de secciones, portada tipo banner con promos y productos destacados.' },
+  cobre:       { label: 'Cobre',       tier: 'advanced', desc: 'Retail de indumentaria: piedra y tinta, titulares condensados XXL en mayúsculas, placas de acento, tira de beneficios y grilla de colección.' }
 }
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de

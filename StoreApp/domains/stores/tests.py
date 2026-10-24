@@ -267,7 +267,7 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_basic_discards_plus_and_advanced_templates(self):
         client, _       =   self._client()
-        for key in ('street', 'promo', 'terminal', 'lookbook'):
+        for key in ('street', 'promo', 'terminal', 'lookbook', 'cobre'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'classic')
 
@@ -279,13 +279,13 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_standard_discards_advanced_template(self):
         client, _       =   self._client('has_design_plus')
-        for key in ('terminal', 'lookbook'):
+        for key in ('terminal', 'lookbook', 'cobre'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'classic')
 
     def test_premium_picks_any_template(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        for key in ('classic', 'perspective', 'street', 'promo', 'terminal', 'lookbook'):
+        for key in ('classic', 'perspective', 'street', 'promo', 'terminal', 'lookbook', 'cobre'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
