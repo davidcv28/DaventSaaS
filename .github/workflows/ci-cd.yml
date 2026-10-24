@@ -157,7 +157,7 @@ jobs:
         with:
           images: ${{ env.API_IMAGE }}
           tags: |
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Tags imagen WEB
@@ -166,7 +166,7 @@ jobs:
         with:
           images: ${{ env.WEB_IMAGE }}
           tags: |
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build API -> GHCR
