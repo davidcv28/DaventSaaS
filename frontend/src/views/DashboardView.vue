@@ -19,7 +19,9 @@ import {
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES, formatStorageMB,
-  CHATBOT_DEFAULTS, CHATBOT_QA_MAX
+  CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
+  MARKETING_LIMITS, SERVICE_ICONS, SECTION_ORDER_LABELS, resolveSectionOrder,
+  validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel
 } from '../api/stores.api.js'
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductOffer, validateProductDescription,
@@ -815,7 +817,10 @@ async function saveBot() {
 // los planes; el backend lo fuerza en PATCH). Fuente, tamaño, acento y
 // carrusel son premium (has_design_advanced): fuente/tamaño/acento se ven
 // bloqueados y el carrusel directamente no se muestra.
-const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS })
+// Las listas se inicializan frescas: el spread compartiría las instancias
+// de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
+// ensuciaría los defaults del módulo.
+const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [] })
 const designTouched = reactive({})
 const designBusy = ref(false)
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
@@ -871,10 +876,51 @@ function designFieldErr(name) {
   return (designTouched[name] ? designErrors.value[name] || '' : '') || store.fieldErrors[name] || ''
 }
 
-// "Mi empresa" (sección propia): edita los campos de "Sobre nosotros" que se
-// renderizan en la web pública. PATCH parcial: manda solo estos campos.
+// "Mi empresa" (sección propia): hub del contenido de marketing de la
+// portada. Cada tarjeta guarda su propio PATCH parcial con los campos de su
+// bloque; las listas (servicios, cifras, testimonios, FAQ, horarios) se
+// editan como filas y el backend las sanea igual que el qa del chatbot:
+// recorta textos, descarta filas incompletas y filtra lo desconocido.
 const COMPANY_FIELDS = ['about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties']
 const companyBusy = ref(false)
+const companyErrs = reactive({})
+const mkLimits = MARKETING_LIMITS
+const serviceIcons = SERVICE_ICONS
+const sectionLabels = SECTION_ORDER_LABELS
+
+// Una fila "a medias" (algo escrito pero sin sus campos requeridos) avisa y
+// no deja guardar — mismo criterio que las preguntas del chatbot.
+function hasPartialRow(rows, keys, required) {
+  return rows.some((r) => keys.some((k) => String(r[k] ?? '').trim()) && required.some((k) => !String(r[k] ?? '').trim()))
+}
+function cleanRows(rows, keys, required = keys) {
+  return rows
+    .map((r) => Object.fromEntries(keys.map((k) => [k, String(r[k] ?? '').trim()])))
+    .filter((r) => required.every((k) => r[k]))
+}
+function addRow(list, max, row) {
+  if (list.length < max) list.push(row)
+}
+function moveRow(list, index, direction) {
+  const target = index + direction
+  if (target < 0 || target >= list.length) return
+  ;[list[index], list[target]] = [list[target], list[index]]
+}
+
+// Atajos a cada bloque de la sección (es larga: chips con scroll suave).
+const mkNav = [
+  { id: 'mk-about', label: 'Sobre nosotros' },
+  { id: 'mk-services', label: 'Qué ofrecemos' },
+  { id: 'mk-stats', label: 'Tus números' },
+  { id: 'mk-testimonials', label: 'Testimonios' },
+  { id: 'mk-faqs', label: 'Preguntas' },
+  { id: 'mk-hours', label: 'Horarios' },
+  { id: 'mk-cta', label: 'Llamado a la acción' },
+  { id: 'mk-order', label: 'Orden' }
+]
+function scrollToCard(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 async function saveCompany() {
   COMPANY_FIELDS.forEach((k) => { designTouched[k] = true })
@@ -888,6 +934,116 @@ async function saveCompany() {
     about_mission: designForm.about_mission.trim(),
     about_specialties: designForm.about_specialties.trim()
   })
+  companyBusy.value = false
+}
+
+async function saveServices() {
+  companyErrs.services = ''
+  if (validateSectionTitle(designForm.services_title.trim())) { companyErrs.services = 'El título admite hasta 80 caracteres.'; return }
+  if (hasPartialRow(designForm.services, ['title', 'text'], ['title', 'text'])) {
+    companyErrs.services = 'Cada servicio necesita título y descripción. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    services_title: designForm.services_title.trim(),
+    show_services: Boolean(designForm.show_services),
+    services: cleanRows(designForm.services, ['icon', 'title', 'text'], ['title', 'text'])
+  })
+  companyBusy.value = false
+}
+
+async function saveStats() {
+  companyErrs.stats = ''
+  if (hasPartialRow(designForm.stats, ['value', 'label'], ['value', 'label'])) {
+    companyErrs.stats = 'Cada número necesita valor y etiqueta. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_stats: Boolean(designForm.show_stats),
+    stats: cleanRows(designForm.stats, ['value', 'label'])
+  })
+  companyBusy.value = false
+}
+
+async function saveTestimonials() {
+  companyErrs.testimonials = ''
+  if (validateSectionTitle(designForm.testimonials_title.trim())) { companyErrs.testimonials = 'El título admite hasta 80 caracteres.'; return }
+  if (hasPartialRow(designForm.testimonials, ['name', 'detail', 'text'], ['name', 'text'])) {
+    companyErrs.testimonials = 'Cada testimonio necesita nombre y texto. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    testimonials_title: designForm.testimonials_title.trim(),
+    show_testimonials: Boolean(designForm.show_testimonials),
+    testimonials: cleanRows(designForm.testimonials, ['name', 'detail', 'text'], ['name', 'text'])
+  })
+  companyBusy.value = false
+}
+
+async function saveFaqs() {
+  companyErrs.faqs = ''
+  if (validateSectionTitle(designForm.faqs_title.trim())) { companyErrs.faqs = 'El título admite hasta 80 caracteres.'; return }
+  if (hasPartialRow(designForm.faqs, ['q', 'a'], ['q', 'a'])) {
+    companyErrs.faqs = 'Cada pregunta necesita su respuesta. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    faqs_title: designForm.faqs_title.trim(),
+    show_faq: Boolean(designForm.show_faq),
+    faqs: cleanRows(designForm.faqs, ['q', 'a'])
+  })
+  companyBusy.value = false
+}
+
+async function saveHours() {
+  companyErrs.hours = ''
+  if (hasPartialRow(designForm.hours, ['label', 'value'], ['label', 'value'])) {
+    companyErrs.hours = 'Cada horario necesita los días y la franja. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_hours: Boolean(designForm.show_hours),
+    hours: cleanRows(designForm.hours, ['label', 'value'])
+  })
+  companyBusy.value = false
+}
+
+async function saveCta() {
+  companyErrs.cta = ''
+  const err = validateCtaTitle(designForm.cta_title.trim())
+    || validateCtaText(designForm.cta_text.trim())
+    || validateCtaLabel(designForm.cta_label.trim())
+  if (err) { companyErrs.cta = err; return }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_cta: Boolean(designForm.show_cta),
+    cta_title: designForm.cta_title.trim(),
+    cta_text: designForm.cta_text.trim(),
+    cta_label: designForm.cta_label.trim()
+  })
+  companyBusy.value = false
+}
+
+// Orden de las secciones de la portada: claves cerradas espejo del backend
+// (resolveSectionOrder descarta desconocidas y completa las faltantes);
+// la web lo aplica como CSS order. Hero primero y Contáctanos último siempre.
+const sectionOrderList = computed(() => resolveSectionOrder(designForm.section_order))
+function moveSection(key, direction) {
+  const order = [...sectionOrderList.value]
+  const index = order.indexOf(key)
+  const target = index + direction
+  if (index < 0 || target < 0 || target >= order.length) return
+  ;[order[index], order[target]] = [order[target], order[index]]
+  designForm.section_order = order
+}
+async function saveSectionOrder() {
+  companyBusy.value = true
+  await store.saveCustomization({ section_order: sectionOrderList.value })
   companyBusy.value = false
 }
 
@@ -2176,12 +2332,12 @@ async function changePassword() {
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>
-    <!-- ================= MI EMPRESA (Sobre nosotros) ================= -->
+    <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
       <div class="page-head">
         <div>
           <h1>Mi empresa</h1>
-          <p>Contá quiénes son: esta información alimenta la sección Sobre nosotros de tu web.</p>
+          <p>El contenido de marketing de tu página principal: cada bloque se publica al guardarlo y se oculta solo si quedó vacío o lo apagás.</p>
         </div>
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
       </div>
@@ -2189,8 +2345,13 @@ async function changePassword() {
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
       <template v-if="canCustomize">
-        <div class="card">
-          <h3><AppIcon name="building-2" :size="18" /> Información de tu empresa</h3>
+        <nav class="mk-nav" aria-label="Bloques de contenido">
+          <button v-for="l in mkNav" :key="l.id" type="button" class="mk-chip" @click="scrollToCard(l.id)">{{ l.label }}</button>
+        </nav>
+
+        <!-- ===== Sobre nosotros ===== -->
+        <div id="mk-about" class="card mk-card">
+          <h3><AppIcon name="building-2" :size="18" /> Sobre nosotros</h3>
           <AppInput v-model="designForm.about_title" label="Título de la sección" name="company_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección en tu web. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
           <div class="field">
             <label for="company-about-text">Descripción de la empresa</label>
@@ -2231,11 +2392,254 @@ async function changePassword() {
             <AppButton :loading="companyBusy" @click="saveCompany">Guardar información</AppButton>
           </div>
         </div>
+
+        <!-- ===== Qué ofrecemos (servicios/ventajas con ícono) ===== -->
+        <div id="mk-services" class="card mk-card">
+          <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_services" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Tarjetas con ícono que resumen tus servicios o ventajas. Se ocultan solas si no cargás ninguna.</small>
+              </span>
+            </label>
+          </div>
+          <AppInput v-model="designForm.services_title" label="Título de la sección" name="company_services_title" placeholder="Qué ofrecemos" hint="Vacío: se muestra 'Qué ofrecemos'." maxlength="80" />
+          <div class="field">
+            <label>Servicios o ventajas <span class="hint-inline">({{ designForm.services.length }}/{{ mkLimits.services }})</span></label>
+            <div v-if="designForm.services.length" class="qa-list">
+              <div v-for="(s, i) in designForm.services" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <div class="mk-icon-field">
+                    <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[s.icon] ? s.icon : 'package'" :size="17" /></span>
+                    <select v-model="s.icon" class="select" :aria-label="`Ícono del servicio ${i + 1}`">
+                      <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                    </select>
+                  </div>
+                  <input v-model="s.title" class="input" type="text" :maxlength="mkLimits.serviceTitle" placeholder="Ej. Envíos a todo el país" :aria-label="`Título del servicio ${i + 1}`" />
+                  <textarea v-model="s.text" class="textarea" rows="2" :maxlength="mkLimits.serviceText" placeholder="Una línea que lo describa" :aria-label="`Descripción del servicio ${i + 1}`"></textarea>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el servicio ${i + 1}`" @click="moveRow(designForm.services, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.services.length - 1" :aria-label="`Bajar el servicio ${i + 1}`" @click="moveRow(designForm.services, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el servicio ${i + 1}`" @click="designForm.services.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.services.length >= mkLimits.services" @click="addRow(designForm.services, mkLimits.services, { icon: 'package', title: '', text: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar servicio
+            </button>
+            <p class="hint">Se muestran como tarjetas con ícono. Ordenalas con las flechas.</p>
+            <p v-if="companyErrs.services" class="field-error" role="alert">{{ companyErrs.services }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveServices">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Tus números (cifras destacadas) ===== -->
+        <div id="mk-stats" class="card mk-card">
+          <h3><AppIcon name="trending-up" :size="18" /> Tus números</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_stats" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Banda de cifras que resume tu negocio: clientes, años, productos vendidos.</small>
+              </span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Cifras <span class="hint-inline">({{ designForm.stats.length }}/{{ mkLimits.stats }})</span></label>
+            <div v-if="designForm.stats.length" class="qa-list">
+              <div v-for="(s, i) in designForm.stats" :key="i" class="qa-item">
+                <div class="qa-fields mk-pair">
+                  <input v-model="s.value" class="input" type="text" :maxlength="mkLimits.statValue" placeholder="+500" :aria-label="`Valor de la cifra ${i + 1}`" />
+                  <input v-model="s.label" class="input" type="text" :maxlength="mkLimits.statLabel" placeholder="clientes que nos eligen" :aria-label="`Etiqueta de la cifra ${i + 1}`" />
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.stats.length - 1" :aria-label="`Bajar la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar la cifra ${i + 1}`" @click="designForm.stats.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.stats.length >= mkLimits.stats" @click="addRow(designForm.stats, mkLimits.stats, { value: '', label: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar cifra
+            </button>
+            <p class="hint">Ej. "+500" y "clientes", o "15" y "años de trayectoria". Se ven en grande en una banda de tu portada.</p>
+            <p v-if="companyErrs.stats" class="field-error" role="alert">{{ companyErrs.stats }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveStats">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Testimonios ===== -->
+        <div id="mk-testimonials" class="card mk-card">
+          <h3><AppIcon name="quote" :size="18" /> Testimonios</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_testimonials" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Opiniones de tus clientes: la mejor prueba social para vender más.</small>
+              </span>
+            </label>
+          </div>
+          <AppInput v-model="designForm.testimonials_title" label="Título de la sección" name="company_testimonials_title" placeholder="Lo que dicen nuestros clientes" hint="Vacío: se muestra 'Lo que dicen nuestros clientes'." maxlength="80" />
+          <div class="field">
+            <label>Testimonios <span class="hint-inline">({{ designForm.testimonials.length }}/{{ mkLimits.testimonials }})</span></label>
+            <div v-if="designForm.testimonials.length" class="qa-list">
+              <div v-for="(t, i) in designForm.testimonials" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <div class="mk-pair">
+                    <input v-model="t.name" class="input" type="text" :maxlength="mkLimits.testimonialName" placeholder="Nombre del cliente" :aria-label="`Nombre del testimonio ${i + 1}`" />
+                    <input v-model="t.detail" class="input" type="text" :maxlength="mkLimits.testimonialDetail" placeholder="Detalle opcional. Ej. Cliente desde 2019" :aria-label="`Detalle del testimonio ${i + 1}`" />
+                  </div>
+                  <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.testimonialText" placeholder="Lo que dijo de tu negocio" :aria-label="`Texto del testimonio ${i + 1}`"></textarea>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.testimonials.length - 1" :aria-label="`Bajar el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el testimonio ${i + 1}`" @click="designForm.testimonials.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.testimonials.length >= mkLimits.testimonials" @click="addRow(designForm.testimonials, mkLimits.testimonials, { name: '', detail: '', text: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar testimonio
+            </button>
+            <p class="hint">Publicá solo opiniones reales de clientes que te hayan autorizado a usarlas.</p>
+            <p v-if="companyErrs.testimonials" class="field-error" role="alert">{{ companyErrs.testimonials }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveTestimonials">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Preguntas frecuentes ===== -->
+        <div id="mk-faqs" class="card mk-card">
+          <h3><AppIcon name="message-circle" :size="18" /> Preguntas frecuentes</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_faq" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Respuestas que se despliegan al tocarlas: ahorran consultas repetidas.</small>
+              </span>
+            </label>
+          </div>
+          <AppInput v-model="designForm.faqs_title" label="Título de la sección" name="company_faqs_title" placeholder="Preguntas frecuentes" hint="Vacío: se muestra 'Preguntas frecuentes'." maxlength="80" />
+          <div class="field">
+            <label>Preguntas y respuestas <span class="hint-inline">({{ designForm.faqs.length }}/{{ mkLimits.faqs }})</span></label>
+            <div v-if="designForm.faqs.length" class="qa-list">
+              <div v-for="(f, i) in designForm.faqs" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <input v-model="f.q" class="input" type="text" :maxlength="mkLimits.faqQ" placeholder="Ej. ¿Hacen envíos?" :aria-label="`Pregunta ${i + 1}`" />
+                  <textarea v-model="f.a" class="textarea" rows="2" :maxlength="mkLimits.faqA" placeholder="Respuesta que ve la visita" :aria-label="`Respuesta ${i + 1}`"></textarea>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.faqs.length - 1" :aria-label="`Bajar la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar la pregunta ${i + 1}`" @click="designForm.faqs.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.faqs.length >= mkLimits.faqs" @click="addRow(designForm.faqs, mkLimits.faqs, { q: '', a: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar pregunta
+            </button>
+            <p v-if="companyErrs.faqs" class="field-error" role="alert">{{ companyErrs.faqs }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveFaqs">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Horarios de atención ===== -->
+        <div id="mk-hours" class="card mk-card">
+          <h3><AppIcon name="clock" :size="18" /> Horarios de atención</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_hours" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Aparecen dentro de la sección Contáctanos, junto a tus canales.</small>
+              </span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Horarios <span class="hint-inline">({{ designForm.hours.length }}/{{ mkLimits.hours }})</span></label>
+            <div v-if="designForm.hours.length" class="qa-list">
+              <div v-for="(h, i) in designForm.hours" :key="i" class="qa-item">
+                <div class="qa-fields mk-pair">
+                  <input v-model="h.label" class="input" type="text" :maxlength="mkLimits.hourLabel" placeholder="Lunes a viernes" :aria-label="`Días del horario ${i + 1}`" />
+                  <input v-model="h.value" class="input" type="text" :maxlength="mkLimits.hourValue" placeholder="9 a 18 h" :aria-label="`Franja del horario ${i + 1}`" />
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el horario ${i + 1}`" @click="moveRow(designForm.hours, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.hours.length - 1" :aria-label="`Bajar el horario ${i + 1}`" @click="moveRow(designForm.hours, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el horario ${i + 1}`" @click="designForm.hours.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar horario
+            </button>
+            <p class="hint">Si apagás la sección Contáctanos desde Diseño web, los horarios también se ocultan.</p>
+            <p v-if="companyErrs.hours" class="field-error" role="alert">{{ companyErrs.hours }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveHours">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Llamado a la acción ===== -->
+        <div id="mk-cta" class="card mk-card">
+          <h3><AppIcon name="megaphone" :size="18" /> Llamado a la acción</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_cta" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Banda de cierre de tu portada con un botón grande para que te escriban.</small>
+              </span>
+            </label>
+          </div>
+          <AppInput v-model="designForm.cta_title" label="Título" name="company_cta_title" placeholder="¿Listo para hacer tu pedido?" maxlength="120" />
+          <AppInput v-model="designForm.cta_text" label="Texto" name="company_cta_text" placeholder="Escribinos y te armamos el pedido en el día." hint="Frase corta que acompaña al título." maxlength="280" />
+          <AppInput v-model="designForm.cta_label" label="Texto del botón" name="company_cta_label" placeholder="Escribinos por WhatsApp" hint="Vacío: se usa uno genérico según el destino del botón." maxlength="40" />
+          <p class="hint">El botón abre tu WhatsApp si cargaste uno; si no, lleva al formulario de contacto o a tu catálogo. La banda solo aparece si hay título o texto.</p>
+          <p v-if="companyErrs.cta" class="field-error" role="alert">{{ companyErrs.cta }}</p>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveCta">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Orden de las secciones ===== -->
+        <div id="mk-order" class="card mk-card">
+          <h3><AppIcon name="arrow-down-wide-narrow" :size="18" /> Orden de las secciones</h3>
+          <p>Definí en qué orden aparecen los bloques de tu página principal. La portada va primero y Contáctanos último siempre.</p>
+          <div class="mk-order-list">
+            <div v-for="(key, i) in sectionOrderList" :key="key" class="mk-order-item">
+              <span class="mk-order-num" aria-hidden="true">{{ i + 1 }}</span>
+              <strong>{{ sectionLabels[key] }}</strong>
+              <span class="qa-actions mk-order-actions">
+                <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir ${sectionLabels[key]}`" @click="moveSection(key, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                <button type="button" class="icon-btn" :disabled="i === sectionOrderList.length - 1" :aria-label="`Bajar ${sectionLabels[key]}`" @click="moveSection(key, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+              </span>
+            </div>
+          </div>
+          <p class="hint">Las secciones vacías o apagadas se saltan solas: el orden aplica solo a las visibles.</p>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveSectionOrder">Guardar orden</AppButton>
+          </div>
+        </div>
       </template>
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
-        <h3>La información de tu empresa viene con tu plan</h3>
-        <p>Activá una suscripción para completar la sección Sobre nosotros de tu página pública.</p>
+        <h3>El contenido de tu empresa viene con tu plan</h3>
+        <p>Activá una suscripción para completar las secciones de marketing de tu página pública.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>

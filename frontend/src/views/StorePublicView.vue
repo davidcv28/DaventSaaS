@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, inject, onMounted, onBeforeUnmount } from 'vue'
-import { storesApi } from '../api/stores.api.js'
+import { storesApi, resolveSectionOrder, SERVICE_ICONS } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
@@ -107,6 +107,33 @@ function stepLightbox(direction) {
   lightboxIndex.value = ((lightboxIndex.value + direction) % total + total) % total
 }
 
+// --- Bloques de marketing (se editan en "Mi empresa"): cada uno se apaga
+// con su show_* y además se oculta solo si quedó sin contenido. El orden
+// de las secciones de la portada sale de section_order (claves cerradas):
+// se aplica como CSS order sobre los <section> hijos de .sp-page-root —
+// el hero va primero y Contáctanos último siempre (order 99). ---
+const listOf = (value) => (Array.isArray(value) ? value : [])
+const services = computed(() => listOf(custom.value.services))
+const showServices = computed(() => custom.value.show_services !== false && services.value.length > 0)
+const servicesTitle = computed(() => custom.value.services_title?.trim() || 'Qué ofrecemos')
+const serviceIcon = (key) => (SERVICE_ICONS[key] ? key : 'package')
+const stats = computed(() => listOf(custom.value.stats))
+const showStats = computed(() => custom.value.show_stats !== false && stats.value.length > 0)
+const testimonials = computed(() => listOf(custom.value.testimonials))
+const showTestimonials = computed(() => custom.value.show_testimonials !== false && testimonials.value.length > 0)
+const testimonialsTitle = computed(() => custom.value.testimonials_title?.trim() || 'Lo que dicen nuestros clientes')
+const faqs = computed(() => listOf(custom.value.faqs))
+const showFaqs = computed(() => custom.value.show_faq !== false && faqs.value.length > 0)
+const faqsTitle = computed(() => custom.value.faqs_title?.trim() || 'Preguntas frecuentes')
+const contactHours = computed(() => listOf(custom.value.hours))
+const showHours = computed(() => custom.value.show_hours !== false && contactHours.value.length > 0)
+// Orden efectivo de las secciones (posición CSS order; 0 queda para el hero).
+const sectionPos = computed(() => {
+  const pos = {}
+  resolveSectionOrder(custom.value.section_order).forEach((key, i) => { pos[key] = i + 1 })
+  return pos
+})
+
 // --- Contáctanos: formulario público (captcha + honeypot antispam), canales
 // y el mapa de ubicación, que vive dentro de esta sección. ---
 const contactForm = reactive({ name: '', email: '', message: '', website: '', captcha_answer: '' })
@@ -126,6 +153,21 @@ const socials = computed(() => [
   { key: 'facebook', label: 'Facebook', url: facebookUrl.value }
 ].filter((s) => s.url))
 const hasContactChannels = computed(() => Boolean(whatsappUrl.value || socials.value.length))
+
+// Banda de llamado a la acción: el botón apunta a WhatsApp si el dueño
+// cargó uno; si no, al formulario de contacto o al catálogo (en ese orden
+// de preferencia). La banda solo existe si hay título o texto cargados.
+const showCta = computed(() => custom.value.show_cta !== false
+  && Boolean(custom.value.cta_title?.trim() || custom.value.cta_text?.trim()))
+const ctaTitle = computed(() => custom.value.cta_title?.trim() || '¿Hablamos?')
+const ctaLink = computed(() => {
+  if (whatsappUrl.value) return { href: whatsappUrl.value, external: true }
+  if (showContact.value) return { href: '#contacto', external: false }
+  if (showCatalog.value) return { to: catalogTo.value, external: false }
+  return null
+})
+const ctaLabel = computed(() => custom.value.cta_label?.trim()
+  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : 'Ver catálogo'))
 
 // Mapa de ubicación (beneficio has_location_map, Estándar y Premium): el
 // backend devuelve location_address ya armada para geocodificar, o null si
@@ -321,7 +363,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->
-  <section v-if="hasAbout" id="nosotros" class="sp-about" aria-labelledby="sp-about-title">
+  <section v-if="hasAbout" id="nosotros" class="sp-about" :style="{ order: sectionPos.about }" aria-labelledby="sp-about-title">
     <div class="sp-container sp-about-grid" :class="{ 'no-card': !hasAboutCard && !decorAbout }">
       <div v-reveal class="sp-about-info">
         <p class="sp-eyebrow">Conocenos</p>
@@ -355,7 +397,7 @@ onBeforeUnmount(() => {
   <!-- ===== Banda decorativa: la imagen va junto a un texto de invitación
        con CTAs (nunca una foto suelta a todo lo ancho); en móvil la foto
        se oculta y queda solo el bloque de texto ===== -->
-  <section v-if="decorBand" class="sp-showcase">
+  <section v-if="decorBand" class="sp-showcase" :style="{ order: sectionPos.gallery }">
     <div class="sp-container sp-showcase-grid">
       <figure v-reveal class="sp-showcase-frame" aria-hidden="true">
         <img :src="decorBand.url" alt="" loading="lazy" />
@@ -373,7 +415,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Galería ===== -->
-  <section v-if="showGallery" id="galeria" class="sp-gallery" aria-labelledby="sp-gallery-title">
+  <section v-if="showGallery" id="galeria" class="sp-gallery" :style="{ order: sectionPos.gallery }" aria-labelledby="sp-gallery-title">
     <div class="sp-container">
       <h2 id="sp-gallery-title" v-reveal class="sp-section-title">Galería</h2>
       <div class="sp-gallery-grid">
@@ -389,8 +431,80 @@ onBeforeUnmount(() => {
     </div>
   </section>
 
+  <!-- ===== Qué ofrecemos: tarjetas de servicios/ventajas con ícono ===== -->
+  <section v-if="showServices" class="sp-services" :style="{ order: sectionPos.services }" aria-labelledby="sp-services-title">
+    <div class="sp-container">
+      <p class="sp-eyebrow">Servicios</p>
+      <h2 id="sp-services-title" v-reveal class="sp-section-title">{{ servicesTitle }}</h2>
+      <div class="sp-services-grid">
+        <article v-for="(s, i) in services" :key="i" v-reveal="(i % 3) * 80" class="sp-service">
+          <span class="sp-service-icon" aria-hidden="true"><AppIcon :name="serviceIcon(s.icon)" :size="22" /></span>
+          <strong>{{ s.title }}</strong>
+          <p v-if="s.text">{{ s.text }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Tus números: banda de cifras destacadas ===== -->
+  <section v-if="showStats" class="sp-stats" :style="{ order: sectionPos.stats }" aria-label="Cifras del negocio">
+    <div class="sp-container sp-stats-grid">
+      <div v-for="(s, i) in stats" :key="i" v-reveal="i * 80" class="sp-stat">
+        <strong>{{ s.value }}</strong>
+        <span>{{ s.label }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Testimonios ===== -->
+  <section v-if="showTestimonials" class="sp-testimonials" :style="{ order: sectionPos.testimonials }" aria-labelledby="sp-testimonials-title">
+    <div class="sp-container">
+      <p class="sp-eyebrow">Clientes</p>
+      <h2 id="sp-testimonials-title" v-reveal class="sp-section-title">{{ testimonialsTitle }}</h2>
+      <div class="sp-testimonials-grid">
+        <figure v-for="(t, i) in testimonials" :key="i" v-reveal="(i % 3) * 80" class="sp-testimonial">
+          <span class="sp-testimonial-quote" aria-hidden="true"><AppIcon name="quote" :size="20" /></span>
+          <blockquote class="sp-testimonial-text">{{ t.text }}</blockquote>
+          <figcaption class="sp-testimonial-by">
+            <strong>{{ t.name }}</strong>
+            <span v-if="t.detail">{{ t.detail }}</span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Preguntas frecuentes: respuestas desplegables ===== -->
+  <section v-if="showFaqs" class="sp-faq" :style="{ order: sectionPos.faq }" aria-labelledby="sp-faq-title">
+    <div class="sp-container">
+      <p class="sp-eyebrow">Dudas frecuentes</p>
+      <h2 id="sp-faq-title" v-reveal class="sp-section-title">{{ faqsTitle }}</h2>
+      <div class="sp-faq-list">
+        <details v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item">
+          <summary>{{ f.q }}<span class="sp-faq-caret" aria-hidden="true"><AppIcon name="chevron-down" :size="16" /></span></summary>
+          <p class="sp-faq-answer">{{ f.a }}</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Llamado a la acción: banda de cierre de la portada ===== -->
+  <section v-if="showCta" class="sp-cta" :style="{ order: sectionPos.cta }">
+    <div class="sp-container sp-cta-inner">
+      <h2 v-reveal class="sp-cta-title">{{ ctaTitle }}</h2>
+      <p v-if="custom.cta_text" v-reveal="80" class="sp-cta-text">{{ custom.cta_text }}</p>
+      <component
+        v-if="ctaLink" :is="ctaLink.to ? 'RouterLink' : 'a'" v-reveal="160" class="sp-btn sp-cta-btn"
+        :to="ctaLink.to" :href="ctaLink.href"
+        :target="ctaLink.external ? '_blank' : null" :rel="ctaLink.external ? 'noopener' : null"
+      >
+        {{ ctaLabel }} <AppIcon name="arrow-right" :size="16" class="sp-arrow" />
+      </component>
+    </div>
+  </section>
+
   <!-- ===== Contáctanos (formulario + canales + mapa de ubicación) ===== -->
-  <section v-if="showContact" id="contacto" class="sp-contact" aria-labelledby="sp-contact-title">
+  <section v-if="showContact" id="contacto" class="sp-contact" :style="{ order: 99 }" aria-labelledby="sp-contact-title">
     <div class="sp-container">
       <div class="sp-contact-grid">
         <div v-reveal class="sp-contact-info">
@@ -398,6 +512,13 @@ onBeforeUnmount(() => {
           <h2 id="sp-contact-title" class="sp-contact-title">Contáctanos</h2>
           <p class="sp-contact-sub">Escribinos tu consulta y te respondemos a la brevedad.</p>
           <p v-if="mapAddress" class="sp-map-address"><AppIcon name="map-pin" :size="14" /> {{ mapAddress }}</p>
+          <ul v-if="showHours" class="sp-contact-hours">
+            <li v-for="(h, i) in contactHours" :key="i">
+              <AppIcon name="clock" :size="14" aria-hidden="true" />
+              <span>{{ h.label }}</span>
+              <strong>{{ h.value }}</strong>
+            </li>
+          </ul>
           <div v-if="hasContactChannels" class="sp-contact-channels">
             <a v-if="whatsappUrl" class="sp-btn" :href="whatsappUrl" target="_blank" rel="noopener">
               <AppIcon name="whatsapp" :size="16" /> WhatsApp

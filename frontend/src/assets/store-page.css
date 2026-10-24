@@ -1662,6 +1662,75 @@ html { scroll-behavior: smooth; }
   .sp-about-photo img { transition: none; }
 }
 
+/* ===== Bloques de marketing de la portada ("Mi empresa") =====
+   Cada bloque se ordena con CSS order (section_order) y se oculta solo
+   cuando quedó sin contenido o el dueño apagó su interruptor. */
+
+/* Qué ofrecemos: tarjetas de servicios/ventajas con ícono (hermana de
+   los destacados del hero, pero dentro del flujo normal de la página). */
+.sp-services { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-services .sp-section-title { margin: 6px 0 26px; }
+.sp-services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.sp-service { position: relative; display: grid; gap: 8px; align-content: start; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); transition: box-shadow .2s, border-color .2s, transform .25s var(--sp-ease); }
+.sp-service:hover { border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: var(--sp-shadow-md); transform: translateY(-3px); }
+.sp-service-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 10px 20px -10px var(--store-accent-ink); }
+.sp-service strong { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.sp-service p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--sp-muted); overflow-wrap: anywhere; }
+
+/* Tus números: banda de acento con cifras grandes. */
+.sp-stats { padding-top: 64px; }
+.sp-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; padding: 30px clamp(20px, 3vw, 40px); border-radius: var(--sp-radius); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: var(--sp-shadow-md); }
+.sp-stat { display: grid; gap: 4px; justify-items: center; text-align: center; color: #fff; }
+.sp-stat strong { font-size: clamp(26px, 3.4vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; overflow-wrap: anywhere; }
+.sp-stat span { font-size: 12.5px; font-weight: 600; letter-spacing: .04em; color: rgb(255 255 255 / .82); text-transform: uppercase; overflow-wrap: anywhere; }
+
+/* Testimonios: tarjetas con la cita, el nombre y un detalle opcional. */
+.sp-testimonials { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-testimonials .sp-section-title { margin: 6px 0 26px; }
+.sp-testimonials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.sp-testimonial { position: relative; display: grid; gap: 14px; align-content: start; margin: 0; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
+.sp-testimonial-quote { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--store-accent-soft); color: var(--sp-accent-text); }
+.store-page[data-store-theme='dark'] .sp-testimonial-quote { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.sp-testimonial-text { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--sp-ink-2); overflow-wrap: anywhere; }
+.sp-testimonial-by { display: grid; gap: 1px; }
+.sp-testimonial-by strong { font-size: 14px; font-weight: 700; }
+.sp-testimonial-by span { font-size: 12.5px; color: var(--sp-muted); }
+
+/* Preguntas frecuentes: <details> nativos, el caret rota al abrir. */
+.sp-faq { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
+.sp-faq .sp-section-title { margin: 6px 0 26px; }
+.sp-faq-list { display: grid; gap: 12px; max-width: 780px; }
+.sp-faq-item { border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow: hidden; }
+.sp-faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 20px; font-size: 14.5px; font-weight: 650; cursor: pointer; list-style: none; transition: color .15s; }
+.sp-faq-item summary::-webkit-details-marker { display: none; }
+.sp-faq-item summary:hover { color: var(--sp-accent-text); }
+.sp-faq-caret { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--store-accent-soft); color: var(--sp-accent-text); transition: transform .25s var(--sp-ease); }
+.store-page[data-store-theme='dark'] .sp-faq-caret { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.sp-faq-item[open] .sp-faq-caret { transform: rotate(180deg); }
+.sp-faq-answer { margin: 0; padding: 0 20px 18px; font-size: 14px; line-height: 1.65; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+
+/* Llamado a la acción: banda de acento que cierra la portada. */
+.sp-cta { padding-top: 72px; }
+.sp-cta-inner { position: relative; display: grid; justify-items: center; gap: 14px; padding: 52px clamp(24px, 4vw, 64px); border-radius: calc(var(--sp-radius) + 8px); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: var(--sp-shadow-md); text-align: center; color: #fff; overflow: hidden; }
+.sp-cta-inner::after { content: ''; position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(closest-side, rgb(255 255 255 / .16), transparent); pointer-events: none; }
+.sp-cta-title { position: relative; margin: 0; font-size: clamp(24px, 3.4vw, 38px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; max-width: 24ch; overflow-wrap: anywhere; }
+.sp-cta-text { position: relative; margin: 0; font-size: 15px; line-height: 1.65; max-width: 52ch; color: rgb(255 255 255 / .88); overflow-wrap: anywhere; }
+.sp-cta-btn { position: relative; height: 46px; padding: 0 26px; margin-top: 6px; background: #fff; color: var(--store-accent-ink); }
+
+/* Horarios dentro de Contáctanos: renglón días → franja. */
+.sp-contact-hours { list-style: none; display: grid; gap: 8px; margin: 4px 0 0; padding: 0; }
+.sp-contact-hours li { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-card); font-size: 13.5px; }
+.sp-contact-hours .icon { flex: none; color: var(--sp-accent-text); }
+.sp-contact-hours span { flex: 1; min-width: 0; color: var(--sp-ink-2); }
+.sp-contact-hours strong { flex: none; font-weight: 650; color: var(--sp-ink); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .sp-services, .sp-testimonials, .sp-faq, .sp-cta { padding-top: 56px; }
+  .sp-stats { padding-top: 48px; }
+  .sp-stats-grid { padding: 24px 18px; gap: 18px; }
+  .sp-cta-inner { padding: 40px 22px; }
+}
+
 /* ===== Diseños v3: refinamiento moderno por plantilla =====
    Clásico = contemporary limpio (iconos suaves, ritmo aireado) ·
    Atelier = alta costura con serif de display (Fraunces on-demand) ·

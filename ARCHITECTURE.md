@@ -441,6 +441,25 @@ StoreCustomization        (diseño de la web pública)
     ├── show_about   (default true → toggle del dueño; la sección también
     │                se oculta sola si no hay ningún contenido about_* cargado.
     │                Se edita desde "Mi empresa" en el dashboard, no en Diseño web)
+    ├── ── Bloques de marketing de la portada (mig. 0023, se editan en
+    │      "Mi empresa"; el serializer sanea cada lista igual que el qa del
+    │      chatbot: tope, recorte de textos, filas incompletas descartadas)
+    ├── services     (JSON, máx 6 filas {icon, title ≤60, text ≤160};
+    │                icon del catálogo cerrado SERVICE_ICONS → 'package')
+    ├── services_title / show_services (título ≤80 y toggle de la sección)
+    ├── stats        (JSON, máx 4 filas {value ≤20, label ≤60} → banda de cifras)
+    ├── show_stats   / testimonials (JSON, máx 6 {name ≤60, detail ≤80, text ≤300})
+    ├── testimonials_title / show_testimonials
+    ├── faqs         (JSON, máx 8 {q ≤140, a ≤500} → <details> en la web)
+    ├── faqs_title   / show_faq
+    ├── hours        (JSON, máx 8 {label ≤60, value ≤60} → dentro de Contáctanos)
+    ├── show_hours
+    ├── cta_title (≤120) / cta_text (≤280) / cta_label (≤40) / show_cta
+    │                (banda final de acento; el botón → WhatsApp → contacto → catálogo)
+    ├── section_order (JSON, claves cerradas SECTION_ORDER =
+    │                'about|services|stats|gallery|testimonials|faq|cta';
+    │                el serializer descarta desconocidas y completa faltantes;
+    │                la web lo aplica como CSS order sobre .sp-page-root)
     ├── contact_email (destino del formulario Contáctanos; vacío = email de la cuenta)
     ├── show_contact  (default true → sección Contáctanos en la web)
     ├── show_location (default true → mapa Google embebido en Contáctanos, has_location_map)

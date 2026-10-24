@@ -252,6 +252,28 @@ export const CUSTOMIZATION_DEFAULTS = {
   about_mission: '',
   about_specialties: '',
   show_about: true,
+  // Secciones de marketing de la portada (se editan en "Mi empresa"): cada
+  // bloque se apaga con su show_* y además se oculta solo en la web cuando
+  // quedó vacío. section_order ordena las secciones de la portada (claves
+  // de SECTION_ORDER_KEYS); el hero va primero y el contacto último.
+  services: [],
+  services_title: '',
+  show_services: true,
+  stats: [],
+  show_stats: true,
+  testimonials: [],
+  testimonials_title: '',
+  show_testimonials: true,
+  faqs: [],
+  faqs_title: '',
+  show_faq: true,
+  hours: [],
+  show_hours: true,
+  cta_title: '',
+  cta_text: '',
+  cta_label: '',
+  show_cta: true,
+  section_order: [],
   contact_email: '',
   show_contact: true,
   theme: 'light',
@@ -294,6 +316,88 @@ export function validateImageFile(file) {
 
 export function formatStorageMB(bytes) {
   return (Number(bytes || 0) / (1024 * 1024)).toFixed(1)
+}
+
+// ===== Secciones de marketing de la portada (espejo del modelo) =====
+// Límites por bloque: el backend recorta igual, así que acá solo se evita
+// mandar de más y se muestran contadores. Filas incompletas se descartan.
+export const MARKETING_LIMITS = {
+  services: 6, serviceTitle: 60, serviceText: 160,
+  stats: 4, statValue: 20, statLabel: 60,
+  testimonials: 6, testimonialName: 60, testimonialDetail: 80, testimonialText: 300,
+  faqs: 8, faqQ: 140, faqA: 500,
+  hours: 8, hourLabel: 60, hourValue: 60,
+  ctaTitle: 120, ctaText: 280, ctaLabel: 40
+}
+
+// Iconos elegibles para "Qué ofrecemos" (catálogo cerrado, espejo de
+// StoreCustomization.SERVICE_ICONS). Se renderizan con AppIcon.
+export const SERVICE_ICONS = {
+  'package':        'Productos',
+  'truck':          'Envíos',
+  'wrench':         'Servicio técnico',
+  'tag':            'Ofertas',
+  'percent':        'Descuentos',
+  'gift':           'Regalos',
+  'star':           'Destacado',
+  'zap':            'Rápido',
+  'shield-check':   'Garantía',
+  'clock':          'Horarios',
+  'map-pin':        'Ubicación',
+  'users':          'Atención',
+  'phone':          'Teléfono',
+  'message-circle': 'Consultas',
+  'store':          'Local',
+  'credit-card':    'Tarjetas',
+  'wallet':         'Pagos',
+  'crown':          'Premium',
+  'badge-check':    'Calidad',
+  'trending-up':    'Trayectoria',
+  'calendar':       'Turnos',
+  'flame':          'Novedades',
+  'megaphone':      'Promos',
+  'check':          'Otro'
+}
+
+// Orden de las secciones de la portada (espejo de SECTION_ORDER del modelo):
+// el dueño las reordena desde "Mi empresa"; el hero queda primero y el
+// contacto último siempre.
+export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'cta']
+export const SECTION_ORDER_LABELS = {
+  about:        'Sobre nosotros',
+  services:     'Qué ofrecemos',
+  stats:        'Tus números',
+  gallery:      'Galería',
+  testimonials: 'Testimonios',
+  faq:          'Preguntas frecuentes',
+  cta:          'Llamado a la acción'
+}
+
+// Orden efectivo: respeta lo guardado, descarta claves desconocidas y
+// completa al final las que falten (mismo criterio del serializer).
+export function resolveSectionOrder(saved) {
+  const clean = (Array.isArray(saved) ? saved : []).filter((k, i, arr) => SECTION_ORDER_KEYS.includes(k) && arr.indexOf(k) === i)
+  return [...clean, ...SECTION_ORDER_KEYS.filter((k) => !clean.includes(k))]
+}
+
+export function validateSectionTitle(value) {
+  if (value && value.length > 80) return 'El título admite hasta 80 caracteres'
+  return ''
+}
+
+export function validateCtaTitle(value) {
+  if (value && value.length > MARKETING_LIMITS.ctaTitle) return 'El título admite hasta 120 caracteres'
+  return ''
+}
+
+export function validateCtaText(value) {
+  if (value && value.length > MARKETING_LIMITS.ctaText) return 'El texto admite hasta 280 caracteres'
+  return ''
+}
+
+export function validateCtaLabel(value) {
+  if (value && value.length > MARKETING_LIMITS.ctaLabel) return 'El texto del botón admite hasta 40 caracteres'
+  return ''
 }
 
 export const STORE_ACCENTS = {

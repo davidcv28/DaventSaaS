@@ -231,3 +231,89 @@ class StoreCoverGatingTests(TestCase):
         response    =   self._client(premium = True).patch(f'{STORES_URL}customization/', {'template': 'street'}, format = 'json')
         self.assertEqual(response.data['customization']['template'], 'street')
         self.assertIn('cover', response.data['customization'])
+
+
+class MarketingFieldsTests(TestCase):
+    """
+    Secciones de marketing de la portada ("Mi empresa"): las listas JSON se
+    sanea en el serializer — filas incompletas fuera, textos recortados,
+    iconos fuera del catálogo caen al default y section_order solo admite
+    claves conocidas completándose con el orden base.
+    """
+
+    def _client(self, with_plan = True):
+        _, profile      =   _make_user(verified = True)
+        if with_plan:
+            plan        =   SuscriptionPlan.objects.create(name = 'Plan test')
+            for code in ('has_public_link', 'has_customization'):
+                benefit =   Benefit.objects.create(code = code, label = code, kind = Benefit.FLAG)
+                PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
+            Suscription.objects.create(
+                user                =   profile,
+                plan_suscription    =   plan,
+                end_date            =   timezone.now() + timedelta(days = 30),
+                status              =   Suscription.STATUS_ACTIVE,
+            )
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = profile.user)
+        return client
+
+    def test_marketing_patch_forbidden_without_plan(self):
+        response    =   self._client(with_plan = False).patch(f'{STORES_URL}customization/', {'services': []}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_services_are_sanitized(self):
+        payload     =   [
+            {'icon': 'truck', 'title': 'Envíos', 'text': 'A todo el país'},
+            {'icon': 'no-existe', 'title': 'Garantía', 'text': '30 días'},
+            {'icon': 'star', 'title': '', 'text': 'sin título'},
+            {'icon': 'star', 'title': 'Solo título'},
+            'basura',
+        ]
+        response    =   self._client().patch(f'{STORES_URL}customization/', {'services': payload}, format = 'json')
+        services    =   response.data['customization']['services']
+        self.assertEqual(len(services), 2)
+        self.assertEqual(services[0]['icon'], 'truck')
+        self.assertEqual(services[1]['icon'], 'package')
+
+    def test_lists_are_truncated_and_clipped(self):
+        payload     =   {
+            'stats'         :   [{'value': f'+{i}', 'label': f'Cifra {i}'} for i in range(10)],
+            'testimonials'  :   [{'name': 'Ana', 'detail': 'x' * 200, 'text': 'Muy buena atención'}],
+            'faqs'          :   [{'q': '¿Envían?', 'a': 'Sí, a todo el país'}, {'q': 'incompleta'}],
+            'hours'         :   [{'label': 'Lun a vie', 'value': '9 a 18 h'}],
+        }
+        response    =   self._client().patch(f'{STORES_URL}customization/', payload, format = 'json')
+        custom      =   response.data['customization']
+        self.assertEqual(len(custom['stats']), 4)
+        self.assertEqual(len(custom['testimonials'][0]['detail']), 80)
+        self.assertEqual(len(custom['faqs']), 1)
+        self.assertEqual(custom['hours'], [{'label': 'Lun a vie', 'value': '9 a 18 h'}])
+
+    def test_section_order_filters_and_completes(self):
+        response    =   self._client().patch(
+            f'{STORES_URL}customization/',
+            {'section_order': ['faq', 'inventada', 'about', 'faq']},
+            format = 'json',
+        )
+        order       =   response.data['customization']['section_order']
+        self.assertEqual(order[:2], ['faq', 'about'])
+        self.assertEqual(len(order), 7)
+        self.assertNotIn('inventada', order)
+
+    def test_non_list_payload_rejected(self):
+        response    =   self._client().patch(f'{STORES_URL}customization/', {'faqs': 'no-es-lista'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_public_payload_exposes_marketing_fields(self):
+        client      =   self._client()
+        client.patch(
+            f'{STORES_URL}customization/',
+            {'services': [{'icon': 'truck', 'title': 'Envíos', 'text': 'A todo el país'}], 'cta_title': 'Escribinos'},
+            format = 'json',
+        )
+        response    =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        custom      =   response.data['customization']
+        self.assertEqual(custom['services'][0]['title'], 'Envíos')
+        self.assertEqual(custom['cta_title'], 'Escribinos')

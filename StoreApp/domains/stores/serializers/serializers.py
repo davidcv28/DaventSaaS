@@ -80,6 +80,18 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     about_mission               =   serializers.CharField(**CustomizationFields['about_mission'])
     about_specialties           =   serializers.CharField(**CustomizationFields['about_specialties'])
     contact_email               =   serializers.EmailField(**CustomizationFields['contact_email'])
+    services                    =   serializers.JSONField(**CustomizationFields['services'])
+    services_title              =   serializers.CharField(**CustomizationFields['services_title'])
+    stats                       =   serializers.JSONField(**CustomizationFields['stats'])
+    testimonials                =   serializers.JSONField(**CustomizationFields['testimonials'])
+    testimonials_title          =   serializers.CharField(**CustomizationFields['testimonials_title'])
+    faqs                        =   serializers.JSONField(**CustomizationFields['faqs'])
+    faqs_title                  =   serializers.CharField(**CustomizationFields['faqs_title'])
+    hours                       =   serializers.JSONField(**CustomizationFields['hours'])
+    cta_title                   =   serializers.CharField(**CustomizationFields['cta_title'])
+    cta_text                    =   serializers.CharField(**CustomizationFields['cta_text'])
+    cta_label                   =   serializers.CharField(**CustomizationFields['cta_label'])
+    section_order               =   serializers.JSONField(**CustomizationFields['section_order'])
     whatsapp                    =   serializers.CharField(**CustomizationFields['whatsapp'])
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
     tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
@@ -94,6 +106,10 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         fields                  =   [
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent', 'template',
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
+            'services', 'services_title', 'show_services', 'stats', 'show_stats',
+            'testimonials', 'testimonials_title', 'show_testimonials',
+            'faqs', 'faqs_title', 'show_faq', 'hours', 'show_hours',
+            'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
             'logo', 'cover', 'carousel', 'gallery', 'decor', 'updated_at',
@@ -112,6 +128,74 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     def get_decor(self, customization):
         images                  =   customization.store.gallery_images.filter(kind = StoreGalleryImage.KIND_DECOR)
         return StoreGalleryImageSerializer(images, many = True).data
+    @staticmethod
+    def _rows(value, max_items, message):
+        #Base común de las listas de marketing: se trunca al tope y se
+        #descarta lo que no sea dict (mismo criterio que validate_qa).
+        if not isinstance(value, list):
+            raise serializers.ValidationError(message)
+        return [item for item in value[:max_items] if isinstance(item, dict)]
+
+    def validate_services(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.SERVICES_MAX, 'Debe ser una lista de servicios.'):
+            icon                =   str(item.get('icon') or '').strip().lower()
+            title               =   str(item.get('title') or '').strip()[:StoreCustomization.SERVICE_TITLE_MAX]
+            text                =   str(item.get('text') or '').strip()[:StoreCustomization.SERVICE_TEXT_MAX]
+            if title and text:
+                clean.append({'icon': icon if icon in StoreCustomization.SERVICE_ICONS else 'package', 'title': title, 'text': text})
+        return clean
+
+    def validate_stats(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.STATS_MAX, 'Debe ser una lista de números.'):
+            number              =   str(item.get('value') or '').strip()[:StoreCustomization.STAT_VALUE_MAX]
+            label               =   str(item.get('label') or '').strip()[:StoreCustomization.STAT_LABEL_MAX]
+            if number and label:
+                clean.append({'value': number, 'label': label})
+        return clean
+
+    def validate_testimonials(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.TESTIMONIALS_MAX, 'Debe ser una lista de testimonios.'):
+            name                =   str(item.get('name') or '').strip()[:StoreCustomization.TESTIMONIAL_NAME_MAX]
+            detail              =   str(item.get('detail') or '').strip()[:StoreCustomization.TESTIMONIAL_DETAIL_MAX]
+            text                =   str(item.get('text') or '').strip()[:StoreCustomization.TESTIMONIAL_TEXT_MAX]
+            if name and text:
+                clean.append({'name': name, 'detail': detail, 'text': text})
+        return clean
+
+    def validate_faqs(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.FAQS_MAX, 'Debe ser una lista de preguntas y respuestas.'):
+            q                   =   str(item.get('q') or '').strip()[:StoreCustomization.FAQ_Q_MAX]
+            a                   =   str(item.get('a') or '').strip()[:StoreCustomization.FAQ_A_MAX]
+            if q and a:
+                clean.append({'q': q, 'a': a})
+        return clean
+
+    def validate_hours(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.HOURS_MAX, 'Debe ser una lista de horarios.'):
+            label               =   str(item.get('label') or '').strip()[:StoreCustomization.HOURS_LABEL_MAX]
+            time                =   str(item.get('value') or '').strip()[:StoreCustomization.HOURS_VALUE_MAX]
+            if label and time:
+                clean.append({'label': label, 'value': time})
+        return clean
+
+    def validate_section_order(self, value):
+        #Solo claves del catálogo SECTION_ORDER, sin repetidas; las que no
+        #vengan conservan su orden base al final (PATCH parcial seguro).
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Debe ser una lista de secciones.')
+        seen, order             =   set(), []
+        for raw in value:
+            key                 =   str(raw or '').strip()
+            if key in StoreCustomization.SECTION_ORDER and key not in seen:
+                seen.add(key)
+                order.append(key)
+        return order + [k for k in StoreCustomization.SECTION_ORDER if k not in seen]
+
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')
         if value and not validate_whatsapp(value):

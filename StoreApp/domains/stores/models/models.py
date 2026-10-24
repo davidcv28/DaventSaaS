@@ -154,6 +154,63 @@ class StoreCustomization(models.Model):
     #vidriera del negocio. No borra productos ni gestión del panel: la ruta
     #/<slug>/catalogo y el endpoint público devuelven 404 hasta reactivarla.
     show_catalog                =   models.BooleanField(default = True, verbose_name = 'Mostrar página de catálogo')
+    #===== Secciones de marketing de la portada ("Mi empresa") =====
+    #Bloques de contenido rico para que la web funcione como landing
+    #completa, no solo como vidriera: servicios, cifras, testimonios,
+    #preguntas frecuentes, horarios y un cierre con llamado a la acción.
+    #Las listas viajan en JSON y el serializer las sanea (cantidad tope,
+    #textos recortados, filas incompletas descartadas, iconos de catálogo
+    #cerrado). Cada bloque se apaga con su show_* y además se oculta solo
+    #en la web cuando quedó vacío — igual que Sobre nosotros/Galería.
+    SERVICES_MAX                =   6
+    SERVICE_TITLE_MAX           =   60
+    SERVICE_TEXT_MAX            =   160
+    SERVICE_ICONS               =   frozenset([
+        'package', 'truck', 'wrench', 'tag', 'percent', 'gift', 'star', 'zap',
+        'shield-check', 'clock', 'map-pin', 'users', 'phone', 'message-circle',
+        'store', 'credit-card', 'wallet', 'crown', 'badge-check', 'trending-up',
+        'calendar', 'flame', 'megaphone', 'check',
+    ])
+    STATS_MAX                   =   4
+    STAT_VALUE_MAX              =   20
+    STAT_LABEL_MAX              =   60
+    TESTIMONIALS_MAX            =   6
+    TESTIMONIAL_NAME_MAX        =   60
+    TESTIMONIAL_DETAIL_MAX      =   80
+    TESTIMONIAL_TEXT_MAX        =   300
+    FAQS_MAX                    =   8
+    FAQ_Q_MAX                   =   140
+    FAQ_A_MAX                   =   500
+    HOURS_MAX                   =   8
+    HOURS_LABEL_MAX             =   60
+    HOURS_VALUE_MAX             =   60
+    #Orden de las secciones de la portada (claves cerradas): el hero va
+    #primero y el contacto último siempre; el serializer descarta claves
+    #desconocidas y completa las que falten al final en este orden base.
+    #La web pública lo aplica como CSS order sobre .sp-page-root (flex).
+    SECTION_ORDER               =   ('about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'cta')
+    services                    =   models.JSONField(default = list, blank = True, verbose_name = 'Qué ofrecemos')
+    services_title              =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Qué ofrecemos')
+    show_services               =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Qué ofrecemos')
+    stats                       =   models.JSONField(default = list, blank = True, verbose_name = 'Números del negocio')
+    show_stats                  =   models.BooleanField(default = True, verbose_name = 'Mostrar números del negocio')
+    testimonials                =   models.JSONField(default = list, blank = True, verbose_name = 'Testimonios')
+    testimonials_title          =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Testimonios')
+    show_testimonials           =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Testimonios')
+    faqs                        =   models.JSONField(default = list, blank = True, verbose_name = 'Preguntas frecuentes')
+    faqs_title                  =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Preguntas frecuentes')
+    show_faq                    =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Preguntas frecuentes')
+    #Horarios de atención: filas {label: 'Lun a vie', value: '9 a 18 h'},
+    #se renderizan dentro de la sección Contáctanos.
+    hours                       =   models.JSONField(default = list, blank = True, verbose_name = 'Horarios de atención')
+    show_hours                  =   models.BooleanField(default = True, verbose_name = 'Mostrar horarios de atención')
+    #Cierre de la portada: banda de llamado a la acción. El botón lleva a
+    #WhatsApp si hay número cargado; si no, al formulario o al catálogo.
+    cta_title                   =   models.CharField(max_length = 120, blank = True, verbose_name = 'Título del llamado a la acción')
+    cta_text                    =   models.CharField(max_length = 280, blank = True, verbose_name = 'Texto del llamado a la acción')
+    cta_label                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Texto del botón')
+    show_cta                    =   models.BooleanField(default = True, verbose_name = 'Mostrar llamado a la acción')
+    section_order               =   models.JSONField(default = list, blank = True, verbose_name = 'Orden de las secciones de la portada')
     updated_at                  =   models.DateTimeField(auto_now = True)
     class Meta:
         app_label               =   'stores'
