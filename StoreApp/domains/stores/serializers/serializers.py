@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
 from StoreApp.domains.stores.services.storage import object_url
-from StoreApp.domains.stores.services        import profile_has_benefit, storage_payload
+from StoreApp.domains.stores.services        import profile_has_benefit, allowed_templates_of, storage_payload
 from .config_fields import StoresFields, CustomizationFields
 from .mixins        import StoreMixinValidator, StoreCreateMixin
 from .validators    import validate_whatsapp, validate_instagram, validate_tiktok, validate_facebook
@@ -265,15 +265,21 @@ class StorePublicSerializer(serializers.ModelSerializer):
     province_name               =   serializers.CharField(source = 'user.province.name_province', read_only = True)
     customization               =   StoreCustomizationPublicSerializer(read_only = True)
     has_design_advanced         =   serializers.SerializerMethodField()
+    allowed_templates           =   serializers.SerializerMethodField()
     location_address            =   serializers.SerializerMethodField()
     chatbot                     =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'location_address', 'chatbot']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
         return profile_has_benefit(store.user, 'has_design_advanced')
+    def get_allowed_templates(self, store):
+        #Whitelist de plantillas según el nivel del plan: la web fuerza
+        #'classic' si el diseño guardado deja de estar permitido (baja de
+        #plan o plantilla retirada del catálogo).
+        return list(allowed_templates_of(store.user))
     def get_location_address(self, store):
         #Dirección lista para geocodificar (mapa embebido, has_location_map):
         #None si el dueño la apagó en Diseño web o no tiene domicilio cargado.

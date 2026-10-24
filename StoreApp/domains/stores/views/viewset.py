@@ -18,7 +18,8 @@ from StoreApp.domains.stores.serializers.validators  import (
     validate_slug_available,
 )
 from StoreApp.domains.stores.services                import (
-    profile_has_benefit, storage_payload, upload_logo, delete_logo, upload_cover, delete_cover,
+    profile_has_benefit, allowed_templates_of, storage_payload,
+    upload_logo, delete_logo, upload_cover, delete_cover,
     upload_carousel_image, delete_carousel_image,
     upload_gallery_image, delete_gallery_image,
     issue_captcha, verify_captcha, send_contact_message, contact_target,
@@ -34,8 +35,9 @@ Viewsets del dominio Stores.
 #Campos del diseño reservados a has_design_advanced (Plan premium): en un
 #PATCH/PUT de customization se descartan del payload en vez de rechazar la
 #request, así el resto del formulario (contenido, logo y tema) se guarda
-#igual y los valores ya guardados quedan intactos.
-DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent', 'template')
+#igual y los valores ya guardados quedan intactos. Las plantillas se
+#validan aparte, por nivel de plan (allowed_templates_of del servicio).
+DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)
@@ -313,6 +315,13 @@ class StoreViewSet(StoreBaseViewSet):
             data        =   request.data.copy()
             for field in discard:
                 data.pop(field, None)
+        #Plantilla según el nivel del plan (Básico: Clásico/Perspectiva;
+        #Estándar suma Urbano/Publicidad; Premium, todo): un diseño fuera
+        #del nivel se descarta del payload como los campos premium.
+        if 'template' in data and data.get('template') not in allowed_templates_of(store.user):
+            if data is request.data:
+                data        =   request.data.copy()
+            data.pop('template')
         serializer        =   StoreCustomizationSerializer(customization, data = data, partial = (request.method == 'PATCH'))
         serializer.is_valid(raise_exception = True)
         serializer.save()

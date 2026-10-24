@@ -53,6 +53,8 @@ class StoreCustomization(models.Model):
     ACCENT_AMBER                =   'amber'
     ACCENT_ROSE                 =   'rose'
     ACCENT_SKY                  =   'sky'
+    ACCENT_ORANGE               =   'orange'
+    ACCENT_LIME                 =   'lime'
     ACCENT_CHOICES              =   [
         (ACCENT_INDIGO,  'Índigo'),
         (ACCENT_VIOLET,  'Violeta'),
@@ -60,6 +62,8 @@ class StoreCustomization(models.Model):
         (ACCENT_AMBER,   'Ámbar'),
         (ACCENT_ROSE,    'Rosa'),
         (ACCENT_SKY,     'Celeste'),
+        (ACCENT_ORANGE,  'Naranja'),
+        (ACCENT_LIME,    'Lima'),
     ]
     FONT_INTER                  =   'inter'
     # Catálogo cerrado de Google Fonts (espejo de STORE_FONTS en stores.api.js):
@@ -95,15 +99,19 @@ class StoreCustomization(models.Model):
         ('jetbrains-mono',       'JetBrains Mono'),
     ]
     TEMPLATE_CLASSIC            =   'classic'
-    #Diseños de la web pública (catálogo cerrado): clásico es el diseño base
-    #y las restantes se habilitan con has_design_advanced (Plan premium).
-    #El viewset descarta el campo del payload sin ese beneficio y el frontend
-    #además lo fuerza a 'classic' si la tienda pierde el plan premium.
+    #Diseños de la web pública (catálogo cerrado) por nivel de plan:
+    #base para todo plan con has_customization, TEMPLATE_PLUS suman las
+    #plantillas de campaña con has_design_plus (Estándar) y
+    #TEMPLATE_ADVANCED quedan para has_design_advanced (Premium). El
+    #viewset descarta del payload un diseño fuera del nivel del plan y
+    #la web fuerza 'classic' si el guardado deja de estar permitido.
+    TEMPLATE_BASE               =   ('classic', 'perspective')
+    TEMPLATE_PLUS               =   ('street', 'promo')
+    TEMPLATE_ADVANCED           =   ('terminal',)
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
         ('promo',            'Publicidad'),
-        ('atelier',          'Atelier'),
         ('street',           'Urbano'),
         ('terminal',         'Terminal'),
     ]

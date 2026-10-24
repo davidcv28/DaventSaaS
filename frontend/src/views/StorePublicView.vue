@@ -13,8 +13,8 @@ import { vReveal } from '../directives/reveal.js'
 const ctx = inject('storePage')
 const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
 // Diseño activo de la portada ('classic' | 'perspective' | 'promo' |
-// 'atelier' | 'street' | 'terminal'): la estructura del hero se reordena
-// por CSS (grid-areas); el decor propio de cada diseño es el único markup extra.
+// 'street' | 'terminal'): la estructura del hero se reordena por CSS
+// (grid-areas); el decor propio de cada diseño es el único markup extra.
 const tpl = pageTemplate
 
 const year = new Date().getFullYear()
@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <section class="sp-hero">
     <div class="sp-hero-band" :class="{ 'has-cover': cover }">
-      <div v-if="cover && tpl !== 'atelier'" class="sp-hero-cover" aria-hidden="true">
+      <div v-if="cover" class="sp-hero-cover" aria-hidden="true">
         <img :src="cover" alt="" fetchpriority="high" />
       </div>
       <div class="sp-hero-decor" aria-hidden="true">
@@ -259,11 +259,7 @@ onBeforeUnmount(() => {
         <span class="sp-float f3"><AppIcon name="shield-check" :size="24" /></span>
         <span class="sp-float f4"><AppIcon name="trending-up" :size="22" /></span>
         <span class="sp-float f5"><AppIcon name="store" :size="24" /></span>
-        <template v-if="tpl === 'atelier'">
-          <span class="sp-at-letter">{{ initial }}</span>
-          <span class="sp-at-rail">Edición {{ year }} · {{ shopName }}</span>
-        </template>
-        <template v-else-if="tpl === 'street'">
+        <template v-if="tpl === 'street'">
           <span class="sp-st-ghost">{{ shopName }}</span>
           <span class="sp-st-sticker">
             <svg class="sp-st-sticker-ring" viewBox="0 0 200 200">
@@ -300,14 +296,7 @@ onBeforeUnmount(() => {
         <span class="sp-tm-path">tienda@davent:~/{{ slug }}</span>
         <span class="sp-tm-live">[ en línea ]</span>
       </div>
-      <div v-if="tpl === 'atelier'" class="sp-container sp-at-masthead" aria-hidden="true">
-        <span>Nº 01</span><i></i><span>Colección {{ year }}</span><i></i><span>{{ location || (showCatalog ? 'Catálogo' : 'Sitio oficial') }}</span>
-      </div>
       <div class="sp-container sp-hero-inner">
-        <figure v-if="cover && tpl === 'atelier'" v-reveal="120" class="sp-at-cover">
-          <img :src="cover" alt="" fetchpriority="high" />
-          <figcaption class="sp-at-cover-tag" aria-hidden="true">Campaña {{ year }}</figcaption>
-        </figure>
         <span v-if="tpl === 'promo'" class="sp-pr-tag"><AppIcon name="megaphone" :size="15" :stroke="2.25" /> ¡Novedad!</span>
         <span v-reveal class="sp-ava">
           <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
@@ -317,7 +306,7 @@ onBeforeUnmount(() => {
           <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
           {{ heroBadge }}
         </p>
-        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'street'">{{ titleSplit.head }} <mark class="sp-st-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'atelier'">{{ titleSplit.head }} <em class="sp-at-em">{{ titleSplit.last }}</em></template><template v-else-if="tpl === 'terminal'">{{ titleSplit.head }} <mark class="sp-tm-mark">{{ titleSplit.last }}</mark></template><template v-else>{{ heroTitle }}</template></h1>
+        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'street'">{{ titleSplit.head }} <mark class="sp-st-mark">{{ titleSplit.last }}</mark></template><template v-else-if="tpl === 'terminal'">{{ titleSplit.head }} <mark class="sp-tm-mark">{{ titleSplit.last }}</mark></template><template v-else>{{ heroTitle }}</template></h1>
         <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
         <div v-reveal="320" class="sp-hero-ctas">
           <a v-if="tpl === 'promo' && whatsappUrl" class="sp-btn sp-pr-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> Escribinos ahora</a>

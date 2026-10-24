@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.db.models import F, Sum
 from django.utils import timezone
 from SuscriptionApp.domains.benefits.models import Benefit
-from StoreApp.domains.stores.models import StoreDailyVisit
+from StoreApp.domains.stores.models import StoreCustomization, StoreDailyVisit
 """
 
 Servicios del dominio Stores.
@@ -42,6 +42,26 @@ def profile_has_benefit(profile, code):
     """
     value           =   plan_benefits_of(profile).get(code, False)
     return True if value is None else bool(value)
+#=========================================
+# ALLOWED TEMPLATES OF (diseños de portada según el plan vigente)
+#=========================================
+def allowed_templates_of(profile):
+    """
+    Diseños de la web disponibles según el plan: TEMPLATE_BASE va con
+    cualquier has_customization, has_design_plus suma Urbano/Publicidad
+    y has_design_advanced el resto. Sin acceso solo 'classic' — la web
+    pública lo usa como whitelist para forzar el fallback si el dueño
+    baja de plan o guardó un diseño ya retirado.
+    """
+    benefits        =   plan_benefits_of(profile)
+    if not benefits.get('has_customization'):
+        return (StoreCustomization.TEMPLATE_CLASSIC,)
+    allowed         =   list(StoreCustomization.TEMPLATE_BASE)
+    if benefits.get('has_design_plus'):
+        allowed         +=  StoreCustomization.TEMPLATE_PLUS
+    if benefits.get('has_design_advanced'):
+        allowed         +=  StoreCustomization.TEMPLATE_ADVANCED
+    return tuple(allowed)
 #=========================================
 # RECORD STORE VISIT (+1 por visitante/día, sin guardar IPs)
 #=========================================

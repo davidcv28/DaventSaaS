@@ -13,11 +13,13 @@ import { storeUrl } from '../config/env.js'
 //                                                   cuenta una visita por visitante/día en la web pública}
 //                                                   -> 403 sin el beneficio has_stats (plan Básico)
 // GET  /api/stores/public/<slug>/        público  -> {slug, business_name, city_name, province_name, customization,
-//                                                   has_design_advanced, location_address} — sin has_design_advanced
-//                                                   la web no muestra portada y expone un toggle claro/oscuro
-//                                                   al visitante en el nav; location_address es null sin
-//                                                   has_location_map (Estándar+) o si el dueño apagó el mapa
-//                                                   (customization.show_location)
+//                                                   has_design_advanced, allowed_templates, location_address} —
+//                                                   sin has_design_advanced la web no muestra portada y expone
+//                                                   un toggle claro/oscuro al visitante en el nav;
+//                                                   allowed_templates es la whitelist de plantillas del plan
+//                                                   (la web fuerza 'classic' si el guardado no está permitido);
+//                                                   location_address es null sin has_location_map (Estándar+)
+//                                                   o si el dueño apagó el mapa (customization.show_location)
 // GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products}
 //                                                   (?q=&category=&brand=&min_price=&max_price=&sort=
 //                                                     name|recent|price_asc|price_desc; valores
@@ -34,8 +36,11 @@ import { storeUrl } from '../config/env.js'
 //                                                web: queda como vidriera del negocio; no borra productos)}
 //                                        -> 403 si el plan vigente no incluye 'has_customization'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
-//                                           name_font, name_font_size, accent y template del payload; sin
-//                                           'has_location_map' (Estándar+) descarta show_location
+//                                           name_font, name_font_size y accent del payload; template
+//                                           se descarta si no está en el nivel del plan (Básico:
+//                                           Clásico/Perspectiva; Estándar suma Urbano/Publicidad;
+//                                           Premium todo); sin 'has_location_map' (Estándar+)
+//                                           descarta show_location
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/logo/ Bearer   -> quita el logo y libera la cuota
@@ -406,7 +411,9 @@ export const STORE_ACCENTS = {
   emerald: { label: 'Esmeralda', hex: '#059669', ink: '#047857', soft: '#ecfdf5' },
   amber:   { label: 'Ámbar',     hex: '#d97706', ink: '#b45309', soft: '#fffbeb' },
   rose:    { label: 'Rosa',      hex: '#e11d48', ink: '#be123c', soft: '#fff1f2' },
-  sky:     { label: 'Celeste',   hex: '#0284c7', ink: '#0369a1', soft: '#f0f9ff' }
+  sky:     { label: 'Celeste',   hex: '#0284c7', ink: '#0369a1', soft: '#f0f9ff' },
+  orange:  { label: 'Naranja',   hex: '#ea580c', ink: '#c2410c', soft: '#fff7ed' },
+  lime:    { label: 'Lima',      hex: '#65a30d', ink: '#4d7c0f', soft: '#f7fee7' }
 }
 
 export const STORE_THEMES = {
@@ -414,22 +421,41 @@ export const STORE_THEMES = {
   dark:  { label: 'Oscuro' }
 }
 
-// Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
-// 'classic' es el diseño base; 'perspective', 'promo', 'atelier', 'street' y
-// 'terminal' se habilitan con el beneficio has_design_advanced (Plan premium).
-// El frontend fuerza 'classic' cuando la tienda no tiene ese beneficio aunque
-// haya otro valor guardado.
+// Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES)
+// por nivel de plan — `tier` marca qué beneficio lo habilita:
+//   'base'     -> todo plan con has_customization (Básico)
+//   'plus'     -> has_design_plus (Estándar y Premium)
+//   'advanced' -> has_design_advanced (Premium)
+// El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
+// 'classic' si el guardado deja de estar permitido (baja de plan o
+// plantilla retirada, como la extinta 'atelier').
 export const STORE_TEMPLATES = {
-  classic:   { label: 'Clásico',    desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
-  perspective: { label: 'Perspectiva', desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
-  promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
-  atelier:   { label: 'Atelier',    desc: 'Portada de revista: papel crema, masthead serif en mayúsculas, caja «En esta edición» con las acciones, índice de contenidos y fichas de gaceta.' },
-  street:    { label: 'Urbano',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
-  terminal:  { label: 'Terminal',   desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' }
+  classic:     { label: 'Clásico',     tier: 'base',     desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
+  perspective: { label: 'Perspectiva', tier: 'base',     desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
+  street:      { label: 'Urbano',      tier: 'plus',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
+  promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
+  terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' }
 }
 
-export function storeTemplate(value) {
-  return STORE_TEMPLATES[value] ? value : 'classic'
+// Plantillas elegibles según los beneficios del plan vigente (espejo de
+// allowed_templates_of del backend: mismo orden del catálogo). Sirve tanto
+// con el dict de benefits del plan como con la lista allowed_templates que
+// devuelve /public/<slug>/.
+const TEMPLATE_TIER_BENEFIT = { base: null, plus: 'has_design_plus', advanced: 'has_design_advanced' }
+
+export function allowedTemplatesFor(benefits = {}) {
+  if (!benefits.has_customization) return ['classic']
+  return Object.keys(STORE_TEMPLATES).filter((key) => {
+    const need = TEMPLATE_TIER_BENEFIT[STORE_TEMPLATES[key].tier]
+    return !need || Boolean(benefits[need])
+  })
+}
+
+// Normaliza un diseño guardado contra la whitelist: 'classic' si el valor
+// no existe en el catálogo o quedó fuera del nivel del plan.
+export function resolveStoreTemplate(value, allowed) {
+  const list = Array.isArray(allowed) && allowed.length ? allowed : ['classic']
+  return STORE_TEMPLATES[value] && list.includes(value) ? value : 'classic'
 }
 
 // Fuentes del nombre junto al logo: catálogo cerrado de Google Fonts

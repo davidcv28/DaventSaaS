@@ -193,10 +193,15 @@ class ImageNormalizationTests(TestCase):
 class StoreCoverGatingTests(TestCase):
     """Imagen de portada: solo con has_design_advanced (Plan premium)."""
 
-    def _client(self, premium):
+    def _client(self, premium = False, plus = False):
         _, profile      =   _make_user(verified = True)
         plan            =   SuscriptionPlan.objects.create(name = 'Plan test')
-        for code in ('has_public_link', 'has_customization') + (('has_design_advanced',) if premium else ()):
+        codes           =   ['has_public_link', 'has_customization']
+        if plus:
+            codes.append('has_design_plus')
+        if premium:
+            codes +=  ['has_design_plus', 'has_design_advanced']
+        for code in set(codes):
             benefit     =   Benefit.objects.create(code = code, label = code, kind = Benefit.FLAG)
             PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
         Suscription.objects.create(
@@ -222,15 +227,89 @@ class StoreCoverGatingTests(TestCase):
         response    =   self._client(premium = True).post(f'{STORES_URL}customization/cover/', {}, format = 'multipart')
         self.assertEqual(response.status_code, 400)
 
-    def test_premium_template_discarded_without_premium(self):
-        response    =   self._client(premium = False).patch(f'{STORES_URL}customization/', {'template': 'atelier'}, format = 'json')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['customization']['template'], 'classic')
-
     def test_premium_template_saved_with_premium(self):
         response    =   self._client(premium = True).patch(f'{STORES_URL}customization/', {'template': 'street'}, format = 'json')
         self.assertEqual(response.data['customization']['template'], 'street')
         self.assertIn('cover', response.data['customization'])
+
+
+class StoreTemplateGatingTests(TestCase):
+    """
+    Plantillas de portada por nivel de plan: Básico elige Clásico o
+    Perspectiva, Estándar (has_design_plus) suma Urbano y Publicidad y
+    Premium (has_design_advanced) todo el catálogo. Un diseño fuera del
+    nivel se descarta del PATCH igual que los campos premium y la web
+    pública fuerza 'classic' si el guardado deja de estar permitido.
+    """
+
+    def _client(self, *benefit_codes):
+        _, profile      =   _make_user(verified = True)
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan test')
+        for code in set(('has_public_link', 'has_customization') + benefit_codes):
+            benefit     =   Benefit.objects.create(code = code, label = code, kind = Benefit.FLAG)
+            PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = profile.user)
+        return client, store
+
+    def test_basic_picks_base_templates(self):
+        client, _       =   self._client()
+        for key in ('classic', 'perspective'):
+            response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
+            self.assertEqual(response.data['customization']['template'], key)
+
+    def test_basic_discards_plus_and_advanced_templates(self):
+        client, _       =   self._client()
+        for key in ('street', 'promo', 'terminal'):
+            response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
+            self.assertEqual(response.data['customization']['template'], 'classic')
+
+    def test_standard_picks_plus_templates(self):
+        client, _       =   self._client('has_design_plus')
+        for key in ('street', 'promo'):
+            response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
+            self.assertEqual(response.data['customization']['template'], key)
+
+    def test_standard_discards_advanced_template(self):
+        client, _       =   self._client('has_design_plus')
+        response        =   client.patch(f'{STORES_URL}customization/', {'template': 'terminal'}, format = 'json')
+        self.assertEqual(response.data['customization']['template'], 'classic')
+
+    def test_premium_picks_any_template(self):
+        client, _       =   self._client('has_design_plus', 'has_design_advanced')
+        for key in ('classic', 'perspective', 'street', 'promo', 'terminal'):
+            response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
+            self.assertEqual(response.data['customization']['template'], key)
+
+    def test_removed_template_is_discarded(self):
+        #'atelier' salió del catálogo: no está en allowed_templates, así
+        #que el PATCH la descarta como a un diseño fuera del nivel.
+        client, _       =   self._client('has_design_plus', 'has_design_advanced')
+        response        =   client.patch(f'{STORES_URL}customization/', {'template': 'atelier'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['template'], 'classic')
+
+    def test_public_payload_lists_allowed_templates(self):
+        client, store   =   self._client('has_design_plus')
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'street', 'promo'])
+
+    def test_downgraded_template_is_not_persisted(self):
+        #Con el plan vigente guarda 'street'; si el beneficio se pierde, el
+        #payload público ya no lo lista (el frontend fuerza 'classic').
+        client, store   =   self._client('has_design_plus')
+        client.patch(f'{STORES_URL}customization/', {'template': 'street'}, format = 'json')
+        PlanBenefit.objects.filter(benefit__code = 'has_design_plus').delete()
+        response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertNotIn('street', response.data['allowed_templates'])
+        self.assertEqual(response.data['customization']['template'], 'street')
 
 
 class MarketingFieldsTests(TestCase):

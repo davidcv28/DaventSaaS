@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, storeTemplate, CUSTOMIZATION_DEFAULTS
+  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -32,9 +32,11 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // Diseño avanzado (Plan premium): define si la web muestra el carrusel de
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
 const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
-// Diseño de la web (template): los diseños alternativos son premium; sin
-// has_design_advanced se fuerza 'classic' aunque quede otro valor guardado.
-const pageTemplate = computed(() => (hasDesignAdvanced.value ? storeTemplate(custom.value.template) : 'classic'))
+// Diseño de la web (template): la whitelist allowed_templates del payload
+// marca el nivel del plan (Básico: Clásico/Perspectiva; Estándar suma
+// Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
+// plan o plantilla retirada — se fuerza 'classic'.
+const pageTemplate = computed(() => resolveStoreTemplate(custom.value.template, store.value?.allowed_templates))
 // Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
 // visitante puede alternarlo con el botón del nav (solo para esta visita).
 const visitorTheme = ref(null) // null = tema de la tienda
@@ -122,12 +124,11 @@ onMounted(async () => {
     store.value = await storesApi.publicStore(slug.value)
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
-    // Fuentes propias de la plantilla (titulares): serif de pasarela en
-    // 'atelier', condensada de letrero en 'perspective', peso pesado de
-    // streetwear en 'street' y el par monospace de 'terminal'. Misma carga
-    // on-demand que name_font; el resto del texto sigue con la fuente
-    // elegida por el dueño.
-    const TEMPLATE_FONTS = { atelier: ['fraunces'], perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'] }
+    // Fuentes propias de la plantilla (titulares): condensada de letrero
+    // en 'perspective', peso pesado de streetwear en 'street' y el par
+    // monospace de 'terminal'. Misma carga on-demand que name_font; el
+    // resto del texto sigue con la fuente elegida por el dueño.
+    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'] }
     TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'

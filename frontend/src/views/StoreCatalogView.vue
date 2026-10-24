@@ -16,7 +16,7 @@ import { vReveal } from '../directives/reveal.js'
 // estado `ui` provisto por el layout.
 const ctx = inject('storePage')
 const { slug, ui, custom, hasDesignAdvanced, shopName, pageTemplate } = ctx
-// Diseño activo ('atelier'/'street' suman decor propia a la cabecera).
+// Diseño activo ('street'/'terminal' suman decor propia a la cabecera).
 const tpl = pageTemplate
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const route = useRoute()
@@ -257,10 +257,6 @@ onBeforeUnmount(() => {
       <template v-if="tpl === 'street'">
         <span class="sp-st-ghost">Catálogo</span>
         <span class="sp-st-barcode"><i></i><em>{{ shopName }}</em></span>
-      </template>
-      <template v-else-if="tpl === 'atelier'">
-        <span class="sp-at-letter">{{ shopName.slice(0, 1).toUpperCase() }}</span>
-        <span class="sp-at-rail">Catálogo · {{ shopName }}</span>
       </template>
       <template v-else-if="tpl === 'terminal'">
         <span class="sp-tm-ghost">~/catalogo</span>

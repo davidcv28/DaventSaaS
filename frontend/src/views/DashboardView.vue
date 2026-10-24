@@ -11,7 +11,8 @@ import { useSlugCheck } from '../composables/useSlugCheck.js'
 import QRCode from 'qrcode'
 import {
   normalizeSlug, publicStoreUrl,
-  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily, storeTemplate,
+  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily,
+  allowedTemplatesFor, resolveStoreTemplate,
   ensureStoreFont, ensureStoreFontList, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
@@ -830,15 +831,40 @@ const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpp
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
 const storeThemes = STORE_THEMES
-// Diseños de la web (STORE_TEMPLATES): las alternativas a 'classic' son
-// premium. La vista previa fuerza 'classic' sin has_design_advanced, igual
-// que la web.
+// Diseños de la web (STORE_TEMPLATES): cada plantilla declara su tier
+// ('base' | 'plus' | 'advanced'). La vista previa usa el mismo fallback
+// que la web pública: 'classic' si el diseño queda fuera del plan.
 const storeTemplates = STORE_TEMPLATES
-const designTemplate = computed(() => (canDesignAdvanced.value ? storeTemplate(designForm.template) : 'classic'))
+// Plantillas elegibles por nivel de plan (espejo del backend): Básico
+// elige base, Estándar suma 'plus' y Premium todo el catálogo.
+const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
+const designTemplate = computed(() => resolveStoreTemplate(designForm.template, allowedTemplates.value))
+// Si el guardado quedó fuera del nivel (baja de plan o plantilla retirada
+// como 'atelier') el select vuelve al primer diseño permitido.
+watch(allowedTemplates, (list) => {
+  if (!list.includes(designForm.template)) designForm.template = list[0] || 'classic'
+})
+function templatePlanLabel(key) {
+  const tier = STORE_TEMPLATES[key]?.tier
+  return tier === 'plus' ? 'Estándar' : tier === 'advanced' ? 'Premium' : ''
+}
+function pickTemplate(key) {
+  if (allowedTemplates.value.includes(key)) designForm.template = key
+}
+function pickFont(key) {
+  if (canDesignAdvanced.value) designForm.name_font = key
+}
+function pickAccent(key) {
+  if (canDesignAdvanced.value) designForm.accent = key
+}
 
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
-  if (s) Object.assign(designForm, store.customization)
+  if (!s) return
+  Object.assign(designForm, store.customization)
+  // Si el plan ya estaba cargado y el diseño guardado quedó fuera de su
+  // nivel (baja de plan o plantilla retirada), vuelve al primero permitido.
+  if (!allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'classic'
 }, { immediate: true })
 
 const designErrors = computed(() => {
@@ -1070,10 +1096,12 @@ async function saveDesign() {
     Object.assign(payload, {
       name_font: designForm.name_font,
       name_font_size: Number(designForm.name_font_size),
-      accent: designForm.accent,
-      template: designForm.template
+      accent: designForm.accent
     })
   }
+  // La plantilla viaja siempre: el backend la descarta del payload si
+  // quedó fuera del nivel del plan (allowed_templates_of).
+  payload.template = designForm.template
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   await store.saveCustomization(payload)
@@ -2194,39 +2222,50 @@ async function changePassword() {
               <p class="hint">Foto de hasta 4 MB que decora el fondo de tu página principal. La ajustamos automáticamente; elegí una imagen apaisada y luminosa.</p>
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-template-label">Diseño de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="tpl-options" role="radiogroup" aria-labelledby="design-template-label">
+            <div class="field">
+              <label for="design-template">Diseño de tu web</label>
+              <select id="design-template" v-model="designForm.template" class="select">
+                <option
+                  v-for="(t, key) in storeTemplates" :key="key" :value="key"
+                  :disabled="!allowedTemplates.includes(key)"
+                >
+                  {{ t.label }}<template v-if="!allowedTemplates.includes(key)"> · Plan {{ templatePlanLabel(key) }}</template>
+                </option>
+              </select>
+              <div class="pick-strip tpl-thumbs" aria-label="Vista previa de cada diseño">
                 <button
                   v-for="(t, key) in storeTemplates" :key="key" type="button"
-                  class="tpl-option" :class="{ active: designForm.template === key }"
-                  :disabled="!canDesignAdvanced"
+                  class="tpl-thumb-btn" :class="{ active: designForm.template === key }"
+                  :aria-disabled="!allowedTemplates.includes(key)"
                   :aria-pressed="designForm.template === key"
-                  @click="designForm.template = key"
+                  :title="allowedTemplates.includes(key) ? t.desc : `${t.label} · Plan ${templatePlanLabel(key)}`"
+                  @click="pickTemplate(key)"
                 >
                   <span class="tpl-thumb" :data-tpl="key" aria-hidden="true"><i></i></span>
-                  <span class="tpl-text"><strong>{{ t.label }}</strong><small>{{ t.desc }}</small></span>
+                  <span class="tpl-thumb-name">{{ t.label }}</span>
+                  <span v-if="!allowedTemplates.includes(key)" class="tpl-thumb-lock" aria-hidden="true"><AppIcon name="lock" :size="10" :stroke="2.5" /></span>
                 </button>
               </div>
-              <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido.</p>
+              <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido. Los diseños bloqueados se habilitan subiendo de plan.</p>
             </div>
-            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="Los diseños, el color de acento, la fuente, la imagen de portada y las decoraciones se habilitan con el Plan premium." />
+            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="Las fuentes, el color de acento, la imagen de portada, el carrusel y las decoraciones se habilitan con el Plan premium. Los diseños Urbano y Publicidad vienen desde el Estándar." />
             <div v-if="!canDesignAdvanced" class="btn-row">
               <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-font-label">Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="font-options" role="radiogroup" aria-labelledby="design-font-label">
+              <label for="design-font">Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <select id="design-font" v-model="designForm.name_font" class="select" :disabled="!canDesignAdvanced">
+                <option v-for="(f, key) in storeFonts" :key="key" :value="key" :style="{ fontFamily: f.family }">{{ f.label }}</option>
+              </select>
+              <div class="pick-strip font-chips" aria-label="Vista previa de cada fuente">
                 <button
                   v-for="(f, key) in storeFonts" :key="key" type="button"
-                  class="font-option" :class="{ active: designForm.name_font === key }"
+                  class="font-chip" :class="{ active: designForm.name_font === key }"
                   :style="{ fontFamily: f.family }"
-                  :disabled="!canDesignAdvanced"
-                  :aria-pressed="designForm.name_font === key"
-                  @click="designForm.name_font = key"
-                >
-                  {{ f.label }}
-                </button>
+                  :aria-disabled="!canDesignAdvanced"
+                  :title="f.label"
+                  @click="pickFont(key)"
+                >{{ f.label }}</button>
               </div>
               <p class="hint">Se aplica a todo el texto de tu web: nombre, secciones y catálogo.</p>
             </div>
@@ -2262,18 +2301,21 @@ async function changePassword() {
               <p class="hint">Claro u oscuro: se aplica a la barra superior, la portada y todo tu catálogo.</p>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-accent-label">Color de acento <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="swatches" role="radiogroup" aria-labelledby="design-accent-label">
+              <label for="design-accent">Color de acento <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <select id="design-accent" v-model="designForm.accent" class="select" :disabled="!canDesignAdvanced">
+                <option v-for="(a, key) in storeAccents" :key="key" :value="key">{{ a.label }}</option>
+              </select>
+              <div class="pick-strip swatches compact" aria-label="Vista previa de cada color">
                 <button
                   v-for="(a, key) in storeAccents" :key="key" type="button"
                   class="swatch" :class="{ active: designForm.accent === key }"
                   :style="{ '--swatch': a.hex }"
                   :title="a.label" :aria-label="`Color ${a.label}`"
-                  :disabled="!canDesignAdvanced"
+                  :aria-disabled="!canDesignAdvanced"
                   :aria-pressed="designForm.accent === key"
-                  @click="designForm.accent = key"
+                  @click="pickAccent(key)"
                 >
-                  <AppIcon v-if="designForm.accent === key" name="check" :size="14" :stroke="2.5" />
+                  <AppIcon v-if="designForm.accent === key" name="check" :size="13" :stroke="2.5" />
                 </button>
               </div>
               <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
@@ -2295,9 +2337,6 @@ async function changePassword() {
                 <span v-if="designCatalogOn" class="dp-nav-item">Catálogo</span>
                 <span class="dp-nav-item">Contacto</span>
               </span>
-            </div>
-            <div v-if="designTemplate === 'atelier'" class="dp-at-masthead" aria-hidden="true">
-              <span>Nº 01</span><i></i><span>Colección {{ new Date().getFullYear() }}</span><i></i><span>{{ designCatalogOn ? 'Catálogo' : 'Sitio oficial' }}</span>
             </div>
             <div class="dp-hero" :class="{ 'has-cover': canDesignAdvanced && currentCover }" :style="canDesignAdvanced && currentCover ? { '--dp-cover': `url(${currentCover})` } : null">
               <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
