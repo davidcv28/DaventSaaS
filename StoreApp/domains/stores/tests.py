@@ -312,13 +312,13 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_basic_picks_base_templates(self):
         client, _       =   self._client()
-        for key in ('classic', 'perspective'):
+        for key in ('classic', 'perspective', 'duo'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
     def test_basic_discards_plus_and_advanced_templates(self):
         client, _       =   self._client()
-        for key in ('street', 'promo', 'terminal', 'lookbook', 'cobre'):
+        for key in ('street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'classic')
 
@@ -330,13 +330,13 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_standard_discards_advanced_template(self):
         client, _       =   self._client('has_design_plus')
-        for key in ('terminal', 'lookbook', 'cobre'):
+        for key in ('terminal', 'lookbook', 'cobre', 'minimal', 'boutique'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'classic')
 
     def test_premium_picks_any_template(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        for key in ('classic', 'perspective', 'street', 'promo', 'terminal', 'lookbook', 'cobre'):
+        for key in ('classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
@@ -351,7 +351,7 @@ class StoreTemplateGatingTests(TestCase):
     def test_public_payload_lists_allowed_templates(self):
         client, store   =   self._client('has_design_plus')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'street', 'promo'])
+        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'duo', 'street', 'promo'])
 
     def test_downgraded_template_is_not_persisted(self):
         #Con el plan vigente guarda 'street'; si el beneficio se pierde, el

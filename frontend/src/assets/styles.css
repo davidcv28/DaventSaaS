@@ -911,6 +911,54 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='minimal'] .dp-hero.has-cover .dp-badge { color: rgba(255, 255, 255, .9); }
 .design-preview[data-store-template='minimal'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .7); color: #fff; }
 
+/* Dúo: portada a dos columnas — placa de imagen a la izquierda, copy a la
+   derecha sobre fondo claro (la composición de la ex "Opción 2"). */
+.tpl-thumb[data-tpl='duo'] { background: linear-gradient(180deg, #eef2f7 0 68%, var(--card) 68%); }
+.tpl-thumb[data-tpl='duo']::before { content: ''; position: absolute; left: 7%; top: 14%; bottom: 22%; width: 32%; border-radius: 6px; background: var(--brand-500); }
+.tpl-thumb[data-tpl='duo']::after { content: ''; position: absolute; right: 8%; top: 22%; width: 40%; height: 6px; border-radius: 2px; background: #0f172a; box-shadow: 0 11px 0 -1px #0f172a, 0 24px 0 -1px #94a3b8; }
+.tpl-thumb[data-tpl='duo'] i { left: auto; right: 8%; bottom: 12%; width: 40%; height: 6px; border-radius: 99px; background: var(--brand-500); opacity: .8; }
+.design-preview[data-store-template='duo'] .dp-hero { grid-template-columns: 76px minmax(0, 1fr); column-gap: 16px; align-content: center; justify-items: start; text-align: left; background: #edf1f7; color: #0f172a; border-bottom: 1px solid #dbe3ee; padding: 22px 18px; }
+.design-preview[data-store-theme='dark'][data-store-template='duo'] .dp-hero { background: #101826; color: #e8ecf7; border-bottom-color: #24314a; }
+.design-preview[data-store-template='duo'] .dp-logo,
+.design-preview[data-store-template='duo'] .dp-mono { grid-row: 1 / -1; width: 76px; height: 96px; border-radius: 9px; object-fit: cover; font-size: 26px; background: var(--store-accent); color: #fff; box-shadow: 0 8px 18px -10px rgba(15, 23, 42, .35); }
+.design-preview[data-store-template='duo'] .dp-badge { padding: 0; border: 0; background: none; color: var(--store-accent-ink); font-size: 8.5px; font-weight: 800; letter-spacing: .14em; }
+.design-preview[data-store-template='duo'] .dp-title { font-size: 22px; color: #0f172a; }
+.design-preview[data-store-theme='dark'][data-store-template='duo'] .dp-title { color: #e8ecf7; }
+.design-preview[data-store-template='duo'] .dp-desc { color: #5b6678; font-size: 10.5px; }
+.design-preview[data-store-theme='dark'][data-store-template='duo'] .dp-desc { color: #93a0bd; }
+.design-preview[data-store-template='duo'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='duo'] .dp-btn { background: var(--store-accent-ink); }
+.design-preview[data-store-template='duo'] .dp-btn.ghost { background: #fff; color: #334155; border-color: #dbe3ee; }
+.design-preview[data-store-theme='dark'][data-store-template='duo'] .dp-btn.ghost { background: transparent; color: #c3cbdf; border-color: #28304d; }
+
+/* Boutique: catálogo de indumentaria — marfil y tinta, títulos Playfair
+   con serif, barra de anuncio y botones rectos de tinta. */
+.tpl-thumb[data-tpl='boutique'] { background: linear-gradient(180deg, #1c1917 0 12%, #f6f4ee 12%); }
+.tpl-thumb[data-tpl='boutique']::before { content: ''; position: absolute; right: 10%; top: 24%; bottom: 12%; width: 30%; background: #ece7dc; border: 1px solid #e0dacd; }
+.tpl-thumb[data-tpl='boutique']::after { content: ''; position: absolute; left: 8%; top: 30%; width: 44%; height: 6px; background: #1c1917; box-shadow: 0 12px 0 -1px #1c1917, 0 26px 0 -2px #a89e90; }
+.tpl-thumb[data-tpl='boutique'] i { left: 8%; right: auto; bottom: 14%; width: 30%; height: 5px; border-radius: 0; background: var(--brand-500); opacity: 1; }
+.design-preview[data-store-template='boutique'] { --sp-bg: #f6f4ee; --sp-card: #ffffff; --sp-ink: #1c1917; --sp-ink-2: #443d36; --sp-muted: #75695e; --sp-line: #e0dacd; }
+.design-preview[data-store-theme='dark'][data-store-template='boutique'] { --sp-bg: #131110; --sp-card: #1b1816; --sp-ink: #f2ede3; --sp-ink-2: #cfc7bb; --sp-muted: #a89e90; --sp-line: #37302a; }
+.design-preview[data-store-template='boutique'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
+.design-preview[data-store-template='boutique'] .dp-nav-name { color: var(--sp-ink); font-family: 'Playfair Display', Georgia, serif; font-weight: 600; font-size: 14px; letter-spacing: .02em; }
+.design-preview[data-store-template='boutique'] .dp-nav-item { color: var(--sp-muted); font-size: 8px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.design-preview[data-store-template='boutique'] .dp-nav-mono { background: var(--sp-ink); color: var(--sp-bg); border-radius: 0; }
+.design-preview[data-store-template='boutique'] .dp-hero { position: relative; justify-items: start; text-align: left; color: var(--sp-ink); background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); padding: 26px 18px 22px; }
+.design-preview[data-store-template='boutique'] .dp-hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
+.design-preview[data-store-template='boutique'] .dp-mono { background: var(--sp-ink); color: var(--sp-bg); border-radius: 0; }
+.design-preview[data-store-template='boutique'] .dp-badge { padding: 0; border: 0; border-radius: 0; background: none; color: var(--sp-muted); font-size: 8px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+.design-preview[data-store-template='boutique'] .dp-title { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; font-size: 30px; line-height: 1.05; letter-spacing: -.01em; color: var(--sp-ink); }
+.design-preview[data-store-template='boutique'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='boutique'] .dp-desc { color: var(--sp-muted); font-family: 'Raleway', var(--store-font), sans-serif; font-size: 10.5px; line-height: 1.65; }
+.design-preview[data-store-template='boutique'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='boutique'] .dp-btn { border-radius: 0; background: var(--sp-ink); color: var(--sp-bg); font-weight: 700; font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; box-shadow: none; }
+.design-preview[data-store-template='boutique'] .dp-btn.ghost { background: transparent; border: 1px solid var(--sp-ink); color: var(--sp-ink); }
+.design-preview[data-store-template='boutique'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(28, 25, 23, .78), rgba(28, 25, 23, .35)), var(--dp-cover) center / cover no-repeat; color: #fff; }
+.design-preview[data-store-template='boutique'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='boutique'] .dp-hero.has-cover .dp-desc { color: #fff; }
+.design-preview[data-store-template='boutique'] .dp-hero.has-cover .dp-badge { color: rgba(255, 255, 255, .9); }
+.design-preview[data-store-template='boutique'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .7); color: #fff; }
+
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
 .tab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: color .15s, border-color .15s; }

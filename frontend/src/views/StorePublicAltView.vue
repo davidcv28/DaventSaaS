@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, inject, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { storesApi, SERVICE_ICONS } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { formatARS } from '../api/billing.api.js'
@@ -11,18 +11,21 @@ import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-page-v2.css'
 
-// Landing "Opción 2" (prototipo): la misma información de la portada actual
-// con los elementos acomodados distinto — hero sobre fondo claro con la
-// imagen a la izquierda y el copy a la derecha, números pegados al hero,
-// destacados como tira, productos en riel horizontal, servicios numerados,
-// Nosotros espejado (foto a la izquierda), galería en tira horizontal,
-// FAQ en dos columnas y Contáctanos con el formulario a la izquierda.
-// Se entra desde "Vista previa opción 2" del panel (/<slug>/v2) y no
-// reemplaza la portada real: es una propuesta para comparar.
+// Diseño "Dúo" (antes prototipo "Opción 2"): la misma información de la
+// portada actual con los elementos acomodados distinto — hero sobre fondo
+// claro con la imagen a la izquierda y el copy a la derecha, números
+// pegados al hero, destacados como tira, productos en riel horizontal,
+// servicios numerados, Nosotros espejado (foto a la izquierda), galería en
+// tira horizontal, FAQ en dos columnas y Contáctanos con el formulario a la
+// izquierda. Es la portada real cuando la tienda elige el diseño 'duo'
+// (StoreHomeView la monta) y sigue abierta como vista previa en /<slug>/v2
+// (ruta store-alt): solo en ese caso se muestra la barra .sp2-preview.
 const ctx = inject('storePage')
 const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
 
 const router = useRouter()
+const route = useRoute()
+const isPreview = computed(() => route.name === 'store-alt')
 const homeTo = computed(() => ({ name: 'store-public', params: storeHostSlug ? {} : { slug: slug.value } }))
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
@@ -270,12 +273,12 @@ onBeforeUnmount(() => {
 
 <template>
 <div class="sp-page-root sp2">
-  <!-- ===== Barra de vista previa: identifica el prototipo y devuelve a la
-       portada actual sin salir de la web pública ===== -->
-  <div class="sp2-preview">
+  <!-- ===== Barra de vista previa: solo en /<slug>/v2 (ruta store-alt);
+       cuando 'duo' es el diseño elegido esta composición ES la portada ===== -->
+  <div v-if="isPreview" class="sp2-preview">
     <div class="sp-container sp2-preview-inner">
-      <span class="sp2-preview-badge"><AppIcon name="eye" :size="13" /> Vista previa · Opción 2</span>
-      <span class="sp2-preview-note">Propuesta alternativa de portada: tu web actual no cambia.</span>
+      <span class="sp2-preview-badge"><AppIcon name="eye" :size="13" /> Vista previa · Diseño Dúo</span>
+      <span class="sp2-preview-note">Así se vería tu portada con el diseño Dúo: tu web actual no cambia.</span>
       <RouterLink class="sp2-preview-link" :to="homeTo">Ver versión actual <AppIcon name="arrow-right" :size="13" /></RouterLink>
     </div>
   </div>

@@ -106,12 +106,13 @@ class StoreCustomization(models.Model):
     #TEMPLATE_ADVANCED quedan para has_design_advanced (Premium). El
     #viewset descarta del payload un diseño fuera del nivel del plan y
     #la web fuerza 'classic' si el guardado deja de estar permitido.
-    TEMPLATE_BASE               =   ('classic', 'perspective')
+    TEMPLATE_BASE               =   ('classic', 'perspective', 'duo')
     TEMPLATE_PLUS               =   ('street', 'promo')
-    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal')
+    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
+        ('duo',              'Dúo'),
         ('promo',            'Publicidad'),
         ('street',           'Urbano'),
         ('terminal',         'Terminal'),
@@ -119,6 +120,7 @@ class StoreCustomization(models.Model):
         ('shop',             'Tienda Pro'),
         ('cobre',            'Cobre'),
         ('minimal',          'Minimal'),
+        ('boutique',         'Boutique'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

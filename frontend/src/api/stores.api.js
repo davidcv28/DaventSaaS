@@ -434,13 +434,15 @@ export const STORE_THEMES = {
 export const STORE_TEMPLATES = {
   classic:     { label: 'Clásico',     tier: 'base',     desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
   perspective: { label: 'Perspectiva', tier: 'base',     desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
+  duo:         { label: 'Dúo',         tier: 'base',     desc: 'Portada a dos columnas: imagen a un lado, presentación al otro, cifras debajo del hero y productos en carril horizontal.' },
   street:      { label: 'Urbano',      tier: 'plus',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
   promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
   terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' },
   lookbook:    { label: 'Lookbook',    tier: 'advanced', desc: 'Editorial de moda: papel cálido, titulares serif de revista, pliegos de imagen numerados y catálogo como índice de colección.' },
   shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Estilo marketplace: barra superior con buscador, menú de secciones, portada tipo banner con promos y productos destacados.' },
   cobre:       { label: 'Cobre',       tier: 'advanced', desc: 'Retail de indumentaria: piedra y tinta, titulares condensados XXL en mayúsculas, placas de acento, tira de beneficios y grilla de colección.' },
-  minimal:     { label: 'Minimal',     tier: 'advanced', desc: 'Catálogo editorial esencial: papel claro y tinta, barra de anuncio, hero tipográfico, tarjetas 3:4 sin cromo y cierre en bloque de tinta.' }
+  minimal:     { label: 'Minimal',     tier: 'advanced', desc: 'Catálogo editorial esencial: papel claro y tinta, barra de anuncio, hero tipográfico, tarjetas 3:4 sin cromo y cierre en bloque de tinta.' },
+  boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' }
 }
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de

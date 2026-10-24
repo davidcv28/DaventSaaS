@@ -16,7 +16,7 @@ const AboutView = () => import('../views/AboutView.vue')
 const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
-const StorePublicView = () => import('../views/StorePublicView.vue')
+const StoreHomeView = () => import('../views/StoreHomeView.vue')
 const StorePublicAltView = () => import('../views/StorePublicAltView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreProductView = () => import('../views/StoreProductView.vue')
@@ -30,7 +30,7 @@ const storeChildren = [
   {
     path: '',
     name: 'store-public',
-    component: StorePublicView,
+    component: StoreHomeView,
     meta: { title: 'Tienda' }
   },
   {
@@ -39,8 +39,9 @@ const storeChildren = [
     component: StoreCatalogView,
     meta: { title: 'Catálogo' }
   },
-  // Prototipo "Opción 2" de la portada (misma info, otro orden de secciones):
-  // se entra desde "Vista previa opción 2" del panel (/<slug>/v2).
+  // Vista previa del diseño "Dúo" (misma info, otro orden de secciones):
+  // se entra desde "Vista previa Dúo" del panel (/<slug>/v2). Cuando la
+  // tienda lo elige como diseño, la misma composición es la portada real.
   {
     path: 'v2',
     name: 'store-alt',

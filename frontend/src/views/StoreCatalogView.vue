@@ -276,9 +276,12 @@ onBeforeUnmount(() => {
       <template v-else-if="tpl === 'cobre'">
         <span class="sp-cb-ghost">Colección</span>
       </template>
+      <template v-else-if="tpl === 'boutique'">
+        <span class="sp-bt-ghost">Colección</span>
+      </template>
     </div>
-    <!-- Minimal: barra de anuncio de tinta (el strip editorial del diseño) -->
-    <p v-if="tpl === 'minimal'" class="sp-mn-announce">
+    <!-- Minimal y Boutique: barra de anuncio (el strip editorial del diseño) -->
+    <p v-if="tpl === 'minimal' || tpl === 'boutique'" class="sp-mn-announce">
       {{ offerCount ? `${offerCount} ${offerCount === 1 ? 'oferta activa' : 'ofertas activas'}` : 'Colección completa' }} · Precios en pesos argentinos
     </p>
     <div class="sp-container sp-cat-hero-inner">
@@ -289,6 +292,9 @@ onBeforeUnmount(() => {
       </nav>
       <p v-if="tpl === 'lookbook'" v-reveal="40" class="sp-lb-cat-issue">
         <span>Índice de la colección</span><i aria-hidden="true"></i><span>{{ year }}</span>
+      </p>
+      <p v-else-if="tpl === 'boutique'" v-reveal="40" class="sp-bt-cat-issue">
+        <span>Colección {{ year }}</span><i aria-hidden="true"></i><span>{{ shopName }}</span>
       </p>
       <div v-reveal="80" class="sp-cat-head">
         <span class="sp-cat-head-icon" aria-hidden="true"><AppIcon name="package" :size="26" /></span>
