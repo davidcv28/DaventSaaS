@@ -2140,6 +2140,9 @@ async function changePassword() {
                 <span class="dp-nav-item">Contacto</span>
               </span>
             </div>
+            <div v-if="designTemplate === 'atelier'" class="dp-at-masthead" aria-hidden="true">
+              <span>Nº 01</span><i></i><span>Colección {{ new Date().getFullYear() }}</span><i></i><span>{{ designCatalogOn ? 'Catálogo' : 'Sitio oficial' }}</span>
+            </div>
             <div class="dp-hero" :class="{ 'has-cover': canDesignAdvanced && currentCover }" :style="canDesignAdvanced && currentCover ? { '--dp-cover': `url(${currentCover})` } : null">
               <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
               <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>

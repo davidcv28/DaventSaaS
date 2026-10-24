@@ -731,9 +731,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 .tpl-thumb[data-tpl='classic']::before { content: ''; position: absolute; left: 50%; top: 13%; width: 14px; height: 14px; border-radius: 5px; background: #fff; transform: translateX(-50%); }
 .tpl-thumb[data-tpl='classic']::after { content: ''; position: absolute; left: 28%; right: 28%; top: 38%; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .92); box-shadow: 0 8px 0 rgba(255, 255, 255, .45); }
 /* Atelier: tapa de revista — papel crema, masthead de tinta y caja de edición. */
-.tpl-thumb[data-tpl='atelier'] { background: linear-gradient(180deg, #f3eee2 0 80%, #241f18 80%); }
-.tpl-thumb[data-tpl='atelier']::before { content: ''; position: absolute; left: 8%; right: 8%; top: 11%; height: 13px; background: #241f18; }
-.tpl-thumb[data-tpl='atelier']::after { content: ''; position: absolute; left: 8%; top: 40%; width: 36%; height: 3px; background: #241f18; box-shadow: 0 7px 0 #a89f8d, 0 14px 0 #a89f8d; }
+.tpl-thumb[data-tpl='atelier'] { background: linear-gradient(180deg, #f3eee2 0 84%, #241f18 84%); border-color: #241f18; }
+.tpl-thumb[data-tpl='atelier']::before { content: ''; position: absolute; left: 8%; right: 8%; top: 10%; height: 9px; background: #241f18; box-shadow: 0 5px 0 -3px #f3eee2, 0 6px 0 -2px #a89f8d; }
+.tpl-thumb[data-tpl='atelier']::after { content: ''; position: absolute; left: 8%; top: 38%; width: 38%; height: 7px; background: #241f18; box-shadow: 0 12px 0 -3px #a89f8d, 0 18px 0 -3px #a89f8d, 0 24px 0 -3px #a89f8d; }
 /* Perspectiva: hero claro con rombo isométrico flotante y título tinta. */
 .tpl-thumb[data-tpl='perspective'] { background: linear-gradient(180deg, #edf3f8 0 62%, var(--card) 62%); }
 .tpl-thumb[data-tpl='perspective']::before { content: ''; position: absolute; right: 13%; top: 12%; width: 17px; height: 17px; border-radius: 4px; background: var(--brand-500); transform: rotate(45deg) skew(-8deg, -8deg); box-shadow: -5px 5px 0 color-mix(in srgb, var(--brand-500) 28%, transparent); }
@@ -813,6 +813,46 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='atelier'] .dp-btn.ghost { background: transparent; border: 1px solid #241f18; color: #241f18; }
 .design-preview[data-store-theme='dark'][data-store-template='atelier'] .dp-btn { background: #efe7d7; color: #17130f; }
 .design-preview[data-store-theme='dark'][data-store-template='atelier'] .dp-btn.ghost { border-color: #efe7d7; color: #efe7d7; }
+/* Atelier (mejora): cuerpo de papel crema, masthead de revista, cover line a dos columnas
+   con la caja «En esta edición» y portada fotográfica sin velo de color. */
+.design-preview[data-store-template='atelier'] { --sp-bg: #f3eee2; --sp-card: #f3eee2; --sp-ink: #241f18; --sp-muted: #7a705f; --sp-line: #cfc6b3; --sp-soft: #ebe5d6; border-color: #241f18; border-radius: 4px; }
+.design-preview[data-store-theme='dark'][data-store-template='atelier'] { --sp-bg: #17130f; --sp-card: #17130f; --sp-ink: #efe7d7; --sp-muted: #a89f8d; --sp-line: #4a4234; --sp-soft: #211c15; border-color: #efe7d7; }
+.dp-at-masthead { display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: #f3eee2; color: #7a705f; font-size: 8.5px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; overflow: hidden; border-bottom: 1px solid #cfc6b3; }
+.dp-at-masthead i { flex: 1; height: 1px; background: #cfc6b3; min-width: 10px; }
+.design-preview[data-store-theme='dark'] .dp-at-masthead { background: #17130f; color: #a89f8d; border-bottom-color: #4a4234; }
+.design-preview[data-store-theme='dark'] .dp-at-masthead i { background: #4a4234; }
+.design-preview[data-store-template='atelier'] .dp-nav { padding: 10px 14px; }
+.design-preview[data-store-template='atelier'] .dp-nav-name { font-family: 'Fraunces', Georgia, serif; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; }
+.design-preview[data-store-template='atelier'] .dp-nav-item { border-radius: 0; text-transform: uppercase; letter-spacing: .12em; font-size: 9px; }
+.design-preview[data-store-template='atelier'] .dp-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(128px, 40%); grid-template-areas: 'logo badge' 'title ctas' 'desc ctas'; align-items: start; column-gap: 18px; row-gap: 6px; padding: 18px 16px 20px; }
+.design-preview[data-store-template='atelier'] .dp-hero > .dp-logo,
+.design-preview[data-store-template='atelier'] .dp-hero > .dp-mono { grid-area: logo; width: 40px; height: 40px; border-radius: 0; font-size: 17px; background: #241f18; color: #f3eee2; border: 1px solid #241f18; box-shadow: 4px 4px 0 #cfc6b3; object-fit: cover; }
+.design-preview[data-store-theme='dark'][data-store-template='atelier'] .dp-hero > .dp-mono { background: #efe7d7; color: #17130f; border-color: #efe7d7; box-shadow: 4px 4px 0 #4a4234; }
+.design-preview[data-store-template='atelier'] .dp-badge { grid-area: badge; justify-self: stretch; align-self: center; text-align: center; font-size: 8.5px; letter-spacing: .24em; }
+.design-preview[data-store-template='atelier'] .dp-title { grid-area: title; margin-top: 8px; font-size: 22px; line-height: 1.08; }
+.design-preview[data-store-template='atelier'] .dp-title.is-name { font-size: clamp(16px, calc(var(--store-name-size, 32px) * .6), 34px); }
+.design-preview[data-store-template='atelier'] .dp-desc { grid-area: desc; max-width: none; font-size: 11px; }
+.design-preview[data-store-template='atelier'] .dp-cta { grid-area: ctas; grid-row: 2 / span 2; flex-direction: column; flex-wrap: nowrap; gap: 0; margin: 8px 0 0; border: 1px solid currentColor; justify-content: flex-start; }
+.design-preview[data-store-template='atelier'] .dp-cta::before { content: '✦ En esta edición'; padding: 7px 10px; border-bottom: 1px solid currentColor; font-size: 8px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
+.design-preview[data-store-template='atelier'] .dp-btn,
+.design-preview[data-store-template='atelier'] .dp-btn.ghost { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 9px 10px; border: 0; border-bottom: 1px solid #cfc6b3; border-radius: 0; background: transparent; color: inherit; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.design-preview[data-store-theme='dark'][data-store-template='atelier'] .dp-btn,
+.design-preview[data-store-theme='dark'][data-store-template='atelier'] .dp-btn.ghost { background: transparent; color: inherit; border-bottom-color: #4a4234; }
+.design-preview[data-store-template='atelier'] .dp-btn::after { content: '→'; }
+.design-preview[data-store-template='atelier'] .dp-btn.ghost::after { content: '↗'; }
+.design-preview[data-store-template='atelier'] .dp-cta > :last-child { border-bottom: 0; }
+.design-preview[data-store-template='atelier'] .dp-hero.has-cover { background: linear-gradient(180deg, rgba(36, 31, 24, .35), rgba(36, 31, 24, .82)), var(--dp-cover) center / cover no-repeat; color: #f3eee2; }
+.design-preview[data-store-template='atelier'] .dp-hero.has-cover .dp-badge { border-color: rgba(243, 238, 226, .6); color: #f3eee2; }
+.design-preview[data-store-template='atelier'] .dp-hero.has-cover .dp-btn,
+.design-preview[data-store-template='atelier'] .dp-hero.has-cover .dp-btn.ghost { color: #f3eee2; border-bottom-color: rgba(243, 238, 226, .35); }
+.design-preview[data-store-template='atelier'] .dp-section-label { color: #241f18; border-bottom: 1px solid #241f18; padding-bottom: 4px; letter-spacing: .2em; }
+.design-preview[data-store-theme='dark'][data-store-template='atelier'] .dp-section-label { color: #efe7d7; border-bottom-color: #efe7d7; }
+.design-preview[data-store-template='atelier'] .dp-carousel { border-radius: 0; }
+.design-preview[data-store-template='atelier'] .dp-map { border-radius: 0; }
+@media (max-width: 520px) {
+  .design-preview[data-store-template='atelier'] .dp-hero { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'logo' 'badge' 'title' 'desc' 'ctas'; }
+  .design-preview[data-store-template='atelier'] .dp-cta { grid-row: auto; }
+}
 /* Perspectiva: misma banda clara de la web real (hero centrado). */
 .design-preview[data-store-template='perspective'] .dp-nav { background: #fff; border-bottom-color: var(--line); }
 .design-preview[data-store-theme='dark'][data-store-template='perspective'] .dp-nav { background: var(--sp-card); }
