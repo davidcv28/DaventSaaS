@@ -390,20 +390,40 @@ onBeforeUnmount(() => {
             <span class="sp-st-sticker-core"><AppIcon name="zap" :size="34" :stroke="2" /></span>
           </span>
           <span class="sp-st-barcode"><i></i><em>SS{{ String(year).slice(2) }}</em></span>
+          <span class="sp-st-spray"></span>
+          <span class="sp-st-tape"></span>
         </template>
         <template v-else-if="tpl === 'perspective'">
           <span class="sp-px-floor"></span>
           <span class="sp-px-plane p1"></span>
           <span class="sp-px-plane p2"></span>
+          <span class="sp-px-mote m1"></span>
+          <span class="sp-px-mote m2"></span>
+          <span class="sp-px-mote m3"></span>
+          <span class="sp-px-mote m4"></span>
+          <span class="sp-px-ripple r1"></span>
+          <span class="sp-px-ripple r2"></span>
         </template>
         <template v-else-if="tpl === 'promo'">
           <span class="sp-pr-burst"></span>
           <span class="sp-pr-spark s1"><AppIcon name="sparkles" :size="30" :stroke="2" /></span>
           <span class="sp-pr-spark s2"><AppIcon name="star" :size="22" :stroke="2" /></span>
           <span class="sp-pr-spark s3"><AppIcon name="zap" :size="26" :stroke="2" /></span>
+          <span class="sp-pr-conf c1"></span>
+          <span class="sp-pr-conf c2"></span>
+          <span class="sp-pr-conf c3"></span>
+          <span class="sp-pr-conf c4"></span>
+          <span class="sp-pr-conf c5"></span>
+          <span class="sp-pr-tagfloat"><AppIcon name="percent" :size="20" :stroke="2.5" /></span>
         </template>
         <template v-else-if="tpl === 'terminal'">
           <span class="sp-tm-ghost">&gt;_</span>
+          <span class="sp-tm-rain r1"><i>0110100101101011010010110100101101</i><i>0110100101101011010010110100101101</i></span>
+          <span class="sp-tm-rain r2"><i>1011010010110100101101001011010010</i><i>1011010010110100101101001011010010</i></span>
+          <span class="sp-tm-corner tl"></span>
+          <span class="sp-tm-corner tr"></span>
+          <span class="sp-tm-corner bl"></span>
+          <span class="sp-tm-corner br"></span>
           <span class="sp-tm-log">
             <i><b>[ ok ]</b> tienda inicializada</i>
             <i><b>[ ok ]</b> identidad cargada</i>
@@ -413,9 +433,43 @@ onBeforeUnmount(() => {
         </template>
         <template v-else-if="tpl === 'lookbook'">
           <span class="sp-lb-rail">Lookbook</span>
+          <span class="sp-lb-asterisk">*</span>
+          <span class="sp-lb-folio">Pág. 01 / 04</span>
         </template>
         <template v-else-if="tpl === 'boutique'">
           <span class="sp-bt-ghost">{{ shopName }}</span>
+          <span class="sp-bt-sparkle s1"><AppIcon name="sparkles" :size="22" :stroke="1.5" /></span>
+          <span class="sp-bt-sparkle s2"><AppIcon name="star" :size="15" :stroke="1.5" /></span>
+          <span class="sp-bt-sparkle s3"><AppIcon name="sparkles" :size="17" :stroke="1.5" /></span>
+          <span class="sp-bt-seal">
+            <svg class="sp-bt-seal-ring" viewBox="0 0 200 200">
+              <defs><path id="sp-bt-circle" d="M100,100 m-76,0 a76,76 0 1,1 152,0 a76,76 0 1,1 -152,0" /></defs>
+              <text><textPath href="#sp-bt-circle" textLength="474" lengthAdjust="spacing">COLECCIÓN • NUEVA TEMPORADA • </textPath></text>
+            </svg>
+            <span class="sp-bt-seal-core"><AppIcon name="star" :size="20" :stroke="1.5" /></span>
+          </span>
+        </template>
+        <template v-else-if="tpl === 'classic'">
+          <span class="sp-cl-ring"></span>
+          <span class="sp-cl-orbit"><i></i></span>
+          <span class="sp-cl-spark s1"><AppIcon name="plus" :size="18" :stroke="2.5" /></span>
+          <span class="sp-cl-spark s2"><AppIcon name="plus" :size="14" :stroke="2.5" /></span>
+        </template>
+        <template v-else-if="tpl === 'cobre'">
+          <span class="sp-cb-stitch t1"></span>
+          <span class="sp-cb-stitch t2"></span>
+          <span class="sp-cb-tape"></span>
+        </template>
+        <template v-else-if="tpl === 'minimal'">
+          <span class="sp-mn-circle"></span>
+          <span class="sp-mn-plus p1"></span>
+          <span class="sp-mn-plus p2"></span>
+          <span class="sp-mn-index">Nº 01</span>
+        </template>
+        <template v-else-if="tpl === 'shop'">
+          <span class="sp-shop-chip d1"><AppIcon name="package" :size="20" :stroke="2" /></span>
+          <span class="sp-shop-chip d2"><AppIcon name="percent" :size="17" :stroke="2.25" /></span>
+          <span class="sp-shop-chip d3"><AppIcon name="tag" :size="16" :stroke="2" /></span>
         </template>
       </div>
       <div v-if="tpl === 'terminal'" class="sp-container sp-tm-bar" aria-hidden="true">

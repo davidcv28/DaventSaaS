@@ -286,6 +286,12 @@ onBeforeUnmount(() => {
   <!-- ===== Presentación: hero partido sobre fondo claro — placa de imagen
        a la izquierda, identidad a la derecha (espejo de la opción 1) ===== -->
   <section class="sp2-hero">
+    <div class="sp2-hero-decor" aria-hidden="true">
+      <span class="sp2-blob"></span>
+      <span class="sp2-ring"></span>
+      <span class="sp2-plus p1"></span>
+      <span class="sp2-plus p2"></span>
+    </div>
     <div class="sp-container sp2-hero-grid">
       <div v-reveal class="sp2-hero-art">
         <figure class="sp2-hero-plate" :class="{ 'is-logo': !heroImgA }">

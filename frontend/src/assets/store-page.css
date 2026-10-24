@@ -1077,6 +1077,26 @@ html { scroll-behavior: smooth; }
 .sp-px-plane.p2 { width: 92px; height: 62px; right: 27%; top: 52%; opacity: .75; animation-delay: -3.2s; }
 @keyframes sp-px-bob { from { transform: rotate(-7deg) skewX(-6deg) translateY(0); } to { transform: rotate(-7deg) skewX(-6deg) translateY(-13px); } }
 .store-page[data-store-theme='dark'][data-store-template='perspective'] .sp-px-plane { background: linear-gradient(150deg, color-mix(in srgb, var(--store-accent) 20%, var(--sp-card-solid)), var(--sp-card-solid)); }
+/* Motas de profundidad: cubitos de acento que nacen del piso isométrico y
+   suben girando hasta desvanecerse — la trama cobra volumen. */
+.sp-px-mote { position: absolute; bottom: -12px; width: 9px; height: 9px; border-radius: 2px; background: color-mix(in srgb, var(--store-accent) 55%, transparent); opacity: 0; animation: sp-px-rise 7.5s linear infinite; }
+.sp-px-mote.m1 { left: 12%; }
+.sp-px-mote.m2 { left: 31%; animation-delay: -2.4s; width: 7px; height: 7px; }
+.sp-px-mote.m3 { right: 24%; animation-delay: -4.6s; }
+.sp-px-mote.m4 { left: 56%; animation-delay: -6.2s; width: 6px; height: 6px; }
+@keyframes sp-px-rise {
+  0% { transform: translateY(0) rotate(45deg); opacity: 0; }
+  12% { opacity: .85; }
+  62% { opacity: .5; }
+  100% { transform: translateY(-54vh) rotate(45deg) scale(.55); opacity: 0; }
+}
+/* Anillos de aterrizaje: elipses planas sobre el piso que se expanden como
+   un radar, reforzando el punto de fuga. */
+.sp-px-ripple { position: absolute; bottom: 5%; width: 150px; height: 42px; border: 2px solid color-mix(in srgb, var(--store-accent) 42%, transparent); border-radius: 50%; animation: sp-px-ripple 4.4s ease-out infinite; }
+.sp-px-ripple.r1 { left: 15%; }
+.sp-px-ripple.r2 { right: 26%; bottom: 9%; width: 110px; height: 32px; animation-delay: -2.2s; }
+@keyframes sp-px-ripple { from { transform: scale(.35); opacity: .85; } to { transform: scale(1.55); opacity: 0; } }
+@media (max-width: 960px) { .sp-px-mote.m3, .sp-px-mote.m4, .sp-px-ripple.r2 { display: none; } }
 /* La trama de puntos base estorba al piso: la reemplaza la grilla 3D. */
 .store-page[data-store-template='perspective'] .sp-hero-decor::before { background-image: none; }
 .store-page[data-store-template='perspective'] .sp-orb { display: none; }
@@ -1122,9 +1142,28 @@ html { scroll-behavior: smooth; }
 .sp-pr-spark.s2 { left: 6%; bottom: 22%; animation-delay: -1.2s; }
 .sp-pr-spark.s3 { right: 6%; top: 14%; animation-delay: -2.2s; }
 @keyframes sp-pr-twinkle { 0%, 100% { transform: scale(.8) rotate(-10deg); opacity: .8; } 50% { transform: scale(1.2) rotate(12deg); opacity: 1; } }
+/* Confeti de campaña: piezas amarillas y blancas que caen girando a
+   distintos ritmos — el afiche festeja sin tapar el mensaje. */
+.sp-pr-conf { position: absolute; top: -7%; width: 12px; height: 12px; background: var(--sp-yellow, #ffe14d); opacity: 0; animation: sp-pr-fall 9s linear infinite; }
+.sp-pr-conf.c1 { left: 9%; }
+.sp-pr-conf.c2 { left: 25%; width: 9px; height: 9px; border-radius: 50%; background: #fff; animation-delay: -3.1s; animation-duration: 10.5s; }
+.sp-pr-conf.c3 { left: 46%; animation-delay: -6.3s; }
+.sp-pr-conf.c4 { right: 15%; width: 8px; height: 8px; border-radius: 50%; animation-delay: -1.7s; animation-duration: 8.4s; }
+.sp-pr-conf.c5 { right: 33%; width: 10px; height: 10px; background: #fff; animation-delay: -7.8s; animation-duration: 11s; }
+@keyframes sp-pr-fall {
+  0% { transform: translateY(-8vh) rotate(0deg); opacity: 0; }
+  9% { opacity: .95; }
+  88% { opacity: .95; }
+  100% { transform: translateY(58vh) rotate(330deg); opacity: 0; }
+}
+/* Tag flotante con %: cuelga sobre el sello como la etiqueta de una vidriera. */
+.sp-pr-tagfloat { position: absolute; right: 24%; top: 10%; display: grid; place-items: center; width: 52px; height: 52px; border: 2px solid var(--sp-ink-hard, #111827); border-radius: 14px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); box-shadow: 5px 5px 0 var(--sp-ink-hard, #111827); animation: sp-pr-hang 4s ease-in-out infinite; transform-origin: 50% -18px; }
+.sp-pr-tagfloat::before { content: ''; position: absolute; top: -14px; left: 50%; width: 2px; height: 14px; background: var(--sp-ink-hard, #111827); }
+@keyframes sp-pr-hang { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
 .store-page[data-store-template='promo'] .sp-hero-decor::before,
 .store-page[data-store-template='promo'] .sp-orb,
 .store-page[data-store-template='promo'] .sp-float { display: none; }
+@media (max-width: 960px) { .sp-pr-tagfloat, .sp-pr-conf.c3, .sp-pr-conf.c5 { display: none; } }
 .store-page[data-store-template='promo'] .sp-hero-inner { grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr); grid-template-areas: 'ava seal' 'tag seal' 'badge seal' 'title seal' 'sub seal' 'ctas seal' 'meta seal'; justify-items: start; align-content: center; column-gap: 48px; text-align: left; padding: 64px 40px 84px; }
 .store-page[data-store-template='promo'] .sp-ava { grid-area: ava; }
 .sp-pr-tag { grid-area: tag; display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 7px 14px; border: 2px solid var(--sp-ink-hard, #111827); border-radius: 8px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); font-size: 13px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); transform: rotate(-3deg); animation: sp-pr-wobble 3.4s ease-in-out infinite; }
@@ -1216,7 +1255,7 @@ html { scroll-behavior: smooth; }
   .sp-pr-spark.s3 { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sp-px-floor, .sp-px-plane, .sp-pr-burst, .sp-pr-spark, .sp-pr-tag, .sp-pr-mark, .sp-pr-seal-ring, .sp-pr-seal-core, .sp-btn.sp-pr-wa,
+  .sp-px-floor, .sp-px-plane, .sp-px-mote, .sp-px-ripple, .sp-pr-burst, .sp-pr-spark, .sp-pr-conf, .sp-pr-tagfloat, .sp-pr-tag, .sp-pr-mark, .sp-pr-seal-ring, .sp-pr-seal-core, .sp-btn.sp-pr-wa,
   .store-page[data-store-template='promo'] .sp-hero-band, .sp-hero-marquee-track { animation: none !important; }
 }
 
@@ -1322,6 +1361,9 @@ html { scroll-behavior: smooth; }
 .sp-hero-band.has-cover .sp-hero-inner { padding-top: 56px; padding-bottom: 96px; }
 @media (max-width: 760px) { .sp-hero-band.has-cover .sp-hero-inner { padding-top: 40px; padding-bottom: 88px; } }
 .sp-hero-band.has-cover .sp-hero-decor .sp-float, .sp-hero-band.has-cover .sp-hero-decor .sp-orb { display: none; }
+/* El decor adicional de cada diseño también se retira con portada: sobre la
+   foto compite con la imagen y baja el contraste del copy. */
+.sp-hero-band.has-cover .sp-hero-decor :is(.sp-cl-ring, .sp-cl-orbit, .sp-cl-spark, .sp-px-mote, .sp-px-ripple, .sp-st-spray, .sp-st-tape, .sp-pr-conf, .sp-pr-tagfloat, .sp-tm-rain, .sp-tm-corner) { display: none; }
 .sp-contact-photo { margin: 6px 0 0; aspect-ratio: 16 / 10; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
 .sp-contact-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (max-width: 960px) { .sp-contact-photo { display: none; } }
@@ -1549,13 +1591,23 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-theme='dark'] .sp-cl-chip-ico { background: color-mix(in srgb, var(--store-accent) 20%, transparent); }
 .sp-cl-chip.c1 { left: -14px; top: 12%; }
 .sp-cl-chip.c2 { right: -6px; bottom: 9%; animation-delay: -3s; }
+/* Órbita de marca: anillo punteado detrás de la placa con un punto blanco
+   que recorre el trazado — movimiento continuo sin tapar la imagen. */
+.sp-cl-ring { position: absolute; right: 7%; top: 50%; translate: 0 -50%; width: 360px; height: 360px; border: 1.5px dashed rgba(255, 255, 255, .42); border-radius: 50%; animation: sp-spin 46s linear infinite reverse; }
+.sp-cl-orbit { position: absolute; right: 7%; top: 50%; translate: 0 -50%; width: 360px; height: 360px; animation: sp-spin 13s linear infinite; }
+.sp-cl-orbit i { position: absolute; top: -5px; left: 50%; margin-left: -5px; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 14px 2px rgba(255, 255, 255, .75); }
+/* Cruces de acento que titilan alrededor de la placa. */
+.sp-cl-spark { position: absolute; display: grid; place-items: center; color: rgba(255, 255, 255, .85); animation: sp-pr-twinkle 3.6s ease-in-out infinite; }
+.sp-cl-spark.s1 { right: 40%; top: 15%; }
+.sp-cl-spark.s2 { right: 2%; bottom: 20%; animation-delay: -1.8s; opacity: .7; }
 @media (max-width: 900px) {
   .store-page[data-store-template='classic'] .sp-hero-inner { grid-template-columns: minmax(0, 1fr); gap: 36px; padding-top: 56px; padding-bottom: 96px; }
   .sp-cl-art { justify-self: start; width: min(100%, 340px); }
   .sp-cl-frame { aspect-ratio: 16 / 11; }
   .sp-cl-chip.c1 { left: -4px; }
+  .sp-cl-ring, .sp-cl-orbit { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .sp-cl-chip { animation: none; } .sp-cl-frame { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .sp-cl-chip, .sp-cl-ring, .sp-cl-orbit, .sp-cl-spark { animation: none; } .sp-cl-frame { transition: none; } }
 
 /* ---------- Perspectiva v3: Oswald de letrero + Poppins ---------- */
 .store-page[data-store-template='perspective'] { --sp-display: 'Oswald', var(--store-font), sans-serif; --sp-body: 'Poppins', var(--store-font), sans-serif; }
@@ -1636,6 +1688,25 @@ html { scroll-behavior: smooth; }
 .sp-st-barcode { position: absolute; left: 5%; bottom: 10%; display: grid; justify-items: center; gap: 6px; transform: rotate(-3deg); }
 .sp-st-barcode i { display: block; width: 112px; height: 38px; background: repeating-linear-gradient(90deg, var(--sp-ink) 0 2px, transparent 2px 5px, var(--sp-ink) 5px 6px, transparent 6px 11px, var(--sp-ink) 11px 14px, transparent 14px 17px); }
 .sp-st-barcode em { font-style: normal; font-family: var(--sp-body); font-size: 10px; font-weight: 700; letter-spacing: .42em; text-transform: uppercase; color: var(--sp-muted); }
+/* Salpicadura de aerosol: puntos de acento de distinto grano que respiran
+   suave, como el spray recién tirado sobre el papel. */
+.sp-st-spray { position: absolute; right: 15%; bottom: 15%; width: 170px; height: 120px; opacity: .5; animation: sp-st-breathe 5s ease-in-out infinite;
+  background-image:
+    radial-gradient(circle 4px at 22% 34%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 2.5px at 44% 18%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 6px at 62% 42%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 2px at 80% 24%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 3px at 36% 62%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 2px at 58% 78%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 3.5px at 86% 60%, var(--store-accent) 96%, transparent),
+    radial-gradient(circle 1.8px at 14% 72%, var(--store-accent) 96%, transparent);
+}
+@keyframes sp-st-breathe { 0%, 100% { opacity: .38; transform: scale(.97); } 50% { opacity: .6; transform: scale(1.02); } }
+/* Cinta de obra: franja diagonal de seguridad corrida en la esquina —
+   el patrón se desplaza como una cinta sin fin. */
+.sp-st-tape { position: absolute; left: -34px; top: 30px; width: 250px; height: 24px; border-block: 2px solid var(--sp-ink); background: repeating-linear-gradient(45deg, var(--store-accent) 0 14px, var(--sp-ink) 14px 28px); transform: rotate(-14deg); animation: sp-st-tape 1.6s linear infinite; }
+@keyframes sp-st-tape { to { background-position: 40px 0; } }
+@media (max-width: 960px) { .sp-st-spray { display: none; } }
 /* Última palabra del titular: hueca con filete de acento. */
 .sp-st-mark { font-style: normal; color: transparent; -webkit-text-stroke: 2.5px var(--store-accent); text-shadow: none; }
 /* Contenido del hero: titular condensado XXL sobre la trama. */
@@ -1793,7 +1864,7 @@ html { scroll-behavior: smooth; }
   .sp-st-barcode { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sp-st-sticker-ring { animation: none !important; }
+  .sp-st-sticker-ring, .sp-st-spray, .sp-st-tape { animation: none !important; }
   .store-page[data-store-template='street'] .sp-hl,
   .store-page[data-store-template='street'] .sp-card,
   .store-page[data-store-template='street'] .sp-gallery-item,
@@ -1875,6 +1946,21 @@ html { scroll-behavior: smooth; }
 .sp-tm-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp-tm-path::after { content: ' $'; color: var(--tm-acc); font-weight: 700; }
 .sp-tm-live { margin-left: auto; flex: none; color: var(--tm-acc); font-weight: 700; }
+/* Lluvia binaria: dos columnas de bits que descienden en loop sin costura
+   (dos bloques idénticos, el track se desplaza la mitad) con fundido en
+   los bordes, como procesos corriendo de fondo. */
+.sp-tm-rain { position: absolute; top: -55%; width: 12px; font-family: var(--sp-mono); font-size: 10px; line-height: 1.7; letter-spacing: .06em; word-break: break-all; color: var(--tm-dim); opacity: .45; -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); animation: sp-tm-rain 14s linear infinite; }
+.sp-tm-rain i { display: block; font-style: normal; }
+.sp-tm-rain.r1 { left: 5%; }
+.sp-tm-rain.r2 { right: 7%; animation-delay: -6s; animation-duration: 17s; }
+@keyframes sp-tm-rain { to { transform: translateY(50%); } }
+/* Esquinas del visor: corchetes de mira en los bordes de la pantalla. */
+.sp-tm-corner { position: absolute; width: 22px; height: 22px; border: 0 solid var(--tm-acc); opacity: .55; }
+.sp-tm-corner.tl { left: 16px; top: 16px; border-top-width: 2px; border-left-width: 2px; }
+.sp-tm-corner.tr { right: 16px; top: 16px; border-top-width: 2px; border-right-width: 2px; }
+.sp-tm-corner.bl { left: 16px; bottom: 16px; border-bottom-width: 2px; border-left-width: 2px; }
+.sp-tm-corner.br { right: 16px; bottom: 16px; border-bottom-width: 2px; border-right-width: 2px; }
+@media (max-width: 960px) { .sp-tm-rain.r2, .sp-tm-corner { display: none; } }
 /* Contenido de la sesión: columna a la izquierda, como salida de comandos. */
 .store-page[data-store-template='terminal'] .sp-hero-inner { justify-items: start; text-align: left; padding: 30px 40px 78px; }
 .store-page[data-store-template='terminal'] .sp-ava { border-radius: 8px; }
@@ -2106,6 +2192,7 @@ html { scroll-behavior: smooth; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sp-tm-caret,
+  .sp-tm-rain,
   .store-page[data-store-template='terminal'] .sp-hero-decor::after,
   .store-page[data-store-template='terminal'] .sp-hero-title::after,
   .store-page[data-store-template='terminal'] .sp-cat-title::after,
@@ -2196,6 +2283,23 @@ html { scroll-behavior: smooth; }
 }
 .store-page[data-store-template='lookbook'] .sp-lb-rail::after { content: ''; display: block; width: 1px; height: 46px; margin: 14px auto 0; background: var(--sp-line); }
 @media (max-width: 1280px) { .store-page[data-store-template='lookbook'] .sp-lb-rail { display: none; } }
+/* Asterisco de edición: marca tipográfica del acento que gira muy despacio
+   en el aire entre el copy y el pliego — la firma de la edición. */
+.store-page[data-store-template='lookbook'] .sp-lb-asterisk {
+  position: absolute; left: 45%; top: 9%;
+  font-family: var(--sp-display); font-size: 110px; line-height: 1;
+  color: var(--store-accent); opacity: .85; user-select: none;
+  animation: sp-spin 34s linear infinite;
+}
+/* Folio de página: número corrido en la esquina superior derecha, como en
+   el cuaderno impreso. */
+.store-page[data-store-template='lookbook'] .sp-lb-folio {
+  position: absolute; right: 42px; top: 16px;
+  font-family: var(--sp-body); font-size: 10px; font-weight: 600;
+  letter-spacing: .3em; text-transform: uppercase; color: var(--sp-muted);
+  user-select: none;
+}
+@media (max-width: 960px) { .store-page[data-store-template='lookbook'] .sp-lb-asterisk, .store-page[data-store-template='lookbook'] .sp-lb-folio { display: none; } }
 
 .store-page[data-store-template='lookbook'] .sp-hero-inner {
   display: grid;
@@ -3338,6 +3442,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='lookbook'] .spd-rel-img img,
   .store-page[data-store-template='lookbook'] .sp-gallery-item img,
   .store-page[data-store-template='lookbook'] .sp-about-photo img { transition: none !important; }
+  .store-page[data-store-template='lookbook'] .sp-lb-asterisk { animation: none !important; }
 }
 
 /* ===== Diseños v4: Tienda Pro — marketplace tipo e-commerce =====
@@ -3456,6 +3561,15 @@ html { scroll-behavior: smooth; }
 }
 .store-page[data-store-template='shop'] .sp-orb,
 .store-page[data-store-template='shop'] .sp-float { display: none; }
+/* Chips flotantes de marketplace: tarjetitas con ícono que orbitan el
+   lateral de promos, con el vaivén suave de una etiqueta colgada. */
+.sp-shop-chip { position: absolute; display: grid; place-items: center; border-radius: 14px; background: var(--sp-card-solid); border: 1px solid var(--sp-line); color: var(--sp-accent-text); box-shadow: var(--sp-shadow-sm); animation: sp-shop-chip-bob 5.4s ease-in-out infinite; }
+.sp-shop-chip.d1 { right: 31%; top: 4%; width: 46px; height: 46px; transform: rotate(-6deg); }
+.sp-shop-chip.d2 { right: 1.2%; top: 46%; width: 38px; height: 38px; border-radius: 11px; animation-delay: -2.1s; }
+.sp-shop-chip.d3 { right: 33.5%; bottom: 5%; width: 34px; height: 34px; border-radius: 10px; opacity: .75; animation-delay: -3.8s; }
+@keyframes sp-shop-chip-bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -12px; } }
+@media (max-width: 1100px) { .sp-shop-chip.d3 { display: none; } }
+@media (max-width: 960px) { .sp-shop-chip { display: none; } }
 .store-page[data-store-template='shop'] .sp-hero-inner {
   grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr);
   gap: 18px; align-items: stretch; justify-items: stretch; text-align: left;
@@ -4144,6 +4258,7 @@ html { scroll-behavior: smooth; }
   .sp-shop-promo-media img,
   .sp-shop-dept,
   .sp-shop-dept-thumb { transition: none !important; }
+  .sp-shop-chip { animation: none !important; }
   .sp-shop-promo:hover,
   .sp-shop-dept:hover { transform: none; }
 }
@@ -4219,6 +4334,22 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='cobre'] .sp-hero-decor::before { background-image: none; }
 .store-page[data-store-template='cobre'] .sp-hero-decor .sp-orb,
 .store-page[data-store-template='cobre'] .sp-hero-decor .sp-float { display: none; }
+/* Pespuntes: costuras de hilo que avanzan despacio por la piedra, como la
+   marca de fábrica de la colección. */
+.sp-cb-stitch { position: absolute; height: 2px; background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--sp-ink) 30%, transparent) 0 9px, transparent 9px 17px); animation: sp-cb-stitch 9s linear infinite; }
+.sp-cb-stitch.t1 { left: 3%; top: 11%; width: 30%; transform: rotate(-.6deg); }
+.sp-cb-stitch.t2 { left: 5%; bottom: 13%; width: 24%; animation-duration: 12s; }
+@keyframes sp-cb-stitch { to { background-position: 34px 0; } }
+/* Cinta métrica colgada: fleje con marcas cortas y largas que se mece
+   desde el borde izquierdo. */
+.sp-cb-tape { position: absolute; left: 18px; top: 9%; width: 22px; height: 60%; opacity: .5; transform-origin: top center; animation: sp-cb-sway 6.5s ease-in-out infinite;
+  background:
+    repeating-linear-gradient(180deg, color-mix(in srgb, var(--sp-ink) 42%, transparent) 0 1.5px, transparent 1.5px 52px) left top / 13px 100% no-repeat,
+    repeating-linear-gradient(180deg, color-mix(in srgb, var(--sp-ink) 42%, transparent) 0 1.5px, transparent 1.5px 10px) left top / 6px 100% no-repeat;
+  border-left: 1px solid color-mix(in srgb, var(--sp-ink) 26%, transparent);
+}
+@keyframes sp-cb-sway { 0%, 100% { transform: rotate(1.4deg); } 50% { transform: rotate(-1.4deg); } }
+@media (max-width: 1100px) { .sp-cb-tape { display: none; } }
 .store-page[data-store-template='cobre'] .sp-hero-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 46%);
@@ -5073,6 +5204,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='cobre'] .spd-rel-img img,
   .store-page[data-store-template='cobre'] .sp-gallery-item img,
   .store-page[data-store-template='cobre'] .sp-about-photo img { transition: none !important; }
+  .sp-cb-stitch, .sp-cb-tape { animation: none !important; }
 }
 
 /* ===== Diseños v5: Minimal — catálogo editorial esencial ==================
@@ -5158,6 +5290,20 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='minimal'] .sp-hero-decor::before { background-image: none; }
 .store-page[data-store-template='minimal'] .sp-hero-decor .sp-orb,
 .store-page[data-store-template='minimal'] .sp-hero-decor .sp-float { display: none; }
+/* Geometría quieta: un círculo de filo que respira apenas en la esquina —
+   la única curva de un sistema de líneas rectas. */
+.sp-mn-circle { position: absolute; right: -5%; top: -16%; width: 330px; height: 330px; border: 1.5px solid color-mix(in srgb, var(--sp-ink) 12%, transparent); border-radius: 50%; animation: sp-mn-drift 12s ease-in-out infinite alternate; }
+@keyframes sp-mn-drift { from { transform: translate(0, 0); } to { transform: translate(-14px, 10px); } }
+/* Cruces de registro: dos "+ de prensa en tinta tenue. */
+.sp-mn-plus { position: absolute; width: 16px; height: 16px; opacity: .5; }
+.sp-mn-plus::before, .sp-mn-plus::after { content: ''; position: absolute; background: var(--sp-ink); }
+.sp-mn-plus::before { left: 0; top: 50%; width: 100%; height: 1px; margin-top: -.5px; }
+.sp-mn-plus::after { left: 50%; top: 0; width: 1px; height: 100%; margin-left: -.5px; }
+.sp-mn-plus.p1 { left: 51%; top: 20%; }
+.sp-mn-plus.p2 { left: 4%; bottom: 20%; }
+/* Índice corrido: el "Nº de pie de la composición. */
+.sp-mn-index { position: absolute; left: 40px; bottom: 20px; font-size: 10px; font-weight: 700; letter-spacing: .3em; color: var(--sp-muted); user-select: none; }
+@media (max-width: 960px) { .sp-mn-circle, .sp-mn-plus.p2, .sp-mn-index { display: none; } }
 .store-page[data-store-template='minimal'] .sp-hero-inner {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
@@ -6083,6 +6229,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='minimal'] .spd-rel-img img,
   .store-page[data-store-template='minimal'] .sp-gallery-item img,
   .store-page[data-store-template='minimal'] .sp-about-photo img { transition: none !important; }
+  .sp-mn-circle { animation: none !important; }
 }
 
 /* --- Móvil: tarjetas de catálogo en columna, imágenes sin estirarse (todas las plantillas) --- */
@@ -6283,6 +6430,20 @@ html { scroll-behavior: smooth; }
   white-space: nowrap; overflow: hidden; text-align: center;
   pointer-events: none; user-select: none;
 }
+/* Destellos de vitrina: chispas finas del acento que titilan alrededor de
+   la placa de prenda, como el brillo del afiche de campaña. */
+.store-page[data-store-template='boutique'] .sp-bt-sparkle { position: absolute; color: var(--store-accent); animation: sp-pr-twinkle 4s ease-in-out infinite; }
+.store-page[data-store-template='boutique'] .sp-bt-sparkle.s1 { right: 4%; top: 11%; }
+.store-page[data-store-template='boutique'] .sp-bt-sparkle.s2 { right: 40%; bottom: 13%; animation-delay: -1.6s; opacity: .8; }
+.store-page[data-store-template='boutique'] .sp-bt-sparkle.s3 { right: 27%; top: 5%; animation-delay: -2.8s; opacity: .65; }
+/* Sello de la colección: anillo de texto serif que gira despacio con una
+   estrella al centro — la firma de la temporada. */
+.store-page[data-store-template='boutique'] .sp-bt-seal { position: absolute; right: 35%; bottom: 7%; width: 116px; height: 116px; display: grid; place-items: center; }
+.store-page[data-store-template='boutique'] .sp-bt-seal-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; animation: sp-spin 22s linear infinite; }
+.store-page[data-store-template='boutique'] .sp-bt-seal-ring text { fill: var(--sp-ink); font-family: var(--sp-body); font-size: 15px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; }
+.store-page[data-store-template='boutique'] .sp-bt-seal-core { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--sp-ink); border-radius: 50%; color: var(--sp-accent-text); }
+@media (max-width: 1100px) { .store-page[data-store-template='boutique'] .sp-bt-seal { display: none; } }
+@media (max-width: 960px) { .store-page[data-store-template='boutique'] .sp-bt-sparkle { display: none; } }
 .store-page[data-store-template='boutique'] .sp-hero-inner {
   position: relative; z-index: 1;
   display: grid;
@@ -7287,4 +7448,6 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='boutique'] .sp-gallery-item img,
   .store-page[data-store-template='boutique'] .sp-about-photo img { transition: none !important; }
   .store-page[data-store-template='boutique'] .sp-card-quick { transition: none; }
+  .store-page[data-store-template='boutique'] .sp-bt-sparkle,
+  .store-page[data-store-template='boutique'] .sp-bt-seal-ring { animation: none !important; }
 }
