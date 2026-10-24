@@ -1,1 +1,1 @@
-from .models import SuscriptionPlan, Suscription
+from .models import SuscriptionPlan, Suscription, Coupon, CouponRedemption

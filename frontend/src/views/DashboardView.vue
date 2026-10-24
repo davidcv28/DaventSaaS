@@ -65,6 +65,8 @@ const section = computed({
   set: (id) => { sectionInner.value = navItems.value.some((i) => i.id === id) ? id : 'overview' }
 })
 const busyPlan = ref(null)
+const couponCode = ref('')
+const couponBusy = ref(false)
 const renewBusy = ref(false)
 const confirmCancel = ref(false)
 const passForm = reactive({ old_password: '', new_password: '', confirm_password: '' })
@@ -1534,6 +1536,20 @@ async function planAction(p) {
     startCheckoutWatch(p.id)
   } finally {
     busyPlan.value = null
+  }
+}
+
+// Canje de cupón promocional (sección Planes): el backend pisa la suscripción
+// con el plan del cupón por coupon.days días.
+async function redeemCoupon() {
+  const code = couponCode.value.trim()
+  if (!code || couponBusy.value) return
+  couponBusy.value = true
+  try {
+    const ok = await billing.redeemCoupon(code)
+    if (ok) couponCode.value = ''
+  } finally {
+    couponBusy.value = false
   }
 }
 
@@ -3010,6 +3026,26 @@ async function changePassword() {
       <AlertMessage v-if="billing.lastError" kind="error" :message="billing.lastError" />
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
+      <div class="card coupon-card">
+        <div class="coupon-copy">
+          <h3><AppIcon name="gift" :size="18" /> ¿Tenés un código promocional?</h3>
+          <p>Ingresalo acá para activar los días de acceso que te otorga.</p>
+        </div>
+        <form class="coupon-form" @submit.prevent="redeemCoupon">
+          <input
+            v-model="couponCode"
+            class="input"
+            type="text"
+            maxlength="40"
+            placeholder="Ej. FLYER7"
+            aria-label="Código promocional"
+            :disabled="couponBusy"
+          />
+          <button class="btn btn-auto" type="submit" :disabled="couponBusy || !couponCode.trim()">
+            <span v-if="couponBusy" class="spinner"></span> Canjear
+          </button>
+        </form>
+      </div>
       <div class="price-grid">
         <PlanCard
           v-for="p in billing.plans"

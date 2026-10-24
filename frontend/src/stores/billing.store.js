@@ -98,6 +98,24 @@ export const useBillingStore = defineStore('billing', () => {
     }
   }
 
+  async function redeemCoupon(code) {
+    status.value = 'loading'
+    lastError.value = ''
+    notice.value = ''
+    try {
+      const data = await billingApi.redeemCoupon(code)
+      notice.value = data?.Exito || 'Cupón aplicado.'
+      await loadMine()
+      status.value = 'success'
+      return true
+    } catch (e) {
+      status.value = 'error'
+      const parsed = extractApiError(e)
+      lastError.value = parsed.code || parsed.nonField || Object.values(parsed)[0] || 'No se pudo aplicar el cupón.'
+      return false
+    }
+  }
+
   function reset() {
     subscription.value = null
     status.value = 'idle'
@@ -108,6 +126,6 @@ export const useBillingStore = defineStore('billing', () => {
   return {
     plans, subscription, status, plansStatus, lastError, notice,
     hasSubscription, currentPlan,
-    loadPlans, loadMine, subscribe, changePlan, reset
+    loadPlans, loadMine, subscribe, changePlan, redeemCoupon, reset
   }
 })

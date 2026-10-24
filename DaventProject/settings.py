@@ -82,6 +82,8 @@ REST_FRAMEWORK = {
         #Denuncias públicas de contenido: cada POST válido envía un mail a
         #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
         'content_report': '5/hour',
+        #Canje de cupones (por usuario): acota el brute-force de códigos.
+        'coupon_redeem': '10/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'DaventProject.pagination.DaventPageNumberPagination',

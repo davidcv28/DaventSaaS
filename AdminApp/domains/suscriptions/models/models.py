@@ -75,6 +75,42 @@ class Suscription(models.Model):
     #=========================================
     def grants_access(self):
         return self.status == self.STATUS_ACTIVE and bool(self.end_date) and timezone.now() <= self.access_until()
+#=========================================
+#COUPON MODEL
+#=========================================
+class Coupon(models.Model):
+    #Código promocional canjeable: otorga `days` días del `plan` indicado.
+    #max_uses=None = canjes ilimitados; expires_at=None = sin vencimiento.
+    code                        =   models.CharField(max_length = 40, unique = True, verbose_name = 'Código')
+    plan                        =   models.ForeignKey(SuscriptionPlan, on_delete = models.RESTRICT, verbose_name = 'Plan otorgado', db_index = False)
+    days                        =   models.PositiveIntegerField(verbose_name = 'Días de acceso')
+    max_uses                    =   models.PositiveIntegerField(null = True, blank = True, verbose_name = 'Máximo de canjes')
+    expires_at                  =   models.DateTimeField(null = True, blank = True, verbose_name = 'Vencimiento')
+    is_active                   =   models.BooleanField(default = True, verbose_name = 'Activo')
+    created_at                  =   models.DateTimeField(auto_now_add = True, verbose_name = 'Fecha de creación')
+    class Meta:
+        app_label               =   'suscriptions'
+        verbose_name            =   'Cupón'
+        verbose_name_plural     =   'Cupones'
+    def __str__(self):
+        return self.code
+#=========================================
+#COUPON REDEMPTION MODEL (auditoría + un canje por usuario y cupón)
+#=========================================
+class CouponRedemption(models.Model):
+    coupon                      =   models.ForeignKey(Coupon, on_delete = models.CASCADE, related_name = 'redemptions', verbose_name = 'Cupón')
+    user                        =   models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'coupon_redemptions', verbose_name = 'Usuario')
+    suscription                 =   models.ForeignKey(Suscription, on_delete = models.SET_NULL, null = True, blank = True, related_name = 'coupon_redemptions', verbose_name = 'Suscripción')
+    redeemed_at                 =   models.DateTimeField(auto_now_add = True, verbose_name = 'Fecha de canje')
+    class Meta:
+        app_label               =   'suscriptions'
+        verbose_name            =   'Canje de cupón'
+        verbose_name_plural     =   'Canjes de cupones'
+        constraints             =   [
+            models.UniqueConstraint(
+                fields          =   ['coupon', 'user'],
+                name            =   'UniqueCouponRedemptionConstraint',
+            )
+        ]
 #=============================================
 
-   

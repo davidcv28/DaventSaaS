@@ -13,12 +13,13 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
-from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+from AdminApp.domains.suscriptions.models import Coupon, CouponRedemption, Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 
 SUSCRIPTIONS_URL  =   '/api/suscriptions/'
 PLANS_URL         =   '/api/suscription-plans/'
 ASSIGN_URL        =   '/api/suscriptions/assign/'
+REDEEM_URL        =   '/api/suscriptions/redeem-coupon/'
 
 
 def _make_user(username, staff = False):
@@ -236,3 +237,106 @@ class GrantsAccessTests(TestCase):
         suscription     =   self._suscription(
             end_date = timezone.now() - timedelta(days = 6), auto_renew = True)
         self.assertFalse(suscription.grants_access())
+
+
+class CouponRedeemTests(TestCase):
+    """Canje de cupones: un canje por usuario, sin pisar un plan pago vigente."""
+
+    def _client(self):
+        user, profile   =   _make_user('cliente')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, profile
+
+    def _coupon(self, plan_name = 'Premium', **kwargs):
+        defaults        =   {'code': 'FLYER7', 'plan': _plan(name = plan_name), 'days': 7}
+        defaults.update(kwargs)
+        return Coupon.objects.create(**defaults)
+
+    def test_redeem_grants_coupon_plan_days(self):
+        client, profile =   self._client()
+        coupon          =   self._coupon()
+        response        =   client.post(REDEEM_URL, {'code': 'flyer7'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        suscription     =   Suscription.objects.get(user = profile)
+        self.assertEqual(suscription.plan_suscription, coupon.plan)
+        self.assertTrue(suscription.grants_access())
+        self.assertAlmostEqual(
+            (suscription.end_date - timezone.now()).days, 7, delta = 1)
+        self.assertTrue(
+            CouponRedemption.objects.filter(coupon = coupon, user = profile).exists())
+
+    def test_redeem_replaces_active_trial(self):
+        #La trial del registro sí se pisa: el cupón es un upgrade del período gratis.
+        client, profile =   self._client()
+        trial           =   _plan(name = 'Trial', price = 0, is_trial = True)
+        Suscription.objects.create(
+            user = profile, plan_suscription = trial, status = Suscription.STATUS_ACTIVE,
+            end_date = timezone.now() + timedelta(days = 1))
+        coupon          =   self._coupon()
+        response        =   client.post(REDEEM_URL, {'code': coupon.code}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            Suscription.objects.get(user = profile).plan_suscription, coupon.plan)
+
+    def test_redeem_rejected_with_active_paid_plan(self):
+        #Un plan pago vigente nunca se pisa con una promo.
+        client, profile =   self._client()
+        Suscription.objects.create(
+            user = profile, plan_suscription = _plan(name = 'Pago'), status = Suscription.STATUS_ACTIVE,
+            end_date = timezone.now() + timedelta(days = 20))
+        self._coupon()
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_redeem_unknown_code(self):
+        client, _       =   self._client()
+        response        =   client.post(REDEEM_URL, {'code': 'NOEXISTE'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_redeem_inactive_coupon(self):
+        client, _       =   self._client()
+        self._coupon(is_active = False)
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_redeem_expired_coupon(self):
+        client, _       =   self._client()
+        self._coupon(expires_at = timezone.now() - timedelta(days = 1))
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_redeem_exhausted_max_uses(self):
+        client, _       =   self._client()
+        _, other        =   _make_user('otro')
+        coupon          =   self._coupon(max_uses = 1)
+        CouponRedemption.objects.create(coupon = coupon, user = other)
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_redeem_same_coupon_twice_rejected(self):
+        client, profile =   self._client()
+        coupon          =   self._coupon()
+        client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        #Vencemos la promo a mano: el segundo canje del MISMO cupón se rechaza.
+        Suscription.objects.filter(user = profile).update(
+            end_date = timezone.now() - timedelta(days = 1))
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            CouponRedemption.objects.filter(coupon = coupon, user = profile).count(), 1)
+
+    def test_redeem_allowed_after_promo_expires(self):
+        client, profile =   self._client()
+        self._coupon()
+        client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        Suscription.objects.filter(user = profile).update(
+            end_date = timezone.now() - timedelta(days = 1))
+        self._coupon(code = 'OTRA8', plan_name = 'Otro Premium')
+        response        =   client.post(REDEEM_URL, {'code': 'OTRA8'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_redeem_anonymous_rejected(self):
+        self._coupon()
+        response        =   APIClient().post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 401)

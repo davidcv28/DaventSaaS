@@ -13,6 +13,7 @@ import { http } from './http.js'
 // GET  /api/suscriptions/      Bearer   -> mi suscripción (lista con 0..1)
 // POST /api/suscriptions/      Bearer {plan_suscription: <pk>} -> 201
 // PUT  /api/suscriptions/<pk>/ Bearer {plan_suscription: <pk>} -> 200
+// POST /api/suscriptions/redeem-coupon/ Bearer {code} -> 200 (cupón promocional)
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -38,6 +39,11 @@ export const billingApi = {
 
   async changePlan(subscriptionPk, planPk) {
     const { data } = await http.put(`/suscriptions/${subscriptionPk}/`, { plan_suscription: planPk })
+    return data
+  },
+
+  async redeemCoupon(code) {
+    const { data } = await http.post('/suscriptions/redeem-coupon/', { code })
     return data
   }
 }

@@ -176,6 +176,9 @@ Toda cuenta nueva arranca con el plan `is_trial=True` ("Plan de prueba", $0): `R
 #### Asignación manual de plan (staff)
 `POST /api/suscriptions/assign/` (IsAdminUser) `{user_id, plan_id}`: upsert de la `Suscription` del usuario — crea la fila si no existe o la pisa: plan nuevo, `status='Suscripción activa'`, `start_date=now`, `end_date=now+30d`, `pending_plan_suscription=None`. No toca el débito automático de MP (si existe sigue su curso). `user_id` es el id del `User` de auth (requiere `UserProfile` cargado: 400 si no existe). Los planes `is_trial` devuelven 404 (no reactivables). La respuesta incluye la suscripción serializada con `auth_user_id` (mapea suscripción ↔ usuario en el panel admin).
 
+#### Cupones promocionales
+`Coupon` (mig. suscriptions.0006): `code` único + `plan` (no trial) + `days` de acceso; `max_uses`/`expires_at` opcionales (null = ilimitado/sin vencimiento), `is_active`. `CouponRedemption` registra cada canje (unique coupon+user → un canje por usuario y cupón) y referencia la `Suscription` afectada. `POST /api/suscriptions/redeem-coupon/` (IsAuthenticated, throttle `coupon_redeem` 10/h por usuario) `{code}`: valida activo/vigencia/cupo/ya-usado, **rechaza si hay un plan pago vigente** (`grants_access()` sobre plan no-trial — la trial sí se pisa) y pisa la suscripción OneToOne: plan del cupón, `end_date=now+days`, limpia `pending_plan`/`auto_renew`/`preapproval_id`/`cancelled_at` (restos de débito MP). `select_for_update` en `transaction.atomic` serializa el conteo de `max_uses`. Alta/edición/baja de cupones por `manage.py create_coupon --code X --plan "Plan premium" --days 7 [--max-uses N] [--expires YYYY-MM-DD] [--deactivate]` (idempotente). Frontend: tarjeta "¿Tenés un código promocional?" en la sección Planes → `billing.redeemCoupon(code)`.
+
 #### Patrón de serializers (lectura vs escritura)
 ```
 SuscriptionSerializer       → CREATE / UPDATE  (HiddenField user)
@@ -540,6 +543,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/verify-email/resend/       → reenvía el correo de verificación (Bearer, throttle 5/h por usuario)
 /api/suscriptions/              → SuscriptionViewSet
 /api/suscriptions/assign/       → asignación manual de plan a un usuario (POST IsAdminUser)
+/api/suscriptions/redeem-coupon/ → canje de cupón promocional (POST IsAuthenticated, throttle coupon_redeem)
 /api/suscription-plans/         → SuscriptionPlanViewSet
 /api/provinces/                 → ProvinceViewSet
 /api/cities/                    → CityViewSet
