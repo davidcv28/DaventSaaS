@@ -28,7 +28,7 @@ const {
       </nav>
       <h1 class="cv-cb-title"><span>Colección</span> <mark>{{ year }}</mark></h1>
       <ul class="cv-cb-facts">
-        <li><strong>{{ total }}</strong> {{ total === 1 ? 'prenda' : 'prendas' }}</li>
+        <li><strong>{{ total }}</strong> {{ total === 1 ? 'producto' : 'productos' }}</li>
         <li v-if="catalog.categories.length"><strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</li>
         <li>{{ shopName }}</li>
       </ul>
@@ -68,7 +68,7 @@ const {
           <span v-else class="cv-cb-ph"><AppIcon name="package" :size="30" /></span>
           <span v-if="productOffer(p) != null" class="cv-cb-plate">-{{ offerPct(p) }}%</span>
           <span v-else-if="isNewProduct(p)" class="cv-cb-plate ink">Nuevo</span>
-          <span class="cv-cb-hover" aria-hidden="true">Ver prenda <AppIcon name="arrow-right" :size="15" /></span>
+          <span class="cv-cb-hover" aria-hidden="true">Ver producto <AppIcon name="arrow-right" :size="15" /></span>
         </div>
         <div class="cv-cb-cap">
           <div>

@@ -29,7 +29,7 @@ const {
       <p class="cv-bt-season"><span>{{ shopName }}</span><i aria-hidden="true"></i><span>Colección {{ year }}</span></p>
       <h1 class="cv-bt-title">La <em>colección</em></h1>
       <p class="cv-bt-orn" aria-hidden="true"><i></i><AppIcon name="sparkles" :size="14" /><i></i></p>
-      <p class="cv-bt-lede">{{ total }} {{ total === 1 ? 'prenda' : 'prendas' }} · Precios en pesos argentinos</p>
+      <p class="cv-bt-lede">{{ total }} {{ total === 1 ? 'producto' : 'productos' }} · Precios en pesos argentinos</p>
 
       <div v-if="catalog.categories.length" class="cv-bt-depts" role="group" aria-label="Departamentos">
         <button type="button" class="cv-bt-dept" :class="{ on: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)">
@@ -44,7 +44,7 @@ const {
 
   <main class="cv-wrap cv-bt-main">
     <div class="cv-bt-bar" role="group" aria-label="Filtros del catálogo">
-      <label class="cv-bt-field cv-bt-search"><AppIcon name="search" :size="15" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="Buscar prendas" aria-label="Buscar productos" /></label>
+      <label class="cv-bt-field cv-bt-search"><AppIcon name="search" :size="15" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" /></label>
       <div class="cv-bt-field"><input v-model="priceMin" type="text" inputmode="decimal" placeholder="Desde $" aria-label="Precio mínimo" /><i aria-hidden="true">—</i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="Hasta $" aria-label="Precio máximo" /></div>
       <label class="cv-bt-field"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="13" aria-hidden="true" /></label>
     </div>
@@ -66,7 +66,7 @@ const {
           <span v-else class="cv-bt-ph"><AppIcon name="package" :size="28" /></span>
           <span v-if="productOffer(p) != null" class="cv-bt-flag">-{{ offerPct(p) }}%</span>
           <span v-else-if="isNewProduct(p)" class="cv-bt-flag">Nuevo</span>
-          <span class="cv-bt-view" aria-hidden="true">Ver prenda</span>
+          <span class="cv-bt-view" aria-hidden="true">Ver producto</span>
         </div>
         <div class="cv-bt-body">
           <p v-if="brandNameOf(p) || categoryNameOf(p)" class="cv-bt-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</p>
