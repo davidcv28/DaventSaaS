@@ -124,17 +124,21 @@ const highlights = computed(() => {
 // show_gallery y se oculta sola sin imágenes cargadas) ---
 const gallery = computed(() => custom.value.gallery || [])
 const showGallery = computed(() => ctx.showGallery.value)
-// Imágenes ilustrativas de la portada (premium, hasta 3): se reparten en
-// zonas estratégicas — una enmarca Sobre nosotros, otra abre una banda
-// panorámica antes de Contáctanos y el resto monta sobre el borde del
-// hero. Si una sección no existe, su imagen cae en la franja del hero
-// (ninguna subida se pierde). En "Catálogo exclusivo" alimentan los tiles
-// laterales del banner (sideTiles).
+// Imágenes ilustrativas de la portada (premium, hasta 3): siempre van al
+// lado de un texto — una enmarca Sobre nosotros, otra acompaña la banda de
+// invitación antes de Contáctanos y la última cierra la columna de
+// contacto. En "Catálogo exclusivo" alimentan los tiles laterales del
+// banner (sideTiles). En móvil se ocultan por CSS.
 const decor = computed(() => (hasDesignAdvanced.value ? (custom.value.decor || []).slice(0, 3) : []))
 const decorAbout = computed(() => (!isCatalogTpl.value && hasAbout.value ? decor.value[0] || null : null))
 const decorPool = computed(() => decor.value.slice(decorAbout.value ? 1 : 0))
 const decorBand = computed(() => (isCatalogTpl.value ? null : decorPool.value[0] || null))
 const decorContact = computed(() => (showContact.value ? decorPool.value[decorBand.value ? 1 : 0] || null : null))
+// Banda decorativa: la imagen acompaña una invitación con CTAs (la misión
+// cargada sirve de bajada cuando existe); nunca una foto suelta a todo lo
+// ancho ni sin contexto.
+const showcaseTitle = computed(() => (showContact.value ? 'Hablemos de lo que buscás' : `Conocé ${shopName.value}`))
+const showcaseText = computed(() => custom.value.about_mission?.trim() || '')
 const lightboxIndex = ref(-1)
 const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
 const openLightbox = (index) => { lightboxIndex.value = index }
@@ -460,13 +464,23 @@ onBeforeUnmount(() => {
     </div>
   </section>
 
-  <!-- ===== Banda visual: imagen decorativa a todo lo ancho que corta
-       la monotonía entre el contenido y el cierre (Contáctanos/pie) ===== -->
-  <section v-if="decorBand" class="sp-showcase" aria-hidden="true">
-    <div class="sp-container">
-      <figure v-reveal class="sp-showcase-frame">
+  <!-- ===== Banda decorativa: la imagen va junto a un texto de invitación
+       con CTAs (nunca una foto suelta a todo lo ancho); en móvil la foto
+       se oculta y queda solo el bloque de texto ===== -->
+  <section v-if="decorBand" class="sp-showcase">
+    <div class="sp-container sp-showcase-grid">
+      <figure v-reveal class="sp-showcase-frame" aria-hidden="true">
         <img :src="decorBand.url" alt="" loading="lazy" />
       </figure>
+      <div v-reveal="120" class="sp-showcase-copy">
+        <p class="sp-eyebrow">{{ shopName }}</p>
+        <h2 class="sp-showcase-title">{{ showcaseTitle }}</h2>
+        <p v-if="showcaseText" class="sp-showcase-text">{{ showcaseText }}</p>
+        <div class="sp-showcase-ctas">
+          <RouterLink v-if="showCatalog" class="sp-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <a v-if="showContact" class="sp-btn ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+        </div>
+      </div>
     </div>
   </section>
 

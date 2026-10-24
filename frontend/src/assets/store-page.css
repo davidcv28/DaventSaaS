@@ -1388,20 +1388,6 @@ html { scroll-behavior: smooth; }
   .spd-rel-grid { gap: 12px; }
 }
 
-/* Imágenes ilustrativas de la portada (premium): hasta 3 tarjetas que montan sobre el borde del hero. */
-.sp-decor { display: flex; justify-content: center; gap: 18px; margin-top: -72px; position: relative; z-index: 2; }
-.sp-decor-item { flex: 0 1 280px; margin: 0; aspect-ratio: 4 / 5; max-height: 320px; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 4px solid var(--sp-card-solid, #fff); background: var(--sp-soft); box-shadow: var(--sp-shadow-md); transition: transform .35s var(--sp-ease); }
-.sp-decor-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.sp-decor-item:nth-child(1) { rotate: -2deg; }
-.sp-decor-item:nth-child(2) { translate: 0 -14px; }
-.sp-decor-item:nth-child(3) { rotate: 2deg; }
-.sp-decor-item:hover { rotate: 0deg; transform: translateY(-6px); }
-.sp-decor + .sp-highlights { margin-top: 28px !important; }
-@media (max-width: 760px) {
-  .sp-decor { gap: 8px; margin-top: -56px; }
-  .sp-decor-item { flex: 1 1 0; min-width: 0; max-height: 200px; border-width: 3px; }
-}
-@media (prefers-reduced-motion: reduce) { .sp-decor-item { transition: none; } }
 
 /* ===== Imagen de portada (premium) + tipografía v3 + diseño "Catálogo exclusivo" =====
    Va al final para ganar por cascada. La portada es el fondo del hero con un
@@ -1412,7 +1398,12 @@ html { scroll-behavior: smooth; }
 .sp-hero-cover { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .sp-hero-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.04); animation: sp-cover-drift 24s ease-in-out infinite alternate; }
 .sp-hero-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, color-mix(in srgb, var(--store-accent-ink) 82%, transparent) 0%, color-mix(in srgb, var(--store-accent-ink) 52%, transparent) 42%, color-mix(in srgb, var(--store-accent) 10%, transparent) 100%), linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .28)); }
-.sp-hero-band.has-cover { min-height: clamp(460px, 62vh, 640px); display: flex; flex-direction: column; justify-content: center; }
+/* La portada no es un hero a pantalla: alto acotado tipo portada de
+   Facebook (~2.7:1). El contenido puede estirarla, pero la banda sola
+   nunca ocupa medio viewport. */
+.sp-hero-band.has-cover { min-height: clamp(300px, 36vw, 430px); display: flex; flex-direction: column; justify-content: center; }
+.sp-hero-band.has-cover .sp-hero-inner { padding-top: 56px; padding-bottom: 96px; }
+@media (max-width: 760px) { .sp-hero-band.has-cover .sp-hero-inner { padding-top: 40px; padding-bottom: 88px; } }
 .store-page[data-store-template='editorial'] .sp-hero-band.has-cover { min-height: 0; display: block; }
 .sp-hero-band.has-cover .sp-hero-decor .sp-float, .sp-hero-band.has-cover .sp-hero-decor .sp-orb { display: none; }
 .sp-contact-photo { margin: 6px 0 0; aspect-ratio: 16 / 10; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
@@ -1431,7 +1422,7 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='editorial'][data-store-theme='dark'] .sp-hero-band.has-cover { background-image: linear-gradient(165deg, color-mix(in srgb, var(--store-accent) 18%, var(--sp-card-solid)), var(--sp-card-solid) 80%); }
 .store-page[data-store-template='editorial'] .sp-hero-band.has-cover .sp-hero-title, .store-page[data-store-template='editorial'] .sp-hero-band.has-cover .sp-hero-sub { text-shadow: none; }
 /* Editorial: la portada es la tapa de la revista (marco y sombra-bloque). */
-.sp-ed-cover { grid-area: visual; justify-self: center; align-self: center; position: relative; margin: 0; width: min(100%, 440px); aspect-ratio: 4 / 5; overflow: hidden; border: 1px solid var(--sp-ink); border-radius: 4px; background: var(--sp-soft); box-shadow: 18px 18px 0 color-mix(in srgb, var(--store-accent) 30%, transparent), 0 0 0 10px var(--sp-card-solid), 0 0 0 11px var(--sp-line); }
+.sp-ed-cover { grid-area: visual; justify-self: center; align-self: center; position: relative; margin: 0; width: min(100%, 440px); aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--sp-ink); border-radius: 4px; background: var(--sp-soft); box-shadow: 18px 18px 0 color-mix(in srgb, var(--store-accent) 30%, transparent), 0 0 0 10px var(--sp-card-solid), 0 0 0 11px var(--sp-line); }
 .sp-ed-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--sp-ease); }
 .sp-ed-cover:hover img { transform: scale(1.04); }
 .sp-ed-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(15, 23, 42, .28)); pointer-events: none; }
@@ -1491,7 +1482,7 @@ html { scroll-behavior: smooth; }
 .sp-cx-search-btn { flex: none; height: 34px; padding: 0 18px; border: 0; border-radius: 7px; background: var(--store-accent); color: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: filter .15s; }
 .sp-cx-search-btn:hover { filter: brightness(1.1); }
 .sp-cx-hero { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr); gap: 16px; padding-top: 24px; }
-.sp-cx-banner { position: relative; isolation: isolate; display: flex; align-items: center; min-height: 400px; border-radius: 22px; overflow: hidden; color: #fff; background: linear-gradient(115deg, var(--store-accent-ink), var(--store-accent)); }
+.sp-cx-banner { position: relative; isolation: isolate; display: flex; align-items: center; min-height: 320px; border-radius: 22px; overflow: hidden; color: #fff; background: linear-gradient(115deg, var(--store-accent-ink), var(--store-accent)); }
 .sp-cx-banner-img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
 .sp-cx-banner.has-cover::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(95deg, rgba(8, 12, 24, .84) 0%, rgba(8, 12, 24, .52) 50%, rgba(8, 12, 24, .06) 100%); }
 .sp-cx-banner-art { position: absolute; right: -2%; bottom: -16%; z-index: -1; color: rgba(255, 255, 255, .14); }
@@ -1635,8 +1626,9 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 960px) {
   .sp-cx-hero { grid-template-columns: minmax(0, 1fr); }
-  .sp-cx-side { grid-template-rows: none; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sp-cx-banner { min-height: 340px; }
+  .sp-cx-side { grid-template-rows: none; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .sp-cx-banner { min-height: 300px; }
+  .sp-cx-tile.has-img { display: none; }
   .sp-cx-trust { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sp-cx-trust li:nth-child(3) { border-left: 0; }
   .sp-cx-trust li:nth-child(n + 3) { border-top: 1px solid var(--sp-line); }
@@ -1660,33 +1652,36 @@ html { scroll-behavior: smooth; }
 }
 
 /* ---------- Distribución de imágenes decorativas (premium) ----------
-   Además de la franja de polaroids bajo el hero, una enmarca la sección
-   Sobre nosotros (collage con la tarjeta de trayectoria/misión) y otra
-   abre una banda panorámica que corta la página antes del cierre. */
-.sp-about-side { display: grid; align-content: start; }
-.sp-about-photo { position: relative; z-index: 1; margin: 0 28px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); background: var(--sp-soft); box-shadow: var(--sp-shadow-md); }
-.sp-about-photo:only-child { margin: 0; }
+   Las fotos siempre van junto a un texto, nunca sueltas a todo lo ancho
+   ni superpuestas a otros contenedores: una enmarca Sobre nosotros (con
+   la tarjeta de trayectoria/misión debajo, sin pisarla), otra acompaña la
+   banda de invitación antes del cierre y la última va en la columna de
+   contacto. En móvil (≤960px) todas se ocultan. */
+.sp-about-side { display: grid; align-content: start; gap: 18px; }
+.sp-about-photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); background: var(--sp-soft); box-shadow: var(--sp-shadow-md); }
 .sp-about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .8s var(--sp-ease); }
 .sp-about-photo:hover img { transform: scale(1.05); }
-.sp-about-side .sp-about-card { position: relative; z-index: 2; margin-top: -56px; }
 
-/* Banda panorámica entre secciones: la imagen respira con el mismo drift
-   de la portada y lleva un velo suave del acento hacia el borde inferior. */
+/* Banda decorativa: imagen al lado de la invitación con CTAs (el texto
+   ocupa la columna ancha; la foto respira con el mismo drift de la
+   portada y lleva un velo suave del acento hacia el borde inferior). */
 .sp-showcase { padding-top: 72px; }
-.sp-showcase-frame { position: relative; margin: 0; aspect-ratio: 21 / 9; min-height: 280px; overflow: hidden; border-radius: calc(var(--sp-radius) + 8px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
+.sp-showcase-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 56px); align-items: center; }
+.sp-showcase-frame { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--sp-radius) + 8px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
 .sp-showcase-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.05); animation: sp-cover-drift 26s ease-in-out infinite alternate; }
 .sp-showcase-frame::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--store-accent-ink) 42%, transparent)); pointer-events: none; }
+.sp-showcase-copy { display: grid; gap: 14px; justify-items: start; }
+.sp-showcase-title { margin: 0; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; overflow-wrap: anywhere; }
+.sp-showcase-text { margin: 0; font-size: 15px; line-height: 1.7; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.sp-showcase-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
 
 @media (max-width: 960px) {
-  .sp-about-photo { aspect-ratio: 16 / 10; margin: 0 20px; }
-  .sp-about-photo:only-child { margin: 0; }
-  .sp-about-side .sp-about-card { margin-top: -44px; }
+  .sp-about-photo, .sp-showcase-frame { display: none; }
+  .sp-about-side:not(:has(.sp-about-card)) { display: none; }
+  .sp-showcase-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
   .sp-showcase { padding-top: 56px; }
-  .sp-showcase-frame { aspect-ratio: 16 / 10; min-height: 200px; border-radius: calc(var(--sp-radius) + 2px); }
-  .sp-about-photo { margin: 0 12px; }
-  .sp-about-side .sp-about-card { margin-top: -32px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sp-showcase-frame img { animation: none; transform: none; }
