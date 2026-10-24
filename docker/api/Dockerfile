@@ -31,11 +31,22 @@ ARG VITE_PLATFORM_DOMAIN=daventsaas.onrender.com
 ARG VITE_APP_URL=https://daventsaas.onrender.com
 ARG VITE_APP_NAME=DAVENT
 ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
+# Firebase Phone Auth: config web pública por diseño (viaja en el bundle);
+# defaults = el proyecto davent-f089b. Render no pasa env vars al build, así
+# que el default es lo que hace que la feature exista en el bundle de prod.
+ARG VITE_FIREBASE_API_KEY=AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
+ARG VITE_FIREBASE_AUTH_DOMAIN=davent-f089b.firebaseapp.com
+ARG VITE_FIREBASE_PROJECT_ID=davent-f089b
+ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_URL=$VITE_APP_URL \
     VITE_APP_NAME=$VITE_APP_NAME \
-    VITE_APP_TAGLINE=$VITE_APP_TAGLINE
+    VITE_APP_TAGLINE=$VITE_APP_TAGLINE \
+    VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
+    VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
+    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
+    VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
 RUN npm run build
 
 # ---------- Stage 2: runtime mínimo, sin toolchain ----------

@@ -1,0 +1,155 @@
+# =============================================================================
+# DAVENT — Render Blueprint (infra como código)
+#
+#   render.yaml declara el servicio + TODAS sus env vars. Al conectar el repo
+#   como Blueprint (Dashboard -> New -> Blueprint), Render crea/vincula el
+#   servicio por nombre y aplica las vars automáticamente — se acabó cargarlas
+#   a mano en el dashboard.
+#
+#   Reglas:
+#     - `value:`    -> var pública, viaja en git con el Blueprint
+#     - `sync: false` -> secreto: Render lo toma del dashboard tal cual esté y
+#                      el Blueprint NUNCA lo pisa (pone el valor una vez en
+#                      Environment del servicio y queda)
+#
+#   Deploy: un único servicio `daventsaas` con la imagen docker/api (ella
+#   hornea el SPA en el stage `frontend` y la sirve en / + /api). Postgres
+#   externo: Neon (DATABASE_URL). Sin Redis -> caché locmem (default de
+#   settings). El VITE_* del front se hornea via ARG defaults del Dockerfile.
+# =============================================================================
+
+services:
+  - type: web
+    name: daventsaas
+    runtime: docker
+    dockerfilePath: ./docker/api/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /healthz/
+    autoDeploy: true
+    envVars:
+
+      # ---- Núcleo Django ------------------------------------------------------
+      - key: SECRET_KEY
+        sync: false                       # ya existe en el dashboard; no pisar
+                                        # (regenerarla cierra todas las sesiones
+                                        # e invalida tokens firmados vivos)
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: daventsaas.onrender.com    # + dominio propio cuando se delegue
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://daventsaas.onrender.com
+      - key: CORS_ALLOW_CREDENTIALS
+        value: "True"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://daventsaas.onrender.com
+      - key: FRONTEND_URL
+        value: https://daventsaas.onrender.com
+      - key: BACKEND_URL
+        value: https://daventsaas.onrender.com   # mismo servicio sirve API+SPA;
+                                        # alimenta los links de los mails
+                                        # (verify-email / password-reset)
+
+      # ---- TLS detrás del proxy de Render ------------------------------------
+      - key: SECURE_PROXY_SSL             # Render termina TLS y manda
+        value: "True"                     # X-Forwarded-Proto: https
+      - key: SECURE_SSL_REDIRECT
+        value: "False"                    # el redirect 80->443 lo hace Render
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "True"
+      - key: SECURE_HSTS_PRELOAD
+        value: "False"
+
+      # ---- Base de datos (Neon, externa) --------------------------------------
+      - key: DATABASE_URL
+        sync: false                       # cadena completa de Neon con password
+
+      # ---- Email (Brevo) -------------------------------------------------------
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: EMAIL_PORT
+        value: "2525"                     # Render no filtra 25/465/587 outbound
+                                          # en todos los planes: Brevo ofrece
+                                          # 2525 como alternativa que sí sale
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        value: bf8fa9001@smtp-brevo.com   # login SMTP de Brevo (no es secreto)
+      - key: EMAIL_HOST_PASSWORD
+        sync: false                       # xsmtpsib-... (SMTP key de Brevo)
+      - key: DEFAULT_FROM_EMAIL
+        value: DAVENT <daventargentina@gmail.com>
+      - key: LEGAL_REPORTS_EMAIL
+        value: davidcv28@outlook.com
+      - key: ADMIN_URL
+        sync: false                       # path no obvio del admin, si está seteado
+
+      # ---- MercadoPago ---------------------------------------------------------
+      - key: SECRET_MP_KEY
+        sync: false
+      - key: MP_WEBHOOK_SECRET
+        sync: false                       # firma HMAC de webhooks (panel MP)
+      - key: MP_PAYER_EMAIL
+        sync: false                       # payer de prueba (solo credenciales TEST)
+
+      # ---- Cloudflare R2 (imágenes de tienda) ----------------------------------
+      - key: S3_API
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: BACKUP_RETENTION_DAYS
+        value: "14"
+
+      # ---- Firebase Phone Auth (verificación de celular, costo $0) -------------
+      # Web API key: pública por diseño (viaja en el bundle del front). La
+      # protección real: Authorized domains del proyecto + cuota Spark ~10/día.
+      - key: FIREBASE_API_KEY
+        value: AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
+
+      # ---- Emisor de comprobantes (fiscal) --------------------------------------
+      - key: ISSUER_NAME
+        value: DAVENT
+      - key: ISSUER_CUIT
+        sync: false
+      - key: ISSUER_ADDRESS
+        sync: false
+      - key: ISSUER_EMAIL
+        sync: false
+      - key: ISSUER_TAX_CONDITION
+        value: MO
+      - key: ISSUER_IIBB
+        sync: false
+      - key: ISSUER_ACTIVITY_START
+        sync: false
+
+      # ---- Operación -------------------------------------------------------------
+      # Seeds idempotentes (locations/planes/beneficios) — Render free no tiene
+      # shell: corren en el entrypoint cuando AUTO_SEED=1.
+      - key: AUTO_SEED
+        value: "1"
+      - key: GUNICORN_WORKERS
+        value: "2"                        # plan free = 512MB: menos workers que
+      - key: GUNICORN_THREADS             # el default de compose (3x4)
+        value: "4"
+      # Superuser inicial sin shell: completar una vez en el dashboard.
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
