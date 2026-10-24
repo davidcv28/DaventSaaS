@@ -4963,6 +4963,10 @@ html { scroll-behavior: smooth; }
   /* La foto lateral se oculta a este ancho: una sola columna para que la
      tarjeta no quede comprimida a la mitad. */
   .store-page[data-store-template='cobre'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
+  /* El override de escritorio (1fr 1fr) ganaba al colapso base y estrangulaba
+     años + misión en móvil, igual que pasaba en Minimal. */
+  .store-page[data-store-template='cobre'] .sp-about-grid,
+  .store-page[data-store-template='cobre'] .sp-about-grid.no-card { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .store-page[data-store-template='cobre'] .sp-services > .sp-container { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='cobre'] .sp-services .sp-services-grid { grid-column: 1; grid-row: auto; }
   .store-page[data-store-template='cobre'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
@@ -5071,7 +5075,11 @@ html { scroll-behavior: smooth; }
   background: var(--mn-ink); color: var(--mn-paper);
   font-size: 13px; font-weight: 500; letter-spacing: .04em;
   text-align: center;
+  animation: sp-mn-drop .6s var(--sp-ease) both;
 }
+/* La banda tiene overflow:hidden, así que el strip entra deslizándose
+   desde arriba sin mover el resto del layout. */
+@keyframes sp-mn-drop { from { transform: translateY(-102%); } to { transform: none; } }
 
 /* --- Portada: hero tipográfico con placa de imagen --- */
 .store-page[data-store-template='minimal'] .sp-hero-band {
@@ -5113,7 +5121,15 @@ html { scroll-behavior: smooth; }
   color: var(--sp-ink); text-shadow: none; text-wrap: balance;
 }
 .store-page[data-store-template='minimal'] .sp-hero-title.is-name { font-size: clamp(34px, 5vw, calc(var(--store-name-size, 48px) * 1.5)); }
-.store-page[data-store-template='minimal'] .sp-mn-mark { color: var(--sp-accent-text); }
+.store-page[data-store-template='minimal'] .sp-mn-mark { position: relative; color: var(--sp-accent-text); }
+/* La última palabra del titular se subraya con un filete de acento que se
+   dibuja cuando el título termina de revelarse (v-reveal → .is-in). */
+.store-page[data-store-template='minimal'] .sp-mn-mark::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: .02em; height: .07em;
+  background: var(--store-accent); transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .6s var(--sp-ease) .45s;
+}
+.store-page[data-store-template='minimal'] .sp-hero-title.is-in .sp-mn-mark::after { transform: scaleX(1); }
 .store-page[data-store-template='minimal'] .sp-hero-sub {
   width: 100%; max-width: min(54ch, 100%); margin: 0;
   font-size: 16px; line-height: 1.7; color: var(--sp-muted);
@@ -5166,8 +5182,13 @@ html { scroll-behavior: smooth; }
   background: var(--mn-tile); overflow: hidden;
   display: grid; place-items: center;
 }
-.store-page[data-store-template='minimal'] .sp-mn-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.store-page[data-store-template='minimal'] .sp-mn-art img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1s var(--sp-ease); }
 .store-page[data-store-template='minimal'] .sp-mn-art.is-logo img { object-fit: contain; padding: 20%; }
+/* La imagen de la placa arranca con un leve zoom y se asienta al revelarse;
+   el scale extra sobre el tile recortado da la sensación de foco editorial.
+   :not(.is-in) deja libre la regla cuando termina la entrada, para que el
+   zoom de hover (más abajo, menor especificidad) pueda tomar el mando. */
+.store-page[data-store-template='minimal'] .sp-mn-art.sp-rv:not(.is-in) img { transform: scale(1.06); }
 .store-page[data-store-template='minimal'] .sp-mn-art-initial {
   font-family: var(--sp-display); font-weight: 800;
   font-size: clamp(96px, 14vw, 180px); line-height: 1; letter-spacing: -.04em;
@@ -5319,7 +5340,16 @@ html { scroll-behavior: smooth; }
   font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
   color: var(--sp-accent-text);
 }
-.store-page[data-store-template='minimal'] .sp-eyebrow::before { display: none; }
+/* El dash del eyebrow vuelve como filete fino que se dibuja de izquierda a
+   derecha cuando algo del bloque se revela (los eyebrow no llevan v-reveal
+   propio, así que el gatillo es el .is-in de su contenedor). */
+.store-page[data-store-template='minimal'] .sp-eyebrow::before {
+  width: 26px; height: 1px; border-radius: 0; background: var(--store-accent);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .55s var(--sp-ease) .15s;
+}
+.store-page[data-store-template='minimal'] .sp-rv.is-in .sp-eyebrow::before,
+.store-page[data-store-template='minimal'] .sp-container:has(.is-in) .sp-eyebrow::before { transform: scaleX(1); }
 .store-page[data-store-template='minimal'] .sp-section-title {
   margin: 10px 0 34px; font-family: var(--sp-display); font-weight: 800;
   font-size: clamp(30px, 4.2vw, 52px); line-height: 1.05; letter-spacing: -.03em;
@@ -5875,6 +5905,43 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='minimal'] .spd-rel-name { font-size: 15px; font-weight: 700; }
 .store-page[data-store-template='minimal'] .spd-rel-price { font-size: 13.5px; font-weight: 600; color: var(--sp-muted); }
 
+/* --- Micro-interacciones de Minimal: movimiento plano, sin relieve ---
+   Misma gramática del diseño (filetes, tinta, acento) aplicada al motion:
+   reveals más cortos, filetes que se dibujan y feedback de tap por opacidad
+   (transform queda libre para los hovers del sistema base). */
+.store-page[data-store-template='minimal'] { -webkit-tap-highlight-color: transparent; }
+.store-page[data-store-template='minimal'] :is(a, button, summary, [role='button']) { touch-action: manipulation; }
+.store-page[data-store-template='minimal'] .sp-rv { translate: 0 16px; }
+.store-page[data-store-template='minimal'] .sp-card-name {
+  padding-bottom: 2px;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 1px;
+  transition: background-size .35s var(--sp-ease);
+}
+.store-page[data-store-template='minimal'] .sp-card-img,
+.store-page[data-store-template='minimal'] .sp-testimonial,
+.store-page[data-store-template='minimal'] .sp-gallery-item {
+  transition: transform .16s var(--sp-ease), border-color .25s var(--sp-ease);
+}
+.store-page[data-store-template='minimal'] .sp-hl-icon,
+.store-page[data-store-template='minimal'] .sp-service-icon,
+.store-page[data-store-template='minimal'] .sp-shop-viewall .sp-arrow,
+.store-page[data-store-template='minimal'] .sp-faq-caret {
+  transition: background .25s var(--sp-ease), color .25s var(--sp-ease), border-color .25s var(--sp-ease), transform .3s var(--sp-ease);
+}
+.store-page[data-store-template='minimal'] :is(.sp-btn, .sp-top-cta, .sp-shop-viewall, .sp-icon-btn, .sp-quick-pill, .sp-nav-item, .sp-nav-clear, .sp-card, .sp-card-cta):active { opacity: .78; }
+.store-page[data-store-template='minimal'] .sp-gallery-item:active { transform: scale(.98); opacity: .9; }
+@media (hover: hover) and (pointer: fine) {
+  .store-page[data-store-template='minimal'] .sp-mn-art:hover img { transform: scale(1.03); }
+  .store-page[data-store-template='minimal'] .sp-card:hover .sp-card-img { border-color: var(--mn-ink); }
+  .store-page[data-store-template='minimal'] .sp-card:hover .sp-card-name { background-size: 100% 1px; }
+  .store-page[data-store-template='minimal'] .sp-testimonial:hover { border-color: var(--mn-ink); }
+  .store-page[data-store-template='minimal'] .sp-service:hover .sp-service-icon,
+  .store-page[data-store-template='minimal'] .sp-hl:hover .sp-hl-icon { background: var(--mn-ink); border-color: var(--mn-ink); color: var(--mn-paper); }
+  .store-page[data-store-template='minimal'] .sp-shop-viewall:hover .sp-arrow { transform: translateX(3px); }
+  .store-page[data-store-template='minimal'] .sp-faq-item summary:hover .sp-faq-caret { border-color: var(--mn-ink); }
+}
+
 /* --- Responsive de Minimal --- */
 @media (max-width: 960px) {
   .store-page[data-store-template='minimal'] .sp-hero-inner {
@@ -5891,6 +5958,12 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='minimal'] .sp-mn-art { aspect-ratio: 4 / 3; max-height: 420px; }
   .store-page[data-store-template='minimal'] .sp-highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 28px; padding-left: 20px; padding-right: 20px; }
   .store-page[data-store-template='minimal'] .sp-hl, .store-page[data-store-template='minimal'] .sp-hl:first-child { padding: 0; border-left: 0; }
+  /* El override de escritorio (1fr 1fr, especificidad 0,3,0) ganaba al
+     colapso base del sistema y dejaba la sección en dos columnas: la
+     tarjeta de años + misión quedaba estrangulada y el texto se partía
+     a mitad de palabra (overflow-wrap: anywhere). */
+  .store-page[data-store-template='minimal'] .sp-about-grid,
+  .store-page[data-store-template='minimal'] .sp-about-grid.no-card { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .store-page[data-store-template='minimal'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='minimal'] .sp-services > .sp-container { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='minimal'] .sp-services .sp-services-grid { grid-column: 1; grid-row: auto; }
@@ -5918,15 +5991,25 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='minimal'] .sp-toolbar { align-items: stretch; }
   .store-page[data-store-template='minimal'] .sp-form { padding: 20px; }
   .store-page[data-store-template='minimal'] .sp-form-row { grid-template-columns: minmax(0, 1fr); }
+  /* El fix global de tarjetas del catálogo está más abajo en el archivo y
+     a igual especificidad gana por orden: se refuerza el selector para
+     que el cuerpo siga pegado al tile como marca el diseño. */
+  .store-page[data-store-template='minimal'] .sp-grid .sp-card .sp-card-body { padding: 12px 0 0; }
+  .store-page[data-store-template='minimal'] .sp-about-card { padding: 22px; }
 }
 @media (max-width: 520px) {
   .store-page[data-store-template='minimal'] .sp-hero-title { font-size: clamp(30px, 9.5vw, 44px); }
   .store-page[data-store-template='minimal'] .sp-hero-ctas { flex-wrap: wrap; gap: 10px; }
-  .store-page[data-store-template='minimal'] .sp-hero-ctas .sp-btn { height: 46px; padding: 0 18px; font-size: 12px; }
+  .store-page[data-store-template='minimal'] .sp-hero-ctas .sp-btn { flex: 1 1 auto; justify-content: center; height: 46px; padding: 0 18px; font-size: 12px; }
   .store-page[data-store-template='minimal'] .sp-hero .sp-icon-btn { width: 46px; height: 46px; }
   .store-page[data-store-template='minimal'] .sp-mn-art { max-height: 340px; }
   .store-page[data-store-template='minimal'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .store-page[data-store-template='minimal'] .sp-stats-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+/* En táctil los inputs van a 16px: iOS hace zoom al enfocar cualquier
+   campo con menos y no lo revierte al salir. */
+@media (pointer: coarse) {
+  .store-page[data-store-template='minimal'] :is(.sp-input, .sp-search input, .sp-price input, .sp-sort select) { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-store-template='minimal'] .sp-card,
