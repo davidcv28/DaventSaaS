@@ -33,7 +33,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
     issuer                  = serializers.SerializerMethodField()
 
     def get_comprobante(self, obj):
-        return f'{obj.pos:04d}-{obj.number:08d}'
+        #Con CAE el número legal es el que asignó ARCA (puede diferir del
+        #correlativo interno si el CAE se pidió en un reintento).
+        return f'{obj.pos:04d}-{(obj.fiscal_number or obj.number):08d}'
 
     def get_net_amount(self, obj):
         return (obj.total / _IVA_DIVISOR).quantize(_CENTS, rounding = ROUND_HALF_UP)
@@ -56,4 +58,5 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'plan_name', 'paid_at', 'currency',
             'customer_name', 'document', 'type_document', 'tax_condition_display',
             'address', 'city_name', 'province_name', 'issuer',
+            'cae', 'cae_due', 'fiscal_number', 'afip_status',
         ]

@@ -17,6 +17,7 @@ from django.utils.html import escape
 from rest_framework import serializers
 
 from AdminApp.domains.invoices.models import Invoice, TypeInvoice
+from AdminApp.domains.invoices.services import afip
 from AdminApp.domains.payments.models import Payment
 
 logger          =   logging.getLogger(__name__)
@@ -59,10 +60,13 @@ def IssueInvoiceQuery(payment, pos : int = 1) -> Invoice:
                     number          =   number,
                     total           =   payment.amount,
                     issued_at       =   timezone.localdate(),
+                    #PENDING: el hook post-commit decide (CAE si AFIP está
+                    #habilitado, DISABLED si no). Filas viejas quedan DISABLED.
+                    afip_status     =   Invoice.AfipStatus.PENDING,
                 )
-                #EMAIL: se agenda post-commit — nunca se envía dentro de la
-                #transacción (un rollback no debe haber notificado igual)
-                transaction.on_commit(lambda : SendInvoiceEmailQuery(invoice))
+                #POST-COMMIT: pedido de CAE en ARCA + email — nunca dentro de la
+                #transacción (un rollback no debe haber facturado ni notificado).
+                transaction.on_commit(lambda : FinalizeInvoiceQuery(invoice.pk))
                 return invoice
         except IntegrityError:
             #CARRERA: si otro proceso emitió para este pago, se devuelve la existente;
@@ -72,6 +76,22 @@ def IssueInvoiceQuery(payment, pos : int = 1) -> Invoice:
                 return existing
             if attempt == 2:
                 raise serializers.ValidationError({'invoice': 'Error al emitir la factura.'})
+
+#FINALIZE INVOICE QUERY (post-commit: CAE primero para que el mail salga con el
+#número fiscal si ARCA respondió; el mail sale igual aunque ARCA falle)
+def FinalizeInvoiceQuery(invoice_id : int) -> None:
+    invoice     =   Invoice.objects.select_related(
+        'user__user', 'user__province', 'user__city',
+        'payment__suscription__plan_suscription',
+    ).filter(pk = invoice_id).first()
+    if not invoice:
+        return
+    try:
+        afip.RequestCaeQuery(invoice)
+    except Exception:
+        #RequestCaeQuery ya es fail-open; esto es solo defensa extra del hook.
+        logger.exception('Finalize: fallo inesperado pidiendo CAE de la factura %s', invoice_id)
+    SendInvoiceEmailQuery(invoice)
 
 #=================================
 # INVOICE EMAIL
@@ -86,7 +106,9 @@ def SendInvoiceEmailQuery(invoice : Invoice) -> None:
     if not recipient:
         return
     issuer          =   settings.INVOICE_ISSUER
-    comprobante     =   f'{invoice.pos:04d}-{invoice.number:08d}'
+    #Con CAE el número legal es el que asignó ARCA (fiscal_number); sin CAE es
+    #el correlativo interno provisorio.
+    comprobante     =   f'{invoice.pos:04d}-{(invoice.fiscal_number or invoice.number):08d}'
     type_label      =   invoice.get_type_display()
     plan_name       =   invoice.payment.suscription.plan_suscription.name
     customer        =   invoice.user.business_name or f'{invoice.user.first_name} {invoice.user.last_name}'.strip() or recipient
@@ -94,13 +116,18 @@ def SendInvoiceEmailQuery(invoice : Invoice) -> None:
     issued          =   invoice.issued_at.strftime('%d/%m/%Y')
     invoice_url     =   f'{FRONTEND_URL}/facturas/{invoice.pk}'
     subject         =   f'Tu factura de DAVENT — {type_label} {comprobante}'
+    cae_text        =   ''
+    if invoice.cae:
+        cae_due     =   invoice.cae_due.strftime('%d/%m/%Y') if invoice.cae_due else '—'
+        cae_text    =   f'CAE             : {invoice.cae} (vto. {cae_due})\n'
     body            =   (
         f'Hola {customer},\n\n'
         f'Ya emitimos el comprobante de tu último pago acreditado en DAVENT.\n\n'
         f'Comprobante     : {type_label} {comprobante}\n'
         f'Fecha de emisión: {issued}\n'
         f'Plan            : {plan_name}\n'
-        f'Total           : {total}\n\n'
+        f'Total           : {total}\n'
+        f'{cae_text}\n'
         f'Ver o imprimir tu factura: {invoice_url}\n'
         f'También está disponible en tu panel, sección Facturas.\n\n'
         f'{issuer["name"]} — {issuer["tagline"]}'
@@ -111,6 +138,13 @@ def SendInvoiceEmailQuery(invoice : Invoice) -> None:
         escape(issuer['address']),
         escape(issuer['email']),
     ]))
+    cae_row         =   ''
+    if invoice.cae:
+        cae_due_fmt =   invoice.cae_due.strftime('%d/%m/%Y') if invoice.cae_due else '—'
+        cae_row     =   f"""<tr>
+                <td style="padding:12px 16px;color:#64748b;">CAE</td>
+                <td align="right" style="padding:12px 16px;">{escape(invoice.cae)} · vto. {cae_due_fmt}</td>
+              </tr>"""
     html            =   f"""<!doctype html>
 <html lang="es">
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
@@ -143,9 +177,10 @@ def SendInvoiceEmailQuery(invoice : Invoice) -> None:
                 <td align="right" style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">{escape(plan_name)}</td>
               </tr>
               <tr>
-                <td style="padding:12px 16px;color:#64748b;">Total</td>
-                <td align="right" style="padding:12px 16px;font-size:17px;font-weight:700;color:#4f46e5;">{total}</td>
+                <td style="padding:12px 16px;color:#64748b;border-bottom:1px solid #e2e8f0;">Total</td>
+                <td align="right" style="padding:12px 16px;font-size:17px;font-weight:700;color:#4f46e5;border-bottom:1px solid #e2e8f0;">{total}</td>
               </tr>
+              {cae_row}
             </table>
             <p style="margin:0 0 20px;text-align:center;">
               <a href="{invoice_url}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 28px;border-radius:10px;">Ver mi factura</a>

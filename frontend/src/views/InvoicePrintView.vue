@@ -27,8 +27,9 @@ const status = ref('loading') // loading | ready | error
 const error = ref('')
 
 const issuer = computed(() => invoice.value?.issuer || FALLBACK_ISSUER)
-// Sin CUIT del emisor todavía no se puede emitir un comprobante fiscal real.
-const isInternal = computed(() => !issuer.value.cuit)
+// El comprobante es fiscal solo cuando ARCA otorgó el CAE; sin CAE sigue
+// siendo un documento interno/provisorio (integración apagada o en reintento).
+const isInternal = computed(() => !invoice.value?.cae)
 
 const docTitle = computed(() =>
   invoice.value ? `${invoice.value.type_display} ${invoice.value.comprobante}` : 'Factura'
@@ -169,9 +170,15 @@ function closeTab() {
       </div>
 
       <footer class="inv-foot">
-        <span v-if="isInternal">Comprobante interno sin validez fiscal ante ARCA.</span>
-        <span v-else>Comprobante emitido digitalmente por {{ issuer.name }}.</span>
-        <span v-if="invoice.currency">Moneda: {{ invoice.currency }}</span>
+        <div class="inv-foot-info">
+          <span v-if="isInternal">Comprobante interno sin validez fiscal ante ARCA.</span>
+          <span v-else>Comprobante autorizado por ARCA — emitido digitalmente por {{ issuer.name }}.</span>
+          <span v-if="invoice.currency">Moneda: {{ invoice.currency }}</span>
+        </div>
+        <div v-if="invoice.cae" class="inv-cae">
+          <span>CAE N°: <strong>{{ invoice.cae }}</strong></span>
+          <span v-if="invoice.cae_due">Fecha Vto. CAE: {{ formatDate(invoice.cae_due) }}</span>
+        </div>
       </footer>
     </article>
   </div>
@@ -257,6 +264,12 @@ function closeTab() {
   display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   color: #94a3b8; font-size: 12px;
 }
+.inv-foot-info { display: flex; gap: 12px; flex-wrap: wrap; }
+.inv-cae {
+  display: grid; justify-items: end; gap: 2px;
+  color: #334155; font-size: 13px;
+}
+.inv-cae strong { font-size: 14.5px; letter-spacing: .04em; }
 
 @media (max-width: 640px) {
   .inv-doc { padding: 26px 20px; }

@@ -308,6 +308,19 @@ INVOICE_ISSUER = {
     'activity_start' : config('ISSUER_ACTIVITY_START', default = ''),
 }
 
+# ARCA (ex-AFIP) — factura electrónica WSFE con CAE. Dormido hasta completar:
+#   AFIP_ENABLED=True + AFIP_CUIT + AFIP_CERT/AFIP_KEY (PEM inline o ruta).
+#   AFIP_ENV=testing apunta a homologación; production al servicio real.
+#   El cert se genera en ARCA > Administración de Certificados Digitales y se
+#   delega al web service 'wsfe' (pasos en .env.example y AGENTS.md).
+AFIP = {
+    'enabled'   : config('AFIP_ENABLED', default = False, cast = bool),
+    'env'       : config('AFIP_ENV', default = 'testing'),
+    'cuit'      : config('AFIP_CUIT', default = ''),
+    'cert'      : config('AFIP_CERT', default = ''),
+    'key'       : config('AFIP_KEY', default = ''),
+}
+
 # Logging: sin esta sección Django no tiene handlers configurados y los
 # logger.warning/exception del proyecto (webhooks de MP, fallos de email,
 # auditoría de seguridad) se perdían en producción. stdout lo captura
