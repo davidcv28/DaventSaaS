@@ -4126,6 +4126,7 @@ html { scroll-behavior: smooth; }
   grid-template-columns: minmax(0, 1fr) minmax(300px, 46%);
   grid-template-areas: 'copy art';
   align-items: end;
+  justify-items: stretch;
   text-align: left;
   column-gap: clamp(32px, 5vw, 72px);
   padding: clamp(44px, 6vw, 84px) var(--cb-gutter, 40px) clamp(56px, 7vw, 96px);
@@ -4193,7 +4194,7 @@ html { scroll-behavior: smooth; }
 /* Placas superpuestas: la principal sobre acento, la segunda sobre tinta;
    cada una con rótulo tipo etiqueta. */
 .store-page[data-store-template='cobre'] .sp-cb-art {
-  grid-area: art; position: relative; min-width: 0;
+  grid-area: art; position: relative; min-width: 0; width: 100%;
   height: clamp(420px, 44vw, 580px);
 }
 .store-page[data-store-template='cobre'] .sp-cb-tile {
@@ -4915,8 +4916,10 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='cobre'] .spd-gallery { border-right: 0; border-bottom: 1px solid var(--sp-line); min-height: 0; }
 }
 @media (max-width: 760px) {
-  .store-page[data-store-template='cobre'] .sp-container { padding: 0 20px; }
-  .store-page[data-store-template='cobre'] .sp-highlights { justify-content: flex-start; gap: 6px 24px; }
+  .store-page[data-store-template='cobre'] .sp-container { padding-left: 20px; padding-right: 20px; }
+  .store-page[data-store-template='cobre'] .sp-highlights { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; gap: 14px; }
+  .store-page[data-store-template='cobre'] .sp-hl { align-items: flex-start; }
+  .store-page[data-store-template='cobre'] .sp-hl-icon { align-self: flex-start; margin-top: 2px; }
   .store-page[data-store-template='cobre'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='cobre'] .sp-service { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='cobre'] .sp-service p { grid-column: 1; grid-row: auto; }
