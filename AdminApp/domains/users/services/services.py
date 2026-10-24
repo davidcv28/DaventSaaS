@@ -1,16 +1,14 @@
 import logging
 import re
-import secrets
 from datetime import timedelta
-from urllib.parse import quote
 
+import requests
 from decouple import config
 from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
-from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.utils import timezone
@@ -273,37 +271,20 @@ def VerifyEmailQuery(uid_b64 : str, token : str) -> bool:
         profile.save(update_fields = ['email_verified', 'email_verified_at'])
     return True
 #=================================
-# PHONE VERIFICATION QUERYS (WhatsApp entrante — costo $0)
+# PHONE VERIFICATION QUERYS (Firebase Phone Auth — costo $0)
 #=================================
-#El usuario le escribe un código al número business de DAVENT por WhatsApp:
-#la conversación la inicia él (service message → gratis en la Cloud API de
-#Meta, sin SMS ni tarjetas de por medio). El webhook /api/webhooks/whatsapp/
-#recibe el mensaje y confirma que el 'from' matchea profile.phone.
-#WHATSAPP_VERIFY_NUMBER: número business en formato E.164 sin '+' (wa.me).
-#Vacío = feature apagada: el endpoint de inicio responde 503.
-WHATSAPP_VERIFY_NUMBER  =   config('WHATSAPP_VERIFY_NUMBER', default = '')
-#Handshake del webhook (GET ?hub.verify_token) y firma HMAC de los POST
-#entrantes (X-Hub-Signature-256). El secret vacío salta la firma SOLO en dev —
-#en prod es obligatorio, sin él cualquiera forja "mensajes entrantes".
-WHATSAPP_WEBHOOK_TOKEN  =   config('WHATSAPP_WEBHOOK_TOKEN', default = '')
-WHATSAPP_APP_SECRET     =   config('WHATSAPP_APP_SECRET', default = '')
-PHONE_CODE_TTL          =   600  #El código de verificación vive 10 minutos.
-#Sin 0/O ni 1/I: el usuario copia el código a mano si el link no abre.
-_PHONE_CODE_ALPHABET    =   'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-_PHONE_CODE_KEY         =   'phone_verify:{}'
-_PHONE_CODE_RE          =   re.compile(r'DAVENT[^0-9A-Z]*([0-9A-Z]{6})')
-
-def StartPhoneVerificationQuery(profile : UserProfile) -> tuple:
-    """Genera el código de un solo uso y devuelve (code, link wa.me)."""
-    code        =   ''.join(secrets.choice(_PHONE_CODE_ALPHABET) for _ in range(6))
-    cache.set(_PHONE_CODE_KEY.format(code), profile.user_id, PHONE_CODE_TTL)
-    text        =   f'DAVENT {code}'
-    link        =   f'https://wa.me/{WHATSAPP_VERIFY_NUMBER}?text={quote(text)}'
-    return code, link
+#El usuario recibe un SMS de Firebase con un código; el SDK JS confirma el
+#código y obtiene un idToken. Acá lo validamos con la API REST de Identity
+#Toolkit (accounts:lookup): devuelve el phoneNumber que Firebase ya verificó
+#y lo comparamos con profile.phone — verificar es probar posesión DEL número
+#registrado, no de otro. Plan Spark: 10 SMS/día gratis, sin tarjeta.
+#FIREBASE_API_KEY vacía = feature apagada: el endpoint responde 503.
+FIREBASE_API_KEY        =   config('FIREBASE_API_KEY', default = '')
+_FIREBASE_LOOKUP_URL    =   'https://identitytoolkit.googleapis.com/v1/accounts:lookup'
 
 def _national_phone(raw : str) -> str:
-    #Normaliza a número nacional argentino: el perfil guarda +549... y Meta
-    #reporta el 'from' como 549... — y un 54... sin el 9 debe matchear igual.
+    #Normaliza a número nacional argentino: el perfil guarda +549... y Firebase
+    #devuelve +549... — pero un 54... sin el 9 debe matchear igual.
     digits  =   re.sub(r'\D', '', raw or '')
     if digits.startswith('54'):
         digits  =   digits[2:]
@@ -311,26 +292,30 @@ def _national_phone(raw : str) -> str:
         digits  =   digits[1:]
     return digits
 
-def ConfirmPhoneVerificationQuery(wa_from : str, text : str) -> bool:
+def ConfirmPhoneVerificationQuery(profile : UserProfile, id_token : str) -> bool:
     """
-    Confirma el código recibido por el webhook: tiene que existir en cache
-    (un solo uso, TTL) y el 'from' de WhatsApp tiene que ser el celular del
-    perfil — verificar es probar posesión DEL número registrado, no de otro.
+    Valida el idToken post-confirmación del SMS contra Identity Toolkit y
+    marca el perfil solo si el phoneNumber verificado por Firebase matchea.
     """
-    match   =   _PHONE_CODE_RE.search((text or '').upper())
-    if not match:
+    if not FIREBASE_API_KEY or not (id_token or '').strip():
         return False
-    key     =   _PHONE_CODE_KEY.format(match.group(1))
-    user_id =   cache.get(key)
-    if not user_id:
+    try:
+        resp    =   requests.post(
+            f'{_FIREBASE_LOOKUP_URL}?key={FIREBASE_API_KEY}',
+            json    =   {'idToken': id_token},
+            timeout =   10,
+        )
+        data    =   resp.json() if resp.ok else {}
+    except (requests.RequestException, ValueError):
+        logger.exception('Falló la consulta a Firebase Identity Toolkit')
         return False
-    profile =   UserProfile.objects.filter(user_id = user_id).first()
-    if not profile or not profile.phone:
+    users   =   data.get('users') or []
+    phone   =   users[0].get('phoneNumber') if users else None
+    if not phone or not profile.phone:
         return False
-    if _national_phone(profile.phone) != _national_phone(wa_from):
+    if _national_phone(profile.phone) != _national_phone(phone):
         return False
     profile.phone_verified    =   True
     profile.phone_verified_at =   timezone.now()
     profile.save(update_fields = ['phone_verified', 'phone_verified_at'])
-    cache.delete(key)
     return True

@@ -123,15 +123,15 @@ export const authApi = {
     return data
   },
 
-  // --- Verificación de celular por WhatsApp (gratis: service messages) ---
-  // POST /api/verify-phone/ -> {code, whatsapp_url, expires_in}: el usuario
-  // abre el link, le manda el código al número business y el webhook marca.
-  async startPhoneVerification() {
-    const { data } = await http.post('/verify-phone/')
+  // --- Verificación de celular por SMS de Firebase (gratis: plan Spark) ---
+  // POST /api/verify-phone/ {id_token}: el SMS y el código los maneja el SDK
+  // de Firebase en el cliente; acá solo validamos el idToken resultante.
+  async confirmPhoneVerification(idToken) {
+    const { data } = await http.post('/verify-phone/', { id_token: idToken })
     return data
   },
 
-  // GET /api/verify-phone/status/ -> {phone_verified} (polling mientras espera)
+  // GET /api/verify-phone/status/ -> {phone_verified}
   async fetchPhoneStatus() {
     const { data } = await http.get('/verify-phone/status/')
     return data

@@ -30,7 +30,8 @@ import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
-import { env, storeSubdomains } from '../config/env.js'
+import { sendVerificationSms, confirmSmsCode } from '../api/phone-verify.js'
+import { env, storeSubdomains, firebaseEnabled } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
   validateDocument, validateBusinessName, validatePhone, validateAddress,
@@ -94,48 +95,50 @@ async function resendVerification() {
   }
 }
 
-// --- Verificación de celular (WhatsApp entrante: gratis, ancla anti-abuso) ---
+// --- Verificación de celular (SMS de Firebase — gratis, ancla anti-abuso) ---
+// Flujo: sendVerificationSms dispara el SMS de Firebase -> el usuario carga
+// el código -> confirmSmsCode devuelve el idToken -> el backend lo valida
+// contra Identity Toolkit y marca phone_verified si el número coincide.
 const phoneVerifyBusy = ref(false)
 const phoneVerifyErr = ref('')
+const phoneVerifySent = ref(false)
 const phoneVerifyCode = ref('')
-const phoneVerifyUrl = ref('')
-let phonePoll = null
+const recaptchaEl = ref(null)
+let confirmationResult = null
 const phoneVerified = computed(() => auth.user?.profile?.phone_verified === true)
 const hasPhone = computed(() => Boolean(auth.user?.profile?.phone))
 
-function stopPhonePoll() {
-  if (phonePoll) { clearInterval(phonePoll); phonePoll = null }
-}
 async function startPhoneVerify() {
   phoneVerifyBusy.value = true
   phoneVerifyErr.value = ''
   try {
-    const data = await authApi.startPhoneVerification()
-    phoneVerifyCode.value = data?.code || ''
-    phoneVerifyUrl.value = data?.whatsapp_url || ''
-    //Polling liviano: el webhook de Meta marca el perfil cuando llega el
-    //mensaje y acá lo reflejamos solo (sin recargar la página).
-    stopPhonePoll()
-    phonePoll = setInterval(async () => {
-      try {
-        const s = await authApi.fetchPhoneStatus()
-        if (s?.phone_verified) {
-          stopPhonePoll()
-          phoneVerifyCode.value = ''
-          phoneVerifyUrl.value = ''
-          if (auth.user?.profile) auth.user.profile.phone_verified = true
-        }
-      } catch { /* polling tolerante: reintenta en el próximo tick */ }
-    }, 4000)
+    confirmationResult = await sendVerificationSms(auth.user.profile.phone, recaptchaEl.value)
+    phoneVerifySent.value = true
+    phoneVerifyCode.value = ''
   } catch (e) {
-    phoneVerifyErr.value = e.response?.status === 429
-      ? 'Generaste varios códigos. Esperá un rato y probá de nuevo.'
-      : e.response?.data?.detail || 'No se pudo iniciar la verificación. Reintentá en unos minutos.'
+    phoneVerifyErr.value = 'No se pudo enviar el SMS. Reintentá en unos minutos.'
   } finally {
     phoneVerifyBusy.value = false
   }
 }
-onUnmounted(stopPhonePoll)
+async function confirmPhoneVerify() {
+  if (!confirmationResult || !phoneVerifyCode.value.trim()) return
+  phoneVerifyBusy.value = true
+  phoneVerifyErr.value = ''
+  try {
+    const idToken = await confirmSmsCode(confirmationResult, phoneVerifyCode.value.trim())
+    await authApi.confirmPhoneVerification(idToken)
+    if (auth.user?.profile) auth.user.profile.phone_verified = true
+    phoneVerifySent.value = false
+    phoneVerifyCode.value = ''
+  } catch (e) {
+    phoneVerifyErr.value = e.response?.status === 429
+      ? 'Demasiados intentos. Esperá un rato y probá de nuevo.'
+      : e.response?.data?.detail || 'El código no es válido o ya venció. Pedí un SMS nuevo.'
+  } finally {
+    phoneVerifyBusy.value = false
+  }
+}
 
 // --- Cuenta: edición de correo + perfil fiscal ---
 const accountForm = reactive({
@@ -2496,25 +2499,37 @@ async function changePassword() {
             <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
             <AppButton :loading="accountBusy">Guardar cambios</AppButton>
           </form>
-          <!-- Verificación del celular: WhatsApp entrante (service message = gratis).
-               El usuario manda el código y el webhook lo marca; acá se pollea. -->
+          <!-- Verificación del celular por SMS de Firebase (plan Spark gratis).
+               El SDK confirma el código y manda el idToken al backend. -->
           <div class="verify-phone">
             <template v-if="phoneVerified">
               <p class="badge-ok"><AppIcon name="badge-check" :size="16" /> Celular verificado</p>
             </template>
             <template v-else>
-              <p class="verify-phone-text">Verificá tu celular mandando un código por WhatsApp. Nos ayuda a confirmar que la cuenta es de una persona real.</p>
-              <button type="button" class="btn ghost btn-auto" :disabled="!hasPhone || phoneVerifyBusy" @click="startPhoneVerify">
-                <span v-if="phoneVerifyBusy" class="spinner"></span><AppIcon name="whatsapp" :size="16" /> Verificar por WhatsApp
+              <p class="verify-phone-text">Verificá tu celular: te enviamos un código por SMS. Nos ayuda a confirmar que la cuenta es de una persona real.</p>
+              <button type="button" class="btn ghost btn-auto" :disabled="!hasPhone || !firebaseEnabled || phoneVerifyBusy" @click="startPhoneVerify">
+                <span v-if="phoneVerifyBusy" class="spinner"></span><AppIcon name="message-circle" :size="16" /> {{ phoneVerifySent ? 'Reenviar SMS' : 'Verificar por SMS' }}
               </button>
               <p v-if="!hasPhone" class="hint">Cargá tu número de celular arriba y guardá los cambios para poder verificarlo.</p>
-              <div v-if="phoneVerifyCode" class="verify-phone-pending">
-                <p>Enviá este código desde tu WhatsApp:</p>
-                <p class="verify-phone-code">{{ phoneVerifyCode }}</p>
-                <a class="btn btn-auto" :href="phoneVerifyUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="16" /> Abrir WhatsApp</a>
-                <p class="hint"><span class="spinner spinner-brand"></span> Esperando tu mensaje… el panel se actualiza solo.</p>
+              <p v-else-if="!firebaseEnabled" class="hint">La verificación por SMS no está habilitada en este despliegue.</p>
+              <div v-if="phoneVerifySent" class="verify-phone-pending">
+                <p>Ingresá el código que te llegó por SMS:</p>
+                <input
+                  v-model="phoneVerifyCode"
+                  class="input verify-phone-input"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  maxlength="6"
+                  placeholder="123456"
+                />
+                <button type="button" class="btn btn-auto" :disabled="phoneVerifyBusy || phoneVerifyCode.trim().length < 6" @click="confirmPhoneVerify">
+                  <span v-if="phoneVerifyBusy" class="spinner"></span>Confirmar código
+                </button>
               </div>
               <AlertMessage v-if="phoneVerifyErr" kind="error" :message="phoneVerifyErr" />
+              <!-- Firebase monta el reCAPTCHA invisible acá (obligatorio) -->
+              <div ref="recaptchaEl"></div>
             </template>
           </div>
         </div>

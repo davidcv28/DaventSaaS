@@ -1,10 +1,8 @@
-import hashlib
-import hmac
 import secrets
 from datetime import timedelta
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -24,13 +22,9 @@ from AdminApp.domains.users.services import (
     ConfirmPasswordResetQuery,
     SendVerificationEmailQuery,
     VerifyEmailQuery,
-    StartPhoneVerificationQuery,
     ConfirmPhoneVerificationQuery,
     FRONTEND_URL,
-    WHATSAPP_VERIFY_NUMBER,
-    WHATSAPP_WEBHOOK_TOKEN,
-    WHATSAPP_APP_SECRET,
-    PHONE_CODE_TTL,
+    FIREBASE_API_KEY,
 )
 
 # Sesión web: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ — el
@@ -272,15 +266,16 @@ class VerifyEmailResendView(APIView):
 
 
 #=================================
-# PHONE VERIFICATION (WhatsApp entrante — costo $0)
+# PHONE VERIFICATION (Firebase Phone Auth — costo $0)
 #=================================
-# El usuario le manda su código al número business de DAVENT por WhatsApp:
-# la conversación la inicia él y Meta no cobra los service messages. No hay
-# SMS, ni OTP provider, ni tarjeta de por medio.
-class VerifyPhoneStartView(APIView):
+# El usuario recibe un SMS de Firebase (plan Spark: 10/día gratis, sin
+# tarjeta), confirma el código en el frontend con el SDK de Firebase y nos
+# manda el idToken resultante — acá se valida contra Identity Toolkit y se
+# compara el phoneNumber verificado por Google con profile.phone.
+class VerifyPhoneConfirmView(APIView):
     """
-    POST /api/verify-phone/: genera el código de un solo uso (TTL) y devuelve
-    el link wa.me con el mensaje precargado — el usuario solo toca "enviar".
+    POST /api/verify-phone/ {id_token}: marca phone_verified si el número
+    verificado por Firebase coincide con el celular del perfil.
     """
     permission_classes  =   [IsAuthenticated]
     throttle_classes    =   [VerifyPhoneRateThrottle]
@@ -291,64 +286,20 @@ class VerifyPhoneStartView(APIView):
             return Response({'detail': 'Cargá tu número de celular en tu perfil primero.'}, status = status.HTTP_400_BAD_REQUEST)
         if profile.phone_verified:
             return Response({'Exito': 'Tu celular ya está verificado.'}, status = status.HTTP_200_OK)
-        if not WHATSAPP_VERIFY_NUMBER:
-            return Response({'detail': 'La verificación por WhatsApp no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
-        code, link  =   StartPhoneVerificationQuery(profile)
-        return Response({'code': code, 'whatsapp_url': link, 'expires_in': PHONE_CODE_TTL}, status = status.HTTP_200_OK)
+        if not FIREBASE_API_KEY:
+            return Response({'detail': 'La verificación por SMS no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
+        if not ConfirmPhoneVerificationQuery(profile, request.data.get('id_token', '')):
+            return Response({'detail': 'El código no es válido o ya venció. Pedí un SMS nuevo.'}, status = status.HTTP_400_BAD_REQUEST)
+        return Response({'Exito': 'Tu celular quedó verificado.'}, status = status.HTTP_200_OK)
 
 
 class VerifyPhoneStatusView(APIView):
     """
-    GET /api/verify-phone/status/: polling liviano del frontend mientras el
-    usuario manda el WhatsApp — devuelve solo el flag, no el perfil entero.
+    GET /api/verify-phone/status/: consulta liviana del flag — devuelve solo
+    el booleano, no el perfil entero.
     """
     permission_classes  =   [IsAuthenticated]
 
     def get(self, request):
         profile =   getattr(request.user, 'profile', None)
         return Response({'phone_verified': bool(profile and profile.phone_verified)}, status = status.HTTP_200_OK)
-
-
-def _verify_whatsapp_signature(request) -> bool:
-    #X-Hub-Signature-256 = 'sha256=' + HMAC-SHA256(app_secret, body crudo).
-    #Sin WHATSAPP_APP_SECRET se saltea el check (dev local): en prod la env
-    #es obligatoria — sin firma cualquiera forja "mensajes entrantes".
-    if not WHATSAPP_APP_SECRET:
-        return True
-    header  =   request.headers.get('X-Hub-Signature-256', '')
-    if not header.startswith('sha256='):
-        return False
-    expected    =   'sha256=' + hmac.new(WHATSAPP_APP_SECRET.encode(), request.body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, header)
-
-
-class WhatsappWebhookView(APIView):
-    """
-    GET  /api/webhooks/whatsapp/: handshake de Meta (hub.challenge) — una sola
-         vez, cuando se configura el webhook en la consola de la app.
-    POST /api/webhooks/whatsapp/: mensajes entrantes; por cada text busca el
-         código DAVENT y confirma la posesión del celular del perfil.
-    """
-    permission_classes  =   [AllowAny]
-
-    def get(self, request):
-        mode        =   request.query_params.get('hub.mode')
-        token       =   request.query_params.get('hub.verify_token')
-        challenge   =   request.query_params.get('hub.challenge')
-        if mode == 'subscribe' and WHATSAPP_WEBHOOK_TOKEN and token == WHATSAPP_WEBHOOK_TOKEN:
-            return HttpResponse(challenge or '', content_type = 'text/plain')
-        return HttpResponseForbidden()
-
-    def post(self, request):
-        if not _verify_whatsapp_signature(request):
-            return Response({'detail': 'Firma inválida'}, status = status.HTTP_401_UNAUTHORIZED)
-        data    =   request.data or {}
-        for entry in data.get('entry', []):
-            for change in entry.get('changes', []):
-                value   =   change.get('value') or {}
-                for msg in value.get('messages') or []:
-                    if msg.get('type') == 'text':
-                        ConfirmPhoneVerificationQuery(msg.get('from', ''), (msg.get('text') or {}).get('body', ''))
-        #Siempre 200: Meta reintenta el POST si responde error y un mensaje
-        #irreconocible no es motivo para un 4xx/5xx.
-        return Response({'status': 'ok'}, status = status.HTTP_200_OK)

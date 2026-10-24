@@ -6,12 +6,9 @@ Cubren los flujos que no pueden romperse antes del lanzamiento:
 - Policy de contraseñas en registro, cambio y reset
 - Invalidación de sesiones (blacklist de refresh) tras cambiar la clave
 - Verificación de email (token firmado, marcado, reset al cambiar correo)
-- Verificación de celular por WhatsApp (código único, firma HMAC del webhook)
+- Verificación de celular por SMS de Firebase (idToken vs Identity Toolkit)
 """
-import hashlib
-import hmac
-import json
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
@@ -23,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.users.models import UserProfile
-from AdminApp.domains.users.services.services import email_verification_token, StartPhoneVerificationQuery
+from AdminApp.domains.users.services.services import email_verification_token
 
 STRONG_PASSWORD = 'Xq7#mP2vL9bT'
 NEW_PASSWORD    = 'Kp4$wN8rT3sD'
@@ -36,7 +33,7 @@ REFRESH_URL         = '/api/token/refresh/'
 PASSWORD_UPDATE_URL = '/api/password_update/'
 USER_UPDATE_URL     = '/api/user/me/'
 VERIFY_PHONE_URL    = '/api/verify-phone/'
-WHATSAPP_HOOK_URL   = '/api/webhooks/whatsapp/'
+VERIFY_PHONE_STATUS = '/api/verify-phone/status/'
 
 
 def _location():
@@ -216,11 +213,12 @@ class EmailVerificationTests(TestCase):
 
 
 class PhoneVerificationTests(TestCase):
-    """Código de un solo uso + webhook de Meta con firma HMAC fail-closed."""
+    """idToken de Firebase validado contra Identity Toolkit (mockeado)."""
 
     VIEWS_MODULE    =   'AdminApp.domains.users.views.auth_views'
+    SERVICES_MODULE =   'AdminApp.domains.users.services.services'
     PHONE           =   '+5491122334455'    #formato del perfil (con + y 9)
-    PHONE_WA        =   '5491122334455'     #formato del 'from' de WhatsApp
+    PHONE_FB        =   '+5491122334455'    #formato del phoneNumber de Firebase
 
     def _user_with_phone(self):
         user, profile       =   _make_user()
@@ -228,88 +226,77 @@ class PhoneVerificationTests(TestCase):
         profile.save(update_fields = ['phone'])
         return user, profile
 
-    def _webhook_payload(self, wa_from, text):
-        return {
-            'object': 'whatsapp_business_account',
-            'entry': [{'changes': [{'field': 'messages', 'value': {
-                'messages': [{'from': wa_from, 'id': 'wamid.x', 'type': 'text', 'text': {'body': text}}],
-            }}]}],
-        }
+    def _lookup_response(self, phone_number):
+        #Simula la respuesta de Identity Toolkit accounts:lookup.
+        resp            =   Mock()
+        resp.ok         =   phone_number is not None
+        resp.json       =   lambda: {'users': [{'phoneNumber': phone_number}]} if phone_number else {}
+        return resp
 
-    def test_start_requires_auth(self):
-        response    =   APIClient().post(VERIFY_PHONE_URL, {}, format = 'json')
+    def test_confirm_requires_auth(self):
+        response    =   APIClient().post(VERIFY_PHONE_URL, {'id_token': 'x'}, format = 'json')
         self.assertEqual(response.status_code, 401)
 
-    def test_start_returns_code_and_whatsapp_link(self):
-        user, _         =   self._user_with_phone()
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        with patch(f'{self.VIEWS_MODULE}.WHATSAPP_VERIFY_NUMBER', '5491111111111'), \
-             patch('AdminApp.domains.users.services.services.WHATSAPP_VERIFY_NUMBER', '5491111111111'):
-            response    =   client.post(VERIFY_PHONE_URL, {}, format = 'json')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('wa.me/5491111111111', response.json()['whatsapp_url'])
-
-    def test_start_without_phone_is_rejected(self):
+    def test_confirm_without_phone_is_rejected(self):
         user, _         =   _make_user()
         client          =   APIClient()
         client.force_authenticate(user = user)
-        response        =   client.post(VERIFY_PHONE_URL, {}, format = 'json')
+        response        =   client.post(VERIFY_PHONE_URL, {'id_token': 'x'}, format = 'json')
         self.assertEqual(response.status_code, 400)
 
-    def test_webhook_marks_phone_verified_on_matching_number(self):
+    def test_confirm_marks_phone_verified_on_matching_number(self):
         user, profile   =   self._user_with_phone()
-        code, _         =   StartPhoneVerificationQuery(profile)
-        response        =   self.client.post(
-            WHATSAPP_HOOK_URL,
-            data            =   json.dumps(self._webhook_payload(self.PHONE_WA, f'DAVENT {code}')),
-            content_type    =   'application/json',
-        )
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', 'api-key'), \
+             patch(f'{self.SERVICES_MODULE}.FIREBASE_API_KEY', 'api-key'), \
+             patch(f'{self.SERVICES_MODULE}.requests.post', return_value = self._lookup_response(self.PHONE_FB)):
+            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'id-token-valido'}, format = 'json')
         self.assertEqual(response.status_code, 200)
         profile.refresh_from_db()
         self.assertTrue(profile.phone_verified)
 
-    def test_webhook_rejects_mismatched_number(self):
+    def test_confirm_rejects_mismatched_number(self):
+        """El token es válido pero verificó OTRO número: no se marca."""
         user, profile   =   self._user_with_phone()
-        code, _         =   StartPhoneVerificationQuery(profile)
-        #El código es válido pero llega desde OTRO celular: no se verifica.
-        self.client.post(
-            WHATSAPP_HOOK_URL,
-            data            =   json.dumps(self._webhook_payload('549223334444', f'DAVENT {code}')),
-            content_type    =   'application/json',
-        )
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', 'api-key'), \
+             patch(f'{self.SERVICES_MODULE}.FIREBASE_API_KEY', 'api-key'), \
+             patch(f'{self.SERVICES_MODULE}.requests.post', return_value = self._lookup_response('+549223334444')):
+            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'id-token-valido'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
         profile.refresh_from_db()
         self.assertFalse(profile.phone_verified)
 
-    def test_webhook_enforces_signature_when_secret_set(self):
-        secret          =   'app-secret-meta'
+    def test_confirm_rejects_invalid_token(self):
         user, profile   =   self._user_with_phone()
-        code, _         =   StartPhoneVerificationQuery(profile)
-        body            =   json.dumps(self._webhook_payload(self.PHONE_WA, f'DAVENT {code}')).encode()
-        with patch(f'{self.VIEWS_MODULE}.WHATSAPP_APP_SECRET', secret):
-            unsigned    =   self.client.post(WHATSAPP_HOOK_URL, data = body, content_type = 'application/json')
-            forged      =   self.client.post(
-                WHATSAPP_HOOK_URL, data = body, content_type = 'application/json',
-                HTTP_X_HUB_SIGNATURE_256 = 'sha256=firma-trucha',
-            )
-            self.assertEqual(unsigned.status_code, 401)
-            self.assertEqual(forged.status_code, 401)
-            signature   =   'sha256=' + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-            valid       =   self.client.post(
-                WHATSAPP_HOOK_URL, data = body, content_type = 'application/json',
-                HTTP_X_HUB_SIGNATURE_256 = signature,
-            )
-            self.assertEqual(valid.status_code, 200)
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', 'api-key'), \
+             patch(f'{self.SERVICES_MODULE}.FIREBASE_API_KEY', 'api-key'), \
+             patch(f'{self.SERVICES_MODULE}.requests.post', return_value = self._lookup_response(None)):
+            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'token-trucho'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
         profile.refresh_from_db()
-        self.assertTrue(profile.phone_verified)
+        self.assertFalse(profile.phone_verified)
 
-    def test_webhook_handshake_needs_verify_token(self):
-        with patch(f'{self.VIEWS_MODULE}.WHATSAPP_WEBHOOK_TOKEN', 'token-secreto'):
-            bad     =   self.client.get(WHATSAPP_HOOK_URL, {'hub.mode': 'subscribe', 'hub.verify_token': 'otro', 'hub.challenge': 'abc'})
-            ok      =   self.client.get(WHATSAPP_HOOK_URL, {'hub.mode': 'subscribe', 'hub.verify_token': 'token-secreto', 'hub.challenge': 'abc'})
-        self.assertEqual(bad.status_code, 403)
-        self.assertEqual(ok.status_code, 200)
-        self.assertEqual(ok.content, b'abc')
+    def test_confirm_503_without_api_key(self):
+        user, _         =   self._user_with_phone()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', ''):
+            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'x'}, format = 'json')
+        self.assertEqual(response.status_code, 503)
+
+    def test_status_reports_flag(self):
+        user, profile   =   self._user_with_phone()
+        profile.phone_verified      =   True
+        profile.save(update_fields = ['phone_verified'])
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.get(VERIFY_PHONE_STATUS)
+        self.assertEqual(response.json()['phone_verified'], True)
 
     def test_profile_update_resets_verification_on_phone_change(self):
         """Cambiar el celular invalida la verificación (igual que el correo)."""

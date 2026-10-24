@@ -48,3 +48,13 @@ export function apiUrl(path = '') {
   const suffix = path.startsWith('/') ? path : `/${path}`
   return `${base}${suffix}`
 }
+
+// Firebase Phone Auth (verificación de celular por SMS — plan Spark: 10 SMS/día
+// gratis). Sin apiKey la feature queda apagada y el botón no se muestra.
+export const firebase = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+}
+export const firebaseEnabled = Boolean(firebase.apiKey)

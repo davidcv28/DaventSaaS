@@ -66,6 +66,8 @@ frontend/
 | Confirmar reset | `POST /password-reset/confirm/` | `{uid,token,new_password,confirm_password}` | `200 {Exito}`; `400 {token/new_password}` |
 | Verificar email | `GET /verify-email/?uid&token` | backend marca y **redirige** a `/verificar-email?status=` | 302 |
 | Reenviar verificación | `POST /verify-email/resend/` | Bearer | `200 {Exito}` (throttle 5/h por usuario) |
+| Verificar celular | `POST /verify-phone/` | Bearer `{id_token}` — Firebase Phone Auth en el cliente (SMS + código → idToken) | `200 {Exito}` · 400 sin `profile.phone` / token inválido / número no coincide · 503 sin `FIREBASE_API_KEY` (throttle 5/h por usuario) |
+| Estado celular | `GET /verify-phone/status/` | Bearer | `200 {phone_verified}` |
 
 > Hallazgos senior: `DaventProject/urls.py` hoy monta `suscriptions` + `users` + `locations` + JWT.
 > Registro `POST /register/` y selects `GET /provinces/`, `GET /cities/?province=<id>` son reales
