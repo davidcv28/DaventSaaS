@@ -750,9 +750,11 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='promo'] .dp-cta { justify-content: flex-start; }
 .design-preview[data-store-template='promo'] .dp-btn { background: #fff; color: var(--store-accent-ink); border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
 .design-preview[data-store-template='promo'] .dp-btn.ghost { background: transparent; border-color: #fff; color: #fff; box-shadow: none; }
-.design-preview[data-store-template='impact'] .dp-title { text-transform: uppercase; font-weight: 900; }
+.design-preview[data-store-template='impact'] .dp-title { text-transform: uppercase; font-weight: 700; font-family: 'Space Grotesk', var(--store-font), sans-serif; letter-spacing: -.02em; }
 .design-preview[data-store-template='impact'] .dp-btn, .design-preview[data-store-template='impact'] .dp-badge { border-radius: 0; }
-.design-preview[data-store-template='editorial'] .dp-title { letter-spacing: -.04em; font-weight: 800; }
+.design-preview[data-store-template='editorial'] .dp-title { letter-spacing: -.02em; font-weight: 700; font-family: 'Playfair Display', Georgia, serif; }
+.design-preview[data-store-template='editorial'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='editorial'] .dp-desc { font-family: 'Playfair Display', Georgia, serif; font-style: italic; }
 .design-preview[data-store-template='editorial'] .dp-badge { border-radius: 0; }
 /* Catálogo exclusivo: marketplace con buscador, rejilla de productos y barra de confianza */
 .tpl-thumb[data-tpl='catalog'] { background: linear-gradient(180deg, #fff 0 18%, var(--surface) 18%); }

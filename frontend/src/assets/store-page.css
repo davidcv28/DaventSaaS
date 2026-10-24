@@ -1687,3 +1687,105 @@ html { scroll-behavior: smooth; }
   .sp-showcase-frame img { animation: none; transform: none; }
   .sp-about-photo img { transition: none; }
 }
+
+/* ===== Diseños v3: refinamiento moderno por plantilla =====
+   Clásico = contemporary limpio (iconos suaves, ritmo aireado) ·
+   Editorial = revista con serif de display (Playfair Display on-demand)
+   · Impacto = tech con Space Grotesk y detalles mono · Catálogo =
+   vitrina ordenada tipo bento (tiles consistentes, imagen inset).
+   Van al final para ganar por cascada; 'promo' no se toca. */
+
+/* ---------- Clásico v3 ---------- */
+/* Titular más grande y aireado; el nombre sigue gobernado por
+   --store-name-size cuando el h1 es el nombre. */
+.store-page[data-store-template='classic'] .sp-hero-title { font-size: clamp(34px, 5.4vw, 58px); letter-spacing: -.035em; }
+/* Iconos del hero más discretos: menos cristal, más descanso visual. */
+.store-page[data-store-template='classic'] .sp-float { border-radius: 18px; background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .3); }
+.store-page[data-store-template='classic'] .sp-hero-badge { letter-spacing: .12em; }
+/* Destacados y cabeceras: tiles de acento suave en vez de gradiente
+   lleno — la marca se siente moderna sin competir con el hero. */
+.store-page[data-store-template='classic'] .sp-highlights { gap: 16px; }
+.store-page[data-store-template='classic'] .sp-hl { padding: 26px 24px; border-radius: 18px; gap: 10px; }
+.store-page[data-store-template='classic'] .sp-hl-icon { width: 50px; height: 50px; border-radius: 15px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); box-shadow: none; }
+.store-page[data-store-template='classic'][data-store-theme='dark'] .sp-hl-icon { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='classic'] .sp-hl:hover .sp-hl-icon { transform: translateY(-2px); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; border-color: transparent; }
+.store-page[data-store-template='classic'] .sp-about-heading-icon,
+.store-page[data-store-template='classic'] .sp-form-badge { border-radius: 16px; background: var(--store-accent-soft); color: var(--sp-accent-text); border: 1px solid color-mix(in srgb, var(--store-accent) 22%, var(--sp-line)); box-shadow: none; transform: none; }
+.store-page[data-store-template='classic'][data-store-theme='dark'] .sp-about-heading-icon,
+.store-page[data-store-template='classic'][data-store-theme='dark'] .sp-form-badge { background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
+.store-page[data-store-template='classic'] .sp-form:hover .sp-form-badge { transform: translateY(-2px); }
+/* Secciones con más aire y títulos con subrayado de acento más marcado. */
+.store-page[data-store-template='classic'] .sp-section-title::after { height: 4px; }
+
+/* ---------- Editorial v3: serif de revista ---------- */
+.store-page[data-store-template='editorial'] { --sp-serif: 'Playfair Display', Georgia, 'Times New Roman', serif; }
+/* Titulares y textos de ambiente en serif; el nombre conserva la fuente
+   elegida por el dueño (inline style cuando el h1 es el nombre). */
+.store-page[data-store-template='editorial'] .sp-hero-title,
+.store-page[data-store-template='editorial'] .sp-section-title,
+.store-page[data-store-template='editorial'] .sp-about-heading,
+.store-page[data-store-template='editorial'] .sp-contact-title,
+.store-page[data-store-template='editorial'] .sp-cat-title,
+.store-page[data-store-template='editorial'] .sp-showcase-title,
+.store-page[data-store-template='editorial'] .spd-name,
+.store-page[data-store-template='editorial'] .spd-sec-title { font-family: var(--sp-serif); font-weight: 700; letter-spacing: -.02em; }
+.store-page[data-store-template='editorial'] .sp-hero-sub,
+.store-page[data-store-template='editorial'] .sp-contact-sub,
+.store-page[data-store-template='editorial'] .sp-about-mission { font-family: var(--sp-serif); }
+.store-page[data-store-template='editorial'] .sp-ed-letter { font-family: var(--sp-serif); font-style: italic; font-weight: 700; }
+.store-page[data-store-template='editorial'] .sp-about-text::first-letter { font-family: var(--sp-serif); }
+.store-page[data-store-template='editorial'] .sp-hl::before,
+.store-page[data-store-template='editorial'] .sp-about-years strong { font-family: var(--sp-serif); }
+.store-page[data-store-template='editorial'] .spd-price { font-family: var(--sp-serif); font-weight: 700; }
+
+/* ---------- Impacto v3: Space Grotesk + mono de terminal ---------- */
+.store-page[data-store-template='impact'] { --sp-tech: 'Space Grotesk', var(--store-font), sans-serif; --sp-tech-mono: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.store-page[data-store-template='impact'] .sp-hero-title,
+.store-page[data-store-template='impact'] .sp-section-title,
+.store-page[data-store-template='impact'] .sp-about-heading,
+.store-page[data-store-template='impact'] .sp-contact-title,
+.store-page[data-store-template='impact'] .sp-cat-title,
+.store-page[data-store-template='impact'] .sp-showcase-title,
+.store-page[data-store-template='impact'] .spd-name,
+.store-page[data-store-template='impact'] .spd-sec-title,
+.store-page[data-store-template='impact'] .sp-hl strong { font-family: var(--sp-tech); font-weight: 700; letter-spacing: -.03em; }
+/* Ornamentos más finos: grilla más abierta y haces más suaves. */
+.store-page[data-store-template='impact'] .sp-im-grid { background-image: linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px); background-size: 64px 64px; }
+.store-page[data-store-template='impact'] .sp-im-beam { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--store-accent) 26%, transparent), transparent); filter: blur(14px); }
+.store-page[data-store-template='impact'] .sp-hero-badge,
+.store-page[data-store-template='impact'] .sp-hero-meta li { font-family: var(--sp-tech-mono); }
+.store-page[data-store-template='impact'] .sp-hero-meta li { font-size: 12.5px; }
+/* Catálogo bajo la misma identidad oscura: cabecera, icono y chips. */
+.store-page[data-store-template='impact'] .sp-cat-head-icon { background: rgba(255, 255, 255, .06); border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); color: var(--store-accent); box-shadow: 0 0 22px -6px var(--store-accent); animation: none; }
+.store-page[data-store-template='impact'] .sp-cat-stats li { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .16); border-radius: 4px; font-family: var(--sp-tech-mono); font-size: 12px; }
+.store-page[data-store-template='impact'] .sp-chip,
+.store-page[data-store-template='impact'] .sp-quick-pill { border-radius: 4px; }
+/* Tarjetas y CTA de ficha con la misma esquina cortada del hero. */
+.store-page[data-store-template='impact'] .sp-card { border-radius: 6px; }
+.store-page[data-store-template='impact'] .sp-card-img { border-radius: 4px; }
+.store-page[data-store-template='impact'] .spd-buy .sp-btn { border-radius: 0; clip-path: polygon(var(--sp-cut, 12px) 0, 100% 0, 100% calc(100% - var(--sp-cut, 12px)), calc(100% - var(--sp-cut, 12px)) 100%, 0 100%, 0 var(--sp-cut, 12px)); text-transform: uppercase; letter-spacing: .06em; font-weight: 800; }
+.store-page[data-store-template='impact'] .spd-specs-wrap { border-radius: 6px; }
+
+/* ---------- Catálogo exclusivo v3: vitrina ordenada tipo bento ---------- */
+/* Ritmo de 4/8/16/20: mismas distancias entre bloques, mismos radios. */
+.sp-cx-hero { gap: 20px; padding-top: 28px; }
+.sp-cx-banner { min-height: 340px; border-radius: 24px; }
+.sp-cx-banner-copy { gap: 16px; padding: 56px clamp(28px, 4.5vw, 64px); }
+.sp-cx-banner.has-cover::before { background: linear-gradient(96deg, rgba(8, 12, 24, .86) 0%, rgba(8, 12, 24, .52) 52%, rgba(8, 12, 24, .04) 100%); }
+.sp-cx-side { gap: 20px; }
+.sp-cx-tile { border-radius: 24px; }
+.sp-cx-trust { margin-top: 20px; border-radius: 18px; }
+.sp-cx-trust li { padding: 20px 22px; }
+.sp-cx-trust-icon { border-radius: 14px; }
+.sp-cx-block { padding-top: 56px; }
+/* Categorías: de círculos a tiles squircle (más ordenado, estilo bento). */
+.sp-cx-cat-img { width: min(100%, 120px); border-width: 2px; border-radius: 26px; }
+/* Tarjetas de producto: imagen inset (como .sp-card) y precio dominante. */
+.sp-cx-card { border-radius: 16px; }
+.sp-cx-card-img { margin: 10px 10px 0; border-radius: 12px; }
+.sp-cx-card-body { padding: 14px 18px 18px; border-top: 0; }
+.sp-cx-card-price { font-size: 21px; }
+.sp-cx-flag { border-radius: 8px; }
+/* Buscador protagonista con el mismo radio del sistema. */
+.sp-cx-search { border-radius: 12px; }
+.sp-cx-search-btn { border-radius: 9px; }

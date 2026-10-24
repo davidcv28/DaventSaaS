@@ -315,11 +315,11 @@ export const STORE_THEMES = {
 // beneficio has_design_advanced (Plan premium). El frontend fuerza 'classic'
 // cuando la tienda no tiene ese beneficio aunque haya otro valor guardado.
 export const STORE_TEMPLATES = {
-  classic:   { label: 'Clásico',    desc: 'El diseño base, pensado para catálogos: portada centrada y tarjetas de destacados.' },
-  editorial: { label: 'Editorial',  desc: 'Revista de papel: tipografía grande, filetes finos, índice numerado y marca enmarcada.' },
-  impact:    { label: 'Impacto',    desc: 'Tecnológico y oscuro: título gigante, grilla animada, neón y esquinas cortadas.' },
+  classic:   { label: 'Clásico',    desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
+  editorial: { label: 'Editorial',  desc: 'Revista de papel: serif de tapa, filetes finos, índice numerado y marca enmarcada.' },
+  impact:    { label: 'Impacto',    desc: 'Tecnológico y oscuro: título gigante en Space Grotesk, grilla animada, neón y esquinas cortadas.' },
   promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
-  catalog:   { label: 'Catálogo exclusivo', desc: 'Tienda estilo marketplace: buscador grande, categorías, novedades en vitrina, filtros fijos y barra de confianza.' }
+  catalog:   { label: 'Catálogo exclusivo', desc: 'Tienda estilo marketplace: buscador grande, categorías en tiles, novedades en vitrina, filtros fijos y barra de confianza.' }
 }
 
 export function storeTemplate(value) {
