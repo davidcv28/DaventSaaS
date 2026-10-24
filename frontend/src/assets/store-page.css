@@ -1641,3 +1641,37 @@ html { scroll-behavior: smooth; }
   .sp-hero-cover img { animation: none !important; transform: none; }
   .sp-cx-tile, .sp-cx-card, .sp-cx-cat-img, .sp-cx-brands a, .sp-ed-cover img { transition: none !important; }
 }
+
+/* ---------- Distribución de imágenes decorativas (premium) ----------
+   Además de la franja de polaroids bajo el hero, una enmarca la sección
+   Sobre nosotros (collage con la tarjeta de trayectoria/misión) y otra
+   abre una banda panorámica que corta la página antes del cierre. */
+.sp-about-side { display: grid; align-content: start; }
+.sp-about-photo { position: relative; z-index: 1; margin: 0 28px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--sp-radius) + 4px); border: 1px solid var(--sp-line); background: var(--sp-soft); box-shadow: var(--sp-shadow-md); }
+.sp-about-photo:only-child { margin: 0; }
+.sp-about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .8s var(--sp-ease); }
+.sp-about-photo:hover img { transform: scale(1.05); }
+.sp-about-side .sp-about-card { position: relative; z-index: 2; margin-top: -56px; }
+
+/* Banda panorámica entre secciones: la imagen respira con el mismo drift
+   de la portada y lleva un velo suave del acento hacia el borde inferior. */
+.sp-showcase { padding-top: 72px; }
+.sp-showcase-frame { position: relative; margin: 0; aspect-ratio: 21 / 9; min-height: 280px; overflow: hidden; border-radius: calc(var(--sp-radius) + 8px); border: 1px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
+.sp-showcase-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.05); animation: sp-cover-drift 26s ease-in-out infinite alternate; }
+.sp-showcase-frame::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--store-accent-ink) 42%, transparent)); pointer-events: none; }
+
+@media (max-width: 960px) {
+  .sp-about-photo { aspect-ratio: 16 / 10; margin: 0 20px; }
+  .sp-about-photo:only-child { margin: 0; }
+  .sp-about-side .sp-about-card { margin-top: -44px; }
+}
+@media (max-width: 760px) {
+  .sp-showcase { padding-top: 56px; }
+  .sp-showcase-frame { aspect-ratio: 16 / 10; min-height: 200px; border-radius: calc(var(--sp-radius) + 2px); }
+  .sp-about-photo { margin: 0 12px; }
+  .sp-about-side .sp-about-card { margin-top: -32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-showcase-frame img { animation: none; transform: none; }
+  .sp-about-photo img { transition: none; }
+}

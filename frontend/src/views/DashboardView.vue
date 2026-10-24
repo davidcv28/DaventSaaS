@@ -1893,7 +1893,7 @@ async function changePassword() {
                 </button>
               </div>
               <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-decor-label" @change="onDecorPicked" />
-              <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} imágenes ilustrativas que decoran tu página principal, justo debajo de la portada. Gastan cupo de tu galería ({{ galleryUsed }}{{ galleryMax === null ? '' : ` de ${galleryMax}` }} usadas).</p>
+              <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} imágenes ilustrativas que decoran tu página principal: una enmarca Sobre nosotros, otra abre una banda a lo ancho y el resto va bajo la portada. Gastan cupo de tu galería ({{ galleryUsed }}{{ galleryMax === null ? '' : ` de ${galleryMax}` }} usadas).</p>
             </div>
             <div class="field">
               <label id="design-sections-label">Secciones de tu web</label>

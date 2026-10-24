@@ -123,8 +123,17 @@ const highlights = computed(() => {
 // show_gallery y se oculta sola sin imágenes cargadas) ---
 const gallery = computed(() => custom.value.gallery || [])
 const showGallery = computed(() => ctx.showGallery.value)
-// Imágenes ilustrativas de la portada (premium, hasta 3): franja bajo el hero.
+// Imágenes ilustrativas de la portada (premium, hasta 3): se reparten en
+// zonas estratégicas — una enmarca Sobre nosotros, otra abre una banda
+// panorámica antes de Contáctanos y el resto monta sobre el borde del
+// hero. Si una sección no existe, su imagen cae en la franja del hero
+// (ninguna subida se pierde). En "Catálogo exclusivo" alimentan los tiles
+// laterales del banner (sideTiles).
 const decor = computed(() => (hasDesignAdvanced.value ? (custom.value.decor || []).slice(0, 3) : []))
+const decorAbout = computed(() => (!isCatalogTpl.value && hasAbout.value ? decor.value[0] || null : null))
+const decorPool = computed(() => decor.value.slice(decorAbout.value ? 1 : 0))
+const decorBand = computed(() => (isCatalogTpl.value ? null : decorPool.value[0] || null))
+const decorStrip = computed(() => decorPool.value.slice(decorBand.value ? 1 : 0))
 const lightboxIndex = ref(-1)
 const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
 const openLightbox = (index) => { lightboxIndex.value = index }
@@ -404,8 +413,8 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div v-if="decor.length" class="sp-container sp-decor" :data-count="decor.length">
-      <figure v-for="(img, i) in decor" :key="img.id" v-reveal="i * 100" class="sp-decor-item">
+    <div v-if="decorStrip.length" class="sp-container sp-decor" :data-count="decorStrip.length">
+      <figure v-for="(img, i) in decorStrip" :key="img.id" v-reveal="i * 100" class="sp-decor-item">
         <img :src="img.url" alt="" loading="lazy" />
       </figure>
     </div>
@@ -425,7 +434,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Sobre nosotros: contenido a la izquierda, tarjeta destacada a la derecha ===== -->
   <section v-if="hasAbout" id="nosotros" class="sp-about" aria-labelledby="sp-about-title">
-    <div class="sp-container sp-about-grid" :class="{ 'no-card': !hasAboutCard }">
+    <div class="sp-container sp-about-grid" :class="{ 'no-card': !hasAboutCard && !decorAbout }">
       <div v-reveal class="sp-about-info">
         <p class="sp-eyebrow">Conocenos</p>
         <h2 id="sp-about-title" class="sp-about-heading">
@@ -437,16 +446,31 @@ onBeforeUnmount(() => {
           <li v-for="s in aboutSpecialties" :key="s"><AppIcon name="check" :size="16" /> <span>{{ s }}</span></li>
         </ul>
       </div>
-      <div v-if="hasAboutCard" v-reveal="140" class="sp-about-card">
-        <p v-if="custom.about_years" class="sp-about-years">
-          <strong>+{{ custom.about_years }}</strong>
-          <span>años de trayectoria</span>
-        </p>
-        <blockquote v-if="custom.about_mission" class="sp-about-mission">
-          <span class="sp-about-mission-label">Nuestra misión</span>
-          {{ custom.about_mission }}
-        </blockquote>
+      <div v-if="hasAboutCard || decorAbout" class="sp-about-side">
+        <figure v-if="decorAbout" v-reveal="140" class="sp-about-photo">
+          <img :src="decorAbout.url" :alt="`Imagen de ${shopName}`" loading="lazy" />
+        </figure>
+        <div v-if="hasAboutCard" v-reveal="140" class="sp-about-card">
+          <p v-if="custom.about_years" class="sp-about-years">
+            <strong>+{{ custom.about_years }}</strong>
+            <span>años de trayectoria</span>
+          </p>
+          <blockquote v-if="custom.about_mission" class="sp-about-mission">
+            <span class="sp-about-mission-label">Nuestra misión</span>
+            {{ custom.about_mission }}
+          </blockquote>
+        </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ===== Banda visual: imagen decorativa a todo lo ancho que corta
+       la monotonía entre el contenido y el cierre (Contáctanos/pie) ===== -->
+  <section v-if="decorBand" class="sp-showcase" aria-hidden="true">
+    <div class="sp-container">
+      <figure v-reveal class="sp-showcase-frame">
+        <img :src="decorBand.url" alt="" loading="lazy" />
+      </figure>
     </div>
   </section>
 
