@@ -4224,25 +4224,34 @@ html { scroll-behavior: smooth; }
 
 /* --- Tira de beneficios: banda de tinta a todo lo ancho --- */
 .store-page[data-store-template='cobre'] .sp-highlights {
-  margin-top: 0; gap: 10px 40px; justify-content: center;
-  padding: 18px 0; border: 0;
-  background: var(--sp-ink); color: var(--cb-stone);
-  box-shadow: 0 0 0 100vmax var(--sp-ink); clip-path: inset(0 -100vmax);
+  --cb-band: #101318; --cb-band-ink: #eceee9; --cb-band-soft: #b9bcc2;
+  margin-top: 0; gap: 18px 32px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start;
+  padding: 24px 40px; border: 0;
+  background: var(--cb-band); color: var(--cb-band-ink);
+  box-shadow: 0 0 0 100vmax var(--cb-band); clip-path: inset(0 -100vmax);
+}
+.store-page[data-store-template='cobre'][data-store-theme='dark'] .sp-highlights {
+  --cb-band: #22262b;
 }
 .store-page[data-store-template='cobre'] .sp-hl {
-  display: inline-flex; flex-direction: row; align-items: baseline; gap: 9px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'icon title' 'icon text';
+  align-items: start; align-content: start; gap: 2px 12px;
   padding: 0; border: 0; border-radius: 0;
   background: transparent; box-shadow: none; overflow: visible;
 }
+.store-page[data-store-template='cobre'] .sp-hl > .sp-hl-icon { grid-area: icon; }
+.store-page[data-store-template='cobre'] .sp-hl > strong { grid-area: title; }
+.store-page[data-store-template='cobre'] .sp-hl > .sp-hl-text { grid-area: text; }
 .store-page[data-store-template='cobre'] .sp-hl::after { display: none; }
 .store-page[data-store-template='cobre'] .sp-hl:hover { transform: none; border-color: transparent; box-shadow: none; }
 .store-page[data-store-template='cobre'] .sp-hl-icon {
-  width: auto; height: auto; align-self: center;
+  width: 22px; height: 22px; align-self: start;
   background: none; border: 0; box-shadow: none; color: var(--store-accent);
 }
 .store-page[data-store-template='cobre'] .sp-hl:hover .sp-hl-icon { transform: none; background: none; }
-.store-page[data-store-template='cobre'] .sp-hl strong { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--cb-stone); }
-.store-page[data-store-template='cobre'] .sp-hl-text { font-size: 14.5px; line-height: 1.5; color: var(--cb-soft); }
+.store-page[data-store-template='cobre'] .sp-hl strong { margin: 0; font-size: 14.5px; font-weight: 600; line-height: 22px; color: var(--cb-band-ink); }
+.store-page[data-store-template='cobre'] .sp-hl-text { font-size: 14px; line-height: 1.5; color: var(--cb-band-soft); }
 
 /* --- La colección: vitrina de tiles 4:5 --- */
 .store-page[data-store-template='cobre'] .sp-shop-featured { margin-top: clamp(52px, 6.5vw, 88px); }
@@ -4353,7 +4362,9 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='cobre'] .sp-section-title::after { display: none; }
 
 /* --- Sobre nosotros --- */
-.store-page[data-store-template='cobre'] .sp-about-grid { align-items: start; }
+.store-page[data-store-template='cobre'] .sp-about-grid { align-items: center; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 72px); }
+.store-page[data-store-template='cobre'] .sp-about-grid.no-card { grid-template-columns: minmax(0, 720px); }
+.store-page[data-store-template='cobre'] .sp-about-side { gap: 14px; }
 .store-page[data-store-template='cobre'] .sp-about-heading {
   font-family: var(--sp-display); font-weight: 400;
   font-size: clamp(36px, 4.6vw, 64px); line-height: .9; letter-spacing: .005em;
