@@ -118,7 +118,11 @@
 .cv-du-link { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; font-size: 14.5px; font-weight: 600; color: var(--sp-ink-2); text-align: left; transition: background .15s, color .15s; }
 .cv-du-link::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: transparent; }
 .cv-du-link:hover { background: var(--sp-soft); }
-.cv-du-link.on { background: var(--store-accent-soft); color: var(--sp-accent-text); }
+.cv-du-link.on { background: color-mix(in srgb, var(--store-accent) 18%, transparent); color: var(--sp-ink); }
+.cv-du-link:focus-visible { outline: 2px solid var(--store-accent); outline-offset: -2px; }
+.cv-du-link, .cv-du-tag { background-color: transparent; }
+.cv-du-side > * { min-width: 0; }
+.cv-du-side { overflow-x: hidden; }
 .cv-du-link.on::after { background: var(--store-accent); }
 .cv-du-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .cv-du-tag { padding: 6px 12px; border-radius: 99px; border: 1px solid var(--sp-line); font-size: 13px; font-weight: 600; color: var(--sp-ink-2); }
