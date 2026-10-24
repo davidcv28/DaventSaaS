@@ -708,7 +708,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 
 /* Selector de diseño de la web (3 plantillas; editorial/impact con premium):
    miniatura wireframe dibujada con gradientes + nombre y descripción. */
-.tpl-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tpl-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tpl-option { display: grid; gap: 9px; justify-items: stretch; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
 .tpl-option:hover { border-color: var(--line-strong); }
 .tpl-option.active { border-color: var(--brand-500); box-shadow: var(--ring); }
@@ -728,6 +728,24 @@ body { transition: background-color .2s ease, color .2s ease; }
 .tpl-thumb[data-tpl='impact'] { background: linear-gradient(160deg, #1e2a55 0, #0a0e1a 62%, var(--card) 62%); }
 .tpl-thumb[data-tpl='impact']::before { content: ''; position: absolute; left: 10%; top: 11%; width: 10px; height: 10px; border-radius: 50%; background: var(--brand-500); }
 .tpl-thumb[data-tpl='impact']::after { content: ''; position: absolute; left: 10%; top: 30%; width: 52%; height: 5px; border-radius: 99px; background: #fff; box-shadow: 0 9px 0 rgba(255, 255, 255, .35); }
+/* Publicidad: afiche amarillo/acento con sello y cinta */
+.tpl-thumb[data-tpl='promo'] { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .14) 0 5px, transparent 5px 10px), linear-gradient(120deg, var(--brand-500), #3730a3); }
+.tpl-thumb[data-tpl='promo']::before { content: ''; position: absolute; right: 10%; top: 14%; width: 20px; height: 20px; border-radius: 50%; background: #ffe14d; border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
+.tpl-thumb[data-tpl='promo']::after { content: ''; position: absolute; left: 9%; top: 26%; width: 46%; height: 6px; border-radius: 2px; background: #fff; box-shadow: 0 10px 0 #ffe14d; }
+.tpl-thumb[data-tpl='promo'] i { left: -4%; right: -4%; bottom: 12%; height: 9px; border-radius: 0; background: #ffe14d; opacity: 1; transform: rotate(-3deg); }
+.tpl-thumb[data-tpl='impact'] i { height: 2px; background: var(--brand-500); opacity: .9; box-shadow: 0 0 8px var(--brand-500); }
+.tpl-thumb[data-tpl='editorial'] i { height: 1px; background: #1e293b; opacity: .5; }
+.design-preview[data-store-template='promo'] .dp-nav { background: var(--store-accent-ink); border-bottom: 3px solid #ffe14d; }
+.design-preview[data-store-template='promo'] .dp-hero { justify-items: start; text-align: left; color: #fff; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 10px, transparent 10px 20px), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
+.design-preview[data-store-template='promo'] .dp-badge { background: #ffe14d; border: 2px solid #111827; color: #111827; transform: rotate(-2deg); }
+.design-preview[data-store-template='promo'] .dp-title { font-weight: 900; text-shadow: 0 3px 0 rgba(0, 0, 0, .2); }
+.design-preview[data-store-template='promo'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='promo'] .dp-btn { background: #fff; color: var(--store-accent-ink); border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
+.design-preview[data-store-template='promo'] .dp-btn.ghost { background: transparent; border-color: #fff; color: #fff; box-shadow: none; }
+.design-preview[data-store-template='impact'] .dp-title { text-transform: uppercase; font-weight: 900; }
+.design-preview[data-store-template='impact'] .dp-btn, .design-preview[data-store-template='impact'] .dp-badge { border-radius: 0; }
+.design-preview[data-store-template='editorial'] .dp-title { letter-spacing: -.04em; font-weight: 800; }
+.design-preview[data-store-template='editorial'] .dp-badge { border-radius: 0; }
 @media (max-width: 640px) { .tpl-options { grid-template-columns: minmax(0, 1fr); } }
 
 /* Vista previa por diseño (data-store-template): refleja la portada real. */

@@ -288,13 +288,14 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
-// 'classic' es el diseño base; 'editorial' e 'impact' se habilitan con el
+// 'classic' es el diseño base; 'editorial', 'impact' y 'promo' se habilitan con el
 // beneficio has_design_advanced (Plan premium). El frontend fuerza 'classic'
 // cuando la tienda no tiene ese beneficio aunque haya otro valor guardado.
 export const STORE_TEMPLATES = {
-  classic:   { label: 'Clásico',   desc: 'Portada centrada con banda de color y tarjetas de destacados.' },
-  editorial: { label: 'Editorial', desc: 'Estilo revista: titular a la izquierda y marca enmarcada.' },
-  impact:    { label: 'Impacto',   desc: 'Portada oscura de alto contraste con cinta de marca animada.' }
+  classic:   { label: 'Clásico',    desc: 'El diseño base, pensado para catálogos: portada centrada y tarjetas de destacados.' },
+  editorial: { label: 'Editorial',  desc: 'Revista de papel: tipografía grande, filetes finos, índice numerado y marca enmarcada.' },
+  impact:    { label: 'Impacto',    desc: 'Tecnológico y oscuro: título gigante, grilla animada, neón y esquinas cortadas.' },
+  promo:     { label: 'Publicidad', desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' }
 }
 
 export function storeTemplate(value) {

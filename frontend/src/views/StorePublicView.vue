@@ -16,6 +16,15 @@ const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAb
 // marca de 'impact' es markup extra.
 const tpl = pageTemplate
 
+const year = new Date().getFullYear()
+const marqueeItems = computed(() => (tpl.value === 'promo'
+  ? [{ icon: 'flame', text: 'Ofertas' }, { icon: 'sparkles', text: 'Novedades' }, { icon: 'percent', text: 'Promos' }, { icon: 'zap', text: 'Consultá ya' }]
+  : [{ icon: 'zap', text: shopName.value }, { icon: 'star', text: heroTitle.value }, { icon: 'map-pin', text: location.value || 'Tienda online' }]))
+const titleSplit = computed(() => {
+  const words = heroTitle.value.split(/\s+/)
+  return words.length > 1 ? { head: words.slice(0, -1).join(' '), last: words[words.length - 1] } : { head: '', last: heroTitle.value }
+})
+
 const copied = ref(false)
 const catalogTo = computed(() => ({ name: 'store-catalog', params: { slug: slug.value } }))
 
@@ -182,8 +191,26 @@ onBeforeUnmount(() => {
         <span class="sp-float f3"><AppIcon name="shield-check" :size="24" /></span>
         <span class="sp-float f4"><AppIcon name="trending-up" :size="22" /></span>
         <span class="sp-float f5"><AppIcon name="store" :size="24" /></span>
+        <template v-if="tpl === 'editorial'">
+          <span class="sp-ed-letter">{{ initial }}</span>
+        </template>
+        <template v-else-if="tpl === 'impact'">
+          <span class="sp-im-grid"></span>
+          <span class="sp-im-beam b1"></span>
+          <span class="sp-im-beam b2"></span>
+        </template>
+        <template v-else-if="tpl === 'promo'">
+          <span class="sp-pr-burst"></span>
+          <span class="sp-pr-spark s1"><AppIcon name="sparkles" :size="30" :stroke="2" /></span>
+          <span class="sp-pr-spark s2"><AppIcon name="star" :size="22" :stroke="2" /></span>
+          <span class="sp-pr-spark s3"><AppIcon name="zap" :size="26" :stroke="2" /></span>
+        </template>
+      </div>
+      <div v-if="tpl === 'editorial'" class="sp-container sp-ed-masthead" aria-hidden="true">
+        <span>Nº 01</span><i></i><span>Edición {{ year }}</span><i></i><span>{{ location || (showCatalog ? 'Catálogo' : 'Sitio oficial') }}</span>
       </div>
       <div class="sp-container sp-hero-inner">
+        <span v-if="tpl === 'promo'" class="sp-pr-tag"><AppIcon name="megaphone" :size="15" :stroke="2.25" /> ¡Novedad!</span>
         <span v-reveal class="sp-ava">
           <img v-if="custom.logo" class="sp-logo lg" :src="custom.logo" :alt="`Logo de ${shopName}`" />
           <span v-else class="sp-mono lg" aria-hidden="true">{{ initial }}</span>
@@ -192,9 +219,10 @@ onBeforeUnmount(() => {
           <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
           {{ heroBadge }}
         </p>
-        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
+        <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null"><template v-if="tpl === 'promo'">{{ titleSplit.head }} <mark class="sp-pr-mark">{{ titleSplit.last }}</mark></template><template v-else>{{ heroTitle }}</template></h1>
         <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
         <div v-reveal="320" class="sp-hero-ctas">
+          <a v-if="tpl === 'promo' && whatsappUrl" class="sp-btn sp-pr-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> Escribinos ahora</a>
           <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
           <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
           <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
@@ -204,13 +232,20 @@ onBeforeUnmount(() => {
         <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
           <li v-for="m in heroMeta" :key="m.text"><AppIcon :name="m.icon" :size="14" /> {{ m.text }}</li>
         </ul>
+        <div v-if="tpl === 'promo'" class="sp-pr-seal" aria-hidden="true">
+          <svg class="sp-pr-seal-ring" viewBox="0 0 200 200">
+            <defs><path id="sp-pr-circle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs>
+            <text><textPath href="#sp-pr-circle" textLength="486" lengthAdjust="spacing">OFERTAS • NOVEDADES • CONSULTÁ YA • </textPath></text>
+          </svg>
+          <span class="sp-pr-seal-core"><AppIcon name="gift" :size="46" :stroke="1.75" /></span>
+        </div>
       </div>
       <!-- Cinta de marca del diseño Impacto: marquee infinito (dos secuencias
            idénticas, el track se desplaza -50% en loop). Solo decoración. -->
-      <div v-if="tpl === 'impact'" class="sp-hero-marquee" aria-hidden="true">
+      <div v-if="tpl === 'impact' || tpl === 'promo'" class="sp-hero-marquee" aria-hidden="true">
         <div class="sp-hero-marquee-track">
           <span v-for="n in 2" :key="n" class="sp-hero-marquee-seq">
-            {{ shopName }} <i></i> {{ heroTitle }} <i></i> {{ location || 'Tienda online' }} <i></i>
+            <template v-for="(m, i) in marqueeItems" :key="i"><AppIcon :name="m.icon" :size="15" :stroke="2.25" /> {{ m.text }} <i></i></template>
           </span>
         </div>
       </div>

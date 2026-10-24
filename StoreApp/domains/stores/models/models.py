@@ -101,6 +101,7 @@ class StoreCustomization(models.Model):
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('editorial',        'Editorial'),
         ('impact',           'Impacto'),
+        ('promo',            'Publicidad'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
