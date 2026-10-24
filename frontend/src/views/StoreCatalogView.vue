@@ -144,6 +144,9 @@ const productCount = computed(() => {
 
 const brandNameOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
+// Ofertas activas: alimentan la barra de anuncio de Minimal (nunca se
+// anuncia una oferta que la tienda no tiene).
+const offerCount = computed(() => catalog.value.products.filter((p) => productOffer(p) != null).length)
 const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, catalog.value.products.length)} de ${catalog.value.products.length}`)
 const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, catalog.value.products.length) / Math.max(1, catalog.value.products.length)) * 100)}%`)
 
@@ -274,6 +277,10 @@ onBeforeUnmount(() => {
         <span class="sp-cb-ghost">Colección</span>
       </template>
     </div>
+    <!-- Minimal: barra de anuncio de tinta (el strip editorial del diseño) -->
+    <p v-if="tpl === 'minimal'" class="sp-mn-announce">
+      {{ offerCount ? `${offerCount} ${offerCount === 1 ? 'oferta activa' : 'ofertas activas'}` : 'Colección completa' }} · Precios en pesos argentinos
+    </p>
     <div class="sp-container sp-cat-hero-inner">
       <nav v-reveal class="sp-crumbs" aria-label="Ruta">
         <RouterLink v-if="custom.site_mode !== 'catalog'" :to="homeTo">Inicio</RouterLink>

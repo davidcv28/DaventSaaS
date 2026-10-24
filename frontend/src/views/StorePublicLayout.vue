@@ -155,7 +155,7 @@ onMounted(async () => {
     // monospace de 'terminal' y el serif editorial de 'lookbook'. Misma
     // carga on-demand que name_font; el resto del texto sigue con la fuente
     // elegida por el dueño.
-    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'], shop: ['rubik'], cobre: ['bebas-neue', 'dm-sans'] }
+    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'], shop: ['rubik'], cobre: ['bebas-neue', 'dm-sans'], minimal: ['manrope'] }
     TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'

@@ -97,6 +97,7 @@ class StoreCustomization(models.Model):
         ('lobster',              'Lobster'),
         ('space-mono',           'Space Mono'),
         ('jetbrains-mono',       'JetBrains Mono'),
+        ('manrope',              'Manrope'),
     ]
     TEMPLATE_CLASSIC            =   'classic'
     #Diseños de la web pública (catálogo cerrado) por nivel de plan:
@@ -107,7 +108,7 @@ class StoreCustomization(models.Model):
     #la web fuerza 'classic' si el guardado deja de estar permitido.
     TEMPLATE_BASE               =   ('classic', 'perspective')
     TEMPLATE_PLUS               =   ('street', 'promo')
-    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre')
+    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
@@ -117,6 +118,7 @@ class StoreCustomization(models.Model):
         ('lookbook',         'Lookbook'),
         ('shop',             'Tienda Pro'),
         ('cobre',            'Cobre'),
+        ('minimal',          'Minimal'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
