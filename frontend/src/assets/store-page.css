@@ -2113,13 +2113,8 @@ html { scroll-behavior: smooth; }
 
 .store-page[data-store-template='lookbook'] .sp-hero-inner {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  grid-template-areas:
-    'badge plate'
-    'title plate'
-    'sub   plate'
-    'ctas  plate'
-    'meta  plate';
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+  grid-template-areas: 'copy plate';
   align-items: start;
   justify-items: stretch;
   text-align: left;
@@ -2127,10 +2122,17 @@ html { scroll-behavior: smooth; }
   row-gap: 0;
   padding: 68px 40px 40px;
 }
+/* Columna de texto del héroe editorial: los ítems se apilan a su alto natural;
+   el pliego ocupa su propia celda y ya no reparte su alto entre filas. */
+.sp-lb-copy {
+  grid-area: copy; align-self: center;
+  display: grid; align-content: start; justify-items: start;
+  min-width: 0;
+}
 .store-page[data-store-template='lookbook'] .sp-hero .sp-ava,
 .store-page[data-store-template='lookbook'] .sp-hero-badge { display: none; }
 .sp-lb-dateline {
-  grid-area: badge; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   margin: 0 0 22px; font-family: var(--sp-body);
   font-size: 10px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase;
   color: var(--sp-muted);
@@ -2138,7 +2140,6 @@ html { scroll-behavior: smooth; }
 .sp-lb-dateline span:first-child { color: var(--sp-accent-text); }
 .sp-lb-dateline i { width: 28px; height: 1px; background: var(--sp-line); }
 .store-page[data-store-template='lookbook'] .sp-hero-title {
-  grid-area: title;
   max-width: 15ch; margin: 0;
   font-family: var(--sp-display); font-weight: 300;
   font-size: clamp(42px, 6.6vw, 94px); line-height: .98; letter-spacing: -.035em;
@@ -2152,12 +2153,12 @@ html { scroll-behavior: smooth; }
   text-underline-offset: .1em; text-decoration-color: var(--store-accent);
 }
 .store-page[data-store-template='lookbook'] .sp-hero-sub {
-  grid-area: sub; width: 100%; max-width: min(48ch, 100%); margin: 24px 0 0;
+  width: 100%; max-width: min(48ch, 100%); margin: 24px 0 0;
   font-size: 16px; line-height: 1.85; color: var(--sp-ink-2);
   white-space: pre-line; overflow-wrap: anywhere;
 }
 .store-page[data-store-template='lookbook'] .sp-hero-ctas {
-  grid-area: ctas; justify-content: flex-start; align-items: center;
+  justify-content: flex-start; align-items: center;
   gap: 28px; margin-top: 32px;
 }
 .store-page[data-store-template='lookbook'] .sp-hero-ctas .sp-btn {
@@ -2185,7 +2186,7 @@ html { scroll-behavior: smooth; }
   filter: none; transform: none;
 }
 .store-page[data-store-template='lookbook'] .sp-hero-meta {
-  grid-area: meta; justify-content: flex-start; gap: 0;
+  justify-content: flex-start; gap: 0;
   width: 100%; max-width: 520px; margin: 34px 0 0; padding: 16px 0 0;
   border-top: 1px solid var(--sp-line);
   font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase;
@@ -2220,7 +2221,7 @@ html { scroll-behavior: smooth; }
 }
 .sp-lb-plate figcaption span { color: var(--sp-accent-text); }
 .sp-lb-plate-seal {
-  position: absolute; left: -22px; bottom: 48px;
+  position: absolute; top: -16px; right: -16px;
   display: grid; place-items: center; width: 78px; height: 78px;
   border: 1px solid var(--sp-line); border-radius: 50%;
   background: var(--lb-paper); color: var(--sp-ink);
@@ -3083,18 +3084,14 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='lookbook'] .sp-hero-inner {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'badge'
-      'title'
-      'plate'
-      'sub'
-      'ctas'
-      'meta';
+      'copy'
+      'plate';
     padding: 44px 20px 32px;
   }
   .store-page[data-store-template='lookbook'] .sp-hero-title { max-width: 18ch; font-size: clamp(38px, 9vw, 64px); }
   .store-page[data-store-template='lookbook'] .sp-lb-plate { margin-top: 28px; }
   .store-page[data-store-template='lookbook'] .sp-lb-plate-frame { aspect-ratio: 4 / 5; }
-  .sp-lb-plate-seal { left: -10px; bottom: 42px; width: 64px; height: 64px; font-size: 14px; }
+  .sp-lb-plate-seal { top: -12px; right: -12px; width: 64px; height: 64px; font-size: 14px; }
   .store-page[data-store-template='lookbook'] .sp-hero-sub { margin-top: 20px; }
   .store-page[data-store-template='lookbook'] .sp-about-grid,
   .store-page[data-store-template='lookbook'] .sp-contact-grid { grid-template-columns: minmax(0, 1fr); }
