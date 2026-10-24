@@ -1,10 +1,14 @@
 # syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
+# La config web de Firebase (apiKey/authDomain/...) es PÚBLICA por diseño:
+# viaja en el bundle del browser; la protección real son los Authorized
+# domains del proyecto + la cuota Spark. No son secretos — el check no aplica.
 # Imagen web = build del SPA Vue + nginx (reverse proxy + TLS + estáticos).
 # Contexto de build: raíz del repo (.) — buildx exige que el Dockerfile viva
 # dentro del contexto; los COPY referencian frontend/.
 
 # ---------- Stage 1: build del SPA ----------
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /src
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -35,7 +39,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
 RUN npm run build
 
 # ---------- Stage 2: nginx sirve el SPA y proxifica /api ----------
-FROM nginx:1.27-alpine
+FROM nginx:1.30-alpine
 # Parcheo los paquetes del runtime (openssl/musl/nginx): la imagen base
 # queda atrás de los fixes de Alpine ya publicados.
 RUN apk upgrade --no-cache

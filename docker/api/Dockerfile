@@ -1,4 +1,8 @@
 # syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
+# La config web de Firebase (apiKey/authDomain/...) es PÚBLICA por diseño:
+# viaja en el bundle del browser; la protección real son los Authorized
+# domains del proyecto + la cuota Spark. No son secretos — el check no aplica.
 # Imagen de la API DRF (gunicorn) — también la usa el worker Celery y el job migrate.
 
 # ---------- Stage 1: compila wheels de requirements.txt ----------
@@ -21,7 +25,7 @@ RUN pip wheel --wheel-dir /wheels -r requirements.txt
 # proxy de confianza: la API sirve el dist estático ella misma. VITE_* se
 # hornean acá porque Vite las inyecta en build-time — para otro dominio hay
 # que rebuildear pasando --build-arg.
-FROM node:20-alpine AS frontend
+FROM node:22-alpine AS frontend
 WORKDIR /fe
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
