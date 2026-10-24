@@ -89,7 +89,10 @@ const botConfig = computed(() => (status.value === 'success' ? store.value?.chat
 const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isProduct = computed(() => route.name === 'store-product')
-const isHome = computed(() => route.name === 'store-public')
+// Opción 2 (/<slug>/v2): prototipo de portada alternativa — se comporta como
+// Inicio para el menú, el dock móvil y el redirect del modo "solo catálogo".
+const isAlt = computed(() => route.name === 'store-alt')
+const isHome = computed(() => route.name === 'store-public' || isAlt.value)
 // Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
 // las anclas de la home (#nosotros, #galeria, #contacto) comparten el path y
 // quedarían todas marcadas a la vez.
@@ -101,6 +104,9 @@ const shopCurrent = computed(() => {
 })
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+// Anclas de sección (#nosotros/#galeria/#contacto): en la vista previa de la
+// opción 2 se quedan dentro de la propia página; fuera de ella van al inicio.
+const anchorTo = (hash) => ({ path: isAlt.value ? route.path : homeTo.value.path, hash })
 watch([catalogOnly, isHome], ([only, home]) => { if (only && home) router.replace(catalogTo.value) }, { immediate: true })
 
 // Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
@@ -135,7 +141,9 @@ provide('storePage', {
 // Título de pestaña por página: "<tienda>" en Inicio, "<tienda> · Catálogo"
 // en el catálogo. Corre también al volver del catálogo al inicio.
 watch([status, () => route.name], ([s, name]) => {
-  if (s === 'success') document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo` : shopName.value
+  if (s !== 'success') return
+  document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
+    : name === 'store-alt' ? `${shopName.value} · Vista previa` : shopName.value
 }, { immediate: true })
 
 // Canales de contacto (pie y barra fija móvil).
@@ -275,9 +283,9 @@ onBeforeUnmount(() => {
         <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
           <RouterLink v-if="!catalogOnly" :to="homeTo">Inicio</RouterLink>
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-          <RouterLink v-if="hasAbout && !catalogOnly" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery && !catalogOnly" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
-          <RouterLink v-if="showContact && !catalogOnly" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+          <RouterLink v-if="hasAbout && !catalogOnly" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
+          <RouterLink v-if="showGallery && !catalogOnly" :to="anchorTo('#galeria')">Galería</RouterLink>
+          <RouterLink v-if="showContact && !catalogOnly" :to="anchorTo('#contacto')">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
@@ -311,9 +319,9 @@ onBeforeUnmount(() => {
           <div class="sp-shop-nav-links">
             <RouterLink v-if="!catalogOnly" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout && !catalogOnly" :to="{ ...homeTo, hash: '#nosotros' }" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !catalogOnly" :to="{ ...homeTo, hash: '#galeria' }" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
-            <RouterLink v-if="showContact && !catalogOnly" :to="{ ...homeTo, hash: '#contacto' }" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !catalogOnly" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !catalogOnly" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
+            <RouterLink v-if="showContact && !catalogOnly" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
           </div>
           <span class="sp-shop-nav-note">Precios en pesos argentinos</span>
         </div>
@@ -368,9 +376,9 @@ onBeforeUnmount(() => {
             <p class="sp-foot-heading">Tienda</p>
             <RouterLink v-if="!catalogOnly" :to="homeTo">Inicio</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout && !catalogOnly" :to="{ ...homeTo, hash: '#nosotros' }">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !catalogOnly" :to="{ ...homeTo, hash: '#galeria' }">Galería</RouterLink>
-            <RouterLink v-if="showContact && !catalogOnly" :to="{ ...homeTo, hash: '#contacto' }">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !catalogOnly" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !catalogOnly" :to="anchorTo('#galeria')">Galería</RouterLink>
+            <RouterLink v-if="showContact && !catalogOnly" :to="anchorTo('#contacto')">Contacto</RouterLink>
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>

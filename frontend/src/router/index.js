@@ -17,6 +17,7 @@ const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StorePublicView = () => import('../views/StorePublicView.vue')
+const StorePublicAltView = () => import('../views/StorePublicAltView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreProductView = () => import('../views/StoreProductView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
@@ -37,6 +38,14 @@ const storeChildren = [
     name: 'store-catalog',
     component: StoreCatalogView,
     meta: { title: 'Catálogo' }
+  },
+  // Prototipo "Opción 2" de la portada (misma info, otro orden de secciones):
+  // se entra desde "Vista previa opción 2" del panel (/<slug>/v2).
+  {
+    path: 'v2',
+    name: 'store-alt',
+    component: StorePublicAltView,
+    meta: { title: 'Vista previa' }
   },
   // Publicación de producto estilo marketplace (ficha completa).
   {
@@ -197,7 +206,7 @@ export const router = createRouter({
 router.beforeEach(async (to) => {
   // En un subdominio de tienda solo existe la web pública: cualquier ruta de
   // plataforma (login, panel, legales) se resuelve en el dominio principal.
-  if (storeHostSlug && !['store-public', 'store-catalog', 'store-product'].includes(to.name)) {
+  if (storeHostSlug && !['store-public', 'store-catalog', 'store-product', 'store-alt'].includes(to.name)) {
     window.location.assign(`${env.appUrl}${to.fullPath}`)
     return false
   }

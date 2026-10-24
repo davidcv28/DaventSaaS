@@ -406,6 +406,12 @@ function openStore() {
   if (publicUrl.value) window.open(publicUrl.value, '_blank', 'noopener')
 }
 
+// Prototipo "Opción 2" de la portada: /<slug>/v2 sobre el link público.
+const previewUrl = computed(() => (publicUrl.value ? `${publicUrl.value}/v2` : ''))
+function openPreview() {
+  if (previewUrl.value) window.open(previewUrl.value, '_blank', 'noopener')
+}
+
 async function togglePublished() {
   if (!store.store || storeBusy.value) return
   storeBusy.value = true
@@ -2030,6 +2036,7 @@ async function changePassword() {
           <div class="btn-row link-actions">
             <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
             <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Abrir tienda</button>
+            <button class="btn ghost btn-auto" @click="openPreview"><AppIcon name="eye" :size="16" /> Vista previa opción 2</button>
             <button class="btn ghost btn-auto" :disabled="storeBusy" @click="togglePublished">{{ store.store.is_published ? 'Pausar link' : 'Activar link' }}</button>
           </div>
           <p class="hint">Con el link pausado, la página pública muestra “tienda no disponible”.</p>
