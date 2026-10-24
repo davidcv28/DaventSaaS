@@ -7205,12 +7205,19 @@ html { scroll-behavior: smooth; }
     padding: 44px 20px 64px;
   }
   .store-page[data-store-template='boutique'] .sp-hero-title { font-size: clamp(34px, 8vw, 58px); }
-  .store-page[data-store-template='boutique'] .sp-bt-art { justify-self: start; max-width: 340px; }
+  /* En móvil las dos placas se apilan en columna: la composición
+     superpuesta del escritorio hacía que colisionaran entre sí y la
+     banda (overflow:hidden) recortaba la secundaria. */
+  .store-page[data-store-template='boutique'] .sp-bt-art {
+    display: grid; gap: 16px;
+    justify-self: start; max-width: 340px;
+  }
   .store-page[data-store-template='boutique'] .sp-bt-plate { max-height: 460px; }
-  /* La placa secundaria cuelga por debajo del art y la banda la recorta
-     (overflow:hidden): debajo de 960px se va para no amontonar el hero
-     contra la sección siguiente. */
-  .store-page[data-store-template='boutique'] .sp-bt-plate.alt { display: none; }
+  .store-page[data-store-template='boutique'] .sp-bt-plate.alt {
+    position: static; width: 100%;
+    aspect-ratio: 4 / 3; max-height: 240px;
+    box-shadow: none; /* el aro de papel solo separaba placas superpuestas */
+  }
   .store-page[data-store-template='boutique'] .sp-shop-depts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .store-page[data-store-template='boutique'] .sp-card-quick { display: none; }
   .store-page[data-store-template='boutique'] .sp-about-grid,
