@@ -15,7 +15,6 @@ const I = {
   store: 'M3 9l1.5-5h15L21 9M3 9h18v1a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0zM5 13v8h14v-8M10 21v-5h4v5',
   pin: 'M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
   chat: 'M21 12a9 9 0 0 1-13.5 7.8L3 21l1.3-4.4A9 9 0 1 1 21 12z',
-  mail: 'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 7l-10 6L2 7',
   chart: 'M4 20V10M10 20V4M16 20v-8M22 20H2',
   qr: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v1M14 20h1M20 20v1'
 }
@@ -225,11 +224,7 @@ const menu = ref(false)
               Técnico en Análisis de Sistemas, de Salta, Argentina. Hace más de 3 años que desarrollo software
               y creé DAVENT para que cualquier comercio pueda tener su propia web: simple, rápida y sin depender de nadie.
             </p>
-            <a class="lp-link" href="mailto:daventargentina@gmail.com">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="I.mail" /></svg>
-              daventargentina@gmail.com
-            </a>
-            <RouterLink to="/acerca-de" class="lp-link more">Conocé más sobre DAVENT →</RouterLink>
+            <RouterLink to="/acerca-de" class="lp-link">Conocé más sobre DAVENT →</RouterLink>
           </div>
         </div>
       </section>
@@ -274,7 +269,6 @@ const menu = ref(false)
           <RouterLink to="/acerca-de">Sobre DAVENT</RouterLink>
           <RouterLink to="/terminos">Términos y condiciones</RouterLink>
           <RouterLink to="/login">Ingresar</RouterLink>
-          <a href="mailto:daventargentina@gmail.com">daventargentina@gmail.com</a>
         </nav>
       </div>
     </footer>
@@ -402,7 +396,6 @@ const menu = ref(false)
 .lp-mono { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: #eef0ff; color: #4338ca; font-size: 26px; font-weight: 800; }
 .lp-link { margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--brand-soft); }
 .lp-link:hover { color: #fff; }
-.lp-link.more { display: flex; margin-top: 10px; }
 
 .lp-faq-list { display: grid; gap: 10px; max-width: 760px; margin-top: 36px; }
 .lp-faq-item { border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, .04); }
@@ -421,7 +414,6 @@ const menu = ref(false)
 .lp-footer nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
 .lp-footer nav a { transition: color .15s; }
 .lp-footer nav a:hover { color: #fff; }
-.lp-footer nav a[href^='mailto'] { font-weight: 600; color: #c7cbf5; }
 
 @media (max-width: 960px) {
   .lp-features { grid-template-columns: repeat(2, 1fr); }
