@@ -1,3 +1,4 @@
+import hashlib
 import io
 import os
 import tempfile
@@ -30,6 +31,11 @@ MAX_SIDE_LOGO           =   800
 COVER_MIN_RATIO         =   1.0               # portadas verticales se recortan a cuadrado (el hero es apaisado)
 GALLERY_RATIO           =   (3 / 4, 16 / 9)   # (alto máximo relativo, ancho máximo relativo)
 BG_MODEL_URL            =   'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx'
+#SHA256 del artefacto oficial u2netp.onnx (release rembg v0.0.0): sin esta
+#verificación un artefacto reemplazado/corrupto en la descarga se cargaba en
+#onnxruntime sin chequeo (supply-chain). BG_MODEL_SHA256 en .env lo pisa si
+#se usa otra URL/modelo; con BG_MODEL_URL default basta el valor de fábrica.
+BG_MODEL_SHA256         =   '309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8'
 BG_MODEL_SIZE           =   320
 _bg_lock                =   threading.Lock()
 _bg_session             =   None
@@ -94,6 +100,30 @@ def normalize_image(upload, kind = 'gallery'):
 #=========================================
 def _model_path():
     return os.path.join(tempfile.gettempdir(), 'davent_bg_model.onnx')
+def _file_sha256(path):
+    digest          =   hashlib.sha256()
+    with open(path, 'rb') as handle:
+        for chunk in iter(lambda : handle.read(1 << 20), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+def _ensure_model(path):
+    """
+    Garantiza que el ONNX cacheado sea íntegro: un archivo con hash distinto
+    del esperado (descarga truncada, artefacto reemplazado upstream) se borra
+    y se vuelve a descargar — y si la nueva descarga tampoco matchea, falla.
+    """
+    expected        =   config('BG_MODEL_SHA256', default = BG_MODEL_SHA256)
+    if os.path.exists(path):
+        if not expected or _file_sha256(path) == expected:
+            return
+        os.remove(path)
+    response        =   requests.get(config('BG_MODEL_URL', default = BG_MODEL_URL), timeout = 120)
+    response.raise_for_status()
+    if expected and hashlib.sha256(response.content).hexdigest() != expected:
+        raise ValueError('El modelo descargado no coincide con el hash esperado.')
+    with open(path + '.tmp', 'wb') as handle:
+        handle.write(response.content)
+    os.replace(path + '.tmp', path)
 def _session():
     global _bg_session
     if _bg_session is not None:
@@ -104,12 +134,7 @@ def _session():
         try:
             import onnxruntime
             path    =   _model_path()
-            if not os.path.exists(path):
-                response    =   requests.get(config('BG_MODEL_URL', default = BG_MODEL_URL), timeout = 120)
-                response.raise_for_status()
-                with open(path + '.tmp', 'wb') as handle:
-                    handle.write(response.content)
-                os.replace(path + '.tmp', path)
+            _ensure_model(path)
             _bg_session =   onnxruntime.InferenceSession(path, providers = ['CPUExecutionProvider'])
         except Exception:
             raise ValueError('El editor de fondo no está disponible en este momento. Probá más tarde.')

@@ -29,6 +29,7 @@ from StoreApp.domains.stores.services                import (
 )
 from .viewset_base   import StoreBaseViewSet
 from .viewset_config import StoreConfigs
+from DaventProject.throttling import PublicReadThrottle
 """
 
 Viewsets del dominio Stores.
@@ -179,7 +180,7 @@ class StoreViewSet(StoreBaseViewSet):
     #=========================================
     # PUBLIC (resolución pública del link, sin auth)
     #=========================================
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)')
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)', throttle_classes = [PublicReadThrottle])
     def public(self, request, slug = None):
         store       =   get_object_or_404(
             Store.objects.select_related('user__city', 'user__province', 'customization'),
@@ -235,7 +236,7 @@ class StoreViewSet(StoreBaseViewSet):
     #=========================================
     # PUBLIC CATALOG (productos/categorías/marcas visibles, con buscador)
     #=========================================
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/catalog')
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/catalog', throttle_classes = [PublicReadThrottle])
     def public_catalog(self, request, slug = None):
         from StoreApp.domains.catalog.models import Product
         from StoreApp.domains.catalog.serializers.serializers import (
@@ -307,7 +308,7 @@ class StoreViewSet(StoreBaseViewSet):
             raise Http404
         return store
 
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/contact/captcha')
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/contact/captcha', throttle_classes = [PublicReadThrottle])
     def contact_captcha(self, request, slug = None):
         self._contact_store(slug)
         return Response(issue_captcha(slug), status = status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from DaventProject.throttling import PublicReadThrottle
 
 
 #================================
@@ -8,6 +9,9 @@ from rest_framework.response import Response
 #================================
 class LocationBaseViewSet(viewsets.GenericViewSet):
     view_config = {}
+    #Los selects del registro consultan provincias/ciudades/CP por cada
+    #visitante anónimo: scope 'public_read' (no el anon global de 100/día).
+    throttle_classes = [PublicReadThrottle]
 
     def get_action_view(self):
         config = self.view_config.get(self.action)

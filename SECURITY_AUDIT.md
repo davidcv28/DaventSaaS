@@ -157,17 +157,54 @@ requirements.txt` → **0 CVEs** · `npm audit --omit=dev` → **0 CVEs** (2 en 
 vite/esbuild, solo afectan `vite dev`) · grep de secretos en el repo → limpio
 (`.env` nunca commiteado; la Firebase Web API key es pública por diseño).
 
-### Hallazgos nuevos
+### Hallazgos nuevos — estado: **todos remediados** (mismo commit)
 
-| # | Severidad | Hallazgo | Acción sugerida |
-|---|-----------|----------|-----------------|
-| A | **Media** | `AnonRateThrottle` global `anon: 100/day` aplica a las rutas públicas (`stores/public/*`, catálogo, locations). Bajo CGNAT de carriers móviles miles de usuarios comparten IP → 429 a visitantes legítimos de las webs de clientes. | Scope propio más holgado para GETs públicos de tienda (ej. `store_public: 600/hour`) y/o eximir lecturas GET de la cuota anon. |
-| B | **Media-baja** | CSP divergente entre deploys: la de `urls.py::spa` habilita Firebase (gstatic, googleapis, recaptcha) pero la de `docker/web/templates/default.conf.template` no (`script-src 'self'`, `connect-src 'self'`) → verificación por SMS rota en el deploy Docker/nginx. | Sumar los dominios de Firebase/reCAPTCHA a la CSP del vhost. |
-| C | **Baja** | `DEFAULT_PERMISSION_CLASSES = DjangoModelPermissionsOrAnonReadOnly`: fail-open — cualquier view futuro sin `permissions` permite lectura anónima. Hoy no expone nada (todos los viewsets definen permisos propios). | Cambiar el default a `IsAuthenticated` (AllowAny se declara explícito igual que ahora). |
-| D | **Baja** | `redeem_coupon` nullea `preapproval_id` local sin cancelar en MP: si el usuario tenía débito autorizado y su plan quedó sin acceso (edge: cancelado en MP pero `auto_renew` stale), MP seguiría debitando un preapproval que el sistema ya no conoce. | Si hay `preapproval_id` al canjear, llamar `CancelPreapprovalQuery` antes de limpiar. |
-| E | **Baja** | `BG_MODEL_URL` (onnx de rembg) se descarga sin chequeo de integridad. | Pinnar SHA256 del modelo en settings/env. |
-| F | **Baja** | `PATCH` devuelve 405 en suscriptions/plans/coupons/payments (los bases definen `update` pero no `partial_update`; `update` ya es partial=True). El frontend usa PUT — funciona, pero la API es inconsistente. | Agregar `partial_update` en los bases afectados. |
-| G | **Nota** | `SECURE_*`/cookies `Secure` dependen 100% de .env (defaults False). Si una variable falta en un deploy nuevo, las cookies viajan sin `Secure`. | Verificar el .env de cada entorno al deployar (o endurecer defaults cuando `DEBUG=False`). |
+| # | Severidad | Hallazgo | Fix aplicado |
+|---|-----------|----------|--------------|
+| A | **Media** | `AnonRateThrottle` global `anon: 100/day` aplicaba a las rutas públicas (`stores/public/*`, catálogo, locations). Bajo CGNAT de carriers móviles miles de usuarios comparten IP → 429 a visitantes legítimos. | ✅ Nuevo scope `public_read: 1000/hour` (`DaventProject/throttling.py::PublicReadThrottle`) aplicado a `public`/`public_catalog`/`contact_captcha`, `GET /api/plans/`, `GET /api/suscription-plans/` y los 3 viewsets de locations. El scope `anon` sigue como red de seguridad para futuros endpoints anónimos. |
+| B | **Media-baja** | CSP divergente entre deploys: la de `urls.py::spa` habilita Firebase pero la de `docker/web/templates/default.conf.template` no → verificación por SMS rota en Docker/nginx. | ✅ `script-src` suma gstatic/google/apis.google; `connect-src` suma identitytoolkit + securetoken + googleapis; `frame-src` suma recaptcha.google.com. Misma whitelist que la CSP del SPA. |
+| C | **Baja** | `DEFAULT_PERMISSION_CLASSES = DjangoModelPermissionsOrAnonReadOnly`: fail-open — cualquier view futuro sin `permissions` permitía lectura anónima. | ✅ Default → `IsAuthenticated` (fail-closed). Verificado: todo endpoint público declara `AllowAny`/`IsAnonimous` explícito o `permission_classes = ()` (simplejwt); OPTIONS preflight lo resuelve el middleware CORS antes del view. |
+| D | **Baja** | `redeem_coupon` nulleaba `preapproval_id` local sin cancelar en MP: un débito autorizado podía seguir cobrando tras el canje. | ✅ `CancelPreapprovalQuery` se llama antes del atomic si había `preapproval_id` (best-effort fuera de la transacción: un fallo de MP se loguea, no bloquea el canje ni alarga el lock del cupón). |
+| E | **Baja** | `BG_MODEL_URL` (onnx de rembg) se descargaba sin chequeo de integridad (supply-chain). | ✅ SHA256 del artefacto oficial pinneado (`BG_MODEL_SHA256` en imaging.py, sobreescribible por env). El archivo cacheado y la descarga se verifican; un mismatch borra el cache y una descarga que no matchea falla cerrado (no se escribe). |
+| F | **Baja** | `PATCH` devolvía 405 en suscriptions/plans/coupons/payments; además `partial_update` del mixin en `/api/profile/me/` caía al config `retrieve` y update() pedía `['message']` → 500. | ✅ `partial_update` delegando a `update` en los bases de suscriptions/payments/users + mapeo `partial_update → config 'update'` (sin el mapeo PATCH habría usado el serializer de lectura y permitido escribir `plan_suscription` directo — escalación evitada). |
+| F2 | **Baja** | PATCH parcial real rompía en users: `UpdateUserQuery` exigía `email` en el payload (KeyError→500) y `UpdateProfileQuery` reseteaba `phone_verified` si `phone` no viajaba en el PATCH; `UserProfileValidatorsMixins.validate` explotaba (`len(None)`, `None.cities`) con payload parcial. | ✅ `UpdateUserQuery` conserva el email actual si no viaja; `phone_verified` solo se resetea si `phone` está en `validated_data`; el validate() usa los valores de la instancia como fallback. Verificado por smoke test: PATCH parcial 200, flag intacto, PATCH de phone resetea el flag. |
+| G | **Nota** | `SECURE_*`/cookies `Secure` dependen 100% de .env (defaults False). | ➖ Pendiente por diseño: endurecer los defaults rompería el runserver local (`localhost` sin TLS). Mitigación real = checklist de .env por entorno (ver abajo). |
+
+### Verificación del `.env` local (2026-10-25)
+
+Auditoría del `.env` del proyecto (sin volcar secretos: solo presencia, longitud
+y entropía):
+
+- `SECRET_KEY`: 66 chars, ~340 bits — fuerte, **pero con prefijo
+  `django-insecure-`** (es la key generada por startproject). Para dev es
+  aceptable (la parte aleatoria tiene entropía suficiente); **si esa misma
+  key estuviera seteada en producción, rotarla** (el prefijo solo indica que
+  vino del template, no que sea débil — la del deploy de Render es la que
+  cuenta y no es verificable desde acá).
+- `DEBUG=True`, `ALLOWED_HOSTS=127.0.0.1,localhost`, `CORS` a localhost:5173 —
+  correctos para dev; en prod vienen de Render/dashboard.
+- `MP_WEBHOOK_SECRET` **ausente** en dev (by design: con DEBUG=True el webhook
+  procesa sin firma y loguea warning). **Confirmar que esté seteado en el
+  panel de Render y en el `.env` del VPS** — es la variable que más daño hace
+  si falta en prod.
+- `BACKEND_URL` vacío en dev (sin `notification_url` en los checkouts — el
+  webhook no puede alcanzar localhost; necesario en prod).
+- Credenciales SMTP (Brevo), R2 y MP presentes con entropía alta; `REDIS_URL`
+  ausente → locmem cache en dev (throttles per-process, correcto en local).
+- `CLOUD_CL_NAME`/`SECRET_CL_KEY`/`API_CL_KEY`/`ACCOUNT`: credenciales de
+  Cloudinary huérfanas (Cloudinary ya no se usa — la app migró a R2) —
+  candidatas a limpieza del `.env`.
+- `ISSUER_*` (datos fiscales de AFIP) vacíos — necesarios cuando se habilite
+  facturación real.
+
+### Límites de esta auditoría (honestidad técnica)
+
+- El .env de producción, el nginx en ejecución, ACL real del bucket R2,
+  secretos de MP/Firebase y dominios autorizados **no son verificables desde
+  el repo** — se audita la intención, no el despliegue.
+- Una suite propia cubre lo que el autor previó; el estándar de industria
+  complementa con: pentest externo o segundo revisor, DAST (OWASP ZAP/Burp)
+  contra staging, y `pip-audit`/`npm audit` en CI.
 
 ### Límites de esta auditoría (honestidad técnica)
 

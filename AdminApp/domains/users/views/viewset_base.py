@@ -13,7 +13,10 @@ class UserBaseViewSet(viewsets.GenericViewSet):
     view_config         =   {}
 
     def get_action_view(self):
-        config          =   self.view_config.get(self.action)
+        #'partial_update' reutiliza la config 'update' (sin el mapeo caería
+        #al fallback 'list' → IsAdminUser y PATCH /user/ quedaría roto).
+        action          =   'update' if self.action == 'partial_update' else self.action
+        config          =   self.view_config.get(action)
         if not config:
             #drf_spectacular introspecciona con actions sintéticas ('metadata')
             #al generar el schema durante check --deploy; sin el fallback la
@@ -57,7 +60,11 @@ class UserBaseViewSet(viewsets.GenericViewSet):
                 'Exito' :   message
             }, status=status.HTTP_200_OK
         )
-    
+
+    #///PARTIAL UPDATE METHOD///
+    def partial_update(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
     #///LIST METHOD///
     def list(self, request, *args, **kwargs):
         queryset        =   self.get_queryset()
@@ -105,7 +112,10 @@ class UserPassWordBaseViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin,)
 class UserProfileBaseVieSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
     view_config         =   {}
     def get_action_view(self):
-        config          =   self.view_config.get(self.action)
+        #partial_update (del mixin) caía al fallback 'retrieve' y update()
+        #pedía ['message'] → 500. Mapeo a la config 'update'.
+        action          =   'update' if self.action == 'partial_update' else self.action
+        config          =   self.view_config.get(action)
         if not config:
             #Mismo fallback que UserBaseViewSet: drf_spectacular usa actions
             #sintéticas al generar el schema (check --deploy).

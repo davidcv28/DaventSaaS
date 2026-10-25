@@ -13,29 +13,24 @@ Creamos la base de los viewsets que utilizaremos del dominio Suscriptions
 #=========================================
 class SuscriptionBaseViewSet(viewsets.GenericViewSet):
     viewset_config  =   {}
+    def _key(self):
+        #'partial_update' resuelve sobre la config 'update': caer a 'get'
+        #habilitaría PATCH con el serializer de lectura, que no restringe
+        #plan_suscription (escritura directa del plan — escalación).
+        if self.action == 'create':
+            return 'create'
+        if self.action in ('update', 'partial_update'):
+            return 'update'
+        return 'get'
     def get_serializer_class(self):
-        if self.action == 'create':
-            return self.viewset_config['create']['serializer']
-        if self.action == 'update':
-            return self.viewset_config['update']['serializer']
-        return self.viewset_config['get']['serializer']
+        return self.viewset_config[self._key()]['serializer']
     def get_queryset(self):
-        if self.action == 'create':
-            queryset = self.viewset_config['create']['queryset']
-        elif self.action == 'update':
-            queryset = self.viewset_config['update']['queryset']
-        else:
-            queryset = self.viewset_config['get']['queryset']
+        queryset = self.viewset_config[self._key()]['queryset']
         if callable(queryset):
             return queryset(self)
         return queryset
     def get_permissions(self):
-        if self.action == 'create':
-            permissions_get = self.viewset_config['create']['permissions']
-        elif self.action == 'update':
-            permissions_get = self.viewset_config['update']['permissions']
-        else:
-            permissions_get = self.viewset_config['get']['permissions']
+        permissions_get = self.viewset_config[self._key()]['permissions']
         return [permission() for permission in permissions_get]
     #=========================================
     # LIST METHOD (mi suscripción / listado admin)
@@ -80,5 +75,5 @@ class SuscriptionBaseViewSet(viewsets.GenericViewSet):
                 'Exito' : self.viewset_config['update']['message']
             }
         )
-   
-    
+    def partial_update(self, request, pk = None):
+        return self.update(request, pk)

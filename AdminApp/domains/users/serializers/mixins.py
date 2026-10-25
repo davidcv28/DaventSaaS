@@ -136,12 +136,16 @@ class UserProfileValidatorsMixins:
             raise serializers.ValidationError('El número de celular ingresado ya se encuentra en uso')
         return phone_val
     def validate(self, attrs):
-        tax_condition   =   attrs.get('tax_condition')
-        type_document   =   attrs.get('type_document')
-        business_name   =   attrs.get('business_name')
-        province_select =   attrs.get('province')
-        city_select     =   attrs.get('city')
-        document        =   attrs.get('document')
+        #PATCH parcial: los campos ausentes se validan con el valor actual de
+        #la instancia (sin el fallback, DocumentFormat(len(None)) y
+        #ProvinceAndCityComparation(None.cities) explotaban con 500).
+        inst            =   self.instance
+        tax_condition   =   attrs.get('tax_condition') or getattr(inst, 'tax_condition', None)
+        type_document   =   attrs.get('type_document') or getattr(inst, 'type_document', None)
+        business_name   =   attrs.get('business_name') or getattr(inst, 'business_name', None)
+        province_select =   attrs.get('province') or getattr(inst, 'province', None)
+        city_select     =   attrs.get('city') or getattr(inst, 'city', None)
+        document        =   attrs.get('document') or getattr(inst, 'document', None)
         errors          =   {}
         type_document   =   TypeDocumentSelect(tax_condition, type_document)
         attrs['type_document']          =   type_document

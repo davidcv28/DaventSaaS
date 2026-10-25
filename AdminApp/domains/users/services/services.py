@@ -28,7 +28,9 @@ BACKEND_URL     =   config('BACKEND_URL', default = '') or 'http://127.0.0.1:800
 
 #USER UPDATE QUERY
 def UpdateUserQuery(user: User, validated_data : dict) -> User:
-    email       =   validated_data['email'].strip()
+    #PATCH parcial: si el payload no trae 'email' se conserva el actual
+    #(PUT del frontend siempre lo manda, pero PATCH no está obligado).
+    email       =   (validated_data.get('email') or user.email).strip()
     #Si cambia el correo hay que verificarlo de nuevo: la verificación anterior
     #valía para la dirección vieja.
     if email != user.email:
@@ -56,8 +58,9 @@ def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
 #PROFILE UPDATE QUERY
 def UpdateProfileQuery(profile : UserProfile, validated_data : dict) -> UserProfile:
     #Si cambia el celular hay que verificarlo de nuevo: la verificación anterior
-    #valía para el número viejo (misma regla que el cambio de correo).
-    if validated_data.get('phone') != profile.phone:
+    #valía para el número viejo (misma regla que el cambio de correo). Solo si
+    #'phone' viajó en el payload — un PATCH sin phone no debe resetear el flag.
+    if 'phone' in validated_data and validated_data.get('phone') != profile.phone:
         profile.phone_verified    =   False
         profile.phone_verified_at =   None
     for field, value in validated_data.items():

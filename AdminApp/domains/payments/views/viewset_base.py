@@ -75,3 +75,5 @@ class PaymentBaseViewSet(viewsets.GenericViewSet):
                 'Exito' : self.viewset_config['update']['message']
             }
         )
+    def partial_update(self, request, pk = None):
+        return self.update(request, pk)

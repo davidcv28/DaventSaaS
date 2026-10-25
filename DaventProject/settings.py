@@ -53,8 +53,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':(
     'rest_framework_simplejwt.authentication.JWTAuthentication',  
     ),
+    #Fail-closed: un endpoint sin 'permissions' explícito exige autenticación,
+    #nunca lectura anónima por defecto. Los públicos declaran AllowAny.
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+        "rest_framework.permissions.IsAuthenticated"
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -63,6 +65,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day',
+        #Lecturas públicas (webs de clientes, catálogo, planes, locations):
+        #scope propio — compartir el 'anon' de 100/día saturaba visitantes
+        #reales detrás de CGNAT (carriers móviles con IP compartida).
+        'public_read': '1000/hour',
         'login': '5/min',
         #Renovación de JWT por cookie (cada pestaña renueva al expirar el access;
         #holgado para NAT oficinas pero acota brute-force del cookie de sesión).

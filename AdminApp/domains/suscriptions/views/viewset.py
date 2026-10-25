@@ -6,15 +6,17 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .viewset_base      import  SuscriptionBaseViewSet
 from .viewset_config    import  SuscriptionConfigs, SuscriptionPlanConfigs, CouponConfigs
-from rest_framework     import status
+from rest_framework     import status, serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from AdminApp.domains.suscriptions.models                   import Suscription, SuscriptionPlan, Coupon, CouponRedemption
+from AdminApp.domains.payments.services                     import CancelPreapprovalQuery
 from AdminApp.domains.suscriptions.serializers.serializers  import SuscriptionSerializerList
 from AdminApp.domains.users.models                          import UserProfile
+from DaventProject.throttling                               import PublicReadThrottle
 
 
 class CouponRedeemRateThrottle(UserRateThrottle):
@@ -106,6 +108,18 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
         profile     =   UserProfile.objects.filter(user = request.user).first()
         if profile is None:
             return Response({'detail': 'Todavía no completaste tu perfil.'}, status = status.HTTP_400_BAD_REQUEST)
+        #Si había un débito automático de MP, se cancela ANTES de pisar la
+        #suscripción: nullear preapproval_id a secas dejaba el débito
+        #autorizado en MP y el cobro seguía llegando (edge: plan vencido sin
+        #acceso pero preapproval authorized). Best-effort fuera del atomic:
+        #un fallo de la API de MP no debe bloquear el canje ni alargar el
+        #lock de la fila del cupón.
+        suscription_prev    =   Suscription.objects.filter(user = profile).first()
+        if suscription_prev and suscription_prev.preapproval_id:
+            try:
+                CancelPreapprovalQuery(suscription_prev)
+            except serializers.ValidationError:
+                self.logger.warning('No se pudo cancelar el débito MP al canjear cupón: user=%s', profile.pk)
         #select_for_update + unique(coupon, user) serializan canjes concurrentes
         #para que max_uses no se supere en una carrera.
         with transaction.atomic():
@@ -145,7 +159,8 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
 # SUSCRIPTION PLAN VIEWSET (catálogo público para el dashboard)
 #=========================================
 class SuscriptionPlanViewSet(SuscriptionBaseViewSet):
-    viewset_config  =   SuscriptionPlanConfigs
+    viewset_config      =   SuscriptionPlanConfigs
+    throttle_classes    =   [PublicReadThrottle]
 
 #=========================================
 # COUPON VIEWSET (admin: alta/edición/listado con auditoría de canjes)
