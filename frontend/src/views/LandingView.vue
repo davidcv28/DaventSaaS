@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const navLinks = [
   { href: '#incluye', label: 'Qué incluye' },
@@ -63,6 +63,51 @@ const products = [
   { name: 'Smartwatch', icon: 'M12 6.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM9 6.5 10 2h4l1 4.5M9 17.5 10 22h4l1-4.5M12 9.5V12l1.5 1.5' }
 ]
 
+const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+let io = null
+const vLpReveal = {
+  mounted(el, b) {
+    el.classList.add('lp-rv')
+    if (b.value) el.style.setProperty('--d', `${b.value}ms`)
+    if (reduce || !('IntersectionObserver' in window)) return el.classList.add('is-in')
+    io ??= new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return
+      e.target.classList.add('is-in')
+      io.unobserve(e.target)
+    }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' })
+    requestAnimationFrame(() => requestAnimationFrame(() => io.observe(el)))
+  },
+  unmounted(el) { io?.unobserve(el) }
+}
+
+const spot = (e) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
+
+const visual = ref(null)
+const tilt = (e) => {
+  if (reduce || !visual.value || e.pointerType === 'touch') return
+  const r = e.currentTarget.getBoundingClientRect()
+  visual.value.style.setProperty('--rx', ((e.clientX - r.left) / r.width - 0.5).toFixed(3))
+  visual.value.style.setProperty('--ry', ((e.clientY - r.top) / r.height - 0.5).toFixed(3))
+}
+const untilt = () => { visual.value?.style.setProperty('--rx', 0); visual.value?.style.setProperty('--ry', 0) }
+
+const bar = ref(null)
+let raf = 0
+const onScroll = () => {
+  if (raf) return
+  raf = requestAnimationFrame(() => {
+    raf = 0
+    const h = document.documentElement
+    bar.value?.style.setProperty('--p', (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)).toFixed(4))
+  })
+}
+onMounted(() => { window.addEventListener('scroll', onScroll, { passive: true }); onScroll() })
+onBeforeUnmount(() => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); io?.disconnect(); io = null })
+
 const open = ref(0)
 const toggle = (i) => { open.value = open.value === i ? -1 : i }
 const menu = ref(false)
@@ -70,6 +115,7 @@ const menu = ref(false)
 
 <template>
   <div class="lp">
+    <div ref="bar" class="lp-progress" aria-hidden="true" />
     <section id="top" class="lp-hero-wrap">
       <header class="lp-nav">
         <a class="lp-brand" href="#top" aria-label="DAVENT, ir al inicio">
@@ -91,7 +137,7 @@ const menu = ref(false)
         </button>
       </header>
 
-      <div class="lp-hero">
+      <div class="lp-hero" @pointermove="tilt" @pointerleave="untilt">
         <div class="lp-hero-copy">
           <span class="lp-pill">Plataforma para comercios</span>
           <h1>Tu comercio en internet, <em>sin complicarte.</em></h1>
@@ -114,7 +160,7 @@ const menu = ref(false)
           </ul>
         </div>
 
-        <div class="lp-hero-visual" aria-hidden="true">
+        <div ref="visual" class="lp-hero-visual" aria-hidden="true">
           <div class="lp-phone">
             <div class="lp-url">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
@@ -159,11 +205,11 @@ const menu = ref(false)
 
     <main>
       <section id="incluye" class="lp-section">
-        <span class="lp-eyebrow">Todo en un solo lugar</span>
-        <h2>Una plataforma pensada para vender más y administrar menos.</h2>
-        <p class="lp-lead">Catálogos, suscripciones y cobros en un mismo lugar, con la información que necesita un comercio argentino.</p>
+        <span v-lp-reveal class="lp-eyebrow">Todo en un solo lugar</span>
+        <h2 v-lp-reveal="80">Una plataforma pensada para vender más y administrar menos.</h2>
+        <p v-lp-reveal="140" class="lp-lead">Catálogos, suscripciones y cobros en un mismo lugar, con la información que necesita un comercio argentino.</p>
         <div class="lp-features">
-          <article v-for="f in features" :key="f.title" class="lp-card">
+          <article v-for="(f, i) in features" :key="f.title" v-lp-reveal="i * 90" class="lp-card" @pointermove="spot">
             <span class="lp-ico">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path :d="f.icon" /></svg>
             </span>
@@ -175,18 +221,18 @@ const menu = ref(false)
       </section>
 
       <section id="tu-web" class="lp-section">
-        <span class="lp-eyebrow">Tu web</span>
-        <h2>Qué podés hacer con tu web.</h2>
-        <p class="lp-lead">Estar en internet sin complicarte: tu logo, tus colores y tus productos, en una web que se actualiza sola.</p>
+        <span v-lp-reveal class="lp-eyebrow">Tu web</span>
+        <h2 v-lp-reveal="80">Qué podés hacer con tu web.</h2>
+        <p v-lp-reveal="140" class="lp-lead">Estar en internet sin complicarte: tu logo, tus colores y tus productos, en una web que se actualiza sola.</p>
         <div class="lp-bento">
-          <article v-for="c in webCards" :key="c.title" class="lp-card" :class="{ wide: c.wide }">
+          <article v-for="(c, i) in webCards" :key="c.title" v-lp-reveal="i * 90" class="lp-card" @pointermove="spot" :class="{ wide: c.wide }">
             <span class="lp-ico">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path :d="c.icon" /></svg>
             </span>
             <h3>{{ c.title }}</h3>
             <p>{{ c.text }}</p>
           </article>
-          <article class="lp-card lp-design">
+          <article v-lp-reveal="200" class="lp-card lp-design">
             <div class="lp-swatches"><i v-for="(s, i) in swatches" :key="s" :style="{ background: s }" :class="{ on: i === 0 }" /></div>
             <h3>Diseño profesional</h3>
             <p>Tu logo, tus colores y secciones que activás a gusto.</p>
@@ -198,10 +244,10 @@ const menu = ref(false)
       </section>
 
       <section id="como-funciona" class="lp-section">
-        <span class="lp-eyebrow">Cómo funciona</span>
-        <h2>Tu web lista en minutos.</h2>
+        <span v-lp-reveal class="lp-eyebrow">Cómo funciona</span>
+        <h2 v-lp-reveal="80">Tu web lista en minutos.</h2>
         <ol class="lp-steps">
-          <li v-for="s in steps" :key="s.n" class="lp-card">
+          <li v-for="(s, i) in steps" :key="s.n" v-lp-reveal="i * 120" class="lp-card" @pointermove="spot">
             <span class="lp-num">{{ s.n }}</span>
             <h3>{{ s.title }}</h3>
             <p>{{ s.text }}</p>
@@ -211,11 +257,11 @@ const menu = ref(false)
 
       <section id="quien" class="lp-section lp-founder">
         <div>
-          <span class="lp-eyebrow">Quién está detrás</span>
-          <h2>Simple, rápida y sin depender de nadie.</h2>
-          <p class="lp-lead">DAVENT nació para que cualquier comercio pueda tener su propia web.</p>
+          <span v-lp-reveal class="lp-eyebrow">Quién está detrás</span>
+          <h2 v-lp-reveal="80">Simple, rápida y sin depender de nadie.</h2>
+          <p v-lp-reveal="140" class="lp-lead">DAVENT nació para que cualquier comercio pueda tener su propia web.</p>
         </div>
-        <div class="lp-founder-card">
+        <div v-lp-reveal="120" class="lp-founder-card">
           <span class="lp-mono">D</span>
           <div>
             <strong>David Cervantes</strong>
@@ -230,9 +276,9 @@ const menu = ref(false)
       </section>
 
       <section class="lp-section lp-faq">
-        <span class="lp-eyebrow">Preguntas frecuentes</span>
-        <h2>Lo que más nos preguntan</h2>
-        <div class="lp-faq-list">
+        <span v-lp-reveal class="lp-eyebrow">Preguntas frecuentes</span>
+        <h2 v-lp-reveal="80">Lo que más nos preguntan</h2>
+        <div v-lp-reveal="120" class="lp-faq-list">
           <div v-for="(f, i) in faqs" :key="f.q" class="lp-faq-item" :class="{ on: open === i }">
             <button type="button" :aria-expanded="open === i" @click="toggle(i)">
               {{ f.q }}<span aria-hidden="true">{{ open === i ? '−' : '+' }}</span>
@@ -243,7 +289,7 @@ const menu = ref(false)
       </section>
 
       <section id="empezar" class="lp-final-wrap">
-        <div class="lp-final">
+        <div v-lp-reveal class="lp-final">
           <h2>Empezá hoy.</h2>
           <p>Crear tu cuenta es gratis y tu web queda lista en minutos. Elegís tu link, cargás tus productos y ya podés compartirla.</p>
           <div class="lp-actions center">
@@ -444,9 +490,73 @@ const menu = ref(false)
   .lp-list { grid-template-columns: 1fr; }
   .lp-chip.c-link, .lp-chip.c-toggle, .lp-chip.c-qr { display: none; }
 }
+/* ---- Motion ---- */
+.lp-progress { position: fixed; inset: 0 0 auto 0; z-index: 50; height: 3px; transform-origin: 0 50%; transform: scaleX(var(--p, 0)); background: linear-gradient(90deg, #6366f1, #a5b4fc, #38bdf8); pointer-events: none; }
+
+.lp-hero-wrap { position: relative; overflow: hidden; }
+.lp-hero-wrap::before, .lp-hero-wrap::after { content: ''; position: absolute; z-index: 0; border-radius: 50%; filter: blur(70px); pointer-events: none; }
+.lp-hero-wrap::before { width: 460px; height: 460px; left: -120px; top: 80px; background: rgba(124, 92, 214, .35); animation: lp-drift 16s ease-in-out infinite alternate; }
+.lp-hero-wrap::after { width: 520px; height: 520px; right: -140px; bottom: -120px; background: rgba(56, 130, 246, .28); animation: lp-drift 20s ease-in-out infinite alternate-reverse; }
+.lp-nav, .lp-hero { position: relative; z-index: 1; }
+@keyframes lp-drift { to { transform: translate3d(80px, -50px, 0) scale(1.15); } }
+
+@keyframes lp-up { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+@keyframes lp-pop { from { opacity: 0; transform: translateY(30px) scale(.94); } to { opacity: 1; transform: none; } }
+.lp-nav { animation: lp-up .7s cubic-bezier(.2, .7, .2, 1) both; }
+.lp-hero-copy > * { animation: lp-up .9s cubic-bezier(.2, .7, .2, 1) both; }
+.lp-hero-copy > :nth-child(1) { animation-delay: .1s; }
+.lp-hero-copy > :nth-child(2) { animation-delay: .2s; }
+.lp-hero-copy > :nth-child(3) { animation-delay: .32s; }
+.lp-hero-copy > :nth-child(4) { animation-delay: .44s; }
+.lp-hero-copy > :nth-child(5) { animation-delay: .56s; }
+.lp-hero h1 em { background: linear-gradient(100deg, #a5b4fc 20%, #e0e7ff 45%, #a5b4fc 70%) 0 0 / 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: lp-shine 6s ease-in-out 1.2s infinite; }
+@keyframes lp-shine { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+
+.lp-hero-visual { --rx: 0; --ry: 0; animation: lp-pop 1s cubic-bezier(.2, .7, .2, 1) .35s both; }
+.lp-phone { transform: perspective(1000px) rotateY(calc(var(--rx) * 10deg)) rotateX(calc(var(--ry) * -8deg)); transition: transform .35s cubic-bezier(.2, .7, .2, 1); animation: lp-bob 7s ease-in-out infinite; will-change: transform; }
+.lp-chip { translate: calc(var(--rx) * 22px) calc(var(--ry) * 16px); transition: translate .45s cubic-bezier(.2, .7, .2, 1); }
+.c-qr { translate: calc(var(--rx) * -26px) calc(var(--ry) * -18px); }
+@keyframes lp-bob { 50% { translate: 0 -10px; } }
+.lp-grid > div { animation: lp-up .6s cubic-bezier(.2, .7, .2, 1) both; }
+.lp-grid > div:nth-child(1) { animation-delay: .9s; } .lp-grid > div:nth-child(2) { animation-delay: 1s; }
+.lp-grid > div:nth-child(3) { animation-delay: 1.1s; } .lp-grid > div:nth-child(4) { animation-delay: 1.2s; }
+.sw::after { animation: lp-switch 4.5s ease-in-out infinite; }
+.sw { animation: lp-switch-bg 4.5s ease-in-out infinite; }
+@keyframes lp-switch { 0%, 40% { right: 3px; } 50%, 90% { right: 19px; } 100% { right: 3px; } }
+@keyframes lp-switch-bg { 0%, 40% { background: #34d399; } 50%, 90% { background: #64748b; } 100% { background: #34d399; } }
+
+.lp-btn.primary { position: relative; overflow: hidden; }
+.lp-btn.primary::after { content: ''; position: absolute; inset: 0 auto 0 -60%; width: 40%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent); animation: lp-sweep 4.5s ease-in-out 2s infinite; }
+@keyframes lp-sweep { 0% { left: -60%; } 40%, 100% { left: 130%; } }
+.lp-btn.glow { animation: lp-glow 3.2s ease-in-out infinite; }
+@keyframes lp-glow { 50% { box-shadow: 0 12px 44px rgba(99, 102, 241, .75); } }
+.lp-btn svg { transition: transform .2s; }
+.lp-btn:hover svg { transform: translateX(3px); }
+
+.lp-rv { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(.2, .7, .2, 1) var(--d, 0ms), transform .8s cubic-bezier(.2, .7, .2, 1) var(--d, 0ms), border-color .2s; }
+.lp-rv.is-in { opacity: 1; transform: none; }
+.lp-card.lp-rv.is-in:hover { transform: translateY(-4px); transition-delay: 0ms, 0ms, 0ms; }
+
+.lp-card { position: relative; overflow: hidden; isolation: isolate; }
+.lp-card::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .3s; background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 0%), rgba(129, 140, 248, .22), transparent 65%); }
+.lp-card:hover::before { opacity: 1; }
+.lp-ico { transition: transform .3s cubic-bezier(.2, .7, .2, 1), background .3s; }
+.lp-card:hover .lp-ico { transform: scale(1.08) rotate(-4deg); background: rgba(99, 102, 241, .4); }
+.lp-num { box-shadow: 0 0 0 0 rgba(99, 102, 241, .5); animation: lp-ping 2.8s ease-out infinite; }
+.lp-steps > li:nth-child(2) .lp-num { animation-delay: .5s; } .lp-steps > li:nth-child(3) .lp-num { animation-delay: 1s; }
+@keyframes lp-ping { 70%, 100% { box-shadow: 0 0 0 14px rgba(99, 102, 241, 0); } }
+.lp-swatches i { transition: transform .25s cubic-bezier(.2, .7, .2, 1); }
+.lp-swatches i:hover { transform: scale(1.25); }
+.lp-faq-item { transition: border-color .2s, background .2s; }
+.lp-faq-item:hover { background: rgba(255, 255, 255, .07); }
+.lp-faq-item button span { transition: transform .25s; }
+.lp-faq-item.on button span { transform: rotate(180deg); }
+.lp-final { background-size: auto, 28px 28px, 160% 160%; animation: lp-grad 12s ease-in-out infinite alternate; }
+@keyframes lp-grad { to { background-position: 0 0, 0 0, 100% 100%; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .lp { scroll-behavior: auto; }
-  .lp-chip { animation: none; }
-  .lp-btn, .lp-card { transition: none; }
+  .lp *, .lp *::before, .lp *::after, .lp-hero-wrap::before, .lp-hero-wrap::after { animation: none !important; transition: none !important; }
+  .lp-rv { opacity: 1; transform: none; }
+  .lp-phone, .lp-chip { transform: none; translate: none; }
 }
 </style>
