@@ -143,3 +143,37 @@ proyecto se perdían en producción.
 Nota: los throttles comparten el cache locmem entre tests — las clases que
 pegan a endpoints con rate limpio `cache.clear()` en `setUp` para que el
 conteo por IP no se herede entre casos.
+
+---
+
+## 5. Re-auditoría independiente — 2026-10-25
+
+Segunda pasada completa (misma base de código, foco adversarial: leer el
+sistema como si lo hubiera escrito un tercero) + verificación ejecutable.
+
+**Ejecutado:** `manage.py test` → **219 tests OK** · `manage.py check --deploy`
+(solo warnings esperados de flags env-driven + spectacular) · `pip-audit -r
+requirements.txt` → **0 CVEs** · `npm audit --omit=dev` → **0 CVEs** (2 en dev:
+vite/esbuild, solo afectan `vite dev`) · grep de secretos en el repo → limpio
+(`.env` nunca commiteado; la Firebase Web API key es pública por diseño).
+
+### Hallazgos nuevos
+
+| # | Severidad | Hallazgo | Acción sugerida |
+|---|-----------|----------|-----------------|
+| A | **Media** | `AnonRateThrottle` global `anon: 100/day` aplica a las rutas públicas (`stores/public/*`, catálogo, locations). Bajo CGNAT de carriers móviles miles de usuarios comparten IP → 429 a visitantes legítimos de las webs de clientes. | Scope propio más holgado para GETs públicos de tienda (ej. `store_public: 600/hour`) y/o eximir lecturas GET de la cuota anon. |
+| B | **Media-baja** | CSP divergente entre deploys: la de `urls.py::spa` habilita Firebase (gstatic, googleapis, recaptcha) pero la de `docker/web/templates/default.conf.template` no (`script-src 'self'`, `connect-src 'self'`) → verificación por SMS rota en el deploy Docker/nginx. | Sumar los dominios de Firebase/reCAPTCHA a la CSP del vhost. |
+| C | **Baja** | `DEFAULT_PERMISSION_CLASSES = DjangoModelPermissionsOrAnonReadOnly`: fail-open — cualquier view futuro sin `permissions` permite lectura anónima. Hoy no expone nada (todos los viewsets definen permisos propios). | Cambiar el default a `IsAuthenticated` (AllowAny se declara explícito igual que ahora). |
+| D | **Baja** | `redeem_coupon` nullea `preapproval_id` local sin cancelar en MP: si el usuario tenía débito autorizado y su plan quedó sin acceso (edge: cancelado en MP pero `auto_renew` stale), MP seguiría debitando un preapproval que el sistema ya no conoce. | Si hay `preapproval_id` al canjear, llamar `CancelPreapprovalQuery` antes de limpiar. |
+| E | **Baja** | `BG_MODEL_URL` (onnx de rembg) se descarga sin chequeo de integridad. | Pinnar SHA256 del modelo en settings/env. |
+| F | **Baja** | `PATCH` devuelve 405 en suscriptions/plans/coupons/payments (los bases definen `update` pero no `partial_update`; `update` ya es partial=True). El frontend usa PUT — funciona, pero la API es inconsistente. | Agregar `partial_update` en los bases afectados. |
+| G | **Nota** | `SECURE_*`/cookies `Secure` dependen 100% de .env (defaults False). Si una variable falta en un deploy nuevo, las cookies viajan sin `Secure`. | Verificar el .env de cada entorno al deployar (o endurecer defaults cuando `DEBUG=False`). |
+
+### Límites de esta auditoría (honestidad técnica)
+
+- El .env de producción, el nginx en ejecución, ACL real del bucket R2,
+  secretos de MP/Firebase y dominios autorizados **no son verificables desde
+  el repo** — se audita la intención, no el despliegue.
+- Una suite propia cubre lo que el autor previó; el estándar de industria
+  complementa con: pentest externo o segundo revisor, DAST (OWASP ZAP/Burp)
+  contra staging, y `pip-audit`/`npm audit` en CI.
