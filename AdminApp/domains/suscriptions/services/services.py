@@ -24,11 +24,10 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
     cupón por coupon.days días y limpia restos de débito MP (pending_plan /
     auto_renew / preapproval_id / cancelled_at).
 
-    El débito en MP se cancela POST-COMMIT por id (CancelPreapprovalByIdQuery):
-    si la transacción rollbackea —cupón inválido, vencido, agotado, ya usado,
-    plan vigente— el débito del usuario queda intacto. Cancelarlo ANTES de
-    validar dejaba al usuario sin débito y sin plan en cualquier canje fallido.
-    Un fallo de la API de MP queda logueado para reconciliar vía /sync/.
+    Un débito MP aún vivo (preapproval sin baja confirmada) rechaza el canje:
+    un cobro en vuelo de MP entraría con el plan ya pisado por el cupón.
+    cancelled_at certifica que MP procesó la baja — ahí solo se limpian los
+    restos locales sin volver a llamar a la API.
     """
     code    =   (code or '').strip()
     if not code:
@@ -49,7 +48,12 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
         suscription =   Suscription.objects.select_for_update().filter(user = profile).first() or Suscription(user = profile)
         if suscription.pk and suscription.grants_access() and not suscription.plan_suscription.is_trial:
             raise serializers.ValidationError({'detail': 'Ya tenés un plan vigente.'})
-        preapproval_id                          =   suscription.preapproval_id
+        #Un débito MP aún vivo (preapproval sin baja confirmada) puede cobrar
+        #en vuelo tras el canje: ese cobro entraría con el plan ya pisado por
+        #el cupón. Se exige darlo de baja primero — cancelled_at certifica
+        #que MP ya procesó la cancelación.
+        if suscription.pk and suscription.preapproval_id and not suscription.cancelled_at:
+            raise serializers.ValidationError({'detail': 'Primero tenés que dar de baja el débito automático para canjear un cupón.'})
         suscription.plan_suscription            =   coupon.plan
         suscription.pending_plan_suscription    =   None
         suscription.status                      =   Suscription.STATUS_ACTIVE
@@ -60,10 +64,5 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
         suscription.cancelled_at                =   None
         suscription.save()
         CouponRedemption.objects.create(coupon = coupon, user = profile, suscription = suscription)
-        if preapproval_id:
-            #Import diferido: evita un edge de inicialización entre dominios
-            #(payments.services ya importa suscriptions.models).
-            from AdminApp.domains.payments.services import CancelPreapprovalByIdQuery
-            transaction.on_commit(lambda pid = preapproval_id : CancelPreapprovalByIdQuery(pid))
     logger.info('Cupón canjeado: coupon=%s user=%s', coupon.code, profile.pk)
     return suscription, coupon

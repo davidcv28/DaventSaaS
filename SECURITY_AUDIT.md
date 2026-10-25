@@ -283,3 +283,24 @@ estados del repo arrojan resultados consistentes. Lo que queda fuera del
 alcance de cualquier lectura de código es la validación del despliegue real y
 un pentest/revisor humano externo — el siguiente paso recomendado es DAST
 (OWASP ZAP/Burp) contra staging.
+
+## 8. Simulación de ataque al sistema de pagos — 2026-10-25 (cotejo + remediación)
+
+Una simulación adversarial de 5 vectores sobre el flujo de Mercado Pago fue
+cotejada contra el código real. Resultado corregido: **2 falsos positivos,
+1 edge de consistencia (remediado), 1 brecha condicional (remediada) y
+1 defensa confirmada**.
+
+| # | Vector | Veredicto cotejado | Acción |
+|---|--------|--------------------|--------|
+| V-1 | Replay de webhook con firma válida dentro de la ventana de 10 min | **Falso positivo**: la idempotencia no falta — vive a nivel `Payment` (`external_reference` unique + `select_for_update(of='self')` + relectura de `old_status` → segundo `approved` sin `renew`, sin rollup ni factura). `IssueInvoiceQuery` devuelve la existente. | ✅ Endurecido igual: dedup de entregas por `x-request-id` en cache (`WEBHOOK_DEDUP_SECONDS=600`, fail-open, marca solo tras procesar OK) — el replay ya ni siquiera pega a la API de MP. |
+| V-2 | Race en cupón `max_uses=1` multiusuario | **Falso positivo**: `Coupon.objects.select_for_update()` dentro de `atomic()` retiene el lock de fila hasta el commit — el `redemptions.count()` del segundo ya ve la redención del primero (READ COMMITTED por statement). Serialización total en la fila del cupón. | Sin cambio (el lock existente es la mitigación correcta). |
+| V-3 | Canje de cupón con débito MP vivo (`PENDING_PAYMENT` + `preapproval_id`) | **Válido como edge de consistencia (bajo)**: un cobro en vuelo de MP podía entrar con el plan ya pisado por el cupón — si el monto no coincidía con el nuevo plan quedaba huérfano sin acreditar (sin ganancia para el atacante: los días del cupón se pisan, no se acumulan). | ✅ `RedeemCouponQuery` rechaza el canje con `preapproval_id` sin `cancelled_at` — hay que dar de baja el débito primero. El `on_commit(CancelPreapprovalByIdQuery)` quedó obsoleto y se eliminó (baja confirmada ⇒ nada que cancelar). |
+| V-4 | Webhook sin firma con `DEBUG=True` en producción | **Válido condicional a misconfig** (era el único bypass: `DEBUG=True` + secret vacío procesaba sin verificar; además `checks.py` retornaba temprano con DEBUG → `check --deploy` no lo flagueaba). | ✅ El bypass ahora exige opt-in explícito `MP_WEBHOOK_ALLOW_UNSIGNED=True` **además** de `DEBUG=True`; nuevo check `payments.E003` marca el flag en `check --deploy`. `DEBUG=True` solo ya nunca abre el endpoint. |
+| V-5 | IDOR con `payment_id` ajeno | **Defensa confirmada**: ownership por `external_reference` + rechazo de pago existente de otra suscripción (regresión del hallazgo #4, §1). | Sin cambio. |
+
+Tests nuevos/actualizados: `payments/tests.py` (unsigned solo con flag+DEBUG,
+rechazo sin flag en DEBUG, flag inerte fuera de DEBUG, dedup por request-id,
+request-ids distintos sí procesan) y `suscriptions/tests.py` (canje rechazado
+con débito vivo conservando suscripción intacta, canje permitido con baja
+confirmada `cancelled_at`).

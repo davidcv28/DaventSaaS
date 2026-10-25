@@ -41,3 +41,23 @@ def check_mp_secret_key(app_configs, **kwargs):
             )
         ]
     return []
+
+
+@register(Tags.security, deploy = True)
+def check_mp_webhook_allow_unsigned(app_configs, **kwargs):
+    #El flag es un bypass solo-dev (además exige DEBUG=True en runtime): si se
+    #cuela en el .env de producción queda inerte, pero su presencia marca un
+    #env copiado de dev — y bastaría un DEBUG=True accidental para abrir el
+    #webhook sin firma.
+    if settings.DEBUG:
+        return []
+    if config('MP_WEBHOOK_ALLOW_UNSIGNED', default = False, cast = bool):
+        return [
+            Error(
+                'MP_WEBHOOK_ALLOW_UNSIGNED está habilitado en un entorno de deploy: '
+                'si DEBUG se activa, los webhooks de MP se procesarían sin firma.',
+                hint = 'Quitar MP_WEBHOOK_ALLOW_UNSIGNED del .env (es un bypass solo para dev local).',
+                id = 'payments.E003',
+            )
+        ]
+    return []

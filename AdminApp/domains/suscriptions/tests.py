@@ -289,6 +289,40 @@ class CouponRedeemTests(TestCase):
         response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
         self.assertEqual(response.status_code, 400)
 
+    def test_redeem_rejected_with_active_debit(self):
+        #Un preapproval sin baja confirmada puede cobrar en vuelo tras el
+        #canje: hay que darlo de baja antes de canjear el cupón.
+        client, profile =   self._client()
+        Suscription.objects.create(
+            user = profile, plan_suscription = _plan(name = 'Pago'),
+            status = Suscription.STATUS_PENDING_PAYMENT,
+            end_date = timezone.now(),
+            auto_renew = True, preapproval_id = 'pre-9')
+        self._coupon()
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(CouponRedemption.objects.exists())
+        #La suscripción quedó intacta: ni el plan ni el débito se tocaron.
+        suscription     =   Suscription.objects.get(user = profile)
+        self.assertEqual(suscription.plan_suscription.name, 'Pago')
+        self.assertEqual(suscription.preapproval_id, 'pre-9')
+
+    def test_redeem_allowed_after_debit_cancelled(self):
+        #cancelled_at certifica la baja en MP: el canje solo limpia los restos
+        #locales sin volver a llamar a la API de Mercado Pago.
+        client, profile =   self._client()
+        Suscription.objects.create(
+            user = profile, plan_suscription = _plan(name = 'Pago'),
+            status = Suscription.STATUS_PENDING_PAYMENT,
+            end_date = timezone.now(),
+            preapproval_id = 'pre-9', cancelled_at = timezone.now())
+        coupon          =   self._coupon()
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        suscription     =   Suscription.objects.get(user = profile)
+        self.assertEqual(suscription.plan_suscription, coupon.plan)
+        self.assertIsNone(suscription.preapproval_id)
+
     def test_redeem_unknown_code(self):
         client, _       =   self._client()
         response        =   client.post(REDEEM_URL, {'code': 'NOEXISTE'}, format = 'json')

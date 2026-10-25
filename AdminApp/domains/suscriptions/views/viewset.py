@@ -96,8 +96,9 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
     # REDEEM COUPON (cliente): canjea un código promocional y reemplaza su
     # suscripción por el plan del cupón durante coupon.days días, sin cobro.
     # Un canje por usuario y cupón (constraint); se rechaza con un plan pago
-    # vigente (la trial sí se puede pisar) y se limpia cualquier resto de
-    # débito automático de MP para que no sume días de gracia ni se reintente.
+    # vigente (la trial sí se puede pisar), con un débito MP aún vivo (hay
+    # que darlo de baja antes) y se limpia cualquier resto local del débito
+    # para que no sume días de gracia ni se reintente.
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'redeem-coupon')
     def redeem_coupon(self, request):

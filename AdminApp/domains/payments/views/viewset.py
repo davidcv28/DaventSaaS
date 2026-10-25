@@ -43,6 +43,9 @@ logger              =   logging.getLogger(__name__)
 #Ventana mínima entre barridos reales contra la API de Mercado Pago en
 #/payments/sync/ (ver el action sync): el payment_id puntual nunca se acota.
 SYNC_SWEEP_SECONDS      =   15
+#TTL del dedup de entregas de webhook (ver el action webhook): cubre la
+#ventana de frescura de la firma — un replay más viejo ya cae por el ts.
+WEBHOOK_DEDUP_SECONDS   =   600
 #=========================================
 # WEBHOOK SIGNATURE (HMAC-SHA256 según doc oficial de Mercado Pago)
 #=========================================
@@ -51,16 +54,18 @@ def _verify_mp_signature(request, resource_id) -> bool:
     Valida x-signature + x-request-id: el manifest es
     'id:<data.id>;request-id:<x-request-id>;ts:<ts>;' firmado con HMAC-SHA256
     y MP_WEBHOOK_SECRET -> debe matchear el v1= del header (compare_digest).
-    Sin secret configurado se loguea warning y se procesa igual SOLO en dev
-    (DEBUG=True): en producción la falta de secret rechaza el evento — un
-    webhook sin verificar permite forjar acreditaciones de pago.
+    Sin secret el evento se procesa igual SOLO en dev con opt-in explícito:
+    exige DEBUG=True y MP_WEBHOOK_ALLOW_UNSIGNED=True en el .env — así un
+    DEBUG=True accidental en producción no deja el webhook sin verificar
+    (un webhook sin firma permite forjar acreditaciones de pago).
     """
     secret          =   config('MP_WEBHOOK_SECRET', default = '')
     if not secret:
-        if settings.DEBUG:
-            logger.warning('MP_WEBHOOK_SECRET no configurado: webhook de MP procesado sin verificar firma')
+        allow_unsigned  =   settings.DEBUG and config('MP_WEBHOOK_ALLOW_UNSIGNED', default = False, cast = bool)
+        if allow_unsigned:
+            logger.warning('MP_WEBHOOK_SECRET no configurado: webhook de MP procesado sin verificar firma (MP_WEBHOOK_ALLOW_UNSIGNED)')
             return True
-        logger.error('MP_WEBHOOK_SECRET no configurado en producción: webhook de MP rechazado')
+        logger.error('MP_WEBHOOK_SECRET no configurado: webhook de MP rechazado')
         return False
     x_signature     =   request.headers.get('x-signature', '')
     x_request_id    =   request.headers.get('x-request-id', '')
@@ -124,12 +129,32 @@ class PaymentViewSet(PaymentBaseViewSet):
         if not _verify_mp_signature(request, resource_id):
             logger.warning('Webhook de MP rechazado: firma inválida (topic=%s id=%s)', topic, resource_id)
             return Response({'detail': 'Firma de webhook inválida'}, status = status.HTTP_401_UNAUTHORIZED)
+        #Dedup de entregas: MP reintenta el mismo evento y un replay dentro de
+        #la ventana de frescura reenvía las mismas cabeceras — con el
+        #x-request-id ya procesado se responde 200 sin volver a pegarle a la
+        #API de MP. Fail-open si el cache cae: la idempotencia real está en
+        #las queries; la marca se escribe solo tras procesar con éxito (un
+        #evento fallido puede reintentarse con el mismo request-id).
+        dedup_key       =   None
+        x_request_id    =   request.headers.get('x-request-id', '')
+        if x_request_id:
+            dedup_key   =   f'mp-webhook:{topic}:{resource_id}:{x_request_id}'
+            try:
+                if cache.get(dedup_key):
+                    return Response({'Exito': 'Notificación ya procesada'}, status = status.HTTP_200_OK)
+            except Exception:
+                pass
         if topic == 'payment' and resource_id:
             PaymentWebhookQuery(resource_id)
         elif topic == 'subscription_preapproval' and resource_id:
             PreapprovalWebhookQuery(resource_id)
         elif topic == 'subscription_authorized_payment' and resource_id:
             AuthorizedPaymentWebhookQuery(resource_id)
+        if dedup_key:
+            try:
+                cache.set(dedup_key, 1, WEBHOOK_DEDUP_SECONDS)
+            except Exception:
+                pass
         return Response({'Exito': 'Notificación procesada'}, status = status.HTTP_200_OK)
     #=========================================
     # RESOLVE SUSCRIPTION (resuelve/crea la suscripción y deja el plan elegido pendiente)

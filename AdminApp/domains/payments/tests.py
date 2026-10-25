@@ -2,7 +2,8 @@
 Tests de seguridad del dominio payments.
 
 El webhook de Mercado Pago exige firma HMAC-SHA256 válida cuando
-MP_WEBHOOK_SECRET está configurado; sin secret procesa igual (dev).
+MP_WEBHOOK_SECRET está configurado; sin secret solo se procesa en dev con
+el opt-in explícito MP_WEBHOOK_ALLOW_UNSIGNED (además de DEBUG).
 """
 import hashlib
 import hmac
@@ -11,6 +12,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework import serializers
@@ -85,12 +87,33 @@ class MercadoPagoWebhookSignatureTests(TestCase):
 
     @override_settings(DEBUG = True)
     @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
-    def test_processes_unsigned_request_when_secret_missing_in_debug(self, webhook_query):
-        #Sin MP_WEBHOOK_SECRET con DEBUG=True (dev) el evento se procesa con warning.
-        with patch('AdminApp.domains.payments.views.viewset.config', lambda *a, **kw: kw.get('default', '')):
+    def test_processes_unsigned_request_only_with_explicit_flag(self, webhook_query):
+        #El bypass de firma en dev exige MP_WEBHOOK_ALLOW_UNSIGNED=True además
+        #de DEBUG: un DEBUG accidental en prod ya no abre el webhook.
+        fake    =   lambda *a, **kw: True if a and a[0] == 'MP_WEBHOOK_ALLOW_UNSIGNED' else kw.get('default', '')
+        with patch('AdminApp.domains.payments.views.viewset.config', side_effect = fake):
             response    =   self._post()
         self.assertEqual(response.status_code, 200)
         webhook_query.assert_called_once_with('12345')
+
+    @override_settings(DEBUG = True)
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_rejects_unsigned_request_without_flag_in_debug(self, webhook_query):
+        #Sin secret y sin el flag explícito se rechaza igual que en producción.
+        with patch('AdminApp.domains.payments.views.viewset.config', lambda *a, **kw: kw.get('default', '')):
+            response    =   self._post()
+        self.assertEqual(response.status_code, 401)
+        webhook_query.assert_not_called()
+
+    @override_settings(DEBUG = False)
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_unsigned_flag_is_inert_outside_debug(self, webhook_query):
+        #El flag colado a un entorno sin DEBUG no habilita el bypass.
+        fake    =   lambda *a, **kw: True if a and a[0] == 'MP_WEBHOOK_ALLOW_UNSIGNED' else kw.get('default', '')
+        with patch('AdminApp.domains.payments.views.viewset.config', side_effect = fake):
+            response    =   self._post()
+        self.assertEqual(response.status_code, 401)
+        webhook_query.assert_not_called()
 
     @override_settings(DEBUG = False)
     @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
@@ -208,6 +231,41 @@ class WebhookReplayTests(TestCase):
                 **_signature_headers('12345', ts = ts_ms),
             )
         self.assertEqual(response.status_code, 200)
+
+
+class WebhookDedupTests(TestCase):
+    """Entregas repetidas del mismo evento (mismo x-request-id) se absorben:
+    el replay dentro de la ventana de frescura no vuelve a llamar a MP."""
+    client_class    =   APIClient
+
+    def setUp(self):
+        #El dedup vive en el cache compartido de la suite.
+        cache.clear()
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_duplicate_delivery_is_deduped(self, webhook_query):
+        headers     =   _signature_headers('12345', request_id = 'req-dup-1')
+        payload     =   {'type': 'payment', 'data': {'id': '12345'}}
+        first       =   self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
+        second      =   self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        webhook_query.assert_called_once_with('12345')
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_distinct_request_ids_are_processed(self, webhook_query):
+        #Reintentos legítimos de MP llegan con otro request-id y sí se procesan
+        #(la idempotencia real está en las queries).
+        payload     =   {'type': 'payment', 'data': {'id': '12345'}}
+        for rid in ('req-a', 'req-b'):
+            response    =   self.client.post(
+                WEBHOOK_URL, payload, format = 'json',
+                **_signature_headers('12345', request_id = rid),
+            )
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(webhook_query.call_count, 2)
 
 
 def _suscription_for(username, **plan_kwargs):
