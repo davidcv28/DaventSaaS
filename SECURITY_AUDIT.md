@@ -242,3 +242,44 @@ SOLID, API). Cotejo de sus hallazgos contra el código real:
 - Estado tras esta pasada: 219 tests OK; ambas auditorías coinciden en que no
   hay hallazgos críticos abiertos en el código — el residual es de despliegue
   (env vars en prod) y de validación humana externa pendiente.
+
+## 7. Cierre — segunda pasada de la IA externa sobre `5c07a52`
+
+La IA externa re-auditó el HEAD con todos los fixes y concluyó igual que esta
+auditoría: **sin hallazgos críticos abiertos en el código**; confirmó además
+los controles agregados (throttle `logout`, saga de compensación en
+preapproval, `RedeemCouponQuery` + `on_commit`, fail-closed, SHA256 del
+modelo ONNX, CSP alineada nginx/SPA) y la sincronía docs↔código.
+
+### Falso positivo verificado
+
+- **§4.2 "admin sin rate-limit"**: incorrecto — `AdminLoginRateLimitMiddleware`
+  (`DaventProject/middleware.py`, registrado en `MIDDLEWARE`) ya corta el
+  brute-force del login del admin a 10 POST/5min por IP sobre
+  `<ADMIN_URL>/login/`, desde el propio commit auditado. (`django-axes`
+  NO está instalado; sería una capa adicional opcional, no una dependencia
+  del control actual.)
+
+### Notas operativas / deuda técnica (no son bugs)
+
+- **§4.5 throttling sin Redis en multi-instancia**: con `locmem` cada proceso
+  cuenta sus propios límites — documentado en settings; en prod `REDIS_URL`
+  está seteado. Nota de escalado, no defecto.
+- **§4.7 OneToOne + UniqueConstraint redundantes en `Suscription`**:
+  redundancia de esquema inofensiva; se deja como está.
+- **§4.8 sin ESLint en CI**: real, pero se **difere** deliberadamente — el
+  frontend puede acumular warnings que romperían el pipeline; se evalúa
+  cuando el código frontend pase lint limpio.
+- **Checklist de despliegue** (residual de ambas auditorías): `.env` de prod
+  completo (SECRET_KEY, SECRET_MP_KEY, **MP_WEBHOOK_SECRET**, R2_*, ISSUER_*
+  fiscales, AFIP_*, EMAIL_HOST_PASSWORD), `ADMIN_URL` no obvio,
+  `CSRF_TRUSTED_ORIGINS` con el dominio real, `R2_PUBLIC_URL`, Authorized
+  domains en Firebase, ACL del bucket R2, `NUM_TRUSTED_PROXIES=2` si hay
+  Cloudflare delante. Los deploy checks `payments.E001/E002` hacen falible
+  el deploy sin credenciales MP.
+
+**Cierre de la auditoría estática**: dos revisiones independientes sobre dos
+estados del repo arrojan resultados consistentes. Lo que queda fuera del
+alcance de cualquier lectura de código es la validación del despliegue real y
+un pentest/revisor humano externo — el siguiente paso recomendado es DAST
+(OWASP ZAP/Burp) contra staging.
