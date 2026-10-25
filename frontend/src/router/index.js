@@ -3,6 +3,7 @@ import { env, storeHostSlug } from '../config/env.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useStoreStore } from '../stores/store.store.js'
 
+const LandingView = () => import('../views/LandingView.vue')
 const LoginView = () => import('../views/LoginView.vue')
 const RegisterView = () => import('../views/RegisterView.vue')
 const ForgotPasswordView = () => import('../views/ForgotPasswordView.vue')
@@ -58,7 +59,7 @@ const storeChildren = [
 ]
 
 const routes = [
-  ...(storeHostSlug ? [] : [{ path: '/', redirect: '/login' }]),
+  ...(storeHostSlug ? [] : [{ path: '/', name: 'landing', component: LandingView, meta: { title: 'Tu comercio en internet' } }]),
   {
     path: '/login',
     name: 'login',
