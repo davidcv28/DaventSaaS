@@ -304,3 +304,21 @@ rechazo sin flag en DEBUG, flag inerte fuera de DEBUG, dedup por request-id,
 request-ids distintos sí procesan) y `suscriptions/tests.py` (canje rechazado
 con débito vivo conservando suscripción intacta, canje permitido con baja
 confirmada `cancelled_at`).
+
+## 9. Segunda ronda de simulación — 2026-10-25 (cotejo + remediación)
+
+Segunda simulación adversarial de 5 vectores sobre el mismo flujo, cotejada
+contra el código: **3 falsos positivos, 1 race real pero inofensiva
+(endurecida igual), 1 edge de consistencia real (remediado)**.
+
+| # | Vector | Veredicto cotejado | Acción |
+|---|--------|--------------------|--------|
+| W-1 | Race `cache.get`+`set` en el dedup por `x-request-id` | **Race real, impacto nulo**: dos entregas concurrentes podían procesar a la vez, pero la idempotencia real (`external_reference` unique → IntegrityError → existente; `select_for_update` + `old_status` → sin doble rollup/factura/`renew`) lo absorbía. Además el vector descrito era incorrecto: la firma cubre `id:<data.id>` en el manifest — un replay no puede cambiar el `payment_id`. | ✅ Endurecido: `cache.add` atómico para clamar la entrega + `cache.delete` si el procesamiento falla (el retry de MP con el mismo request-id reintenta). Dedup ahora también correcto entre workers. |
+| W-2 | `pending_plan` con débito activo → plan sin cobro del nuevo monto | **El vector narrado es falso** (MP no cobra "el monto viejo y se aplica el nuevo": `subscription` ya llama `UpdatePreapprovalPlanQuery` y `CreatePaymentQuery` exige monto = precio del plan). **Pero el cotejo encontró el hueco real**: `checkout` seteaba `pending_plan` con `preapproval_id` vivo sin realinear el monto en MP → el próximo débito cobraba el precio viejo y el webhook lo rechazaba → cobro huérfano. | ✅ `checkout` ahora llama `UpdatePreapprovalPlanQuery` cuando hay débito vivo (`preapproval_id` sin `cancelled_at`) y cambió el plan objetivo (pending_plan o suscripción impaga). Débito cancelado queda fuera (MP rechazaría el update). |
+| W-3 | Cancelación de débito ajeno vía `cancel-renewal` | **Falso positivo**: el action es `detail=False` y resuelve `Suscription.objects.filter(user__user=request.user)` — no acepta ningún id del request. | Sin cambio + test de regresión (`CancelRenewalOwnershipTests`). |
+| W-4 | Pago con monto alterado inferior al plan | **Falso positivo**: `CreatePaymentQuery` exige `transaction_amount == plan_price` (services.py:75-80) — más estricto que el `>=` propuesto. La simulación no leyó esa sección. | Sin cambio (ya cubierto por `test_amount_mismatch_rejected`). |
+| W-5 | Webhook `authorized_payment` tardío tras canje de cupón | **Ya mitigado por el fix de la ronda 1**: el canje exige `cancelled_at` (baja confirmada en MP) antes de pisar la suscripción — la ventana quedó reducida a cobros ya ejecutados por MP antes de la baja. Residuo honesto: si ese cobro existe y su monto ≠ precio del plan nuevo, el `Payment` no se registra → reconciliación manual vía panel MP (el dinero sí se cobró — no hay ganancia para el atacante ni cargo sin rastro en MP). | Documentado como residual aceptado; registrar/alertar cobros huérfanos queda como mejora futura (no trivial: distinguir débito stale de pago manual legítimo sin romper la acreditación). |
+
+Tests nuevos: `payments/tests.py` (`test_failed_processing_releases_dedup_key`,
+alineación de preapproval en checkout con débito vivo / skip sin débito /
+skip con débito cancelado, `CancelRenewalOwnershipTests`).

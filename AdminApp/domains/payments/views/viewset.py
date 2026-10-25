@@ -130,31 +130,35 @@ class PaymentViewSet(PaymentBaseViewSet):
             logger.warning('Webhook de MP rechazado: firma inválida (topic=%s id=%s)', topic, resource_id)
             return Response({'detail': 'Firma de webhook inválida'}, status = status.HTTP_401_UNAUTHORIZED)
         #Dedup de entregas: MP reintenta el mismo evento y un replay dentro de
-        #la ventana de frescura reenvía las mismas cabeceras — con el
-        #x-request-id ya procesado se responde 200 sin volver a pegarle a la
+        #la ventana de frescura reenvía las mismas cabeceras. cache.add es
+        #atómico — el primer delivery clama el request-id y los demás (aun
+        #concurrentes entre workers) se absorben sin volver a pegarle a la
         #API de MP. Fail-open si el cache cae: la idempotencia real está en
-        #las queries; la marca se escribe solo tras procesar con éxito (un
-        #evento fallido puede reintentarse con el mismo request-id).
+        #las queries; si el procesamiento explota se libera la marca para
+        #que el retry de MP con el mismo request-id pueda reintentarlo.
         dedup_key       =   None
         x_request_id    =   request.headers.get('x-request-id', '')
         if x_request_id:
             dedup_key   =   f'mp-webhook:{topic}:{resource_id}:{x_request_id}'
             try:
-                if cache.get(dedup_key):
+                if not cache.add(dedup_key, 1, WEBHOOK_DEDUP_SECONDS):
                     return Response({'Exito': 'Notificación ya procesada'}, status = status.HTTP_200_OK)
             except Exception:
-                pass
-        if topic == 'payment' and resource_id:
-            PaymentWebhookQuery(resource_id)
-        elif topic == 'subscription_preapproval' and resource_id:
-            PreapprovalWebhookQuery(resource_id)
-        elif topic == 'subscription_authorized_payment' and resource_id:
-            AuthorizedPaymentWebhookQuery(resource_id)
-        if dedup_key:
-            try:
-                cache.set(dedup_key, 1, WEBHOOK_DEDUP_SECONDS)
-            except Exception:
-                pass
+                dedup_key   =   None
+        try:
+            if topic == 'payment' and resource_id:
+                PaymentWebhookQuery(resource_id)
+            elif topic == 'subscription_preapproval' and resource_id:
+                PreapprovalWebhookQuery(resource_id)
+            elif topic == 'subscription_authorized_payment' and resource_id:
+                AuthorizedPaymentWebhookQuery(resource_id)
+        except Exception:
+            if dedup_key:
+                try:
+                    cache.delete(dedup_key)
+                except Exception:
+                    pass
+            raise
         return Response({'Exito': 'Notificación procesada'}, status = status.HTTP_200_OK)
     #=========================================
     # RESOLVE SUSCRIPTION (resuelve/crea la suscripción y deja el plan elegido pendiente)
@@ -208,6 +212,16 @@ class PaymentViewSet(PaymentBaseViewSet):
     @action(detail = False, methods = ['post'], url_path = 'checkout')
     def checkout(self, request):
         suscription     =   self._resolve_suscription(request)
+        #Cambio de plan vía checkout con débito vivo: el próximo cobro
+        #automático también debe cargar el plan pendiente o el plan nuevo de
+        #una suscripción impaga (misma regla que el action subscription).
+        #Si no se actualiza la preapproval, MP cargaría el monto viejo y el
+        #webhook lo rechazaría por el chequeo de monto — cobro huérfano.
+        #Un débito ya cancelado (cancelled_at) queda fuera: MP rechazaría
+        #el update y arrastraría un 400 al checkout.
+        if suscription.preapproval_id and not suscription.cancelled_at and (
+            suscription.pending_plan_suscription_id or suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT):
+            UpdatePreapprovalPlanQuery(suscription)
         preference      =   CreateCheckoutPreferenceQuery(suscription)
         #Con credenciales TEST se usa el checkout sandbox; en prod el init_point real.
         is_sandbox      =   str(config('SECRET_MP_KEY', default = '')).startswith('TEST-')

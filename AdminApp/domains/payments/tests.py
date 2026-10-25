@@ -267,6 +267,20 @@ class WebhookDedupTests(TestCase):
             self.assertEqual(response.status_code, 200)
         self.assertEqual(webhook_query.call_count, 2)
 
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_failed_processing_releases_dedup_key(self, webhook_query):
+        #Si el procesamiento explota, la marca se libera: el retry de MP con
+        #el mismo request-id no queda absorbido y puede reintentarse.
+        webhook_query.side_effect   =   [Exception('boom'), None]
+        headers     =   _signature_headers('12345', request_id = 'req-retry')
+        payload     =   {'type': 'payment', 'data': {'id': '12345'}}
+        with self.assertRaises(Exception):
+            self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
+        second      =   self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(webhook_query.call_count, 2)
+
 
 def _suscription_for(username, **plan_kwargs):
     """Profile + suscripción vigente para un usuario distinto de 'cliente'."""
@@ -352,6 +366,52 @@ class CheckoutResolutionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         suscription     =   Suscription.objects.get(user = profile)
         self.assertEqual(suscription.status, Suscription.STATUS_PENDING_PAYMENT)
+
+    @patch('AdminApp.domains.payments.views.viewset.UpdatePreapprovalPlanQuery')
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    def test_checkout_with_live_debit_aligns_pending_plan_amount(self, preference, update_preapproval):
+        #Cambio de plan por checkout con débito vivo: la preapproval de MP
+        #también debe cargar el plan pendiente — si no, el próximo débito
+        #cobra el monto viejo y el webhook lo rechaza (cobro huérfano).
+        preference.return_value     =   {'id': 'pref-1', 'init_point': 'https://mp.test/init'}
+        _, suscription              =   _suscription_for('cliente')
+        suscription.preapproval_id  =   'pre-1'
+        suscription.auto_renew      =   True
+        suscription.save(update_fields = ['preapproval_id', 'auto_renew'])
+        new_plan                    =   SuscriptionPlan.objects.create(name = 'Plan upgrade', price = 2000)
+        client                      =   APIClient()
+        client.force_authenticate(user = suscription.user.user)
+        response                    =   client.post(self.URL, {'plan_suscription': new_plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        update_preapproval.assert_called_once()
+
+    @patch('AdminApp.domains.payments.views.viewset.UpdatePreapprovalPlanQuery')
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    def test_checkout_without_debit_skips_preapproval_update(self, preference, update_preapproval):
+        preference.return_value     =   {'id': 'pref-1', 'init_point': 'https://mp.test/init'}
+        _, suscription              =   _suscription_for('cliente')
+        new_plan                    =   SuscriptionPlan.objects.create(name = 'Plan upgrade', price = 2000)
+        client                      =   APIClient()
+        client.force_authenticate(user = suscription.user.user)
+        response                    =   client.post(self.URL, {'plan_suscription': new_plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        update_preapproval.assert_not_called()
+
+    @patch('AdminApp.domains.payments.views.viewset.UpdatePreapprovalPlanQuery')
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    def test_checkout_with_cancelled_debit_skips_preapproval_update(self, preference, update_preapproval):
+        #Un débito ya cancelado en MP rechazaría el update: no se intenta.
+        preference.return_value     =   {'id': 'pref-1', 'init_point': 'https://mp.test/init'}
+        _, suscription              =   _suscription_for('cliente')
+        suscription.preapproval_id  =   'pre-1'
+        suscription.cancelled_at    =   timezone.now()
+        suscription.save(update_fields = ['preapproval_id', 'cancelled_at'])
+        new_plan                    =   SuscriptionPlan.objects.create(name = 'Plan upgrade', price = 2000)
+        client                      =   APIClient()
+        client.force_authenticate(user = suscription.user.user)
+        response                    =   client.post(self.URL, {'plan_suscription': new_plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        update_preapproval.assert_not_called()
 
 
 class CreatePaymentSecurityTests(TestCase):
@@ -500,3 +560,28 @@ class PaymentVisibilityTests(TestCase):
         client.force_authenticate(user = profile.user)
         response        =   client.get('/api/payments/admin-summary/')
         self.assertEqual(response.status_code, 403)
+
+
+class CancelRenewalOwnershipTests(TestCase):
+    """cancel-renewal es detail=False y resuelve por request.user: un débito
+    ajeno jamás es alcanzable aunque el caller conozca su id."""
+    client_class    =   APIClient
+
+    @patch('AdminApp.domains.payments.views.viewset.CancelPreapprovalQuery')
+    def test_cancel_renewal_never_touches_foreign_suscription(self, cancel_query):
+        _, foreign      =   _suscription_for('otro')
+        foreign.preapproval_id  =   'pre-foreign'
+        foreign.auto_renew      =   True
+        foreign.save(update_fields = ['preapproval_id', 'auto_renew'])
+        profile_a, _    =   _suscription_for('cliente')   # A sin débito propio
+        client          =   APIClient()
+        client.force_authenticate(user = profile_a.user)
+        response        =   client.post(
+            '/api/payments/cancel-renewal/', {'suscription': foreign.pk}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        cancel_query.assert_called_once()
+        #El target resuelto es la suscripción PROPIA: el id del body se ignora.
+        self.assertEqual(cancel_query.call_args[0][0].user, profile_a)
+        foreign.refresh_from_db()
+        self.assertTrue(foreign.auto_renew)
+        self.assertIsNone(foreign.cancelled_at)
