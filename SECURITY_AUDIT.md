@@ -322,3 +322,23 @@ contra el código: **3 falsos positivos, 1 race real pero inofensiva
 Tests nuevos: `payments/tests.py` (`test_failed_processing_releases_dedup_key`,
 alineación de preapproval en checkout con débito vivo / skip sin débito /
 skip con débito cancelado, `CancelRenewalOwnershipTests`).
+
+## 10. Tercera ronda de simulación — 2026-10-25 (cotejo: 5 falsos positivos)
+
+Tercera y última simulación de 5 vectores; todos refutados contra el código.
+La ronda asumió comportamientos sin leer las secciones relevantes — mismo
+patrón que las anteriores (ronda 1: 2/5 falsos, ronda 2: 3/5, ronda 3: 5/5).
+
+| # | Vector | Veredicto cotejado |
+|---|--------|--------------------|
+| Y-1 | `back_url` manipulada en la preferencia / robo de `payment_id` | **Falso positivo**: la preferencia se arma 100% server-side — `back_urls` de `FRONTEND_URL` (env), `unit_price = plan.price`, `external_reference = suscription.id` (services.py:254-266). El request de `checkout`/`subscription` solo acepta ids de suscripción/plan. Y un `payment_id` robado solo puede acreditar la suscripción del propio pagador (`external_reference == suscription.id` por `request.user`) — ganancia del atacante: cero. |
+| Y-2 | IDOR en `/sync/` con `preapproval_id` ajeno | **Falso positivo**: `sync` resuelve `filter(user__user=request.user)` y no lee `preapproval_id`/`suscription_id` del request (viewset.py:296). El único parámetro (`payment_id`) se contrasta contra el `external_reference` real de MP — ajeno → `[]`. |
+| Y-3 | `pending_plan` activado sin pago aprobado | **Falso positivo**: `ApplyPendingPlanQuery` solo se invoca tras verificar el cobro en la API real de MP (`CreatePaymentQuery`, `PaymentWebhookQuery`) o desde `approve` (`IsAdminUser`, sobre un `Payment` ya creado vía verificación MP). Setear `pending_plan` no otorga acceso: `grants_access` exige ACTIVE + vigencia, y aplicarlo exige cobro approved del monto del plan pendiente. |
+| Y-4 | Replay de webhook `subscription_preapproval` para alterar débito ajeno | **Falso positivo**: el manifest HMAC cubre `id:<resource_id>` — el `preapproval_id` no es cambiable sin invalidar la firma. Además `PreapprovalWebhookQuery` hace GET a MP y espeja el estado remoto: el body del webhook ni se lee, un replay solo re-sincroniza la verdad de MP. El dedup atómico absorbe replays del mismo `x-request-id`. |
+| Y-5 | Doble pago `approved` extiende el acceso (60 días por 1) | **Falso positivo**: `ApplyPendingPlanQuery` hace `end_date = now + 30d` — reinicia, nunca acumula (services.py:188-191). El segundo pago además debe ser real en MP con monto = precio del plan: quien lo intenta paga dos veces por los mismos 30 días (perjuicio propio → reembolso, no ganancia). |
+
+Sin correcciones — la regla de los 5 intentos no aplica al no haber brecha
+abierta. Balance de las 3 rondas: 15 vectores simulados → **3 issues reales
+remediados** (bypass de firma unsigned, canje de cupón con débito vivo,
+preapproval desalineada en checkout) + **1 hardening defensivo** (dedup
+atómico de webhooks) + 10 falsos positivos documentados.
