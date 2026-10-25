@@ -121,6 +121,15 @@ jobs:
           pip install bandit==1.8.3
           bandit -r AdminApp StoreApp SuscriptionApp DaventProject -ll
 
+      - name: pip-audit — CVEs en dependencias Python
+        run: |
+          pip install pip-audit==2.9.0
+          pip-audit -r requirements.txt
+
+      - name: npm audit — CVEs en dependencias del SPA (prod)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Trivy — vulnerabilidades en dependencias/archivos
         uses: aquasecurity/trivy-action@v0.36.0
         with:
