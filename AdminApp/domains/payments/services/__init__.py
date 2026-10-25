@@ -10,6 +10,7 @@ from .services import (
     UpdatePreapprovalPlanQuery,
     SyncPreapprovalQuery,
     CancelPreapprovalQuery,
+    CancelPreapprovalByIdQuery,
     PreapprovalWebhookQuery,
     AuthorizedPaymentWebhookQuery,
     SUSCRIPTION_STATUS_ACTIVE,

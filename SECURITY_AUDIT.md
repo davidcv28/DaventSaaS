@@ -197,20 +197,48 @@ y entropía):
 - `ISSUER_*` (datos fiscales de AFIP) vacíos — necesarios cuando se habilite
   facturación real.
 
+## 6. Segunda auditoría externa (IA independiente) — cotejo y remediación
+
+Una segunda IA auditó el repo en solo lectura (seguridad, ACID, concurrencia,
+SOLID, API). Cotejo de sus hallazgos contra el código real:
+
+### Confirmados → remediados
+
+| ID | Hallazgo de la otra IA | Veredicto / fix |
+|----|------------------------|-----------------|
+| S-02 | `X-Forwarded-For` spoofeable evade throttles | **Válido, pero el diagnóstico era otro sitio**: `_client_ip` ya toma el ÚLTIMO XFF (corregido en la pasada anterior). El hueco real es `SimpleRateThrottle.get_ident` de DRF: sin `NUM_PROXIES` usa el PRIMER XFF → spoofeable. ✅ `REST_FRAMEWORK['NUM_PROXIES'] = NUM_TRUSTED_PROXIES` (default 1 = nginx/Render; 2 si Cloudflare delante). |
+| S-04 | `/admin/` sin rate-limit propio | **Válido.** ✅ `AdminLoginRateLimitMiddleware`: 10 POST/5min por IP a `<ADMIN_URL>/login/` (cache Redis en prod). |
+| S-06 | logout y verify-resend sin throttle dedicado | **Mitad falso positivo**: `verify-email/resend` ya tenía `email_verification` 5/h. `TokenLogoutView` (AllowAny, blacklistea refresh) no tenía → ✅ scope `logout` 30/h. |
+| A-01/A-02 | race en extensión de plan / rollups | **Válido y real**: dos webhooks `approved` concurrentes leían `old_status=PENDING` ambos → rollups duplicados + posible doble factura. ✅ `PaymentWebhookQuery` re-lee el Payment con `select_for_update(of='self')` dentro de la tx y re-evalúa `old_status` bajo lock; `ApplyPendingPlanQuery` bloquea la fila de Suscription. (Nota: `of='self'` es obligatorio — `FOR UPDATE` no aplica al lado nulable de un outer join en Postgres.) |
+| A-03 | `UpdateUserQuery` sin `transaction.atomic` | **Válido** (user.email + profile.email_verified en dos saves). ✅ envuelto en `atomic`. |
+| C-01 | cancel de débito MP fuera de la tx del canje | **Válido, peor de lo descrito**: el fix anterior cancelaba ANTES de validar → un canje rechazado (cupón inválido/vencido/usado → rollback) dejaba al usuario SIN débito y SIN plan. ✅ `RedeemCouponQuery` (nuevo `suscriptions/services/`, también resuelve D-01) registra `transaction.on_commit(CancelPreapprovalByIdQuery(pid))`: el débito en MP solo se cancela si el canje commitea; fallo de MP queda logueado para `/sync/`. |
+| C-02 | llamadas a MP fuera de tx → huérfanos | **Válido parcialmente.** ✅ `CreatePreapprovalQuery` ahora compensa: si el save local falla, cancela el preapproval remoto (saga mínima). Los demás paths ya son idempotentes por `external_reference` + `/sync/`; una saga completa queda como deuda documentada. |
+
+### Falsos positivos / sin acción
+
+| ID | Hallazgo | Por qué no aplica |
+|----|----------|-------------------|
+| S-03 | "no se observó django-cors-headers" | **Falso**: `corsheaders` está en INSTALLED_APPS + middleware + `CORS_ALLOWED_ORIGINS` por env (settings.py:128,148,249). |
+| S-01 | webhook sin firma = crítico | **Sobreestimado**: el bypass sin firma solo existe con `DEBUG=True` (dev local, testeado explícitamente); en prod ya se rechaza con 401+error. Endurecido igualmente: ✅ `payments/checks.py` registra errores `payments.E001/E002` en `check --deploy` si falta `MP_WEBHOOK_SECRET`/`SECRET_MP_KEY` con DEBUG=False. |
+| S-05 | API key Firebase en query string | Inevitable: Identity Toolkit REST la exige así; es una key pública por diseño (protección real = Authorized Domains + cuota). |
+| A-04 | UpdateProfileQuery sin tx | Una sola fila — `save()` ya es atómico. |
+| A-05 | `Payment.approve()` sin tx explícita | Único caller lo invoca dentro de `atomic` (viewset.approve). |
+| C-03 | phone verify sin lock | Idempotente (mismo resultado); doble escritura sin efecto. |
+| C-04 | retry ciego de IntegrityError en facturas | El retry re-lee la existente y topea en 3; solo puede colisionar la UNIQUE (type,pos,number) que es justo lo que recalcula. |
+| D-05 | regex de password duplica validate_password | **No es duplicación**: el regex añade complejidad (mayús+dígito+especial) ENCIMA de AUTH_PASSWORD_VALIDATORS; quitarlo debilitaría la política. |
+| API-03 | webhook AllowAny depende solo de HMAC | Además de la firma: `external_reference`→suscripción propia + monto=precio del plan + ventana anti-replay. MP no publica rangos IP estables para allowlist. |
+| API-01/02 | sin /api/v1/, respuestas no uniformes | **Válido como deuda de diseño**, fuera de scope: cambiar paths/envelope rompe el frontend; queda en roadmap. |
+| D-02/D-04 | SDK a nivel módulo, view_config dicts | Deuda de diseño aceptada; refactor grande sin riesgo de seguridad. |
+| API-04/05 | sin Location/ETag | Roadmap. |
+
 ### Límites de esta auditoría (honestidad técnica)
 
 - El .env de producción, el nginx en ejecución, ACL real del bucket R2,
   secretos de MP/Firebase y dominios autorizados **no son verificables desde
   el repo** — se audita la intención, no el despliegue.
 - Una suite propia cubre lo que el autor previó; el estándar de industria
-  complementa con: pentest externo o segundo revisor, DAST (OWASP ZAP/Burp)
-  contra staging, y `pip-audit`/`npm audit` en CI.
-
-### Límites de esta auditoría (honestidad técnica)
-
-- El .env de producción, el nginx en ejecución, ACL real del bucket R2,
-  secretos de MP/Firebase y dominios autorizados **no son verificables desde
-  el repo** — se audita la intención, no el despliegue.
-- Una suite propia cubre lo que el autor previó; el estándar de industria
-  complementa con: pentest externo o segundo revisor, DAST (OWASP ZAP/Burp)
-  contra staging, y `pip-audit`/`npm audit` en CI.
+  complementa con: pentest externo o segundo revisor humano, DAST (OWASP
+  ZAP/Burp) contra staging, y `pip-audit`/`npm audit` en CI.
+- Estado tras esta pasada: 219 tests OK; ambas auditorías coinciden en que no
+  hay hallazgos críticos abiertos en el código — el residual es de despliegue
+  (env vars en prod) y de validación humana externa pendiente.

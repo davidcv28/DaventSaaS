@@ -1,3 +1,4 @@
+import logging
 import mercadopago
 import requests
 from decimal import Decimal
@@ -13,6 +14,7 @@ from AdminApp.domains.payments.models import Payment, DailyRevenue, MonthlyReven
 from AdminApp.domains.suscriptions.models import Suscription
 from AdminApp.domains.invoices.services import IssueInvoiceQuery
 
+logger          =   logging.getLogger(__name__)
 sdk             =   mercadopago.SDK(config('SECRET_MP_KEY'))
 FRONTEND_URL    =   config('FRONTEND_URL', default = 'http://localhost:5173')
 BACKEND_URL     =   config('BACKEND_URL', default = '')
@@ -56,7 +58,10 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
         if payment_exists.suscription_id != suscription.id:
             raise serializers.ValidationError({'payment_id': 'El pago no corresponde a esta suscripción.'})
         if payment_exists.status == Payment.Status.APPROVED:
-            ApplyPendingPlanQuery(payment_exists.suscription)
+            #Dentro de atomic: ApplyPendingPlanQuery bloquea la suscripción
+            #(select_for_update) y autocommit reventaría fuera de transacción.
+            with transaction.atomic():
+                ApplyPendingPlanQuery(payment_exists.suscription)
         return payment_exists
     if mp_payment is None:
         mp_payment      =   GetMercadoPagoPayment(payment_id)
@@ -116,10 +121,16 @@ def PaymentWebhookQuery(payment_id):
             {'user' : suscription.user, 'suscription' : suscription, 'payment_id' : payment_id},
             mp_payment = mp_payment
         )
-    old_status          =   payment.status
     new_status          =   MP_STATUS_MAP.get(mp_payment.get('status'), payment.status)
     paid_at             =   parse_datetime(mp_payment['date_approved']) if mp_payment.get('date_approved') else payment.paid_at
     with transaction.atomic():
+        #Bloqueo pesimista + relectura del estado: dos webhooks concurrentes
+        #del MISMO pago leían old_status PENDING los dos y duplicaban rollups
+        #y factura. Serializado, el segundo ve APPROVED y no hace efectos.
+        #of=('self',): FOR UPDATE no puede aplicarse al lado nulable de un
+        #outer join (pending_plan_suscription) — se bloquea solo la tabla base.
+        payment             =   Payment.objects.select_for_update(of = ('self',)).select_related('suscription__pending_plan_suscription').get(pk = payment.pk)
+        old_status          =   payment.status
         payment.status      =   new_status
         payment.paid_at     =   paid_at
         payment.save(update_fields = ['status', 'paid_at', 'updated_at'])
@@ -160,7 +171,10 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
     )
 
 #APPLY PENDING PLAN QUERY (establece el plan una vez acreditado el pago)
+#PRECONDICIÓN: llamar dentro de transaction.atomic — la fila se bloquea con
+#select_for_update para serializar extensiones concurrentes del plan.
 def ApplyPendingPlanQuery(suscription, renew = False):
+    suscription         =   Suscription.objects.select_for_update().get(pk = suscription.pk)
     pending_plan        =   suscription.pending_plan_suscription
     is_pending_payment  =   suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT
     if not pending_plan and not is_pending_payment and not renew:
@@ -301,7 +315,14 @@ def CreatePreapprovalQuery(suscription) -> dict:
         raise serializers.ValidationError({'suscription': 'No se pudo iniciar el débito automático en Mercado Pago'})
     response                    =   mp_result['response']
     suscription.preapproval_id  =   response.get('id')
-    suscription.save(update_fields = ['preapproval_id'])
+    try:
+        suscription.save(update_fields = ['preapproval_id'])
+    except Exception:
+        #Compensación (saga mínima): el alta remota ya existe en MP — si la
+        #escritura local falla se cancela el preapproval para no dejar un
+        #débito huérfano cobrando sin suscripción asociada.
+        CancelPreapprovalByIdQuery(response.get('id'))
+        raise
     return response
 
 #UPDATE PREAPPROVAL PLAN QUERY (cambio de plan con débito activo: se ajusta el monto del próximo débito)
@@ -351,6 +372,17 @@ def CancelPreapprovalQuery(suscription):
     suscription.cancelled_at    =   timezone.now()
     suscription.save(update_fields = ['auto_renew', 'cancelled_at'])
     return suscription
+
+#CANCEL PREAPPROVAL BY ID (post-commit del canje de cupón y compensación de
+#CreatePreapprovalQuery: cancela el débito en MP por id sin tocar el estado
+#local — la suscripción ya fue actualizada cuando esto corre)
+def CancelPreapprovalByIdQuery(preapproval_id) -> None:
+    try:
+        mp_result   =   sdk.preapproval().update(str(preapproval_id), {'status': 'cancelled'})
+        if mp_result.get('status') not in (200, 201):
+            logger.warning('No se pudo cancelar el preapproval %s en MP (status=%s)', preapproval_id, mp_result.get('status'))
+    except Exception:
+        logger.exception('Falló la cancelación del preapproval %s en MP', preapproval_id)
 
 #PREAPPROVAL WEBHOOK QUERY (topic subscription_preapproval: alta/pausa/baja del débito)
 def PreapprovalWebhookQuery(preapproval_id):

@@ -77,6 +77,11 @@ class VerifyEmailRateThrottle(UserRateThrottle):
     """Scope 'email_verification' (settings): reenvío por usuario autenticado."""
     scope = 'email_verification'
 
+class LogoutRateThrottle(UserRateThrottle):
+    """Scope 'logout' (settings): el endpoint es AllowAny y blacklistea el
+    refresh de la cookie — acotado por usuario o por IP si no hay auth."""
+    scope = 'logout'
+
 class VerifyPhoneRateThrottle(UserRateThrottle):
     """Scope 'phone_verification' (settings): generación de códigos por usuario."""
     scope = 'phone_verification'
@@ -205,6 +210,7 @@ class TokenLogoutView(APIView):
     válido) y borra ambas cookies. Idempotente: sin cookie responde 200 igual.
     """
     permission_classes = [AllowAny]
+    throttle_classes   = [LogoutRateThrottle]
 
     def post(self, request):
         refresh = request.COOKIES.get(REFRESH_COOKIE)

@@ -90,10 +90,19 @@ REST_FRAMEWORK = {
         'content_report': '5/hour',
         #Canje de cupones (por usuario): acota el brute-force de códigos.
         'coupon_redeem': '10/hour',
+        #Logout (por usuario/IP): defensa en profundidad — el endpoint es
+        #AllowAny y blacklistea refresh tokens de la cookie.
+        'logout': '30/hour',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'DaventProject.pagination.DaventPageNumberPagination',
     'PAGE_SIZE': 10,
+    #Cantidad de proxies confiables entre el cliente y la app: sin esto DRF
+    #lee el PRIMER X-Forwarded-For (spoofeable: el cliente lo inyecta y el
+    #proxy lo pisa al final). Con 1 proxy (nginx/Render) el ident del
+    #throttle pasa a ser el ÚLTIMO valor — el que agregó el proxy. Si se suma
+    #Cloudflare delante, subir a 2 vía NUM_TRUSTED_PROXIES.
+    'NUM_PROXIES': config('NUM_TRUSTED_PROXIES', default = 1, cast = int),
 }
 # JWT: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ (el JS del
 # frontend nunca lo lee — anti-robo por XSS); el ACCESS va solo en memoria del
@@ -147,6 +156,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'DaventProject.middleware.AdminLoginRateLimitMiddleware',
     #Sirve STATIC_ROOT también sin nginx (deploys serverless tipo Render).
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

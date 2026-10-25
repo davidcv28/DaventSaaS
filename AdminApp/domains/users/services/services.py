@@ -31,16 +31,20 @@ def UpdateUserQuery(user: User, validated_data : dict) -> User:
     #PATCH parcial: si el payload no trae 'email' se conserva el actual
     #(PUT del frontend siempre lo manda, pero PATCH no está obligado).
     email       =   (validated_data.get('email') or user.email).strip()
-    #Si cambia el correo hay que verificarlo de nuevo: la verificación anterior
-    #valía para la dirección vieja.
-    if email != user.email:
-        profile     =   getattr(user, 'profile', None)
-        if profile is not None and profile.email_verified:
-            profile.email_verified    =   False
-            profile.email_verified_at =   None
-            profile.save(update_fields = ['email_verified', 'email_verified_at'])
-    user.email  =   email
-    user.save()
+    #Toca dos tablas (user.email + profile.email_verified): una sola
+    #transacción — sin ella un fallo del segundo save dejaba el correo
+    #nuevo con la verificación vieja.
+    with transaction.atomic():
+        #Si cambia el correo hay que verificarlo de nuevo: la verificación anterior
+        #valía para la dirección vieja.
+        if email != user.email:
+            profile     =   getattr(user, 'profile', None)
+            if profile is not None and profile.email_verified:
+                profile.email_verified    =   False
+                profile.email_verified_at =   None
+                profile.save(update_fields = ['email_verified', 'email_verified_at'])
+        user.email  =   email
+        user.save()
     return user
 
 #USER PASSWORD UPDATE
