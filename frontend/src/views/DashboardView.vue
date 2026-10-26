@@ -1590,7 +1590,15 @@ const chatLastId = ref(0)
 const chatBoxEl = ref(null)
 const chatInputEl = ref(null)
 const chatStaff = ref([])
+const chatOpen = ref(false)
+const chatTarget = ref(null)
 const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).length)
+//El objetivo del chat se resuelve contra el roster vivo: si cambia su
+//presencia, el header refleja el estado nuevo sin reabrir la ventana.
+const chatPeer = computed(() => {
+  if (!chatTarget.value) return null
+  return chatStaff.value.find((s) => s.id === chatTarget.value.id) || chatTarget.value
+})
 let chatPollTimer = null
 let chatBeatTimer = null
 
@@ -1599,14 +1607,49 @@ function staffInitials(name) {
   return ((p[0]?.[0] || '?') + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase()
 }
 
+function resizeChatInput() {
+  const el = chatInputEl.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 132) + 'px'
+}
+
+function onChatKey(e) {
+  if (e.key === 'Escape') closeChat()
+}
+
+function openChat(member = null) {
+  chatTarget.value = member
+  chatOpen.value = true
+  document.body.style.overflow = 'hidden'
+  window.addEventListener('keydown', onChatKey)
+  nextTick(() => {
+    scrollChat()
+    resizeChatInput()
+    chatInputEl.value?.focus()
+  })
+}
+
+function closeChat() {
+  chatOpen.value = false
+  document.body.style.overflow = ''
+  window.removeEventListener('keydown', onChatKey)
+}
+
+function onComposerEnter(e) {
+  if (e.shiftKey) return
+  e.preventDefault()
+  sendChat()
+}
+
 function contactStaff(s) {
-  if (!chatInput.value.trim()) chatInput.value = `Hola ${s.name.split(' ')[0]}, necesito ayuda con `
-  nextTick(() => chatInputEl.value?.focus())
+  openChat(s)
 }
 
 async function requestLiveHelp() {
   if (chatBusy.value) return
-  chatInput.value = 'Hola, necesito asistencia en vivo, ¿pueden ayudarme?'
+  openChat(chatStaff.value.find((s) => s.online) || null)
+  if (!chatInput.value.trim()) chatInput.value = 'Hola, necesito asistencia en vivo, ¿pueden ayudarme?'
   await sendChat()
 }
 
@@ -1672,6 +1715,7 @@ async function sendChat() {
     chatInput.value = ''
     await nextTick()
     scrollChat()
+    resizeChatInput()
   } catch (e) {
     chatErr.value = extractApiError(e).nonField
   } finally {
@@ -1700,6 +1744,7 @@ watch(section, (s) => { s === 'support' ? startChat() : stopChat() })
 onUnmounted(() => {
   stopCheckoutWatch()
   stopChat()
+  closeChat()
   clearInterval(previewTimer)
   window.removeEventListener('storage', onPaymentBroadcast)
 })
@@ -3755,22 +3800,47 @@ async function changePassword() {
                   <strong>{{ s.name }}</strong>
                   <small>{{ s.online ? 'En línea ahora' : 'Desconectado' }}</small>
                 </span>
+                <AppIcon class="support-go" name="message-circle" :size="16" />
               </button>
             </li>
           </ul>
+        </aside>
+
+        <div class="card support-side">
+          <div class="support-side-icon"><AppIcon name="message-circle" :size="20" /></div>
+          <h3>¿Necesitás ayuda con tu tienda?</h3>
+          <p>
+            Elegí a quién escribirle o pedí asistencia general. Si alguien está en línea,
+            la respuesta llega en el momento; si no, tu mensaje queda guardado.
+          </p>
           <AppButton class="support-live" :loading="chatBusy" :disabled="!chatStaffOnline" @click="requestLiveHelp">
             Solicitar asistencia en vivo
           </AppButton>
-          <p class="support-hint">
-            {{ chatStaffOnline ? 'Alguien del equipo te responde en minutos.' : 'Dejá tu mensaje: te respondemos apenas alguien se conecte.' }}
-          </p>
-        </aside>
+          <ul class="support-facts">
+            <li><AppIcon name="check" :size="15" /> Elegí un integrante para abrir la conversación</li>
+            <li><AppIcon name="check" :size="15" /> Tu historial de chat queda guardado</li>
+            <li><AppIcon name="check" :size="15" /> Si el equipo está desconectado, te responde a la brevedad</li>
+          </ul>
+        </div>
+      </div>
 
-        <div class="card chat-card">
-          <div class="chat-title">
-            <strong>Conversación con soporte</strong>
-            <span class="chat-sub">{{ chatStaffOnline ? 'Respuesta en vivo' : 'Respuesta diferida' }}</span>
-          </div>
+      <!-- Ventana de chat estilo Messenger (sin recargar la página) -->
+      <div v-if="chatOpen" class="chat-overlay" @click.self="closeChat">
+        <div class="chat-modal" role="dialog" aria-modal="true" aria-label="Chat de soporte">
+          <header class="chat-modal-head">
+            <span class="support-avatar">
+              {{ staffInitials(chatPeer?.name || 'DAVENT') }}
+              <span class="support-status" :class="{ on: chatPeer ? chatPeer.online : chatStaffOnline }"></span>
+            </span>
+            <div class="chat-modal-who">
+              <strong>{{ chatPeer?.name || 'Equipo DAVENT' }}</strong>
+              <small>{{ chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Desconectado · responde a la brevedad') : (chatStaffOnline ? 'Equipo en línea' : 'Respuesta diferida') }}</small>
+            </div>
+            <button type="button" class="chat-close" aria-label="Cerrar chat" @click="closeChat">
+              <AppIcon name="x" :size="17" />
+            </button>
+          </header>
+
           <div ref="chatBoxEl" class="chat-box">
             <p v-if="!chatMessages.length" class="chat-empty">
               Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
@@ -3780,18 +3850,28 @@ async function changePassword() {
               <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
             </div>
           </div>
-          <div class="chat-input">
-            <input
+
+          <div class="chat-composer">
+            <textarea
               ref="chatInputEl"
               v-model="chatInput"
-              class="input"
-              type="text"
+              class="chat-text"
+              rows="1"
               maxlength="2000"
               placeholder="Escribí tu mensaje…"
               aria-label="Mensaje para soporte"
-              @keydown.enter="sendChat"
-            />
-            <AppButton :loading="chatBusy" :disabled="!chatInput.trim()" @click="sendChat">Enviar</AppButton>
+              @input="resizeChatInput"
+              @keydown.enter="onComposerEnter"
+            ></textarea>
+            <button
+              type="button"
+              class="chat-send"
+              :disabled="!chatInput.trim() || chatBusy"
+              aria-label="Enviar mensaje"
+              @click="sendChat"
+            >
+              <AppIcon name="send" :size="17" />
+            </button>
           </div>
         </div>
       </div>
