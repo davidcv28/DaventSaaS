@@ -36,6 +36,10 @@ const titleSplit = computed(() => {
 
 const copied = ref(false)
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
+// Página de servicios (site_templates): la landing enlaza al embudo de
+// pedido por WhatsApp además del catálogo.
+const servicesPage = ctx.showServices
+const servicesTo = computed(() => ({ name: 'store-services', params: storeHostSlug ? {} : { slug: slug.value } }))
 const router = useRouter()
 
 // Imagen de portada (premium): fondo del hero. Sin diseño avanzado no se usa
@@ -177,6 +181,7 @@ const aboutTitle = computed(() => custom.value.about_title?.trim() || 'Sobre nos
 const highlights = computed(() => {
   const list = []
   if (showCatalog.value) list.push({ icon: 'package', title: 'Catálogo online', text: 'Explorá todos los productos con precios y detalles actualizados.', to: catalogTo.value })
+  if (servicesPage.value) list.push({ icon: 'wrench', title: 'Servicios', text: 'Elegí lo que necesitás, mirá el presupuesto y coordinamos por WhatsApp.', to: servicesTo.value })
   if (showContact.value) list.push({ icon: 'message-circle', title: 'Consultas directas', text: 'Escribinos y te respondemos a la brevedad.', href: '#contacto' })
   if (location.value) list.push({ icon: 'map-pin', title: 'Dónde estamos', text: location.value })
   if (custom.value.about_years) list.push({ icon: 'clock', title: `+${custom.value.about_years} años`, text: 'De trayectoria y experiencia en lo que hacemos.' })
@@ -308,10 +313,11 @@ const ctaLink = computed(() => {
   if (whatsappUrl.value) return { href: whatsappUrl.value, external: true }
   if (showContact.value) return { href: '#contacto', external: false }
   if (showCatalog.value) return { to: catalogTo.value, external: false }
+  if (servicesPage.value) return { to: servicesTo.value, external: false }
   return null
 })
 const ctaLabel = computed(() => custom.value.cta_label?.trim()
-  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : 'Ver catálogo'))
+  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to === servicesTo.value ? 'Ver servicios' : 'Ver catálogo'))
 
 // Mapa de ubicación (beneficio has_location_map, Estándar y Premium): el
 // backend devuelve location_address ya armada para geocodificar, o null si
@@ -553,6 +559,7 @@ onBeforeUnmount(() => {
             <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
             <div v-reveal="320" class="sp-hero-ctas">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -584,6 +591,7 @@ onBeforeUnmount(() => {
             <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
             <div v-reveal="320" class="sp-hero-ctas">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -620,6 +628,7 @@ onBeforeUnmount(() => {
             <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
             <div v-reveal="320" class="sp-hero-ctas">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -649,6 +658,7 @@ onBeforeUnmount(() => {
             <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
             <div v-reveal="320" class="sp-hero-ctas">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -685,6 +695,7 @@ onBeforeUnmount(() => {
             <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
             <div v-reveal="320" class="sp-hero-ctas">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -739,6 +750,7 @@ onBeforeUnmount(() => {
                 <p v-if="custom.description" class="sp-hero-sub">{{ custom.description }}</p>
                 <div class="sp-hero-ctas">
                   <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+                  <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
                   <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
                   <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                     <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -763,6 +775,7 @@ onBeforeUnmount(() => {
               <p v-if="custom.description" class="sp-hero-sub sp-shop-sub">{{ custom.description }}</p>
               <div class="sp-hero-ctas">
                 <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+                <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
                 <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               </div>
               <ul v-if="heroMeta.length" class="sp-hero-meta">
@@ -813,6 +826,7 @@ onBeforeUnmount(() => {
             <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
             <div v-reveal="280" class="sp-hero-ctas">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
               <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -846,6 +860,7 @@ onBeforeUnmount(() => {
           <div v-reveal="320" class="sp-hero-ctas">
             <a v-if="tpl === 'promo' && whatsappUrl" class="sp-btn sp-pr-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> Escribinos ahora</a>
             <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+            <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
             <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
             <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
               <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -1016,6 +1031,8 @@ onBeforeUnmount(() => {
         <p v-if="showcaseText" class="sp-showcase-text">{{ showcaseText }}</p>
         <div class="sp-showcase-ctas">
           <RouterLink v-if="showCatalog" class="sp-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-else-if="servicesPage" class="sp-btn" :to="servicesTo">Ver servicios <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-if="servicesPage && showCatalog" class="sp-btn ghost" :to="servicesTo"><AppIcon name="wrench" :size="16" /> Servicios</RouterLink>
           <a v-if="showContact" class="sp-btn ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
         </div>
       </div>
@@ -1050,6 +1067,9 @@ onBeforeUnmount(() => {
           <strong>{{ s.title }}</strong>
           <p v-if="s.text">{{ s.text }}</p>
         </article>
+      </div>
+      <div v-if="servicesPage" class="sp-more">
+        <RouterLink class="sp-btn" :to="servicesTo">Ver precios y pedir por WhatsApp <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
       </div>
     </div>
   </section>

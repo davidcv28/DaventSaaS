@@ -17,19 +17,21 @@ const I = {
   pin: 'M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
   chat: 'M21 12a9 9 0 0 1-13.5 7.8L3 21l1.3-4.4A9 9 0 1 1 21 12z',
   chart: 'M4 20V10M10 20V4M16 20v-8M22 20H2',
-  qr: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v1M14 20h1M20 20v1'
+  qr: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v1M14 20h1M20 20v1',
+  wrench: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'
 }
 
 const features = [
   { icon: I.shield, title: 'Acceso seguro', text: 'Sesiones con renovación automática de credenciales.' },
   { icon: I.receipt, title: 'Facturación argentina', text: 'Cada tipo de contribuyente, resuelto.', tags: ['Consumidor final', 'Monotributo', 'Responsable Inscripto', 'Exento'] },
-  { icon: I.store, title: 'Web con o sin catálogo', text: 'Publicá tus productos o usala como vidriera de tu local: el catálogo es opcional.' },
+  { icon: I.store, title: 'Web con o sin catálogo', text: 'Publicá productos o servicios — también funciona como vidriera de tu local.' },
   { icon: I.pin, title: 'Datos validados', text: 'Provincias, ciudades y documentos verificados.' }
 ]
 
 const webCards = [
   { icon: I.link, title: 'Tu propia web', text: 'Con un link único para compartir por WhatsApp o redes. Tus clientes la ven desde el primer día, sin que tengas que armar nada.', wide: true },
   { icon: I.store, title: 'Catálogo opcional', text: 'Publicá tus productos con fotos, precios y categorías, o apagalo y usá tu web como vidriera de tu local.', wide: true },
+  { icon: I.wrench, title: 'Página de servicios', text: 'Ideal para peluquerías, talleres y profesionales: tus clientes arman su presupuesto y te llega el pedido por WhatsApp. Sin cobros por la web.' },
   { icon: I.chat, title: 'Contacto directo', text: 'WhatsApp, Instagram y formulario de contacto con verificación antispam.' },
   { icon: I.qr, title: 'QR y folletos', text: 'Para promocionar tu tienda también por fuera de internet, listos para imprimir.' },
   { icon: I.chart, title: 'Estadísticas', text: 'Mirá cuántas personas visitan tu web, día por día.' }
@@ -42,7 +44,7 @@ const steps = [
 ]
 
 const strip = [
-  'Link único para compartir', 'Catálogo opcional', 'QR y folletos',
+  'Link único para compartir', 'Catálogo opcional', 'Página de servicios', 'QR y folletos',
   'Contacto por WhatsApp', 'Estadísticas diarias', 'Facturación argentina',
   'Diseño a medida', 'Sin saber de tecnología'
 ]
@@ -84,7 +86,7 @@ const swatches = ['#6366f1', '#38bdf8', '#34d399', '#fbbf24', '#fb7185']
 const faqs = [
   { q: '¿Necesito saber de tecnología?', a: 'No. Cargás tus datos y tus productos desde un panel simple y tu web queda lista.' },
   { q: '¿Cuánto cuesta empezar?', a: 'Crear la cuenta es gratis e incluye un plan de prueba para que conozcas todo antes de elegir un plan.' },
-  { q: '¿Tengo que usar el catálogo?', a: 'No, es opcional. Podés usar tu web solo como vidriera de tu local.' },
+  { q: '¿Tengo que usar el catálogo?', a: 'No, es opcional. Podés usar tu web solo como vidriera de tu local o para ofrecer tus servicios.' },
   { q: '¿Cómo me contactan mis clientes?', a: 'Por WhatsApp, Instagram o el formulario de contacto de tu web.' }
 ]
 

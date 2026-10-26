@@ -21,6 +21,10 @@ const { slug, custom, shopName, nameFont, initial, location, hasAbout, showConta
 const router = useRouter()
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+// Página de servicios (site_templates): acceso desde la portada además del
+// catálogo.
+const servicesPage = ctx.showServices
+const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
 const openProduct = (p) => router.push(productTo(p))
 
@@ -128,10 +132,11 @@ const ctaLink = computed(() => {
   if (whatsappUrl.value) return { href: whatsappUrl.value, external: true }
   if (showContact.value) return { href: '#contacto', external: false }
   if (showCatalog.value) return { to: catalogTo.value, external: false }
+  if (servicesPage.value) return { to: servicesTo.value, external: false }
   return null
 })
 const ctaLabel = computed(() => custom.value.cta_label?.trim()
-  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : 'Ver catálogo'))
+  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to === servicesTo.value ? 'Ver servicios' : 'Ver catálogo'))
 
 // --- Contacto: canales e info en celdas + el formulario compartido (sp-form)
 // con inputs cuadrados propios del estilo.
@@ -237,6 +242,8 @@ onBeforeUnmount(() => {
         </div>
         <div class="bq-hero-ctas">
           <RouterLink v-if="showCatalog" class="bq-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="15" /></RouterLink>
+          <RouterLink v-else-if="servicesPage" class="bq-btn" :to="servicesTo">Ver servicios <AppIcon name="arrow-right" :size="15" /></RouterLink>
+          <RouterLink v-if="servicesPage && showCatalog" class="bq-btn ghost" :to="servicesTo">Servicios</RouterLink>
           <a v-if="showContact" class="bq-btn ghost" href="#contacto">Contacto</a>
           <RouterLink v-else-if="hasAbout" class="bq-btn ghost" :to="{ path: homeTo.path, hash: '#nosotros' }">Nosotros</RouterLink>
         </div>
@@ -331,6 +338,7 @@ onBeforeUnmount(() => {
       <header v-reveal class="bq-sec-head">
         <span class="bq-idx" aria-hidden="true">03</span>
         <h2 id="bq-serv-title" class="bq-h2">{{ servicesTitle }}</h2>
+        <RouterLink v-if="servicesPage" class="bq-sec-link" :to="servicesTo">Ver precios <AppIcon name="arrow-right" :size="14" /></RouterLink>
       </header>
       <ol class="bq-rows">
         <li v-for="(s, i) in services" :key="i" v-reveal="(i % 3) * 60" class="bq-row">

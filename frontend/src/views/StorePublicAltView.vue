@@ -28,6 +28,10 @@ const route = useRoute()
 const isPreview = computed(() => route.name === 'store-alt')
 const homeTo = computed(() => ({ name: 'store-public', params: storeHostSlug ? {} : { slug: slug.value } }))
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
+// Página de servicios (site_templates): acceso desde la portada además del
+// catálogo.
+const servicesPage = ctx.showServices
+const servicesTo = computed(() => ({ name: 'store-services', params: storeHostSlug ? {} : { slug: slug.value } }))
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
 const openProduct = (p) => router.push(productTo(p))
 
@@ -87,6 +91,7 @@ async function loadCatalog() {
 const highlights = computed(() => {
   const list = []
   if (showCatalog.value) list.push({ icon: 'package', title: 'Catálogo online', text: 'Productos y precios actualizados.', to: catalogTo.value })
+  if (servicesPage.value) list.push({ icon: 'wrench', title: 'Servicios', text: 'Presupuesto y pedido por WhatsApp.', to: servicesTo.value })
   if (showContact.value) list.push({ icon: 'message-circle', title: 'Consultas directas', text: 'Te respondemos a la brevedad.', href: '#contacto' })
   if (location.value) list.push({ icon: 'map-pin', title: 'Dónde estamos', text: location.value })
   if (custom.value.about_years) list.push({ icon: 'clock', title: `+${custom.value.about_years} años`, text: 'De trayectoria y experiencia.' })
@@ -183,10 +188,11 @@ const ctaLink = computed(() => {
   if (whatsappUrl.value) return { href: whatsappUrl.value, external: true }
   if (showContact.value) return { href: '#contacto', external: false }
   if (showCatalog.value) return { to: catalogTo.value, external: false }
+  if (servicesPage.value) return { to: servicesTo.value, external: false }
   return null
 })
 const ctaLabel = computed(() => custom.value.cta_label?.trim()
-  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : 'Ver catálogo'))
+  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to === servicesTo.value ? 'Ver servicios' : 'Ver catálogo'))
 
 // --- Contáctanos: espejado (formulario a la izquierda, info a la derecha);
 // el mapa sigue debajo de las dos columnas. ---
@@ -340,6 +346,8 @@ onBeforeUnmount(() => {
         <p v-if="custom.description" v-reveal="200" class="sp2-hero-sub">{{ custom.description }}</p>
         <div v-reveal="280" class="sp2-hero-ctas">
           <RouterLink v-if="showCatalog" class="sp-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-else-if="servicesPage" class="sp-btn" :to="servicesTo">Ver servicios <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-if="servicesPage && showCatalog" class="sp-btn ghost" :to="servicesTo"><AppIcon name="wrench" :size="16" /> Servicios</RouterLink>
           <a v-if="showContact" class="sp-btn ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
           <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
             <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
@@ -462,6 +470,9 @@ onBeforeUnmount(() => {
           </div>
         </li>
       </ol>
+      <div v-if="servicesPage" class="sp-more">
+        <RouterLink class="sp-btn" :to="servicesTo">Ver precios y pedir por WhatsApp <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+      </div>
     </div>
   </section>
 
@@ -495,6 +506,8 @@ onBeforeUnmount(() => {
         <p v-if="showcaseText" class="sp2-showcase-text">{{ showcaseText }}</p>
         <div class="sp2-showcase-ctas">
           <RouterLink v-if="showCatalog" class="sp-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-else-if="servicesPage" class="sp-btn" :to="servicesTo">Ver servicios <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+          <RouterLink v-if="servicesPage && showCatalog" class="sp-btn ghost" :to="servicesTo"><AppIcon name="wrench" :size="16" /> Servicios</RouterLink>
           <a v-if="showContact" class="sp-btn ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
         </div>
       </div>

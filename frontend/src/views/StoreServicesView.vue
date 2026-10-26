@@ -8,7 +8,7 @@
 // Los ítems llegan en el payload público (store.service_items, solo
 // activos); si la página no está en los site_templates efectivos del plan
 // la ruta rebota a la página disponible.
-import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, inject, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../config/env.js'
 import { buildServiceRequestMessage, servicePriceLabel } from '../api/services.api.js'
@@ -31,17 +31,9 @@ watch([siteTemplates, status], () => {
   }
 }, { immediate: true })
 
-// Fuentes propias del diseño de la página: Unbounded (display) + Figtree
-// (texto). Se cargan on-demand como las fuentes de las otras plantillas.
-onMounted(() => {
-  if (!document.getElementById('store-font-sv')) {
-    const link = document.createElement('link')
-    link.id = 'store-font-sv'
-    link.rel = 'stylesheet'
-    link.href = 'https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap'
-    document.head.appendChild(link)
-  }
-})
+// Tipografía: la página usa las fuentes de la plantilla activa de la
+// tienda (las carga el layout según el template elegido) — el diseño se
+// adapta por tokens en store-services.css.
 
 // ===== Ítems y selección =====
 const items = computed(() => (status.value === 'success' ? store.value?.service_items || [] : []))
@@ -283,12 +275,12 @@ function scrollTo(id) {
               </fieldset>
               <button class="sv-btn" type="submit"><AppIcon name="whatsapp" :size="18" /> Enviar pedido por WhatsApp</button>
               <p v-if="sentOk" class="sv-form-ok" role="status"><AppIcon name="circle-check" :size="18" /> Listo — se abrió WhatsApp con tu pedido.</p>
-              <p class="form-note">Te escriben por WhatsApp para confirmar. El pago se hace en persona, nada se cobra por la web.</p>
+              <p class="sv-form-note">Te escriben por WhatsApp para confirmar. El pago se hace en persona, nada se cobra por la web.</p>
             </form>
 
             <div v-else class="sv-form" role="note">
               <p><strong>Este negocio aún no configuró su WhatsApp.</strong></p>
-              <p class="form-note">Cuando cargue su número vas a poder enviar el pedido desde acá. Mientras tanto podés contactarlo desde la página principal.</p>
+              <p class="sv-form-note">Cuando cargue su número vas a poder enviar el pedido desde acá. Mientras tanto podés contactarlo desde la página principal.</p>
               <RouterLink v-if="siteTemplates.includes('landing')" class="sv-btn sv-btn--ghost" :to="homeTo"><AppIcon name="store" :size="16" /> Ir a la página principal</RouterLink>
             </div>
           </div>

@@ -21,6 +21,10 @@ const { slug, custom, shopName, nameFont, initial, location, hasAbout, showConta
 const router = useRouter()
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+// Página de servicios (site_templates): acceso desde la portada además del
+// catálogo.
+const servicesPage = ctx.showServices
+const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
 const openProduct = (p) => router.push(productTo(p))
 
@@ -121,10 +125,11 @@ const ctaLink = computed(() => {
   if (whatsappUrl.value) return { href: whatsappUrl.value, external: true }
   if (showContact.value) return { href: '#contacto', external: false }
   if (showCatalog.value) return { to: catalogTo.value, external: false }
+  if (servicesPage.value) return { to: servicesTo.value, external: false }
   return null
 })
 const ctaLabel = computed(() => custom.value.cta_label?.trim()
-  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : 'Ver catálogo'))
+  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to === servicesTo.value ? 'Ver servicios' : 'Ver catálogo'))
 
 // --- Contacto: canales e info en celdas + el formulario compartido (sp-form)
 // con inputs cuadrados propios del estilo.
@@ -232,6 +237,8 @@ onBeforeUnmount(() => {
         <div class="rs-sticker" aria-hidden="true"><span>{{ heroStatus.text }}</span></div>
         <div class="rs-hero-cta">
           <RouterLink v-if="showCatalog" class="rs-btn" :to="catalogTo">Ver catálogo <span class="rs-arr" aria-hidden="true">→</span></RouterLink>
+          <RouterLink v-else-if="servicesPage" class="rs-btn" :to="servicesTo">Ver servicios <span class="rs-arr" aria-hidden="true">→</span></RouterLink>
+          <RouterLink v-if="servicesPage && showCatalog" class="rs-btn card" :to="servicesTo">Servicios <span class="rs-arr" aria-hidden="true">→</span></RouterLink>
           <a v-if="showContact" class="rs-btn card" href="#contacto">Contacto</a>
           <RouterLink v-else-if="hasAbout" class="rs-btn card" :to="{ path: homeTo.path, hash: '#nosotros' }">Nosotros</RouterLink>
         </div>
@@ -339,6 +346,9 @@ onBeforeUnmount(() => {
           <p v-if="s.text">{{ s.text }}</p>
         </li>
       </ul>
+      <div v-if="servicesPage" class="rs-more">
+        <RouterLink class="rs-btn" :to="servicesTo">Ver precios y pedir por WhatsApp <span class="rs-arr" aria-hidden="true">→</span></RouterLink>
+      </div>
     </div>
   </section>
 
