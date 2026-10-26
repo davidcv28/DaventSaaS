@@ -2840,7 +2840,7 @@ async function changePassword() {
                 </option>
               </select>
               <div class="pick-preview" aria-live="polite">
-                <span class="tpl-thumb pick-preview-thumb" :data-tpl="designForm.template" aria-hidden="true"><i></i></span>
+                <span class="tpl-thumb pick-preview-thumb" :data-tpl="designForm.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
                 <div class="pick-preview-info">
                   <span class="pick-preview-eyebrow">Diseño elegido</span>
                   <strong>{{ storeTemplates[designForm.template]?.label }}</strong>

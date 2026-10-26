@@ -5,6 +5,7 @@ import { router } from './router/index.js'
 import { useAuthStore } from './stores/auth.store.js'
 import { useThemeStore } from './stores/theme.store.js'
 import './assets/styles.css'
+import './assets/template-thumbs.css'
 
 // Deploy con HTML viejo en caché: un chunk lazy pedido ya no existe en el
 // servidor y el import falla. Recargar una vez trae el index.html nuevo.

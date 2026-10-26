@@ -741,21 +741,8 @@ body { transition: background-color .2s ease, color .2s ease; }
 .tpl-thumb-btn[aria-disabled='true']:hover { border-color: var(--line); }
 .tpl-thumb-name { font-size: 10px; font-weight: 700; color: var(--ink-2); text-align: center; }
 .tpl-thumb-lock { position: absolute; top: 7px; right: 7px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); color: var(--muted); }
-.tpl-thumb { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9.5; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
-.tpl-thumb i { position: absolute; left: 12%; right: 12%; bottom: 10%; height: 4px; border-radius: 99px; background: var(--line-strong); opacity: .45; }
-.tpl-thumb[data-tpl='classic'] { background: linear-gradient(180deg, var(--brand-500) 0 60%, var(--card) 60%); }
-.tpl-thumb[data-tpl='classic']::before { content: ''; position: absolute; left: 50%; top: 13%; width: 14px; height: 14px; border-radius: 5px; background: #fff; transform: translateX(-50%); }
-.tpl-thumb[data-tpl='classic']::after { content: ''; position: absolute; left: 28%; right: 28%; top: 38%; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .92); box-shadow: 0 8px 0 rgba(255, 255, 255, .45); }
 /* Perspectiva: hero claro con rombo isométrico flotante y título tinta. */
-.tpl-thumb[data-tpl='perspective'] { background: linear-gradient(180deg, #edf3f8 0 62%, var(--card) 62%); }
-.tpl-thumb[data-tpl='perspective']::before { content: ''; position: absolute; right: 13%; top: 12%; width: 17px; height: 17px; border-radius: 4px; background: var(--brand-500); transform: rotate(45deg) skew(-8deg, -8deg); box-shadow: -5px 5px 0 color-mix(in srgb, var(--brand-500) 28%, transparent); }
-.tpl-thumb[data-tpl='perspective']::after { content: ''; position: absolute; left: 10%; top: 30%; width: 50%; height: 5px; border-radius: 2px; background: #111827; box-shadow: 0 9px 0 #94a3b8; }
 /* Publicidad: afiche amarillo/acento con sello y cinta */
-.tpl-thumb[data-tpl='promo'] { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .14) 0 5px, transparent 5px 10px), linear-gradient(120deg, var(--brand-500), #3730a3); }
-.tpl-thumb[data-tpl='promo']::before { content: ''; position: absolute; right: 10%; top: 14%; width: 20px; height: 20px; border-radius: 50%; background: #ffe14d; border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
-.tpl-thumb[data-tpl='promo']::after { content: ''; position: absolute; left: 9%; top: 26%; width: 46%; height: 6px; border-radius: 2px; background: #fff; box-shadow: 0 10px 0 #ffe14d; }
-.tpl-thumb[data-tpl='promo'] i { left: -4%; right: -4%; bottom: 12%; height: 9px; border-radius: 0; background: #ffe14d; opacity: 1; transform: rotate(-3deg); }
-.tpl-thumb[data-tpl='perspective'] i { left: 6%; right: 6%; height: 2px; background: var(--brand-500); opacity: .5; transform: skewX(-30deg); }
 .design-preview[data-store-template='promo'] .dp-nav { background: var(--store-accent-ink); border-bottom: 3px solid #ffe14d; }
 .design-preview[data-store-template='promo'] .dp-hero { justify-items: start; text-align: left; color: #fff; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 10px, transparent 10px 20px), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
 .design-preview[data-store-template='promo'] .dp-badge { background: #ffe14d; border: 2px solid #111827; color: #111827; transform: rotate(-2deg); }
@@ -767,15 +754,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='perspective'] .dp-title.is-name { font-family: var(--store-font, inherit); }
 .design-preview[data-store-template='perspective'] .dp-btn { box-shadow: 3px 3px 0 color-mix(in srgb, var(--store-accent-ink) 30%, rgba(17, 24, 39, .4)); }
 /* Urbano: papel claro, titular de letrero XXL, pegatina y cinta de colección */
-.tpl-thumb[data-tpl='street'] { background: var(--card); }
-.tpl-thumb[data-tpl='street']::before { content: ''; position: absolute; right: 10%; top: 12%; width: 19px; height: 19px; border-radius: 50%; background: var(--brand-500); border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
-.tpl-thumb[data-tpl='street']::after { content: ''; position: absolute; left: 9%; top: 26%; width: 52%; height: 7px; border-radius: 1px; background: #111827; box-shadow: 0 11px 0 -3px transparent, 0 12px 0 #94a3b8; }
-.tpl-thumb[data-tpl='street'] i { left: -4%; right: -4%; bottom: 10%; height: 8px; border-radius: 0; opacity: 1; background: var(--brand-500); border-block: 2px solid #111827; transform: rotate(-2.5deg); }
 /* Terminal: pantalla oscura con puntos de ventana, líneas de salida y cursor. */
-.tpl-thumb[data-tpl='terminal'] { background: linear-gradient(180deg, #0b0f0c 0 62%, var(--card) 62%); }
-.tpl-thumb[data-tpl='terminal']::before { content: ''; position: absolute; left: 9%; top: 10%; width: 6px; height: 6px; border-radius: 50%; background: #ff5f57; box-shadow: 9px 0 0 #febc2e, 18px 0 0 var(--brand-500); }
-.tpl-thumb[data-tpl='terminal']::after { content: ''; position: absolute; left: 9%; top: 30%; width: 52%; height: 5px; border-radius: 1px; background: #4a5a4f; box-shadow: 0 10px 0 -1px #2c362f; }
-.tpl-thumb[data-tpl='terminal'] i { left: auto; right: 30%; top: 31%; bottom: auto; width: 9px; height: 8px; border-radius: 1px; background: var(--brand-500); opacity: 1; }
 .design-preview[data-store-template='street'] .dp-nav { background: #fff; border-bottom: 2px solid var(--sp-ink); }
 .design-preview[data-store-template='street'] .dp-nav-name { color: var(--sp-ink); }
 .design-preview[data-store-template='street'] .dp-nav-item { color: var(--sp-muted); }
@@ -828,10 +807,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='terminal'] .dp-btn.ghost { background: transparent; border-color: color-mix(in srgb, var(--store-accent) 45%, transparent); color: #e9f3ec; }
 .design-preview[data-store-template='terminal'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(7, 10, 8, .88), rgba(7, 10, 8, .5)), var(--dp-cover) center / cover no-repeat; color: #e9f3ec; }
 /* Lookbook: papel cálido, titular serif y pliego de imagen (editorial de moda). */
-.tpl-thumb[data-tpl='lookbook'] { background: #f4f0e7; }
-.tpl-thumb[data-tpl='lookbook']::before { content: ''; position: absolute; right: 8%; top: 11%; bottom: 14%; width: 32%; background: #e2dacb; border: 1px solid #1a1613; }
-.tpl-thumb[data-tpl='lookbook']::after { content: ''; position: absolute; left: 8%; top: 16%; width: 44%; height: 4px; background: #1a1613; box-shadow: 0 9px 0 -1px #1a1613, 0 18px 0 -1px #1a1613, 0 34px 0 -1px #8c8375; }
-.tpl-thumb[data-tpl='lookbook'] i { left: 8%; right: auto; bottom: 12%; width: 44%; height: 1px; border-radius: 0; background: #1a1613; opacity: .5; }
 .design-preview[data-store-template='lookbook'] { --sp-bg: #f4f0e7; --sp-card: #faf7f0; --sp-ink: #1a1613; --sp-ink-2: #453d35; --sp-muted: #6f665b; --sp-line: #d9d0c0; }
 .design-preview[data-store-theme='dark'][data-store-template='lookbook'] { --sp-bg: #14110e; --sp-card: #1a1613; --sp-ink: #f2ebdf; --sp-ink-2: #d8cdbd; --sp-muted: #a99d8d; --sp-line: #3a332b; }
 .design-preview[data-store-template='lookbook'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
@@ -852,10 +827,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='lookbook'] .dp-hero.has-cover .dp-title,
 .design-preview[data-store-template='lookbook'] .dp-hero.has-cover .dp-desc { color: var(--sp-ink); }
 /* Tienda Pro: masthead de acento con buscador blanco, menú claro y banner. */
-.tpl-thumb[data-tpl='shop'] { background: linear-gradient(180deg, var(--brand-500) 0 34%, var(--card) 34% 44%, #f1f4fa 44%); }
-.tpl-thumb[data-tpl='shop']::before { content: ''; position: absolute; left: 30%; right: 10%; top: 9%; height: 7px; border-radius: 3px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .18); }
-.tpl-thumb[data-tpl='shop']::after { content: ''; position: absolute; left: 8%; top: 54%; width: 40%; height: 6px; border-radius: 2px; background: #111827; box-shadow: 0 10px 0 #94a3b8; }
-.tpl-thumb[data-tpl='shop'] i { left: auto; right: 9%; top: 52%; bottom: auto; width: 22%; height: 28%; border-radius: 3px; background: var(--card); border: 1px solid var(--line); opacity: 1; }
 .design-preview[data-store-template='shop'] .dp-nav { border-bottom: 9px solid var(--sp-card); }
 .design-preview[data-store-template='shop'] .dp-hero { justify-items: start; text-align: left; color: var(--sp-ink); background: radial-gradient(240px 130px at 88% -24%, color-mix(in srgb, var(--store-accent) 14%, transparent), transparent 62%), linear-gradient(180deg, color-mix(in srgb, var(--store-accent-soft) 60%, #f5f7fc), var(--sp-bg) 96%); border-bottom: 1px solid var(--sp-line); padding: 24px 20px 22px; }
 .design-preview[data-store-theme='dark'][data-store-template='shop'] .dp-hero { background: radial-gradient(240px 130px at 88% -24%, color-mix(in srgb, var(--store-accent) 20%, transparent), transparent 62%), linear-gradient(180deg, color-mix(in srgb, var(--store-accent) 10%, var(--sp-card)), var(--sp-bg) 96%); }
@@ -872,10 +843,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='shop'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .55); color: #fff; }
 /* Cobre: retail de indumentaria — piedra y tinta, titular Bebas condensado
    en mayúsculas, botón como bloque de acento y placa de imagen a un lado. */
-.tpl-thumb[data-tpl='cobre'] { background: #e9e8e4; }
-.tpl-thumb[data-tpl='cobre']::before { content: ''; position: absolute; right: 8%; top: 12%; width: 30%; height: 52%; border-radius: 3px; background: var(--brand-500); }
-.tpl-thumb[data-tpl='cobre']::after { content: ''; position: absolute; left: 8%; top: 16%; width: 46%; height: 8px; border-radius: 1px; background: #101318; box-shadow: 0 14px 0 -2px #101318, 0 34px 0 -2px #8a8d94; }
-.tpl-thumb[data-tpl='cobre'] i { left: auto; right: 16%; bottom: 14%; width: 26%; height: 34%; border-radius: 3px; background: #101318; opacity: 1; }
 .design-preview[data-store-template='cobre'] { --sp-bg: #e9e8e4; --sp-card: #f2f1ed; --sp-ink: #101318; --sp-ink-2: #2a2e36; --sp-muted: #454a52; --sp-line: color-mix(in srgb, #101318 14%, transparent); }
 .design-preview[data-store-theme='dark'][data-store-template='cobre'] { --sp-bg: #141619; --sp-card: #1b1e23; --sp-ink: #eceee9; --sp-ink-2: #c9cdd3; --sp-muted: #a9aeb6; --sp-line: color-mix(in srgb, #eceee9 14%, transparent); }
 .design-preview[data-store-template='cobre'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
@@ -899,10 +866,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='cobre'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .7); color: #fff; }
 /* Minimal: catálogo editorial — papel y tinta, barra de anuncio, titular
    Manrope 800 con tracking negativo y botón como bloque de tinta. */
-.tpl-thumb[data-tpl='minimal'] { background: linear-gradient(180deg, #111 0 16%, #fafaf8 16%); }
-.tpl-thumb[data-tpl='minimal']::before { content: ''; position: absolute; right: 10%; top: 28%; width: 26%; height: 42%; border-radius: 2px; background: #efeeea; border: 1px solid #e3e2dd; }
-.tpl-thumb[data-tpl='minimal']::after { content: ''; position: absolute; left: 9%; top: 30%; width: 44%; height: 6px; border-radius: 1px; background: #111; box-shadow: 0 12px 0 -1px #111, 0 24px 0 -2px #a9a8a2; }
-.tpl-thumb[data-tpl='minimal'] i { left: 9%; right: auto; bottom: 14%; width: 34%; height: 6px; border-radius: 1px; background: var(--brand-500); opacity: 1; }
 .design-preview[data-store-template='minimal'] { --sp-bg: #fafaf8; --sp-card: #ffffff; --sp-ink: #111111; --sp-ink-2: #3c3c38; --sp-muted: #5e5e5a; --sp-line: #e3e2dd; }
 .design-preview[data-store-theme='dark'][data-store-template='minimal'] { --sp-bg: #0f0f0e; --sp-card: #181817; --sp-ink: #f4f3ef; --sp-ink-2: #cfceca; --sp-muted: #a9a8a2; --sp-line: #2e2e2b; }
 .design-preview[data-store-template='minimal'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
@@ -928,10 +891,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 
 /* Dúo: portada a dos columnas — placa de imagen a la izquierda, copy a la
    derecha sobre fondo claro (la composición de la ex "Opción 2"). */
-.tpl-thumb[data-tpl='duo'] { background: linear-gradient(180deg, #eef2f7 0 68%, var(--card) 68%); }
-.tpl-thumb[data-tpl='duo']::before { content: ''; position: absolute; left: 7%; top: 14%; bottom: 22%; width: 32%; border-radius: 6px; background: var(--brand-500); }
-.tpl-thumb[data-tpl='duo']::after { content: ''; position: absolute; right: 8%; top: 22%; width: 40%; height: 6px; border-radius: 2px; background: #0f172a; box-shadow: 0 11px 0 -1px #0f172a, 0 24px 0 -1px #94a3b8; }
-.tpl-thumb[data-tpl='duo'] i { left: auto; right: 8%; bottom: 12%; width: 40%; height: 6px; border-radius: 99px; background: var(--brand-500); opacity: .8; }
 .design-preview[data-store-template='duo'] .dp-hero { grid-template-columns: 76px minmax(0, 1fr); column-gap: 16px; align-content: center; justify-items: start; text-align: left; background: #edf1f7; color: #0f172a; border-bottom: 1px solid #dbe3ee; padding: 22px 18px; }
 .design-preview[data-store-theme='dark'][data-store-template='duo'] .dp-hero { background: #101826; color: #e8ecf7; border-bottom-color: #24314a; }
 .design-preview[data-store-template='duo'] .dp-logo,
@@ -948,10 +907,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 
 /* Boutique: catálogo de indumentaria — marfil y tinta, títulos Playfair
    con serif, barra de anuncio y botones rectos de tinta. */
-.tpl-thumb[data-tpl='boutique'] { background: linear-gradient(180deg, #1c1917 0 12%, #f6f4ee 12%); }
-.tpl-thumb[data-tpl='boutique']::before { content: ''; position: absolute; right: 10%; top: 24%; bottom: 12%; width: 30%; background: #ece7dc; border: 1px solid #e0dacd; }
-.tpl-thumb[data-tpl='boutique']::after { content: ''; position: absolute; left: 8%; top: 30%; width: 44%; height: 6px; background: #1c1917; box-shadow: 0 12px 0 -1px #1c1917, 0 26px 0 -2px #a89e90; }
-.tpl-thumb[data-tpl='boutique'] i { left: 8%; right: auto; bottom: 14%; width: 30%; height: 5px; border-radius: 0; background: var(--brand-500); opacity: 1; }
 .design-preview[data-store-template='boutique'] { --sp-bg: #f6f4ee; --sp-card: #ffffff; --sp-ink: #1c1917; --sp-ink-2: #443d36; --sp-muted: #75695e; --sp-line: #e0dacd; }
 .design-preview[data-store-theme='dark'][data-store-template='boutique'] { --sp-bg: #131110; --sp-card: #1b1816; --sp-ink: #f2ede3; --sp-ink-2: #cfc7bb; --sp-muted: #a89e90; --sp-line: #37302a; }
 .design-preview[data-store-template='boutique'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
