@@ -264,13 +264,20 @@ class StoreViewSet(StoreBaseViewSet):
         if customization is not None and customization.show_catalog is False:
             raise Http404
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
-        #Las estrellas solo se anotan si el dueño habilitó valoraciones:
-        #sin el flag los productos viajan con rating_avg/count en None.
+        #La valoración solo se anota si el dueño habilitó opiniones: score
+        #0-5 = 5 × likes/votos (is_positive binario — el promedio sale del
+        #ratio de likes); sin el flag viaja rating_avg/count en None.
         if customization is not None and customization.show_reviews:
-            from django.db.models import Avg, Count
+            from django.db.models import Avg, Count, Q, Case, When, Value, FloatField, ExpressionWrapper
             products    =   products.annotate(
-                rating_avg      =   Avg('reviews__rating'),
-                rating_count    =   Count('reviews__rating'),
+                rating_avg      =   ExpressionWrapper(
+                    Value(5.0) * Avg(
+                        Case(When(reviews__is_positive = True, then = Value(1.0)), default = Value(0.0), output_field = FloatField()),
+                        filter = Q(reviews__is_positive__isnull = False),
+                    ),
+                    output_field = FloatField(),
+                ),
+                rating_count    =   Count('reviews__is_positive', filter = Q(reviews__is_positive__isnull = False)),
             )
         category_id     =   request.query_params.get('category')
         brand_id        =   request.query_params.get('brand')
@@ -437,7 +444,7 @@ class StoreViewSet(StoreBaseViewSet):
         ProductReview.objects.create(
             store       =   store,
             product     =   product,
-            rating      =   data.get('rating') if can_rate else None,
+            is_positive =   data.get('is_positive') if can_rate else None,
             text        =   data.get('text') or '',
             name        =   data['name'],
             surname     =   data['surname'],

@@ -99,7 +99,7 @@ function untilt(e) {
         <div class="cv-pe-body">
           <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-pe-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
           <h3 class="cv-pe-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
+          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="hexagon" :size="12" />
           <p class="cv-pe-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
         </div>
       </article>

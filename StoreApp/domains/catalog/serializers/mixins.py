@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework import serializers
 from .config_fields import FeatureLimits, DiscountLimits
 """
@@ -135,6 +136,30 @@ class DiscountMixinValidator:
             )
             if not chosen:
                 errors['products']  =   'Elegí al menos un producto.'
+            elif 'products' not in errors:
+                #Un producto solo vive en un grupo de ofertas a la vez: si ya
+                #está en otro descuento de productos vigente o programado
+                #(aunque esté pausado — reactivarlo chocaría), se rechaza.
+                from django.utils import timezone
+                taken       =   (
+                    Discount.objects
+                    .filter(
+                        store       =   store,
+                        scope       =   Discount.Scope.PRODUCTS,
+                        products__in =  chosen,
+                    )
+                    .filter(
+                        models.Q(ends_at__isnull = True) |
+                        models.Q(ends_at__gt = timezone.now())
+                    )
+                )
+                if self.instance is not None:
+                    taken   =   taken.exclude(pk = self.instance.pk)
+                taken       =   list(taken.distinct()[:4])
+                if taken:
+                    names   =   ', '.join(f'«{d.name}»' for d in taken[:3])
+                    extra   =   f' y {len(taken) - 3} más' if len(taken) > 3 else ''
+                    errors['products']  =   f'Hay productos que ya están en {names}{extra}: cada producto solo puede estar en un grupo de ofertas.'
         starts          =   attrs.get('starts_at', getattr(self.instance, 'starts_at', None))
         ends            =   attrs.get('ends_at', getattr(self.instance, 'ends_at', None))
         if starts is not None and ends is not None and ends <= starts:

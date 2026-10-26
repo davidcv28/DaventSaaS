@@ -137,23 +137,15 @@ DiscountFields              =   {
 # REVIEW FIELDS (opiniones de visitantes, formulario público)
 #=========================================
 ReviewLimits              =   {
-    'rating_min'            :   1,
-    'rating_max'            :   5,
     'text_max'              :   600,
     'list_max'              :   50,   # reseñas que viajan en la ficha pública
 }
 ReviewFields              =   {
-    'rating'                :   {
+    'is_positive'           :   {
         'label'             :   'Valoración',
         'required'          :   False,
         'allow_null'        :   True,
-        'min_value'         :   ReviewLimits['rating_min'],
-        'max_value'         :   ReviewLimits['rating_max'],
-        'error_messages'    :   {
-            'min_value'     :   'La valoración va de 1 a 5 estrellas',
-            'max_value'     :   'La valoración va de 1 a 5 estrellas',
-            'invalid'       :   'Elegí de 1 a 5 estrellas',
-        },
+        'error_messages'    :   {'invalid': 'Indicá si te gustó o no'},
     },
     'text'                  :   {
         'label'             :   'Comentario',

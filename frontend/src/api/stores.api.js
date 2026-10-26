@@ -29,8 +29,8 @@ import { storeUrl } from '../config/env.js'
 //                                                        challenge_id, captcha_answer} -> envía el
 //                                                        mensaje por email al dueño (throttle 10/h por IP)
 // GET  /api/stores/public/<slug>/reviews/captcha/ público -> {challenge_id, question} (mismo captcha)
-// GET  /api/stores/public/<slug>/products/<id>/reviews/ público -> [{rating, text, name, surname_initial, created_at}]
-// POST /api/stores/public/<slug>/products/<id>/reviews/ público {rating?, text?, name, surname, email,
+// GET  /api/stores/public/<slug>/products/<id>/reviews/ público -> [{is_positive, text, name, surname_initial, created_at}]
+// POST /api/stores/public/<slug>/products/<id>/reviews/ público {is_positive? (like/dislike), text?, name, surname, email,
 //                                                        website (honeypot), challenge_id, captcha_answer}
 //                                                        -> 404 si la tienda apagó valoraciones y comentarios;
 //                                                        el texto solo viaja con show_comments (premium,

@@ -37,6 +37,15 @@ const catalog = ref({ categories: [], brands: [], products: [] })
 const status = ref('loading') // loading | ready | missing | error
 const copied = ref(false)
 
+// El glifo de la valoración acompaña la identidad de cada plantilla (mismo
+// mapa que usan las tarjetas del catálogo).
+const RATING_ICONS = {
+  classic: 'star', perspective: 'hexagon', duo: 'moon', street: 'zap',
+  promo: 'flame', terminal: 'terminal', lookbook: 'diamond', shop: 'heart',
+  cobre: 'gem', minimal: 'dot', boutique: 'crown',
+}
+const ratingIcon = computed(() => RATING_ICONS[custom.value.template] || 'star')
+
 const product = computed(() => catalog.value.products.find((p) => String(p.id) === String(route.params.productId)) || null)
 const categoryName = computed(() => catalog.value.categories.find((c) => c.id === product.value?.category)?.name || '')
 const brandName = computed(() => catalog.value.brands.find((b) => b.id === product.value?.brand)?.name || '')
@@ -145,7 +154,7 @@ onMounted(() => {
               </button>
             </div>
             <h1 class="spd-name">{{ product.name }}</h1>
-            <ProductStars v-if="custom.show_reviews && product.rating_count" class="spd-stars" :avg="product.rating_avg" :count="product.rating_count" :size="15" show-value />
+            <ProductStars v-if="custom.show_reviews && product.rating_count" class="spd-stars" :avg="product.rating_avg" :count="product.rating_count" :icon="ratingIcon" :size="15" show-value />
             <p v-if="brandName" class="spd-brand">Marca: {{ brandName }}</p>
 
             <div class="spd-pricebox">
@@ -226,6 +235,7 @@ onMounted(() => {
           :can-comment="custom.show_comments"
           :avg="product.rating_avg"
           :count="product.rating_count || 0"
+          :icon="ratingIcon"
         />
       </article>
 

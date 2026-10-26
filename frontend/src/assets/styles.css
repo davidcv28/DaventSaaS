@@ -1048,6 +1048,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 .disc-products .check-item { padding: 10px 14px; }
 .disc-products .check-item:hover { background: var(--brand-soft); }
 .disc-products .check-item input[type='checkbox'] { accent-color: var(--brand-500); }
+.check-item.taken { opacity: .6; cursor: default; }
+.check-item.taken:hover { background: transparent; }
+.check-taken { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); background: var(--line-soft); border-radius: 999px; padding: 3px 8px; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .disc-when-label { color: var(--muted); }
 
 /* Alcance: tarjetas con ícono en tile */
@@ -1102,8 +1105,8 @@ body { transition: background-color .2s ease, color .2s ease; }
 .rev-item:hover { border-color: var(--brand-400); }
 .rev-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .rev-head strong { font-size: 14px; color: var(--ink); }
-.rev-stars { display: inline-flex; gap: 1px; color: #f59e0b; }
-.rev-stars .rev-off { color: #cbd5e1; }
+.rev-vote { display: inline-flex; align-items: center; color: #16a34a; }
+.rev-vote.down { color: #dc2626; }
 .rev-mail, .rev-date { font-size: 12px; color: var(--muted); }
 .rev-date { margin-left: auto; }
 .rev-text { margin: 8px 0 0; font-size: 14px; color: var(--ink-2); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }

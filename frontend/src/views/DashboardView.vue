@@ -791,6 +791,20 @@ const discountErrors = computed(() => {
 
 // El backend reporta errores con las keys del modelo (starts_at/ends_at);
 // el form las divide en fecha+hora (start_date/end_date) — se mapean acá.
+// Un producto solo puede vivir en un grupo de ofertas vigente a la vez:
+// los ya tomados por OTRO descuento con scope 'products' (vigente,
+// programado o pausado — no el terminado) se muestran bloqueados con el
+// nombre del grupo que los ocupa. El backend también lo rechaza; esto
+// evita el ida y vuelta del error.
+const discountTakenBy = computed(() => {
+  const taken = new Map()
+  for (const d of catalog.discounts) {
+    if (d.scope !== 'products' || d.status === 'ended' || d.id === discountEditing.value) continue
+    for (const pid of d.products || []) if (!taken.has(pid)) taken.set(pid, d.name)
+  }
+  return taken
+})
+
 const DISCOUNT_FIELD_MAP = { start_date: 'starts_at', end_date: 'ends_at' }
 function discountFieldErr(name) {
   const serverKey = DISCOUNT_FIELD_MAP[name] || name
@@ -2350,16 +2364,18 @@ async function changePassword() {
                 <label id="disc-products-label"><AppIcon name="package" :size="14" class="label-icon" aria-hidden="true" />Productos incluidos</label>
                 <template v-if="catalog.products.length">
                   <div class="disc-products-tools">
-                    <button type="button" class="disc-tool" @click="discountForm.product_ids = catalog.products.map((p) => p.id)"><AppIcon name="check" :size="13" /> Todos</button>
+                    <button type="button" class="disc-tool" @click="discountForm.product_ids = catalog.products.filter((p) => !discountTakenBy.has(p.id)).map((p) => p.id)"><AppIcon name="check" :size="13" /> Todos</button>
                     <button type="button" class="disc-tool" @click="discountForm.product_ids = []"><AppIcon name="x" :size="13" /> Ninguno</button>
                     <span class="hint">{{ discountForm.product_ids.length }} seleccionados</span>
                   </div>
                   <div class="check-list disc-products" role="group" aria-labelledby="disc-products-label">
-                    <label v-for="p in catalog.products" :key="p.id" class="check-item">
-                      <input type="checkbox" :value="p.id" v-model="discountForm.product_ids" />
+                    <label v-for="p in catalog.products" :key="p.id" class="check-item" :class="{ taken: discountTakenBy.has(p.id) }">
+                      <input type="checkbox" :value="p.id" v-model="discountForm.product_ids" :disabled="discountTakenBy.has(p.id)" />
                       <span class="check-text"><strong>{{ p.name }}</strong><small>{{ formatARS(p.price) }}</small></span>
+                      <span v-if="discountTakenBy.has(p.id)" class="check-taken" :title="`Ya está en el descuento «${discountTakenBy.get(p.id)}»`"><AppIcon name="lock" :size="11" /> {{ discountTakenBy.get(p.id) }}</span>
                     </label>
                   </div>
+                  <p v-if="discountTakenBy.size" class="hint">Los productos que ya están en otro descuento vigente no se pueden elegir.</p>
                 </template>
                 <p v-else class="hint">Todavía no cargaste productos.</p>
                 <p v-if="discountFieldErr('products')" class="field-error" role="alert">{{ discountFieldErr('products') }}</p>
@@ -2439,8 +2455,8 @@ async function changePassword() {
             <ul v-else class="rev-list">
               <li v-for="r in catalog.reviews" :key="r.id" class="rev-item">
                 <div class="rev-head">
-                  <span v-if="r.rating" class="rev-stars" :aria-label="`${r.rating} de 5 estrellas`">
-                    <AppIcon v-for="i in 5" :key="i" name="star" :size="13" :class="{ 'rev-off': i > r.rating }" />
+                  <span v-if="r.is_positive != null" class="rev-vote" :class="{ down: !r.is_positive }" :title="r.is_positive ? 'Le gustó' : 'No le gustó'">
+                    <AppIcon :name="r.is_positive ? 'thumbs-up' : 'thumbs-down'" :size="14" />
                   </span>
                   <strong>{{ r.name }} {{ r.surname }}</strong>
                   <span class="rev-mail">{{ r.email }}</span>
@@ -2482,8 +2498,8 @@ async function changePassword() {
                 <label class="check-item" :class="{ disabled: reviewToggleBusy }">
                   <input type="checkbox" :checked="designForm.show_reviews" :disabled="reviewToggleBusy" @change="toggleShowReviews" />
                   <span class="check-text">
-                    <strong>Valoraciones con estrellas</strong>
-                    <small>Los visitantes puntúan cada producto de 1 a 5; el promedio se ve en el catálogo.</small>
+                    <strong>Valoraciones de productos</strong>
+                    <small>Los visitantes votan “me gustó” o “no me gustó”; el resultado se ve en el catálogo.</small>
                   </span>
                 </label>
                 <label class="check-item" :class="{ disabled: !canProductComments || reviewToggleBusy }">

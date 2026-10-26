@@ -370,6 +370,33 @@ class DiscountTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['item']['status'], 'paused')
 
+    def test_product_lives_in_one_products_discount_only(self):
+        #Un producto no puede estar en dos grupos de ofertas (scope=products)
+        #que sigan vivos — vigente, programado o pausado (reactivarlo chocaría).
+        #El error nombra el descuento que lo ocupa; un grupo terminado libera.
+        client, store   =   self._client()
+        product         =   Product.objects.create(store = store, name = 'Calza', price = 10)
+        other           =   Product.objects.create(store = store, name = 'Remera', price = 20)
+        first           =   client.post(DISCOUNTS_URL, self._payload(scope = 'products', products = [product.pk]), format = 'json')
+        self.assertEqual(first.status_code, 201)
+        first_id        =   first.data['item']['id']
+        dup             =   client.post(DISCOUNTS_URL, self._payload(scope = 'products', products = [product.pk, other.pk]), format = 'json')
+        self.assertEqual(dup.status_code, 400)
+        self.assertIn('Promo finde', dup.data['products'][0])
+        #Pausado también bloquea: reactivarlo crearía el solape.
+        client.patch(f'{DISCOUNTS_URL}{first_id}/', {'is_active': False}, format = 'json')
+        dup             =   client.post(DISCOUNTS_URL, self._payload(scope = 'products', products = [product.pk]), format = 'json')
+        self.assertEqual(dup.status_code, 400)
+        #Terminado libera el producto para un grupo nuevo (por ORM porque el
+        #PATCH validaría ends_at > starts_at del propio registro).
+        Discount.objects.filter(pk = first_id).update(ends_at = timezone.now() - timedelta(hours = 1))
+        ok              =   client.post(DISCOUNTS_URL, self._payload(scope = 'products', products = [product.pk]), format = 'json')
+        self.assertEqual(ok.status_code, 201)
+        #Editar el propio grupo no se cuenta como conflicto consigo mismo.
+        second_id       =   ok.data['item']['id']
+        edit            =   client.patch(f'{DISCOUNTS_URL}{second_id}/', {'products': [product.pk, other.pk]}, format = 'json')
+        self.assertEqual(edit.status_code, 200)
+
     def test_changing_scope_clears_leftovers(self):
         #Pasar de products a all limpia la M2M: no quedan restos de la
         #selección anterior limitando el alcance.
@@ -533,7 +560,7 @@ def _review_captcha(slug, answer = 7):
 
 class ReviewTests(TestCase):
     """
-    Opiniones de visitantes: estrellas (show_reviews, todos los planes) y
+    Opiniones de visitantes: like/dislike (show_reviews, todos los planes) y
     comentarios (show_comments, premium por has_product_comments). El alta
     pública pide nombre+apellido+email+captcha; el dueño modera borrando.
     """
@@ -562,17 +589,17 @@ class ReviewTests(TestCase):
         }
         return APIClient().post(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id), payload)
 
-    def test_review_create_rating_and_comment(self):
+    def test_review_create_vote_and_comment(self):
         _, product      =   self._setup()
-        response        =   self._post(product, rating = 5, text = 'Excelente calidad')
+        response        =   self._post(product, is_positive = True, text = 'Excelente calidad')
         self.assertEqual(response.status_code, 201)
         review          =   ProductReview.objects.get(product = product)
-        self.assertEqual(review.rating, 5)
+        self.assertTrue(review.is_positive)
         self.assertEqual(review.text, 'Excelente calidad')
 
     def test_review_list_public_privacy(self):
         _, product      =   self._setup()
-        self._post(product, rating = 4, text = 'Muy buena')
+        self._post(product, is_positive = True, text = 'Muy buena')
         items           =   APIClient().get(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)).data
         self.assertEqual(len(items), 1)
         item            =   items[0]
@@ -585,37 +612,37 @@ class ReviewTests(TestCase):
 
     def test_endpoints_404_with_features_off(self):
         _, product      =   self._setup(comments = False, reviews = False)
-        self.assertEqual(self._post(product, rating = 5).status_code, 404)
+        self.assertEqual(self._post(product, is_positive = True).status_code, 404)
         self.assertEqual(
             APIClient().get(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)).status_code, 404,
         )
 
     def test_comments_require_premium_benefit(self):
         #show_comments quedó en True pero el plan bajó (sin el flag): el
-        #texto se rechaza y las estrellas solas siguen funcionando.
+        #texto se rechaza y el voto solo sigue funcionando.
         _, product      =   self._setup(comments = True)
         PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
         self.assertEqual(self._post(product, text = 'Hola').status_code, 400)
-        self.assertEqual(self._post(product, rating = 5).status_code, 201)
+        self.assertEqual(self._post(product, is_positive = True).status_code, 201)
 
     def test_reviews_only_store_rejects_text(self):
         _, product      =   self._setup(comments = False)
-        self.assertEqual(self._post(product, rating = 5, text = 'Hola').status_code, 400)
-        self.assertEqual(self._post(product, rating = 5).status_code, 201)
+        self.assertEqual(self._post(product, is_positive = True, text = 'Hola').status_code, 400)
+        self.assertEqual(self._post(product, is_positive = True).status_code, 201)
 
     def test_comments_only_store_requires_text(self):
         _, product      =   self._setup(reviews = False)
-        self.assertEqual(self._post(product, rating = 5).status_code, 400)
+        self.assertEqual(self._post(product, is_positive = True).status_code, 400)
         self.assertEqual(self._post(product, text = 'Muy buena').status_code, 201)
 
-    def test_review_needs_rating_or_text(self):
+    def test_review_needs_vote_or_text(self):
         _, product      =   self._setup()
         self.assertEqual(self._post(product).status_code, 400)
 
-    def test_review_rating_bounds(self):
+    def test_review_vote_must_be_boolean(self):
         _, product      =   self._setup()
-        self.assertEqual(self._post(product, rating = 0).status_code, 400)
-        self.assertEqual(self._post(product, rating = 6).status_code, 400)
+        self.assertEqual(self._post(product, is_positive = 'quiza').status_code, 400)
+        self.assertEqual(self._post(product, is_positive = False).status_code, 201)
 
     def test_review_bad_captcha_rejected(self):
         _, product      =   self._setup()
@@ -623,29 +650,32 @@ class ReviewTests(TestCase):
         captcha['captcha_answer']   =   '9'
         response        =   APIClient().post(
             PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id),
-            {'name': 'Maria', 'surname': 'Perez', 'email': 'm@x.com', 'rating': 5, **captcha},
+            {'name': 'Maria', 'surname': 'Perez', 'email': 'm@x.com', 'is_positive': True, **captcha},
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(ProductReview.objects.count(), 0)
 
     def test_review_honeypot_fakes_success(self):
         _, product      =   self._setup()
-        response        =   self._post(product, rating = 5, website = 'http://spam')
+        response        =   self._post(product, is_positive = True, website = 'http://spam')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ProductReview.objects.count(), 0)
 
     def test_public_catalog_rating_aggregates(self):
         store, product  =   self._setup()
-        ProductReview.objects.create(store = store, product = product, rating = 5, name = 'A', surname = 'B', email = 'a@x.com')
-        ProductReview.objects.create(store = store, product = product, rating = 3, name = 'C', surname = 'D', email = 'c@x.com')
+        #1 like + 1 dislike: el score público es 5 × likes/votos = 2.5,
+        #y el conteo suma solo votos (los comentarios solo-texto no puntúan).
+        ProductReview.objects.create(store = store, product = product, is_positive = True, name = 'A', surname = 'B', email = 'a@x.com')
+        ProductReview.objects.create(store = store, product = product, is_positive = False, name = 'C', surname = 'D', email = 'c@x.com')
+        ProductReview.objects.create(store = store, product = product, text = 'Solo texto', name = 'E', surname = 'F', email = 'e@x.com')
         products        =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda')).data['products']
         calza           =   next(p for p in products if p['name'] == 'Calza')
-        self.assertEqual(calza['rating_avg'], 4.0)
+        self.assertEqual(calza['rating_avg'], 2.5)
         self.assertEqual(calza['rating_count'], 2)
 
     def test_public_catalog_hides_ratings_without_flag(self):
         store, product  =   self._setup(reviews = False)
-        ProductReview.objects.create(store = store, product = product, rating = 5, name = 'A', surname = 'B', email = 'a@x.com')
+        ProductReview.objects.create(store = store, product = product, is_positive = True, name = 'A', surname = 'B', email = 'a@x.com')
         products        =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda')).data['products']
         calza           =   next(p for p in products if p['name'] == 'Calza')
         self.assertIsNone(calza['rating_avg'])
@@ -654,7 +684,7 @@ class ReviewTests(TestCase):
     def test_owner_moderation_list_and_delete(self):
         store, product  =   self._setup()
         review          =   ProductReview.objects.create(
-            store = store, product = product, rating = 4, text = 'Buena',
+            store = store, product = product, is_positive = True, text = 'Buena',
             name = 'Maria', surname = 'Perez', email = 'm@x.com',
         )
         client          =   APIClient()
@@ -670,7 +700,7 @@ class ReviewTests(TestCase):
     def test_owner_cannot_moderate_foreign_review(self):
         _, product      =   self._setup()
         review          =   ProductReview.objects.create(
-            store = product.store, product = product, rating = 1, text = 'Mala',
+            store = product.store, product = product, is_positive = False, text = 'Mala',
             name = 'X', surname = 'Y', email = 'x@x.com',
         )
         _, other        =   _make_user('otro')
@@ -686,7 +716,7 @@ class ReviewTests(TestCase):
         store, _        =   self._setup()
         client          =   APIClient()
         client.force_authenticate(user = store.user.user)
-        self.assertEqual(client.post(REVIEWS_URL, {'rating': 5}).status_code, 405)
+        self.assertEqual(client.post(REVIEWS_URL, {'is_positive': True}).status_code, 405)
 
     def test_customization_patch_discards_comments_without_benefit(self):
         store, _        =   self._setup(comments = False)

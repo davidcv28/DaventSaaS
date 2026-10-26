@@ -137,18 +137,16 @@ class Discount(models.Model):
 #=========================================
 class ProductReview(models.Model):
     """
-    Opinión de un visitante sobre un producto de la web pública: estrellas
-    (rating 1-5, solo si la tienda habilitó valoraciones) y/o texto (solo
+    Opinión de un visitante sobre un producto de la web pública: like/dislike
+    (is_positive, solo si la tienda habilitó valoraciones) y/o texto (solo
     con comentarios premium). Se publica directo — el dueño modera
     borrando desde su panel (no hay pre-aprobación).
     El alta pide nombre+apellido+email+captcha (fricción antispam); el
     email nunca sale en la API pública (solo lo ve el dueño al moderar).
     """
-    RATING_MIN                  =   1
-    RATING_MAX                  =   5
     store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'product_reviews', db_index = False)
     product                     =   models.ForeignKey(Product, on_delete = models.CASCADE, related_name = 'reviews', db_index = False)
-    rating                      =   models.PositiveSmallIntegerField(null = True, blank = True, verbose_name = 'Valoración (1-5)')
+    is_positive                 =   models.BooleanField(null = True, blank = True, verbose_name = 'Le gustó')
     text                        =   models.CharField(max_length = 600, blank = True, verbose_name = 'Comentario')
     name                        =   models.CharField(max_length = 80, verbose_name = 'Nombre')
     surname                     =   models.CharField(max_length = 80, verbose_name = 'Apellido')
@@ -164,15 +162,11 @@ class ProductReview(models.Model):
             models.Index(fields = ['product', 'created_at'], name = 'idx_review_product_date'),
         ]
         constraints             =   [
-            #Una opinión sin estrellas ni texto no aporta nada (también lo
+            #Una opinión sin voto ni texto no aporta nada (también lo
             #valida el serializer; la constraint es la segunda capa).
             models.CheckConstraint(
-                condition       =   models.Q(rating__isnull = False) | ~models.Q(text = ''),
-                name            =   'ck_review_rating_or_text',
-            ),
-            models.CheckConstraint(
-                condition       =   models.Q(rating__isnull = True) | models.Q(rating__gte = 1, rating__lte = 5),
-                name            =   'ck_review_rating_range',
+                condition       =   models.Q(is_positive__isnull = False) | ~models.Q(text = ''),
+                name            =   'ck_review_vote_or_text',
             ),
         ]
     def __str__(self):

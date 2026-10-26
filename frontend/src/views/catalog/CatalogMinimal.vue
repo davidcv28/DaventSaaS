@@ -62,7 +62,7 @@ const {
           <span v-else class="cv-mn-ph"><AppIcon name="package" :size="26" /></span>
         </div>
         <h3 class="cv-mn-name">{{ p.name }}</h3>
-        <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
+        <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="dot" :size="12" />
         <p class="cv-mn-meta">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') || '\u00a0' }}</p>
         <p class="cv-mn-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}<em v-if="productOffer(p) != null"> −{{ offerPct(p) }}%</em></p>
       </article>

@@ -128,7 +128,7 @@ class ReviewSerializerList(serializers.ModelSerializer):
     product_name                =   serializers.CharField(source = 'product.name', read_only = True)
     class Meta:
         model                   =   ProductReview
-        fields                  =   ['id', 'product', 'product_name', 'rating', 'text', 'name', 'surname', 'email', 'created_at']
+        fields                  =   ['id', 'product', 'product_name', 'is_positive', 'text', 'name', 'surname', 'email', 'created_at']
 #=========================================
 # REVIEW PUBLIC SERIALIZER (ficha pública: jamás expone el email y el
 # apellido viaja reducido a su inicial — "María P.")
@@ -137,7 +137,7 @@ class ReviewPublicSerializer(serializers.ModelSerializer):
     surname_initial             =   serializers.SerializerMethodField()
     class Meta:
         model                   =   ProductReview
-        fields                  =   ['rating', 'text', 'name', 'surname_initial', 'created_at']
+        fields                  =   ['is_positive', 'text', 'name', 'surname_initial', 'created_at']
     def get_surname_initial(self, review):
         surname =   (review.surname or '').strip()
         return f'{surname[0]}.' if surname else ''
@@ -146,7 +146,7 @@ class ReviewPublicSerializer(serializers.ModelSerializer):
 # texto según show_comments — el viewset pasa ambos flags en context)
 #=========================================
 class ReviewCreateSerializer(serializers.ModelSerializer):
-    rating                      =   serializers.IntegerField(**ReviewFields['rating'])
+    is_positive                 =   serializers.BooleanField(**ReviewFields['is_positive'])
     text                        =   serializers.CharField(**ReviewFields['text'])
     name                        =   serializers.CharField(**ReviewFields['name'])
     surname                     =   serializers.CharField(**ReviewFields['surname'])
@@ -157,23 +157,23 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
     captcha_answer              =   serializers.CharField(max_length = 8, write_only = True)
     class Meta:
         model                   =   ProductReview
-        fields                  =   ['rating', 'text', 'name', 'surname', 'email', 'website', 'challenge_id', 'captcha_answer']
+        fields                  =   ['is_positive', 'text', 'name', 'surname', 'email', 'website', 'challenge_id', 'captcha_answer']
     def validate(self, attrs):
         can_rate                =   self.context.get('can_rate', False)
         can_comment             =   self.context.get('can_comment', False)
-        rating                  =   attrs.get('rating')
+        vote                    =   attrs.get('is_positive')
         text                    =   (attrs.get('text') or '').strip()
         attrs['text']           =   text
-        if not can_rate and rating is not None:
-            raise serializers.ValidationError({'rating': 'Esta tienda no tiene valoraciones habilitadas.'})
+        if not can_rate and vote is not None:
+            raise serializers.ValidationError({'is_positive': 'Esta tienda no tiene valoraciones habilitadas.'})
         if not can_comment and text:
             raise serializers.ValidationError({'text': 'Esta tienda no tiene comentarios habilitados.'})
-        if can_rate and not can_comment and rating is None:
-            raise serializers.ValidationError({'rating': 'Elegí de 1 a 5 estrellas.'})
+        if can_rate and not can_comment and vote is None:
+            raise serializers.ValidationError({'is_positive': 'Indicá si te gustó o no.'})
         if can_comment and not can_rate and not text:
             raise serializers.ValidationError({'text': 'Escribí tu comentario.'})
-        if rating is None and not text:
-            raise serializers.ValidationError({'rating': 'Dejá una valoración o un comentario.'})
+        if vote is None and not text:
+            raise serializers.ValidationError({'is_positive': 'Dejá una valoración o un comentario.'})
         return attrs
 #=========================================
 # DISCOUNT PUBLIC SERIALIZER (promos vigentes del catálogo público)

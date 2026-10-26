@@ -1,15 +1,18 @@
 <script setup>
 import { computed } from 'vue'
+import AppIcon from './AppIcon.vue'
 
-// Estrellas de valoración (web pública + panel): media luna no existe —
-// el relleno parcial se resuelve con una capa dorada recortada al % del
-// promedio sobre la fila de estrellas vacías. Se usa en las tarjetas del
-// catálogo (compact), la ficha (showValue) y la lista de moderación.
+// Fila de valoración (web pública + panel): el score sale del ratio
+// likes/votos y el relleno parcial se resuelve con una capa dorada recortada
+// al % sobre la fila de íconos base. El glifo depende de la plantilla de la
+// web (prop `icon`): estrella en clásico, rayo en urbano, diamante en
+// lookbook… cualquier ícono del catálogo sirve.
 const props = defineProps({
   avg: { type: Number, default: null },
   count: { type: Number, default: 0 },
   size: { type: Number, default: 13 },
   showValue: { type: Boolean, default: false },
+  icon: { type: String, default: 'star' },
 })
 
 const pct = computed(() => {
@@ -19,7 +22,7 @@ const pct = computed(() => {
 const label = computed(() => {
   const avg = Number(props.avg)
   if (!Number.isFinite(avg)) return 'Sin valoraciones'
-  const base = `${avg.toFixed(1)} de 5 estrellas`
+  const base = `${avg.toFixed(1)} de 5`
   return props.count ? `${base} (${props.count} ${props.count === 1 ? 'valoración' : 'valoraciones'})` : base
 })
 </script>
@@ -28,10 +31,10 @@ const label = computed(() => {
   <span class="pstars" role="img" :aria-label="label" :title="label">
     <span class="pstars-row" aria-hidden="true">
       <span class="pstars-base">
-        <svg v-for="i in 5" :key="i" :width="size" :height="size" viewBox="0 0 24 24" fill="currentColor"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+        <AppIcon v-for="i in 5" :key="i" :name="icon" :size="size" />
       </span>
       <span class="pstars-fill" :style="{ width: `${pct}%` }">
-        <svg v-for="i in 5" :key="i" :width="size" :height="size" viewBox="0 0 24 24" fill="currentColor"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+        <AppIcon v-for="i in 5" :key="i" :name="icon" :size="size" />
       </span>
     </span>
     <span v-if="showValue && avg != null" class="pstars-num">{{ Number(avg).toFixed(1) }}</span>

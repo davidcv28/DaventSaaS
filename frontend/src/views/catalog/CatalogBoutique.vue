@@ -74,7 +74,7 @@ const {
         <div class="cv-bt-body">
           <p v-if="brandNameOf(p) || categoryNameOf(p)" class="cv-bt-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</p>
           <h3 class="cv-bt-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
+          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="crown" :size="12" />
           <p class="cv-bt-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
         </div>
       </article>

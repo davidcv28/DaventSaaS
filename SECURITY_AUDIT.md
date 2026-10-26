@@ -408,9 +408,23 @@ corresponde al precio mostrado — consistencia, no solo seguridad.
 **Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
 250 tests OK · `npm run build` (Vite) OK.
 
+### Addendum 2026-10-26 — exclusividad de productos entre grupos de ofertas
+
+`DiscountMixinValidator` ahora rechaza (400) que un producto quede en dos
+descuentos con `scope=products` cuya ventana siga viva: el solape se evalúa
+contra descuentos con `ends_at` null o futuro — el terminado libera y el
+pausado también bloquea (reactivarlo recrearía el conflicto). Se excluye el
+propio registro en update y el mensaje nombra el descuento ocupante. El
+picker del dashboard los muestra deshabilitados con el nombre del grupo
+(`discountTakenBy`) — UX adelantada, no sustituto del gate server-side.
+Cubierto por `test_product_lives_in_one_products_discount_only`.
+
 ## 12. Auditoría del feature: valoraciones y comentarios de productos — 2026-10-26
 
-Revisión del nuevo modelo `ProductReview` (mig. catalog.0006), los flags
+Revisión del nuevo modelo `ProductReview` (mig. catalog.0006 — **revisado
+2026-10-26**: el voto pasó de `rating` 1-5 a `is_positive` like/dislike
+nullable; la mig. catalog.0007 convierte los datos existentes (rating ≥3 →
+positivo) antes de borrar el campo), los flags
 `StoreCustomization.show_reviews`/`show_comments` (mig. stores.0031) y su
 superficie: `GET .../reviews/captcha/`, `GET/POST
 .../products/<id>/reviews/` públicos y `GET/DELETE /api/reviews/` del dueño.
@@ -420,20 +434,20 @@ superficie: `GET .../reviews/captcha/`, `GET/POST
 | Control | Dónde |
 |---------|-------|
 | **Antispam en capas** (idéntico al contacto auditado): captcha aritmético firmado con `TimestampSigner` (la respuesta viaja como hash SHA-256, nunca en claro), edad máxima 10 min, **mínimo 3s** entre emisión y envío (anti-bot), honeypot `website` con 201 genérico sin persistir, throttle `store_review` 10/h por IP | `services/contact.py`, `stores/views/viewset.py`, settings |
-| **Fricción exigida por diseño del producto**: nombre + apellido + email obligatorios en todo envío — aunque solo valore con estrellas | `ReviewCreateSerializer` |
+| **Fricción exigida por diseño del producto**: nombre + apellido + email obligatorios en todo envío — aunque solo deje su voto | `ReviewCreateSerializer` |
 | **Privacidad del autor**: el email y el apellido completo jamás salen en la API pública — `ReviewPublicSerializer` expone `surname` como inicial; solo el dueño autenticado los ve en moderación | serializers |
-| **Feature gates server-side en cascada**: la tienda debe estar publicada, sin bloqueo, con suscripción vigente, `has_public_link`, catálogo encendido y producto activo — mismos 404/403 que el catálogo; además `rating` exige `show_reviews` y `text` exige `show_comments` **más** el flag `has_product_comments` del plan (premium/trial; `PATCH customization` lo descarta sin el flag) | `_review_store`/`_review_product` |
-| **Contenido mínimo garantizado en DB**: `ck_review_rating_or_text` (algo tiene que traer) + `ck_review_rating_range` (1-5 o null) — segunda capa tras el serializer | models |
+| **Feature gates server-side en cascada**: la tienda debe estar publicada, sin bloqueo, con suscripción vigente, `has_public_link`, catálogo encendido y producto activo — mismos 404/403 que el catálogo; además `is_positive` exige `show_reviews` y `text` exige `show_comments` **más** el flag `has_product_comments` del plan (premium/trial; `PATCH customization` lo descarta sin el flag) | `_review_store`/`_review_product` |
+| **Contenido mínimo garantizado en DB**: `ck_review_vote_or_text` (voto like/dislike o texto — algo tiene que traer) — segunda capa tras el serializer | models |
 | **Moderación aislada por dueño**: `/api/reviews/` scoping `store=my_store()` — borrar una opinión ajena da 404; create/update/retrieve bloqueados con 405 (`http_method_names`) — el alta solo nace en la web pública | `ReviewViewSet` |
 | **Sin XSS**: el texto es `CharField` plano renderizado como `{{ r.text }}` en Vue (escapado nativo); sin `v-html` | `ProductReviews.vue` |
-| **Aggregates acotados**: `rating_avg`/`rating_count` se anotan solo si `show_reviews` (sin el flag viajan null — la web no muestra estrellas vacías) | `public_catalog` |
+| **Aggregates acotados**: `rating_avg`/`rating_count` se anotan solo si `show_reviews` (sin el flag viajan null — la web no muestra la fila de valoración) | `public_catalog` |
 | **Sin enumeración de existencia**: producto ajeno a la tienda o inactivo → 404, igual que catálogo inexistente | `_review_product` |
 
-### Tests agregados (`catalog/tests.py`, suite 269 → OK)
+### Tests agregados (`catalog/tests.py`, suite 270 → OK)
 
 - `ProductReviewPublicTests`: GET lista (sin email, apellido como inicial);
-  POST feliz con estrellas+texto; captcha inválido/vencido/muy rápido → 400;
-  rating sin `show_reviews` → 400; texto sin `show_comments` → 400;
+  POST feliz con voto+texto; captcha inválido/vencido/muy rápido → 400;
+  voto sin `show_reviews` → 400; texto sin `show_comments` → 400;
   comentarios sin `has_product_comments` → 400; producto inactivo → 404;
   honeypot → 201 sin persistir.
 - `ReviewOwnerTests`: list scoping (no ve ajenas), delete propio OK / ajeno
@@ -450,11 +464,11 @@ superficie: `GET .../reviews/captcha/`, `GET/POST
   abuso — mínimo necesario, nunca expuestos públicamente; un futuro purgado
   por antigüedad es mejora posible.
 - **Cache 30s del catálogo público**: un borrado de opinión tarda ≤30s en
-  reflejarse en `rating_avg` de la grilla (la lista de opiniones es endpoint
+  reflejarse en el `rating_avg` de la grilla (la lista de opiniones es endpoint
   aparte, sin cache) — staleness acotada y consistente con el resto.
 - **Sin dedupe de reseñas**: el mismo visitante puede opinar varias veces
   (pasa captcha cada vez, 10/h por IP) — spam real exige resolver captchas
   manualmente, costo razonable vs. exigir cuenta.
 
 **Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
-269 tests OK · `npm run build` (Vite) OK.
+270 tests OK · `npm run build` (Vite) OK.

@@ -79,7 +79,7 @@ const {
             <div class="cv-du-copy">
               <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-du-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
               <h3 class="cv-du-name">{{ p.name }}</h3>
-              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
+              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="moon" :size="12" />
               <p v-if="p.description" class="cv-du-desc">{{ p.description }}</p>
               <div class="cv-du-foot">
                 <span class="cv-du-price-tag"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>

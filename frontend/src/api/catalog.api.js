@@ -28,7 +28,7 @@ import { http } from './http.js'
 // El precio promocionado viaja en product.discount_offer/discount_names
 // (mi lista) y en offer_price efectivo (catálogo público).
 //
-// GET    /api/reviews/                    Bearer -> [{id,product,product_name,rating,text,name,surname,email,created_at}]
+// GET    /api/reviews/                    Bearer -> [{id,product,product_name,is_positive,text,name,surname,email,created_at}]
 // DELETE /api/reviews/<pk>/               Bearer -> {Exito}
 // Opiniones de visitantes (valoraciones 1-5 y/o comentarios): se crean en
 // la web pública con captcha; acá el dueño solo las lista y las borra.
