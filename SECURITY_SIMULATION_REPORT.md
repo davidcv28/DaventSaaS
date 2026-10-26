@@ -13,7 +13,7 @@
 |---|---|
 | `manage.py check` | ✅ 0 issues |
 | `ruff check` | ✅ All checks passed |
-| Suite `manage.py test` | ▶️ Lanzada (194 tests; en ejecución al cerrar este reporte) |
+| Suite `manage.py test` | ✅ 230 tests, 0 fallos (~116s) |
 | Auditoría ofensiva previa documentada | ✅ `SECURITY_AUDIT.md` — 3 rondas, 15 vectores, 3 issues reales remediados + 1 hardening + 10 falsos positivos |
 | Hallazgos críticos abiertos de este simulacro | **Ninguno** |
 
@@ -32,7 +32,7 @@ Cada área se revisó contra los vectores de la "Regla de los 5 intentos" de `AG
 | 4 | **Reset de contraseña / Email** | Enumeración de correo, token con `last_login`, reenvío sin límite | ✅ Bloqueados | `password_reset` siempre 200 genérico + throttle 5/h por IP; `EmailVerificationTokenGenerator` sin `last_login`; `VerifyEmailResendView` throttle `email_verification`; reset/cambio blacklistean `OutstandingToken` |
 | 5 | **Verificación celular (Firebase)** | Token de número ajeno, falta `FIREBASE_API_KEY`, cambio de celular sin reset | ✅ Bloqueados | `ConfirmPhoneVerificationQuery` valida `phoneNumber` de Identity Toolkit vs `profile.phone` tras `_national_phone`; 503 sin `FIREBASE_API_KEY`; `UpdateProfileQuery` resetea `phone_verified` al cambiar el número |
 | 6 | **Tiendas públicas / Catálogo** | Claim de slug sin email verificado, IDOR de tienda ajena, catálogo con `Decimal('1e999')`, sort crudo por query param | ✅ Bloqueados | `email_verified` gate en `POST /api/stores/`; staff `listMine` con `?mine=1`; `_price_bound` parseo defensivo + clamp; `CATALOG_SORTS` whitelist (nunca `order_by` crudo) |
-| 7 | **Formulario de contacto** | Captcha timing-compare, email-bombing sin throttle, honeypot ausente | ✅ Bloqueados | `hmac.compare_digest` en captcha, `TimestampSigner` firmado, throttle `store_contact` 10/h por IP, honeypot `website`, mínimo 2s desde captcha |
+| 7 | **Formulario de contacto** | Captcha timing-compare, email-bombing sin throttle, honeypot ausente | ✅ Bloqueados | `hmac.compare_digest` en captcha, `TimestampSigner` firmado, throttle `store_contact` 10/h por IP, honeypot `website`, mínimo 3s desde captcha (`CAPTCHA_MIN_SECONDS`) |
 
 ## 3. Hallazgos por severidad
 
@@ -48,7 +48,7 @@ Todos los bajos de la auditoría anterior (regex de planes, `IntegrityError`→4
 
 ## 4. Evidencia de código (mitigaciones clave)
 
-- `AdminApp/domains/payments/views/viewset.py:52-80` — `_verify_mp_signature`: HMAC-SHA256, `compare_digest`, requiere `MP_WEBHOOK_SECRET` (salvo `DEBUG` + `MP_WEBHOOK_ALLOW_UNSIGNED`), ventana ts, dedup `WEBHOOK_DEDUP_SECONDS = 600`.
+- `AdminApp/domains/payments/views/viewset.py:52-94` — `_verify_mp_signature`: HMAC-SHA256, `compare_digest`, requiere `MP_WEBHOOK_SECRET` (salvo `DEBUG` + `MP_WEBHOOK_ALLOW_UNSIGNED`), ventana ts, dedup `WEBHOOK_DEDUP_SECONDS = 600`.
 - `AdminApp/domains/payments/services/services.py:49-72` — `CreatePaymentQuery`: idempotencia por `external_reference`, rechazo si el pago pertenece a otra suscripción.
 - `AdminApp/domains/suscriptions/services/services.py:21-67` — `RedeemCouponQuery`: `select_for_update` en cupón y suscripción, rechazo con `preapproval_id` y no `cancelled_at` (regresión C-01), tope `max_uses` bajo lock.
 - `AdminApp/domains/users/views/auth_views.py:47-54` — `_remember_requested`: parseo estricto del flag `remember` (el string `'false'` no es truthy).
@@ -56,7 +56,7 @@ Todos los bajos de la auditoría anterior (regex de planes, `IntegrityError`→4
 
 ## 5. Recomendaciones
 
-1. **Completar la suite de tests:** `manage.py test` sigue en ejecución (194 tests con DB). Al terminar, confirmar 0 fallos y corregir cualquier fallo antes de hacer push.
+1. **Suite de tests:** ✅ verificada post-reporte — `manage.py test` completó 230 tests con 0 fallos (~116s).
 2. **Webhook MP en producción:** asegurar que `MP_WEBHOOK_SECRET` esté configurado en el `.env` real y `DEBUG=False`; `MP_WEBHOOK_ALLOW_UNSIGNED` solo en desarrollo. Habilitar eventos `subscription_*` en el panel de webhooks de MP apuntando a `/api/payments/webhook/`.
 3. **Firebase SMS:** configurar `VITE_FIREBASE_*` y `FIREBASE_API_KEY`; recordar la cuota Spark (~10 SMS/día) y el dominio autorizado en Firebase Console.
 4. **Seguimiento de cobros huérfanos:** registrar/alertar pagos de MP cuyo monto no coincida con el plan (reconciliación manual vía panel MP) — mejora futura, no crítico.
