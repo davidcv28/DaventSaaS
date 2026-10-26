@@ -140,6 +140,14 @@
 .tpl-thumb[data-tpl='boutique'] i b { border-radius: 0; background-size: 34% 1.5px, 68% 1.5px, 100% 70%; }
 .tpl-thumb[data-tpl='boutique'] i b:nth-child(2) { translate: 0 3px; }
 
+/* Bloque: papel y tinta, reglas visibles, titular XXL en barras duras y
+   sello de acento — el mini-sitio es una grilla suiza. */
+.tpl-thumb[data-tpl='bloque'] { --tp-bg: #f1f1ec; --tp-nav: #f1f1ec; --tp-line: #0b0b0b; --tp-hero: linear-gradient(#f1f1ec, #f1f1ec); --tp-card: #f1f1ec; --tp-img: #dcdcd4; --tp-ink: #0b0b0b; --tp-mute: #6b6b66; border-color: #0b0b0b; border-width: 1.5px; }
+.tpl-thumb[data-tpl='bloque']::before { right: 8%; top: 17%; width: 13%; aspect-ratio: 1; background: var(--tp-acc); }
+.tpl-thumb[data-tpl='bloque']::after { left: 6%; top: 20%; width: 52%; height: 7.5%; background: #0b0b0b; box-shadow: 0 12px 0 -1px #0b0b0b, 0 24px 0 -1.5px #6b6b66; }
+.tpl-thumb[data-tpl='bloque'] i { top: 62%; gap: 3px; }
+.tpl-thumb[data-tpl='bloque'] i b { border: 1.5px solid #0b0b0b; border-radius: 0; background-size: 34% 2px, 68% 2px, 100% 66%; }
+
 /* Signature: noche de espresso, placa enmarcada en doble filete y
    titular grabado — el acento es la rúbrica de la casa. */
 .tpl-thumb[data-tpl='signature'] { --tp-bg: #16130f; --tp-nav: #16130f; --tp-line: rgba(242, 236, 220, .16); --tp-hero: radial-gradient(circle at 82% -10%, color-mix(in srgb, var(--tp-acc) 30%, transparent), transparent 60%), #16130f; --tp-card: #1e1a14; --tp-img: #2a251d; --tp-ink: #f2ecdc; --tp-mute: #544c3e; border-color: #2c2620; }
