@@ -27,9 +27,7 @@
 .topbar-title .icon { color: var(--brand-ink); }
 .topbar-title strong { font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
 .topbar-date { margin-left: auto; font-size: 13px; color: var(--muted); text-transform: capitalize; }
-.topbar-btn { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink-2); cursor: pointer; transition: transform .2s var(--ease-out), border-color .2s, color .2s; }
-.topbar-btn:hover { border-color: var(--brand-soft-line); color: var(--brand-ink); transform: translateY(-1px); }
-.topbar-btn:active { transform: scale(.94); }
+
 .tb-swap-enter-active, .tb-swap-leave-active { transition: opacity .16s ease, transform .16s var(--ease-out); }
 .tb-swap-enter-from { opacity: 0; transform: translateY(6px); }
 .tb-swap-leave-to { opacity: 0; transform: translateY(-6px); }

@@ -61,6 +61,8 @@ watch(() => props.items, async () => { await nextTick(); moveIndicator() })
 
 let headerObserver
 onMounted(() => {
+  // El panel es siempre oscuro (sin toggle): se restaura el tema global al salir.
+  theme.forceDark()
   setHeaderVar()
   moveIndicator()
   if (sidebarEl.value) { headerObserver = new ResizeObserver(() => { setHeaderVar(); moveIndicator() }); headerObserver.observe(sidebarEl.value) }
@@ -68,6 +70,7 @@ onMounted(() => {
   window.addEventListener('resize', onResize, { passive: true })
 })
 onBeforeUnmount(() => {
+  theme.releaseTheme()
   headerObserver?.disconnect()
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('resize', onResize)
@@ -80,15 +83,6 @@ onBeforeUnmount(() => {
     <aside ref="sidebarEl" class="sidebar">
       <div class="brand"><BrandLogo :size="34" /> <span>DAVENT</span></div>
       <div v-if="planName" class="plan-badge"><AppIcon name="dot" :size="12" /> {{ planName }}</div>
-      <button
-        class="theme-icon"
-        type="button"
-        :aria-label="theme.isDark ? 'Cambiar a modo claro' : 'Cambiar a modo nocturno'"
-        :aria-pressed="theme.isDark"
-        @click="theme.toggleTheme()"
-      >
-        <AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="20" />
-      </button>
       <button
         class="menu-toggle"
         :class="{ open }"
@@ -123,10 +117,6 @@ onBeforeUnmount(() => {
           </template>
         </nav>
         <div class="side-foot">
-          <button class="link theme-btn" type="button" :aria-pressed="theme.isDark" @click="theme.toggleTheme()">
-            <AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" />
-            <span>{{ theme.isDark ? 'Modo claro' : 'Modo nocturno' }}</span>
-          </button>
           <RouterLink class="link" to="/terminos" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
           <RouterLink class="link" to="/denuncias" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
           <div class="who"><span class="avatar sm">{{ initial }}</span> <span class="who-name">{{ userName }}</span></div>
@@ -141,15 +131,6 @@ onBeforeUnmount(() => {
           <Transition name="tb-swap" mode="out-in"><strong :key="active">{{ current?.label || 'Resumen' }}</strong></Transition>
         </div>
         <span class="topbar-date">{{ todayLabel }}</span>
-        <button
-          class="topbar-btn"
-          type="button"
-          :aria-label="theme.isDark ? 'Cambiar a modo claro' : 'Cambiar a modo nocturno'"
-          :aria-pressed="theme.isDark"
-          @click="theme.toggleTheme()"
-        >
-          <AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="18" />
-        </button>
         <span class="avatar sm" :title="userName">{{ initial }}</span>
       </header>
       <slot />

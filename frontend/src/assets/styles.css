@@ -303,8 +303,6 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .side-foot .who-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e2e8f0; font-weight: 500; }
 .side-foot .link { display: flex; align-items: center; gap: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; text-align: left; padding: 8px 6px; font: inherit; font-size: 13px; border-radius: 8px; transition: color .15s, background .15s; }
 .side-foot .link:hover { color: #fca5a5; background: rgba(255, 255, 255, .05); }
-.side-foot .link.theme-btn:hover { color: var(--brand-200); background: rgba(255, 255, 255, .05); }
-.theme-icon { display: none; }
 .main { padding: 32px 36px 60px; max-width: 1400px; width: 100%; min-width: 0; }
 .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
 .page-head h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
@@ -1300,9 +1298,7 @@ body { transition: background-color .2s ease, color .2s ease; }
   }
   .sidebar .brand { order: 1; flex: 1 1 auto; padding: 0; font-size: 15px; min-width: 0; }
   .plan-badge { order: 2; font-size: 11px; padding: 4px 10px; white-space: nowrap; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
-  .theme-icon { order: 3; display: grid; place-items: center; width: 44px; height: 44px; border: none; border-radius: var(--radius-sm); background: transparent; color: #a5b4d4; cursor: pointer; transition: background .15s, color .15s; }
-  .theme-icon:hover { background: rgba(255, 255, 255, .08); color: #fff; }
-  .menu-toggle { order: 4; display: grid; place-items: center; width: 44px; height: 44px; margin-right: -8px; border: none; border-radius: var(--radius-sm); background: transparent; color: #fff; cursor: pointer; transition: background .15s; }
+  .menu-toggle { order: 3; display: grid; place-items: center; width: 44px; height: 44px; margin-right: -8px; border: none; border-radius: var(--radius-sm); background: transparent; color: #fff; cursor: pointer; transition: background .15s; }
   .menu-toggle:hover { background: rgba(255, 255, 255, .08); }
   .side-panel {
     position: fixed; top: calc(var(--header-h, 64px) - 2px); left: 0; right: 0; bottom: 0; z-index: 40;
