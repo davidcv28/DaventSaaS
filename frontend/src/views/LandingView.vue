@@ -179,6 +179,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
         <RouterLink to="/login" class="lp-btn ghost lg" @click="menu = false">Ya tengo cuenta</RouterLink>
         <RouterLink to="/register" class="lp-btn primary lg" @click="menu = false">Crear cuenta gratis</RouterLink>
       </div>
+      <small class="lp-menu-foot">DAVENT · Hecho en Argentina</small>
     </div>
 
     <section id="top" class="lp-hero-wrap">
@@ -658,38 +659,44 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
   .lp-nav-cta .lp-btn.primary { min-height: 40px; padding: 0 15px; font-size: 13.5px; }
   .lp-hide-sm { display: none; }
 
-  .lp-burger { display: block; position: relative; flex: none; width: 44px; height: 44px; padding: 0; background: rgba(255, 255, 255, .07); border: 1px solid var(--line); border-radius: 50%; cursor: pointer; transition: background .2s; }
+  .lp-burger { display: block; position: relative; flex: none; width: 44px; height: 44px; padding: 0; background: rgba(255, 255, 255, .07); border: 1px solid var(--line); border-radius: 50%; cursor: pointer; transition: background .2s, border-color .2s; }
   .lp-burger:hover { background: rgba(255, 255, 255, .14); }
-  .lp-burger span { position: absolute; left: 13px; right: 13px; height: 2px; border-radius: 2px; background: #fff; transition: transform .4s var(--ease), opacity .25s; }
-  .lp-burger span:nth-child(1) { top: 15px; }
+  .lp-burger span { position: absolute; left: 12px; right: 12px; height: 2px; border-radius: 2px; background: #fff; transition: transform .4s var(--ease), opacity .25s; }
+  .lp-burger span:nth-child(1) { top: 14px; }
   .lp-burger span:nth-child(2) { top: 21px; }
-  .lp-burger span:nth-child(3) { top: 27px; }
-  .lp-nav.is-open .lp-burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .lp-burger span:nth-child(3) { top: 28px; }
+  .lp-nav.is-open .lp-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   .lp-nav.is-open .lp-burger span:nth-child(2) { transform: scaleX(0); opacity: 0; }
-  .lp-nav.is-open .lp-burger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  .lp-nav.is-open .lp-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  /* Con el menú abierto la píldora se funde en el overlay: quedan solo
+     marca + botón de cierre, sin CTA duplicado ni doble vidrio. */
+  .lp-nav.is-open { background: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .lp-nav.is-open .lp-nav-cta { display: none; }
 
   .lp-menu {
     display: flex; position: fixed; inset: 0; z-index: 55;
-    flex-direction: column; align-items: center; justify-content: center; gap: 42px;
-    padding: 110px 24px 48px;
-    background: rgba(7, 9, 24, .78);
+    flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+    padding: 96px 24px 40px;
+    background: rgba(7, 9, 24, .86);
     -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
     opacity: 0; visibility: hidden; transform: translateY(-16px);
     transition: opacity .45s var(--ease), transform .45s var(--ease), visibility 0s .45s;
   }
   .lp-menu.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-  .lp-menu-links { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-  .lp-menu-links a { font-size: clamp(26px, 7vw, 34px); font-weight: 800; letter-spacing: -.02em; color: #fff; }
+  .lp-menu-links { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .lp-menu-links a { display: block; padding: 10px 16px; font-size: clamp(27px, 7.5vw, 36px); font-weight: 800; letter-spacing: -.02em; color: #f4f5ff; }
   .lp-menu-links a:hover { color: var(--brand-soft); }
   .lp-menu-cta { display: flex; flex-direction: column; gap: 12px; width: min(320px, 100%); }
-  .lp-menu-links a, .lp-menu-cta .lp-btn { opacity: 0; transform: translateY(28px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
-  .lp-menu.open .lp-menu-links a, .lp-menu.open .lp-menu-cta .lp-btn { opacity: 1; transform: none; }
+  .lp-menu-foot { font-size: 12px; font-weight: 500; letter-spacing: .08em; color: #6e74a4; }
+  .lp-menu-links a, .lp-menu-cta .lp-btn, .lp-menu-foot { opacity: 0; transform: translateY(28px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+  .lp-menu.open .lp-menu-links a, .lp-menu.open .lp-menu-cta .lp-btn, .lp-menu.open .lp-menu-foot { opacity: 1; transform: none; }
   .lp-menu.open .lp-menu-links a:nth-child(1) { transition-delay: .07s; }
   .lp-menu.open .lp-menu-links a:nth-child(2) { transition-delay: .13s; }
   .lp-menu.open .lp-menu-links a:nth-child(3) { transition-delay: .19s; }
   .lp-menu.open .lp-menu-links a:nth-child(4) { transition-delay: .25s; }
   .lp-menu.open .lp-menu-cta .lp-btn:nth-child(1) { transition-delay: .31s; }
   .lp-menu.open .lp-menu-cta .lp-btn:nth-child(2) { transition-delay: .37s; }
+  .lp-menu.open .lp-menu-foot { transition-delay: .43s; }
 }
 @media (max-width: 760px) {
   .lp-hero { padding-bottom: 72px; }
