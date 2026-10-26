@@ -1,3 +1,19 @@
+<script>
+// Scope de módulo (corre una vez por carga de la app, no por instancia):
+// login y register montan el componente — una sola llamada a /api/config/.
+import { http } from '../api/http.js'
+
+let configPromise = null
+function fetchClientId() {
+  if (!configPromise) {
+    configPromise = http.get('/config/')
+      .then(({ data }) => (data?.google_client_id || '').trim())
+      .catch(() => '')
+  }
+  return configPromise
+}
+</script>
+
 <script setup>
 // Botón de login social con Google Identity Services (GIS).
 // El branding lo exige Google: renderiza un iframe con la cuenta del usuario.
@@ -8,7 +24,6 @@
 // override de dev queda VITE_GOOGLE_CLIENT_ID en frontend/.env. Sin ID en
 // ambos lados el botón no se muestra (feature apagada).
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { http } from '../api/http.js'
 import { useAuthStore } from '../stores/auth.store.js'
 
 const props = defineProps({
@@ -20,18 +35,6 @@ const auth = useAuthStore()
 
 const clientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID || '')
 const visible = ref(Boolean(clientId.value))
-
-// Cache a nivel módulo: login y register montan el componente — una sola
-// llamada a /api/config/ por carga de la app.
-let configPromise = null
-function fetchClientId() {
-  if (!configPromise) {
-    configPromise = http.get('/config/')
-      .then(({ data }) => (data?.google_client_id || '').trim())
-      .catch(() => '')
-  }
-  return configPromise
-}
 
 const googleEl = ref(null)
 const busy = ref(false)
