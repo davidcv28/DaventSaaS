@@ -5,9 +5,10 @@
 #Services) y nos manda la credencial. Acá la validamos SERVER-SIDE contra el
 #provider — jamás se confía en el email o el nombre que llega del cliente —
 #y resolvemos el find-or-create de la cuenta.
-#Env var: GOOGLE_CLIENT_ID — vacía significa feature apagada (el endpoint
-#responde 503 y el frontend oculta el botón). Se lee en cada import para que
-#los tests la patcheen.
+#Env var: GOOGLE_CLIENT_ID — si no está definida se usa el client ID del
+#proyecto (es público por diseño: viaja en el bundle del frontend); seteada
+#vacía explícitamente apaga la feature (endpoint 503 y botón oculto). Se lee
+#en cada import para que los tests la patcheen.
 import logging
 import re
 from datetime import timedelta
@@ -22,7 +23,8 @@ from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 
 logger                  =   logging.getLogger(__name__)
-GOOGLE_CLIENT_ID        =   config('GOOGLE_CLIENT_ID', default = '')
+_DEFAULT_GOOGLE_ID      =   '10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com'
+GOOGLE_CLIENT_ID        =   config('GOOGLE_CLIENT_ID', default = _DEFAULT_GOOGLE_ID)
 _GOOGLE_TOKENINFO       =   'https://oauth2.googleapis.com/tokeninfo'
 _HTTP_TIMEOUT           =   10
 
