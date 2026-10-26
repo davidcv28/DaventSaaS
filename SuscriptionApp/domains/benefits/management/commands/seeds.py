@@ -25,7 +25,8 @@ dict_benefits = {
     'has_design_advanced':  {'label': 'Diseño web avanzado: fuentes, color y carrusel', 'kind': 'flag'},
     'has_advanced_menu' :   {'label': 'Menú administrador avanzado',        'kind': 'flag'},
     'has_chatbot'       :   {'label': 'Chatbot con tus respuestas en la web', 'kind': 'flag'},
-    'has_product_comments': {'label': 'Comentarios de visitantes en productos', 'kind': 'flag'},
+    'has_product_comments': {'label': 'Opiniones de clientes: valoraciones y comentarios', 'kind': 'flag'},
+    'has_discounts'     :   {'label': 'Descuentos programados del catálogo',  'kind': 'flag'},
 }
 
 dict_plan_benefits = {
@@ -50,6 +51,7 @@ dict_plan_benefits = {
             'has_advanced_menu' :   True,
             'has_chatbot'       :   True,
             'has_product_comments': True,
+            'has_discounts'     :   True,
         },
         'presentation'  :   {
             'slug'          :   'prueba',
@@ -83,6 +85,7 @@ dict_plan_benefits = {
             'has_advanced_menu' :   False,
             'has_chatbot'       :   False,
             'has_product_comments': False,
+            'has_discounts'     :   False,
         },
         'presentation'  :   {
             'slug'          :   'basico',
@@ -119,6 +122,7 @@ dict_plan_benefits = {
             'has_advanced_menu' :   False,
             'has_chatbot'       :   False,
             'has_product_comments': False,
+            'has_discounts'     :   False,
         },
         'presentation'  :   {
             'slug'          :   'estandar',
@@ -156,6 +160,7 @@ dict_plan_benefits = {
             'has_advanced_menu' :   True,
             'has_chatbot'       :   True,
             'has_product_comments': True,
+            'has_discounts'     :   True,
         },
         'presentation'  :   {
             'slug'          :   'premium',
@@ -172,7 +177,8 @@ dict_plan_benefits = {
                 'Imagen de portada e imágenes decorativas en tu web',
                 'Carrusel de banners en la portada',
                 'Chatbot con tus respuestas para las visitas',
-                'Comentarios de visitantes en tus productos',
+                'Descuentos programados que se activan solos',
+                'Valoraciones y comentarios de tus clientes',
                 'Menú administrador avanzado',
             ],
         },

@@ -269,13 +269,13 @@ class RemoveBackgroundGateTests(TestCase):
 class DiscountTests(TestCase):
     """
     Descuentos programados del dueño: scopeado a su tienda (un id ajeno
-    devuelve 404 y nunca descuenta productos ajenos) y con la ventana
-    validada server-side.
+    devuelve 404 y nunca descuenta productos ajenos), con la ventana
+    validada server-side y la función gated por 'has_discounts' (premium).
     """
 
-    def _client(self, username = 'duenio', slug = 'mi-tienda'):
+    def _client(self, username = 'duenio', slug = 'mi-tienda', premium = True):
         user, profile   =   _make_user(username)
-        _grant(profile, has_public_link = True)
+        _grant(profile, has_public_link = True, has_discounts = premium)
         store           =   Store.objects.create(user = profile, slug = slug)
         client          =   APIClient()
         client.force_authenticate(user = user)
@@ -397,6 +397,16 @@ class DiscountTests(TestCase):
         edit            =   client.patch(f'{DISCOUNTS_URL}{second_id}/', {'products': [product.pk, other.pk]}, format = 'json')
         self.assertEqual(edit.status_code, 200)
 
+    def test_discount_endpoints_require_premium_benefit(self):
+        #has_discounts es premium: sin el flag el CRUD completo responde
+        #403 — ni siquiera el listado viaja (la función no existe para el plan).
+        client, store   =   self._client(premium = False)
+        discount        =   Discount.objects.create(store = store, name = 'Viejo', percent = 10, starts_at = timezone.now())
+        self.assertEqual(client.get(DISCOUNTS_URL).status_code, 403)
+        self.assertEqual(client.post(DISCOUNTS_URL, self._payload(), format = 'json').status_code, 403)
+        self.assertEqual(client.patch(f'{DISCOUNTS_URL}{discount.pk}/', {'percent': 20}, format = 'json').status_code, 403)
+        self.assertEqual(client.delete(f'{DISCOUNTS_URL}{discount.pk}/').status_code, 403)
+
     def test_changing_scope_clears_leftovers(self):
         #Pasar de products a all limpia la M2M: no quedan restos de la
         #selección anterior limitando el alcance.
@@ -416,9 +426,9 @@ class DiscountPublicTests(TestCase):
     solo, sin tocar offer_price ni requerir un worker.
     """
 
-    def _setup(self):
+    def _setup(self, premium = True):
         _, profile      =   _make_user('duenio')
-        _grant(profile, has_public_link = True)
+        _grant(profile, has_public_link = True, has_discounts = premium)
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
         return store
 
@@ -545,6 +555,22 @@ class DiscountPublicTests(TestCase):
         self.assertEqual(float(item['discount_offer']), 90.0)
         self.assertEqual(item['discount_names'], ['Promo'])
 
+    def test_discount_not_applied_without_premium_benefit(self):
+        #Tienda que bajó de plan: el descuento queda guardado pero la web
+        #pública deja de descontar (oferta, firma del descuento y banner
+        #de promos salen todos vacíos).
+        store           =   self._setup(premium = False)
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        Discount.objects.create(
+            store = store, name = 'Promo', percent = 25, scope = 'all',
+            starts_at = timezone.now() - timedelta(hours = 1),
+        )
+        response        =   self._catalog()
+        calza           =   next(p for p in response.data['products'] if p['name'] == 'Calza')
+        self.assertIsNone(calza['offer_price'])
+        self.assertIsNone(calza['discount'])
+        self.assertEqual(response.data['promotions'], [])
+
 
 def _review_captcha(slug, answer = 7):
     """
@@ -617,13 +643,14 @@ class ReviewTests(TestCase):
             APIClient().get(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)).status_code, 404,
         )
 
-    def test_comments_require_premium_benefit(self):
-        #show_comments quedó en True pero el plan bajó (sin el flag): el
-        #texto se rechaza y el voto solo sigue funcionando.
+    def test_reviews_require_premium_benefit(self):
+        #Las opiniones (valoraciones + comentarios) son premium: los
+        #toggles quedaron en True pero el plan bajó — los endpoints
+        #públicos cierran por completo (404 para votos y comentarios).
         _, product      =   self._setup(comments = True)
         PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
-        self.assertEqual(self._post(product, text = 'Hola').status_code, 400)
-        self.assertEqual(self._post(product, is_positive = True).status_code, 201)
+        self.assertEqual(self._post(product, text = 'Hola').status_code, 404)
+        self.assertEqual(self._post(product, is_positive = True).status_code, 404)
 
     def test_reviews_only_store_rejects_text(self):
         _, product      =   self._setup(comments = False)
@@ -704,12 +731,27 @@ class ReviewTests(TestCase):
             name = 'X', surname = 'Y', email = 'x@x.com',
         )
         _, other        =   _make_user('otro')
-        _grant(other, has_public_link = True)
+        _grant(other, has_public_link = True, has_product_comments = True)
         Store.objects.create(user = other, slug = 'otra-tienda', is_published = True)
         client          =   APIClient()
         client.force_authenticate(user = other.user)
         self.assertEqual(client.get(REVIEWS_URL).data, [])
         self.assertEqual(client.delete(f'{REVIEWS_URL}{review.id}/').status_code, 404)
+        self.assertTrue(ProductReview.objects.filter(pk = review.id).exists())
+
+    def test_owner_moderation_requires_premium_benefit(self):
+        #Sin has_product_comments el panel tampoco lista ni borra opiniones:
+        #la moderación viaja con la sección premium (el dato queda intacto).
+        store, product  =   self._setup()
+        review          =   ProductReview.objects.create(
+            store = store, product = product, is_positive = True, text = 'Buena',
+            name = 'Maria', surname = 'Perez', email = 'm@x.com',
+        )
+        PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
+        client          =   APIClient()
+        client.force_authenticate(user = store.user.user)
+        self.assertEqual(client.get(REVIEWS_URL).status_code, 403)
+        self.assertEqual(client.delete(f'{REVIEWS_URL}{review.id}/').status_code, 403)
         self.assertTrue(ProductReview.objects.filter(pk = review.id).exists())
 
     def test_reviews_create_via_owner_endpoint_rejected(self):
@@ -718,26 +760,39 @@ class ReviewTests(TestCase):
         client.force_authenticate(user = store.user.user)
         self.assertEqual(client.post(REVIEWS_URL, {'is_positive': True}).status_code, 405)
 
-    def test_customization_patch_discards_comments_without_benefit(self):
-        store, _        =   self._setup(comments = False)
+    def test_customization_patch_discards_reviews_without_benefit(self):
+        store, _        =   self._setup(reviews = False, comments = False)
         PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
         client          =   APIClient()
         client.force_authenticate(user = store.user.user)
-        client.patch(CUSTOMIZATION_URL, {'show_comments': True}, format = 'json')
+        client.patch(CUSTOMIZATION_URL, {'show_reviews': True, 'show_comments': True}, format = 'json')
         store.customization.refresh_from_db()
+        self.assertFalse(store.customization.show_reviews)
         self.assertFalse(store.customization.show_comments)
 
-    def test_customization_patch_saves_comments_with_benefit(self):
-        store, _        =   self._setup(comments = False)
+    def test_customization_patch_saves_reviews_with_benefit(self):
+        store, _        =   self._setup(reviews = False, comments = False)
         client          =   APIClient()
         client.force_authenticate(user = store.user.user)
-        client.patch(CUSTOMIZATION_URL, {'show_comments': True}, format = 'json')
+        client.patch(CUSTOMIZATION_URL, {'show_reviews': True, 'show_comments': True}, format = 'json')
         store.customization.refresh_from_db()
+        self.assertTrue(store.customization.show_reviews)
         self.assertTrue(store.customization.show_comments)
 
-    def test_public_store_hides_comments_flag_without_benefit(self):
+    def test_public_store_hides_reviews_flags_without_benefit(self):
         store, _        =   self._setup()
         PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
         data            =   APIClient().get(PUBLIC_STORE.format(slug = 'mi-tienda')).data
         self.assertFalse(data['customization']['show_comments'])
-        self.assertTrue(data['customization']['show_reviews'])
+        self.assertFalse(data['customization']['show_reviews'])
+
+    def test_public_catalog_hides_ratings_without_benefit(self):
+        #Las estrellas del catálogo también se apagan sin el flag: el
+        #rating no se anota aunque show_reviews quedara en True.
+        store, product  =   self._setup()
+        PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
+        ProductReview.objects.create(store = store, product = product, is_positive = True, name = 'A', surname = 'B', email = 'a@x.com')
+        products        =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda')).data['products']
+        calza           =   next(p for p in products if p['name'] == 'Calza')
+        self.assertIsNone(calza['rating_avg'])
+        self.assertIsNone(calza['rating_count'])

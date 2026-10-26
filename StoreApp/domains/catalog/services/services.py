@@ -42,8 +42,13 @@ def running_discounts_of(store, moment = None):
     is_active y dentro de la ventana [starts_at, ends_at). Devuelve una
     lista con la M2M de productos ya resuelta (prefetch) — evaluar el
     alcance no vuelve a pegarle a la base.
+    Los descuentos son premium ('has_discounts'): sin el flag la lista
+    sale vacía — la tienda que baja de plan deja de descontar en la web
+    pública y en el panel aunque el descuento quede guardado.
     """
     from StoreApp.domains.catalog.models import Discount
+    if not plan_benefits_of(store.user).get('has_discounts'):
+        return []
     moment      =   moment or timezone.now()
     return list(
         Discount.objects.filter(store = store, is_active = True, starts_at__lte = moment)

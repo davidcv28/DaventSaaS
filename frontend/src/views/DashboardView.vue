@@ -347,6 +347,7 @@ const navItems = computed(() => {
   const g = tabGroups.value
   const items = [{ id: 'overview', label: 'Inicio', icon: 'dashboard' }, { heading: 'Mi negocio' }]
   if (hasAccess) items.push({ id: 'catalogs', label: 'Mis productos', icon: 'package' })
+  if (hasAccess) items.push({ id: 'reviews', label: 'Opiniones', icon: 'star' })
   items.push({ id: 'store', label: 'Mi página web', icon: 'store' })
   if (hasAccess) {
     items.push({ id: 'pos', label: 'Vender en persona', icon: 'monitor' })
@@ -1068,6 +1069,7 @@ const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customizat
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
 const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_product_comments))
+const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
@@ -1385,12 +1387,13 @@ async function setSiteMode(mode) {
 }
 
 // Valoraciones/comentarios de la web pública: toggles instantáneos como
-// site_mode ("Opciones avanzadas" no tiene botón de guardar). Los comentarios
-// piden has_product_comments (premium); el backend descarta show_comments
-// sin el flag, así que el checkbox solo se bloquea en la UI.
+// site_mode (la sección Opiniones no tiene botón de guardar). Toda la
+// función pide has_product_comments (premium); el backend descarta
+// show_reviews/show_comments sin el flag — el checkbox solo se bloquea
+// en la UI.
 const reviewToggleBusy = ref(false)
 async function toggleShowReviews() {
-  if (reviewToggleBusy.value) return
+  if (reviewToggleBusy.value || !canProductComments.value) return
   const prev = designForm.show_reviews
   designForm.show_reviews = !prev
   reviewToggleBusy.value = true
@@ -1408,11 +1411,11 @@ async function toggleShowComments() {
   reviewToggleBusy.value = false
 }
 
-// ----- Opiniones recibidas (pestaña del catálogo: moderación, solo borrado) -----
+// ----- Opiniones recibidas (sección propia del menú: moderación, solo borrado) -----
 const reviewsLoaded = ref(false)
 const reviewDeleting = ref(null)
-watch(catalogTab, (t) => {
-  if (t === 'reviews' && !reviewsLoaded.value) {
+watch(section, (s) => {
+  if (s === 'reviews' && canProductComments.value && !reviewsLoaded.value) {
     reviewsLoaded.value = true
     catalog.loadReviews()
   }
@@ -2117,10 +2120,7 @@ async function changePassword() {
             <AppIcon name="tag" :size="16" /> Marcas
           </button>
           <button type="button" class="tab" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
-            <AppIcon name="percent" :size="16" /> Descuentos <small class="tab-sub">se activan solos</small>
-          </button>
-          <button type="button" class="tab" :class="{ active: catalogTab === 'reviews' }" @click="catalogTab = 'reviews'">
-            <AppIcon name="star" :size="16" /> Opiniones
+            <AppIcon name="percent" :size="16" /> Descuentos <small class="tab-sub">{{ canDiscounts ? 'se activan solos' : 'Premium' }}</small>
           </button>
         </div>
 
@@ -2306,8 +2306,15 @@ async function changePassword() {
             <p v-else class="hint">Sin marcas todavía.</p>
           </div>
 
-          <!-- -------- Descuentos programados -------- -->
-          <div v-show="catalogTab === 'discounts'" class="grid-2 disc-wrap">
+          <!-- -------- Descuentos programados (premium) -------- -->
+          <div v-show="catalogTab === 'discounts'">
+          <div v-if="!canDiscounts" class="empty">
+            <span class="empty-icon"><AppIcon name="percent" :size="28" /></span>
+            <h3>Los descuentos programados son Premium</h3>
+            <p>Con el Plan premium creás ofertas que se activan y se apagan solas en las fechas que elijas, sin tocar los precios a mano.</p>
+            <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+          </div>
+          <div v-else class="grid-2 disc-wrap">
             <div class="card disc-card">
               <h3><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="18" /> {{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
               <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
@@ -2447,34 +2454,6 @@ async function changePassword() {
               </ul>
             </div>
           </div>
-          <!-- -------- Opiniones de visitantes (moderación) -------- -->
-          <div v-show="catalogTab === 'reviews'" class="card">
-            <h3><AppIcon name="star" :size="18" /> Opiniones recibidas</h3>
-            <p class="hint">Valoraciones y comentarios que los visitantes dejan en tu web. Podés borrar los que no quieras mostrar.</p>
-            <div v-if="!catalog.reviews.length" class="empty-mini">Todavía no recibiste opiniones. Activá las valoraciones desde «Opciones avanzadas».</div>
-            <ul v-else class="rev-list">
-              <li v-for="r in catalog.reviews" :key="r.id" class="rev-item">
-                <div class="rev-head">
-                  <span v-if="r.is_positive != null" class="rev-vote" :class="{ down: !r.is_positive }" :title="r.is_positive ? 'Le gustó' : 'No le gustó'">
-                    <AppIcon :name="r.is_positive ? 'thumbs-up' : 'thumbs-down'" :size="14" />
-                  </span>
-                  <strong>{{ r.name }} {{ r.surname }}</strong>
-                  <span class="rev-mail">{{ r.email }}</span>
-                  <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
-                </div>
-                <p v-if="r.text" class="rev-text">{{ r.text }}</p>
-                <div class="rev-foot">
-                  <span class="rev-prod"><AppIcon name="package" :size="12" /> {{ r.product_name }}</span>
-                  <button
-                    type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
-                    :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"
-                  >
-                    <span v-if="reviewDeleting === r.id" class="spinner" aria-hidden="true"></span>
-                    <AppIcon v-else name="trash" :size="15" />
-                  </button>
-                </div>
-              </li>
-            </ul>
           </div>
 
           <!-- -------- Opciones avanzadas -------- -->
@@ -2488,25 +2467,6 @@ async function changePassword() {
                   <span class="check-text">
                     <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
                     <small>{{ m.hint }}</small>
-                  </span>
-                </label>
-              </div>
-            </div>
-            <div class="field">
-              <label id="reviews-toggle-label">Opiniones de tus clientes</label>
-              <div class="check-list" role="group" aria-labelledby="reviews-toggle-label">
-                <label class="check-item" :class="{ disabled: reviewToggleBusy }">
-                  <input type="checkbox" :checked="designForm.show_reviews" :disabled="reviewToggleBusy" @change="toggleShowReviews" />
-                  <span class="check-text">
-                    <strong>Valoraciones de productos</strong>
-                    <small>Los visitantes votan “me gustó” o “no me gustó”; el resultado se ve en el catálogo.</small>
-                  </span>
-                </label>
-                <label class="check-item" :class="{ disabled: !canProductComments || reviewToggleBusy }">
-                  <input type="checkbox" :checked="designForm.show_comments" :disabled="!canProductComments || reviewToggleBusy" @change="toggleShowComments" />
-                  <span class="check-text">
-                    <strong>Comentarios en productos <span v-if="!canProductComments" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></strong>
-                    <small>{{ canProductComments ? 'Opinan con nombre, apellido, email y captcha antispam. Los moderás en la pestaña Opiniones.' : 'Disponible con el Plan premium.' }}</small>
                   </span>
                 </label>
               </div>
@@ -2539,6 +2499,86 @@ async function changePassword() {
             <p v-else class="hint">El carrusel de portada del catálogo se habilita con el Plan premium.</p>
           </details>
         </template>
+      </template>
+    </div>
+    <!-- ================= OPINIONES ================= -->
+    <div v-if="seen.reviews" v-show="section === 'reviews'" :class="{ 'sec-on': section === 'reviews' }">
+      <div class="page-head">
+        <div>
+          <h1>Opiniones</h1>
+          <p>Las valoraciones y comentarios que los visitantes dejan en los productos de tu web.</p>
+        </div>
+      </div>
+
+      <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
+      <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
+
+      <div v-if="store.status === 'loading' || store.status === 'idle'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu tienda…</p></div>
+
+      <div v-else-if="!store.hasStore" class="empty">
+        <span class="empty-icon"><AppIcon name="store" :size="28" /></span>
+        <h3>Primero creá tu página web</h3>
+        <p>Las opiniones se dejan en los productos de tu web. Cuando la tengas, volvé acá para activarlas.</p>
+        <button class="btn btn-auto" @click="section = 'store'">Crear mi página web</button>
+      </div>
+
+      <div v-else-if="!canProductComments" class="empty">
+        <span class="empty-icon"><AppIcon name="star" :size="28" /></span>
+        <h3>Las opiniones son una función Premium</h3>
+        <p>Con el Plan premium tus clientes valoran tus productos y dejan comentarios que se muestran en tu web. Vos decidís cuáles se ven.</p>
+        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+      </div>
+
+      <template v-else>
+        <div class="card">
+          <h3><AppIcon name="star" :size="18" /> Opiniones de tus clientes</h3>
+          <p class="hint">Elegí qué pueden dejar los visitantes en tus productos. Los cambios se aplican al instante.</p>
+          <div class="check-list" role="group" aria-label="Opiniones de tus clientes">
+            <label class="check-item" :class="{ disabled: reviewToggleBusy }">
+              <input type="checkbox" :checked="designForm.show_reviews" :disabled="reviewToggleBusy" @change="toggleShowReviews" />
+              <span class="check-text">
+                <strong>Valoraciones de productos <span v-if="reviewToggleBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                <small>Los visitantes votan “me gustó” o “no me gustó”; el resultado se ve en el catálogo.</small>
+              </span>
+            </label>
+            <label class="check-item" :class="{ disabled: reviewToggleBusy }">
+              <input type="checkbox" :checked="designForm.show_comments" :disabled="reviewToggleBusy" @change="toggleShowComments" />
+              <span class="check-text">
+                <strong>Comentarios en productos</strong>
+                <small>Opinan con nombre, apellido, email y captcha antispam. Los moderás en la lista de abajo.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3><AppIcon name="checklist" :size="18" /> Opiniones recibidas</h3>
+          <p class="hint">Podés borrar las que no quieras mostrar en tu web.</p>
+          <div v-if="!catalog.reviews.length" class="empty-mini">Todavía no recibiste opiniones. Cuando un visitante deje una valoración o un comentario aparece acá.</div>
+          <ul v-else class="rev-list">
+            <li v-for="r in catalog.reviews" :key="r.id" class="rev-item">
+              <div class="rev-head">
+                <span v-if="r.is_positive != null" class="rev-vote" :class="{ down: !r.is_positive }" :title="r.is_positive ? 'Le gustó' : 'No le gustó'">
+                  <AppIcon :name="r.is_positive ? 'thumbs-up' : 'thumbs-down'" :size="14" />
+                </span>
+                <strong>{{ r.name }} {{ r.surname }}</strong>
+                <span class="rev-mail">{{ r.email }}</span>
+                <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
+              </div>
+              <p v-if="r.text" class="rev-text">{{ r.text }}</p>
+              <div class="rev-foot">
+                <span class="rev-prod"><AppIcon name="package" :size="12" /> {{ r.product_name }}</span>
+                <button
+                  type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
+                  :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"
+                >
+                  <span v-if="reviewDeleting === r.id" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="trash" :size="15" />
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
       </template>
     </div>
     <!-- ================= MI TIENDA ================= -->

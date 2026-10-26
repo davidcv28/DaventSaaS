@@ -6,7 +6,10 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.response import Response
 from StoreApp.domains.catalog.services.services   import catalog_enabled, can_add_product, products_limit
 from StoreApp.domains.catalog.serializers.serializers import ProductSerializerList
-from StoreApp.domains.stores.services             import upload_product_image, delete_product_image, storage_payload, validate_image_file, remove_background
+from StoreApp.domains.stores.services             import (
+    profile_has_benefit, upload_product_image, delete_product_image, storage_payload,
+    validate_image_file, remove_background,
+)
 from .viewset_base   import CatalogBaseViewSet
 from .viewset_config import CategoryConfigs, BrandConfigs, ProductConfigs, DiscountConfigs, ReviewConfigs
 """
@@ -52,6 +55,34 @@ class BrandViewSet(CatalogGateMixin, CatalogBaseViewSet):
 #=========================================
 class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   DiscountConfigs
+    def _deny_without_discounts(self):
+        #Sistema de descuentos programados: función premium
+        #('has_discounts'). Sin el flag la web ya no los aplica
+        #(running_discounts_of sale vacío) y el panel tampoco los gestiona.
+        if not profile_has_benefit(self.my_store().user, 'has_discounts'):
+            return Response(
+                {'detail': 'Los descuentos programados están disponibles con el plan Premium.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        return None
+    def list(self, request, *args, **kwargs):
+        denied  =   self._deny_without_discounts()
+        if denied: return denied
+        return super().list(request, *args, **kwargs)
+    def create(self, request):
+        denied  =   self._deny_without_discounts()
+        if denied: return denied
+        return self._swap_item(request, super().create(request))
+    def update(self, request, pk = None):
+        denied  =   self._deny_without_discounts()
+        if denied: return denied
+        return self._swap_item(request, super().update(request, pk))
+    def partial_update(self, request, pk = None):
+        return self.update(request, pk)
+    def destroy(self, request, pk = None):
+        denied  =   self._deny_without_discounts()
+        if denied: return denied
+        return super().destroy(request, pk)
     def _swap_item(self, request, response):
         """
         Como en ProductViewSet: tras guardar, el `item` de la respuesta se
@@ -65,10 +96,6 @@ class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
         if discount is not None:
             response.data['item']   =   DiscountSerializerList(discount).data
         return response
-    def create(self, request):
-        return self._swap_item(request, super().create(request))
-    def update(self, request, pk = None):
-        return self._swap_item(request, super().update(request, pk))
 #=========================================
 # REVIEW VIEWSET (moderación del dueño: lista y borra opiniones de su
 # tienda; el alta vive en la web pública, nunca en este endpoint)
@@ -76,6 +103,23 @@ class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
 class ReviewViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   ReviewConfigs
     http_method_names   =   ['get', 'delete', 'head', 'options']
+    def _deny_without_reviews(self):
+        #Las opiniones son premium ('has_product_comments'): sin el flag
+        #tampoco se moderan desde el panel (la web pública ya las cierra).
+        if not profile_has_benefit(self.my_store().user, 'has_product_comments'):
+            return Response(
+                {'detail': 'Las valoraciones y comentarios están disponibles con el plan Premium.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        return None
+    def list(self, request, *args, **kwargs):
+        denied  =   self._deny_without_reviews()
+        if denied: return denied
+        return super().list(request, *args, **kwargs)
+    def destroy(self, request, pk = None):
+        denied  =   self._deny_without_reviews()
+        if denied: return denied
+        return super().destroy(request, pk)
 #=========================================
 # BACKGROUND REMOVAL THROTTLE (inferencia en CPU: acotada por usuario)
 #=========================================

@@ -45,9 +45,9 @@ DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)
-#Los comentarios de producto son premium (has_product_comments): sin el
-#flag el toggle se descarta del PATCH (las valoraciones son para todos).
-COMMENT_FIELDS          =   ('show_comments',)
+#Las opiniones de producto (valoraciones + comentarios) son premium
+#(has_product_comments): sin el flag ambos toggles se descartan del PATCH.
+REVIEW_FIELDS           =   ('show_reviews', 'show_comments')
 #Ordenamientos admitidos por el catálogo público (whitelist cerrada: el
 #param ?sort= jamás llega crudo al order_by). Sin sort válido queda el
 #ordering del Meta de Product (name, id). Los precios ordenan/filtran por
@@ -264,10 +264,11 @@ class StoreViewSet(StoreBaseViewSet):
         if customization is not None and customization.show_catalog is False:
             raise Http404
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
-        #La valoración solo se anota si el dueño habilitó opiniones: score
-        #0-5 = 5 × likes/votos (is_positive binario — el promedio sale del
-        #ratio de likes); sin el flag viaja rating_avg/count en None.
-        if customization is not None and customization.show_reviews:
+        #La valoración solo se anota si el dueño habilitó opiniones y el
+        #plan las incluye (has_product_comments, premium): score 0-5 =
+        #5 × likes/votos (is_positive binario — el promedio sale del ratio
+        #de likes); sin el flag viaja rating_avg/count en None.
+        if customization is not None and customization.show_reviews and profile_has_benefit(store.user, 'has_product_comments'):
             from django.db.models import Avg, Count, Q, Case, When, Value, FloatField, ExpressionWrapper
             products    =   products.annotate(
                 rating_avg      =   ExpressionWrapper(
@@ -397,11 +398,11 @@ class StoreViewSet(StoreBaseViewSet):
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
         customization   =   getattr(store, 'customization', None)
-        can_rate        =   bool(customization and customization.show_reviews)
-        can_comment     =   bool(
-            customization and customization.show_comments
-            and profile_has_benefit(store.user, 'has_product_comments')
-        )
+        #Las opiniones (valoraciones y comentarios) son premium: sin el
+        #flag la tienda no las recibe aunque los toggles quedaran en True.
+        has_reviews     =   profile_has_benefit(store.user, 'has_product_comments')
+        can_rate        =   bool(customization and customization.show_reviews and has_reviews)
+        can_comment     =   bool(customization and customization.show_comments and has_reviews)
         if not (can_rate or can_comment):
             raise Http404
         return store, can_rate, can_comment
@@ -472,7 +473,7 @@ class StoreViewSet(StoreBaseViewSet):
         if not profile_has_benefit(store.user, 'has_location_map'):
             discard.extend(LOCATION_FIELDS)
         if not profile_has_benefit(store.user, 'has_product_comments'):
-            discard.extend(COMMENT_FIELDS)
+            discard.extend(REVIEW_FIELDS)
         if discard:
             data        =   request.data.copy()
             for field in discard:

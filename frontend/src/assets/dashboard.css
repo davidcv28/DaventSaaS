@@ -300,11 +300,18 @@
 .flyer-mini-foot b { height: 5px; width: 50%; border-radius: 3px; background: #fde047; }
 
 /* Tarjetas de plan */
-.plan-medal { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; color: #fff; background: linear-gradient(135deg, var(--brand-500), var(--accent)); box-shadow: 0 8px 18px -8px rgba(99, 102, 241, .8); z-index: 2; position: relative; }
+.plan-head { display: flex; align-items: flex-start; gap: 10px; position: relative; z-index: 2; }
+.plan-title { flex: 1; min-width: 0; }
+.plan-medal { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: #fff; background: linear-gradient(135deg, var(--brand-500), var(--accent)); box-shadow: 0 8px 18px -8px rgba(99, 102, 241, .8); flex: none; }
 .price-card.featured .plan-medal { background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 8px 18px -8px rgba(239, 68, 68, .75); }
 .price-card.trial .plan-medal { background: linear-gradient(135deg, #10b981, #0d9488); box-shadow: 0 8px 18px -8px rgba(16, 185, 129, .7); }
-.plan-perks { display: flex; flex-wrap: wrap; gap: 6px; z-index: 2; position: relative; }
-.plan-perk { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 99px; background: var(--brand-soft); color: var(--brand-ink); font-size: 11.5px; font-weight: 700; }
-.plan-includes { margin: 4px 0 -4px; display: flex; align-items: center; gap: 10px; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); z-index: 2; position: relative; }
-.plan-includes::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.plan-perks { display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; position: relative; }
+.plan-perk { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 99px; background: var(--brand-soft); color: var(--brand-ink); font-size: 11px; font-weight: 700; }
+.plan-more { z-index: 2; position: relative; }
+.plan-more > summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
+.plan-more > summary::-webkit-details-marker { display: none; }
+.plan-more > summary:hover { color: var(--brand-ink); }
+.plan-more > summary .icon { transition: transform .2s var(--ease-out); }
+.plan-more[open] > summary .icon { transform: rotate(180deg); }
+.plan-more > summary:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; border-radius: 4px; }
 .price-card li .icon { box-sizing: content-box; padding: 3px; border-radius: 50%; background: var(--ok-bg); margin-top: -1px; }

@@ -242,10 +242,12 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
         fields              =   [f for f in StoreCustomizationSerializer.Meta.fields if f != 'contact_email']
     def to_representation(self, customization):
         data                =   super().to_representation(customization)
-        #Los comentarios son premium (has_product_comments): si la tienda
-        #bajó de plan la web pública no los muestra aunque el toggle quedó
-        #guardado en True (al volver a premium reaparecen solos).
+        #Las opiniones (valoraciones y comentarios) son premium
+        #(has_product_comments): si la tienda bajó de plan la web pública
+        #no las muestra aunque los toggles quedaron en True (al volver a
+        #premium reaparecen solos).
         if not profile_has_benefit(customization.store.user, 'has_product_comments'):
+            data['show_reviews']    =   False
             data['show_comments']   =   False
         return data
 #=========================================

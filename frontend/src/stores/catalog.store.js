@@ -37,7 +37,12 @@ export const useCatalogStore = defineStore('catalog', () => {
         catalogApi.listCategories(),
         catalogApi.listBrands(),
         catalogApi.listProducts(),
-        catalogApi.listDiscounts()
+        // Los descuentos son premium: el 403 de 'has_discounts' no es un
+        // error del catálogo — la lista queda vacía y el panel sigue andando.
+        catalogApi.listDiscounts().catch((e) => {
+          if (e?.response?.status === 403) return []
+          throw e
+        })
       ])
       categories.value = cats
       brands.value = brs
