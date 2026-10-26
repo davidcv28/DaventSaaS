@@ -1,9 +1,9 @@
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
-from StoreApp.domains.catalog.models                    import Category, Brand, Product, Discount
+from StoreApp.domains.catalog.models                    import Category, Brand, Product, Discount, ProductReview
 from StoreApp.domains.catalog.serializers.serializers   import (
     CategorySerializer, BrandSerializer, ProductSerializer, ProductSerializerList,
-    DiscountSerializer, DiscountSerializerList,
+    DiscountSerializer, DiscountSerializerList, ReviewSerializerList,
 )
 """
 
@@ -20,6 +20,8 @@ def _own_products(view):
     return Product.objects.filter(store = view.my_store()).select_related('category', 'brand')
 def _own_discounts(view):
     return Discount.objects.filter(store = view.my_store()).select_related('category', 'brand').prefetch_related('products')
+def _own_reviews(view):
+    return ProductReview.objects.filter(store = view.my_store()).select_related('product')
 #=========================================
 # CATEGORY CONFIGS
 #=========================================
@@ -110,5 +112,17 @@ DiscountConfigs = {
         'queryset'      :   _own_discounts,
         'permissions'   :   [IsAuthenticated],
         'delete_message':   'El descuento se eliminó correctamente',
+    },
+}
+#=========================================
+# REVIEW CONFIGS (moderación del dueño: solo listado y borrado — las
+# opiniones se crean desde la web pública, nunca desde el panel)
+#=========================================
+ReviewConfigs = {
+    'get': {
+        'serializer'    :   ReviewSerializerList,
+        'queryset'      :   _own_reviews,
+        'permissions'   :   [IsAuthenticated],
+        'delete_message':   'La opinión se eliminó correctamente',
     },
 }

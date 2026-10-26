@@ -133,3 +133,69 @@ DiscountFields              =   {
     'category'              :   {'required': False, 'allow_null': True},
     'brand'                 :   {'required': False, 'allow_null': True},
 }
+#=========================================
+# REVIEW FIELDS (opiniones de visitantes, formulario público)
+#=========================================
+ReviewLimits              =   {
+    'rating_min'            :   1,
+    'rating_max'            :   5,
+    'text_max'              :   600,
+    'list_max'              :   50,   # reseñas que viajan en la ficha pública
+}
+ReviewFields              =   {
+    'rating'                :   {
+        'label'             :   'Valoración',
+        'required'          :   False,
+        'allow_null'        :   True,
+        'min_value'         :   ReviewLimits['rating_min'],
+        'max_value'         :   ReviewLimits['rating_max'],
+        'error_messages'    :   {
+            'min_value'     :   'La valoración va de 1 a 5 estrellas',
+            'max_value'     :   'La valoración va de 1 a 5 estrellas',
+            'invalid'       :   'Elegí de 1 a 5 estrellas',
+        },
+    },
+    'text'                  :   {
+        'label'             :   'Comentario',
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   ReviewLimits['text_max'],
+        'error_messages'    :   {'max_length': 'El comentario admite hasta 600 caracteres'},
+    },
+    'name'                  :   {
+        'label'             :   'Nombre',
+        'required'          :   True,
+        'trim_whitespace'   :   True,
+        'min_length'        :   2,
+        'max_length'        :   80,
+        'error_messages'    :   {
+            'required'      :   'Contanos tu nombre',
+            'blank'         :   'Contanos tu nombre',
+            'min_length'    :   'El nombre es demasiado corto',
+            'max_length'    :   'El nombre admite hasta 80 caracteres',
+        },
+    },
+    'surname'               :   {
+        'label'             :   'Apellido',
+        'required'          :   True,
+        'trim_whitespace'   :   True,
+        'min_length'        :   2,
+        'max_length'        :   80,
+        'error_messages'    :   {
+            'required'      :   'Contanos tu apellido',
+            'blank'         :   'Contanos tu apellido',
+            'min_length'    :   'El apellido es demasiado corto',
+            'max_length'    :   'El apellido admite hasta 80 caracteres',
+        },
+    },
+    'email'                 :   {
+        'label'             :   'Email',
+        'required'          :   True,
+        'error_messages'    :   {
+            'required'      :   'Contanos tu email',
+            'blank'         :   'Contanos tu email',
+            'invalid'       :   'Ingresá un email válido',
+        },
+    },
+}

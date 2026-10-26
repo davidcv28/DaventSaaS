@@ -119,7 +119,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
-            'site_mode', 'show_highlights',
+            'site_mode', 'show_highlights', 'show_reviews', 'show_comments',
             'logo', 'cover', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
@@ -240,6 +240,14 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
 class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
     class Meta(StoreCustomizationSerializer.Meta):
         fields              =   [f for f in StoreCustomizationSerializer.Meta.fields if f != 'contact_email']
+    def to_representation(self, customization):
+        data                =   super().to_representation(customization)
+        #Los comentarios son premium (has_product_comments): si la tienda
+        #bajó de plan la web pública no los muestra aunque el toggle quedó
+        #guardado en True (al volver a premium reaparecen solos).
+        if not profile_has_benefit(customization.store.user, 'has_product_comments'):
+            data['show_comments']   =   False
+        return data
 #=========================================
 # STORE SERIALIZER LIST
 #=========================================

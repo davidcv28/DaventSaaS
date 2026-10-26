@@ -75,6 +75,9 @@ REST_FRAMEWORK = {
         'token_refresh': '120/hour',
         #Formulario de contacto de las webs públicas (antispam por IP).
         'store_contact': '10/hour',
+        #Opiniones públicas de productos (valoraciones/comentarios): por IP,
+        #además del captcha firmado y el honeypot del formulario.
+        'store_review': '10/hour',
         #Reset de contraseña por correo (por IP; la respuesta es genérica).
         'password_reset': '5/hour',
         #Reenvío del correo de verificación (por usuario autenticado).

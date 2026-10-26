@@ -2212,8 +2212,8 @@ async function changePassword() {
           </div>
 
           <!-- -------- Descuentos programados -------- -->
-          <div v-show="catalogTab === 'discounts'" class="grid-2">
-            <div class="card">
+          <div v-show="catalogTab === 'discounts'" class="grid-2 disc-wrap">
+            <div class="card disc-card">
               <h3><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="18" /> {{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
               <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
               <AppInput v-model="discountForm.name" label="Nombre" name="disc_name" icon="tag" placeholder="Ej. Semana de ofertas" :error="discountFieldErr('name')" @blur="discountTouched.name = true" />
@@ -2321,17 +2321,18 @@ async function changePassword() {
               </div>
             </div>
 
-            <div class="card">
+            <div class="card disc-card">
               <h3><AppIcon name="percent" :size="18" /> Tus descuentos</h3>
               <div v-if="!catalog.discounts.length" class="empty-mini"><AppIcon name="percent" :size="22" /><p>Todavía no programaste descuentos. Crean ofertas que se encienden y se apagan solas.</p></div>
-              <ul v-else class="tax-list">
-                <li v-for="d in catalog.discounts" :key="d.id">
-                  <span>
-                    <strong>{{ d.name }}</strong> <span class="disc-pct">-{{ d.percent }}%</span>
-                    <small class="hint-inline">{{ discountScopeLabel(d) }}</small>
-                    <small class="disc-window"><AppIcon name="calendar" :size="12" aria-hidden="true" /> {{ discountWindowLabel(d) }}</small>
+              <ul v-else class="disc-list">
+                <li v-for="d in catalog.discounts" :key="d.id" class="disc-item">
+                  <span class="disc-badge" aria-hidden="true"><b>-{{ d.percent }}</b><i>%</i></span>
+                  <span class="disc-info">
+                    <strong class="disc-name">{{ d.name }}</strong>
+                    <small class="disc-meta"><AppIcon name="tag" :size="12" aria-hidden="true" /> {{ discountScopeLabel(d) }}</small>
+                    <small class="disc-range"><AppIcon name="calendar" :size="12" aria-hidden="true" /> {{ discountWindowLabel(d) }}</small>
                   </span>
-                  <span class="tax-item-actions">
+                  <span class="disc-actions">
                     <span class="pill" :class="discountStatusMeta(d).pill">{{ discountStatusMeta(d).label }}</span>
                     <button type="button" class="icon-btn" :aria-label="d.is_active ? 'Pausar descuento' : 'Reactivar descuento'" :title="d.is_active ? 'Pausar' : 'Reactivar'" @click="toggleDiscount(d)"><AppIcon :name="d.is_active ? 'pause' : 'play'" :size="15" /></button>
                     <button type="button" class="icon-btn" aria-label="Editar descuento" @click="editDiscount(d)"><AppIcon name="pencil" :size="15" /></button>

@@ -5,9 +5,12 @@ Todo objeto vive dentro de la tienda del dueño autenticado: los querysets
 están scopeados por owner, las taxonomías se validan por pertenencia y los
 cupos del plan se rechequean bajo lock en el create.
 """
+import time
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.core import signing
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -15,15 +18,20 @@ from rest_framework.test import APIClient
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
-from StoreApp.domains.catalog.models import Brand, Category, Discount, Product
-from StoreApp.domains.stores.models import Store
+from StoreApp.domains.catalog.models import Brand, Category, Discount, Product, ProductReview
+from StoreApp.domains.stores.models import Store, StoreCustomization
+from StoreApp.domains.stores.services.contact import CAPTCHA_SALT, _answer_hash
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 CATEGORIES_URL    =   '/api/categories/'
 BRANDS_URL        =   '/api/brands/'
 PRODUCTS_URL      =   '/api/products/'
 DISCOUNTS_URL     =   '/api/discounts/'
+REVIEWS_URL       =   '/api/reviews/'
 PUBLIC_CATALOG    =   '/api/stores/public/{slug}/catalog/'
+PUBLIC_STORE      =   '/api/stores/public/{slug}/'
+PUBLIC_REVIEWS    =   '/api/stores/public/{slug}/products/{pid}/reviews/'
+CUSTOMIZATION_URL =   '/api/stores/customization/'
 
 
 def _make_user(username, verified = True):
@@ -509,3 +517,189 @@ class DiscountPublicTests(TestCase):
         self.assertEqual(item['offer_price'], None)
         self.assertEqual(float(item['discount_offer']), 90.0)
         self.assertEqual(item['discount_names'], ['Promo'])
+
+
+def _review_captcha(slug, answer = 7):
+    """
+    Challenge válido y envejecido (30s > CAPTCHA_MIN_SECONDS): pasa la
+    verificación real de firma + antigüedad + respuesta.
+    """
+    payload =   {'s': slug, 'h': _answer_hash(slug, answer), 't': time.time() - 30}
+    return {
+        'challenge_id'  :   signing.dumps(payload, salt = CAPTCHA_SALT),
+        'captcha_answer':   str(answer),
+    }
+
+
+class ReviewTests(TestCase):
+    """
+    Opiniones de visitantes: estrellas (show_reviews, todos los planes) y
+    comentarios (show_comments, premium por has_product_comments). El alta
+    pública pide nombre+apellido+email+captcha; el dueño modera borrando.
+    """
+
+    def setUp(self):
+        #El throttle store_review (10/h por IP) comparte la cache entre
+        #tests: sin limpiarla los POST acumulados devuelven 429 falsos.
+        cache.clear()
+
+    def _setup(self, comments = True, reviews = True):
+        _, profile      =   _make_user('duenio')
+        _grant(profile, has_public_link = True, has_product_comments = True)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+        StoreCustomization.objects.create(
+            store = store, show_reviews = reviews, show_comments = comments,
+        )
+        product         =   Product.objects.create(store = store, name = 'Calza', price = 100)
+        return store, product
+
+    def _post(self, product, **extra):
+        payload     =   {
+            'name'      :   'Maria', 'surname': 'Perez',
+            'email'     :   'maria@example.com',
+            **_review_captcha('mi-tienda'),
+            **extra,
+        }
+        return APIClient().post(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id), payload)
+
+    def test_review_create_rating_and_comment(self):
+        _, product      =   self._setup()
+        response        =   self._post(product, rating = 5, text = 'Excelente calidad')
+        self.assertEqual(response.status_code, 201)
+        review          =   ProductReview.objects.get(product = product)
+        self.assertEqual(review.rating, 5)
+        self.assertEqual(review.text, 'Excelente calidad')
+
+    def test_review_list_public_privacy(self):
+        _, product      =   self._setup()
+        self._post(product, rating = 4, text = 'Muy buena')
+        items           =   APIClient().get(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)).data
+        self.assertEqual(len(items), 1)
+        item            =   items[0]
+        #La ficha muestra "Maria P.": el apellido viaja reducido a inicial
+        #y el email jamás sale en la API pública (solo lo ve el dueño).
+        self.assertEqual(item['name'], 'Maria')
+        self.assertEqual(item['surname_initial'], 'P.')
+        self.assertNotIn('email', item)
+        self.assertNotIn('surname', item)
+
+    def test_endpoints_404_with_features_off(self):
+        _, product      =   self._setup(comments = False, reviews = False)
+        self.assertEqual(self._post(product, rating = 5).status_code, 404)
+        self.assertEqual(
+            APIClient().get(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)).status_code, 404,
+        )
+
+    def test_comments_require_premium_benefit(self):
+        #show_comments quedó en True pero el plan bajó (sin el flag): el
+        #texto se rechaza y las estrellas solas siguen funcionando.
+        _, product      =   self._setup(comments = True)
+        PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
+        self.assertEqual(self._post(product, text = 'Hola').status_code, 400)
+        self.assertEqual(self._post(product, rating = 5).status_code, 201)
+
+    def test_reviews_only_store_rejects_text(self):
+        _, product      =   self._setup(comments = False)
+        self.assertEqual(self._post(product, rating = 5, text = 'Hola').status_code, 400)
+        self.assertEqual(self._post(product, rating = 5).status_code, 201)
+
+    def test_comments_only_store_requires_text(self):
+        _, product      =   self._setup(reviews = False)
+        self.assertEqual(self._post(product, rating = 5).status_code, 400)
+        self.assertEqual(self._post(product, text = 'Muy buena').status_code, 201)
+
+    def test_review_needs_rating_or_text(self):
+        _, product      =   self._setup()
+        self.assertEqual(self._post(product).status_code, 400)
+
+    def test_review_rating_bounds(self):
+        _, product      =   self._setup()
+        self.assertEqual(self._post(product, rating = 0).status_code, 400)
+        self.assertEqual(self._post(product, rating = 6).status_code, 400)
+
+    def test_review_bad_captcha_rejected(self):
+        _, product      =   self._setup()
+        captcha         =   _review_captcha('mi-tienda', answer = 7)
+        captcha['captcha_answer']   =   '9'
+        response        =   APIClient().post(
+            PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id),
+            {'name': 'Maria', 'surname': 'Perez', 'email': 'm@x.com', 'rating': 5, **captcha},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(ProductReview.objects.count(), 0)
+
+    def test_review_honeypot_fakes_success(self):
+        _, product      =   self._setup()
+        response        =   self._post(product, rating = 5, website = 'http://spam')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ProductReview.objects.count(), 0)
+
+    def test_public_catalog_rating_aggregates(self):
+        store, product  =   self._setup()
+        ProductReview.objects.create(store = store, product = product, rating = 5, name = 'A', surname = 'B', email = 'a@x.com')
+        ProductReview.objects.create(store = store, product = product, rating = 3, name = 'C', surname = 'D', email = 'c@x.com')
+        products        =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda')).data['products']
+        calza           =   next(p for p in products if p['name'] == 'Calza')
+        self.assertEqual(calza['rating_avg'], 4.0)
+        self.assertEqual(calza['rating_count'], 2)
+
+    def test_public_catalog_hides_ratings_without_flag(self):
+        store, product  =   self._setup(reviews = False)
+        ProductReview.objects.create(store = store, product = product, rating = 5, name = 'A', surname = 'B', email = 'a@x.com')
+        products        =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda')).data['products']
+        calza           =   next(p for p in products if p['name'] == 'Calza')
+        self.assertIsNone(calza['rating_avg'])
+        self.assertIsNone(calza['rating_count'])
+
+    def test_owner_moderation_list_and_delete(self):
+        store, product  =   self._setup()
+        review          =   ProductReview.objects.create(
+            store = store, product = product, rating = 4, text = 'Buena',
+            name = 'Maria', surname = 'Perez', email = 'm@x.com',
+        )
+        client          =   APIClient()
+        client.force_authenticate(user = store.user.user)
+        items           =   client.get(REVIEWS_URL).data
+        self.assertEqual(len(items), 1)
+        #El dueño sí ve el email completo para poder responder o moderar.
+        self.assertEqual(items[0]['email'], 'm@x.com')
+        self.assertEqual(items[0]['product_name'], 'Calza')
+        self.assertEqual(client.delete(f'{REVIEWS_URL}{review.id}/').status_code, 200)
+        self.assertEqual(ProductReview.objects.count(), 0)
+
+    def test_owner_cannot_moderate_foreign_review(self):
+        _, product      =   self._setup()
+        review          =   ProductReview.objects.create(
+            store = product.store, product = product, rating = 1, text = 'Mala',
+            name = 'X', surname = 'Y', email = 'x@x.com',
+        )
+        _, other        =   _make_user('otro')
+        _grant(other, has_public_link = True)
+        Store.objects.create(user = other, slug = 'otra-tienda', is_published = True)
+        client          =   APIClient()
+        client.force_authenticate(user = other.user)
+        self.assertEqual(client.get(REVIEWS_URL).data, [])
+        self.assertEqual(client.delete(f'{REVIEWS_URL}{review.id}/').status_code, 404)
+        self.assertTrue(ProductReview.objects.filter(pk = review.id).exists())
+
+    def test_reviews_create_via_owner_endpoint_rejected(self):
+        store, _        =   self._setup()
+        client          =   APIClient()
+        client.force_authenticate(user = store.user.user)
+        self.assertEqual(client.post(REVIEWS_URL, {'rating': 5}).status_code, 405)
+
+    def test_customization_patch_discards_comments_without_benefit(self):
+        store, _        =   self._setup()
+        PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
+        client          =   APIClient()
+        client.force_authenticate(user = store.user.user)
+        client.patch(CUSTOMIZATION_URL, {'show_comments': True}, format = 'json')
+        store.customization.refresh_from_db()
+        self.assertFalse(store.customization.show_comments)
+
+    def test_public_store_hides_comments_flag_without_benefit(self):
+        store, _        =   self._setup()
+        PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
+        data            =   APIClient().get(PUBLIC_STORE.format(slug = 'mi-tienda')).data
+        self.assertFalse(data['customization']['show_comments'])
+        self.assertTrue(data['customization']['show_reviews'])

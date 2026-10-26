@@ -45,6 +45,9 @@ DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)
+#Los comentarios de producto son premium (has_product_comments): sin el
+#flag el toggle se descarta del PATCH (las valoraciones son para todos).
+COMMENT_FIELDS          =   ('show_comments',)
 #Ordenamientos admitidos por el catálogo público (whitelist cerrada: el
 #param ?sort= jamás llega crudo al order_by). Sin sort válido queda el
 #ordering del Meta de Product (name, id). Los precios ordenan/filtran por
@@ -106,13 +109,18 @@ def _apply_order(queryset, order):
 class StoreContactThrottle(AnonRateThrottle):
     scope   =   'store_contact'
 #=========================================
+# REVIEW THROTTLE (alta de opiniones públicas, antispam por IP)
+#=========================================
+class StoreReviewThrottle(AnonRateThrottle):
+    scope   =   'store_review'
+#=========================================
 # STORE VIEWSET
 #=========================================
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
 
     def get_permissions(self):
-        if self.action in ('public', 'public_catalog', 'contact_captcha', 'contact'):
+        if self.action in ('public', 'public_catalog', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews'):
             return [AllowAny()]
         if self.action in ('block', 'unblock'):
             return [IsAdminUser()]
@@ -256,6 +264,14 @@ class StoreViewSet(StoreBaseViewSet):
         if customization is not None and customization.show_catalog is False:
             raise Http404
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
+        #Las estrellas solo se anotan si el dueño habilitó valoraciones:
+        #sin el flag los productos viajan con rating_avg/count en None.
+        if customization is not None and customization.show_reviews:
+            from django.db.models import Avg, Count
+            products    =   products.annotate(
+                rating_avg      =   Avg('reviews__rating'),
+                rating_count    =   Count('reviews__rating'),
+            )
         category_id     =   request.query_params.get('category')
         brand_id        =   request.query_params.get('brand')
         search          =   (request.query_params.get('q') or '').strip()
@@ -359,6 +375,76 @@ class StoreViewSet(StoreBaseViewSet):
             )
         return Response({'Exito': 'Tu mensaje fue enviado. El comercio te va a responder a la brevedad.'}, status = status.HTTP_200_OK)
     #=========================================
+    # PRODUCT REVIEWS (valoraciones y comentarios de visitantes)
+    #=========================================
+    def _review_store(self, slug):
+        """
+        Mismas condiciones que la web pública + al menos una de las dos
+        opiniones habilitadas por el dueño. Devuelve (store, product) —
+        las reseñas son siempre de un producto concreto del catálogo.
+        """
+        store       =   get_object_or_404(
+            Store.objects.select_related('user__user', 'customization'),
+            slug = slug, is_published = True, is_blocked = False,
+        )
+        if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
+        customization   =   getattr(store, 'customization', None)
+        can_rate        =   bool(customization and customization.show_reviews)
+        can_comment     =   bool(
+            customization and customization.show_comments
+            and profile_has_benefit(store.user, 'has_product_comments')
+        )
+        if not (can_rate or can_comment):
+            raise Http404
+        return store, can_rate, can_comment
+
+    def _review_product(self, store, product_id):
+        from StoreApp.domains.catalog.models import Product
+        return get_object_or_404(Product, pk = product_id, store = store, is_active = True)
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/reviews/captcha', throttle_classes = [PublicReadThrottle])
+    def review_captcha(self, request, slug = None):
+        self._review_store(slug)
+        return Response(issue_captcha(slug), status = status.HTTP_200_OK)
+
+    @action(detail = False, methods = ['get', 'post'], url_path = r'public/(?P<slug>[a-z0-9-]+)/products/(?P<product_id>[0-9]+)/reviews', throttle_classes = [StoreReviewThrottle])
+    def product_reviews(self, request, slug = None, product_id = None):
+        from StoreApp.domains.catalog.models import ProductReview
+        from StoreApp.domains.catalog.serializers.serializers import (
+            ReviewPublicSerializer, ReviewCreateSerializer,
+        )
+        from StoreApp.domains.catalog.serializers.config_fields import ReviewLimits
+        store, can_rate, can_comment    =   self._review_store(slug)
+        product                         =   self._review_product(store, product_id)
+        if request.method == 'GET':
+            reviews     =   product.reviews.all()[:ReviewLimits['list_max']]
+            return Response(ReviewPublicSerializer(reviews, many = True).data, status = status.HTTP_200_OK)
+        serializer  =   ReviewCreateSerializer(
+            data        =   request.data,
+            context     =   {'can_rate': can_rate, 'can_comment': can_comment},
+        )
+        serializer.is_valid(raise_exception = True)
+        data        =   serializer.validated_data
+        #Honeypot como en contact: éxito falso sin guardar nada.
+        if data.get('website'):
+            return Response({'Exito': 'Tu opinión fue publicada.'}, status = status.HTTP_200_OK)
+        if not verify_captcha(slug, data['challenge_id'], data['captcha_answer']):
+            return Response(
+                {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
+                status = status.HTTP_400_BAD_REQUEST,
+            )
+        ProductReview.objects.create(
+            store       =   store,
+            product     =   product,
+            rating      =   data.get('rating') if can_rate else None,
+            text        =   data.get('text') or '',
+            name        =   data['name'],
+            surname     =   data['surname'],
+            email       =   data['email'],
+        )
+        return Response({'Exito': 'Tu opinión fue publicada. ¡Gracias!'}, status = status.HTTP_201_CREATED)
+    #=========================================
     # CUSTOMIZATION (diseño de la web pública, gated por el plan)
     #=========================================
     @action(detail = False, methods = ['get', 'put', 'patch'], url_path = 'customization')
@@ -378,6 +464,8 @@ class StoreViewSet(StoreBaseViewSet):
             discard.extend(DESIGN_ADVANCED_FIELDS)
         if not profile_has_benefit(store.user, 'has_location_map'):
             discard.extend(LOCATION_FIELDS)
+        if not profile_has_benefit(store.user, 'has_product_comments'):
+            discard.extend(COMMENT_FIELDS)
         if discard:
             data        =   request.data.copy()
             for field in discard:

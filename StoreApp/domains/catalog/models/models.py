@@ -132,3 +132,48 @@ class Discount(models.Model):
         """Vigente en `moment` (ahora por defecto): activo y dentro de la ventana."""
         moment  =   moment or timezone.now()
         return self.is_active and self.starts_at <= moment and (self.ends_at is None or self.ends_at > moment)
+#=========================================
+# PRODUCT REVIEW MODEL (valoraciones y comentarios de visitantes)
+#=========================================
+class ProductReview(models.Model):
+    """
+    Opinión de un visitante sobre un producto de la web pública: estrellas
+    (rating 1-5, solo si la tienda habilitó valoraciones) y/o texto (solo
+    con comentarios premium). Se publica directo — el dueño modera
+    borrando desde su panel (no hay pre-aprobación).
+    El alta pide nombre+apellido+email+captcha (fricción antispam); el
+    email nunca sale en la API pública (solo lo ve el dueño al moderar).
+    """
+    RATING_MIN                  =   1
+    RATING_MAX                  =   5
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'product_reviews', db_index = False)
+    product                     =   models.ForeignKey(Product, on_delete = models.CASCADE, related_name = 'reviews', db_index = False)
+    rating                      =   models.PositiveSmallIntegerField(null = True, blank = True, verbose_name = 'Valoración (1-5)')
+    text                        =   models.CharField(max_length = 600, blank = True, verbose_name = 'Comentario')
+    name                        =   models.CharField(max_length = 80, verbose_name = 'Nombre')
+    surname                     =   models.CharField(max_length = 80, verbose_name = 'Apellido')
+    email                       =   models.EmailField(verbose_name = 'Email')
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'catalog'
+        verbose_name            =   'Opinión de producto'
+        verbose_name_plural     =   'Opiniones de productos'
+        ordering                =   ['-created_at', '-id']
+        indexes                 =   [
+            models.Index(fields = ['store', 'created_at'], name = 'idx_review_store_date'),
+            models.Index(fields = ['product', 'created_at'], name = 'idx_review_product_date'),
+        ]
+        constraints             =   [
+            #Una opinión sin estrellas ni texto no aporta nada (también lo
+            #valida el serializer; la constraint es la segunda capa).
+            models.CheckConstraint(
+                condition       =   models.Q(rating__isnull = False) | ~models.Q(text = ''),
+                name            =   'ck_review_rating_or_text',
+            ),
+            models.CheckConstraint(
+                condition       =   models.Q(rating__isnull = True) | models.Q(rating__gte = 1, rating__lte = 5),
+                name            =   'ck_review_rating_range',
+            ),
+        ]
+    def __str__(self):
+        return f'{self.name} sobre {self.product.name} ({self.store.slug})'

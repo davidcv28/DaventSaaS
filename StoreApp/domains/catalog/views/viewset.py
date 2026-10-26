@@ -8,7 +8,7 @@ from StoreApp.domains.catalog.services.services   import catalog_enabled, can_ad
 from StoreApp.domains.catalog.serializers.serializers import ProductSerializerList
 from StoreApp.domains.stores.services             import upload_product_image, delete_product_image, storage_payload, validate_image_file, remove_background
 from .viewset_base   import CatalogBaseViewSet
-from .viewset_config import CategoryConfigs, BrandConfigs, ProductConfigs, DiscountConfigs
+from .viewset_config import CategoryConfigs, BrandConfigs, ProductConfigs, DiscountConfigs, ReviewConfigs
 """
 
 Viewsets del dominio Catalog.
@@ -69,6 +69,13 @@ class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
         return self._swap_item(request, super().create(request))
     def update(self, request, pk = None):
         return self._swap_item(request, super().update(request, pk))
+#=========================================
+# REVIEW VIEWSET (moderación del dueño: lista y borra opiniones de su
+# tienda; el alta vive en la web pública, nunca en este endpoint)
+#=========================================
+class ReviewViewSet(CatalogGateMixin, CatalogBaseViewSet):
+    viewset_config  =   ReviewConfigs
+    http_method_names   =   ['get', 'delete', 'head', 'options']
 #=========================================
 # BACKGROUND REMOVAL THROTTLE (inferencia en CPU: acotada por usuario)
 #=========================================

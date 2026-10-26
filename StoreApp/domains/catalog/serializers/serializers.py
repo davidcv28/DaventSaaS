@@ -1,11 +1,11 @@
 from django.utils import timezone
 from rest_framework import serializers
-from StoreApp.domains.catalog.models import Category, Brand, Product, Discount
+from StoreApp.domains.catalog.models import Category, Brand, Product, Discount, ProductReview
 from StoreApp.domains.catalog.services.services import (
     running_discounts_of, discount_covers, discount_price_of,
 )
 from StoreApp.domains.stores.services.storage import object_url
-from .config_fields import TaxonomyFields, ProductFields, DiscountFields
+from .config_fields import TaxonomyFields, ProductFields, DiscountFields, ReviewFields
 from .mixins        import TaxonomyMixinValidator, CategorySchemaMixinValidator, ProductMixinValidator, DiscountMixinValidator
 """
 
@@ -88,9 +88,11 @@ class ProductPublicSerializer(serializers.ModelSerializer):
     image                       =   serializers.SerializerMethodField()
     offer_price                 =   serializers.SerializerMethodField()
     discount                    =   serializers.SerializerMethodField()
+    rating_avg                  =   serializers.SerializerMethodField()
+    rating_count                =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at', 'discount']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at', 'discount', 'rating_avg', 'rating_count']
     def get_image(self, product):
         return object_url(product.image_key)
     def get_offer_price(self, product):
@@ -111,6 +113,68 @@ class ProductPublicSerializer(serializers.ModelSerializer):
             'percent'   :   discount.percent,
             'ends_at'   :   discount.ends_at,
         }
+    def get_rating_avg(self, product):
+        #public_catalog anota el promedio solo si la tienda habilitó
+        #valoraciones (show_reviews): sin anotación viaja None y la web no
+        #muestra estrellas. Se redondea a 1 decimal para las medias.
+        avg =   getattr(product, 'rating_avg', None)
+        return round(avg, 1) if avg is not None else None
+    def get_rating_count(self, product):
+        return getattr(product, 'rating_count', None)
+#=========================================
+# REVIEW SERIALIZER (lectura del dueño: moderación desde el panel)
+#=========================================
+class ReviewSerializerList(serializers.ModelSerializer):
+    product_name                =   serializers.CharField(source = 'product.name', read_only = True)
+    class Meta:
+        model                   =   ProductReview
+        fields                  =   ['id', 'product', 'product_name', 'rating', 'text', 'name', 'surname', 'email', 'created_at']
+#=========================================
+# REVIEW PUBLIC SERIALIZER (ficha pública: jamás expone el email y el
+# apellido viaja reducido a su inicial — "María P.")
+#=========================================
+class ReviewPublicSerializer(serializers.ModelSerializer):
+    surname_initial             =   serializers.SerializerMethodField()
+    class Meta:
+        model                   =   ProductReview
+        fields                  =   ['rating', 'text', 'name', 'surname_initial', 'created_at']
+    def get_surname_initial(self, review):
+        surname =   (review.surname or '').strip()
+        return f'{surname[0]}.' if surname else ''
+#=========================================
+# REVIEW CREATE SERIALIZER (escritura pública: rating según show_reviews,
+# texto según show_comments — el viewset pasa ambos flags en context)
+#=========================================
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    rating                      =   serializers.IntegerField(**ReviewFields['rating'])
+    text                        =   serializers.CharField(**ReviewFields['text'])
+    name                        =   serializers.CharField(**ReviewFields['name'])
+    surname                     =   serializers.CharField(**ReviewFields['surname'])
+    email                       =   serializers.EmailField(**ReviewFields['email'])
+    #Honeypot + captcha firmado (mismo challenge del formulario de contacto).
+    website                     =   serializers.CharField(required = False, allow_blank = True, write_only = True)
+    challenge_id                =   serializers.CharField(write_only = True)
+    captcha_answer              =   serializers.CharField(max_length = 8, write_only = True)
+    class Meta:
+        model                   =   ProductReview
+        fields                  =   ['rating', 'text', 'name', 'surname', 'email', 'website', 'challenge_id', 'captcha_answer']
+    def validate(self, attrs):
+        can_rate                =   self.context.get('can_rate', False)
+        can_comment             =   self.context.get('can_comment', False)
+        rating                  =   attrs.get('rating')
+        text                    =   (attrs.get('text') or '').strip()
+        attrs['text']           =   text
+        if not can_rate and rating is not None:
+            raise serializers.ValidationError({'rating': 'Esta tienda no tiene valoraciones habilitadas.'})
+        if not can_comment and text:
+            raise serializers.ValidationError({'text': 'Esta tienda no tiene comentarios habilitados.'})
+        if can_rate and not can_comment and rating is None:
+            raise serializers.ValidationError({'rating': 'Elegí de 1 a 5 estrellas.'})
+        if can_comment and not can_rate and not text:
+            raise serializers.ValidationError({'text': 'Escribí tu comentario.'})
+        if rating is None and not text:
+            raise serializers.ValidationError({'rating': 'Dejá una valoración o un comentario.'})
+        return attrs
 #=========================================
 # DISCOUNT PUBLIC SERIALIZER (promos vigentes del catálogo público)
 #=========================================

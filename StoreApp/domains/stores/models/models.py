@@ -184,6 +184,15 @@ class StoreCustomization(models.Model):
     site_mode                   =   models.CharField(max_length = 10, choices = SITE_MODE_CHOICES, default = SITE_MODE_BOTH, verbose_name = 'Tipo de web')
     #Franja de etiquetas bajo la portada (destacados): el dueño decide si aparece.
     show_highlights             =   models.BooleanField(default = True, verbose_name = 'Mostrar franja de etiquetas')
+    #===== Opiniones de visitantes sobre los productos del catálogo =====
+    #Valoraciones: estrellas 1-5 en las tarjetas y la ficha (disponible en
+    #todos los planes). Comentarios: texto de la opinión en la ficha —
+    #requiere el beneficio 'has_product_comments' (premium); si la tienda
+    #baja de plan quedan guardados pero la web los oculta (el serializer
+    #público expone show_comments=False sin el flag). Apagados por
+    #defecto: el dueño los enciende desde "Mis catálogos".
+    show_reviews                =   models.BooleanField(default = False, verbose_name = 'Valoraciones en productos')
+    show_comments               =   models.BooleanField(default = False, verbose_name = 'Comentarios en productos (premium)')
     #===== Secciones de marketing de la portada ("Mi empresa") =====
     #Bloques de contenido rico para que la web funcione como landing
     #completa, no solo como vidriera: servicios, cifras, testimonios,
