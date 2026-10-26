@@ -387,6 +387,12 @@
 .chat-win .chat-box { flex: 1; height: auto; min-height: 0; background: var(--surface); padding: 14px 12px; }
 .chat-win.min { height: auto; width: min(300px, calc(100vw - 36px)); }
 .chat-win.min .chat-win-head { border-bottom-color: transparent; }
+
+/* Aviso de no-leídos del cliente cuando la ventana está cerrada: abre el
+   chat (el GET de mensajes recién ahí los marca como leídos). */
+.support-unread { display: inline-flex; align-items: center; justify-content: center; gap: 9px; margin-top: 12px; padding: 9px 14px; border: 1px solid var(--brand-soft-line, var(--line)); border-radius: 12px; background: var(--brand-soft); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s, transform .15s var(--ease-out); }
+.support-unread:hover { border-color: var(--brand-500); transform: translateY(-1px); }
+.support-unread:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .chatwin-enter-active { transition: opacity .18s ease, transform .26s var(--ease-spring); }
 .chatwin-leave-active { transition: opacity .14s ease, transform .14s ease; }
 .chatwin-enter-from, .chatwin-leave-to { opacity: 0; transform: translateY(14px) scale(.94); }

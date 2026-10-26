@@ -1597,6 +1597,8 @@ const chatBoxEl = ref(null)
 const chatInputEl = ref(null)
 const chatStaff = ref([])
 const chatOpen = ref(false)
+const chatMin = ref(false)
+const chatUnread = ref(0)
 const chatTarget = ref(null)
 // Adjuntos en cola: [{file, url}] — el url es un objectURL local (vista
 // previa optimista); el archivo nunca toca la DB, viaja al bucket/disco.
@@ -1626,22 +1628,40 @@ function resizeChatInput() {
 }
 
 function onChatKey(e) {
-  if (e.key === 'Escape') closeChat()
+  if (e.key === 'Escape' && chatOpen.value && section.value === 'support') closeChat()
 }
 
 function openChat(member = null) {
   chatTarget.value = member
   chatOpen.value = true
+  chatMin.value = false
   window.addEventListener('keydown', onChatKey)
+  // Al abrir se trae el historial: el GET marca los mensajes del staff
+  // como leídos (por eso solo corre con la ventana abierta).
+  loadChat()
   nextTick(() => {
     scrollChat()
     resizeChatInput()
-    chatInputEl.value?.focus()
+    chatInputEl.value?.focus({ preventScroll: true })
   })
+}
+
+function toggleChatMin() {
+  chatMin.value = !chatMin.value
+  if (!chatMin.value) {
+    // Al expandir se retoma el polling (pausado minimizada): lo que llegó
+    // en el medio todavía no quedó marcado como leído en el servidor.
+    pollChat()
+    nextTick(() => {
+      scrollChat()
+      chatInputEl.value?.focus({ preventScroll: true })
+    })
+  }
 }
 
 function closeChat() {
   chatOpen.value = false
+  chatMin.value = false
   resetChatFiles()
   window.removeEventListener('keydown', onChatKey)
 }
@@ -1736,6 +1756,7 @@ async function loadChat() {
     const data = await fetchChat()
     chatStaffOnline.value = Boolean(data.staff_online)
     chatStaff.value = data.staff || []
+    chatUnread.value = data.unread || 0
     const msgs = data.messages || []
     chatMessages.value = msgs
     chatLastId.value = msgs.length ? msgs[msgs.length - 1].id : 0
@@ -1751,7 +1772,10 @@ async function pollChat() {
   // Silencioso: un tick fallido reintenta en el próximo intervalo.
   // Oculto no se pollea (ahorra cuota; al volver hay tick inmediato) y nunca
   // se enciman dos requests si una tardó más que el intervalo.
-  if (document.hidden || chatPolling) return
+  // Ventana cerrada o minimizada tampoco se pollea: el GET marca los
+  // mensajes del staff como leídos y el cliente todavía no los vio —
+  // el no-leído sigue contando por el heartbeat (badge en el header).
+  if (!chatOpen.value || chatMin.value || document.hidden || chatPolling) return
   chatPolling = true
   try {
     const data = await fetchChatMessages({ after: chatLastId.value })
@@ -1773,6 +1797,10 @@ async function beatChat() {
     const data = await chatHeartbeat()
     chatStaffOnline.value = Boolean(data.staff_online)
     if (data.staff) chatStaff.value = data.staff
+    // El no-leído llega por heartbeat (no marca lectura): con la ventana
+    // cerrada/minimizada es el contador del badge; abierta queda en 0
+    // porque el polling ya marcó todo como leído.
+    chatUnread.value = data.unread || 0
   } catch { /* silencioso */ }
 }
 
@@ -1825,6 +1853,7 @@ async function sendChat() {
     chatErr.value = extractApiError(e).nonField
   } finally {
     chatBusy.value = false
+    chatInputEl.value?.focus({ preventScroll: true })
   }
 }
 
@@ -1835,8 +1864,10 @@ const CHAT_BEAT_MS = 30000
 
 function startChat() {
   stopChat()
-  loadChat()
   beatChat()
+  // Si la ventana quedó abierta al cambiar de sección, se refresca el
+  // hilo; si no, alcanza con el heartbeat (marca presencia + no-leídos).
+  if (chatOpen.value) loadChat()
   chatPollTimer = setInterval(pollChat, CHAT_POLL_MS)
   chatBeatTimer = setInterval(beatChat, CHAT_BEAT_MS)
 }
@@ -3938,6 +3969,10 @@ async function changePassword() {
           <AppButton class="support-live" :loading="chatBusy" :disabled="!chatStaffOnline" @click="requestLiveHelp">
             Solicitar asistencia en vivo
           </AppButton>
+          <button v-if="chatUnread && !chatOpen" type="button" class="support-unread" @click="openChat()">
+            <span class="chat-badge">{{ chatUnread }}</span>
+            <span>Tenés {{ chatUnread === 1 ? 'un mensaje' : `${chatUnread} mensajes` }} sin leer — abrir chat</span>
+          </button>
           <ul class="support-facts">
             <li><AppIcon name="check" :size="15" /> Elegí un integrante para abrir la conversación</li>
             <li><AppIcon name="check" :size="15" /> Tu historial de chat queda guardado</li>
@@ -3946,96 +3981,127 @@ async function changePassword() {
         </div>
       </div>
 
-      <!-- Ventana de chat estilo Messenger (sin recargar la página) -->
-      <div v-if="chatOpen" class="chat-overlay" @click.self="closeChat">
-        <div class="chat-modal" role="dialog" aria-modal="true" aria-label="Chat de soporte">
-          <header class="chat-modal-head">
+      <!-- Ventana flotante de conversación (estilo chat de Facebook,
+           calcada del panel admin): minimiza al header, cierra con Esc o
+           la X, badge de no-leídos mientras está minimizada (el polling
+           se pausa para no marcar leídos sin verlos) y foco al textarea
+           al abrir/expandir/enviar. -->
+      <Transition name="chatwin">
+        <section
+          v-if="chatOpen"
+          class="chat-win"
+          :class="{ min: chatMin }"
+          role="dialog"
+          aria-modal="false"
+          :aria-label="`Conversación con ${chatPeer?.name || 'equipo DAVENT'}`"
+        >
+          <header class="chat-win-head" @click="toggleChatMin">
             <span class="support-avatar">
               {{ staffInitials(chatPeer?.name || 'DAVENT') }}
               <span class="support-status" :class="{ on: chatPeer ? chatPeer.online : chatStaffOnline }"></span>
             </span>
             <div class="chat-modal-who">
               <strong>{{ chatPeer?.name || 'Equipo DAVENT' }}</strong>
-              <small>{{ chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Desconectado · responde a la brevedad') : (chatStaffOnline ? 'Equipo en línea' : 'Respuesta diferida') }}</small>
+              <small><span class="chat-win-state" :class="{ on: chatPeer ? chatPeer.online : chatStaffOnline }">{{ chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Desconectado · responde a la brevedad') : (chatStaffOnline ? 'Equipo en línea' : 'Respuesta diferida') }}</span></small>
             </div>
-            <button type="button" class="chat-close" aria-label="Cerrar chat" @click="closeChat">
-              <AppIcon name="x" :size="17" />
-            </button>
+            <span class="chat-win-actions">
+              <span v-if="chatMin && chatUnread" class="chat-badge">{{ chatUnread }}</span>
+              <button
+                type="button"
+                class="chat-win-btn"
+                :aria-label="chatMin ? 'Expandir chat' : 'Minimizar chat'"
+                :title="chatMin ? 'Expandir' : 'Minimizar'"
+                @click.stop="toggleChatMin"
+              >
+                <AppIcon :name="chatMin ? 'chevron-up' : 'chevron-down'" :size="15" />
+              </button>
+              <button
+                type="button"
+                class="chat-win-btn"
+                aria-label="Cerrar chat"
+                title="Cerrar"
+                @click.stop="closeChat"
+              >
+                <AppIcon name="x" :size="15" />
+              </button>
+            </span>
           </header>
 
-          <div ref="chatBoxEl" class="chat-box">
-            <p v-if="!chatMessages.length" class="chat-empty">
-              Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
-            </p>
-            <template v-for="r in chatRows(chatMessages)" :key="r.key">
-              <div v-if="r.day" class="chat-day">{{ r.day }}</div>
-              <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
-                <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
-                <div class="chat-stack">
-                  <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
-                    <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
-                      <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
-                    </a>
-                    <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+          <template v-if="!chatMin">
+            <div ref="chatBoxEl" class="chat-box">
+              <p v-if="!chatMessages.length" class="chat-empty">
+                Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
+              </p>
+              <template v-for="r in chatRows(chatMessages)" :key="r.key">
+                <div v-if="r.day" class="chat-day">{{ r.day }}</div>
+                <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
+                  <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
+                  <div class="chat-stack">
+                    <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
+                      <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
+                        <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
+                      </a>
+                      <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+                    </div>
+                    <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
                   </div>
-                  <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
                 </div>
-              </div>
-            </template>
-          </div>
+              </template>
+            </div>
 
-          <!-- Adjuntos en cola: preview local antes de subir -->
-          <div v-if="chatFiles.length" class="chat-files">
-            <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
-              <img :src="f.url" :alt="f.file.name">
-              <button type="button" class="chat-file-x" aria-label="Quitar imagen" @click="removeChatFile(i)">
-                <AppIcon name="x" :size="10" />
+            <!-- Adjuntos en cola: preview local antes de subir -->
+            <div v-if="chatFiles.length" class="chat-files">
+              <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
+                <img :src="f.url" :alt="f.file.name">
+                <button type="button" class="chat-file-x" aria-label="Quitar imagen" @click="removeChatFile(i)">
+                  <AppIcon name="x" :size="10" />
+                </button>
+              </div>
+            </div>
+
+            <div class="chat-composer">
+              <input
+                ref="chatFileInput"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                multiple
+                hidden
+                @change="onChatFiles"
+              >
+              <button
+                type="button"
+                class="chat-attach"
+                :disabled="chatBusy || chatFiles.length >= CHAT_FILES_MAX"
+                aria-label="Adjuntar imagen"
+                title="Adjuntar imagen"
+                @click="pickChatImages"
+              >
+                <AppIcon name="image" :size="17" />
+              </button>
+              <textarea
+                ref="chatInputEl"
+                v-model="chatInput"
+                class="chat-text"
+                rows="1"
+                maxlength="2000"
+                placeholder="Escribí tu mensaje…"
+                aria-label="Mensaje para soporte"
+                @input="resizeChatInput"
+                @keydown.enter="onComposerEnter"
+              ></textarea>
+              <button
+                type="button"
+                class="chat-send"
+                :disabled="(!chatInput.trim() && !chatFiles.length) || chatBusy"
+                aria-label="Enviar mensaje"
+                @click="sendChat"
+              >
+                <AppIcon name="send" :size="17" />
               </button>
             </div>
-          </div>
-
-          <div class="chat-composer">
-            <input
-              ref="chatFileInput"
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              multiple
-              hidden
-              @change="onChatFiles"
-            >
-            <button
-              type="button"
-              class="chat-attach"
-              :disabled="chatBusy || chatFiles.length >= CHAT_FILES_MAX"
-              aria-label="Adjuntar imagen"
-              title="Adjuntar imagen"
-              @click="pickChatImages"
-            >
-              <AppIcon name="image" :size="17" />
-            </button>
-            <textarea
-              ref="chatInputEl"
-              v-model="chatInput"
-              class="chat-text"
-              rows="1"
-              maxlength="2000"
-              placeholder="Escribí tu mensaje…"
-              aria-label="Mensaje para soporte"
-              @input="resizeChatInput"
-              @keydown.enter="onComposerEnter"
-            ></textarea>
-            <button
-              type="button"
-              class="chat-send"
-              :disabled="(!chatInput.trim() && !chatFiles.length) || chatBusy"
-              aria-label="Enviar mensaje"
-              @click="sendChat"
-            >
-              <AppIcon name="send" :size="17" />
-            </button>
-          </div>
-        </div>
-      </div>
+          </template>
+        </section>
+      </Transition>
     </div>
     <!-- ================= PLANES ================= -->
     <div v-if="seen.plans" v-show="section === 'plans'" :class="{ 'sec-on': section === 'plans' }">
