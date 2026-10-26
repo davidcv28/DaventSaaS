@@ -33,8 +33,6 @@ from AdminApp.domains.users.views.auth_views import (
     PasswordResetConfirmView,
     VerifyEmailView,
     VerifyEmailResendView,
-    VerifyPhoneConfirmView,
-    VerifyPhoneStatusView,
     GoogleAuthView,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
@@ -70,11 +68,6 @@ urlpatterns = [
     path('api/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('api/verify-email/resend/', VerifyEmailResendView.as_view(), name='verify_email_resend'),
     #=================================
-    # CELULAR (verificación por SMS vía Firebase Phone Auth)
-    #=================================
-    path('api/verify-phone/', VerifyPhoneConfirmView.as_view(), name='verify_phone'),
-    path('api/verify-phone/status/', VerifyPhoneStatusView.as_view(), name='verify_phone_status'),
-    #=================================
     # LOGIN SOCIAL (Google — token exchange, mismo JWT/cookies)
     #=================================
     path('api/auth/google/', GoogleAuthView.as_view(), name='auth_google'),
@@ -107,8 +100,8 @@ def spa(request):
     # CSP del SPA: recursos propios + Google Fonts (estilos on-demand del catálogo
     # de fuentes), iframe de Google Maps (mapa de ubicación), imágenes https (R2)
     # y data: (favicon inline / QR). Los scripts son solo archivos del build más
-    # los de Firebase Phone Auth (gstatic/recaptcha) y el SDK de login social
-    # (accounts.google.com = Google Identity Services); el frame cubre el
+    # el SDK de Google Identity Services (accounts.google.com: script, frame del
+    # botón, connect del exchange y su stylesheet); el frame cubre también el
     # iframe del botón de Google. Sin ellos ese login quedaba roto únicamente
     # en el deploy empaquetado (en dev la CSP no aplica porque la SPA la sirve Vite).
     # COOP: el default de SecurityMiddleware es 'same-origin', que aísla el
@@ -118,12 +111,12 @@ def spa(request):
     resp['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
     resp['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' https://www.gstatic.com https://www.google.com https://apis.google.com https://accounts.google.com; "
+        "script-src 'self' https://accounts.google.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://www.google.com https://accounts.google.com; "
-        "frame-src https://maps.google.com https://www.google.com https://recaptcha.google.com https://accounts.google.com; "
+        "connect-src 'self' https://accounts.google.com; "
+        "frame-src https://maps.google.com https://www.google.com https://accounts.google.com; "
         "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     )
     return resp

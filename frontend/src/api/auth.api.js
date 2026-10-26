@@ -132,20 +132,6 @@ export const authApi = {
   async googleLogin(credential, remember = true) {
     const { data } = await http.post('/auth/google/', { credential, remember })
     return data
-  },
-
-  // --- Verificación de celular por SMS de Firebase (gratis: plan Spark) ---
-  // POST /api/verify-phone/ {id_token}: el SMS y el código los maneja el SDK
-  // de Firebase en el cliente; acá solo validamos el idToken resultante.
-  async confirmPhoneVerification(idToken) {
-    const { data } = await http.post('/verify-phone/', { id_token: idToken })
-    return data
-  },
-
-  // GET /api/verify-phone/status/ -> {phone_verified}
-  async fetchPhoneStatus() {
-    const { data } = await http.get('/verify-phone/status/')
-    return data
   }
 }
 

@@ -115,12 +115,6 @@ services:
       - key: BACKUP_RETENTION_DAYS
         value: "14"
 
-      # ---- Firebase Phone Auth (verificación de celular, costo $0) -------------
-      # Web API key: pública por diseño (viaja en el bundle del front). La
-      # protección real: Authorized domains del proyecto + cuota Spark ~10/día.
-      - key: FIREBASE_API_KEY
-        value: AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
-
       # ---- Login social (Google) -----------------------------------------------
       # Vacío = feature apagada (endpoint 503, botón oculto). El client ID es
       # público por diseño — viaja en cada página.

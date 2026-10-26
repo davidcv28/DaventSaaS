@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1
 # check=skip=SecretsUsedInArgOrEnv
-# La config web de Firebase (apiKey/authDomain/...) es PÚBLICA por diseño:
-# viaja en el bundle del browser; la protección real son los Authorized
-# domains del proyecto + la cuota Spark. No son secretos — el check no aplica.
+# El client ID de Google es PÚBLICO por diseño: viaja en el bundle del
+# browser; no es un secreto — el check de ARG/ENV no aplica.
 # Imagen web = build del SPA Vue + nginx (reverse proxy + TLS + estáticos).
 # Contexto de build: raíz del repo (.) — buildx exige que el Dockerfile viva
 # dentro del contexto; los COPY referencian frontend/.
@@ -18,26 +17,12 @@ ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN
 ARG VITE_APP_NAME
 ARG VITE_APP_TAGLINE
-# Firebase Phone Auth (verificación de celular — la config web es PÚBLICA por
-# diseño: viaja en el bundle que sirve cualquier browser; la protección real
-# son los Authorized domains del proyecto + la cuota Spark, no la clave).
-# Van como defaults del ARG para que el build en Render (que no recibe las
-# env vars del dashboard en build-time) hornee la feature sin plomería extra;
-# un --build-arg las sobreescribe si algún día hay otro proyecto Firebase.
-ARG VITE_FIREBASE_API_KEY=AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
-ARG VITE_FIREBASE_AUTH_DOMAIN=davent-f089b.firebaseapp.com
-ARG VITE_FIREBASE_PROJECT_ID=davent-f089b
-ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
 # Login social (Google): también público por diseño; vacío = botón oculto.
 ARG VITE_GOOGLE_CLIENT_ID=10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_NAME=$VITE_APP_NAME \
     VITE_APP_TAGLINE=$VITE_APP_TAGLINE \
-    VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
-    VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
-    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
-    VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
     VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 

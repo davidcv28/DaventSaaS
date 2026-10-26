@@ -47,14 +47,11 @@ class UserProfileSerializer(UserProfileValidatorsMixins,UserProfileUpdateMethod,
     #EMAIL VERIFICATION (solo lectura: se marca desde el link firmado del correo)
     email_verified      =   serializers.BooleanField(read_only = True)
     email_verified_at   =   serializers.DateTimeField(read_only = True)
-    #PHONE VERIFICATION (solo lectura: la marca el webhook de WhatsApp entrante)
-    phone_verified      =   serializers.BooleanField(read_only = True)
-    phone_verified_at   =   serializers.DateTimeField(read_only = True)
     class Meta:
         model           =   UserProfile
         fields          =   ['user', 'tax_condition', 'business_name', 'type_document', 'document', 'first_name', 'last_name',
                              'province', 'city', 'address', 'phone', 'terms_accepted', 'terms_accepted_at', 'terms_version',
-                             'email_verified', 'email_verified_at', 'phone_verified', 'phone_verified_at']
+                             'email_verified', 'email_verified_at']
 
     
 #=============================#=============================#=============================#=============================

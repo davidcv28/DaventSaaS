@@ -6,7 +6,6 @@ Cubren los flujos que no pueden romperse antes del lanzamiento:
 - Policy de contraseñas en registro, cambio y reset
 - Invalidación de sesiones (blacklist de refresh) tras cambiar la clave
 - Verificación de email (token firmado, marcado, reset al cambiar correo)
-- Verificación de celular por SMS de Firebase (idToken vs Identity Toolkit)
 """
 from unittest.mock import patch, Mock
 
@@ -35,8 +34,6 @@ VERIFY_URL          = '/api/verify-email/'
 REFRESH_URL         = '/api/token/refresh/'
 PASSWORD_UPDATE_URL = '/api/password_update/'
 USER_UPDATE_URL     = '/api/user/me/'
-VERIFY_PHONE_URL    = '/api/verify-phone/'
-VERIFY_PHONE_STATUS = '/api/verify-phone/status/'
 GOOGLE_AUTH_URL     = '/api/auth/google/'
 
 
@@ -207,98 +204,12 @@ class EmailVerificationTests(TestCase):
         response        =   client.put(USER_UPDATE_URL, {'email': 'cambiado@gmail.com'}, format = 'json')
         self.assertNotEqual(response.status_code, 500)
 
-
-class PhoneVerificationTests(TestCase):
-    """idToken de Firebase validado contra Identity Toolkit (mockeado)."""
-
-    VIEWS_MODULE    =   'AdminApp.domains.users.views.auth_views'
-    SERVICES_MODULE =   'AdminApp.domains.users.services.services'
-    PHONE           =   '+5491122334455'    #formato del perfil (con + y 9)
-    PHONE_FB        =   '+5491122334455'    #formato del phoneNumber de Firebase
-
-    def _user_with_phone(self):
-        user, profile       =   _make_user()
-        profile.phone       =   self.PHONE
-        profile.save(update_fields = ['phone'])
-        return user, profile
-
-    def _lookup_response(self, phone_number):
-        #Simula la respuesta de Identity Toolkit accounts:lookup.
-        resp            =   Mock()
-        resp.ok         =   phone_number is not None
-        resp.json       =   lambda: {'users': [{'phoneNumber': phone_number}]} if phone_number else {}
-        return resp
-
-    def test_confirm_requires_auth(self):
-        response    =   APIClient().post(VERIFY_PHONE_URL, {'id_token': 'x'}, format = 'json')
-        self.assertEqual(response.status_code, 401)
-
-    def test_confirm_without_phone_is_rejected(self):
-        user, _         =   _make_user()
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        response        =   client.post(VERIFY_PHONE_URL, {'id_token': 'x'}, format = 'json')
-        self.assertEqual(response.status_code, 400)
-
-    def test_confirm_marks_phone_verified_on_matching_number(self):
-        user, profile   =   self._user_with_phone()
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', 'api-key'), \
-             patch(f'{self.SERVICES_MODULE}.FIREBASE_API_KEY', 'api-key'), \
-             patch(f'{self.SERVICES_MODULE}.requests.post', return_value = self._lookup_response(self.PHONE_FB)):
-            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'id-token-valido'}, format = 'json')
-        self.assertEqual(response.status_code, 200)
-        profile.refresh_from_db()
-        self.assertTrue(profile.phone_verified)
-
-    def test_confirm_rejects_mismatched_number(self):
-        """El token es válido pero verificó OTRO número: no se marca."""
-        user, profile   =   self._user_with_phone()
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', 'api-key'), \
-             patch(f'{self.SERVICES_MODULE}.FIREBASE_API_KEY', 'api-key'), \
-             patch(f'{self.SERVICES_MODULE}.requests.post', return_value = self._lookup_response('+549223334444')):
-            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'id-token-valido'}, format = 'json')
-        self.assertEqual(response.status_code, 400)
-        profile.refresh_from_db()
-        self.assertFalse(profile.phone_verified)
-
-    def test_confirm_rejects_invalid_token(self):
-        user, profile   =   self._user_with_phone()
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', 'api-key'), \
-             patch(f'{self.SERVICES_MODULE}.FIREBASE_API_KEY', 'api-key'), \
-             patch(f'{self.SERVICES_MODULE}.requests.post', return_value = self._lookup_response(None)):
-            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'token-trucho'}, format = 'json')
-        self.assertEqual(response.status_code, 400)
-        profile.refresh_from_db()
-        self.assertFalse(profile.phone_verified)
-
-    def test_confirm_503_without_api_key(self):
-        user, _         =   self._user_with_phone()
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        with patch(f'{self.VIEWS_MODULE}.FIREBASE_API_KEY', ''):
-            response    =   client.post(VERIFY_PHONE_URL, {'id_token': 'x'}, format = 'json')
-        self.assertEqual(response.status_code, 503)
-
-    def test_status_reports_flag(self):
-        user, profile   =   self._user_with_phone()
-        profile.phone_verified      =   True
-        profile.save(update_fields = ['phone_verified'])
-        client          =   APIClient()
-        client.force_authenticate(user = user)
-        response        =   client.get(VERIFY_PHONE_STATUS)
-        self.assertEqual(response.json()['phone_verified'], True)
-
     def test_profile_update_resets_verification_on_phone_change(self):
-        """Cambiar el celular invalida la verificación (igual que el correo)."""
-        user, profile   =   self._user_with_phone()
-        profile.phone_verified      =   True
-        profile.save(update_fields = ['phone_verified'])
+        """Cambiar el celular resetea phone_verified (misma regla que el correo)."""
+        user, profile   =   _make_user()
+        profile.phone           =   '+5491122334455'
+        profile.phone_verified  =   True
+        profile.save(update_fields = ['phone', 'phone_verified'])
         client          =   APIClient()
         client.force_authenticate(user = user)
         response        =   client.put('/api/profile/me/', {

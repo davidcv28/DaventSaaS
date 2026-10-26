@@ -35,8 +35,7 @@ import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
-import { sendVerificationSms, confirmSmsCode } from '../api/phone-verify.js'
-import { env, storeSubdomains, firebaseEnabled } from '../config/env.js'
+import { env, storeSubdomains } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
   validateDocument, validateBusinessName, validatePhone, validateAddress,
@@ -102,70 +101,6 @@ async function resendVerification() {
       : 'No se pudo reenviar el correo. Reintentá en unos minutos.'
   } finally {
     verifyBusy.value = false
-  }
-}
-
-// --- Verificación de celular (SMS de Firebase — gratis, ancla anti-abuso) ---
-// Flujo: sendVerificationSms dispara el SMS de Firebase -> el usuario carga
-// el código -> confirmSmsCode devuelve el idToken -> el backend lo valida
-// contra Identity Toolkit y marca phone_verified si el número coincide.
-const phoneVerifyBusy = ref(false)
-const phoneVerifyErr = ref('')
-const phoneVerifySent = ref(false)
-const phoneVerifyCode = ref('')
-const recaptchaEl = ref(null)
-let confirmationResult = null
-const phoneVerified = computed(() => auth.user?.profile?.phone_verified === true)
-const hasPhone = computed(() => Boolean(auth.user?.profile?.phone))
-
-// Errores conocidos del SDK de Firebase -> mensaje accionable. Cualquier otro
-// cae al genérico con el code entre paréntesis para poder reportarlo.
-const PHONE_VERIFY_ERRORS = {
-  'auth/invalid-phone-number': 'El número del perfil no es válido. Tiene que estar en formato internacional (+549…).',
-  'auth/too-many-requests': 'Demasiados intentos seguidos. Esperá un rato y probá de nuevo.',
-  'auth/quota-exceeded': 'Se alcanzó el límite diario de SMS del servicio. Probá mañana.',
-  'auth/operation-not-allowed': 'El proveedor de SMS no está habilitado en Firebase.',
-  'auth/invalid-app-credential': 'El reCAPTCHA fue rechazado. Recargá la página y probá de nuevo.',
-  'auth/captcha-check-failed': 'No se pudo validar el reCAPTCHA. Recargá la página y probá de nuevo.',
-  'auth/network-request-failed': 'Sin conexión. Revisá tu red y probá de nuevo.',
-  'auth/missing-phone-number': 'Cargá tu número de celular arriba y guardá los cambios.',
-  'auth/invalid-verification-code': 'El código no es válido. Revisá los 6 dígitos y probá de nuevo.',
-  'auth/code-expired': 'El código venció. Pedí un SMS nuevo.',
-}
-function phoneVerifyErrorMessage(e, fallback) {
-  console.error('Phone verification failed:', e)
-  return PHONE_VERIFY_ERRORS[e?.code] || `${fallback} (${e?.code || 'error desconocido'})`
-}
-
-async function startPhoneVerify() {
-  phoneVerifyBusy.value = true
-  phoneVerifyErr.value = ''
-  try {
-    confirmationResult = await sendVerificationSms(auth.user.profile.phone, recaptchaEl.value)
-    phoneVerifySent.value = true
-    phoneVerifyCode.value = ''
-  } catch (e) {
-    phoneVerifyErr.value = phoneVerifyErrorMessage(e, 'No se pudo enviar el SMS. Reintentá en unos minutos.')
-  } finally {
-    phoneVerifyBusy.value = false
-  }
-}
-async function confirmPhoneVerify() {
-  if (!confirmationResult || !phoneVerifyCode.value.trim()) return
-  phoneVerifyBusy.value = true
-  phoneVerifyErr.value = ''
-  try {
-    const idToken = await confirmSmsCode(confirmationResult, phoneVerifyCode.value.trim())
-    await authApi.confirmPhoneVerification(idToken)
-    if (auth.user?.profile) auth.user.profile.phone_verified = true
-    phoneVerifySent.value = false
-    phoneVerifyCode.value = ''
-  } catch (e) {
-    phoneVerifyErr.value = e.response?.status === 429
-      ? 'Demasiados intentos. Esperá un rato y probá de nuevo.'
-      : e.response?.data?.detail || phoneVerifyErrorMessage(e, 'El código no es válido o ya venció. Pedí un SMS nuevo.')
-  } finally {
-    phoneVerifyBusy.value = false
   }
 }
 
@@ -3927,39 +3862,6 @@ async function changePassword() {
             <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
             <AppButton :loading="accountBusy">Guardar cambios</AppButton>
           </form>
-          <!-- Verificación del celular por SMS de Firebase (plan Spark gratis).
-               El SDK confirma el código y manda el idToken al backend. -->
-          <div class="verify-phone">
-            <template v-if="phoneVerified">
-              <p class="badge-ok"><AppIcon name="badge-check" :size="16" /> Celular verificado</p>
-            </template>
-            <template v-else>
-              <p class="verify-phone-text">Verificá tu celular: te enviamos un código por SMS. Nos ayuda a confirmar que la cuenta es de una persona real.</p>
-              <button type="button" class="btn ghost btn-auto" :disabled="!hasPhone || !firebaseEnabled || phoneVerifyBusy" @click="startPhoneVerify">
-                <span v-if="phoneVerifyBusy" class="spinner"></span><AppIcon name="message-circle" :size="16" /> {{ phoneVerifySent ? 'Reenviar SMS' : 'Verificar por SMS' }}
-              </button>
-              <p v-if="!hasPhone" class="hint">Cargá tu número de celular arriba y guardá los cambios para poder verificarlo.</p>
-              <p v-else-if="!firebaseEnabled" class="hint">La verificación por SMS no está habilitada en este despliegue.</p>
-              <div v-if="phoneVerifySent" class="verify-phone-pending">
-                <p>Ingresá el código que te llegó por SMS:</p>
-                <input
-                  v-model="phoneVerifyCode"
-                  class="input verify-phone-input"
-                  type="text"
-                  inputmode="numeric"
-                  autocomplete="one-time-code"
-                  maxlength="6"
-                  placeholder="123456"
-                />
-                <button type="button" class="btn btn-auto" :disabled="phoneVerifyBusy || phoneVerifyCode.trim().length < 6" @click="confirmPhoneVerify">
-                  <span v-if="phoneVerifyBusy" class="spinner"></span>Confirmar código
-                </button>
-              </div>
-              <AlertMessage v-if="phoneVerifyErr" kind="error" :message="phoneVerifyErr" />
-              <!-- Firebase monta el reCAPTCHA invisible acá (obligatorio) -->
-              <div ref="recaptchaEl"></div>
-            </template>
-          </div>
         </div>
         <div class="card">
           <h3><AppIcon name="key" :size="18" /> Cambiar mi contraseña</h3>

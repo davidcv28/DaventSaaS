@@ -23,13 +23,11 @@ from AdminApp.domains.users.services import (
     ConfirmPasswordResetQuery,
     SendVerificationEmailQuery,
     VerifyEmailQuery,
-    ConfirmPhoneVerificationQuery,
     SocialAuthError,
     SocialLoginQuery,
     VerifyGoogleCredentialQuery,
     GOOGLE_CLIENT_ID,
     FRONTEND_URL,
-    FIREBASE_API_KEY,
 )
 
 # Sesión web: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ — el
@@ -85,10 +83,6 @@ class LogoutRateThrottle(UserRateThrottle):
     """Scope 'logout' (settings): el endpoint es AllowAny y blacklistea el
     refresh de la cookie — acotado por usuario o por IP si no hay auth."""
     scope = 'logout'
-
-class VerifyPhoneRateThrottle(UserRateThrottle):
-    """Scope 'phone_verification' (settings): generación de códigos por usuario."""
-    scope = 'phone_verification'
 
 class SocialAuthRateThrottle(AnonRateThrottle):
     """Scope 'social_auth' (settings): cada exchange pega una llamada al
@@ -300,46 +294,6 @@ class VerifyEmailResendView(APIView):
             return Response({'Exito': 'Tu correo ya está verificado.'}, status = status.HTTP_200_OK)
         SendVerificationEmailQuery(request.user)
         return Response({'Exito': 'Te reenviamos el correo de verificación. Revisá tu casilla (y el spam).'}, status = status.HTTP_200_OK)
-
-
-#=================================
-# PHONE VERIFICATION (Firebase Phone Auth — costo $0)
-#=================================
-# El usuario recibe un SMS de Firebase (plan Spark: 10/día gratis, sin
-# tarjeta), confirma el código en el frontend con el SDK de Firebase y nos
-# manda el idToken resultante — acá se valida contra Identity Toolkit y se
-# compara el phoneNumber verificado por Google con profile.phone.
-class VerifyPhoneConfirmView(APIView):
-    """
-    POST /api/verify-phone/ {id_token}: marca phone_verified si el número
-    verificado por Firebase coincide con el celular del perfil.
-    """
-    permission_classes  =   [IsAuthenticated]
-    throttle_classes    =   [VerifyPhoneRateThrottle]
-
-    def post(self, request):
-        profile =   getattr(request.user, 'profile', None)
-        if not profile or not profile.phone:
-            return Response({'detail': 'Cargá tu número de celular en tu perfil primero.'}, status = status.HTTP_400_BAD_REQUEST)
-        if profile.phone_verified:
-            return Response({'Exito': 'Tu celular ya está verificado.'}, status = status.HTTP_200_OK)
-        if not FIREBASE_API_KEY:
-            return Response({'detail': 'La verificación por SMS no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
-        if not ConfirmPhoneVerificationQuery(profile, request.data.get('id_token', '')):
-            return Response({'detail': 'El código no es válido o ya venció. Pedí un SMS nuevo.'}, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'Exito': 'Tu celular quedó verificado.'}, status = status.HTTP_200_OK)
-
-
-class VerifyPhoneStatusView(APIView):
-    """
-    GET /api/verify-phone/status/: consulta liviana del flag — devuelve solo
-    el booleano, no el perfil entero.
-    """
-    permission_classes  =   [IsAuthenticated]
-
-    def get(self, request):
-        profile =   getattr(request.user, 'profile', None)
-        return Response({'phone_verified': bool(profile and profile.phone_verified)}, status = status.HTTP_200_OK)
 
 
 #=================================

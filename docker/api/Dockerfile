@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1
 # check=skip=SecretsUsedInArgOrEnv
-# La config web de Firebase (apiKey/authDomain/...) es PÚBLICA por diseño:
-# viaja en el bundle del browser; la protección real son los Authorized
-# domains del proyecto + la cuota Spark. No son secretos — el check no aplica.
+# El client ID de Google es PÚBLICO por diseño: viaja en el bundle del
+# browser; no es un secreto — el check de ARG/ENV no aplica.
 # Imagen de la API DRF (gunicorn) — también la usa el worker Celery y el job migrate.
 
 # ---------- Stage 1: compila wheels de requirements.txt ----------
@@ -35,13 +34,6 @@ ARG VITE_PLATFORM_DOMAIN=daventsaas.onrender.com
 ARG VITE_APP_URL=https://daventsaas.onrender.com
 ARG VITE_APP_NAME=DAVENT
 ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
-# Firebase Phone Auth: config web pública por diseño (viaja en el bundle);
-# defaults = el proyecto davent-f089b. Render no pasa env vars al build, así
-# que el default es lo que hace que la feature exista en el bundle de prod.
-ARG VITE_FIREBASE_API_KEY=AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
-ARG VITE_FIREBASE_AUTH_DOMAIN=davent-f089b.firebaseapp.com
-ARG VITE_FIREBASE_PROJECT_ID=davent-f089b
-ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
 # Login social (Google): el client ID es público por diseño (viaja en cada
 # página). Vacío = botón oculto.
 ARG VITE_GOOGLE_CLIENT_ID=10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
@@ -50,10 +42,6 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_APP_URL=$VITE_APP_URL \
     VITE_APP_NAME=$VITE_APP_NAME \
     VITE_APP_TAGLINE=$VITE_APP_TAGLINE \
-    VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
-    VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
-    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
-    VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
     VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 

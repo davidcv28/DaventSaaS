@@ -1,8 +1,6 @@
 import logging
-import re
 from datetime import timedelta
 
-import requests
 from decouple import config
 from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
@@ -304,51 +302,9 @@ def VerifyEmailQuery(uid_b64 : str, token : str) -> bool:
         profile.save(update_fields = ['email_verified', 'email_verified_at'])
     return True
 #=================================
-# PHONE VERIFICATION QUERYS (Firebase Phone Auth — costo $0)
+# PHONE VERIFICATION — retirada
 #=================================
-#El usuario recibe un SMS de Firebase con un código; el SDK JS confirma el
-#código y obtiene un idToken. Acá lo validamos con la API REST de Identity
-#Toolkit (accounts:lookup): devuelve el phoneNumber que Firebase ya verificó
-#y lo comparamos con profile.phone — verificar es probar posesión DEL número
-#registrado, no de otro. Plan Spark: 10 SMS/día gratis, sin tarjeta.
-#FIREBASE_API_KEY vacía = feature apagada: el endpoint responde 503.
-FIREBASE_API_KEY        =   config('FIREBASE_API_KEY', default = '')
-_FIREBASE_LOOKUP_URL    =   'https://identitytoolkit.googleapis.com/v1/accounts:lookup'
-
-def _national_phone(raw : str) -> str:
-    #Normaliza a número nacional argentino: el perfil guarda +549... y Firebase
-    #devuelve +549... — pero un 54... sin el 9 debe matchear igual.
-    digits  =   re.sub(r'\D', '', raw or '')
-    if digits.startswith('54'):
-        digits  =   digits[2:]
-    if digits.startswith('9') and len(digits) > 10:
-        digits  =   digits[1:]
-    return digits
-
-def ConfirmPhoneVerificationQuery(profile : UserProfile, id_token : str) -> bool:
-    """
-    Valida el idToken post-confirmación del SMS contra Identity Toolkit y
-    marca el perfil solo si el phoneNumber verificado por Firebase matchea.
-    """
-    if not FIREBASE_API_KEY or not (id_token or '').strip():
-        return False
-    try:
-        resp    =   requests.post(
-            f'{_FIREBASE_LOOKUP_URL}?key={FIREBASE_API_KEY}',
-            json    =   {'idToken': id_token},
-            timeout =   10,
-        )
-        data    =   resp.json() if resp.ok else {}
-    except (requests.RequestException, ValueError):
-        logger.exception('Falló la consulta a Firebase Identity Toolkit')
-        return False
-    users   =   data.get('users') or []
-    phone   =   users[0].get('phoneNumber') if users else None
-    if not phone or not profile.phone:
-        return False
-    if _national_phone(profile.phone) != _national_phone(phone):
-        return False
-    profile.phone_verified    =   True
-    profile.phone_verified_at =   timezone.now()
-    profile.save(update_fields = ['phone_verified', 'phone_verified_at'])
-    return True
+#El SMS por Firebase se deshabilitó: la cuota Spark (~10 SMS/día) no escala y
+#el control de abuso ya lo cubren el celular único por cuenta + los cupones.
+#Los campos phone_verified/phone_verified_at quedan en el modelo como dato
+#histórico; UpdateProfileQuery sigue reseteando el flag si cambia el número.
