@@ -33,6 +33,9 @@ class Store(models.Model):
 #=========================================
 # STORE CUSTOMIZATION MODEL
 #=========================================
+def default_site_templates():
+    """Web mínima por defecto: portada + catálogo (el viejo site_mode='both')."""
+    return ['landing', 'catalog']
 class StoreCustomization(models.Model):
     """
     Apariencia y contenido editable de la web pública del cliente.
@@ -188,7 +191,7 @@ class StoreCustomization(models.Model):
     #mantiene show_catalog sincronizado ('catalog' presente -> True) y
     #expone site_mode derivado para compat con las plantillas del catálogo.
     SITE_TEMPLATES              =   ('landing', 'services', 'catalog')
-    site_templates              =   models.JSONField(default = lambda: ['landing', 'catalog'], blank = True, verbose_name = 'Páginas de la web')
+    site_templates              =   models.JSONField(default = default_site_templates, blank = True, verbose_name = 'Páginas de la web')
     #===== Config de la página "Servicios" (dominio services) =====
     #Bloques del embudo de pedido: los pasos "cómo funciona" (filas
     #{icon,title,text}), los días y franjas que ofrece el formulario,

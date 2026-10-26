@@ -357,3 +357,25 @@ class ServicePageConfigTests(TestCase):
             'service_days': ['Lunes', '  lunes ', '', 'Martes'],
         }, format = 'json')
         self.assertEqual(response.data['customization']['service_days'], ['Lunes', 'Martes'])
+
+
+class ServiceNoTransactionsTests(TestCase):
+    """
+    Regla dura del producto: la web nunca persiste pedidos, reservas ni
+    pagos — la selección del visitante viaja en un mensaje de WhatsApp.
+    El dominio solo tiene StoreService (ítems de la página) y no existe
+    ningún endpoint de booking/order/checkout bajo /api/services/.
+    """
+
+    def test_services_app_has_no_transaction_models(self):
+        from django.apps import apps
+        models      =   {m.__name__.lower() for m in apps.get_app_config('services').get_models()}
+        self.assertEqual(models, {'storeservice'})
+        forbidden =   ('order', 'booking', 'reservation', 'payment', 'invoice', 'cart', 'checkout')
+        self.assertFalse(any(word in name for name in models for word in forbidden))
+
+    def test_no_booking_endpoint_under_services(self):
+        client      =   APIClient()
+        for path in ('/api/services/book/', '/api/services/order/1/', '/api/services/pay/'):
+            self.assertIn(client.post(path, {}, format = 'json').status_code, (401, 404))
+

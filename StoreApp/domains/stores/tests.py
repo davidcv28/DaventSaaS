@@ -137,7 +137,14 @@ class StoreCatalogToggleTests(TestCase):
             status              =   Suscription.STATUS_ACTIVE,
         )
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
-        StoreCustomization.objects.create(store = store, show_catalog = show_catalog)
+        #El catálogo se apaga sacando 'catalog' de site_templates (el flag
+        #show_catalog queda derivado: el serializer lo sincroniza y el
+        #payload público lo expone desde el set efectivo).
+        StoreCustomization.objects.create(
+            store               =   store,
+            show_catalog        =   show_catalog,
+            site_templates      =   ['landing', 'catalog'] if show_catalog else ['landing'],
+        )
 
     def test_public_catalog_ok_when_enabled(self):
         self._make_store(show_catalog = True)
