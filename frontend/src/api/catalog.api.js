@@ -27,6 +27,11 @@ import { http } from './http.js'
 // descuento se activa y vence solo (status: scheduled|active|ended|paused).
 // El precio promocionado viaja en product.discount_offer/discount_names
 // (mi lista) y en offer_price efectivo (catálogo público).
+//
+// GET    /api/reviews/                    Bearer -> [{id,product,product_name,rating,text,name,surname,email,created_at}]
+// DELETE /api/reviews/<pk>/               Bearer -> {Exito}
+// Opiniones de visitantes (valoraciones 1-5 y/o comentarios): se crean en
+// la web pública con captcha; acá el dueño solo las lista y las borra.
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -122,6 +127,16 @@ export const catalogApi = {
   },
   async deleteDiscount(pk) {
     const { data } = await http.delete(`/discounts/${pk}/`)
+    return data
+  },
+
+  // ----- Opiniones de visitantes (moderación del dueño) -----
+  async listReviews() {
+    const { data } = await http.get('/reviews/', { params: { page_size: 500 } })
+    return unwrap(data)
+  },
+  async deleteReview(pk) {
+    const { data } = await http.delete(`/reviews/${pk}/`)
     return data
   }
 }

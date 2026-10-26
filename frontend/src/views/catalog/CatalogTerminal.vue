@@ -5,6 +5,7 @@ import { productOffer, effectivePrice, offerPct } from '../../api/catalog.api.js
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Terminal: el catálogo como salida de consola — barra de ventana, prompt
 // con el buscador, filtros como flags [--cat=...] y los productos como un
@@ -77,7 +78,7 @@ const pad = (n) => String(n + 1).padStart(3, '0')
           >
             <span role="cell" class="cv-tm-id">{{ pad(i) }}</span>
             <span role="cell" class="cv-tm-thumb"><img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" /><AppIcon v-else name="package" :size="16" /></span>
-            <span role="cell" class="cv-tm-name">{{ p.name }}<em v-if="productOffer(p) != null"> -{{ offerPct(p) }}%</em></span>
+            <span role="cell" class="cv-tm-name">{{ p.name }}<em v-if="productOffer(p) != null"> -{{ offerPct(p) }}%</em><ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="11" /></span>
             <span role="cell" class="cv-tm-hide cv-tm-dim">{{ categoryNameOf(p) || '—' }}</span>
             <span role="cell" class="cv-tm-hide cv-tm-dim">{{ brandNameOf(p) || '—' }}</span>
             <span role="cell" class="cv-tm-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>

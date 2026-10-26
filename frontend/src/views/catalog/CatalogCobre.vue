@@ -7,6 +7,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Cobre: retail de indumentaria — placa de acento con titular condensado,
 // barra de colección fija con las categorías como pestañas, y una grilla de
@@ -75,6 +76,7 @@ const {
         <div class="cv-cb-cap">
           <div>
             <h3 class="cv-cb-name">{{ p.name }}</h3>
+            <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
             <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-cb-meta">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' / ') }}</p>
           </div>
           <p class="cv-cb-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>

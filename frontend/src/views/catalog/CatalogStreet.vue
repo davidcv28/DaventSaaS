@@ -8,6 +8,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Urbano: streetwear — titular XXL en outline, cinta de ticker con las
 // categorías, filtros como stickers con sombra dura y fichas numeradas de
@@ -90,6 +91,7 @@ const pad = (n) => String(n + 1).padStart(2, '0')
         <div class="cv-st-body">
           <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-st-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' / ') }}</p>
           <h3 class="cv-st-name">{{ p.name }}</h3>
+          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
           <p class="cv-st-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
         </div>
         <span class="cv-st-arrow" aria-hidden="true"><AppIcon name="arrow-up-right" :size="18" /></span>

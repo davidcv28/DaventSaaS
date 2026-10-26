@@ -28,6 +28,13 @@ import { storeUrl } from '../config/env.js'
 // POST /api/stores/public/<slug>/contact/       público {name, email, message, website (honeypot),
 //                                                        challenge_id, captcha_answer} -> envía el
 //                                                        mensaje por email al dueño (throttle 10/h por IP)
+// GET  /api/stores/public/<slug>/reviews/captcha/ público -> {challenge_id, question} (mismo captcha)
+// GET  /api/stores/public/<slug>/products/<id>/reviews/ público -> [{rating, text, name, surname_initial, created_at}]
+// POST /api/stores/public/<slug>/products/<id>/reviews/ público {rating?, text?, name, surname, email,
+//                                                        website (honeypot), challenge_id, captcha_answer}
+//                                                        -> 404 si la tienda apagó valoraciones y comentarios;
+//                                                        el texto solo viaja con show_comments (premium,
+//                                                        has_product_comments); throttle 10/h por IP
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
 //                                                about_title?, about_text?, show_about?, contact_email?, show_contact?,
@@ -40,7 +47,8 @@ import { storeUrl } from '../config/env.js'
 //                                           se descarta si no está en el nivel del plan (Básico:
 //                                           Clásico/Perspectiva; Estándar suma Urbano/Publicidad;
 //                                           Premium todo); sin 'has_location_map' (Estándar+)
-//                                           descarta show_location
+//                                           descarta show_location; sin 'has_product_comments'
+//                                           (premium) descarta show_comments
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/logo/ Bearer   -> quita el logo y libera la cuota
@@ -124,6 +132,23 @@ export const storesApi = {
 
   async sendContact(slug, payload) {
     const { data } = await http.post(`/stores/public/${slug}/contact/`, payload)
+    return data
+  },
+
+  // Opiniones de producto (valoraciones/comentarios de visitantes): mismo
+  // captcha firmado que el contacto + honeypot 'website' en el payload.
+  async reviewCaptcha(slug) {
+    const { data } = await http.get(`/stores/public/${slug}/reviews/captcha/`)
+    return data
+  },
+
+  async productReviews(slug, productId) {
+    const { data } = await http.get(`/stores/public/${slug}/products/${productId}/reviews/`)
+    return data
+  },
+
+  async sendProductReview(slug, productId, payload) {
+    const { data } = await http.post(`/stores/public/${slug}/products/${productId}/reviews/`, payload)
     return data
   },
 
@@ -293,6 +318,8 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_catalog: true,
   site_mode: 'both',
   show_highlights: true,
+  show_reviews: false,
+  show_comments: false,
   logo: null,
   cover: null,
   carousel: [],

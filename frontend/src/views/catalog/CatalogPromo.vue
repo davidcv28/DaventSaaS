@@ -8,6 +8,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Publicidad: el catálogo como folleto de campaña — afiche con ráfaga, un
 // carril "Ofertas" con carteles de descuento y la grilla completa donde cada
@@ -54,6 +55,7 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
           </div>
           <div class="cv-pr-poster-body">
             <h3>{{ p.name }}</h3>
+            <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
             <p class="cv-pr-was">{{ formatARS(p.price) }}</p>
             <p class="cv-pr-now">{{ formatARS(effectivePrice(p)) }}</p>
           </div>
@@ -87,6 +89,7 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
           <div class="cv-pr-body">
             <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-pr-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
             <h3 class="cv-pr-name">{{ p.name }}</h3>
+            <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
             <p class="cv-pr-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
             <a v-if="whatsappUrl" class="cv-pr-cta" :href="askUrl(p)" target="_blank" rel="noopener" @click.stop><AppIcon name="whatsapp" :size="16" /> Lo quiero</a>
             <button v-else type="button" class="cv-pr-cta" @click="openProduct(p)"><AppIcon name="eye" :size="16" /> Ver producto</button>

@@ -1303,6 +1303,29 @@ html { scroll-behavior: smooth; }
 .spd-specs tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--sp-soft) 45%, transparent); }
 .spd-desc { margin: 0; font-size: 15px; line-height: 1.75; color: var(--sp-ink-2); white-space: pre-line; overflow-wrap: anywhere; }
 
+/* ===== Opiniones del producto (valoraciones + comentarios) ===== */
+.spd-stars { margin: 6px 0 2px; }
+.spd-reviews .spd-sec-title { margin: 0; }
+.spd-rev-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.spd-rev-empty { margin: 0 0 18px; font-size: 14px; color: var(--sp-muted); }
+.spd-rev-list { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 12px; }
+.spd-rev-item { border: 1px solid var(--sp-line); border-radius: 14px; padding: 14px 16px; background: var(--sp-card); }
+.spd-rev-top { display: flex; align-items: center; gap: 10px; }
+.spd-rev-avatar { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--store-accent) 16%, var(--sp-soft)); color: var(--sp-accent-text); font-weight: 800; font-size: 14px; }
+.spd-rev-who { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.spd-rev-who strong { font-size: 13.5px; }
+.spd-rev-who time { font-size: 11.5px; color: var(--sp-muted); }
+.spd-rev-text { margin: 10px 0 0 44px; font-size: 14px; line-height: 1.6; color: var(--sp-ink-2); overflow-wrap: anywhere; }
+.spd-rev-form { margin-top: 4px; box-shadow: var(--sp-shadow-sm); }
+.spd-rev-form-head { display: flex; align-items: center; gap: 12px; }
+.spd-rev-form-head strong { display: block; font-size: 15px; }
+.spd-rev-form-head small { display: block; font-size: 12.5px; color: var(--sp-muted); margin-top: 1px; }
+.spd-rev-pick { display: inline-flex; gap: 2px; }
+.spd-rev-pick-star { display: grid; place-items: center; width: 32px; height: 32px; border: none; background: none; color: var(--sp-line); cursor: pointer; padding: 0; transition: color .15s, transform .15s; }
+.spd-rev-pick-star.on { color: #e8a020; }
+.spd-rev-pick-star:hover { transform: scale(1.15); }
+.store-page[data-store-theme='dark'] .spd-rev-item { background: color-mix(in srgb, var(--store-accent) 7%, transparent); }
+
 .spd-related { margin-top: 28px; }
 .spd-rel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .spd-rel { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--sp-line); border-radius: 14px; background: var(--sp-card); color: var(--sp-ink); text-decoration: none; box-shadow: var(--sp-shadow-sm); transition: border-color .2s, box-shadow .3s var(--sp-ease), transform .3s var(--sp-ease); }

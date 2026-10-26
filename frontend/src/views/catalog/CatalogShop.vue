@@ -8,6 +8,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Tienda Pro: resultados de marketplace — columna de filtros a la izquierda,
 // barra de resultados con orden y selector grilla/lista, chips de filtros
@@ -95,6 +96,7 @@ const filtersOpen = ref(false)
             <div class="cv-sh-body">
               <p v-if="brandNameOf(p) || categoryNameOf(p)" class="cv-sh-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</p>
               <h3 class="cv-sh-name">{{ p.name }}</h3>
+              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
               <p v-if="p.description" class="cv-sh-desc">{{ p.description }}</p>
               <p v-if="productOffer(p) != null" class="cv-sh-was">{{ formatARS(p.price) }}</p>
               <p class="cv-sh-price-row">

@@ -545,7 +545,7 @@ class ReviewTests(TestCase):
 
     def _setup(self, comments = True, reviews = True):
         _, profile      =   _make_user('duenio')
-        _grant(profile, has_public_link = True, has_product_comments = True)
+        _grant(profile, has_public_link = True, has_product_comments = True, has_customization = True)
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
         StoreCustomization.objects.create(
             store = store, show_reviews = reviews, show_comments = comments,
@@ -689,13 +689,21 @@ class ReviewTests(TestCase):
         self.assertEqual(client.post(REVIEWS_URL, {'rating': 5}).status_code, 405)
 
     def test_customization_patch_discards_comments_without_benefit(self):
-        store, _        =   self._setup()
+        store, _        =   self._setup(comments = False)
         PlanBenefit.objects.filter(benefit__code = 'has_product_comments').delete()
         client          =   APIClient()
         client.force_authenticate(user = store.user.user)
         client.patch(CUSTOMIZATION_URL, {'show_comments': True}, format = 'json')
         store.customization.refresh_from_db()
         self.assertFalse(store.customization.show_comments)
+
+    def test_customization_patch_saves_comments_with_benefit(self):
+        store, _        =   self._setup(comments = False)
+        client          =   APIClient()
+        client.force_authenticate(user = store.user.user)
+        client.patch(CUSTOMIZATION_URL, {'show_comments': True}, format = 'json')
+        store.customization.refresh_from_db()
+        self.assertTrue(store.customization.show_comments)
 
     def test_public_store_hides_comments_flag_without_benefit(self):
         store, _        =   self._setup()

@@ -7,6 +7,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Dúo: pantalla partida — a la izquierda un panel fijo con la presentación,
 // la navegación por categorías y los filtros; a la derecha el catálogo como
@@ -78,6 +79,7 @@ const {
             <div class="cv-du-copy">
               <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-du-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
               <h3 class="cv-du-name">{{ p.name }}</h3>
+              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
               <p v-if="p.description" class="cv-du-desc">{{ p.description }}</p>
               <div class="cv-du-foot">
                 <span class="cv-du-price-tag"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>

@@ -7,6 +7,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Boutique: departamentos primero — título serif centrado con ornamento,
 // una fila de departamentos redondos con la foto de su primera prenda y una
@@ -73,6 +74,7 @@ const {
         <div class="cv-bt-body">
           <p v-if="brandNameOf(p) || categoryNameOf(p)" class="cv-bt-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</p>
           <h3 class="cv-bt-name">{{ p.name }}</h3>
+          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
           <p class="cv-bt-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
         </div>
       </article>

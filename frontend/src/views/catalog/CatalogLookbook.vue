@@ -7,6 +7,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 
 // Lookbook: el catálogo como edición de revista — título serif con índice de
 // contenidos (las categorías, numeradas), filtros escritos como texto
@@ -64,6 +65,7 @@ const pad = (n) => String(n).padStart(2, '0')
         <figcaption>
           <span class="cv-lb-no">Nº {{ pad(i + 1) }}</span>
           <h3 class="cv-lb-name">{{ p.name }}</h3>
+          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
           <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-lb-meta">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' — ') }}</p>
           <p class="cv-lb-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
         </figcaption>

@@ -5,6 +5,8 @@ import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../api/catalog.api.js'
 import AppIcon from '../components/AppIcon.vue'
+import ProductStars from '../components/ProductStars.vue'
+import ProductReviews from '../components/ProductReviews.vue'
 import { vReveal } from '../directives/reveal.js'
 
 // Página de producto estilo marketplace (/<slug>/producto/<id>): migas,
@@ -143,6 +145,7 @@ onMounted(() => {
               </button>
             </div>
             <h1 class="spd-name">{{ product.name }}</h1>
+            <ProductStars v-if="custom.show_reviews && product.rating_count" class="spd-stars" :avg="product.rating_avg" :count="product.rating_count" :size="15" show-value />
             <p v-if="brandName" class="spd-brand">Marca: {{ brandName }}</p>
 
             <div class="spd-pricebox">
@@ -213,6 +216,17 @@ onMounted(() => {
           <h2 id="spd-desc-title" class="spd-sec-title">Descripción</h2>
           <p class="spd-desc">{{ product.description }}</p>
         </section>
+
+        <!-- Opiniones de visitantes (valoraciones y/o comentarios premium) -->
+        <ProductReviews
+          v-if="custom.show_reviews || custom.show_comments"
+          :slug="slug"
+          :product-id="product.id"
+          :can-rate="custom.show_reviews"
+          :can-comment="custom.show_comments"
+          :avg="product.rating_avg"
+          :count="product.rating_count || 0"
+        />
       </article>
 
       <!-- Relacionados -->

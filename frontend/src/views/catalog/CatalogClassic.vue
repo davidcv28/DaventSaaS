@@ -6,6 +6,7 @@ import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import ProductStars from '../../components/ProductStars.vue'
 import { vReveal } from '../../directives/reveal.js'
 
 // Página de catálogo de la web pública (/<slug>/catalogo): navegación por
@@ -438,6 +439,7 @@ onBeforeUnmount(() => {
                 <span v-if="brandNameOf(p)">{{ brandNameOf(p) }}</span>
               </p>
               <h3 class="sp-card-name">{{ p.name }}</h3>
+              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :size="12" />
               <p v-if="productDiscount(p)" class="sp-card-promo">
                 <AppIcon name="tag" :size="12" aria-hidden="true" />
                 {{ productDiscount(p).name }}<span v-if="offerEndsLabel(productDiscount(p))" class="sp-card-promo-ends"> · {{ offerEndsLabel(productDiscount(p)) }}</span>

@@ -24,7 +24,7 @@ import {
   validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel
 } from '../api/stores.api.js'
 import {
-  validateTaxonomyName, validateProductName, validateProductPrice, validateProductOffer, validateProductDescription,
+  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
   catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures,
   DISCOUNT_SCOPES, discountStatusMeta, discountScopeLabel, discountWindowLabel,
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
@@ -500,8 +500,14 @@ const catalogLoaded = ref(false)
 // página de catálogo": el dueño controla el catálogo por separado del
 // diseño general de su web.
 
-const productForm = reactive({ name: '', price: '', offer_price: '', category: '', brand: '', description: '', is_active: true })
+// offer_price ya no se edita: el precio promocionado lo dan los descuentos
+// programados (pestaña Descuentos). Los productos viejos que lo tengan lo
+// conservan hasta que el dueño lo quite — legacyOffer lo muestra y el
+// botón "Quitar" lo limpia al guardar.
+const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true })
 const productTouched = reactive({})
+const legacyOffer = ref(null)
+const offerCleared = ref(false)
 const productBusy = ref(false)
 const productEditing = ref(null)
 const productImage = ref(null)
@@ -614,11 +620,9 @@ const productErrors = computed(() => {
   const e = {}
   const n = validateProductName(productForm.name)
   const p = validateProductPrice(productForm.price)
-  const o = validateProductOffer(productForm.offer_price, productForm.price)
   const d = validateProductDescription(productForm.description.trim())
   if (n) e.name = n
   if (p) e.price = p
-  if (o) e.offer_price = o
   if (d) e.description = d
   if (featuresErr.value) e.features = featuresErr.value
   return e
@@ -676,7 +680,9 @@ function restoreProductOriginal() {
 
 function resetProductForm() {
   productOriginal.value = null
-  Object.assign(productForm, { name: '', price: '', offer_price: '', category: '', brand: '', description: '', is_active: true })
+  Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true })
+  legacyOffer.value = null
+  offerCleared.value = false
   productFeatures.value = []
   Object.keys(productTouched).forEach((k) => { productTouched[k] = false })
   productEditing.value = null
@@ -689,9 +695,11 @@ function resetProductForm() {
 function editProduct(p) {
   productEditing.value = p.id
   Object.assign(productForm, {
-    name: p.name, price: p.price, offer_price: p.offer_price ?? '', category: p.category || '', brand: p.brand || '',
+    name: p.name, price: p.price, category: p.category || '', brand: p.brand || '',
     description: p.description || '', is_active: p.is_active
   })
+  legacyOffer.value = p.offer_price ?? null
+  offerCleared.value = false
   productFeatures.value = Object.entries(p.features || {}).map(([name, value]) => ({ name, value }))
   if (p.category) applyCategorySchema(p.category)
   productImage.value = null
@@ -711,8 +719,10 @@ async function saveProduct() {
     fields: {
       name: productForm.name.trim(),
       price: productForm.price,
-      // '' viaja como vacío y el backend lo mapea a None (quita la oferta).
-      offer_price: productForm.offer_price,
+      // La oferta manual legada solo viaja cuando el dueño la quitó:
+      // '' mapea a None en el backend. Sin el flag no se envía y el valor
+      // guardado queda intacto mientras migra a Descuentos.
+      ...(offerCleared.value ? { offer_price: '' } : {}),
       category: productForm.category,
       brand: productForm.brand,
       description: productForm.description.trim(),
@@ -1039,6 +1049,7 @@ const designTabs = [
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
+const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_product_comments))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
@@ -1342,6 +1353,46 @@ async function setSiteMode(mode) {
     designForm.show_catalog = prev !== 'marketing'
   }
   catalogPageBusy.value = false
+}
+
+// Valoraciones/comentarios de la web pública: toggles instantáneos como
+// site_mode ("Opciones avanzadas" no tiene botón de guardar). Los comentarios
+// piden has_product_comments (premium); el backend descarta show_comments
+// sin el flag, así que el checkbox solo se bloquea en la UI.
+const reviewToggleBusy = ref(false)
+async function toggleShowReviews() {
+  if (reviewToggleBusy.value) return
+  const prev = designForm.show_reviews
+  designForm.show_reviews = !prev
+  reviewToggleBusy.value = true
+  const ok = await store.saveCustomization({ show_reviews: designForm.show_reviews })
+  if (!ok) designForm.show_reviews = prev
+  reviewToggleBusy.value = false
+}
+async function toggleShowComments() {
+  if (reviewToggleBusy.value || !canProductComments.value) return
+  const prev = designForm.show_comments
+  designForm.show_comments = !prev
+  reviewToggleBusy.value = true
+  const ok = await store.saveCustomization({ show_comments: designForm.show_comments })
+  if (!ok) designForm.show_comments = prev
+  reviewToggleBusy.value = false
+}
+
+// ----- Opiniones recibidas (pestaña del catálogo: moderación, solo borrado) -----
+const reviewsLoaded = ref(false)
+const reviewDeleting = ref(null)
+watch(catalogTab, (t) => {
+  if (t === 'reviews' && !reviewsLoaded.value) {
+    reviewsLoaded.value = true
+    catalog.loadReviews()
+  }
+})
+async function onDeleteReview(r) {
+  if (reviewDeleting.value === r.id) return
+  reviewDeleting.value = r.id
+  await catalog.removeReview(r.id)
+  reviewDeleting.value = null
 }
 
 // Carrusel de banners de la web pública (premium, has_design_advanced). Misma
@@ -2032,6 +2083,9 @@ async function changePassword() {
           <button type="button" class="tab" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
             <AppIcon name="percent" :size="16" /> Descuentos <small class="tab-sub">se activan solos</small>
           </button>
+          <button type="button" class="tab" :class="{ active: catalogTab === 'reviews' }" @click="catalogTab = 'reviews'">
+            <AppIcon name="star" :size="16" /> Opiniones
+          </button>
         </div>
 
         <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
@@ -2046,8 +2100,13 @@ async function changePassword() {
               <AppInput v-model="productForm.name" label="Nombre" name="prod_name" placeholder="Ej. Remera oversize" :error="productFieldErr('name')" @blur="productTouched.name = true" />
               <div class="grid-2">
                 <AppInput v-model="productForm.price" label="Precio" name="prod_price" type="number" min="0" step="0.01" placeholder="0.00" :error="productFieldErr('price')" @blur="productTouched.price = true" />
-                <AppInput v-model="productForm.offer_price" label="Precio de oferta" name="prod_offer" type="number" min="0" step="0.01" placeholder="Opcional" hint="Si es menor que el precio, tu web lo muestra tachado con el descuento." :error="productFieldErr('offer_price')" @blur="productTouched.offer_price = true" />
               </div>
+              <div v-if="legacyOffer && !offerCleared" class="legacy-offer">
+                <AppIcon name="tag" :size="14" aria-hidden="true" />
+                <span>Este producto tiene una oferta manual: <strong>{{ formatARS(legacyOffer) }}</strong>. Las ofertas ahora se programan en «Descuentos».</span>
+                <button type="button" class="legacy-offer-btn" @click="offerCleared = true">Quitar</button>
+              </div>
+              <p v-else class="hint">¿Oferta? Programala en la pestaña «Descuentos»: se activa y vence sola.</p>
               <div class="form-step"><span class="form-step-num">2</span> Sumá una foto</div>
               <div class="field">
                 <label id="prod-image-label">Imagen</label>
@@ -2342,6 +2401,36 @@ async function changePassword() {
               </ul>
             </div>
           </div>
+          <!-- -------- Opiniones de visitantes (moderación) -------- -->
+          <div v-show="catalogTab === 'reviews'" class="card">
+            <h3><AppIcon name="star" :size="18" /> Opiniones recibidas</h3>
+            <p class="hint">Valoraciones y comentarios que los visitantes dejan en tu web. Podés borrar los que no quieras mostrar.</p>
+            <div v-if="!catalog.reviews.length" class="empty-mini">Todavía no recibiste opiniones. Activá las valoraciones desde «Opciones avanzadas».</div>
+            <ul v-else class="rev-list">
+              <li v-for="r in catalog.reviews" :key="r.id" class="rev-item">
+                <div class="rev-head">
+                  <span v-if="r.rating" class="rev-stars" :aria-label="`${r.rating} de 5 estrellas`">
+                    <AppIcon v-for="i in 5" :key="i" name="star" :size="13" :class="{ 'rev-off': i > r.rating }" />
+                  </span>
+                  <strong>{{ r.name }} {{ r.surname }}</strong>
+                  <span class="rev-mail">{{ r.email }}</span>
+                  <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
+                </div>
+                <p v-if="r.text" class="rev-text">{{ r.text }}</p>
+                <div class="rev-foot">
+                  <span class="rev-prod"><AppIcon name="package" :size="12" /> {{ r.product_name }}</span>
+                  <button
+                    type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
+                    :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"
+                  >
+                    <span v-if="reviewDeleting === r.id" class="spinner" aria-hidden="true"></span>
+                    <AppIcon v-else name="trash" :size="15" />
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+
           <!-- -------- Opciones avanzadas -------- -->
           <details class="card more-card">
             <summary><AppIcon name="store" :size="18" /> Opciones avanzadas de tu catálogo <small>Tipo de web y carrusel de portada</small></summary>
@@ -2353,6 +2442,25 @@ async function changePassword() {
                   <span class="check-text">
                     <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
                     <small>{{ m.hint }}</small>
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="field">
+              <label id="reviews-toggle-label">Opiniones de tus clientes</label>
+              <div class="check-list" role="group" aria-labelledby="reviews-toggle-label">
+                <label class="check-item" :class="{ disabled: reviewToggleBusy }">
+                  <input type="checkbox" :checked="designForm.show_reviews" :disabled="reviewToggleBusy" @change="toggleShowReviews" />
+                  <span class="check-text">
+                    <strong>Valoraciones con estrellas</strong>
+                    <small>Los visitantes puntúan cada producto de 1 a 5; el promedio se ve en el catálogo.</small>
+                  </span>
+                </label>
+                <label class="check-item" :class="{ disabled: !canProductComments || reviewToggleBusy }">
+                  <input type="checkbox" :checked="designForm.show_comments" :disabled="!canProductComments || reviewToggleBusy" @change="toggleShowComments" />
+                  <span class="check-text">
+                    <strong>Comentarios en productos <span v-if="!canProductComments" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></strong>
+                    <small>{{ canProductComments ? 'Opinan con nombre, apellido, email y captcha antispam. Los moderás en la pestaña Opiniones.' : 'Disponible con el Plan premium.' }}</small>
                   </span>
                 </label>
               </div>

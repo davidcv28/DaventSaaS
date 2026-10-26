@@ -10,6 +10,7 @@ export const useCatalogStore = defineStore('catalog', () => {
   const brands = ref([])
   const products = ref([])
   const discounts = ref([])
+  const reviews = ref([])
   const status = ref('idle') // idle | loading | success | error
   const lastError = ref('')
   const notice = ref('')
@@ -154,11 +155,28 @@ export const useCatalogStore = defineStore('catalog', () => {
     return res.ok
   }
 
+  // ----- Opiniones de visitantes (moderación: solo listar y borrar) -----
+  async function loadReviews() {
+    try {
+      reviews.value = await catalogApi.listReviews()
+    } catch (e) {
+      setApiError(e)
+    }
+  }
+  async function removeReview(pk) {
+    const res = await run(() => catalogApi.deleteReview(pk), 'La opinión se eliminó.')
+    if (res.ok) {
+      reviews.value = reviews.value.filter((r) => r.id !== pk)
+    }
+    return res.ok
+  }
+
   function reset() {
     categories.value = []
     brands.value = []
     products.value = []
     discounts.value = []
+    reviews.value = []
     status.value = 'idle'
     lastError.value = ''
     notice.value = ''
@@ -167,9 +185,10 @@ export const useCatalogStore = defineStore('catalog', () => {
   }
 
   return {
-    categories, brands, products, discounts, status, lastError, notice, fieldErrors, denied,
+    categories, brands, products, discounts, reviews, status, lastError, notice, fieldErrors, denied,
     productLimitReached,
     loadAll, saveCategory, removeCategory, saveBrand, removeBrand,
-    saveProduct, removeProduct, saveDiscount, toggleDiscount, removeDiscount, reset
+    saveProduct, removeProduct, saveDiscount, toggleDiscount, removeDiscount,
+    loadReviews, removeReview, reset
   }
 })
