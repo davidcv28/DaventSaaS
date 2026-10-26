@@ -10,6 +10,7 @@ from .services import (
     send_message,
     touch_presence,
     staff_online,
+    staff_roster,
     online_customer_ids,
 )
 
@@ -25,5 +26,6 @@ __all__ = [
     'send_message',
     'touch_presence',
     'staff_online',
+    'staff_roster',
     'online_customer_ids',
 ]

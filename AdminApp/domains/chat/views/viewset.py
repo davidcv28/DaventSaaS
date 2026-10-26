@@ -18,6 +18,7 @@ from AdminApp.domains.chat.services       import (
     online_customer_ids,
     send_message,
     staff_online,
+    staff_roster,
     staff_threads_queryset,
     thread_of,
     touch_presence,
@@ -88,6 +89,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
             'messages'      :   ChatMessageSerializer(messages, many = True, context = {'request': request}).data,
             'unread'        :   unread_for(request.user, thread) if thread else 0,
             'staff_online'  :   staff_online(),
+            'staff'         :   staff_roster(),
         })
 
     #=========================================
@@ -144,6 +146,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
         return Response({
             'unread'        :   unread_for(request.user, thread) if thread else 0,
             'staff_online'  :   staff_online(),
+            'staff'         :   staff_roster(),
         })
 
     def _resolve_thread(self, request):

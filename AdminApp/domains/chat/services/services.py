@@ -113,6 +113,22 @@ def staff_online() -> bool:
     return ChatPresence.objects.filter(user__is_staff = True, last_seen__gte = _online_since()).exists()
 
 
+def staff_roster():
+    #Equipo visible para el cliente: solo id, nombre publico y presencia
+    #(nunca email ni datos de cuenta). Conectados primero.
+    since   =   _online_since()
+    online  =   set(ChatPresence.objects.filter(user__is_staff = True, last_seen__gte = since).values_list('user_id', flat = True))
+    roster  =   []
+    for u in User.objects.filter(is_staff = True, is_active = True).order_by('first_name', 'username'):
+        roster.append({
+            'id'        :   u.id,
+            'name'      :   u.get_full_name().strip() or u.username,
+            'online'    :   u.id in online,
+        })
+    roster.sort(key = lambda s: not s['online'])
+    return roster
+
+
 def online_customer_ids():
     #Clientes conectados (para la bandeja del staff). No expone staff.
     return set(

@@ -290,7 +290,7 @@ const navItems = computed(() => {
     items.push({ id: 'pos', label: 'Vender en persona', icon: 'monitor' })
     if (b.has_chatbot) items.push({ id: 'bot', label: 'Asistente de chat', icon: 'bot' })
     if (g.promo.length) items.push({ id: g.promo[0].id, label: 'Promocionar', icon: 'megaphone' })
-    if (b.has_support_chat) items.push({ id: 'support', label: 'Ayuda', icon: 'message-circle' })
+    if (b.has_support_chat) items.push({ id: 'support', label: 'Soporte', icon: 'message-circle' })
   }
   items.push(
     { heading: 'Mi suscripción' },
@@ -1588,8 +1588,27 @@ const chatErr = ref('')
 const chatStaffOnline = ref(false)
 const chatLastId = ref(0)
 const chatBoxEl = ref(null)
+const chatInputEl = ref(null)
+const chatStaff = ref([])
+const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).length)
 let chatPollTimer = null
 let chatBeatTimer = null
+
+function staffInitials(name) {
+  const p = String(name || '?').trim().split(/\s+/)
+  return ((p[0]?.[0] || '?') + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase()
+}
+
+function contactStaff(s) {
+  if (!chatInput.value.trim()) chatInput.value = `Hola ${s.name.split(' ')[0]}, necesito ayuda con `
+  nextTick(() => chatInputEl.value?.focus())
+}
+
+async function requestLiveHelp() {
+  if (chatBusy.value) return
+  chatInput.value = 'Hola, necesito asistencia en vivo, ¿pueden ayudarme?'
+  await sendChat()
+}
 
 function scrollChat() {
   const el = chatBoxEl.value
@@ -1609,6 +1628,7 @@ async function loadChat() {
   try {
     const data = await fetchChat()
     chatStaffOnline.value = Boolean(data.staff_online)
+    chatStaff.value = data.staff || []
     const msgs = data.messages || []
     chatMessages.value = msgs
     chatLastId.value = msgs.length ? msgs[msgs.length - 1].id : 0
@@ -1636,6 +1656,7 @@ async function beatChat() {
   try {
     const data = await chatHeartbeat()
     chatStaffOnline.value = Boolean(data.staff_online)
+    if (data.staff) chatStaff.value = data.staff
   } catch { /* silencioso */ }
 }
 
@@ -1663,7 +1684,7 @@ function startChat() {
   loadChat()
   beatChat()
   chatPollTimer = setInterval(pollChat, 5000)
-  chatBeatTimer = setInterval(beatChat, 45000)
+  chatBeatTimer = setInterval(beatChat, 30000)
 }
 
 function stopChat() {
@@ -3701,42 +3722,77 @@ async function changePassword() {
         <AppButton :loading="botBusy" @click="saveBot">Guardar cambios</AppButton>
       </div>
     </div>
-    <!-- ================= AYUDA (chat con soporte) ================= -->
+    <!-- ================= SOPORTE (equipo + chat en vivo) ================= -->
     <div v-if="seen.support" v-show="section === 'support'" :class="{ 'sec-on': section === 'support' }">
       <div class="page-head">
         <div>
-          <h1>Ayuda</h1>
-          <p>Hablá directamente con el equipo de DAVENT. Te respondemos dentro del horario de atención.</p>
+          <h1>Soporte</h1>
+          <p>Mirá quién del equipo de DAVENT está disponible y pedí asistencia en vivo por chat.</p>
         </div>
         <span class="presence-chip" :class="{ on: chatStaffOnline }">
           <span class="presence-dot"></span>
-          {{ chatStaffOnline ? 'Soporte en línea' : 'Soporte desconectado' }}
+          {{ chatStaffOnline ? `${chatOnlineCount} en línea` : 'Equipo desconectado' }}
         </span>
       </div>
 
       <AlertMessage v-if="chatErr" kind="error" :message="chatErr" />
 
-      <div class="card chat-card">
-        <div ref="chatBoxEl" class="chat-box">
-          <p v-if="!chatMessages.length" class="chat-empty">
-            Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
-          </p>
-          <div v-for="m in chatMessages" :key="m.id" class="chat-msg" :class="{ mine: m.mine }">
-            <p class="chat-body">{{ m.body }}</p>
-            <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
+      <div class="support-grid">
+        <aside class="card support-team">
+          <div class="support-team-head">
+            <h3>Equipo de soporte</h3>
+            <span class="support-count">{{ chatOnlineCount }}/{{ chatStaff.length }}</span>
           </div>
-        </div>
-        <div class="chat-input">
-          <input
-            v-model="chatInput"
-            class="input"
-            type="text"
-            maxlength="2000"
-            placeholder="Escribí tu mensaje…"
-            aria-label="Mensaje para soporte"
-            @keydown.enter="sendChat"
-          />
-          <AppButton :loading="chatBusy" :disabled="!chatInput.trim()" @click="sendChat">Enviar</AppButton>
+          <p v-if="!chatStaff.length" class="chat-empty">Sin integrantes disponibles por ahora.</p>
+          <ul v-else class="support-list">
+            <li v-for="s in chatStaff" :key="s.id">
+              <button type="button" class="support-member" :class="{ on: s.online }" @click="contactStaff(s)">
+                <span class="support-avatar">
+                  {{ staffInitials(s.name) }}
+                  <span class="support-status" :class="{ on: s.online }"></span>
+                </span>
+                <span class="support-info">
+                  <strong>{{ s.name }}</strong>
+                  <small>{{ s.online ? 'En línea ahora' : 'Desconectado' }}</small>
+                </span>
+              </button>
+            </li>
+          </ul>
+          <AppButton class="support-live" :loading="chatBusy" :disabled="!chatStaffOnline" @click="requestLiveHelp">
+            Solicitar asistencia en vivo
+          </AppButton>
+          <p class="support-hint">
+            {{ chatStaffOnline ? 'Alguien del equipo te responde en minutos.' : 'Dejá tu mensaje: te respondemos apenas alguien se conecte.' }}
+          </p>
+        </aside>
+
+        <div class="card chat-card">
+          <div class="chat-title">
+            <strong>Conversación con soporte</strong>
+            <span class="chat-sub">{{ chatStaffOnline ? 'Respuesta en vivo' : 'Respuesta diferida' }}</span>
+          </div>
+          <div ref="chatBoxEl" class="chat-box">
+            <p v-if="!chatMessages.length" class="chat-empty">
+              Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
+            </p>
+            <div v-for="m in chatMessages" :key="m.id" class="chat-msg" :class="{ mine: m.mine }">
+              <p class="chat-body">{{ m.body }}</p>
+              <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
+            </div>
+          </div>
+          <div class="chat-input">
+            <input
+              ref="chatInputEl"
+              v-model="chatInput"
+              class="input"
+              type="text"
+              maxlength="2000"
+              placeholder="Escribí tu mensaje…"
+              aria-label="Mensaje para soporte"
+              @keydown.enter="sendChat"
+            />
+            <AppButton :loading="chatBusy" :disabled="!chatInput.trim()" @click="sendChat">Enviar</AppButton>
+          </div>
         </div>
       </div>
     </div>
