@@ -463,6 +463,7 @@ export const STORE_TEMPLATES = {
   perspective: { label: 'Perspectiva', tier: 'base',     desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
   duo:         { label: 'Dúo',         tier: 'base',     desc: 'Portada a dos columnas: imagen a un lado, presentación al otro, cifras debajo del hero y productos en carril horizontal.' },
   bloque:      { label: 'Bloque',      tier: 'base',     desc: 'Grid suizo de bordes duros: papel y tinta con reglas visibles, titulares XXL en mayúsculas, metadata en mono y tu acento a bloque.' },
+  riso:        { label: 'Riso',        tier: 'base',     desc: 'Risografía: papel crema con trama de puntos, tintas planas rosa, azul, amarillo y menta que se solapan, sombras desplazadas, formas redondas y tu acento como azul.' },
   street:      { label: 'Urbano',      tier: 'plus',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
   promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
   terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' },
@@ -529,7 +530,9 @@ export const STORE_FONTS = {
   'space-mono':       { label: 'Space Mono',       family: "'Space Mono', monospace",             google: 'Space+Mono:ital,wght@0,400;0,700;1,400;1,700' },
   'jetbrains-mono':   { label: 'JetBrains Mono',   family: "'JetBrains Mono', monospace",         google: 'JetBrains+Mono:ital,wght@0,400..800;1,400..800' },
   'manrope':          { label: 'Manrope',          family: "'Manrope', sans-serif",               google: 'Manrope:wght@400..800' },
-  'archivo':          { label: 'Archivo',          family: "'Archivo', 'Helvetica Neue', sans-serif", google: 'Archivo:wdth,wght@62..125,400..900' }
+  'archivo':          { label: 'Archivo',          family: "'Archivo', 'Helvetica Neue', sans-serif", google: 'Archivo:wdth,wght@62..125,400..900' },
+  'bricolage-grotesque': { label: 'Bricolage Grotesque', family: "'Bricolage Grotesque', 'Arial Black', sans-serif", google: 'Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800' },
+  'figtree':          { label: 'Figtree',          family: "'Figtree', system-ui, sans-serif",     google: 'Figtree:wght@400..700' }
 }
 
 export function storeFontFamily(nameFont) {

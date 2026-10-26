@@ -24,7 +24,8 @@ const VARIANTS = {
   boutique: defineAsyncComponent(() => import('./catalog/CatalogBoutique.vue')),
   signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue')),
   aurora: defineAsyncComponent(() => import('./catalog/CatalogAurora.vue')),
-  bloque: defineAsyncComponent(() => import('./catalog/CatalogBloque.vue'))
+  bloque: defineAsyncComponent(() => import('./catalog/CatalogBloque.vue')),
+  riso: defineAsyncComponent(() => import('./catalog/CatalogRiso.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || CatalogClassic)
 </script>

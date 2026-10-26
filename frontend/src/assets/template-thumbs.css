@@ -148,6 +148,15 @@
 .tpl-thumb[data-tpl='bloque'] i { top: 62%; gap: 3px; }
 .tpl-thumb[data-tpl='bloque'] i b { border: 1.5px solid #0b0b0b; border-radius: 0; background-size: 34% 2px, 68% 2px, 100% 66%; }
 
+/* Riso: papel crema con trama, titular a tintas rosa y azul, sello amarillo
+   y tarjetas redondas con sombra desplazada — risografía. */
+.tpl-thumb[data-tpl='riso'] { --tp-bg: #fff5e6; --tp-nav: #fff5e6; --tp-line: #1e1a33; --tp-hero: radial-gradient(rgba(30, 26, 51, .14) 1px, transparent 1.3px) 0 0 / 6px 6px, #fff5e6; --tp-card: #fffdf8; --tp-img: #ff5fa2; --tp-ink: #1e1a33; --tp-mute: #6e6883; border-color: #1e1a33; border-width: 1.5px; }
+.tpl-thumb[data-tpl='riso']::before { right: 9%; top: 19%; width: 21%; aspect-ratio: 1; border-radius: 50%; background: #ffcf3f; border: 1.5px solid #1e1a33; box-shadow: 2px 2px 0 #1e1a33; }
+.tpl-thumb[data-tpl='riso']::after { left: 7%; top: 19%; width: 44%; height: 7.5%; border-radius: 2px; background: #ff5fa2; box-shadow: 0 12px 0 -1px #3550f5, 0 24px 0 -1.5px #1e1a33; }
+.tpl-thumb[data-tpl='riso'] i b { border: 1.5px solid #1e1a33; border-radius: 6px; box-shadow: 1.5px 1.5px 0 #1e1a33; background-size: 34% 2px, 68% 2px, 100% 66%; }
+.tpl-thumb[data-tpl='riso'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#ffcf3f, #ffcf3f); }
+.tpl-thumb[data-tpl='riso'] i b:nth-child(3) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#6fe0c0, #6fe0c0); }
+
 /* Signature: noche de espresso, placa enmarcada en doble filete y
    titular grabado — el acento es la rúbrica de la casa. */
 .tpl-thumb[data-tpl='signature'] { --tp-bg: #16130f; --tp-nav: #16130f; --tp-line: rgba(242, 236, 220, .16); --tp-hero: radial-gradient(circle at 82% -10%, color-mix(in srgb, var(--tp-acc) 30%, transparent), transparent 60%), #16130f; --tp-card: #1e1a14; --tp-img: #2a251d; --tp-ink: #f2ecdc; --tp-mute: #544c3e; border-color: #2c2620; }

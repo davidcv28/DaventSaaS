@@ -9,12 +9,14 @@ import { computed, inject } from 'vue'
 import StorePublicView from './StorePublicView.vue'
 import StorePublicAltView from './StorePublicAltView.vue'
 import StoreBloqueView from './StoreBloqueView.vue'
+import StoreRisoView from './StoreRisoView.vue'
 
 const ctx = inject('storePage')
 const component = computed(() => {
   const tpl = ctx?.pageTemplate?.value
   if (tpl === 'duo') return StorePublicAltView
   if (tpl === 'bloque') return StoreBloqueView
+  if (tpl === 'riso') return StoreRisoView
   return StorePublicView
 })
 </script>

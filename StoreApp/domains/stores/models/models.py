@@ -99,6 +99,8 @@ class StoreCustomization(models.Model):
         ('jetbrains-mono',       'JetBrains Mono'),
         ('manrope',              'Manrope'),
         ('archivo',              'Archivo'),
+        ('bricolage-grotesque',  'Bricolage Grotesque'),
+        ('figtree',              'Figtree'),
     ]
     TEMPLATE_CLASSIC            =   'classic'
     #Diseños de la web pública (catálogo cerrado) por nivel de plan:
@@ -107,7 +109,7 @@ class StoreCustomization(models.Model):
     #TEMPLATE_ADVANCED quedan para has_design_advanced (Premium). El
     #viewset descarta del payload un diseño fuera del nivel del plan y
     #la web fuerza 'classic' si el guardado deja de estar permitido.
-    TEMPLATE_BASE               =   ('classic', 'perspective', 'duo', 'bloque')
+    TEMPLATE_BASE               =   ('classic', 'perspective', 'duo', 'bloque', 'riso')
     TEMPLATE_PLUS               =   ('street', 'promo')
     TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora')
     TEMPLATE_CHOICES            =   [
@@ -115,6 +117,7 @@ class StoreCustomization(models.Model):
         ('perspective',      'Perspectiva'),
         ('duo',              'Dúo'),
         ('bloque',           'Bloque'),
+        ('riso',             'Riso'),
         ('promo',            'Publicidad'),
         ('street',           'Urbano'),
         ('terminal',         'Terminal'),
