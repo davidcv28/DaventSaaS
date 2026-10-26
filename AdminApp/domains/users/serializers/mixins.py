@@ -118,7 +118,7 @@ class UserProfileValidatorsMixins:
         if not value:
             return value
         document_val        =   value.strip()
-        queryset            =   UserProfile.objects.filter(document = document_val)
+        queryset            =   UserProfile.objects.filter(document__iexact = document_val)
         errors              =   []
         if self.instance:
             queryset        =   queryset.exclude(pk = self.instance.pk)
@@ -133,7 +133,7 @@ class UserProfileValidatorsMixins:
         if not value:
             return None
         phone_val           =   value.strip()
-        queryset            =   UserProfile.objects.filter(phone = phone_val)
+        queryset            =   UserProfile.objects.filter(phone__iexact = phone_val)
         if self.instance:
             queryset        =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():

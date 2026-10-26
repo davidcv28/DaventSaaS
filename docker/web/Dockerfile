@@ -17,8 +17,9 @@ ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN
 ARG VITE_APP_NAME
 ARG VITE_APP_TAGLINE
-# Login social (Google): también público por diseño; vacío = botón oculto.
-ARG VITE_GOOGLE_CLIENT_ID=10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
+# Login social (Google): también público por diseño pero no se embebe en la
+# imagen — llega por build-arg. Vacío = botón oculto.
+ARG VITE_GOOGLE_CLIENT_ID=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_NAME=$VITE_APP_NAME \
