@@ -1503,14 +1503,27 @@ function removeServiceStep(i) {
 // Config del embudo de la página (service_* de customization): filas de
 // pasos como las de "Qué ofrecemos", días y franjas como listas de
 // etiquetas, y las notas de precio/pago. Se guarda junto con un PATCH.
-const serviceDaysText = computed({
-  get: () => (designForm.service_days || []).join(', '),
-  set: (v) => { designForm.service_days = v.split(',').map((s) => s.trim()).filter(Boolean) }
-})
-const serviceSlotsText = computed({
-  get: () => (designForm.service_slots || []).join(', '),
-  set: (v) => { designForm.service_slots = v.split(',').map((s) => s.trim()).filter(Boolean) }
-})
+const serviceChipDraft = reactive({ service_days: '', service_slots: '' })
+const SERVICE_CHIP_SUGGESTIONS = {
+  service_days: ['Hoy', 'Mañana', 'Lunes a viernes', 'Sábado', 'Domingo'],
+  service_slots: ['Mañana (9 a 12 h)', 'Tarde (15 a 18 h)', 'Noche (19 a 21 h)']
+}
+function chipMax(field) {
+  return field === 'service_days' ? servicePageLimits.days : servicePageLimits.slots
+}
+function addServiceChip(field, value) {
+  const v = String(value ?? serviceChipDraft[field]).trim().slice(0, servicePageLimits.day)
+  const list = designForm[field] || (designForm[field] = [])
+  if (v && list.length < chipMax(field) && !list.some((x) => x.toLowerCase() === v.toLowerCase())) list.push(v)
+  serviceChipDraft[field] = ''
+}
+function removeServiceChip(field, i) {
+  designForm[field]?.splice(i, 1)
+}
+function onChipKey(e, field) {
+  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addServiceChip(field) }
+  else if (e.key === 'Backspace' && !serviceChipDraft[field]) designForm[field]?.pop()
+}
 async function saveServicePage() {
   companyErrs.servicePage = ''
   if (hasPartialRow(designForm.service_steps || [], ['title', 'text'], ['title', 'text'])) {
@@ -3146,8 +3159,15 @@ async function changePassword() {
           <div class="card">
             <h3><AppIcon name="wrench" :size="18" /> Tu página de servicios</h3>
             <p class="lead">Ajustá cómo pide los datos el formulario y qué leen tus clientes junto al presupuesto.</p>
-            <div class="field">
-              <label id="svc-steps-label">Pasos de «cómo funciona»</label>
+            <section class="svc-block">
+              <header class="svc-block-head" style="--h: 250">
+                <span class="svc-block-ico"><AppIcon name="checklist" :size="18" aria-hidden="true" /></span>
+                <div>
+                  <h4 id="svc-steps-label">Cómo funciona</h4>
+                  <p>Los pasos que ve tu cliente antes de pedir. Hasta {{ servicePageLimits.steps }}; sin pasos se usan unos por defecto.</p>
+                </div>
+                <span class="svc-count">{{ (designForm.service_steps || []).length }}/{{ servicePageLimits.steps }}</span>
+              </header>
               <ul v-if="(designForm.service_steps || []).length" class="feat-rows" aria-labelledby="svc-steps-label">
                 <li v-for="(row, i) in designForm.service_steps" :key="i" class="feat-row svc-step-row">
                   <select v-model="row.icon" class="select svc-step-icon" :aria-label="`Icono del paso ${i + 1}`">
@@ -3159,24 +3179,55 @@ async function changePassword() {
                 </li>
               </ul>
               <button type="button" class="btn ghost btn-auto" :disabled="(designForm.service_steps || []).length >= servicePageLimits.steps" @click="addServiceStep"><AppIcon name="plus" :size="15" /> Agregar paso</button>
-              <p class="hint">Hasta {{ servicePageLimits.steps }} pasos. Si no cargás ninguno, la página muestra unos pasos por defecto.</p>
-            </div>
-            <div class="grid-2">
-              <AppInput v-model="serviceDaysText" label="Días que ofrecés" name="svc_days" placeholder="Ej. Hoy, Mañana, Sábado" />
-              <AppInput v-model="serviceSlotsText" label="Franjas horarias" name="svc_slots" placeholder="Ej. 9 a 12 h, 15 a 18 h" />
-            </div>
-            <p class="hint">Separados por coma: hasta {{ servicePageLimits.days }} días y {{ servicePageLimits.slots }} franjas, de {{ servicePageLimits.day }} caracteres cada uno. Vacíos = la página propone opciones genéricas.</p>
-            <label class="check-item">
-              <input v-model="designForm.service_ask_address" type="checkbox" />
-              <span class="check-text">
-                <strong>Pedir dirección en el pedido</strong>
-                <small>Útil si trabajás a domicilio. Si no lo necesitás, el formulario la omite.</small>
-              </span>
-            </label>
-            <div class="grid-2">
-              <AppInput v-model="designForm.service_price_note" label="Nota de precios" name="svc_price_note" placeholder="Ej. Precios orientativos: el valor final se confirma al ver el trabajo" />
-              <AppInput v-model="designForm.service_pay_note" label="Nota de pago" name="svc_pay_note" placeholder="Ej. Se paga en persona al concretar: efectivo, débito o transferencia" />
-            </div>
+            </section>
+
+            <section class="svc-block">
+              <header class="svc-block-head" style="--h: 195">
+                <span class="svc-block-ico"><AppIcon name="calendar" :size="18" aria-hidden="true" /></span>
+                <div>
+                  <h4>Cuándo atendés</h4>
+                  <p>Escribí y presioná Enter, o tocá una sugerencia. Si lo dejás vacío, la página propone opciones genéricas.</p>
+                </div>
+              </header>
+              <div class="grid-2">
+                <div v-for="f in [{ k: 'service_days', label: 'Días que ofrecés', icon: 'calendar', ph: 'Ej. Sábado' }, { k: 'service_slots', label: 'Franjas horarias', icon: 'clock', ph: 'Ej. 9 a 12 h' }]" :key="f.k" class="field">
+                  <label :for="`chip-${f.k}`">{{ f.label }} <span class="svc-count">{{ (designForm[f.k] || []).length }}/{{ chipMax(f.k) }}</span></label>
+                  <div class="svc-chips" @click="$refs[`chip_${f.k}`]?.[0]?.focus()">
+                    <span v-for="(c, i) in designForm[f.k] || []" :key="c" class="svc-chip">
+                      <AppIcon :name="f.icon" :size="12" aria-hidden="true" /> {{ c }}
+                      <button type="button" :aria-label="`Quitar ${c}`" @click.stop="removeServiceChip(f.k, i)"><AppIcon name="x" :size="12" /></button>
+                    </span>
+                    <input :id="`chip-${f.k}`" :ref="`chip_${f.k}`" v-model="serviceChipDraft[f.k]" type="text" class="svc-chip-input" :maxlength="servicePageLimits.day" :placeholder="(designForm[f.k] || []).length ? 'Agregar otro…' : f.ph" :disabled="(designForm[f.k] || []).length >= chipMax(f.k)" @keydown="onChipKey($event, f.k)" @blur="addServiceChip(f.k)" />
+                  </div>
+                  <div class="svc-sugg">
+                    <button v-for="sg in SERVICE_CHIP_SUGGESTIONS[f.k].filter((x) => !(designForm[f.k] || []).includes(x))" :key="sg" type="button" @click="addServiceChip(f.k, sg)"><AppIcon name="plus" :size="11" aria-hidden="true" /> {{ sg }}</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="svc-block">
+              <header class="svc-block-head" style="--h: 330">
+                <span class="svc-block-ico"><AppIcon name="message-circle" :size="18" aria-hidden="true" /></span>
+                <div>
+                  <h4>Datos y mensajes</h4>
+                  <p>Qué te pide el formulario y qué aclaraciones lee el cliente junto al presupuesto.</p>
+                </div>
+              </header>
+              <label class="svc-switch">
+                <input v-model="designForm.service_ask_address" type="checkbox" role="switch" />
+                <span class="svc-switch-track" aria-hidden="true"><i></i></span>
+                <span class="check-text">
+                  <strong>Pedir dirección en el pedido</strong>
+                  <small>Útil si trabajás a domicilio. Si no lo necesitás, el formulario la omite.</small>
+                </span>
+              </label>
+              <div class="grid-2">
+                <AppInput v-model="designForm.service_price_note" label="Nota de precios" name="svc_price_note" placeholder="Ej. El valor final se confirma al ver el trabajo" />
+                <AppInput v-model="designForm.service_pay_note" label="Nota de pago" name="svc_pay_note" placeholder="Ej. Se paga en persona: efectivo, débito o transferencia" />
+              </div>
+            </section>
+
             <p v-if="companyErrs.servicePage" class="field-error" role="alert">{{ companyErrs.servicePage }}</p>
             <div class="btn-row">
               <AppButton :loading="svcBusy" @click="saveServicePage">Guardar configuración</AppButton>
