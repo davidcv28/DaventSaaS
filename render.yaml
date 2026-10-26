@@ -126,7 +126,7 @@ services:
       # públicos por diseño; el SECRET es el único sensible. Completar en el
       # dashboard -> Environment del servicio (Render nunca los pisa).
       - key: GOOGLE_CLIENT_ID
-        sync: false                       # xxxx.apps.googleusercontent.com
+        value: 10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
       - key: FACEBOOK_APP_ID
         sync: false                       # numérico, de developers.facebook.com
       - key: FACEBOOK_APP_SECRET

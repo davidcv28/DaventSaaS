@@ -45,7 +45,7 @@ ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
 # Login social: también son IDs públicos por diseño (el client ID viaja en
 # cada página y el App ID de Meta en el SDK). Vacíos = botones ocultos.
 # Una vez creadas las apps OAuth, rellenar los defaults acá (o --build-arg).
-ARG VITE_GOOGLE_CLIENT_ID=
+ARG VITE_GOOGLE_CLIENT_ID=10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
 ARG VITE_FACEBOOK_APP_ID=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
