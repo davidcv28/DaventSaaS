@@ -3,8 +3,12 @@
 // El branding lo exige Google: renderiza un iframe con la cuenta del usuario.
 // La credencial se canjea en el backend (auth.socialLogin) que la verifica
 // server-side — acá nunca se confía en el email del cliente.
-// Sin VITE_GOOGLE_CLIENT_ID el botón no se muestra (feature apagada).
-import { ref, onMounted, onUnmounted } from 'vue'
+// El client ID llega en runtime desde GET /api/config/ (env del backend —
+// no se hornea en el bundle ni viaja en el build de la imagen). Como
+// override de dev queda VITE_GOOGLE_CLIENT_ID en frontend/.env. Sin ID en
+// ambos lados el botón no se muestra (feature apagada).
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { http } from '../api/http.js'
 import { useAuthStore } from '../stores/auth.store.js'
 
 const props = defineProps({
@@ -14,8 +18,20 @@ const props = defineProps({
 const emit = defineEmits(['done', 'error'])
 const auth = useAuthStore()
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
-const visible = Boolean(GOOGLE_CLIENT_ID)
+const clientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID || '')
+const visible = ref(Boolean(clientId.value))
+
+// Cache a nivel módulo: login y register montan el componente — una sola
+// llamada a /api/config/ por carga de la app.
+let configPromise = null
+function fetchClientId() {
+  if (!configPromise) {
+    configPromise = http.get('/config/')
+      .then(({ data }) => (data?.google_client_id || '').trim())
+      .catch(() => '')
+  }
+  return configPromise
+}
 
 const googleEl = ref(null)
 const busy = ref(false)
@@ -60,7 +76,7 @@ async function initGoogle() {
   try {
     await loadScript('https://accounts.google.com/gsi/client', 'gsi-client')
     window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
+      client_id: clientId.value,
       callback: onGoogleCredential,
     })
     renderGoogleButton()
@@ -99,8 +115,16 @@ async function onGoogleCredential({ credential }) {
   }
 }
 
-onMounted(() => {
-  if (GOOGLE_CLIENT_ID) initGoogle()
+onMounted(async () => {
+  // Sin override horneado, el ID se resuelve en runtime contra el backend.
+  if (!clientId.value) {
+    clientId.value = await fetchClientId()
+    if (!clientId.value) return // feature apagada en el backend
+    visible.value = true
+    // El div del botón existe recién cuando v-if se repinta.
+    await nextTick()
+  }
+  initGoogle()
 })
 
 onUnmounted(() => resizeObs?.disconnect())

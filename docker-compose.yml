@@ -161,9 +161,8 @@ services:
       args:
         VITE_PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
         VITE_API_BASE_URL: /api
-        # Login social (Google): público por diseño pero no se embebe —
-        # se setea en el .env. Vacío = botón oculto.
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        # Login social (Google): el client ID no se hornea — el SPA lo pide
+        # en runtime a /api/config/ (GOOGLE_CLIENT_ID del env de la api).
     restart: unless-stopped
     environment:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}   # envsubst del template de vhost

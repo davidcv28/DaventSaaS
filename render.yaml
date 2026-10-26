@@ -116,10 +116,12 @@ services:
         value: "14"
 
       # ---- Login social (Google) -----------------------------------------------
-      # Vacío = feature apagada (endpoint 503, botón oculto). El client ID es
-      # público por diseño — viaja en cada página.
+      # Vacío = feature apagada (endpoint 503, botón oculto). sync:false -> el
+      # valor vive solo en el dashboard de Render (fuera de git); se pegó una
+      # vez en Environment. El backend lo verifica (aud del token) y lo sirve
+      # al frontend en runtime via GET /api/config/ — no se hornea en el build.
       - key: GOOGLE_CLIENT_ID
-        value: 10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
+        sync: false
 
       # ---- Emisor de comprobantes (fiscal) --------------------------------------
       - key: ISSUER_NAME

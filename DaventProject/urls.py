@@ -34,6 +34,7 @@ from AdminApp.domains.users.views.auth_views import (
     VerifyEmailView,
     VerifyEmailResendView,
     GoogleAuthView,
+    PublicConfigView,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
@@ -68,6 +69,12 @@ urlpatterns = [
     path('api/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('api/verify-email/resend/', VerifyEmailResendView.as_view(), name='verify_email_resend'),
+    #=================================
+    # CONFIG PÚBLICA DEL FRONTEND (servida en runtime — no horneada en el
+    # bundle: el client ID de Google sale del env del backend, nunca del
+    # código ni del build de la imagen)
+    #=================================
+    path('api/config/', PublicConfigView.as_view(), name='public_config'),
     #=================================
     # LOGIN SOCIAL (Google — token exchange, mismo JWT/cookies)
     #=================================

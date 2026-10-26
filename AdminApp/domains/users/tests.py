@@ -35,6 +35,7 @@ REFRESH_URL         = '/api/token/refresh/'
 PASSWORD_UPDATE_URL = '/api/password_update/'
 USER_UPDATE_URL     = '/api/user/me/'
 GOOGLE_AUTH_URL     = '/api/auth/google/'
+CONFIG_URL          = '/api/config/'
 
 
 def _location():
@@ -621,3 +622,25 @@ class SocialAuthTests(TestCase):
     def test_google_503_without_client_id(self):
         response    =   self._post_google(client_id = '')
         self.assertEqual(response.status_code, 503)
+
+
+class PublicConfigTests(TestCase):
+    """
+    GET /api/config/: config pública que el frontend lee en runtime — hoy
+    el client ID de Google (así el botón social no se hornea en el bundle).
+    Es AllowAny por diseño; vacío = feature apagada.
+    """
+
+    VIEWS_MODULE    =   'AdminApp.domains.users.views.auth_views'
+
+    def test_config_returns_google_client_id(self):
+        with patch(f'{self.VIEWS_MODULE}.GOOGLE_CLIENT_ID', 'google-client-id'):
+            response    =   APIClient().get(CONFIG_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['google_client_id'], 'google-client-id')
+
+    def test_config_empty_when_feature_off(self):
+        with patch(f'{self.VIEWS_MODULE}.GOOGLE_CLIENT_ID', ''):
+            response    =   APIClient().get(CONFIG_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['google_client_id'], '')

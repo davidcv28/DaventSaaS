@@ -89,6 +89,11 @@ class SocialAuthRateThrottle(AnonRateThrottle):
     provider (tokeninfo de Google) — se acota por IP."""
     scope = 'social_auth'
 
+class PublicConfigRateThrottle(AnonRateThrottle):
+    """Scope 'public_read' (settings): misma bolsa que las lecturas públicas
+    del catálogo — el endpoint devuelve un valor estático público."""
+    scope = 'public_read'
+
 
 def _secure():
     # Secure solo bajo HTTPS real (prod); en dev http://localhost se omite.
@@ -332,6 +337,24 @@ def _social_error(e : SocialAuthError, provider : str) -> Response:
     else:
         detail  =   f'No pudimos verificar tu cuenta de {provider}. Intentá de nuevo.'
     return Response({'detail': detail}, status = status.HTTP_400_BAD_REQUEST)
+
+
+class PublicConfigView(APIView):
+    """
+    GET /api/config/: config pública que el frontend necesita en runtime.
+    El client ID de Google viaja acá en vez de hornearse en el bundle JS:
+    una sola fuente (env del backend — la misma var que verifica el aud
+    del token) y ningún hardcode en el código, la imagen ni el build.
+    Es público por diseño (Google exige el ID en la página para renderizar
+    el botón); vacío = feature apagada (botón oculto).
+    """
+    permission_classes  =   [AllowAny]
+    throttle_classes    =   [PublicConfigRateThrottle]
+
+    def get(self, request):
+        response    =   Response({'google_client_id': GOOGLE_CLIENT_ID})
+        response['Cache-Control']   =   'no-store'
+        return response
 
 
 class GoogleAuthView(APIView):

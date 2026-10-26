@@ -17,14 +17,13 @@ ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN
 ARG VITE_APP_NAME
 ARG VITE_APP_TAGLINE
-# Login social (Google): también público por diseño pero no se embebe en la
-# imagen — llega por build-arg. Vacío = botón oculto.
-ARG VITE_GOOGLE_CLIENT_ID=
+# Login social (Google): el client ID NO se hornea — el frontend lo pide en
+# runtime a GET /api/config/ (env GOOGLE_CLIENT_ID del backend). Sin var
+# ahí el botón queda oculto.
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_NAME=$VITE_APP_NAME \
-    VITE_APP_TAGLINE=$VITE_APP_TAGLINE \
-    VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+    VITE_APP_TAGLINE=$VITE_APP_TAGLINE
 RUN npm run build
 
 # ---------- Stage 2: nginx sirve el SPA y proxifica /api ----------

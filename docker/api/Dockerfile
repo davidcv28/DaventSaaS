@@ -34,16 +34,14 @@ ARG VITE_PLATFORM_DOMAIN=daventsaas.onrender.com
 ARG VITE_APP_URL=https://daventsaas.onrender.com
 ARG VITE_APP_NAME=DAVENT
 ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
-# Login social (Google): el client ID es público por diseño (viaja en cada
-# página) pero NO va hardcodeado — se pasa por --build-arg/env. Vacío =
-# botón oculto.
-ARG VITE_GOOGLE_CLIENT_ID=
+# Login social (Google): el client ID NO se hornea — el frontend lo pide en
+# runtime a GET /api/config/ (env GOOGLE_CLIENT_ID del backend). Sin var
+# ahí el botón queda oculto.
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_URL=$VITE_APP_URL \
     VITE_APP_NAME=$VITE_APP_NAME \
-    VITE_APP_TAGLINE=$VITE_APP_TAGLINE \
-    VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+    VITE_APP_TAGLINE=$VITE_APP_TAGLINE
 RUN npm run build
 
 # ---------- Stage 2: runtime mínimo, sin toolchain ----------
