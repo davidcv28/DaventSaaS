@@ -255,7 +255,8 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .social-buttons { display: grid; gap: 10px; }
 /* El botón de Google lo renderiza su iframe: el contenedor solo lo centra. */
-.google-btn { display: flex; justify-content: center; min-height: 44px; }
+.google-btn { display: flex; justify-content: center; min-width: 0; min-height: 44px; overflow: hidden; }
+.google-btn iframe { max-width: 100%; }
 .google-btn.is-busy { opacity: .6; pointer-events: none; }
 .social-terms { margin: 12px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
 .social-terms a { color: var(--brand-ink); font-weight: 600; text-decoration: none; }

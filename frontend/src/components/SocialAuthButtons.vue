@@ -4,7 +4,7 @@
 // La credencial se canjea en el backend (auth.socialLogin) que la verifica
 // server-side — acá nunca se confía en el email del cliente.
 // Sin VITE_GOOGLE_CLIENT_ID el botón no se muestra (feature apagada).
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/auth.store.js'
 
 const props = defineProps({
@@ -35,6 +35,27 @@ function loadScript(src, id) {
   })
 }
 
+let resizeObs = null
+
+function renderGoogleButton() {
+  const el = googleEl.value
+  if (!el) return
+  el.innerHTML = ''
+  // Botón oficial renderizado por Google dentro de su iframe. 'outline'
+  // (blanco) es el estilo estándar para fondos claros como la auth card.
+  // El ancho es un número fijo de px: se recalcula y re-renderiza al
+  // redimensionar (ResizeObserver) para que nunca desborde el contenedor.
+  window.google.accounts.id.renderButton(el, {
+    type: 'standard',
+    theme: 'outline',
+    size: 'large',
+    shape: 'pill',
+    logo_alignment: 'left',
+    text: props.mode === 'register' ? 'signup_with' : 'continue_with',
+    width: Math.min(Math.max(el.clientWidth || 300, 200), 400),
+  })
+}
+
 async function initGoogle() {
   try {
     await loadScript('https://accounts.google.com/gsi/client', 'gsi-client')
@@ -42,17 +63,19 @@ async function initGoogle() {
       client_id: GOOGLE_CLIENT_ID,
       callback: onGoogleCredential,
     })
-    // Botón oficial renderizado por Google dentro de su iframe. 'outline'
-    // (blanco) es el estilo estándar para fondos claros como la auth card.
-    window.google.accounts.id.renderButton(googleEl.value, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      logo_alignment: 'left',
-      text: props.mode === 'register' ? 'signup_with' : 'continue_with',
-      width: Math.min(Math.max(googleEl.value?.clientWidth || 300, 240), 400),
+    renderGoogleButton()
+    // Re-render cuando cambia el ancho disponible (rotación, sidebar,
+    // resize del browser): el iframe del botón tiene ancho fijo en px.
+    let timer = null
+    let lastW = googleEl.value?.clientWidth || 0
+    resizeObs = new ResizeObserver(() => {
+      const w = googleEl.value?.clientWidth || 0
+      if (!w || w === lastW) return
+      lastW = w
+      clearTimeout(timer)
+      timer = setTimeout(renderGoogleButton, 150)
     })
+    resizeObs.observe(googleEl.value)
   } catch {
     emit('error', 'No pudimos cargar el ingreso con Google. Intentá de nuevo.')
   }
@@ -79,6 +102,8 @@ async function onGoogleCredential({ credential }) {
 onMounted(() => {
   if (GOOGLE_CLIENT_ID) initGoogle()
 })
+
+onUnmounted(() => resizeObs?.disconnect())
 </script>
 
 <template>
