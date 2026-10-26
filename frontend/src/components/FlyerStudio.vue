@@ -37,8 +37,10 @@ const accept = LOGO_ACCEPT
 const products = ref([])
 const loadingProducts = ref(false)
 const layouts = computed(() => layoutsOfKind(draft.kind))
-const isCatalog = computed(() => draft.kind === 'catalogo')
-const maxProducts = computed(() => layoutById(draft.layout).products || 4)
+const curLayout = computed(() => layoutById(draft.layout))
+const isCatalog = computed(() => !!curLayout.value.products)
+const ph = computed(() => curLayout.value.ph || {})
+const maxProducts = computed(() => curLayout.value.products || 4)
 const sizeInfo = computed(() => sizeById(draft.size))
 const imp = computed(() => imposition(draft.size, draft.sheet))
 const filled = computed(() => imposition(draft.size, 'a4'))
@@ -186,23 +188,23 @@ function reset() {
         <h3><AppIcon name="pencil" :size="18" /> 4. Completá los textos</h3>
         <div class="field">
           <label for="fl-title"><AppIcon name="type" :size="14" class="label-icon" aria-hidden="true" />Titular <span class="counter">{{ draft.title.length }}/{{ L.title }}</span></label>
-          <input id="fl-title" v-model="draft.title" class="input" :maxlength="L.title" placeholder="Ej. Liquidación de invierno" />
+          <input id="fl-title" v-model="draft.title" class="input" :maxlength="L.title" :placeholder="ph.title || 'Ej. Liquidación de invierno'" />
         </div>
         <div class="field">
           <label for="fl-sub"><AppIcon name="file-text" :size="14" class="label-icon" aria-hidden="true" />Frase de apoyo <span class="counter">{{ draft.subtitle.length }}/{{ L.subtitle }}</span></label>
-          <input id="fl-sub" v-model="draft.subtitle" class="input" :maxlength="L.subtitle" placeholder="Ej. Hasta agotar stock en toda la tienda" />
+          <input id="fl-sub" v-model="draft.subtitle" class="input" :maxlength="L.subtitle" :placeholder="ph.subtitle || 'Ej. Hasta agotar stock en toda la tienda'" />
         </div>
         <div class="field">
           <label for="fl-badge"><AppIcon name="tag" :size="14" class="label-icon" aria-hidden="true" />Sello o descuento <span class="counter">{{ draft.badge.length }}/{{ L.badge }}</span></label>
-          <input id="fl-badge" v-model="draft.badge" class="input" :maxlength="L.badge" placeholder="Ej. -30% OFF" />
+          <input id="fl-badge" v-model="draft.badge" class="input" :maxlength="L.badge" :placeholder="ph.badge || 'Ej. -30% OFF'" />
           <p class="hint">Opcional. Se destaca en el diseño; dejalo vacío si no hay oferta.</p>
         </div>
-        <div v-if="!isCatalog" class="field">
-          <label><AppIcon name="checklist" :size="14" class="label-icon" aria-hidden="true" />Puntos destacados</label>
+        <div v-if="!isCatalog || curLayout.perks" class="field">
+          <label><AppIcon name="checklist" :size="14" class="label-icon" aria-hidden="true" />{{ ph.bulletsLabel || 'Puntos destacados' }}</label>
           <div class="studio-bullets">
             <div v-for="(_, i) in draft.bullets" :key="i" class="studio-bullet">
               <span class="studio-bullet-n">{{ i + 1 }}</span>
-              <input v-model="draft.bullets[i]" class="input" :maxlength="L.bullet" :placeholder="['Ej. Envíos a todo el país', 'Ej. 3 cuotas sin interés', 'Ej. Cambios sin cargo'][i]" :aria-label="`Punto destacado ${i + 1}`" />
+              <input v-model="draft.bullets[i]" class="input" :maxlength="L.bullet" :placeholder="(ph.bullets || ['Ej. Envíos a todo el país', 'Ej. 3 cuotas sin interés', 'Ej. Cambios sin cargo', ''])[i]" :aria-label="`Punto destacado ${i + 1}`" />
             </div>
           </div>
         </div>
