@@ -20,11 +20,14 @@ const {
   activeCategories, activeBrands, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand,
   clearCategories, clearFilters, hasFilters, hasCatalogNav, activeTags, productCount,
-  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
+  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct,
+  facets, offerTotal, newTotal
 } = useStoreCatalog({ pageSize: 12 })
 
-// El burger del header solo aparece cuando hay categorías o marcas.
-watchEffect(() => { ui.hasCatalogNav = hasCatalogNav.value })
+// El burger/drawer aparece con categorías o marcas y también si solo hay
+// facetas/filtros rápidos (oferta, novedades) — así nunca quedan ocultos.
+const hasDrawer = computed(() => hasCatalogNav.value || facets.value.length > 0 || offerTotal.value > 0 || newTotal.value > 0)
+watchEffect(() => { ui.hasCatalogNav = hasDrawer.value })
 
 const onKey = (e) => {
   if (e.key === 'Escape') ui.menuOpen = false
@@ -177,9 +180,9 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div class="sp-layout" :class="{ 'has-nav': hasCatalogNav }">
-      <div v-if="hasCatalogNav" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
-      <aside v-if="hasCatalogNav" id="sp-drawer" class="sp-drawer" :class="{ open: ui.menuOpen }" aria-label="Categorías y marcas">
+    <div class="sp-layout" :class="{ 'has-nav': hasDrawer }">
+      <div v-if="hasDrawer" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
+      <aside v-if="hasDrawer" id="sp-drawer" class="sp-drawer" :class="{ open: ui.menuOpen }" aria-label="Filtros del catálogo">
         <div class="sp-drawer-head">
           <strong>Explorar</strong>
           <button type="button" class="sp-drawer-close" aria-label="Cerrar menú" @click="ui.menuOpen = false">

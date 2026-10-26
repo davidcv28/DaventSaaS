@@ -9,6 +9,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Urbano: streetwear — titular XXL en outline, cinta de ticker con las
@@ -73,6 +74,7 @@ const pad = (n) => String(n + 1).padStart(2, '0')
       <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-st-pill brand" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
     </div>
     <CatalogFacets />
+    <CatalogTags />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

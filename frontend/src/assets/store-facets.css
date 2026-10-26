@@ -1,9 +1,20 @@
-/* Panel de facetas del catálogo público (CatalogFacets.vue): compartido
-   por todas las plantillas — queda neutro a propósito: hereda la fuente y
-   el color del contexto y solo pinta el estado activo con el acento de la
-   tienda (--store-accent / --store-accent-ink, definidos en la raíz). */
-.cf-facets { display: grid; gap: 12px; }
-.cf-fset { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+/* =====================================================================
+   Panel de filtros avanzados del catálogo público — CatalogFacets.vue
+   (facetas por atributo + oferta/novedades) y CatalogTags.vue (chips de
+   filtros activos removibles).
+
+   La base .cf-* queda neutra a propósito y cada plantilla la viste con el
+   mismo idioma visual de sus propios controles: el scope es la clase raíz
+   del diseño (.cv-pe, .cv-st, .cv-rs, ...) o .sp-drawer en el clásico, así
+   ninguna regla de un diseño pisa a otro. Donde el panel vive dentro de
+   una barra/columna propia (drawer clásico, asides de Dúo/Riso/Bloque),
+   .cf-facets se aplana con display:contents para que cada .cf-fset herede
+   la grilla y el espaciado del contenedor padre.
+   ===================================================================== */
+
+/* ---------- Base neutra (fallback si un diseño no tiene piel propia) ---------- */
+.cf-facets { display: grid; gap: 12px; min-width: 0; }
+.cf-fset { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; min-width: 0; }
 .cf-fset-name {
   flex: 0 0 100%; margin: 0 0 2px;
   font-size: .76em; font-weight: 700; letter-spacing: .05em;
@@ -17,7 +28,7 @@
   transition: opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
 }
 .cf-opt:hover { opacity: 1; }
-.cf-opt:focus-visible { outline: 2px solid var(--store-accent, currentColor); outline-offset: 2px; }
+.cf-opt:focus-visible, .cf-tag:focus-visible { outline: 2px solid var(--store-accent, currentColor); outline-offset: 2px; }
 .cf-opt.on {
   background: var(--store-accent, currentColor);
   border-color: var(--store-accent, currentColor);
@@ -27,3 +38,427 @@
 /* Contador pequeño reutilizable (facetas, categorías y marcas con
    products_count en las plantillas): no depende de .cf-opt. */
 .cf-n { font-size: .78em; opacity: .6; font-variant-numeric: tabular-nums; font-style: normal; }
+
+/* ---------- Chips de filtros activos (CatalogTags) ---------- */
+.cf-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.cf-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border: 1.5px solid currentColor; border-radius: 999px;
+  background: transparent; color: inherit; font: inherit; font-size: .84em;
+  font-weight: 600; line-height: 1.4; cursor: pointer; opacity: .85;
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.cf-tag:hover { opacity: 1; }
+.cf-tag-x { font-style: normal; font-size: 1.05em; line-height: 1; opacity: .7; }
+.cf-tag.clear { border-style: dashed; opacity: .7; }
+
+/* =====================================================================
+   CLÁSICO — dentro de .sp-drawer: cada grupo se ve como un .sp-nav-group
+   y cada opción como un .sp-nav-item (fila con contador a la derecha).
+   ===================================================================== */
+.sp-drawer .cf-facets { display: contents; }
+.sp-drawer .cf-fset { display: grid; gap: 4px; padding: 16px 0 12px; border-top: 1px solid var(--sp-line); }
+.sp-drawer .cf-fset-name {
+  margin: 4px 12px 8px; font-size: 11px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--sp-accent-text); opacity: 1;
+}
+.sp-drawer .cf-opt {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 9px 12px; border: 0; border-radius: 9px;
+  background: transparent; color: var(--sp-ink-2); font-size: 14px; font-weight: 500;
+  text-align: left; opacity: 1; transition: background .12s, color .12s;
+}
+.sp-drawer .cf-opt:hover { background: var(--store-accent-soft); color: var(--store-accent-ink); opacity: 1; }
+.store-page[data-store-theme='dark'] .sp-drawer .cf-opt:hover { background: color-mix(in srgb, var(--store-accent) 16%, transparent); color: #fff; }
+.sp-drawer .cf-opt.on { background: var(--store-accent-soft); border-color: transparent; color: var(--store-accent-ink); font-weight: 650; }
+.store-page[data-store-theme='dark'] .sp-drawer .cf-opt.on { background: color-mix(in srgb, var(--store-accent) 22%, transparent); color: #fff; }
+.sp-drawer .cf-opt.on::before {
+  content: ''; position: absolute; left: 0; top: 22%; bottom: 22%;
+  width: 3px; border-radius: 99px; background: var(--store-accent);
+}
+.sp-drawer .cf-opt > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* =====================================================================
+   PERSPECTIVA — chips ladeados como los .cv-pe-brand del panel.
+   ===================================================================== */
+.cv-pe .cf-facets { display: grid; gap: 12px; margin-top: 18px; }
+.cv-pe .cf-fset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cv-pe .cf-fset-name {
+  flex: 0 0 100%; margin: 0; font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--sp-muted); opacity: 1;
+}
+.cv-pe .cf-opt {
+  padding: 7px 14px; border-radius: 8px; border: 1px dashed var(--sp-line);
+  background: transparent; color: var(--sp-ink-2); font-size: 13px; font-weight: 600;
+  opacity: 1; transform: skewX(-8deg);
+}
+.cv-pe .cf-opt:hover { border-color: var(--store-accent); opacity: 1; }
+.cv-pe .cf-opt.on { background: var(--store-accent-ink); border-style: solid; border-color: var(--store-accent-ink); color: #fff; }
+.cv-pe .cf-tags { margin-top: 16px; }
+.cv-pe .cf-tag {
+  padding: 6px 13px; border-radius: 8px; transform: skewX(-8deg);
+  border: 1px solid color-mix(in srgb, var(--store-accent) 45%, var(--sp-line));
+  background: var(--store-accent-soft); color: var(--sp-accent-text); font-size: 12.5px; font-weight: 600; opacity: 1;
+}
+.cv-pe .cf-tag.clear { background: transparent; border-style: dashed; border-color: var(--sp-line); color: var(--sp-muted); }
+
+/* =====================================================================
+   DÚO — cada grupo ocupa un slot del panel lateral como .cv-du-group y
+   las opciones se ven como .cv-du-tag.
+   ===================================================================== */
+.cv-du .cf-facets { display: contents; }
+.cv-du .cf-fset { display: flex; flex-wrap: wrap; gap: 6px; }
+.cv-du .cf-fset-name {
+  flex: 0 0 100%; margin: 0 0 4px; font-size: 11px; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--sp-muted); opacity: 1;
+}
+.cv-du .cf-opt {
+  padding: 6px 12px; border-radius: 99px; border: 1px solid var(--sp-line);
+  background: transparent; font-size: 13px; font-weight: 600; color: var(--sp-ink-2); opacity: 1;
+}
+.cv-du .cf-opt.on { background: var(--store-accent-ink); border-color: var(--store-accent-ink); color: #fff; }
+.cv-du .cf-tags { margin-bottom: 16px; }
+.cv-du .cf-tag {
+  padding: 6px 12px; border-radius: 99px; font-size: 12.5px; font-weight: 600;
+  border: 1px solid var(--store-accent-ink); background: var(--store-accent-ink); color: #fff; opacity: 1;
+}
+.cv-du .cf-tag.clear { background: transparent; border-style: dashed; border-color: var(--sp-line); color: var(--sp-muted); }
+
+/* =====================================================================
+   URBANO — stickers con sombra dura, como .cv-st-pill.
+   ===================================================================== */
+.cv-st .cf-facets { display: grid; gap: 16px; margin-top: 26px; }
+.cv-st .cf-fset { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 10px; }
+.cv-st .cf-fset-name {
+  flex: 0 0 100%; margin: 0; font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--sp-muted); opacity: 1;
+}
+.cv-st .cf-opt {
+  padding: 7px 16px; border: 3px solid var(--sp-ink); border-radius: 99px;
+  background: var(--sp-card-solid); box-shadow: 3px 3px 0 var(--sp-ink);
+  font-family: var(--sp-display); font-size: 12px; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--sp-ink); opacity: 1;
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+.cv-st .cf-opt:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--sp-ink); opacity: 1; }
+.cv-st .cf-opt.on { background: var(--store-accent-ink); border-color: var(--sp-ink); color: #fff; }
+.cv-st .cf-tags { margin-top: 18px; }
+.cv-st .cf-tag {
+  padding: 6px 14px; border: 2px solid var(--sp-ink); border-radius: 99px;
+  background: var(--store-accent); box-shadow: 2px 2px 0 var(--sp-ink);
+  font-family: var(--sp-display); font-size: 11px; letter-spacing: .03em;
+  text-transform: uppercase; color: #fff; opacity: 1;
+}
+.cv-st .cf-tag.clear { background: var(--sp-card-solid); border-style: dashed; color: var(--sp-ink); }
+
+/* =====================================================================
+   PUBLICIDAD — chips bold como .cv-pr-chip.
+   ===================================================================== */
+.cv-pr .cf-facets { display: grid; gap: 14px; margin-top: 16px; }
+.cv-pr .cf-fset { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cv-pr .cf-fset-name {
+  flex: 0 0 100%; margin: 0; font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--sp-muted); opacity: 1;
+}
+.cv-pr .cf-opt {
+  padding: 8px 16px; border-radius: 99px; border: 2px solid var(--sp-line);
+  background: var(--sp-card-solid); font-size: 13px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--sp-ink-2); opacity: 1;
+}
+.cv-pr .cf-opt:hover { border-color: var(--store-accent); opacity: 1; }
+.cv-pr .cf-opt.on { background: var(--store-accent-ink); border-color: var(--store-accent-ink); color: #fff; }
+.cv-pr .cf-tags { margin-top: 14px; }
+.cv-pr .cf-tag {
+  padding: 7px 14px; border-radius: 99px;
+  border: 2px solid var(--store-accent-ink); background: var(--store-accent-ink); color: #fff;
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; opacity: 1;
+}
+.cv-pr .cf-tag.clear { background: transparent; border-style: dashed; border-color: var(--sp-line); color: var(--sp-muted); }
+
+/* =====================================================================
+   LOOKBOOK — líneas de índice editorial: etiqueta en versalitas y los
+   valores como texto con la firma itálica del .cv-lb-sorts.
+   ===================================================================== */
+.cv-lb .cf-facets { display: grid; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--lb-rule); }
+.cv-lb .cf-fset { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; font-size: 14px; color: var(--lb-ink); }
+.cv-lb .cf-fset-name {
+  flex: none; margin: 0; font-size: 10.5px; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--lb-dim); opacity: 1;
+}
+.cv-lb .cf-opt {
+  padding: 2px 0; border: 0; border-radius: 0; background: none;
+  color: var(--lb-dim); font-size: 14px; font-weight: 400; opacity: 1;
+  transition: color .15s;
+}
+.cv-lb .cf-opt:hover { color: var(--lb-ink); opacity: 1; }
+.cv-lb .cf-opt.on { background: none; border-color: transparent; color: var(--lb-ink); font-style: italic; border-bottom: 1px solid var(--store-accent); }
+.cv-lb .cf-tags { padding-top: 14px; }
+.cv-lb .cf-tag {
+  padding: 4px 11px; border: 1px solid var(--lb-rule); border-radius: 99px;
+  background: transparent; color: var(--lb-dim); font-size: 12.5px; font-weight: 500; opacity: 1;
+}
+.cv-lb .cf-tag:hover { color: var(--lb-ink); border-color: var(--lb-ink); }
+.cv-lb .cf-tag.clear { border-style: dashed; font-style: italic; }
+
+/* =====================================================================
+   TIENDA PRO — filas de checklist dentro de .cv-sh-box, como .check.
+   ===================================================================== */
+.cv-sh .cf-facets { display: grid; gap: 10px; }
+.cv-sh .cf-fset { display: grid; gap: 2px; }
+.cv-sh .cf-fset-name {
+  margin: 0 0 4px; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--sp-muted); opacity: 1;
+}
+.cv-sh .cf-opt {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 7px 8px; border: 0; border-radius: 8px;
+  background: transparent; font-size: 14px; font-weight: 400; text-align: left;
+  color: var(--sp-ink-2); opacity: 1;
+}
+.cv-sh .cf-opt::before {
+  content: ''; flex: none; width: 15px; height: 15px;
+  border: 1.5px solid var(--sp-muted); border-radius: 4px; background: transparent;
+}
+.cv-sh .cf-opt:hover { background: var(--sp-soft); opacity: 1; }
+.cv-sh .cf-opt.on { background: var(--store-accent-soft); border-color: transparent; color: var(--sp-accent-text); font-weight: 700; }
+.cv-sh .cf-opt.on::before { background: var(--store-accent-ink); border-color: var(--store-accent-ink); }
+.cv-sh .cf-opt.on::after {
+  content: ''; position: absolute; left: 13px; top: 50%; width: 4px; height: 8px;
+  margin-top: -6px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.cv-sh .cf-opt > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* =====================================================================
+   COBRE — sub-filtros en la barra fija, como .cv-cb-sub (etiqueta en
+   línea + botones con borde de tinta).
+   ===================================================================== */
+.cv-cb .cf-facets { display: grid; gap: 8px; padding-bottom: 12px; }
+.cv-cb .cf-fset {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+}
+.cv-cb .cf-fset-name { flex: none; margin: 0; font-size: 12px; letter-spacing: .12em; color: var(--cb-muted); opacity: 1; }
+.cv-cb .cf-opt {
+  padding: 4px 11px; border: 1px solid var(--cb-ink); border-radius: 0;
+  background: transparent; letter-spacing: .06em; color: var(--cb-ink);
+  font-size: 12px; font-weight: 700; text-transform: uppercase; opacity: 1;
+}
+.cv-cb .cf-opt.on { background: var(--store-accent-ink); border-color: var(--store-accent-ink); color: #fff; }
+.cv-cb .cf-tags { margin-bottom: 20px; }
+.cv-cb .cf-tag {
+  padding: 4px 11px; border: 1px solid var(--cb-ink); border-radius: 0;
+  background: var(--cb-ink); color: var(--cb-stone);
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: 1;
+}
+.cv-cb .cf-tag.clear { background: transparent; border-style: dashed; color: var(--cb-muted); }
+
+/* =====================================================================
+   MINIMAL — chips finitos como .cv-mn-brands.
+   ===================================================================== */
+.cv-mn .cf-facets { display: grid; gap: 12px; margin-top: 14px; }
+.cv-mn .cf-fset { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.cv-mn .cf-fset-name {
+  flex: 0 0 100%; margin: 0; font-size: 12px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--mn-muted); opacity: 1;
+}
+.cv-mn .cf-opt {
+  padding: 4px 11px; border: 1px solid var(--mn-line); border-radius: 2px;
+  background: transparent; font-size: 12px; font-weight: 400; color: var(--mn-muted); opacity: 1;
+}
+.cv-mn .cf-opt:hover { border-color: var(--mn-ink); color: var(--mn-ink); opacity: 1; }
+.cv-mn .cf-opt.on { background: var(--mn-ink); border-color: var(--mn-ink); color: var(--mn-paper); }
+.cv-mn .cf-tags { margin-top: 14px; }
+.cv-mn .cf-tag {
+  padding: 4px 11px; border: 1px solid var(--mn-ink); border-radius: 2px;
+  background: var(--mn-ink); color: var(--mn-paper); font-size: 12px; font-weight: 600; opacity: 1;
+}
+.cv-mn .cf-tag.clear { background: transparent; border-style: dashed; border-color: var(--mn-line); color: var(--mn-muted); }
+
+/* =====================================================================
+   BOUTIQUE — vínculos espaciados centrados como .cv-bt-brands, con la
+   etiqueta de grupo como rúbrica centrada.
+   ===================================================================== */
+.cv-bt .cf-facets { display: grid; gap: 8px; margin-top: 14px; }
+.cv-bt .cf-fset { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 6px 22px; }
+.cv-bt .cf-fset-name {
+  flex: 0 0 100%; margin: 0 0 2px; text-align: center; font-size: 10.5px;
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--bt-muted); opacity: 1;
+}
+.cv-bt .cf-opt {
+  padding: 3px 0; border: 0; border-radius: 0; background: none;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--bt-muted); opacity: 1;
+}
+.cv-bt .cf-opt:hover { color: var(--bt-ink); opacity: 1; }
+.cv-bt .cf-opt.on { background: none; border-color: transparent; color: var(--bt-ink); border-bottom: 1px solid var(--store-accent); }
+.cv-bt .cf-tags { justify-content: center; margin-top: 16px; }
+.cv-bt .cf-tag {
+  padding: 5px 12px; border: 1px solid var(--bt-line); border-radius: 0;
+  background: var(--bt-surface); font-size: 10.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--bt-ink); opacity: 1;
+}
+.cv-bt .cf-tag.clear { background: transparent; border-style: dashed; color: var(--bt-muted); }
+
+/* =====================================================================
+   SIGNATURE — índice grabado como .cv-sg-brands (mayúsculas espaciadas,
+   firma con filete de acento).
+   ===================================================================== */
+.cv-sg .cf-facets { display: grid; gap: 10px; margin-top: 16px; }
+.cv-sg .cf-fset { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 8px 24px; }
+.cv-sg .cf-fset-name {
+  flex: 0 0 100%; margin: 0; text-align: center; font-size: 10px;
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--sg-muted); opacity: 1;
+}
+.cv-sg .cf-opt {
+  padding: 4px 2px; border: 0; border-radius: 0; background: none;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--sg-muted); opacity: 1;
+}
+.cv-sg .cf-opt:hover { color: var(--sg-ink); opacity: 1; }
+.cv-sg .cf-opt.on { background: none; border-color: transparent; color: var(--sg-ink); border-bottom: 1px solid var(--store-accent); }
+.cv-sg .cf-tags { justify-content: center; margin-top: 16px; }
+.cv-sg .cf-tag {
+  padding: 5px 12px; border: 1px solid var(--sg-line); border-radius: var(--sp-radius);
+  background: var(--sg-panel); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--sg-ink); opacity: 1;
+}
+.cv-sg .cf-tag.clear { background: transparent; border-style: dashed; color: var(--sg-muted); }
+
+/* =====================================================================
+   AURORA — chips de vidrio como la constelación .cv-au-cats.
+   ===================================================================== */
+.cv-au .cf-facets { display: grid; gap: 10px; margin-top: 14px; }
+.cv-au .cf-fset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cv-au .cf-fset-name {
+  flex: none; margin: 0 6px 0 0; font-family: var(--sp-label); font-size: 10px;
+  font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--au-muted); opacity: 1;
+}
+.cv-au .cf-opt {
+  display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px;
+  border-radius: 99px; border: 1px solid var(--au-line); background: var(--au-glass);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--au-ink-2); font-family: var(--sp-label); font-size: 11.5px;
+  font-weight: 600; letter-spacing: .06em; opacity: 1;
+  transition: border-color .2s, color .2s, background .2s, transform .2s var(--sp-ease);
+}
+.cv-au .cf-opt:hover { border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); color: var(--au-ink); opacity: 1; }
+.cv-au .cf-opt.on {
+  background: linear-gradient(120deg, var(--store-accent), var(--au-hue2));
+  border-color: transparent; color: #fff;
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--store-accent) 65%, transparent);
+}
+.cv-au .cf-tags { margin-top: 16px; }
+.cv-au .cf-tag {
+  height: 32px; padding: 0 13px; border-radius: 99px;
+  border: 1px solid var(--au-line); background: var(--au-glass);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--au-ink); font-family: var(--sp-label); font-size: 11px;
+  font-weight: 600; letter-spacing: .08em; opacity: 1;
+}
+.cv-au .cf-tag.clear { border-style: dashed; color: var(--au-muted); }
+
+/* =====================================================================
+   RISO — filas con casilla rotada como .cv-rs-opt dentro de .cv-rs-aside.
+   ===================================================================== */
+.cv-rs .cf-facets { display: contents; }
+.cv-rs .cf-fset { display: grid; gap: 4px; }
+.cv-rs .cf-fset-name {
+  margin: 0 0 6px; font-family: var(--rs-display); font-weight: 700;
+  font-size: 18px; text-transform: none; letter-spacing: 0; color: var(--rs-ink); opacity: 1;
+}
+.cv-rs .cf-opt {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 10px; border: 0; border-radius: 12px; background: transparent;
+  color: var(--rs-ink); font: 500 14px var(--rs-body); text-align: left; opacity: 1;
+  transition: background-color .25s, transform .3s var(--rs-spring);
+}
+.cv-rs .cf-opt::before {
+  content: ''; flex: none; width: 16px; height: 16px; border-radius: 5px;
+  border: 2px solid var(--rs-ink); background: var(--rs-card);
+  transition: background-color .2s, transform .35s var(--rs-spring);
+}
+.cv-rs .cf-opt:hover { background: color-mix(in oklab, var(--rs-yellow) 35%, transparent); transform: translateX(3px); opacity: 1; }
+.cv-rs .cf-opt.on { background: transparent; border-color: transparent; color: var(--rs-ink); font-weight: 700; }
+.cv-rs .cf-opt.on::before { background: var(--rs-pink); transform: rotate(-8deg) scale(1.1); }
+.cv-rs .cf-opt:focus-visible { outline: 3px solid var(--rs-blue); outline-offset: 2px; }
+.cv-rs .cf-opt > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* =====================================================================
+   BLOQUE — celdas de archivo como .cv-bq-opt dentro de .cv-bq-aside.
+   ===================================================================== */
+.cv-bq .cf-facets { display: contents; }
+.cv-bq .cf-fset { display: block; padding: 16px 0; border-bottom: 1.5px solid var(--bq-line); }
+.cv-bq .cf-fset-name {
+  margin: 0 0 12px; font-family: var(--bq-mono); font-size: 10.5px;
+  font-weight: 500; text-transform: uppercase; letter-spacing: .12em; color: var(--bq-mute); opacity: 1;
+}
+.cv-bq .cf-opt {
+  display: block; width: 100%; margin: 0 0 4px; padding: 7px 10px;
+  border: 1.5px solid var(--bq-line); border-radius: 0; background: transparent;
+  color: var(--bq-ink); font-family: var(--bq-mono); font-size: 11.5px;
+  text-transform: uppercase; letter-spacing: .06em; text-align: left; opacity: 1;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.cv-bq .cf-opt:hover { border-color: var(--bq-rule); opacity: 1; }
+.cv-bq .cf-opt.on { background: var(--bq-ink); border-color: var(--bq-ink); color: var(--bq-paper); }
+
+/* =====================================================================
+   MÓVIL — cada fila de facetas/tags se vuelve una tira deslizable como el
+   resto de los filtros del diseño (la etiqueta del grupo viaja en línea).
+   ===================================================================== */
+@media (max-width: 720px) {
+  .cv-pe .cf-fset, .cv-st .cf-fset, .cv-pr .cf-fset, .cv-cb .cf-fset, .cv-du .cf-fset,
+  .cv-mn .cf-fset, .cv-bt .cf-fset, .cv-sg .cf-fset, .cv-au .cf-fset, .cv-lb .cf-fset,
+  .cv-pe .cf-tags, .cv-st .cf-tags, .cv-pr .cf-tags, .cv-cb .cf-tags, .cv-du .cf-tags,
+  .cv-mn .cf-tags, .cv-bt .cf-tags, .cv-sg .cf-tags, .cv-au .cf-tags, .cv-lb .cf-tags {
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    margin-inline: -18px; padding-inline: 18px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 28px), transparent);
+  }
+  .cv-pe .cf-fset::-webkit-scrollbar, .cv-st .cf-fset::-webkit-scrollbar, .cv-pr .cf-fset::-webkit-scrollbar,
+  .cv-cb .cf-fset::-webkit-scrollbar, .cv-du .cf-fset::-webkit-scrollbar, .cv-mn .cf-fset::-webkit-scrollbar,
+  .cv-bt .cf-fset::-webkit-scrollbar, .cv-sg .cf-fset::-webkit-scrollbar, .cv-au .cf-fset::-webkit-scrollbar,
+  .cv-lb .cf-fset::-webkit-scrollbar,
+  .cv-pe .cf-tags::-webkit-scrollbar, .cv-st .cf-tags::-webkit-scrollbar, .cv-pr .cf-tags::-webkit-scrollbar,
+  .cv-cb .cf-tags::-webkit-scrollbar, .cv-du .cf-tags::-webkit-scrollbar, .cv-mn .cf-tags::-webkit-scrollbar,
+  .cv-bt .cf-tags::-webkit-scrollbar, .cv-sg .cf-tags::-webkit-scrollbar, .cv-au .cf-tags::-webkit-scrollbar,
+  .cv-lb .cf-tags::-webkit-scrollbar { display: none; }
+  .cv-pe .cf-fset > *, .cv-st .cf-fset > *, .cv-pr .cf-fset > *, .cv-cb .cf-fset > *, .cv-du .cf-fset > *,
+  .cv-mn .cf-fset > *, .cv-bt .cf-fset > *, .cv-sg .cf-fset > *, .cv-au .cf-fset > *, .cv-lb .cf-fset > *,
+  .cv-pe .cf-tags > *, .cv-st .cf-tags > *, .cv-pr .cf-tags > *, .cv-cb .cf-tags > *, .cv-du .cf-tags > *,
+  .cv-mn .cf-tags > *, .cv-bt .cf-tags > *, .cv-sg .cf-tags > *, .cv-au .cf-tags > *, .cv-lb .cf-tags > * {
+    flex: none; white-space: nowrap; scroll-snap-align: start;
+  }
+  /* En la tira deslizable la etiqueta del grupo viaja como primer ítem. */
+  .cv-pe .cf-fset-name, .cv-st .cf-fset-name, .cv-pr .cf-fset-name, .cv-mn .cf-fset-name,
+  .cv-bt .cf-fset-name, .cv-sg .cf-fset-name, .cv-au .cf-fset-name, .cv-du .cf-fset-name { flex: none; margin: 0; }
+  .cv-bt .cf-fset, .cv-sg .cf-fset, .cv-bt .cf-tags, .cv-sg .cf-tags { justify-content: flex-start; }
+  /* Urbano: mantener la sombra dentro de la tira. */
+  .cv-st .cf-fset { padding-bottom: 8px; }
+  .cv-st .cf-tags { padding-bottom: 8px; }
+  /* Perspectiva: el skew no se corta contra el borde de la tira. */
+  .cv-pe .cf-fset, .cv-pe .cf-tags { padding-left: 6px; padding-right: 6px; }
+  /* Bloque: los fsets se reparten como sus .cv-bq-fset nativos. */
+  .cv-bq .cf-fset { flex: 1 1 200px; border-bottom: 0; padding: 0; }
+  /* Tienda Pro: listas largas acotadas como sus .cv-sh-box ul. */
+  .cv-sh .cf-fset { max-height: 220px; overflow-y: auto; }
+  /* Dúo: en columna única el nombre del grupo se esconde como .cv-du-label. */
+  .cv-du .cf-fset-name { display: none; }
+}
+
+/* Pantallas muy angostas: la tira sangra al margen real del .cv-wrap (14px). */
+@media (max-width: 400px) {
+  .cv-pe .cf-fset, .cv-st .cf-fset, .cv-pr .cf-fset, .cv-cb .cf-fset,
+  .cv-mn .cf-fset, .cv-bt .cf-fset, .cv-sg .cf-fset, .cv-au .cf-fset, .cv-lb .cf-fset,
+  .cv-pe .cf-tags, .cv-st .cf-tags, .cv-pr .cf-tags, .cv-cb .cf-tags,
+  .cv-mn .cf-tags, .cv-bt .cf-tags, .cv-sg .cf-tags, .cv-au .cf-tags, .cv-lb .cf-tags {
+    margin-inline: -14px; padding-inline: 14px;
+  }
+  .cv-pe .cf-fset, .cv-pe .cf-tags { padding-left: 6px; padding-right: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-opt, .cf-tag { transition-duration: .01ms !important; }
+}

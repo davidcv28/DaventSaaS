@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Signature (casa de autor): el catálogo como vitrina ceremonial — dateline
@@ -33,7 +34,7 @@ const {
       <p class="cv-sg-dateline"><i aria-hidden="true"></i><span>{{ shopName }}</span><i aria-hidden="true"></i><span>{{ year }}</span></p>
       <h1 class="cv-sg-title">La vitrina</h1>
       <p class="cv-sg-orn" aria-hidden="true"><i></i><span class="cv-sg-romb"></span><i></i></p>
-      <p class="cv-sg-lede">{{ total }} {{ total === 1 ? 'pieza' : 'piezas' }} · Precios en pesos argentinos</p>
+      <p class="cv-sg-lede" role="status" aria-live="polite">{{ total }} {{ total === 1 ? 'pieza' : 'piezas' }} · Precios en pesos argentinos</p>
 
       <div v-if="catalog.categories.length" class="cv-sg-cats" role="group" aria-label="Categorías">
         <button type="button" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todo</button>
@@ -53,6 +54,7 @@ const {
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="13" /> Limpiar</button>
     </div>
     <CatalogFacets />
+    <CatalogTags />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

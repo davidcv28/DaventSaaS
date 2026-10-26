@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Minimal: lo esencial — sin hero ni cromo. Un título chico, una línea
@@ -49,6 +50,7 @@ const {
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters">Limpiar</button>
     </div>
     <CatalogFacets />
+    <CatalogTags />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

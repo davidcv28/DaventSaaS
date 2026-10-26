@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Cobre: retail de indumentaria — placa de acento con titular condensado,
@@ -30,7 +31,7 @@ const {
         <span aria-current="page">Catálogo</span>
       </nav>
       <h1 class="cv-cb-title"><span>Colección</span> <mark>{{ year }}</mark></h1>
-      <ul class="cv-cb-facts">
+      <ul class="cv-cb-facts" role="status" aria-live="polite">
         <li><strong>{{ total }}</strong> {{ total === 1 ? 'producto' : 'productos' }}</li>
         <li v-if="catalog.categories.length"><strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</li>
         <li>{{ shopName }}</li>
@@ -59,6 +60,7 @@ const {
   </div>
 
   <main class="cv-wrap cv-cb-main">
+    <CatalogTags />
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 

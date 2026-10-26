@@ -2,13 +2,14 @@
 import { computed } from 'vue'
 import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
-import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
+import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Publicidad: el catálogo como folleto de campaña — afiche con ráfaga, un
@@ -59,6 +60,7 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
             <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="flame" :size="12" />
             <p class="cv-pr-was">{{ formatARS(p.price) }}</p>
             <p class="cv-pr-now">{{ formatARS(effectivePrice(p)) }}</p>
+            <p v-if="offerEndsLabel(productDiscount(p))" class="cv-pr-ends">{{ offerEndsLabel(productDiscount(p)) }}</p>
           </div>
         </article>
       </div>
@@ -77,6 +79,7 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
         <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-pr-chip alt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
       </div>
       <CatalogFacets />
+      <CatalogTags />
 
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
@@ -93,6 +96,7 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
             <h3 class="cv-pr-name">{{ p.name }}</h3>
             <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="flame" :size="12" />
             <p class="cv-pr-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
+            <p v-if="offerEndsLabel(productDiscount(p))" class="cv-pr-ends">{{ offerEndsLabel(productDiscount(p)) }}</p>
             <a v-if="whatsappUrl" class="cv-pr-cta" :href="askUrl(p)" target="_blank" rel="noopener" @click.stop><AppIcon name="whatsapp" :size="16" /> Lo quiero</a>
             <button v-else type="button" class="cv-pr-cta" @click="openProduct(p)"><AppIcon name="eye" :size="16" /> Ver producto</button>
           </div>

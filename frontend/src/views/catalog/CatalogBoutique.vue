@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Boutique: departamentos primero — título serif centrado con ornamento,
@@ -32,7 +33,7 @@ const {
       <p class="cv-bt-season"><span>{{ shopName }}</span><i aria-hidden="true"></i><span>Colección {{ year }}</span></p>
       <h1 class="cv-bt-title">La <em>colección</em></h1>
       <p class="cv-bt-orn" aria-hidden="true"><i></i><AppIcon name="sparkles" :size="14" /><i></i></p>
-      <p class="cv-bt-lede">{{ total }} {{ total === 1 ? 'producto' : 'productos' }} · Precios en pesos argentinos</p>
+      <p class="cv-bt-lede" role="status" aria-live="polite">{{ total }} {{ total === 1 ? 'producto' : 'productos' }} · Precios en pesos argentinos</p>
 
       <div v-if="catalog.categories.length" class="cv-bt-depts" role="group" aria-label="Departamentos">
         <button type="button" class="cv-bt-dept" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">
@@ -56,6 +57,7 @@ const {
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="13" /> Limpiar</button>
     </div>
     <CatalogFacets />
+    <CatalogTags />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

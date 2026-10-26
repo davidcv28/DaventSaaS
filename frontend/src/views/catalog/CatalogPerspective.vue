@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Perspectiva: el catálogo como un escenario en profundidad — piso con punto
@@ -46,7 +47,7 @@ function untilt(e) {
         <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="13" aria-hidden="true" />
         <span aria-current="page">Catálogo</span>
       </nav>
-      <p class="cv-pe-kicker">{{ shopName }} <i aria-hidden="true"></i> {{ total }} {{ total === 1 ? 'producto' : 'productos' }}</p>
+      <p class="cv-pe-kicker" role="status" aria-live="polite">{{ shopName }} <i aria-hidden="true"></i> {{ total }} {{ total === 1 ? 'producto' : 'productos' }}</p>
       <h1 class="cv-pe-title" data-text="Catálogo">Catálogo</h1>
       <div v-if="catalog.categories.length" class="cv-pe-planes" role="group" aria-label="Categorías">
         <button type="button" class="cv-pe-plane" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories"><span>Todo</span></button>
@@ -81,6 +82,7 @@ function untilt(e) {
       <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-pe-brand" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
     </div>
     <CatalogFacets />
+    <CatalogTags />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

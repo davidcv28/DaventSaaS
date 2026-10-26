@@ -275,6 +275,9 @@
 .cv-pr-poster-body h3 { font-size: 17px; font-weight: 800; line-height: 1.2; color: var(--sp-ink); }
 .cv-pr-was { margin-top: 8px; font-size: 13px; color: var(--sp-muted); text-decoration: line-through; }
 .cv-pr-now { font-size: 30px; font-weight: 900; letter-spacing: -.03em; color: var(--sp-accent-text); line-height: 1.1; }
+/* Urgencia de la promo vigente ("Termina mañana") bajo el precio, en
+   poster y tarjeta de grilla — la fecha la da product.discount.ends_at. */
+.cv-pr-ends { margin-top: 6px; font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--sp-accent-text); }
 .cv-pr-bar { display: flex; flex-wrap: wrap; gap: 12px; }
 .cv-pr-box { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border: 2px solid var(--sp-line); border-radius: 12px; background: var(--sp-card-solid); color: var(--sp-muted); font-size: 14px; }
 .cv-pr-box:focus-within { border-color: var(--store-accent); }
@@ -301,6 +304,7 @@
 .cv-pr-name { margin-top: 4px; font-size: 16px; font-weight: 800; line-height: 1.25; color: var(--sp-ink); }
 .cv-pr-price { margin: 8px 0 14px; font-size: 24px; font-weight: 900; letter-spacing: -.03em; color: var(--sp-accent-text); }
 .cv-pr-price s { font-size: 14px; color: var(--sp-muted); letter-spacing: 0; }
+.cv-pr-price + .cv-pr-ends { margin: -8px 0 12px; }
 .cv-pr-cta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; padding: 12px; border-radius: 12px; background: #0f7a3d; color: #fff; font-size: 14px; font-weight: 800; text-decoration: none; transition: filter .15s, transform .15s; }
 button.cv-pr-cta { background: var(--store-accent-ink); }
 .cv-pr-cta:hover { filter: brightness(1.12); transform: translateY(-1px); }

@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Dúo: pantalla partida — a la izquierda un panel fijo con la presentación,
@@ -30,7 +31,7 @@ const {
         <span aria-current="page">Catálogo</span>
       </nav>
       <h1 class="cv-du-title">Todo lo que<br /><em>{{ shopName }}</em> tiene para vos</h1>
-      <p class="cv-du-count"><strong>{{ total }}</strong> {{ total === 1 ? 'producto' : 'productos' }}<template v-if="catalog.categories.length"> · <strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</template></p>
+      <p class="cv-du-count" role="status" aria-live="polite"><strong>{{ total }}</strong> {{ total === 1 ? 'producto' : 'productos' }}<template v-if="catalog.categories.length"> · <strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</template></p>
 
       <label class="cv-du-search">
         <AppIcon name="search" :size="16" aria-hidden="true" />
@@ -70,6 +71,7 @@ const {
     </aside>
 
     <section class="cv-du-list" aria-label="Productos">
+      <CatalogTags />
       <CatalogPromoBanner :promotions="catalog.promotions" />
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="5" @retry="loadCatalog" @clear="clearFilters" />
       <ol v-if="catalog.products.length" class="cv-du-rows" :class="{ loading: catalogStatus === 'loading' }">

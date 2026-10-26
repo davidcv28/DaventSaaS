@@ -8,6 +8,7 @@ import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFacets from './CatalogFacets.vue'
+import CatalogTags from './CatalogTags.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Lookbook: el catálogo como edición de revista — título serif con índice de
@@ -33,7 +34,7 @@ const pad = (n) => String(n).padStart(2, '0')
       </nav>
       <p class="cv-lb-issue"><span>Edición Nº {{ pad(1) }}</span><i aria-hidden="true"></i><span>{{ shopName }} · {{ year }}</span></p>
       <h1 class="cv-lb-title">Índice de la <em>colección</em></h1>
-      <p class="cv-lb-lede">{{ total }} {{ total === 1 ? 'pieza' : 'piezas' }} seleccionadas, ordenadas para hojear sin apuro.</p>
+      <p class="cv-lb-lede" role="status" aria-live="polite">{{ total }} {{ total === 1 ? 'pieza' : 'piezas' }} seleccionadas, ordenadas para hojear sin apuro.</p>
     </div>
     <nav v-if="catalog.categories.length" class="cv-lb-toc" aria-label="Categorías">
       <p class="cv-lb-toc-h">Contenido</p>
@@ -54,6 +55,7 @@ const pad = (n) => String(n).padStart(2, '0')
       <button v-if="hasFilters" type="button" class="cv-lb-reset" @click="clearFilters">Quitar filtros</button>
     </div>
     <CatalogFacets />
+    <CatalogTags />
 
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 
