@@ -6,6 +6,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Lookbook: el catálogo como edición de revista — título serif con índice de
 // contenidos (las categorías, numeradas), filtros escritos como texto
@@ -42,6 +43,7 @@ const pad = (n) => String(n).padStart(2, '0')
   </header>
 
   <main class="cv-wrap cv-lb-main">
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <div class="cv-lb-bar" role="group" aria-label="Filtros del catálogo">
       <label class="cv-lb-line"><span>Buscar</span><input v-model="ui.search" type="search" placeholder="una pieza…" aria-label="Buscar productos" /></label>
       <div class="cv-lb-line"><span>Precio</span><input v-model="priceMin" type="text" inputmode="decimal" placeholder="desde" aria-label="Precio mínimo" /><i aria-hidden="true">–</i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="hasta" aria-label="Precio máximo" /></div>

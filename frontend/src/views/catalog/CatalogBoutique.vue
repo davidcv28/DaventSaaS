@@ -6,6 +6,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Boutique: departamentos primero — título serif centrado con ornamento,
 // una fila de departamentos redondos con la foto de su primera prenda y una
@@ -53,6 +54,7 @@ const {
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="13" /> Limpiar</button>
     </div>
 
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-bt-grid" :class="{ loading: catalogStatus === 'loading' }">

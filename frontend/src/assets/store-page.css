@@ -1427,6 +1427,16 @@ html { scroll-behavior: smooth; }
 .spd-price-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .spd-offer-pill { padding: 4px 10px; border-radius: 99px; background: var(--store-accent-ink); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
 
+/* Promo programada que firma la oferta: nombre + vencimiento, en tarjeta
+   (.sp-card-promo) y en la ficha (.spd-promo). Solo aparece cuando el
+   precio efectivo lo define un descuento (product.discount del backend). */
+.sp-card-promo { display: inline-flex; align-items: center; gap: 5px; margin: 2px 0 0; font-size: 11px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--sp-accent-text); }
+.sp-card-promo svg { flex-shrink: 0; }
+.sp-card-promo-ends { color: var(--sp-muted); font-weight: 600; text-transform: none; letter-spacing: 0; }
+.spd-promo { display: flex; align-items: center; gap: 7px; margin: -2px 0 0; font-size: 13px; font-weight: 700; color: var(--sp-accent-text); }
+.spd-promo svg { flex-shrink: 0; }
+.spd-promo-ends { color: var(--sp-muted); font-weight: 600; }
+
 @media (prefers-reduced-motion: reduce) {
   .sp-hero-cover img { animation: none !important; transform: none; }
 }

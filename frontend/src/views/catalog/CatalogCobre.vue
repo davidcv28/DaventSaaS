@@ -6,6 +6,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Cobre: retail de indumentaria — placa de acento con titular condensado,
 // barra de colección fija con las categorías como pestañas, y una grilla de
@@ -55,6 +56,7 @@ const {
   </div>
 
   <main class="cv-wrap cv-cb-main">
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-cb-grid" :class="{ loading: catalogStatus === 'loading' }">

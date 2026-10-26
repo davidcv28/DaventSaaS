@@ -62,31 +62,47 @@ def discount_covers(discount, product):
     if scope == Discount.Scope.BRAND:
         return discount.brand_id is not None and product.brand_id == discount.brand_id
     return any(item.id == product.id for item in discount.products.all())
-def discount_price_of(product, discounts):
+def winning_discount_of(product, discounts):
     """
-    Mejor precio que deja algún descuento vigente sobre el producto
-    (el más bajo si se solapan). None si ninguno lo cubre o el precio
-    de lista es 0 (un 0% real no es oferta).
+    (precio, descuento) del descuento vigente que más baja el producto.
+    (None, None) si ninguno lo cubre o el precio de lista es 0 (un 0%
+    real no es oferta).
     """
+    best_price, best_discount   =   None, None
     if product.price is None or product.price <= 0:
-        return None
-    best    =   None
+        return best_price, best_discount
     for discount in discounts:
         if not discount_covers(discount, product):
             continue
         price   =   (product.price * Decimal(100 - discount.percent) / Decimal(100)).quantize(
             Decimal('0.01'), rounding = ROUND_HALF_UP)
-        if best is None or price < best:
-            best    =   price
-    return best
+        if best_price is None or price < best_price:
+            best_price, best_discount   =   price, discount
+    return best_price, best_discount
+def discount_price_of(product, discounts):
+    """
+    Mejor precio que deja algún descuento vigente sobre el producto
+    (el más bajo si se solapan). None si ninguno lo cubre.
+    """
+    return winning_discount_of(product, discounts)[0]
+def effective_pricing_of(product, discounts):
+    """
+    (oferta, descuento) efectivos del producto: la oferta es la menor
+    entre la manual (offer_price) y el mejor descuento vigente — solo
+    cuenta si queda por debajo del precio de lista. El descuento solo
+    "firma" la oferta cuando realmente gana: si la manual queda más baja,
+    el producto no lleva su nombre ni su fecha (sería engañar al público).
+    """
+    d_price, d_discount =   winning_discount_of(product, discounts)
+    manual              =   product.offer_price
+    if manual is not None and (product.price is None or manual >= product.price):
+        manual          =   None
+    discount_wins       =   d_price is not None and (manual is None or d_price < manual)
+    return (d_price if discount_wins else manual, d_discount if discount_wins else None)
 def effective_offer_of(product, discounts):
     """
     Oferta efectiva del producto: la menor entre la oferta manual
     (offer_price) y el mejor descuento vigente — misma regla que la web
     pública (solo cuenta si queda por debajo del precio de lista).
     """
-    offers  =   [
-        offer for offer in (product.offer_price, discount_price_of(product, discounts))
-        if offer is not None and product.price is not None and offer < product.price
-    ]
-    return min(offers) if offers else None
+    return effective_pricing_of(product, discounts)[0]

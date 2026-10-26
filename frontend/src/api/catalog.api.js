@@ -198,6 +198,39 @@ export function isNewProduct(p) {
   return Number.isFinite(created) && Date.now() - created < PRODUCT_NEW_DAYS * 864e5
 }
 
+// Descuento que firma la oferta pública: el backend lo anota en
+// product.discount {name, percent, ends_at} solo cuando el descuento
+// programado le gana a la oferta manual. Null si no hay o gana la manual.
+export function productDiscount(p) {
+  const d = p?.discount
+  return d && d.name ? d : null
+}
+
+// Texto de urgencia del fin de una promo: "Termina hoy", "Termina mañana"
+// o "Hasta el 30 nov". Null si no vence (ends_at null = sin fin declarado).
+export function offerEndsLabel(discount) {
+  const ends = new Date(discount?.ends_at || '')
+  if (Number.isNaN(ends.getTime())) return null
+  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const daysLeft = Math.round((dayStart(ends) - dayStart(new Date())) / 864e5)
+  if (daysLeft <= 0) return 'Termina hoy'
+  if (daysLeft === 1) return 'Termina mañana'
+  return `Hasta el ${ends.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`
+}
+
+// Alcance legible de una promo del banner público (promotions[] del
+// catálogo): "en toda la tienda", "en Calzas", "en Nike", "en productos
+// seleccionados".
+export function promoScopeLabel(promo) {
+  switch (promo?.scope) {
+    case 'all': return 'en toda la tienda'
+    case 'category': return promo.category_name ? `en ${promo.category_name}` : 'en una categoría'
+    case 'brand': return promo.brand_name ? `en ${promo.brand_name}` : 'en una marca'
+    case 'products': return 'en productos seleccionados'
+    default: return ''
+  }
+}
+
 // ===== Características (espejo de FeatureLimits en config_fields.py) =====
 export const FEATURE_LIMITS = { schemaMax: 15, nameMax: 40, entriesMax: 20, valueMax: 120 }
 

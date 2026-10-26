@@ -7,6 +7,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Publicidad: el catálogo como folleto de campaña — afiche con ráfaga, un
 // carril "Ofertas" con carteles de descuento y la grilla completa donde cada
@@ -41,6 +42,7 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
   </header>
 
   <main class="cv-wrap cv-pr-main">
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <section v-if="offers.length" class="cv-pr-offers" aria-labelledby="cv-pr-off-t">
       <h2 id="cv-pr-off-t" class="cv-pr-h"><AppIcon name="flame" :size="20" /> Ofertas de la semana</h2>
       <div class="cv-pr-rail">

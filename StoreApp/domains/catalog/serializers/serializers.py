@@ -87,9 +87,10 @@ class ProductSerializerList(serializers.ModelSerializer):
 class ProductPublicSerializer(serializers.ModelSerializer):
     image                       =   serializers.SerializerMethodField()
     offer_price                 =   serializers.SerializerMethodField()
+    discount                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at', 'discount']
     def get_image(self, product):
         return object_url(product.image_key)
     def get_offer_price(self, product):
@@ -97,6 +98,28 @@ class ProductPublicSerializer(serializers.ModelSerializer):
         #y el mejor descuento vigente — toda la web pública muestra el mismo
         #precio efectivo (badge, tachado, orden y filtros).
         return getattr(product, 'effective_offer', product.offer_price)
+    def get_discount(self, product):
+        #public_catalog anota effective_discount = el descuento que firma la
+        #oferta (o None si gana la manual). Se expone nombre, % y vencimiento
+        #para que la plantilla muestre la promo ("Black Friday", "termina
+        #el 30/11") sin revelar nada interno (scope, estado, ids).
+        discount    =   getattr(product, 'effective_discount', None)
+        if discount is None:
+            return None
+        return {
+            'name'      :   discount.name,
+            'percent'   :   discount.percent,
+            'ends_at'   :   discount.ends_at,
+        }
+#=========================================
+# DISCOUNT PUBLIC SERIALIZER (promos vigentes del catálogo público)
+#=========================================
+class DiscountPublicSerializer(serializers.ModelSerializer):
+    category_name               =   serializers.CharField(source = 'category.name', read_only = True)
+    brand_name                  =   serializers.CharField(source = 'brand.name', read_only = True)
+    class Meta:
+        model                   =   Discount
+        fields                  =   ['name', 'percent', 'scope', 'category', 'category_name', 'brand', 'brand_name', 'ends_at']
 #=========================================
 # DISCOUNT SERIALIZER (escritura del dueño)
 #=========================================

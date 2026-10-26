@@ -240,9 +240,9 @@ class StoreViewSet(StoreBaseViewSet):
     def public_catalog(self, request, slug = None):
         from StoreApp.domains.catalog.models import Product
         from StoreApp.domains.catalog.serializers.serializers import (
-            CategorySerializer, BrandSerializer, ProductPublicSerializer,
+            CategorySerializer, BrandSerializer, ProductPublicSerializer, DiscountPublicSerializer,
         )
-        from StoreApp.domains.catalog.services.services import running_discounts_of, effective_offer_of
+        from StoreApp.domains.catalog.services.services import running_discounts_of, effective_pricing_of
         store           =   get_object_or_404(
             Store.objects.select_related('user', 'customization'),
             slug = slug, is_published = True, is_blocked = False,
@@ -280,8 +280,10 @@ class StoreViewSet(StoreBaseViewSet):
         discounts       =   running_discounts_of(store)
         items           =   []
         for product in products:
-            product.effective_offer     =   effective_offer_of(product, discounts)
-            product.effective_price     =   product.effective_offer if product.effective_offer is not None else product.price
+            #El descuento solo firma la oferta cuando realmente gana — si la
+            #oferta manual queda más baja, no se le cuelga su nombre/fecha.
+            product.effective_offer, product.effective_discount =   effective_pricing_of(product, discounts)
+            product.effective_price       =   product.effective_offer if product.effective_offer is not None else product.price
             if min_price is not None and product.effective_price < min_price:
                 continue
             if max_price is not None and product.effective_price > max_price:
@@ -294,10 +296,15 @@ class StoreViewSet(StoreBaseViewSet):
             items.sort(key = lambda p: p.effective_price, reverse = (sort == 'price_desc'))
         categories      =   store.categories.all()
         brands          =   store.brands.all()
+        #Las promos vigentes viajan a nivel catálogo (nombre, %, alcance y
+        #vencimiento) para que las plantillas armen su propio banner —
+        #ordenadas de mayor a menor descuento.
+        promotions      =   sorted(discounts, key = lambda d: d.percent, reverse = True)
         response        =   Response(
             {
                 'categories'    :   CategorySerializer(categories, many = True).data,
                 'brands'        :   BrandSerializer(brands, many = True).data,
+                'promotions'    :   DiscountPublicSerializer(promotions, many = True).data,
                 'products'      :   ProductPublicSerializer(items, many = True).data,
             },
             status = status.HTTP_200_OK,

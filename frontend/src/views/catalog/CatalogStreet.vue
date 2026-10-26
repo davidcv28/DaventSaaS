@@ -7,6 +7,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Urbano: streetwear — titular XXL en outline, cinta de ticker con las
 // categorías, filtros como stickers con sombra dura y fichas numeradas de
@@ -70,6 +71,7 @@ const pad = (n) => String(n + 1).padStart(2, '0')
       <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-st-pill brand" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
     </div>
 
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-st-grid" :class="{ loading: catalogStatus === 'loading' }">

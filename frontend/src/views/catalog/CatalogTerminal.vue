@@ -4,6 +4,7 @@ import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogFeedback from './CatalogFeedback.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Terminal: el catálogo como salida de consola — barra de ventana, prompt
 // con el buscador, filtros como flags [--cat=...] y los productos como un
@@ -57,6 +58,7 @@ const pad = (n) => String(n + 1).padStart(3, '0')
           <button v-if="hasFilters" type="button" class="cv-tm-flag clear" @click="clearFilters">[reset]</button>
         </div>
 
+        <CatalogPromoBanner :promotions="catalog.promotions" />
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-tm-table" role="table" :class="{ loading: catalogStatus === 'loading' }" aria-label="Productos">

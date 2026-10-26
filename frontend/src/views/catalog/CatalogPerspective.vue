@@ -6,6 +6,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Perspectiva: el catálogo como un escenario en profundidad — piso con punto
 // de fuga bajo el título extruido, categorías como planos flotantes y
@@ -78,6 +79,7 @@ function untilt(e) {
       <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-pe-brand" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
     </div>
 
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-pe-grid" :class="{ loading: catalogStatus === 'loading' }" @pointermove="tilt" @pointerout="untilt">

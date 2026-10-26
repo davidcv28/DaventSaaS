@@ -6,6 +6,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Dúo: pantalla partida — a la izquierda un panel fijo con la presentación,
 // la navegación por categorías y los filtros; a la derecha el catálogo como
@@ -65,6 +66,7 @@ const {
     </aside>
 
     <section class="cv-du-list" aria-label="Productos">
+      <CatalogPromoBanner :promotions="catalog.promotions" />
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="5" @retry="loadCatalog" @clear="clearFilters" />
       <ol v-if="catalog.products.length" class="cv-du-rows" :class="{ loading: catalogStatus === 'loading' }">
         <li v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 60">

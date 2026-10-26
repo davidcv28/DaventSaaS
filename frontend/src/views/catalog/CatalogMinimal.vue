@@ -6,6 +6,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Minimal: lo esencial — sin hero ni cromo. Un título chico, una línea
 // fina con las categorías como texto separado por barras, buscador y orden
@@ -46,6 +47,7 @@ const {
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters">Limpiar</button>
     </div>
 
+    <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-mn-grid" :class="{ loading: catalogStatus === 'loading' }">

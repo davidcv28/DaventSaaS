@@ -7,6 +7,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
+import CatalogPromoBanner from './CatalogPromoBanner.vue'
 
 // Tienda Pro: resultados de marketplace — columna de filtros a la izquierda,
 // barra de resultados con orden y selector grilla/lista, chips de filtros
@@ -78,6 +79,7 @@ const filtersOpen = ref(false)
           <button v-if="hasPriceFilter" type="button" @click="clearPrice">{{ priceRangeLabel }} <AppIcon name="x" :size="12" /></button>
         </div>
 
+        <CatalogPromoBanner :promotions="catalog.promotions" />
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-sh-items" :class="[`is-${view}`, { loading: catalogStatus === 'loading' }]">

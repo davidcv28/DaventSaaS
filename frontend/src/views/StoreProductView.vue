@@ -3,7 +3,7 @@ import { ref, computed, watch, inject, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
-import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
+import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../api/catalog.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 
@@ -151,6 +151,10 @@ onMounted(() => {
                 <span class="spd-price">{{ formatARS(effectivePrice(product)) }}</span>
                 <span v-if="productOffer(product) != null" class="spd-offer-pill">-{{ offerPct(product) }}% OFF</span>
               </div>
+              <p v-if="productDiscount(product)" class="spd-promo">
+                <AppIcon name="tag" :size="14" aria-hidden="true" />
+                <span>Promo {{ productDiscount(product).name }}<span v-if="offerEndsLabel(productDiscount(product))" class="spd-promo-ends"> · {{ offerEndsLabel(productDiscount(product)) }}</span></span>
+              </p>
               <p class="spd-pay">
                 <AppIcon name="credit-card" :size="15" aria-hidden="true" />
                 Medios de pago, cuotas y envío se coordinan con el vendedor

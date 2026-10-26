@@ -393,5 +393,17 @@ precios stale ni un job que un atacante pueda interferir.
   Un desfasaje del reloj del cliente solo afecta lo que el dueño ve, no la
   vigencia server-side.
 
+### Addendum 2026-10-25 — metadata de descuentos en el catálogo público
+
+`public_catalog` ahora expone `promotions[]` (nombre, %, alcance y
+vencimiento de los descuentos vigentes) y `product.discount`
+(`{name, percent, ends_at}` del descuento que firma la oferta).
+Superficie revisada: solo datos de marketing que el dueño escribió para
+publicar; los `category`/`brand` ids ya viajaban en las mismas respuestas
+(`categories`/`brands` del payload). `is_active`, `products` M2M, ids de
+descuento y `store` **no** se exponen. La regla "el descuento firma solo
+cuando gana" (`effective_pricing_of`) evita mostrar una promo que no
+corresponde al precio mostrado — consistencia, no solo seguridad.
+
 **Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
 250 tests OK · `npm run build` (Vite) OK.

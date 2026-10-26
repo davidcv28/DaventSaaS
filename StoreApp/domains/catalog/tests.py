@@ -400,8 +400,28 @@ class DiscountPublicTests(TestCase):
             store = store, name = 'Promo', percent = 25, scope = 'all',
             starts_at = timezone.now() - timedelta(hours = 1),
         )
-        products        =   self._catalog().data['products']
+        response        =   self._catalog()
+        products        =   response.data['products']
         self.assertEqual(float(self._offer_of(products, 'Calza')), 75.0)
+        #El producto expone qué promo firma su oferta (nombre, %, fin) y la
+        #lista de promos vigentes viaja a nivel catálogo para el banner.
+        calza           =   next(p for p in products if p['name'] == 'Calza')
+        self.assertEqual(calza['discount'], {'name': 'Promo', 'percent': 25, 'ends_at': None})
+        self.assertEqual([p['name'] for p in response.data['promotions']], ['Promo'])
+
+    def test_winning_discount_is_none_when_manual_offer_wins(self):
+        #Si la oferta manual gana, el producto no firma el descuento: el
+        #público no vería un nombre/fecha que no corresponde a su precio.
+        store           =   self._setup()
+        Product.objects.create(store = store, name = 'Calza', price = 100, offer_price = 60)
+        Discount.objects.create(
+            store = store, name = 'Promo', percent = 25, scope = 'all',
+            starts_at = timezone.now() - timedelta(hours = 1),
+        )
+        products        =   self._catalog().data['products']
+        calza           =   next(p for p in products if p['name'] == 'Calza')
+        self.assertEqual(float(calza['offer_price']), 60.0)
+        self.assertIsNone(calza['discount'])
 
     def test_scheduled_discount_does_not_apply_yet(self):
         store           =   self._setup()
