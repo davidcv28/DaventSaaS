@@ -111,6 +111,11 @@ def spa(request):
     # (accounts.google.com = Google Identity Services); el frame cubre el
     # iframe del botón de Google. Sin ellos ese login quedaba roto únicamente
     # en el deploy empaquetado (en dev la CSP no aplica porque la SPA la sirve Vite).
+    # COOP: el default de SecurityMiddleware es 'same-origin', que aísla el
+    # popup de Google (window.opener = null) y el login social quedaba en
+    # blanco tras el consent — el popup no puede postMessagear la credencial.
+    # 'same-origin-allow-popups' conserva la referencia en popups que abrimos.
+    resp['Cross-Origin-Opener-Policy'] = 'same-origin-allow-popups'
     resp['Content-Security-Policy'] = (
         "default-src 'self'; "
         "script-src 'self' https://www.gstatic.com https://www.google.com https://apis.google.com https://accounts.google.com; "
