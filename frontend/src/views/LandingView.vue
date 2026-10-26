@@ -49,6 +49,7 @@ const strip = [
 
 const tagline = 'Tu comercio no cierra nunca. Mientras atendés el local, tu web muestra tus productos y te acerca clientes por WhatsApp.'
 const tagWords = computed(() => tagline.split(' '))
+const tagHl = (w) => w === 'nunca.' || w === 'WhatsApp.'
 const tagEl = ref(null)
 const lit = ref(0)
 
@@ -294,9 +295,11 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
       </section>
 
       <section ref="tagEl" class="lp-tag" aria-label="Tu comercio no cierra nunca">
+        <span class="lp-eyebrow">Siempre abierta</span>
         <p class="lp-tagline">
-          <span v-for="(w, i) in tagWords" :key="i" class="lp-tw" :class="{ on: i < lit }">{{ w + ' ' }}</span>
+          <span v-for="(w, i) in tagWords" :key="i" class="lp-tw" :class="{ on: i < lit, hl: tagHl(w) }">{{ w + ' ' }}</span>
         </p>
+        <p v-lp-reveal class="lp-tag-sub">Una vidriera digital que trabaja todos los días, a toda hora, sin que tengas que hacer nada.</p>
       </section>
 
       <section id="tu-web" class="lp-section">
@@ -548,11 +551,14 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-strip-run i { flex: none; width: 5px; height: 5px; margin: 0 30px; border-radius: 50%; background: rgba(165, 180, 252, .45); }
 @keyframes lp-marquee { to { transform: translateX(-50%); } }
 
-/* Tagline con revelado palabra por palabra al hacer scroll (lit desde JS). */
-.lp-tag { max-width: 980px; margin: 0 auto; padding: 104px 20px 48px; text-align: center; }
-.lp-tagline { margin: 0; font-size: clamp(28px, 4.4vw, 50px); line-height: 1.18; font-weight: 800; letter-spacing: -.025em; text-wrap: balance; }
+/* Tagline con revelado palabra por palabra al hacer scroll (lit desde JS).
+   Composición editorial: alineado a la izquierda, tamaño contenido. */
+.lp-tag { max-width: 1160px; margin: 0 auto; padding: 88px 20px 40px; }
+.lp-tagline { margin: 16px 0 0; max-width: 700px; font-size: clamp(26px, 3.6vw, 42px); line-height: 1.22; font-weight: 700; letter-spacing: -.02em; text-wrap: pretty; }
+.lp-tag-sub { margin: 18px 0 0; max-width: 540px; font-size: 16px; line-height: 1.6; color: var(--muted); }
 .lp-tw { color: rgba(196, 201, 234, .16); transition: color .55s var(--ease); }
 .lp-tw.on { color: #f2f3ff; }
+.lp-tw.on.hl { color: var(--brand-soft); }
 
 .lp-section { max-width: 1160px; margin: 0 auto; padding: 88px 20px 40px; scroll-margin-top: 96px; }
 .lp-eyebrow { display: block; color: var(--brand-soft); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
@@ -560,7 +566,15 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-lead { margin: 18px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: var(--muted); }
 
 .lp-features, .lp-steps, .lp-bento { margin-top: 48px; display: grid; gap: 20px; list-style: none; padding: 0; }
-.lp-features { grid-template-columns: repeat(4, 1fr); }
+.lp-features { grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1080px; }
+/* Tarjetas de features compactas: mismo ancho, contenido alineado. */
+.lp-features .lp-card { padding: 24px 22px; border-radius: 18px; }
+.lp-features .lp-ico { width: 42px; height: 42px; border-radius: 12px; }
+.lp-features .lp-ico svg { width: 20px; height: 20px; }
+.lp-features .lp-card h3 { margin-top: 18px; font-size: 18px; min-height: 2.6em; }
+.lp-features .lp-card p { font-size: 14px; }
+.lp-features .lp-tags { margin-top: 12px; }
+.lp-features .lp-tags span { padding: 3px 9px; font-size: 11px; }
 .lp-steps { grid-template-columns: repeat(3, 1fr); }
 .lp-bento { grid-template-columns: repeat(6, 1fr); }
 .lp-bento > .lp-card { grid-column: span 2; }
