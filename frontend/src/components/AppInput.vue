@@ -12,7 +12,8 @@ const props = defineProps({
   error: { type: String, default: '' },
   autocomplete: { type: String, default: '' },
   required: { type: Boolean, default: false },
-  maxlength: { type: [Number, String], default: undefined }
+  maxlength: { type: [Number, String], default: undefined },
+  icon: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:modelValue', 'blur'])
@@ -24,7 +25,7 @@ const describedBy = computed(() => `${props.name}-hint ${props.name}-error`)
 
 <template>
   <div class="field">
-    <label :for="name">{{ label }} <span v-if="required" aria-hidden="true">*</span></label>
+    <label :for="name"><AppIcon v-if="icon" :name="icon" :size="14" class="label-icon" aria-hidden="true" />{{ label }} <span v-if="required" aria-hidden="true">*</span></label>
     <div class="input-wrap">
       <input
         :id="name"

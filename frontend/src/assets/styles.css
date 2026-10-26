@@ -988,9 +988,46 @@ body { transition: background-color .2s ease, color .2s ease; }
 .tax-item-actions { display: flex; gap: 6px; flex: none; align-items: center; }
 .tax-schema { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
 .disc-products { max-height: 220px; overflow-y: auto; }
+.disc-products-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.disc-products-tools .hint { margin: 0 0 0 auto; }
+.disc-tool { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.disc-tool:hover { border-color: var(--brand-500); color: var(--brand-ink); }
 .disc-pct { margin-left: 6px; font-size: 12.5px; font-weight: 700; color: var(--brand-ink); }
-.disc-window { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+.disc-window { display: flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 12px; color: var(--muted); }
 .hint-inline { color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+/* Íconos en labels de formularios (AppInput icon= y labels manuales). */
+.label-icon { display: inline-block; vertical-align: -2px; margin-right: 6px; color: var(--muted); }
+
+/* Form de descuentos: % con slider, alcance como tarjetas, ventana
+   fecha+hora separadas con presets (reemplaza al datetime-local críptico). */
+.disc-pct-row { display: flex; align-items: center; gap: 10px; }
+.disc-pct-input { max-width: 92px; text-align: center; }
+.disc-pct-sign { font-weight: 700; color: var(--ink-2); flex: none; }
+.disc-pct-slider { flex: 1; height: 40px; accent-color: var(--brand-500); cursor: pointer; min-width: 0; }
+.disc-scope { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.disc-scope-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--ink-2); font-size: 12.5px; font-weight: 600; text-align: center; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
+.disc-scope-card svg { color: var(--muted); transition: color .15s; }
+.disc-scope-card:hover { border-color: var(--line-strong); }
+.disc-scope-card.on { border-color: var(--brand-500); background: var(--brand-50); color: var(--brand-ink); box-shadow: var(--ring); }
+.disc-scope-card.on svg { color: var(--brand-600); }
+.disc-scope-card:focus-within { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.disc-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.disc-preset { padding: 5px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.disc-preset:hover { border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-50); }
+.disc-window { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card-soft, var(--brand-50)); }
+.disc-when { display: grid; gap: 8px; align-content: start; }
+.disc-when-label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.disc-when-label svg { color: var(--brand-500); }
+.disc-when-fields { display: flex; gap: 8px; }
+.disc-when-fields .input[type='date'] { flex: 1.5; min-width: 0; }
+.disc-when-fields .input[type='time'] { flex: 1; min-width: 0; }
+.disc-none { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.disc-none input[type='checkbox'] { width: 16px; height: 16px; accent-color: var(--brand-600); cursor: pointer; }
+@media (max-width: 560px) {
+  .disc-window { grid-template-columns: 1fr; }
+  .disc-pct-slider { display: none; }
+}
 .feat-rows { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
 .feat-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto; gap: 8px; align-items: center; }
 .feat-row .input { padding: 9px 12px; }
