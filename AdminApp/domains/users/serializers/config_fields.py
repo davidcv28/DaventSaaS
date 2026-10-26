@@ -141,7 +141,9 @@ UserProfileFieldsConfig     =   {
     'tax_condition'         :   {
         'choices'           :   UserProfile.TAX_CONDITION,
         'label'             :   'Condición fiscal',
-        'required'          :   True,
+        #Ya no se exige en el alta ni en el PATCH parcial: se confirma al
+        #completar los datos de facturación (gate de payments).
+        'required'          :   False,
         'error_messages'    :   {
             'required'      :   'Este campo es obligatorio'
         }
@@ -167,7 +169,9 @@ UserProfileFieldsConfig     =   {
     'document'              :   {
         'label'             :   'Documento',
         'style'             :   {'placeholder' : 'Escribe tu número de identificación'},
-        'required'          :   True,
+        #Nullable desde el alta minimal: se carga al iniciar un pago.
+        'required'          :   False,
+        'allow_null'        :   True,
         'max_length'        :   11,
         'min_length'        :   7,
         'trim_whitespace'   :   True,
@@ -182,7 +186,8 @@ UserProfileFieldsConfig     =   {
     'first_name'            :   {
         'label'             :   'Nombre',
         'style'             :   {'placeholder'  :   'Escribe tu nombre'},
-        'required'          :   True,
+        'required'          :   False,
+        'allow_null'        :   True,
         'max_length'        :   150,
         'min_length'        :   3,
         'trim_whitespace'   :   True,
@@ -195,7 +200,8 @@ UserProfileFieldsConfig     =   {
     'last_name'             :   {
         'label'             :   'Apellido/s',
         'style'             :   {'placeholder'  :   'Escribe tu/s apellido/s'},
-        'required'          :   True,
+        'required'          :   False,
+        'allow_null'        :   True,
         'max_length'        :   150,
         'min_length'        :   3,
         'trim_whitespace'   :   True,
@@ -207,10 +213,14 @@ UserProfileFieldsConfig     =   {
     },
     'province'              :   {
         'label'             :   'Provincia',
+        'required'          :   False,
+        'allow_null'        :   True,
         'queryset'          :   Province.objects.all()  
     },
     'city'                  :   {
         'label'             :   'Ciudad',
+        'required'          :   False,
+        'allow_null'        :   True,
         'queryset'          :   City.objects.all()
     },
     'address'               :   {

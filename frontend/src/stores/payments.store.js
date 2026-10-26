@@ -18,6 +18,16 @@ export const usePaymentsStore = defineStore('payments', () => {
 
   const hasPayments = computed(() => payments.value.length > 0)
 
+  // Campos fiscales faltantes que exige el backend (400 billing_required):
+  // el alta ya no los pide — el form de facturación aparece al iniciar un pago.
+  const billingRequired = ref([])
+
+  function readBillingRequired(e) {
+    const missing = e.response?.data?.billing_required
+    billingRequired.value = Array.isArray(missing) ? missing : []
+    return billingRequired.value.length > 0
+  }
+
   async function loadPayments() {
     status.value = 'loading'
     lastError.value = ''
@@ -54,6 +64,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     confirmStatus.value = 'loading'
     lastError.value = ''
     notice.value = ''
+    billingRequired.value = []
     try {
       const data = await paymentsApi.createCheckout({ suscription, planPk })
       confirmStatus.value = 'success'
@@ -61,7 +72,11 @@ export const usePaymentsStore = defineStore('payments', () => {
     } catch (e) {
       confirmStatus.value = 'error'
       const parsed = extractApiError(e)
-      lastError.value = parsed.suscription?.[0] || parsed.plan_suscription?.[0] || parsed.nonField || 'No se pudo iniciar el pago.'
+      //Con billing_required el form de facturación ya explica el bloqueo:
+      //el lastError queda solo para los demás errores.
+      if (!readBillingRequired(e)) {
+        lastError.value = parsed.suscription?.[0] || parsed.plan_suscription?.[0] || parsed.nonField || 'No se pudo iniciar el pago.'
+      }
       return null
     }
   }
@@ -72,6 +87,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     confirmStatus.value = 'loading'
     lastError.value = ''
     notice.value = ''
+    billingRequired.value = []
     try {
       const data = await paymentsApi.createSubscription({ suscription, planPk })
       confirmStatus.value = 'success'
@@ -79,7 +95,9 @@ export const usePaymentsStore = defineStore('payments', () => {
     } catch (e) {
       confirmStatus.value = 'error'
       const parsed = extractApiError(e)
-      lastError.value = parsed.suscription?.[0] || parsed.plan_suscription?.[0] || parsed.preapproval_id?.[0] || parsed.nonField || 'No se pudo activar el débito automático.'
+      if (!readBillingRequired(e)) {
+        lastError.value = parsed.suscription?.[0] || parsed.plan_suscription?.[0] || parsed.preapproval_id?.[0] || parsed.nonField || 'No se pudo activar el débito automático.'
+      }
       return null
     }
   }
@@ -134,6 +152,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     confirmStatus.value = 'idle'
     lastError.value = ''
     notice.value = ''
+    billingRequired.value = []
     dailyRevenues.value = []
     monthlyRevenues.value = []
     revenuesStatus.value = 'idle'
@@ -142,7 +161,7 @@ export const usePaymentsStore = defineStore('payments', () => {
   return {
     payments, status, confirmStatus, lastError, notice,
     dailyRevenues, monthlyRevenues, revenuesStatus,
-    hasPayments,
+    hasPayments, billingRequired,
     loadPayments, confirm, checkout, subscribeAuto, cancelRenewal, sync, loadRevenues, reset
   }
 })

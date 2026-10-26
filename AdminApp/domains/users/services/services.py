@@ -72,7 +72,20 @@ def UpdateProfileQuery(profile : UserProfile, validated_data : dict) -> UserProf
     profile.save()
     return profile
 
+#=================================
+# BILLING DATA QUERY (datos fiscales exigidos recién al iniciar un cobro)
+#=================================
+#Lo que la factura necesita del comprador (ARCA + comprobante imprimible):
+#nombre/apellido, documento y ubicación fiscal. El alta ya no los pide — el
+#gate de payments los exige antes de crear la preferencia/débito en MP.
+BILLING_REQUIRED_FIELDS   =   ('first_name', 'last_name', 'document', 'province', 'city')
 
+def BillingMissingFieldsQuery(profile) -> list:
+    missing =   [field for field in BILLING_REQUIRED_FIELDS if not getattr(profile, field, None)]
+    #Condición no-CF exige razón social (misma regla que el serializer).
+    if getattr(profile, 'tax_condition', 'CF') != 'CF' and not getattr(profile, 'business_name', None):
+        missing.append('business_name')
+    return missing
 
 #=================================
 # USER REGISTER QUERYS

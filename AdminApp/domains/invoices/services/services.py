@@ -111,7 +111,7 @@ def SendInvoiceEmailQuery(invoice : Invoice) -> None:
     comprobante     =   f'{invoice.pos:04d}-{(invoice.fiscal_number or invoice.number):08d}'
     type_label      =   invoice.get_type_display()
     plan_name       =   invoice.payment.suscription.plan_suscription.name
-    customer        =   invoice.user.business_name or f'{invoice.user.first_name} {invoice.user.last_name}'.strip() or recipient
+    customer        =   invoice.user.business_name or ' '.join(filter(None, [invoice.user.first_name, invoice.user.last_name])) or recipient
     total           =   _format_ars(invoice.total)
     issued          =   invoice.issued_at.strftime('%d/%m/%Y')
     invoice_url     =   f'{FRONTEND_URL}/facturas/{invoice.pk}'

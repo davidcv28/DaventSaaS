@@ -5,11 +5,13 @@ import { http } from './http.js'
 // POST /api/token/refresh/    {} (cookie)          -> {access} — lo llama http.js, no las vistas
 // POST /api/token/logout/     {} (cookie + CSRF)   -> 200 — lo llama http.js (logoutSession)
 // POST /api/token/verify/     {token}              -> 200
-// POST /api/register/         RegisterUserSerializer -> 201 {Exito}
+// POST /api/register/         RegisterUserSerializer -> 201 {Exito} — alta minimal:
+//                             solo cuenta + celular + TyC; los datos fiscales se
+//                             completan recién al pagar (gate billing_required).
 // GET  /api/user/me/ + /api/profile/me/           (requiere Bearer, retrieve propio)
 // PUT  /api/user/me/          {email}             (UserUpdateSerializer, parcial ok)
-// PUT  /api/profile/me/       UserProfileSerializer — el validate() del backend exige
-//                             el set completo (tax_condition, document, province, city…)
+// PUT  /api/profile/me/       UserProfileSerializer — PATCH parcial: los datos
+//                             fiscales son opcionales hasta el primer pago.
 // POST /api/password_update/  {old_password, new_password, confirm_password}
 // POST /api/password-reset/   {email} -> 200 genérico (anti-enumeración)
 // POST /api/password-reset/confirm/ {uid, token, new_password, confirm_password}
@@ -138,24 +140,16 @@ export const authApi = {
   }
 }
 
-// Arma el payload exacto de RegisterUserSerializer.
-// type_document es read_only en backend y se deriva de tax_condition (operations.py).
+// Arma el payload exacto de RegisterUserSerializer — alta minimal:
+// cuenta + celular (ancla anti-abuso) + TyC. Los datos fiscales/de facturación
+// (nombre, documento, condición fiscal, provincia/ciudad) se completan en el
+// perfil recién cuando el usuario inicia un pago (billing_required).
 export function buildRegisterPayload(form) {
-  const tax = (form.tax_condition || 'CF').toUpperCase()
   return {
     username: form.username?.trim(),
     email: form.email?.trim(),
     password: form.password,
     confirm_password: form.confirm_password,
-    first_name: form.first_name?.trim(),
-    last_name: form.last_name?.trim(),
-    tax_condition: tax,
-    business_name: form.business_name?.trim() || null,
-    type_document: tax === 'CF' ? 'DNI' : 'CUIT',
-    document: form.document?.trim(),
-    province: Number(form.province),
-    city: Number(form.city),
-    address: form.address?.trim() || null,
     phone: form.phone?.trim() || null,
     accept_terms: form.accept_terms === true
   }

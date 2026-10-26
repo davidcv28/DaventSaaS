@@ -1755,6 +1755,65 @@ function showRenewalActivated() {
   payments.notice = ''
 }
 
+// --- Datos de facturación (se piden recién al iniciar un cobro) ---
+// El backend responde 400 billing_required cuando falta info fiscal: se abre
+// este form (mismo accountForm de Cuenta) y, al guardar, se reintenta la acción.
+const needsBilling = ref(false)
+const billingRetry = ref(null) // {kind:'plan', plan} | {kind:'renew'}
+const billingBusy = ref(false)
+
+function openBilling(retry) {
+  billingRetry.value = retry
+  needsBilling.value = true
+  payments.lastError = ''
+  //El form vive en la sección Planes: si el cobro salió de otra (ej. el
+  //débito automático del Resumen) llevamos al usuario hasta él.
+  section.value = 'plans'
+  if (!provinces.value.length) loadAccountProvinces()
+  fillAccountForm()
+}
+
+function closeBilling() {
+  needsBilling.value = false
+  billingRetry.value = null
+}
+
+async function saveBilling() {
+  Object.keys(accountForm).forEach((k) => { accountTouched[k] = true })
+  billing.lastError = ''
+  if (Object.keys(accountErrors.value).length) return
+  billingBusy.value = true
+  try {
+    const res = await auth.updateAccount({
+      email: accountForm.email.trim() || auth.user?.email,
+      profile: {
+        first_name: accountForm.first_name.trim(),
+        last_name: accountForm.last_name.trim(),
+        tax_condition: accountForm.tax_condition,
+        business_name: accountForm.business_name.trim() || null,
+        document: accountForm.document.trim() || null,
+        province: Number(accountForm.province),
+        city: Number(accountForm.city),
+        address: accountForm.address.trim() || null,
+        phone: accountForm.phone.trim() || null
+      }
+    })
+    if (!res.ok) {
+      billing.lastError = auth.lastError || 'No se pudieron guardar tus datos de facturación.'
+      return
+    }
+    await fillAccountForm()
+    needsBilling.value = false
+    billing.notice = 'Datos de facturación guardados. Retomando tu pago…'
+    const retry = billingRetry.value
+    billingRetry.value = null
+    if (retry?.kind === 'plan') await planAction(retry.plan)
+    else if (retry?.kind === 'renew') await activateAutoRenew()
+  } finally {
+    billingBusy.value = false
+  }
+}
+
 async function planAction(p) {
   if (p.is_trial) return // plan de prueba: informativo, no se puede elegir
   busyPlan.value = p.id
@@ -1777,6 +1836,7 @@ async function planAction(p) {
       const renewUrl = data?.checkout_url || data?.init_point || data?.sandbox_init_point
       if (!renewUrl) {
         checkoutTab?.close()
+        if (payments.billingRequired.length) openBilling({ kind: 'plan', plan: p })
         return
       }
       checkoutTab.location.href = renewUrl
@@ -1788,6 +1848,7 @@ async function planAction(p) {
     const url = await payments.checkout({ suscription: billing.subscription?.id ?? null, planPk: p.id })
     if (!url) {
       checkoutTab?.close()
+      if (payments.billingRequired.length) openBilling({ kind: 'plan', plan: p })
       return
     }
     checkoutTab.location.href = url
@@ -1832,6 +1893,7 @@ async function activateAutoRenew() {
     const url = data?.checkout_url || data?.init_point || data?.sandbox_init_point
     if (!url) {
       tab?.close()
+      if (payments.billingRequired.length) openBilling({ kind: 'renew' })
       return
     }
     tab.location.href = url
@@ -3636,6 +3698,52 @@ async function changePassword() {
           <button class="btn btn-auto" type="submit" :disabled="couponBusy || !couponCode.trim()">
             <span v-if="couponBusy" class="spinner"></span> Canjear
           </button>
+        </form>
+      </div>
+      <!-- Datos de facturación: se piden recién al iniciar un cobro (billing_required). -->
+      <div v-if="needsBilling" class="card billing-card">
+        <div class="billing-head">
+          <h3><AppIcon name="receipt" :size="18" /> Datos de facturación</h3>
+          <p>Los necesitamos una sola vez para emitir tu factura. Se guardan en tu perfil y solo se usan para los cobros.</p>
+        </div>
+        <form @submit.prevent="saveBilling" novalidate>
+          <div class="grid-2">
+            <AppInput v-model="accountForm.first_name" label="Nombre" name="bill_first_name" autocomplete="given-name" placeholder="Escribe tu nombre" required :error="accountFieldErr('first_name')" @blur="accountTouched.first_name = true" />
+            <AppInput v-model="accountForm.last_name" label="Apellido/s" name="bill_last_name" autocomplete="family-name" placeholder="Escribe tu/s apellido/s" required :error="accountFieldErr('last_name')" @blur="accountTouched.last_name = true" />
+          </div>
+          <div class="field">
+            <label for="bill_tax_condition">Condición fiscal *</label>
+            <select id="bill_tax_condition" v-model="accountForm.tax_condition" class="select">
+              <option v-for="t in TAX_CONDITIONS" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+            <p class="hint">Tipo de documento automático: {{ docKind }} (CF → DNI, resto → CUIT).</p>
+          </div>
+          <AppInput v-model="accountForm.business_name" label="Nombre de negocio" name="bill_business_name" placeholder="Escribe tu nombre de negocio" :hint="accountForm.tax_condition === 'CF' ? 'Opcional únicamente para consumidor final.' : 'Obligatorio para tu condición fiscal.'" :error="accountFieldErr('business_name')" @blur="accountTouched.business_name = true" />
+          <AppInput v-model="accountForm.document" label="Documento" name="bill_document" placeholder="Escribe tu número de identificación" :hint="docHint" required :error="accountFieldErr('document')" @blur="accountTouched.document = true" />
+          <div class="grid-2">
+            <div class="field">
+              <label for="bill_province">Provincia *</label>
+              <select id="bill_province" v-model="accountForm.province" class="select" :class="{ invalid: accountFieldErr('province') }" @change="onAccountProvinceChange">
+                <option value="">Seleccionar…</option>
+                <option v-for="p in provinces" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+              <p v-if="accountFieldErr('province')" class="field-error">{{ accountFieldErr('province') }}</p>
+            </div>
+            <div class="field">
+              <label for="bill_city">Ciudad *</label>
+              <select id="bill_city" v-model="accountForm.city" class="select" :class="{ invalid: accountFieldErr('city') }" :disabled="!accountForm.province">
+                <option value="">{{ accountForm.province ? 'Seleccionar…' : 'Primero elegí provincia' }}</option>
+                <option v-for="c in cities" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+              <p v-if="accountFieldErr('city')" class="field-error">{{ accountFieldErr('city') }}</p>
+            </div>
+          </div>
+          <AppInput v-model="accountForm.address" label="Domicilio" name="bill_address" autocomplete="street-address" placeholder="Escribe tu domicilio" :error="accountFieldErr('address')" @blur="accountTouched.address = true" />
+          <AppInput v-model="accountForm.phone" label="Número de celular" name="bill_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
+          <div class="btn-row">
+            <AppButton variant="ghost" type="button" @click="closeBilling">Cancelar</AppButton>
+            <AppButton type="submit" :loading="billingBusy">Guardar y continuar al pago</AppButton>
+          </div>
         </form>
       </div>
       <div class="price-grid">

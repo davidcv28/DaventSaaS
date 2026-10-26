@@ -378,6 +378,12 @@ body { transition: background-color .2s ease, color .2s ease; }
 .coupon-form { display: flex; gap: 10px; flex: 1 1 280px; max-width: 420px; }
 .coupon-form .input { flex: 1; min-width: 0; text-transform: uppercase; }
 .coupon-form .btn { width: auto; }
+/* Datos de facturación: form que aparece en Planes cuando el cobro exige
+   los datos fiscales que el alta ya no pide (billing_required). */
+.billing-card { border: 1px solid var(--brand-500); box-shadow: 0 0 0 3px rgba(79, 70, 229, .12); }
+.billing-head { margin-bottom: 18px; }
+.billing-head h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.billing-head p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
 .coupon-detail-row td { background: var(--surface); }
 .coupon-detail { display: grid; gap: 6px; padding: 4px 0; }
 .coupon-redemption { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13.5px; }

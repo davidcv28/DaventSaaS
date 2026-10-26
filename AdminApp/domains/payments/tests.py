@@ -585,3 +585,83 @@ class CancelRenewalOwnershipTests(TestCase):
         foreign.refresh_from_db()
         self.assertTrue(foreign.auto_renew)
         self.assertIsNone(foreign.cancelled_at)
+
+
+class BillingDataGateTests(TestCase):
+    """
+    Gate de datos fiscales: el alta minimal deja el perfil sin ellos —
+    checkout y débito automático los exigen recién al iniciar el cobro
+    (la factura se emite sobre ese perfil).
+    """
+    CHECKOUT_URL    =   '/api/payments/checkout/'
+    SUBSCRIPTION_URL=   '/api/payments/subscription/'
+
+    def _bare_client(self):
+        #Perfil recién registrado: sin datos fiscales (alta minimal).
+        user        =   User.objects.create_user(
+            username = 'cliente', email = 'cliente@gmail.com', password = 'Xq7#mP2vL9bT')
+        profile     =   UserProfile.objects.create(user = user, phone = '+5491100000000')
+        client      =   APIClient()
+        client.force_authenticate(user = user)
+        return client, profile
+
+    def _complete_profile(self, profile):
+        province    =   Province.objects.create(name_province = 'Mendoza')
+        zipcode     =   ZipCode.objects.create(zipcode = '5500')
+        city        =   City.objects.create(name_city = 'Mendoza', province = province, zipcode = zipcode)
+        profile.first_name  =   'Ana'
+        profile.last_name   =   'Perez'
+        profile.document    =   '28123456'
+        profile.province    =   province
+        profile.city        =   city
+        profile.save()
+
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    def test_checkout_requires_billing_data(self, preference):
+        client, _       =   self._bare_client()
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan pago', price = 1000)
+        response        =   client.post(self.CHECKOUT_URL, {'plan_suscription': plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        missing         =   response.json().get('billing_required')
+        self.assertTrue(missing)
+        for field in ('first_name', 'last_name', 'document', 'province', 'city'):
+            self.assertIn(field, missing)
+        #No se crea la preferencia de MP sin datos de facturación.
+        preference.assert_not_called()
+
+    @patch('AdminApp.domains.payments.views.viewset.CreatePreapprovalQuery')
+    def test_subscription_requires_billing_data(self, preapproval):
+        client, _       =   self._bare_client()
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan pago', price = 1000)
+        response        =   client.post(self.SUBSCRIPTION_URL, {'plan_suscription': plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('billing_required', response.json())
+        preapproval.assert_not_called()
+
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    def test_checkout_proceeds_once_billing_complete(self, preference):
+        preference.return_value     =   {'id': 'pref-1', 'init_point': 'https://mp.test/init'}
+        client, profile =   self._bare_client()
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan pago', price = 1000)
+        response        =   client.post(self.CHECKOUT_URL, {'plan_suscription': plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        #El plan elegido quedó pendiente: tras completar el perfil el retry
+        #ya no necesita mandar el plan otra vez.
+        self._complete_profile(profile)
+        retry           =   client.post(self.CHECKOUT_URL, {}, format = 'json')
+        self.assertEqual(retry.status_code, 200)
+        preference.assert_called_once()
+
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    def test_billing_gate_also_covers_pending_suscription_retry(self, preference):
+        #Un usuario con suscripción pendiente y perfil incompleto también
+        #debe completar la facturación — el gate corre en todo cobro.
+        client, profile =   self._bare_client()
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan pago', price = 1000)
+        first           =   client.post(self.CHECKOUT_URL, {'plan_suscription': plan.pk}, format = 'json')
+        self.assertEqual(first.status_code, 400)
+        suscription     =   Suscription.objects.get(user = profile)
+        retry           =   client.post(self.CHECKOUT_URL, {'suscription': suscription.pk}, format = 'json')
+        self.assertEqual(retry.status_code, 400)
+        self.assertIn('billing_required', retry.json())
+        preference.assert_not_called()

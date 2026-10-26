@@ -132,24 +132,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 #=============================
 # REGISTER USER SERIALIZER
 #=============================
+#ALTA MINIMAL: solo lo necesario para crear la cuenta + el ancla anti-abuso
+#(phone) + los TyC. Los datos fiscales/de facturación (nombre, documento,
+#condición fiscal, provincia/ciudad) se piden recién al iniciar un pago —
+#el gate billing_required de payments los exige antes de crear el cobro.
 class RegisterUserSerializer(UsersValidatorsMixins,UserProfileValidatorsMixins, UserRegisterValidate,UserRegisterCreateMethod, serializers.ModelSerializer):
     username            =   serializers.CharField(**UserFieldsConfig['username'])
     email               =   serializers.EmailField(**UserFieldsConfig['email'])
     password            =   serializers.CharField(**UserFieldsConfig['password'])
     confirm_password    =   serializers.CharField(**UserFieldsConfig['confirm_password'])
-    first_name          =   serializers.CharField(**UserProfileFieldsConfig['first_name'])
-    last_name           =   serializers.CharField(**UserProfileFieldsConfig['last_name'])
-    tax_condition       =   serializers.ChoiceField(**UserProfileFieldsConfig['tax_condition'])
-    business_name       =   serializers.CharField(**UserProfileFieldsConfig['business_name'])
-    type_document       =   serializers.ChoiceField(**UserProfileFieldsConfig['type_document'])
-    document            =   serializers.CharField(**UserProfileFieldsConfig['document'])
-    province            =   serializers.PrimaryKeyRelatedField(**UserProfileFieldsConfig['province'])
-    city                =   serializers.PrimaryKeyRelatedField(**UserProfileFieldsConfig['city'])
-    address             =   serializers.CharField(**UserProfileFieldsConfig['address'])
     phone               =   serializers.CharField(**UserProfileFieldsConfig['phone'])
     accept_terms        =   serializers.BooleanField(**UserFieldsConfig['accept_terms'])
     class Meta:
         model           =   User
-        fields          =   ['username','email', 'password', 'confirm_password','first_name', 'last_name',
-                            'tax_condition', 'business_name', 'type_document', 'document', 'province', 'city', 'address', 'phone',
-                            'accept_terms']
+        fields          =   ['username','email', 'password', 'confirm_password', 'phone', 'accept_terms']

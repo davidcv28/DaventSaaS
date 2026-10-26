@@ -28,12 +28,14 @@ class UserProfile(models.Model):
     tax_condition       =   models.CharField(default = 'CF', null = False, blank = False, choices = TAX_CONDITION, verbose_name = 'Condición fiscal')
     business_name       =   models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Nombre comercial')
     type_document       =   models.CharField(default = 'DNI',  null = False, blank = False, choices = DOCUMENT_TYPE, verbose_name = 'Tipo de documento')
-    document            =   models.CharField(max_length = 11,  null = False, blank = False, unique = True, verbose_name = 'Documento')
-    first_name          =   models.CharField(max_length = 150, null = False, blank = False, verbose_name = 'Nombre')
-    last_name           =   models.CharField(max_length = 150, null = False, blank = False, verbose_name = 'Apellido')
+    #Datos fiscales nullables: el alta ya no los pide — se completan recién
+    #al iniciar un pago (gate billing_required en payments._resolve_suscription).
+    document            =   models.CharField(max_length = 11,  null = True, blank = True, unique = True, verbose_name = 'Documento')
+    first_name          =   models.CharField(max_length = 150, null = True, blank = True, verbose_name = 'Nombre')
+    last_name           =   models.CharField(max_length = 150, null = True, blank = True, verbose_name = 'Apellido')
     #ADDRESS USER
-    province            =   models.ForeignKey(Province, on_delete = models.RESTRICT, related_name = 'users', db_index = False)
-    city                =   models.ForeignKey(City, on_delete = models.RESTRICT, db_index = False)
+    province            =   models.ForeignKey(Province, on_delete = models.RESTRICT, related_name = 'users', db_index = False, null = True, blank = True)
+    city                =   models.ForeignKey(City, on_delete = models.RESTRICT, db_index = False, null = True, blank = True)
     address             =   models.CharField(max_length = 255, null = True, blank = True, verbose_name = 'Domicilio')
     #CONTACT USER
     phone               =   models.CharField(max_length = 16, null = True, blank = True, unique = True, verbose_name = 'Número telefonico')

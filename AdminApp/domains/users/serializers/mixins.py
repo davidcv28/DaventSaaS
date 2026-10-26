@@ -113,6 +113,10 @@ class UserPasswordUpdateMethod:
 #=================================
 class UserProfileValidatorsMixins:
     def validate_document(self, value):
+        #Nullable desde el alta minimal: un PATCH que lo limpia (null) no
+        #debe explotar — la unicidad solo corre sobre un valor real.
+        if not value:
+            return value
         document_val        =   value.strip()
         queryset            =   UserProfile.objects.filter(document = document_val)
         errors              =   []
@@ -136,23 +140,31 @@ class UserProfileValidatorsMixins:
             raise serializers.ValidationError('El número de celular ingresado ya se encuentra en uso')
         return phone_val
     def validate(self, attrs):
-        #PATCH parcial: los campos ausentes se validan con el valor actual de
-        #la instancia (sin el fallback, DocumentFormat(len(None)) y
-        #ProvinceAndCityComparation(None.cities) explotaban con 500).
+        #PATCH parcial / alta minimal: los campos ausentes se validan con el
+        #valor actual de la instancia. Los datos fiscales pueden no existir
+        #todavía (el alta ya no los pide) — el bloqueo recién corre al iniciar
+        #un pago (billing_required en payments._resolve_suscription).
         inst            =   self.instance
-        tax_condition   =   attrs.get('tax_condition') or getattr(inst, 'tax_condition', None)
-        type_document   =   attrs.get('type_document') or getattr(inst, 'type_document', None)
-        business_name   =   attrs.get('business_name') or getattr(inst, 'business_name', None)
-        province_select =   attrs.get('province') or getattr(inst, 'province', None)
-        city_select     =   attrs.get('city') or getattr(inst, 'city', None)
-        document        =   attrs.get('document') or getattr(inst, 'document', None)
+        tax_condition   =   attrs.get('tax_condition', getattr(inst, 'tax_condition', None))
+        business_name   =   attrs.get('business_name', getattr(inst, 'business_name', None))
+        province_select =   attrs.get('province', getattr(inst, 'province', None))
+        city_select     =   attrs.get('city', getattr(inst, 'city', None))
+        document        =   attrs.get('document', getattr(inst, 'document', None))
         errors          =   {}
-        type_document   =   TypeDocumentSelect(tax_condition, type_document)
-        attrs['type_document']          =   type_document
-        if not BusinessNameRequired(tax_condition, business_name):
-            errors['business_name']     = 'Este campo es obligatorio para tu condición fiscal'
-        errors.update(DocumentFormat(type_document, document))
-        if not ProvinceAndCityComparation(province_select, city_select):
+        if tax_condition:
+            #Sin condición fiscal (alta minimal) no hay combo que derivar:
+            #el modelo rellena los defaults CF/DNI.
+            type_document               =   TypeDocumentSelect(tax_condition, attrs.get('type_document') or getattr(inst, 'type_document', None))
+            attrs['type_document']      =   type_document
+            if not BusinessNameRequired(tax_condition, business_name):
+                errors['business_name'] =   'Este campo es obligatorio para tu condición fiscal'
+            if document:
+                errors.update(DocumentFormat(type_document, document))
+        #Provincia y ciudad se cargan de a par: una sin la otra no sirve
+        #para facturar. Borrarlas exige mandar las dos en null.
+        if bool(province_select) != bool(city_select):
+            errors['city']              =   'Seleccioná provincia y ciudad'
+        elif province_select and city_select and not ProvinceAndCityComparation(province_select, city_select):
             errors['city']              =   f'La ciudad seleccionada no pertenece a la provincia de {province_select.name_province} '
         if errors:
             raise serializers.ValidationError(errors)

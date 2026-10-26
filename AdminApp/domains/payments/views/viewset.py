@@ -14,6 +14,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
+from AdminApp.domains.users.services import BillingMissingFieldsQuery
 from AdminApp.domains.payments.models import Payment
 from AdminApp.domains.invoices.services import IssueInvoiceQuery
 from AdminApp.domains.payments.services import (
@@ -205,6 +206,15 @@ class PaymentViewSet(PaymentBaseViewSet):
             #El plan se aplica recién cuando el pago se acredita
             suscription.pending_plan_suscription    =   target_plan
             suscription.save(update_fields = ['pending_plan_suscription'])
+        #DATOS FISCALES: el alta ya no los pide — se exigen recién al iniciar
+        #un cobro porque la factura se emite sobre este perfil (ARCA + PDF).
+        #El frontend usa 'billing_required' para abrir el form de facturación.
+        missing =   BillingMissingFieldsQuery(suscription.user)
+        if missing:
+            raise serializers.ValidationError({
+                'billing_required'  :   missing,
+                'detail'            :   'Completá tus datos de facturación para poder contratar un plan.',
+            })
         return suscription
     #=========================================
     # CHECKOUT ACTION (crea preferencia MP y devuelve init_point)

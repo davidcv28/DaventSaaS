@@ -121,20 +121,12 @@ class PasswordPolicyTests(TestCase):
     """AUTH_PASSWORD_VALIDATORS aplicada en alta y cambio de clave."""
 
     def _payload(self, password):
-        province, city  =   _location()
+        #Alta minimal: los datos fiscales se piden recién al pagar un plan.
         return {
             'username'          :   'nuevo.cliente',
             'email'             :   'nuevo@gmail.com',
             'password'          :   password,
             'confirm_password'  :   password,
-            'first_name'        :   'Ana',
-            'last_name'         :   'Perez',
-            'tax_condition'     :   'CF',
-            'type_document'     :   'DNI',
-            'document'          :   '28123456',
-            'province'          :   province.pk,
-            'city'              :   city.pk,
-            'address'           :   'Calle 123',
             'phone'             :   '+5491122334455',
             'accept_terms'      :   True,
         }
@@ -423,20 +415,12 @@ class RegisterSecurityTests(TestCase):
         cache.clear()
 
     def _payload(self, **overrides):
-        province, city  =   _location()
+        #Alta minimal: sin datos fiscales — el ancla anti-abuso es el celular.
         payload         =   {
             'username'          :   'nuevo.cliente',
             'email'             :   'nuevo@gmail.com',
             'password'          :   STRONG_PASSWORD,
             'confirm_password'  :   STRONG_PASSWORD,
-            'first_name'        :   'Ana',
-            'last_name'         :   'Perez',
-            'tax_condition'     :   'CF',
-            'type_document'     :   'DNI',
-            'document'          :   '28123456',
-            'province'          :   province.pk,
-            'city'              :   city.pk,
-            'address'           :   'Calle 123',
             'phone'             :   '+5491122334455',
             'accept_terms'      :   True,
         }
@@ -453,15 +437,15 @@ class RegisterSecurityTests(TestCase):
     def test_register_rejects_case_variant_email(self):
         #Regresión: la unicidad era case-sensitive — NUEVO@GMAIL.COM abría
         #una segunda cuenta con el mismo correo (bypass anti multi-cuenta).
-        self.client.post(REGISTER_URL, self._payload(phone = '+5491100000001', document = '28000001'), format = 'json')
+        self.client.post(REGISTER_URL, self._payload(phone = '+5491100000001'), format = 'json')
         response        =   self.client.post(REGISTER_URL, self._payload(
-            email = 'NUEVO@GMAIL.COM', phone = '+5491100000002', document = '28000002'), format = 'json')
+            email = 'NUEVO@GMAIL.COM', phone = '+5491100000002'), format = 'json')
         self.assertEqual(response.status_code, 400)
 
     def test_register_rejects_case_variant_username(self):
-        self.client.post(REGISTER_URL, self._payload(phone = '+5491100000001', document = '28000001'), format = 'json')
+        self.client.post(REGISTER_URL, self._payload(phone = '+5491100000001'), format = 'json')
         response        =   self.client.post(REGISTER_URL, self._payload(
-            username = 'NUEVO.CLIENTE', phone = '+5491100000002', document = '28000002'), format = 'json')
+            username = 'NUEVO.CLIENTE', phone = '+5491100000002'), format = 'json')
         self.assertEqual(response.status_code, 400)
 
     def test_register_grants_one_day_trial(self):
@@ -472,6 +456,135 @@ class RegisterSecurityTests(TestCase):
         self.assertEqual(suscription.plan_suscription, trial)
         self.assertTrue(suscription.grants_access())
         self.assertLess((suscription.end_date - suscription.start_date).days, 2)
+
+
+class DeferredBillingDataTests(TestCase):
+    """
+    El alta ya no pide datos fiscales: el perfil nace sin ellos y se
+    completan por PATCH (form de facturación) antes de poder pagar.
+    """
+
+    PROFILE_URL =   '/api/profile/me/'
+
+    def setUp(self):
+        cache.clear()
+
+    def _minimal_payload(self, **overrides):
+        payload =   {
+            'username'          :   'nuevo.cliente',
+            'email'             :   'nuevo@gmail.com',
+            'password'          :   STRONG_PASSWORD,
+            'confirm_password'  :   STRONG_PASSWORD,
+            'phone'             :   '+5491122334455',
+            'accept_terms'      :   True,
+        }
+        payload.update(overrides)
+        return payload
+
+    def _bare_user(self, username = 'cliente', email = 'cliente@gmail.com', phone = '+5491100000000'):
+        user        =   User.objects.create_user(username = username, email = email, password = STRONG_PASSWORD)
+        profile     =   UserProfile.objects.create(user = user, phone = phone)
+        return user, profile
+
+    def test_register_minimal_creates_profile_without_billing_data(self):
+        response        =   self.client.post(REGISTER_URL, self._minimal_payload(), format = 'json')
+        self.assertEqual(response.status_code, 201)
+        profile         =   UserProfile.objects.get(user__username = 'nuevo.cliente')
+        self.assertIsNone(profile.document)
+        self.assertIsNone(profile.first_name)
+        self.assertIsNone(profile.last_name)
+        self.assertIsNone(profile.province_id)
+        self.assertIsNone(profile.city_id)
+        #Los defaults no-fiscales siguen sellados: condición CF y TyC.
+        self.assertEqual(profile.tax_condition, 'CF')
+        self.assertTrue(profile.terms_accepted)
+
+    def test_register_still_requires_phone_and_terms(self):
+        #El celular queda: es el ancla anti-abuso multi-cuenta, no un dato fiscal.
+        response        =   self.client.post(REGISTER_URL, self._minimal_payload(phone = ''), format = 'json')
+        self.assertEqual(response.status_code, 400)
+        response        =   self.client.post(REGISTER_URL, self._minimal_payload(accept_terms = False), format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_profile_patch_fills_billing_data(self):
+        user, _         =   self._bare_user()
+        province, city  =   _location()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.put(self.PROFILE_URL, {
+            'first_name'    :   'Ana',
+            'last_name'     :   'Perez',
+            'tax_condition' :   'CF',
+            'document'      :   '28123456',
+            'province'      :   province.pk,
+            'city'          :   city.pk,
+            'address'       :   'Calle 123',
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.json())
+        profile         =   UserProfile.objects.get(user = user)
+        self.assertEqual(profile.document, '28123456')
+        self.assertEqual(profile.type_document, 'DNI')
+        self.assertEqual(profile.city_id, city.pk)
+
+    def test_profile_patch_derives_cuit_and_requires_business_name(self):
+        #RI/MO exigen CUIT válido + razón social (regla fiscal del emisor).
+        user, _         =   self._bare_user()
+        province, city  =   _location()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.put(self.PROFILE_URL, {
+            'first_name'    :   'Ana',
+            'last_name'     :   'Perez',
+            'tax_condition' :   'RI',
+            'document'      :   '28123456',
+            'province'      :   province.pk,
+            'city'          :   city.pk,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('business_name', response.json())
+        #CUIT válido + razón social -> type_document se deriva a CUIT.
+        response        =   client.put(self.PROFILE_URL, {
+            'first_name'    :   'Ana',
+            'last_name'     :   'Perez',
+            'tax_condition' :   'RI',
+            'business_name' :   'Estudio Norte',
+            'document'      :   '20234567897',
+            'province'      :   province.pk,
+            'city'          :   city.pk,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.json())
+        self.assertEqual(UserProfile.objects.get(user = user).type_document, 'CUIT')
+
+    def test_profile_patch_rejects_half_location(self):
+        #Provincia sin ciudad (o al revés) no sirve para facturar.
+        user, _         =   self._bare_user()
+        province, city  =   _location()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.put(self.PROFILE_URL, {'province': province.pk}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        response        =   client.put(self.PROFILE_URL, {'city': city.pk}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_profile_patch_allows_partial_non_fiscal(self):
+        #Un PATCH que no toca datos fiscales no exige nada de ellos.
+        user, _         =   self._bare_user()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.put(self.PROFILE_URL, {'phone': '+5491198877665'}, format = 'json')
+        self.assertEqual(response.status_code, 200, response.json())
+        profile         =   UserProfile.objects.get(user = user)
+        self.assertEqual(profile.phone, '+5491198877665')
+        self.assertIsNone(profile.document)
+
+    def test_document_uniqueness_still_enforced_on_patch(self):
+        #El documento sigue siendo único cuando se carga (anti multi-cuenta).
+        _make_user()
+        user, _         =   self._bare_user(username = 'otro', email = 'otro@gmail.com', phone = '+5491100000001')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.put(self.PROFILE_URL, {'document': '30111222'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
 
 
 class EmailVerificationTokenTests(TestCase):

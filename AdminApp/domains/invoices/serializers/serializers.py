@@ -48,7 +48,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def get_customer_name(self, obj):
         u = obj.user
-        return u.business_name or f'{u.first_name} {u.last_name}'.strip()
+        return u.business_name or ' '.join(filter(None, [u.first_name, u.last_name]))
 
     class Meta:
         model = Invoice
