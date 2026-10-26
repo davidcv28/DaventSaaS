@@ -147,6 +147,17 @@ class CouponRedemptionSerializerList(serializers.ModelSerializer):
         fields          =   ['id', 'user_name', 'user_email', 'business_name', 'redeemed_at']
 
 #=========================================
+# MY COUPON REDEMPTION SERIALIZER (vista del cliente: sus canjes)
+#=========================================
+class MyCouponRedemptionSerializer(serializers.ModelSerializer):
+    code                =   serializers.CharField(source = 'coupon.code', read_only = True)
+    plan_name           =   serializers.CharField(source = 'coupon.plan.name', read_only = True)
+    days                =   serializers.IntegerField(source = 'coupon.days', read_only = True)
+    class Meta:
+        model           =   CouponRedemption
+        fields          =   ['id', 'code', 'plan_name', 'days', 'redeemed_at']
+
+#=========================================
 # COUPON SERIALIZER LIST (panel admin)
 #=========================================
 class CouponSerializerList(serializers.ModelSerializer):

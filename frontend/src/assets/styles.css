@@ -387,6 +387,13 @@ body { transition: background-color .2s ease, color .2s ease; }
 .coupon-form { display: flex; gap: 10px; flex: 1 1 280px; max-width: 420px; }
 .coupon-form .input { flex: 1; min-width: 0; text-transform: uppercase; }
 .coupon-form .btn { width: auto; }
+/* Historial de cupones canjeados (sección Pagos): actividad promocional
+   separada del historial de pagos — un canje nunca es un pago. */
+.coupon-history { list-style: none; display: grid; gap: 8px; margin: 10px 0 0; padding: 0; }
+.coupon-history li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 13.5px; }
+.coupon-history .coupon-code { font-weight: 700; letter-spacing: .05em; }
+.coupon-history .coupon-detail { flex: 1; min-width: 0; color: var(--muted); }
+.coupon-history time { flex: none; font-size: 12.5px; color: var(--muted); }
 /* Datos de facturación: form que aparece en Planes cuando el cobro exige
    los datos fiscales que el alta ya no pide (billing_required). */
 .billing-card { border: 1px solid var(--brand-500); box-shadow: 0 0 0 3px rgba(79, 70, 229, .12); }

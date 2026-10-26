@@ -45,6 +45,14 @@ export const billingApi = {
   async redeemCoupon(code) {
     const { data } = await http.post('/suscriptions/redeem-coupon/', { code })
     return data
+  },
+
+  // GET /api/suscriptions/my-redemptions/ Bearer -> [{code, plan_name, days, redeemed_at}]
+  // Historial promocional del cliente: los canjes nunca son Payments ni
+  // facturas — se listan aparte del historial de pagos.
+  async myRedemptions() {
+    const { data } = await http.get('/suscriptions/my-redemptions/')
+    return unwrap(data)
   }
 }
 

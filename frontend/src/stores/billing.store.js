@@ -124,7 +124,7 @@ export const useBillingStore = defineStore('billing', () => {
     try {
       const data = await billingApi.redeemCoupon(code)
       notice.value = data?.Exito || 'Cupón aplicado.'
-      await loadMine()
+      await Promise.all([loadMine(), loadRedemptions()])
       status.value = 'success'
       return true
     } catch (e) {
@@ -135,16 +135,32 @@ export const useBillingStore = defineStore('billing', () => {
     }
   }
 
+  // Historial de cupones canjeados (actividad promocional, separada de pagos).
+  const redemptions = ref([])
+  const redemptionsStatus = ref('idle')
+
+  async function loadRedemptions() {
+    redemptionsStatus.value = 'loading'
+    try {
+      redemptions.value = await billingApi.myRedemptions()
+      redemptionsStatus.value = 'success'
+    } catch (e) {
+      redemptionsStatus.value = 'error'
+    }
+  }
+
   function reset() {
     subscription.value = null
     status.value = 'idle'
     lastError.value = ''
     notice.value = ''
+    redemptions.value = []
+    redemptionsStatus.value = 'idle'
   }
 
   return {
     plans, subscription, status, plansStatus, lastError, notice,
-    hasSubscription, currentPlan,
-    loadPlans, loadMine, subscribe, changePlan, redeemCoupon, reset
+    hasSubscription, currentPlan, redemptions, redemptionsStatus,
+    loadPlans, loadMine, subscribe, changePlan, redeemCoupon, loadRedemptions, reset
   }
 })

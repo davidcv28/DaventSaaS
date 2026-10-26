@@ -11,8 +11,8 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
-from AdminApp.domains.suscriptions.models                   import Suscription, SuscriptionPlan
-from AdminApp.domains.suscriptions.serializers.serializers  import SuscriptionSerializerList
+from AdminApp.domains.suscriptions.models                   import Suscription, SuscriptionPlan, CouponRedemption
+from AdminApp.domains.suscriptions.serializers.serializers  import SuscriptionSerializerList, MyCouponRedemptionSerializer
 from AdminApp.domains.suscriptions.services                 import RedeemCouponQuery
 from AdminApp.domains.users.models                          import UserProfile
 from DaventProject.throttling                               import PublicReadThrottle
@@ -111,6 +111,26 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
                 'Exito'         : f'Cupón aplicado: {coupon.plan.name} por {coupon.days} días.',
                 'suscription'   : SuscriptionSerializerList(suscription).data,
             },
+            status = status.HTTP_200_OK,
+        )
+    #=========================================
+    # MY REDEMPTIONS (cliente): su historial de cupones canjeados. El canje
+    # nunca genera Payment ni Invoice — este listado es la evidencia de la
+    # actividad promocional, separada del historial de pagos.
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'my-redemptions')
+    def my_redemptions(self, request):
+        profile     =   UserProfile.objects.filter(user = request.user).first()
+        if profile is None:
+            return Response([], status = status.HTTP_200_OK)
+        redemptions =   (
+            CouponRedemption.objects
+            .filter(user = profile)
+            .select_related('coupon__plan')
+            .order_by('-redeemed_at')
+        )
+        return Response(
+            MyCouponRedemptionSerializer(redemptions, many = True).data,
             status = status.HTTP_200_OK,
         )
 

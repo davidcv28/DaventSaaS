@@ -376,6 +376,74 @@ class CouponRedeemTests(TestCase):
         self.assertEqual(response.status_code, 401)
 
 
+class CouponBillingIsolationTests(TestCase):
+    """El canje promocional NO es un cobro: no genera Payment (historial de
+    pagos) ni Invoice (factura). La actividad queda en CouponRedemption y
+    se expone al cliente por /api/suscriptions/my-redemptions/."""
+
+    PAYMENTS_URL    =   '/api/payments/'
+    REDEMPTIONS_URL =   '/api/suscriptions/my-redemptions/'
+
+    def _client(self):
+        user, profile   =   _make_user('cliente')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, profile
+
+    def _coupon(self, **kwargs):
+        defaults        =   {'code': 'FLYER7', 'plan': _plan(name = 'Premium'), 'days': 7}
+        defaults.update(kwargs)
+        return Coupon.objects.create(**defaults)
+
+    def test_redeem_creates_no_payment_no_invoice(self):
+        from AdminApp.domains.payments.models import Payment
+        from AdminApp.domains.invoices.models import Invoice
+        client, profile =   self._client()
+        self._coupon()
+        response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Payment.objects.count(), 0)
+        self.assertEqual(Invoice.objects.count(), 0)
+        self.assertEqual(
+            CouponRedemption.objects.filter(user = profile).count(), 1)
+
+    def test_payment_history_stays_empty_after_redeem(self):
+        client, _       =   self._client()
+        self._coupon()
+        client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        response        =   client.get(self.PAYMENTS_URL)
+        self.assertEqual(response.status_code, 200)
+        rows            =   response.data['results'] if isinstance(response.data, dict) else response.data
+        self.assertEqual(rows, [])
+
+    def test_my_redemptions_lists_redeemed_coupon(self):
+        client, _       =   self._client()
+        coupon          =   self._coupon()
+        client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')
+        response        =   client.get(self.REDEMPTIONS_URL)
+        self.assertEqual(response.status_code, 200)
+        rows            =   response.data['results'] if isinstance(response.data, dict) else response.data
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['code'], coupon.code)
+        self.assertEqual(rows[0]['plan_name'], coupon.plan.name)
+        self.assertEqual(rows[0]['days'], coupon.days)
+
+    def test_my_redemptions_scoped_to_owner(self):
+        #El canje de otro usuario nunca se filtra al historial propio.
+        client, _       =   self._client()
+        _, other        =   _make_user('otro')
+        coupon          =   self._coupon()
+        CouponRedemption.objects.create(coupon = coupon, user = other)
+        response        =   client.get(self.REDEMPTIONS_URL)
+        self.assertEqual(response.status_code, 200)
+        rows            =   response.data['results'] if isinstance(response.data, dict) else response.data
+        self.assertEqual(rows, [])
+
+    def test_my_redemptions_anonymous_rejected(self):
+        self.assertEqual(
+            APIClient().get(self.REDEMPTIONS_URL).status_code, 401)
+
+
 class CouponAdminTests(TestCase):
     """Gestión de cupones desde el panel admin: solo staff."""
 

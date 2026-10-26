@@ -516,6 +516,7 @@ watch(section, (s) => {
   }
   if (s === 'bot') ensureBot()
   if (s === 'stats' && canStats.value) store.loadStats()
+  if (s === 'payments') billing.loadRedemptions()
 })
 
 // Los avisos se renderizan arriba de cada sección y el botón de guardar puede
@@ -4170,6 +4171,19 @@ async function changePassword() {
         <h3>Todavía no hiciste ningún pago</h3>
         <p>Cuando pagues tu plan, el pago va a aparecer acá.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+      </div>
+
+      <!-- Los cupones canjeados no son pagos ni facturas: se listan aparte
+           como actividad promocional de la cuenta. -->
+      <div v-if="billing.redemptions.length" class="card section-gap">
+        <h3><AppIcon name="badge-check" :size="18" /> Cupones canjeados</h3>
+        <ul class="coupon-history">
+          <li v-for="r in billing.redemptions" :key="r.id">
+            <span class="coupon-code mono">{{ r.code }}</span>
+            <span class="coupon-detail">{{ r.plan_name }} · {{ r.days }} día{{ r.days === 1 ? '' : 's' }}</span>
+            <time>{{ formatDateTime(r.redeemed_at) }}</time>
+          </li>
+        </ul>
       </div>
 
       <div v-if="payments.revenuesStatus === 'success'" class="grid-2 section-gap">
