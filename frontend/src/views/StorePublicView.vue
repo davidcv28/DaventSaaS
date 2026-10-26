@@ -51,7 +51,7 @@ const shopPromoImgs = computed(() => shopImgs.value.slice(cover.value ? 0 : 1, c
 // Productos destacados: vitrina del catálogo en la portada (primeros 8 en
 // Tienda Pro, primeros 4 como selección de pliegos en Lookbook).
 const shopCatalog = ref({ categories: [], brands: [], products: [] })
-const shopProducts = computed(() => shopCatalog.value.products.slice(0, tpl.value === 'lookbook' || tpl.value === 'cobre' ? 4 : 8))
+const shopProducts = computed(() => shopCatalog.value.products.slice(0, tpl.value === 'lookbook' || tpl.value === 'cobre' ? 4 : tpl.value === 'signature' ? 6 : 8))
 // Minimal: la placa de imagen del hero — portada propia, primera imagen
 // del carrusel o, en su defecto, el logo sobre el tile de la paleta.
 const mnArtImg = computed(() => cover.value || shopImgs.value[0] || '')
@@ -82,6 +82,11 @@ const cbTileBLabel = computed(() => cbTileProduct(cbTileB.value)?.name || 'Nueva
 const btTileA = cbTileA
 const btTileB = cbTileB
 const btTileALabel = cbTileALabel
+// Signature: mismas placas del pool (portada → carrusel → productos),
+// enmarcadas como carta de autor — placa principal y una miniatura de apoyo.
+const sgTileA = cbTileA
+const sgTileB = cbTileB
+const sgTileALabel = cbTileALabel
 const shopBrandOf = (p) => shopCatalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 const shopCatOf = (p) => shopCatalog.value.categories.find((c) => c.id === p.category)?.name || ''
 // Departamentos: categorías reales con productos, en el orden que definió
@@ -118,7 +123,7 @@ const shopPromoEyebrow = computed(() => {
     : 'Catálogo completo'
 })
 async function loadShopFeatured() {
-  if (!['shop', 'lookbook', 'cobre', 'minimal', 'classic', 'boutique'].includes(tpl.value) || !showCatalog.value) return
+  if (!['shop', 'lookbook', 'cobre', 'minimal', 'classic', 'boutique', 'signature'].includes(tpl.value) || !showCatalog.value) return
   try {
     shopCatalog.value = await loadPublicCatalog({ sort: 'recent' })
   } catch {
@@ -387,10 +392,10 @@ onBeforeUnmount(() => {
 <div class="sp-page-root">
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <section class="sp-hero">
-    <div class="sp-hero-band" :class="{ 'has-cover': cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' }">
+    <div class="sp-hero-band" :class="{ 'has-cover': cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature' }">
       <!-- Minimal y Boutique: barra de anuncio (strip editorial del diseño) -->
       <p v-if="tpl === 'minimal' || tpl === 'boutique'" class="sp-mn-announce">{{ mnNotice }}</p>
-      <div v-if="cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique'" class="sp-hero-cover" aria-hidden="true">
+      <div v-if="cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature'" class="sp-hero-cover" aria-hidden="true">
         <img :src="cover" alt="" fetchpriority="high" />
       </div>
       <div class="sp-hero-decor" aria-hidden="true">
@@ -492,6 +497,16 @@ onBeforeUnmount(() => {
           <span class="sp-shop-chip d1"><AppIcon name="package" :size="20" :stroke="2" /></span>
           <span class="sp-shop-chip d2"><AppIcon name="percent" :size="17" :stroke="2.25" /></span>
           <span class="sp-shop-chip d3"><AppIcon name="tag" :size="16" :stroke="2" /></span>
+        </template>
+        <template v-else-if="tpl === 'signature'">
+          <span class="sp-sg-ghost">{{ initial }}</span>
+          <span class="sp-sg-seal">
+            <svg class="sp-sg-seal-ring" viewBox="0 0 200 200">
+              <defs><path id="sp-sg-circle" d="M100,100 m-76,0 a76,76 0 1,1 152,0 a76,76 0 1,1 -152,0" /></defs>
+              <text><textPath href="#sp-sg-circle" textLength="474" lengthAdjust="spacing">FIRMA DE AUTOR • EDICIÓN CONTINUA • </textPath></text>
+            </svg>
+            <span class="sp-sg-seal-core"><AppIcon name="gem" :size="20" :stroke="1.5" /></span>
+          </span>
         </template>
       </div>
       <div v-if="tpl === 'terminal'" class="sp-container sp-tm-bar" aria-hidden="true">
@@ -631,6 +646,42 @@ onBeforeUnmount(() => {
             <span class="sp-bt-tag" aria-hidden="true">SS{{ String(year).slice(2) }}</span>
           </div>
         </template>
+        <template v-else-if="tpl === 'signature'">
+          <!-- Signature (casa de autor): composición ceremonial — copy a la
+               izquierda con dateline grabado, titular Cinzel con doble
+               filete en la última palabra y la firma manuscrita del
+               negocio; a la derecha una placa retrato enmar­cada con
+               doble filete y el monograma en cartucho. -->
+          <div class="sp-sg-copy">
+            <p v-reveal class="sp-sg-dateline">
+              <i aria-hidden="true"></i><span>{{ heroBadge }}</span><i aria-hidden="true"></i><span>{{ year }}</span>
+            </p>
+            <h1 v-reveal="160" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <span class="sp-sg-mark">{{ titleSplit.last }}</span></h1>
+            <p v-if="custom.description" v-reveal="240" class="sp-hero-sub">{{ custom.description }}</p>
+            <div v-reveal="320" class="sp-hero-ctas">
+              <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <ul v-if="heroMeta.length" v-reveal="400" class="sp-hero-meta">
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+            </ul>
+          </div>
+          <div v-reveal="120" class="sp-sg-art">
+            <figure class="sp-sg-plate" :class="{ 'is-logo': !sgTileA && custom.logo }">
+              <img v-if="sgTileA" :src="sgTileA" alt="" fetchpriority="high" />
+              <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+              <span v-else class="sp-sg-plate-initial" aria-hidden="true">{{ initial }}</span>
+              <figcaption>{{ sgTileALabel }}</figcaption>
+            </figure>
+            <figure v-if="sgTileB" class="sp-sg-plate alt" aria-hidden="true">
+              <img :src="sgTileB" alt="" loading="lazy" />
+            </figure>
+            <span class="sp-sg-mono" aria-hidden="true"><i>{{ initial }}</i></span>
+          </div>
+        </template>
         <template v-else-if="tpl === 'shop'">
           <!-- Tienda Pro (marketplace): banner principal + dos tarjetas
                promo apiladas, como la portada de un e-commerce. La foto va
@@ -761,13 +812,21 @@ onBeforeUnmount(() => {
         <span>Edición Nº 01</span><i></i><span>{{ year }}</span>
         <span class="sp-lb-hero-foot-note">Colección de temporada</span>
       </div>
+      <!-- Signature: línea de firma bajo el hero — dateline en mayúsculas
+           grabadas a los bordes y el nombre del negocio manuscrito al
+           centro, como la firma al pie de un documento. -->
+      <div v-if="tpl === 'signature'" class="sp-container sp-sg-strip">
+        <span class="sp-sg-strip-edge">Est. {{ year }}</span>
+        <span class="sp-sg-strip-sign">{{ shopName }}</span>
+        <span class="sp-sg-strip-edge">{{ location || 'Tienda online' }}</span>
+      </div>
     </div>
 
     <!-- Tienda Pro y Boutique: departamentos reales del catálogo
          (categorías con productos, miniatura del primer producto y
          conteo). Sin catálogo se mantiene la fila de destacados del resto
          de los diseños. -->
-    <div v-if="(tpl === 'shop' || tpl === 'boutique') && shopDepts.length" class="sp-container">
+    <div v-if="(tpl === 'shop' || tpl === 'boutique' || tpl === 'signature') && shopDepts.length" class="sp-container">
       <div class="sp-shop-depts" :style="{ maxWidth: `${(shopDepts.length + (showCatalog ? 1 : 0)) * 156}px` }" aria-label="Departamentos del catálogo">
         <RouterLink v-for="d in shopDepts" :key="d.id" v-reveal class="sp-shop-dept" :to="deptTo(d.id)">
           <span class="sp-shop-dept-thumb">
@@ -798,13 +857,13 @@ onBeforeUnmount(() => {
     <!-- Tienda Pro, Lookbook, Cobre, Minimal y Boutique: vitrina de
          productos destacados en la portada (8 en marketplace/Minimal/
          Boutique, 4 pliegos en Lookbook y en la colección). -->
-    <div v-if="(tpl === 'shop' || tpl === 'lookbook' || tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique') && shopProducts.length" class="sp-container sp-shop-featured">
+    <div v-if="(tpl === 'shop' || tpl === 'lookbook' || tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' || tpl === 'signature') && shopProducts.length" class="sp-container sp-shop-featured">
       <div class="sp-shop-featured-head">
         <div class="sp-shop-featured-copy">
-          <p class="sp-shop-featured-eyebrow">{{ tpl === 'lookbook' ? 'Selección de la edición' : tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' ? 'Nueva temporada' : 'Recién llegados' }}</p>
-          <h2 class="sp-shop-featured-title">{{ tpl === 'lookbook' ? 'Pliegos destacados' : tpl === 'cobre' || tpl === 'boutique' ? 'La colección' : tpl === 'minimal' ? 'Selección' : 'Productos destacados' }}</h2>
+          <p class="sp-shop-featured-eyebrow">{{ tpl === 'lookbook' ? 'Selección de la edición' : tpl === 'signature' ? 'Curaduría de autor' : tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' ? 'Nueva temporada' : 'Recién llegados' }}</p>
+          <h2 class="sp-shop-featured-title">{{ tpl === 'lookbook' ? 'Pliegos destacados' : tpl === 'signature' ? 'La vitrina' : tpl === 'cobre' || tpl === 'boutique' ? 'La colección' : tpl === 'minimal' ? 'Selección' : 'Productos destacados' }}</h2>
         </div>
-        <RouterLink class="sp-shop-viewall" :to="catalogTo">{{ tpl === 'lookbook' ? 'Ver índice completo' : tpl === 'cobre' ? 'Ver todo' : tpl === 'boutique' ? 'Ver toda la colección' : 'Ver todo el catálogo' }} <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
+        <RouterLink class="sp-shop-viewall" :to="catalogTo">{{ tpl === 'lookbook' ? 'Ver índice completo' : tpl === 'cobre' ? 'Ver todo' : tpl === 'signature' ? 'Ver el catálogo completo' : tpl === 'boutique' ? 'Ver toda la colección' : 'Ver todo el catálogo' }} <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
       </div>
       <div class="sp-shop-featured-grid">
         <article

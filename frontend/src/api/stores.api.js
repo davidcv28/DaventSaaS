@@ -469,7 +469,8 @@ export const STORE_TEMPLATES = {
   shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Estilo marketplace: barra superior con buscador, menú de secciones, portada tipo banner con promos y productos destacados.' },
   cobre:       { label: 'Cobre',       tier: 'advanced', desc: 'Retail de indumentaria: piedra y tinta, titulares condensados XXL en mayúsculas, placas de acento, tira de beneficios y grilla de colección.' },
   minimal:     { label: 'Minimal',     tier: 'advanced', desc: 'Catálogo editorial esencial: papel claro y tinta, barra de anuncio, hero tipográfico, tarjetas 3:4 sin cromo y cierre en bloque de tinta.' },
-  boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' }
+  boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' },
+  signature:   { label: 'Signature',   tier: 'advanced', desc: 'Casa de autor: noche de espresso, marfil y tu acento, titulares Cinzel grabados, marcos de doble filete, sello de monograma y firma manuscrita.' }
 }
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de

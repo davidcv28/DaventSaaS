@@ -929,6 +929,29 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='boutique'] .dp-hero.has-cover .dp-badge { color: rgba(255, 255, 255, .9); }
 .design-preview[data-store-template='boutique'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(255, 255, 255, .7); color: #fff; }
 
+/* Signature: casa de autor — noche de espresso y marfil, títulos Cinzel
+   grabados, filetes dobles, botón de marfil y cartucho de monograma. */
+.design-preview[data-store-template='signature'] { --sp-bg: #16130f; --sp-card: #1e1a14; --sp-ink: #f2ecdc; --sp-ink-2: #d8cfba; --sp-muted: #9c917e; --sp-line: rgba(242, 236, 220, .18); }
+.design-preview[data-store-theme='dark'][data-store-template='signature'] { --sp-bg: #100e0b; --sp-card: #1a1712; --sp-ink: #f2ecdc; --sp-ink-2: #d8cfba; --sp-muted: #9c917e; --sp-line: rgba(242, 236, 220, .18); }
+.design-preview[data-store-template='signature'] .dp-nav { background: var(--sp-bg); border-bottom: 1px solid var(--sp-line); }
+.design-preview[data-store-template='signature'] .dp-nav-name { color: var(--sp-ink); font-family: 'Cinzel', Georgia, serif; font-weight: 600; font-size: 13px; letter-spacing: .06em; }
+.design-preview[data-store-template='signature'] .dp-nav-item { color: var(--sp-muted); font-size: 8px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+.design-preview[data-store-template='signature'] .dp-nav-mono { background: var(--sp-card); color: var(--sp-ink); border: 1px solid var(--sp-line); border-radius: 2px; font-family: 'Cinzel', Georgia, serif; }
+.design-preview[data-store-template='signature'] .dp-hero { justify-items: start; text-align: left; color: var(--sp-ink); background: radial-gradient(200px 120px at 84% -20%, color-mix(in srgb, var(--store-accent) 16%, transparent), transparent 62%), var(--sp-bg); border-bottom: 3px double var(--sp-line); padding: 26px 18px 24px; }
+.design-preview[data-store-template='signature'] .dp-mono { background: var(--sp-card); color: var(--store-accent); border: 1px solid var(--sp-line); border-radius: 2px; font-family: 'Cinzel', Georgia, serif; }
+.design-preview[data-store-template='signature'] .dp-badge { padding: 0; border: 0; border-radius: 0; background: none; color: var(--sp-muted); font-size: 8px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; }
+.design-preview[data-store-template='signature'] .dp-title { font-family: 'Cinzel', Georgia, serif; font-weight: 600; font-size: 28px; line-height: 1.08; letter-spacing: .02em; color: var(--sp-ink); }
+.design-preview[data-store-template='signature'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='signature'] .dp-desc { color: var(--sp-muted); font-size: 10.5px; line-height: 1.7; }
+.design-preview[data-store-template='signature'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='signature'] .dp-btn { border-radius: 2px; background: var(--sp-ink); color: var(--sp-bg); font-weight: 700; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; box-shadow: none; }
+.design-preview[data-store-template='signature'] .dp-btn.ghost { background: transparent; border: 1px solid var(--sp-line); color: var(--sp-ink); }
+.design-preview[data-store-template='signature'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(22, 19, 15, .82), rgba(22, 19, 15, .45)), var(--dp-cover) center / cover no-repeat; color: #f2ecdc; }
+.design-preview[data-store-template='signature'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='signature'] .dp-hero.has-cover .dp-desc { color: #f2ecdc; }
+.design-preview[data-store-template='signature'] .dp-hero.has-cover .dp-badge { color: rgba(242, 236, 220, .85); }
+.design-preview[data-store-template='signature'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(242, 236, 220, .4); color: #f2ecdc; }
+
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
 .tab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: color .15s, border-color .15s; }

@@ -8,6 +8,7 @@ import { computed, inject, defineAsyncComponent } from 'vue'
 import CatalogClassic from './catalog/CatalogClassic.vue'
 import '../assets/store-catalog.css'
 import '../assets/store-catalog-responsive.css'
+import '../assets/store-catalog-polish.css'
 
 const ctx = inject('storePage')
 const VARIANTS = {
@@ -20,7 +21,8 @@ const VARIANTS = {
   shop: defineAsyncComponent(() => import('./catalog/CatalogShop.vue')),
   cobre: defineAsyncComponent(() => import('./catalog/CatalogCobre.vue')),
   minimal: defineAsyncComponent(() => import('./catalog/CatalogMinimal.vue')),
-  boutique: defineAsyncComponent(() => import('./catalog/CatalogBoutique.vue'))
+  boutique: defineAsyncComponent(() => import('./catalog/CatalogBoutique.vue')),
+  signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || CatalogClassic)
 </script>

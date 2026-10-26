@@ -10,11 +10,11 @@
 .cv { --cv-rv: opacity .7s var(--sp-ease) var(--rv-d, 0ms), translate .7s var(--sp-ease) var(--rv-d, 0ms); flex: 1; width: 100%; padding-bottom: 96px; min-width: 0; }
 .cv-wrap { width: 100%; max-width: 1360px; margin: 0 auto; padding: 0 40px; }
 .cv img { display: block; max-width: 100%; }
-.cv button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:where(.cv) button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .cv :is(input, select) { border: 0; background: transparent; color: inherit; font: inherit; min-width: 0; outline: 0; }
 .cv select { cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 18px; }
 .cv select option { color: #111; background: #fff; }
-.cv :is(h1, h2, h3, p, ol, ul, figure) { margin: 0; padding: 0; }
+:where(.cv) :is(h1, h2, h3, p, ol, ul, figure) { margin: 0; padding: 0; }
 .cv :is(ol, ul) { list-style: none; }
 .cv s { text-decoration: line-through; opacity: .55; font-weight: 500; margin-right: 8px; }
 .cv [role='link'] { cursor: pointer; }
@@ -682,4 +682,80 @@ button.cv-pr-cta { background: var(--store-accent-ink); }
   .cv-bt-name { font-size: 16px; }
   .cv-bt-field input { width: 76px; }
   .cv-bt .cv-skels { --cv-cols: 2; --cv-gap: 12px; }
+}
+
+/* =====================================================================
+   SIGNATURE — vitrina de la casa de autor (índice grabado + placas)
+   ===================================================================== */
+.cv-sg { font-family: var(--sp-body); color: var(--sg-ink); }
+.cv-sg-head { padding: 56px 0 42px; text-align: center; border-bottom: 4px double var(--sg-line); }
+.cv-sg .cv-crumbs { font-size: 10.5px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--sg-muted); }
+.cv-sg .cv-crumbs a { color: var(--sg-muted); }
+.cv-sg .cv-crumbs a:hover { color: var(--sg-ink); text-decoration: none; }
+.cv-sg .cv-crumbs [aria-current] { color: var(--sg-ink); }
+/* Dateline del membrete: la casa y el año flanqueados por filetes de acento. */
+.cv-sg-dateline { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 36px; font-size: 11px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--sg-muted); }
+.cv-sg-dateline i { width: 42px; height: 1px; background: var(--store-accent); }
+.cv-sg-title { margin-top: 16px; font-family: var(--sp-display); font-weight: 600; font-size: clamp(46px, 7vw, 92px); line-height: 1.04; letter-spacing: .02em; color: var(--sg-ink); }
+/* Ornamento rombo entre filetes: la rúbrica bajo el titular. */
+.cv-sg-orn { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 20px; }
+.cv-sg-orn i { width: 76px; height: 1px; background: var(--sg-line); }
+.cv-sg-romb { width: 8px; height: 8px; border: 1px solid var(--store-accent); transform: rotate(45deg); }
+.cv-sg-lede { margin-top: 16px; font-size: 13px; letter-spacing: .06em; color: var(--sg-muted); }
+/* Índice de categorías: mayúsculas espaciadas, la activa firma con el
+   filete de acento — como los apartados de una carta de autor. */
+.cv-sg-cats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 30px; margin-top: 38px; }
+.cv-sg-cats button { position: relative; padding: 6px 2px; font-size: 12.5px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--sg-muted); transition: color .2s; }
+.cv-sg-cats button:hover { color: var(--sg-ink); }
+.cv-sg-cats button.on { color: var(--sg-ink); }
+.cv-sg-cats button.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -4px; border-bottom: 3px double var(--store-accent); }
+.cv-sg-main { padding-top: 36px; }
+/* Filtros como campos de documento: subrayados, sin caja. */
+.cv-sg-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 30px; }
+.cv-sg-field { display: flex; align-items: center; gap: 8px; padding: 8px 2px; border-bottom: 1px solid var(--sg-line); font-size: 13.5px; color: var(--sg-muted); transition: border-color .2s; }
+.cv-sg-field:focus-within { border-bottom-color: var(--store-accent); }
+.cv-sg-field input, .cv-sg-field select { color: var(--sg-ink); }
+.cv-sg-field input { width: 104px; }
+.cv-sg-field input::placeholder { color: color-mix(in srgb, var(--sg-muted) 70%, transparent); }
+.cv-sg-search { flex: 0 1 300px; }
+.cv-sg-search input { width: 100%; }
+.cv-sg-brands { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; margin-top: 20px; }
+.cv-sg-brands button { padding: 4px 2px; font-size: 11.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--sg-muted); }
+.cv-sg-brands button:hover { color: var(--sg-ink); }
+.cv-sg-brands button.on { color: var(--sg-ink); border-bottom: 1px solid var(--store-accent); }
+.cv-sg-brands .reset { display: inline-flex; align-items: center; gap: 4px; color: var(--sp-accent-text); }
+.cv-sg .cv-skels { --cv-cols: 3; --cv-gap: 32px; --cv-skel-r: 2px; }
+.cv-sg .cv-skel { aspect-ratio: 4 / 5; }
+/* Placa de la pieza: marco de doble filete, foto de tono amordazado que se
+   abre al pasar y el nombre grabado en Cinzel. */
+.cv-sg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 52px 28px; margin-top: 44px; }
+.cv-sg-media { position: relative; aspect-ratio: 4 / 5; padding: 9px; background: var(--sg-panel); border: 1px solid var(--sg-line); border-radius: var(--sp-radius); transition: border-color .3s var(--sp-ease); }
+.cv-sg-media::after { content: ''; position: absolute; inset: 17px; border: 1px solid var(--sg-line-soft); border-radius: 1px; pointer-events: none; transition: border-color .3s; }
+.cv-sg-card:hover .cv-sg-media { border-color: var(--store-accent); }
+.cv-sg-card:hover .cv-sg-media::after { border-color: color-mix(in srgb, var(--store-accent) 40%, transparent); }
+.cv-sg-media img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.82) contrast(1.02); transition: transform .8s var(--sp-ease), filter .6s var(--sp-ease); }
+.cv-sg-card:hover .cv-sg-media img { transform: scale(1.03); filter: saturate(1) contrast(1.03); }
+.cv-sg-ph { display: grid; place-items: center; width: 100%; height: 100%; color: color-mix(in srgb, var(--sg-ink) 30%, transparent); }
+.cv-sg-flag { position: absolute; top: 18px; left: 18px; z-index: 1; padding: 5px 11px; background: var(--sg-night); border: 1px solid var(--sg-line); border-radius: var(--sp-radius); color: var(--sg-ink); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.cv-sg-body { padding: 16px 4px 0; text-align: center; }
+.cv-sg-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--sg-muted); }
+.cv-sg-name { margin: 8px 0 6px; font-family: var(--sp-display); font-weight: 600; font-size: 19px; line-height: 1.28; letter-spacing: .02em; color: var(--sg-ink); }
+.cv-sg-price { font-size: 14px; letter-spacing: .04em; font-variant-numeric: tabular-nums; color: var(--sg-ink); }
+.cv-sg-price s { color: var(--sg-muted); opacity: 1; }
+.cv-sg .cv-more-btn { border-radius: var(--sp-radius); background: var(--sg-ink); color: var(--sg-night); letter-spacing: .18em; text-transform: uppercase; font-size: 12px; }
+.cv-sg .cv-more-btn:hover { background: var(--store-accent); color: #fff; filter: none; transform: none; }
+.cv-sg .cv-more-bar { height: 1px; border-radius: 0; }
+.cv-sg .cv-promo-item { border-radius: var(--sp-radius); }
+@media (max-width: 960px) { .cv-sg-grid { gap: 42px 20px; } }
+@media (max-width: 720px) {
+  .cv-sg-head { padding: 36px 0 28px; }
+  .cv-sg-title { font-size: clamp(36px, 12vw, 56px); }
+  .cv-sg-dateline i { width: 24px; }
+  .cv-sg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 12px; }
+  .cv-sg-name { font-size: 15px; }
+  .cv-sg-body { padding: 12px 0 0; }
+  .cv-sg-bar { flex-direction: column; }
+  .cv-sg-search, .cv-sg-field { flex: 1 1 auto; width: 100%; }
+  .cv-sg-field input { flex: 1; width: 0; }
+  .cv-sg .cv-skels { --cv-cols: 2; --cv-gap: 12px; }
 }
