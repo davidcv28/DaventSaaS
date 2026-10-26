@@ -153,6 +153,28 @@ services:
     logging: *logging
 
   # ---------------------------------------------------------------------------
+  # Scheduler: dispara CELERY_BEAT_SCHEDULE (hoy: resumen diario de WhatsApp a
+  # las 9 AM AR). Sin state propio — el PID file va en el tmpfs.
+  celery-beat:
+    image: ${API_IMAGE:-ghcr.io/davidcv28/daventsaas-api:latest}
+    restart: unless-stopped
+    command: ["celery", "-A", "DaventProject", "beat", "-l", "info", "--pidfile", "/tmp/celerybeat.pid", "--schedule", "/tmp/celerybeat-schedule"]
+    env_file: .env
+    environment: *api-env
+    networks: [internal_net]
+    depends_on:
+      redis:   {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits: {cpus: "0.2", memory: 256M}
+    logging: *logging
+
+  # ---------------------------------------------------------------------------
   web:
     image: ${WEB_IMAGE:-ghcr.io/davidcv28/daventsaas-web:latest}
     build:

@@ -312,6 +312,24 @@ if REDIS_URL:
 # imagen de la API; el broker y el backend de resultados viven en Redis.
 CELERY_BROKER_URL     = config('CELERY_BROKER_URL', default = '')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default = '') or CELERY_BROKER_URL
+# Beat: jobs periódicos del VPS (compose: servicio celery-beat). En Render el
+# mismo envío lo dispara el cron `daventsaas-digest` (type: cron de render.yaml).
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE  = {
+    # Resumen diario por WhatsApp a las 9 AM de Argentina (TIME_ZONE=UTC -> 12:00)
+    'whatsapp-daily-digest': {
+        'task'      : 'stores.send_daily_whatsapp_digest',
+        'schedule'  : crontab(hour = 12, minute = 0),
+    },
+}
+
+# WhatsApp Business Cloud API (Meta) — resumen diario de la tienda, beneficio
+# 'has_whatsapp_digest' (Premium). Mensajes business-initiated = TEMPLATE
+# pre-aprobado: crear 'resumen_diario_tienda' (utility, es_AR, 6 vars body) en
+# Meta y configurar token permanente + id del número remitente. Vacío = apagado.
+WHATSAPP_TOKEN      = config('WHATSAPP_TOKEN', default = '')        # secreto
+WHATSAPP_PHONE_ID   = config('WHATSAPP_PHONE_ID', default = '')
+WHATSAPP_TEMPLATE   = config('WHATSAPP_TEMPLATE', default = 'resumen_diario_tienda')
 
 # Datos fiscales del emisor (DAVENT) que se imprimen en los comprobantes.
 # Completar en .env una vez dado de alta en ARCA. tax_condition:

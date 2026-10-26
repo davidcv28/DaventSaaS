@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 from django.contrib.auth.models import User
 from django.core import mail, signing
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APIClient
@@ -973,3 +973,95 @@ class PremiumFieldsGatingTests(TestCase):
         response    =   client.patch(
             f'{STORES_URL}customization/', {'show_location': True}, format = 'json')
         self.assertFalse(response.data['customization']['show_location'])
+
+
+class WhatsappDigestTests(TestCase):
+    """
+    Resumen diario por WhatsApp (has_whatsapp_digest, premium): el opt-in
+    viaja en el perfil pero el job solo envía con el beneficio vigente,
+    dedupe por sent_at y número normalizado a dígitos E.164.
+    """
+
+    def _opted_in(self, with_benefit = True, with_store = True, phone = '+5493871551234'):
+        _, profile      =   _make_user(verified = True)
+        profile.phone               =   phone
+        profile.whatsapp_digest     =   True
+        profile.save(update_fields = ['phone', 'whatsapp_digest'])
+        if with_benefit:
+            _grant(profile, has_whatsapp_digest = True)
+        if with_store:
+            store       =   Store.objects.create(user = profile, slug = f'tienda-{profile.pk}')
+            StoreCustomization.objects.create(store = store, display_name = 'Mi Tienda')
+        return profile
+
+    def test_digest_opt_in_persists_in_profile(self):
+        profile     =   self._opted_in()
+        client      =   APIClient()
+        client.force_authenticate(user = profile.user)
+        response    =   client.put(
+            '/api/profile/me/',
+            {'tax_condition': 'CF', 'type_document': 'DNI', 'document': '27123456',
+             'first_name': 'Ana', 'last_name': 'Perez', 'province': profile.province_id,
+             'city': profile.city_id, 'address': 'Calle 1', 'phone': profile.phone,
+             'whatsapp_digest': True},
+            format = 'json')
+        profile.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(profile.whatsapp_digest)
+
+    @patch('StoreApp.domains.stores.services.whatsapp.requests.post')
+    @override_settings(WHATSAPP_TOKEN = 'tok', WHATSAPP_PHONE_ID = '999')
+    def test_digest_sent_to_opted_in_premium(self, post):
+        post.return_value         =   Mock(ok = True)
+        profile                   =   self._opted_in()
+        from StoreApp.domains.stores.services import send_daily_digests
+        stats                     =   send_daily_digests()
+        self.assertEqual(stats['sent'], 1)
+        call                      =   post.call_args
+        self.assertEqual(call[0][0], 'https://graph.facebook.com/v22.0/999/messages')
+        self.assertEqual(call[1]['headers']['Authorization'], 'Bearer tok')
+        body                      =   call[1]['json']
+        self.assertEqual(body['to'], '5493871551234')
+        self.assertEqual(body['template']['name'], 'resumen_diario_tienda')
+        params                    =   [p['text'] for p in body['template']['components'][0]['parameters']]
+        self.assertEqual(params[1], 'Mi Tienda')
+        self.assertTrue(params[5].endswith('/tienda-' + str(profile.pk)))
+        profile.refresh_from_db()
+        self.assertIsNotNone(profile.whatsapp_digest_sent_at)
+
+    @patch('StoreApp.domains.stores.services.whatsapp.requests.post')
+    def test_digest_skipped_without_benefit(self, post):
+        self._opted_in(with_benefit = False)
+        from StoreApp.domains.stores.services import send_daily_digests
+        stats     =   send_daily_digests()
+        self.assertEqual(stats['sent'], 0)
+        post.assert_not_called()
+
+    @patch('StoreApp.domains.stores.services.whatsapp.requests.post')
+    def test_digest_skipped_without_store(self, post):
+        self._opted_in(with_store = False)
+        from StoreApp.domains.stores.services import send_daily_digests
+        self.assertEqual(send_daily_digests()['sent'], 0)
+        post.assert_not_called()
+
+    @patch('StoreApp.domains.stores.services.whatsapp.requests.post')
+    @override_settings(WHATSAPP_TOKEN = 'tok', WHATSAPP_PHONE_ID = '999')
+    def test_digest_not_sent_twice_same_day(self, post):
+        post.return_value         =   Mock(ok = True)
+        self._opted_in()
+        from StoreApp.domains.stores.services import send_daily_digests
+        send_daily_digests()
+        stats                     =   send_daily_digests()
+        self.assertEqual(stats['sent'], 0)
+        self.assertEqual(post.call_count, 1)
+
+    @patch('StoreApp.domains.stores.services.whatsapp.requests.post')
+    @override_settings(WHATSAPP_TOKEN = 'tok', WHATSAPP_PHONE_ID = '999')
+    def test_digest_retries_after_meta_error(self, post):
+        post.return_value         =   Mock(ok = False, status_code = 500, text = 'err')
+        profile                   =   self._opted_in()
+        from StoreApp.domains.stores.services import send_daily_digests
+        stats                     =   send_daily_digests()
+        self.assertEqual(stats['failed'], 1)
+        profile.refresh_from_db()
+        self.assertIsNone(profile.whatsapp_digest_sent_at)

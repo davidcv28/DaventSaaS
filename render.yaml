@@ -121,6 +121,17 @@ services:
       - key: GOOGLE_CLIENT_ID
         value: 10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
 
+      # ---- WhatsApp digest diario (Meta Cloud API) ------------------------------
+      # Resumen de la tienda a las 9 AM AR — beneficio premium. Los mensajes
+      # business-initiated salen por un TEMPLATE aprobado en Meta ('resumen_
+      # diario_tienda', utility es_AR). Vacío = feature apagada.
+      - key: WHATSAPP_TOKEN
+        sync: false                       # token permanente del system user
+      - key: WHATSAPP_PHONE_ID
+        sync: false                       # id del número remitente de la WABA
+      - key: WHATSAPP_TEMPLATE
+        value: resumen_diario_tienda
+
       # ---- Emisor de comprobantes (fiscal) --------------------------------------
       - key: ISSUER_NAME
         value: DAVENT
@@ -153,3 +164,32 @@ services:
         sync: false
       - key: DJANGO_SUPERUSER_EMAIL
         sync: false
+
+  # ---------------------------------------------------------------------------
+  # Cron diario del resumen de WhatsApp — Render free soporta cron jobs (corren
+  # segundos por día). 12:00 UTC = 9 AM de Argentina, un envío por día por
+  # usuario (dedupe por sent_at). Misma imagen Docker que la API: comparte el
+  # código y las migraciones ya aplicadas por el entrypoint del servicio web.
+  - type: cron
+    name: daventsaas-digest
+    runtime: docker
+    dockerfilePath: ./docker/api/Dockerfile
+    dockerContext: .
+    dockerCommand: ["python", "manage.py", "send_whatsapp_digest"]
+    schedule: "0 12 * * *"
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        sync: false                     # mismo valor que en el servicio web
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        sync: false                     # misma Neon que la API
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_ID
+        sync: false
+      - key: WHATSAPP_TEMPLATE
+        value: resumen_diario_tienda
+      - key: FRONTEND_URL
+        value: https://daventsaas.onrender.com   # arma el link público del resumen

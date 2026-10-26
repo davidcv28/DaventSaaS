@@ -27,6 +27,7 @@ dict_benefits = {
     'has_chatbot'       :   {'label': 'Chatbot con tus respuestas en la web', 'kind': 'flag'},
     'has_product_comments': {'label': 'Opiniones de clientes: valoraciones y comentarios', 'kind': 'flag'},
     'has_discounts'     :   {'label': 'Descuentos programados del catálogo',  'kind': 'flag'},
+    'has_whatsapp_digest':  {'label': 'Resumen diario de tu tienda por WhatsApp', 'kind': 'flag'},
 }
 
 dict_plan_benefits = {
@@ -52,6 +53,7 @@ dict_plan_benefits = {
             'has_chatbot'       :   True,
             'has_product_comments': True,
             'has_discounts'     :   True,
+            'has_whatsapp_digest' :   True,
         },
         'presentation'  :   {
             'slug'          :   'prueba',
@@ -86,6 +88,7 @@ dict_plan_benefits = {
             'has_chatbot'       :   False,
             'has_product_comments': False,
             'has_discounts'     :   False,
+            'has_whatsapp_digest' :   False,
         },
         'presentation'  :   {
             'slug'          :   'basico',
@@ -123,6 +126,7 @@ dict_plan_benefits = {
             'has_chatbot'       :   False,
             'has_product_comments': False,
             'has_discounts'     :   False,
+            'has_whatsapp_digest' :   False,
         },
         'presentation'  :   {
             'slug'          :   'estandar',
@@ -161,6 +165,7 @@ dict_plan_benefits = {
             'has_chatbot'       :   True,
             'has_product_comments': True,
             'has_discounts'     :   True,
+            'has_whatsapp_digest' :   True,
         },
         'presentation'  :   {
             'slug'          :   'premium',
