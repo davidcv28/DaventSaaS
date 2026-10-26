@@ -1050,6 +1050,36 @@ body { transition: background-color .2s ease, color .2s ease; }
 .disc-products .check-item input[type='checkbox'] { accent-color: var(--brand-500); }
 .disc-when-label { color: var(--muted); }
 
+/* Alcance: tarjetas con ícono en tile */
+.disc-wrap .field label.disc-scope-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; margin: 0; padding: 18px 10px 14px; min-height: 104px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: 13px; font-weight: 600; line-height: 1.25; }
+.disc-wrap .field label.disc-scope-card span { color: var(--ink-2); }
+.disc-scope-card svg { width: 38px; height: 38px; padding: 9px; box-sizing: border-box; border-radius: 11px; background: var(--card); border: 1px solid var(--line); color: var(--muted); transition: all .18s; }
+.disc-wrap .field label.disc-scope-card:hover { border-color: var(--brand-400); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.disc-wrap .field label.disc-scope-card:hover svg { color: var(--brand-ink); }
+.disc-wrap .field label.disc-scope-card.on { border-color: var(--brand-500); background: linear-gradient(160deg, var(--brand-soft), transparent 85%), var(--surface); box-shadow: var(--ring); transform: none; }
+.disc-wrap .field label.disc-scope-card.on span { color: var(--ink); }
+.disc-scope-card.on svg { background: linear-gradient(135deg, var(--brand-500), var(--accent)); border-color: transparent; color: #fff; box-shadow: 0 6px 14px -6px rgba(99, 102, 241, .7); }
+.disc-scope-card::after { content: ''; position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--line-strong); transition: all .18s; }
+.disc-scope-card.on::after { border-color: var(--brand-500); background: var(--brand-500) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
+.disc-scope-card:focus-within { outline: none; }
+.disc-scope-card:has(:focus-visible) { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+
+/* Ventana: dos paneles independientes */
+.disc-wrap .disc-window { padding: 0; border: none; background: transparent; gap: 12px; }
+.disc-when { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); gap: 10px; }
+.disc-when-label { padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
+.disc-when-label svg { width: 24px; height: 24px; padding: 5px; box-sizing: border-box; border-radius: 8px; background: var(--brand-soft); color: var(--brand-ink); }
+.disc-when-fields .input { background: var(--card); }
+
+/* "Sin fin" como interruptor */
+.disc-wrap .field label.disc-none { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.disc-wrap .field label.disc-none span { color: var(--ink-2); }
+.disc-none input[type='checkbox'] { -webkit-appearance: none; appearance: none; flex: none; width: 36px; height: 20px; border-radius: 99px; background: var(--line-strong); position: relative; transition: background .18s; cursor: pointer; }
+.disc-none input[type='checkbox']::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .35); transition: transform .18s; }
+.disc-none input[type='checkbox']:checked { background: linear-gradient(135deg, var(--brand-500), var(--accent)); }
+.disc-none input[type='checkbox']:checked::after { transform: translateX(16px); }
+.disc-none input[type='checkbox']:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+
 .disc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .disc-item { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, var(--brand-soft), transparent 55%), var(--card); transition: border-color .15s, box-shadow .15s, transform .15s; }
 .disc-item:hover { border-color: var(--brand-400); box-shadow: var(--shadow-md); transform: translateY(-1px); }
