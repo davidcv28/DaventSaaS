@@ -174,7 +174,10 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
     <div ref="bar" class="lp-progress" aria-hidden="true" />
     <div class="lp-menu" :class="{ open: menu }" role="dialog" aria-modal="true" aria-label="Menú de navegación">
       <nav class="lp-menu-links">
-        <a v-for="l in navLinks" :key="l.href" :href="l.href" @click="menu = false">{{ l.label }}</a>
+        <a v-for="l in navLinks" :key="l.href" :href="l.href" @click="menu = false">
+          {{ l.label }}
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+        </a>
       </nav>
       <div class="lp-menu-cta">
         <RouterLink to="/login" class="lp-btn ghost lg" @click="menu = false">Ya tengo cuenta</RouterLink>
@@ -666,7 +669,8 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 }
 @media (max-width: 900px) {
   .lp-links { display: none; }
-  .lp-nav { padding: 8px 8px 8px 14px; }
+  /* En mobile la nav deja de ser píldora: barra a todo lo ancho. */
+  .lp-nav { top: 0; left: 0; right: 0; max-width: none; border-radius: 0; border: 0; border-bottom: 1px solid var(--line); padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: rgba(9, 11, 30, .88); }
   .lp-logo { width: 34px; height: 34px; border-radius: 10px; }
   .lp-brand-name { font-size: 16px; }
   .lp-nav-cta { margin-left: auto; }
@@ -684,24 +688,26 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
   .lp-nav.is-open .lp-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
   /* Con el menú abierto la píldora se funde en el overlay: quedan solo
      marca + botón de cierre, sin CTA duplicado ni doble vidrio. */
-  .lp-nav.is-open { background: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .lp-nav.is-open { background: transparent; border-bottom-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .lp-nav.is-open .lp-nav-cta { display: none; }
 
   .lp-menu {
     display: flex; position: fixed; inset: 0; z-index: 55;
-    flex-direction: column; align-items: center; justify-content: center; gap: 40px;
-    padding: 96px 24px 40px;
-    background: rgba(7, 9, 24, .86);
+    flex-direction: column; justify-content: flex-start;
+    padding: calc(76px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom));
+    background: rgba(7, 9, 24, .92);
     -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
-    opacity: 0; visibility: hidden; transform: translateY(-16px);
-    transition: opacity .45s var(--ease), transform .45s var(--ease), visibility 0s .45s;
+    opacity: 0; visibility: hidden; transform: translateY(-12px);
+    transition: opacity .4s var(--ease), transform .4s var(--ease), visibility 0s .4s;
   }
   .lp-menu.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-  .lp-menu-links { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .lp-menu-links a { display: block; padding: 10px 16px; font-size: clamp(27px, 7.5vw, 36px); font-weight: 800; letter-spacing: -.02em; color: #f4f5ff; }
+  .lp-menu-links { display: flex; flex-direction: column; }
+  .lp-menu-links a { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 19px 2px; font-size: 21px; font-weight: 700; letter-spacing: -.015em; color: #f4f5ff; border-bottom: 1px solid var(--line); }
+  .lp-menu-links a svg { flex: none; color: var(--brand-soft); opacity: .7; }
   .lp-menu-links a:hover { color: var(--brand-soft); }
-  .lp-menu-cta { display: flex; flex-direction: column; gap: 12px; width: min(320px, 100%); }
-  .lp-menu-foot { font-size: 12px; font-weight: 500; letter-spacing: .08em; color: #6e74a4; }
+  .lp-menu-cta { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .lp-menu-cta .lp-btn { width: 100%; }
+  .lp-menu-foot { margin-top: 16px; text-align: center; font-size: 12px; font-weight: 500; letter-spacing: .08em; color: #6e74a4; }
   .lp-menu-links a, .lp-menu-cta .lp-btn, .lp-menu-foot { opacity: 0; transform: translateY(28px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
   .lp-menu.open .lp-menu-links a, .lp-menu.open .lp-menu-cta .lp-btn, .lp-menu.open .lp-menu-foot { opacity: 1; transform: none; }
   .lp-menu.open .lp-menu-links a:nth-child(1) { transition-delay: .07s; }
