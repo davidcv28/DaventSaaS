@@ -139,3 +139,17 @@
 .tpl-thumb[data-tpl='boutique']::after { left: 8%; top: 25%; width: 44%; height: 5.4%; background: #1c1917; box-shadow: 0 11px 0 -1px #1c1917, 0 24px 0 -2px #a89e90, 0 36px 0 -1px var(--tp-acc); }
 .tpl-thumb[data-tpl='boutique'] i b { border-radius: 0; background-size: 34% 1.5px, 68% 1.5px, 100% 70%; }
 .tpl-thumb[data-tpl='boutique'] i b:nth-child(2) { translate: 0 3px; }
+
+/* Signature: noche de espresso, placa enmarcada en doble filete y
+   titular grabado — el acento es la rúbrica de la casa. */
+.tpl-thumb[data-tpl='signature'] { --tp-bg: #16130f; --tp-nav: #16130f; --tp-line: rgba(242, 236, 220, .16); --tp-hero: radial-gradient(circle at 82% -10%, color-mix(in srgb, var(--tp-acc) 30%, transparent), transparent 60%), #16130f; --tp-card: #1e1a14; --tp-img: #2a251d; --tp-ink: #f2ecdc; --tp-mute: #544c3e; border-color: #2c2620; }
+.tpl-thumb[data-tpl='signature']::before { right: 8%; top: 20%; width: 27%; height: 40%; border: 1px solid rgba(242, 236, 220, .45); border-radius: 1px; background: linear-gradient(160deg, #3a332a, #241f18); box-shadow: inset 0 0 0 3px #16130f, inset 0 0 0 4px rgba(242, 236, 220, .22); }
+.tpl-thumb[data-tpl='signature']::after { left: 8%; top: 24%; width: 46%; height: 5.4%; background: #f2ecdc; box-shadow: 0 11px 0 -1px #f2ecdc, 0 26px 0 -1px #7a7263, 0 37px 0 0 var(--tp-acc); }
+.tpl-thumb[data-tpl='signature'] i b { border-radius: 1px; border-color: rgba(242, 236, 220, .2); background-size: 34% 1.5px, 68% 1.5px, 100% 66%; }
+.tpl-thumb[data-tpl='signature'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#332c22, #332c22); }
+
+/* Signature: noche de espresso, marfil y acento con marcos de doble filete. */
+.tpl-thumb[data-tpl='signature'] { --tp-bg: #17110d; --tp-nav: #17110d; --tp-line: color-mix(in srgb, var(--tp-acc) 38%, transparent); --tp-hero: radial-gradient(circle at 50% 0%, #2c1f16, #17110d 72%); --tp-card: #1f1711; --tp-img: #3a2a1e; --tp-ink: #e9dcc5; --tp-mute: #5a4838; border-color: #2e2218; }
+.tpl-thumb[data-tpl='signature']::before { left: 50%; top: 16%; width: 12%; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--tp-acc); background: radial-gradient(circle, color-mix(in srgb, var(--tp-acc) 35%, transparent), transparent 70%); transform: translateX(-50%); box-shadow: 0 0 0 3px #17110d, 0 0 0 4px color-mix(in srgb, var(--tp-acc) 45%, transparent); }
+.tpl-thumb[data-tpl='signature']::after { left: 26%; right: 26%; top: 40%; height: 3%; border-radius: 99px; background: #e9dcc5; box-shadow: 0 8px 0 -.5px color-mix(in srgb, #e9dcc5 50%, transparent), 0 15px 0 -1px var(--tp-acc); }
+.tpl-thumb[data-tpl='signature'] i b { border-radius: 1px; border-color: color-mix(in srgb, var(--tp-acc) 45%, transparent); outline: 1px solid color-mix(in srgb, var(--tp-acc) 22%, transparent); outline-offset: 2px; background-size: 34% 1.5px, 68% 1.5px, 100% 66%; }
