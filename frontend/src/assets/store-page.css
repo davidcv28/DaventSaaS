@@ -9641,3 +9641,58 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='aurora'] .sp-au-star,
   .store-page[data-store-template='aurora'] .sp-au-polaris { animation: none !important; }
 }
+
+/* ================== BLOQUES EXTRA CONFIGURABLES ==================
+   Cinta de anuncios (marquee bajo la portada), sección Video (embed
+   YouTube/Vimeo) y línea extra del pie: el dueño los edita en "Mi
+   empresa"; vacíos o apagados no se renderizan. Las variantes por
+   plantilla viven en su propia hoja o al final de la misma. */
+.sp-ann { overflow: hidden; border-block: 1px solid var(--sp-line); background: var(--sp-card); padding: 13px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.sp-ann-track { display: flex; align-items: center; width: max-content; animation: sp-ann 34s linear infinite; }
+.sp-ann:hover .sp-ann-track { animation-play-state: paused; }
+.sp-ann-item { display: inline-flex; align-items: center; gap: 9px; padding-right: 44px; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-ink-2); white-space: nowrap; }
+.sp-ann-item svg { color: var(--store-accent); flex: none; }
+@keyframes sp-ann { to { transform: translateX(calc(-100% / 3)); } }
+@media (prefers-reduced-motion: reduce) { .sp-ann-track { animation: none; flex-wrap: wrap; width: 100%; justify-content: center; padding: 0 16px; gap: 10px 0; } }
+
+.sp-video { padding: clamp(44px, 6vw, 84px) 0; }
+.sp-video-head { margin-bottom: 26px; }
+.sp-video-title { margin: 0; font-size: clamp(24px, 3.4vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1.12; color: var(--sp-ink); text-wrap: balance; }
+.sp-video-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: #0f172a; box-shadow: var(--sp-shadow-md); }
+.sp-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.sp-foot-note { margin: 14px 0 0; font-size: 12.5px; color: rgba(255, 255, 255, .72); }
+
+/* ===== Bloques extra por plantilla ===== */
+/* Perspective: la banda respira sobre el fondo espacial. */
+.store-page[data-store-template='perspective'] .sp-ann { background: var(--sp-surface); }
+/* Publicidad: banda de tinta con letra amarilla — tono campaña igual que
+   el marquee del hero, pero recta (el hero ya lleva la inclinación). */
+.store-page[data-store-template='promo'] .sp-ann { background: var(--sp-ink-hard, #111827); border-block: 3px solid var(--sp-ink-hard, #111827); -webkit-mask-image: none; mask-image: none; }
+.store-page[data-store-template='promo'] .sp-ann-item { color: var(--sp-yellow, #ffe14d); }
+.store-page[data-store-template='promo'] .sp-ann-item svg { color: var(--sp-card-solid, #fff); }
+.store-page[data-store-template='promo'] .sp-video-title { font-family: var(--sp-display, inherit); text-transform: uppercase; }
+.store-page[data-store-template='promo'] .sp-video-frame { border: 3px solid var(--sp-ink-hard, #111827); border-radius: 4px; box-shadow: 10px 10px 0 var(--sp-yellow, #ffe14d); }
+/* Urbano: acento a sangre con letra dura. */
+.store-page[data-store-template='street'] .sp-ann { background: var(--store-accent); border-block-color: var(--sp-ink); -webkit-mask-image: none; mask-image: none; }
+.store-page[data-store-template='street'] .sp-ann-item { color: #fff; }
+.store-page[data-store-template='street'] .sp-ann-item svg { color: #fff; }
+.store-page[data-store-template='street'] .sp-video-title { text-transform: uppercase; }
+/* Terminal: mono, reglas finas y marco técnico. */
+.store-page[data-store-template='terminal'] .sp-ann { border-block-color: var(--tm-line); }
+.store-page[data-store-template='terminal'] .sp-ann-item { font-family: var(--sp-mono, monospace); letter-spacing: .18em; color: var(--tm-dim, var(--sp-muted)); }
+.store-page[data-store-template='terminal'] .sp-video-title { font-family: var(--sp-mono, monospace); text-transform: uppercase; letter-spacing: .12em; }
+.store-page[data-store-template='terminal'] .sp-video-frame { border-radius: 6px; border-color: var(--tm-line, var(--sp-line)); box-shadow: none; }
+/* Lookbook: reglas editoriales y título serif. */
+.store-page[data-store-template='lookbook'] .sp-ann { border-block: 1px solid var(--lb-rule, var(--sp-line)); background: transparent; }
+.store-page[data-store-template='lookbook'] .sp-ann-item { font-family: var(--sp-body, inherit); letter-spacing: .26em; }
+.store-page[data-store-template='lookbook'] .sp-video-title { font-family: var(--sp-display, 'Fraunces', serif); font-weight: 500; }
+.store-page[data-store-template='lookbook'] .sp-video-frame { border-radius: 0; box-shadow: none; }
+/* Cobre: marco con borde cálido. */
+.store-page[data-store-template='cobre'] .sp-video-frame { border-color: color-mix(in srgb, var(--store-accent) 40%, var(--sp-line)); }
+/* Signature: título editorial y marco aireado. */
+.store-page[data-store-template='signature'] .sp-video-title { font-family: var(--sp-display, 'Fraunces', serif); font-weight: 500; }
+/* Aurora: marco vidrio sobre el halo. */
+.store-page[data-store-template='aurora'] .sp-ann { background: color-mix(in srgb, var(--sp-card-solid, #0f1424) 55%, transparent); border-block-color: rgba(255, 255, 255, .12); }
+.store-page[data-store-template='aurora'] .sp-ann-item { color: rgba(235, 240, 255, .78); }
+.store-page[data-store-template='aurora'] .sp-video-frame { border-color: rgba(255, 255, 255, .14); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, .65); }

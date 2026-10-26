@@ -46,6 +46,15 @@ const listOf = (value) => (Array.isArray(value) ? value : [])
 const stats = computed(() => listOf(custom.value.stats))
 const showStats = computed(() => custom.value.show_stats !== false && stats.value.length > 0)
 
+// Cinta de anuncios (avisos del dueño bajo el hero) y sección Video: la URL
+// llega ya normalizada al embed oficial desde el serializer.
+const announcements = computed(() => listOf(custom.value.announcements))
+const showAnn = computed(() => custom.value.show_announcements !== false && announcements.value.length > 0)
+const annLoop = computed(() => [...announcements.value, ...announcements.value, ...announcements.value])
+const videoEmbed = computed(() => (custom.value.video_url || '').trim())
+const showVideo = computed(() => custom.value.show_video !== false && Boolean(videoEmbed.value))
+const videoTitle = computed(() => custom.value.video_title?.trim() || 'Mirá nuestro video')
+
 // Catálogo: vitrina de recientes en grilla (misma fuente que el riel de Dúo).
 const catalog = ref({ categories: [], brands: [], products: [] })
 const gridProducts = computed(() => catalog.value.products.slice(0, 8))
@@ -243,6 +252,13 @@ onBeforeUnmount(() => {
     </div>
   </div>
 
+  <!-- ===== Cinta de anuncios: avisos del dueño en banda de acento ===== -->
+  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+    <div class="sp-ann-track">
+      <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
+    </div>
+  </div>
+
   <!-- ===== Tus números: celdas de grilla pegadas a la cinta ===== -->
   <section v-if="showStats" class="bq-stats" aria-label="Cifras del negocio">
     <div class="sp-container bq-stats-row">
@@ -380,6 +396,22 @@ onBeforeUnmount(() => {
           <summary>{{ f.q }}<AppIcon name="plus" :size="15" aria-hidden="true" /></summary>
           <p>{{ f.a }}</p>
         </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Video: embed enmarcado con las mismas reglas duras ===== -->
+  <section v-if="showVideo" class="sp-video" aria-labelledby="sp-video-title">
+    <div class="sp-container">
+      <header v-reveal class="sp-video-head">
+        <h2 id="sp-video-title" class="sp-video-title">{{ videoTitle }}</h2>
+      </header>
+      <div v-reveal="80" class="sp-video-frame">
+        <iframe
+          :src="videoEmbed" :title="videoTitle" loading="lazy" allowfullscreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
       </div>
     </div>
   </section>

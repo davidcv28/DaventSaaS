@@ -522,3 +522,12 @@
 @media (max-width: 960px) {
   .store-page[data-store-template='riso'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--rs-ink); }
 }
+
+/* ===== Bloques extra: cinta de anuncios y sección Video ===== */
+/* Avisos del dueño en banda amarilla inclinada al revés del .rs-band rosa:
+   misma tinta plana y borde grueso, contrapeso visual. */
+.store-page[data-store-template='riso'] .sp-ann { background: var(--rs-yellow); border-block: 2px solid var(--rs-ink); transform: rotate(.6deg); margin-block: 10px; -webkit-mask-image: none; mask-image: none; }
+.store-page[data-store-template='riso'] .sp-ann-item { color: var(--rs-ink); letter-spacing: .12em; }
+.store-page[data-store-template='riso'] .sp-ann-item svg { color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .sp-video-title { font-family: var(--rs-display, inherit); }
+.store-page[data-store-template='riso'] .sp-video-frame { border: 2.5px solid var(--rs-ink); border-radius: 6px; box-shadow: var(--rs-shadow, 8px 8px 0 rgba(31, 41, 55, .9)); }

@@ -21,7 +21,7 @@ import {
   validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES, formatStorageMB,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
   MARKETING_LIMITS, SERVICE_ICONS, SECTION_ORDER_LABELS, resolveSectionOrder,
-  validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel
+  validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl
 } from '../api/stores.api.js'
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
@@ -994,7 +994,7 @@ async function saveBot() {
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
-const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [] })
+const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [], announcements: [] })
 const designTouched = reactive({})
 const designBusy = ref(false)
 const designTab = ref('content')
@@ -1135,6 +1135,9 @@ const mkNav = [
   { id: 'mk-faqs', label: 'Preguntas' },
   { id: 'mk-hours', label: 'Horarios' },
   { id: 'mk-cta', label: 'Llamado a la acción' },
+  { id: 'mk-ann', label: 'Anuncios' },
+  { id: 'mk-video', label: 'Video' },
+  { id: 'mk-extras', label: 'Extras' },
   { id: 'mk-order', label: 'Orden' }
 ]
 function scrollToCard(id) {
@@ -1244,6 +1247,48 @@ async function saveCta() {
     cta_title: designForm.cta_title.trim(),
     cta_text: designForm.cta_text.trim(),
     cta_label: designForm.cta_label.trim()
+  })
+  companyBusy.value = false
+}
+
+async function saveAnnouncements() {
+  companyErrs.announcements = ''
+  if (hasPartialRow(designForm.announcements, ['icon', 'text'], ['text'])) {
+    companyErrs.announcements = 'Cada anuncio necesita su texto. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_announcements: Boolean(designForm.show_announcements),
+    announcements: cleanRows(designForm.announcements, ['icon', 'text'], ['text'])
+  })
+  companyBusy.value = false
+}
+
+async function saveVideo() {
+  companyErrs.video = ''
+  const err = validateVideoUrl(designForm.video_url.trim())
+    || validateSectionTitle(designForm.video_title.trim())
+  if (err) { companyErrs.video = err; return }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_video: Boolean(designForm.show_video),
+    video_url: designForm.video_url.trim(),
+    video_title: designForm.video_title.trim()
+  })
+  companyBusy.value = false
+}
+
+async function saveExtras() {
+  companyErrs.extras = ''
+  if (designForm.catalog_note.trim().length > mkLimits.catalogNote || designForm.footer_text.trim().length > mkLimits.footerText) {
+    companyErrs.extras = `El aviso del catálogo y el texto del pie admiten hasta ${mkLimits.catalogNote} caracteres.`
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    catalog_note: designForm.catalog_note.trim(),
+    footer_text: designForm.footer_text.trim()
   })
   companyBusy.value = false
 }
@@ -3619,6 +3664,81 @@ async function changePassword() {
           <p v-if="companyErrs.cta" class="field-error" role="alert">{{ companyErrs.cta }}</p>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveCta">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Cinta de anuncios (marquee bajo la portada) ===== -->
+        <div id="mk-ann" class="card mk-card">
+          <h3><AppIcon name="megaphone" :size="18" /> Cinta de anuncios</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_announcements" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Banda que corre en bucle debajo de la portada con tus avisos cortos (envíos gratis, cuotas, promos).</small>
+              </span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Anuncios <span class="hint-inline">({{ designForm.announcements.length }}/{{ mkLimits.announcements }})</span></label>
+            <div v-if="designForm.announcements.length" class="qa-list">
+              <div v-for="(a, i) in designForm.announcements" :key="i" class="qa-item">
+                <div class="qa-fields mk-pair">
+                  <div class="mk-icon-field">
+                    <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[a.icon] ? a.icon : 'megaphone'" :size="17" /></span>
+                    <select v-model="a.icon" class="select" :aria-label="`Ícono del anuncio ${i + 1}`">
+                      <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                    </select>
+                  </div>
+                  <input v-model="a.text" class="input" type="text" :maxlength="mkLimits.announcementText" placeholder="Ej. Envíos gratis superando $80.000" :aria-label="`Texto del anuncio ${i + 1}`" />
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.announcements.length - 1" :aria-label="`Bajar el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el anuncio ${i + 1}`" @click="designForm.announcements.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.announcements.length >= mkLimits.announcements" @click="addRow(designForm.announcements, mkLimits.announcements, { icon: 'megaphone', text: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar anuncio
+            </button>
+            <p class="hint">Frases cortas con ícono que se repiten en bucle. Se ocultan solas si no cargás ninguna.</p>
+            <p v-if="companyErrs.announcements" class="field-error" role="alert">{{ companyErrs.announcements }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveAnnouncements">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Video (embed YouTube/Vimeo) ===== -->
+        <div id="mk-video" class="card mk-card">
+          <h3><AppIcon name="eye" :size="18" /> Video</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_video" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Sección con un video de YouTube o Vimeo: ideal para mostrar el local, un producto o cómo comprar.</small>
+              </span>
+            </label>
+          </div>
+          <AppInput v-model="designForm.video_url" label="Link del video" name="company_video_url" placeholder="https://www.youtube.com/watch?v=…" hint="Pegá el link completo de YouTube o Vimeo. Vacío: la sección no se muestra." maxlength="300" />
+          <AppInput v-model="designForm.video_title" label="Título de la sección" name="company_video_title" placeholder="Mirá nuestro local en video" hint="Vacío: se muestra 'Mirá nuestro video'." maxlength="80" />
+          <p class="hint">Podés reordenarla entre las secciones desde el bloque "Orden".</p>
+          <p v-if="companyErrs.video" class="field-error" role="alert">{{ companyErrs.video }}</p>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveVideo">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Extras (aviso del catálogo + texto del pie) ===== -->
+        <div id="mk-extras" class="card mk-card">
+          <h3><AppIcon name="plus" :size="18" /> Extras</h3>
+          <AppInput v-model="designForm.catalog_note" label="Aviso del catálogo" name="company_catalog_note" placeholder="Ej. Envíos a todo el país · Aceptamos todos los medios de pago" hint="Tira informativa que aparece arriba de tu página de catálogo. Vacío: no se muestra." maxlength="160" />
+          <AppInput v-model="designForm.footer_text" label="Frase del pie" name="company_footer_text" placeholder="Ej. Tienda familiar desde 1998" hint="Línea extra al final de tu web, debajo del copyright. Vacío: no se muestra." maxlength="160" />
+          <p v-if="companyErrs.extras" class="field-error" role="alert">{{ companyErrs.extras }}</p>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveExtras">Guardar sección</AppButton>
           </div>
         </div>
 

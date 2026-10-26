@@ -1,3 +1,5 @@
+import re
+from urllib.parse import urlparse, parse_qs
 from rest_framework import serializers
 from django.db import IntegrityError
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
@@ -99,6 +101,11 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     cta_text                    =   serializers.CharField(**CustomizationFields['cta_text'])
     cta_label                   =   serializers.CharField(**CustomizationFields['cta_label'])
     section_order               =   serializers.JSONField(**CustomizationFields['section_order'])
+    announcements               =   serializers.JSONField(**CustomizationFields['announcements'])
+    video_url                   =   serializers.CharField(**CustomizationFields['video_url'])
+    video_title                 =   serializers.CharField(**CustomizationFields['video_title'])
+    catalog_note                =   serializers.CharField(**CustomizationFields['catalog_note'])
+    footer_text                 =   serializers.CharField(**CustomizationFields['footer_text'])
     whatsapp                    =   serializers.CharField(**CustomizationFields['whatsapp'])
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
     tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
@@ -117,6 +124,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'testimonials', 'testimonials_title', 'show_testimonials',
             'faqs', 'faqs_title', 'show_faq', 'hours', 'show_hours',
             'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order',
+            'announcements', 'show_announcements', 'video_url', 'video_title', 'show_video',
+            'catalog_note', 'footer_text',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
             'site_mode', 'show_highlights', 'show_reviews', 'show_comments',
@@ -205,6 +214,46 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
                 seen.add(key)
                 order.append(key)
         return order + [k for k in StoreCustomization.SECTION_ORDER if k not in seen]
+
+    def validate_announcements(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.ANNOUNCEMENTS_MAX, 'Debe ser una lista de anuncios.'):
+            icon                =   str(item.get('icon') or '').strip().lower()
+            text                =   str(item.get('text') or '').strip()[:StoreCustomization.ANNOUNCEMENT_TEXT_MAX]
+            if text:
+                clean.append({'icon': icon if icon in StoreCustomization.SERVICE_ICONS else 'megaphone', 'text': text})
+        return clean
+
+    #Video de la portada: solo embeds de YouTube o Vimeo. El link que pega
+    #el dueño (watch, youtu.be, shorts, player, embed) se normaliza a la URL
+    #de embed oficial — así el iframe público jamás apunta a un host ajeno.
+    _YT_HOSTS                   =   {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'}
+    _VIMEO_HOSTS                =   {'vimeo.com', 'www.vimeo.com', 'player.vimeo.com'}
+    _YT_ID                      =   re.compile(r'^[A-Za-z0-9_-]{6,20}$')
+    def validate_video_url(self, value):
+        value                   =   (value or '').strip()
+        if not value:
+            return ''
+        parsed                  =   urlparse(value if '://' in value else f'https://{value}')
+        host                    =   (parsed.hostname or '').lower()
+        parts                   =   [p for p in parsed.path.split('/') if p]
+        video_id                =   None
+        if host in self._YT_HOSTS:
+            if host == 'youtu.be':
+                video_id        =   parts[0] if parts else None
+            elif parts and parts[0] in ('embed', 'shorts', 'live') and len(parts) > 1:
+                video_id        =   parts[1]
+            elif parts and parts[0] == 'watch':
+                video_id        =   (parse_qs(parsed.query).get('v') or [None])[0]
+            if not (video_id and self._YT_ID.match(video_id)):
+                raise serializers.ValidationError('Pegá el link completo del video de YouTube.')
+            return f'https://www.youtube-nocookie.com/embed/{video_id}'
+        if host in self._VIMEO_HOSTS:
+            video_id            =   parts[-1] if parts else None
+            if video_id and video_id.isdigit():
+                return f'https://player.vimeo.com/video/{video_id}'
+            raise serializers.ValidationError('Pegá el link completo del video de Vimeo.')
+        raise serializers.ValidationError('Solo se admiten videos de YouTube o Vimeo.')
 
     def validate(self, attrs):
         #site_mode manda sobre show_catalog: se derivan siempre juntos.

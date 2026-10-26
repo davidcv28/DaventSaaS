@@ -430,6 +430,7 @@ onBeforeUnmount(() => {
             <BrandLogo :size="16" /> Publicado con <strong>DAVENT</strong>
           </a>
         </div>
+        <p v-if="custom.footer_text" class="sp-foot-note">{{ custom.footer_text }}</p>
       </div>
     </footer>
 

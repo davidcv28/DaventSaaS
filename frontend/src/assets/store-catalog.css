@@ -981,3 +981,14 @@ button.cv-pr-cta { background: var(--store-accent-ink); }
   .cv-au-cats button { transition: none !important; }
   .cv-au-quick { transition: none; }
 }
+
+/* ===== Aviso del catálogo (catalog_note) =====
+   Tira informativa configurable por el dueño ("Mi empresa" → Extras):
+   encabeza la página del catálogo en todas las plantillas. */
+.cv-outer { display: block; }
+.cv-note { display: flex; align-items: center; justify-content: center; gap: 9px; margin: 0; padding: 11px 20px; border-bottom: 1px solid var(--sp-line); background: var(--sp-card); font-size: 13px; font-weight: 650; letter-spacing: .03em; color: var(--sp-ink-2); text-align: center; }
+.cv-note svg { flex: none; color: var(--store-accent); }
+.store-page[data-store-template='bloque'] .cv-note { border-bottom: 2px solid var(--bq-ink); font-family: var(--bq-mono, monospace); text-transform: uppercase; letter-spacing: .14em; }
+.store-page[data-store-template='riso'] .cv-note { border-bottom: 2px solid var(--rs-ink); background: var(--rs-paper); font-weight: 700; }
+.store-page[data-store-template='terminal'] .cv-note { font-family: var(--sp-mono, monospace); letter-spacing: .12em; }
+.store-page[data-store-template='promo'] .cv-note { background: var(--sp-ink-hard, #111827); border-bottom: 3px solid var(--sp-ink-hard, #111827); color: var(--sp-yellow, #ffe14d); text-transform: uppercase; }

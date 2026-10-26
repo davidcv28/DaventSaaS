@@ -443,7 +443,7 @@ class MarketingFieldsTests(TestCase):
         )
         order       =   response.data['customization']['section_order']
         self.assertEqual(order[:2], ['faq', 'about'])
-        self.assertEqual(len(order), 7)
+        self.assertEqual(len(order), 8)
         self.assertNotIn('inventada', order)
 
     def test_non_list_payload_rejected(self):
@@ -461,6 +461,50 @@ class MarketingFieldsTests(TestCase):
         custom      =   response.data['customization']
         self.assertEqual(custom['services'][0]['title'], 'Envíos')
         self.assertEqual(custom['cta_title'], 'Escribinos')
+
+    def test_announcements_are_sanitized(self):
+        payload     =   [
+            {'icon': 'truck', 'text': 'Envíos a todo el país'},
+            {'icon': 'no-existe', 'text': 'Cuotas sin interés'},
+            {'icon': 'star', 'text': ''},
+            'basura',
+        ]
+        response    =   self._client().patch(f'{STORES_URL}customization/', {'announcements': payload}, format = 'json')
+        ann         =   response.data['customization']['announcements']
+        self.assertEqual(len(ann), 2)
+        self.assertEqual(ann[0]['icon'], 'truck')
+        self.assertEqual(ann[1]['icon'], 'megaphone')
+
+    def test_video_url_normalizes_youtube_links(self):
+        client      =   self._client()
+        cases       =   [
+            ('https://www.youtube.com/watch?v=abcDEF123_-', 'https://www.youtube-nocookie.com/embed/abcDEF123_-'),
+            ('https://youtu.be/abcDEF123_-?t=30', 'https://www.youtube-nocookie.com/embed/abcDEF123_-'),
+            ('https://www.youtube.com/shorts/abcDEF123_-', 'https://www.youtube-nocookie.com/embed/abcDEF123_-'),
+            ('https://vimeo.com/123456789', 'https://player.vimeo.com/video/123456789'),
+        ]
+        for raw, embed in cases:
+            response    =   client.patch(f'{STORES_URL}customization/', {'video_url': raw}, format = 'json')
+            self.assertEqual(response.data['customization']['video_url'], embed)
+
+    def test_video_url_rejects_other_hosts(self):
+        client      =   self._client()
+        for raw in ('https://evil.example.com/x', 'javascript:alert(1)', 'https://youtube.com.evil.com/watch?v=abcDEF123_-'):
+            response    =   client.patch(f'{STORES_URL}customization/', {'video_url': raw}, format = 'json')
+            self.assertEqual(response.status_code, 400, raw)
+
+    def test_extras_are_stored_and_bounded(self):
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'catalog_note': 'Envíos a todo el país', 'footer_text': 'Tienda familiar desde 1998'},
+            format = 'json',
+        )
+        custom      =   response.data['customization']
+        self.assertEqual(custom['catalog_note'], 'Envíos a todo el país')
+        self.assertEqual(custom['footer_text'], 'Tienda familiar desde 1998')
+        too_long    =   client.patch(f'{STORES_URL}customization/', {'footer_text': 'x' * 200}, format = 'json')
+        self.assertEqual(too_long.status_code, 400)
 
 
 class SlugSecurityTests(TestCase):

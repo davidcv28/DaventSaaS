@@ -230,11 +230,22 @@ class StoreCustomization(models.Model):
     HOURS_MAX                   =   8
     HOURS_LABEL_MAX             =   60
     HOURS_VALUE_MAX             =   60
+    #Cinta de anuncios bajo la portada: filas {icon, text} que corren en
+    #marquee (ícono del catálogo SERVICE_ICONS, texto corto).
+    ANNOUNCEMENTS_MAX           =   6
+    ANNOUNCEMENT_TEXT_MAX       =   60
+    #Sección "Video": embed de YouTube/Vimeo solamente. El serializer
+    #normaliza el link pegado por el dueño a la URL de embed oficial
+    #(youtube-nocookie/player.vimeo) y descarta cualquier otro host.
+    VIDEO_URL_MAX               =   300
+    VIDEO_TITLE_MAX             =   80
+    CATALOG_NOTE_MAX            =   160
+    FOOTER_TEXT_MAX             =   160
     #Orden de las secciones de la portada (claves cerradas): el hero va
     #primero y el contacto último siempre; el serializer descarta claves
     #desconocidas y completa las que falten al final en este orden base.
     #La web pública lo aplica como CSS order sobre .sp-page-root (flex).
-    SECTION_ORDER               =   ('about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'cta')
+    SECTION_ORDER               =   ('about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'video', 'cta')
     services                    =   models.JSONField(default = list, blank = True, verbose_name = 'Qué ofrecemos')
     services_title              =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Qué ofrecemos')
     show_services               =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Qué ofrecemos')
@@ -257,6 +268,17 @@ class StoreCustomization(models.Model):
     cta_label                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Texto del botón')
     show_cta                    =   models.BooleanField(default = True, verbose_name = 'Mostrar llamado a la acción')
     section_order               =   models.JSONField(default = list, blank = True, verbose_name = 'Orden de las secciones de la portada')
+    #Cinta de anuncios bajo la portada y sección Video: bloques extra de
+    #marketing que el dueño configura desde "Mi empresa".
+    announcements               =   models.JSONField(default = list, blank = True, verbose_name = 'Cinta de anuncios')
+    show_announcements          =   models.BooleanField(default = True, verbose_name = 'Mostrar cinta de anuncios')
+    video_url                   =   models.CharField(max_length = VIDEO_URL_MAX, blank = True, verbose_name = 'Video (URL de embed)')
+    video_title                 =   models.CharField(max_length = VIDEO_TITLE_MAX, blank = True, verbose_name = 'Título de la sección Video')
+    show_video                  =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Video')
+    #Textos sueltos: aviso que encabeza la página del catálogo y una línea
+    #extra en el pie de la web pública.
+    catalog_note                =   models.CharField(max_length = CATALOG_NOTE_MAX, blank = True, verbose_name = 'Aviso en el catálogo')
+    footer_text                 =   models.CharField(max_length = FOOTER_TEXT_MAX, blank = True, verbose_name = 'Texto del pie')
     updated_at                  =   models.DateTimeField(auto_now = True)
     class Meta:
         app_label               =   'stores'

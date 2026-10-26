@@ -6,11 +6,15 @@
 // Como StoreHomeView, solo consume el contexto `storePage` del layout.
 import { computed, inject, defineAsyncComponent } from 'vue'
 import CatalogClassic from './catalog/CatalogClassic.vue'
+import AppIcon from '../components/AppIcon.vue'
 import '../assets/store-catalog.css'
 import '../assets/store-catalog-responsive.css'
 import '../assets/store-catalog-polish.css'
 
 const ctx = inject('storePage')
+// Aviso configurable del dueño: tira informativa arriba del catálogo
+// (envíos, medios de pago, retiro). Vacío -> no se muestra.
+const catalogNote = computed(() => (ctx?.custom?.value?.catalog_note || '').trim())
 const VARIANTS = {
   perspective: defineAsyncComponent(() => import('./catalog/CatalogPerspective.vue')),
   duo: defineAsyncComponent(() => import('./catalog/CatalogDuo.vue')),
@@ -31,5 +35,8 @@ const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || CatalogCl
 </script>
 
 <template>
-  <component :is="component" />
+  <div class="cv-outer">
+    <p v-if="catalogNote" class="cv-note" role="note"><AppIcon name="megaphone" :size="15" />{{ catalogNote }}</p>
+    <component :is="component" />
+  </div>
 </template>

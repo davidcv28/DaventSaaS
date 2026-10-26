@@ -530,3 +530,12 @@
 @media (max-width: 960px) {
   .store-page[data-store-template='bloque'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--bq-rule); }
 }
+
+/* ===== Bloques extra: cinta de anuncios y sección Video ===== */
+/* La banda de avisos es un bloque de acento a sangre (el ticker blanco/negro
+   ya existe arriba: acá el dueño comunica promos propias). */
+.store-page[data-store-template='bloque'] .sp-ann { background: var(--bq-cobalt, var(--store-accent)); border-block: 2px solid var(--bq-ink); -webkit-mask-image: none; mask-image: none; }
+.store-page[data-store-template='bloque'] .sp-ann-item { font-family: var(--bq-mono, monospace); letter-spacing: .16em; color: var(--bq-on-cobalt, #fff); }
+.store-page[data-store-template='bloque'] .sp-ann-item svg { color: var(--bq-on-cobalt, #fff); }
+.store-page[data-store-template='bloque'] .sp-video-title { font-family: var(--bq-display, inherit); text-transform: uppercase; letter-spacing: -.01em; }
+.store-page[data-store-template='bloque'] .sp-video-frame { border: 2px solid var(--bq-ink); border-radius: 0; box-shadow: 8px 8px 0 var(--bq-ink); }

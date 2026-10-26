@@ -279,3 +279,11 @@ a.sp2-strip-item:hover { background: var(--store-accent-soft); }
   .store-page[data-store-template='duo'] .spd-buy { padding: 6px 8px 10px; }
   .store-page[data-store-template='duo'] .spd-sec { margin: 0 14px 14px; padding: 20px 18px; }
 }
+
+/* ===== Bloques extra: cinta de anuncios y sección Video ===== */
+/* Dúo: banda suave con ítems píldora, acorde a las tarjetas redondeadas. */
+.store-page[data-store-template='duo'] .sp-ann { background: var(--sp-surface); border-block-color: var(--sp-line); }
+.store-page[data-store-template='duo'] .sp-ann-item { padding: 6px 22px; margin-right: 44px; border: 1px solid var(--sp-line); border-radius: 999px; background: var(--sp-card-solid); font-family: var(--store-font); letter-spacing: .08em; }
+.store-page[data-store-template='duo'] .sp-video { padding-block: clamp(40px, 5.5vw, 76px); }
+.store-page[data-store-template='duo'] .sp-video-title { font-family: var(--sp-display, inherit); letter-spacing: -.03em; }
+.store-page[data-store-template='duo'] .sp-video-frame { border-radius: 28px; border-color: var(--sp-line); }

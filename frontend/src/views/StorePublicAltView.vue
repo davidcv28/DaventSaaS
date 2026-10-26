@@ -206,6 +206,13 @@ const socials = computed(() => [
 const hasContactChannels = computed(() => Boolean(whatsappUrl.value || socials.value.length))
 const contactHours = computed(() => listOf(custom.value.hours))
 const showHours = computed(() => custom.value.show_hours !== false && contactHours.value.length > 0)
+// Cinta de anuncios y sección Video (URL de embed ya normalizada en el backend).
+const announcements = computed(() => listOf(custom.value.announcements))
+const showAnn = computed(() => custom.value.show_announcements !== false && announcements.value.length > 0)
+const annLoop = computed(() => [...announcements.value, ...announcements.value, ...announcements.value])
+const videoEmbed = computed(() => (custom.value.video_url || '').trim())
+const showVideo = computed(() => custom.value.show_video !== false && Boolean(videoEmbed.value))
+const videoTitle = computed(() => custom.value.video_title?.trim() || 'Mirá nuestro video')
 const mapAddress = computed(() => ctx.store.value?.location_address || '')
 const mapUrl = computed(() => (
   mapAddress.value
@@ -344,6 +351,13 @@ onBeforeUnmount(() => {
       </div>
     </div>
   </section>
+
+  <!-- ===== Cinta de anuncios: marquee en bucle bajo la portada ===== -->
+  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+    <div class="sp-ann-track">
+      <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
+    </div>
+  </div>
 
   <!-- ===== Tus números: banda de acento pegada al hero (prueba social
        inmediata; en la opción 1 viaja a media página) ===== -->
@@ -520,6 +534,22 @@ onBeforeUnmount(() => {
           <summary>{{ f.q }}<span class="sp2-faq-caret" aria-hidden="true"><AppIcon name="chevron-down" :size="16" /></span></summary>
           <p class="sp2-faq-answer">{{ f.a }}</p>
         </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Video: embed de YouTube/Vimeo en su propia sección ===== -->
+  <section v-if="showVideo" class="sp-video" aria-labelledby="sp-video-title">
+    <div class="sp-container">
+      <header v-reveal class="sp-video-head">
+        <h2 id="sp-video-title" class="sp-video-title">{{ videoTitle }}</h2>
+      </header>
+      <div v-reveal="80" class="sp-video-frame">
+        <iframe
+          :src="videoEmbed" :title="videoTitle" loading="lazy" allowfullscreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
       </div>
     </div>
   </section>

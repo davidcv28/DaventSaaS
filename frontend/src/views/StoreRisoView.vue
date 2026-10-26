@@ -143,6 +143,14 @@ const socials = computed(() => [
 ].filter((s) => s.url))
 const contactHours = computed(() => listOf(custom.value.hours))
 const showHours = computed(() => custom.value.show_hours !== false && contactHours.value.length > 0)
+// Cinta de anuncios (avisos del dueño bajo el hero) y sección Video: la URL
+// llega ya normalizada al embed oficial desde el serializer.
+const announcements = computed(() => listOf(custom.value.announcements))
+const showAnn = computed(() => custom.value.show_announcements !== false && announcements.value.length > 0)
+const annLoop = computed(() => [...announcements.value, ...announcements.value, ...announcements.value])
+const videoEmbed = computed(() => (custom.value.video_url || '').trim())
+const showVideo = computed(() => custom.value.show_video !== false && Boolean(videoEmbed.value))
+const videoTitle = computed(() => custom.value.video_title?.trim() || 'Mirá nuestro video')
 const mapAddress = computed(() => ctx.store.value?.location_address || '')
 const mapUrl = computed(() => (
   mapAddress.value
@@ -236,6 +244,13 @@ onBeforeUnmount(() => {
     <div class="rs-band-track">
       <span v-for="(t, i) in tickerItems" :key="`a-${i}`">{{ t }}</span>
       <span v-for="(t, i) in tickerItems" :key="`b-${i}`">{{ t }}</span>
+    </div>
+  </div>
+
+  <!-- ===== Cinta de anuncios: avisos del dueño en banda propia ===== -->
+  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+    <div class="sp-ann-track">
+      <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
     </div>
   </div>
 
@@ -380,6 +395,22 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== CTA: bloque azul con sombra desplazada ===== -->
+  <!-- ===== Video: embed en placas de tinta plana ===== -->
+  <section v-if="showVideo" class="sp-video" aria-labelledby="sp-video-title">
+    <div class="sp-container">
+      <header v-reveal class="sp-video-head">
+        <h2 id="sp-video-title" class="sp-video-title">{{ videoTitle }}</h2>
+      </header>
+      <div v-reveal="80" class="sp-video-frame">
+        <iframe
+          :src="videoEmbed" :title="videoTitle" loading="lazy" allowfullscreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+      </div>
+    </div>
+  </section>
+
   <section v-if="showCta" class="rs-sec">
     <div class="sp-container">
       <div class="rs-shop">

@@ -332,6 +332,16 @@ export const CUSTOMIZATION_DEFAULTS = {
   cta_label: '',
   show_cta: true,
   section_order: [],
+  // Bloques extra: cinta de anuncios bajo la portada (marquee {icon, text}),
+  // sección Video (embed YouTube/Vimeo ya normalizado por el backend),
+  // aviso que encabeza el catálogo y línea extra del pie.
+  announcements: [],
+  show_announcements: true,
+  video_url: '',
+  video_title: '',
+  show_video: true,
+  catalog_note: '',
+  footer_text: '',
   contact_email: '',
   show_contact: true,
   theme: 'light',
@@ -389,7 +399,10 @@ export const MARKETING_LIMITS = {
   testimonials: 6, testimonialName: 60, testimonialDetail: 80, testimonialText: 300,
   faqs: 8, faqQ: 140, faqA: 500,
   hours: 8, hourLabel: 60, hourValue: 60,
-  ctaTitle: 120, ctaText: 280, ctaLabel: 40
+  ctaTitle: 120, ctaText: 280, ctaLabel: 40,
+  announcements: 6, announcementText: 60,
+  videoUrl: 300, videoTitle: 80,
+  catalogNote: 160, footerText: 160
 }
 
 // Iconos elegibles para "Qué ofrecemos" (catálogo cerrado, espejo de
@@ -424,7 +437,7 @@ export const SERVICE_ICONS = {
 // Orden de las secciones de la portada (espejo de SECTION_ORDER del modelo):
 // el dueño las reordena desde "Mi empresa"; el hero queda primero y el
 // contacto último siempre.
-export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'cta']
+export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'video', 'cta']
 export const SECTION_ORDER_LABELS = {
   about:        'Sobre nosotros',
   services:     'Qué ofrecemos',
@@ -432,7 +445,21 @@ export const SECTION_ORDER_LABELS = {
   gallery:      'Galería',
   testimonials: 'Testimonios',
   faq:          'Preguntas frecuentes',
+  video:        'Video',
   cta:          'Llamado a la acción'
+}
+
+// Video de la portada: el backend normaliza a la URL de embed oficial
+// (youtube-nocookie / player.vimeo) — el iframe usa video_url tal cual.
+// Acá solo se valida el formato para avisar antes de guardar.
+export function validateVideoUrl(value) {
+  const v = String(value || '').trim()
+  if (!v) return ''
+  if (v.length > 300) return 'El link del video admite hasta 300 caracteres'
+  if (/^(https?:\/\/)?(www\.|m\.|music\.)?youtube\.com\/(watch\?.*v=|embed\/|shorts\/|live\/)[\w-]{6,20}/i.test(v)) return ''
+  if (/^(https?:\/\/)?(www\.)?youtu\.be\/[\w-]{6,20}/i.test(v)) return ''
+  if (/^(https?:\/\/)?(www\.|player\.)?vimeo\.com\/(video\/)?\d{5,}/i.test(v)) return ''
+  return 'Solo se admiten videos de YouTube o Vimeo. Pegá el link completo del video.'
 }
 
 // Orden efectivo: respeta lo guardado, descarta claves desconocidas y
