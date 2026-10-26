@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { catalogApi } from '../api/catalog.api.js'
 import { extractApiError } from '../api/http.js'
+import { swrGet, swrSet } from '../utils/swr.js'
 
 // Catálogo del cliente: categorías, marcas y productos de su tienda.
 // Requiere suscripción activa (el backend devuelve 403 sin plan).
@@ -29,7 +30,18 @@ export const useCatalogStore = defineStore('catalog', () => {
   }
 
   async function loadAll() {
-    status.value = 'loading'
+    // SWR: al entrar a la sección Catálogo las cuatro listas pintan al
+    // instante con lo último cargado mientras se revalidan.
+    const cached = swrGet('catalog.all')
+    if (cached !== undefined) {
+      categories.value = cached.categories || []
+      brands.value = cached.brands || []
+      products.value = cached.products || []
+      discounts.value = cached.discounts || []
+      status.value = 'success'
+    } else {
+      status.value = 'loading'
+    }
     lastError.value = ''
     denied.value = false
     try {
@@ -48,8 +60,10 @@ export const useCatalogStore = defineStore('catalog', () => {
       brands.value = brs
       products.value = prods
       discounts.value = discs
+      swrSet('catalog.all', { categories: cats, brands: brs, products: prods, discounts: discs })
       status.value = 'success'
     } catch (e) {
+      if (cached !== undefined) return
       status.value = 'error'
       setApiError(e)
     }

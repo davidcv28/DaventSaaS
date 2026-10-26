@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.signals import post_delete, post_save
 from AdminApp.domains.suscriptions.models import SuscriptionPlan
 """
 
@@ -67,3 +68,15 @@ class PlanPresentation(models.Model):
         verbose_name_plural     =   'Presentaciones de planes'
     def __str__(self):
         return f'{self.plan.name} ({self.slug})'
+#=========================================
+# BENEFITS CACHE BUST (invalida el cache cross-request de plan_benefits_of)
+#=========================================
+def _bust_plan_benefits(sender, instance, **kwargs):
+    #PlanBenefit muta por seed_benefits, admin o bulk-delete: pisa el cache
+    #de beneficios de todos los perfiles con ese plan (key 'planben:<id>'),
+    #si no el gating seguiría sirviendo el set viejo hasta el TTL.
+    from AdminApp.domains.suscriptions.models.models import Suscription, _bust_benefits_cache
+    profiles    =   Suscription.objects.filter(plan_suscription_id = instance.plan_id).values_list('user_id', flat = True)
+    _bust_benefits_cache(*profiles)
+post_save.connect(_bust_plan_benefits, sender = PlanBenefit)
+post_delete.connect(_bust_plan_benefits, sender = PlanBenefit)

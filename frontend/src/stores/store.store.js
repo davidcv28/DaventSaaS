@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { storesApi, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
+import { swrGet, swrSet } from '../utils/swr.js'
 
 // Tienda del cliente: link público (claim en el primer ingreso), rename y pausa.
 // El backend modela OneToOne UserProfile->Store: lista de 0..1.
@@ -17,14 +18,25 @@ export const useStoreStore = defineStore('store', () => {
   const customization = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
 
   async function loadMine() {
-    status.value = 'loading'
+    // SWR: la tienda (diseño+cuota incluidas) pinta al instante al volver al
+    // panel y se revalida en segundo plano. Las mutaciones ya refetchean.
+    const cached = swrGet('store.mine')
+    if (cached !== undefined) {
+      store.value = cached
+      storage.value = cached?.storage || null
+      status.value = 'success'
+    } else {
+      status.value = 'loading'
+    }
     lastError.value = ''
     try {
       const rows = await storesApi.listMine()
       store.value = rows[0] || null
       storage.value = rows[0]?.storage || null
+      swrSet('store.mine', store.value)
       status.value = 'success'
     } catch (e) {
+      if (cached !== undefined) return
       status.value = 'error'
       lastError.value = extractApiError(e).nonField || 'No se pudo cargar tu tienda.'
     }
@@ -290,10 +302,13 @@ export const useStoreStore = defineStore('store', () => {
   const visitStats = ref(null) // {total, today, days: [{date, count}]}
 
   async function loadStats() {
+    const cached = swrGet('store.stats')
+    if (cached !== undefined) visitStats.value = cached
     try {
       visitStats.value = await storesApi.stats()
+      swrSet('store.stats', visitStats.value)
     } catch {
-      visitStats.value = null
+      if (cached === undefined) visitStats.value = null
     }
   }
 

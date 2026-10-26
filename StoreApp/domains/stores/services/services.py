@@ -17,28 +17,48 @@ cliente en su web pública.
 #=========================================
 # PLAN BENEFITS OF (dict {code: valor} del plan vigente)
 #=========================================
+#TTL del cache cruzado entre requests: el panel dispara ~10 endpoints en
+#ráfaga y cada uno pagaba perfil->suscripción->plan->beneficios (~4 queries).
+#La key se invalida en Suscription.save(); el TTL acota los escritos que
+#bypassean save() (QuerySet.update, cambios directos en DB).
+PLAN_BENEFITS_TTL   =   10
+
+def _benefits_cache_key(profile):
+    return 'planben:%s' % profile.pk
+
 def plan_benefits_of(profile):
     """
     Beneficios del plan de la suscripción activa del perfil.
     Devuelve {} si no hay suscripción o está pendiente de pago:
     'limit' -> int (None = ilimitado) | 'flag' -> bool.
 
-    Se memoiza en la instancia: el serializer público lo llama ~5 veces
-    por request y cada llamada reconsultaba suscripción + beneficios
-    (los gating checks del mismo request comparten el resultado).
+    Tres niveles de reuso: memo en la instancia (el serializer público lo
+    llama ~5 veces por request), cache cross-request de ~10s (la ráfaga
+    del dashboard comparte un solo cálculo) y prefetch si el queryset
+    del viewset lo pidió.
     """
     cached  =   getattr(profile, '_plan_benefits_cache', None)
     if cached is not None:
         return cached
-    suscription     =   getattr(profile, 'suscription', None)
-    #grants_access() fuerza status + vigencia (end_date + gracia si hay débito automático)
-    if suscription is None or not suscription.grants_access():
-        profile._plan_benefits_cache    =   {}
-        return {}
-    benefits        =   {}
-    for plan_benefit in suscription.plan_suscription.benefits.select_related('benefit'):
-        code                =   plan_benefit.benefit.code
-        benefits[code]      =   plan_benefit.value if plan_benefit.benefit.kind == Benefit.LIMIT else plan_benefit.enabled
+    try:
+        benefits    =   cache.get(_benefits_cache_key(profile))
+    except Exception:
+        benefits    =   None
+    if benefits is None:
+        suscription     =   getattr(profile, 'suscription', None)
+        #grants_access() fuerza status + vigencia (end_date + gracia si hay débito automático)
+        benefits        =   {}
+        if suscription is not None and suscription.grants_access():
+            plan        =   suscription.plan_suscription
+            prefetched  =   getattr(plan, '_prefetched_objects_cache', {})
+            rows        =   prefetched['benefits'] if 'benefits' in prefetched else plan.benefits.select_related('benefit')
+            for plan_benefit in rows:
+                code                =   plan_benefit.benefit.code
+                benefits[code]      =   plan_benefit.value if plan_benefit.benefit.kind == Benefit.LIMIT else plan_benefit.enabled
+        try:
+            cache.set(_benefits_cache_key(profile), benefits, PLAN_BENEFITS_TTL)
+        except Exception:
+            pass
     profile._plan_benefits_cache        =   benefits
     return benefits
 #=========================================

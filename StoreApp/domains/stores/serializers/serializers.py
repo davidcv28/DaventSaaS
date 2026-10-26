@@ -131,10 +131,12 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         images                  =   customization.store.carousel_images.all()
         return StoreCarouselImageSerializer(images, many = True).data
     def get_gallery(self, customization):
-        images                  =   customization.store.gallery_images.filter(kind = StoreGalleryImage.KIND_GALLERY)
+        #Filtro en Python para reutilizar el prefetch del queryset del listado
+        #(.filter() clonaría el queryset y pegaría un query extra por tienda).
+        images                  =   [img for img in customization.store.gallery_images.all() if img.kind == StoreGalleryImage.KIND_GALLERY]
         return StoreGalleryImageSerializer(images, many = True).data
     def get_decor(self, customization):
-        images                  =   customization.store.gallery_images.filter(kind = StoreGalleryImage.KIND_DECOR)
+        images                  =   [img for img in customization.store.gallery_images.all() if img.kind == StoreGalleryImage.KIND_DECOR]
         return StoreGalleryImageSerializer(images, many = True).data
     @staticmethod
     def _rows(value, max_items, message):

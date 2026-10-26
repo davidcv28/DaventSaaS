@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { paymentsApi } from '../api/payments.api.js'
 import { extractApiError } from '../api/http.js'
+import { swrGet, swrSet } from '../utils/swr.js'
 
 // Fuente de pagos del usuario (FRONTEND_RULES §1: stores en Composition style).
 export const usePaymentsStore = defineStore('payments', () => {
@@ -29,12 +30,22 @@ export const usePaymentsStore = defineStore('payments', () => {
   }
 
   async function loadPayments() {
-    status.value = 'loading'
+    // SWR: la lista se muestra al instante con lo último cargado y se
+    // revalida en segundo plano (clave al volver al panel entre secciones).
+    const cached = swrGet('payments.list')
+    if (cached !== undefined) {
+      payments.value = cached
+      status.value = 'success'
+    } else {
+      status.value = 'loading'
+    }
     lastError.value = ''
     try {
       payments.value = await paymentsApi.listPayments()
+      swrSet('payments.list', payments.value)
       status.value = 'success'
     } catch (e) {
+      if (cached !== undefined) return
       status.value = 'error'
       lastError.value = extractApiError(e).nonField || 'No se pudieron cargar tus pagos.'
     }

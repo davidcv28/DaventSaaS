@@ -29,15 +29,15 @@ DEBUG = config('DEBUG', default = False, cast = bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
 
-# Cabeceras de seguridad para producción (https detrás del proxy). En dev
-# quedan apagadas; se activan por .env al desplegar:
-#   SECURE_SSL_REDIRECT=True  SESSION_COOKIE_SECURE=True  CSRF_COOKIE_SECURE=True
-#   SECURE_HSTS_SECONDS=31536000  SECURE_HSTS_INCLUDE_SUBDOMAINS=True
-SECURE_SSL_REDIRECT             = config('SECURE_SSL_REDIRECT', default = False, cast = bool)
-SESSION_COOKIE_SECURE           = config('SESSION_COOKIE_SECURE', default = False, cast = bool)
-CSRF_COOKIE_SECURE              = config('CSRF_COOKIE_SECURE', default = False, cast = bool)
-SECURE_HSTS_SECONDS             = config('SECURE_HSTS_SECONDS', default = 0, cast = int)
-SECURE_HSTS_INCLUDE_SUBDOMAINS  = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default = False, cast = bool)
+# Cabeceras de seguridad. Default SEGURO atado a DEBUG: en producción
+# (DEBUG=False) quedan activas aunque el .env no las declare — un env
+# incompleto ya no baja la guardia. En dev (DEBUG=True, runserver por http)
+# siguen apagadas para no romper localhost; siempre sobreescribibles por env.
+SECURE_SSL_REDIRECT             = config('SECURE_SSL_REDIRECT', default = not DEBUG, cast = bool)
+SESSION_COOKIE_SECURE           = config('SESSION_COOKIE_SECURE', default = not DEBUG, cast = bool)
+CSRF_COOKIE_SECURE              = config('CSRF_COOKIE_SECURE', default = not DEBUG, cast = bool)
+SECURE_HSTS_SECONDS             = config('SECURE_HSTS_SECONDS', default = 0 if DEBUG else 31536000, cast = int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS  = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default = not DEBUG, cast = bool)
 SECURE_HSTS_PRELOAD             = config('SECURE_HSTS_PRELOAD', default = False, cast = bool)
 SECURE_REFERRER_POLICY          = 'same-origin'
 # Detrás de nginx/Cloudflare: el proxy termina TLS y avisa por header
@@ -73,6 +73,10 @@ REST_FRAMEWORK = {
         #Renovación de JWT por cookie (cada pestaña renueva al expirar el access;
         #holgado para NAT oficinas pero acota brute-force del cookie de sesión).
         'token_refresh': '120/hour',
+        #Carga de la web pública (suma una visita al contador del día): más
+        #acotada que public_read — nadie recarga una tienda 2 veces/minuto
+        #de forma legítima y así se frena la inflación de estadísticas.
+        'store_visit': '120/hour',
         #Formulario de contacto de las webs públicas (antispam por IP).
         'store_contact': '10/hour',
         #Opiniones públicas de productos (valoraciones/comentarios): por IP,
@@ -89,8 +93,9 @@ REST_FRAMEWORK = {
         #Editor de fondo de imágenes de producto (inferencia en CPU, por usuario).
         'bg_removal': '60/hour',
         #Chat de soporte (por usuario): el 'user' default (1000/día) mataría
-        #el polling en ~40 min — scope propio holgado para intervalos de ~5s.
-        'chat': '1500/hour',
+        #el polling — scope propio holgado para intervalos de ~2.5s en ambos
+        #lados (cliente ~1.5k/h, bandeja staff ~2.2k/h, margen para 2 tabs).
+        'chat': '5000/hour',
         #Envío de mensajes del chat: mucho más estricto que la lectura.
         'chat_send': '120/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a
@@ -166,6 +171,9 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'DaventProject.middleware.AdminLoginRateLimitMiddleware',
+    #CSP de respaldo para HTML servido por Django (admin, browsable API):
+    #rellena el header solo si ninguna capa previa lo seteó (SPA/nginx).
+    'DaventProject.middleware.ContentSecurityPolicyMiddleware',
     #Sirve STATIC_ROOT también sin nginx (deploys serverless tipo Render).
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -282,9 +290,13 @@ CSRF_TRUSTED_ORIGINS = config(
 )
 
 # Email
-# Por defecto los correos se imprimen en consola (dev). En producción definir
-# EMAIL_BACKEND=smtp y las credenciales SMTP correspondientes en .env.
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='') or 'django.core.mail.backends.console.EmailBackend'
+# Default seguro: consola solo en dev (DEBUG=True); en producción cae a SMTP
+# — un EMAIL_BACKEND olvidado falla ruidoso contra EMAIL_HOST en vez de
+# tragar los correos de verificación/reset/facturas en consola.
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='') or (
+    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    else 'django.core.mail.backends.smtp.EmailBackend'
+)
 EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
@@ -295,8 +307,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='DAVENT <no-reply@davent.app>')
 
-# Path del admin de Django: en producción definir ADMIN_URL con un path no
-# obvio (ej. 'gestion-x7k/') — el login de /admin/ no tiene rate-limit propio.
+# Path del admin de Django: en producción ADMIN_URL es OBLIGATORIA con un
+# path no obvio (ej. 'gestion-x7k/') — `check --deploy` falla con el default
+# 'admin/' (users.E001). El login ya tiene rate-limit propio por middleware.
 ADMIN_URL = config('ADMIN_URL', default='admin/')
 
 # Destinatario de las denuncias de contenido (copyright / ilegal)

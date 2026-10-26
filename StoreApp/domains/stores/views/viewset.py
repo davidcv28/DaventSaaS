@@ -104,6 +104,13 @@ def _apply_order(queryset, order):
             image.save(update_fields = ['position'])
         position    +=  1
 #=========================================
+# VISIT THROTTLE (anti-inflación del contador de visitas, rate en settings)
+#=========================================
+class StoreVisitThrottle(AnonRateThrottle):
+    #El GET público de la tienda suma +1 visita/día por visitante: scope
+    #dedicado más acotado que public_read para frenar el inflate de stats.
+    scope   =   'store_visit'
+#=========================================
 # CONTACT THROTTLE (antispam del formulario público, rate en settings)
 #=========================================
 class StoreContactThrottle(AnonRateThrottle):
@@ -197,7 +204,7 @@ class StoreViewSet(StoreBaseViewSet):
     #=========================================
     # PUBLIC (resolución pública del link, sin auth)
     #=========================================
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)', throttle_classes = [PublicReadThrottle])
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)', throttle_classes = [PublicReadThrottle, StoreVisitThrottle])
     def public(self, request, slug = None):
         store       =   get_object_or_404(
             Store.objects.select_related('user__city', 'user__province', 'customization'),
@@ -219,7 +226,10 @@ class StoreViewSet(StoreBaseViewSet):
     #=========================================
     @action(detail = False, methods = ['get'], url_path = 'stats')
     def stats(self, request):
-        profile     =   getattr(request.user, 'profile', None)
+        #Perfil + tienda + cadena de suscripción en una sola query: el gating
+        #de beneficios los reutiliza en memoria (o el cache cross-request).
+        from AdminApp.domains.users.models import UserProfile
+        profile     =   UserProfile.objects.select_related('store', 'suscription__plan_suscription').filter(user = request.user).first()
         store       =   getattr(profile, 'store', None)
         if store is None:
             return Response({'detail': 'Todavía no tenés una web creada.'}, status = status.HTTP_404_NOT_FOUND)

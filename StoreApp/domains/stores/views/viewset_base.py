@@ -39,6 +39,12 @@ class StoreBaseViewSet(viewsets.GenericViewSet):
         else:
             permissions_get = self.viewset_config['get']['permissions']
         return [permission() for permission in permissions_get]
+    def paginate_queryset(self, queryset):
+        #El cliente lista solo su propia tienda (≤1 fila): el COUNT de la
+        #paginación es costo puro. El staff sí pagina el listado completo.
+        if not self.request.user.is_staff:
+            return None
+        return super().paginate_queryset(queryset)
     #=========================================
     # LIST METHOD (mi tienda / listado admin)
     #=========================================

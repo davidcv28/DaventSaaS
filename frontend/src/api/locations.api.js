@@ -51,6 +51,31 @@ function unwrap(data) {
   return []
 }
 
+// Catálogo geo en localStorage (24h): provincias/ciudades cambian nunca —
+// sin esto cada ingreso al panel volvía a pedir las 24 provincias + todas
+// las ciudades de la provincia de la cuenta (2+ requests por montaje).
+// Es data pública compartida: persiste entre logins sin purgarse.
+const GEO_TTL = 24 * 60 * 60 * 1000
+const GEO_NS = 'davent:geo:'
+
+function geoGet(key) {
+  try {
+    const raw = localStorage.getItem(GEO_NS + key)
+    if (!raw) return null
+    const { t, v } = JSON.parse(raw)
+    if (!Number.isFinite(t) || Date.now() - t > GEO_TTL) return null
+    return v
+  } catch {
+    return null
+  }
+}
+
+function geoSet(key, v) {
+  try {
+    localStorage.setItem(GEO_NS + key, JSON.stringify({ t: Date.now(), v }))
+  } catch { /* cuota llena o storage bloqueado */ }
+}
+
 function normalize(rows) {
   return (rows || []).map((item) => {
     if (typeof item === 'string') return { id: item, name: item }
@@ -89,9 +114,15 @@ export const locationsApi = {
   },
 
   async getProvinces() {
+    const cached = geoGet('provinces')
+    if (cached) {
+      this.usingFallback = false
+      return cached
+    }
     try {
       const rows = normalize(await this.fetchAllPages('/provinces/', { page_size: 200 }))
       if (rows.length) {
+        geoSet('provinces', rows)
         this.usingFallback = false
         return rows
       }
@@ -108,9 +139,15 @@ export const locationsApi = {
 
   async getCities(provinceId) {
     if (!provinceId) return []
+    const cached = geoGet(`cities:${provinceId}`)
+    if (cached) {
+      this.usingFallback = false
+      return cached
+    }
     try {
       const rows = normalize(await this.fetchAllPages('/cities/', { province: provinceId, page_size: 200 }))
       if (rows.length) {
+        geoSet(`cities:${provinceId}`, rows)
         this.usingFallback = false
         return rows
       }

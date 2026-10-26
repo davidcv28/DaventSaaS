@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { billingApi, daysLeft } from '../api/billing.api.js'
 import { extractApiError } from '../api/http.js'
+import { swrGet, swrSet } from '../utils/swr.js'
 
 // Fuente de suscripción (FRONTEND_RULES §1: stores en Composition style).
 // El backend modela OneToOne UserProfile->Suscription: lista de 0..1.
@@ -39,24 +40,42 @@ export const useBillingStore = defineStore('billing', () => {
   })
 
   async function loadPlans() {
-    plansStatus.value = 'loading'
+    // SWR: el catálogo de planes cambia muy poco — se muestra lo último
+    // cargado mientras se revalida (el 'loading' completo solo en frío).
+    const cached = swrGet('billing.plans')
+    if (cached !== undefined) {
+      plans.value = cached
+      plansStatus.value = 'success'
+    } else {
+      plansStatus.value = 'loading'
+    }
     try {
       plans.value = await billingApi.listPlans()
+      swrSet('billing.plans', plans.value)
       plansStatus.value = 'success'
     } catch (e) {
+      if (cached !== undefined) return // hay data servible: el revalidate falló, no bloquea
       plansStatus.value = 'error'
       lastError.value = extractApiError(e).nonField || 'No se pudo cargar el catálogo de planes.'
     }
   }
 
   async function loadMine() {
-    status.value = 'loading'
+    const cached = swrGet('billing.mine')
+    if (cached !== undefined) {
+      subscription.value = cached
+      status.value = 'success'
+    } else {
+      status.value = 'loading'
+    }
     lastError.value = ''
     try {
       const rows = await billingApi.listMine()
       subscription.value = rows[0] || null
+      swrSet('billing.mine', subscription.value)
       status.value = 'success'
     } catch (e) {
+      if (cached !== undefined) return
       status.value = 'error'
       lastError.value = extractApiError(e).nonField || 'No se pudo cargar tu suscripción.'
     }

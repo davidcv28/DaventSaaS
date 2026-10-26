@@ -147,7 +147,12 @@ def gallery_limit(profile):
     return benefits['max_gallery_images']
 def image_count(store):
     """Cantidad de imágenes que ocupan cuota: logo + carrusel + galería + productos."""
-    count           =   store.carousel_images.count() + store.gallery_images.count() + store.products.exclude(image_key = '').count()
+    #_n_product_images viene anotado en el queryset del listado y los count()
+    #de carrusel/galería usan el prefetch: sin eso sumaban 3 queries por tienda.
+    products    =   getattr(store, '_n_product_images', None)
+    if products is None:
+        products    =   store.products.exclude(image_key = '').count()
+    count           =   store.carousel_images.count() + store.gallery_images.count() + products
     customization   =   getattr(store, 'customization', None)
     if customization and customization.logo_key:
         count       +=  1

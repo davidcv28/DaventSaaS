@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Q
+from django.db.models import Count, Q, OuterRef, Subquery
 from django.utils import timezone
 
 from AdminApp.domains.chat.models         import ChatMessage, ChatPresence, ChatThread
@@ -50,10 +50,18 @@ def get_or_create_thread(user : User) -> ChatThread:
 
 
 def staff_threads_queryset():
+    #El último mensaje viaja anotado por Subquery: sin esto la bandeja hacía
+    #1 query extra por hilo (N+1) en cada poll del staff.
+    last    =   ChatMessage.objects.filter(thread = OuterRef('pk')).order_by('-created_at')
     return (
         ChatThread.objects
         .select_related('customer', 'customer__profile')
-        .annotate(unread_count = Count('messages', filter = Q(messages__from_staff = False, messages__read_at__isnull = True)))
+        .annotate(
+            unread_count = Count('messages', filter = Q(messages__from_staff = False, messages__read_at__isnull = True)),
+            last_body = Subquery(last.values('body')[:1]),
+            last_from_staff = Subquery(last.values('from_staff')[:1]),
+            last_created_at = Subquery(last.values('created_at')[:1]),
+        )
         .order_by('-updated_at')
     )
 

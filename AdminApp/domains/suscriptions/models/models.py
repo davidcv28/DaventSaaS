@@ -25,6 +25,28 @@ class SuscriptionPlan(models.Model):
     def __str__(self):
         return self.name
     
+def _bust_benefits_cache(*profile_ids):
+    #Pisa el cache cross-request de beneficios (plan_benefits_of en
+    #StoreApp/stores/services — keys 'planben:<profile_id>'): sin esto el
+    #gating seguiría viendo el plan anterior hasta que venza el TTL.
+    if not profile_ids:
+        return
+    from django.core.cache import cache
+    try:
+        cache.delete_many(['planben:%s' % pk for pk in profile_ids])
+    except Exception:
+        pass
+#=========================================
+#SUSCRIPTION QUERYSET (bulk update también invalida el cache de beneficios)
+#=========================================
+class SuscriptionQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        #QuerySet.update() bypassa save(): la invalidación corre acá igual
+        #para que un downgrade/upgrade por bulk no sirva el plan viejo.
+        profiles    =   list(self.values_list('user_id', flat = True))
+        updated     =   super().update(**kwargs)
+        _bust_benefits_cache(*profiles)
+        return updated
 #=========================================
 #SUSCRIPTION MODEL
 #=========================================
@@ -46,6 +68,7 @@ class Suscription(models.Model):
     auto_renew                  =   models.BooleanField(default = False, verbose_name = 'Renovación automática')
     preapproval_id              =   models.CharField(max_length = 64, null = True, blank = True, unique = True, verbose_name = 'Suscripción en Mercado Pago')
     cancelled_at                =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de baja de la renovación')
+    objects                     =   SuscriptionQuerySet.as_manager()
     class Meta:
         app_label               =   'suscriptions'
         verbose_name            =   'Suscripción'
@@ -64,6 +87,7 @@ class Suscription(models.Model):
         if not self.end_date:
             self.end_date   =   self.start_date + timedelta(days = 30)
         super().save(*args, **kwargs)
+        _bust_benefits_cache(self.user_id)
     #=========================================
     # ACCESS UNTIL (fin real del acceso, con gracia si hay débito automático)
     #=========================================
@@ -75,6 +99,9 @@ class Suscription(models.Model):
     #=========================================
     def grants_access(self):
         return self.status == self.STATUS_ACTIVE and bool(self.end_date) and timezone.now() <= self.access_until()
+
+from django.db.models.signals import post_delete
+post_delete.connect(lambda sender, instance, **kwargs: _bust_benefits_cache(instance.user_id), sender = Suscription)
 #=========================================
 #COUPON MODEL
 #=========================================

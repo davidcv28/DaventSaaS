@@ -77,6 +77,12 @@ class ChatThreadSerializer(serializers.ModelSerializer):
         return obj.customer_id in online
 
     def get_last_message(self, obj):
+        #Anotado en staff_threads_queryset (Subquery, sin N+1); fallback al
+        #query por si el serializer se usa sin la anotación.
+        if hasattr(obj, 'last_body'):
+            if obj.last_body is None:
+                return None
+            return {'body': obj.last_body[:80], 'from_staff': obj.last_from_staff, 'created_at': obj.last_created_at}
         last    =   obj.messages.order_by('-created_at').first()
         if not last:
             return None

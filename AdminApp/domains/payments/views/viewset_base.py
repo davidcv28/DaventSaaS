@@ -32,6 +32,12 @@ class PaymentBaseViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         permissions_get = self.viewset_config[self.get_action_key()]['permissions']
         return [permission() for permission in permissions_get]
+    def paginate_queryset(self, queryset):
+        #El cliente lista solo sus pagos (acotados a su cuenta): el COUNT de
+        #la paginación es costo puro. El staff sí pagina el listado completo.
+        if not self.request.user.is_staff:
+            return None
+        return super().paginate_queryset(queryset)
     #=========================================
     # LIST METHOD (mis pagos / listado admin / rollups)
     #=========================================

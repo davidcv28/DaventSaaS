@@ -13,6 +13,9 @@ from AdminApp.domains.invoices.views.viewset_config import InvoiceUserConfig, In
 #=========================================
 class InvoiceViewSet(InvoiceBaseViewSet):
     config_view = InvoiceUserConfig
+    #El cliente lista solo sus facturas (acotadas a su cuenta): el COUNT de
+    #la paginación es costo puro. El panel admin usa InvoiceAdminViewSet.
+    pagination_class = None
 
 #=========================================
 # INVOICE ADMIN VIEWSET
