@@ -5,6 +5,10 @@ from django.db import IntegrityError
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.services        import profile_has_benefit, allowed_templates_of, storage_payload
+from StoreApp.domains.services.services      import (
+    DEFAULT_SITE_TEMPLATES, normalize_site_templates, site_mode_of,
+    validate_site_templates as validate_site_templates_plan, effective_site_templates,
+)
 from .config_fields import StoresFields, CustomizationFields
 from .mixins        import StoreMixinValidator, StoreCreateMixin
 from .validators    import validate_whatsapp, validate_instagram, validate_tiktok, validate_facebook
@@ -106,6 +110,12 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     video_title                 =   serializers.CharField(**CustomizationFields['video_title'])
     catalog_note                =   serializers.CharField(**CustomizationFields['catalog_note'])
     footer_text                 =   serializers.CharField(**CustomizationFields['footer_text'])
+    site_templates              =   serializers.JSONField(**CustomizationFields['site_templates'])
+    service_steps               =   serializers.JSONField(**CustomizationFields['service_steps'])
+    service_days                =   serializers.JSONField(**CustomizationFields['service_days'])
+    service_slots               =   serializers.JSONField(**CustomizationFields['service_slots'])
+    service_price_note          =   serializers.CharField(**CustomizationFields['service_price_note'])
+    service_pay_note            =   serializers.CharField(**CustomizationFields['service_pay_note'])
     whatsapp                    =   serializers.CharField(**CustomizationFields['whatsapp'])
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
     tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
@@ -128,7 +138,9 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'catalog_note', 'footer_text',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
-            'site_mode', 'show_highlights', 'show_reviews', 'show_comments',
+            'site_templates', 'service_steps', 'service_days', 'service_slots', 'service_ask_address',
+            'service_price_note', 'service_pay_note',
+            'show_highlights', 'show_reviews', 'show_comments',
             'logo', 'cover', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
         read_only_fields        =   ['updated_at']
@@ -202,6 +214,45 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
                 clean.append({'label': label, 'value': time})
         return clean
 
+    def validate_site_templates(self, value):
+        #Páginas de la web: el servicio fuerza la whitelist, el cupo
+        #max_site_templates y el flag has_services_site del plan vigente.
+        store               =   getattr(self.instance, 'store', None) if self.instance is not None else None
+        return validate_site_templates_plan(getattr(store, 'user', None), value)
+
+    def validate_service_steps(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.SERVICE_STEPS_MAX, 'Debe ser una lista de pasos.'):
+            icon                =   str(item.get('icon') or '').strip().lower()
+            title               =   str(item.get('title') or '').strip()[:StoreCustomization.SERVICE_STEP_TITLE_MAX]
+            text                =   str(item.get('text') or '').strip()[:StoreCustomization.SERVICE_STEP_TEXT_MAX]
+            if title and text:
+                clean.append({'icon': icon if icon in StoreCustomization.SERVICE_ICONS else 'check', 'title': title, 'text': text})
+        return clean
+
+    @staticmethod
+    def _labels(value, max_items, max_len, message):
+        #Listas de etiquetas cortas (días/franjas del pedido): se recortan,
+        #se descartan vacías y repetidas ignorando mayúsculas.
+        if not isinstance(value, list):
+            raise serializers.ValidationError(message)
+        seen, clean             =   set(), []
+        for raw in value:
+            text                =   str(raw or '').strip()[:max_len]
+            if not text or text.casefold() in seen:
+                continue
+            seen.add(text.casefold())
+            clean.append(text)
+            if len(clean) >= max_items:
+                break
+        return clean
+
+    def validate_service_days(self, value):
+        return self._labels(value, StoreCustomization.SERVICE_DAYS_MAX, StoreCustomization.SERVICE_DAY_MAX, 'Debe ser una lista de días.')
+
+    def validate_service_slots(self, value):
+        return self._labels(value, StoreCustomization.SERVICE_SLOTS_MAX, StoreCustomization.SERVICE_SLOT_MAX, 'Debe ser una lista de franjas.')
+
     def validate_section_order(self, value):
         #Solo claves del catálogo SECTION_ORDER, sin repetidas; las que no
         #vengan conservan su orden base al final (PATCH parcial seguro).
@@ -256,11 +307,22 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError('Solo se admiten videos de YouTube o Vimeo.')
 
     def validate(self, attrs):
-        #site_mode manda sobre show_catalog: se derivan siempre juntos.
-        mode                    =   attrs.get('site_mode')
-        if mode:
-            attrs['show_catalog']   =   mode != StoreCustomization.SITE_MODE_MARKETING
+        #site_templates manda sobre show_catalog: se derivan siempre
+        #juntos (la página catálogo apagada devuelve 404 en la web).
+        templates               =   attrs.get('site_templates')
+        if templates is not None:
+            attrs['show_catalog']   =   'catalog' in templates
         return attrs
+
+    def to_representation(self, customization):
+        data                    =   super().to_representation(customization)
+        #site_templates sale siempre normalizado (una fila vieja o vacía
+        #autocorrige la lectura al default) y site_mode se expone derivado
+        #solo para compat con las plantillas del catálogo.
+        templates               =   normalize_site_templates(customization.site_templates) or list(DEFAULT_SITE_TEMPLATES)
+        data['site_templates']  =   templates
+        data['site_mode']       =   site_mode_of(templates)
+        return data
 
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')
@@ -300,6 +362,13 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
         if not profile_has_benefit(customization.store.user, 'has_product_comments'):
             data['show_reviews']    =   False
             data['show_comments']   =   False
+        #site_templates viaja EFECTIVO al público: lo guardado intersectado
+        #con el plan vigente y recortado al cupo (la página Servicios sale
+        #sola al bajar de Estándar; al subir reaparece con sus ítems).
+        effective                   =   effective_site_templates(customization.store)
+        data['site_templates']      =   effective
+        data['site_mode']           =   site_mode_of(effective)
+        data['show_catalog']        =   'catalog' in effective
         return data
 #=========================================
 # STORE SERIALIZER LIST
@@ -344,9 +413,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     allowed_templates           =   serializers.SerializerMethodField()
     location_address            =   serializers.SerializerMethodField()
     chatbot                     =   serializers.SerializerMethodField()
+    service_items               =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -383,6 +453,17 @@ class StorePublicSerializer(serializers.ModelSerializer):
         if not cfg or not cfg.is_enabled:
             return None
         return {'greeting': cfg.greeting, 'qa': cfg.qa or []}
+    def get_service_items(self, store):
+        #Servicios activos de la página "Servicios": los carga la action
+        #public() solo cuando la página está habilitada en los
+        #site_templates efectivos — sin el flag el viaje no se hace y el
+        #payload sale vacío. Nunca se persisten pedidos: la selección del
+        #visitante se coordina por WhatsApp.
+        items                   =   getattr(store, '_service_items', None)
+        if not items:
+            return []
+        from StoreApp.domains.services.serializers.serializers import ServicePublicSerializer
+        return ServicePublicSerializer(items, many = True).data
 #=========================================
 # STORE CONTACT SERIALIZER (formulario público "Contáctanos")
 #=========================================

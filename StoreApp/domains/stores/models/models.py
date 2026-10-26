@@ -176,19 +176,38 @@ class StoreCustomization(models.Model):
     #vidriera del negocio. No borra productos ni gestión del panel: la ruta
     #/<slug>/catalogo y el endpoint público devuelven 404 hasta reactivarla.
     show_catalog                =   models.BooleanField(default = True, verbose_name = 'Mostrar página de catálogo')
-    #Tipo de web que elige el dueño: 'marketing' (solo la página principal,
-    #catálogo apagado), 'catalog' (solo el catálogo: la portada redirige a
-    #él) o 'both'. show_catalog se mantiene sincronizado desde el serializer
-    #(marketing -> False, resto -> True) para que backend y 404 sigan igual.
-    SITE_MODE_MARKETING         =   'marketing'
-    SITE_MODE_CATALOG           =   'catalog'
-    SITE_MODE_BOTH              =   'both'
-    SITE_MODE_CHOICES           =   [
-        (SITE_MODE_MARKETING, 'Solo web de marketing'),
-        (SITE_MODE_CATALOG, 'Solo catálogo'),
-        (SITE_MODE_BOTH, 'Marketing y catálogo'),
-    ]
-    site_mode                   =   models.CharField(max_length = 10, choices = SITE_MODE_CHOICES, default = SITE_MODE_BOTH, verbose_name = 'Tipo de web')
+    #Páginas que componen la web pública del cliente (catálogo cerrado y
+    #multi-selección): 'landing' = portada de marketing, 'services' =
+    #página de servicios con pedido por WhatsApp, 'catalog' = catálogo de
+    #productos. La cantidad máxima la fija el beneficio 'max_site_templates'
+    #del plan (básico/estándar = 2, premium/trial = ilimitado) y 'services'
+    #además exige el flag 'has_services_site' (estándar en adelante).
+    #services.validate_site_templates fuerza ambas reglas en el serializer;
+    #las filas viejas se migraron desde site_mode (marketing->['landing'],
+    #catalog->['catalog'], both->['landing','catalog']). El serializer
+    #mantiene show_catalog sincronizado ('catalog' presente -> True) y
+    #expone site_mode derivado para compat con las plantillas del catálogo.
+    SITE_TEMPLATES              =   ('landing', 'services', 'catalog')
+    site_templates              =   models.JSONField(default = lambda: ['landing', 'catalog'], blank = True, verbose_name = 'Páginas de la web')
+    #===== Config de la página "Servicios" (dominio services) =====
+    #Bloques del embudo de pedido: los pasos "cómo funciona" (filas
+    #{icon,title,text}), los días y franjas que ofrece el formulario,
+    #si el pedido pide dirección y las notas de precio/pago. Todo se
+    #coordinada por WhatsApp: la web nunca persiste reservas ni pagos.
+    SERVICE_STEPS_MAX           =   4
+    SERVICE_STEP_TITLE_MAX      =   60
+    SERVICE_STEP_TEXT_MAX       =   160
+    SERVICE_DAYS_MAX            =   7
+    SERVICE_DAY_MAX             =   24
+    SERVICE_SLOTS_MAX           =   4
+    SERVICE_SLOT_MAX            =   24
+    SERVICE_NOTE_MAX            =   160
+    service_steps               =   models.JSONField(default = list, blank = True, verbose_name = 'Pasos de cómo funciona')
+    service_days                =   models.JSONField(default = list, blank = True, verbose_name = 'Días de atención')
+    service_slots               =   models.JSONField(default = list, blank = True, verbose_name = 'Franjas horarias')
+    service_ask_address         =   models.BooleanField(default = True, verbose_name = 'Pedir dirección en el pedido')
+    service_price_note          =   models.CharField(max_length = SERVICE_NOTE_MAX, blank = True, verbose_name = 'Nota de precios orientativos')
+    service_pay_note            =   models.CharField(max_length = SERVICE_NOTE_MAX, blank = True, verbose_name = 'Nota de pago en persona')
     #Franja de etiquetas bajo la portada (destacados): el dueño decide si aparece.
     show_highlights             =   models.BooleanField(default = True, verbose_name = 'Mostrar franja de etiquetas')
     #===== Opiniones de visitantes sobre los productos del catálogo =====

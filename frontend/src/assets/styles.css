@@ -1147,6 +1147,9 @@ body { transition: background-color .2s ease, color .2s ease; }
 .feat-rows { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
 .feat-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto; gap: 8px; align-items: center; }
 .feat-row .input { padding: 9px 12px; }
+.svc-step-row { grid-template-columns: 96px minmax(0, 2fr) minmax(0, 3fr) auto; }
+.svc-step-icon { min-width: 0; }
+@media (max-width: 640px) { .svc-step-row { grid-template-columns: 1fr 1fr auto; } .svc-step-row .input:last-of-type { grid-column: 1 / -1; order: 3; } .svc-step-row .icon-btn { order: 4; } }
 .prod-search { display: flex; align-items: center; gap: 8px; height: 40px; margin-bottom: 12px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--muted); box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s; }
 .prod-search:focus-within { border-color: var(--brand-500); box-shadow: var(--ring); }
 .prod-search input { flex: 1; min-width: 0; border: none; background: transparent; padding: 0; font: inherit; font-size: 14px; color: var(--ink); }

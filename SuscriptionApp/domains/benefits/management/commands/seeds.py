@@ -28,6 +28,8 @@ dict_benefits = {
     'has_product_comments': {'label': 'Opiniones de clientes: valoraciones y comentarios', 'kind': 'flag'},
     'has_discounts'     :   {'label': 'Descuentos programados del catálogo',  'kind': 'flag'},
     'has_support_chat'  :   {'label': 'Chat directo con el equipo de soporte',  'kind': 'flag'},
+    'has_services_site' :   {'label': 'Página de servicios con pedidos por WhatsApp', 'kind': 'flag'},
+    'max_site_templates':   {'label': 'Páginas de la web (portada, servicios, catálogo)', 'kind': 'limit'},
 }
 
 dict_plan_benefits = {
@@ -54,6 +56,8 @@ dict_plan_benefits = {
             'has_product_comments': True,
             'has_discounts'     :   True,
             'has_support_chat'  :   True,
+            'has_services_site' :   True,
+            'max_site_templates':   None,
         },
         'presentation'  :   {
             'slug'          :   'prueba',
@@ -89,6 +93,8 @@ dict_plan_benefits = {
             'has_product_comments': False,
             'has_discounts'     :   False,
             'has_support_chat'  :   False,
+            'has_services_site' :   False,
+            'max_site_templates':   2,
         },
         'presentation'  :   {
             'slug'          :   'basico',
@@ -127,6 +133,8 @@ dict_plan_benefits = {
             'has_product_comments': False,
             'has_discounts'     :   False,
             'has_support_chat'  :   False,
+            'has_services_site' :   True,
+            'max_site_templates':   2,
         },
         'presentation'  :   {
             'slug'          :   'estandar',
@@ -143,6 +151,7 @@ dict_plan_benefits = {
                 'Mapa con la ubicación de tu negocio en la web',
                 'Diseños web extra: plantillas Urbano y Publicidad',
                 'Folletos publicitarios listos para imprimir',
+                'Página de servicios: precios orientativos y pedidos por WhatsApp',
             ],
         },
     },
@@ -166,6 +175,8 @@ dict_plan_benefits = {
             'has_product_comments': True,
             'has_discounts'     :   True,
             'has_support_chat'  :   True,
+            'has_services_site' :   True,
+            'max_site_templates':   None,
         },
         'presentation'  :   {
             'slug'          :   'premium',
@@ -175,6 +186,7 @@ dict_plan_benefits = {
             'display_order' :   3,
             'bullets'       :   [
                 'Todo lo del plan Estándar, y además:',
+                'Las 3 páginas de tu web: portada, servicios y catálogo',
                 'Productos e imágenes ilimitados',
                 '1.5 GB de almacenamiento de imágenes',
                 'Galería de hasta 15 fotos en tu web',

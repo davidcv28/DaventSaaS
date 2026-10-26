@@ -7,11 +7,14 @@ import { usePaymentsStore } from '../stores/payments.store.js'
 import { useInvoicesStore } from '../stores/invoices.store.js'
 import { useStoreStore } from '../stores/store.store.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
+import { useServicesStore } from '../stores/services.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl,
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily,
   allowedTemplatesFor, resolveStoreTemplate,
+  SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
+  siteTemplatesLimit, allowedSiteTemplatesFor, normalizeSiteTemplates, resolveSiteTemplates,
   ensureStoreFont, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
@@ -30,6 +33,10 @@ import {
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
   isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct
 } from '../api/catalog.api.js'
+import {
+  SERVICE_LIMITS, SERVICE_PAGE_LIMITS, servicePriceLabel, servicePayload,
+  validateServiceName, validateServiceDescription, validateServicePrice, validateServiceDuration
+} from '../api/services.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
@@ -63,6 +70,7 @@ const payments = usePaymentsStore()
 const invoices = useInvoicesStore()
 const store = useStoreStore()
 const catalog = useCatalogStore()
+const services = useServicesStore()
 
 // Sección activa con setter validado: un botón interno (o una sección que
 // desaparece del menú cuando vence el plan) jamás deja una vista vacía.
@@ -260,6 +268,7 @@ const tabGroups = computed(() => {
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
     web.push(
+      { id: 'pages', label: 'Plantillas', icon: 'layout-grid', hint: 'Qué páginas tiene tu web' },
       { id: 'design', label: 'Cómo se ve', icon: 'palette', hint: 'Textos, colores e imágenes' },
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
@@ -284,6 +293,10 @@ const navItems = computed(() => {
   const g = tabGroups.value
   const items = [{ id: 'overview', label: 'Inicio', icon: 'dashboard' }, { heading: 'Mi negocio' }]
   if (hasAccess) items.push({ id: 'catalogs', label: 'Mis productos', icon: 'package' })
+  // La página Servicios (y su gestión) la habilita el flag has_services_site
+  // del plan (Estándar+): sin el beneficio la entrada no aparece — la
+  // tarjeta bloqueada vive en la sección Plantillas como upgrade.
+  if (hasAccess && b.has_services_site) items.push({ id: 'services', label: 'Mis servicios', icon: 'wrench' })
   if (hasAccess) items.push({ id: 'reviews', label: 'Opiniones', icon: 'star' })
   items.push({ id: 'store', label: 'Mi página web', icon: 'store' })
   if (hasAccess) {
@@ -994,7 +1007,7 @@ async function saveBot() {
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
-const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [], announcements: [] })
+const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [] })
 const designTouched = reactive({})
 const designBusy = ref(false)
 const designTab = ref('content')
@@ -1347,31 +1360,161 @@ async function saveDesign() {
   designBusy.value = false
 }
 
-// La página Catálogo se controla desde "Mis catálogos" (tarjeta "Tu
-// página de catálogo"), separada del diseño general: el interruptor
-// guarda show_catalog al instante con su propio PATCH.
-const SITE_MODES = [
-  { id: 'both', label: 'Marketing y catálogo', hint: 'Página principal con tu presentación y, aparte, tu catálogo de productos.', icon: 'layout-grid' },
-  { id: 'marketing', label: 'Solo web de marketing', hint: 'Una vidriera del negocio: portada, secciones y contacto, sin catálogo.', icon: 'megaphone' },
-  { id: 'catalog', label: 'Solo catálogo', hint: 'Tu web abre directo en el catálogo de productos, sin página principal.', icon: 'package' }
-]
-const catalogPageBusy = ref(false)
-async function setSiteMode(mode) {
-  if (catalogPageBusy.value || designForm.site_mode === mode) return
-  const prev = designForm.site_mode
-  designForm.site_mode = mode
-  designForm.show_catalog = mode !== 'marketing'
-  catalogPageBusy.value = true
-  const ok = await store.saveCustomization({ site_mode: mode })
+// Páginas de la web (site_templates): multi-selección de catálogo cerrado
+// que reemplazó al site_mode (both/marketing/catalog). El plan fija el
+// cupo (max_site_templates: Básico/Estándar 2, Premium las tres) y la
+// página Servicios exige además el flag has_services_site. Cada cambio
+// guarda al instante con su propio PATCH — el backend fuerza las mismas
+// reglas (400 si el set viola el plan).
+const siteTemplateKeys = SITE_TEMPLATE_KEYS
+const siteTemplates = SITE_TEMPLATES
+const siteTemplatesBusy = ref(false)
+const canServicesSite = computed(() => Boolean(plan.value?.benefits?.has_services_site))
+const allowedSiteTemplates = computed(() => allowedSiteTemplatesFor(plan.value?.benefits || {}))
+const siteTemplatesMax = computed(() => siteTemplatesLimit(plan.value?.benefits || {}))
+// Set que se muestra: guardado normalizado ∩ plan (el backend manda lo
+// guardado; acá se recorta igual que effective_site_templates).
+const designSiteTemplates = computed(() => resolveSiteTemplates(designForm.site_templates, plan.value?.benefits || {}))
+const siteTemplatesHint = computed(() => {
+  const max = siteTemplatesMax.value
+  return max === null ? 'Tu plan permite tener las tres páginas activas.' : `Tu plan permite hasta ${max} ${max === 1 ? 'página' : 'páginas'} a la vez.`
+})
+function siteTemplateLock(key) {
+  return key === 'services' && !canServicesSite.value ? 'Desde Estándar' : ''
+}
+function canToggleSiteTemplate(key) {
+  if (siteTemplatesBusy.value || !allowedSiteTemplates.value.includes(key)) return false
+  const on = designSiteTemplates.value.includes(key)
+  if (on) return designSiteTemplates.value.length > 1 // la web nunca queda vacía
+  return siteTemplatesMax.value === null || designSiteTemplates.value.length < siteTemplatesMax.value
+}
+async function toggleSiteTemplate(key) {
+  if (!canToggleSiteTemplate(key)) return
+  const current = [...designSiteTemplates.value]
+  const i = current.indexOf(key)
+  if (i === -1) current.push(key)
+  else current.splice(i, 1)
+  const next = SITE_TEMPLATE_KEYS.filter((k) => current.includes(k))
+  const prev = normalizeSiteTemplates(designForm.site_templates)
+  designForm.site_templates = next
+  designForm.show_catalog = next.includes('catalog')
+  siteTemplatesBusy.value = true
+  const ok = await store.saveCustomization({ site_templates: next })
   if (!ok) {
-    designForm.site_mode = prev
-    designForm.show_catalog = prev !== 'marketing'
+    designForm.site_templates = prev
+    designForm.show_catalog = prev.includes('catalog')
   }
-  catalogPageBusy.value = false
+  siteTemplatesBusy.value = false
+}
+
+// ----- Mis servicios (sección propia del menú, gated por has_services_site) -----
+// CRUD de los ítems de la página "Servicios" + la config del embudo
+// (pasos, días, franjas, notas). El endpoint responde 403 sin el flag —
+// services.denied dispara la tarjeta de upgrade.
+const servicesLoaded = ref(false)
+watch(section, (s) => {
+  if (s === 'services' && !servicesLoaded.value) {
+    servicesLoaded.value = true
+    services.loadAll()
+  }
+})
+const serviceForm = reactive({ name: '', price: '', duration: '', icon: 'wrench', description: '', is_active: true })
+const serviceTouched = reactive({})
+const serviceBusy = ref(false)
+const serviceEditing = ref(null)
+const serviceLimits = SERVICE_LIMITS
+const servicePageLimits = SERVICE_PAGE_LIMITS
+const svcBusy = ref(false) // PATCH de la config de la página (pasos/días/notas)
+
+const serviceErrors = computed(() => {
+  const e = {}
+  const n = validateServiceName(serviceForm.name)
+  const d = validateServiceDescription(serviceForm.description.trim())
+  const p = validateServicePrice(serviceForm.price)
+  const du = validateServiceDuration(serviceForm.duration.trim())
+  if (n) e.name = n
+  if (d) e.description = d
+  if (p) e.price = p
+  if (du) e.duration = du
+  return e
+})
+function serviceFieldErr(name) {
+  return (serviceTouched[name] ? serviceErrors.value[name] || '' : '') || services.fieldErrors[name] || ''
+}
+function resetServiceForm() {
+  serviceEditing.value = null
+  Object.assign(serviceForm, { name: '', price: '', duration: '', icon: 'wrench', description: '', is_active: true })
+  Object.keys(serviceTouched).forEach((k) => { serviceTouched[k] = false })
+}
+function editService(s) {
+  serviceEditing.value = s
+  Object.assign(serviceForm, {
+    name: s.name, price: s.price ?? '', duration: s.duration || '',
+    icon: s.icon || 'wrench', description: s.description || '', is_active: Boolean(s.is_active)
+  })
+}
+async function saveService() {
+  Object.keys(serviceForm).forEach((k) => { serviceTouched[k] = true })
+  if (Object.keys(serviceErrors.value).length) return
+  serviceBusy.value = true
+  const ok = await services.saveService(serviceEditing.value?.id, servicePayload(serviceForm))
+  serviceBusy.value = false
+  if (ok) resetServiceForm()
+}
+async function removeService(s) {
+  await services.removeService(s.id)
+  if (serviceEditing.value?.id === s.id) resetServiceForm()
+}
+async function moveService(s, dir) {
+  services.moveItem(s.id, dir)
+  await services.saveOrder()
+}
+function serviceIcon(key) {
+  return SERVICE_ICONS[key] ? key : 'wrench'
+}
+function addServiceStep() {
+  const list = designForm.service_steps || (designForm.service_steps = [])
+  if (list.length < servicePageLimits.steps) list.push({ icon: 'check', title: '', text: '' })
+}
+function removeServiceStep(i) {
+  designForm.service_steps?.splice(i, 1)
+}
+
+// Config del embudo de la página (service_* de customization): filas de
+// pasos como las de "Qué ofrecemos", días y franjas como listas de
+// etiquetas, y las notas de precio/pago. Se guarda junto con un PATCH.
+const serviceDaysText = computed({
+  get: () => (designForm.service_days || []).join(', '),
+  set: (v) => { designForm.service_days = v.split(',').map((s) => s.trim()).filter(Boolean) }
+})
+const serviceSlotsText = computed({
+  get: () => (designForm.service_slots || []).join(', '),
+  set: (v) => { designForm.service_slots = v.split(',').map((s) => s.trim()).filter(Boolean) }
+})
+async function saveServicePage() {
+  companyErrs.servicePage = ''
+  if (hasPartialRow(designForm.service_steps || [], ['title', 'text'], ['title', 'text'])) {
+    companyErrs.servicePage = 'Cada paso necesita título y descripción. Completá la fila o borrala con el tachito.'
+    return
+  }
+  if ((designForm.service_price_note || '').length > servicePageLimits.note || (designForm.service_pay_note || '').length > servicePageLimits.note) {
+    companyErrs.servicePage = `Las notas admiten hasta ${servicePageLimits.note} caracteres.`
+    return
+  }
+  svcBusy.value = true
+  await store.saveCustomization({
+    service_steps: cleanRows(designForm.service_steps || [], ['icon', 'title', 'text'], ['title', 'text']),
+    service_days: (designForm.service_days || []).map((s) => String(s).trim()).filter(Boolean),
+    service_slots: (designForm.service_slots || []).map((s) => String(s).trim()).filter(Boolean),
+    service_ask_address: Boolean(designForm.service_ask_address),
+    service_price_note: (designForm.service_price_note || '').trim(),
+    service_pay_note: (designForm.service_pay_note || '').trim()
+  })
+  svcBusy.value = false
 }
 
 // Valoraciones/comentarios de la web pública: toggles instantáneos como
-// site_mode (la sección Opiniones no tiene botón de guardar). Toda la
+// site_templates (la sección Opiniones no tiene botón de guardar). Toda la
 // función pide has_product_comments (premium); el backend descarta
 // show_reviews/show_comments sin el flag — el checkbox solo se bloquea
 // en la UI.
@@ -2819,18 +2962,19 @@ async function changePassword() {
 
           <!-- -------- Opciones avanzadas -------- -->
           <details class="card more-card">
-            <summary><AppIcon name="store" :size="18" /> Opciones avanzadas de tu catálogo <small>Tipo de web y carrusel de portada</small></summary>
+            <summary><AppIcon name="store" :size="18" /> Opciones avanzadas de tu catálogo <small>Páginas de la web y carrusel de portada</small></summary>
             <div class="field">
-              <label id="site-mode-label-cat">Tipo de web</label>
-              <div class="check-list" role="radiogroup" aria-labelledby="site-mode-label-cat">
-                <label v-for="m in SITE_MODES" :key="m.id" class="check-item">
-                  <input type="radio" name="site-mode-cat" :value="m.id" :checked="designForm.site_mode === m.id" :disabled="catalogPageBusy" @change="setSiteMode(m.id)" />
+              <label id="site-templates-label-cat">Páginas de tu web</label>
+              <div class="check-list" role="group" aria-labelledby="site-templates-label-cat">
+                <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
+                  <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
                   <span class="check-text">
-                    <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-                    <small>{{ m.hint }}</small>
+                    <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span> <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                    <small>{{ siteTemplates[key].desc }}</small>
                   </span>
                 </label>
               </div>
+              <p class="hint">{{ siteTemplatesHint }} Se guarda al instante — también podés administrarlas desde «Plantillas» en Mi página web.</p>
             </div>
             <div v-if="canDesignAdvanced" class="field">
               <label id="catalog-carousel-label">Carrusel de portada</label>
@@ -2859,6 +3003,136 @@ async function changePassword() {
             </div>
             <p v-else class="hint">El carrusel de portada del catálogo se habilita con el Plan premium.</p>
           </details>
+        </template>
+      </template>
+    </div>
+    <!-- ================= MIS SERVICIOS ================= -->
+    <div v-if="seen.services" v-show="section === 'services'" :class="{ 'sec-on': section === 'services' }">
+      <div class="page-head">
+        <div>
+          <h1>Mis servicios</h1>
+          <p>Lo que ofrecés en la página Servicios de tu web: tus clientes arman su presupuesto y el pedido te llega por WhatsApp. Nada se cobra online.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="services.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+      </div>
+
+      <AlertMessage v-if="services.notice" kind="success" :message="services.notice" />
+      <AlertMessage v-if="services.lastError" kind="error" :message="services.lastError" />
+
+      <template v-if="services.denied">
+        <div class="empty">
+          <span class="empty-icon"><AppIcon name="wrench" :size="28" /></span>
+          <h3>La página Servicios está disponible desde el plan Estándar</h3>
+          <p>Sumala a tu web: tus clientes eligen servicios, ven un presupuesto orientativo y te escriben por WhatsApp.</p>
+          <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div v-if="!designSiteTemplates.includes('services')" class="card" role="note">
+          <h3><AppIcon name="info" :size="18" /> La página está apagada</h3>
+          <p class="hint">Tus servicios quedan guardados, pero la página Servicios no aparece en tu web hasta que la actives en <a href="#" @click.prevent="section = 'pages'"><strong>Plantillas</strong></a>.</p>
+        </div>
+        <div v-if="services.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tus servicios…</p></div>
+        <template v-else>
+          <div class="grid-2">
+            <div class="card">
+              <h3><AppIcon :name="serviceEditing ? 'pencil' : 'plus'" :size="18" /> {{ serviceEditing ? 'Editar servicio' : 'Agregar un servicio' }}</h3>
+              <p class="lead">El precio es orientativo: podés dejarlo vacío y se muestra como «a convenir».</p>
+              <AppInput v-model="serviceForm.name" label="Nombre" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
+              <div class="grid-2">
+                <AppInput v-model="serviceForm.price" label="Precio orientativo" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
+                <AppInput v-model="serviceForm.duration" label="Duración estimada" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="svc-icon">Icono</label>
+                  <select id="svc-icon" v-model="serviceForm.icon" class="select">
+                    <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="svc-active">Visibilidad</label>
+                  <select id="svc-active" v-model="serviceForm.is_active" class="select">
+                    <option :value="true">Visible en mi web</option>
+                    <option :value="false">Oculto</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="svc-description">Descripción corta</label>
+                <textarea id="svc-description" v-model="serviceForm.description" class="textarea" :class="{ invalid: serviceFieldErr('description') }" placeholder="Qué incluye o cómo se coordina (opcional)" :maxlength="serviceLimits.description" rows="2" @blur="serviceTouched.description = true"></textarea>
+                <p class="hint">{{ serviceForm.description.length }}/{{ serviceLimits.description }}</p>
+                <p v-if="serviceFieldErr('description')" class="field-error" role="alert">{{ serviceFieldErr('description') }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="serviceBusy" :disabled="!serviceEditing && services.limitReached" @click="saveService">{{ serviceEditing ? 'Guardar cambios' : 'Publicar servicio' }}</AppButton>
+                <button v-if="serviceEditing" type="button" class="btn ghost btn-auto" @click="resetServiceForm">Cancelar</button>
+              </div>
+              <p v-if="services.limitReached" class="hint">Llegaste al máximo de {{ serviceLimits.max }} servicios por página.</p>
+            </div>
+
+            <div class="card">
+              <h3><AppIcon name="wrench" :size="18" /> Tus servicios</h3>
+              <div v-if="!services.items.length" class="empty-mini"><AppIcon name="wrench" :size="22" /><p>Todavía no cargaste servicios. El primero se publica desde el formulario de al lado.</p></div>
+              <ul v-else class="prod-list">
+                <li v-for="(s, i) in services.items" :key="s.id" class="prod-item">
+                  <span class="prod-thumb"><AppIcon :name="serviceIcon(s.icon)" :size="16" aria-hidden="true" /></span>
+                  <div class="prod-info">
+                    <strong>{{ s.name }}</strong>
+                    <small>{{ servicePriceLabel(s) }}<template v-if="s.duration"> · {{ s.duration }}</template></small>
+                  </div>
+                  <span v-if="!s.is_active" class="pill muted">Oculto</span>
+                  <button type="button" class="icon-btn" aria-label="Subir" :disabled="i === 0" @click="moveService(s, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" aria-label="Bajar" :disabled="i === services.items.length - 1" @click="moveService(s, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn" :aria-label="s.is_active ? 'Ocultar servicio' : 'Mostrar servicio'" :title="s.is_active ? 'Ocultar' : 'Mostrar'" @click="services.toggleService(s)"><AppIcon :name="s.is_active ? 'eye-off' : 'eye'" :size="15" /></button>
+                  <button type="button" class="icon-btn" aria-label="Editar servicio" @click="editService(s)"><AppIcon name="pencil" :size="15" /></button>
+                  <button type="button" class="icon-btn danger" aria-label="Eliminar servicio" @click="removeService(s)"><AppIcon name="trash" :size="15" /></button>
+                </li>
+              </ul>
+              <p class="hint">El orden de esta lista es el orden en que aparecen en tu web.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3><AppIcon name="wrench" :size="18" /> Tu página de servicios</h3>
+            <p class="lead">Ajustá cómo pide los datos el formulario y qué leen tus clientes junto al presupuesto.</p>
+            <div class="field">
+              <label id="svc-steps-label">Pasos de «cómo funciona»</label>
+              <ul v-if="(designForm.service_steps || []).length" class="feat-rows" aria-labelledby="svc-steps-label">
+                <li v-for="(row, i) in designForm.service_steps" :key="i" class="feat-row svc-step-row">
+                  <select v-model="row.icon" class="select svc-step-icon" :aria-label="`Icono del paso ${i + 1}`">
+                    <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                  </select>
+                  <input v-model="row.title" class="input" type="text" :maxlength="servicePageLimits.stepTitle" placeholder="Título (ej. Confirmamos por WhatsApp)" :aria-label="`Título del paso ${i + 1}`" />
+                  <input v-model="row.text" class="input" type="text" :maxlength="servicePageLimits.stepText" placeholder="Descripción breve" :aria-label="`Texto del paso ${i + 1}`" />
+                  <button type="button" class="icon-btn danger" aria-label="Quitar paso" @click="removeServiceStep(i)"><AppIcon name="trash" :size="15" /></button>
+                </li>
+              </ul>
+              <button type="button" class="btn ghost btn-auto" :disabled="(designForm.service_steps || []).length >= servicePageLimits.steps" @click="addServiceStep"><AppIcon name="plus" :size="15" /> Agregar paso</button>
+              <p class="hint">Hasta {{ servicePageLimits.steps }} pasos. Si no cargás ninguno, la página muestra unos pasos por defecto.</p>
+            </div>
+            <div class="grid-2">
+              <AppInput v-model="serviceDaysText" label="Días que ofrecés" name="svc_days" placeholder="Ej. Hoy, Mañana, Sábado" />
+              <AppInput v-model="serviceSlotsText" label="Franjas horarias" name="svc_slots" placeholder="Ej. 9 a 12 h, 15 a 18 h" />
+            </div>
+            <p class="hint">Separados por coma: hasta {{ servicePageLimits.days }} días y {{ servicePageLimits.slots }} franjas, de {{ servicePageLimits.day }} caracteres cada uno. Vacíos = la página propone opciones genéricas.</p>
+            <label class="check-item">
+              <input v-model="designForm.service_ask_address" type="checkbox" />
+              <span class="check-text">
+                <strong>Pedir dirección en el pedido</strong>
+                <small>Útil si trabajás a domicilio. Si no lo necesitás, el formulario la omite.</small>
+              </span>
+            </label>
+            <div class="grid-2">
+              <AppInput v-model="designForm.service_price_note" label="Nota de precios" name="svc_price_note" placeholder="Ej. Precios orientativos: el valor final se confirma al ver el trabajo" />
+              <AppInput v-model="designForm.service_pay_note" label="Nota de pago" name="svc_pay_note" placeholder="Ej. Se paga en persona al concretar: efectivo, débito o transferencia" />
+            </div>
+            <p v-if="companyErrs.servicePage" class="field-error" role="alert">{{ companyErrs.servicePage }}</p>
+            <div class="btn-row">
+              <AppButton :loading="svcBusy" @click="saveServicePage">Guardar configuración</AppButton>
+            </div>
+          </div>
         </template>
       </template>
     </div>
@@ -3020,6 +3294,51 @@ async function changePassword() {
         </div>
       </template>
     </div>
+    <!-- ================= PLANTILLAS (páginas de la web) ================= -->
+    <div v-if="seen.pages" v-show="section === 'pages'" :class="{ 'sec-on': section === 'pages' }">
+      <div class="page-head">
+        <div>
+          <h1>Plantillas de tu web</h1>
+          <p>Tu sitio puede tener hasta {{ siteTemplatesMax === null ? 'tres' : siteTemplatesMax }} páginas. Elegí cuáles mostrar: se guardan al instante.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+      </div>
+      <SectionTabs :tabs="tabGroups.web" active="pages" @select="section = $event" />
+
+      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+
+      <div class="card">
+        <h3><AppIcon name="layout-grid" :size="18" /> Páginas activas</h3>
+        <p class="lead">Cada página es una sección distinta de tu misma web. Desmarcar una la apaga sin borrar su contenido.</p>
+        <div class="check-list" role="group" aria-label="Páginas de tu web">
+          <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
+            <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
+            <span class="check-text">
+              <strong>
+                <AppIcon :name="siteTemplates[key].icon" :size="15" aria-hidden="true" /> {{ siteTemplates[key].label }}
+                <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span>
+                <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span>
+              </strong>
+              <small>{{ siteTemplates[key].desc }}</small>
+            </span>
+          </label>
+        </div>
+        <p class="hint">{{ siteTemplatesHint }} La web siempre conserva al menos una página.</p>
+        <p v-if="!canServicesSite" class="hint">La página <strong>Servicios</strong> se habilita desde el plan Estándar: tus clientes arman su presupuesto y te llega el pedido por WhatsApp, sin pagos online.</p>
+      </div>
+
+      <div v-if="canServicesSite" class="next-card">
+        <span class="next-icon"><AppIcon name="wrench" :size="22" /></span>
+        <div><strong>¿Tenés la página Servicios activa?</strong><small>Cargá tus servicios con precios orientativos y recibí pedidos por WhatsApp.</small></div>
+        <button class="btn btn-auto" @click="section = 'services'">Ir a mis servicios <AppIcon name="arrow-right" :size="16" /></button>
+      </div>
+      <div v-else class="next-card">
+        <span class="next-icon"><AppIcon name="crown" :size="22" /></span>
+        <div><strong>Servicios es un plan Estándar</strong><small>Sumala a tu web subiendo de plan: presupuestos orientativos y pedidos por WhatsApp.</small></div>
+        <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
+      </div>
+    </div>
     <!-- ================= DISEÑO WEB ================= -->
     <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
@@ -3127,19 +3446,19 @@ async function changePassword() {
           <div v-show="designTab === 'sections'" class="card dsg-card">
             <h3><AppIcon name="layout-grid" :size="18" /> Secciones</h3>
             <div class="field">
-              <label id="site-mode-label">¿Qué tipo de web querés?</label>
-              <div class="check-list" role="radiogroup" aria-labelledby="site-mode-label">
-                <label v-for="m in SITE_MODES" :key="m.id" class="check-item">
-                  <input type="radio" name="site-mode" :value="m.id" :checked="designForm.site_mode === m.id" :disabled="catalogPageBusy" @change="setSiteMode(m.id)" />
+              <label id="site-templates-label">¿Qué páginas tiene tu web?</label>
+              <div class="check-list" role="group" aria-labelledby="site-templates-label">
+                <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
+                  <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
                   <span class="check-text">
-                    <strong>{{ m.label }} <span v-if="catalogPageBusy && designForm.site_mode === m.id" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-                    <small>{{ m.hint }}</small>
+                    <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span></strong>
+                    <small>{{ siteTemplates[key].desc }}</small>
                   </span>
                 </label>
               </div>
-              <p class="hint">Se guarda al instante. Tus productos se cargan en "Mis productos".</p>
+              <p class="hint">{{ siteTemplatesHint }} Se guarda al instante.</p>
             </div>
-            <div v-if="designForm.site_mode !== 'catalog'" class="field">
+            <div v-if="designSiteTemplates.includes('landing')" class="field">
               <label id="design-sections-label">Secciones de tu web</label>
               <div class="check-list" role="group" aria-labelledby="design-sections-label">
                 <label class="check-item">

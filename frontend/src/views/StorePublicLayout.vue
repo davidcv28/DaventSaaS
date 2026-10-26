@@ -84,9 +84,20 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 // Catálogo opcional: el dueño puede apagarlo (vidriera sin productos). La
 // página /catalogo redirige al inicio y desaparecen todos sus accesos.
 const showCatalog = computed(() => status.value === 'success' && custom.value.show_catalog !== false)
-// Modo "solo catálogo": no hay página principal; la portada redirige al
-// catálogo y el menú no ofrece Inicio ni las secciones de marketing.
-const catalogOnly = computed(() => status.value === 'success' && custom.value.site_mode === 'catalog' && showCatalog.value)
+// Páginas efectivas de la web (site_templates ya viene filtrado por el
+// plan desde el backend): 'landing' = portada, 'services' = servicios con
+// pedido por WhatsApp, 'catalog' = catálogo de productos.
+const siteTemplates = computed(() => {
+  const list = Array.isArray(custom.value.site_templates) ? custom.value.site_templates : ['landing', 'catalog']
+  return ['landing', 'services', 'catalog'].filter((k) => list.includes(k))
+})
+// Página "Servicios": aparece solo si quedó en el set efectivo del plan.
+const showServices = computed(() => status.value === 'success' && siteTemplates.value.includes('services'))
+// Web sin portada: el home redirige a la primera página disponible
+// (Servicios si existe, si no el catálogo) y el menú no ofrece Inicio ni
+// las secciones de marketing. Cubre el viejo "modo solo catálogo" y la
+// combinación servicios+catálogo sin landing.
+const landingOff = computed(() => status.value === 'success' && !siteTemplates.value.includes('landing'))
 // Chatbot (beneficio has_chatbot, solo Premium): el serializer público lo manda
 // solo si el dueño lo activó y el plan lo incluye — None = sin widget.
 const botConfig = computed(() => (status.value === 'success' ? store.value?.chatbot || null : null))
@@ -95,9 +106,10 @@ const botConfig = computed(() => (status.value === 'success' ? store.value?.chat
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
 const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
 const isCatalog = computed(() => route.name === 'store-catalog')
+const isServices = computed(() => route.name === 'store-services')
 const isProduct = computed(() => route.name === 'store-product')
 // Opción 2 (/<slug>/v2): prototipo de portada alternativa — se comporta como
-// Inicio para el menú, el dock móvil y el redirect del modo "solo catálogo".
+// Inicio para el menú, el dock móvil y el redirect de la web sin portada.
 const isAlt = computed(() => route.name === 'store-alt')
 const isHome = computed(() => route.name === 'store-public' || isAlt.value)
 // Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
@@ -105,16 +117,21 @@ const isHome = computed(() => route.name === 'store-public' || isAlt.value)
 // quedarían todas marcadas a la vez.
 const shopCurrent = computed(() => {
   if (isCatalog.value || isProduct.value) return 'catalog'
+  if (isServices.value) return 'services'
   if (!isHome.value) return ''
   const hash = route.hash.replace('#', '')
   return ['nosotros', 'galeria', 'contacto'].includes(hash) ? hash : 'home'
 })
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
+const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
+// Página de reemplazo cuando no hay portada: Servicios si está, si no el
+// catálogo (la web nunca queda sin destino — el backend siempre manda ≥1).
+const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : catalogTo.value))
 // Anclas de sección (#nosotros/#galeria/#contacto): en la vista previa de la
 // opción 2 se quedan dentro de la propia página; fuera de ella van al inicio.
 const anchorTo = (hash) => ({ path: isAlt.value ? route.path : homeTo.value.path, hash })
-watch([catalogOnly, isHome], ([only, home]) => { if (only && home) router.replace(catalogTo.value) }, { immediate: true })
+watch([landingOff, isHome], ([off, home]) => { if (off && home) router.replace(homeFallbackTo.value) }, { immediate: true })
 
 // Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
 // resto de las páginas Enter/botón navega al catálogo con ?q= (la vista lo
@@ -124,6 +141,27 @@ function submitTopSearch() {
   const q = ui.search.trim()
   router.push(q ? { ...catalogTo.value, query: { q } } : catalogTo.value)
 }
+
+// CTA cruzado del topbar: desde una página propone la siguiente más útil.
+// En catálogo/producto vuelve al inicio (o a Servicios si no hay portada);
+// en la home/portada ofrece Catálogo y después Servicios; en Servicios la
+// portada o el catálogo. Null cuando no hay otra página que sugerir.
+const topCta = computed(() => {
+  if (status.value !== 'success') return null
+  if (isCatalog.value || isProduct.value) {
+    if (!landingOff.value) return { to: homeTo.value, icon: 'store', label: 'Inicio' }
+    if (showServices.value && !isServices.value) return { to: servicesTo.value, icon: 'wrench', label: 'Servicios' }
+    return null
+  }
+  if (isServices.value) {
+    if (!landingOff.value) return { to: homeTo.value, icon: 'store', label: 'Inicio' }
+    if (showCatalog.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
+    return null
+  }
+  if (showCatalog.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
+  if (showServices.value) return { to: servicesTo.value, icon: 'wrench', label: 'Servicios' }
+  return null
+})
 
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
@@ -165,15 +203,17 @@ function loadPublicCatalog(params = {}) {
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, ui,
+  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, siteTemplates, ui,
   loadPublicCatalog
 })
 
 // Título de pestaña por página: "<tienda>" en Inicio, "<tienda> · Catálogo"
-// en el catálogo. Corre también al volver del catálogo al inicio.
+// en el catálogo, "<tienda> · Servicios" en la página de servicios.
+// Corre también al volver al inicio.
 watch([status, () => route.name], ([s, name]) => {
   if (s !== 'success') return
   document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
+    : name === 'store-services' ? `${shopName.value} · Servicios`
     : name === 'store-alt' ? `${shopName.value} · Vista previa` : shopName.value
 }, { immediate: true })
 
@@ -186,11 +226,13 @@ const socials = computed(() => [
 ].filter((s) => s.url))
 const footAddress = computed(() => store.value?.location_address || '')
 const hasFootContact = computed(() => Boolean(whatsappUrl.value || footAddress.value || socials.value.length))
-// Barra fija móvil: WhatsApp + acceso cruzado Catálogo/Inicio. No aparece en
-// la ficha de producto (ya tiene su propio CTA a WhatsApp).
-const dockCatalog = computed(() => showCatalog.value && !catalogOnly.value && !isCatalog.value && !isProduct.value)
-const dockHome = computed(() => isCatalog.value && !catalogOnly.value)
-const showDock = computed(() => status.value === 'success' && !isProduct.value && Boolean(whatsappUrl.value || dockCatalog.value || dockHome.value))
+// Barra fija móvil: WhatsApp + accesos cruzados a las otras páginas de la
+// web (Inicio solo si hay portada, Catálogo y Servicios). No aparece en la
+// ficha de producto (ya tiene su propio CTA a WhatsApp).
+const dockCatalog = computed(() => showCatalog.value && !isCatalog.value && !isProduct.value)
+const dockServices = computed(() => showServices.value && !isServices.value && !isProduct.value)
+const dockHome = computed(() => !landingOff.value && !isHome.value && !isProduct.value)
+const showDock = computed(() => status.value === 'success' && !isProduct.value && Boolean(whatsappUrl.value || dockCatalog.value || dockServices.value || dockHome.value))
 
 // SEO y previews: Open Graph / Twitter / theme-color + JSON-LD (Store o
 // LocalBusiness) con nombre, dirección, horarios y redes.
@@ -261,6 +303,8 @@ onMounted(async () => {
   if (isHome.value) loadPublicCatalog({ sort: 'recent' })
   else if (isCatalog.value) loadPublicCatalog({ sort: 'name' })
   else if (isProduct.value) loadPublicCatalog()
+  // La página Servicios no necesita el catálogo: sus ítems viajan en el
+  // payload público de la tienda (service_items).
   try {
     store.value = await storesApi.publicStore(slug.value)
     status.value = 'success'
@@ -319,11 +363,12 @@ onBeforeUnmount(() => {
           </span>
         </RouterLink>
         <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
-          <RouterLink v-if="!catalogOnly" :to="homeTo">Inicio</RouterLink>
+          <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
+          <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-          <RouterLink v-if="hasAbout && !catalogOnly" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery && !catalogOnly" :to="anchorTo('#galeria')">Galería</RouterLink>
-          <RouterLink v-if="showContact && !catalogOnly" :to="anchorTo('#contacto')">Contacto</RouterLink>
+          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
+          <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')">Galería</RouterLink>
+          <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
@@ -334,8 +379,8 @@ onBeforeUnmount(() => {
           <button v-if="isShop && !isCatalog" type="button" class="sp-search-go" aria-label="Buscar en el catálogo" @click="submitTopSearch"><AppIcon name="arrow-right" :size="15" /></button>
         </label>
         <div class="sp-top-end">
-          <RouterLink v-if="status === 'success' && !catalogOnly && (isCatalog || isProduct || showCatalog)" class="sp-top-cta" :to="isCatalog ? homeTo : catalogTo">
-            <AppIcon :name="isCatalog ? 'store' : 'package'" :size="16" /> {{ isCatalog ? 'Inicio' : 'Catálogo' }}
+          <RouterLink v-if="topCta" class="sp-top-cta" :to="topCta.to">
+            <AppIcon :name="topCta.icon" :size="16" /> {{ topCta.label }}
           </RouterLink>
           <button
             v-if="showThemeToggle"
@@ -355,11 +400,12 @@ onBeforeUnmount(() => {
       <nav v-if="isShop && status === 'success'" class="sp-shop-nav" aria-label="Secciones de la tienda">
         <div class="sp-container sp-shop-nav-inner">
           <div class="sp-shop-nav-links">
-            <RouterLink v-if="!catalogOnly" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
+            <RouterLink v-if="!landingOff" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
+            <RouterLink v-if="showServices" :to="servicesTo" :class="{ 'is-current': shopCurrent === 'services' }" :aria-current="shopCurrent === 'services' ? 'page' : null">Servicios</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout && !catalogOnly" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !catalogOnly" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
-            <RouterLink v-if="showContact && !catalogOnly" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
+            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
           </div>
           <span class="sp-shop-nav-note">Precios en pesos argentinos</span>
         </div>
@@ -412,11 +458,12 @@ onBeforeUnmount(() => {
           </div>
           <nav v-if="isShop && status === 'success'" class="sp-foot-col" aria-label="Secciones de la tienda">
             <p class="sp-foot-heading">Tienda</p>
-            <RouterLink v-if="!catalogOnly" :to="homeTo">Inicio</RouterLink>
+            <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
+            <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout && !catalogOnly" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !catalogOnly" :to="anchorTo('#galeria')">Galería</RouterLink>
-            <RouterLink v-if="showContact && !catalogOnly" :to="anchorTo('#contacto')">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')">Galería</RouterLink>
+            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')">Contacto</RouterLink>
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>
@@ -437,6 +484,7 @@ onBeforeUnmount(() => {
     <!-- Barra fija de contacto (solo móvil): el CTA principal siempre a mano -->
     <nav v-if="showDock" class="sp-dock" aria-label="Acciones rápidas">
       <a v-if="whatsappUrl" class="sp-dock-btn is-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> WhatsApp</a>
+      <RouterLink v-if="dockServices" class="sp-dock-btn" :to="servicesTo"><AppIcon name="wrench" :size="18" /> Servicios</RouterLink>
       <RouterLink v-if="dockCatalog" class="sp-dock-btn" :to="catalogTo"><AppIcon name="package" :size="18" /> Catálogo</RouterLink>
       <RouterLink v-if="dockHome" class="sp-dock-btn" :to="homeTo"><AppIcon name="store" :size="18" /> Inicio</RouterLink>
     </nav>

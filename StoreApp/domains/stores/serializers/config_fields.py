@@ -103,6 +103,45 @@ CustomizationFields           =   {
         'label'             :   'Mostrar sección Sobre nosotros',
         'required'          :   False,
     },
+    #===== Páginas de la web + página "Servicios" =====
+    'site_templates'        :   {
+        'label'             :   'Páginas de tu web',
+        'required'          :   False,
+    },
+    'service_steps'         :   {
+        'label'             :   'Pasos de cómo funciona',
+        'required'          :   False,
+    },
+    'service_days'          :   {
+        'label'             :   'Días de atención',
+        'required'          :   False,
+    },
+    'service_slots'         :   {
+        'label'             :   'Franjas horarias',
+        'required'          :   False,
+    },
+    'service_ask_address'   :   {
+        'label'             :   'Pedir dirección en el pedido',
+        'required'          :   False,
+    },
+    'service_price_note'    :   {
+        'label'             :   'Nota de precios orientativos',
+        'style'             :   {'placeholder': 'Ej. Los precios son orientativos: el valor final se confirma al ver el trabajo'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   160,
+        'error_messages'    :   {'max_length': 'La nota admite hasta 160 caracteres'},
+    },
+    'service_pay_note'      :   {
+        'label'             :   'Nota de pago en persona',
+        'style'             :   {'placeholder': 'Ej. Se paga al recibir: efectivo, débito o transferencia'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   160,
+        'error_messages'    :   {'max_length': 'La nota admite hasta 160 caracteres'},
+    },
     #===== Secciones de marketing ("Mi empresa") =====
     'services'              :   {
         'label'             :   'Qué ofrecemos',

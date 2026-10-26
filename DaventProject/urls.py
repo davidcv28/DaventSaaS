@@ -56,6 +56,7 @@ urlpatterns = [
     path('api/', include('SuscriptionApp.domains.benefits.urls.urls')),
     path('api/', include('StoreApp.domains.stores.urls.urls')),
     path('api/', include('StoreApp.domains.catalog.urls.urls')),
+    path('api/', include('StoreApp.domains.services.urls.urls')),
     #=================================
     # JWT
     #=================================

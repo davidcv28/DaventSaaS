@@ -19,7 +19,13 @@ import { storeUrl } from '../config/env.js'
 //                                                   allowed_templates es la whitelist de plantillas del plan
 //                                                   (la web fuerza 'classic' si el guardado no está permitido);
 //                                                   location_address es null sin has_location_map (Estándar+)
-//                                                   o si el dueño apagó el mapa (customization.show_location)
+//                                                   o si el dueño apagó el mapa (customization.show_location);
+//                                                   service_items = servicios activos [{id,name,description,
+//                                                   price,duration,icon}] — vacío si la página Servicios no
+//                                                   está en site_templates efectivo o sin has_services_site;
+//                                                   customization.site_templates ya llega como set EFECTIVO
+//                                                   (guardado ∩ plan) y site_mode/site_services derivados
+//                                                   de compat: catalog | marketing | both
 // GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products, promotions,
 //                                                   facets, offer_count, new_count, price_max}
 //                                                   (?q= texto que busca en nombre, descripción, categoría,
@@ -354,7 +360,17 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_location: true,
   show_gallery: true,
   show_catalog: true,
+  // Páginas de la web: portada + servicios + catálogo (el backend deriva
+  // show_catalog y expone site_mode de compat para las plantillas viejas).
+  site_templates: ['landing', 'catalog'],
   site_mode: 'both',
+  // Página "Servicios": pasos del embudo, días/franjas del pedido y notas.
+  service_steps: [],
+  service_days: [],
+  service_slots: [],
+  service_ask_address: true,
+  service_price_note: '',
+  service_pay_note: '',
   show_highlights: true,
   show_reviews: false,
   show_comments: false,
@@ -363,6 +379,50 @@ export const CUSTOMIZATION_DEFAULTS = {
   carousel: [],
   gallery: [],
   decor: []
+}
+
+// ===== Páginas de la web (espejo de services/services.py del backend) =====
+// site_templates es multi-selección de catálogo cerrado: 'landing' =
+// portada de marketing, 'services' = página de servicios con pedidos por
+// WhatsApp, 'catalog' = catálogo de productos. El plan fija el cupo
+// (max_site_templates) y 'services' exige además el flag has_services_site;
+// el backend fuerza ambas reglas en el PATCH de customization (400) y la
+// web pública recibe el set EFECTIVO (guardado ∩ plan vigente).
+export const SITE_TEMPLATE_KEYS = ['landing', 'services', 'catalog']
+export const SITE_TEMPLATES = {
+  landing:  { label: 'Portada',   icon: 'store',        desc: 'Tu página principal: presentación, secciones de marketing y contacto.' },
+  services: { label: 'Servicios', icon: 'wrench',       desc: 'Listá tus servicios con precios orientativos y recibí pedidos por WhatsApp. Sin pagos online.', benefit: 'has_services_site' },
+  catalog:  { label: 'Catálogo',  icon: 'package',      desc: 'Tu catálogo de productos con buscador, filtros y fichas.' }
+}
+// Web mínima por defecto (misma conducta que el viejo site_mode='both').
+export const DEFAULT_SITE_TEMPLATES = ['landing', 'catalog']
+
+// Tope de páginas según el plan: max_site_templates ausente -> 2 (piso
+// histórico portada+catálogo); null -> las tres.
+export function siteTemplatesLimit(benefits = {}) {
+  if (!('max_site_templates' in benefits)) return 2
+  return benefits.max_site_templates
+}
+
+// Páginas elegibles por el plan: 'services' solo con has_services_site.
+export function allowedSiteTemplatesFor(benefits = {}) {
+  return SITE_TEMPLATE_KEYS.filter((key) => key !== 'services' || benefits.has_services_site)
+}
+
+// Normaliza un set guardado: whitelist, sin repetidas, orden canónico.
+export function normalizeSiteTemplates(value) {
+  if (!Array.isArray(value)) return []
+  return SITE_TEMPLATE_KEYS.filter((key) => value.includes(key))
+}
+
+// Set efectivo para mostrar (dashboard/público): guardado normalizado ∩
+// permitido por el plan, recortado al cupo; vacío -> default.
+export function resolveSiteTemplates(saved, benefits = {}) {
+  const allowed = allowedSiteTemplatesFor(benefits)
+  let list = normalizeSiteTemplates(saved).filter((key) => allowed.includes(key))
+  const limit = siteTemplatesLimit(benefits)
+  if (limit != null) list = list.slice(0, limit)
+  return list.length ? list : [...DEFAULT_SITE_TEMPLATES]
 }
 
 // Imágenes: límites por archivo (espejo del backend).

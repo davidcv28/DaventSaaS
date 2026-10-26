@@ -302,6 +302,13 @@ class StoreViewSet(StoreBaseViewSet):
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
+        #La página "Servicios" viaja en el mismo payload cuando está
+        #habilitada en los site_templates efectivos: una sola query extra
+        #y solo en ese caso (service_items sale [] en el resto).
+        from StoreApp.domains.services.services import effective_site_templates
+        if 'services' in effective_site_templates(store):
+            from StoreApp.domains.services.models import StoreService
+            store._service_items    =   list(StoreService.objects.filter(store = store, is_active = True))
         record_store_visit(store, request)
         serializer  =   StorePublicSerializer(store)
         response    =   Response(serializer.data, status = status.HTTP_200_OK)
@@ -370,6 +377,12 @@ class StoreViewSet(StoreBaseViewSet):
         #mismo criterio que show_contact en el formulario (404, no vacío).
         customization     =   getattr(store, 'customization', None)
         if customization is not None and customization.show_catalog is False:
+            raise Http404
+        #La página también cae si 'catalog' quedó fuera de los
+        #site_templates efectivos (p.ej. bajó a un plan con menos páginas
+        #y el catálogo no entró en el cupo).
+        from StoreApp.domains.services.services import effective_site_templates
+        if 'catalog' not in effective_site_templates(store):
             raise Http404
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
         #La valoración solo se anota si el dueño habilitó opiniones y el

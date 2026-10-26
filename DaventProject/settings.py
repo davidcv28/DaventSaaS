@@ -162,9 +162,10 @@ INSTALLED_APPS = [
     'AdminApp.domains.chat.apps.apps.ChatAppConfig',
     #SUSCRIPTION APP (beneficios de los planes; mismo patrón: solo los dominios hijos)
     'SuscriptionApp.domains.benefits.apps.apps.BenefitsAppConfig',
-    #STORE APP (web del cliente: link público, catálogo, personalización)
+    #STORE APP (web del cliente: link público, catálogo, personalización, servicios)
     'StoreApp.domains.stores.apps.apps.StoresAppConfig',
-    'StoreApp.domains.catalog.apps.apps.CatalogAppConfig'
+    'StoreApp.domains.catalog.apps.apps.CatalogAppConfig',
+    'StoreApp.domains.services.apps.apps.ServicesAppConfig'
 ]
 
 MIDDLEWARE = [
