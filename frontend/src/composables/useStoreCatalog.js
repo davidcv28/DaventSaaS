@@ -145,13 +145,29 @@ function buildCatalogState(ctx, { pageSize }) {
   }
   const pickCategory = (id) => toggleIn(activeCategories, id)
   const pickBrand = (id) => toggleIn(activeBrands, id)
+  // Las claves/valores de features pueden llegar con casings distintos
+  // (la query ?features= guarda lo que había y el backend devuelve el
+  // casing canónico del feature_schema): el match del backend ignora
+  // mayúsculas, así que el toggle y el estado "activo" hacen lo mismo.
+  const featureKey = (name) => Object.keys(featureFilters).find((k) => k.toLowerCase() === String(name).toLowerCase())
+  const isFeatureOn = (name, value) => {
+    const key = featureKey(name)
+    return key ? (featureFilters[key] || []).some((v) => String(v).toLowerCase() === String(value).toLowerCase()) : false
+  }
   function pickFeature(name, value) {
-    const list = featureFilters[name] || []
-    const i = list.indexOf(value)
+    const key = featureKey(name) || name
+    const list = featureFilters[key] || []
+    const i = list.findIndex((v) => String(v).toLowerCase() === String(value).toLowerCase())
     if (i === -1) list.push(value)
     else list.splice(i, 1)
-    if (list.length) featureFilters[name] = list
-    else delete featureFilters[name]
+    if (list.length) featureFilters[key] = list
+    else delete featureFilters[key]
+    // Migra la clave al casing canónico que vino del panel: una sola forma
+    // en la URL y en los tags aunque la query haya entrado con otra.
+    if (key !== name && featureFilters[key]) {
+      featureFilters[name] = featureFilters[key]
+      delete featureFilters[key]
+    }
     loadCatalog()
   }
   const toggleOffer = () => { onlyOffer.value = !onlyOffer.value; loadCatalog() }
@@ -257,7 +273,7 @@ function buildCatalogState(ctx, { pageSize }) {
     catalog, catalogStatus, loadCatalog,
     activeCategories, activeBrands, featureFilters, onlyOffer, onlyNew, priceMin, priceMax, sort,
     visibleCount, visibleProducts, hasMoreProducts, showMore,
-    catThumbs, pickCategory, pickBrand, pickFeature, toggleOffer, toggleNew, clearFilters, clearPrice, clearCategories, clearBrands,
+    catThumbs, pickCategory, pickBrand, pickFeature, isFeatureOn, toggleOffer, toggleNew, clearFilters, clearPrice, clearCategories, clearBrands,
     hasPriceFilter, priceRangeLabel, hasFilters, hasCatalogNav,
     activeCategoryName, activeBrandName, activeCategoryNames, activeBrandNames, activeFilterCount,
     total, productCount, facets, priceCeiling, offerTotal, newTotal, activeTags,

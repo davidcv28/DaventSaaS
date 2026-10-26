@@ -8,11 +8,11 @@ import '../../assets/store-facets.css'
 // multi-selección. Consume la misma instancia de useStoreCatalog que crea
 // la página — solo aporta la presentación neutra (store-facets.css).
 const {
-  catalog, facets, featureFilters, pickFeature,
+  catalog, facets, pickFeature, isFeatureOn,
   onlyOffer, onlyNew, toggleOffer, toggleNew, offerTotal, newTotal
 } = useStoreCatalog()
 
-const isOn = (name, value) => (featureFilters[name] || []).includes(value)
+const isOn = isFeatureOn
 </script>
 
 <template>

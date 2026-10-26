@@ -441,9 +441,16 @@ class StoreViewSet(StoreBaseViewSet):
                     name    =   str(fname).strip()
                     if not name:
                         continue
-                    values  =   facets.setdefault(name, {})
+                    #El mismo atributo puede viajar con casing distinto entre
+                    #productos de categorías distintas ("Color"/"color") y lo
+                    #mismo pasa con los valores ("verde"/"Verde"): el match de
+                    #?features= ignora mayúsculas (_features_match), así que
+                    #las facetas se agrupan con la misma regla — un solo grupo
+                    #y un solo valor por clave, con sus conteos sumados.
+                    entry   =   facets.setdefault(name.casefold(), {'name': name, 'values': {}})
                     for token in _feature_tokens(fvalue):
-                        values[token]   =   values.get(token, 0) + 1
+                        bucket  =   entry['values'].setdefault(token.casefold(), {'value': token, 'count': 0})
+                        bucket['count'] +=  1
             if category_ids and product.category_id not in category_ids:
                 continue
             if brand_ids and product.brand_id not in brand_ids:
@@ -480,17 +487,26 @@ class StoreViewSet(StoreBaseViewSet):
                 if cat.id in category_ids:
                     for raw in (cat.feature_schema or []):
                         schema_index.setdefault(str(raw).strip().casefold(), len(schema_index))
+        #El casing que se muestra prefiere el que el dueño declaró en el
+        #feature_schema de sus categorías ("Color" y no "color"); cuando
+        #ninguna lo declara queda el primero visto en los productos.
+        schema_names    =   {}
+        for cat in categories:
+            for raw in (cat.feature_schema or []):
+                declared    =   str(raw).strip()
+                if declared:
+                    schema_names.setdefault(declared.casefold(), declared)
         #Facetas ordenadas: los atributos más usados primero y dentro de cada
         #uno los valores más frecuentes (desempate "natural": 2 < 10).
         facet_list      =   [
             {
-                'name'      :   name,
+                'name'      :   schema_names.get(key, entry['name']),
                 'values'    :   [
-                    {'value': value, 'count': count}
-                    for value, count in sorted(values.items(), key = lambda kv: (-kv[1], _natural_key(kv[0])))[:CATALOG_FACET_VALUES]
+                    {'value': bucket['value'], 'count': bucket['count']}
+                    for bucket in sorted(entry['values'].values(), key = lambda b: (-b['count'], _natural_key(b['value'])))[:CATALOG_FACET_VALUES]
                 ],
             }
-            for name, values in facets.items()
+            for key, entry in facets.items()
         ]
         facet_list.sort(key = lambda f: (schema_index.get(f['name'].casefold(), len(schema_index)), -sum(v['count'] for v in f['values']), f['name'].casefold()))
         facet_list      =   facet_list[:CATALOG_FACET_GROUPS]

@@ -692,6 +692,30 @@ class PublicCatalogFilterTests(TestCase):
         response        =   self._catalog(category = str(electro.id))
         self.assertEqual([f['name'] for f in response.data['facets']], ['Voltaje'])
 
+    def test_facets_merge_same_feature_across_categories(self):
+        #Regresión: dos categorías comparten el atributo con casing distinto
+        #("Color"/"color") y los productos guardan el valor igualmente
+        #variado ("verde"/"Verde") — el match ya ignora mayúsculas, así que
+        #el panel tiene que agrupar todo en UN grupo y UN valor por clave;
+        #sin esto se veían "Color" y "color" duplicados con "verde" x2.
+        store           =   self._setup()
+        pastas          =   Category.objects.create(store = store, name = 'Pastas de aceituna', feature_schema = ['Color'])
+        aceitunas       =   Category.objects.create(store = store, name = 'Aceitunas')
+        Product.objects.create(store = store, name = 'A', price = 10, category = pastas, features = {'Color': 'verde'})
+        Product.objects.create(store = store, name = 'B', price = 10, category = aceitunas, features = {'color': 'Verde'})
+        Product.objects.create(store = store, name = 'C', price = 10, category = aceitunas, features = {'COLOR': 'rojo'})
+        response        =   self._catalog()
+        self.assertEqual(len(response.data['facets']), 1)
+        color           =   response.data['facets'][0]
+        #El casing que viaja es el que el dueño declaró en el feature_schema.
+        self.assertEqual(color['name'], 'Color')
+        verde           =   next(v for v in color['values'] if v['value'].casefold() == 'verde')
+        self.assertEqual(verde['count'], 2)
+        self.assertEqual(sum(v['count'] for v in color['values']), 3)
+        #El filtro sigue matcheando cualquier casing del valor guardado.
+        response        =   self._catalog(features = '{"Color": ["verde"]}')
+        self.assertEqual(sorted(p['name'] for p in response.data['products']), ['A', 'B'])
+
 
 def _review_captcha(slug, answer = 7):
     """
