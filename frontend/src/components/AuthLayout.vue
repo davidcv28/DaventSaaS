@@ -24,7 +24,9 @@ const features = [
         <b class="fx-orb a"></b>
         <b class="fx-orb b"></b>
       </div>
-      <div class="brand-mark"><BrandLogo :size="40" /> <span>DAVENT</span></div>
+      <RouterLink to="/" class="brand-mark" aria-label="DAVENT, volver a la web">
+        <BrandLogo :size="40" /> <span>DAVENT</span>
+      </RouterLink>
       <div class="brand-hero">
         <span class="eyebrow">Plataforma para comercios</span>
         <h1>Gestioná tus tiendas tecnológicas desde un solo lugar.</h1>
@@ -42,8 +44,11 @@ const features = [
       </div>
     </aside>
     <main class="auth-panel">
+      <RouterLink to="/" class="auth-back">
+        <AppIcon name="arrow-left" :size="15" /> Volver a la web
+      </RouterLink>
       <section class="auth-card">
-        <div class="auth-card-logo"><BrandLogo :size="32" /> <span>DAVENT</span></div>
+        <RouterLink to="/" class="auth-card-logo" aria-label="DAVENT, volver a la web"><BrandLogo :size="32" /> <span>DAVENT</span></RouterLink>
         <h2>{{ title }}</h2>
         <p v-if="subtitle" class="sub">{{ subtitle }}</p>
         <slot />
