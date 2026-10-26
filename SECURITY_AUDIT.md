@@ -472,3 +472,51 @@ superficie: `GET .../reviews/captcha/`, `GET/POST
 
 **Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
 270 tests OK · `npm run build` (Vite) OK.
+
+## 13. Auditoría general — delta post-§12 (2026-10-26)
+
+Pasada sobre todo lo incorporado desde la §12: login social con Google,
+gate `billing_required` del checkout, headers del SPA (COOP/CSP para GIS),
+retirada de Firebase Phone Auth y de la feature WhatsApp (add+revert).
+Verificación ejecutable del HEAD actual.
+
+**Ejecutado:** `manage.py check --deploy` → solo warnings `drf_spectacular.W001`
+de type hints (sin issues de seguridad) · `pip-audit -r requirements.txt` →
+**0 CVEs** · `npm audit --omit=dev` → **0 vulnerabilities** · `manage.py test`
+→ suite OK.
+
+### Verificado como correcto
+
+| Área | Veredicto |
+|------|-----------|
+| **Login Google — verificación server-side** | `VerifyGoogleCredentialQuery` consulta `tokeninfo` de Google (firma+issuer los valida Google), exige `aud == GOOGLE_CLIENT_ID` (un ID token de otra app no sirve) y `email_verified=true`. El email/nombre salen del token, nunca del body del cliente. Token trucho/ajeno → 400 genérico sin revelar causa. |
+| **Login Google — find-or-create** | `SocialLoginQuery`: alta nueva con `set_unusable_password` (sin clave local: el reset la crea si quiere), `email_verified` sellado (Google ya lo verificó → no se manda mail redundante), TyC en `TERMS_VERSION` vigente y plan trial — mismas garantías que `RegisterUserQuery`. `IntegrityError` en alta concurrente → login de la cuenta ya creada (no duplica). Merge por email: si existe cuenta con ese correo verificado por Google, entra directo (auto-link estándar — Google garantiza titularidad). |
+| **Login Google — sesión y límites** | `_social_session_response` emite exactamente la misma sesión que el login con clave: access en memoria + refresh httpOnly scopeado `/api/token/` + CSRF doble-submit + `remember` respetado. Throttle `social_auth` 20/h por IP (cada exchange pega a Google). Kill switch: `GOOGLE_CLIENT_ID` seteado vacío → 503 y botón oculto. `_social_error` no filtra si la cuenta existe. |
+| **Alta social sin celular** | Google no provee phone → `profile.phone=None` y la respuesta trae `requires_phone=true` → el frontend lleva a `/completar-celular`. El claim de la web sigue exigiendo phone — el ancla anti-abuso se conserva sin bloquear el ingreso al panel. |
+| **GOOGLE_CLIENT_ID embebido en código** | El default hardcodeado es un **identificador público** (viaja en la URL del iframe de Google que todo visitante recibe — no puede ser secreto por diseño). No es una credencial: el Client Secret **no** está en el repo ni se usa (el flujo del botón verifica el ID token directo). Env var lo sobreescribe; seteada vacía apaga la feature. |
+| **Headers del SPA para GIS** | CSP suma `accounts.google.com` (script/frame/connect) y `ssl.gstatic.com` (style) — whitelist exacta de la guía de Google Identity Services. `Cross-Origin-Opener-Policy: same-origin-allow-popups` (en vez del `same-origin` default de Django): mantiene aislamiento pero permite que el popup de Google haga `postMessage` de vuelta — sin esto el popup queda en blanco tras elegir la cuenta. Solo se aplica a la respuesta del SPA; la misma CSP/COOP quedó espejada en el template nginx (`docker/web`). |
+| **Gate `billing_required`** | `_resolve_suscription` (compartido por `checkout` y `subscription`) llama `BillingMissingFieldsQuery` **antes** de cualquier llamada a MP → 400 con la lista de campos faltantes. La suscripción impaga se crea igual (válido: nace `PENDIENTE_PAGO`, no otorga nada). Fail-closed server-side — el form del dashboard es solo UX, saltearlo con un POST a mano no inicia cobro. |
+| **Retirada Firebase Phone Auth** | Vistas, URLs, service, throttle scope, exports, config `firebase` del frontend, dep `firebase` (package.json), dominios Firebase/reCAPTCHA fuera de **ambas** CSP (SPA + nginx template), vars `VITE_FIREBASE_*`/`FIREBASE_API_KEY` fuera de ejemplos/Dockerfiles/render.yaml. `phone` sigue `required`+`unique` (ancla anti-abuso debilitada pero presente); `phone_verified`/`_at` quedan en el modelo como histórico y `UpdateProfileQuery` los resetea al cambiar el número. |
+| **Retirada WhatsApp digest** | Revertida completa: service/tasks/comando/celery-beat/cron/`WHATSAPP_*`/flag `has_whatsapp_digest`/checkbox/tests — la mig. `0009` elimina las columnas ya desplegadas por la `0008`. El campo `whatsapp` del storefront (contacto del comercio) se conservó — no es la automatización. |
+
+### Residuales honestos (documentados)
+
+- **Auto-link por email verificado**: una cuenta local con el mismo correo que
+  una cuenta Google absorbe el login social (no se pide la clave local).
+  Estándar de la industria (Google atestigua la titularidad del correo); el
+  riesgo residual — que alguien pre-registre el email de otro — es el mismo
+  vector de siempre del alta por email, mitigado porque el trial exige
+  verificación y el claim exige celular único.
+- **`GOOGLE_CLIENT_ID` público por diseño**: quien copie el ID puede
+  renderizar el botón de Google en otro origen — pero los Authorized
+  JavaScript Origins de la consola lo rechazan (ese es el control real, no
+  el secreto del ID).
+- **COOP relajado a `same-origin-allow-popups`**: el popup queda con
+  referencia al opener — requisito de GIS; alternativa (redirect flow)
+  exigiría redirect URIs y un backend callback. Riesgo: un popup propio
+  malicioso podría leer `window.opener` — solo abrimos popups de Google.
+- **Celular sin verificar**: tras la retirada de Firebase, `phone` es
+  único pero no probado — ancla anti-abuso más débil (un atacante puede
+  inventar números únicos). Compensación: el trial tiene 1 día y el claim
+  exige email verificado; si el abuso crece, reintroducir verificación con
+  un proveedor de cuota mayor es la mitigación documentada.
