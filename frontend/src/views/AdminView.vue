@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useBillingStore } from '../stores/billing.store.js'
@@ -7,6 +7,8 @@ import { usePaymentsStore } from '../stores/payments.store.js'
 import { useAdminStore } from '../stores/admin.store.js'
 import { formatARS } from '../api/billing.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
+import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
+import { extractApiError } from '../api/http.js'
 import DashLayout from '../components/DashLayout.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
@@ -61,6 +63,7 @@ const navItems = [
   { id: 'plans', label: 'Planes', icon: 'package' },
   { id: 'coupons', label: 'Cupones', icon: 'gift' },
   { id: 'users', label: 'Usuarios', icon: 'users' },
+  { id: 'chat', label: 'Chat soporte', icon: 'message-circle' },
   { heading: 'Cuenta' },
   { id: 'flyer', label: 'Folleto promo', icon: 'printer' }
 ]
@@ -120,6 +123,128 @@ const priceError = computed(() => {
   if (planForm.price === '' || Number.isNaN(n) || n <= 0) return 'Ingresá un precio mayor a 0'
   return ''
 })
+
+// --- Chat de soporte: bandeja de clientes + conversación (polling + heartbeat) ---
+const chatThreads = ref([])
+const chatOnline = ref(new Set())
+const chatActive = ref(null)
+const chatMsgs = ref([])
+const chatInput = ref('')
+const chatBusy = ref(false)
+const chatErr = ref('')
+const chatLastId = ref(0)
+const chatUnread = ref(0)
+const chatBoxEl = ref(null)
+let chatThreadsTimer = null
+let chatMsgsTimer = null
+let chatBeatTimer = null
+
+const chatOnlineCount = computed(() => chatOnline.value.size)
+
+function scrollChatBox() {
+  const el = chatBoxEl.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+
+function fmtChatTime(iso) {
+  const d = new Date(iso)
+  const sameDay = d.toDateString() === new Date().toDateString()
+  return sameDay
+    ? d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+}
+
+async function loadChatThreads() {
+  try {
+    const data = await fetchChat()
+    chatThreads.value = data.threads || []
+    chatOnline.value = new Set(data.online || [])
+    chatErr.value = ''
+    // Si el hilo activo sigue existiendo, refresco sus contadores
+    if (chatActive.value) {
+      const fresh = chatThreads.value.find((t) => t.id === chatActive.value.id)
+      if (fresh) chatActive.value = fresh
+    }
+  } catch (e) { chatErr.value = extractApiError(e).nonField }
+}
+
+async function openChatThread(thread) {
+  chatActive.value = thread
+  chatMsgs.value = []
+  chatLastId.value = 0
+  chatErr.value = ''
+  try {
+    const data = await fetchChatMessages({ thread: thread.id })
+    const msgs = data.messages || []
+    chatMsgs.value = msgs
+    chatLastId.value = msgs.length ? msgs[msgs.length - 1].id : 0
+    await nextTick()
+    scrollChatBox()
+    loadChatThreads() // el thread ya quedó leído: refresca el badge
+  } catch (e) { chatErr.value = extractApiError(e).nonField }
+}
+
+async function pollChatMsgs() {
+  if (!chatActive.value) return
+  try {
+    const data = await fetchChatMessages({ thread: chatActive.value.id, after: chatLastId.value })
+    const msgs = data.messages || []
+    if (msgs.length) {
+      chatMsgs.value = [...chatMsgs.value, ...msgs]
+      chatLastId.value = msgs[msgs.length - 1].id
+      await nextTick()
+      scrollChatBox()
+    }
+  } catch { /* reintenta el próximo tick */ }
+}
+
+async function beatChat() {
+  try {
+    const data = await chatHeartbeat()
+    chatUnread.value = data.unread || 0
+    chatOnline.value = new Set(data.online || [])
+  } catch { /* silencioso */ }
+}
+
+async function sendChat() {
+  const body = chatInput.value.trim()
+  if (!body || chatBusy.value || !chatActive.value) return
+  chatBusy.value = true
+  chatErr.value = ''
+  try {
+    const { message } = await sendChatMessage(body, chatActive.value.id)
+    chatMsgs.value = [...chatMsgs.value, message]
+    chatLastId.value = message.id
+    chatInput.value = ''
+    await nextTick()
+    scrollChatBox()
+  } catch (e) {
+    chatErr.value = extractApiError(e).nonField
+  } finally {
+    chatBusy.value = false
+  }
+}
+
+function startChat() {
+  stopChat()
+  loadChatThreads()
+  beatChat()
+  chatThreadsTimer = setInterval(loadChatThreads, 10000)
+  chatMsgsTimer = setInterval(pollChatMsgs, 5000)
+  chatBeatTimer = setInterval(beatChat, 45000)
+}
+
+function stopChat() {
+  clearInterval(chatThreadsTimer)
+  clearInterval(chatMsgsTimer)
+  clearInterval(chatBeatTimer)
+  chatThreadsTimer = null
+  chatMsgsTimer = null
+  chatBeatTimer = null
+}
+
+watch(section, (s) => { s === 'chat' ? startChat() : stopChat() })
+onUnmounted(stopChat)
 
 onMounted(async () => {
   await auth.fetchMe()
@@ -847,6 +972,81 @@ async function logout() {
         <span class="empty-icon"><AppIcon name="users" :size="28" /></span>
         <h3>Sin usuarios registrados</h3>
         <p>Las cuentas creadas desde el registro van a listarse acá.</p>
+      </div>
+    </div>
+
+    <!-- ================= CHAT SOPORTE ================= -->
+    <div v-show="section === 'chat'">
+      <div class="page-head">
+        <div>
+          <h1>Chat de soporte</h1>
+          <p>Conversaciones con clientes del plan Premium.</p>
+        </div>
+        <span class="presence-chip" :class="{ on: chatOnlineCount > 0 }">
+          <span class="presence-dot"></span>
+          {{ chatOnlineCount }} cliente{{ chatOnlineCount === 1 ? '' : 's' }} en línea
+        </span>
+      </div>
+
+      <AlertMessage v-if="chatErr" kind="error" :message="chatErr" />
+
+      <div class="chat-admin">
+        <div class="card chat-threads">
+          <h3><AppIcon name="message-circle" :size="16" /> Conversaciones</h3>
+          <div v-if="chatThreads.length" class="chat-thread-list">
+            <button
+              v-for="t in chatThreads"
+              :key="t.id"
+              type="button"
+              class="chat-thread"
+              :class="{ active: chatActive?.id === t.id }"
+              @click="openChatThread(t)"
+            >
+              <span class="chat-thread-head">
+                <strong>{{ t.customer.name }}</strong>
+                <span class="presence-dot" :class="{ on: t.online }" :title="t.online ? 'En línea' : 'Desconectado'"></span>
+              </span>
+              <span class="chat-thread-last">{{ t.last_message ? t.last_message.body : 'Sin mensajes' }}</span>
+              <span class="chat-thread-meta">
+                <span v-if="t.last_message">{{ fmtChatTime(t.last_message.created_at) }}</span>
+                <span v-if="t.unread" class="chat-badge">{{ t.unread }}</span>
+              </span>
+            </button>
+          </div>
+          <p v-else class="muted">Ningún cliente escribió todavía.</p>
+        </div>
+
+        <div class="card chat-card">
+          <template v-if="chatActive">
+            <div class="chat-title">
+              <strong>{{ chatActive.customer.name }}</strong>
+              <span class="muted">{{ chatActive.customer.email }}</span>
+            </div>
+            <div ref="chatBoxEl" class="chat-box">
+              <div v-for="m in chatMsgs" :key="m.id" class="chat-msg" :class="{ mine: m.mine }">
+                <p class="chat-body">{{ m.body }}</p>
+                <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
+              </div>
+            </div>
+            <div class="chat-input">
+              <input
+                v-model="chatInput"
+                class="input"
+                type="text"
+                maxlength="2000"
+                placeholder="Respondé al cliente…"
+                aria-label="Respuesta al cliente"
+                @keydown.enter="sendChat"
+              />
+              <AppButton :loading="chatBusy" :disabled="!chatInput.trim()" @click="sendChat">Enviar</AppButton>
+            </div>
+          </template>
+          <div v-else class="empty">
+            <span class="empty-icon"><AppIcon name="message-circle" :size="28" /></span>
+            <h3>Elegí una conversación</h3>
+            <p>Seleccioná un cliente de la lista para leer y responder sus mensajes.</p>
+          </div>
+        </div>
       </div>
     </div>
   </DashLayout>

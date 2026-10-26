@@ -35,6 +35,8 @@ import { formatDate as formatInvDate } from '../api/invoices.api.js'
 import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.api.js'
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
+import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
+import { extractApiError } from '../api/http.js'
 import { env, storeSubdomains } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
@@ -288,6 +290,7 @@ const navItems = computed(() => {
     items.push({ id: 'pos', label: 'Vender en persona', icon: 'monitor' })
     if (b.has_chatbot) items.push({ id: 'bot', label: 'Asistente de chat', icon: 'bot' })
     if (g.promo.length) items.push({ id: g.promo[0].id, label: 'Promocionar', icon: 'megaphone' })
+    if (b.has_support_chat) items.push({ id: 'support', label: 'Ayuda', icon: 'message-circle' })
   }
   items.push(
     { heading: 'Mi suscripción' },
@@ -1577,8 +1580,105 @@ watch(() => carouselImages.value.length, (total) => {
   }
 })
 
+// --- Ayuda: chat de soporte con el equipo (premium — polling + heartbeat) ---
+const chatMessages = ref([])
+const chatInput = ref('')
+const chatBusy = ref(false)
+const chatErr = ref('')
+const chatStaffOnline = ref(false)
+const chatLastId = ref(0)
+const chatBoxEl = ref(null)
+let chatPollTimer = null
+let chatBeatTimer = null
+
+function scrollChat() {
+  const el = chatBoxEl.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+
+function fmtChatTime(iso) {
+  const d = new Date(iso)
+  const today = new Date()
+  const sameDay = d.toDateString() === today.toDateString()
+  return sameDay
+    ? d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+}
+
+async function loadChat() {
+  try {
+    const data = await fetchChat()
+    chatStaffOnline.value = Boolean(data.staff_online)
+    const msgs = data.messages || []
+    chatMessages.value = msgs
+    chatLastId.value = msgs.length ? msgs[msgs.length - 1].id : 0
+    chatErr.value = ''
+    await nextTick()
+    scrollChat()
+  } catch (e) { chatErr.value = extractApiError(e).nonField }
+}
+
+async function pollChat() {
+  // Silencioso: un tick fallido reintenta en el próximo intervalo.
+  try {
+    const data = await fetchChatMessages({ after: chatLastId.value })
+    const msgs = data.messages || []
+    if (msgs.length) {
+      chatMessages.value = [...chatMessages.value, ...msgs]
+      chatLastId.value = msgs[msgs.length - 1].id
+      await nextTick()
+      scrollChat()
+    }
+  } catch { /* reintenta el próximo tick */ }
+}
+
+async function beatChat() {
+  try {
+    const data = await chatHeartbeat()
+    chatStaffOnline.value = Boolean(data.staff_online)
+  } catch { /* silencioso */ }
+}
+
+async function sendChat() {
+  const body = chatInput.value.trim()
+  if (!body || chatBusy.value) return
+  chatBusy.value = true
+  chatErr.value = ''
+  try {
+    const { message } = await sendChatMessage(body)
+    chatMessages.value = [...chatMessages.value, message]
+    chatLastId.value = message.id
+    chatInput.value = ''
+    await nextTick()
+    scrollChat()
+  } catch (e) {
+    chatErr.value = extractApiError(e).nonField
+  } finally {
+    chatBusy.value = false
+  }
+}
+
+function startChat() {
+  stopChat()
+  loadChat()
+  beatChat()
+  chatPollTimer = setInterval(pollChat, 5000)
+  chatBeatTimer = setInterval(beatChat, 45000)
+}
+
+function stopChat() {
+  clearInterval(chatPollTimer)
+  clearInterval(chatBeatTimer)
+  chatPollTimer = null
+  chatBeatTimer = null
+}
+
+// Los timers solo viven mientras la sección Ayuda está abierta.
+watch(section, (s) => { s === 'support' ? startChat() : stopChat() })
+
 onUnmounted(() => {
   stopCheckoutWatch()
+  stopChat()
   clearInterval(previewTimer)
   window.removeEventListener('storage', onPaymentBroadcast)
 })
@@ -3599,6 +3699,45 @@ async function changePassword() {
           </button>
         </div>
         <AppButton :loading="botBusy" @click="saveBot">Guardar cambios</AppButton>
+      </div>
+    </div>
+    <!-- ================= AYUDA (chat con soporte) ================= -->
+    <div v-if="seen.support" v-show="section === 'support'" :class="{ 'sec-on': section === 'support' }">
+      <div class="page-head">
+        <div>
+          <h1>Ayuda</h1>
+          <p>Hablá directamente con el equipo de DAVENT. Te respondemos dentro del horario de atención.</p>
+        </div>
+        <span class="presence-chip" :class="{ on: chatStaffOnline }">
+          <span class="presence-dot"></span>
+          {{ chatStaffOnline ? 'Soporte en línea' : 'Soporte desconectado' }}
+        </span>
+      </div>
+
+      <AlertMessage v-if="chatErr" kind="error" :message="chatErr" />
+
+      <div class="card chat-card">
+        <div ref="chatBoxEl" class="chat-box">
+          <p v-if="!chatMessages.length" class="chat-empty">
+            Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
+          </p>
+          <div v-for="m in chatMessages" :key="m.id" class="chat-msg" :class="{ mine: m.mine }">
+            <p class="chat-body">{{ m.body }}</p>
+            <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
+          </div>
+        </div>
+        <div class="chat-input">
+          <input
+            v-model="chatInput"
+            class="input"
+            type="text"
+            maxlength="2000"
+            placeholder="Escribí tu mensaje…"
+            aria-label="Mensaje para soporte"
+            @keydown.enter="sendChat"
+          />
+          <AppButton :loading="chatBusy" :disabled="!chatInput.trim()" @click="sendChat">Enviar</AppButton>
+        </div>
       </div>
     </div>
     <!-- ================= PLANES ================= -->

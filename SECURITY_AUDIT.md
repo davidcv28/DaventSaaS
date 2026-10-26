@@ -520,3 +520,65 @@ de type hints (sin issues de seguridad) · `pip-audit -r requirements.txt` →
   inventar números únicos). Compensación: el trial tiene 1 día y el claim
   exige email verificado; si el abuso crece, reintroducir verificación con
   un proveedor de cuota mayor es la mitigación documentada.
+
+## 14. Auditoría del feature: chat de soporte cliente ↔ staff — 2026-10-26
+
+Revisión del nuevo dominio `AdminApp/domains/chat` (mig. chat.0001):
+`ChatThread` (un hilo por cliente, OneToOne→User), `ChatMessage`
+(`from_staff`, `body` ≤2000, `read_at` para no-leídos) y `ChatPresence`
+(heartbeat con ventana de 120s). Superficie: `GET /api/chat/` (role-aware),
+`GET /api/chat/messages/` (incremental), `POST /api/chat/send/`,
+`POST /api/chat/heartbeat/`. Transporte: **polling + heartbeat** — el deploy
+corre gunicorn sync (sin Channels/Daphne): websockets quedaron descartados
+por incompatibilidad de infraestructura, no por capricho.
+
+### Controles aplicados (diseño)
+
+| Control | Dónde |
+|---------|-------|
+| **Gate premium fail-closed**: todo action exige `IsAuthenticated` + `chat_enabled` — el cliente necesita el flag `has_support_chat` vigente (Premium + prueba) → **403**; staff siempre habilitado (es el lado que responde). Frontend oculta la sección pero el gate real es server-side | `viewset._gate` / `services.chat_enabled` |
+| **Aislado por dueño**: el cliente lee y escribe solo SU hilo (`OneToOne` resuelto por `request.user`); el parámetro `?thread=` del endpoint messages **se ignora para clientes** — pedir un id ajeno devuelve el propio hilo, nunca datos de otro. Staff resuelve `?thread=<id>` libre | `viewset._resolve_thread` / `send` |
+| **`from_staff` jamás del request**: lo fija `send_message` desde `sender.is_staff` — un cliente no puede simular mensajes del staff | `services.send_message` |
+| **Presencia con vencimiento**: "conectado" = heartbeat dentro de `ONLINE_SECONDS` (120s); sin latido fresco el usuario aparece offline — no existe un booleano eterno. La lista `online` del staff excluye empleados (`user__is_staff=False`) | `ChatPresence`, `services` |
+| **Privacidad del staff hacia el cliente**: los mensajes del staff exponen `sender_name='Soporte'` — nunca nombre, email ni id del empleado | `ChatMessageSerializer.get_sender_name` |
+| **Throttles dedicados**: scopes `chat` (1500/h, polling+heartbeat — el `user` default de 1000/día mataría el polling en ~40 min) y `chat_send` (120/h por usuario, spam) aplicado solo al action `send` vía `get_throttles()` | `viewset`, settings |
+| **Validación**: body trim obligatorio 1–2000 chars → 400; `thread` inexistente → 404; `after` no numérico → 0 (sin 500) | `ChatSendSerializer`, `viewset` |
+| **Lectura marca leídos solo de la contraparte**: `mark_counterpart_read` toca `read_at` de mensajes ajenos al lector — los propios no cuentan | `services.messages_payload` |
+| **Índices**: (thread, created_at) para el historial incremental y (thread, from_staff, read_at) para los contadores de no-leídos; bandeja del staff con `unread_count` anotado (sin N+1) | `models.Meta`, `staff_threads_queryset` |
+| **Sin XSS**: `body` es texto plano renderizado `{{ m.body }}` en Vue | templates |
+
+### Tests agregados (`chat/tests.py`, 21 → suite 306 OK)
+
+- `ChatGateTests`: anónimo 401 en los 4 endpoints; sin beneficio → 403;
+  sin suscripción → 403; premium OK; staff sin beneficio OK.
+- `ChatMessagingTests`: primer envío crea el hilo; staff responde con
+  `from_staff`/`sender_name='Soporte'`; staff sin hilo o hilo inexistente
+  → 404; `?thread=` ajeno ignorado por clientes (cae en el propio);
+  incremental `?after=` devuelve solo nuevos; cliente sin hilo → 404;
+  staff lee cualquier hilo; body vacío/blank/2001 → 400; leer marca
+  contraparte y limpia el badge; bandeja expone identidad del cliente.
+- `ChatPresenceTests`: heartbeat marca online; `staff_online` visible para
+  el cliente; presencia expira con `last_seen` viejo; la lista `online`
+  del staff excluye empleados; el payload del cliente nunca filtra
+  identidad del staff.
+
+### Residuales honestos (documentados, no bugs)
+
+- **Polling, no push**: la latencia percibida es ~5s (intervalo del
+  frontend). Si la plataforma migra a ASGI/Redis, `ChatMessage`/`ChatPresence`
+  ya sirven de modelo para un consumer de Channels.
+- **`last_message` por hilo**: la bandeja hace una query por conversación
+  (N+1 acotado por cantidad de clientes con chat — volumen bajo; el unread
+  sí va anotado).
+- **Sin adjuntos**: solo texto — una decisión deliberada (adjuntos abrirían
+  vector de uploads, AV scan y cuota R2). Si se agregan, reutilizar el
+  pipeline de imágenes auditado en §1/#6.
+- **Presencia compartida por pestañas**: dos tabs del mismo usuario hacen
+  heartbeat con la misma fila — correcto (misma identidad).
+- **Historial ilimitado**: los mensajes no expiran ni se purgan — política
+  de retención queda como mejora futura (la bandeja crece con el tiempo;
+  paginación por `after` ya la soporta).
+
+**Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
+306 tests OK · `npm run build` OK · migración `chat.0001` aplicada ·
+`seed_benefits` actualiza el flag en cada entorno.

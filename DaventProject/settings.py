@@ -88,6 +88,11 @@ REST_FRAMEWORK = {
         'social_auth': '20/hour',
         #Editor de fondo de imágenes de producto (inferencia en CPU, por usuario).
         'bg_removal': '60/hour',
+        #Chat de soporte (por usuario): el 'user' default (1000/día) mataría
+        #el polling en ~40 min — scope propio holgado para intervalos de ~5s.
+        'chat': '1500/hour',
+        #Envío de mensajes del chat: mucho más estricto que la lectura.
+        'chat_send': '120/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a
         #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
         'content_report': '5/hour',
@@ -149,6 +154,7 @@ INSTALLED_APPS = [
     'AdminApp.domains.payments.apps.apps.PaymentsAppConfig',
     'AdminApp.domains.invoices.apps.apps.InvoicesAppConfig',
     'AdminApp.domains.legal.apps.apps.LegalAppConfig',
+    'AdminApp.domains.chat.apps.apps.ChatAppConfig',
     #SUSCRIPTION APP (beneficios de los planes; mismo patrón: solo los dominios hijos)
     'SuscriptionApp.domains.benefits.apps.apps.BenefitsAppConfig',
     #STORE APP (web del cliente: link público, catálogo, personalización)
