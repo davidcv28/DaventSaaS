@@ -136,11 +136,26 @@ const chatLastId = ref(0)
 const chatUnread = ref(0)
 const chatBoxEl = ref(null)
 const chatInputEl = ref(null)
+const chatMin = ref(false)
+const chatQuery = ref('')
 // Adjuntos en cola: [{file, url}] — objectURL local para la vista previa;
 // el archivo viaja al bucket/disco del backend, nunca a la DB.
 const chatFiles = ref([])
 const chatFileInput = ref(null)
 const CHAT_FILES_MAX = 4
+
+const filteredChatThreads = computed(() => {
+  const norm = (v) => String(v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  const q = norm(chatQuery.value.trim())
+  if (!q) return chatThreads.value
+  return chatThreads.value.filter((t) =>
+    [t.customer?.name, t.customer?.email, t.last_message?.body].some((v) => norm(v).includes(q))
+  )
+})
+
+function focusChatInput() {
+  nextTick(() => chatInputEl.value?.focus({ preventScroll: true }))
+}
 
 function pickChatImages() {
   chatFileInput.value?.click()
@@ -247,10 +262,12 @@ async function loadChatThreads() {
 
 async function openChatThread(thread) {
   chatActive.value = thread
+  chatMin.value = false
   chatMsgs.value = []
   chatLastId.value = 0
   chatErr.value = ''
   resetChatFiles()
+  focusChatInput() // la ventana abre con el cursor listo para responder
   try {
     const data = await fetchChatMessages({ thread: thread.id })
     const msgs = data.messages || []
@@ -262,10 +279,46 @@ async function openChatThread(thread) {
   } catch (e) { chatErr.value = extractApiError(e).nonField }
 }
 
+function onThreadClick(t) {
+  // Click sobre la conversación ya abierta: la expande si estaba
+  // minimizada o simplemente devuelve el foco al composer (Messenger).
+  if (chatActive.value?.id === t.id) {
+    if (chatMin.value) toggleChatMin()
+    else focusChatInput()
+    return
+  }
+  openChatThread(t)
+}
+
+function toggleChatMin() {
+  chatMin.value = !chatMin.value
+  if (!chatMin.value) {
+    // Al expandir se retoma el polling (pausado mínimo): lo que llegó en
+    // el medio todavía no quedó marcado como leído en el servidor.
+    pollChatMsgs()
+    nextTick(() => {
+      scrollChatBox()
+      chatInputEl.value?.focus({ preventScroll: true })
+    })
+  }
+}
+
+function closeChatWindow() {
+  chatActive.value = null
+  chatMin.value = false
+  resetChatFiles()
+}
+
+function onChatKey(e) {
+  if (e.key === 'Escape' && chatActive.value && section.value === 'chat') closeChatWindow()
+}
+
 let chatMsgsPolling = false
 
 async function pollChatMsgs() {
-  if (!chatActive.value || document.hidden || chatMsgsPolling) return
+  // Minimizada no se fetchea: el GET marca los mensajes como leídos y el
+  // staff todavía no los vio — el badge de la ventana/inbox sigue vivo.
+  if (!chatActive.value || chatMin.value || document.hidden || chatMsgsPolling) return
   chatMsgsPolling = true
   try {
     const data = await fetchChatMessages({ thread: chatActive.value.id, after: chatLastId.value })
@@ -337,6 +390,7 @@ async function sendChat() {
     chatErr.value = extractApiError(e).nonField
   } finally {
     chatBusy.value = false
+    focusChatInput()
   }
 }
 
@@ -374,12 +428,16 @@ function onChatVisible() {
     beatChat()
   }
 }
-onMounted(() => document.addEventListener('visibilitychange', onChatVisible))
+onMounted(() => {
+  document.addEventListener('visibilitychange', onChatVisible)
+  document.addEventListener('keydown', onChatKey)
+})
 
 onUnmounted(() => {
   stopChat()
   resetChatFiles()
   document.removeEventListener('visibilitychange', onChatVisible)
+  document.removeEventListener('keydown', onChatKey)
 })
 
 onMounted(async () => {
@@ -1126,72 +1184,107 @@ async function logout() {
 
       <AlertMessage v-if="chatErr" kind="error" :message="chatErr" />
 
-      <div class="chat-admin" :class="{ 'has-active': chatActive }">
-        <div class="chat-threads">
-          <div class="chat-threads-head">
-            <h3><AppIcon name="message-circle" :size="16" /> Conversaciones</h3>
-            <span v-if="chatThreads.length" class="support-count">{{ chatThreads.length }}</span>
-          </div>
-          <div v-if="chatThreads.length" class="chat-thread-list">
-            <button
-              v-for="t in chatThreads"
-              :key="t.id"
-              type="button"
-              class="chat-thread"
-              :class="{ active: chatActive?.id === t.id, unread: t.unread }"
-              @click="openChatThread(t)"
-            >
-              <span class="support-avatar">
-                {{ chatInitials(t.customer.name) }}
-                <span class="support-status" :class="{ on: t.online }"></span>
-              </span>
-              <span class="chat-thread-body">
-                <span class="chat-thread-head">
-                  <strong>{{ t.customer.name }}</strong>
-                  <span v-if="t.last_message" class="chat-thread-time">{{ fmtChatTime(t.last_message.created_at) }}</span>
-                </span>
-                <span class="chat-thread-row">
-                  <span class="chat-thread-last">{{ t.last_message ? (t.last_message.body || 'Imagen adjunta') : 'Sin mensajes' }}</span>
-                  <span v-if="t.unread" class="chat-badge">{{ t.unread }}</span>
-                </span>
-              </span>
-            </button>
-          </div>
-          <p v-else class="chat-threads-empty">Ningún cliente escribió todavía.</p>
+      <!-- Bandeja estilo Messenger: la conversación abre en una ventana
+           flotante abajo a la derecha (por encima del bot del panel). -->
+      <div class="chat-inbox">
+        <div class="chat-threads-head">
+          <h3><AppIcon name="message-circle" :size="16" /> Conversaciones</h3>
+          <label class="chat-inbox-search">
+            <AppIcon name="search" :size="14" />
+            <input v-model="chatQuery" type="search" placeholder="Buscar cliente…" aria-label="Buscar conversación" />
+          </label>
+          <span v-if="chatThreads.length" class="support-count">{{ chatThreads.length }}</span>
         </div>
-
-        <div class="chat-card">
-          <template v-if="chatActive">
-            <div class="chat-title">
-              <button type="button" class="chat-back" aria-label="Volver a conversaciones" @click="chatActive = null">
-                <AppIcon name="arrow-left" :size="17" />
-              </button>
-              <span class="support-avatar">
-                {{ chatInitials(chatActive.customer.name) }}
-                <span class="support-status" :class="{ on: chatActive.online }"></span>
+        <div v-if="filteredChatThreads.length" class="chat-thread-list">
+          <button
+            v-for="t in filteredChatThreads"
+            :key="t.id"
+            type="button"
+            class="chat-thread"
+            :class="{ active: chatActive?.id === t.id, unread: t.unread }"
+            @click="onThreadClick(t)"
+          >
+            <span class="support-avatar">
+              {{ chatInitials(t.customer.name) }}
+              <span class="support-status" :class="{ on: t.online }"></span>
+            </span>
+            <span class="chat-thread-body">
+              <span class="chat-thread-head">
+                <strong>{{ t.customer.name }}</strong>
+                <span v-if="t.last_message" class="chat-thread-time">{{ fmtChatTime(t.last_message.created_at) }}</span>
               </span>
-              <div class="chat-modal-who">
-                <strong>{{ chatActive.customer.name }}</strong>
-                <small>{{ chatActive.online ? 'En línea ahora' : 'Desconectado' }} · {{ chatActive.customer.email }}</small>
-              </div>
+              <span class="chat-thread-row">
+                <span class="chat-thread-last">{{ t.last_message ? (t.last_message.body || 'Imagen adjunta') : 'Sin mensajes' }}</span>
+                <span v-if="t.unread" class="chat-badge">{{ t.unread }}</span>
+              </span>
+            </span>
+          </button>
+        </div>
+        <p v-else class="chat-threads-empty">{{ chatThreads.length ? 'Ninguna conversación coincide con la búsqueda.' : 'Ningún cliente escribió todavía.' }}</p>
+      </div>
+
+      <!-- Ventana flotante de conversación (estilo chat de Facebook):
+           se minimiza al header, cierra con Esc o la X, y al abrirse el
+           foco cae en el textarea. -->
+      <Transition name="chatwin">
+        <section
+          v-if="chatActive"
+          class="chat-win"
+          :class="{ min: chatMin }"
+          role="dialog"
+          aria-modal="false"
+          :aria-label="`Conversación con ${chatActive.customer.name}`"
+        >
+          <header class="chat-win-head" @click="toggleChatMin">
+            <span class="support-avatar">
+              {{ chatInitials(chatActive.customer.name) }}
+              <span class="support-status" :class="{ on: chatActive.online }"></span>
+            </span>
+            <div class="chat-modal-who">
+              <strong>{{ chatActive.customer.name }}</strong>
+              <small><span class="chat-win-state" :class="{ on: chatActive.online }">{{ chatActive.online ? 'En línea ahora' : 'Desconectado' }}</span> · {{ chatActive.customer.email }}</small>
             </div>
+            <span class="chat-win-actions">
+              <span v-if="chatMin && chatActive.unread" class="chat-badge">{{ chatActive.unread }}</span>
+              <button
+                type="button"
+                class="chat-win-btn"
+                :aria-label="chatMin ? 'Expandir chat' : 'Minimizar chat'"
+                :title="chatMin ? 'Expandir' : 'Minimizar'"
+                @click.stop="toggleChatMin"
+              >
+                <AppIcon :name="chatMin ? 'chevron-up' : 'chevron-down'" :size="15" />
+              </button>
+              <button
+                type="button"
+                class="chat-win-btn"
+                aria-label="Cerrar chat"
+                title="Cerrar"
+                @click.stop="closeChatWindow"
+              >
+                <AppIcon name="x" :size="15" />
+              </button>
+            </span>
+          </header>
+
+          <template v-if="!chatMin">
             <div ref="chatBoxEl" class="chat-box">
               <p v-if="!chatMsgs.length" class="chat-empty">Todavía no hay mensajes en esta conversación.</p>
               <template v-for="r in chatRows(chatMsgs)" :key="r.key">
-              <div v-if="r.day" class="chat-day">{{ r.day }}</div>
-              <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
-                <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
-                <div class="chat-stack">
-                  <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
-                    <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
-                      <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
-                    </a>
-                    <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+                <div v-if="r.day" class="chat-day">{{ r.day }}</div>
+                <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
+                  <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
+                  <div class="chat-stack">
+                    <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
+                      <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
+                        <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
+                      </a>
+                      <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+                    </div>
+                    <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
                   </div>
-                  <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
                 </div>
-              </div>
-            </template>
+              </template>
             </div>
             <div v-if="chatFiles.length" class="chat-files">
               <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
@@ -1242,13 +1335,8 @@ async function logout() {
               </button>
             </div>
           </template>
-          <div v-else class="empty">
-            <span class="empty-icon"><AppIcon name="message-circle" :size="28" /></span>
-            <h3>Elegí una conversación</h3>
-            <p>Seleccioná un cliente de la lista para leer y responder sus mensajes.</p>
-          </div>
-        </div>
-      </div>
+        </section>
+      </Transition>
     </div>
   </DashLayout>
 </template>
