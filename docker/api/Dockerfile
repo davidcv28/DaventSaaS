@@ -42,11 +42,9 @@ ARG VITE_FIREBASE_API_KEY=AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
 ARG VITE_FIREBASE_AUTH_DOMAIN=davent-f089b.firebaseapp.com
 ARG VITE_FIREBASE_PROJECT_ID=davent-f089b
 ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
-# Login social: también son IDs públicos por diseño (el client ID viaja en
-# cada página y el App ID de Meta en el SDK). Vacíos = botones ocultos.
-# Una vez creadas las apps OAuth, rellenar los defaults acá (o --build-arg).
+# Login social (Google): el client ID es público por diseño (viaja en cada
+# página). Vacío = botón oculto.
 ARG VITE_GOOGLE_CLIENT_ID=10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
-ARG VITE_FACEBOOK_APP_ID=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_URL=$VITE_APP_URL \
@@ -56,8 +54,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
     VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
     VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
-    VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
-    VITE_FACEBOOK_APP_ID=$VITE_FACEBOOK_APP_ID
+    VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 
 # ---------- Stage 2: runtime mínimo, sin toolchain ----------

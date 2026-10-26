@@ -27,10 +27,7 @@ from AdminApp.domains.users.services import (
     SocialAuthError,
     SocialLoginQuery,
     VerifyGoogleCredentialQuery,
-    VerifyFacebookTokenQuery,
     GOOGLE_CLIENT_ID,
-    FACEBOOK_APP_ID,
-    FACEBOOK_APP_SECRET,
     FRONTEND_URL,
     FIREBASE_API_KEY,
 )
@@ -94,8 +91,8 @@ class VerifyPhoneRateThrottle(UserRateThrottle):
     scope = 'phone_verification'
 
 class SocialAuthRateThrottle(AnonRateThrottle):
-    """Scope 'social_auth' (settings): cada exchange pega dos llamadas al
-    provider (tokeninfo/debug_token + /me) — se acota por IP."""
+    """Scope 'social_auth' (settings): cada exchange pega una llamada al
+    provider (tokeninfo de Google) — se acota por IP."""
     scope = 'social_auth'
 
 
@@ -346,7 +343,7 @@ class VerifyPhoneStatusView(APIView):
 
 
 #=================================
-# SOCIAL LOGIN (Google + Facebook — token exchange)
+# SOCIAL LOGIN (Google — token exchange)
 #=================================
 # El frontend completa el consent del provider y manda la credencial; el
 # backend la verifica contra el provider (services/social.py) y emite la
@@ -401,25 +398,4 @@ class GoogleAuthView(APIView):
         except SocialAuthError as e:
             logger.warning('Login Google rechazado (code=%s ip=%s)', e.code, _client_ip(request))
             return _social_error(e, 'Google')
-        return _social_session_response(request, user, is_new)
-
-
-class FacebookAuthView(APIView):
-    """
-    POST /api/auth/facebook/ {access_token}: el user token de FB.login se
-    valida con debug_token (app_id propio + vigente) y /me con
-    appsecret_proof. Sin email en la cuenta Meta se responde 400 explícito.
-    """
-    permission_classes  =   [AllowAny]
-    throttle_classes    =   [SocialAuthRateThrottle]
-
-    def post(self, request):
-        if not FACEBOOK_APP_ID or not FACEBOOK_APP_SECRET:
-            return Response({'detail': 'El ingreso con Facebook no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
-        try:
-            info            =   VerifyFacebookTokenQuery(request.data.get('access_token', ''))
-            user, is_new    =   SocialLoginQuery(info)
-        except SocialAuthError as e:
-            logger.warning('Login Facebook rechazado (code=%s ip=%s)', e.code, _client_ip(request))
-            return _social_error(e, 'Facebook')
         return _social_session_response(request, user, is_new)

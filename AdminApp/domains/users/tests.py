@@ -38,7 +38,6 @@ USER_UPDATE_URL     = '/api/user/me/'
 VERIFY_PHONE_URL    = '/api/verify-phone/'
 VERIFY_PHONE_STATUS = '/api/verify-phone/status/'
 GOOGLE_AUTH_URL     = '/api/auth/google/'
-FACEBOOK_AUTH_URL   = '/api/auth/facebook/'
 
 
 def _location():
@@ -621,21 +620,19 @@ class EmailUniquenessTests(TestCase):
 
 class SocialAuthTests(TestCase):
     """
-    Login social (Google + Facebook): la credencial del provider se verifica
-    server-side (mockeada) y el find-or-create emite la misma sesión JWT +
-    cookies del login por contraseña.
+    Login social (Google): la credencial del provider se verifica server-side
+    (mockeada) y el find-or-create emite la misma sesión JWT + cookies del
+    login por contraseña.
     """
 
     VIEWS_MODULE    =   'AdminApp.domains.users.views.auth_views'
     SOCIAL_MODULE   =   'AdminApp.domains.users.services.social'
     CLIENT_ID       =   'google-client-id'
-    FB_ID           =   'fb-app-id'
-    FB_SECRET       =   'fb-app-secret'
 
     def setUp(self):
         cache.clear()
 
-    # ---------- respuestas mockeadas de los providers ----------
+    # ---------- respuestas mockeadas del provider ----------
     def _tokeninfo(self, **over):
         #tokeninfo de Google: solo devuelve claims si el ID token es válido.
         data    =   {
@@ -653,20 +650,6 @@ class SocialAuthTests(TestCase):
         resp.json   =   lambda: data
         return resp
 
-    def _fb_debug(self, valid = True, app_id = None):
-        resp        =   Mock()
-        resp.ok     =   True
-        resp.json   =   lambda: {'data': {'is_valid': valid, 'app_id': app_id or self.FB_ID}}
-        return resp
-
-    def _fb_me(self, **over):
-        data    =   {'id': 'fb-9', 'email': 'social@gmail.com', 'first_name': 'Sofía', 'last_name': 'Pereyra'}
-        data.update(over)
-        resp        =   Mock()
-        resp.ok     =   True
-        resp.json   =   lambda: data
-        return resp
-
     # ---------- helpers de env + post ----------
     def _post_google(self, payload = None, tokeninfo = None, client_id = None):
         env =   self.CLIENT_ID if client_id is None else client_id
@@ -674,18 +657,6 @@ class SocialAuthTests(TestCase):
              patch(f'{self.SOCIAL_MODULE}.GOOGLE_CLIENT_ID', env), \
              patch(f'{self.SOCIAL_MODULE}.requests.get', return_value = tokeninfo or self._tokeninfo()):
             return APIClient().post(GOOGLE_AUTH_URL, payload if payload is not None else {'credential': 'id-token'}, format = 'json')
-
-    def _post_facebook(self, payload = None, responses = None, app_id = None, app_secret = None):
-        fid     =   self.FB_ID if app_id is None else app_id
-        secret  =   self.FB_SECRET if app_secret is None else app_secret
-        with patch(f'{self.VIEWS_MODULE}.FACEBOOK_APP_ID', fid), \
-             patch(f'{self.VIEWS_MODULE}.FACEBOOK_APP_SECRET', secret), \
-             patch(f'{self.SOCIAL_MODULE}.FACEBOOK_APP_ID', self.FB_ID), \
-             patch(f'{self.SOCIAL_MODULE}.FACEBOOK_APP_SECRET', self.FB_SECRET), \
-             patch(f'{self.SOCIAL_MODULE}.requests.get', side_effect = responses or [self._fb_debug(), self._fb_me()]):
-            return APIClient().post(FACEBOOK_AUTH_URL, payload if payload is not None else {'access_token': 'user-token'}, format = 'json')
-
-    # ---------- Google ----------
     def test_google_creates_account_with_trial_and_verified_email(self):
         trial       =   SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
         response    =   self._post_google()
@@ -738,34 +709,4 @@ class SocialAuthTests(TestCase):
 
     def test_google_503_without_client_id(self):
         response    =   self._post_google(client_id = '')
-        self.assertEqual(response.status_code, 503)
-
-    # ---------- Facebook ----------
-    def test_facebook_creates_account(self):
-        response    =   self._post_facebook()
-        self.assertEqual(response.status_code, 200)
-        data        =   response.json()
-        self.assertTrue(data['is_new'])
-        self.assertIn('davent_refresh', response.cookies)
-        self.assertTrue(User.objects.get(email = 'social@gmail.com').profile.email_verified)
-
-    def test_facebook_rejects_token_of_other_app(self):
-        #debug_token: el user token es válido pero pertenece a otra app Meta.
-        response    =   self._post_facebook(responses = [self._fb_debug(app_id = 'otra-app'), self._fb_me()])
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(User.objects.filter(email = 'social@gmail.com').exists())
-
-    def test_facebook_rejects_invalid_token(self):
-        response    =   self._post_facebook(responses = [self._fb_debug(valid = False), self._fb_me()])
-        self.assertEqual(response.status_code, 400)
-
-    def test_facebook_rejects_account_without_email(self):
-        #Cuentas Meta creadas solo con celular no traen email — sin correo
-        #no hay cuenta DAVENT posible.
-        response    =   self._post_facebook(responses = [self._fb_debug(), self._fb_me(email = None)])
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('email', response.json()['detail'])
-
-    def test_facebook_503_without_credentials(self):
-        response    =   self._post_facebook(app_id = '')
         self.assertEqual(response.status_code, 503)

@@ -62,17 +62,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Login social: el token del provider se canjea en el backend (que lo
-  // verifica server-side) y vuelve la misma sesión del login por contraseña.
-  // Devuelve {ok, isNew, requiresPhone} para que la vista decida la ruta.
-  async function socialLogin(provider, token, remember = true) {
+  // Login social (Google): la credencial del provider se canjea en el backend
+  // (que la verifica server-side) y vuelve la misma sesión del login por
+  // contraseña. Devuelve {ok, isNew, requiresPhone} para decidir la ruta.
+  async function socialLogin(credential, remember = true) {
     status.value = 'loading'
     lastError.value = ''
     fieldErrors.value = {}
     try {
-      const data = provider === 'google'
-        ? await authApi.googleLogin(token, remember)
-        : await authApi.facebookLogin(token, remember)
+      const data = await authApi.googleLogin(credential, remember)
       // Cuenta nueva = estado limpio: nada de la sesión anterior.
       resetSessionStores()
       applyTokens(data)

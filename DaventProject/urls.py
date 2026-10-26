@@ -36,7 +36,6 @@ from AdminApp.domains.users.views.auth_views import (
     VerifyPhoneConfirmView,
     VerifyPhoneStatusView,
     GoogleAuthView,
-    FacebookAuthView,
 )
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 urlpatterns = [
@@ -76,10 +75,9 @@ urlpatterns = [
     path('api/verify-phone/', VerifyPhoneConfirmView.as_view(), name='verify_phone'),
     path('api/verify-phone/status/', VerifyPhoneStatusView.as_view(), name='verify_phone_status'),
     #=================================
-    # LOGIN SOCIAL (Google + Facebook — token exchange, mismo JWT/cookies)
+    # LOGIN SOCIAL (Google — token exchange, mismo JWT/cookies)
     #=================================
     path('api/auth/google/', GoogleAuthView.as_view(), name='auth_google'),
-    path('api/auth/facebook/', FacebookAuthView.as_view(), name='auth_facebook'),
 ]
 
 # Solo en desarrollo: el schema OpenAPI y los docs interactivos exponen la
@@ -109,19 +107,18 @@ def spa(request):
     # CSP del SPA: recursos propios + Google Fonts (estilos on-demand del catálogo
     # de fuentes), iframe de Google Maps (mapa de ubicación), imágenes https (R2)
     # y data: (favicon inline / QR). Los scripts son solo archivos del build más
-    # los de Firebase Phone Auth (gstatic/recaptcha) y los SDKs de login social
-    # (accounts.google.com = Google Identity Services, connect.facebook.net =
-    # SDK de Meta); los frames cubren el iframe del botón de Google y el
-    # xd_arbiter de Facebook. Sin ellos esos logins quedaban rotos únicamente
+    # los de Firebase Phone Auth (gstatic/recaptcha) y el SDK de login social
+    # (accounts.google.com = Google Identity Services); el frame cubre el
+    # iframe del botón de Google. Sin ellos ese login quedaba roto únicamente
     # en el deploy empaquetado (en dev la CSP no aplica porque la SPA la sirve Vite).
     resp['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' https://www.gstatic.com https://www.google.com https://apis.google.com https://accounts.google.com https://connect.facebook.net; "
+        "script-src 'self' https://www.gstatic.com https://www.google.com https://apis.google.com https://accounts.google.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://www.google.com https://graph.facebook.com https://www.facebook.com; "
-        "frame-src https://maps.google.com https://www.google.com https://recaptcha.google.com https://accounts.google.com https://www.facebook.com https://web.facebook.com; "
+        "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://apis.google.com https://www.google.com; "
+        "frame-src https://maps.google.com https://www.google.com https://recaptcha.google.com https://accounts.google.com; "
         "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     )
     return resp

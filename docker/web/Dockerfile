@@ -28,10 +28,8 @@ ARG VITE_FIREBASE_API_KEY=AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
 ARG VITE_FIREBASE_AUTH_DOMAIN=davent-f089b.firebaseapp.com
 ARG VITE_FIREBASE_PROJECT_ID=davent-f089b
 ARG VITE_FIREBASE_APP_ID=1:647641643379:web:adb1f08585ee7270986d06
-# Login social (Google + Facebook): también públicos por diseño; vacíos =
-# botones ocultos. Rellenar los defaults al crear las apps OAuth.
+# Login social (Google): también público por diseño; vacío = botón oculto.
 ARG VITE_GOOGLE_CLIENT_ID=10828662216-ff1ocahbbaj7ul6qpv3p5c3so3jk25p7.apps.googleusercontent.com
-ARG VITE_FACEBOOK_APP_ID=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
     VITE_APP_NAME=$VITE_APP_NAME \
@@ -40,8 +38,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN \
     VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
     VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID \
-    VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
-    VITE_FACEBOOK_APP_ID=$VITE_FACEBOOK_APP_ID
+    VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 
 # ---------- Stage 2: nginx sirve el SPA y proxifica /api ----------

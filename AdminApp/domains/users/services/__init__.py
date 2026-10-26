@@ -7,6 +7,6 @@ from .services import (
 )
 from .social import (
     SocialAuthError, SocialLoginQuery,
-    VerifyGoogleCredentialQuery, VerifyFacebookTokenQuery,
-    GOOGLE_CLIENT_ID, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET,
+    VerifyGoogleCredentialQuery,
+    GOOGLE_CLIENT_ID,
 )
