@@ -153,3 +153,20 @@
 .tpl-thumb[data-tpl='signature']::before { left: 50%; top: 16%; width: 12%; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--tp-acc); background: radial-gradient(circle, color-mix(in srgb, var(--tp-acc) 35%, transparent), transparent 70%); transform: translateX(-50%); box-shadow: 0 0 0 3px #17110d, 0 0 0 4px color-mix(in srgb, var(--tp-acc) 45%, transparent); }
 .tpl-thumb[data-tpl='signature']::after { left: 26%; right: 26%; top: 40%; height: 3%; border-radius: 99px; background: #e9dcc5; box-shadow: 0 8px 0 -.5px color-mix(in srgb, #e9dcc5 50%, transparent), 0 15px 0 -1px var(--tp-acc); }
 .tpl-thumb[data-tpl='signature'] i b { border-radius: 1px; border-color: color-mix(in srgb, var(--tp-acc) 45%, transparent); outline: 1px solid color-mix(in srgb, var(--tp-acc) 22%, transparent); outline-offset: 2px; background-size: 34% 1.5px, 68% 1.5px, 100% 66%; }
+
+/* Aurora: cielo nocturno con cortina de luz, placa panorámica y tarjeta
+   de vidrio solapando su borde inferior. */
+.tpl-thumb[data-tpl='aurora'] { --tp-bg: #070b16; --tp-nav: #070b16; --tp-line: rgba(238, 242, 252, .13); --tp-card: #101728; --tp-img: #1a2440; --tp-ink: #eef2fc; --tp-mute: #46557a; border-color: #1c2740;
+  background:
+    linear-gradient(var(--tp-acc), var(--tp-acc)) 5% 3.4% / 7% 5.2% no-repeat,
+    linear-gradient(var(--tp-mute), var(--tp-mute)) 68% 4.8% / 11% 2.4% no-repeat,
+    linear-gradient(var(--tp-mute), var(--tp-mute)) 92% 4.8% / 11% 2.4% no-repeat,
+    linear-gradient(var(--tp-line), var(--tp-line)) 0 12% / 100% 1px no-repeat,
+    linear-gradient(rgba(7, 11, 22, .72), rgba(7, 11, 22, .72)) 0 0 / 100% 12% no-repeat,
+    linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--tp-acc) 38%, transparent) 46%, transparent 60%) 0 12% / 100% 57% no-repeat,
+    radial-gradient(circle at 78% 16%, color-mix(in srgb, var(--tp-acc) 26%, transparent), transparent 52%),
+    #0a0f1e; }
+.tpl-thumb[data-tpl='aurora']::before { left: 6%; right: 6%; top: 15%; height: 34%; border-radius: 10px; border: 1px solid rgba(238, 242, 252, .18); background: linear-gradient(120deg, color-mix(in srgb, var(--tp-acc) 42%, #1a2440), #101728); }
+.tpl-thumb[data-tpl='aurora']::after { left: 10%; top: 37%; width: 46%; height: 19%; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .22); background: color-mix(in srgb, #070b16 62%, transparent); box-shadow: 0 8px 16px -8px rgba(3, 6, 14, .8), inset 34% 0 0 -2px transparent; }
+.tpl-thumb[data-tpl='aurora'] i b { border-radius: 6px; border-color: rgba(238, 242, 252, .16); background-color: transparent; background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(color-mix(in srgb, #070b16 60%, transparent), color-mix(in srgb, #070b16 60%, transparent)), linear-gradient(var(--tp-img), var(--tp-img)); background-size: 34% 1.5px, 68% 1.5px, 84% 26%, 100% 100%; background-position: 8% 86%, 8% 76%, 8% 100%, 0 0; }
+.tpl-thumb[data-tpl='aurora'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(color-mix(in srgb, #070b16 60%, transparent), color-mix(in srgb, #070b16 60%, transparent)), linear-gradient(color-mix(in srgb, var(--tp-img) 70%, var(--tp-acc)), color-mix(in srgb, var(--tp-img) 70%, var(--tp-acc))); }

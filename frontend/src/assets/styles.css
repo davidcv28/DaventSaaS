@@ -952,6 +952,37 @@ body { transition: background-color .2s ease, color .2s ease; }
 .design-preview[data-store-template='signature'] .dp-hero.has-cover .dp-badge { color: rgba(242, 236, 220, .85); }
 .design-preview[data-store-template='signature'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(242, 236, 220, .4); color: #f2ecdc; }
 
+/* Aurora (observatorio de luz): noche profunda, raíl de instrumentos y
+   el mensaje en placa de vidrio con borde de luz. */
+.design-preview[data-store-template='aurora'] { --sp-bg: #0a0f1e; --sp-card: #101728; --sp-ink: #eef2fc; --sp-ink-2: #c7d1e8; --sp-muted: #93a0c0; --sp-line: rgba(238, 242, 252, .13); }
+.design-preview[data-store-theme='dark'][data-store-template='aurora'] { --sp-bg: #070b16; --sp-card: #0d1424; --sp-ink: #eef2fc; --sp-ink-2: #c7d1e8; --sp-muted: #93a0c0; --sp-line: rgba(238, 242, 252, .13); }
+.design-preview[data-store-template='aurora'] .dp-nav { background: rgba(6, 9, 17, .85); border-bottom: 1px solid var(--sp-line); }
+.design-preview[data-store-template='aurora'] .dp-nav-name { color: var(--sp-ink); font-family: 'Sora', var(--store-font), sans-serif; font-weight: 700; font-size: 14px; letter-spacing: -.01em; }
+.design-preview[data-store-template='aurora'] .dp-nav-item { color: var(--sp-muted); font-size: 8px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.design-preview[data-store-template='aurora'] .dp-nav-mono { background: linear-gradient(140deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 45%, #7cc4ff)); color: #fff; border-radius: 8px; font-family: 'Sora', sans-serif; }
+.design-preview[data-store-template='aurora'] .dp-hero {
+  justify-items: start; text-align: left; color: var(--sp-ink);
+  background:
+    linear-gradient(100deg, transparent 34%, color-mix(in srgb, var(--store-accent) 26%, transparent) 48%, transparent 64%),
+    radial-gradient(240px 130px at 80% -20%, color-mix(in srgb, var(--store-accent) 22%, transparent), transparent 62%),
+    var(--sp-bg);
+  border-bottom: 1px solid var(--sp-line); padding: 18px 18px 20px;
+}
+.design-preview[data-store-template='aurora'] .dp-hero::before { content: ''; position: absolute; top: 8px; left: 18px; right: 18px; height: 1px; background: var(--sp-line); }
+.design-preview[data-store-template='aurora'] .dp-logo, .design-preview[data-store-template='aurora'] .dp-mono { display: none; }
+.design-preview[data-store-template='aurora'] .dp-badge { padding: 0 0 8px; margin-top: 4px; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0; background: none; color: var(--sp-muted); font-size: 7.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; align-self: stretch; }
+.design-preview[data-store-template='aurora'] .dp-title { font-family: 'Sora', var(--store-font), sans-serif; font-weight: 700; font-size: 30px; line-height: 1.07; letter-spacing: -.02em; color: var(--sp-ink); }
+.design-preview[data-store-template='aurora'] .dp-title.is-name { font-family: var(--store-font, inherit); }
+.design-preview[data-store-template='aurora'] .dp-desc { color: var(--sp-ink-2); font-size: 10.5px; line-height: 1.7; }
+.design-preview[data-store-template='aurora'] .dp-cta { justify-content: flex-start; }
+.design-preview[data-store-template='aurora'] .dp-btn { border-radius: 99px; border: 0; background: linear-gradient(120deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 55%, #1a2440)); color: #fff; font-weight: 600; font-size: 9px; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--store-accent) 70%, transparent); }
+.design-preview[data-store-template='aurora'] .dp-btn.ghost { background: rgba(255, 255, 255, .07); border: 1px solid var(--sp-line); color: var(--sp-ink); box-shadow: none; }
+.design-preview[data-store-template='aurora'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(6, 9, 17, .82), rgba(6, 9, 17, .5)), var(--dp-cover) center / cover no-repeat; color: #eef2fc; }
+.design-preview[data-store-template='aurora'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='aurora'] .dp-hero.has-cover .dp-desc { color: #eef2fc; }
+.design-preview[data-store-template='aurora'] .dp-hero.has-cover .dp-badge { color: rgba(238, 242, 252, .8); border-bottom-color: rgba(238, 242, 252, .25); }
+.design-preview[data-store-template='aurora'] .dp-hero.has-cover .dp-btn.ghost { border-color: rgba(238, 242, 252, .35); color: #eef2fc; }
+
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
 .tab { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: color .15s, border-color .15s; }

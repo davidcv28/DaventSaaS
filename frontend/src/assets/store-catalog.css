@@ -759,3 +759,221 @@ button.cv-pr-cta { background: var(--store-accent-ink); }
   .cv-sg-field input { flex: 1; width: 0; }
   .cv-sg .cv-skels { --cv-cols: 2; --cv-gap: 12px; }
 }
+
+/* ===== Catálogo Aurora: la mesa del observatorio ==========================
+   Cabecera con lecturas de instrumento, barra de cristal fija con los
+   instrumentos de búsqueda, constelación de categorías en chips de vidrio
+   y las piezas en placas con etiqueta esmerilada — la primera brilla a lo
+   ancho como estrella polar. */
+.cv-au { font-family: var(--sp-body); color: var(--au-ink); }
+.cv-au-head { padding: 54px 0 30px; border-bottom: 1px solid var(--au-line); }
+.cv-au .cv-crumbs { font-family: var(--sp-label); font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--au-muted); }
+.cv-au .cv-crumbs a { color: var(--au-muted); }
+.cv-au .cv-crumbs a:hover { color: var(--au-ink); text-decoration: none; }
+.cv-au .cv-crumbs [aria-current] { color: var(--au-ink); }
+.cv-au-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 30px; }
+.cv-au-kicker {
+  display: inline-flex; align-items: center; gap: 10px; margin: 0;
+  font-family: var(--sp-label); font-size: 11px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.cv-au-kicker::after { content: ''; width: 34px; height: 1px; background: color-mix(in srgb, var(--store-accent) 55%, transparent); }
+.cv-au-title {
+  margin: 12px 0 0; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(46px, 7.5vw, 88px); line-height: 1.02; letter-spacing: -.03em;
+  color: var(--au-ink);
+}
+.cv-au-count { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin: 0 0 8px; flex: none; }
+.cv-au-count strong { font-family: var(--sp-display); font-weight: 700; font-size: clamp(30px, 3.6vw, 44px); line-height: 1; color: var(--au-ink); font-variant-numeric: tabular-nums; }
+.cv-au-count span { font-family: var(--sp-label); font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--au-muted); }
+
+/* Barra de cristal fija: vidrio esmerilado con los instrumentos dentro. */
+.cv-au-barwrap { position: sticky; top: calc(var(--sp-top-h) + 10px); z-index: 15; margin-top: 22px; }
+.cv-au-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; border-radius: 20px;
+  background: color-mix(in srgb, var(--au-deep) 68%, transparent);
+  backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, .13);
+  box-shadow: 0 18px 48px -18px rgba(3, 6, 14, .8);
+}
+.cv-au-field {
+  display: flex; align-items: center; gap: 8px; height: 42px;
+  padding: 0 14px; border-radius: 12px;
+  background: rgba(255, 255, 255, .06); border: 1px solid var(--au-line);
+  color: var(--au-muted); transition: border-color .2s, background .2s;
+}
+.cv-au-field:focus-within { border-color: var(--store-accent); background: rgba(255, 255, 255, .09); }
+.cv-au-field input, .cv-au-field select {
+  background: transparent; border: 0; outline: none;
+  color: var(--au-ink); font-family: var(--sp-body); font-size: 13.5px;
+}
+.cv-au-field input::placeholder { color: color-mix(in srgb, var(--au-muted) 70%, transparent); }
+.cv-au-field select { appearance: none; padding-right: 2px; cursor: pointer; }
+.cv-au-field select option { background: var(--au-panel); color: var(--au-ink); }
+.cv-au-search { flex: 1 1 240px; }
+.cv-au-search input { width: 100%; }
+.cv-au-range input { width: 84px; }
+.cv-au-range i { color: var(--au-muted); font-style: normal; }
+.cv-au-sort { flex: none; }
+/* Constelación: chips de vidrio que se desplazan en móvil. */
+.cv-au-cats {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  overflow-x: auto; scrollbar-width: none; padding-bottom: 4px;
+}
+.cv-au-cats::-webkit-scrollbar { display: none; }
+.cv-au-cats button {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  height: 36px; padding: 0 15px; border-radius: 99px;
+  border: 1px solid var(--au-line); background: var(--au-glass);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--au-ink-2); font-family: var(--sp-label);
+  font-size: 11.5px; font-weight: 600; letter-spacing: .06em;
+  transition: border-color .2s, color .2s, background .2s, transform .2s var(--sp-ease);
+}
+.cv-au-cats button:hover { border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); color: var(--au-ink); transform: translateY(-1px); }
+.cv-au-cats button.on {
+  background: linear-gradient(120deg, var(--store-accent), var(--au-hue2));
+  border-color: transparent; color: #fff;
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--store-accent) 65%, transparent);
+}
+.cv-au-brands { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; margin-top: 14px; }
+.cv-au-brands button {
+  font-family: var(--sp-label); font-size: 11px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--au-muted);
+  padding: 4px 0; transition: color .2s;
+}
+.cv-au-brands button:hover { color: var(--au-ink); }
+.cv-au-brands button.on { color: var(--sp-accent-text); }
+.cv-au-brands .reset { display: inline-flex; align-items: center; gap: 5px; color: var(--au-ink-2); margin-left: auto; }
+.cv-au-brands .reset:hover { color: var(--au-ink); }
+
+/* La bóveda: placas con etiqueta de vidrio; la primera pieza es la
+   estrella polar a lo ancho. */
+.cv-au-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 20px; margin-top: 38px; }
+.cv-au-grid.loading { opacity: .55; pointer-events: none; }
+.cv-au-card { position: relative; cursor: pointer; }
+.cv-au-card.polar { grid-column: span 2; }
+.cv-au-media {
+  position: relative; width: 100%; aspect-ratio: 4 / 5;
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--au-line); background: var(--au-tile);
+  transition: border-color .3s var(--sp-ease), box-shadow .35s var(--sp-ease);
+}
+.cv-au-card.polar .cv-au-media { aspect-ratio: 16 / 10; }
+.cv-au-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .8s var(--sp-ease); }
+.cv-au-card:hover .cv-au-media {
+  border-color: color-mix(in srgb, var(--store-accent) 55%, transparent);
+  box-shadow: 0 22px 54px -22px color-mix(in srgb, var(--store-accent) 40%, transparent);
+}
+.cv-au-card:hover .cv-au-media img { transform: scale(1.05); }
+.cv-au-ph { display: grid; place-items: center; width: 100%; height: 100%; color: color-mix(in srgb, var(--au-ink) 30%, transparent); }
+.cv-au-flag {
+  position: absolute; top: 12px; left: 12px; z-index: 3;
+  display: inline-flex; align-items: center; height: 26px; padding: 0 11px;
+  border-radius: 99px; border: 1px solid rgba(255, 255, 255, .2);
+  background: color-mix(in srgb, var(--au-deep) 62%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--au-ink); font-family: var(--sp-label);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.cv-au-flag.offer {
+  left: auto; right: 12px; border: 0;
+  background: linear-gradient(120deg, var(--store-accent), var(--au-hue2)); color: #fff;
+}
+.cv-au-quick {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%) translateY(4px); z-index: 3;
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 15px; border-radius: 99px;
+  background: color-mix(in srgb, var(--au-deep) 62%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: var(--au-ink); font-family: var(--sp-label);
+  font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  opacity: 0; transition: opacity .2s var(--sp-ease), transform .25s var(--sp-ease);
+}
+.cv-au-card:hover .cv-au-quick,
+.cv-au-card:focus-visible .cv-au-quick { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Etiqueta esmerilada: el nombre y el precio sobre la imagen. */
+.cv-au-label {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 2;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  padding: 13px 15px; border-radius: 15px;
+  background: color-mix(in srgb, var(--au-deep) 60%, transparent);
+  backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, .13);
+}
+.cv-au-label-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cv-au-eyebrow {
+  font-family: var(--sp-label); font-size: 9px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--au-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cv-au-name {
+  margin: 0; font-family: var(--sp-display); font-weight: 600;
+  font-size: 15px; line-height: 1.3; letter-spacing: -.01em; color: var(--au-ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cv-au-card.polar .cv-au-name { font-size: 18px; }
+.cv-au-price {
+  flex: none; font-family: var(--sp-label); font-size: 14px; font-weight: 600;
+  letter-spacing: .01em; color: var(--au-ink); font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cv-au-card.polar .cv-au-price { font-size: 16px; }
+.cv-au-price s { display: block; font-size: 11.5px; font-weight: 500; color: var(--au-muted); }
+
+.cv-au .cv-skels { --cv-cols: 3; --cv-gap: 20px; --cv-skel-r: 20px; }
+.cv-au .cv-skel { aspect-ratio: 4 / 5; border-radius: 20px; }
+.cv-au .cv-more-btn {
+  border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); color: #fff;
+  font-family: var(--sp-label); font-size: 12px; font-weight: 600; letter-spacing: .08em;
+  box-shadow: 0 12px 34px -10px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+.cv-au .cv-more-btn:hover { filter: brightness(1.14); transform: translateY(-1px); }
+.cv-au .cv-more-bar { height: 2px; border-radius: 99px; background: var(--au-line); }
+.cv-au .cv-more-bar span { background: linear-gradient(90deg, var(--store-accent), var(--au-hue2)); border-radius: 99px; }
+.cv-au .cv-more-label { font-family: var(--sp-label); letter-spacing: .1em; color: var(--au-muted); }
+.cv-au .cv-promo { margin-top: 20px; }
+.cv-au .cv-promo-item {
+  border-radius: 99px; border: 1px solid var(--au-line);
+  background: var(--au-glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.cv-au .cv-state { border: 1px dashed var(--au-line); border-radius: 20px; background: var(--au-glass); }
+.cv-au .cv-state-btn { border-radius: 99px; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
+
+@media (max-width: 960px) {
+  .cv-au-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
+  .cv-au-card.polar { grid-column: 1 / -1; }
+  .cv-au-card.polar .cv-au-media { aspect-ratio: 16 / 9; }
+  .cv-au-quick { display: none; }
+}
+@media (max-width: 720px) {
+  .cv-au-head { padding: 38px 0 24px; }
+  .cv-au-title { font-size: clamp(38px, 12vw, 56px); }
+  .cv-au-title-row { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .cv-au-count { flex-direction: row; align-items: baseline; gap: 8px; margin: 0; }
+  .cv-au-count strong { font-size: 26px; }
+  .cv-au-bar { flex-wrap: wrap; border-radius: 16px; }
+  .cv-au-search { flex: 1 1 100%; }
+  .cv-au-range { flex: 1 1 auto; }
+  .cv-au-range input { flex: 1; width: 0; min-width: 0; }
+  .cv-au-sort { flex: 1 1 auto; }
+  .cv-au-sort select { flex: 1; }
+  .cv-au-label { padding: 10px 12px; gap: 8px; }
+  .cv-au-name { font-size: 13px; }
+  .cv-au-card.polar .cv-au-name { font-size: 15px; }
+  .cv-au-price { font-size: 12.5px; }
+  .cv-au-eyebrow { font-size: 8px; letter-spacing: .1em; }
+  .cv-au .cv-skels { --cv-cols: 2; --cv-gap: 14px; }
+}
+@media (max-width: 420px) {
+  .cv-au-label { left: 7px; right: 7px; bottom: 7px; }
+  .cv-au-name { -webkit-line-clamp: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-au-media img,
+  .cv-au-cats button { transition: none !important; }
+  .cv-au-quick { transition: none; }
+}

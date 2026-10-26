@@ -22,7 +22,8 @@ const VARIANTS = {
   cobre: defineAsyncComponent(() => import('./catalog/CatalogCobre.vue')),
   minimal: defineAsyncComponent(() => import('./catalog/CatalogMinimal.vue')),
   boutique: defineAsyncComponent(() => import('./catalog/CatalogBoutique.vue')),
-  signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue'))
+  signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue')),
+  aurora: defineAsyncComponent(() => import('./catalog/CatalogAurora.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || CatalogClassic)
 </script>

@@ -108,7 +108,7 @@ class StoreCustomization(models.Model):
     #la web fuerza 'classic' si el guardado deja de estar permitido.
     TEMPLATE_BASE               =   ('classic', 'perspective', 'duo')
     TEMPLATE_PLUS               =   ('street', 'promo')
-    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature')
+    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
@@ -122,6 +122,7 @@ class StoreCustomization(models.Model):
         ('minimal',          'Minimal'),
         ('boutique',         'Boutique'),
         ('signature',        'Signature'),
+        ('aurora',           'Aurora'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

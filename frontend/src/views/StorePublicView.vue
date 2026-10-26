@@ -51,7 +51,7 @@ const shopPromoImgs = computed(() => shopImgs.value.slice(cover.value ? 0 : 1, c
 // Productos destacados: vitrina del catálogo en la portada (primeros 8 en
 // Tienda Pro, primeros 4 como selección de pliegos en Lookbook).
 const shopCatalog = ref({ categories: [], brands: [], products: [] })
-const shopProducts = computed(() => shopCatalog.value.products.slice(0, tpl.value === 'lookbook' || tpl.value === 'cobre' ? 4 : tpl.value === 'signature' ? 6 : 8))
+const shopProducts = computed(() => shopCatalog.value.products.slice(0, tpl.value === 'lookbook' || tpl.value === 'cobre' ? 4 : tpl.value === 'signature' || tpl.value === 'aurora' ? 6 : 8))
 // Minimal: la placa de imagen del hero — portada propia, primera imagen
 // del carrusel o, en su defecto, el logo sobre el tile de la paleta.
 const mnArtImg = computed(() => cover.value || shopImgs.value[0] || '')
@@ -87,6 +87,10 @@ const btTileALabel = cbTileALabel
 const sgTileA = cbTileA
 const sgTileB = cbTileB
 const sgTileALabel = cbTileALabel
+// Aurora: el cielo del observatorio — la primera imagen del pool va a la
+// placa panorámica y la segunda al visor pequeño del escenario.
+const auSky = cbTileA
+const auTileB = cbTileB
 const shopBrandOf = (p) => shopCatalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 const shopCatOf = (p) => shopCatalog.value.categories.find((c) => c.id === p.category)?.name || ''
 // Departamentos: categorías reales con productos, en el orden que definió
@@ -123,7 +127,7 @@ const shopPromoEyebrow = computed(() => {
     : 'Catálogo completo'
 })
 async function loadShopFeatured() {
-  if (!['shop', 'lookbook', 'cobre', 'minimal', 'classic', 'boutique', 'signature'].includes(tpl.value) || !showCatalog.value) return
+  if (!['shop', 'lookbook', 'cobre', 'minimal', 'classic', 'boutique', 'signature', 'aurora'].includes(tpl.value) || !showCatalog.value) return
   try {
     shopCatalog.value = await loadPublicCatalog({ sort: 'recent' })
   } catch {
@@ -392,10 +396,10 @@ onBeforeUnmount(() => {
 <div class="sp-page-root">
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <section class="sp-hero">
-    <div class="sp-hero-band" :class="{ 'has-cover': cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature' }">
+    <div class="sp-hero-band" :class="{ 'has-cover': cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature' && tpl !== 'aurora' }">
       <!-- Minimal y Boutique: barra de anuncio (strip editorial del diseño) -->
       <p v-if="tpl === 'minimal' || tpl === 'boutique'" class="sp-mn-announce">{{ mnNotice }}</p>
-      <div v-if="cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature'" class="sp-hero-cover" aria-hidden="true">
+      <div v-if="cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature' && tpl !== 'aurora'" class="sp-hero-cover" aria-hidden="true">
         <img :src="cover" alt="" fetchpriority="high" />
       </div>
       <div class="sp-hero-decor" aria-hidden="true">
@@ -507,6 +511,18 @@ onBeforeUnmount(() => {
             </svg>
             <span class="sp-sg-seal-core"><AppIcon name="gem" :size="20" :stroke="1.5" /></span>
           </span>
+        </template>
+        <template v-else-if="tpl === 'aurora'">
+          <!-- Cortinas de aurora: haces de luz inclinados en el acento del
+               negocio, un segundo tono frío y estrellas que titilan. -->
+          <span class="sp-au-beam b1"></span>
+          <span class="sp-au-beam b2"></span>
+          <span class="sp-au-beam b3"></span>
+          <span class="sp-au-star s1"><AppIcon name="star" :size="13" :stroke="1.5" /></span>
+          <span class="sp-au-star s2"><AppIcon name="sparkles" :size="18" :stroke="1.5" /></span>
+          <span class="sp-au-star s3"><AppIcon name="star" :size="10" :stroke="1.5" /></span>
+          <span class="sp-au-star s4"><AppIcon name="sparkles" :size="12" :stroke="1.5" /></span>
+          <span class="sp-au-horizon"></span>
         </template>
       </div>
       <div v-if="tpl === 'terminal'" class="sp-container sp-tm-bar" aria-hidden="true">
@@ -682,6 +698,47 @@ onBeforeUnmount(() => {
             <span class="sp-sg-mono" aria-hidden="true"><i>{{ initial }}</i></span>
           </div>
         </template>
+        <template v-else-if="tpl === 'aurora'">
+          <!-- Aurora (observatorio de luz): el orden se invierte respecto de
+               los demás diseños — primero el raíl de instrumentos (datos
+               finos a todo lo ancho), después el cielo panorámico con sus
+               piezas flotantes y, solapando su borde inferior, la placa de
+               vidrio esmerilado que lleva el mensaje. -->
+          <div class="sp-au-wrap">
+            <div v-reveal class="sp-au-rail">
+              <p class="sp-au-badge"><AppIcon :name="heroBadgeIcon || 'sparkles'" :size="13" :stroke="2.25" /> {{ heroBadge }}</p>
+              <div class="sp-au-rail-side">
+                <ul v-if="heroMeta.length" class="sp-au-rail-meta">
+                  <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="13" /> {{ m.text }}</li>
+                </ul>
+                <span class="sp-au-rail-year" aria-hidden="true"><i></i>{{ year }}</span>
+              </div>
+            </div>
+            <div v-reveal="120" class="sp-au-stage">
+              <figure class="sp-au-media" :class="{ 'is-logo': !auSky && custom.logo }">
+                <img v-if="auSky" :src="auSky" alt="" fetchpriority="high" />
+                <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+                <span v-else class="sp-au-initial" aria-hidden="true">{{ initial }}</span>
+              </figure>
+              <figure v-if="auTileB" class="sp-au-mini" aria-hidden="true">
+                <img :src="auTileB" alt="" loading="lazy" />
+              </figure>
+              <span class="sp-au-chip"><AppIcon :name="clChipB.icon" :size="13" :stroke="2.25" /> {{ clChipB.text }}</span>
+              <span class="sp-au-polaris" aria-hidden="true"><AppIcon name="star" :size="15" :stroke="1.75" /></span>
+              <div v-reveal="200" class="sp-au-card">
+                <h1 class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <span class="sp-au-mark">{{ titleSplit.last }}</span></h1>
+                <p v-if="custom.description" class="sp-hero-sub">{{ custom.description }}</p>
+                <div class="sp-hero-ctas">
+                  <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+                  <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+                  <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                    <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
         <template v-else-if="tpl === 'shop'">
           <!-- Tienda Pro (marketplace): banner principal + dos tarjetas
                promo apiladas, como la portada de un e-commerce. La foto va
@@ -826,7 +883,7 @@ onBeforeUnmount(() => {
          (categorías con productos, miniatura del primer producto y
          conteo). Sin catálogo se mantiene la fila de destacados del resto
          de los diseños. -->
-    <div v-if="(tpl === 'shop' || tpl === 'boutique' || tpl === 'signature') && shopDepts.length" class="sp-container">
+    <div v-if="(tpl === 'shop' || tpl === 'boutique' || tpl === 'signature' || tpl === 'aurora') && shopDepts.length" class="sp-container">
       <div class="sp-shop-depts" :style="{ maxWidth: `${(shopDepts.length + (showCatalog ? 1 : 0)) * 156}px` }" aria-label="Departamentos del catálogo">
         <RouterLink v-for="d in shopDepts" :key="d.id" v-reveal class="sp-shop-dept" :to="deptTo(d.id)">
           <span class="sp-shop-dept-thumb">
@@ -857,11 +914,11 @@ onBeforeUnmount(() => {
     <!-- Tienda Pro, Lookbook, Cobre, Minimal y Boutique: vitrina de
          productos destacados en la portada (8 en marketplace/Minimal/
          Boutique, 4 pliegos en Lookbook y en la colección). -->
-    <div v-if="(tpl === 'shop' || tpl === 'lookbook' || tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' || tpl === 'signature') && shopProducts.length" class="sp-container sp-shop-featured">
+    <div v-if="(tpl === 'shop' || tpl === 'lookbook' || tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' || tpl === 'signature' || tpl === 'aurora') && shopProducts.length" class="sp-container sp-shop-featured">
       <div class="sp-shop-featured-head">
         <div class="sp-shop-featured-copy">
-          <p class="sp-shop-featured-eyebrow">{{ tpl === 'lookbook' ? 'Selección de la edición' : tpl === 'signature' ? 'Curaduría de autor' : tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' ? 'Nueva temporada' : 'Recién llegados' }}</p>
-          <h2 class="sp-shop-featured-title">{{ tpl === 'lookbook' ? 'Pliegos destacados' : tpl === 'signature' ? 'La vitrina' : tpl === 'cobre' || tpl === 'boutique' ? 'La colección' : tpl === 'minimal' ? 'Selección' : 'Productos destacados' }}</h2>
+          <p class="sp-shop-featured-eyebrow">{{ tpl === 'lookbook' ? 'Selección de la edición' : tpl === 'signature' ? 'Curaduría de autor' : tpl === 'aurora' ? 'Cielo despejado' : tpl === 'cobre' || tpl === 'minimal' || tpl === 'boutique' ? 'Nueva temporada' : 'Recién llegados' }}</p>
+          <h2 class="sp-shop-featured-title">{{ tpl === 'lookbook' ? 'Pliegos destacados' : tpl === 'signature' ? 'La vitrina' : tpl === 'aurora' ? 'El observatorio' : tpl === 'cobre' || tpl === 'boutique' ? 'La colección' : tpl === 'minimal' ? 'Selección' : 'Productos destacados' }}</h2>
         </div>
         <RouterLink class="sp-shop-viewall" :to="catalogTo">{{ tpl === 'lookbook' ? 'Ver índice completo' : tpl === 'cobre' ? 'Ver todo' : tpl === 'signature' ? 'Ver el catálogo completo' : tpl === 'boutique' ? 'Ver toda la colección' : 'Ver todo el catálogo' }} <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
       </div>

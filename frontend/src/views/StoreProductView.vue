@@ -43,6 +43,7 @@ const RATING_ICONS = {
   classic: 'star', perspective: 'hexagon', duo: 'moon', street: 'zap',
   promo: 'flame', terminal: 'terminal', lookbook: 'diamond', shop: 'heart',
   cobre: 'gem', minimal: 'dot', boutique: 'crown', signature: 'pencil',
+  aurora: 'sparkles',
 }
 const ratingIcon = computed(() => RATING_ICONS[custom.value.template] || 'star')
 

@@ -8520,3 +8520,1079 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='signature'] .sp-card-quick { transition: none; }
   .store-page[data-store-template='signature'] .sp-sg-seal-ring { animation: none !important; }
 }
+
+/* ===== Diseños v8: Aurora — observatorio de luz =========================
+   'aurora' (Premium, has_design_advanced): la web se compone como la
+   noche de un observatorio. Cielo profundo en ambos temas (la luz es la
+   identidad, como Terminal/Signature), tinta polar #eef2fc y el acento
+   del dueño como aurora: cortinas de luz inclinadas, estrellas que
+   titilan y un halo en el horizonte. Dos voces tipográficas: Sora para
+   titulares y Space Grotesk para las lecturas de instrumentos (caps
+   espaciadas). La estructura se invierte respecto de los demás diseños:
+   primero un raíl de datos fino, después el cielo panorámico (la foto
+   de portada) con chips y visor flotantes, y el mensaje vive en una
+   placa de vidrio esmerilado con borde de luz que solapa el borde del
+   cielo — la etiqueta de museo sobre el marco. Los departamentos son
+   una constelación de esferas, la vitrina repite la etiqueta de vidrio
+   dentro de cada placa, las secciones van en paneles de vidrio y el
+   cierre es el propio cielo. El catálogo usa barra de cristal fija,
+   constelación de chips y la primera pieza como estrella polar. */
+.store-page[data-store-template='aurora'] {
+  --au-sky: #0a0f1e;
+  --au-deep: #060911;
+  --au-panel: #101728;
+  --au-panel2: #141d33;
+  --au-tile: #131c31;
+  --au-ink: #eef2fc;
+  --au-ink-2: #c7d1e8;
+  --au-muted: #93a0c0;
+  --au-line: color-mix(in srgb, #eef2fc 13%, transparent);
+  --au-line-soft: color-mix(in srgb, #eef2fc 7%, transparent);
+  --au-hue2: color-mix(in srgb, var(--store-accent) 45%, #7cc4ff);
+  --au-glass: color-mix(in srgb, var(--au-panel) 62%, transparent);
+  --sp-display: 'Sora', var(--store-font), sans-serif;
+  --sp-label: 'Space Grotesk', var(--store-font), sans-serif;
+  --sp-body: var(--store-font), system-ui, sans-serif;
+  --sp-bg: var(--au-sky);
+  --sp-card: var(--au-panel);
+  --sp-card-solid: var(--au-panel);
+  --sp-surface: var(--au-panel2);
+  --sp-ink: var(--au-ink);
+  --sp-ink-2: var(--au-ink-2);
+  --sp-muted: var(--au-muted);
+  --sp-line: var(--au-line);
+  --sp-soft: var(--au-panel2);
+  --sp-accent-text: var(--store-accent);
+  --sp-radius: 18px;
+  --sp-shadow-sm: 0 1px 2px rgba(3, 6, 14, .4);
+  --sp-shadow-md: 0 14px 44px -16px rgba(3, 6, 14, .7);
+  font-family: var(--sp-body);
+  font-size: 15.5px;
+  color-scheme: dark;
+}
+/* La noche también en el tema claro: la aurora solo existe contra el
+   cielo oscuro; el interruptor solo cambia la profundidad de la noche. */
+.store-page[data-store-template='aurora'][data-store-theme='dark'] {
+  --au-sky: #070b16;
+  --au-deep: #04060c;
+  --au-panel: #0d1424;
+  --au-panel2: #111930;
+  --au-tile: #101829;
+}
+.store-page[data-store-template='aurora']::before,
+.store-page[data-store-template='aurora']::after { display: none; }
+.store-page[data-store-template='aurora'] ::selection { background: color-mix(in srgb, var(--store-accent) 40%, transparent); color: var(--au-ink); }
+.store-page[data-store-template='aurora'] :is(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--store-accent); outline-offset: 2px;
+}
+.store-page[data-store-template='aurora'] .sp-mono {
+  animation: none; border: 1px solid var(--au-line); border-radius: 12px;
+  background: linear-gradient(140deg, var(--store-accent), var(--au-hue2));
+  color: #fff; font-family: var(--sp-display); font-weight: 700;
+  box-shadow: 0 0 24px -6px color-mix(in srgb, var(--store-accent) 60%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-ava::after { display: none; }
+
+/* --- Portada: cielo profundo con estrellas, cortinas y horizonte --- */
+.store-page[data-store-template='aurora'] .sp-hero-band {
+  position: relative; color: var(--au-ink);
+  background:
+    radial-gradient(1100px 480px at 78% -18%, color-mix(in srgb, var(--store-accent) 22%, transparent), transparent 62%),
+    radial-gradient(880px 420px at -6% 112%, color-mix(in srgb, var(--au-hue2) 13%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--au-deep) 0%, var(--au-sky) 52%, var(--au-deep) 100%);
+  border-bottom: 1px solid var(--au-line);
+  animation: none; overflow: hidden;
+}
+/* Campo de estrellas: puntos fijos de distinto brillo, sin moverse —
+   el cielo quieto sobre el que bailan las cortinas. */
+.store-page[data-store-template='aurora'] .sp-hero-decor::before {
+  background-image:
+    radial-gradient(1.6px 1.6px at 8% 24%, rgba(255, 255, 255, .85), transparent 60%),
+    radial-gradient(1.2px 1.2px at 19% 66%, rgba(255, 255, 255, .5), transparent 60%),
+    radial-gradient(1.4px 1.4px at 33% 14%, rgba(255, 255, 255, .7), transparent 60%),
+    radial-gradient(1px 1px at 47% 40%, rgba(255, 255, 255, .4), transparent 60%),
+    radial-gradient(1.8px 1.8px at 61% 18%, rgba(255, 255, 255, .8), transparent 60%),
+    radial-gradient(1.1px 1.1px at 73% 62%, rgba(255, 255, 255, .5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 87% 30%, rgba(255, 255, 255, .7), transparent 60%),
+    radial-gradient(1.2px 1.2px at 94% 72%, rgba(255, 255, 255, .45), transparent 60%),
+    radial-gradient(1px 1px at 27% 88%, rgba(255, 255, 255, .4), transparent 60%),
+    radial-gradient(1.4px 1.4px at 55% 82%, rgba(255, 255, 255, .55), transparent 60%);
+  background-size: auto;
+}
+.store-page[data-store-template='aurora'] .sp-hero-decor .sp-orb,
+.store-page[data-store-template='aurora'] .sp-hero-decor .sp-float { display: none; }
+/* Cortinas de aurora: haces verticales inclinados, difusos, que respiran. */
+.store-page[data-store-template='aurora'] .sp-au-beam {
+  position: absolute; top: -24%; bottom: -6%; width: clamp(120px, 15vw, 230px);
+  pointer-events: none; filter: blur(22px); transform: skewX(-11deg);
+  background: linear-gradient(178deg,
+    transparent 4%,
+    color-mix(in srgb, var(--store-accent) 30%, transparent) 38%,
+    color-mix(in srgb, var(--au-hue2) 18%, transparent) 72%,
+    transparent 98%);
+  opacity: .5; animation: sp-au-sway 16s ease-in-out infinite alternate;
+}
+.store-page[data-store-template='aurora'] .sp-au-beam.b1 { left: 9%; }
+.store-page[data-store-template='aurora'] .sp-au-beam.b2 {
+  left: 34%; width: clamp(70px, 9vw, 140px); opacity: .34;
+  background: linear-gradient(178deg, transparent 8%, color-mix(in srgb, var(--au-hue2) 22%, transparent) 46%, transparent 92%);
+  animation-duration: 21s; animation-delay: -6s;
+}
+.store-page[data-store-template='aurora'] .sp-au-beam.b3 { right: 12%; left: auto; opacity: .42; animation-duration: 19s; animation-delay: -3s; transform: skewX(-9deg); }
+@keyframes sp-au-sway {
+  from { translate: 0 0; opacity: .32; }
+  to { translate: 26px 0; opacity: .62; }
+}
+/* Estrellas que titilan sobre el cielo. */
+.store-page[data-store-template='aurora'] .sp-au-star { position: absolute; color: color-mix(in srgb, var(--store-accent) 70%, #fff); opacity: .55; pointer-events: none; animation: sp-au-twinkle 3.8s ease-in-out infinite; }
+.store-page[data-store-template='aurora'] .sp-au-star.s1 { top: 18%; left: 24%; animation-delay: -.8s; }
+.store-page[data-store-template='aurora'] .sp-au-star.s2 { top: 12%; right: 30%; animation-delay: -2.1s; }
+.store-page[data-store-template='aurora'] .sp-au-star.s3 { top: 46%; right: 12%; animation-delay: -1.4s; }
+.store-page[data-store-template='aurora'] .sp-au-star.s4 { top: 56%; left: 8%; animation-delay: -3s; }
+@keyframes sp-au-twinkle {
+  0%, 100% { opacity: .25; transform: scale(.85); }
+  50% { opacity: .9; transform: scale(1.12); }
+}
+/* Halo del horizonte: la luz se concentra bajo la placa de vidrio. */
+.store-page[data-store-template='aurora'] .sp-au-horizon {
+  position: absolute; left: 6%; right: 6%; bottom: -46px; height: 90px;
+  background: radial-gradient(52% 100% at 50% 0%, color-mix(in srgb, var(--store-accent) 26%, transparent), transparent 72%);
+  filter: blur(10px); pointer-events: none;
+}
+
+/* --- Raíl de instrumentos: lecturas finas a todo lo ancho --- */
+.store-page[data-store-template='aurora'] .sp-hero-inner {
+  position: relative; z-index: 1;
+  display: block; padding: clamp(40px, 5vw, 68px) 40px clamp(56px, 6vw, 84px);
+}
+.store-page[data-store-template='aurora'] .sp-au-wrap { display: grid; gap: clamp(30px, 4.5vw, 52px); }
+.store-page[data-store-template='aurora'] .sp-au-rail {
+  display: flex; align-items: center; gap: 22px;
+  padding-bottom: 18px; border-bottom: 1px solid var(--au-line);
+}
+.store-page[data-store-template='aurora'] .sp-au-badge {
+  display: inline-flex; align-items: center; gap: 10px; margin: 0; min-width: 0;
+  font-family: var(--sp-label); font-size: 11px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--au-ink-2);
+}
+.store-page[data-store-template='aurora'] .sp-au-badge::before {
+  content: ''; width: 6px; height: 6px; flex: none;
+  background: var(--store-accent); transform: rotate(45deg);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--store-accent) 85%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-au-badge svg { color: var(--sp-accent-text); flex: none; }
+.store-page[data-store-template='aurora'] .sp-au-rail-side { margin-left: auto; display: flex; align-items: center; gap: 22px; min-width: 0; }
+.store-page[data-store-template='aurora'] .sp-au-rail-meta {
+  list-style: none; display: flex; align-items: center; gap: 20px;
+  margin: 0; padding: 0;
+  font-family: var(--sp-label); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .sp-au-rail-meta li { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.store-page[data-store-template='aurora'] .sp-au-rail-meta svg { color: var(--sp-accent-text); }
+.store-page[data-store-template='aurora'] .sp-au-rail-year {
+  display: inline-flex; align-items: center; gap: 10px; flex: none;
+  font-family: var(--sp-label); font-size: 11px; font-weight: 600;
+  letter-spacing: .22em; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .sp-au-rail-year i { width: 28px; height: 1px; background: var(--au-line); }
+
+/* --- Escenario: el cielo panorámico con sus piezas flotantes --- */
+.store-page[data-store-template='aurora'] .sp-au-stage { position: relative; }
+.store-page[data-store-template='aurora'] .sp-au-media {
+  position: relative; margin: 0; width: 100%;
+  aspect-ratio: 21 / 9; min-height: 300px; max-height: 560px;
+  border-radius: 26px; overflow: hidden;
+  border: 1px solid var(--au-line); background: var(--au-tile);
+  box-shadow: 0 34px 90px -30px rgba(3, 6, 14, .85);
+}
+.store-page[data-store-template='aurora'] .sp-au-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.store-page[data-store-template='aurora'] .sp-au-media.is-logo img { object-fit: contain; padding: 8%; }
+.store-page[data-store-template='aurora'] .sp-au-media::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 52%, rgba(6, 9, 17, .58));
+}
+.store-page[data-store-template='aurora'] .sp-au-initial {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(130px, 22vw, 300px); line-height: 1;
+  color: color-mix(in srgb, var(--au-ink) 15%, transparent);
+  background:
+    radial-gradient(70% 90% at 50% 110%, color-mix(in srgb, var(--store-accent) 20%, transparent), transparent 70%),
+    var(--au-tile);
+}
+/* Visor pequeño: la segunda imagen flota sobre la esquina del cielo. */
+.store-page[data-store-template='aurora'] .sp-au-mini {
+  position: absolute; top: clamp(16px, 3vw, 34px); right: clamp(16px, 3vw, 38px);
+  width: clamp(110px, 13.5vw, 178px); aspect-ratio: 4 / 5; margin: 0;
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .3);
+  box-shadow: 0 20px 46px -14px rgba(3, 6, 14, .8);
+}
+.store-page[data-store-template='aurora'] .sp-au-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Chip de lectura: dato real del negocio en vidrio esmerilado. */
+.store-page[data-store-template='aurora'] .sp-au-chip {
+  position: absolute; top: clamp(14px, 2.4vw, 26px); left: clamp(14px, 2.4vw, 26px); z-index: 2;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 15px; border-radius: 99px;
+  background: color-mix(in srgb, var(--au-deep) 55%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, .22);
+  color: var(--au-ink);
+  font-family: var(--sp-label); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.store-page[data-store-template='aurora'] .sp-au-chip svg { color: var(--sp-accent-text); }
+/* Polaris: la estrella fija del observatorio, en la esquina del cielo. */
+.store-page[data-store-template='aurora'] .sp-au-polaris {
+  position: absolute; right: clamp(18px, 3vw, 40px); bottom: 22px; z-index: 2;
+  display: grid; place-items: center; width: 34px; height: 34px;
+  color: var(--sp-accent-text); pointer-events: none;
+  animation: sp-au-twinkle 4.2s ease-in-out infinite;
+}
+@media (max-width: 1100px) { .store-page[data-store-template='aurora'] .sp-au-polaris { display: none; } }
+
+/* --- La placa de vidrio: etiqueta del observatorio solapando el cielo --- */
+.store-page[data-store-template='aurora'] .sp-au-card {
+  position: relative; z-index: 3;
+  width: min(660px, calc(100% - 40px));
+  margin: calc(clamp(56px, 9vw, 104px) * -1) auto 0 clamp(0px, 5vw, 60px);
+  padding: clamp(28px, 3.6vw, 46px);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--au-panel) 58%, transparent);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 28px 74px -24px rgba(3, 6, 14, .85);
+}
+/* Borde de luz: hairline en degradado que recorre la placa. */
+.store-page[data-store-template='aurora'] .sp-au-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+  background: linear-gradient(138deg,
+    rgba(255, 255, 255, .5),
+    color-mix(in srgb, var(--store-accent) 45%, transparent) 40%,
+    rgba(255, 255, 255, .1) 78%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
+}
+.store-page[data-store-template='aurora'] .sp-au-card .sp-hero-title {
+  margin: 0; max-width: 21ch;
+  font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(32px, 4.6vw, 60px); line-height: 1.07; letter-spacing: -.025em;
+  color: var(--au-ink); text-wrap: balance;
+}
+.store-page[data-store-template='aurora'] .sp-au-card .sp-hero-title.is-name { font-size: clamp(30px, 4.4vw, calc(var(--store-name-size, 48px) * 1.15)); }
+/* La última palabra del titular es luz pura: degradado de aurora. */
+.store-page[data-store-template='aurora'] .sp-au-mark {
+  font-style: normal;
+  background: linear-gradient(92deg, var(--store-accent), var(--au-hue2));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+.store-page[data-store-template='aurora'] .sp-au-card .sp-hero-sub {
+  width: 100%; max-width: min(50ch, 100%); margin: 16px 0 0;
+  font-size: 15.5px; line-height: 1.78; color: var(--au-ink-2);
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.store-page[data-store-template='aurora'] .sp-au-card .sp-hero-ctas {
+  justify-content: flex-start; align-items: center; gap: 12px; margin-top: 26px;
+}
+.store-page[data-store-template='aurora'] .sp-hero-ctas .sp-btn {
+  height: 48px; padding: 0 24px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-size: 14px; font-weight: 600; letter-spacing: .01em;
+  box-shadow: 0 12px 34px -10px color-mix(in srgb, var(--store-accent) 75%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-hero-ctas .sp-btn:hover {
+  filter: brightness(1.14); transform: translateY(-1px);
+  box-shadow: 0 16px 40px -10px color-mix(in srgb, var(--store-accent) 85%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-hero-ctas .sp-btn.sp-hero-ghost {
+  background: rgba(255, 255, 255, .07); border: 1px solid var(--au-line);
+  color: var(--au-ink); box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-hero-ctas .sp-btn.sp-hero-ghost:hover {
+  background: rgba(255, 255, 255, .12); border-color: color-mix(in srgb, var(--store-accent) 55%, transparent);
+  color: var(--au-ink); filter: none; transform: translateY(-1px);
+}
+.store-page[data-store-template='aurora'] .sp-hero .sp-icon-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255, 255, 255, .07); border: 1px solid var(--au-line);
+  color: var(--au-ink); box-shadow: none;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.store-page[data-store-template='aurora'] .sp-hero .sp-icon-btn:hover {
+  background: rgba(255, 255, 255, .13); border-color: var(--store-accent);
+  color: var(--sp-accent-text); filter: none; transform: translateY(-1px);
+}
+
+/* --- Departamentos: constelación de esferas de vidrio --- */
+.store-page[data-store-template='aurora'] .sp-shop-depts {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 14px; margin-top: clamp(44px, 5.5vw, 72px); max-width: none !important;
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 8px 20px 8px 8px; border-radius: 99px;
+  border: 1px solid var(--au-line); background: var(--au-glass);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  text-align: left; box-shadow: none;
+  transition: border-color .25s var(--sp-ease), transform .25s var(--sp-ease), box-shadow .3s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--store-accent) 60%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--store-accent) 30%, transparent), 0 14px 34px -14px color-mix(in srgb, var(--store-accent) 45%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept-thumb {
+  width: 46px; height: 46px; flex: none;
+  border-radius: 50%; border: 1px solid var(--au-line);
+  overflow: hidden; background: var(--au-tile);
+  box-shadow: inset 0 0 0 2px var(--au-deep);
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.store-page[data-store-template='aurora'] .sp-shop-dept-initial {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  font-family: var(--sp-display); font-weight: 700; font-size: 18px;
+  color: color-mix(in srgb, var(--au-ink) 60%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept-name {
+  font-family: var(--sp-label); font-weight: 600;
+  font-size: 13.5px; letter-spacing: .04em; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept-count {
+  font-family: var(--sp-label); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--au-muted);
+  white-space: nowrap;
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept.all .sp-shop-dept-thumb {
+  display: grid; place-items: center;
+  background: linear-gradient(140deg, var(--store-accent), var(--au-hue2));
+  border: 0; color: #fff;
+}
+.store-page[data-store-template='aurora'] .sp-shop-dept.all .sp-shop-dept-count { color: var(--sp-accent-text); }
+
+/* --- La vitrina: placas con etiqueta de vidrio sobre la imagen --- */
+.store-page[data-store-template='aurora'] .sp-shop-featured { margin-top: clamp(60px, 7vw, 104px); }
+.store-page[data-store-template='aurora'] .sp-shop-featured-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 18px; margin-bottom: 36px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--au-line);
+}
+.store-page[data-store-template='aurora'] .sp-shop-featured-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin: 0 0 6px; font-family: var(--sp-label); font-size: 11px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='aurora'] .sp-shop-featured-eyebrow::before {
+  content: ''; width: 6px; height: 6px; background: var(--store-accent);
+  transform: rotate(45deg);
+}
+.store-page[data-store-template='aurora'] .sp-shop-featured-title {
+  margin: 0; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(32px, 4.4vw, 54px); line-height: 1.06; letter-spacing: -.02em;
+  color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-shop-viewall {
+  display: inline-flex; align-items: center; gap: 8px; flex: none;
+  height: 46px; padding: 0 20px; border-radius: 99px;
+  border: 1px solid var(--au-line); background: var(--au-glass);
+  color: var(--au-ink); font-family: var(--sp-label);
+  font-size: 12px; font-weight: 600; letter-spacing: .08em;
+  text-decoration: none; transition: border-color .2s, color .2s, transform .2s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-shop-viewall:hover {
+  border-color: var(--store-accent); color: var(--sp-accent-text); transform: translateY(-1px);
+}
+.store-page[data-store-template='aurora'] .sp-shop-featured-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 32px 20px;
+}
+/* La tarjeta es cielo + etiqueta: la imagen ocupa todo y el texto vive
+   en una placa de vidrio pegada a su borde inferior, como en el hero. */
+.store-page[data-store-template='aurora'] .sp-card {
+  position: relative; display: block; overflow: visible;
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  cursor: pointer;
+}
+.store-page[data-store-template='aurora'] .sp-card::before,
+.store-page[data-store-template='aurora'] .sp-card::after { display: none; }
+.store-page[data-store-template='aurora'] .sp-card:hover { transform: none; border: 0; box-shadow: none; }
+.store-page[data-store-template='aurora'] .sp-card-img {
+  position: relative; width: 100%; aspect-ratio: 4 / 5; margin: 0;
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--au-line); background: var(--au-tile);
+  transition: border-color .3s var(--sp-ease), box-shadow .35s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-card-img img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .7s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-card:hover .sp-card-img {
+  border-color: color-mix(in srgb, var(--store-accent) 55%, transparent);
+  box-shadow: 0 20px 50px -20px color-mix(in srgb, var(--store-accent) 40%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-card:hover .sp-card-img img { transform: scale(1.05); }
+.store-page[data-store-template='aurora'] .sp-card-img::after { display: none; }
+.store-page[data-store-template='aurora'] .sp-card-body {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 2;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 13px 15px; border-radius: 15px;
+  background: color-mix(in srgb, var(--au-deep) 60%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, .13);
+}
+.store-page[data-store-template='aurora'] .sp-card-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px; margin: 0;
+  font-family: var(--sp-label); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .sp-card-eyebrow i { width: 3px; height: 3px; border-radius: 0; background: var(--au-muted); transform: rotate(45deg); }
+.store-page[data-store-template='aurora'] .sp-card-name {
+  margin: 0; font-family: var(--sp-display); font-weight: 600;
+  font-size: 15px; line-height: 1.32; letter-spacing: -.01em; color: var(--au-ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.store-page[data-store-template='aurora'] .sp-card-foot {
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+  gap: 10px; margin-top: 7px; padding-top: 0; border-top: 0;
+}
+.store-page[data-store-template='aurora'] .sp-card-foot .sp-card-price {
+  font-family: var(--sp-label); font-size: 14px; font-weight: 600;
+  letter-spacing: .01em; color: var(--au-ink); font-variant-numeric: tabular-nums;
+}
+.store-page[data-store-template='aurora'] .sp-card:hover .sp-card-price { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-card-price .sp-price-old,
+.store-page[data-store-template='aurora'] .sp-price-old {
+  margin-right: 7px; font-size: 12px; font-weight: 500; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .sp-card-go {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+  border-radius: 50%; border: 0; padding: 0;
+  background: linear-gradient(140deg, var(--store-accent), var(--au-hue2));
+  color: #fff; font-size: 0; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--store-accent) 70%, transparent);
+  transition: transform .25s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-card-go svg { width: 14px; height: 14px; }
+.store-page[data-store-template='aurora'] .sp-card:hover .sp-card-go { transform: translateX(2px) scale(1.06); }
+.store-page[data-store-template='aurora'] .sp-card-quick {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%) translateY(4px);
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 14px; border-radius: 99px;
+  background: color-mix(in srgb, var(--au-deep) 62%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: var(--au-ink); font-family: var(--sp-label);
+  font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  opacity: 0; transition: opacity .2s var(--sp-ease), transform .25s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-card:hover .sp-card-quick,
+.store-page[data-store-template='aurora'] .sp-card:focus-visible .sp-card-quick { opacity: 1; transform: translateX(-50%) translateY(0); }
+.store-page[data-store-template='aurora'] .sp-card-flag {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  display: inline-flex; align-items: center; height: 26px; padding: 0 10px;
+  border-radius: 99px; border: 1px solid rgba(255, 255, 255, .2);
+  background: color-mix(in srgb, var(--au-deep) 62%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: var(--au-ink); font-family: var(--sp-label);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.store-page[data-store-template='aurora'] .sp-card-flag.offer {
+  left: auto; right: 12px;
+  background: linear-gradient(120deg, var(--store-accent), var(--au-hue2));
+  border: 0; color: #fff;
+}
+.store-page[data-store-template='aurora'] .sp-card-placeholder {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  color: color-mix(in srgb, var(--au-ink) 30%, transparent); background: var(--au-tile);
+}
+.store-page[data-store-template='aurora'] .sp-skeleton { border: 1px solid var(--au-line); border-radius: 20px; box-shadow: none; background: var(--au-tile); }
+.store-page[data-store-template='aurora'] .sp-skeleton .sp-card-img,
+.store-page[data-store-template='aurora'] .sp-sk-line { border-radius: var(--sp-radius); }
+
+/* --- Destacados sin categorías: chips de vidrio --- */
+.store-page[data-store-template='aurora'] .sp-hl {
+  border: 1px solid var(--au-line); border-radius: var(--sp-radius);
+  background: var(--au-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-hl:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); box-shadow: 0 14px 34px -16px color-mix(in srgb, var(--store-accent) 40%, transparent); }
+.store-page[data-store-template='aurora'] .sp-hl-icon { color: var(--sp-accent-text); }
+
+/* --- Ritmo de secciones: titulares Sora con haz de luz, eyebrows de
+   instrumento --- */
+.store-page[data-store-template='aurora'] .sp-about,
+.store-page[data-store-template='aurora'] .sp-showcase,
+.store-page[data-store-template='aurora'] .sp-gallery,
+.store-page[data-store-template='aurora'] .sp-services,
+.store-page[data-store-template='aurora'] .sp-testimonials,
+.store-page[data-store-template='aurora'] .sp-faq { padding-top: clamp(60px, 7vw, 108px); }
+.store-page[data-store-template='aurora'] .sp-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--sp-label); font-size: 11px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='aurora'] .sp-eyebrow::before {
+  content: ''; width: 6px; height: 6px; background: var(--store-accent);
+  transform: rotate(45deg); box-shadow: 0 0 10px color-mix(in srgb, var(--store-accent) 80%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-section-title {
+  margin: 12px 0 36px;
+  font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(28px, 4.2vw, 50px); line-height: 1.08; letter-spacing: -.02em;
+  color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-section-title::after {
+  width: 64px; height: 2px; margin-top: 14px; border-radius: 99px;
+  background: linear-gradient(90deg, var(--store-accent), transparent);
+}
+
+/* --- Sobre nosotros: paneles de vidrio sobre la noche --- */
+.store-page[data-store-template='aurora'] .sp-about-grid { align-items: center; gap: clamp(32px, 5vw, 76px); }
+.store-page[data-store-template='aurora'] .sp-about-heading {
+  font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(28px, 4.2vw, 50px); line-height: 1.08; letter-spacing: -.02em;
+  color: var(--au-ink); text-align: left;
+}
+.store-page[data-store-template='aurora'] .sp-about-heading-icon { display: none; }
+.store-page[data-store-template='aurora'] .sp-about-text { font-size: 16px; line-height: 1.8; color: var(--au-ink-2); }
+.store-page[data-store-template='aurora'] .sp-about-list li { font-size: 14.5px; color: var(--au-ink-2); }
+.store-page[data-store-template='aurora'] .sp-about-list .icon { color: var(--store-accent); }
+.store-page[data-store-template='aurora'] .sp-about-photo {
+  border: 1px solid var(--au-line); border-radius: 22px; padding: 10px;
+  background: var(--au-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--sp-shadow-md);
+}
+.store-page[data-store-template='aurora'] .sp-about-photo img { border-radius: 14px; }
+.store-page[data-store-template='aurora'] .sp-about-card {
+  padding: 30px; border: 1px solid var(--au-line); border-radius: 22px;
+  background: var(--au-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-about-card::before { display: none; }
+.store-page[data-store-template='aurora'] .sp-about-card:hover { transform: none; box-shadow: none; }
+.store-page[data-store-template='aurora'] .sp-about-years {
+  padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; text-align: left;
+}
+.store-page[data-store-template='aurora'] .sp-about-years strong {
+  display: block; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(52px, 6.5vw, 88px); line-height: 1; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-about-years span {
+  display: block; margin-top: 10px; font-family: var(--sp-label);
+  font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .sp-about-mission {
+  margin: 24px 0 0; padding: 16px 0 0 18px;
+  border-top: 1px solid var(--au-line-soft); border-left: 2px solid var(--store-accent);
+  border-radius: 0; background: none;
+  font-size: 17px; line-height: 1.7; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-about-mission-label {
+  color: var(--sp-accent-text); font-family: var(--sp-label);
+  font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+}
+
+/* --- Banda de invitación: la foto viaja en placa de vidrio --- */
+.store-page[data-store-template='aurora'] .sp-showcase-frame {
+  border: 1px solid var(--au-line); border-radius: 22px; padding: 10px;
+  background: var(--au-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--sp-shadow-md);
+}
+.store-page[data-store-template='aurora'] .sp-showcase-frame img { border-radius: 14px; }
+.store-page[data-store-template='aurora'] .sp-showcase-frame::after { display: none; }
+.store-page[data-store-template='aurora'] .sp-showcase-title {
+  font-family: var(--sp-display); font-weight: 700; text-align: left;
+  font-size: clamp(28px, 4.4vw, 54px); line-height: 1.08; letter-spacing: -.02em;
+  color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-showcase-text { font-size: 16px; line-height: 1.8; color: var(--au-ink-2); }
+.store-page[data-store-template='aurora'] .sp-showcase-ctas .sp-btn {
+  height: 50px; padding: 0 26px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-weight: 600; font-size: 14px;
+  box-shadow: 0 12px 34px -10px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-showcase-ctas .sp-btn:hover { filter: brightness(1.14); transform: translateY(-1px); }
+.store-page[data-store-template='aurora'] .sp-showcase-ctas .sp-btn.ghost {
+  background: rgba(255, 255, 255, .07); color: var(--au-ink); border: 1px solid var(--au-line);
+  box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-showcase-ctas .sp-btn.ghost:hover {
+  background: rgba(255, 255, 255, .12); border-color: var(--store-accent); color: var(--au-ink); filter: none;
+}
+
+/* --- Galería: placas redondas sobre la noche --- */
+.store-page[data-store-template='aurora'] .sp-gallery-grid { gap: 14px; }
+.store-page[data-store-template='aurora'] .sp-gallery-item {
+  border: 1px solid var(--au-line); border-radius: 18px; overflow: hidden;
+  background: var(--au-tile); box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-gallery-item img { transition: transform .6s var(--sp-ease); }
+.store-page[data-store-template='aurora'] .sp-gallery-item:hover {
+  transform: none; box-shadow: 0 16px 40px -18px color-mix(in srgb, var(--store-accent) 40%, transparent);
+  border-color: color-mix(in srgb, var(--store-accent) 55%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-gallery-item:hover img { transform: scale(1.05); }
+
+/* --- Qué ofrecemos: casillas de vidrio con icono en halo --- */
+.store-page[data-store-template='aurora'] .sp-services .sp-services-grid { gap: 16px; }
+.store-page[data-store-template='aurora'] .sp-service {
+  border: 1px solid var(--au-line); border-radius: 20px;
+  background: var(--au-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: none; transition: border-color .25s var(--sp-ease), transform .25s var(--sp-ease);
+}
+.store-page[data-store-template='aurora'] .sp-service:hover {
+  transform: translateY(-3px); border-color: color-mix(in srgb, var(--store-accent) 55%, transparent);
+  box-shadow: 0 16px 40px -18px color-mix(in srgb, var(--store-accent) 35%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-service-icon {
+  border-radius: 14px; border: 1px solid color-mix(in srgb, var(--store-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--store-accent) 14%, transparent);
+  box-shadow: 0 0 20px -4px color-mix(in srgb, var(--store-accent) 45%, transparent);
+  color: var(--sp-accent-text);
+}
+.store-page[data-store-template='aurora'] .sp-service strong {
+  font-family: var(--sp-display); font-weight: 600; font-size: 17px;
+  letter-spacing: -.01em; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-service p { color: var(--au-muted); }
+
+/* --- Cifras: lecturas del observatorio --- */
+.store-page[data-store-template='aurora'] .sp-stats {
+  margin-top: clamp(60px, 7vw, 108px); padding: clamp(50px, 5.5vw, 78px) 0;
+  background:
+    radial-gradient(70% 130% at 50% -20%, color-mix(in srgb, var(--store-accent) 16%, transparent), transparent 70%),
+    var(--au-deep);
+  color: var(--au-ink);
+  border-top: 1px solid var(--au-line); border-bottom: 1px solid var(--au-line);
+}
+.store-page[data-store-template='aurora'] .sp-stat strong {
+  font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(48px, 6vw, 84px); line-height: 1; color: var(--au-ink);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-store-template='aurora'] .sp-stat span {
+  display: block; margin-top: 10px; font-family: var(--sp-label);
+  font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--au-muted);
+}
+
+/* --- Testimonios: mensajes en botellas de vidrio --- */
+.store-page[data-store-template='aurora'] .sp-testimonial {
+  border: 1px solid var(--au-line); border-radius: 20px;
+  background: var(--au-glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-testimonial:hover { transform: none; box-shadow: none; border-color: color-mix(in srgb, var(--store-accent) 50%, transparent); }
+.store-page[data-store-template='aurora'] .sp-testimonial-quote { color: var(--sp-accent-text); }
+.store-page[data-store-template='aurora'] .sp-testimonial-text { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-testimonial-by { border-top: 1px solid var(--au-line-soft); }
+.store-page[data-store-template='aurora'] .sp-testimonial-by strong { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-testimonial-by span { color: var(--au-muted); }
+
+/* --- Preguntas: filas de vidrio --- */
+.store-page[data-store-template='aurora'] .sp-faq-intro .sp-section-title { text-align: left; }
+.store-page[data-store-template='aurora'] .sp-faq-item {
+  border: 1px solid var(--au-line); border-radius: 16px;
+  background: var(--au-glass); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.store-page[data-store-template='aurora'] .sp-faq-item + .sp-faq-item { margin-top: 10px; }
+.store-page[data-store-template='aurora'] .sp-faq-item summary {
+  font-family: var(--sp-display); font-weight: 600; font-size: 17px;
+  letter-spacing: -.01em; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-faq-caret {
+  border: 1px solid var(--au-line); border-radius: 50%;
+  background: rgba(255, 255, 255, .05); color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-faq-item[open] { border-color: color-mix(in srgb, var(--store-accent) 45%, transparent); }
+.store-page[data-store-template='aurora'] .sp-faq-item[open] .sp-faq-caret { color: var(--sp-accent-text); border-color: var(--store-accent); }
+.store-page[data-store-template='aurora'] .sp-faq-answer { color: var(--au-ink-2); }
+.store-page[data-store-template='aurora'] .sp-faq-note a { color: var(--sp-accent-text); }
+
+/* --- Cierre: el propio cielo con su haz de luz --- */
+.store-page[data-store-template='aurora'] .sp-cta { margin-top: clamp(60px, 7vw, 108px); }
+.store-page[data-store-template='aurora'] .sp-cta-inner {
+  position: relative; overflow: hidden; gap: 18px;
+  padding: clamp(54px, 7vw, 90px) 28px;
+  border: 1px solid var(--au-line); border-radius: 28px;
+  background:
+    radial-gradient(80% 130% at 50% -30%, color-mix(in srgb, var(--store-accent) 30%, transparent), transparent 68%),
+    radial-gradient(60% 100% at 90% 130%, color-mix(in srgb, var(--au-hue2) 14%, transparent), transparent 66%),
+    var(--au-deep);
+  color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-cta-inner::before { display: none; }
+.store-page[data-store-template='aurora'] .sp-cta-title {
+  margin: 0; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(34px, 5.2vw, 68px); line-height: 1.06; letter-spacing: -.025em;
+  color: var(--au-ink); text-wrap: balance;
+}
+.store-page[data-store-template='aurora'] .sp-cta-text {
+  max-width: min(52ch, 100%); margin: 0; font-size: 16px; line-height: 1.75;
+  color: var(--au-ink-2);
+}
+.store-page[data-store-template='aurora'] .sp-cta-btn {
+  height: 52px; margin-top: 10px; padding: 0 30px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-weight: 600; font-size: 14.5px;
+  box-shadow: 0 14px 40px -12px color-mix(in srgb, var(--store-accent) 80%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-cta-btn:hover {
+  filter: brightness(1.14); transform: translateY(-1px);
+}
+
+/* --- Contacto: instrumentos de vidrio esmerilado --- */
+.store-page[data-store-template='aurora'] .sp-contact { padding: clamp(60px, 7vw, 108px) 0; }
+.store-page[data-store-template='aurora'] .sp-contact-title {
+  margin: 10px 0 12px; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(28px, 4.2vw, 50px); line-height: 1.08; letter-spacing: -.02em;
+  color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-contact-sub { max-width: min(48ch, 100%); font-size: 16px; line-height: 1.8; color: var(--au-muted); }
+.store-page[data-store-template='aurora'] .sp-map-address { font-family: var(--sp-label); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--au-muted); }
+.store-page[data-store-template='aurora'] .sp-contact-hours li {
+  border: 1px solid var(--au-line); border-radius: 14px;
+  background: var(--au-glass); color: var(--au-ink-2);
+}
+.store-page[data-store-template='aurora'] .sp-contact-hours li strong { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-contact-channels > .sp-btn {
+  height: 50px; padding: 0 26px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-weight: 600; font-size: 14px;
+  box-shadow: 0 12px 34px -10px color-mix(in srgb, var(--store-accent) 70%, transparent);
+  animation: none;
+}
+.store-page[data-store-template='aurora'] .sp-contact-channels > .sp-btn:hover { filter: brightness(1.14); }
+.store-page[data-store-template='aurora'] .sp-contact-channels .sp-icon-btn {
+  width: 50px; height: 50px; border: 1px solid var(--au-line); border-radius: 50%;
+  background: rgba(255, 255, 255, .06); color: var(--au-ink); box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-contact-channels .sp-icon-btn:hover {
+  border-color: var(--store-accent); color: var(--sp-accent-text); background: rgba(255, 255, 255, .1);
+}
+.store-page[data-store-template='aurora'] .sp-contact-photo {
+  border: 1px solid var(--au-line); border-radius: 20px; padding: 8px;
+  background: var(--au-glass); box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-form {
+  padding: 32px; border: 1px solid var(--au-line); border-radius: 24px;
+  background: var(--au-glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--sp-shadow-md);
+}
+.store-page[data-store-template='aurora'] .sp-form::before,
+.store-page[data-store-template='aurora'] .sp-form::after { display: none; }
+.store-page[data-store-template='aurora'] .sp-form:hover { transform: none; box-shadow: var(--sp-shadow-md); }
+.store-page[data-store-template='aurora'] .sp-form-head strong { font-family: var(--sp-display); font-weight: 600; font-size: 20px; letter-spacing: -.01em; color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-form-head span { color: var(--au-muted); }
+.store-page[data-store-template='aurora'] .sp-form-badge {
+  border-radius: 14px; border: 1px solid color-mix(in srgb, var(--store-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--store-accent) 14%, transparent);
+  color: var(--sp-accent-text); box-shadow: none; transform: none;
+}
+.store-page[data-store-template='aurora'] .sp-form:hover .sp-form-badge { transform: none; }
+.store-page[data-store-template='aurora'] .sp-field label { color: var(--au-muted); font-family: var(--sp-label); letter-spacing: .06em; }
+.store-page[data-store-template='aurora'] .sp-input {
+  min-height: 50px; padding: 12px 16px;
+  border: 1px solid var(--au-line); border-radius: 14px;
+  background: rgba(255, 255, 255, .05); box-shadow: none;
+  font-size: 15px; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-input-wrap .sp-input { padding-left: 42px; }
+.store-page[data-store-template='aurora'] .sp-input:focus {
+  background: rgba(255, 255, 255, .08); border-color: var(--store-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--store-accent) 22%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-input::placeholder { color: color-mix(in srgb, var(--au-muted) 70%, transparent); }
+.store-page[data-store-template='aurora'] .sp-captcha-q {
+  border: 1px solid var(--au-line); border-radius: 12px;
+  background: rgba(255, 255, 255, .05); color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-captcha-row .sp-icon-btn {
+  border-radius: 12px; border-color: var(--au-line); color: var(--au-ink); background: rgba(255, 255, 255, .05);
+}
+.store-page[data-store-template='aurora'] .sp-captcha-row .sp-icon-btn:hover { border-color: var(--store-accent); color: var(--sp-accent-text); }
+.store-page[data-store-template='aurora'] .sp-captcha-row .sp-input { border: 1px solid var(--au-line); }
+.store-page[data-store-template='aurora'] .sp-form .sp-btn {
+  height: 52px; padding: 0 30px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-weight: 600; font-size: 14.5px;
+  box-shadow: 0 12px 34px -10px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-form .sp-btn:hover {
+  filter: brightness(1.14); transform: translateY(-1px);
+}
+.store-page[data-store-template='aurora'] .sp-form .sp-btn.ghost {
+  background: rgba(255, 255, 255, .07); color: var(--au-ink); border: 1px solid var(--au-line);
+  box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-form .sp-btn.ghost:hover {
+  background: rgba(255, 255, 255, .12); border-color: var(--store-accent); color: var(--au-ink); filter: none;
+}
+.store-page[data-store-template='aurora'] .sp-form-note { color: var(--au-muted); }
+.store-page[data-store-template='aurora'] .sp-sent-check { border-radius: 50%; background: linear-gradient(140deg, var(--store-accent), var(--au-hue2)); box-shadow: 0 0 30px -4px color-mix(in srgb, var(--store-accent) 70%, transparent); }
+.store-page[data-store-template='aurora'] .sp-map-frame { border: 1px solid var(--au-line); border-radius: 20px; box-shadow: none; background: var(--au-panel); overflow: hidden; }
+.store-page[data-store-template='aurora'] .sp-map-open { color: var(--au-ink); }
+
+/* --- Barra superior: consola del observatorio (vidrio nocturno) --- */
+.store-page[data-store-template='aurora'] .sp-top,
+.store-page[data-store-template='aurora'][data-store-theme='dark'] .sp-top {
+  background: color-mix(in srgb, var(--au-deep) 82%, transparent);
+  border-bottom: 1px solid var(--au-line); box-shadow: none;
+  backdrop-filter: saturate(140%) blur(14px); -webkit-backdrop-filter: saturate(140%) blur(14px);
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-brand,
+.store-page[data-store-template='aurora'] .sp-top .sp-name { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-top .sp-name {
+  font-family: var(--sp-display); font-weight: 700; letter-spacing: -.01em;
+  font-size: clamp(15px, calc(var(--store-name-size, 32px) * .5), 20px);
+}
+.store-page[data-store-template='aurora'] .sp-top-links a {
+  padding: 8px 13px; border-radius: 99px; color: var(--au-muted);
+  font-family: var(--sp-label); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.store-page[data-store-template='aurora'] .sp-top-links a:hover {
+  color: var(--au-ink); background: rgba(255, 255, 255, .08);
+}
+.store-page[data-store-template='aurora'] .sp-top-links a.router-link-exact-active {
+  color: var(--au-ink); background: color-mix(in srgb, var(--store-accent) 22%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-icon-btn,
+.store-page[data-store-template='aurora'] .sp-top .sp-burger {
+  background: rgba(255, 255, 255, .06); border: 1px solid var(--au-line);
+  border-radius: 50%; color: var(--au-ink); box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-burger { border-radius: 12px; }
+.store-page[data-store-template='aurora'] .sp-top .sp-icon-btn:hover,
+.store-page[data-store-template='aurora'] .sp-top .sp-burger:hover {
+  background: rgba(255, 255, 255, .12); border-color: var(--store-accent);
+  color: var(--sp-accent-text); transform: none;
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-icon-btn.primary {
+  background: linear-gradient(140deg, var(--store-accent), var(--au-hue2));
+  border: 0; color: #fff;
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-icon-btn.primary:hover {
+  filter: brightness(1.14); color: #fff;
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-mono { border-radius: 12px; }
+.store-page[data-store-template='aurora'] .sp-top .sp-logo.sm { border-radius: 12px; border-color: var(--au-line); }
+.store-page[data-store-template='aurora'] .sp-top .sp-search {
+  background: rgba(255, 255, 255, .06); border: 1px solid var(--au-line);
+  border-radius: 99px; box-shadow: none; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .sp-top .sp-search input { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-top .sp-search:focus-within { border-color: var(--store-accent); box-shadow: none; }
+.store-page[data-store-template='aurora'] .sp-top-cta {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px;
+  padding: 0 18px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-family: var(--sp-label); font-size: 12px; font-weight: 600;
+  letter-spacing: .08em;
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+.store-page[data-store-template='aurora'] .sp-top-cta:hover { filter: brightness(1.14); transform: none; }
+.store-page[data-store-template='aurora'] .sp-progress { background: linear-gradient(90deg, var(--store-accent), var(--au-hue2)); }
+
+/* --- Pie: horizonte del observatorio --- */
+.store-page[data-store-template='aurora'] .sp-foot {
+  margin-top: clamp(60px, 7vw, 108px); padding-top: 64px;
+  background:
+    radial-gradient(80% 120% at 50% -30%, color-mix(in srgb, var(--store-accent) 12%, transparent), transparent 70%),
+    var(--au-deep);
+  color: var(--au-ink); border-top: 1px solid var(--au-line);
+}
+.store-page[data-store-template='aurora'] .sp-foot::before { display: none; }
+.store-page[data-store-template='aurora'] .sp-foot-brand strong {
+  font-family: var(--sp-display); font-weight: 700; font-size: 26px;
+  letter-spacing: -.01em; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-foot-brand span,
+.store-page[data-store-template='aurora'] .sp-foot-copy { color: color-mix(in srgb, var(--au-ink) 55%, transparent); }
+.store-page[data-store-template='aurora'] .sp-foot-desc { color: color-mix(in srgb, var(--au-ink) 60%, transparent); }
+.store-page[data-store-template='aurora'] .sp-foot-heading {
+  color: var(--sp-accent-text); font-family: var(--sp-label);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+}
+.store-page[data-store-template='aurora'] .sp-foot-col a { color: color-mix(in srgb, var(--au-ink) 70%, transparent); font-size: 14px; }
+.store-page[data-store-template='aurora'] .sp-foot-col a:hover { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-foot-bottom { border-top-color: var(--au-line-soft); color: color-mix(in srgb, var(--au-ink) 50%, transparent); }
+.store-page[data-store-template='aurora'] .sp-foot .sp-davent-badge {
+  background: rgba(255, 255, 255, .05); border-color: var(--au-line);
+  border-radius: 99px; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .sp-foot .sp-davent-badge:hover { border-color: var(--store-accent); transform: none; }
+.store-page[data-store-template='aurora'] .sp-foot .sp-davent-badge strong { color: var(--sp-accent-text); }
+.store-page[data-store-template='aurora'] .sp-foot .sp-foot-contact li,
+.store-page[data-store-template='aurora'] .sp-foot .sp-foot-contact a { color: color-mix(in srgb, var(--au-ink) 75%, transparent); }
+.store-page[data-store-template='aurora'] .sp-foot .sp-foot-contact a:hover { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .sp-foot .sp-foot-social a {
+  border-radius: 50%; color: var(--au-ink);
+  background: rgba(255, 255, 255, .05); border-color: var(--au-line);
+}
+.store-page[data-store-template='aurora'] .sp-foot .sp-foot-social a:hover {
+  background: linear-gradient(140deg, var(--store-accent), var(--au-hue2));
+  color: #fff; border-color: transparent; transform: none;
+}
+
+/* ===== Ficha de producto: la pieza observada ===== */
+.store-page[data-store-template='aurora'] .spd-main { flex: 1; padding-top: 28px; padding-bottom: 88px; }
+.store-page[data-store-template='aurora'] .spd-crumbs {
+  font-family: var(--sp-label); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .spd-crumbs a { color: var(--au-muted); text-decoration: none; }
+.store-page[data-store-template='aurora'] .spd-crumbs a:hover { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .spd-crumb-here { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .spd-sheet {
+  background: var(--au-glass); border: 1px solid var(--au-line);
+  border-radius: 24px; box-shadow: var(--sp-shadow-md); overflow: hidden;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.store-page[data-store-template='aurora'] .spd-gallery { background: var(--au-tile); border-right: 1px solid var(--au-line); }
+.store-page[data-store-template='aurora'] .spd-cond {
+  font-family: var(--sp-label); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--sp-accent-text);
+}
+.store-page[data-store-template='aurora'] .spd-name {
+  margin: 0; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 46px); line-height: 1.08; letter-spacing: -.02em;
+  color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .spd-brand {
+  font-family: var(--sp-label); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .spd-price { font-family: var(--sp-label); font-size: 28px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .spd-offer-pill {
+  border-radius: 99px; border: 0;
+  background: linear-gradient(120deg, var(--store-accent), var(--au-hue2)); color: #fff;
+  font-family: var(--sp-label); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+}
+.store-page[data-store-template='aurora'] .spd-buy .sp-btn {
+  height: 54px; border: 0; border-radius: 99px;
+  background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink));
+  color: #fff; font-weight: 600; font-size: 14.5px;
+  box-shadow: 0 12px 34px -10px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+.store-page[data-store-template='aurora'] .spd-buy .sp-btn:hover { filter: brightness(1.14); transform: translateY(-1px); }
+.store-page[data-store-template='aurora'] .spd-buy .sp-btn.ghost {
+  background: rgba(255, 255, 255, .07); color: var(--au-ink); border: 1px solid var(--au-line);
+  box-shadow: none;
+}
+.store-page[data-store-template='aurora'] .spd-buy .sp-btn.ghost:hover {
+  background: rgba(255, 255, 255, .12); border-color: var(--store-accent); color: var(--au-ink); filter: none;
+}
+.store-page[data-store-template='aurora'] .spd-seller { border-top: 1px solid var(--au-line-soft); font-size: 13px; color: var(--au-muted); }
+.store-page[data-store-template='aurora'] .spd-seller svg { color: var(--sp-accent-text); }
+.store-page[data-store-template='aurora'] .spd-backlink {
+  font-family: var(--sp-label); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .spd-backlink:hover { color: var(--au-ink); }
+.store-page[data-store-template='aurora'] .spd-sec-title {
+  margin: 0 0 18px; font-family: var(--sp-display); font-weight: 700;
+  font-size: clamp(24px, 3vw, 38px); letter-spacing: -.02em; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .spd-specs-wrap { border: 1px solid var(--au-line); border-radius: 16px; overflow: hidden; }
+.store-page[data-store-template='aurora'] .spd-specs th {
+  font-family: var(--sp-label); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--au-muted);
+}
+.store-page[data-store-template='aurora'] .spd-specs tbody tr:nth-child(even) th,
+.store-page[data-store-template='aurora'] .spd-specs tbody tr:nth-child(even) td { background: rgba(255, 255, 255, .03); }
+.store-page[data-store-template='aurora'] .spd-rel-img {
+  border: 1px solid var(--au-line); border-radius: 18px; background: var(--au-tile);
+  aspect-ratio: 4 / 5;
+}
+.store-page[data-store-template='aurora'] .spd-rel-img img { transition: transform .5s var(--sp-ease); }
+.store-page[data-store-template='aurora'] .spd-rel:hover .spd-rel-img img { transform: scale(1.04); }
+.store-page[data-store-template='aurora'] .spd-rel:hover .spd-rel-img { border-color: color-mix(in srgb, var(--store-accent) 55%, transparent); }
+.store-page[data-store-template='aurora'] .spd-rel-name {
+  font-family: var(--sp-display); font-weight: 600; font-size: 16px;
+  letter-spacing: -.01em; color: var(--au-ink);
+}
+.store-page[data-store-template='aurora'] .spd-rel-price { font-family: var(--sp-label); font-size: 13.5px; font-weight: 600; color: var(--au-muted); }
+
+/* --- Micro-interacciones de Aurora: la luz responde — los paneles se
+   elevan, el acento siempre llega como halo o degradado, la imagen
+   respira en zoom lento. --- */
+.store-page[data-store-template='aurora'] { -webkit-tap-highlight-color: transparent; }
+.store-page[data-store-template='aurora'] :is(a, button, summary, [role='button']) { touch-action: manipulation; }
+.store-page[data-store-template='aurora'] .sp-rv { translate: 0 18px; }
+.store-page[data-store-template='aurora'] :is(.sp-btn, .sp-top-cta, .sp-shop-viewall, .sp-icon-btn, .sp-card):active { opacity: .8; }
+.store-page[data-store-template='aurora'] .sp-gallery-item:active { transform: scale(.98); opacity: .92; }
+@media (hover: hover) and (pointer: fine) {
+  .store-page[data-store-template='aurora'] .sp-shop-dept:hover .sp-shop-dept-name { color: var(--sp-accent-text); }
+  .store-page[data-store-template='aurora'] .sp-faq-item summary:hover .sp-faq-caret { border-color: var(--store-accent); }
+}
+
+/* --- Responsive de Aurora --- */
+@media (max-width: 960px) {
+  .store-page[data-store-template='aurora'] .sp-hero-inner { padding: 36px 20px 60px; }
+  .store-page[data-store-template='aurora'] .sp-au-wrap { gap: 34px; }
+  .store-page[data-store-template='aurora'] .sp-au-rail { flex-wrap: wrap; gap: 12px 20px; }
+  .store-page[data-store-template='aurora'] .sp-au-rail-side { width: 100%; margin-left: 0; justify-content: space-between; }
+  .store-page[data-store-template='aurora'] .sp-au-media { aspect-ratio: 4 / 3; min-height: 240px; }
+  .store-page[data-store-template='aurora'] .sp-au-mini { width: clamp(96px, 22vw, 130px); }
+  .store-page[data-store-template='aurora'] .sp-au-card {
+    width: calc(100% - 24px); margin-top: -48px; margin-left: 12px;
+    padding: 26px 22px;
+  }
+  .store-page[data-store-template='aurora'] .sp-card-quick { display: none; }
+  .store-page[data-store-template='aurora'] .sp-about-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .store-page[data-store-template='aurora'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+  .store-page[data-store-template='aurora'] .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+  .store-page[data-store-template='aurora'] .spd-top { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='aurora'] .spd-gallery { border-right: 0; border-bottom: 1px solid var(--au-line); min-height: 0; }
+}
+@media (max-width: 640px) {
+  .store-page[data-store-template='aurora'] .sp-container { padding-left: 20px; padding-right: 20px; }
+  .store-page[data-store-template='aurora'] .sp-au-rail { padding-bottom: 14px; }
+  .store-page[data-store-template='aurora'] .sp-au-rail-meta { gap: 14px; flex-wrap: wrap; }
+  .store-page[data-store-template='aurora'] .sp-au-rail-meta li { font-size: 9.5px; }
+  .store-page[data-store-template='aurora'] .sp-au-rail-year { display: none; }
+  .store-page[data-store-template='aurora'] .sp-au-media { border-radius: 20px; }
+  .store-page[data-store-template='aurora'] .sp-au-mini { display: none; }
+  .store-page[data-store-template='aurora'] .sp-au-chip { top: 12px; left: 12px; height: 32px; font-size: 9.5px; }
+  .store-page[data-store-template='aurora'] .sp-shop-depts { justify-content: flex-start; gap: 10px; }
+  .store-page[data-store-template='aurora'] .sp-shop-dept { padding: 6px 16px 6px 6px; }
+  .store-page[data-store-template='aurora'] .sp-shop-dept-thumb { width: 38px; height: 38px; }
+  .store-page[data-store-template='aurora'] .sp-shop-dept-count { display: none; }
+  .store-page[data-store-template='aurora'] .sp-shop-featured-head { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .store-page[data-store-template='aurora'] .sp-form { padding: 24px 20px; }
+  .store-page[data-store-template='aurora'] .sp-form-row { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='aurora'] .sp-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 0; }
+}
+@media (max-width: 460px) {
+  .store-page[data-store-template='aurora'] .sp-au-card { width: calc(100% - 12px); margin-left: 6px; padding: 22px 18px; }
+  .store-page[data-store-template='aurora'] .sp-au-card .sp-hero-title { font-size: clamp(26px, 8.5vw, 38px); }
+  .store-page[data-store-template='aurora'] .sp-hero-ctas { flex-direction: column; align-items: stretch; gap: 10px; }
+  .store-page[data-store-template='aurora'] .sp-hero-ctas .sp-btn { justify-content: center; height: 50px; }
+  .store-page[data-store-template='aurora'] .sp-hero .sp-icon-btn { align-self: center; width: 50px; height: 50px; }
+  .store-page[data-store-template='aurora'] .sp-card-body { padding: 11px 12px; }
+  .store-page[data-store-template='aurora'] .sp-card-name { font-size: 13.5px; }
+  .store-page[data-store-template='aurora'] .sp-card-foot .sp-card-price { font-size: 12.5px; }
+  .store-page[data-store-template='aurora'] .sp-card-eyebrow { font-size: 8.5px; letter-spacing: .1em; }
+  .store-page[data-store-template='aurora'] .sp-stats-grid { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .store-page[data-store-template='aurora'] .sp-badge { letter-spacing: .14em; }
+}
+@media (max-width: 380px) {
+  .store-page[data-store-template='aurora'] :is(.sp-input, .sp-search input, .sp-price input, .sp-sort select) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-store-template='aurora'] .sp-card-img img,
+  .store-page[data-store-template='aurora'] .spd-rel-img img,
+  .store-page[data-store-template='aurora'] .sp-gallery-item img,
+  .store-page[data-store-template='aurora'] .sp-shop-dept,
+  .store-page[data-store-template='aurora'] .sp-service,
+  .store-page[data-store-template='aurora'] .sp-hl { transition: none !important; }
+  .store-page[data-store-template='aurora'] .sp-card-quick { transition: none; }
+  .store-page[data-store-template='aurora'] .sp-au-beam,
+  .store-page[data-store-template='aurora'] .sp-au-star,
+  .store-page[data-store-template='aurora'] .sp-au-polaris { animation: none !important; }
+}
