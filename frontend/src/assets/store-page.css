@@ -1259,6 +1259,51 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='promo'] .sp-hero-band, .sp-hero-marquee-track { animation: none !important; }
 }
 
+/* Publicidad: la ficha también es afiche — sheet con marco duro y sombra
+   desplazada, condición/pills como stickers amarillos rotados, CTA con
+   relieve de tinta y secciones con el resaltador amarillo de la landing. */
+.store-page[data-store-template='promo'] .spd-crumbs { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.store-page[data-store-template='promo'] .spd-crumbs a { color: var(--sp-accent-text); }
+.store-page[data-store-template='promo'] .spd-sheet { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 22px; box-shadow: 8px 8px 0 var(--store-accent-ink); }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .spd-sheet { border-color: #fff; box-shadow: 8px 8px 0 var(--store-accent); }
+.store-page[data-store-template='promo'] .spd-gallery { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--store-accent) 8%, transparent) 0 16px, transparent 16px 32px), var(--sp-card-solid); }
+.store-page[data-store-template='promo'] .spd-gallery img { filter: drop-shadow(6px 6px 0 rgba(0, 0, 0, .12)); }
+.store-page[data-store-template='promo'] .spd-cond { display: inline-flex; align-self: flex-start; margin: 0; padding: 5px 13px; border: 2px solid var(--sp-ink-hard, #111827); border-radius: 99px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; transform: rotate(-2deg); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .spd-share { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 10px; background: var(--sp-card); color: var(--sp-ink); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .spd-share:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .spd-share { border-color: #fff; box-shadow: 3px 3px 0 #fff; }
+.store-page[data-store-template='promo'] .spd-name { font-weight: 900; text-transform: uppercase; letter-spacing: -.03em; line-height: 1.12; text-shadow: 2px 2px 0 color-mix(in srgb, var(--store-accent) 24%, transparent); }
+.store-page[data-store-template='promo'] .spd-stars svg { color: var(--sp-yellow, #ffe14d); stroke: var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .spd-price { font-weight: 900; letter-spacing: -.04em; }
+.store-page[data-store-template='promo'] .spd-price-old { color: var(--sp-muted); }
+.store-page[data-store-template='promo'] .spd-offer-pill { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 8px; background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); font-weight: 900; transform: rotate(2deg); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .spd-pay svg { color: var(--sp-accent-text); }
+.store-page[data-store-template='promo'] .spd-buy .sp-btn { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 13px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .spd-buy .sp-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--sp-ink-hard, #111827); filter: none; }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .spd-buy .sp-btn { border-color: #fff; box-shadow: 4px 4px 0 #fff; }
+.store-page[data-store-template='promo'] .spd-buy .sp-btn.ghost { background: var(--sp-card); color: var(--sp-ink); }
+.store-page[data-store-template='promo'] .spd-backlink { font-weight: 800; text-transform: uppercase; font-size: 12px; letter-spacing: .08em; }
+.store-page[data-store-template='promo'] .spd-seller li { padding: 9px 12px; border: 2px solid var(--sp-line); border-radius: 10px; background: var(--sp-surface); font-weight: 600; }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .spd-seller li { border-color: var(--sp-line); }
+.store-page[data-store-template='promo'] .spd-sec-title { font-weight: 900; text-transform: uppercase; letter-spacing: -.02em; background: linear-gradient(transparent 62%, color-mix(in srgb, var(--sp-yellow, #ffe14d) 85%, transparent) 62% 94%, transparent 94%); width: fit-content; max-width: 100%; padding: 0 .1em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.store-page[data-store-template='promo'] .spd-specs-wrap { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 14px; }
+.store-page[data-store-template='promo'] .spd-specs th { font-weight: 800; text-transform: uppercase; font-size: 11.5px; letter-spacing: .06em; }
+.store-page[data-store-template='promo'] .spd-desc { font-weight: 500; }
+.store-page[data-store-template='promo'] .spd-rev-item { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 14px; box-shadow: 4px 4px 0 var(--store-accent-ink); }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .spd-rev-item { border-color: #fff; }
+.store-page[data-store-template='promo'] .spd-rev-avatar { border: 2px solid var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .spd-rev-pick { border: 2px solid var(--sp-line); border-radius: 10px; font-weight: 800; }
+.store-page[data-store-template='promo'] .spd-rel { border: 2px solid var(--sp-ink-hard, #111827); border-radius: 16px; box-shadow: 5px 5px 0 var(--store-accent); }
+.store-page[data-store-theme='dark'][data-store-template='promo'] .spd-rel { border-color: #fff; }
+.store-page[data-store-template='promo'] .spd-rel:nth-child(odd) { rotate: -.6deg; }
+.store-page[data-store-template='promo'] .spd-rel:nth-child(even) { rotate: .6deg; }
+.store-page[data-store-template='promo'] .spd-rel:hover { rotate: 0deg; transform: translate(-3px, -3px); border-color: var(--sp-ink-hard, #111827); box-shadow: 8px 8px 0 var(--store-accent); }
+.store-page[data-store-template='promo'] .spd-rel-name { font-weight: 800; }
+.store-page[data-store-template='promo'] .spd-rel-price { font-weight: 900; color: var(--sp-accent-text); }
+@media (max-width: 760px) {
+  .store-page[data-store-template='promo'] .spd-rel:nth-child(odd), .store-page[data-store-template='promo'] .spd-rel:nth-child(even) { rotate: 0deg; }
+}
+
 /* ===== Ficha de producto (/producto/<id>, estilo marketplace) =====
    Sheet tipo publicación: galería a la izquierda y panel de compra a la
    derecha (precio, CTA de contacto, vendedor); abajo las características

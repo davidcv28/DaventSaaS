@@ -13,6 +13,13 @@ import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
 import '../assets/store-page.css'
+// Las hojas de las landing alternativas también definen el cromado
+// (topbar/pie) y la ficha de producto de su diseño: se cargan acá para que
+// /catalogo y /producto/:id las tengan aunque el visitante no pase por el
+// home que las importa (acceso directo por URL al producto).
+import '../assets/store-page-v2.css'
+import '../assets/store-bloque.css'
+import '../assets/store-riso.css'
 
 // Layout de la web pública del cliente (sin auth): barra superior + pie +
 // transición suave entre sus páginas (Inicio y Catálogo). Resuelve la tienda

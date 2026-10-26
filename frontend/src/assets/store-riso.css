@@ -478,3 +478,47 @@
   .rs-h1 .rs-w, .rs-sticker { animation: none; }
   .rs *, .cv-rs * { transition-duration: .01ms !important; }
 }
+
+/* =====================================================================
+   Ficha de producto (/producto/<id>) — misma risografía: bordes de tinta
+   de 2px, sombras desplazadas, condición/oferta como stickers rotados,
+   CTA píldora azul y relacionados como tarjetas .rs-card del catálogo.
+   ===================================================================== */
+.store-page[data-store-template='riso'] .spd-main { font-family: var(--rs-body); }
+.store-page[data-store-template='riso'] .spd-crumbs { font-size: 12px; font-weight: 700; color: var(--rs-mute); }
+.store-page[data-store-template='riso'] .spd-crumbs a { color: var(--rs-blue); }
+.store-page[data-store-template='riso'] .spd-crumb-here { color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-sheet { background: var(--rs-card); border: 2px solid var(--rs-ink); border-radius: 24px; box-shadow: var(--rs-shadow); }
+.store-page[data-store-template='riso'] .spd-gallery { border-right: 2px solid var(--rs-ink); background: var(--sp-surface); }
+.store-page[data-store-template='riso'] .spd-gallery img { filter: drop-shadow(4px 4px 0 rgba(30, 26, 51, .18)); }
+.store-page[data-store-template='riso'] .spd-cond { display: inline-flex; align-self: flex-start; margin: 0; padding: 5px 14px; border: 2px solid var(--rs-ink); border-radius: 999px; background: var(--rs-yellow); color: #1e1a33; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; transform: rotate(-2deg); }
+.store-page[data-store-template='riso'] .spd-share { border: 2px solid var(--rs-ink); border-radius: 50%; background: var(--rs-card); color: var(--rs-ink); box-shadow: 3px 3px 0 var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-share:hover { transform: translate(-1px, -1px) rotate(-4deg); box-shadow: 4px 4px 0 var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-name { font-family: var(--rs-display); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-price { font-family: var(--rs-display); font-weight: 800; color: var(--rs-blue); }
+.store-page[data-store-template='riso'] .spd-price-old { font-family: var(--rs-body); }
+.store-page[data-store-template='riso'] .spd-offer-pill { border: 2px solid var(--rs-ink); border-radius: 999px; background: var(--rs-pink); color: #1e1a33; transform: rotate(2deg); box-shadow: 3px 3px 0 var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-pay svg { color: var(--rs-blue); }
+.store-page[data-store-template='riso'] .spd-buy .sp-btn { border: 2px solid var(--rs-ink); border-radius: 999px; background: var(--rs-blue); color: var(--rs-on-blue); font-weight: 800; box-shadow: var(--rs-shadow); transition: transform .18s var(--rs-spring), box-shadow .18s var(--rs-spring); }
+.store-page[data-store-template='riso'] .spd-buy .sp-btn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--rs-ink); filter: none; }
+.store-page[data-store-template='riso'] .spd-buy .sp-btn.ghost { background: var(--rs-card); color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-buy .sp-btn.ghost:hover { background: var(--rs-mint); color: #1e1a33; }
+.store-page[data-store-template='riso'] .spd-backlink { font-weight: 700; color: var(--rs-blue); }
+.store-page[data-store-template='riso'] .spd-seller li { padding: 8px 12px; border: 2px solid var(--rs-ink); border-radius: 14px; background: var(--rs-card); font-weight: 600; }
+.store-page[data-store-template='riso'] .spd-seller svg { color: var(--rs-blue); }
+.store-page[data-store-template='riso'] .spd-sec { border-top: 2px solid var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-sec-title { font-family: var(--rs-display); font-weight: 800; color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-specs-wrap { border: 2px solid var(--rs-ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-specs th { font-weight: 800; background: var(--rs-yellow); color: #1e1a33; }
+.store-page[data-store-template='riso'] .spd-specs th, .store-page[data-store-template='riso'] .spd-specs td { border-bottom-color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-rev-item { border: 2px solid var(--rs-ink); border-radius: 16px; background: var(--rs-card); box-shadow: 3px 3px 0 var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-rev-avatar { border: 2px solid var(--rs-ink); background: var(--rs-pink); color: #1e1a33; }
+.store-page[data-store-template='riso'] .spd-rev-pick { border: 2px solid var(--rs-ink); border-radius: 999px; font-weight: 700; }
+.store-page[data-store-template='riso'] .spd-rel { border: 2px solid var(--rs-ink); border-radius: 18px; background: var(--rs-card); box-shadow: var(--rs-shadow); transition: transform .18s var(--rs-spring), box-shadow .18s var(--rs-spring); }
+.store-page[data-store-template='riso'] .spd-rel:hover { transform: translate(-2px, -2px) rotate(-1deg); box-shadow: 7px 7px 0 var(--rs-ink); border-color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-rel-img { border: 2px solid var(--rs-ink); border-radius: 12px; background: var(--sp-surface); }
+.store-page[data-store-template='riso'] .spd-rel-name { font-weight: 700; color: var(--rs-ink); }
+.store-page[data-store-template='riso'] .spd-rel-price { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--rs-blue); }
+@media (max-width: 960px) {
+  .store-page[data-store-template='riso'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--rs-ink); }
+}
