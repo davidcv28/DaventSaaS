@@ -209,8 +209,10 @@ function buildCatalogState(ctx, { pageSize }) {
   const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, total.value)} de ${total.value}`)
   const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, total.value) / Math.max(1, total.value)) * 100)}%`)
 
-  // Facetas y topes del panel de filtros (calculados en el backend sobre
-  // todo el catálogo activo — los conteos no cambian al filtrar).
+  // Facetas y topes del panel de filtros (backend): los atributos se
+  // adaptan a las categorías elegidas — solo llegan los de sus productos,
+  // ordenados por el feature_schema de la categoría — y no se achican al
+  // tocar valores/ofertas/precio; ofertas/novedades/price_max son globales.
   const facets = computed(() => catalog.value.facets || [])
   const priceCeiling = computed(() => Math.ceil(Number(catalog.value.price_max || 0)))
   const offerTotal = computed(() => Number(catalog.value.offer_count || 0))

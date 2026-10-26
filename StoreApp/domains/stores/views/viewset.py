@@ -412,9 +412,12 @@ class StoreViewSet(StoreBaseViewSet):
         #orden por precio se resuelven sobre ese valor ya calculado — el
         #catálogo queda acotado por max_products del plan, así que evaluar
         #en memoria no escala mal y evita materializar nada en la base.
-        #El mismo barrido arma las facetas y los conteos sobre TODOS los
-        #productos activos (estáticos, no cambian con los filtros activos:
-        #mismo criterio que los conteos de las taxonomías).
+        #El mismo barrido arma las facetas y los conteos globales (ofertas,
+        #novedades, techo de precio) sobre TODOS los productos activos. Las
+        #facetas, en cambio, se adaptan a la categoría elegida: con
+        #?category= activa solo se recolectan los atributos de SUS productos
+        #(sin selección, los de todo el catálogo), y no se achican al tocar
+        #los valores — el panel queda estable mientras se filtra.
         discounts       =   running_discounts_of(store)
         new_cutoff      =   timezone.now() - timedelta(days = CATALOG_NEW_DAYS)
         facets          =   {}
@@ -433,7 +436,7 @@ class StoreViewSet(StoreBaseViewSet):
                 new_count   +=  1
             if price_max is None or product.effective_price > price_max:
                 price_max   =   product.effective_price
-            if isinstance(product.features, dict):
+            if isinstance(product.features, dict) and (not category_ids or product.category_id in category_ids):
                 for fname, fvalue in product.features.items():
                     name    =   str(fname).strip()
                     if not name:
@@ -463,6 +466,20 @@ class StoreViewSet(StoreBaseViewSet):
             #sentidos (un reverse sobre la tupla invertiría también el nombre).
             items.sort(key = lambda p: p.name)
             items.sort(key = lambda p: p.effective_price, reverse = (sort == 'price_desc'))
+        #Los conteos de cada taxonomía viajan en products_count (solo
+        #productos activos, como la lista que se filtra).
+        from django.db.models import Count, Q
+        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
+        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
+        #Orden de los grupos de facetas: con categoría elegida, los atributos
+        #que esa categoría declara en su feature_schema van primero y en ese
+        #mismo orden (la plantilla del dueño manda); el resto por frecuencia.
+        schema_index    =   {}
+        if category_ids:
+            for cat in categories:
+                if cat.id in category_ids:
+                    for raw in (cat.feature_schema or []):
+                        schema_index.setdefault(str(raw).strip().casefold(), len(schema_index))
         #Facetas ordenadas: los atributos más usados primero y dentro de cada
         #uno los valores más frecuentes (desempate "natural": 2 < 10).
         facet_list      =   [
@@ -475,13 +492,8 @@ class StoreViewSet(StoreBaseViewSet):
             }
             for name, values in facets.items()
         ]
-        facet_list.sort(key = lambda f: (-sum(v['count'] for v in f['values']), f['name'].casefold()))
+        facet_list.sort(key = lambda f: (schema_index.get(f['name'].casefold(), len(schema_index)), -sum(v['count'] for v in f['values']), f['name'].casefold()))
         facet_list      =   facet_list[:CATALOG_FACET_GROUPS]
-        #Los conteos de cada taxonomía viajan en products_count (solo
-        #productos activos, como la lista que se filtra).
-        from django.db.models import Count, Q
-        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
-        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
         #Las promos vigentes viajan a nivel catálogo (nombre, %, alcance y
         #vencimiento) para que las plantillas armen su propio banner —
         #ordenadas de mayor a menor descuento.

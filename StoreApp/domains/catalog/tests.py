@@ -672,6 +672,26 @@ class PublicCatalogFilterTests(TestCase):
         #muestra a 45 (su oferta), así que el máximo visible es 45.
         self.assertEqual(float(response.data['price_max']), 45.0)
 
+    def test_facets_scope_and_schema_order_by_category(self):
+        #Las facetas se adaptan a la categoría elegida: solo viajan los
+        #atributos de SUS productos y ordenados según su feature_schema
+        #(la plantilla del dueño), no por frecuencia global.
+        store           =   self._setup()
+        remeras         =   Category.objects.create(store = store, name = 'Remeras', feature_schema = ['Color', 'Talle'])
+        electro         =   Category.objects.create(store = store, name = 'Electro', feature_schema = ['Voltaje'])
+        Product.objects.create(store = store, name = 'A', price = 10, category = remeras, features = {'Talle': 'M', 'Color': 'Azul'})
+        Product.objects.create(store = store, name = 'B', price = 10, category = remeras, features = {'Talle': 'L'})
+        Product.objects.create(store = store, name = 'C', price = 10, category = electro, features = {'Voltaje': '220v'})
+        #Sin selección, todo el catálogo aporta sus atributos.
+        response        =   self._catalog()
+        self.assertEqual([f['name'] for f in response.data['facets']], ['Talle', 'Color', 'Voltaje'])
+        #Con categoría, solo sus atributos — y en el orden de su schema
+        #(Color primero aunque Talle tenga más conteo).
+        response        =   self._catalog(category = str(remeras.id))
+        self.assertEqual([f['name'] for f in response.data['facets']], ['Color', 'Talle'])
+        response        =   self._catalog(category = str(electro.id))
+        self.assertEqual([f['name'] for f in response.data['facets']], ['Voltaje'])
+
 
 def _review_captcha(slug, answer = 7):
     """
