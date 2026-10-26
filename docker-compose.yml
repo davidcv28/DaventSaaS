@@ -167,6 +167,9 @@ services:
         VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-davent-f089b.firebaseapp.com}
         VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-davent-f089b}
         VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-1:647641643379:web:adb1f08585ee7270986d06}
+        # Login social: públicos por diseño; vacíos = botones ocultos.
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_FACEBOOK_APP_ID: ${VITE_FACEBOOK_APP_ID:-}
     restart: unless-stopped
     environment:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}   # envsubst del template de vhost

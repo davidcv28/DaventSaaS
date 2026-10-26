@@ -121,6 +121,17 @@ services:
       - key: FIREBASE_API_KEY
         value: AIzaSyAUE2OoFITeDNAsEQxnoGDqfIvj6mfrWJs
 
+      # ---- Login social (Google + Facebook) ------------------------------------
+      # Vacías = feature apagada (endpoints 503, botones ocultos). Los IDs son
+      # públicos por diseño; el SECRET es el único sensible. Completar en el
+      # dashboard -> Environment del servicio (Render nunca los pisa).
+      - key: GOOGLE_CLIENT_ID
+        sync: false                       # xxxx.apps.googleusercontent.com
+      - key: FACEBOOK_APP_ID
+        sync: false                       # numérico, de developers.facebook.com
+      - key: FACEBOOK_APP_SECRET
+        sync: false                       # secreto real — solo en el dashboard
+
       # ---- Emisor de comprobantes (fiscal) --------------------------------------
       - key: ISSUER_NAME
         value: DAVENT
