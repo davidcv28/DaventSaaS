@@ -135,6 +135,20 @@ const chatErr = ref('')
 const chatLastId = ref(0)
 const chatUnread = ref(0)
 const chatBoxEl = ref(null)
+const chatInputEl = ref(null)
+
+function resizeChatInput() {
+  const el = chatInputEl.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 132) + 'px'
+}
+
+function onComposerEnter(e) {
+  if (e.shiftKey) return
+  e.preventDefault()
+  sendChat()
+}
 let chatThreadsTimer = null
 let chatMsgsTimer = null
 let chatBeatTimer = null
@@ -154,7 +168,13 @@ function fmtChatTime(iso) {
     : d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
 }
 
+let chatThreadsLoading = false
+
 async function loadChatThreads() {
+  // Oculto no se pollea (al volver hay tick inmediato) y nunca se enciman
+  // dos requests si una tardó más que el intervalo.
+  if (document.hidden || chatThreadsLoading) return
+  chatThreadsLoading = true
   try {
     const data = await fetchChat()
     chatThreads.value = data.threads || []
@@ -166,6 +186,7 @@ async function loadChatThreads() {
       if (fresh) chatActive.value = fresh
     }
   } catch (e) { chatErr.value = extractApiError(e).nonField }
+  finally { chatThreadsLoading = false }
 }
 
 async function openChatThread(thread) {
@@ -184,18 +205,24 @@ async function openChatThread(thread) {
   } catch (e) { chatErr.value = extractApiError(e).nonField }
 }
 
+let chatMsgsPolling = false
+
 async function pollChatMsgs() {
-  if (!chatActive.value) return
+  if (!chatActive.value || document.hidden || chatMsgsPolling) return
+  chatMsgsPolling = true
   try {
     const data = await fetchChatMessages({ thread: chatActive.value.id, after: chatLastId.value })
-    const msgs = data.messages || []
-    if (msgs.length) {
-      chatMsgs.value = [...chatMsgs.value, ...msgs]
-      chatLastId.value = msgs[msgs.length - 1].id
+    // Dedupe por id: un send optimista o un poll encimado ya pudo traer el
+    // mensaje — sin el filtro se vería dos veces hasta el próximo refetch.
+    const fresh = (data.messages || []).filter((m) => !chatMsgs.value.some((x) => x.id === m.id))
+    if (fresh.length) {
+      chatMsgs.value = [...chatMsgs.value, ...fresh]
+      chatLastId.value = fresh[fresh.length - 1].id
       await nextTick()
       scrollChatBox()
     }
   } catch { /* reintenta el próximo tick */ }
+  finally { chatMsgsPolling = false }
 }
 
 async function beatChat() {
@@ -211,26 +238,44 @@ async function sendChat() {
   if (!body || chatBusy.value || !chatActive.value) return
   chatBusy.value = true
   chatErr.value = ''
+  // Optimista: la respuesta aparece al instante como pendiente y se
+  // reemplaza por el mensaje real; si el POST falla se restaura el input.
+  const tmp = {
+    id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    body, mine: true, sender_name: 'Vos', pending: true, created_at: new Date().toISOString()
+  }
+  chatMsgs.value = [...chatMsgs.value, tmp]
+  chatInput.value = ''
+  await nextTick()
+  scrollChatBox()
+  resizeChatInput()
   try {
     const { message } = await sendChatMessage(body, chatActive.value.id)
-    chatMsgs.value = [...chatMsgs.value, message]
-    chatLastId.value = message.id
-    chatInput.value = ''
-    await nextTick()
-    scrollChatBox()
+    chatMsgs.value = chatMsgs.value.filter((m) => m.id !== tmp.id && m.id !== message.id).concat(message)
+    chatLastId.value = Math.max(chatLastId.value, message.id)
+    pollChatMsgs() // recoge al instante mensajes del cliente llegados en el medio
+    loadChatThreads() // refresca last_message/unread de la bandeja
   } catch (e) {
+    chatMsgs.value = chatMsgs.value.filter((m) => m.id !== tmp.id)
+    chatInput.value = body
+    nextTick(resizeChatInput)
     chatErr.value = extractApiError(e).nonField
   } finally {
     chatBusy.value = false
   }
 }
 
+// ~2.5s mensajes / ~6s bandeja: el staff ve los mensajes del cliente con
+// ~1.2s de latencia media. El throttle 'chat' (5000/h) cubre este ritmo.
+const CHAT_MSGS_MS = 2500
+const CHAT_THREADS_MS = 6000
+
 function startChat() {
   stopChat()
   loadChatThreads()
   beatChat()
-  chatThreadsTimer = setInterval(loadChatThreads, 10000)
-  chatMsgsTimer = setInterval(pollChatMsgs, 5000)
+  chatThreadsTimer = setInterval(loadChatThreads, CHAT_THREADS_MS)
+  chatMsgsTimer = setInterval(pollChatMsgs, CHAT_MSGS_MS)
   chatBeatTimer = setInterval(beatChat, 45000)
 }
 
@@ -244,7 +289,22 @@ function stopChat() {
 }
 
 watch(section, (s) => { s === 'chat' ? startChat() : stopChat() })
-onUnmounted(stopChat)
+
+// Al volver al tab: tick inmediato (los intervals no corrían con la pestaña
+// oculta) — el staff ve los mensajes nuevos sin esperar al próximo ciclo.
+function onChatVisible() {
+  if (document.visibilityState === 'visible' && section.value === 'chat') {
+    pollChatMsgs()
+    loadChatThreads()
+    beatChat()
+  }
+}
+onMounted(() => document.addEventListener('visibilitychange', onChatVisible))
+
+onUnmounted(() => {
+  stopChat()
+  document.removeEventListener('visibilitychange', onChatVisible)
+})
 
 onMounted(async () => {
   await auth.fetchMe()
@@ -1020,25 +1080,36 @@ async function logout() {
           <template v-if="chatActive">
             <div class="chat-title">
               <strong>{{ chatActive.customer.name }}</strong>
+              <span class="presence-dot" :class="{ on: chatActive.online }" :title="chatActive.online ? 'En línea' : 'Desconectado'"></span>
               <span class="muted">{{ chatActive.customer.email }}</span>
             </div>
             <div ref="chatBoxEl" class="chat-box">
-              <div v-for="m in chatMsgs" :key="m.id" class="chat-msg" :class="{ mine: m.mine }">
+              <div v-for="m in chatMsgs" :key="m.id" class="chat-msg" :class="{ mine: m.mine, pending: m.pending }">
                 <p class="chat-body">{{ m.body }}</p>
-                <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
+                <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ m.pending ? 'Enviando…' : fmtChatTime(m.created_at) }}</span>
               </div>
             </div>
-            <div class="chat-input">
-              <input
+            <div class="chat-composer">
+              <textarea
+                ref="chatInputEl"
                 v-model="chatInput"
-                class="input"
-                type="text"
+                class="chat-text"
+                rows="1"
                 maxlength="2000"
                 placeholder="Respondé al cliente…"
                 aria-label="Respuesta al cliente"
-                @keydown.enter="sendChat"
-              />
-              <AppButton :loading="chatBusy" :disabled="!chatInput.trim()" @click="sendChat">Enviar</AppButton>
+                @input="resizeChatInput"
+                @keydown.enter="onComposerEnter"
+              ></textarea>
+              <button
+                type="button"
+                class="chat-send"
+                :disabled="!chatInput.trim() || chatBusy"
+                aria-label="Enviar respuesta"
+                @click="sendChat"
+              >
+                <AppIcon name="send" :size="17" />
+              </button>
             </div>
           </template>
           <div v-else class="empty">

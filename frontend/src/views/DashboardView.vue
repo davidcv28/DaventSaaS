@@ -1555,13 +1555,18 @@ onMounted(async () => {
   // verificación y alimenta el formulario de Cuenta sin frenar el resto.
   auth.fetchMe().then(() => fillAccountForm())
   loadAccountProvinces()
-  if (store.status === 'idle') store.loadMine()
-  await Promise.all([billing.loadPlans(), billing.loadMine(), payments.loadPayments(), invoices.loadInvoices()])
-  if (canStats.value) store.loadStats()
-  // Precarga silenciosa del catálogo para los próximos pasos del resumen.
-  ensureCatalog()
-  // Primero el retorno del checkout (trae payment_id en la URL): es la vía instantánea.
-  await handlePaymentReturn()
+  const storeReady = store.status === 'idle' ? store.loadMine() : Promise.resolve()
+  // Vía rápida: plan + tienda destraban stats, la precarga del catálogo y el
+  // retorno de MP sin esperar a los listados de pagos/facturas (los stores
+  // SWR ya pintan con la data cacheada mientras revalidan).
+  const fastLane = Promise.all([billing.loadPlans(), billing.loadMine(), storeReady]).then(async () => {
+    if (canStats.value) store.loadStats()
+    // Precarga silenciosa del catálogo para los próximos pasos del resumen.
+    ensureCatalog()
+    // Retorno del checkout (trae payment_id en la URL): es la vía instantánea.
+    await handlePaymentReturn()
+  })
+  await Promise.allSettled([fastLane, payments.loadPayments(), invoices.loadInvoices()])
   // Red de seguridad en segundo plano (registra pagos ya acreditados en MP
   // que aún no estén en el sistema): el barrido contra la API de MP tarda
   // ~1s, así que ya no se espera — el backend además lo acota a uno cada
@@ -1621,7 +1626,6 @@ function onChatKey(e) {
 function openChat(member = null) {
   chatTarget.value = member
   chatOpen.value = true
-  document.body.style.overflow = 'hidden'
   window.addEventListener('keydown', onChatKey)
   nextTick(() => {
     scrollChat()
@@ -1632,7 +1636,6 @@ function openChat(member = null) {
 
 function closeChat() {
   chatOpen.value = false
-  document.body.style.overflow = ''
   window.removeEventListener('keydown', onChatKey)
 }
 
@@ -1646,11 +1649,14 @@ function contactStaff(s) {
   openChat(s)
 }
 
-async function requestLiveHelp() {
-  if (chatBusy.value) return
+function requestLiveHelp() {
+  //Abre la ventana con el mensaje precargado — nada se envía solo: el
+  //cliente revisa el texto y lo manda con Enter o el botón.
   openChat(chatStaff.value.find((s) => s.online) || null)
-  if (!chatInput.value.trim()) chatInput.value = 'Hola, necesito asistencia en vivo, ¿pueden ayudarme?'
-  await sendChat()
+  if (!chatInput.value.trim()) {
+    chatInput.value = 'Hola, necesito asistencia en vivo, ¿pueden ayudarme?'
+    nextTick(resizeChatInput)
+  }
 }
 
 function scrollChat() {
@@ -1681,18 +1687,27 @@ async function loadChat() {
   } catch (e) { chatErr.value = extractApiError(e).nonField }
 }
 
+let chatPolling = false
+
 async function pollChat() {
   // Silencioso: un tick fallido reintenta en el próximo intervalo.
+  // Oculto no se pollea (ahorra cuota; al volver hay tick inmediato) y nunca
+  // se enciman dos requests si una tardó más que el intervalo.
+  if (document.hidden || chatPolling) return
+  chatPolling = true
   try {
     const data = await fetchChatMessages({ after: chatLastId.value })
-    const msgs = data.messages || []
-    if (msgs.length) {
-      chatMessages.value = [...chatMessages.value, ...msgs]
-      chatLastId.value = msgs[msgs.length - 1].id
+    // Dedupe por id: un send optimista o un poll encimado ya pudo traer el
+    // mensaje — sin el filtro se vería dos veces hasta el próximo refetch.
+    const fresh = (data.messages || []).filter((m) => !chatMessages.value.some((x) => x.id === m.id))
+    if (fresh.length) {
+      chatMessages.value = [...chatMessages.value, ...fresh]
+      chatLastId.value = fresh[fresh.length - 1].id
       await nextTick()
       scrollChat()
     }
   } catch { /* reintenta el próximo tick */ }
+  finally { chatPolling = false }
 }
 
 async function beatChat() {
@@ -1708,27 +1723,44 @@ async function sendChat() {
   if (!body || chatBusy.value) return
   chatBusy.value = true
   chatErr.value = ''
+  // Optimista: el mensaje aparece al instante como pendiente y se reemplaza
+  // por el real; si el POST falla se quita y se restaura el input.
+  const tmp = {
+    id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    body, mine: true, sender_name: 'Vos', pending: true, created_at: new Date().toISOString()
+  }
+  chatMessages.value = [...chatMessages.value, tmp]
+  chatInput.value = ''
+  await nextTick()
+  scrollChat()
+  resizeChatInput()
   try {
     const { message } = await sendChatMessage(body)
-    chatMessages.value = [...chatMessages.value, message]
-    chatLastId.value = message.id
-    chatInput.value = ''
-    await nextTick()
-    scrollChat()
-    resizeChatInput()
+    chatMessages.value = chatMessages.value.filter((m) => m.id !== tmp.id && m.id !== message.id).concat(message)
+    chatLastId.value = Math.max(chatLastId.value, message.id)
+    pollChat() // recoge al instante cualquier respuesta que haya llegado en el medio
   } catch (e) {
+    chatMessages.value = chatMessages.value.filter((m) => m.id !== tmp.id)
+    chatInput.value = body
+    await nextTick()
+    resizeChatInput()
     chatErr.value = extractApiError(e).nonField
   } finally {
     chatBusy.value = false
   }
 }
 
+// ~2.5s de poll: latencia media de ~1.2s contra ~2.5s antes. El throttle
+// del scope 'chat' (5000/h) cubre este ritmo en ambos lados.
+const CHAT_POLL_MS = 2500
+const CHAT_BEAT_MS = 30000
+
 function startChat() {
   stopChat()
   loadChat()
   beatChat()
-  chatPollTimer = setInterval(pollChat, 5000)
-  chatBeatTimer = setInterval(beatChat, 30000)
+  chatPollTimer = setInterval(pollChat, CHAT_POLL_MS)
+  chatBeatTimer = setInterval(beatChat, CHAT_BEAT_MS)
 }
 
 function stopChat() {
@@ -1741,12 +1773,24 @@ function stopChat() {
 // Los timers solo viven mientras la sección Ayuda está abierta.
 watch(section, (s) => { s === 'support' ? startChat() : stopChat() })
 
+// Al volver al tab: tick inmediato (los intervals no corrían con la pestaña
+// oculta) — el usuario ve los mensajes nuevos sin esperar al próximo ciclo.
+function onChatVisible() {
+  if (document.visibilityState === 'visible' && section.value === 'support') {
+    pollChat()
+    beatChat()
+  }
+}
+
+onMounted(() => document.addEventListener('visibilitychange', onChatVisible))
+
 onUnmounted(() => {
   stopCheckoutWatch()
   stopChat()
   closeChat()
   clearInterval(previewTimer)
   window.removeEventListener('storage', onPaymentBroadcast)
+  document.removeEventListener('visibilitychange', onChatVisible)
 })
 
 // La pestaña del checkout avisa por acá cuando vuelve de Mercado Pago.
@@ -3845,9 +3889,9 @@ async function changePassword() {
             <p v-if="!chatMessages.length" class="chat-empty">
               Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
             </p>
-            <div v-for="m in chatMessages" :key="m.id" class="chat-msg" :class="{ mine: m.mine }">
+            <div v-for="m in chatMessages" :key="m.id" class="chat-msg" :class="{ mine: m.mine, pending: m.pending }">
               <p class="chat-body">{{ m.body }}</p>
-              <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ fmtChatTime(m.created_at) }}</span>
+              <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ m.pending ? 'Enviando…' : fmtChatTime(m.created_at) }}</span>
             </div>
           </div>
 
