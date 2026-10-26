@@ -107,7 +107,7 @@ async function resendVerification() {
 // --- Cuenta: edición de correo + perfil fiscal ---
 const accountForm = reactive({
   email: '', first_name: '', last_name: '', tax_condition: 'CF', business_name: '',
-  document: '', province: '', city: '', address: '', phone: '', whatsapp_digest: false
+  document: '', province: '', city: '', address: '', phone: ''
 })
 const accountTouched = reactive({})
 const accountMsg = ref('')
@@ -167,8 +167,7 @@ async function fillAccountForm() {
     province: p.province || '',
     city: p.city || '',
     address: p.address || '',
-    phone: p.phone || '',
-    whatsapp_digest: Boolean(p.whatsapp_digest)
+    phone: p.phone || ''
   })
   Object.keys(accountTouched).forEach((k) => { accountTouched[k] = false })
   await loadAccountCities()
@@ -218,8 +217,7 @@ async function saveAccount() {
         province: Number(accountForm.province),
         city: Number(accountForm.city),
         address: accountForm.address.trim() || null,
-        phone: accountForm.phone.trim() || null,
-        whatsapp_digest: canWhatsappDigest.value ? Boolean(accountForm.whatsapp_digest) : false
+        phone: accountForm.phone.trim() || null
       }
     })
     if (res.ok) {
@@ -1007,7 +1005,6 @@ const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_desig
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
 const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_product_comments))
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
-const canWhatsappDigest = computed(() => Boolean(plan.value?.benefits?.has_whatsapp_digest))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const designPreviewVars = computed(() => storeThemeVars(designForm))
 const storeAccents = STORE_ACCENTS
@@ -1733,8 +1730,7 @@ async function saveBilling() {
         province: Number(accountForm.province),
         city: Number(accountForm.city),
         address: accountForm.address.trim() || null,
-        phone: accountForm.phone.trim() || null,
-        whatsapp_digest: canWhatsappDigest.value ? Boolean(accountForm.whatsapp_digest) : false
+        phone: accountForm.phone.trim() || null
       }
     })
     if (!res.ok) {
@@ -3864,13 +3860,6 @@ async function changePassword() {
             </div>
             <AppInput v-model="accountForm.address" label="Domicilio" name="acc_address" autocomplete="street-address" placeholder="Escribe tu domicilio" :error="accountFieldErr('address')" @blur="accountTouched.address = true" />
             <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
-            <label class="check-item" :class="{ disabled: !canWhatsappDigest }">
-              <input v-model="accountForm.whatsapp_digest" type="checkbox" :disabled="!canWhatsappDigest" />
-              <span class="check-text">
-                <strong>Resumen diario por WhatsApp <span v-if="!canWhatsappDigest" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></strong>
-                <small>Cada mañana te mandamos a tu celular las visitas y productos de tu tienda.</small>
-              </span>
-            </label>
             <AppButton :loading="accountBusy">Guardar cambios</AppButton>
           </form>
         </div>

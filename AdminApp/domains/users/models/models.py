@@ -50,10 +50,6 @@ class UserProfile(models.Model):
     #vía WhatsApp entrante — el usuario le manda un código al número business)
     phone_verified      =   models.BooleanField(default = False, verbose_name = 'Celular verificado')
     phone_verified_at   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de verificación del celular')
-    #WHATSAPP DIGEST (opt-in: resumen diario de su tienda por WhatsApp — el envío
-    #real lo fuerza el beneficio has_whatsapp_digest del plan en el job diario)
-    whatsapp_digest         =   models.BooleanField(default = False, verbose_name = 'Resumen diario por WhatsApp')
-    whatsapp_digest_sent_at =   models.DateTimeField(null = True, blank = True, verbose_name = 'Último resumen de WhatsApp enviado')
     class Meta:
         app_label           =   'users'
         indexes             =   [

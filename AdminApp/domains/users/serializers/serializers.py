@@ -47,16 +47,11 @@ class UserProfileSerializer(UserProfileValidatorsMixins,UserProfileUpdateMethod,
     #EMAIL VERIFICATION (solo lectura: se marca desde el link firmado del correo)
     email_verified      =   serializers.BooleanField(read_only = True)
     email_verified_at   =   serializers.DateTimeField(read_only = True)
-    #WHATSAPP DIGEST (opt-in del resumen diario; el ENVÍO lo fuerza el beneficio
-    #has_whatsapp_digest del plan en el job — el flag queda guardado igual para
-    #retomarlo apenas sube de plan. sent_at solo lectura: lo marca el job.)
-    whatsapp_digest         =   serializers.BooleanField(required = False)
-    whatsapp_digest_sent_at =   serializers.DateTimeField(read_only = True)
     class Meta:
         model           =   UserProfile
         fields          =   ['user', 'tax_condition', 'business_name', 'type_document', 'document', 'first_name', 'last_name',
                              'province', 'city', 'address', 'phone', 'terms_accepted', 'terms_accepted_at', 'terms_version',
-                             'email_verified', 'email_verified_at', 'whatsapp_digest', 'whatsapp_digest_sent_at']
+                             'email_verified', 'email_verified_at']
 
     
 #=============================#=============================#=============================#=============================
