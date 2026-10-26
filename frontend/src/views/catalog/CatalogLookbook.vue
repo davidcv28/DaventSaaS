@@ -7,14 +7,15 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Lookbook: el catálogo como edición de revista — título serif con índice de
 // contenidos (las categorías, numeradas), filtros escritos como texto
 // subrayado y pliegos de imagen en columnas con proporciones alternadas.
 const {
-  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total,
+  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
@@ -37,8 +38,8 @@ const pad = (n) => String(n).padStart(2, '0')
     <nav v-if="catalog.categories.length" class="cv-lb-toc" aria-label="Categorías">
       <p class="cv-lb-toc-h">Contenido</p>
       <ol>
-        <li><button type="button" :class="{ on: !activeCategory }" @click="activeCategory && pickCategory(activeCategory)"><b>00</b><span>Toda la colección</span><i aria-hidden="true"></i></button></li>
-        <li v-for="(cat, i) in catalog.categories" :key="cat.id"><button type="button" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)"><b>{{ pad(i + 1) }}</b><span>{{ cat.name }}</span><i aria-hidden="true"></i></button></li>
+        <li><button type="button" :class="{ on: !activeCategories.length }" @click="clearCategories"><b>00</b><span>Toda la colección</span><i aria-hidden="true"></i></button></li>
+        <li v-for="(cat, i) in catalog.categories" :key="cat.id"><button type="button" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)"><b>{{ pad(i + 1) }}</b><span>{{ cat.name }}</span><i aria-hidden="true" class="cf-n">{{ cat.products_count ?? 0 }}</i></button></li>
       </ol>
     </nav>
   </header>
@@ -49,9 +50,10 @@ const pad = (n) => String(n).padStart(2, '0')
       <label class="cv-lb-line"><span>Buscar</span><input v-model="ui.search" type="search" placeholder="una pieza…" aria-label="Buscar productos" /></label>
       <div class="cv-lb-line"><span>Precio</span><input v-model="priceMin" type="text" inputmode="decimal" placeholder="desde" aria-label="Precio mínimo" /><i aria-hidden="true">–</i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="hasta" aria-label="Precio máximo" /></div>
       <div class="cv-lb-line cv-lb-sorts" role="group" aria-label="Ordenar por"><span>Orden</span><button v-for="o in SORT_OPTIONS" :key="o.value" type="button" :class="{ on: sort === o.value }" :aria-pressed="sort === o.value" @click="sort = o.value">{{ o.label.replace(' (A-Z)', '') }}</button></div>
-      <div v-if="catalog.brands.length" class="cv-lb-line cv-lb-sorts" role="group" aria-label="Marcas"><span>Firmas</span><button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button></div>
+      <div v-if="catalog.brands.length" class="cv-lb-line cv-lb-sorts" role="group" aria-label="Marcas"><span>Firmas</span><button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button></div>
       <button v-if="hasFilters" type="button" class="cv-lb-reset" @click="clearFilters">Quitar filtros</button>
     </div>
+    <CatalogFacets />
 
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 

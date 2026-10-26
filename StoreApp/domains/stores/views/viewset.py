@@ -1,4 +1,7 @@
+import json
 import logging
+import re
+from datetime import timedelta
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -58,6 +61,18 @@ CATALOG_SORTS           =   {
     'recent'        :   ('-created_at', '-id'),
     'name'          :   ('name', 'id'),
 }
+#Días que un producto se considera "novedad" en el catálogo público
+#(filtro ?new=1 y new_count) — espejo de PRODUCT_NEW_DAYS del frontend.
+CATALOG_NEW_DAYS        =   7
+#Topes defensivos de los filtros avanzados: el ?features= viaja como JSON
+#{nombre: [valores]} y nunca se evalúa más allá de estos límites.
+CATALOG_FEATURE_GROUPS  =   10
+CATALOG_FEATURE_VALUES  =   15
+CATALOG_IDS_MAX         =   50
+#Topes de las facetas devueltas (un atributo con más valores se recorta a
+#los más frecuentes; los atributos con menos uso quedan fuera del panel).
+CATALOG_FACET_GROUPS    =   12
+CATALOG_FACET_VALUES    =   30
 #=========================================
 # HELPERS
 #=========================================
@@ -77,6 +92,80 @@ def _price_bound(raw):
     #campo: gte deja el resultado vacío y lte lo deja completo — la
     #semántica del filtro se conserva sin romper la query.
     return min(value, Decimal('9999999999.99'))
+def _id_list(raw):
+    """Ids separados por coma (?category=1,2): los no numéricos se descartan."""
+    ids =   set()
+    for piece in str(raw or '').split(','):
+        piece   =   piece.strip()
+        if piece.isdigit():
+            ids.add(int(piece))
+        if len(ids) >= CATALOG_IDS_MAX:
+            break
+    return ids
+def _flag(raw):
+    """Flags booleanos del catálogo (?offer=1 / ?new=1)."""
+    return str(raw or '').strip().lower() in ('1', 'true', 'yes', 'on')
+def _feature_tokens(value):
+    """
+    Un valor de característica puede listar varias opciones ("S, M / L"):
+    se trocea por los separadores habituales para poder facetarlo.
+    """
+    return [token.strip() for token in re.split(r'[,;/·]', str(value)) if token.strip()]
+def _feature_filters(raw):
+    """
+    Parseo defensivo de ?features={"Talle":["M","L"]}: un JSON inválido o
+    con otra forma no filtra nada (mismo criterio que los ids inválidos).
+    """
+    try:
+        data    =   json.loads(str(raw or ''))
+    except (TypeError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    cleaned =   {}
+    for name, values in data.items():
+        if len(cleaned) >= CATALOG_FEATURE_GROUPS:
+            break
+        name    =   str(name).strip()
+        if not name:
+            continue
+        if not isinstance(values, list):
+            values  =   [values]
+        values  =   [str(v).strip() for v in values if str(v).strip()][:CATALOG_FEATURE_VALUES]
+        if values:
+            cleaned[name]   =   values
+    return cleaned
+def _features_match(features, filters):
+    """
+    True si el producto cumple todos los grupos pedidos: dentro de un
+    atributo los valores suman (OR), entre atributos se exigen (AND).
+    """
+    if not isinstance(features, dict):
+        return False
+    lowered =   {str(k).strip().casefold(): v for k, v in features.items()}
+    for name, values in filters.items():
+        raw =   lowered.get(name.casefold())
+        if raw is None:
+            return False
+        tokens  =   {t.casefold() for t in _feature_tokens(raw)}
+        if not any(v.casefold() in tokens for v in values):
+            return False
+    return True
+def _product_haystack(product):
+    """
+    Texto buscable del producto (búsqueda ?q=): nombre, descripción,
+    categoría, marca y características — como el buscador de la plantilla.
+    """
+    parts   =   [product.name or '', product.description or '']
+    parts.append(product.category.name if product.category_id else '')
+    parts.append(product.brand.name if product.brand_id else '')
+    if isinstance(product.features, dict):
+        parts += [str(k) for k in product.features.keys()]
+        parts += [str(v) for v in product.features.values()]
+    return ' '.join(parts).casefold()
+def _natural_key(text):
+    """Orden "humano" de los valores de una faceta: 2 < 10, S < XL."""
+    return [int(piece) if piece.isdigit() else piece.casefold() for piece in re.split(r'(\d+)', str(text))]
 
 def _apply_order(queryset, order):
     """
@@ -299,19 +388,22 @@ class StoreViewSet(StoreBaseViewSet):
                 ),
                 rating_count    =   Count('reviews__is_positive', filter = Q(reviews__is_positive__isnull = False)),
             )
-        category_id     =   request.query_params.get('category')
-        brand_id        =   request.query_params.get('brand')
-        search          =   (request.query_params.get('q') or '').strip()
+        #Filtros avanzados del catálogo público:
+        #  ?category=1,2 / ?brand=3,4   taxonomías multi-selección (OR entre ids)
+        #  ?q=texto                     nombre + descripción + categoría + marca + características
+        #  ?features={"Talle":["M"]}    atributos dinámicos (OR dentro, AND entre grupos)
+        #  ?offer=1 / ?new=1            solo ofertas efectivas / solo novedades (7 días)
+        #  ?min_price / ?max_price      rango sobre el precio efectivo
+        #  ?sort=name|recent|price_asc|price_desc
+        category_ids    =   _id_list(request.query_params.get('category'))
+        brand_ids       =   _id_list(request.query_params.get('brand'))
+        search          =   (request.query_params.get('q') or '').strip().casefold()
         min_price       =   _price_bound(request.query_params.get('min_price'))
         max_price       =   _price_bound(request.query_params.get('max_price'))
+        feature_filters =   _feature_filters(request.query_params.get('features'))
+        only_offer      =   _flag(request.query_params.get('offer'))
+        only_new        =   _flag(request.query_params.get('new'))
         sort            =   (request.query_params.get('sort') or '').strip()
-        if category_id and category_id.isdigit():
-            products    =   products.filter(category_id = int(category_id))
-        if brand_id and brand_id.isdigit():
-            products    =   products.filter(brand_id = int(brand_id))
-        from django.db.models import Q
-        if search:
-            products    =   products.filter(Q(name__icontains = search) | Q(description__icontains = search))
         ordering        =   CATALOG_SORTS.get(sort)
         if ordering and sort not in ('price_asc', 'price_desc'):
             products    =   products.order_by(*ordering)
@@ -320,16 +412,50 @@ class StoreViewSet(StoreBaseViewSet):
         #orden por precio se resuelven sobre ese valor ya calculado — el
         #catálogo queda acotado por max_products del plan, así que evaluar
         #en memoria no escala mal y evita materializar nada en la base.
+        #El mismo barrido arma las facetas y los conteos sobre TODOS los
+        #productos activos (estáticos, no cambian con los filtros activos:
+        #mismo criterio que los conteos de las taxonomías).
         discounts       =   running_discounts_of(store)
+        new_cutoff      =   timezone.now() - timedelta(days = CATALOG_NEW_DAYS)
+        facets          =   {}
         items           =   []
+        offer_count     =   0
+        new_count       =   0
+        price_max       =   None
         for product in products:
             #El descuento solo firma la oferta cuando realmente gana — si la
             #oferta manual queda más baja, no se le cuelga su nombre/fecha.
             product.effective_offer, product.effective_discount =   effective_pricing_of(product, discounts)
             product.effective_price       =   product.effective_offer if product.effective_offer is not None else product.price
+            if product.effective_offer is not None:
+                offer_count +=  1
+            if product.created_at >= new_cutoff:
+                new_count   +=  1
+            if price_max is None or product.effective_price > price_max:
+                price_max   =   product.effective_price
+            if isinstance(product.features, dict):
+                for fname, fvalue in product.features.items():
+                    name    =   str(fname).strip()
+                    if not name:
+                        continue
+                    values  =   facets.setdefault(name, {})
+                    for token in _feature_tokens(fvalue):
+                        values[token]   =   values.get(token, 0) + 1
+            if category_ids and product.category_id not in category_ids:
+                continue
+            if brand_ids and product.brand_id not in brand_ids:
+                continue
+            if search and search not in _product_haystack(product):
+                continue
+            if only_new and product.created_at < new_cutoff:
+                continue
+            if only_offer and product.effective_offer is None:
+                continue
             if min_price is not None and product.effective_price < min_price:
                 continue
             if max_price is not None and product.effective_price > max_price:
+                continue
+            if feature_filters and not _features_match(product.features, feature_filters):
                 continue
             items.append(product)
         if sort in ('price_asc', 'price_desc'):
@@ -337,8 +463,25 @@ class StoreViewSet(StoreBaseViewSet):
             #sentidos (un reverse sobre la tupla invertiría también el nombre).
             items.sort(key = lambda p: p.name)
             items.sort(key = lambda p: p.effective_price, reverse = (sort == 'price_desc'))
-        categories      =   store.categories.all()
-        brands          =   store.brands.all()
+        #Facetas ordenadas: los atributos más usados primero y dentro de cada
+        #uno los valores más frecuentes (desempate "natural": 2 < 10).
+        facet_list      =   [
+            {
+                'name'      :   name,
+                'values'    :   [
+                    {'value': value, 'count': count}
+                    for value, count in sorted(values.items(), key = lambda kv: (-kv[1], _natural_key(kv[0])))[:CATALOG_FACET_VALUES]
+                ],
+            }
+            for name, values in facets.items()
+        ]
+        facet_list.sort(key = lambda f: (-sum(v['count'] for v in f['values']), f['name'].casefold()))
+        facet_list      =   facet_list[:CATALOG_FACET_GROUPS]
+        #Los conteos de cada taxonomía viajan en products_count (solo
+        #productos activos, como la lista que se filtra).
+        from django.db.models import Count, Q
+        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
+        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
         #Las promos vigentes viajan a nivel catálogo (nombre, %, alcance y
         #vencimiento) para que las plantillas armen su propio banner —
         #ordenadas de mayor a menor descuento.
@@ -349,6 +492,10 @@ class StoreViewSet(StoreBaseViewSet):
                 'brands'        :   BrandSerializer(brands, many = True).data,
                 'promotions'    :   DiscountPublicSerializer(promotions, many = True).data,
                 'products'      :   ProductPublicSerializer(items, many = True).data,
+                'facets'        :   facet_list,
+                'offer_count'   :   offer_count,
+                'new_count'     :   new_count,
+                'price_max'     :   price_max,
             },
             status = status.HTTP_200_OK,
         )

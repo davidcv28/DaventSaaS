@@ -7,14 +7,15 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Perspectiva: el catálogo como un escenario en profundidad — piso con punto
 // de fuga bajo el título extruido, categorías como planos flotantes y
 // tarjetas que se inclinan hacia el puntero sobre su propio zócalo.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total,
+  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog()
 
@@ -48,8 +49,8 @@ function untilt(e) {
       <p class="cv-pe-kicker">{{ shopName }} <i aria-hidden="true"></i> {{ total }} {{ total === 1 ? 'producto' : 'productos' }}</p>
       <h1 class="cv-pe-title" data-text="Catálogo">Catálogo</h1>
       <div v-if="catalog.categories.length" class="cv-pe-planes" role="group" aria-label="Categorías">
-        <button type="button" class="cv-pe-plane" :class="{ on: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)"><span>Todo</span></button>
-        <button v-for="cat in catalog.categories" :key="cat.id" type="button" class="cv-pe-plane" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)"><span>{{ cat.name }}</span></button>
+        <button type="button" class="cv-pe-plane" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories"><span>Todo</span></button>
+        <button v-for="cat in catalog.categories" :key="cat.id" type="button" class="cv-pe-plane" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)"><span>{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></span></button>
       </div>
     </div>
   </header>
@@ -77,8 +78,9 @@ function untilt(e) {
     </div>
 
     <div v-if="catalog.brands.length" class="cv-pe-brands" role="group" aria-label="Marcas">
-      <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-pe-brand" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
+      <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-pe-brand" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
     </div>
+    <CatalogFacets />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

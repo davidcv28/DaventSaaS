@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  storesApi, normalizeSlug, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS
+  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -138,8 +138,10 @@ function onScroll() {
 // provide — antes cada página esperaba a la ficha y recién pedía el suyo.
 const catalogCache = new Map()
 function loadPublicCatalog(params = {}) {
-  const { q = '', category = '', brand = '', min_price = '', max_price = '', sort = '' } = params
-  const key = [q, category, brand, min_price, max_price, sort].join('|')
+  // La clave es la forma canónica de los params (ids/valores ordenados):
+  // {category:[2,1]} y {category:'1,2'} comparten el mismo request.
+  const normalized = normalizeCatalogParams(params)
+  const key = JSON.stringify(normalized)
   let req = catalogCache.get(key)
   if (!req) {
     req = storesApi.publicCatalog(slug.value, params).catch((e) => {

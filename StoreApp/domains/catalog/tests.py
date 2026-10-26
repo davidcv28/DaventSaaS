@@ -572,6 +572,107 @@ class DiscountPublicTests(TestCase):
         self.assertEqual(response.data['promotions'], [])
 
 
+class PublicCatalogFilterTests(TestCase):
+    """
+    Filtros avanzados del catálogo público: taxonomías multi-selección,
+    búsqueda sobre categoría/marca/características, facetas dinámicas por
+    atributo (?features=), banderas offer/new y conteos del panel.
+    """
+
+    def _setup(self):
+        _, profile      =   _make_user('duenio')
+        _grant(profile, has_public_link = True)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+        return store
+
+    def _catalog(self, **params):
+        return APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda'), params)
+
+    def test_multi_category_and_brand_filters(self):
+        #?category=1,2 suma categorías (OR): cada id seleccionado aporta
+        #sus productos, igual que los checkboxes del panel de filtros.
+        store           =   self._setup()
+        calzas          =   Category.objects.create(store = store, name = 'Calzas')
+        remeras         =   Category.objects.create(store = store, name = 'Remeras')
+        nike            =   Brand.objects.create(store = store, name = 'Nike')
+        adidas          =   Brand.objects.create(store = store, name = 'Adidas')
+        Product.objects.create(store = store, name = 'A', price = 10, category = calzas)
+        Product.objects.create(store = store, name = 'B', price = 10, category = remeras)
+        Product.objects.create(store = store, name = 'C', price = 10)
+        Product.objects.create(store = store, name = 'D', price = 10, brand = nike)
+        Product.objects.create(store = store, name = 'E', price = 10, brand = adidas)
+        response        =   self._catalog(category = f'{calzas.id},{remeras.id}')
+        self.assertEqual(sorted(p['name'] for p in response.data['products']), ['A', 'B'])
+        response        =   self._catalog(brand = f'{nike.id},{adidas.id}')
+        self.assertEqual(sorted(p['name'] for p in response.data['products']), ['D', 'E'])
+        #Un id solo sigue funcionando (compat) y uno inválido no rompe.
+        response        =   self._catalog(category = str(calzas.id))
+        self.assertEqual([p['name'] for p in response.data['products']], ['A'])
+        response        =   self._catalog(category = 'abc')
+        self.assertEqual(len(response.data['products']), 5)
+
+    def test_search_covers_taxonomies_and_features(self):
+        #El buscador no solo mira nombre/descripción: también encuentra por
+        #categoría, marca y valores de características (talle, color...).
+        store           =   self._setup()
+        calzas          =   Category.objects.create(store = store, name = 'Calzas')
+        Product.objects.create(store = store, name = 'A', price = 10, category = calzas)
+        Product.objects.create(store = store, name = 'B', price = 10, brand = Brand.objects.create(store = store, name = 'Puma'))
+        Product.objects.create(store = store, name = 'C', price = 10, features = {'Color': 'Bordó'})
+        for term, expected in (('calzas', ['A']), ('puma', ['B']), ('bordó', ['C'])):
+            response    =   self._catalog(q = term)
+            self.assertEqual([p['name'] for p in response.data['products']], expected, term)
+
+    def test_feature_filter_or_within_and_across(self):
+        #?features={"Talle":["S","M"],"Color":["Azul"]}: dentro de un grupo
+        #los valores suman; entre grupos todas las condiciones se exigen.
+        store           =   self._setup()
+        Product.objects.create(store = store, name = 'A', price = 10, features = {'Talle': 'S, M', 'Color': 'Azul'})
+        Product.objects.create(store = store, name = 'B', price = 10, features = {'Talle': 'L', 'Color': 'Azul'})
+        Product.objects.create(store = store, name = 'C', price = 10, features = {'Talle': 'M', 'Color': 'Rojo'})
+        response        =   self._catalog(features = '{"Talle": ["S", "M"]}')
+        self.assertEqual(sorted(p['name'] for p in response.data['products']), ['A', 'C'])
+        response        =   self._catalog(features = '{"Talle": ["M"], "Color": ["Azul"]}')
+        self.assertEqual([p['name'] for p in response.data['products']], ['A'])
+        #JSON inválido o con otra forma no filtra nada (criterio defensivo).
+        response        =   self._catalog(features = 'no-json')
+        self.assertEqual(len(response.data['products']), 3)
+
+    def test_offer_and_new_flags(self):
+        #?offer=1 deja solo ofertas efectivas; ?new=1 solo las novedades
+        #(CATALOG_NEW_DAYS, espejo de PRODUCT_NEW_DAYS del frontend).
+        store           =   self._setup()
+        Product.objects.create(store = store, name = 'Vieja', price = 10)
+        Product.objects.create(store = store, name = 'Oferta', price = 10, offer_price = 5)
+        viejo           =   Product.objects.create(store = store, name = 'Antigua', price = 10)
+        Product.objects.filter(pk = viejo.pk).update(created_at = timezone.now() - timedelta(days = 30))
+        response        =   self._catalog(offer = '1')
+        self.assertEqual([p['name'] for p in response.data['products']], ['Oferta'])
+        response        =   self._catalog(new = '1')
+        self.assertEqual(sorted(p['name'] for p in response.data['products']), ['Oferta', 'Vieja'])
+
+    def test_facets_counts_and_price_max_payload(self):
+        #El panel de filtros se alimenta del propio payload: facetas por
+        #atributo con su conteo, products_count por taxonomía, totales de
+        #ofertas/novedades y el techo de precio para el slider.
+        store           =   self._setup()
+        calzas          =   Category.objects.create(store = store, name = 'Calzas')
+        Product.objects.create(store = store, name = 'A', price = 10, category = calzas, features = {'Talle': 'S, M'})
+        Product.objects.create(store = store, name = 'B', price = 90, category = calzas, features = {'Talle': 'M'}, offer_price = 45)
+        Product.objects.create(store = store, name = 'C', price = 10, is_active = False, features = {'Talle': 'XXL'})
+        response        =   self._catalog()
+        talle           =   next(f for f in response.data['facets'] if f['name'] == 'Talle')
+        self.assertEqual(talle['values'], [{'value': 'M', 'count': 2}, {'value': 'S', 'count': 1}])
+        self.assertFalse(any(v['value'] == 'XXL' for v in talle['values']))
+        calza           =   next(c for c in response.data['categories'] if c['name'] == 'Calzas')
+        self.assertEqual(calza['products_count'], 2)
+        self.assertEqual(response.data['offer_count'], 1)
+        self.assertEqual(response.data['new_count'], 2)
+        #El techo usa el precio efectivo: B cuesta 90 de lista pero se
+        #muestra a 45 (su oferta), así que el máximo visible es 45.
+        self.assertEqual(float(response.data['price_max']), 45.0)
+
+
 def _review_captcha(slug, answer = 7):
     """
     Challenge válido y envejecido (30s > CAPTCHA_MIN_SECONDS): pasa la

@@ -7,15 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import '../../assets/store-riso.css'
 
 // Riso: el catálogo en risografía — titular a dos tintas, buscador píldora,
 // aside de filtros como tarjeta con sombra desplazada y grilla de tarjetas
 // con placa de color y trama de puntos. Mismo estado que el resto de diseños.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
+  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, clearPrice, hasFilters,
-  hasPriceFilter, productCount, activeCategoryName, activeBrandName, priceRangeLabel,
+  hasPriceFilter, productCount, activeTags,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
@@ -52,18 +53,19 @@ const toneOf = (p) => TONES[Math.max(0, catalog.value.categories.findIndex((c) =
           <p class="cv-rs-fset-name">Categoría</p>
           <button
             v-for="cat in catalog.categories" :key="cat.id" type="button"
-            class="cv-rs-opt" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id"
+            class="cv-rs-opt" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)"
             @click="pickCategory(cat.id)"
-          ><span>{{ cat.name }}</span></button>
+          ><span>{{ cat.name }}</span><span class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</span></button>
         </div>
         <div v-if="catalog.brands.length" class="cv-rs-fset">
           <p class="cv-rs-fset-name">Marca</p>
           <button
             v-for="b in catalog.brands" :key="b.id" type="button"
-            class="cv-rs-opt" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id"
+            class="cv-rs-opt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)"
             @click="pickBrand(b.id)"
-          ><span>{{ b.name }}</span></button>
+          ><span>{{ b.name }}</span><span class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</span></button>
         </div>
+        <CatalogFacets />
         <div class="cv-rs-fset">
           <p class="cv-rs-fset-name">Precio</p>
           <div class="cv-rs-range">
@@ -86,10 +88,7 @@ const toneOf = (p) => TONES[Math.max(0, catalog.value.categories.findIndex((c) =
         </div>
 
         <div v-if="hasFilters" class="cv-rs-tags">
-          <button v-if="activeCategoryName" type="button" class="cv-rs-tag" :aria-label="`Quitar categoría ${activeCategoryName}`" @click="pickCategory(activeCategory)">{{ activeCategoryName }}</button>
-          <button v-if="activeBrandName" type="button" class="cv-rs-tag" :aria-label="`Quitar marca ${activeBrandName}`" @click="pickBrand(activeBrand)">{{ activeBrandName }}</button>
-          <span v-if="ui.search.trim()" class="cv-rs-tag static">“{{ ui.search.trim() }}”</span>
-          <button v-if="hasPriceFilter" type="button" class="cv-rs-tag" aria-label="Quitar rango de precio" @click="clearPrice">{{ priceRangeLabel }}</button>
+          <button v-for="t in activeTags" :key="t.key" type="button" class="cv-rs-tag" :aria-label="`Quitar filtro ${t.label}`" @click="t.remove()">{{ t.label }}</button>
         </div>
 
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

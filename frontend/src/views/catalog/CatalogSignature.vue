@@ -7,6 +7,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Signature (casa de autor): el catálogo como vitrina ceremonial — dateline
@@ -14,8 +15,8 @@ import ProductStars from '../../components/ProductStars.vue'
 // categorías como mayúsculas espaciadas, filtros como campos de
 // documento subrayados y placas 4:5 enmarcadas con doble filete.
 const {
-  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total,
+  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -35,8 +36,8 @@ const {
       <p class="cv-sg-lede">{{ total }} {{ total === 1 ? 'pieza' : 'piezas' }} · Precios en pesos argentinos</p>
 
       <div v-if="catalog.categories.length" class="cv-sg-cats" role="group" aria-label="Categorías">
-        <button type="button" :class="{ on: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)">Todo</button>
-        <button v-for="cat in catalog.categories" :key="cat.id" type="button" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)">{{ cat.name }}</button>
+        <button type="button" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todo</button>
+        <button v-for="cat in catalog.categories" :key="cat.id" type="button" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
       </div>
     </div>
   </header>
@@ -48,9 +49,10 @@ const {
       <label class="cv-sg-field"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="13" aria-hidden="true" /></label>
     </div>
     <div v-if="catalog.brands.length || hasFilters" class="cv-sg-brands">
-      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
+      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="13" /> Limpiar</button>
     </div>
+    <CatalogFacets />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

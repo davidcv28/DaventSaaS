@@ -7,14 +7,15 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Dúo: pantalla partida — a la izquierda un panel fijo con la presentación,
 // la navegación por categorías y los filtros; a la derecha el catálogo como
 // lista de fichas horizontales (foto + copy), una por renglón.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total,
+  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 10 })
 </script>
@@ -38,16 +39,18 @@ const {
 
       <div v-if="catalog.categories.length" class="cv-du-group">
         <p class="cv-du-label">Categorías</p>
-        <button type="button" class="cv-du-link" :class="{ on: !activeCategory }" @click="activeCategory && pickCategory(activeCategory)"><span>Todas</span></button>
-        <button v-for="cat in catalog.categories" :key="cat.id" type="button" class="cv-du-link" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)"><span>{{ cat.name }}</span></button>
+        <button type="button" class="cv-du-link" :class="{ on: !activeCategories.length }" @click="clearCategories"><span>Todas</span></button>
+        <button v-for="cat in catalog.categories" :key="cat.id" type="button" class="cv-du-link" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)"><span>{{ cat.name }}</span><i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
       </div>
 
       <div v-if="catalog.brands.length" class="cv-du-group">
         <p class="cv-du-label">Marcas</p>
         <div class="cv-du-tags">
-          <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-du-tag" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
+          <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-du-tag" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
         </div>
       </div>
+
+      <CatalogFacets />
 
       <div class="cv-du-group">
         <p class="cv-du-label">Precio</p>

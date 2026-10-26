@@ -1,157 +1,30 @@
 <script setup>
-import { ref, computed, watch, watchEffect, inject, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { storeHostSlug } from '../../config/env.js'
+import { ref, computed, watchEffect, onMounted, onBeforeUnmount } from 'vue'
+import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 import { vReveal } from '../../directives/reveal.js'
 
 // Página de catálogo de la web pública (/<slug>/catalogo): navegación por
-// categorías/marcas, buscador, filtro de precios y orden. Cada tarjeta
-// abre la ficha completa del producto (/<slug>/producto/<id>, estilo
-// marketplace). La tienda la resuelve StorePublicLayout
-// (inject 'storePage'); el buscador del header y el burger comparten el
-// estado `ui` provisto por el layout.
-const ctx = inject('storePage')
-const { slug, ui, custom, hasDesignAdvanced, shopName, loadPublicCatalog } = ctx
-const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
-const route = useRoute()
-const router = useRouter()
+// categorías/marcas multi-selección, facetas por atributo, buscador,
+// filtro de precios y orden. Cada tarjeta abre la ficha completa del
+// producto (/<slug>/producto/<id>, estilo marketplace). El estado lo da
+// useStoreCatalog (compartido con CatalogFacets vía provide/inject);
+// el buscador del header y el burger comparten `ui` con el layout.
+const {
+  ui, custom, hasDesignAdvanced, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand,
+  clearCategories, clearFilters, hasFilters, hasCatalogNav, activeTags, productCount,
+  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
+} = useStoreCatalog({ pageSize: 12 })
 
-// Catálogo opcional: si el dueño lo apagó la web queda como vidriera y esta
-// página no existe (el endpoint público también devuelve 404). Se resuelve
-// async en el layout, así que se espera a que customization llegue.
-watch(() => custom.value.show_catalog, (v) => {
-  if (v === false) router.replace(homeTo.value)
-}, { immediate: true })
-
-// La búsqueda también puede llegar por URL (?q=) — alimenta el buscador
-// compartido con el header.
-watch(() => route.query.q, (q) => {
-  const next = typeof q === 'string' ? q : ''
-  if (next !== ui.search) ui.search = next
-}, { immediate: true })
-
-const catalog = ref({ categories: [], brands: [], products: [] })
-const catalogStatus = ref('idle') // idle | loading | success | error
-
-// --- Filtros de la tienda (el texto de búsqueda vive en ui.search para
-// compartirlo con el buscador del header) ---
-// Los accesos de la portada (categoría, marca, orden) llegan por query.
-const queryId = (v) => (/^\d+$/.test(String(v || '')) ? Number(v) : null)
-const SORTS = ['name', 'recent', 'price_asc', 'price_desc']
-const activeCategory = ref(queryId(route.query.category))
-const activeBrand = ref(queryId(route.query.brand))
-const priceMin = ref('')
-const priceMax = ref('')
-const sort = ref(SORTS.includes(route.query.sort) ? route.query.sort : 'name')
-let searchTimer = null
-
-// parsePrice acepta formato es-AR ("1.500,50") y punto decimal: lo que no
-// sea un número >= 0 se ignora (el backend también descarta bounds inválidos).
-function parsePrice(value) {
-  const raw = String(value || '').trim().replace(/\s/g, '')
-  if (!raw) return ''
-  const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw
-  const n = Number(normalized)
-  return Number.isFinite(n) && n >= 0 ? n : ''
-}
-
-const PAGE_SIZE = 12
-const visibleCount = ref(PAGE_SIZE)
-const visibleProducts = computed(() => catalog.value.products.slice(0, visibleCount.value))
-const hasMoreProducts = computed(() => catalog.value.products.length > visibleCount.value)
-const showMore = () => { visibleCount.value += PAGE_SIZE }
-
-async function loadCatalog() {
-  visibleCount.value = PAGE_SIZE
-  catalogStatus.value = 'loading'
-  try {
-    let min = parsePrice(priceMin.value)
-    let max = parsePrice(priceMax.value)
-    if (min !== '' && max !== '' && min > max) [min, max] = [max, min]
-    catalog.value = await loadPublicCatalog({
-      q: ui.search.trim(),
-      category: activeCategory.value || '',
-      brand: activeBrand.value || '',
-      min_price: min,
-      max_price: max,
-      sort: sort.value
-    })
-    catalogStatus.value = 'success'
-  } catch {
-    catalogStatus.value = 'error'
-  }
-}
-
-watch(() => ui.search, () => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(loadCatalog, 300)
-})
-// El rango de precios también es debounceado (el visitante escribe a su ritmo);
-// el orden recarga al instante porque el select ya entrega el valor final.
-watch([priceMin, priceMax], () => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(loadCatalog, 400)
-})
-watch(sort, loadCatalog)
-
-function pickCategory(id) {
-  activeCategory.value = activeCategory.value === id ? null : id
-  loadCatalog()
-}
-function pickBrand(id) {
-  activeBrand.value = activeBrand.value === id ? null : id
-  loadCatalog()
-}
-function clearFilters() {
-  activeCategory.value = null
-  activeBrand.value = null
-  ui.search = ''
-  priceMin.value = ''
-  priceMax.value = ''
-  loadCatalog()
-}
-
-// El orden no entra en hasFilters ni se resetea con "Limpiar": ordenar no
-// filtra resultados y el visitante espera que se mantenga.
-const hasPriceFilter = computed(() => parsePrice(priceMin.value) !== '' || parsePrice(priceMax.value) !== '')
-const priceRangeLabel = computed(() => {
-  const min = parsePrice(priceMin.value)
-  const max = parsePrice(priceMax.value)
-  if (min !== '' && max !== '') return `${formatARS(min)} – ${formatARS(max)}`
-  if (min !== '') return `Desde ${formatARS(min)}`
-  return `Hasta ${formatARS(max)}`
-})
-const hasFilters = computed(() => Boolean(activeCategory.value || activeBrand.value || ui.search || hasPriceFilter.value))
-const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length))
 // El burger del header solo aparece cuando hay categorías o marcas.
 watchEffect(() => { ui.hasCatalogNav = hasCatalogNav.value })
-const activeCategoryName = computed(() => catalog.value.categories.find((c) => c.id === activeCategory.value)?.name)
-const activeBrandName = computed(() => catalog.value.brands.find((b) => b.id === activeBrand.value)?.name)
-const activeFilterCount = computed(() => [activeCategory.value, activeBrand.value, ui.search.trim(), hasPriceFilter.value].filter(Boolean).length)
-const productCount = computed(() => {
-  const n = catalog.value.products.length
-  const base = `${n} ${n === 1 ? 'producto' : 'productos'}`
-  return hasFilters.value ? `${base}, ${activeFilterCount.value} ${activeFilterCount.value === 1 ? 'filtro' : 'filtros'}` : base
-})
-
-const brandNameOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
-const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
-const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, catalog.value.products.length)} de ${catalog.value.products.length}`)
-const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, catalog.value.products.length) / Math.max(1, catalog.value.products.length)) * 100)}%`)
-
-// La tarjeta entera navega a la ficha del producto (página aparte, como
-// en un marketplace): en dominio de plataforma lleva el slug, en
-// subdominio de tienda la ruta es /producto/<id> sin params extra.
-const productTo = (p) => ({
-  name: 'store-product',
-  params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id }
-})
-const openProduct = (p) => router.push(productTo(p))
 
 const onKey = (e) => {
   if (e.key === 'Escape') ui.menuOpen = false
@@ -231,12 +104,10 @@ function onCardMove(event) {
 
 onMounted(() => {
   restartSlideTimer()
-  if (custom.value.show_catalog !== false) loadCatalog()
   window.addEventListener('keydown', onKey)
 })
 
 onBeforeUnmount(() => {
-  clearTimeout(searchTimer)
   clearInterval(slideTimer)
   ui.menuOpen = false
   ui.hasCatalogNav = false
@@ -319,24 +190,25 @@ onBeforeUnmount(() => {
           <p class="sp-nav-heading">Categorías</p>
           <button
             v-for="c in catalog.categories" :key="`c-${c.id}`" type="button"
-            class="sp-nav-item" :class="{ active: activeCategory === c.id }"
-            :aria-pressed="activeCategory === c.id"
-            @click="pickCategory(c.id); ui.menuOpen = false"
+            class="sp-nav-item" :class="{ active: activeCategories.includes(c.id) }"
+            :aria-pressed="activeCategories.includes(c.id)"
+            @click="pickCategory(c.id)"
           >
-            <AppIcon name="layout-grid" :size="15" /> <span>{{ c.name }}</span>
+            <AppIcon name="layout-grid" :size="15" /> <span>{{ c.name }}</span> <i class="cf-n" aria-hidden="true">{{ c.products_count ?? 0 }}</i>
           </button>
         </nav>
         <nav v-if="catalog.brands.length" class="sp-nav-group" aria-label="Marcas">
           <p class="sp-nav-heading">Marcas</p>
           <button
             v-for="b in catalog.brands" :key="`b-${b.id}`" type="button"
-            class="sp-nav-item" :class="{ active: activeBrand === b.id }"
-            :aria-pressed="activeBrand === b.id"
-            @click="pickBrand(b.id); ui.menuOpen = false"
+            class="sp-nav-item" :class="{ active: activeBrands.includes(b.id) }"
+            :aria-pressed="activeBrands.includes(b.id)"
+            @click="pickBrand(b.id)"
           >
-            <AppIcon name="tag" :size="15" /> <span>{{ b.name }}</span>
+            <AppIcon name="tag" :size="15" /> <span>{{ b.name }}</span> <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i>
           </button>
         </nav>
+        <CatalogFacets />
         <button v-if="hasFilters" type="button" class="sp-nav-clear" @click="clearFilters(); ui.menuOpen = false">
           <AppIcon name="x" :size="14" /> Limpiar filtros
         </button>
@@ -345,10 +217,10 @@ onBeforeUnmount(() => {
       <section class="sp-catalog" aria-labelledby="sp-catalog-title">
         <CatalogPromoBanner :promotions="catalog.promotions" />
         <div v-if="catalog.categories.length" class="sp-quick" role="group" aria-label="Categorías rápidas">
-          <button type="button" class="sp-quick-pill" :class="{ active: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)">Todas</button>
+          <button type="button" class="sp-quick-pill" :class="{ active: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todas</button>
           <button
             v-for="c in catalog.categories" :key="`q-${c.id}`" type="button"
-            class="sp-quick-pill" :class="{ active: activeCategory === c.id }" :aria-pressed="activeCategory === c.id"
+            class="sp-quick-pill" :class="{ active: activeCategories.includes(c.id) }" :aria-pressed="activeCategories.includes(c.id)"
             @click="pickCategory(c.id)"
           >{{ c.name }}</button>
         </div>
@@ -390,17 +262,8 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-if="hasFilters" class="sp-chips" aria-label="Filtros activos">
-          <button v-if="ui.search.trim()" type="button" class="sp-chip" @click="ui.search = ''">
-            &ldquo;{{ ui.search.trim() }}&rdquo; <AppIcon name="x" :size="12" />
-          </button>
-          <button v-if="activeCategoryName" type="button" class="sp-chip" @click="pickCategory(activeCategory)">
-            {{ activeCategoryName }} <AppIcon name="x" :size="12" />
-          </button>
-          <button v-if="activeBrandName" type="button" class="sp-chip" @click="pickBrand(activeBrand)">
-            {{ activeBrandName }} <AppIcon name="x" :size="12" />
-          </button>
-          <button v-if="hasPriceFilter" type="button" class="sp-chip" @click="priceMin = ''; priceMax = ''">
-            {{ priceRangeLabel }} <AppIcon name="x" :size="12" />
+          <button v-for="t in activeTags" :key="t.key" type="button" class="sp-chip" @click="t.remove()">
+            {{ t.label }} <AppIcon name="x" :size="12" />
           </button>
           <button type="button" class="sp-chip clear" @click="clearFilters">Limpiar</button>
         </div>

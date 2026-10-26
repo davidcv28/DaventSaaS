@@ -11,8 +11,10 @@ import ProductStars from '../../components/ProductStars.vue'
 // con el buscador, filtros como flags [--cat=...] y los productos como un
 // listado `ls -l` con columnas ordenables y vista previa de la fila activa.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total,
+  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
+  featureFilters, onlyOffer, onlyNew, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, pickFeature, toggleOffer, toggleNew,
+  clearCategories, clearFilters, hasFilters, total, facets, offerTotal, newTotal,
   shownLabel, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 15 })
 
@@ -49,9 +51,18 @@ const pad = (n) => String(n + 1).padStart(3, '0')
         </label>
 
         <div class="cv-tm-flags" role="group" aria-label="Filtros">
-          <button type="button" class="cv-tm-flag" :class="{ on: !activeCategory }" @click="activeCategory && pickCategory(activeCategory)">[--all]</button>
-          <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-tm-flag" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)">[--cat={{ slugify(cat.name) }}]</button>
-          <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-tm-flag brand" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">[--brand={{ slugify(b.name) }}]</button>
+          <button type="button" class="cv-tm-flag" :class="{ on: !activeCategories.length }" @click="clearCategories">[--all]</button>
+          <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-tm-flag" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">[--cat={{ slugify(cat.name) }}]</button>
+          <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-tm-flag brand" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">[--brand={{ slugify(b.name) }}]</button>
+          <template v-for="f in facets" :key="f.name">
+            <button
+              v-for="v in f.values" :key="`${f.name}-${v.value}`" type="button" class="cv-tm-flag"
+              :class="{ on: (featureFilters[f.name] || []).includes(v.value) }" :aria-pressed="(featureFilters[f.name] || []).includes(v.value)"
+              @click="pickFeature(f.name, v.value)"
+            >[--{{ slugify(f.name) }}={{ slugify(v.value) }}]</button>
+          </template>
+          <button v-if="offerTotal" type="button" class="cv-tm-flag" :class="{ on: onlyOffer }" :aria-pressed="onlyOffer" @click="toggleOffer">[--oferta]</button>
+          <button v-if="newTotal" type="button" class="cv-tm-flag" :class="{ on: onlyNew }" :aria-pressed="onlyNew" @click="toggleNew">[--nuevo]</button>
           <span class="cv-tm-range">
             --min=<input v-model="priceMin" type="text" inputmode="decimal" placeholder="0" aria-label="Precio mínimo" />
             --max=<input v-model="priceMax" type="text" inputmode="decimal" placeholder="∞" aria-label="Precio máximo" />

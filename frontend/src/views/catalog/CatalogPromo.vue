@@ -8,13 +8,14 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Publicidad: el catálogo como folleto de campaña — afiche con ráfaga, un
 // carril "Ofertas" con carteles de descuento y la grilla completa donde cada
 // producto cierra con un botón directo a WhatsApp.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
+  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total, offerCount,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct, askUrl, whatsappUrl
 } = useStoreCatalog({ pageSize: 12 })
@@ -71,10 +72,11 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
         <label class="cv-pr-box"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="14" aria-hidden="true" /></label>
       </div>
       <div class="cv-pr-chips" role="group" aria-label="Categorías y marcas">
-        <button type="button" class="cv-pr-chip" :class="{ on: !activeCategory && !activeBrand }" @click="clearFilters">Todo</button>
-        <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-pr-chip" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)">{{ cat.name }}</button>
-        <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-pr-chip alt" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
+        <button type="button" class="cv-pr-chip" :class="{ on: !activeCategories.length && !activeBrands.length }" @click="clearFilters">Todo</button>
+        <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-pr-chip" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
+        <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-pr-chip alt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
       </div>
+      <CatalogFacets />
 
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 

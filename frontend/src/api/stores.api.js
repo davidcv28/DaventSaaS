@@ -20,10 +20,17 @@ import { storeUrl } from '../config/env.js'
 //                                                   (la web fuerza 'classic' si el guardado no está permitido);
 //                                                   location_address es null sin has_location_map (Estándar+)
 //                                                   o si el dueño apagó el mapa (customization.show_location)
-// GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products}
-//                                                   (?q=&category=&brand=&min_price=&max_price=&sort=
-//                                                     name|recent|price_asc|price_desc; valores
-//                                                     inválidos se ignoran en el backend)
+// GET  /api/stores/public/<slug>/catalog/ público -> {categories, brands, products, promotions,
+//                                                   facets, offer_count, new_count, price_max}
+//                                                   (?q= texto que busca en nombre, descripción, categoría,
+//                                                     marca y características; &category=1,2 &brand=3,4
+//                                                     multi-selección; &features={"Talle":["M"]} JSON;
+//                                                     &offer=1 &new=1 solo ofertas / novedades (7 días);
+//                                                     &min_price= &max_price= sobre el precio efectivo;
+//                                                     &sort= name|recent|price_asc|price_desc;
+//                                                     valores inválidos se ignoran en el backend.
+//                                                     facets = [{name, values:[{value,count}]}] con los
+//                                                     atributos del catálogo para el panel de filtros)
 // GET  /api/stores/public/<slug>/contact/captcha/ público -> {challenge_id, question} (captcha antispam)
 // POST /api/stores/public/<slug>/contact/       público {name, email, message, website (honeypot),
 //                                                        challenge_id, captcha_answer} -> envía el
@@ -82,6 +89,32 @@ function unwrap(data) {
   return []
 }
 
+// Params canónicos del catálogo público: una sola forma por combinación de
+// filtros (ids ordenados, features con claves/valores ordenados, vacíos en
+// undefined) — la usa publicCatalog para la request y StorePublicLayout
+// para la clave del cache compartido.
+export function normalizeCatalogParams({ q = '', category = '', brand = '', min_price = '', max_price = '', sort = '', features = null, offer = false, is_new = false } = {}) {
+  const ids = (v) => [...new Set([].concat(v || []).map((x) => Number(x)).filter((n) => Number.isInteger(n) && n > 0))].sort((a, b) => a - b).join(',')
+  const feats = {}
+  if (features && typeof features === 'object') {
+    for (const name of Object.keys(features).sort()) {
+      const values = [...new Set([].concat(features[name] || []).map((v) => String(v).trim()).filter(Boolean))].sort()
+      if (name.trim() && values.length) feats[name.trim()] = values
+    }
+  }
+  return {
+    q: String(q || '').trim() || undefined,
+    category: ids(category) || undefined,
+    brand: ids(brand) || undefined,
+    min_price: min_price !== '' && min_price != null ? min_price : undefined,
+    max_price: max_price !== '' && max_price != null ? max_price : undefined,
+    sort: sort || undefined,
+    features: Object.keys(feats).length ? JSON.stringify(feats) : undefined,
+    offer: offer ? '1' : undefined,
+    new: is_new ? '1' : undefined
+  }
+}
+
 export const storesApi = {
   async listMine() {
     // mine=1: un staff también recibe solo su tienda (sin él, /stores/ lista todas).
@@ -115,13 +148,8 @@ export const storesApi = {
     return data
   },
 
-  async publicCatalog(slug, { q = '', category = '', brand = '', min_price = '', max_price = '', sort = '' } = {}) {
-    const { data } = await http.get(`/stores/public/${slug}/catalog/`, {
-      params: {
-        q: q || undefined, category: category || undefined, brand: brand || undefined,
-        min_price: min_price || undefined, max_price: max_price || undefined, sort: sort || undefined
-      }
-    })
+  async publicCatalog(slug, params = {}) {
+    const { data } = await http.get(`/stores/public/${slug}/catalog/`, { params: normalizeCatalogParams(params) })
     return data
   },
 

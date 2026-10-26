@@ -7,6 +7,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Aurora (observatorio de luz): el catálogo se lee como la mesa del
@@ -15,8 +16,8 @@ import ProductStars from '../../components/ProductStars.vue'
 // chips de vidrio y las piezas en placas con etiqueta esmerilada sobre
 // la imagen. La primera pieza brilla a lo ancho como estrella polar.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, productCount,
+  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, productCount,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -57,13 +58,14 @@ const {
         </label>
       </div>
       <div class="cv-au-cats" role="group" aria-label="Categorías">
-        <button type="button" :class="{ on: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)"><AppIcon name="sparkles" :size="12" :stroke="2" aria-hidden="true" /> Todo el cielo</button>
-        <button v-for="cat in catalog.categories" :key="cat.id" type="button" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)">{{ cat.name }}</button>
+        <button type="button" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories"><AppIcon name="sparkles" :size="12" :stroke="2" aria-hidden="true" /> Todo el cielo</button>
+        <button v-for="cat in catalog.categories" :key="cat.id" type="button" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
       </div>
       <div v-if="catalog.brands.length || hasFilters" class="cv-au-brands">
-        <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
+        <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
         <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="12" aria-hidden="true" /> Limpiar</button>
       </div>
+      <CatalogFacets />
     </div>
 
     <CatalogPromoBanner :promotions="catalog.promotions" />

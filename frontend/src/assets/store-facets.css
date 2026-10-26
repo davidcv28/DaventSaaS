@@ -1,0 +1,29 @@
+/* Panel de facetas del catálogo público (CatalogFacets.vue): compartido
+   por todas las plantillas — queda neutro a propósito: hereda la fuente y
+   el color del contexto y solo pinta el estado activo con el acento de la
+   tienda (--store-accent / --store-accent-ink, definidos en la raíz). */
+.cf-facets { display: grid; gap: 12px; }
+.cf-fset { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.cf-fset-name {
+  flex: 0 0 100%; margin: 0 0 2px;
+  font-size: .76em; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; opacity: .6;
+}
+.cf-opt {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 4px 10px; border: 1.5px solid currentColor; border-radius: 999px;
+  background: transparent; color: inherit; font: inherit; font-size: .84em;
+  font-weight: 600; line-height: 1.4; cursor: pointer; opacity: .8;
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.cf-opt:hover { opacity: 1; }
+.cf-opt:focus-visible { outline: 2px solid var(--store-accent, currentColor); outline-offset: 2px; }
+.cf-opt.on {
+  background: var(--store-accent, currentColor);
+  border-color: var(--store-accent, currentColor);
+  color: var(--store-accent-ink, #fff);
+  opacity: 1;
+}
+/* Contador pequeño reutilizable (facetas, categorías y marcas con
+   products_count en las plantillas): no depende de .cf-opt. */
+.cf-n { font-size: .78em; opacity: .6; font-variant-numeric: tabular-nums; font-style: normal; }

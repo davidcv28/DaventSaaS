@@ -7,15 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import '../../assets/store-bloque.css'
 
 // Bloque: el catálogo como índice de archivo — cabecera con meta en mono y
 // titular XXL, buscador a campo completo, aside de filtros como celdas
 // regladas y grilla de placas duras numeradas.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
+  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, clearPrice, hasFilters,
-  hasPriceFilter, productCount, activeCategoryName, activeBrandName, priceRangeLabel,
+  hasPriceFilter, productCount, activeTags,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -48,18 +49,19 @@ const {
           <p class="cv-bq-fset-name">Categoría</p>
           <button
             v-for="cat in catalog.categories" :key="cat.id" type="button"
-            class="cv-bq-opt" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id"
+            class="cv-bq-opt" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)"
             @click="pickCategory(cat.id)"
-          >{{ cat.name }}</button>
+          >{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
         </div>
         <div v-if="catalog.brands.length" class="cv-bq-fset">
           <p class="cv-bq-fset-name">Marca</p>
           <button
             v-for="b in catalog.brands" :key="b.id" type="button"
-            class="cv-bq-opt" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id"
+            class="cv-bq-opt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)"
             @click="pickBrand(b.id)"
-          >{{ b.name }}</button>
+          >{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
         </div>
+        <CatalogFacets />
         <div class="cv-bq-fset">
           <p class="cv-bq-fset-name">Precio</p>
           <div class="cv-bq-range">
@@ -82,10 +84,7 @@ const {
         </div>
 
         <div v-if="hasFilters" class="cv-bq-tags">
-          <span v-if="activeCategoryName" class="cv-bq-tag">{{ activeCategoryName }} <button type="button" :aria-label="`Quitar categoría ${activeCategoryName}`" @click="pickCategory(activeCategory)"><AppIcon name="x" :size="11" /></button></span>
-          <span v-if="activeBrandName" class="cv-bq-tag">{{ activeBrandName }} <button type="button" :aria-label="`Quitar marca ${activeBrandName}`" @click="pickBrand(activeBrand)"><AppIcon name="x" :size="11" /></button></span>
-          <span v-if="ui.search.trim()" class="cv-bq-tag">“{{ ui.search.trim() }}”</span>
-          <span v-if="hasPriceFilter" class="cv-bq-tag">{{ priceRangeLabel }} <button type="button" aria-label="Quitar rango de precio" @click="clearPrice"><AppIcon name="x" :size="11" /></button></span>
+          <span v-for="t in activeTags" :key="t.key" class="cv-bq-tag">{{ t.label }} <button type="button" :aria-label="`Quitar filtro ${t.label}`" @click="t.remove()"><AppIcon name="x" :size="11" /></button></span>
         </div>
 
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />

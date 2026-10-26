@@ -8,6 +8,7 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Tienda Pro: resultados de marketplace — columna de filtros a la izquierda,
@@ -15,9 +16,9 @@ import ProductStars from '../../components/ProductStars.vue'
 // activos y tarjetas de producto con precio y descuento destacados. El
 // buscador es el del masthead (ui.search).
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, clearPrice, hasFilters, hasPriceFilter, priceRangeLabel,
-  activeCategoryName, activeBrandName, shownLabel, shownPct, productCount, brandNameOf, categoryNameOf, openProduct
+  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters,
+  activeCategoryName, activeTags, shownLabel, shownPct, productCount, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
 const view = ref('grid') // grid | list
@@ -39,15 +40,18 @@ const filtersOpen = ref(false)
         <section v-if="catalog.categories.length" class="cv-sh-box">
           <h2>Categorías</h2>
           <ul>
-            <li><button type="button" :class="{ on: !activeCategory }" @click="activeCategory && pickCategory(activeCategory)">Todas</button></li>
-            <li v-for="cat in catalog.categories" :key="cat.id"><button type="button" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)">{{ cat.name }}</button></li>
+            <li><button type="button" :class="{ on: !activeCategories.length }" @click="clearCategories">Todas</button></li>
+            <li v-for="cat in catalog.categories" :key="cat.id"><button type="button" class="check" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)"><i aria-hidden="true"></i>{{ cat.name }} <small class="cf-n">{{ cat.products_count ?? 0 }}</small></button></li>
           </ul>
         </section>
         <section v-if="catalog.brands.length" class="cv-sh-box">
           <h2>Marca</h2>
           <ul>
-            <li v-for="b in catalog.brands" :key="b.id"><button type="button" class="check" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)"><i aria-hidden="true"></i>{{ b.name }}</button></li>
+            <li v-for="b in catalog.brands" :key="b.id"><button type="button" class="check" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)"><i aria-hidden="true"></i>{{ b.name }} <small class="cf-n">{{ b.products_count ?? 0 }}</small></button></li>
           </ul>
+        </section>
+        <section class="cv-sh-box">
+          <CatalogFacets />
         </section>
         <section class="cv-sh-box">
           <h2>Precio</h2>
@@ -74,10 +78,7 @@ const filtersOpen = ref(false)
         </div>
 
         <div v-if="hasFilters" class="cv-sh-chips" aria-label="Filtros activos">
-          <button v-if="ui.search.trim()" type="button" @click="ui.search = ''">&ldquo;{{ ui.search.trim() }}&rdquo; <AppIcon name="x" :size="12" /></button>
-          <button v-if="activeCategoryName" type="button" @click="pickCategory(activeCategory)">{{ activeCategoryName }} <AppIcon name="x" :size="12" /></button>
-          <button v-if="activeBrandName" type="button" @click="pickBrand(activeBrand)">{{ activeBrandName }} <AppIcon name="x" :size="12" /></button>
-          <button v-if="hasPriceFilter" type="button" @click="clearPrice">{{ priceRangeLabel }} <AppIcon name="x" :size="12" /></button>
+          <button v-for="t in activeTags" :key="t.key" type="button" @click="t.remove()">{{ t.label }} <AppIcon name="x" :size="12" /></button>
         </div>
 
         <CatalogPromoBanner :promotions="catalog.promotions" />

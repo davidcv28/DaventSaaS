@@ -7,14 +7,15 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFacets from './CatalogFacets.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Minimal: lo esencial — sin hero ni cromo. Un título chico, una línea
 // fina con las categorías como texto separado por barras, buscador y orden
 // al costado, y una grilla de fotos 3:4 sin bordes con nombre y precio.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategory, activeBrand, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, productCount,
+  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, productCount,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -34,8 +35,8 @@ const {
 
     <div class="cv-mn-rule">
       <div class="cv-mn-cats" role="group" aria-label="Categorías">
-        <button type="button" :class="{ on: !activeCategory }" :aria-pressed="!activeCategory" @click="activeCategory && pickCategory(activeCategory)">Todo</button>
-        <template v-for="cat in catalog.categories" :key="cat.id"><i aria-hidden="true">/</i><button type="button" :class="{ on: activeCategory === cat.id }" :aria-pressed="activeCategory === cat.id" @click="pickCategory(cat.id)">{{ cat.name }}</button></template>
+        <button type="button" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todo</button>
+        <template v-for="cat in catalog.categories" :key="cat.id"><i aria-hidden="true">/</i><button type="button" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <small class="cf-n">{{ cat.products_count ?? 0 }}</small></button></template>
       </div>
       <div class="cv-mn-tools">
         <label class="cv-mn-field"><AppIcon name="search" :size="14" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="Buscar" aria-label="Buscar productos" /></label>
@@ -44,9 +45,10 @@ const {
       </div>
     </div>
     <div v-if="catalog.brands.length || hasFilters" class="cv-mn-brands">
-      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrand === b.id }" :aria-pressed="activeBrand === b.id" @click="pickBrand(b.id)">{{ b.name }}</button>
+      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <small class="cf-n">{{ b.products_count ?? 0 }}</small></button>
       <button v-if="hasFilters" type="button" class="reset" @click="clearFilters">Limpiar</button>
     </div>
+    <CatalogFacets />
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
