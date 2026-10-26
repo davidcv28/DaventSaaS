@@ -12,7 +12,7 @@ import {
   normalizeSlug, publicStoreUrl,
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily,
   allowedTemplatesFor, resolveStoreTemplate,
-  ensureStoreFont, ensureStoreFontList, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
+  ensureStoreFont, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
   validateContactEmail,
@@ -52,6 +52,7 @@ import PasswordStrength from '../components/PasswordStrength.vue'
 import StorageMeter from '../components/StorageMeter.vue'
 import AppIcon from '../components/AppIcon.vue'
 import CountUp from '../components/CountUp.vue'
+import FlyerStudio from '../components/FlyerStudio.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -573,7 +574,6 @@ watch(section, (s) => {
   // catálogo se trae en un único <link> para previsualizar cada opción.
   if (s === 'design') {
     ensureStoreFont(designForm.name_font)
-    ensureStoreFontList()
   }
   if (s === 'bot') ensureBot()
   if (s === 'stats' && canStats.value) store.loadStats()
@@ -955,8 +955,12 @@ function downloadQr() {
   a.click()
 }
 
-function openFlyer() {
-  const href = router.resolve({ name: 'store-flyer' }).href
+const discountPreviewPct = computed(() => Math.min(99, Math.max(0, Math.round(Number(discountForm.percent)) || 0)))
+const toolsTab = ref('ready')
+watch([section, canFlyers], () => { if (!canFlyers.value && toolsTab.value === 'studio') toolsTab.value = 'ready' })
+
+function openFlyer(custom = false) {
+  const href = router.resolve({ name: 'store-flyer', query: custom === true ? { custom: '1' } : {} }).href
   window.open(href, '_blank', 'noopener')
 }
 
@@ -1071,12 +1075,23 @@ function templatePlanLabel(key) {
   const tier = STORE_TEMPLATES[key]?.tier
   return tier === 'plus' ? 'Estándar' : tier === 'advanced' ? 'Premium' : ''
 }
-function pickTemplate(key) {
-  if (allowedTemplates.value.includes(key)) designForm.template = key
+function templateTierLabel(key) {
+  const tier = STORE_TEMPLATES[key]?.tier
+  return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Todos los planes'
 }
-function pickFont(key) {
-  if (canDesignAdvanced.value) designForm.name_font = key
+function stepTemplate(dir) {
+  const list = allowedTemplates.value
+  if (!list.length) return
+  const i = list.indexOf(designForm.template)
+  designForm.template = list[(i + dir + list.length) % list.length]
 }
+function stepFont(dir) {
+  if (!canDesignAdvanced.value) return
+  const keys = Object.keys(STORE_FONTS)
+  const i = keys.indexOf(designForm.name_font)
+  designForm.name_font = keys[(i + dir + keys.length) % keys.length]
+}
+const fontPreviewStyle = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
 function pickAccent(key) {
   if (canDesignAdvanced.value) designForm.accent = key
 }
@@ -2023,10 +2038,17 @@ async function changePassword() {
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
       <div class="stats">
-        <button type="button" class="stat stat-link" @click="section = 'catalogs'"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong><CountUp :value="billing.hasSubscription ? catalog.products.length : '—'" /></strong><small>Productos</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
-        <button type="button" class="stat stat-link" :disabled="!canStats" @click="section = 'stats'"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong><CountUp :value="canStats ? (store.visitStats?.total ?? 0) : '—'" /></strong><small>{{ canStats ? 'Visitas totales' : 'Visitas' }}</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
-        <button type="button" class="stat stat-link" :disabled="!canStats" @click="section = 'stats'"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong><CountUp :value="canStats ? (store.visitStats?.today ?? 0) : '—'" /></strong><small>Visitas hoy</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
-        <button type="button" class="stat stat-link" @click="section = 'plans'"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong><CountUp :value="plan?.remaining ?? '—'" /></strong><small>Días restantes</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link t-indigo" @click="section = 'catalogs'"><span class="stat-icon"><AppIcon name="package" :size="20" /></span><div><strong><CountUp :value="billing.hasSubscription ? catalog.products.length : '—'" /></strong><small>Productos</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link t-sky" :disabled="!canStats" @click="section = 'stats'"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong><CountUp :value="canStats ? (store.visitStats?.total ?? 0) : '—'" /></strong><small>{{ canStats ? 'Visitas totales' : 'Visitas' }}</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link t-emerald" :disabled="!canStats" @click="section = 'stats'"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong><CountUp :value="canStats ? (store.visitStats?.today ?? 0) : '—'" /></strong><small>Visitas hoy</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+        <button type="button" class="stat stat-link t-amber" @click="section = 'plans'"><span class="stat-icon"><AppIcon name="clock" :size="20" /></span><div><strong><CountUp :value="plan?.remaining ?? '—'" /></strong><small>Días restantes</small></div><AppIcon class="stat-go" name="arrow-up-right" :size="16" /></button>
+      </div>
+
+      <div v-if="billing.hasSubscription" class="quick-actions" aria-label="Accesos rápidos">
+        <button type="button" class="qa" @click="section = 'catalogs'"><span class="qa-icon t-indigo"><AppIcon name="package" :size="18" /></span><span><strong>Mis productos</strong><small>Cargá y ordená tu catálogo</small></span></button>
+        <button type="button" class="qa" @click="section = 'design'"><span class="qa-icon t-pink"><AppIcon name="palette" :size="18" /></span><span><strong>Diseñar mi página</strong><small>Logo, colores y fotos</small></span></button>
+        <button v-if="canQr || canFlyers" type="button" class="qa" @click="section = 'tools'"><span class="qa-icon t-amber"><AppIcon name="qr-code" :size="18" /></span><span><strong>QR y folletos</strong><small>Material para imprimir</small></span></button>
+        <button type="button" class="qa" @click="section = 'plans'"><span class="qa-icon t-emerald"><AppIcon name="crown" :size="18" /></span><span><strong>Planes y cupones</strong><small>Mejorá tu suscripción</small></span></button>
       </div>
 
       <div v-if="store.hasStore" class="card">
@@ -2275,6 +2297,14 @@ async function changePassword() {
             <div class="card disc-card">
               <h3><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="18" /> {{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
               <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
+              <div class="disc-preview" aria-hidden="true">
+                <span class="disc-preview-badge"><b>-{{ discountPreviewPct }}</b><i>%</i></span>
+                <div class="disc-preview-info">
+                  <small>Así se verá en tu tienda</small>
+                  <strong>{{ discountForm.name || 'Nombre de tu oferta' }}</strong>
+                  <span class="disc-preview-price"><s>{{ formatARS(10000) }}</s><b>{{ formatARS(10000 * (1 - discountPreviewPct / 100)) }}</b></span>
+                </div>
+              </div>
               <AppInput v-model="discountForm.name" label="Nombre" name="disc_name" icon="tag" placeholder="Ej. Semana de ofertas" :error="discountFieldErr('name')" @blur="discountTouched.name = true" />
 
               <div class="field">
@@ -2597,30 +2627,39 @@ async function changePassword() {
           </nav>
           <div v-show="designTab === 'content'" class="card dsg-card">
             <h3><AppIcon name="pencil" :size="18" /> Contenido</h3>
-            <AppInput v-model="designForm.display_name" label="Nombre visible" name="design_display_name" :placeholder="business || 'Tu negocio'" hint="El nombre que aparece junto a tu logo. Vacío: se usa tu nombre de negocio." :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
-            <AppInput v-model="designForm.headline" label="Titular" name="design_headline" placeholder="Ej. Indumentaria y calzado en Salta" hint="Frase corta bajo el nombre de tu negocio (opcional, hasta 140 caracteres)." :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
-            <div class="field">
-              <label for="design-description">Descripción</label>
-              <textarea
-                id="design-description"
-                v-model="designForm.description"
-                class="textarea"
-                :class="{ invalid: designFieldErr('description') }"
-                placeholder="Contale a tus clientes qué ofrecés"
-                maxlength="800"
-                rows="4"
-                @blur="designTouched.description = true"
-              ></textarea>
-              <p class="hint">Aparece debajo del titular. {{ designForm.description.length }}/800</p>
-              <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
-            </div>
-            <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
-            <div class="grid-2">
-              <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
-              <AppInput v-model="designForm.tiktok" label="TikTok" name="design_tiktok" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
-            </div>
-            <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
-            <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
+            <section class="form-group">
+              <header class="form-group-head"><span class="fg-icon"><AppIcon name="store" :size="17" /></span><div><strong>Presentación</strong><small>Lo primero que ve tu cliente al entrar.</small></div></header>
+              <AppInput v-model="designForm.display_name" label="Nombre visible" name="design_display_name" icon="store" :placeholder="business || 'Tu negocio'" hint="El nombre que aparece junto a tu logo. Vacío: se usa tu nombre de negocio." :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
+              <AppInput v-model="designForm.headline" label="Titular" name="design_headline" icon="type" placeholder="Ej. Indumentaria y calzado en Salta" hint="Frase corta bajo el nombre de tu negocio (opcional, hasta 140 caracteres)." :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
+              <div class="field">
+                <label for="design-description"><AppIcon name="file-text" :size="14" class="label-icon" aria-hidden="true" />Descripción <span class="counter" :class="{ warn: designForm.description.length > 720 }">{{ designForm.description.length }}/800</span></label>
+                <textarea
+                  id="design-description"
+                  v-model="designForm.description"
+                  class="textarea"
+                  :class="{ invalid: designFieldErr('description') }"
+                  placeholder="Contale a tus clientes qué ofrecés"
+                  maxlength="800"
+                  rows="4"
+                  @blur="designTouched.description = true"
+                ></textarea>
+                <p class="hint">Aparece debajo del titular.</p>
+                <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
+              </div>
+            </section>
+            <section class="form-group">
+              <header class="form-group-head"><span class="fg-icon wa"><AppIcon name="message-circle" :size="17" /></span><div><strong>Contacto</strong><small>Por dónde te escriben tus clientes.</small></div></header>
+              <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" icon="whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
+              <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" icon="mail" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
+            </section>
+            <section class="form-group">
+              <header class="form-group-head"><span class="fg-icon ig"><AppIcon name="share-2" :size="17" /></span><div><strong>Redes sociales</strong><small>Se muestran como botones en tu web.</small></div></header>
+              <div class="grid-2">
+                <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" icon="instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
+                <AppInput v-model="designForm.tiktok" label="TikTok" name="design_tiktok" icon="tiktok" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
+              </div>
+              <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" icon="facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
+            </section>
           </div>
           <div v-show="designTab === 'images'" class="card dsg-card">
             <h3><AppIcon name="images" :size="18" /> Imágenes</h3>
@@ -2775,7 +2814,7 @@ async function changePassword() {
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
             <div class="field">
-              <label for="design-template">Diseño de tu web</label>
+              <label for="design-template"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
               <select id="design-template" v-model="designForm.template" class="select">
                 <option
                   v-for="(t, key) in storeTemplates" :key="key" :value="key"
@@ -2784,19 +2823,18 @@ async function changePassword() {
                   {{ t.label }}<template v-if="!allowedTemplates.includes(key)"> · Plan {{ templatePlanLabel(key) }}</template>
                 </option>
               </select>
-              <div class="pick-strip tpl-thumbs" aria-label="Vista previa de cada diseño">
-                <button
-                  v-for="(t, key) in storeTemplates" :key="key" type="button"
-                  class="tpl-thumb-btn" :class="{ active: designForm.template === key }"
-                  :aria-disabled="!allowedTemplates.includes(key)"
-                  :aria-pressed="designForm.template === key"
-                  :title="allowedTemplates.includes(key) ? t.desc : `${t.label} · Plan ${templatePlanLabel(key)}`"
-                  @click="pickTemplate(key)"
-                >
-                  <span class="tpl-thumb" :data-tpl="key" aria-hidden="true"><i></i></span>
-                  <span class="tpl-thumb-name">{{ t.label }}</span>
-                  <span v-if="!allowedTemplates.includes(key)" class="tpl-thumb-lock" aria-hidden="true"><AppIcon name="lock" :size="10" :stroke="2.5" /></span>
-                </button>
+              <div class="pick-preview" aria-live="polite">
+                <span class="tpl-thumb pick-preview-thumb" :data-tpl="designForm.template" aria-hidden="true"><i></i></span>
+                <div class="pick-preview-info">
+                  <span class="pick-preview-eyebrow">Diseño elegido</span>
+                  <strong>{{ storeTemplates[designForm.template]?.label }}</strong>
+                  <small>{{ storeTemplates[designForm.template]?.desc }}</small>
+                  <span class="pick-tier" :class="storeTemplates[designForm.template]?.tier">{{ templateTierLabel(designForm.template) }}</span>
+                </div>
+                <div class="pick-nav">
+                  <button type="button" class="icon-btn" aria-label="Diseño anterior" @click="stepTemplate(-1)"><AppIcon name="chevron-left" :size="15" /></button>
+                  <button type="button" class="icon-btn" aria-label="Diseño siguiente" @click="stepTemplate(1)"><AppIcon name="chevron-right" :size="15" /></button>
+                </div>
               </div>
               <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido. Los diseños bloqueados se habilitan subiendo de plan.</p>
             </div>
@@ -2805,19 +2843,21 @@ async function changePassword() {
               <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label for="design-font">Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <label for="design-font"><AppIcon name="type" :size="14" class="label-icon" aria-hidden="true" />Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <select id="design-font" v-model="designForm.name_font" class="select" :disabled="!canDesignAdvanced">
-                <option v-for="(f, key) in storeFonts" :key="key" :value="key" :style="{ fontFamily: f.family }">{{ f.label }}</option>
+                <option v-for="(f, key) in storeFonts" :key="key" :value="key">{{ f.label }}</option>
               </select>
-              <div class="pick-strip font-chips" aria-label="Vista previa de cada fuente">
-                <button
-                  v-for="(f, key) in storeFonts" :key="key" type="button"
-                  class="font-chip" :class="{ active: designForm.name_font === key }"
-                  :style="{ fontFamily: f.family }"
-                  :aria-disabled="!canDesignAdvanced"
-                  :title="f.label"
-                  @click="pickFont(key)"
-                >{{ f.label }}</button>
+              <div class="pick-preview font-preview" aria-live="polite">
+                <span class="font-preview-aa" :style="fontPreviewStyle" aria-hidden="true">Aa</span>
+                <div class="pick-preview-info">
+                  <span class="pick-preview-eyebrow">{{ storeFonts[designForm.name_font]?.label }}</span>
+                  <strong class="font-preview-name" :style="fontPreviewStyle">{{ designShopName }}</strong>
+                  <small class="font-preview-sample" :style="fontPreviewStyle">Catálogo online · Nuevos ingresos 0123456789</small>
+                </div>
+                <div class="pick-nav">
+                  <button type="button" class="icon-btn" aria-label="Fuente anterior" :disabled="!canDesignAdvanced" @click="stepFont(-1)"><AppIcon name="chevron-left" :size="15" /></button>
+                  <button type="button" class="icon-btn" aria-label="Fuente siguiente" :disabled="!canDesignAdvanced" @click="stepFont(1)"><AppIcon name="chevron-right" :size="15" /></button>
+                </div>
               </div>
               <p class="hint">Se aplica a todo el texto de tu web: nombre, secciones y catálogo.</p>
             </div>
@@ -3285,27 +3325,68 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.promo" active="tools" @select="section = $event" />
 
-      <div class="grid-2">
-        <div v-if="canQr" class="card">
+      <div class="tools-hero">
+        <span class="tools-hero-icon"><AppIcon name="megaphone" :size="26" /></span>
+        <div>
+          <strong>Llevá tu tienda al mundo real</strong>
+          <p>Un QR en la vidriera, un folleto en la mano: cada impreso es un cliente más que entra a tu página.</p>
+        </div>
+        <span v-if="visitDays.length && canStats" class="tools-hero-chip"><AppIcon name="eye" :size="14" /> {{ store.visitStats?.total ?? 0 }} visitas</span>
+      </div>
+
+      <nav class="dsg-tabs tools-tabs" role="tablist" aria-label="Herramientas">
+        <button type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'ready' }" :aria-selected="toolsTab === 'ready'" @click="toolsTab = 'ready'"><AppIcon name="qr-code" :size="15" /> QR y folleto rápido</button>
+        <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'studio' }" :aria-selected="toolsTab === 'studio'" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="15" /> Diseñá tu folleto <span class="tools-new">Nuevo</span></button>
+      </nav>
+
+      <div v-show="toolsTab === 'ready'" class="grid-2 tools-grid">
+        <div v-if="canQr" class="card tools-card">
           <h3><AppIcon name="qr-code" :size="18" /> Tu código QR</h3>
           <p>Quien lo escanee con el celular entra directo a tu página. Pegalo en tu vidriera, mostrador o paquetes.</p>
-          <div v-if="qrDataUrl" class="qr-box">
-            <img :src="qrDataUrl" alt="Código QR de tu tienda" />
+          <div class="qr-stage">
+            <div v-if="qrDataUrl" class="qr-frame"><i></i><i></i><i></i><i></i><img :src="qrDataUrl" alt="Código QR de tu tienda" /></div>
+            <span v-else class="spinner spinner-brand" aria-hidden="true"></span>
           </div>
+          <button type="button" class="qr-link" title="Copiar dirección" @click="copyLink"><AppIcon name="external-link" :size="14" /> <span>{{ publicUrl.replace(/^https?:\/\//, '') }}</span> <AppIcon name="copy" :size="14" /></button>
+          <ul class="tools-tips">
+            <li><AppIcon name="store" :size="15" /> Vidriera o puerta del local</li>
+            <li><AppIcon name="package" :size="15" /> Bolsas, cajas y paquetes</li>
+            <li><AppIcon name="receipt" :size="15" /> Tickets y tarjetas personales</li>
+          </ul>
           <div class="btn-row">
             <button class="btn btn-auto" :disabled="!qrDataUrl" @click="downloadQr"><AppIcon name="download" :size="16" /> Descargar QR</button>
             <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
           </div>
         </div>
-        <div v-if="canFlyers" class="card">
-          <h3><AppIcon name="file-text" :size="18" /> Folleto imprimible</h3>
-          <p>Un folleto a color con tu logo, tus productos, tu contacto y el QR. Salen 4 por hoja: imprimilos, cortalos y repartilos (o guardalos como PDF).</p>
+        <div v-if="canFlyers" class="card tools-card">
+          <h3><AppIcon name="file-text" :size="18" /> Folleto rápido</h3>
+          <p>Un folleto a color con tu logo, tus productos, tu contacto y el QR, armado solo. Salen 4 por hoja: imprimilos, cortalos y repartilos (o guardalos como PDF).</p>
+          <div class="flyer-mini" aria-hidden="true">
+            <span class="flyer-mini-top"><i></i><b></b></span>
+            <span class="flyer-mini-lines"><b></b><b></b><b></b></span>
+            <span class="flyer-mini-prods"><i></i><i></i><i></i></span>
+            <span class="flyer-mini-foot"><i></i><b></b></span>
+          </div>
           <div class="btn-row">
             <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
+            <button class="btn ghost btn-auto" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="16" /> Quiero diseñarlo yo</button>
           </div>
         </div>
       </div>
+
+      <FlyerStudio
+        v-if="canFlyers && toolsTab === 'studio'"
+        :slug="store.store?.slug || ''"
+        :shop-name="designShopName"
+        :logo="currentLogo"
+        :qr="qrDataUrl"
+        :url="publicUrl"
+        :contact="designForm.whatsapp || auth.user?.profile?.phone || ''"
+        :can-add-gallery="canAddGallery"
+        @print="openFlyer(true)"
+      />
     </div>
+
     <!-- ================= VENTA EN LOCAL (próximamente) ================= -->
     <div v-if="seen.pos" v-show="section === 'pos'" :class="{ 'sec-on': section === 'pos' }">
       <div class="page-head">

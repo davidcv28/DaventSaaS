@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import QRCode from 'qrcode'
 import { storesApi, publicStoreUrl, storeThemeVars, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
 import { formatARS } from '../api/billing.api.js'
@@ -7,11 +8,18 @@ import { useAuthStore } from '../stores/auth.store.js'
 import { extractApiError } from '../api/http.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
+import FlyerCanvas from '../components/FlyerCanvas.vue'
+import { loadFlyerDraft } from '../utils/flyer.js'
 
 // Panfletito A6 de la tienda, mismo diseño que el folleto promocional de
 // DAVENT: banda de marca arriba, beneficios, destacados y pie con QR.
 // En pantalla se ve 1 copia; al imprimir la hoja A4 sale llena (2×2).
 const auth = useAuthStore()
+const route = useRoute()
+// Modo "a medida": el folleto armado en el diseñador (A5, 2 por hoja A4 apaisada).
+const isCustom = route.query.custom === '1'
+const draft = ref(null)
+let pageStyle = null
 const store = ref(null)
 const place = ref(null) // datos públicos: city_name/province_name
 const products = ref([]) // destacados del catálogo público
@@ -69,6 +77,12 @@ onMounted(async () => {
       storesApi.publicCatalog(store.value.slug).catch(() => null)
     ])
     place.value = pub
+    if (isCustom) {
+      draft.value = loadFlyerDraft(store.value.slug, custom.value.whatsapp || auth.user?.profile?.phone || '')
+      pageStyle = document.createElement('style')
+      pageStyle.textContent = '@page { size: A4 landscape; margin: 0 }'
+      document.head.appendChild(pageStyle)
+    }
     qrDataUrl.value = qr
     products.value = (cat?.products || []).filter((p) => p.image).slice(0, 3)
     status.value = 'ready'
@@ -78,6 +92,8 @@ onMounted(async () => {
     error.value = extractApiError(e).nonField || 'No se pudo generar el folleto.'
   }
 })
+
+onUnmounted(() => pageStyle?.remove())
 
 function print() {
   window.print()
@@ -140,8 +156,15 @@ function closeTab() {
 .sf-davent { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px; font-size: 8.5px; font-weight: 700; letter-spacing: .04em; color: #777; border-top: 1px solid #eee; }
 .sf-davent :deep(.brand-logo) { display: block; }
 
+.cf-sheet { display: grid; justify-items: center; width: 100%; }
+.cf-sheet .cf-card { width: min(100%, 148mm); box-shadow: var(--shadow); }
+.cf-sheet .cf-card + .cf-card { display: none; }
+
 @page { size: A4; margin: 0; }
 @media print {
+  .cf-sheet { display: grid; grid-template-columns: repeat(2, 148.5mm); width: 297mm; height: 209mm; overflow: hidden; break-inside: avoid; justify-items: stretch; }
+  .cf-sheet .cf-card + .cf-card { display: flex; }
+  .cf-sheet .cf-card { width: 148.5mm; height: 209mm; box-shadow: none; outline: 1px dashed #bbb; outline-offset: -1px; box-sizing: border-box; }
   .print-page { background: #fff; padding: 0; min-height: 0; display: block; }
   .print-bar, .print-status { display: none; }
   /* Imposición: la hoja A4 sale con las 4 copias A6 listas para cortar. */
@@ -154,7 +177,7 @@ function closeTab() {
 <template>
   <div class="print-page" :style="themeVars">
     <div class="print-bar">
-      <span class="print-bar-text">Folleto de tu tienda A6 · salen 4 por hoja A4, a color</span>
+      <span class="print-bar-text">{{ isCustom ? 'Folleto a medida A5 · salen 2 por hoja A4 apaisada, a color' : 'Folleto de tu tienda A6 · salen 4 por hoja A4, a color' }}</span>
       <div class="print-bar-actions">
         <button class="btn btn-auto" type="button" :disabled="status !== 'ready'" @click="print">
           <AppIcon name="printer" :size="16" /> Imprimir / PDF
@@ -169,6 +192,13 @@ function closeTab() {
     </div>
     <div v-else-if="status === 'error'" class="print-status">
       <p>{{ error }}</p>
+    </div>
+
+    <div v-else-if="isCustom && draft" class="cf-sheet">
+      <FlyerCanvas
+        v-for="n in 2" :key="n" class="cf-card" :aria-hidden="n > 1 || undefined"
+        :design="draft" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl"
+      />
     </div>
 
     <div v-else class="sf-sheet">

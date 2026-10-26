@@ -1,29 +1,61 @@
 <script setup>
+import { computed } from 'vue'
 import { formatARS } from '../api/billing.api.js'
 import AppIcon from './AppIcon.vue'
 
-defineProps({
+const props = defineProps({
   plan: { type: Object, required: true },
   current: { type: Boolean, default: false },
   busy: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['select'])
+
+const b = computed(() => props.plan.benefits || {})
+
+// Medallón por nivel: la prueba regala, el avanzado corona, el medio despega.
+const tierIcon = computed(() => {
+  if (props.plan.is_trial) return 'gift'
+  if (b.value.has_design_advanced) return 'crown'
+  if (b.value.has_design_plus) return 'rocket'
+  return 'zap'
+})
+
+// Ventajas clave en chips con ícono, las más vendedoras primero (máx. 4).
+const perks = computed(() => {
+  const v = b.value
+  const list = []
+  if ('max_products' in v) list.push({ icon: 'package', text: v.max_products == null ? 'Productos ilimitados' : `Hasta ${v.max_products} productos` })
+  if (v.max_gallery_images) list.push({ icon: 'images', text: `${v.max_gallery_images} fotos de galería` })
+  if (v.has_design_advanced) list.push({ icon: 'palette', text: 'Fuentes y colores' })
+  else if (v.has_design_plus) list.push({ icon: 'layout-grid', text: 'Diseños extra' })
+  if (v.has_flyers) list.push({ icon: 'megaphone', text: 'Folletos y QR' })
+  else if (v.has_qr) list.push({ icon: 'qr-code', text: 'Código QR' })
+  if (v.has_chatbot) list.push({ icon: 'bot', text: 'Chatbot' })
+  if (v.has_stats) list.push({ icon: 'trending-up', text: 'Estadísticas' })
+  return list.slice(0, 4)
+})
 </script>
 
 <template>
   <div class="price-card" :class="{ featured: plan.featured, current, trial: plan.is_trial }">
     <span v-if="plan.is_trial" class="flag trial">1 día gratis</span>
     <span v-else-if="plan.featured" class="flag">Recomendado</span>
+    <span class="plan-medal" aria-hidden="true"><AppIcon :name="tierIcon" :size="20" /></span>
     <h3>{{ plan.name }}</h3>
     <p class="tagline">{{ plan.tagline }}</p>
     <p class="price">{{ formatARS(plan.price) }}<small v-if="Number(plan.price) > 0">/mes</small></p>
+    <div v-if="perks.length" class="plan-perks">
+      <span v-for="p in perks" :key="p.text" class="plan-perk"><AppIcon :name="p.icon" :size="13" /> {{ p.text }}</span>
+    </div>
+    <p class="plan-includes">Incluye</p>
     <ul class="features">
       <li v-for="f in plan.bullets" :key="f"><AppIcon name="check" :size="16" :stroke="2.4" /> <span>{{ f }}</span></li>
     </ul>
     <button class="btn" :class="current || plan.is_trial ? 'ghost' : ''" :disabled="current || busy || plan.is_trial" @click="emit('select', plan)">
       <span v-if="busy" class="spinner" aria-hidden="true"></span>
       {{ current ? 'Plan actual' : (plan.cta_label || 'Elegir plan') }}
+      <AppIcon v-if="!current && !plan.is_trial && !busy" name="arrow-right" :size="15" />
     </button>
   </div>
 </template>
