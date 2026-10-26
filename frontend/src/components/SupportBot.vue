@@ -24,30 +24,37 @@ const isPanel = computed(() => Boolean(route.meta?.requiresAuth))
 
 const open = ref(false)
 const greeted = ref(false)
+const typing = ref(false)
+const draft = ref('')
 const messages = ref([])
 const plans = ref(null)
 const plansLoading = ref(false)
+const asked = ref(new Set())
 const bodyEl = ref(null)
+const inputEl = ref(null)
 
+// `kw` suma sinónimos para matchear el texto libre que escribe el usuario.
 const TOPICS = [
-  { id: 'what', label: '¿Qué es DAVENT?' },
-  { id: 'do', label: '¿Qué puedo hacer con mi tienda?' },
-  { id: 'plans', label: 'Planes y precios' },
-  { id: 'start', label: '¿Cómo empiezo?' },
-  { id: 'pay', label: '¿Cómo se paga?' },
-  { id: 'tech', label: '¿Necesito saber de tecnología?' }
+  { id: 'what', label: '¿Qué es DAVENT?', kw: 'davent plataforma para que sirve' },
+  { id: 'do', label: '¿Qué puedo hacer con mi tienda?', kw: 'funciones tienda catalogo qr folletos whatsapp redes' },
+  { id: 'plans', label: 'Planes y precios', kw: 'plan planes precio precios cuanto cuesta sale costo' },
+  { id: 'start', label: '¿Cómo empiezo?', kw: 'empezar comenzar arrancar registrarme crear cuenta alta' },
+  { id: 'pay', label: '¿Cómo se paga?', kw: 'pago pagos mercado pago cobro debito tarjeta' },
+  { id: 'tech', label: '¿Necesito saber de tecnología?', kw: 'tecnologia programar dificil facil conocimientos' }
 ]
 
 const PANEL_TOPICS = [
-  { id: 'sub', label: 'Mi suscripción' },
-  { id: 'link', label: 'Mi link público' },
-  { id: 'products', label: 'Cargar productos' },
-  { id: 'design', label: 'Diseño de mi web' },
-  { id: 'renew', label: 'Renovación del plan' },
-  { id: 'invoices', label: 'Pagos y facturas' }
+  { id: 'sub', label: 'Mi suscripción', kw: 'suscripcion plan dias restantes vencida vigente' },
+  { id: 'link', label: 'Mi link público', kw: 'link url publico direccion dominio slug web' },
+  { id: 'products', label: 'Cargar productos', kw: 'productos producto catalogo cargar subir categorias marcas fotos' },
+  { id: 'design', label: 'Diseño de mi web', kw: 'diseno logo color fuente carrusel personalizar portada' },
+  { id: 'renew', label: 'Renovación del plan', kw: 'renovacion renovar debito automatico vencimiento' },
+  { id: 'invoices', label: 'Pagos y facturas', kw: 'facturas factura pagos comprobantes historial cobros' }
 ]
 
 const topics = computed(() => (isPanel.value ? PANEL_TOPICS : TOPICS))
+// Temas todavía no preguntados: se ofrecen como mensajes sugeridos en el chat.
+const pending = computed(() => topics.value.filter((t) => !asked.value.has(t.id)))
 
 // Respuestas del modo panel: salen de los stores ya cargados por el dashboard.
 function panelAnswer(id) {
@@ -107,6 +114,7 @@ function toggle() {
     greeted.value = true
     messages.value.push({ from: 'bot', text: greeting.value })
     scrollDown()
+    nextTick(() => inputEl.value?.focus())
   }
 }
 
@@ -118,16 +126,77 @@ const greeting = computed(() =>
 
 const publicUrl = computed(() => (store.store ? publicStoreUrl(store.store.slug) : ''))
 
-async function select(topic) {
-  messages.value.push({ from: 'user', text: topic.label })
+const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') // diacríticos U+0300–U+036F
+
+// Matching del texto libre contra etiqueta + keywords del tema (mismo criterio
+// que el bot de las tiendas: exacto > inclusión > solape de palabras >3 letras).
+function findTopic(text) {
+  const t = norm(text)
+  if (!t) return null
+  let best = null
+  let score = 0
+  for (const topic of topics.value) {
+    const q = norm(`${topic.label} ${topic.kw}`)
+    let s = 0
+    if (t === norm(topic.label)) s += 20
+    else if (t.length > 3 && q.includes(t)) s += 6
+    for (const w of q.split(/[^a-z0-9ñ]+/).filter((w) => w.length > 3)) {
+      if (t.includes(w)) s += 2
+    }
+    if (s > score) {
+      score = s
+      best = topic
+    }
+  }
+  return score >= 3 ? best : null
+}
+
+const FALLBACK = computed(() =>
+  isPanel.value
+    ? 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas.'
+    : 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas — o creá tu cuenta y lo descubrís desde el panel.'
+)
+
+function answer(topic) {
+  asked.value = new Set([...asked.value, topic.id])
   if (isPanel.value) {
     messages.value.push({ from: 'bot', text: panelAnswer(topic.id) })
   } else if (topic.id === 'plans') {
-    await answerPlans()
+    answerPlans()
   } else {
     messages.value.push({ from: 'bot', text: ANSWERS[topic.id] })
   }
   scrollDown()
+}
+
+function select(topic) {
+  if (typing.value) return
+  messages.value.push({ from: 'user', text: topic.label })
+  typing.value = true
+  scrollDown()
+  // Pausa breve de "escribiendo…" como en el bot de las tiendas.
+  window.setTimeout(() => {
+    typing.value = false
+    answer(topic)
+  }, 400)
+}
+
+function send() {
+  const text = draft.value.trim()
+  if (!text || typing.value) return
+  draft.value = ''
+  messages.value.push({ from: 'user', text: text.slice(0, 200) })
+  typing.value = true
+  scrollDown()
+  window.setTimeout(() => {
+    typing.value = false
+    const topic = findTopic(text)
+    if (topic) answer(topic)
+    else {
+      messages.value.push({ from: 'bot', text: FALLBACK.value })
+      scrollDown()
+    }
+  }, 400)
 }
 
 async function answerPlans() {
@@ -168,6 +237,9 @@ watch(() => route.fullPath, () => { open.value = false })
 watch(isPanel, () => {
   messages.value = []
   greeted.value = false
+  typing.value = false
+  draft.value = ''
+  asked.value = new Set()
   open.value = false
 })
 </script>
@@ -187,7 +259,7 @@ watch(isPanel, () => {
           </button>
         </header>
 
-        <div ref="bodyEl" class="bot-body">
+        <div ref="bodyEl" class="bot-body" aria-live="polite">
           <div
             v-for="(m, i) in messages" :key="i"
             class="bot-msg" :class="m.from"
@@ -206,17 +278,37 @@ watch(isPanel, () => {
             </div>
             <template v-else>{{ m.text }}</template>
           </div>
+          <div v-if="typing" class="bot-msg bot" aria-label="Escribiendo">
+            <p class="bot-typing"><i /><i /><i /></p>
+          </div>
+
+          <!-- Preguntas sugeridas: viajan dentro del chat como mensajes
+               clickeables (quick-replies); tocar una la manda como mensaje
+               del usuario. -->
+          <div v-if="pending.length && !typing" class="bot-sugg">
+            <button
+              v-for="t in pending" :key="t.id" type="button"
+              class="bot-sugg-msg"
+              @click="select(t)"
+            >
+              {{ t.label }}
+            </button>
+          </div>
         </div>
 
-        <div class="bot-chips">
-          <button
-            v-for="t in topics" :key="t.id" type="button"
-            class="bot-chip"
-            @click="select(t)"
-          >
-            {{ t.label }}
+        <form class="bot-input" @submit.prevent="send">
+          <input
+            ref="inputEl"
+            v-model="draft"
+            type="text"
+            maxlength="200"
+            placeholder="Escribí tu consulta…"
+            aria-label="Escribí tu consulta"
+          />
+          <button type="submit" class="bot-send" :disabled="!draft.trim() || typing" aria-label="Enviar mensaje">
+            <AppIcon name="arrow-right" :size="16" />
           </button>
-        </div>
+        </form>
         <footer v-if="!isPanel" class="bot-foot">
           <RouterLink to="/register" class="bot-cta">Crear mi cuenta <AppIcon name="arrow-right" :size="14" /></RouterLink>
         </footer>
@@ -246,7 +338,8 @@ watch(isPanel, () => {
 .bot-fab:hover { background: var(--brand-600); }
 .bot-fab:active { transform: scale(.96); }
 
-.bot-panel { width: min(340px, calc(100vw - 36px)); max-height: min(520px, calc(100vh - 110px)); display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+/* Tamaño tipo ventana de Facebook Messenger (~380×640 en desktop). */
+.bot-panel { width: min(380px, calc(100vw - 36px)); height: min(640px, calc(100vh - 110px)); height: min(640px, calc(100dvh - 110px)); display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 
 .bot-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--brand-500); color: #fff; }
 .bot-avatar { width: 34px; height: 34px; border-radius: 10px; background: rgba(255, 255, 255, .16); display: grid; place-items: center; flex: none; }
@@ -269,9 +362,25 @@ watch(isPanel, () => {
 .bot-plan-tag { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .bot-plan ul { margin: 6px 0 0; padding-left: 16px; font-size: 12px; color: var(--ink-2); display: grid; gap: 2px; }
 
-.bot-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }
-.bot-chip { border: 1px solid var(--line); border-radius: 99px; background: var(--card); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; transition: border-color .15s, color .15s; }
-.bot-chip:hover { border-color: var(--brand-500); color: var(--brand-ink); }
+/* Sugerencias dentro del flujo: burbuja alineada a la derecha (lado del
+   usuario) con borde de marca — se lee como "tocar para preguntar". */
+.bot-sugg { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.bot-sugg-msg { max-width: 88%; border: 1.5px solid var(--brand-500); border-radius: 12px; border-bottom-right-radius: 4px; background: var(--card); color: var(--brand-ink); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.45; padding: 9px 12px; cursor: pointer; text-align: left; transition: background .15s, transform .1s; }
+.bot-sugg-msg:hover { background: var(--brand-100, var(--bg)); }
+.bot-sugg-msg:active { transform: scale(.98); }
+
+.bot-typing { display: inline-flex; gap: 4px; align-items: center; min-width: 38px; }
+.bot-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bot-dot 1s infinite; }
+.bot-typing i:nth-child(2) { animation-delay: .15s; }
+.bot-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes bot-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+.bot-input { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--card); }
+.bot-input input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 99px; background: var(--bg); color: var(--ink); font: inherit; font-size: 13.5px; padding: 8px 14px; outline: none; transition: border-color .15s; }
+.bot-input input:focus { border-color: var(--brand-500); }
+.bot-send { width: 38px; height: 38px; flex: none; border: none; border-radius: 50%; background: var(--brand-500); color: #fff; display: grid; place-items: center; cursor: pointer; transition: transform .12s, opacity .15s, background .15s; }
+.bot-send:disabled { opacity: .45; cursor: default; }
+.bot-send:not(:disabled):hover { background: var(--brand-600); transform: scale(1.06); }
 
 .bot-foot { padding: 0 12px 12px; }
 .bot-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 38px; border-radius: var(--radius-sm); background: var(--brand-500); color: #fff; font-size: 13.5px; font-weight: 700; text-decoration: none; transition: background .15s; }
@@ -281,6 +390,6 @@ watch(isPanel, () => {
 .bot-pop-enter-active, .bot-pop-leave-active { transition: opacity .15s, transform .15s; }
 .bot-pop-enter-from, .bot-pop-leave-to { opacity: 0; transform: translateY(8px) scale(.98); }
 @media (prefers-reduced-motion: reduce) {
-  .bot-pop-enter-active, .bot-pop-leave-active { transition: none; }
+  .bot-pop-enter-active, .bot-pop-leave-active, .bot-typing i { transition: none; animation: none; }
 }
 </style>

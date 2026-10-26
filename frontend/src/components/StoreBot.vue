@@ -134,12 +134,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <span class="sp-bot-msg-avatar" aria-hidden="true"><AppIcon name="bot" :size="13" /></span>
             <p class="sp-bot-typing"><i /><i /><i /></p>
           </div>
-        </div>
 
-        <div v-if="chips.length" class="sp-bot-chips">
-          <button v-for="item in chips" :key="item.q" type="button" class="sp-bot-chip" @click="askChip(item)">
-            {{ item.q }}
-          </button>
+          <!-- Preguntas sugeridas: viajan dentro del chat como mensajes clickeables
+               (al estilo quick-replies de Messenger); tocar una la manda como mensaje
+               del usuario. -->
+          <div v-if="chips.length && !typing" class="sp-bot-sugg">
+            <button v-for="item in chips" :key="item.q" type="button" class="sp-bot-sugg-msg" @click="askChip(item)">
+              {{ item.q }}
+            </button>
+          </div>
         </div>
 
         <form class="sp-bot-input" @submit.prevent="send">
@@ -179,7 +182,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .sp-bot-fab:active { transform: scale(.94); }
 @keyframes sp-bot-ring { 0% { opacity: .55; transform: scale(1); } 55%, 100% { opacity: 0; transform: scale(1.45); } }
 
-.sp-bot-panel { width: min(348px, calc(100vw - 36px)); max-height: min(540px, calc(100vh - 120px)); display: flex; flex-direction: column; background: var(--sp-surface); border: 1px solid var(--sp-line); border-radius: 18px; box-shadow: 0 24px 60px rgba(2, 6, 23, .3); overflow: hidden; }
+/* Tamaño tipo ventana de Facebook Messenger (~380×640 en desktop). */
+.sp-bot-panel { width: min(380px, calc(100vw - 36px)); height: min(640px, calc(100vh - 110px)); height: min(640px, calc(100dvh - 110px)); display: flex; flex-direction: column; background: var(--sp-surface); border: 1px solid var(--sp-line); border-radius: 18px; box-shadow: 0 24px 60px rgba(2, 6, 23, .3); overflow: hidden; }
 
 .sp-bot-head { display: flex; align-items: center; gap: 10px; padding: 13px 14px; background: var(--store-accent); color: #fff; }
 .sp-bot-id { width: 36px; height: 36px; border-radius: 12px; background: rgba(255, 255, 255, .16); display: grid; place-items: center; flex: none; font-weight: 800; font-size: 15px; overflow: hidden; }
@@ -204,9 +208,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .sp-bot-typing i:nth-child(3) { animation-delay: .3s; }
 @keyframes sp-bot-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
 
-.sp-bot-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--sp-line); background: var(--sp-surface); }
-.sp-bot-chip { border: 1px solid var(--sp-line); border-radius: 99px; background: var(--sp-bg); color: var(--sp-ink-2); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; cursor: pointer; transition: border-color .15s, color .15s; }
-.sp-bot-chip:hover { border-color: var(--store-accent); color: var(--store-accent-ink); }
+/* Sugerencias dentro del flujo: burbuja alineada a la derecha (lado del usuario)
+   con borde de acento — se lee como "tocar para preguntar". */
+.sp-bot-sugg { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.sp-bot-sugg-msg { max-width: 88%; border: 1.5px solid var(--store-accent); border-radius: 14px; border-bottom-right-radius: 4px; background: var(--sp-surface); color: var(--store-accent-ink); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.45; padding: 9px 12px; cursor: pointer; text-align: left; transition: background .15s, transform .1s; }
+.sp-bot-sugg-msg:hover { background: var(--store-accent-soft); }
+.sp-bot-sugg-msg:active { transform: scale(.98); }
 
 .sp-bot-input { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--sp-line); background: var(--sp-surface); }
 .sp-bot-input input { flex: 1; min-width: 0; border: 1px solid var(--sp-line); border-radius: 99px; background: var(--sp-bg); color: var(--sp-ink); font: inherit; font-size: 13.5px; padding: 8px 14px; outline: none; transition: border-color .15s; }
