@@ -66,6 +66,8 @@ def _make_named_user(username, verified = True, email = None):
         province        =   province,
         city            =   city,
         email_verified  =   verified,
+        #El claim exige celular cargado (ancla anti-abuso del alta social).
+        phone           =   f'1122{abs(hash(username)) % 10**8:08d}',
     )
     return user, profile
 
@@ -83,6 +85,7 @@ def _make_user(verified):
         province        =   province,
         city            =   city,
         email_verified  =   verified,
+        phone           =   '1100000001',
     )
     return user, profile
 
@@ -103,6 +106,16 @@ class StoreClaimVerificationTests(TestCase):
         user, _     =   _make_user(verified = True)
         response    =   self._claim(user)
         self.assertEqual(response.status_code, 201)
+
+    def test_claim_blocked_without_phone(self):
+        #Alta social: el email queda verificado por el provider pero el
+        #celular (ancla anti-abuso) se completa aparte — sin él, 403.
+        user, profile   =   _make_user(verified = True)
+        profile.phone   =   None
+        profile.save(update_fields = ['phone'])
+        response        =   self._claim(user)
+        self.assertEqual(response.status_code, 403)
+        self.assertIn('celular', response.json()['detail'])
 
 
 class StoreCatalogToggleTests(TestCase):

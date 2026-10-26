@@ -86,6 +86,8 @@ REST_FRAMEWORK = {
         'phone_verification': '5/hour',
         #Alta de cuentas (por IP): cada registro dispara un mail y un trial.
         'register': '10/hour',
+        #Login social (por IP): cada exchange pega llamadas al provider.
+        'social_auth': '20/hour',
         #Editor de fondo de imágenes de producto (inferencia en CPU, por usuario).
         'bg_removal': '60/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a

@@ -132,11 +132,20 @@ class StoreViewSet(StoreBaseViewSet):
         #Sin email verificado cualquiera podría farmear tiendas con el plan de
         #prueba. Solo el claim se bloquea: panel y cuenta siguen funcionando.
         profile     =   getattr(request.user, 'profile', None)
-        if profile is not None and not profile.email_verified and not request.user.is_staff:
-            return Response(
-                {'detail': 'Antes de crear tu web pública tenés que verificar tu correo electrónico. Revisá tu casilla o pedí el reenvío desde tu panel.'},
-                status = status.HTTP_403_FORBIDDEN,
-            )
+        if profile is not None and not request.user.is_staff:
+            if not profile.email_verified:
+                return Response(
+                    {'detail': 'Antes de crear tu web pública tenés que verificar tu correo electrónico. Revisá tu casilla o pedí el reenvío desde tu panel.'},
+                    status = status.HTTP_403_FORBIDDEN,
+                )
+            #El celular es el ancla anti-abuso (único por cuenta): el alta
+            #social entra sin él y el frontend lo pide aparte — el claim lo
+            #exige igual para que ningún usuario sin ancla farmee tiendas.
+            if not profile.phone:
+                return Response(
+                    {'detail': 'Antes de crear tu web pública cargá tu número de celular en tu perfil.'},
+                    status = status.HTTP_403_FORBIDDEN,
+                )
         return super().create(request)
     #=========================================
     # SLUG AVAILABLE (check de disponibilidad para el onboarding)

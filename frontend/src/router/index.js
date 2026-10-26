@@ -16,6 +16,7 @@ const ReportView = () => import('../views/ReportView.vue')
 const AboutView = () => import('../views/AboutView.vue')
 const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
+const CompletePhoneView = () => import('../views/CompletePhoneView.vue')
 const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StoreHomeView = () => import('../views/StoreHomeView.vue')
 const StorePublicAltView = () => import('../views/StorePublicAltView.vue')
@@ -104,6 +105,14 @@ const routes = [
     name: 'onboarding',
     component: StoreClaimView,
     meta: { requiresAuth: true, customerOnly: true, title: 'Elegí tu link' }
+  },
+  {
+    // Alta social: el celular no viene del provider pero es el ancla
+    // anti-abuso — se completa acá antes de entrar al panel (ver guard).
+    path: '/completar-celular',
+    name: 'complete-phone',
+    component: CompletePhoneView,
+    meta: { requiresAuth: true, customerOnly: true, title: 'Completá tu celular' }
   },
   {
     path: '/admin',
@@ -251,6 +260,16 @@ router.beforeEach(async (to) => {
       auth.user ? Promise.resolve() : auth.fetchMe().catch(() => {}),
       stores.status === 'idle' ? stores.loadMine() : Promise.resolve()
     ])
+    // Alta social: sin celular en el perfil no se entra al panel — es el ancla
+    // anti-abuso que el alta por formulario exige. Va ANTES del onboarding:
+    // el claim del link necesita el número cargado (el backend también lo
+    // valida, 403, por si se llama la API directo). El staff queda exento.
+    const needsPhone = !auth.user?.is_staff && Boolean(auth.user?.profile) && !auth.user.profile.phone
+    if (to.name === 'complete-phone') {
+      if (!needsPhone) return { name: 'dashboard' }
+      return true
+    }
+    if (needsPhone) return { name: 'complete-phone' }
     const needsOnboarding = stores.status === 'success' && !stores.hasStore && !auth.user?.is_staff
     if (to.name === 'onboarding') {
       if (!needsOnboarding) return { name: 'dashboard' }

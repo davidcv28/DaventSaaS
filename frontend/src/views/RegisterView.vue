@@ -7,6 +7,7 @@ import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
 import PasswordStrength from '../components/PasswordStrength.vue'
+import SocialAuthButtons from '../components/SocialAuthButtons.vue'
 import {
   validateUsername, validateEmail, validatePassword,
   validatePhone, validateAcceptTerms
@@ -15,6 +16,14 @@ import {
 const router = useRouter()
 const auth = useAuthStore()
 const successMsg = ref('')
+const socialError = ref('')
+
+// Alta social OK: el router deriva a /completar-celular si falta el celular
+// (el alta social no lo pide) y después a /bienvenida para elegir el link.
+function onSocialDone() {
+  socialError.value = ''
+  router.push('/dashboard')
+}
 
 // Alta minimal: solo cuenta + celular (ancla anti-abuso) + TyC.
 // Los datos fiscales/de facturación se piden recién al contratar un plan.
@@ -61,6 +70,7 @@ const formErrors = computed(() => validateForm())
 <template>
   <AuthLayout title="Creá tu cuenta" subtitle="Solo usuario, correo, contraseña y celular. Los datos de facturación te los pedimos recién al contratar un plan.">
     <AlertMessage v-if="auth.lastError" kind="error" :message="auth.lastError" />
+    <AlertMessage v-if="socialError" kind="error" :message="socialError" />
     <AlertMessage v-if="successMsg" kind="success" :message="`${successMsg} Redirigiendo al login…`" />
     <AlertMessage kind="info" message="Usamos tu celular para cuidar las cuentas de prueba: un número, una cuenta." />
 
@@ -92,6 +102,8 @@ const formErrors = computed(() => validateForm())
         <AppButton :loading="auth.status === 'loading'">Crear cuenta</AppButton>
       </div>
     </form>
+
+    <SocialAuthButtons mode="register" @done="onSocialDone" @error="(m) => { socialError = m }" />
 
     <div class="auth-links">
       <RouterLink to="/login">Ya tengo cuenta</RouterLink>

@@ -249,6 +249,22 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .alert.success { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-ink); }
 .alert.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
 .alert.info { background: var(--info-bg); border-color: var(--info-line); color: var(--info-ink); }
+/* --- Login social (Google oficial + Facebook propio) --- */
+.social-auth { animation: auth-fade .5s ease-out .35s both; }
+.auth-divider { display: flex; align-items: center; gap: 14px; margin: 20px 0 14px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.social-buttons { display: grid; gap: 10px; }
+/* El botón de Google lo renderiza su iframe: el contenedor solo lo centra. */
+.google-btn { display: flex; justify-content: center; min-height: 44px; }
+.google-btn.is-busy { opacity: .6; pointer-events: none; }
+.btn-social { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 44px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--card); color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s, opacity .15s; }
+.btn-social:hover:not(:disabled) { border-color: var(--brand-400); background: var(--surface); }
+.btn-social:disabled { opacity: .55; cursor: default; }
+.btn-facebook svg { flex: none; }
+.social-terms { margin: 12px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
+.social-terms a { color: var(--brand-ink); font-weight: 600; text-decoration: none; }
+.social-terms a:hover { text-decoration: underline; }
+
 .auth-links { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; font-size: 14px; flex-wrap: wrap; }
 .auth-links a { color: var(--brand-ink); font-weight: 600; text-decoration: none; }
 .auth-links a:hover { color: var(--brand-ink); text-decoration: underline; }

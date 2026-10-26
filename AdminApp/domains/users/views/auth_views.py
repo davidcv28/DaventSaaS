@@ -24,6 +24,13 @@ from AdminApp.domains.users.services import (
     SendVerificationEmailQuery,
     VerifyEmailQuery,
     ConfirmPhoneVerificationQuery,
+    SocialAuthError,
+    SocialLoginQuery,
+    VerifyGoogleCredentialQuery,
+    VerifyFacebookTokenQuery,
+    GOOGLE_CLIENT_ID,
+    FACEBOOK_APP_ID,
+    FACEBOOK_APP_SECRET,
     FRONTEND_URL,
     FIREBASE_API_KEY,
 )
@@ -85,6 +92,11 @@ class LogoutRateThrottle(UserRateThrottle):
 class VerifyPhoneRateThrottle(UserRateThrottle):
     """Scope 'phone_verification' (settings): generación de códigos por usuario."""
     scope = 'phone_verification'
+
+class SocialAuthRateThrottle(AnonRateThrottle):
+    """Scope 'social_auth' (settings): cada exchange pega dos llamadas al
+    provider (tokeninfo/debug_token + /me) — se acota por IP."""
+    scope = 'social_auth'
 
 
 def _secure():
@@ -331,3 +343,83 @@ class VerifyPhoneStatusView(APIView):
     def get(self, request):
         profile =   getattr(request.user, 'profile', None)
         return Response({'phone_verified': bool(profile and profile.phone_verified)}, status = status.HTTP_200_OK)
+
+
+#=================================
+# SOCIAL LOGIN (Google + Facebook — token exchange)
+#=================================
+# El frontend completa el consent del provider y manda la credencial; el
+# backend la verifica contra el provider (services/social.py) y emite la
+# MISMA sesión del login por contraseña: access en body + refresh en cookie
+# httpOnly + CSRF doble-submit. Sin env vars configuradas responde 503.
+def _social_session_response(request, user, is_new):
+    #Misma salida que CustomTokenObtainPairView: el refresh se setea como
+    #cookie y solo viaja a /api/token/. 'remember' respeta el mismo flag del
+    #login (cookie persistente 30d vs cookie de sesión del navegador).
+    remember    =   _remember_requested(request)
+    refresh     =   RefreshToken.for_user(user)
+    if remember:
+        refresh.set_exp(lifetime = REMEMBER_LIFETIME)
+    profile     =   getattr(user, 'profile', None)
+    response    =   Response({
+        'access'            :   str(refresh.access_token),
+        'is_new'            :   is_new,
+        #El alta social no pide celular: el frontend lleva al usuario a
+        #completarlo antes de seguir (el claim de la web lo exige).
+        'requires_phone'    :   not bool(getattr(profile, 'phone', None)),
+    }, status = status.HTTP_200_OK)
+    if remember:
+        _set_remember_cookie(response)
+    _set_refresh_cookie(response, str(refresh), remember)
+    _set_csrf_cookie(response, remember)
+    return response
+
+
+def _social_error(e : SocialAuthError, provider : str) -> Response:
+    if e.code == 'no_email':
+        detail  =   f'Tu cuenta de {provider} no comparte un email. Vinculá un correo en tu cuenta o registrate con el formulario.'
+    else:
+        detail  =   f'No pudimos verificar tu cuenta de {provider}. Intentá de nuevo.'
+    return Response({'detail': detail}, status = status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleAuthView(APIView):
+    """
+    POST /api/auth/google/ {credential}: el ID token del botón oficial de
+    Google Identity Services se verifica contra tokeninfo (aud + email
+    verificado) y abre sesión DAVENT. Alta nueva si el email no existe.
+    """
+    permission_classes  =   [AllowAny]
+    throttle_classes    =   [SocialAuthRateThrottle]
+
+    def post(self, request):
+        if not GOOGLE_CLIENT_ID:
+            return Response({'detail': 'El ingreso con Google no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
+        try:
+            info            =   VerifyGoogleCredentialQuery(request.data.get('credential', ''))
+            user, is_new    =   SocialLoginQuery(info)
+        except SocialAuthError as e:
+            logger.warning('Login Google rechazado (code=%s ip=%s)', e.code, _client_ip(request))
+            return _social_error(e, 'Google')
+        return _social_session_response(request, user, is_new)
+
+
+class FacebookAuthView(APIView):
+    """
+    POST /api/auth/facebook/ {access_token}: el user token de FB.login se
+    valida con debug_token (app_id propio + vigente) y /me con
+    appsecret_proof. Sin email en la cuenta Meta se responde 400 explícito.
+    """
+    permission_classes  =   [AllowAny]
+    throttle_classes    =   [SocialAuthRateThrottle]
+
+    def post(self, request):
+        if not FACEBOOK_APP_ID or not FACEBOOK_APP_SECRET:
+            return Response({'detail': 'El ingreso con Facebook no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
+        try:
+            info            =   VerifyFacebookTokenQuery(request.data.get('access_token', ''))
+            user, is_new    =   SocialLoginQuery(info)
+        except SocialAuthError as e:
+            logger.warning('Login Facebook rechazado (code=%s ip=%s)', e.code, _client_ip(request))
+            return _social_error(e, 'Facebook')
+        return _social_session_response(request, user, is_new)

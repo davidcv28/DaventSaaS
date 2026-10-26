@@ -125,6 +125,21 @@ export const authApi = {
     return data
   },
 
+  // --- Login social (token exchange: el backend verifica contra el provider) ---
+  // POST /api/auth/google/    {credential}   -> {access, is_new, requires_phone} + cookies
+  // POST /api/auth/facebook/  {access_token} -> idem
+  // El celular no viaja en los datos del provider: si falta, la respuesta trae
+  // requires_phone y el router fuerza /completar-celular antes del panel.
+  async googleLogin(credential, remember = true) {
+    const { data } = await http.post('/auth/google/', { credential, remember })
+    return data
+  },
+
+  async facebookLogin(accessToken, remember = true) {
+    const { data } = await http.post('/auth/facebook/', { access_token: accessToken, remember })
+    return data
+  },
+
   // --- Verificación de celular por SMS de Firebase (gratis: plan Spark) ---
   // POST /api/verify-phone/ {id_token}: el SMS y el código los maneja el SDK
   // de Firebase en el cliente; acá solo validamos el idToken resultante.
