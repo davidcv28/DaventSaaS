@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import FileResponse, Http404, JsonResponse
 from django.urls import path, include, re_path
@@ -91,6 +92,9 @@ if settings.DEBUG:
         path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     ]
+    # Fallback local de adjuntos cuando no hay bucket R2: los archivos de
+    # MEDIA_ROOT (imágenes del chat de soporte) los sirve Django en dev.
+    urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 
 
 def spa(request):

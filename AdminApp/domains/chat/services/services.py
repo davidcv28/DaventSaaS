@@ -95,12 +95,13 @@ def messages_payload(user : User, thread : ChatThread, after : int = 0):
     return qs.order_by('-created_at')[:MESSAGES_PAGE_SIZE][::-1]
 
 
-def send_message(sender : User, body : str, thread : ChatThread) -> ChatMessage:
+def send_message(sender : User, body : str, thread : ChatThread, image_key : str = '') -> ChatMessage:
     message     =   ChatMessage.objects.create(
         thread      =   thread,
         sender      =   sender,
         from_staff  =   sender.is_staff,
-        body        =   body,
+        body        =   body or '',
+        image_key   =   image_key or '',
     )
     ChatThread.objects.filter(pk = thread.pk).update(updated_at = message.created_at)
     return message

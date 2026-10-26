@@ -28,6 +28,7 @@ MAX_SIDE_PRODUCT        =   1200
 PRODUCT_CANVAS          =   1000
 MAX_SIDE_COVER          =   2200
 MAX_SIDE_LOGO           =   800
+MAX_SIDE_CHAT           =   1600
 COVER_MIN_RATIO         =   1.0               # portadas verticales se recortan a cuadrado (el hero es apaisado)
 GALLERY_RATIO           =   (3 / 4, 16 / 9)   # (alto máximo relativo, ancho máximo relativo)
 BG_MODEL_URL            =   'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx'
@@ -72,8 +73,10 @@ def normalize_image(upload, kind = 'gallery'):
     """
     Devuelve (bytes, 'webp', 'image/webp') listo para subir a R2.
     kind: 'gallery' | 'decor' (acota proporción, conserva color), 'logo'
-    (conserva la transparencia) o 'product' | 'cover' | 'carousel'
-    (aplana sobre blanco). Lanza ValueError si no es una imagen legible.
+    (conserva la transparencia), 'chat' (adjunto de soporte: conserva la
+    composición original — una captura recortada no le sirve a nadie — y
+    limpia EXIF) o 'product' | 'cover' | 'carousel' (aplana sobre blanco).
+    Lanza ValueError si no es una imagen legible.
     """
     image           =   _open(upload)
     if kind == 'product':
@@ -83,6 +86,10 @@ def normalize_image(upload, kind = 'gallery'):
         # Los logos suelen venir en PNG transparente: el alfa viaja al WebP.
         image       =   image.convert('RGBA') if 'A' in image.getbands() else image.convert('RGB')
         max_side    =   MAX_SIDE_LOGO
+    elif kind == 'chat':
+        # Solo orientación EXIF + tope de lado; NO se recorta ni aplana.
+        image       =   image.convert('RGBA') if 'A' in image.getbands() else image.convert('RGB')
+        max_side    =   MAX_SIDE_CHAT
     elif kind in ('cover', 'carousel'):
         image       =   _flatten_white(image)
         width, height   =   image.size

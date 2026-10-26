@@ -38,7 +38,12 @@ class ChatMessage(models.Model):
     #Denormalizado: staff puede escribir en cualquier hilo — el flag lo
     #fija el service al crear (nunca viene del request del cliente).
     from_staff          =   models.BooleanField(default = False, verbose_name = 'Del staff')
-    body                =   models.TextField(max_length = 2000, verbose_name = 'Mensaje')
+    body                =   models.TextField(max_length = 2000, blank = True, verbose_name = 'Mensaje')
+    #Adjunto de imagen: en DB solo viaja la KEY del objeto (R2) o el path
+    #bajo MEDIA_ROOT — el archivo jamás es un blob de base de datos; vive
+    #como archivo (el emisor lo elige de su PC, el receptor lo descarga a
+    #la suya). '' = mensaje solo texto.
+    image_key           =   models.CharField(max_length = 300, blank = True, default = '', verbose_name = 'Imagen adjunta')
     #Leido por la contraparte; null = pendiente. Es lo que alimenta los
     #contadores de no-leidos de ambos lados.
     read_at             =   models.DateTimeField(null = True, blank = True, verbose_name = 'Leído')

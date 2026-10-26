@@ -14,10 +14,15 @@ nunca emails ni ids del staff hacia el cliente.
 class ChatMessageSerializer(serializers.ModelSerializer):
     mine            =   serializers.SerializerMethodField()
     sender_name     =   serializers.SerializerMethodField()
+    image_url       =   serializers.SerializerMethodField()
 
     class Meta:
         model   =   ChatMessage
-        fields  =   ['id', 'body', 'from_staff', 'mine', 'sender_name', 'read_at', 'created_at']
+        fields  =   ['id', 'body', 'image_url', 'from_staff', 'mine', 'sender_name', 'read_at', 'created_at']
+
+    def get_image_url(self, obj):
+        from AdminApp.domains.chat.services import chat_image_url
+        return chat_image_url(self.context.get('request'), obj)
 
     def get_mine(self, obj):
         request     =   self.context.get('request')
@@ -36,13 +41,17 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 # SEND SERIALIZER
 #=========================================
 class ChatSendSerializer(serializers.Serializer):
-    body    =   serializers.CharField(trim_whitespace = True, max_length = 2000)
+    body    =   serializers.CharField(trim_whitespace = True, max_length = 2000, required = False, allow_blank = True)
     thread  =   serializers.IntegerField(required = False, min_value = 1)
+    #Adjunto opcional: llega como archivo del multipart; la validación de
+    #firma/tamaño y la subida corren en services.attachments (fail-closed).
+    image   =   serializers.FileField(required = False)
 
-    def validate_body(self, value):
-        if not value:
-            raise serializers.ValidationError('Escribí un mensaje.')
-        return value
+    def validate(self, attrs):
+        attrs['body']   =   (attrs.get('body') or '').strip()
+        if not attrs['body'] and not attrs.get('image'):
+            raise serializers.ValidationError('Escribí un mensaje o adjuntá una imagen.')
+        return attrs
 
 
 #=========================================

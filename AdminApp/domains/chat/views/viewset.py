@@ -23,6 +23,7 @@ from AdminApp.domains.chat.services       import (
     thread_of,
     touch_presence,
     unread_for,
+    upload_chat_image,
 )
 
 """
@@ -109,7 +110,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
         return Response({'messages': ChatMessageSerializer(messages, many = True, context = {'request': request}).data})
 
     #=========================================
-    # SEND — POST /api/chat/send/ {body, thread?}
+    # SEND — POST /api/chat/send/ {body?, image?, thread?} (json o multipart)
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'send')
     def send(self, request):
@@ -125,7 +126,15 @@ class SupportChatViewSet(viewsets.GenericViewSet):
         else:
             #El cliente escribe solo en su propio hilo (se crea al primer envio)
             thread      =   get_or_create_thread(request.user)
-        message     =   send_message(request.user, serializer.validated_data['body'], thread)
+        image_key   =   ''
+        image       =   serializer.validated_data.get('image')
+        if image:
+            #El adjunto viaja al bucket/disco — a la DB solo va la key.
+            try:
+                image_key   =   upload_chat_image(thread, image)
+            except ValueError as exc:
+                return Response({'image': [str(exc)]}, status = status.HTTP_400_BAD_REQUEST)
+        message     =   send_message(request.user, serializer.validated_data['body'], thread, image_key = image_key)
         return Response(
             {'message': ChatMessageSerializer(message, context = {'request': request}).data},
             status = status.HTTP_201_CREATED,

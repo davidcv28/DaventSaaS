@@ -136,6 +136,35 @@ const chatLastId = ref(0)
 const chatUnread = ref(0)
 const chatBoxEl = ref(null)
 const chatInputEl = ref(null)
+// Adjuntos en cola: [{file, url}] — objectURL local para la vista previa;
+// el archivo viaja al bucket/disco del backend, nunca a la DB.
+const chatFiles = ref([])
+const chatFileInput = ref(null)
+const CHAT_FILES_MAX = 4
+
+function pickChatImages() {
+  chatFileInput.value?.click()
+}
+
+function onChatFiles(e) {
+  const picked = [...(e.target.files || [])].filter((f) => f.type.startsWith('image/'))
+  const room = Math.max(0, CHAT_FILES_MAX - chatFiles.value.length)
+  picked.slice(0, room).forEach((f) => {
+    chatFiles.value.push({ file: f, url: URL.createObjectURL(f) })
+  })
+  e.target.value = ''
+}
+
+function removeChatFile(i) {
+  const f = chatFiles.value[i]
+  if (f) URL.revokeObjectURL(f.url)
+  chatFiles.value.splice(i, 1)
+}
+
+function resetChatFiles() {
+  chatFiles.value.forEach((f) => URL.revokeObjectURL(f.url))
+  chatFiles.value = []
+}
 
 function resizeChatInput() {
   const el = chatInputEl.value
@@ -158,6 +187,33 @@ const chatOnlineCount = computed(() => chatOnline.value.size)
 function scrollChatBox() {
   const el = chatBoxEl.value
   if (el) el.scrollTop = el.scrollHeight
+}
+
+function chatInitials(name) {
+  return (name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+}
+
+function chatDayLabel(iso) {
+  const d = new Date(iso)
+  const today = new Date()
+  const y = new Date(); y.setDate(today.getDate() - 1)
+  if (d.toDateString() === today.toDateString()) return 'Hoy'
+  if (d.toDateString() === y.toDateString()) return 'Ayer'
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+}
+
+function chatRows(list) {
+  const rows = []
+  const same = (a, b) => a && b && a.mine === b.mine && a.sender_name === b.sender_name &&
+    new Date(a.created_at).toDateString() === new Date(b.created_at).toDateString() &&
+    Math.abs(new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) < 300000
+  list.forEach((m, i) => {
+    const p = list[i - 1]
+    const n = list[i + 1]
+    if (!p || new Date(p.created_at).toDateString() !== new Date(m.created_at).toDateString()) rows.push({ day: chatDayLabel(m.created_at), key: `d-${m.id}` })
+    rows.push({ m, first: !same(p, m), last: !same(m, n), key: m.id })
+  })
+  return rows
 }
 
 function fmtChatTime(iso) {
@@ -194,6 +250,7 @@ async function openChatThread(thread) {
   chatMsgs.value = []
   chatLastId.value = 0
   chatErr.value = ''
+  resetChatFiles()
   try {
     const data = await fetchChatMessages({ thread: thread.id })
     const msgs = data.messages || []
@@ -235,28 +292,46 @@ async function beatChat() {
 
 async function sendChat() {
   const body = chatInput.value.trim()
-  if (!body || chatBusy.value || !chatActive.value) return
+  const files = chatFiles.value
+  if ((!body && !files.length) || chatBusy.value || !chatActive.value) return
   chatBusy.value = true
   chatErr.value = ''
-  // Optimista: la respuesta aparece al instante como pendiente y se
-  // reemplaza por el mensaje real; si el POST falla se restaura el input.
-  const tmp = {
+  chatFiles.value = [] // los objectURL mueren con la fila de previews
+  // Optimista: texto + una burbuja por imagen; las pendientes se reemplazan
+  // por los reales; si un POST falla se quitan las no confirmadas.
+  const mkTmp = (extra = {}) => ({
     id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    body, mine: true, sender_name: 'Vos', pending: true, created_at: new Date().toISOString()
-  }
-  chatMsgs.value = [...chatMsgs.value, tmp]
+    mine: true, sender_name: 'Vos', pending: true, created_at: new Date().toISOString(), ...extra
+  })
+  const tmps = []
+  if (body) tmps.push(mkTmp({ body }))
+  files.forEach((f) => tmps.push(mkTmp({ body: '', image_url: f.url })))
+  chatMsgs.value = [...chatMsgs.value, ...tmps]
   chatInput.value = ''
   await nextTick()
   scrollChatBox()
   resizeChatInput()
   try {
-    const { message } = await sendChatMessage(body, chatActive.value.id)
-    chatMsgs.value = chatMsgs.value.filter((m) => m.id !== tmp.id && m.id !== message.id).concat(message)
-    chatLastId.value = Math.max(chatLastId.value, message.id)
+    let i = 0
+    if (body) {
+      const { message } = await sendChatMessage(body, chatActive.value.id)
+      chatMsgs.value = chatMsgs.value.filter((m) => m.id !== tmps[i].id && m.id !== message.id).concat(message)
+      chatLastId.value = Math.max(chatLastId.value, message.id)
+      i++
+    }
+    for (const f of files) {
+      const { message } = await sendChatMessage('', chatActive.value.id, f.file)
+      chatMsgs.value = chatMsgs.value.filter((m) => m.id !== tmps[i].id && m.id !== message.id).concat(message)
+      chatLastId.value = Math.max(chatLastId.value, message.id)
+      i++
+    }
+    files.forEach((f) => URL.revokeObjectURL(f.url)) // enviados: previews fuera
     pollChatMsgs() // recoge al instante mensajes del cliente llegados en el medio
     loadChatThreads() // refresca last_message/unread de la bandeja
   } catch (e) {
-    chatMsgs.value = chatMsgs.value.filter((m) => m.id !== tmp.id)
+    const stuck = new Set(tmps.slice(i).map((t) => t.id))
+    chatMsgs.value = chatMsgs.value.filter((m) => !stuck.has(m.id))
+    chatFiles.value = files // los adjuntos vuelven a la cola para reintentar
     chatInput.value = body
     nextTick(resizeChatInput)
     chatErr.value = extractApiError(e).nonField
@@ -303,6 +378,7 @@ onMounted(() => document.addEventListener('visibilitychange', onChatVisible))
 
 onUnmounted(() => {
   stopChat()
+  resetChatFiles()
   document.removeEventListener('visibilitychange', onChatVisible)
 })
 
@@ -887,7 +963,7 @@ async function logout() {
       <AlertMessage v-if="admin.notice" kind="success" :message="admin.notice" />
       <AlertMessage v-if="admin.lastError && admin.couponFormStatus === 'error'" kind="error" :message="admin.lastError" />
 
-      <div class="grid-2">
+      <div class="grid-2 stack">
         <div class="card">
           <h3><AppIcon :name="couponForm.id ? 'pencil' : 'plus'" :size="18" /> {{ couponForm.id ? 'Editar cupón' : 'Nuevo cupón' }}</h3>
           <form @submit.prevent="submitCoupon" novalidate>
@@ -1050,46 +1126,100 @@ async function logout() {
 
       <AlertMessage v-if="chatErr" kind="error" :message="chatErr" />
 
-      <div class="chat-admin">
-        <div class="card chat-threads">
-          <h3><AppIcon name="message-circle" :size="16" /> Conversaciones</h3>
+      <div class="chat-admin" :class="{ 'has-active': chatActive }">
+        <div class="chat-threads">
+          <div class="chat-threads-head">
+            <h3><AppIcon name="message-circle" :size="16" /> Conversaciones</h3>
+            <span v-if="chatThreads.length" class="support-count">{{ chatThreads.length }}</span>
+          </div>
           <div v-if="chatThreads.length" class="chat-thread-list">
             <button
               v-for="t in chatThreads"
               :key="t.id"
               type="button"
               class="chat-thread"
-              :class="{ active: chatActive?.id === t.id }"
+              :class="{ active: chatActive?.id === t.id, unread: t.unread }"
               @click="openChatThread(t)"
             >
-              <span class="chat-thread-head">
-                <strong>{{ t.customer.name }}</strong>
-                <span class="presence-dot" :class="{ on: t.online }" :title="t.online ? 'En línea' : 'Desconectado'"></span>
+              <span class="support-avatar">
+                {{ chatInitials(t.customer.name) }}
+                <span class="support-status" :class="{ on: t.online }"></span>
               </span>
-              <span class="chat-thread-last">{{ t.last_message ? t.last_message.body : 'Sin mensajes' }}</span>
-              <span class="chat-thread-meta">
-                <span v-if="t.last_message">{{ fmtChatTime(t.last_message.created_at) }}</span>
-                <span v-if="t.unread" class="chat-badge">{{ t.unread }}</span>
+              <span class="chat-thread-body">
+                <span class="chat-thread-head">
+                  <strong>{{ t.customer.name }}</strong>
+                  <span v-if="t.last_message" class="chat-thread-time">{{ fmtChatTime(t.last_message.created_at) }}</span>
+                </span>
+                <span class="chat-thread-row">
+                  <span class="chat-thread-last">{{ t.last_message ? (t.last_message.body || 'Imagen adjunta') : 'Sin mensajes' }}</span>
+                  <span v-if="t.unread" class="chat-badge">{{ t.unread }}</span>
+                </span>
               </span>
             </button>
           </div>
-          <p v-else class="muted">Ningún cliente escribió todavía.</p>
+          <p v-else class="chat-threads-empty">Ningún cliente escribió todavía.</p>
         </div>
 
-        <div class="card chat-card">
+        <div class="chat-card">
           <template v-if="chatActive">
             <div class="chat-title">
-              <strong>{{ chatActive.customer.name }}</strong>
-              <span class="presence-dot" :class="{ on: chatActive.online }" :title="chatActive.online ? 'En línea' : 'Desconectado'"></span>
-              <span class="muted">{{ chatActive.customer.email }}</span>
+              <button type="button" class="chat-back" aria-label="Volver a conversaciones" @click="chatActive = null">
+                <AppIcon name="arrow-left" :size="17" />
+              </button>
+              <span class="support-avatar">
+                {{ chatInitials(chatActive.customer.name) }}
+                <span class="support-status" :class="{ on: chatActive.online }"></span>
+              </span>
+              <div class="chat-modal-who">
+                <strong>{{ chatActive.customer.name }}</strong>
+                <small>{{ chatActive.online ? 'En línea ahora' : 'Desconectado' }} · {{ chatActive.customer.email }}</small>
+              </div>
             </div>
             <div ref="chatBoxEl" class="chat-box">
-              <div v-for="m in chatMsgs" :key="m.id" class="chat-msg" :class="{ mine: m.mine, pending: m.pending }">
-                <p class="chat-body">{{ m.body }}</p>
-                <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ m.pending ? 'Enviando…' : fmtChatTime(m.created_at) }}</span>
+              <p v-if="!chatMsgs.length" class="chat-empty">Todavía no hay mensajes en esta conversación.</p>
+              <template v-for="r in chatRows(chatMsgs)" :key="r.key">
+              <div v-if="r.day" class="chat-day">{{ r.day }}</div>
+              <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
+                <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
+                <div class="chat-stack">
+                  <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
+                    <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
+                      <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
+                    </a>
+                    <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+                  </div>
+                  <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
+                </div>
+              </div>
+            </template>
+            </div>
+            <div v-if="chatFiles.length" class="chat-files">
+              <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
+                <img :src="f.url" :alt="f.file.name">
+                <button type="button" class="chat-file-x" aria-label="Quitar imagen" @click="removeChatFile(i)">
+                  <AppIcon name="x" :size="10" />
+                </button>
               </div>
             </div>
             <div class="chat-composer">
+              <input
+                ref="chatFileInput"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                multiple
+                hidden
+                @change="onChatFiles"
+              >
+              <button
+                type="button"
+                class="chat-attach"
+                :disabled="chatBusy || chatFiles.length >= CHAT_FILES_MAX"
+                aria-label="Adjuntar imagen"
+                title="Adjuntar imagen"
+                @click="pickChatImages"
+              >
+                <AppIcon name="image" :size="17" />
+              </button>
               <textarea
                 ref="chatInputEl"
                 v-model="chatInput"
@@ -1104,7 +1234,7 @@ async function logout() {
               <button
                 type="button"
                 class="chat-send"
-                :disabled="!chatInput.trim() || chatBusy"
+                :disabled="(!chatInput.trim() && !chatFiles.length) || chatBusy"
                 aria-label="Enviar respuesta"
                 @click="sendChat"
               >

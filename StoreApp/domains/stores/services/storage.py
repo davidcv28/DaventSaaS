@@ -100,6 +100,23 @@ def _delete_object(key):
     except Exception:
         # El objeto huérfano no bloquea el flujo; la cuota ya se liberó en DB.
         pass
+def put_object(key, body, content_type):
+    """
+    Sube bytes arbitrarios al bucket bajo una key explícita (adjuntos que
+    no pertenecen a una tienda — p.ej. imágenes del chat de soporte, sin
+    cupo por tienda). Lanza ValueError si la subida falla.
+    """
+    try:
+        _client().put_object(
+            Bucket          =   _bucket(),
+            Key             =   key,
+            Body            =   body,
+            ContentType     =   content_type,
+            CacheControl    =   'private, max-age=0',
+        )
+    except Exception:
+        raise ValueError('No pudimos subir la imagen. Reintentá en unos minutos.')
+    return key
 def _put_object(store, folder, upload, processed = None):
     """
     Sube un archivo ya validado a R2 y devuelve la key persistible.

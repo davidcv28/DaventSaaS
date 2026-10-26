@@ -6,12 +6,19 @@ el cliente solo ve SU hilo; el staff ve la bandeja completa. La presencia
 es un heartbeat que vence — sin heartbeat fresco el usuario aparece
 desconectado, nunca es un booleano eterno.
 """
+import os
+import shutil
+import tempfile
 from datetime import timedelta
+from io import BytesIO
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.utils import timezone
+from PIL import Image
 from rest_framework.test import APIClient
 
 from AdminApp.domains.chat.models import ChatMessage, ChatPresence, ChatThread
@@ -249,3 +256,77 @@ class ChatPresenceTests(TestCase):
         for m in response.data['messages']:
             if m['from_staff']:
                 self.assertEqual(m['sender_name'], 'Soporte')
+
+
+class ChatAttachmentTests(TestCase):
+    """
+    Adjuntos de imagen: el archivo NUNCA entra a la DB — se guarda en el
+    storage (R2 o MEDIA_ROOT) y la DB solo guarda image_key. En tests el
+    bucket queda deshabilitado por patch -> cae al disco (media/ temporal).
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.user, self.profile   =   _make_user('cliente')
+        _grant_chat(self.profile)
+        self.staff, _             =   _make_user('ayuda', staff = True)
+        #Forzamos el fallback a disco para no tocar el bucket real: MEDIA_ROOT
+        #temporal + storage_configured=False.
+        self.tmp_media            =   tempfile.mkdtemp()
+        self.override             =   override_settings(MEDIA_ROOT = self.tmp_media)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.addCleanup(shutil.rmtree, self.tmp_media, True)
+        patcher                   =   patch(
+            'AdminApp.domains.chat.services.attachments.storage.storage_configured',
+            return_value = False,
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    @staticmethod
+    def _png(name = 'captura.png'):
+        buf     =   BytesIO()
+        Image.new('RGB', (10, 10), 'red').save(buf, format = 'PNG')
+        return SimpleUploadedFile(name, buf.getvalue(), content_type = 'image/png')
+
+    def test_customer_sends_image_only_message(self):
+        upload      =   self._png()
+        response    =   _client(self.user).post(CHAT_SEND_URL, {'image': upload}, format = 'multipart')
+        self.assertEqual(response.status_code, 201)
+        message     =   response.data['message']
+        self.assertEqual(message['body'], '')
+        self.assertTrue(message['image_url'])
+        #La DB guarda la key; el archivo quedó en disco bajo chat/<thread>/
+        msg_row     =   ChatMessage.objects.get()
+        self.assertTrue(msg_row.image_key.startswith('chat/'))
+        self.assertTrue(msg_row.image_key.endswith('.webp'))
+        self.assertTrue(os.path.isfile(os.path.join(self.tmp_media, msg_row.image_key)))
+
+    def test_staff_receives_and_views_customer_image(self):
+        _client(self.user).post(CHAT_SEND_URL, {'image': self._png()}, format = 'multipart')
+        thread      =   ChatThread.objects.get()
+        response    =   _client(self.staff).get(f'{CHAT_MESSAGES_URL}?thread={thread.id}')
+        self.assertEqual(response.status_code, 200)
+        msg         =   response.data['messages'][0]
+        self.assertTrue(msg['image_url'])
+        #El staff también puede responder con imagen en el mismo hilo
+        reply       =   _client(self.staff).post(
+            CHAT_SEND_URL, {'image': self._png('respuesta.png'), 'thread': thread.id}, format = 'multipart',
+        )
+        self.assertEqual(reply.status_code, 201)
+        self.assertTrue(reply.data['message']['from_staff'])
+
+    def test_non_image_file_rejected(self):
+        bad         =   SimpleUploadedFile('virus.exe', b'MZ fake bytes', content_type = 'application/octet-stream')
+        response    =   _client(self.user).post(CHAT_SEND_URL, {'image': bad}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(ChatMessage.objects.exists())
+
+    def test_text_plus_image_same_message(self):
+        response    =   _client(self.user).post(
+            CHAT_SEND_URL, {'body': 'mirá esta captura', 'image': self._png()}, format = 'multipart',
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['message']['body'], 'mirá esta captura')
+        self.assertTrue(response.data['message']['image_url'])

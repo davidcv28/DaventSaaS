@@ -1597,6 +1597,11 @@ const chatInputEl = ref(null)
 const chatStaff = ref([])
 const chatOpen = ref(false)
 const chatTarget = ref(null)
+// Adjuntos en cola: [{file, url}] — el url es un objectURL local (vista
+// previa optimista); el archivo nunca toca la DB, viaja al bucket/disco.
+const chatFiles = ref([])
+const chatFileInput = ref(null)
+const CHAT_FILES_MAX = 4
 const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).length)
 //El objetivo del chat se resuelve contra el roster vivo: si cambia su
 //presencia, el header refleja el estado nuevo sin reabrir la ventana.
@@ -1636,7 +1641,32 @@ function openChat(member = null) {
 
 function closeChat() {
   chatOpen.value = false
+  resetChatFiles()
   window.removeEventListener('keydown', onChatKey)
+}
+
+function pickChatImages() {
+  chatFileInput.value?.click()
+}
+
+function onChatFiles(e) {
+  const picked = [...(e.target.files || [])].filter((f) => f.type.startsWith('image/'))
+  const room = Math.max(0, CHAT_FILES_MAX - chatFiles.value.length)
+  picked.slice(0, room).forEach((f) => {
+    chatFiles.value.push({ file: f, url: URL.createObjectURL(f) })
+  })
+  e.target.value = '' // mismo archivo dos veces = mismo change
+}
+
+function removeChatFile(i) {
+  const f = chatFiles.value[i]
+  if (f) URL.revokeObjectURL(f.url)
+  chatFiles.value.splice(i, 1)
+}
+
+function resetChatFiles() {
+  chatFiles.value.forEach((f) => URL.revokeObjectURL(f.url))
+  chatFiles.value = []
 }
 
 function onComposerEnter(e) {
@@ -1662,6 +1692,33 @@ function requestLiveHelp() {
 function scrollChat() {
   const el = chatBoxEl.value
   if (el) el.scrollTop = el.scrollHeight
+}
+
+function chatInitials(name) {
+  return (name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+}
+
+function chatDayLabel(iso) {
+  const d = new Date(iso)
+  const today = new Date()
+  const y = new Date(); y.setDate(today.getDate() - 1)
+  if (d.toDateString() === today.toDateString()) return 'Hoy'
+  if (d.toDateString() === y.toDateString()) return 'Ayer'
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })
+}
+
+function chatRows(list) {
+  const rows = []
+  const same = (a, b) => a && b && a.mine === b.mine && a.sender_name === b.sender_name &&
+    new Date(a.created_at).toDateString() === new Date(b.created_at).toDateString() &&
+    Math.abs(new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) < 300000
+  list.forEach((m, i) => {
+    const p = list[i - 1]
+    const n = list[i + 1]
+    if (!p || new Date(p.created_at).toDateString() !== new Date(m.created_at).toDateString()) rows.push({ day: chatDayLabel(m.created_at), key: `d-${m.id}` })
+    rows.push({ m, first: !same(p, m), last: !same(m, n), key: m.id })
+  })
+  return rows
 }
 
 function fmtChatTime(iso) {
@@ -1720,27 +1777,47 @@ async function beatChat() {
 
 async function sendChat() {
   const body = chatInput.value.trim()
-  if (!body || chatBusy.value) return
+  const files = chatFiles.value
+  if ((!body && !files.length) || chatBusy.value) return
   chatBusy.value = true
   chatErr.value = ''
-  // Optimista: el mensaje aparece al instante como pendiente y se reemplaza
-  // por el real; si el POST falla se quita y se restaura el input.
-  const tmp = {
+  chatFiles.value = [] // los objectURL mueren con la fila de previews
+  // Optimista: el texto + una burbuja por imagen aparecen al instante como
+  // pendientes y se reemplazan por los reales; si un POST falla se quitan
+  // los que quedaron sin confirmar y se restaura el input.
+  const mkTmp = (extra = {}) => ({
     id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    body, mine: true, sender_name: 'Vos', pending: true, created_at: new Date().toISOString()
-  }
-  chatMessages.value = [...chatMessages.value, tmp]
+    mine: true, sender_name: 'Vos', pending: true, created_at: new Date().toISOString(), ...extra
+  })
+  const tmps = []
+  if (body) tmps.push(mkTmp({ body }))
+  files.forEach((f) => tmps.push(mkTmp({ body: '', image_url: f.url })))
+  chatMessages.value = [...chatMessages.value, ...tmps]
   chatInput.value = ''
   await nextTick()
   scrollChat()
   resizeChatInput()
   try {
-    const { message } = await sendChatMessage(body)
-    chatMessages.value = chatMessages.value.filter((m) => m.id !== tmp.id && m.id !== message.id).concat(message)
-    chatLastId.value = Math.max(chatLastId.value, message.id)
+    let i = 0
+    if (body) {
+      const { message } = await sendChatMessage(body)
+      chatMessages.value = chatMessages.value.filter((m) => m.id !== tmps[i].id && m.id !== message.id).concat(message)
+      chatLastId.value = Math.max(chatLastId.value, message.id)
+      i++
+    }
+    for (const f of files) {
+      const { message } = await sendChatMessage('', null, f.file)
+      chatMessages.value = chatMessages.value.filter((m) => m.id !== tmps[i].id && m.id !== message.id).concat(message)
+      chatLastId.value = Math.max(chatLastId.value, message.id)
+      i++
+    }
+    files.forEach((f) => URL.revokeObjectURL(f.url)) // enviados: previews fuera
     pollChat() // recoge al instante cualquier respuesta que haya llegado en el medio
   } catch (e) {
-    chatMessages.value = chatMessages.value.filter((m) => m.id !== tmp.id)
+    // Los tmps aún pendientes (índice >= i) se retiran; los enviados quedan.
+    const stuck = new Set(tmps.slice(i).map((t) => t.id))
+    chatMessages.value = chatMessages.value.filter((m) => !stuck.has(m.id))
+    chatFiles.value = files // los adjuntos vuelven a la cola para reintentar
     chatInput.value = body
     await nextTick()
     resizeChatInput()
@@ -3889,13 +3966,52 @@ async function changePassword() {
             <p v-if="!chatMessages.length" class="chat-empty">
               Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
             </p>
-            <div v-for="m in chatMessages" :key="m.id" class="chat-msg" :class="{ mine: m.mine, pending: m.pending }">
-              <p class="chat-body">{{ m.body }}</p>
-              <span class="chat-meta">{{ m.mine ? 'Vos' : m.sender_name }} · {{ m.pending ? 'Enviando…' : fmtChatTime(m.created_at) }}</span>
+            <template v-for="r in chatRows(chatMessages)" :key="r.key">
+              <div v-if="r.day" class="chat-day">{{ r.day }}</div>
+              <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
+                <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
+                <div class="chat-stack">
+                  <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
+                    <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
+                      <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
+                    </a>
+                    <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+                  </div>
+                  <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Adjuntos en cola: preview local antes de subir -->
+          <div v-if="chatFiles.length" class="chat-files">
+            <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
+              <img :src="f.url" :alt="f.file.name">
+              <button type="button" class="chat-file-x" aria-label="Quitar imagen" @click="removeChatFile(i)">
+                <AppIcon name="x" :size="10" />
+              </button>
             </div>
           </div>
 
           <div class="chat-composer">
+            <input
+              ref="chatFileInput"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              multiple
+              hidden
+              @change="onChatFiles"
+            >
+            <button
+              type="button"
+              class="chat-attach"
+              :disabled="chatBusy || chatFiles.length >= CHAT_FILES_MAX"
+              aria-label="Adjuntar imagen"
+              title="Adjuntar imagen"
+              @click="pickChatImages"
+            >
+              <AppIcon name="image" :size="17" />
+            </button>
             <textarea
               ref="chatInputEl"
               v-model="chatInput"
@@ -3910,7 +4026,7 @@ async function changePassword() {
             <button
               type="button"
               class="chat-send"
-              :disabled="!chatInput.trim() || chatBusy"
+              :disabled="(!chatInput.trim() && !chatFiles.length) || chatBusy"
               aria-label="Enviar mensaje"
               @click="sendChat"
             >

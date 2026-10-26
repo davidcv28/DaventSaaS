@@ -25,7 +25,20 @@ export function fetchChatMessages({ after = 0, thread = null } = {}) {
 
 // Cliente: {body} (el hilo se crea solo en el primer envío).
 // Staff: {body, thread} con el id de la conversación a responder.
-export function sendChatMessage(body, thread = null) {
+// `image` (File) convierte el envío en multipart: el archivo viaja al
+// bucket/disco del backend, a la DB solo llega la key del objeto.
+export function sendChatMessage(body, thread = null, image = null) {
+  if (image) {
+    const data = new FormData()
+    data.append('body', body || '')
+    if (thread) data.append('thread', thread)
+    data.append('image', image)
+    // undefined → axios borra el 'application/json' de la instancia y el
+    // browser setea multipart/form-data con su boundary.
+    return http.post('/chat/send/', data, {
+      headers: { 'Content-Type': undefined },
+    }).then((r) => r.data)
+  }
   const payload = { body }
   if (thread) payload.thread = thread
   return http.post('/chat/send/', payload).then((r) => r.data)

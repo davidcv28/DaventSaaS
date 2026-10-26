@@ -13,6 +13,7 @@ from .services import (
     staff_roster,
     online_customer_ids,
 )
+from .attachments import chat_image_url, upload_chat_image
 
 __all__ = [
     'ONLINE_SECONDS',
@@ -28,4 +29,6 @@ __all__ = [
     'staff_online',
     'staff_roster',
     'online_customer_ids',
+    'chat_image_url',
+    'upload_chat_image',
 ]
