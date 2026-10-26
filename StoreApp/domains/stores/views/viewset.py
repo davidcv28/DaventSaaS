@@ -414,10 +414,12 @@ class StoreViewSet(StoreBaseViewSet):
         #en memoria no escala mal y evita materializar nada en la base.
         #El mismo barrido arma las facetas y los conteos globales (ofertas,
         #novedades, techo de precio) sobre TODOS los productos activos. Las
-        #facetas, en cambio, se adaptan a la categoría elegida: con
-        #?category= activa solo se recolectan los atributos de SUS productos
-        #(sin selección, los de todo el catálogo), y no se achican al tocar
-        #los valores — el panel queda estable mientras se filtra.
+        #facetas, en cambio, solo viajan con ?category= activa — se
+        #recolectan los atributos de los productos de esas categorías (si
+        #son varias, se combinan): sin selección el panel no mezcla los
+        #atributos de todo el catálogo (chocolates + celulares + pantalones
+        #sería un mundo de filtros ajenos entre sí), y no se achican al
+        #tocar valores — el panel queda estable mientras se filtra.
         discounts       =   running_discounts_of(store)
         new_cutoff      =   timezone.now() - timedelta(days = CATALOG_NEW_DAYS)
         facets          =   {}
@@ -436,7 +438,7 @@ class StoreViewSet(StoreBaseViewSet):
                 new_count   +=  1
             if price_max is None or product.effective_price > price_max:
                 price_max   =   product.effective_price
-            if isinstance(product.features, dict) and (not category_ids or product.category_id in category_ids):
+            if isinstance(product.features, dict) and category_ids and product.category_id in category_ids:
                 for fname, fvalue in product.features.items():
                     name    =   str(fname).strip()
                     if not name:

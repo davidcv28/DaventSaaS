@@ -653,17 +653,17 @@ class PublicCatalogFilterTests(TestCase):
 
     def test_facets_counts_and_price_max_payload(self):
         #El panel de filtros se alimenta del propio payload: facetas por
-        #atributo con su conteo, products_count por taxonomía, totales de
-        #ofertas/novedades y el techo de precio para el slider.
+        #atributo con su conteo (solo con categoría elegida), products_count
+        #por taxonomía, totales de ofertas/novedades y techo de precio.
         store           =   self._setup()
         calzas          =   Category.objects.create(store = store, name = 'Calzas')
         Product.objects.create(store = store, name = 'A', price = 10, category = calzas, features = {'Talle': 'S, M'})
         Product.objects.create(store = store, name = 'B', price = 90, category = calzas, features = {'Talle': 'M'}, offer_price = 45)
         Product.objects.create(store = store, name = 'C', price = 10, is_active = False, features = {'Talle': 'XXL'})
         response        =   self._catalog()
-        talle           =   next(f for f in response.data['facets'] if f['name'] == 'Talle')
-        self.assertEqual(talle['values'], [{'value': 'M', 'count': 2}, {'value': 'S', 'count': 1}])
-        self.assertFalse(any(v['value'] == 'XXL' for v in talle['values']))
+        #Sin categoría elegida no viajan facetas (el panel no mezcla los
+        #atributos de todo el catálogo); los conteos sí son globales.
+        self.assertEqual(response.data['facets'], [])
         calza           =   next(c for c in response.data['categories'] if c['name'] == 'Calzas')
         self.assertEqual(calza['products_count'], 2)
         self.assertEqual(response.data['offer_count'], 1)
@@ -671,6 +671,10 @@ class PublicCatalogFilterTests(TestCase):
         #El techo usa el precio efectivo: B cuesta 90 de lista pero se
         #muestra a 45 (su oferta), así que el máximo visible es 45.
         self.assertEqual(float(response.data['price_max']), 45.0)
+        response        =   self._catalog(category = str(calzas.id))
+        talle           =   next(f for f in response.data['facets'] if f['name'] == 'Talle')
+        self.assertEqual(talle['values'], [{'value': 'M', 'count': 2}, {'value': 'S', 'count': 1}])
+        self.assertFalse(any(v['value'] == 'XXL' for v in talle['values']))
 
     def test_facets_scope_and_schema_order_by_category(self):
         #Las facetas se adaptan a la categoría elegida: solo viajan los
@@ -682,9 +686,14 @@ class PublicCatalogFilterTests(TestCase):
         Product.objects.create(store = store, name = 'A', price = 10, category = remeras, features = {'Talle': 'M', 'Color': 'Azul'})
         Product.objects.create(store = store, name = 'B', price = 10, category = remeras, features = {'Talle': 'L'})
         Product.objects.create(store = store, name = 'C', price = 10, category = electro, features = {'Voltaje': '220v'})
-        #Sin selección, todo el catálogo aporta sus atributos.
+        #Sin selección no viajan facetas: el panel aparece al elegir una
+        #categoría, acotado a ella (o combinado si son varias).
         response        =   self._catalog()
-        self.assertEqual([f['name'] for f in response.data['facets']], ['Talle', 'Color', 'Voltaje'])
+        self.assertEqual(response.data['facets'], [])
+        #Con varias categorías seleccionadas los atributos se combinan —
+        #los schemas se aplican en el orden en que llegan las categorías.
+        response        =   self._catalog(category = f'{remeras.id},{electro.id}')
+        self.assertEqual([f['name'] for f in response.data['facets']], ['Color', 'Talle', 'Voltaje'])
         #Con categoría, solo sus atributos — y en el orden de su schema
         #(Color primero aunque Talle tenga más conteo).
         response        =   self._catalog(category = str(remeras.id))
@@ -704,7 +713,7 @@ class PublicCatalogFilterTests(TestCase):
         Product.objects.create(store = store, name = 'A', price = 10, category = pastas, features = {'Color': 'verde'})
         Product.objects.create(store = store, name = 'B', price = 10, category = aceitunas, features = {'color': 'Verde'})
         Product.objects.create(store = store, name = 'C', price = 10, category = aceitunas, features = {'COLOR': 'rojo'})
-        response        =   self._catalog()
+        response        =   self._catalog(category = f'{pastas.id},{aceitunas.id}')
         self.assertEqual(len(response.data['facets']), 1)
         color           =   response.data['facets'][0]
         #El casing que viaja es el que el dueño declaró en el feature_schema.

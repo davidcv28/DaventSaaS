@@ -39,6 +39,9 @@
    products_count en las plantillas): no depende de .cf-opt. */
 .cf-n { font-size: .78em; opacity: .6; font-variant-numeric: tabular-nums; font-style: normal; }
 
+/* Pista "elegí una categoría": hereda la tipografía de cada plantilla. */
+.cf-hint { margin: 4px 0 0; font: inherit; font-size: .78em; opacity: .55; }
+
 /* ---------- Chips de filtros activos (CatalogTags) ---------- */
 .cf-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
 .cf-tag {
@@ -442,6 +445,9 @@
   .cv-pe .cf-fset, .cv-pe .cf-tags { padding-left: 6px; padding-right: 6px; }
   /* Bloque: los fsets se reparten como sus .cv-bq-fset nativos. */
   .cv-bq .cf-fset { flex: 1 1 200px; border-bottom: 0; padding: 0; }
+  /* La pista de categoría ocupa el ancho entero en los asides repartidos. */
+  .cv-bq .cf-hint { flex-basis: 100%; }
+  .cv-rs .cf-hint { grid-column: 1 / -1; }
   /* Tienda Pro: listas largas acotadas como sus .cv-sh-box ul. */
   .cv-sh .cf-fset { max-height: 220px; overflow-y: auto; }
   /* Dúo: en columna única el nombre del grupo se esconde como .cv-du-label. */

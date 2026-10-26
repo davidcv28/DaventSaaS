@@ -1,18 +1,25 @@
 <script setup>
+import { computed } from 'vue'
 import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import '../../assets/store-facets.css'
 
 // Panel de filtros avanzados compartido por todas las plantillas del
 // catálogo público: banderas rápidas (oferta/novedades con sus conteos) y
-// un grupo por atributo dinámico del catálogo (Talle, Color, Material...)
-// multi-selección. Consume la misma instancia de useStoreCatalog que crea
-// la página — solo aporta la presentación neutra (store-facets.css).
+// un grupo por atributo dinámico (Talle, Color, Material...) que solo
+// aparece cuando el visitante elige una categoría — el backend manda las
+// facetas acotadas a ella, así el panel nunca mezcla atributos ajenos.
+// Consume la misma instancia de useStoreCatalog que crea la página — solo
+// aporta la presentación neutra (store-facets.css).
 const {
-  catalog, facets, pickFeature, isFeatureOn,
+  catalog, facets, activeCategories, pickFeature, isFeatureOn,
   onlyOffer, onlyNew, toggleOffer, toggleNew, offerTotal, newTotal
 } = useStoreCatalog()
 
 const isOn = isFeatureOn
+// Pista de descubrimiento: si alguna categoría declara atributos en su
+// feature_schema y todavía no se eligió ninguna, se sugiere la selección.
+const hasSchemaCategories = computed(() => catalog.value.categories.some((c) => (c.feature_schema || []).length))
+const showHint = computed(() => !activeCategories.value.length && hasSchemaCategories.value)
 </script>
 
 <template>
@@ -36,4 +43,5 @@ const isOn = isFeatureOn
     ><span>{{ opt.value }}</span><span class="cf-n" aria-hidden="true">{{ opt.count }}</span></button>
   </div>
 </div>
+<p v-if="showHint" class="cf-hint">Elegí una categoría para filtrar por sus características.</p>
 </template>
