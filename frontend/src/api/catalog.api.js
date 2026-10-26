@@ -17,6 +17,16 @@ import { http } from './http.js'
 // sugiere los atributos y el dueño puede sumar otros libres.
 // DELETE /api/products/<pk>/              Bearer -> {Exito}  (libera la imagen y la cuota)
 //                                        -> 403 si se supera max_products al crear
+//
+// GET    /api/discounts/                  Bearer -> [{id,name,percent,scope,category,category_name,brand,brand_name,products,products_count,starts_at,ends_at,is_active,status,created_at}]
+// POST   /api/discounts/                  Bearer {name,percent,scope,category?,brand?,products?[],starts_at,ends_at?,is_active?} -> {Exito,item}
+// PATCH  /api/discounts/<pk>/             Bearer idem parcial -> {Exito,item}
+// DELETE /api/discounts/<pk>/             Bearer -> {Exito}
+// Descuentos programados: scope = 'all'|'category'|'brand'|'products'; la
+// ventana [starts_at, ends_at) se evalúa al leer el catálogo público — el
+// descuento se activa y vence solo (status: scheduled|active|ended|paused).
+// El precio promocionado viaja en product.discount_offer/discount_names
+// (mi lista) y en offer_price efectivo (catálogo público).
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -94,6 +104,24 @@ export const catalogApi = {
   },
   async deleteProduct(pk) {
     const { data } = await http.delete(`/products/${pk}/`)
+    return data
+  },
+
+  // ----- Descuentos programados -----
+  async listDiscounts() {
+    const { data } = await http.get('/discounts/', { params: { page_size: 200 } })
+    return unwrap(data)
+  },
+  async createDiscount(payload) {
+    const { data } = await http.post('/discounts/', payload)
+    return data
+  },
+  async updateDiscount(pk, payload) {
+    const { data } = await http.patch(`/discounts/${pk}/`, payload)
+    return data
+  },
+  async deleteDiscount(pk) {
+    const { data } = await http.delete(`/discounts/${pk}/`)
     return data
   }
 }
@@ -209,4 +237,97 @@ export function validateProductFeatures(rows) {
     seen.add(name.toLowerCase())
   }
   return ''
+}
+
+// ===== Descuentos programados (espejo de DiscountFields/config_fields.py) =====
+// Alcances admitidos por Discount.Scope; el objetivo se pide según el alcance.
+export const DISCOUNT_SCOPES = [
+  { value: 'all', label: 'Todo el catálogo' },
+  { value: 'category', label: 'Una categoría' },
+  { value: 'brand', label: 'Una marca' },
+  { value: 'products', label: 'Productos elegidos' }
+]
+export const DISCOUNT_LIMITS = { percentMin: 1, percentMax: 99, productsMax: 500 }
+
+// Estado derivado de la ventana (lo calcula el backend en status):
+// scheduled = aún no llega starts_at | active = vigente | ended = pasó ends_at | paused = apagado a mano.
+export const DISCOUNT_STATUS = {
+  scheduled: { label: 'Programado', pill: 'warn' },
+  active: { label: 'Vigente', pill: 'ok' },
+  ended: { label: 'Finalizado', pill: 'muted' },
+  paused: { label: 'Pausado', pill: 'muted' }
+}
+export const discountStatusMeta = (d) => DISCOUNT_STATUS[d?.status] || DISCOUNT_STATUS.active
+
+export function discountScopeLabel(d) {
+  const scope = DISCOUNT_SCOPES.find((s) => s.value === d?.scope)
+  if (!scope) return ''
+  if (d.scope === 'category' && d.category_name) return `Categoría: ${d.category_name}`
+  if (d.scope === 'brand' && d.brand_name) return `Marca: ${d.brand_name}`
+  if (d.scope === 'products') return `${d.products_count ?? d.products?.length ?? 0} productos`
+  return scope.label
+}
+
+export function validateDiscountName(value) {
+  const v = String(value || '').trim()
+  if (!v) return 'El descuento necesita un nombre'
+  if (v.length < 2) return 'El nombre es demasiado corto'
+  if (v.length > 60) return 'El nombre admite hasta 60 caracteres'
+  return ''
+}
+
+export function validateDiscountPercent(value) {
+  if (value === '' || value === null || value === undefined) return 'Indicá el porcentaje de descuento'
+  const n = Number(value)
+  if (!Number.isInteger(n)) return 'Ingresá un porcentaje entero'
+  if (n < DISCOUNT_LIMITS.percentMin) return 'El descuento mínimo es 1%'
+  if (n > DISCOUNT_LIMITS.percentMax) return 'El descuento máximo es 99%'
+  return ''
+}
+
+export function validateDiscountWindow(startsAt, endsAt) {
+  if (!startsAt) return 'Indicá cuándo empieza el descuento'
+  if (endsAt && new Date(endsAt).getTime() <= new Date(startsAt).getTime()) return 'El fin tiene que ser posterior al inicio'
+  return ''
+}
+
+// datetime-local <-> ISO: el input edita en hora local y al backend viaja
+// el instante en UTC (el servidor evalúa la ventana con timezone aware).
+export function isoToLocalInput(iso) {
+  const d = new Date(iso || '')
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+export function localInputToIso(value) {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
+export function formatDiscountDate(iso) {
+  const d = new Date(iso || '')
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+export function discountWindowLabel(d) {
+  const start = formatDiscountDate(d?.starts_at)
+  return d?.ends_at ? `${start} → ${formatDiscountDate(d.ends_at)}` : `Desde ${start}`
+}
+
+// Oferta a mostrar en "Tus productos": la menor entre la oferta manual
+// (offer_price) y el descuento programado vigente (discount_offer) — el
+// descuento nunca sube el precio mostrado. Null si ninguna aplica.
+export function productListOffer(p) {
+  const offers = [p?.offer_price, p?.discount_offer]
+    .filter((v) => v !== null && v !== undefined && v !== '')
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n < Number(p?.price))
+  return offers.length ? Math.min(...offers) : null
+}
+// True cuando el mejor precio lo deja un descuento programado (no la oferta manual).
+export function isDiscountedProduct(p) {
+  const offer = productListOffer(p)
+  if (offer === null || p?.discount_offer === null || p?.discount_offer === undefined) return false
+  return Number(p.discount_offer) <= offer
 }

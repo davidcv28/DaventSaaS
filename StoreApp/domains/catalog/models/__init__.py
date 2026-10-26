@@ -1,1 +1,1 @@
-from .models import Category, Brand, Product
+from .models import Category, Brand, Product, Discount

@@ -1,7 +1,7 @@
 # Auditoría de seguridad DAVENT — backend
 
 **Fecha:** 2026-10-24 · **Alcance:** `AdminApp/`, `StoreApp/`, `SuscriptionApp/`, `DaventProject/`
-**Suite:** 194 tests (61 preexistentes + 133 nuevos) — `manage.py test` → OK
+**Suite:** 250 tests — `manage.py test` → OK (sección 11: descuentos programados)
 
 Auditoría ofensiva/defensiva del backend completo: autenticación, sesiones,
 suscripciones, pagos (Mercado Pago), facturación, tiendas/catálogo,
@@ -342,3 +342,56 @@ abierta. Balance de las 3 rondas: 15 vectores simulados → **3 issues reales
 remediados** (bypass de firma unsigned, canje de cupón con débito vivo,
 preapproval desalineada en checkout) + **1 hardening defensivo** (dedup
 atómico de webhooks) + 10 falsos positivos documentados.
+
+## 11. Auditoría del feature: descuentos programados del catálogo — 2026-10-25
+
+Revisión de seguridad del nuevo modelo `Discount` (mig. catalog.0005) y su
+superficie: CRUD `/api/discounts/` + aplicación en `public_catalog`.
+La automatización se implementó por **evaluación al leer**
+(`running_discounts_of`/`effective_offer_of` en `catalog/services`) —
+el estado vigente se resuelve en cada request con `timezone.now()`, nunca se
+materializa en `offer_price` ni depende de Celery Beat: no hay ventana de
+precios stale ni un job que un atacante pueda interferir.
+
+### Controles aplicados (diseño)
+
+| Control | Dónde |
+|---------|-------|
+| **Aislado por dueño**: queryset scoping `store=my_store()` en list/retrieve/update/destroy — un id ajeno devuelve 404, nunca 403 con fuga de existencia | `DiscountViewSet` / `viewset_config` |
+| **Gate de suscripción**: mismo `catalog_enabled()` que el resto del catálogo (exige `has_public_link` vigente) → 403 sin plan | `viewset_config` |
+| **Objetivos del alcance validados server-side**: `scope=category|brand` exige el FK **y que pertenezca a la tienda del owner**; `scope=products` exige ≥1 producto propio (queryset filtrado por `store` — ids ajenos se cuentan como faltantes → 400) | `DiscountMixinValidator` |
+| **Porcentaje acotado en dos capas**: `percent` 1–99 con `MinValue/MaxValueValidator` **y** `CHECK` en DB (`ck_discount_percent_range`) — ni 0% inútil ni 100%+ que regale el producto | `models.py`, `config_fields.DiscountFields` |
+| **Ventana coherente**: `ends_at > starts_at` obligatorio; `ends_at` null = sin fin explícito (no ambigüedad con "vencido") | `DiscountMixinValidator` |
+| **Tope defensivo de selección**: `scope=products` limita a `DiscountLimits.products_max` (500) — evita payloads gigantes en el M2M | `DiscountMixinValidator` |
+| **Limpieza de restos**: cambiar de `scope` nulifica los campos del alcance anterior — un descuento no puede heredar productos de una configuración previa | serializer `update`/`create` |
+| **Precio efectivo seguro**: `effective_offer_of` toma el **mínimo** entre oferta manual y descuentos solapados, clamp a ≥0 con `quantize` — un % extremo nunca produce precio negativo | `services.py` |
+| **Sin inyección en filtros públicos**: los descuentos no agregan parámetros nuevos al endpoint público; `?min_price/max_price` siguen pasando por `_price_bound` y el sort por whitelist `CATALOG_SORTS` (el orden por precio se hace en Python sobre el queryset acotado, jamás `order_by` crudo) | `stores/views/viewset.py` |
+| **Vista pública fail-closed**: los descuentos solo enriquecen `offer_price` del payload existente — no exponen endpoints nuevos AllowAny | `public_catalog` |
+
+### Tests agregados (`catalog/tests.py`, suite 42 → OK)
+
+- `DiscountTests` (aislamiento: list/update/delete ajenos → 404; percent fuera
+  de rango → 400; `ends_at ≤ starts_at` → 400; scope inválido o sin objetivo →
+  400; categoría/producto ajenos → 400; create+toggle; cambio de scope limpia
+  restos).
+- `DiscountPublicTests` (descuento vigente baja el `offer_price` público;
+  programado/vencido/pausado no aplican; oferta manual gana si es menor;
+  scope por categoría solo cubre esa categoría; `?min_price` filtra con el
+  precio ya descontado; el list del owner expone `discount_offer`/`discount_names`).
+
+### Residuales honestos (documentados, no bugs)
+
+- **Carga del listado público**: `running_discounts_of` trae los descuentos
+  vigentes de la tienda y `discount_price_of` itera el M2M por producto —
+  O(productos × descuentos) en memoria. Acotado por `max_products` del plan y
+  por el propio catálogo del dueño; sin índice extra necesario a este volumen.
+- **Sin auditoría de cambios**: crear/editar/borrar descuentos no queda en un
+  log de auditoría propio (igual que el resto del catálogo — cubierto por el
+  logging de requests de la sección 3).
+- **Zona horaria**: las ventanas se guardan/comparan en UTC (`USE_TZ`); el
+  frontend convierte `datetime-local` ↔ ISO (`localInputToIso`/`isoToLocalInput`).
+  Un desfasaje del reloj del cliente solo afecta lo que el dueño ve, no la
+  vigencia server-side.
+
+**Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
+250 tests OK · `npm run build` (Vite) OK.

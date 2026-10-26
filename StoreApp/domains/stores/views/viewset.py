@@ -242,6 +242,7 @@ class StoreViewSet(StoreBaseViewSet):
         from StoreApp.domains.catalog.serializers.serializers import (
             CategorySerializer, BrandSerializer, ProductPublicSerializer,
         )
+        from StoreApp.domains.catalog.services.services import running_discounts_of, effective_offer_of
         store           =   get_object_or_404(
             Store.objects.select_related('user', 'customization'),
             slug = slug, is_published = True, is_blocked = False,
@@ -254,11 +255,7 @@ class StoreViewSet(StoreBaseViewSet):
         customization     =   getattr(store, 'customization', None)
         if customization is not None and customization.show_catalog is False:
             raise Http404
-        from django.db.models.functions import Coalesce
-        #El precio efectivo es la oferta cuando existe: filtros y orden lo usan.
-        products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand').annotate(
-            effective_price =   Coalesce('offer_price', 'price'),
-        )
+        products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
         category_id     =   request.query_params.get('category')
         brand_id        =   request.query_params.get('brand')
         search          =   (request.query_params.get('q') or '').strip()
@@ -272,20 +269,36 @@ class StoreViewSet(StoreBaseViewSet):
         from django.db.models import Q
         if search:
             products    =   products.filter(Q(name__icontains = search) | Q(description__icontains = search))
-        if min_price is not None:
-            products    =   products.filter(effective_price__gte = min_price)
-        if max_price is not None:
-            products    =   products.filter(effective_price__lte = max_price)
         ordering        =   CATALOG_SORTS.get(sort)
-        if ordering:
+        if ordering and sort not in ('price_asc', 'price_desc'):
             products    =   products.order_by(*ordering)
+        #El precio efectivo es la menor entre la oferta manual y el mejor
+        #descuento vigente (programado por el dueño): filtros de precio y el
+        #orden por precio se resuelven sobre ese valor ya calculado — el
+        #catálogo queda acotado por max_products del plan, así que evaluar
+        #en memoria no escala mal y evita materializar nada en la base.
+        discounts       =   running_discounts_of(store)
+        items           =   []
+        for product in products:
+            product.effective_offer     =   effective_offer_of(product, discounts)
+            product.effective_price     =   product.effective_offer if product.effective_offer is not None else product.price
+            if min_price is not None and product.effective_price < min_price:
+                continue
+            if max_price is not None and product.effective_price > max_price:
+                continue
+            items.append(product)
+        if sort in ('price_asc', 'price_desc'):
+            #Orden estable: el nombre queda de desempate ascendente en ambos
+            #sentidos (un reverse sobre la tupla invertiría también el nombre).
+            items.sort(key = lambda p: p.name)
+            items.sort(key = lambda p: p.effective_price, reverse = (sort == 'price_desc'))
         categories      =   store.categories.all()
         brands          =   store.brands.all()
         response        =   Response(
             {
                 'categories'    :   CategorySerializer(categories, many = True).data,
                 'brands'        :   BrandSerializer(brands, many = True).data,
-                'products'      :   ProductPublicSerializer(products, many = True).data,
+                'products'      :   ProductPublicSerializer(items, many = True).data,
             },
             status = status.HTTP_200_OK,
         )

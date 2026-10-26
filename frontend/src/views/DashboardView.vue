@@ -25,7 +25,10 @@ import {
 } from '../api/stores.api.js'
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductOffer, validateProductDescription,
-  catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures
+  catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures,
+  DISCOUNT_SCOPES, discountStatusMeta, discountScopeLabel, discountWindowLabel,
+  validateDiscountName, validateDiscountPercent, validateDiscountWindow,
+  isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct
 } from '../api/catalog.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { formatDate as formatInvDate } from '../api/invoices.api.js'
@@ -489,7 +492,7 @@ async function togglePublished() {
 
 // --- Mis catálogos: productos, categorías y marcas de la tienda ---
 // El catálogo se habilita con suscripción activa (el backend devuelve 403 sin plan).
-const catalogTab = ref('products') // products | categories | brands
+const catalogTab = ref('products') // products | categories | brands | discounts
 const catalogLoaded = ref(false)
 
 // El interruptor del catálogo público (customization.show_catalog) y el
@@ -734,6 +737,91 @@ async function removeProduct(p) {
   productBusy.value = false
   if (res?.storage) store.storage = res.storage
   if (productEditing.value === p.id) resetProductForm()
+}
+
+// --- Descuentos programados: se activan y vencen solos por la ventana ---
+// El precio promocionado lo calcula el backend al leer (nunca se pisa
+// offer_price): acá solo se programa nombre, %, alcance y fechas.
+const discountForm = reactive({
+  name: '', percent: '', scope: 'all', category: '', brand: '',
+  product_ids: [], starts_at: '', ends_at: '', is_active: true
+})
+const discountTouched = reactive({})
+const discountBusy = ref(false)
+const discountEditing = ref(null)
+
+const discountErrors = computed(() => {
+  const e = {}
+  const n = validateDiscountName(discountForm.name)
+  const p = validateDiscountPercent(discountForm.percent)
+  const w = validateDiscountWindow(discountForm.starts_at, discountForm.ends_at)
+  if (n) e.name = n
+  if (p) e.percent = p
+  if (w) e[discountForm.starts_at ? 'ends_at' : 'starts_at'] = w
+  if (discountForm.scope === 'category' && !discountForm.category) e.category = 'Elegí la categoría a descontar.'
+  if (discountForm.scope === 'brand' && !discountForm.brand) e.brand = 'Elegí la marca a descontar.'
+  if (discountForm.scope === 'products' && !discountForm.product_ids.length) e.products = 'Elegí al menos un producto.'
+  return e
+})
+
+function discountFieldErr(name) {
+  return (discountTouched[name] ? discountErrors.value[name] || '' : '') || catalog.fieldErrors[name] || ''
+}
+
+function resetDiscountForm() {
+  Object.assign(discountForm, {
+    name: '', percent: '', scope: 'all', category: '', brand: '',
+    product_ids: [], starts_at: '', ends_at: '', is_active: true
+  })
+  Object.keys(discountTouched).forEach((k) => { discountTouched[k] = false })
+  discountEditing.value = null
+}
+
+function editDiscount(d) {
+  discountEditing.value = d.id
+  Object.assign(discountForm, {
+    name: d.name, percent: d.percent, scope: d.scope,
+    category: d.category || '', brand: d.brand || '', product_ids: [...(d.products || [])],
+    starts_at: isoToLocalInput(d.starts_at), ends_at: isoToLocalInput(d.ends_at),
+    is_active: d.is_active
+  })
+  catalog.notice = ''
+  catalog.lastError = ''
+}
+
+async function saveDiscount() {
+  Object.keys(discountForm).forEach((k) => { discountTouched[k] = true })
+  if (Object.keys(discountErrors.value).length) return
+  discountBusy.value = true
+  const ok = await catalog.saveDiscount(discountEditing.value, {
+    name: discountForm.name.trim(),
+    percent: Number(discountForm.percent),
+    scope: discountForm.scope,
+    // Fuera del alcance elegido viaja null: el backend limpia los restos.
+    category: discountForm.scope === 'category' ? discountForm.category : null,
+    brand: discountForm.scope === 'brand' ? discountForm.brand : null,
+    products: discountForm.scope === 'products' ? discountForm.product_ids : [],
+    starts_at: localInputToIso(discountForm.starts_at),
+    ends_at: discountForm.ends_at ? localInputToIso(discountForm.ends_at) : null,
+    is_active: discountForm.is_active
+  })
+  discountBusy.value = false
+  if (ok) resetDiscountForm()
+}
+
+async function toggleDiscount(d) {
+  if (discountBusy.value) return
+  discountBusy.value = true
+  await catalog.toggleDiscount(d)
+  discountBusy.value = false
+}
+
+async function removeDiscount(d) {
+  if (discountBusy.value) return
+  discountBusy.value = true
+  await catalog.removeDiscount(d.id)
+  discountBusy.value = false
+  if (discountEditing.value === d.id) resetDiscountForm()
 }
 
 async function addTaxonomy(kind) {
@@ -1900,6 +1988,9 @@ async function changePassword() {
           <button type="button" class="tab" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
             <AppIcon name="tag" :size="16" /> Marcas
           </button>
+          <button type="button" class="tab" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
+            <AppIcon name="percent" :size="16" /> Descuentos <small class="tab-sub">se activan solos</small>
+          </button>
         </div>
 
         <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
@@ -2020,9 +2111,10 @@ async function changePassword() {
                   </span>
                   <div class="prod-info">
                     <strong>{{ p.name }}</strong>
-                    <small><template v-if="p.offer_price != null"><s class="prod-old">{{ formatARS(p.price) }}</s> {{ formatARS(p.offer_price) }}</template><template v-else>{{ formatARS(p.price) }}</template><template v-if="p.category_name"> · {{ p.category_name }}</template><template v-if="p.brand_name"> · {{ p.brand_name }}</template></small>
+                    <small><template v-if="productListOffer(p) != null"><s class="prod-old">{{ formatARS(p.price) }}</s> {{ formatARS(productListOffer(p)) }}</template><template v-else>{{ formatARS(p.price) }}</template><template v-if="p.category_name"> · {{ p.category_name }}</template><template v-if="p.brand_name"> · {{ p.brand_name }}</template></small>
                   </div>
-                  <span v-if="p.offer_price != null" class="pill ok">Oferta</span>
+                  <span v-if="isDiscountedProduct(p)" class="pill ok" :title="(p.discount_names || []).join(' · ')">Promo</span>
+                  <span v-else-if="productListOffer(p) != null" class="pill ok">Oferta</span>
                   <span v-if="!p.is_active" class="pill muted">Oculto</span>
                   <button type="button" class="icon-btn" aria-label="Editar producto" @click="editProduct(p)"><AppIcon name="pencil" :size="15" /></button>
                   <button type="button" class="icon-btn danger" aria-label="Eliminar producto" @click="removeProduct(p)"><AppIcon name="trash" :size="15" /></button>
@@ -2076,6 +2168,88 @@ async function changePassword() {
               </li>
             </ul>
             <p v-else class="hint">Sin marcas todavía.</p>
+          </div>
+
+          <!-- -------- Descuentos programados -------- -->
+          <div v-show="catalogTab === 'discounts'" class="grid-2">
+            <div class="card">
+              <h3><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="18" /> {{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
+              <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
+              <AppInput v-model="discountForm.name" label="Nombre" name="disc_name" placeholder="Ej. Semana de ofertas" :error="discountFieldErr('name')" @blur="discountTouched.name = true" />
+              <div class="grid-2">
+                <AppInput v-model="discountForm.percent" label="Descuento %" name="disc_percent" type="number" min="1" max="99" step="1" placeholder="Ej. 25" :error="discountFieldErr('percent')" @blur="discountTouched.percent = true" />
+                <div class="field">
+                  <label for="disc-scope">Aplica a</label>
+                  <select id="disc-scope" v-model="discountForm.scope" class="select">
+                    <option v-for="s in DISCOUNT_SCOPES" :key="s.value" :value="s.value">{{ s.label }}</option>
+                  </select>
+                </div>
+              </div>
+              <div v-if="discountForm.scope === 'category'" class="field">
+                <label for="disc-category">Categoría</label>
+                <select id="disc-category" v-model="discountForm.category" class="select" :class="{ invalid: discountFieldErr('category') }">
+                  <option value="">Elegí una categoría</option>
+                  <option v-for="c in catalog.categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+                <p v-if="!catalog.categories.length" class="hint">No tenés categorías: cargalas en la pestaña Categorías.</p>
+                <p v-if="discountFieldErr('category')" class="field-error" role="alert">{{ discountFieldErr('category') }}</p>
+              </div>
+              <div v-if="discountForm.scope === 'brand'" class="field">
+                <label for="disc-brand">Marca</label>
+                <select id="disc-brand" v-model="discountForm.brand" class="select" :class="{ invalid: discountFieldErr('brand') }">
+                  <option value="">Elegí una marca</option>
+                  <option v-for="b in catalog.brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+                </select>
+                <p v-if="!catalog.brands.length" class="hint">No tenés marcas: cargalas en la pestaña Marcas.</p>
+                <p v-if="discountFieldErr('brand')" class="field-error" role="alert">{{ discountFieldErr('brand') }}</p>
+              </div>
+              <div v-if="discountForm.scope === 'products'" class="field">
+                <label id="disc-products-label">Productos incluidos</label>
+                <div v-if="catalog.products.length" class="check-list disc-products" role="group" aria-labelledby="disc-products-label">
+                  <label v-for="p in catalog.products" :key="p.id" class="check-item">
+                    <input type="checkbox" :value="p.id" v-model="discountForm.product_ids" />
+                    <span class="check-text"><strong>{{ p.name }}</strong><small>{{ formatARS(p.price) }}</small></span>
+                  </label>
+                </div>
+                <p v-else class="hint">Todavía no cargaste productos.</p>
+                <p v-if="catalog.products.length" class="hint">{{ discountForm.product_ids.length }} seleccionados</p>
+                <p v-if="discountFieldErr('products')" class="field-error" role="alert">{{ discountFieldErr('products') }}</p>
+              </div>
+              <div class="grid-2">
+                <AppInput v-model="discountForm.starts_at" label="Empieza" name="disc_start" type="datetime-local" :error="discountFieldErr('starts_at')" @blur="discountTouched.starts_at = true" />
+                <AppInput v-model="discountForm.ends_at" label="Termina" name="disc_end" type="datetime-local" hint="Dejalo vacío si no tiene fin." :error="discountFieldErr('ends_at')" @blur="discountTouched.ends_at = true" />
+              </div>
+              <div class="check-list">
+                <label class="check-item">
+                  <input type="checkbox" v-model="discountForm.is_active" />
+                  <span class="check-text"><strong>Descuento activo</strong><small>Si lo pausás, deja de aplicarse aunque esté en fecha.</small></span>
+                </label>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="discountBusy" @click="saveDiscount">{{ discountEditing ? 'Guardar cambios' : 'Crear descuento' }}</AppButton>
+                <button v-if="discountEditing" type="button" class="btn ghost btn-auto" @click="resetDiscountForm">Cancelar</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3><AppIcon name="percent" :size="18" /> Tus descuentos</h3>
+              <div v-if="!catalog.discounts.length" class="empty-mini"><AppIcon name="percent" :size="22" /><p>Todavía no programaste descuentos. Crean ofertas que se encienden y se apagan solas.</p></div>
+              <ul v-else class="tax-list">
+                <li v-for="d in catalog.discounts" :key="d.id">
+                  <span>
+                    <strong>{{ d.name }}</strong> <span class="disc-pct">-{{ d.percent }}%</span>
+                    <small class="hint-inline">{{ discountScopeLabel(d) }}</small>
+                    <small class="disc-window">{{ discountWindowLabel(d) }}</small>
+                  </span>
+                  <span class="tax-item-actions">
+                    <span class="pill" :class="discountStatusMeta(d).pill">{{ discountStatusMeta(d).label }}</span>
+                    <button type="button" class="icon-btn" :aria-label="d.is_active ? 'Pausar descuento' : 'Reactivar descuento'" :title="d.is_active ? 'Pausar' : 'Reactivar'" @click="toggleDiscount(d)"><AppIcon :name="d.is_active ? 'clock' : 'zap'" :size="15" /></button>
+                    <button type="button" class="icon-btn" aria-label="Editar descuento" @click="editDiscount(d)"><AppIcon name="pencil" :size="15" /></button>
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar descuento" @click="removeDiscount(d)"><AppIcon name="trash" :size="15" /></button>
+                  </span>
+                </li>
+              </ul>
+            </div>
           </div>
           <!-- -------- Opciones avanzadas -------- -->
           <details class="card more-card">

@@ -1,1 +1,4 @@
-from .serializers import CategorySerializer, BrandSerializer, ProductSerializer, ProductSerializerList, ProductPublicSerializer
+from .serializers import (
+    CategorySerializer, BrandSerializer, ProductSerializer, ProductSerializerList, ProductPublicSerializer,
+    DiscountSerializer, DiscountSerializerList,
+)

@@ -8,7 +8,7 @@ from StoreApp.domains.catalog.services.services   import catalog_enabled, can_ad
 from StoreApp.domains.catalog.serializers.serializers import ProductSerializerList
 from StoreApp.domains.stores.services             import upload_product_image, delete_product_image, storage_payload, validate_image_file, remove_background
 from .viewset_base   import CatalogBaseViewSet
-from .viewset_config import CategoryConfigs, BrandConfigs, ProductConfigs
+from .viewset_config import CategoryConfigs, BrandConfigs, ProductConfigs, DiscountConfigs
 """
 
 Viewsets del dominio Catalog.
@@ -47,6 +47,28 @@ class CategoryViewSet(CatalogGateMixin, CatalogBaseViewSet):
 #=========================================
 class BrandViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   BrandConfigs
+#=========================================
+# DISCOUNT VIEWSET (descuentos programados de la tienda)
+#=========================================
+class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
+    viewset_config  =   DiscountConfigs
+    def _swap_item(self, request, response):
+        """
+        Como en ProductViewSet: tras guardar, el `item` de la respuesta se
+        re-serializa con DiscountSerializerList para que viaje el estado
+        derivado de la ventana (scheduled/active/ended/paused).
+        """
+        if response.status_code not in (status.HTTP_200_OK, status.HTTP_201_CREATED):
+            return response
+        from StoreApp.domains.catalog.serializers.serializers import DiscountSerializerList
+        discount    =   self.get_queryset().filter(pk = response.data['item']['id']).first()
+        if discount is not None:
+            response.data['item']   =   DiscountSerializerList(discount).data
+        return response
+    def create(self, request):
+        return self._swap_item(request, super().create(request))
+    def update(self, request, pk = None):
+        return self._swap_item(request, super().update(request, pk))
 #=========================================
 # BACKGROUND REMOVAL THROTTLE (inferencia en CPU: acotada por usuario)
 #=========================================
@@ -120,7 +142,9 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
             response    =   super().create(request)
         product     =   self._product_from_response(request, response)
         if product is not None:
-            response.data['item']   =   ProductSerializerList(product).data
+            #El context trae la tienda: discount_offer/names de los
+            #descuentos vigentes viajan también en la respuesta de guardado.
+            response.data['item']   =   ProductSerializerList(product, context = self.get_serializer_context()).data
             response.data['storage']    =   storage_payload(product.store, store.user)
         return response
     def update(self, request, pk = None):
@@ -131,7 +155,7 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
         response    =   super().update(request, pk)
         product     =   self._product_from_response(request, response)
         if product is not None:
-            response.data['item']   =   ProductSerializerList(product).data
+            response.data['item']   =   ProductSerializerList(product, context = self.get_serializer_context()).data
             response.data['storage']    =   storage_payload(product.store, store.user)
         return response
     def destroy(self, request, pk = None):

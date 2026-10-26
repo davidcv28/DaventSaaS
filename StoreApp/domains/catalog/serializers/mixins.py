@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .config_fields import FeatureLimits
+from .config_fields import FeatureLimits, DiscountLimits
 """
 
 Mixins de validación de los serializers del dominio Catalog.
@@ -93,4 +93,52 @@ class ProductMixinValidator:
             price       =   attrs.get('price', getattr(self.instance, 'price', None))
             if offer is not None and price is not None and offer >= price:
                 raise serializers.ValidationError({'offer_price': 'La oferta tiene que ser menor que el precio.'})
+        return attrs
+#==================================
+# DISCOUNT MIXIN (alcance coherente + pertenencia a la tienda + ventana)
+#==================================
+class DiscountMixinValidator:
+    """
+    Reglas del descuento programado: el objetivo del alcance (categoría,
+    marca o productos) debe existir y pertenecer a la tienda del dueño,
+    y la ventana exige ends_at > starts_at cuando hay fin.
+    """
+    def validate(self, attrs):
+        from StoreApp.domains.catalog.models import Discount
+        store           =   self.context['store']
+        scope           =   attrs.get('scope', getattr(self.instance, 'scope', Discount.Scope.ALL))
+        errors          =   {}
+        #Pertenencia: un id de otra tienda nunca descuenta productos ajenos.
+        for field in ('category', 'brand'):
+            related     =   attrs.get(field)
+            if related is not None and related.store_id != store.id:
+                errors[field]   =   'No pertenece a tu tienda.'
+        products        =   attrs.get('products')
+        if products is not None:
+            if len(products) > DiscountLimits['products_max']:
+                errors['products']  =   f"El descuento admite hasta {DiscountLimits['products_max']} productos."
+            elif any(product.store_id != store.id for product in products):
+                errors['products']  =   'Hay productos que no pertenecen a tu tienda.'
+        #El alcance exige su objetivo (en un PATCH puede venir del registro).
+        if scope == Discount.Scope.CATEGORY:
+            category    =   attrs.get('category', getattr(self.instance, 'category', None))
+            if category is None:
+                errors['category']  =   'Elegí la categoría a descontar.'
+        elif scope == Discount.Scope.BRAND:
+            brand       =   attrs.get('brand', getattr(self.instance, 'brand', None))
+            if brand is None:
+                errors['brand'] =   'Elegí la marca a descontar.'
+        elif scope == Discount.Scope.PRODUCTS:
+            chosen      =   attrs.get(
+                'products',
+                list(self.instance.products.all()) if self.instance is not None else None,
+            )
+            if not chosen:
+                errors['products']  =   'Elegí al menos un producto.'
+        starts          =   attrs.get('starts_at', getattr(self.instance, 'starts_at', None))
+        ends            =   attrs.get('ends_at', getattr(self.instance, 'ends_at', None))
+        if starts is not None and ends is not None and ends <= starts:
+            errors['ends_at']   =   'El fin tiene que ser posterior al inicio.'
+        if errors:
+            raise serializers.ValidationError(errors)
         return attrs

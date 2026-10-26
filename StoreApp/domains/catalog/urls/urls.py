@@ -1,5 +1,5 @@
 from rest_framework import routers
-from StoreApp.domains.catalog.views import CategoryViewSet, BrandViewSet, ProductViewSet
+from StoreApp.domains.catalog.views import CategoryViewSet, BrandViewSet, ProductViewSet, DiscountViewSet
 
 router  =   routers.DefaultRouter()
 
@@ -7,6 +7,7 @@ router  =   routers.DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename = 'Categories')
 router.register(r'brands',     BrandViewSet,    basename = 'Brands')
 router.register(r'products',   ProductViewSet,  basename = 'Products')
+router.register(r'discounts',  DiscountViewSet, basename = 'Discounts')
 
 
 #PATTERNS

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from StoreApp.domains.stores.models import Store
 """
 
@@ -88,3 +89,46 @@ class Product(models.Model):
         ]
     def __str__(self):
         return f'{self.name} ({self.store.slug})'
+#=========================================
+# DISCOUNT MODEL (descuento programado: se activa/vence solo por fecha)
+#=========================================
+class Discount(models.Model):
+    """
+    Descuento porcentual que el dueño programa sobre su catálogo. La
+    ventana [starts_at, ends_at) se evalúa al leer (nunca se materializa
+    en offer_price): el descuento entra y sale de vigencia solo, sin
+    tareas programadas. ends_at=None = no vence hasta pausarlo.
+    """
+    class Scope(models.TextChoices):
+        ALL         =   'all',      'Todo el catálogo'
+        CATEGORY    =   'category', 'Una categoría'
+        BRAND       =   'brand',    'Una marca'
+        PRODUCTS    =   'products', 'Productos elegidos'
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'discounts', db_index = False)
+    name                        =   models.CharField(max_length = 60, verbose_name = 'Nombre')
+    percent                     =   models.PositiveSmallIntegerField(verbose_name = 'Descuento (%)')
+    scope                       =   models.CharField(max_length = 10, choices = Scope.choices, default = Scope.ALL, verbose_name = 'Alcance')
+    category                    =   models.ForeignKey(Category, on_delete = models.SET_NULL, related_name = 'discounts', null = True, blank = True, db_index = False)
+    brand                       =   models.ForeignKey(Brand, on_delete = models.SET_NULL, related_name = 'discounts', null = True, blank = True, db_index = False)
+    products                    =   models.ManyToManyField(Product, related_name = 'discounts', blank = True)
+    starts_at                   =   models.DateTimeField(verbose_name = 'Empieza')
+    ends_at                     =   models.DateTimeField(null = True, blank = True, verbose_name = 'Termina')
+    is_active                   =   models.BooleanField(default = True, verbose_name = 'Activo')
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'catalog'
+        verbose_name            =   'Descuento'
+        verbose_name_plural     =   'Descuentos'
+        ordering                =   ['-starts_at', '-id']
+        indexes                 =   [
+            models.Index(fields = ['store', 'is_active', 'starts_at'], name = 'idx_discount_window'),
+        ]
+        constraints             =   [
+            models.CheckConstraint(condition = models.Q(percent__gte = 1, percent__lte = 99), name = 'ck_discount_percent_range'),
+        ]
+    def __str__(self):
+        return f'-{self.percent}% {self.name} ({self.store.slug})'
+    def is_running(self, moment = None):
+        """Vigente en `moment` (ahora por defecto): activo y dentro de la ventana."""
+        moment  =   moment or timezone.now()
+        return self.is_active and self.starts_at <= moment and (self.ends_at is None or self.ends_at > moment)

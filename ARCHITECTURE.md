@@ -519,13 +519,17 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
            price ≥0 (ck_product_price_gte_0), image_key/image_size en R2,
            features {} características nombre→valor,
            is_active apaga visibilidad sin borrar)
+Discount  (store, name, percent 1–99 (ck_discount_percent_range),
+           scope all|category|brand|products → category?|brand?|products M2M,
+           starts_at, ends_at?, is_active)   # oferta programada
 ```
 
 **Características del producto** (`Category.feature_schema` + `Product.features`, JSONField): la categoría define una **plantilla** de nombres de atributos (ej. `['Talle','Color','Material']`, se edita junto a la categoría separados por coma); al cargar un producto de esa categoría el form precarga esas filas y el dueño puede sumar otras libres — el resultado se guarda como dict `{nombre: valor}` (máx 15 nombres de ≤40 chars en el schema; máx 20 pares por producto, clave ≤40 / valor ≤120; trim + anti-repetidos en `CategorySchemaMixinValidator`/`ProductMixinValidator`, límites en `FeatureLimits`). En multipart `features` viaja como string JSON (`JSONField(binary=True)` lo parsea; `''`→`{}` en `_normalize_relations`). En la web pública el modal del producto los lista bajo "Características", ordenados por el schema de su categoría y luego los libres (`.sp-specs`).
 
 - `GET|POST /api/categories/`, `GET|PATCH|DELETE /api/categories/<pk>/` — CRUD; al borrar una categoría los productos quedan sin categoría (`SET_NULL`). Ídem `/api/brands/`.
 - `GET|POST /api/products/`, `GET|PATCH|DELETE /api/products/<pk>/` — CRUD del catálogo. POST/PATCH aceptan multipart con `image` (sube a R2 y consume cuota `max_storage_mb`; `image_clear=true` la quita). Responden `{Exito, item, storage, image_error?}`.
-- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, facets, products}` con filtros `?category=&brand=&q=&min_price=&max_price=` (bounds inválidos/negativos se ignoran vía `_price_bound`), filtros de características `?feat=` (JSON `{"Talle":["M","L"]}` — OR dentro de un atributo, AND entre atributos; `_feature_filters` valida topes y descarta lo inválido, se filtra como `features__contains`) y orden `?sort=name|recent|price_asc|price_desc` (whitelist `CATALOG_SORTS` en el viewset; sin sort válido queda el ordering del Meta). `facets` = facetas estilo marketplace `{name, values:[{value,count}]}` armadas por `_catalog_facets` sobre el queryset filtrado sin los filtros de características; el `feature_schema` de la categoría activa ordena sus atributos primero. 404 si la suscripción no otorga acceso.
+- `GET|POST /api/discounts/`, `GET|PATCH|DELETE /api/discounts/<pk>/` — **descuentos programados** del dueño (pestaña Descuentos del panel): oferta porcentual con ventana `[starts_at, ends_at)` (`ends_at` null = sin fin) e `is_active` de pausa manual. La automatización es por evaluación al leer — `running_discounts_of`/`effective_offer_of` en `services` resuelven la vigencia en cada request, nunca se materializa en `offer_price` y no requiere worker/cron; el precio efectivo es el mínimo entre la oferta manual y el mejor descuento solapado. `DiscountMixinValidator` exige el objetivo del alcance (categoría/marca/productos) y que pertenezca a la tienda, `ends_at>starts_at` y ≤`DiscountLimits.products_max` ítems; los campos fuera del alcance se limpian al guardar. `DiscountSerializerList` deriva `status` (`scheduled|active|ended|paused`) y `ProductSerializerList` expone `discount_offer`/`discount_names` (vigentes cacheados por request).
+- `GET /api/stores/public/<slug>/catalog/` (AllowAny) — catálogo visible de la web pública: `{categories, brands, products}` con filtros `?category=&brand=&q=&min_price=&max_price=` (bounds inválidos/negativos se ignoran vía `_price_bound`) y orden `?sort=name|recent|price_asc|price_desc` (whitelist `CATALOG_SORTS` en el viewset; sin sort válido queda el ordering del Meta). Los bounds de precio y el orden por precio usan el **precio efectivo** — el mínimo entre `offer_price` y el mejor descuento vigente — evaluado en memoria al leer (sort estable de Python para los ordenes por precio). 404 si la suscripción no otorga acceso.
 
 ---
 
@@ -569,6 +573,7 @@ Product   (store, category?, brand?, name ≤120, description ≤600,
 /api/categories/                → categorías del catálogo (Bearer)
 /api/brands/                    → marcas del catálogo (Bearer)
 /api/products/                  → productos del catálogo (Bearer, multipart con image)
+/api/discounts/                 → descuentos programados del catálogo (Bearer)
 /api-auth/                      → login de DRF
 /api/token/                     → JWT obtain
 /api/token/refresh/             → JWT refresh

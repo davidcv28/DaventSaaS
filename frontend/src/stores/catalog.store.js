@@ -9,6 +9,7 @@ export const useCatalogStore = defineStore('catalog', () => {
   const categories = ref([])
   const brands = ref([])
   const products = ref([])
+  const discounts = ref([])
   const status = ref('idle') // idle | loading | success | error
   const lastError = ref('')
   const notice = ref('')
@@ -31,14 +32,16 @@ export const useCatalogStore = defineStore('catalog', () => {
     lastError.value = ''
     denied.value = false
     try {
-      const [cats, brs, prods] = await Promise.all([
+      const [cats, brs, prods, discs] = await Promise.all([
         catalogApi.listCategories(),
         catalogApi.listBrands(),
-        catalogApi.listProducts()
+        catalogApi.listProducts(),
+        catalogApi.listDiscounts()
       ])
       categories.value = cats
       brands.value = brs
       products.value = prods
+      discounts.value = discs
       status.value = 'success'
     } catch (e) {
       status.value = 'error'
@@ -115,10 +118,47 @@ export const useCatalogStore = defineStore('catalog', () => {
     return { ok: false, storage: null }
   }
 
+  // ----- Descuentos programados -----
+  // Un alta/cambio puede alterar discount_offer de los productos: se recargan
+  // los dos listados para que la vitrina del panel refleje el precio efectivo.
+  async function saveDiscount(pk, payload) {
+    const res = await run(
+      () => pk ? catalogApi.updateDiscount(pk, payload) : catalogApi.createDiscount(payload),
+      'El descuento se guardó correctamente.'
+    )
+    if (res.ok) {
+      const [discs, prods] = await Promise.all([catalogApi.listDiscounts(), catalogApi.listProducts()])
+      discounts.value = discs
+      products.value = prods
+    }
+    return res.ok
+  }
+  async function toggleDiscount(d) {
+    const res = await run(
+      () => catalogApi.updateDiscount(d.id, { is_active: !d.is_active }),
+      d.is_active ? 'El descuento se pausó.' : 'El descuento se reactivó.'
+    )
+    if (res.ok) {
+      const [discs, prods] = await Promise.all([catalogApi.listDiscounts(), catalogApi.listProducts()])
+      discounts.value = discs
+      products.value = prods
+    }
+    return res.ok
+  }
+  async function removeDiscount(pk) {
+    const res = await run(() => catalogApi.deleteDiscount(pk), 'El descuento se eliminó.')
+    if (res.ok) {
+      discounts.value = discounts.value.filter((d) => d.id !== pk)
+      products.value = await catalogApi.listProducts()
+    }
+    return res.ok
+  }
+
   function reset() {
     categories.value = []
     brands.value = []
     products.value = []
+    discounts.value = []
     status.value = 'idle'
     lastError.value = ''
     notice.value = ''
@@ -127,9 +167,9 @@ export const useCatalogStore = defineStore('catalog', () => {
   }
 
   return {
-    categories, brands, products, status, lastError, notice, fieldErrors, denied,
+    categories, brands, products, discounts, status, lastError, notice, fieldErrors, denied,
     productLimitReached,
     loadAll, saveCategory, removeCategory, saveBrand, removeBrand,
-    saveProduct, removeProduct, reset
+    saveProduct, removeProduct, saveDiscount, toggleDiscount, removeDiscount, reset
   }
 })
