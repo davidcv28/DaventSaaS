@@ -1,4 +1,5 @@
 import logging
+import re
 import mercadopago
 import requests
 from decimal import Decimal
@@ -71,6 +72,10 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
     #otro usuario — misma regla que aplica PaymentWebhookQuery.
     if str(mp_payment.get('external_reference') or '') != str(suscription.id):
         raise serializers.ValidationError({'payment_id': 'El pago no corresponde a esta suscripción.'})
+    #MONEDA: los precios son ARS; un cobro en otra moneda con el mismo número
+    #no debe acreditar el plan.
+    if (mp_payment.get('currency_id') or 'ARS') != 'ARS':
+        raise serializers.ValidationError({'payment_id': 'La moneda del pago no es ARS.'})
     #VERIFICACIÓN DE MONTO: debe coincidir con el precio del plan (pendiente si existe)
     amount              =   Decimal(str(mp_payment.get('transaction_amount', '0')))
     plan_price          =   (suscription.pending_plan_suscription or suscription.plan_suscription).price
@@ -393,6 +398,8 @@ def PreapprovalWebhookQuery(preapproval_id):
 
 #GET AUTHORIZED PAYMENT (el SDK no cubre /authorized_payments: consulta directa con el access token)
 def GetAuthorizedPayment(authorized_payment_id) -> dict:
+    if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', str(authorized_payment_id)):
+        raise serializers.ValidationError({'authorized_payment_id': 'Identificador inválido'})
     response    =   requests.get(
         f'https://api.mercadopago.com/authorized_payments/{authorized_payment_id}',
         headers     =   {'Authorization': f'Bearer {config("SECRET_MP_KEY")}'},

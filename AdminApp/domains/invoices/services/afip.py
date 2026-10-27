@@ -16,6 +16,7 @@ Diseño:
 """
 import base64
 import logging
+import re
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
@@ -30,6 +31,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from AdminApp.domains.invoices.models import Invoice
+from AdminApp.domains.invoices.services import vault
 
 logger          =   logging.getLogger(__name__)
 AR_TZ           =   ZoneInfo('America/Argentina/Buenos_Aires')
@@ -75,19 +77,45 @@ def _env() -> str:
     return  env if env in WSAA_URL else 'testing'
 
 
-def _read_pem(value : str) -> bytes:
-    #Acepta PEM inline (con \n escapados o reales) o ruta a archivo — así el
-    #mismo .env sirve para dev local y para secretos montados en el VPS.
+_SECRET_PATTERNS    =   (
+    (re.compile(r'-----BEGIN [A-Z ]+-----.*?(-----END [A-Z ]+-----|$)', re.S), '[PEM]'),
+    (re.compile(r'(?i)(token|sign|cms|authorization|bearer)(["\'>=:\s]+)[A-Za-z0-9+/=_.\-]{16,}'), r'\1\2[REDACTED]'),
+    (re.compile(r'enc:v1:[A-Za-z0-9_.\-:]+'), '[ENC]'),
+    (re.compile(r'(?:[A-Za-z]:)?[\\/](?:[\w.\- ]+[\\/])+[\w.\-]+'), '[PATH]'),
+    (re.compile(r'\b\d{11}\b'), '[CUIT]'),
+)
+
+
+def scrub(message) -> str:
+    #Nada de material sensible (PEM, Token/Sign, rutas, CUIT) en afip_error ni
+    #en logs: ese texto termina en la DB, el panel admin y stdout.
+    text    =   str(message)
+    for pattern, replacement in _SECRET_PATTERNS:
+        text    =   pattern.sub(replacement, text)
+    return  text[:500]
+
+
+def _read_pem(value : str, purpose : str = 'AFIP_CERT') -> bytes:
+    #Acepta valor cifrado (enc:v1:..., AES-256-GCM), ruta a archivo (secretos
+    #montados en el VPS) o PEM inline en claro. Una CLAVE PRIVADA inline en
+    #claro solo se tolera con DEBUG=True: en producción debe ir cifrada.
     value   =   (value or '').strip()
     if not value:
         raise AfipError('Certificado/clave de ARCA vacío')
+    if vault.is_encrypted(value):
+        try:
+            return  vault.decrypt_secret(value, purpose)
+        except vault.VaultError as exc:
+            raise AfipError(str(exc))
     if '-----BEGIN' in value:
+        if purpose == 'AFIP_KEY' and not settings.DEBUG:
+            raise AfipError('La clave privada de ARCA no puede ir en claro en producción: cifrarla con manage.py encrypt_secret')
         return  value.replace('\\n', '\n').encode()
     try:
         with open(value, 'rb') as fh:
             return fh.read()
     except OSError:
-        raise AfipError(f'No se pudo leer el archivo PEM: {value}')
+        raise AfipError('No se pudo leer el archivo PEM configurado')
 
 
 def _find_text(root : ET.Element, tag : str):
@@ -153,7 +181,7 @@ def _sign_tra(tra : bytes) -> str:
     cfg     =   settings.AFIP
     try:
         cert    =   x509.load_pem_x509_certificate(_read_pem(cfg['cert']))
-        key     =   serialization.load_pem_private_key(_read_pem(cfg['key']), password = None)
+        key     =   serialization.load_pem_private_key(_read_pem(cfg['key'], 'AFIP_KEY'), password = None)
         der     =   (
             pkcs7.PKCS7SignatureBuilder()
             .set_data(tra)
@@ -163,7 +191,7 @@ def _sign_tra(tra : bytes) -> str:
     except AfipError:
         raise
     except Exception as exc:
-        raise AfipError(f'No se pudo firmar el ticket de acceso: {exc}')
+        raise AfipError(f'No se pudo firmar el ticket de acceso: {type(exc).__name__}')
     return  base64.b64encode(der).decode()
 
 
@@ -315,14 +343,15 @@ def RequestCaeQuery(invoice : Invoice) -> bool:
     try:
         result      =   authorize_invoice(invoice)
     except Exception as exc:
-        message     =   str(exc)[:500]
+        message     =   scrub(exc)
         Invoice.objects.filter(pk = invoice.pk).update(
             afip_status     =   Invoice.AfipStatus.ERROR,
             afip_error      =   message,
         )
         invoice.afip_status     =   Invoice.AfipStatus.ERROR
         invoice.afip_error      =   message
-        logger.exception('ARCA no otorgó CAE para la factura %s: %s', invoice.pk, message)
+        #Sin traceback (exc_info): las frames pueden arrastrar token/sign/PEM.
+        logger.error('ARCA no otorgó CAE para la factura %s: %s', invoice.pk, message)
         return  False
     Invoice.objects.filter(pk = invoice.pk).update(
         fiscal_number       =   result['number'],

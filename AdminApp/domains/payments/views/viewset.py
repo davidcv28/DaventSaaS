@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import logging
+import re
 from decimal import Decimal
 from decouple import config
 from django.conf import settings
@@ -47,6 +48,7 @@ SYNC_SWEEP_SECONDS      =   15
 #TTL del dedup de entregas de webhook (ver el action webhook): cubre la
 #ventana de frescura de la firma — un replay más viejo ya cae por el ts.
 WEBHOOK_DEDUP_SECONDS   =   600
+WEBHOOK_ID_RE           =   re.compile(r'[A-Za-z0-9_-]{1,64}')
 #=========================================
 # WEBHOOK SIGNATURE (HMAC-SHA256 según doc oficial de Mercado Pago)
 #=========================================
@@ -126,6 +128,12 @@ class PaymentViewSet(PaymentBaseViewSet):
         data        =   request.data.get('data')
         resource_id =   data.get('id') if isinstance(data, dict) else None
         resource_id =   resource_id or request.query_params.get('id')
+        #El id se interpola en paths de la API de MP: solo alfanumérico corto
+        #(un '../' o '?' permitiría redirigir la consulta autenticada con el token).
+        resource_id =   str(resource_id) if resource_id is not None else None
+        if resource_id and not WEBHOOK_ID_RE.fullmatch(resource_id):
+            logger.warning('Webhook de MP rechazado: id con formato inválido (topic=%s)', topic)
+            return Response({'detail': 'Identificador inválido'}, status = status.HTTP_400_BAD_REQUEST)
         #Firma HMAC: sin ella cualquiera podría forjar acreditaciones de pago.
         if not _verify_mp_signature(request, resource_id):
             logger.warning('Webhook de MP rechazado: firma inválida (topic=%s id=%s)', topic, resource_id)

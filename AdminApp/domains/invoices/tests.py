@@ -210,3 +210,94 @@ class RetryCaeEndpointTests(TestCase):
         #El comprobante público usa el número fiscal de ARCA, no el interno.
         self.assertEqual(response.data['comprobante'], '0001-00000007')
         self.assertEqual(response.data['afip_status'], 'ok')
+
+
+#=========================================
+# PENTEST: secretos fiscales en reposo + fuga de datos
+#=========================================
+import os as _os
+from AdminApp.domains.invoices.services import afip as _afip, vault as _vault
+
+_PEM = '-----BEGIN PRIVATE KEY-----\nMIIBVgIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----\n'
+
+
+def _ring(*kids):
+    import base64
+    return ','.join(f'{k}:{base64.urlsafe_b64encode(_os.urandom(32)).decode().rstrip("=")}' for k in kids)
+
+
+class VaultEncryptionTests(TestCase):
+    def test_roundtrip_and_ciphertext_hides_plaintext(self):
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k1')):
+            token   =   _vault.encrypt_secret(_PEM.encode(), 'AFIP_KEY')
+            self.assertTrue(token.startswith('enc:v1:k1:'))
+            self.assertNotIn('PRIVATE', token)
+            self.assertEqual(_vault.decrypt_secret(token, 'AFIP_KEY'), _PEM.encode())
+
+    def test_nonce_is_unique_per_encryption(self):
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k1')):
+            self.assertNotEqual(_vault.encrypt_secret(b'x', 'AFIP_KEY'), _vault.encrypt_secret(b'x', 'AFIP_KEY'))
+
+    def test_tampered_ciphertext_is_rejected(self):
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k1')):
+            token   =   _vault.encrypt_secret(_PEM.encode(), 'AFIP_KEY')
+            bad     =   token[:-4] + ('AAAA' if not token.endswith('AAAA') else 'BBBB')
+            with self.assertRaises(_vault.VaultError):
+                _vault.decrypt_secret(bad, 'AFIP_KEY')
+
+    def test_blob_cannot_be_replayed_in_another_field(self):
+        #AAD = purpose: la clave privada cifrada no sirve como AFIP_CERT.
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k1')):
+            token   =   _vault.encrypt_secret(_PEM.encode(), 'AFIP_KEY')
+            with self.assertRaises(_vault.VaultError):
+                _vault.decrypt_secret(token, 'AFIP_CERT')
+
+    def test_key_rotation_keeps_old_blobs_readable(self):
+        ring1   =   _ring('k1')
+        with override_settings(SECRETS_MASTER_KEYS = ring1):
+            old     =   _vault.encrypt_secret(b'secreto', 'AFIP_KEY')
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k2') + ',' + ring1):
+            self.assertEqual(_vault.decrypt_secret(old, 'AFIP_KEY'), b'secreto')
+            rotated =   _vault.rotate_secret(old, 'AFIP_KEY')
+            self.assertTrue(rotated.startswith('enc:v1:k2:'))
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k2')):
+            with self.assertRaises(_vault.VaultError):
+                _vault.decrypt_secret(old, 'AFIP_KEY')
+
+    def test_short_master_key_is_rejected(self):
+        with override_settings(SECRETS_MASTER_KEYS = 'k1:AAAA'):
+            with self.assertRaises(_vault.VaultError):
+                _vault.encrypt_secret(b'x', 'AFIP_KEY')
+
+    @override_settings(DEBUG = False)
+    def test_plaintext_private_key_refused_in_production(self):
+        with self.assertRaises(AfipError):
+            _afip._read_pem(_PEM, 'AFIP_KEY')
+
+    @override_settings(DEBUG = False)
+    def test_encrypted_private_key_is_accepted_in_production(self):
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k1')):
+            token   =   _vault.encrypt_secret(_PEM.encode(), 'AFIP_KEY')
+            self.assertEqual(_afip._read_pem(token, 'AFIP_KEY'), _PEM.encode())
+
+
+class AfipErrorScrubTests(TestCase):
+    def test_scrub_removes_pem_token_path_and_cuit(self):
+        raw     =   (f'fallo {_PEM} token="{"A" * 40}" en C:/secrets/afip/clave.key '
+                     'cuit 20123456789 /etc/ssl/private/afip.key')
+        clean   =   _afip.scrub(raw)
+        for leaked in ('PRIVATE KEY', 'A' * 40, 'secrets', '20123456789', '/etc/ssl'):
+            self.assertNotIn(leaked, clean)
+
+    @override_settings(AFIP = {'enabled': True, 'env': 'testing', 'cuit': '20123456789', 'cert': 'x', 'key': 'x'})
+    def test_stored_afip_error_never_contains_secrets(self):
+        profile     =   _profile('leak')
+        payment     =   _payment(profile, ref = 'leak-1')
+        invoice     =   IssueInvoiceQuery(payment)
+        boom        =   AfipError(f'SOAP fault {_PEM} sign={"Z" * 50}')
+        with patch.object(_afip, 'authorize_invoice', side_effect = boom):
+            RequestCaeQuery(invoice)
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.afip_status, Invoice.AfipStatus.ERROR)
+        self.assertNotIn('PRIVATE KEY', invoice.afip_error)
+        self.assertNotIn('Z' * 50, invoice.afip_error)

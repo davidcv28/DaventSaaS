@@ -665,3 +665,30 @@ class BillingDataGateTests(TestCase):
         self.assertEqual(retry.status_code, 400)
         self.assertIn('billing_required', retry.json())
         preference.assert_not_called()
+
+
+#=========================================
+# PENTEST: path injection por id de webhook + moneda
+#=========================================
+class WebhookIdInjectionTests(TestCase):
+    client_class    =   APIClient
+
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    def test_path_traversal_id_never_reaches_mp_api(self, webhook_query):
+        evil        =   '../users/me?x='
+        response    =   self.client.post(
+            WEBHOOK_URL,
+            {'type': 'payment', 'data': {'id': evil}},
+            format = 'json',
+            **_signature_headers(evil),
+        )
+        self.assertEqual(response.status_code, 400)
+        webhook_query.assert_not_called()
+
+    def test_authorized_payment_lookup_rejects_traversal(self):
+        from AdminApp.domains.payments.services.services import GetAuthorizedPayment
+        with patch('AdminApp.domains.payments.services.services.requests.get') as http:
+            with self.assertRaises(serializers.ValidationError):
+                GetAuthorizedPayment('1/../../users')
+            http.assert_not_called()

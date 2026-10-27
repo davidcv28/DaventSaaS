@@ -364,6 +364,11 @@ AFIP = {
     'key'       : config('AFIP_KEY', default = ''),
 }
 
+# Llaves maestras AES-256-GCM para secretos en reposo (AFIP_KEY/AFIP_CERT con
+# prefijo enc:v1:). "kid:base64url(32 bytes)" separadas por coma; la primera
+# cifra, todas descifran (rotación). Generar: manage.py encrypt_secret --gen-master-key k1
+SECRETS_MASTER_KEYS = config('SECRETS_MASTER_KEYS', default = '')
+
 # Logging: sin esta sección Django no tiene handlers configurados y los
 # logger.warning/exception del proyecto (webhooks de MP, fallos de email,
 # auditoría de seguridad) se perdían en producción. stdout lo captura
