@@ -75,46 +75,62 @@ function closeTab() {
 .df-sheet { display: flex; flex-direction: column; align-items: center; width: 100%; }
 .df-sheet .df + .df { display: none; }
 
-.df { width: min(100%, 105mm); min-height: 148mm; background: #fff; color: #000; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.df { width: min(100%, 105mm); min-height: 148mm; background: #fff; color: #1e1b4b; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-.df-top { background: linear-gradient(135deg, #4338ca 0%, #6d28d9 60%, #8b5cf6 100%); color: #fff; padding: 12px 16px 13px; position: relative; overflow: hidden; }
-.df-top::after { content: ''; position: absolute; right: -34px; top: -34px; width: 110px; height: 110px; border-radius: 50%; border: 14px solid #fff; opacity: .12; }
-.df-brand { display: flex; align-items: center; gap: 9px; position: relative; z-index: 1; }
+/* ---------- CABECERA ---------- */
+.df-top { position: relative; overflow: hidden; padding: 13px 16px 15px; color: #fff; background: radial-gradient(130% 130% at 100% 0, #8b5cf6 0%, #6d28d9 42%, #4338ca 100%); }
+.df-top::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, .18) 1px, transparent 1.4px); background-size: 9px 9px; opacity: .45; }
+.df-top::after { content: ''; position: absolute; right: -52px; top: -66px; width: 158px; height: 158px; border-radius: 50%; border: 20px solid rgba(255, 255, 255, .09); }
+.df-brand { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; }
 /* Logo original con marco blanco para que se distinga sobre la banda de color. */
-.df-brand :deep(.brand-logo) { display: block; background: #fff; padding: 2px; border-radius: 12px; box-shadow: 0 2px 6px rgba(30, 27, 75, .35); }
-.df-brand strong { display: block; font-size: 14px; font-weight: 800; letter-spacing: .2em; line-height: 1; }
-.df-brand span { display: block; font-size: 8.5px; letter-spacing: .08em; text-transform: uppercase; color: #ddd6fe; margin-top: 3px; }
-.df-hook { margin: 9px 0 0; font-size: 21px; font-weight: 900; line-height: 1.08; letter-spacing: -.03em; color: #fff; position: relative; z-index: 1; }
-.df-hook em { font-style: normal; background: #fde047; color: #1e1b4b; padding: 0 5px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.df-sub { margin: 6px 0 0; font-size: 9.5px; line-height: 1.4; color: #ede9fe; position: relative; z-index: 1; }
+.df-brand :deep(.brand-logo) { display: block; background: #fff; padding: 2px; border-radius: 9px; box-shadow: 0 2px 6px rgba(30, 27, 75, .35); }
+.df-brand strong { display: block; font-size: 13.5px; font-weight: 800; letter-spacing: .22em; line-height: 1; }
+.df-brand span { display: block; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: #ddd6fe; margin-top: 3px; }
+.df-hook { position: relative; z-index: 1; margin: 11px 0 0; font-size: 22px; font-weight: 900; line-height: 1.06; letter-spacing: -.035em; color: #fff; }
+.df-hook em { font-style: normal; background: #fde047; color: #1e1b4b; padding: 1px 5px; border-radius: 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.df-sub { position: relative; z-index: 1; margin: 7px 0 0; font-size: 9.4px; line-height: 1.45; color: #e9e4ff; }
 
-.df-perks { list-style: none; margin: 0; padding: 9px 16px 0; display: grid; gap: 4px; }
-.df-perks li { display: flex; gap: 7px; align-items: center; font-size: 9.5px; font-weight: 700; line-height: 1.25; color: #000; }
-.df-tick { flex: none; width: 15px; height: 15px; border-radius: 50%; background: #16a34a; color: #fff; display: grid; place-items: center; }
+/* ---------- CUERPO ---------- */
+.df-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: #fbfaff; }
 
-.df-trial { margin: 9px 16px 0; background: linear-gradient(135deg, #fde047, #f59e0b); color: #1e1b4b; border-radius: 8px; padding: 5px 8px; text-align: center; box-shadow: 0 2px 0 #b45309; }
-.df-trial strong { display: block; font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
-.df-trial span { display: block; font-size: 8.5px; color: #422006; font-weight: 600; margin-top: 1px; }
+.df-perks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.df-perks li { display: flex; align-items: flex-start; gap: 6px; padding: 7px 8px; background: #fff; border: 1px solid #ece7fa; border-radius: 8px; font-size: 8.6px; font-weight: 700; line-height: 1.3; color: #1e1b4b; }
+.df-tick { flex: none; width: 14px; height: 14px; border-radius: 50%; background: #dcfce7; color: #15803d; display: grid; place-items: center; }
 
-.df-plans { flex: 1; padding: 9px 16px 10px; align-content: start; display: grid; gap: 4px; }
-.df-plans-head { display: flex; align-items: center; gap: 8px; margin: 0 0 1px; font-size: 9px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #000; }
-.df-plans-head::after { content: ''; flex: 1; height: 1.5px; background: #6d28d9; }
-.df-plan { border: 1.5px solid #6d28d9; border-radius: 7px; padding: 4px 8px; }
-.df-plan.is-top { background: linear-gradient(135deg, #4338ca, #7c3aed); border-color: #4338ca; color: #fff; }
-.df-plan-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.df-plan-row strong { font-size: 10.5px; font-weight: 900; }
-.df-plan-row span { font-size: 10px; font-weight: 900; white-space: nowrap; }
-.df-plan small { display: block; font-size: 8.3px; line-height: 1.3; color: #4c1d95; margin-top: 1px; }
-.df-plan.is-top small { color: #ede9fe; }
+.df-trial { display: flex; align-items: center; gap: 8px; padding: 7px 9px; background: #fffbeb; border: 1px solid #fde68a; border-left: 3px solid #f59e0b; border-radius: 8px; }
+.df-trial-ico { flex: none; width: 20px; height: 20px; border-radius: 6px; background: #fde047; color: #422006; display: grid; place-items: center; }
+.df-trial strong { display: block; font-size: 9.2px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: #422006; }
+.df-trial span { display: block; font-size: 8.1px; color: #78350f; margin-top: 1px; }
 
-.df-cta { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #1e1b4b; color: #fff; border-top: 4px solid #fde047; }
-.df-qr { flex: none; background: #fff; border-radius: 8px; padding: 6px 6px 4px; display: grid; justify-items: center; gap: 2px; }
+.df-plans { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.df-plans-head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 8.6px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: #4338ca; }
+.df-plans-head::after { content: ''; flex: 1; height: 1px; background: #ddd6fe; }
+.df-table { flex: 1; min-height: 0; display: grid; grid-auto-rows: 1fr; border: 1px solid #e7e2f6; border-radius: 10px; overflow: hidden; background: #fff; }
+.df-plan { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-top: 1px solid #efebfa; }
+.df-plan:first-child { border-top: 0; }
+.df-plan-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.df-plan-name strong { font-size: 10.4px; font-weight: 900; color: #1e1b4b; }
+.df-plan small { display: block; font-size: 8.1px; line-height: 1.3; color: #6b6485; margin-top: 2px; }
+.df-plan-price { flex: none; text-align: right; white-space: nowrap; }
+.df-plan-price b { font-size: 10.8px; font-weight: 900; color: #4338ca; font-variant-numeric: tabular-nums; }
+.df-plan-price span { font-size: 7.6px; font-weight: 700; color: #8b83a8; }
+.df-plan-tag { flex: none; padding: 1px 5px; border-radius: 99px; background: #fde047; color: #1e1b4b; font-size: 6.6px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.df-plan.is-top { background: linear-gradient(120deg, #4338ca, #7c3aed); border-top-color: transparent; }
+.df-plan.is-top strong { color: #fff; }
+.df-plan.is-top small { color: #ddd6fe; }
+.df-plan.is-top .df-plan-price b { color: #fde047; }
+.df-plan.is-top .df-plan-price span { color: #ddd6fe; }
+.df-plans-empty { flex: 1; display: grid; place-items: center; padding: 12px; border: 1px dashed #ddd6fe; border-radius: 10px; font-size: 9px; font-weight: 700; line-height: 1.4; color: #6b6485; text-align: center; }
+
+/* ---------- PIE ---------- */
+.df-cta { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: radial-gradient(130% 150% at 0% 0, #312e81, #17153a 72%); color: #fff; border-top: 4px solid #fde047; }
+.df-qr { flex: none; background: #fff; border-radius: 8px; padding: 5px 5px 3px; display: grid; justify-items: center; gap: 1px; }
 .df-qr img { width: 62px; height: 62px; display: block; }
-.df-qr span { font-size: 8px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #000; }
-.df-cta-label { display: block; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fde047; margin-bottom: 3px; }
-.df-url { display: block; font-size: 13.5px; font-weight: 900; letter-spacing: -.01em; color: #fff; overflow-wrap: anywhere; }
-.df-hint { margin: 3px 0 0; font-size: 8.5px; line-height: 1.45; color: #ddd6fe; }
-.df-wpp { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; padding: 2px 8px; background: #16a34a; border-radius: 99px; font-size: 10px; font-weight: 800; color: #fff; }
+.df-qr span { font-size: 6.8px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: #1e1b4b; }
+.df-cta-label { display: block; font-size: 8.4px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #fde047; margin-bottom: 3px; }
+.df-url { display: block; font-size: 14px; font-weight: 900; letter-spacing: -.01em; color: #fff; overflow-wrap: anywhere; }
+.df-hint { margin: 3px 0 0; font-size: 8.2px; line-height: 1.45; color: #c7c2e8; }
+.df-wpp { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 2px 8px; background: #16a34a; border-radius: 99px; font-size: 9.6px; font-weight: 800; color: #fff; }
 
 @page { size: A4; margin: 0; }
 @media print {
@@ -153,24 +169,40 @@ function closeTab() {
           <p class="df-sub">Con DAVENT tenés tu propia web en minutos. Sin saber de tecnología, sin vueltas.</p>
         </header>
 
-        <ul class="df-perks">
-          <li v-for="p in perks" :key="p"><span class="df-tick"><AppIcon name="check" :size="10" /></span> {{ p }}</li>
-        </ul>
+        <div class="df-body">
+          <ul class="df-perks">
+            <li v-for="p in perks" :key="p">
+              <span class="df-tick"><AppIcon name="check" :size="9" :stroke="3" /></span>
+              <span>{{ p }}</span>
+            </li>
+          </ul>
 
-        <div class="df-trial">
-          <strong>1 día gratis con funciones Premium</strong>
-          <span>Registrate y probá todo el sistema, sin tarjeta.</span>
-        </div>
-
-        <div v-if="paidPlans.length" class="df-plans">
-          <p class="df-plans-head">Elegí tu plan</p>
-          <div v-for="(p, i) in paidPlans" :key="p.id" class="df-plan" :class="{ 'is-top': i === paidPlans.length - 1 }">
-            <div class="df-plan-row">
-              <strong>{{ planName(p) }}</strong>
-              <span>{{ formatARS(p.price) }}/mes</span>
+          <div class="df-trial">
+            <span class="df-trial-ico"><AppIcon name="gift" :size="12" /></span>
+            <div>
+              <strong>1 día gratis con funciones Premium</strong>
+              <span>Registrate y probá todo el sistema, sin tarjeta.</span>
             </div>
-            <small>{{ planLine(p) }}</small>
           </div>
+
+          <section class="df-plans">
+            <p class="df-plans-head">Elegí tu plan</p>
+            <div v-if="paidPlans.length" class="df-table">
+              <div v-for="(p, i) in paidPlans" :key="p.id" class="df-plan" :class="{ 'is-top': i === paidPlans.length - 1 }">
+                <div class="df-plan-main">
+                  <div class="df-plan-name">
+                    <strong>{{ planName(p) }}</strong>
+                    <span v-if="i === paidPlans.length - 1" class="df-plan-tag">Más elegido</span>
+                  </div>
+                  <small>{{ planLine(p) }}</small>
+                </div>
+                <div class="df-plan-price">
+                  <b>{{ formatARS(p.price) }}</b><span>/mes</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="df-plans-empty">Mirá los planes y precios actualizados en {{ shortUrl }}</div>
+          </section>
         </div>
 
         <footer class="df-cta">
