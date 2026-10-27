@@ -5,6 +5,7 @@ import { router } from './router/index.js'
 import { useAuthStore } from './stores/auth.store.js'
 import { useThemeStore } from './stores/theme.store.js'
 import { installNativeShims } from './utils/native.js'
+import { checkAppUpdate } from './utils/appUpdate.js'
 import './assets/styles.css'
 import './assets/template-thumbs.css'
 
@@ -19,6 +20,9 @@ window.addEventListener('vite:preloadError', (e) => {
 })
 
 installNativeShims()
+// En la APK nativa: chequeo de versión publicada contra /api/config/
+// (no-op en el browser — ver utils/appUpdate.js).
+checkAppUpdate()
 
 const app = createApp(App)
 app.use(createPinia())
