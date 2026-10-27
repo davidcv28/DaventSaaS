@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct } from '../../api/catalog.api.js'
@@ -13,14 +14,16 @@ import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
 import '../../assets/store-studio.css'
 
-// Studio/Proceso (Servicios): el catálogo como lista ordenada — cards
-// horizontales de ancho completo, icono en cuadrado, tags de modalidad y
-// precio a la derecha. Filtros/orden: bloques compartidos.
+// Studio/Proceso (Servicios): misma lista ordenada, dos lecturas —
+// studio = cards redondeadas con CTA implícito; proceso = índice de
+// ítems numerados con hairlines, números en mono y precio tabular.
+// Filtros/orden: bloques compartidos.
 const {
-  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, pageTemplate,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
   shownLabel, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 10 })
+const variant = computed(() => (pageTemplate.value === 'proceso' ? 'proceso' : 'studio'))
 
 const tagsOf = (p) => {
   const tags = []
@@ -33,7 +36,7 @@ const tagsOf = (p) => {
 </script>
 
 <template>
-<div class="sp-page-root cv cv-sd">
+<div class="sp-page-root cv cv-sd sd" :data-var="variant">
   <header class="cv-sd-head">
     <div class="cv-wrap">
       <nav class="cv-crumbs" aria-label="Ruta">
@@ -41,8 +44,8 @@ const tagsOf = (p) => {
         <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="13" aria-hidden="true" />
         <span aria-current="page">Catálogo</span>
       </nav>
-      <h1 class="cv-sd-title">Todo lo que ofrecemos</h1>
-      <p class="cv-sd-sub">{{ shopName }} — {{ total }} {{ total === 1 ? 'ítem' : 'ítems' }} disponibles.</p>
+      <h1 class="cv-sd-title">{{ variant === 'proceso' ? 'Índice de servicios' : 'Todo lo que ofrecemos' }}</h1>
+      <p class="cv-sd-sub">{{ variant === 'proceso' ? `ÍTEM · NOMBRE · VALOR — ${total} en total.` : `${shopName} — ${total} ${total === 1 ? 'ítem' : 'ítems'} disponibles.` }}</p>
     </div>
   </header>
 
@@ -56,7 +59,7 @@ const tagsOf = (p) => {
 
         <ul v-if="catalog.products.length" class="cv-sd-list" :class="{ loading: catalogStatus === 'loading' }">
           <li v-for="prod in visibleProducts" :key="prod.id">
-            <article class="sd-svc" role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`" @click="openProduct(prod)" @keydown.enter="openProduct(prod)">
+            <article class="sd-svc" role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`" @click="openProduct(prod)" @keydown.enter="openProduct(prod)" @keydown.space.prevent="openProduct(prod)">
               <span class="sd-svc-icon">
                 <img v-if="prod.image" :src="prod.image" alt="" loading="lazy" class="sd-svc-thumb" />
                 <AppIcon v-else name="package" :size="22" />
@@ -68,7 +71,7 @@ const tagsOf = (p) => {
                 <span v-if="tagsOf(prod).length" class="sd-svc-tags"><StTag v-for="t in tagsOf(prod)" :key="t.label" kind="modalidad" :label="t.label" :icon="t.icon" /></span>
               </span>
               <span class="sd-svc-price">
-                <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" shape="ribbon" small />
+                <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" :shape="variant === 'proceso' ? 'corner' : 'ribbon'" small />
                 {{ formatARS(effectivePrice(prod)) }}
               </span>
             </article>
@@ -82,12 +85,4 @@ const tagsOf = (p) => {
 </div>
 </template>
 
-<style>
-.cv-sd .cv-sd-head { padding: 26px 0 18px; border-bottom: 1px solid var(--sp-line); }
-.cv-sd-title { margin: 6px 0 0; font-family: 'Manrope', sans-serif; font-size: clamp(32px, 7vw, 64px); line-height: 1; font-weight: 800; letter-spacing: -.025em; }
-.cv-sd-sub { margin: 8px 0 0; color: var(--sp-muted); font-size: 14px; }
-.cv-sd-list { display: grid; gap: 12px; margin: 18px 0 0; padding: 0; list-style: none; }
-.cv-sd-list.loading { opacity: .55; pointer-events: none; }
-.cv-sd-list .sd-svc { cursor: pointer; }
-.cv-sd-list .sd-svc-price { display: grid; justify-items: end; gap: 5px; }
-</style>
+

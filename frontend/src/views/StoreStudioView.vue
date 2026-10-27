@@ -76,12 +76,20 @@ const steps = computed(() => {
 // Línea de progreso del rail que se llena con el scroll.
 const railWrap = ref(null)
 const railProgress = ref(0)
+// Línea de tiempo del relato (proceso): progreso real de .sd-main.
+const mainEl = ref(null)
+const spineProgress = ref(0)
+let scrollRaf = null
 function onScroll() {
-  const el = railWrap.value
-  if (!el) return
-  const r = el.getBoundingClientRect()
-  const vh = window.innerHeight
-  railProgress.value = Math.min(1, Math.max(0, (vh * 0.75 - r.top) / (r.height || 1)))
+  if (scrollRaf) return
+  scrollRaf = requestAnimationFrame(() => {
+    scrollRaf = null
+    const vh = window.innerHeight
+    const r = railWrap.value?.getBoundingClientRect()
+    if (r) railProgress.value = Math.min(1, Math.max(0, (vh * 0.75 - r.top) / (r.height || 1)))
+    const m = mainEl.value?.getBoundingClientRect()
+    if (m) spineProgress.value = Math.min(1, Math.max(0, (-m.top) / ((m.height - vh * 0.6) || 1)))
+  })
 }
 
 // Testimonios en carrusel snap (card 280px, comillas grandes).
@@ -94,6 +102,13 @@ const works = computed(() => p.imagePool.value.slice(1, 7))
 // Formulario corto -> mensaje de WhatsApp.
 const form = ref({ name: '', service: '', message: '' })
 const formErr = ref('')
+// Meter de completitud del pedido (firma "barras" de studio): 3 segmentos
+// reales — nombre, servicio elegido y mensaje.
+const formMeter = computed(() => [
+  form.value.name.trim().length >= 2,
+  Boolean(form.value.service),
+  form.value.message.trim().length > 0
+])
 const waForm = computed(() => {
   const f = form.value
   if (f.name.trim().length < 2) return ''
@@ -113,14 +128,18 @@ const stats = computed(() => p.stats.value.slice(0, 4))
 onMounted(() => {
   p.loadCatalog()
   window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
 })
-onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  if (scrollRaf) cancelAnimationFrame(scrollRaf)
+})
 </script>
 
 <template>
-<div class="sp-page-root sd" :data-var="variant">
+<div class="sp-page-root sd" :data-var="variant" :style="{ '--sd-spine': spineProgress }">
   <!-- ===== Hero conversacional + tarjeta flotante de reseñas ===== -->
-  <header class="sd-hero" :class="{ proceso: variant === 'proceso' }">
+  <header class="sd-hero">
     <div class="sd-hero-in">
       <div class="sd-hero-copy">
         <h1 class="sd-title">{{ headline }}</h1>
@@ -133,6 +152,11 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
           <li v-if="location"><AppIcon name="map-pin" :size="13" /> {{ location }}</li>
           <li v-if="p.openNow.value" :data-state="p.openNow.value.state"><AppIcon name="clock" :size="13" /> {{ p.openNow.value.text }}</li>
         </ul>
+        <ol v-if="variant === 'studio' && steps.length" class="sd-hero-meter" aria-hidden="true">
+          <li v-for="(s, i) in steps.slice(0, 3)" :key="i" class="seg" :style="{ '--seg': i }">
+            <i /><span>{{ s.title }}</span>
+          </li>
+        </ol>
       </div>
       <figure v-if="p.heroImage.value && variant === 'studio'" class="sd-hero-photo">
         <img :src="p.heroImage.value" :alt="`Trabajo de ${shopName}`" fetchpriority="high" decoding="async" />
@@ -149,7 +173,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     <TrustBar v-if="trustItems.length" class="sd-trust" :items="trustItems" />
   </header>
 
-  <main class="sd-main">
+  <main ref="mainEl" class="sd-main">
     <!-- ===== Stats reales del dueño ===== -->
     <section v-if="stats.length" v-reveal class="sd-stats" aria-label="Números">
       <div v-for="(s, i) in stats" :key="i" class="sd-stat"><strong>{{ s.value }}</strong><span>{{ s.label }}</span></div>
@@ -184,7 +208,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     <section v-if="works.length" v-reveal class="sd-works" aria-labelledby="sd-works-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">Portfolio</p><h2 id="sd-works-t">Trabajos recientes</h2></header>
       <div class="sd-works-grid">
-        <img v-for="(u, i) in works" :key="i" :src="u" :alt="`Trabajo ${i + 1} de ${shopName}`" loading="lazy" decoding="async" />
+        <figure v-for="(u, i) in works" :key="i">
+          <img :src="u" :alt="`Trabajo ${i + 1} de ${shopName}`" loading="lazy" decoding="async" width="400" height="400" />
+          <figcaption v-if="variant === 'proceso'">FIG. {{ String(i + 1).padStart(2, '0') }}</figcaption>
+        </figure>
       </div>
     </section>
 
@@ -218,6 +245,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
       <header class="sd-sec-h"><p class="sd-eyebrow">Contacto</p><h2 id="sd-contact-t">Contanos qué necesitás</h2></header>
       <div class="sd-contact-grid">
         <form v-if="p.waBase.value" class="sd-form" novalidate @submit.prevent="submit">
+          <div class="sd-form-meter" aria-hidden="true">
+            <span class="seg" :class="{ done: formMeter[0] }" /><span class="seg" :class="{ done: formMeter[1] }" /><span class="seg" :class="{ done: formMeter[2] }" />
+            <span class="lbl">tu pedido</span>
+          </div>
           <label>Tu nombre<input v-model="form.name" type="text" autocomplete="name" maxlength="60" placeholder="María Pérez" /></label>
           <label v-if="p.serviceItems.value.length">Servicio
             <select v-model="form.service">

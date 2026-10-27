@@ -1720,3 +1720,92 @@
   .sv-chips label:hover { transform: none; }
   .sv-trust li:hover { transform: none; }
 }
+
+/* ================================================================
+   FAMILIA NUEVA — SERVICIOS (studio | proceso)
+   Las dos variantes reemplazan el skin "juguete" por su identidad:
+     studio  = boutique serena: Manrope, radios 20px, sombras suaves,
+               CTA pill y nada de tilt.
+     proceso = relato de trabajo: Space Grotesk + mono, filetes 1px,
+               cero sombras, ítems numerados como índice.
+================================================================ */
+.store-page[data-store-template='studio'] .sv-page {
+  --sv-display: 'Manrope', var(--store-font, sans-serif);
+  --sv-body: 'Work Sans', var(--store-font, sans-serif);
+  --sv-r-stage: 28px; --sv-r-lg: 20px; --sv-r-md: 16px; --sv-r-sm: 10px;
+  --sv-bw: 1px;
+  --sv-on-acc: #fff;
+  --sv-on-acc: oklch(from var(--store-accent) calc(0.97 - clamp(0, (l - 0.5) * 10000, 1) * 0.75) 0 0);
+  --sv-sh-pop: 0 18px 38px -20px color-mix(in srgb, var(--sv-fg) 32%, transparent);
+  --sv-sh-panel: 0 14px 30px -16px color-mix(in srgb, var(--sv-fg) 30%, transparent);
+  --sv-sh-form: 0 10px 26px -14px color-mix(in srgb, var(--sv-fg) 28%, transparent);
+  --sv-btn-bg: var(--store-accent);
+  --sv-btn-fg: var(--sv-on-acc);
+  --sv-btn-sh: 0 8px 18px -10px color-mix(in srgb, var(--store-accent) 55%, transparent);
+  --sv-btn-sh-h: 0 12px 24px -10px color-mix(in srgb, var(--store-accent) 60%, transparent);
+  --sv-btn-sh-a: 0 2px 8px -6px color-mix(in srgb, var(--store-accent) 55%, transparent);
+  --sv-btn-move: translateY(-2px);
+  --sv-btn-press: translateY(1px);
+  --sv-ghost-sh: none;
+  --sv-item-move: translateY(-3px);
+  --sv-band-tilt: none;
+  --sv-spring: cubic-bezier(.34, 1.28, .44, 1);
+  --sv-ease: cubic-bezier(.22, .61, .36, 1);
+}
+.store-page[data-store-template='studio'] .sv-stage { border-color: var(--sv-line); }
+.store-page[data-store-template='studio'] .sv-stage .sv-stage-icon { animation: none; }
+.store-page[data-store-template='studio'] .sv-hero h1 .hl::after { border-radius: 99px; height: .16em; }
+.store-page[data-store-template='studio'] .sv-item[aria-pressed='true'] {
+  box-shadow: 0 0 0 1.5px var(--sv-acc), 0 12px 26px -16px color-mix(in srgb, var(--sv-acc) 45%, transparent);
+}
+.store-page[data-store-template='studio'] .sv-btn--ghost { box-shadow: inset 0 0 0 1.5px var(--sv-line); }
+.store-page[data-store-template='studio'] .sv-btn--ghost:hover { box-shadow: inset 0 0 0 1.5px var(--sv-fg); }
+.store-page[data-store-template='studio'] .sv-quote { border-radius: var(--sv-r-lg); }
+.store-page[data-store-template='studio'] .sv-step .num { border-radius: 999px; }
+
+.store-page[data-store-template='proceso'] .sv-page {
+  --sv-display: 'Space Grotesk', var(--store-font, sans-serif);
+  --sv-body: 'Work Sans', var(--store-font, sans-serif);
+  --sv-r-stage: 2px; --sv-r-lg: 2px; --sv-r-md: 2px; --sv-r-sm: 2px;
+  --sv-btn-radius: 2px;
+  --sv-bw: 1px;
+  --sv-on-acc: #fff;
+  --sv-on-acc: oklch(from var(--store-accent) calc(0.97 - clamp(0, (l - 0.5) * 10000, 1) * 0.75) 0 0);
+  --sv-sh-pop: none; --sv-sh-panel: none; --sv-sh-form: none;
+  --sv-btn-bg: var(--store-accent);
+  --sv-btn-fg: var(--sv-on-acc);
+  --sv-btn-sh: none; --sv-btn-sh-h: none; --sv-btn-sh-a: none;
+  --sv-btn-move: translateY(-2px);
+  --sv-btn-press: translateY(1px);
+  --sv-ghost-sh: none;
+  --sv-item-move: none;
+  --sv-band-tilt: none;
+  --sv-spring: cubic-bezier(.22, .61, .36, 1);
+  --sv-ease: cubic-bezier(.22, .61, .36, 1);
+}
+.store-page[data-store-template='proceso'] .sv-eyebrow,
+.store-page[data-store-template='proceso'] .sv-pick-count,
+.store-page[data-store-template='proceso'] .sv-flow { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .12em; }
+.store-page[data-store-template='proceso'] .sv-stage { border-color: var(--sv-line); box-shadow: none; }
+.store-page[data-store-template='proceso'] .sv-stage .sv-stage-icon { animation: none; }
+.store-page[data-store-template='proceso'] .sv-stage-dots { display: none; }
+.store-page[data-store-template='proceso'] .sv-stage-badge { transform: none; animation: none; border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .1em; }
+.store-page[data-store-template='proceso'] .sv-hero h1 .hl::after { height: 1px; border-radius: 0; }
+/* Índice numerado: cada servicio es un ítem del relato. */
+.store-page[data-store-template='proceso'] .sv-list { counter-reset: svp; }
+.store-page[data-store-template='proceso'] .sv-item { counter-increment: svp; padding-top: 34px; }
+.store-page[data-store-template='proceso'] .sv-item::before {
+  content: counter(svp, decimal-leading-zero); position: absolute; top: 12px; left: 14px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: .1em;
+  color: var(--sv-acc);
+}
+.store-page[data-store-template='proceso'] .sv-item .price,
+.store-page[data-store-template='proceso'] .sv-item .dur,
+.store-page[data-store-template='proceso'] .sv-quote .total,
+.store-page[data-store-template='proceso'] .sv-quote li b { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.store-page[data-store-template='proceso'] .sv-item[aria-pressed='true'] { box-shadow: inset 0 0 0 1px var(--sv-acc); }
+.store-page[data-store-template='proceso'] .sv-item[aria-pressed='true']::after { border-radius: 2px; }
+.store-page[data-store-template='proceso'] .sv-btn--ghost { box-shadow: inset 0 0 0 1px var(--sv-fg); }
+.store-page[data-store-template='proceso'] .sv-step .num { border-radius: 2px; font-family: 'JetBrains Mono', monospace; background: transparent; border: 1px solid var(--sv-line); }
+.store-page[data-store-template='proceso'] .sv-band { border-block: 1px solid var(--sv-line); background: transparent; color: var(--sv-fg); }
+.store-page[data-store-template='proceso'] .sv-quote { border: 1px solid var(--sv-line); }

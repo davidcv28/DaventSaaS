@@ -7,6 +7,7 @@ import ProductStars from '../../components/ProductStars.vue'
 import ProductReviews from '../../components/ProductReviews.vue'
 import SwipeGallery from '../../components/store/SwipeGallery.vue'
 import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
+import StepRail from '../../components/store/StepRail.vue'
 import StTag from '../../components/store/StTag.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-studio.css'
@@ -32,6 +33,13 @@ const featureBlock = (re) => rows.value.filter(([k]) => re.test(k)).flatMap(([k,
 const includes = computed(() => featureBlock(/incluye|incluid|cubre/i))
 const needs = computed(() => featureBlock(/necesit|requer|requisit/i))
 const restRows = computed(() => rows.value.filter(([k]) => !/incluye|incluid|cubre|necesit|requer|requisit|duraci|tiempo/i.test(k)))
+
+// Etapas (proceso): solo los pasos que el dueño cargó — sin fallback
+// inventado; si no hay datos el bloque se oculta.
+const steps = computed(() => {
+  const saved = Array.isArray(p.custom.value.service_steps) ? p.custom.value.service_steps.filter((s) => s?.title) : []
+  return saved.slice(0, 5)
+})
 
 const waConsult = computed(() => (product.value ? p.waProduct(product.value, ['me gustaría un presupuesto.']) : ''))
 const phone = computed(() => (p.waNumber.value ? `tel:+${p.waNumber.value}` : ''))
@@ -73,7 +81,7 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <article class="sd-pd-sheet">
         <div class="sd-pd-media">
           <SwipeGallery class="sd-pd-gal" :images="product.image ? [product.image] : []" :alt="product.name" ratio="16 / 10" />
-          <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="ribbon" small />
+          <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" :shape="variant === 'proceso' ? 'corner' : 'ribbon'" small />
         </div>
 
         <div class="sd-pd-info">
@@ -97,6 +105,11 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
             <button type="button" class="sd-cta ghost icon" :aria-label="copied ? 'Link copiado' : 'Compartir'" @click="share"><AppIcon :name="copied ? 'check' : 'share-2'" :size="16" /></button>
           </div>
 
+          <!-- Etapas del trabajo (proceso): el método de la ficha -->
+          <section v-if="variant === 'proceso' && steps.length" class="sd-pd-block sd-pd-steps" aria-labelledby="sd-eta-t">
+            <h2 id="sd-eta-t">Etapas</h2>
+            <StepRail :steps="steps" />
+          </section>
           <!-- Qué incluye / Qué necesitás -->
           <section v-if="includes.length" class="sd-pd-block" aria-labelledby="sd-inc-t">
             <h2 id="sd-inc-t">Qué incluye</h2>
