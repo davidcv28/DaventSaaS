@@ -195,7 +195,7 @@
 .cv-st-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--sp-ease); }
 .cv-st-card:hover .tpc-media img { transform: scale(1.06) rotate(-1deg); }
 .cv-st-card .tpc-ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--sp-muted); }
-.cv-st-card .tpc-idx { position: absolute; top: 10px; left: 10px; padding: 3px 8px; background: var(--sp-ink); color: var(--sp-card-solid); font-family: var(--sp-display); font-size: 12px; }
+.cv-st-card .tpc-idx { position: absolute; top: 10px; bottom: auto; left: 10px; padding: 3px 8px; background: var(--sp-ink); color: var(--sp-card-solid); font-family: var(--sp-display); font-size: 12px; }
 .cv-st-card .tpc-flag { position: absolute; top: 12px; right: 12px; padding: 5px 10px; background: #ffe14d; color: #111827; border: 2px solid #111827; font-family: var(--sp-display); font-size: 14px; text-transform: uppercase; transform: rotate(6deg); box-shadow: 3px 3px 0 #111827; }
 .cv-st-card .tpc-flag.new { background: var(--store-accent); color: #fff; }
 .cv-st-card .tpc-body { padding: 14px 16px 20px; padding-right: 64px; }

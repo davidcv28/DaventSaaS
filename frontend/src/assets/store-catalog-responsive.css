@@ -38,10 +38,10 @@
 
 /* --- Tablet --- */
 @media (max-width: 1024px) {
-  .cv-cb-cap { flex-direction: column; gap: 6px; }
-  .cv-cb-price { text-align: left; }
-  .cv-cb-name { font-size: 24px; }
-  .cv-cb-tile.feat .cv-cb-name { font-size: 38px; }
+  .cv-cb-tile .tpc-body { flex-direction: column; gap: 6px; }
+  .cv-cb-tile .tpc-price { text-align: left; }
+  .cv-cb-tile .tpc-name { font-size: 24px; }
+  .cv-cb-tile.feat .tpc-name { font-size: 38px; }
 }
 @media (max-width: 1024px) {
   .cv-tm-row { grid-template-columns: 38px 34px minmax(0, 1fr) auto; gap: 10px; }
@@ -87,13 +87,13 @@
   .cv-pe-card::before { inset: 18px -4px -6px 8px; }
   .cv-pe-plane { white-space: nowrap; }
   .cv-pe-title { font-size: clamp(44px, 15vw, 90px); overflow-wrap: anywhere; }
-  .cv-pe-body { padding: 8px 2px 0; }
+  .cv-pe-card .tpc-body { padding: 8px 2px 0; }
 
   /* Urbano / Publicidad */
   .cv-st-title { font-size: clamp(44px, 16vw, 90px); overflow-wrap: anywhere; }
-  .cv-st-body { padding-right: 12px; }
-  .cv-st-off { top: 8px; right: 8px; padding: 3px 8px; font-size: 12px; }
-  .cv-st-num { top: 8px; left: 8px; }
+  .cv-st-card .tpc-body { padding-right: 12px; }
+  .cv-st-card .tpc-flag.offer { padding: 3px 8px; font-size: 12px; }
+  .cv-st-card .tpc-idx { top: 8px; left: 8px; bottom: auto; }
   .cv-pr-poster-in { flex-direction: column; align-items: flex-start; gap: 18px; }
   .cv-pr-seal { position: static; width: 88px; height: 88px; }
   .cv-pr-title { font-size: clamp(36px, 12vw, 64px); overflow-wrap: anywhere; }
@@ -117,7 +117,7 @@
   .cv-cb-tool { width: 100%; }
   .cv-cb-tool input, .cv-cb-range input { flex: 1; width: 0; }
   .cv-cb-main { padding-top: 24px; }
-  .cv-cb-name, .cv-cb-price { font-size: 19px; }
+  .cv-cb-tile .tpc-name, .cv-cb-tile .tpc-price { font-size: 19px; }
 
   /* Minimal / Boutique / Lookbook: controles a ancho completo */
   .cv-mn-top { flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -142,24 +142,24 @@
 /* --- Pantallas muy angostas (hasta 400px) --- */
 @media (max-width: 480px) {
   .cv-wrap { padding: 0 14px; }
-  .cv-pe-name, .cv-st-name { font-size: 14px; }
-  .cv-pe-price, .cv-pr-price { font-size: 16px; }
-  .cv-st-price { font-size: 18px; }
-  .cv-cb-name, .cv-cb-price { font-size: 17px; }
-  .cv-cb-tile.feat .cv-cb-name { font-size: 28px; }
-  .cv-bt-name { font-size: 14px; }
-  .cv-bt-body { padding: 12px 0 0; }
-  .cv-sg-name { font-size: 14px; }
-  .cv-sg-media { padding: 6px; }
-  .cv-sg-media::after { inset: 12px; }
+  .cv-pe-card .tpc-name, .cv-st-card .tpc-name { font-size: 14px; }
+  .cv-pe-card .tpc-price, .cv-pr-price { font-size: 16px; }
+  .cv-st-card .tpc-price { font-size: 18px; }
+  .cv-cb-tile .tpc-name, .cv-cb-tile .tpc-price { font-size: 17px; }
+  .cv-cb-tile.feat .tpc-name { font-size: 28px; }
+  .cv-bt-card .tpc-name { font-size: 14px; }
+  .cv-bt-card .tpc-body { padding: 12px 0 0; }
+  .cv-sg-card .tpc-name { font-size: 14px; }
+  .cv-sg-card .tpc-media { padding: 6px; }
+  .cv-sg-card .tpc-media::after { inset: 12px; }
   .cv-lb-sheets { column-gap: 10px; }
-  .cv-lb-name { font-size: 16px; }
-  .cv-lb-seal { width: 42px; height: 42px; font-size: 12px; left: 8px; bottom: 8px; }
+  .cv-lb-sheet .tpc-name { font-size: 16px; }
+  .cv-lb-sheet .tpc-flag { width: 42px; height: 42px; font-size: 12px; left: 8px; bottom: 8px; }
   .cv-tm-row { grid-template-columns: 30px minmax(0, 1fr) auto; }
   .cv-tm-thumb { display: none; }
   .cv-sh-name { font-size: 14px; }
   .cv-sh-price-now { font-size: 17px; }
   .cv-du-row, .cv-du-rows > li:nth-child(even) .cv-du-row { grid-template-columns: 92px minmax(0, 1fr); gap: 10px; }
-  .cv-du-name { font-size: 15px; }
-  .cv-du-price-tag { font-size: 16px; }
+  .cv-du-row .tpc-name { font-size: 15px; }
+  .cv-du-row .tpc-price { font-size: 16px; }
 }
