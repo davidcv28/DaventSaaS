@@ -96,7 +96,7 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
         <div class="mc-pd-media">
           <span class="mc-pd-blob" aria-hidden="true"></span>
           <SwipeGallery class="mc-pd-gal" :images="product.image ? [product.image] : []" :alt="product.name" ratio="1 / 1" />
-          <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="circle" class="mc-pd-seal" />
+          <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" :shape="variant === 'carta' ? 'ticket' : 'circle'" class="mc-pd-seal" />
         </div>
 
         <div class="mc-pd-info">

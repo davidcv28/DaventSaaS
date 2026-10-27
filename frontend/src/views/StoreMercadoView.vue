@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useStorePage } from '../composables/useStorePage.js'
 import AppIcon from '../components/AppIcon.vue'
 import StTag from '../components/store/StTag.vue'
@@ -19,7 +19,15 @@ const { custom, shopName, location, pageTemplate, hasAbout, showContact, showCat
 const variant = computed(() => (pageTemplate.value === 'carta' ? 'carta' : 'mercado'))
 
 // Sello giratorio: texto real de la tienda en círculo (SVG textPath).
+// Pausa fora de viewport (IntersectionObserver).
 const sealText = computed(() => `${shopName.value} · Hecho a pedido · `)
+const sealEl = ref(null)
+let sealIO = null
+
+// "Menú del día" (carta): data real, sem dados inventados.
+const menuDate = computed(() =>
+  new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+)
 
 // Barra de pedido rápido.
 const mapsUrl = computed(() => {
@@ -69,7 +77,14 @@ const menuGroups = computed(() => {
   return groups.length ? groups : [{ id: -1, name: 'La carta', items: gridItems.value }]
 })
 
-onMounted(() => { p.loadCatalog() })
+onMounted(() => {
+  p.loadCatalog()
+  sealIO = new IntersectionObserver(([e]) => {
+    if (sealEl.value) sealEl.value.style.animationPlayState = e.isIntersecting ? 'running' : 'paused'
+  })
+  if (sealEl.value) sealIO.observe(sealEl.value)
+})
+onBeforeUnmount(() => sealIO?.disconnect())
 </script>
 
 <template>
@@ -79,7 +94,7 @@ onMounted(() => { p.loadCatalog() })
     <div class="mc-hero-in">
       <figure v-if="p.heroImage.value" class="mc-hero-photo">
         <img :src="p.heroImage.value" :alt="`Plato de ${shopName}`" fetchpriority="high" decoding="async" />
-        <svg class="mc-seal" viewBox="0 0 100 100" aria-hidden="true">
+        <svg ref="sealEl" class="mc-seal" viewBox="0 0 100 100" aria-hidden="true">
           <defs><path id="mc-seal-circle" d="M50,50 m-36,0 a36,36 0 1,1 72,0 a36,36 0 1,1 -72,0" /></defs>
           <circle cx="50" cy="50" r="48" />
           <text><textPath href="#mc-seal-circle">{{ sealText }}</textPath></text>
@@ -87,6 +102,7 @@ onMounted(() => { p.loadCatalog() })
         </svg>
       </figure>
       <div class="mc-hero-copy">
+        <p v-if="variant === 'carta'" class="mc-menu-date">Menú del día — {{ menuDate }}</p>
         <p v-if="p.openNow.value" class="mc-open" :data-state="p.openNow.value.state"><AppIcon name="dot" :size="10" /> {{ p.openNow.value.text }}</p>
         <h1 class="mc-title">{{ heroTitle }}</h1>
         <p v-if="custom.description" class="mc-lede">{{ custom.description }}</p>
@@ -118,7 +134,7 @@ onMounted(() => { p.loadCatalog() })
   <main class="mc-main" id="mc-carta">
     <!-- ===== Variante mercado: cards cálidas con "+" de pedido ===== -->
     <section v-if="variant === 'mercado' && gridItems.length" class="mc-grid" aria-label="Productos">
-      <article v-for="prod in gridItems" :key="prod.id" class="mc-card">
+      <article v-for="prod in gridItems" :key="prod.id" v-reveal class="mc-card">
         <RouterLink class="mc-card-media" :to="p.productTo(prod)" :aria-label="prod.name">
           <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
           <span v-else class="mc-card-ph"><AppIcon name="coffee" :size="28" /></span>
@@ -135,7 +151,7 @@ onMounted(() => { p.loadCatalog() })
 
     <!-- ===== Variante carta: menú de restaurante ===== -->
     <section v-else-if="variant === 'carta' && gridItems.length" class="mc-menu" aria-label="La carta">
-      <div v-for="g in menuGroups" :key="g.id" class="mc-menu-group">
+      <div v-for="g in menuGroups" :key="g.id" v-reveal class="mc-menu-group">
         <h2 class="mc-menu-title"><span>{{ g.name }}</span></h2>
         <ul class="mc-menu-list">
           <li v-for="prod in g.items" :key="prod.id">
