@@ -57,7 +57,7 @@ const corteOf = (p) => {
             v-for="(prod, i) in visibleProducts" :key="prod.id"
             class="at-card" :class="[cellClass(i), { enter: catalogStatus === 'loading' }]"
             role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`"
-            @click="openProduct(prod)" @keydown.enter="openProduct(prod)"
+            @click="openProduct(prod)" @keydown.enter="openProduct(prod)" @keydown.space.prevent="openProduct(prod)"
           >
             <span class="at-card-media">
               <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />

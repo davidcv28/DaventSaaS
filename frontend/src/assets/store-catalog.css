@@ -163,14 +163,15 @@
 /* =====================================================================
    URBANO — streetwear: bordes gruesos, sombra dura, stickers
    ===================================================================== */
-.cv-st { font-family: var(--sp-body, inherit); }
+.cv-st { font-family: var(--sp-body, inherit); --cv-on-acc: #fff; --cv-on-acc: oklch(from var(--store-accent) calc(0.97 - clamp(0, (l - 0.5) * 10000, 1) * 0.75) 0 0); }
+.cv-st :where(a, button, [role='link'], input, select, textarea, summary):focus-visible { outline: 2px solid var(--store-accent-ink); outline-offset: 3px; }
 .cv-st-head { position: relative; overflow: hidden; padding: 38px 0 40px; background: var(--sp-card-solid); border-bottom: 3px solid var(--sp-ink); }
 .cv-st-ghost { position: absolute; right: -2%; top: -8%; font-family: var(--sp-display); font-size: clamp(130px, 28vw, 400px); line-height: .8; text-transform: uppercase; color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--sp-ink) 14%, transparent); user-select: none; pointer-events: none; }
 .cv-st-head-in { position: relative; }
 .cv-st-title { margin: 20px 0 6px; font-family: var(--sp-display); font-weight: 400; font-size: clamp(54px, 12.5vw, 176px); line-height: .86; letter-spacing: -.02em; text-transform: uppercase; color: var(--sp-ink); }
 .cv-st-title sup { display: inline-block; vertical-align: top; margin: .12em 0 0 .16em; padding: .1em .4em; font-size: .2em; letter-spacing: 0; line-height: 1.2; background: var(--store-accent-ink); color: #fff; border: 3px solid var(--sp-ink); box-shadow: 4px 4px 0 var(--sp-ink); transform: rotate(-5deg); }
 .cv-st-sub { font-size: 15px; font-weight: 600; color: var(--sp-ink-2); }
-.cv-st-sticker { position: absolute; right: 4%; bottom: 4%; display: grid; place-items: center; width: 118px; height: 118px; border-radius: 50%; border: 3px solid var(--sp-ink); background: var(--store-accent); color: #fff; box-shadow: 5px 5px 0 var(--sp-ink); font-family: var(--sp-display); font-size: 17px; line-height: 1.05; text-align: center; text-transform: uppercase; transform: rotate(12deg); animation: cv-st-wob 3.6s ease-in-out infinite; }
+.cv-st-sticker { position: absolute; right: 4%; bottom: 4%; display: grid; place-items: center; width: 118px; height: 118px; border-radius: 50%; border: 3px solid var(--sp-ink); background: var(--store-accent); color: var(--cv-on-acc); box-shadow: 5px 5px 0 var(--sp-ink); font-family: var(--sp-display); font-size: 17px; line-height: 1.05; text-align: center; text-transform: uppercase; transform: rotate(12deg); animation: cv-st-wob 3.6s ease-in-out infinite; }
 @keyframes cv-st-wob { 0%, 100% { transform: rotate(12deg); } 50% { transform: rotate(4deg) scale(1.05); } }
 .cv-st-ribbon { overflow: hidden; background: var(--sp-ink); color: var(--sp-card-solid); border-bottom: 3px solid var(--sp-ink); }
 .cv-st-ribbon-track { display: flex; width: max-content; animation: cv-st-run 34s linear infinite; }

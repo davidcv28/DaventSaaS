@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useStorePage } from '../composables/useStorePage.js'
 import AppIcon from '../components/AppIcon.vue'
 import MarqueeBand from '../components/store/MarqueeBand.vue'
@@ -66,14 +66,29 @@ const toggleSpot = (i) => { openSpot.value = openSpot.value === i ? -1 : i }
 // Etiqueta de prenda (cierre): ubicación + contacto + código de barras.
 const address = computed(() => p.store.value?.location_address || '')
 
-onMounted(() => { p.loadCatalog() })
+// Numeración de drop en las fichas (street): #01, #02...
+const pad = (n) => String(n + 1).padStart(2, '0')
+
+// El sticker del hero (street) pausa su wobble fuera de pantalla.
+const heroEl = ref(null)
+let heroIO = null
+
+onMounted(() => {
+  p.loadCatalog()
+  if (typeof IntersectionObserver !== 'undefined' && heroEl.value) {
+    heroIO = new IntersectionObserver(([e]) => heroEl.value?.classList.toggle('off', !e.isIntersecting))
+    heroIO.observe(heroEl.value)
+  }
+})
+onBeforeUnmount(() => heroIO?.disconnect())
 </script>
 
 <template>
 <div class="sp-page-root at" :data-var="variant">
   <!-- ===== Hero asimétrico: titular en 3 tintas atravesando la imagen ===== -->
-  <header class="at-hero">
+  <header ref="heroEl" class="at-hero">
     <span class="at-collection" aria-hidden="true">{{ p.collectionTag.value }}</span>
+    <span v-if="variant === 'street'" class="at-sticker" aria-hidden="true">Nuevo<br />drop</span>
     <div v-if="p.heroImage.value" class="at-hero-media">
       <img :src="p.heroImage.value" :alt="`Portada de ${shopName}`" fetchpriority="high" decoding="async" />
     </div>
@@ -121,6 +136,7 @@ onMounted(() => { p.loadCatalog() })
         <span class="at-card-media">
           <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
           <span v-else class="at-card-ph"><AppIcon name="scissors" :size="30" /></span>
+          <span v-if="variant === 'street'" class="at-card-num" aria-hidden="true">#{{ pad(i) }}</span>
           <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" :shape="variant === 'street' ? 'ticket' : 'corner'" />
         </span>
         <span class="at-card-info">

@@ -61,7 +61,7 @@ const pad = (n) => String(n + 1).padStart(2, '0')
       <article
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 60"
         class="cv-st-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
+        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)" @keydown.space.prevent="openProduct(p)"
       >
         <div class="cv-st-media">
           <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
