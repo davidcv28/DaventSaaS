@@ -28,8 +28,23 @@
 }
 .cf-main { flex: 1 1 auto; min-width: 0 }
 
-/* ---------- tokens por defecto (sidebar y sheet) ---------- */
-.cf-side,
+/* ---------- tokens por defecto (sidebar y sheet) ----------
+   Van en .store-page: si se definieran en .cf-side/.cf-sheet ganarían
+   siempre sobre los --cf-* que cada plantilla mapea en su raíz (el token
+   se resuelve en el ancestro MÁS cercano que lo declara). Las reglas
+   data-store-template de más abajo pisan estos defaults por especificidad. */
+.store-page {
+  --cf-bg: var(--sp-card-solid, #fff);
+  --cf-fg: var(--sp-ink, #16161c);
+  --cf-muted: var(--sp-muted, #666);
+  --cf-border: var(--sp-line, rgba(0, 0, 0, .12));
+  --cf-accent: var(--store-accent-ink, var(--store-accent, #2f4fe0));
+  --cf-radius: 16px;
+  --cf-font: var(--store-font, inherit);
+}
+/* El sheet viaja teleportado al <body> — fuera de .store-page — con los
+   tokens copiados en línea (sheetVars). Estos defaults cubren el caso de
+   un token vacío: nunca pisan los estilos inline del diálogo. */
 .cf-sheet {
   --cf-bg: var(--sp-card-solid, #fff);
   --cf-fg: var(--sp-ink, #16161c);
@@ -38,6 +53,9 @@
   --cf-accent: var(--store-accent-ink, var(--store-accent, #2f4fe0));
   --cf-radius: 16px;
   --cf-font: var(--store-font, inherit);
+}
+.cf-side,
+.cf-sheet {
   font-family: var(--cf-font);
   color: var(--cf-fg);
 }

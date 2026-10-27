@@ -225,9 +225,9 @@ onBeforeUnmount(() => {
 
         <div v-else class="sp-empty">
           <span class="sp-empty-icon"><AppIcon name="package" :size="26" /></span>
-          <strong>{{ hasFilters ? 'No hay productos con esos filtros' : 'Todavía no hay productos publicados' }}</strong>
-          <p>{{ hasFilters ? 'Probá con otra búsqueda o quitá los filtros.' : 'Cuando el comercio cargue su catálogo, vas a poder verlo acá.' }}</p>
-          <button v-if="hasFilters" type="button" class="sp-btn ghost" @click="clearFilters">Ver todo</button>
+          <strong>{{ hasFilters ? 'Sin resultados' : 'Todavía no hay productos publicados' }}</strong>
+          <p>{{ hasFilters ? 'Ningún producto coincide con esos filtros. Probá con otra búsqueda o quitá alguno.' : 'Cuando el comercio cargue su catálogo, vas a poder verlo acá.' }}</p>
+          <button v-if="hasFilters" type="button" class="sp-btn ghost" @click="clearFilters">Limpiar filtros</button>
         </div>
 
         <div v-if="hasMoreProducts && catalogStatus !== 'error'" class="sp-more">

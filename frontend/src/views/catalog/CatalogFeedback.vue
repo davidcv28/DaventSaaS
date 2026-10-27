@@ -25,8 +25,8 @@ defineEmits(['retry', 'clear'])
   </div>
   <div v-else-if="empty && status === 'success'" class="cv-state">
     <span class="cv-state-icon"><AppIcon name="package" :size="26" /></span>
-    <strong>{{ hasFilters ? 'No hay productos con esos filtros' : 'Todavía no hay productos publicados' }}</strong>
-    <p>{{ hasFilters ? 'Probá con otra búsqueda o quitá los filtros.' : 'Cuando el comercio cargue su catálogo, vas a poder verlo acá.' }}</p>
-    <button v-if="hasFilters" type="button" class="cv-state-btn" @click="$emit('clear')">Ver todo</button>
+    <strong>{{ hasFilters ? 'Sin resultados' : 'Todavía no hay productos publicados' }}</strong>
+    <p>{{ hasFilters ? 'Ningún producto coincide con esos filtros. Probá con otra búsqueda o quitá alguno.' : 'Cuando el comercio cargue su catálogo, vas a poder verlo acá.' }}</p>
+    <button v-if="hasFilters" type="button" class="cv-state-btn" @click="$emit('clear')">Limpiar filtros</button>
   </div>
 </template>

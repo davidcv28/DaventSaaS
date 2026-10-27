@@ -214,6 +214,39 @@ const showBar = computed(() => chosenItems.value.length > 0 && !formInView.value
 watch(items, () => nextTick(observeTargets), { immediate: false })
 onMounted(() => nextTick(observeTargets))
 onBeforeUnmount(() => formIO?.disconnect())
+
+// Hoja de detalle del presupuesto (bottom-sheet móvil): la barra la abre;
+// foco atrapado dentro, cierre con Esc o tocando el fondo.
+const sheetOpen = ref(false)
+const sheetEl = ref(null)
+let sheetPrevFocus = null
+function openSheet() {
+  sheetPrevFocus = document.activeElement
+  sheetOpen.value = true
+  document.documentElement.classList.add('sp-lock')
+  nextTick(() => (sheetEl.value?.querySelector('button:not([disabled])') || sheetEl.value)?.focus())
+}
+function closeSheet() {
+  sheetOpen.value = false
+  document.documentElement.classList.remove('sp-lock')
+  sheetPrevFocus?.focus?.()
+  sheetPrevFocus = null
+}
+function onSheetKeydown(e) {
+  if (e.key === 'Escape') { closeSheet(); return }
+  if (e.key !== 'Tab') return
+  const list = sheetEl.value?.querySelectorAll('button:not([disabled]), a[href], input, [tabindex]:not([tabindex="-1"])')
+  if (!list?.length) return
+  const first = list[0]
+  const last = list[list.length - 1]
+  if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+    (e.shiftKey ? last : first).focus()
+    e.preventDefault()
+  }
+}
+watch(showBar, (v) => { if (!v && sheetOpen.value) closeSheet() })
+onBeforeUnmount(() => { if (sheetOpen.value) document.documentElement.classList.remove('sp-lock') })
+
 const pickError = ref('')
 watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
 </script>
@@ -250,8 +283,10 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
       </div>
 
       <!-- ===== Cinta marquee con los servicios ===== -->
-      <div v-if="bandItems.length" class="sv-band" aria-hidden="true">
-        <div class="sv-band-track"><span v-for="(n, i) in bandItems" :key="i">{{ n }}</span></div>
+      <div v-if="bandItems.length" class="sv-band-wrap" aria-hidden="true">
+        <div class="sv-band">
+          <div class="sv-band-track"><span v-for="(n, i) in bandItems" :key="i">{{ n }}</span></div>
+        </div>
       </div>
 
       <div class="sp-container">
@@ -320,7 +355,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
                   <button type="button" class="rm" :aria-label="`Quitar ${it.name}`" @click="toggle(it.id)"><AppIcon name="x" :size="13" :stroke="2.4" /></button>
                 </li>
               </ul>
-              <p v-if="hasUnpriced" class="count" style="font-size:14px">Los ítems "a convenir" se confirman por WhatsApp.</p>
+              <p v-if="hasUnpriced" class="count sv-note">Los ítems "a convenir" se confirman por WhatsApp.</p>
               <div class="pay"><AppIcon name="shield-check" :size="18" /><span>{{ payNote }}</span></div>
               <button type="button" class="sv-btn" :disabled="!chosenItems.length" @click="scrollTo('sv-pedido')">Pedir con este presupuesto <AppIcon name="arrow-right" :size="17" /></button>
             </aside>
@@ -328,7 +363,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         </section>
 
         <!-- ===== Cómo funciona ===== -->
-        <section v-if="steps.length" id="sv-proceso" aria-labelledby="sv-proc-title" style="padding-top:0">
+        <section v-if="steps.length" id="sv-proceso" class="sv-flush" aria-labelledby="sv-proc-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Cómo funciona</span>
             <h2 id="sv-proc-title">Simple, de punta a punta.</h2>
@@ -343,12 +378,12 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         </section>
 
         <!-- ===== Pedido por WhatsApp ===== -->
-        <section id="sv-pedido" aria-labelledby="sv-book-title" style="padding-top:0">
+        <section id="sv-pedido" class="sv-flush" aria-labelledby="sv-book-title">
           <div class="sv-book">
             <div class="sv-book-info">
               <span class="sv-eyebrow">Hacer el pedido</span>
-              <h2 id="sv-book-title" style="font-size:clamp(28px,4vw,48px)">Dejanos tus datos y coordinamos.</h2>
-              <p style="color:var(--sv-mute);font-size:18px">El pedido sale por WhatsApp con tu selección. No pedimos tarjeta ni pago por adelantado.</p>
+              <h2 id="sv-book-title">Dejanos tus datos y coordinamos.</h2>
+              <p class="sv-book-lead">El pedido sale por WhatsApp con tu selección. No pedimos tarjeta ni pago por adelantado.</p>
               <ul>
                 <li><span class="tick"><AppIcon name="lock" :size="14" /></span>Sin pago online ni datos de tarjeta</li>
                 <li><span class="tick"><AppIcon name="whatsapp" :size="14" /></span>Tu pedido llega directo al WhatsApp del negocio</li>
@@ -412,7 +447,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         </section>
 
         <!-- ===== Preguntas frecuentes (bloque compartido con la portada) ===== -->
-        <section v-if="faqs.length" id="sv-preguntas" aria-labelledby="sv-faq-title" style="padding-top:0">
+        <section v-if="faqs.length" id="sv-preguntas" class="sv-flush" aria-labelledby="sv-faq-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Preguntas</span>
             <h2 id="sv-faq-title">Lo que más nos preguntan.</h2>
@@ -429,11 +464,38 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
 
     <Transition name="sv-bar">
       <div v-if="showBar" class="sv-bar" role="region" aria-label="Resumen del presupuesto">
-        <div class="sv-bar-info">
-          <b>{{ fmt(shownTotal) }}</b>
-          <small>{{ chosenItems.length }} {{ chosenItems.length === 1 ? 'servicio' : 'servicios' }}</small>
+        <button type="button" class="sv-bar-main" aria-haspopup="dialog" :aria-expanded="sheetOpen" aria-controls="sv-sheet" @click="openSheet">
+          <span class="sv-bar-info">
+            <b>{{ fmt(shownTotal) }}</b>
+            <small>{{ chosenItems.length }} {{ chosenItems.length === 1 ? 'servicio' : 'servicios' }} · ver detalle</small>
+          </span>
+          <span class="sv-bar-cta" aria-hidden="true"><AppIcon name="chevron-up" :size="18" /></span>
+        </button>
+      </div>
+    </Transition>
+    <Transition name="sv-fade">
+      <div v-if="sheetOpen" class="sv-sheet-backdrop" aria-hidden="true" @click="closeSheet"></div>
+    </Transition>
+    <Transition name="sv-sheet">
+      <div v-if="sheetOpen" id="sv-sheet" ref="sheetEl" class="sv-sheet" role="dialog" aria-modal="true" aria-labelledby="sv-sheet-title" tabindex="-1" @keydown="onSheetKeydown">
+        <span class="sv-sheet-handle" aria-hidden="true"></span>
+        <div class="sv-sheet-head">
+          <b id="sv-sheet-title">Tu presupuesto</b>
+          <button type="button" class="sv-sheet-close" aria-label="Cerrar detalle del presupuesto" @click="closeSheet"><AppIcon name="x" :size="18" /></button>
         </div>
-        <button type="button" class="sv-btn" @click="scrollTo('sv-pedido')">Pedir <AppIcon name="arrow-right" :size="16" /></button>
+        <div class="sv-sheet-total">
+          <b>{{ fmt(shownTotal) }}</b>
+          <span>{{ chosenItems.length }} {{ chosenItems.length === 1 ? 'servicio' : 'servicios' }} · valor orientativo</span>
+        </div>
+        <ul class="sv-sheet-items">
+          <li v-for="it in chosenItems" :key="it.id">
+            <span class="q-ico" aria-hidden="true" :style="{ '--h': serviceHue(it.icon) }"><AppIcon :name="serviceIcon(it.icon)" :size="13" /></span>
+            <span class="q-name">{{ it.name }}</span><b>{{ servicePriceLabel(it) }}</b>
+            <button type="button" class="rm" :aria-label="`Quitar ${it.name}`" @click="toggle(it.id)"><AppIcon name="x" :size="13" :stroke="2.4" /></button>
+          </li>
+        </ul>
+        <p v-if="hasUnpriced" class="sv-sheet-note">Los ítems "a convenir" se confirman por WhatsApp.</p>
+        <button type="button" class="sv-btn" @click="closeSheet(); scrollTo('sv-pedido')">Pedir con este presupuesto <AppIcon name="arrow-right" :size="17" /></button>
       </div>
     </Transition>
   </div>

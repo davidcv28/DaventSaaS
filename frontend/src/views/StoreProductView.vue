@@ -142,7 +142,7 @@ onMounted(() => {
         <div class="spd-top">
           <!-- Galería -->
           <div class="spd-gallery">
-            <img v-if="product.image" :src="product.image" :alt="product.name" />
+            <img v-if="product.image" :src="product.image" :alt="product.name" decoding="async" fetchpriority="high" />
             <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="64" /></span>
           </div>
 
@@ -239,6 +239,21 @@ onMounted(() => {
           :icon="ratingIcon"
         />
       </article>
+
+      <!-- CTA fija en móvil: precio + consulta siempre a mano (el dock
+           general del layout ya se oculta en la ficha). -->
+      <div class="spd-stick">
+        <span class="spd-stick-info">
+          <s v-if="productOffer(product) != null">{{ formatARS(product.price) }}</s>
+          <strong>{{ formatARS(effectivePrice(product)) }}</strong>
+        </span>
+        <a v-if="whatsappUrl" class="sp-btn spd-stick-btn" :href="whatsappUrl" target="_blank" rel="noopener">
+          <AppIcon name="whatsapp" :size="16" /> Consultar
+        </a>
+        <RouterLink v-else class="sp-btn spd-stick-btn" :to="contactTo">
+          <AppIcon name="message-circle" :size="16" /> Consultar
+        </RouterLink>
+      </div>
 
       <!-- Relacionados -->
       <section v-if="related.length" v-reveal="80" class="spd-related" aria-labelledby="spd-rel-title">

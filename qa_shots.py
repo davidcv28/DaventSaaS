@@ -24,8 +24,8 @@ FRONT = 'http://localhost:5173/bench-store/catalogo'
 API = 'http://127.0.0.1:8000/api/stores/public/bench-store/'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'before'
 ONLY = sys.argv[2:] or None
-WIDTHS = [360, 390, 768, 1024, 1440]
-MOBILE = {360, 390, 768}
+WIDTHS = [320, 360, 390, 768, 1024, 1440]
+MOBILE = {320, 360, 390, 768}
 TEMPLATES = ['classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook',
              'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'bloque', 'riso', 'terra']
 
@@ -119,7 +119,9 @@ with sync_playwright() as pw:
                 shot(page, f'qa/{OUT}/{tpl}-{w}-cat.png')
                 # Abrir el panel/drawer de filtros si hay trigger en móvil
                 if w in MOBILE:
-                    for sel in ['.sp-burger', '.cv-sh-filter-btn', '.cf-open']:
+                    # El sheet de filtros lo abre el trigger de la toolbar;
+                    # el burger quedó solo para navegación del sitio.
+                    for sel in ['.cf-open', '.cv-sh-filter-btn', '.sp-burger']:
                         try:
                             btn = page.locator(sel).first
                             if btn.count() and btn.is_visible():
