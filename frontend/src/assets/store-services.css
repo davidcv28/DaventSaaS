@@ -1004,6 +1004,41 @@
 .store-page[data-store-template='cobre'] .sv-hero h1, .store-page[data-store-template='cobre'] .sv-head h2 { letter-spacing: .01em; }
 .store-page[data-store-template='cobre'] .sv-stage { border-color: var(--sv-line); }
 
+/* Placas de indumentaria: el ícono viaja en una placa rectangular de
+   acento a la izquierda (como etiqueta de prenda), y el precio es un
+   bloque Bebas de pie de tarjeta, separado por filete. Filas densas. */
+.store-page[data-store-template='cobre'] .sv-item {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 0;
+  padding: 0; border: 1px solid var(--sv-line); border-radius: 4px; overflow: hidden;
+}
+.store-page[data-store-template='cobre'] .sv-item .ico {
+  grid-row: 1 / 3; grid-column: 1; width: auto; height: auto; border-radius: 0; margin: 0;
+  background: var(--sv-acc); color: var(--sv-on-acc);
+}
+.store-page[data-store-template='cobre'] .sv-item h3 {
+  grid-column: 2; margin: 0; padding: 14px 48px 4px 16px; font-family: var(--sv-display);
+  font-size: 19px; text-transform: uppercase; letter-spacing: .02em; overflow-wrap: anywhere;
+}
+.store-page[data-store-template='cobre'] .sv-item small {
+  grid-column: 2; padding: 0 48px 14px 16px; font-size: 12.5px;
+}
+.store-page[data-store-template='cobre'] .sv-item .meta {
+  grid-column: 1 / -1; margin: 0; padding: 10px 16px; border-top: 1px solid var(--sv-line);
+  display: flex; align-items: stretch; gap: 12px;
+}
+.store-page[data-store-template='cobre'] .sv-item .dur { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; align-self: center; }
+.store-page[data-store-template='cobre'] .sv-item .price {
+  margin: -10px -16px -10px auto; padding: 2px 14px; align-self: stretch; display: flex; align-items: center;
+  font-family: var(--sv-display); font-size: 24px; letter-spacing: .02em;
+  background: var(--sv-soft); border-left: 1px solid var(--sv-line); border-radius: 0;
+}
+.store-page[data-store-template='cobre'] .sv-item .act {
+  grid-column: 1 / -1; border-radius: 0; border: 0; border-top: 1px solid var(--sv-line);
+  background: var(--sv-fg); color: var(--sv-card); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; min-height: 46px;
+}
+.store-page[data-store-template='cobre'] .sv-item[aria-pressed='true'] .act { background: var(--sv-acc); color: var(--sv-on-acc); }
+.store-page[data-store-template='cobre'] .sv-item:hover { border-color: var(--sv-fg); }
+
 /* ---------- Minimal: retícula mínima, tinta plana ---------- */
 .store-page[data-store-template='minimal'] .sv-page {
   --sv-r-pill: 2px; --sv-r-stage: 2px; --sv-r-lg: 2px; --sv-r-md: 2px; --sv-r-sm: 2px;
