@@ -304,8 +304,31 @@
 
 /* ============================================================
    AJUSTES POR PLANTILLA (data-store-template en .store-page)
-   Cada bloque retoca los tokens; la estructura no cambia.
+   Cada bloque retoca los tokens y — donde la dirección de arte lo
+   pide — la composición del picker (.sv-list / .sv-item). Todo va
+   acotado al [data-store-template]: nada se filtra a otro estilo.
    ============================================================ */
+
+/* ---------- Clásico: catálogo ordenado — picker como bento de 12 col ---------- */
+.store-page[data-store-template='classic'] .sv-page {
+  --sv-r-pill: 999px; --sv-r-stage: 26px; --sv-r-lg: 22px; --sv-r-md: 18px; --sv-r-sm: 12px;
+  --sv-bw: 1px;
+  --sv-band-tilt: none;
+  --sv-btn-sh: 0 10px 24px -14px color-mix(in srgb, var(--sv-acc) 60%, transparent);
+  --sv-btn-sh-h: 0 16px 30px -14px color-mix(in srgb, var(--sv-acc) 65%, transparent);
+  --sv-btn-sh-a: 0 4px 10px -8px color-mix(in srgb, var(--sv-acc) 60%, transparent);
+  --sv-btn-move: translateY(-2px);
+  --sv-btn-press: translateY(0);
+  --sv-item-move: translateY(-3px);
+  --sv-sh-pop: var(--shadow-2); --sv-sh-panel: var(--shadow-2); --sv-sh-form: var(--shadow-1);
+  --sv-form-bw: 1px; --sv-form-bd: var(--sv-line);
+}
+@media (min-width: 1024px) {
+  .store-page[data-store-template='classic'] .sv-list { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: dense; gap: 18px; }
+  .store-page[data-store-template='classic'] .sv-item { grid-column: span 4; }
+  .store-page[data-store-template='classic'] .sv-item:nth-child(4n + 1) { grid-column: span 8; }
+}
+.store-page[data-store-template='classic'] .sv-item:nth-child(4n + 1) .ico { width: 72px; height: 72px; }
 
 /* ---------- Perspective: letrero Oswald + sombras de acento ---------- */
 .store-page[data-store-template='perspective'] .sv-page {
