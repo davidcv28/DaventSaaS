@@ -268,7 +268,7 @@ function reset() {
 .studio-photo:disabled { opacity: .5; cursor: not-allowed; }
 .studio-photo-check { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: var(--brand-500); color: #fff; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
 
-.studio-kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.studio-kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 10px; margin-bottom: 12px; }
 .studio-kind { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; text-align: left; font: inherit; color: var(--muted); border: 1px solid var(--line); border-radius: 12px; background: var(--card); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
 .studio-kind span { display: grid; gap: 2px; }
 .studio-kind strong { font-size: 14px; color: var(--text, inherit); }

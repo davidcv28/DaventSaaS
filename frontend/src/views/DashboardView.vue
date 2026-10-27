@@ -5778,14 +5778,16 @@ async function changePassword() {
 
     <!-- Toast "Guardado ✓" con deshacer donde la acción es reversible -->
     <Teleport to="body">
-      <Transition name="toast">
-        <div v-if="toast" class="toast" role="status">
-          <AppIcon name="circle-check" :size="17" class="toast-ok" />
-          <span class="toast-msg">{{ toast.msg }}</span>
-          <button v-if="toast.undo" type="button" class="toast-undo" @click="toast.undo(); closeToast()">Deshacer</button>
-          <button type="button" class="toast-x" aria-label="Cerrar" @click="closeToast"><AppIcon name="x" :size="14" /></button>
-        </div>
-      </Transition>
+      <div class="toast-wrap">
+        <Transition name="toast">
+          <div v-if="toast" class="toast" role="status">
+            <AppIcon name="circle-check" :size="17" class="toast-ok" />
+            <span class="toast-msg">{{ toast.msg }}</span>
+            <button v-if="toast.undo" type="button" class="toast-undo" @click="toast.undo(); closeToast()">Deshacer</button>
+            <button type="button" class="toast-x" aria-label="Cerrar" @click="closeToast"><AppIcon name="x" :size="14" /></button>
+          </div>
+        </Transition>
+      </div>
     </Teleport>
 
     <!-- Vista previa del beneficio bloqueado: candado del menú, búsqueda o
