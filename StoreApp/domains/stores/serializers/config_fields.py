@@ -221,6 +221,10 @@ CustomizationFields           =   {
         'label'             :   'Orden de las secciones de la portada',
         'required'          :   False,
     },
+    'layout_config'         :   {
+        'label'             :   'Bloques de cada página de la web',
+        'required'          :   False,
+    },
     'benefits'              :   {
         'label'             :   'Garantías y beneficios',
         'required'          :   False,

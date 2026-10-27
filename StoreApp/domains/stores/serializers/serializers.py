@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.services        import profile_has_benefit, allowed_templates_of, storage_payload
+from StoreApp.domains.stores.layout_blocks   import clean_layout_config
 from StoreApp.domains.services.services      import (
     DEFAULT_SITE_TEMPLATES, normalize_site_templates, site_mode_of,
     validate_site_templates as validate_site_templates_plan, effective_site_templates,
@@ -105,6 +106,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     cta_text                    =   serializers.CharField(**CustomizationFields['cta_text'])
     cta_label                   =   serializers.CharField(**CustomizationFields['cta_label'])
     section_order               =   serializers.JSONField(**CustomizationFields['section_order'])
+    layout_config               =   serializers.JSONField(**CustomizationFields['layout_config'])
     announcements               =   serializers.JSONField(**CustomizationFields['announcements'])
     video_url                   =   serializers.CharField(**CustomizationFields['video_url'])
     video_title                 =   serializers.CharField(**CustomizationFields['video_title'])
@@ -136,7 +138,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'services', 'services_title', 'show_services', 'stats', 'show_stats',
             'testimonials', 'testimonials_title', 'show_testimonials',
             'faqs', 'faqs_title', 'show_faq', 'hours', 'show_hours',
-            'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order',
+            'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order', 'layout_config',
             'announcements', 'show_announcements', 'video_url', 'video_title', 'show_video',
             'catalog_note', 'footer_text',
             'benefits', 'show_benefits', 'timeline', 'show_timeline', 'team', 'show_team',
@@ -298,6 +300,17 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
                 seen.add(key)
                 order.append(key)
         return order + [k for k in StoreCustomization.SECTION_ORDER if k not in seen]
+
+    def validate_layout_config(self, value):
+        #Editor de bloques (Diseño web → Bloques): el catálogo cerrado
+        #TEMPLATE_BLOCKS decide ids/variantes/props admitidos; lo
+        #desconocido se descarta y los bloques premium se quitan sin
+        #has_design_advanced. Una config vacía/irreconocible queda en {}
+        #y la web cae al layout por defecto de la plantilla.
+        store                   =   getattr(self.instance, 'store', None) if self.instance is not None else None
+        profile                 =   getattr(store, 'user', None)
+        has_advanced            =   profile_has_benefit(profile, 'has_design_advanced') if profile is not None else False
+        return clean_layout_config(value, has_advanced)
 
     def validate_announcements(self, value):
         clean                   =   []

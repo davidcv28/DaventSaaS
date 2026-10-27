@@ -321,6 +321,14 @@ class StoreCustomization(models.Model):
     cta_label                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Texto del botón')
     show_cta                    =   models.BooleanField(default = True, verbose_name = 'Mostrar llamado a la acción')
     section_order               =   models.JSONField(default = list, blank = True, verbose_name = 'Orden de las secciones de la portada')
+    #Editor de layout (Diseño web → Bloques): por superficie
+    #(landing/catalog/services) guarda los bloques activos, su orden,
+    #variante y props. El serializer lo valida contra TEMPLATE_BLOCKS
+    #(catálogo cerrado); si falta o es inválido la web pública cae al
+    #layout por defecto de la plantilla. Los layouts default y la lista
+    #de bloques que soporta cada plantilla viven en el frontend
+    #(src/templates/<id>/index.js).
+    layout_config               =   models.JSONField(default = dict, blank = True, verbose_name = 'Bloques de cada página de la web')
     #Cinta de anuncios bajo la portada y sección Video: bloques extra de
     #marketing que el dueño configura desde "Mi empresa".
     announcements               =   models.JSONField(default = list, blank = True, verbose_name = 'Cinta de anuncios')

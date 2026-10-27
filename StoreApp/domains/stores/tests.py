@@ -465,7 +465,7 @@ class MarketingFieldsTests(TestCase):
         )
         order       =   response.data['customization']['section_order']
         self.assertEqual(order[:2], ['faq', 'about'])
-        self.assertEqual(len(order), 8)
+        self.assertEqual(len(order), len(StoreCustomization.SECTION_ORDER))
         self.assertNotIn('inventada', order)
 
     def test_non_list_payload_rejected(self):
@@ -1045,3 +1045,187 @@ class PremiumFieldsGatingTests(TestCase):
         response    =   client.patch(
             f'{STORES_URL}customization/', {'show_location': True}, format = 'json')
         self.assertFalse(response.data['customization']['show_location'])
+
+class LayoutConfigTests(TestCase):
+    """
+    Editor de bloques (Diseño web → Bloques): `layout_config` se valida
+    contra el catálogo cerrado TEMPLATE_BLOCKS — superficies/ids/variantes/
+    props desconocidas se descartan, los bloques premium se quitan sin
+    has_design_advanced, los locked quedan siempre prendidos y los textos
+    de props se sanea a texto plano acotado. Una config inválida deja el
+    campo en {} y la web pública cae al layout por defecto de la plantilla.
+    """
+
+    def setUp(self):
+        # plan_benefits_of keyea por PK y SQLite las reutiliza tras el
+        # rollback de cada TestCase — sin limpiar, el premium de un test se
+        # filtra al siguiente y el descarte de bloques miente.
+        cache.clear()
+
+    def _client(self, **benefits):
+        user, profile   =   _make_user(verified = True)
+        _grant(profile, has_customization = True, **benefits)
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client
+
+    def test_layout_requires_customization_benefit(self):
+        user, profile   =   _make_user(verified = True)
+        _grant(profile)
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'landing': {'blocks': [{'id': 'hero', 'enabled': True, 'order': 0}]}}},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_valid_layout_is_saved_normalized(self):
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {
+                'landing': {'blocks': [
+                    {'id': 'about', 'enabled': True, 'order': 1, 'props': {'title': 'Nuestra historia'}},
+                    {'id': 'hero', 'enabled': True, 'order': 0},
+                    {'id': 'contact', 'enabled': False, 'order': 2},
+                ]},
+                'catalog': {'blocks': [
+                    {'id': 'grid', 'enabled': True},
+                    {'id': 'filters', 'enabled': True},
+                ]},
+            }},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 200)
+        config      =   response.data['customization']['layout_config']
+        landing     =   config['landing']['blocks']
+        #El order declarado reordena la lista y se renumera secuencial.
+        self.assertEqual([b['id'] for b in landing], ['hero', 'about', 'contact'])
+        self.assertEqual([b['order'] for b in landing], [0, 1, 2])
+        self.assertEqual(landing[1]['props'], {'title': 'Nuestra historia'})
+        self.assertFalse(landing[2]['enabled'])
+
+    def test_unknown_blocks_surfaces_and_variants_are_dropped(self):
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {
+                'landing': {'blocks': [
+                    {'id': 'hero', 'enabled': True, 'variant': 'full'},
+                    {'id': 'no-existe', 'enabled': True},
+                    {'id': 'hero', 'enabled': True},
+                    {'id': 'stats', 'enabled': True, 'variant': 'inventada'},
+                    {'id': 'announcements', 'enabled': True, 'variant': 'static'},
+                    'basura', 42, None,
+                ]},
+                'seccion-inventada': {'blocks': [{'id': 'hero'}]},
+                'services': 'no-es-dict',
+            }},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 200)
+        config      =   response.data['customization']['layout_config']
+        self.assertNotIn('seccion-inventada', config)
+        self.assertNotIn('services', config)
+        blocks      =   config['landing']['blocks']
+        self.assertEqual([b['id'] for b in blocks], ['hero', 'stats', 'announcements'])
+        #variant default no se guarda; inventada se descarta al default.
+        self.assertNotIn('variant', blocks[0])
+        self.assertNotIn('variant', blocks[1])
+        self.assertEqual(blocks[2]['variant'], 'static')
+
+    def test_premium_block_discarded_without_advanced(self):
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'catalog': {'blocks': [
+                {'id': 'banner', 'enabled': True},
+                {'id': 'filters', 'enabled': True},
+            ]}}},
+            format = 'json',
+        )
+        blocks      =   response.data['customization']['layout_config']['catalog']['blocks']
+        self.assertEqual([b['id'] for b in blocks], ['filters'])
+
+    def test_premium_block_kept_with_advanced(self):
+        client      =   self._client(has_design_advanced = True)
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'catalog': {'blocks': [
+                {'id': 'banner', 'enabled': True},
+                {'id': 'filters', 'enabled': True},
+            ]}}},
+            format = 'json',
+        )
+        blocks      =   response.data['customization']['layout_config']['catalog']['blocks']
+        self.assertEqual([b['id'] for b in blocks], ['banner', 'filters'])
+
+    def test_locked_block_cannot_be_disabled(self):
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'catalog': {'blocks': [
+                {'id': 'grid', 'enabled': False},
+                {'id': 'filters', 'enabled': False},
+            ]}}},
+            format = 'json',
+        )
+        blocks      =   response.data['customization']['layout_config']['catalog']['blocks']
+        self.assertTrue(blocks[0]['enabled'])
+        self.assertFalse(blocks[1]['enabled'])
+
+    def test_props_are_sanitized_and_truncated(self):
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'landing': {'blocks': [
+                {'id': 'about', 'enabled': True, 'props': {
+                    'title': '<b>Nuestra</b> historia ' + 'x' * 200,
+                    'inventada': 'se descarta',
+                    'vacia': '   ',
+                }},
+            ]}}},
+            format = 'json',
+        )
+        block       =   response.data['customization']['layout_config']['landing']['blocks'][0]
+        self.assertEqual(set(block['props'].keys()), {'title'})
+        self.assertEqual(block['props']['title'], 'Nuestra historia ' + 'x' * (80 - len('Nuestra historia ')))
+        self.assertNotIn('<', block['props']['title'])
+
+    def test_invalid_config_falls_back_to_empty(self):
+        client      =   self._client()
+        for bad in ('texto', [1, 2], 42):
+            response    =   client.patch(
+                f'{STORES_URL}customization/', {'layout_config': bad}, format = 'json')
+            self.assertEqual(response.status_code, 400)
+        #Una config con superficies inválidas queda en {} (fail-safe:
+        #la web cae al layout por defecto, no guarda basura).
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'landing': 'no-dict', 'pepito': {'blocks': []}}},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['layout_config'], {})
+
+    def test_layout_survives_template_switch(self):
+        #La config es por superficie, no por plantilla: cambiar de diseño
+        #conserva los bloques guardados (el renderer usa los que la
+        #plantilla destino soporta).
+        client      =   self._client()
+        client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'landing': {'blocks': [
+                {'id': 'contact', 'enabled': True, 'order': 0},
+                {'id': 'hero', 'enabled': True, 'order': 1},
+            ]}}},
+            format = 'json',
+        )
+        response    =   client.patch(
+            f'{STORES_URL}customization/', {'template': 'duo'}, format = 'json')
+        config      =   response.data['customization']['layout_config']
+        self.assertEqual([b['id'] for b in config['landing']['blocks']], ['contact', 'hero'])
