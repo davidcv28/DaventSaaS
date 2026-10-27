@@ -4,6 +4,7 @@ import App from './App.vue'
 import { router } from './router/index.js'
 import { useAuthStore } from './stores/auth.store.js'
 import { useThemeStore } from './stores/theme.store.js'
+import { installNativeShims } from './utils/native.js'
 import './assets/styles.css'
 import './assets/template-thumbs.css'
 
@@ -16,6 +17,8 @@ window.addEventListener('vite:preloadError', (e) => {
     window.location.reload()
   }
 })
+
+installNativeShims()
 
 const app = createApp(App)
 app.use(createPinia())

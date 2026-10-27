@@ -24,6 +24,7 @@ function fetchClientId() {
 // override de dev queda VITE_GOOGLE_CLIENT_ID en frontend/.env. Sin ID en
 // ambos lados el botón no se muestra (feature apagada).
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import { useAuthStore } from '../stores/auth.store.js'
 
 const props = defineProps({
@@ -119,6 +120,10 @@ async function onGoogleCredential({ credential }) {
 }
 
 onMounted(async () => {
+  // APK (WebView nativo): Google bloquea el flujo OAuth dentro de webviews
+  // (403 disallowed_useragent). El botón se oculta hasta integrar el plugin
+  // nativo de Google Sign-In — el login por email/clave sigue funcionando.
+  if (Capacitor.isNativePlatform()) return
   // Sin override horneado, el ID se resuelve en runtime contra el backend.
   if (!clientId.value) {
     clientId.value = await fetchClientId()

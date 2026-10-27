@@ -1,0 +1,9 @@
+{
+  "appId": "com.davent.app",
+  "appName": "DAVENT",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "davent.com"
+  }
+}
