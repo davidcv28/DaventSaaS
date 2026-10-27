@@ -15,7 +15,7 @@ import { useLayout } from '../../../composables/useLayout.js'
 defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
-const { slug, custom, shopName, location, showContact, showCatalog } = ctx
+const { slug, custom, location, showContact, showCatalog } = ctx
 const servicesPage = ctx.showServices
 const { featured: shopCatalog } = useFeaturedCatalog()
 const { blocks } = useLayout('landing')

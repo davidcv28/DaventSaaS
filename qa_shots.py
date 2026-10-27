@@ -26,8 +26,10 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else 'before'
 ONLY = sys.argv[2:] or None
 WIDTHS = [320, 360, 390, 768, 1024, 1440]
 MOBILE = {320, 360, 390, 768}
-TEMPLATES = ['classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook',
-             'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'bloque', 'riso', 'terra']
+TEMPLATES = ['classic', 'perspective', 'duo', 'bloque', 'riso', 'terra', 'street', 'atelier',
+             'circuit', 'lab', 'mercado', 'carta', 'studio', 'proceso', 'promo', 'shop', 'arena',
+             'terminal', 'calma', 'signature', 'vitrina', 'lookbook', 'cobre', 'minimal',
+             'boutique', 'aurora']
 
 from StoreApp.domains.stores.models import Store
 

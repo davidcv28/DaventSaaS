@@ -10036,3 +10036,69 @@ html { scroll-behavior: smooth; }
 .spd-rel.tpc .tpc-body { padding: 0; gap: 4px; }
 .spd-rel.tpc .tpc-foot { margin-top: auto; }
 .spd-rel .tpc-flag { position: absolute; right: 8px; top: 8px; z-index: 2; padding: 3px 8px; border-radius: 5px; background: #00a650; color: #fff; font-size: 10.5px; font-weight: 800; }
+
+/* ===== Bloques del editor de layout (variantes y secciones nuevas) ===== */
+/* Hero 'compact': menos aire y sin la decoración/secuencias secundarias. */
+.sp-hero.is-compact .sp-hero-inner { padding-block: clamp(40px, 6vw, 60px) clamp(52px, 7vw, 76px); }
+.sp-hero.is-compact .sp-hero-decor,
+.sp-hero.is-compact .sp-hero-marquee,
+.sp-hero.is-compact .sp-lb-hero-foot,
+.sp-hero.is-compact .sp-sg-strip,
+.sp-hero.is-compact .sp-mn-announce,
+.sp-hero.is-compact .sp-tm-bar { display: none; }
+/* Anuncios 'static': una sola secuencia fija, centrada y con wrap. */
+.sp-ann.is-static { -webkit-mask-image: none; mask-image: none; }
+.sp-ann.is-static .sp-ann-track { animation: none; width: 100%; flex-wrap: wrap; justify-content: center; padding: 0 16px; }
+.sp-ann.is-static .sp-ann-item { padding-right: 32px; }
+.sp-ann.is-static .sp-ann-item:last-child { padding-right: 0; }
+/* Cifras 'cards': tarjetas sueltas en vez de la banda de acento. */
+.sp-stats.is-cards .sp-stats-grid { background: none; box-shadow: none; padding: 0; gap: 16px; }
+.sp-stats.is-cards .sp-stat { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); box-shadow: var(--sp-shadow-sm); padding: 22px 14px; color: var(--sp-ink); }
+.sp-stats.is-cards .sp-stat span { color: var(--sp-muted); }
+.sp-stats-title { grid-column: 1 / -1; margin: 0 0 6px; font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spacing: -.02em; color: #fff; text-align: center; }
+.sp-stats.is-cards .sp-stats-title { color: var(--sp-ink); }
+/* Garantías y beneficios */
+.sp-benefits { padding-top: 64px; }
+.sp-benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 22px; }
+.sp-benefit { display: grid; gap: 8px; justify-items: start; padding: 20px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
+.sp-benefit-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: color-mix(in srgb, var(--store-accent) 14%, transparent); color: var(--store-accent); }
+.sp-benefit strong { font-size: 15px; }
+.sp-benefit-text { font-size: 13.5px; color: var(--sp-ink-2); }
+/* Línea de tiempo */
+.sp-timeline { padding: 64px 0; }
+.sp-tl-list { display: grid; margin: 26px 0 0; padding: 0 0 0 26px; list-style: none; position: relative; }
+.sp-tl-list::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 34px; width: 2px; background: var(--sp-line); }
+.sp-tl-item { position: relative; padding: 0 0 28px 24px; display: grid; gap: 4px; }
+.sp-tl-item:last-child { padding-bottom: 0; }
+.sp-tl-item::before { content: ''; position: absolute; left: -26px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--store-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--store-accent) 18%, transparent); }
+.sp-tl-label { font-size: 15px; font-weight: 700; }
+.sp-tl-text { font-size: 14px; color: var(--sp-ink-2); max-width: 68ch; }
+/* Equipo */
+.sp-team { padding: 64px 0; }
+.sp-team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 18px; margin-top: 26px; }
+.sp-member { display: grid; gap: 12px; justify-items: center; text-align: center; margin: 0; padding: 22px 14px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
+.sp-member-initial { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); color: #fff; font-size: 22px; font-weight: 800; }
+.sp-member figcaption { display: grid; gap: 2px; }
+.sp-member figcaption strong { font-size: 15px; }
+.sp-member-role { font-size: 12.5px; color: var(--sp-muted); }
+/* Ofertas: bandera con el vencimiento sobre la tarjeta. */
+.sp-offers { padding-top: 64px; }
+.sp-card-flag.ends { left: 10px; right: auto; top: auto; bottom: 10px; background: rgba(15, 23, 42, .82); color: #fff; }
+/* Marcas: encabezado sobre la cinta reutilizada de anuncios. */
+.sp-brands { padding-top: 64px; }
+.sp-brands-title { margin: 0 0 18px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sp-muted); text-align: center; }
+.sp-brands .sp-ann { border-block: none; background: transparent; padding: 0; }
+/* Cuenta regresiva: banda de acento con unidades días/horas/min/seg. */
+.sp-countdown { padding-top: 64px; }
+.sp-cd-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 22px 36px; padding: 30px clamp(20px, 3vw, 40px); border-radius: var(--sp-radius); background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: var(--sp-shadow-md); color: #fff; text-align: center; }
+.sp-cd-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgb(255 255 255 / .82); }
+.sp-cd-title { margin: 4px 0 0; font-size: clamp(20px, 3vw, 30px); font-weight: 800; letter-spacing: -.02em; }
+.sp-cd-clock { display: flex; gap: 10px; }
+.sp-cd-unit { display: grid; justify-items: center; gap: 2px; min-width: 66px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, .14); }
+.sp-cd-unit strong { font-size: clamp(22px, 3vw, 32px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.sp-cd-unit span { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgb(255 255 255 / .78); }
+.sp-cd-btn { flex: none; }
+@media (max-width: 640px) {
+  .sp-cd-inner { flex-direction: column; }
+  .sp-cd-unit { min-width: 58px; }
+}
