@@ -327,6 +327,14 @@ jobs:
             grep -q '^MP_WEBHOOK_SECRET=.\{32,\}' .env || { echo "FATAL: MP_WEBHOOK_SECRET ausente o <32 chars"; exit 1; }
             grep -q '^SECRET_MP_KEY=.\{16,\}' .env     || { echo "FATAL: SECRET_MP_KEY ausente"; exit 1; }
             grep -q '^SECRET_KEY=.\{32,\}' .env        || { echo "FATAL: SECRET_KEY ausente o <32 chars"; exit 1; }
+            # Keyring de PII: SIN esto el contenedor arranca cifrando
+            # document/phone/nombres con la llave derivada del SECRET_KEY
+            # (kid "self"). Al definir el keyring real después, _keyring() deja
+            # de exponer "self" y esas filas quedan ILEGIBLES (VaultError en
+            # cada lectura) — no es solo "acoplado al SECRET_KEY", es pérdida.
+            # El keyring no lo inyecta CI (se rota a mano): solo se valida.
+            grep -q '^SECRETS_MASTER_KEYS=.\{20,\}' .env || { echo "FATAL: SECRETS_MASTER_KEYS ausente — la PII se cifraría con la llave derivada y quedaría ilegible al definir el keyring"; exit 1; }
+            grep -q '^SECRETS_HASH_KEY=.\{20,\}' .env    || { echo "FATAL: SECRETS_HASH_KEY ausente (huellas de documento/celular)"; exit 1; }
 
             # 3. Rotación por sha (nunca :latest).
             git pull --ff-only

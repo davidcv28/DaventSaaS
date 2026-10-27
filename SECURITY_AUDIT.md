@@ -639,8 +639,10 @@ y el Blueprint **no** los pisa (`sync: false`).
 
 - [ ] `MP_WEBHOOK_SECRET`
 - [ ] `SECRET_MP_KEY`
+- [ ] `SECRETS_MASTER_KEYS` y `SECRETS_HASH_KEY` (misma advertencia que §C: sin
+      keyring, la PII se cifra con la llave derivada y queda ilegible al definirlo)
 - [ ] (ya existentes, para referencia) `SECRET_KEY`, `DATABASE_URL` de Neon,
-      `EMAIL_HOST_PASSWORD`, claves R2, `GOOGLE_CLIENT_ID`, `SECRETS_MASTER_KEYS`
+      `EMAIL_HOST_PASSWORD`, claves R2, `GOOGLE_CLIENT_ID`
 
 #### C. VPS `/opt/davent/.env`
 
@@ -648,6 +650,18 @@ El deploy escribe `MP_WEBHOOK_SECRET` y `SECRET_MP_KEY` con un **merge atómico*
 (`mktemp` + `mv`, `umask 077`, `chmod 600`) y borra el archivo temporal con
 `shred`. El resto del `.env` se respeta byte a byte — no lo sobrescribe.
 
+- [ ] **`SECRETS_MASTER_KEYS`** — keyring AES-256-GCM de la PII (`kid:b64url32`).
+      **OBLIGATORIO antes del primer deploy con `users/migrations/0010`.** Sin
+      él el contenedor arranca cifrando `document`/`phone`/nombres/domicilio con
+      la llave derivada del `SECRET_KEY` (`kid "self"`); al definir el keyring
+      real, `_keyring()` deja de exponer `self` y **esas filas quedan ilegibles**
+      (`VaultError` en cada lectura). No es "acoplado al SECRET_KEY": es pérdida
+      de datos. Generar: `manage.py encrypt_secret --gen-master-key k1`.
+- [ ] **`SECRETS_HASH_KEY`** — llave HMAC de `document_hash`/`phone_hash`.
+      Distinta de la keyring. **No rotarla en caliente**: las huellas ya
+      emitidas dependen de ella (se rompe la unicidad/búsqueda).
+- [ ] El preflight del deploy (`.github/workflows/ci-cd.yml`, paso 2) corta si
+      cualquiera de las dos falta o es demasiado corta.
 - [ ] Verificar que `.env` exista y sea `600`: `ls -l /opt/davent/.env`
 - [ ] `SECRET_KEY` ≥32 chars (ideal 50+, si no Django marca `security.W009`)
 
