@@ -220,7 +220,12 @@
 @media (max-width: 560px) {
   .pick-preview { flex-wrap: wrap; }
   .pick-preview-thumb { width: 100%; }
-  .pick-nav { flex-direction: row; }
+  /* margin auto: si la fila de flechas salta sola a otra línea queda a la derecha */
+  .pick-nav { flex-direction: row; margin-left: auto; }
+  /* basis blando: el texto pide ~180px; si no entra con las flechas
+     en la misma línea, ellas caen a una fila propia alineadas a la
+     derecha en vez de aplastar el nombre de la tienda. */
+  .pick-preview-info { flex-basis: 180px; }
 }
 
 /* Resumen */
