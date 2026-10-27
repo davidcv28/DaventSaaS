@@ -100,6 +100,15 @@ const slots = computed(() => {
   return saved.length ? saved : ['Mañana (9 a 12 h)', 'Mediodía (12 a 15 h)', 'Tarde (15 a 18 h)']
 })
 const faqs = computed(() => (custom.value.show_faq !== false && Array.isArray(custom.value.faqs) ? custom.value.faqs : []))
+const perks = computed(() => (custom.value.show_benefits !== false && Array.isArray(custom.value.benefits) ? custom.value.benefits : []))
+const works = computed(() => (custom.value.show_gallery !== false && Array.isArray(custom.value.gallery) ? custom.value.gallery : []))
+const testis = computed(() => (custom.value.show_testimonials !== false && Array.isArray(custom.value.testimonials) ? custom.value.testimonials : []))
+const testisTitle = computed(() => custom.value.testimonials_title?.trim() || 'Lo que dicen los clientes')
+const contactHours = computed(() => (custom.value.show_hours !== false && Array.isArray(custom.value.hours) ? custom.value.hours : []))
+// Cobertura: la zona sale del dato de ubicación; "a domicilio" se infiere
+// cuando el pedido pide dirección (service_ask_address).
+const showZone = computed(() => Boolean(location.value) || contactHours.value.length > 0 || custom.value.service_ask_address !== false)
+const perkIcon = (key) => (SERVICE_ICONS[key] ? key : 'shield-check')
 // Cinta marquee con los nombres de los servicios (duplicada para el loop).
 const bandItems = computed(() => {
   const names = items.value.map((it) => it.name)
@@ -378,6 +387,71 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         </section>
 
         <!-- ===== Pedido por WhatsApp ===== -->
+        <!-- ===== Beneficios y garantías (custom.benefits) ===== -->
+        <section v-if="perks.length" id="sv-garantias" class="sv-flush" aria-labelledby="sv-perk-title">
+          <div class="sv-head">
+            <span class="sv-eyebrow">Garantías</span>
+            <h2 id="sv-perk-title">Tranquilidad de punta a punta.</h2>
+          </div>
+          <ul class="sv-perks">
+            <li v-for="(b, i) in perks" :key="i" v-reveal class="sv-perk">
+              <span class="sv-perk-ico" aria-hidden="true"><AppIcon :name="perkIcon(b.icon)" :size="20" /></span>
+              <strong>{{ b.title }}</strong>
+              <span v-if="b.text">{{ b.text }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ===== Galería de trabajos (custom.gallery) ===== -->
+        <section v-if="works.length" id="sv-trabajos" class="sv-flush" aria-labelledby="sv-works-title">
+          <div class="sv-head">
+            <span class="sv-eyebrow">Trabajos</span>
+            <h2 id="sv-works-title">Algunos trabajos recientes.</h2>
+          </div>
+          <div class="sv-works">
+            <figure v-for="(img, i) in works" :key="img.id || i" v-reveal class="sv-work">
+              <img :src="img.url" :alt="img.alt || `Trabajo ${i + 1} de ${shopName}`" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </section>
+
+        <!-- ===== Testimonios (custom.testimonials) ===== -->
+        <section v-if="testis.length" id="sv-opiniones" class="sv-flush" aria-labelledby="sv-testi-title">
+          <div class="sv-head">
+            <span class="sv-eyebrow">Clientes</span>
+            <h2 id="sv-testi-title">{{ testisTitle }}</h2>
+          </div>
+          <div class="sv-testis">
+            <figure v-for="(t, i) in testis" :key="i" v-reveal class="sv-testi">
+              <span class="sv-testi-quote" aria-hidden="true"><AppIcon name="quote" :size="18" /></span>
+              <blockquote>{{ t.text }}</blockquote>
+              <figcaption><strong>{{ t.name }}</strong><span v-if="t.detail">{{ t.detail }}</span></figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <!-- ===== Zona de cobertura y horarios ===== -->
+        <section v-if="showZone" id="sv-zona" class="sv-flush" aria-labelledby="sv-zone-title">
+          <div class="sv-head">
+            <span class="sv-eyebrow">Cobertura</span>
+            <h2 id="sv-zone-title">Zona y horarios de atención.</h2>
+          </div>
+          <div class="sv-zone">
+            <div class="sv-zone-card">
+              <AppIcon name="map-pin" :size="20" aria-hidden="true" />
+              <strong>{{ location || 'Consultanos la zona de cobertura' }}</strong>
+              <span v-if="custom.service_ask_address !== false">También trabajamos a domicilio: indicanos tu dirección en el pedido.</span>
+            </div>
+            <ul v-if="contactHours.length" class="sv-zone-hours">
+              <li v-for="(h, i) in contactHours" :key="i">
+                <AppIcon name="clock" :size="14" aria-hidden="true" />
+                <span>{{ h.label }}</span>
+                <strong>{{ h.value }}</strong>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <section id="sv-pedido" class="sv-flush" aria-labelledby="sv-book-title">
           <div class="sv-book">
             <div class="sv-book-info">
