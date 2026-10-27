@@ -12,7 +12,7 @@ from unittest.mock import patch, Mock
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -659,7 +659,6 @@ from django.db import connection, IntegrityError, transaction
 from AdminApp.domains.invoices.services import IssueInvoiceQuery
 from AdminApp.domains.invoices.services import afip as _afip, vault as _vault
 from AdminApp.domains.payments.models import Payment
-from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models.fields import digest_for
 from AdminApp.domains.users.services import BillingMissingFieldsQuery
 
@@ -716,9 +715,12 @@ class EncryptedProfileFieldsTests(TestCase):
         self.assertEqual(profile.phone, '+5491122334455')
         self.assertEqual(profile.business_name, 'Tienda Demo')
 
+    @override_settings(SECRETS_MASTER_KEYS = '')
     def test_empty_keyring_falls_back_to_derived_key(self):
         #Dev/test sin SECRETS_MASTER_KEYS: el vault cifra con la llave
         #derivada del SECRET_KEY (kid "self") — prod la exige (users.E002).
+        #El override es obligatorio: CI define SECRETS_MASTER_KEYS (check
+        #--deploy la exige) y sin esto el test heredaría el keyring del job.
         profile     =   _full_profile('encdev')
         raw         =   self._raw(profile, 'document')['document']
         self.assertEqual(_vault.token_kid(raw), 'self')

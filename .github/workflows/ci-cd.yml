@@ -89,6 +89,12 @@ jobs:
       # deploy=True) tumba el job y con él toda la cadena build -> deploy.
       # Los tests de firma siguen usando su propio SECRET vía patch.dict.
       MP_WEBHOOK_SECRET: ci-only-webhook-secret-not-real-000000000000
+      # Keyring AES-256-GCM de la PII de UserProfile + llave HMAC de las
+      # huellas (users.E002/E003, deploy=True). Dummies de CI — el keyring
+      # real vive en el Environment de producción. El test que verifica el
+      # fallback al SECRET_KEY se aísla con override_settings.
+      SECRETS_MASTER_KEYS: ci1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+      SECRETS_HASH_KEY: ci-only-hash-key-000000000000000000000000000000
       # check --deploy exige un ADMIN_URL no predecible (users.E001)
       ADMIN_URL: ci-backoffice/
       # Los defaults seguros de prod (Secure cookies, redirect https) son los
