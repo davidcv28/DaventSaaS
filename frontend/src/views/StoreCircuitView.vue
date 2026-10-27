@@ -10,6 +10,7 @@ import StTag from '../components/store/StTag.vue'
 import OfferSeal from '../components/store/OfferSeal.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-circuit.css'
+import { useLayout } from '../composables/useLayout.js'
 
 // Familia TECNOLOGÍA — "Circuit". Ficha técnica viva: el producto flota
 // sobre una grilla de ingeniería con halo de acento y los datos hablan —
@@ -17,6 +18,7 @@ import '../assets/store-circuit.css'
 // comparador. Variantes: 'circuit' (densidad dark, halo fuerte) y 'lab'
 // (claro minimal: mismo esqueleto, halo suave, menos brillo).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, hasAbout, showContact, showCatalog, heroTitle } = p
 const variant = computed(() => (pageTemplate.value === 'lab' ? 'lab' : 'circuit'))
 
@@ -95,7 +97,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
 <template>
 <div class="sp-page-root ci" :data-var="variant">
   <!-- ===== Hero técnico: producto flotando + callouts conectados ===== -->
-  <header ref="heroEl" class="ci-hero">
+  <header v-if="on('hero')" ref="heroEl" class="ci-hero" :style="{ order: pos('hero') }">
     <div class="ci-hero-grid-bg" aria-hidden="true"></div>
     <div class="ci-hero-stage">
       <div v-if="heroImg" class="ci-hero-product" v-reveal>
@@ -138,7 +140,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
 
   <main class="ci-main">
     <!-- ===== Bento de productos: destacado 2x2 con spec overlay ===== -->
-    <section v-if="bentoItems.length" class="ci-bento" aria-label="Productos">
+    <section v-if="bentoItems.length && on('featured')" class="ci-bento" :style="{ order: pos('featured') }" aria-label="Productos">
       <BentoGrid :items="bentoItems" :is-offer="isOffer" :is-featured="isFeatured" v-slot="{ item, span }">
         <RouterLink class="ci-cell" :to="p.productTo(item)" :aria-label="`${item.name} — ${p.formatARS(p.effectivePrice(item))}`">
           <img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" decoding="async" />
@@ -158,7 +160,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
       </BentoGrid>
     </section>
 
-    <section v-else-if="showCatalog" class="ci-empty">
+    <section v-else-if="showCatalog && on('featured')" class="ci-empty" :style="{ order: pos('featured') }">
       <span class="ci-empty-mark"><AppIcon name="monitor" :size="26" /></span>
       <h2>Sistema en espera</h2>
       <p>{{ shopName }} está cargando su inventario. Consultanos por el equipo que buscás.</p>
@@ -166,7 +168,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
     </section>
 
     <!-- ===== Comparador ===== -->
-    <section v-if="compare" v-reveal class="ci-compare" aria-labelledby="ci-cmp-t">
+    <section v-if="compare && on('compare')" v-reveal class="ci-compare" :style="{ order: pos('compare') }" aria-labelledby="ci-cmp-t">
       <h2 id="ci-cmp-t">Comparar</h2>
       <div class="ci-compare-scroll">
         <table>
@@ -188,7 +190,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
     </section>
 
     <!-- ===== Soporte / contacto en cards ===== -->
-    <section v-if="showContact || p.waBase.value || p.hours.value.length" v-reveal id="contacto" class="ci-support" aria-labelledby="ci-sup-t">
+    <section v-if="(showContact || p.waBase.value || p.hours.value.length) && on('contact')" v-reveal id="contacto" class="ci-support" :style="{ order: pos('contact') }" aria-labelledby="ci-sup-t">
       <h2 id="ci-sup-t">Soporte</h2>
       <div class="ci-support-grid">
         <a v-if="p.waBase.value" class="ci-sup-card" :href="p.waGeneral.value" target="_blank" rel="noopener">

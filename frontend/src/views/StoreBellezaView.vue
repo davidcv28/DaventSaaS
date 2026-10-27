@@ -8,6 +8,7 @@ import TrustBar from '../components/store/TrustBar.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-belleza.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia BELLEZA — se compra tiempo y confianza. El cliente de
@@ -18,6 +19,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // 'signature' (ceremonial — Cinzel sobre espresso, filetes, monograma;
 // el layout ya pinta su paleta --sg-*).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, heroTitle, heroTitleIsName, showCatalog, showServices } = p
 const variant = computed(() => (pageTemplate.value === 'signature' ? 'signature' : 'calma'))
 
@@ -63,7 +65,7 @@ onMounted(() => { p.loadCatalog() })
 <template>
 <div class="sp-page-root be" :data-var="variant">
   <!-- ===== Hero: sereno (calma) / ceremonial (signature) ===== -->
-  <header class="be-hero">
+  <header v-if="on('hero')" class="be-hero" :style="{ order: pos('hero') }">
     <div class="be-hero-in">
       <span v-if="heroTitleIsName" class="be-mono-mark" aria-hidden="true">{{ p.initial }}</span>
       <p class="be-kicker">{{ heroTitleIsName ? (location || 'tienda online') : shopName }}</p>
@@ -74,7 +76,7 @@ onMounted(() => { p.loadCatalog() })
         <RouterLink v-if="showServices && hasServices" :to="p.servicesTo.value" class="be-btn"><AppIcon name="sparkles" :size="16" aria-hidden="true" /> Ver servicios</RouterLink>
         <RouterLink v-else-if="showCatalog" :to="p.catalogTo.value" class="be-btn"><AppIcon name="search" :size="16" aria-hidden="true" /> Ver productos</RouterLink>
       </div>
-      <div v-if="stats.length" class="be-stats">
+      <div v-if="stats.length && on('stats')" class="be-stats">
         <div v-for="s in stats" :key="s.label" class="be-stat"><b>{{ s.value }}</b><span>{{ s.label }}</span></div>
       </div>
     </div>
@@ -85,7 +87,7 @@ onMounted(() => { p.loadCatalog() })
 
   <main class="be-main">
     <!-- ===== La carta de servicios: turno, duración, precio ===== -->
-    <section v-if="hasServices" v-reveal class="be-sec" aria-labelledby="be-svc-t">
+    <section v-if="hasServices && on('services')" v-reveal class="be-sec" :style="{ order: pos('services') }" aria-labelledby="be-svc-t">
       <div class="be-sec-head">
         <h2 id="be-svc-t" class="be-sec-title">{{ variant === 'calma' ? 'Nuestros servicios' : 'La carta' }}</h2>
         <RouterLink v-if="showServices" class="be-sec-link" :to="p.servicesTo.value">Todos los servicios <AppIcon name="arrow-right" :size="15" /></RouterLink>
@@ -106,7 +108,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Resultados / antes-después (galería real) ===== -->
-    <section v-if="p.gallery.value.length" v-reveal class="be-sec" aria-labelledby="be-gal-t">
+    <section v-if="p.gallery.value.length && on('gallery')" v-reveal class="be-sec" :style="{ order: pos('gallery') }" aria-labelledby="be-gal-t">
       <div class="be-sec-head"><h2 id="be-gal-t" class="be-sec-title">{{ variant === 'calma' ? 'Nuestros resultados' : 'El portafolio' }}</h2></div>
       <div class="be-gallery">
         <div v-for="(g, i) in p.gallery.value.slice(0, 8)" :key="i" class="be-gal-item">
@@ -116,7 +118,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Productos ===== -->
-    <section v-if="gridItems.length" v-reveal class="be-sec" aria-labelledby="be-grid-t">
+    <section v-if="gridItems.length && on('offers')" v-reveal class="be-sec" :style="{ order: pos('offers') }" aria-labelledby="be-grid-t">
       <div class="be-sec-head">
         <h2 id="be-grid-t" class="be-sec-title">{{ variant === 'calma' ? 'Ofertas para llevarte' : 'Ofertas de la boutique' }}</h2>
         <RouterLink v-if="showCatalog && extraCount" class="be-sec-link" :to="p.catalogTo.value">Ver {{ extraCount }} más <AppIcon name="arrow-right" :size="15" /></RouterLink>
@@ -129,7 +131,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Horarios + zona ===== -->
-    <section v-reveal class="be-sec" aria-labelledby="be-datos-t">
+    <section v-if="on('contact')" v-reveal class="be-sec" :style="{ order: pos('contact') }" aria-labelledby="be-datos-t">
       <div class="be-sec-head"><h2 id="be-datos-t" class="be-sec-title">{{ variant === 'calma' ? 'Horarios y ubicación' : 'El atelier' }}</h2></div>
       <div class="be-cols">
         <div class="be-panel">
@@ -151,7 +153,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Opiniones ===== -->
-    <section v-if="p.testimonials.value.length" v-reveal class="be-sec" aria-labelledby="be-quotes-t">
+    <section v-if="p.testimonials.value.length && on('testimonials')" v-reveal class="be-sec" :style="{ order: pos('testimonials') }" aria-labelledby="be-quotes-t">
       <div class="be-sec-head"><h2 id="be-quotes-t" class="be-sec-title">{{ variant === 'calma' ? 'Lo que dicen' : 'Referencias' }}</h2></div>
       <div class="be-quotes">
         <figure v-for="(t, i) in p.testimonials.value.slice(0, 3)" :key="i" class="be-quote">
@@ -162,7 +164,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== CTA final ===== -->
-    <section v-reveal class="be-sec" aria-labelledby="be-cta-t">
+    <section v-if="on('cta')" v-reveal class="be-sec" :style="{ order: pos('cta') }" aria-labelledby="be-cta-t">
       <div class="be-cta">
         <h2 id="be-cta-t">{{ variant === 'calma' ? 'Reservá tu turno.' : 'Su turno le espera.' }}</h2>
         <p>Escribinos por WhatsApp, elegí tu servicio y coordinamos el horario que mejor te quede.</p>

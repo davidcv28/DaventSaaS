@@ -422,6 +422,10 @@ html.sp-lock body { overflow: hidden; overscroll-behavior: none; }
 /* Raíz única de cada página hija (la transición la necesita): crece para
    que el pie quede abajo en páginas con poco contenido. */
 .sp-page-root { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* Las vistas familiares agrupan sus secciones dentro de <main>: flex
+   permite reordenarlas con `order` desde el editor de bloques (los
+   hijos sin order conservan el orden declarado en el markup). */
+.sp-page-root > main { display: flex; flex-direction: column; min-width: 0; }
 /* La última sección del inicio (hero/about/galería/contacto, según estén
    activas) siempre respira antes del pie: sin este aire el contenido choca
    con el borde superior del footer. */

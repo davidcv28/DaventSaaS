@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-bloque.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Bloque": grid suizo de bordes duros — papel y tinta con reglas
@@ -17,6 +18,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // acento a bloque y motion mecánico (wipe por palabra, cinta marquee). Es la
 // portada real cuando la tienda elige 'bloque' (StoreHomeView la monta).
 const ctx = inject('storePage')
+const { on, pos } = useLayout('landing')
 const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced, loadPublicCatalog } = ctx
 
 const router = useRouter()
@@ -226,7 +228,7 @@ onBeforeUnmount(() => {
 <div class="sp-page-root bq">
   <!-- ===== Hero: meta mono, titular XXL con wipe por palabra y pie en
        3 celdas regladas (descripción / estado / acciones) ===== -->
-  <section class="bq-hero">
+  <section v-if="on('hero')" class="bq-hero" :style="{ order: pos('hero') }">
     <div class="sp-container">
       <p class="bq-meta" aria-hidden="true">
         <span>{{ shopName }}</span>
@@ -254,7 +256,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Cinta: nombre + datos reales en loop continuo ===== -->
-  <div class="bq-ticker" aria-hidden="true">
+  <div v-if="on('highlights')" class="bq-ticker" :style="{ order: pos('highlights') }" aria-hidden="true">
     <div class="bq-ticker-track">
       <span v-for="(t, i) in tickerItems" :key="`a-${i}`" class="bq-ticker-item">{{ t }} <i>·</i></span>
       <span v-for="(t, i) in tickerItems" :key="`b-${i}`" class="bq-ticker-item">{{ t }} <i>·</i></span>
@@ -262,14 +264,14 @@ onBeforeUnmount(() => {
   </div>
 
   <!-- ===== Cinta de anuncios: avisos del dueño en banda de acento ===== -->
-  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+  <div v-if="showAnn && on('announcements')" class="sp-ann" :style="{ order: pos('announcements') }" role="note" aria-label="Anuncios de la tienda">
     <div class="sp-ann-track">
       <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
     </div>
   </div>
 
   <!-- ===== Tus números: celdas de grilla pegadas a la cinta ===== -->
-  <section v-if="showStats" class="bq-stats" aria-label="Cifras del negocio">
+  <section v-if="showStats && on('stats')" class="bq-stats" :style="{ order: pos('stats') }" aria-label="Cifras del negocio">
     <div class="sp-container bq-stats-row">
       <div v-for="(s, i) in stats" :key="i" v-reveal="i * 60" class="bq-stat">
         <strong>{{ s.value }}</strong>
@@ -279,7 +281,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Catálogo: cabecera numerada + grilla de placas duras ===== -->
-  <section v-if="gridProducts.length" id="ofertas" class="bq-sec" aria-labelledby="bq-prod-title">
+  <section v-if="gridProducts.length && on('offers')" id="ofertas" class="bq-sec" :style="{ order: pos('offers') }" aria-labelledby="bq-prod-title">
     <div class="sp-container">
       <header v-reveal class="bq-sec-head">
         <span class="bq-idx" aria-hidden="true">01</span>
@@ -299,7 +301,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Nosotros: cabecera a la izquierda, texto y especialidades a la
        derecha (el split de la referencia) ===== -->
-  <section v-if="hasAbout" id="nosotros" class="bq-sec bq-about" aria-labelledby="bq-about-title">
+  <section v-if="hasAbout && on('about')" id="nosotros" class="bq-sec bq-about" :style="{ order: pos('about') }" aria-labelledby="bq-about-title">
     <div class="sp-container bq-about-grid">
       <header v-reveal class="bq-sec-head col">
         <span class="bq-idx" aria-hidden="true">02</span>
@@ -320,7 +322,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Qué ofrecemos: filas numeradas entre reglas ===== -->
-  <section v-if="showServices" class="bq-sec" aria-labelledby="bq-serv-title">
+  <section v-if="showServices && on('services')" class="bq-sec" :style="{ order: pos('services') }" aria-labelledby="bq-serv-title">
     <div class="sp-container">
       <header v-reveal class="bq-sec-head">
         <span class="bq-idx" aria-hidden="true">03</span>
@@ -341,7 +343,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Testimonios: citas como celdas de la grilla ===== -->
-  <section v-if="showTestimonials" class="bq-sec" aria-labelledby="bq-test-title">
+  <section v-if="showTestimonials && on('testimonials')" class="bq-sec" :style="{ order: pos('testimonials') }" aria-labelledby="bq-test-title">
     <div class="sp-container">
       <header v-reveal class="bq-sec-head">
         <span class="bq-idx" aria-hidden="true">04</span>
@@ -360,7 +362,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Galería: placas regladas con el lightbox compartido ===== -->
-  <section v-if="showGallery" id="galeria" class="bq-sec" aria-labelledby="bq-gal-title">
+  <section v-if="showGallery && on('gallery')" id="galeria" class="bq-sec" :style="{ order: pos('gallery') }" aria-labelledby="bq-gal-title">
     <div class="sp-container">
       <header v-reveal class="bq-sec-head">
         <span class="bq-idx" aria-hidden="true">05</span>
@@ -380,7 +382,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Preguntas frecuentes ===== -->
-  <section v-if="showFaqs" class="bq-sec" aria-labelledby="bq-faq-title">
+  <section v-if="showFaqs && on('faq')" class="bq-sec" :style="{ order: pos('faq') }" aria-labelledby="bq-faq-title">
     <div class="sp-container bq-faq-grid">
       <header v-reveal class="bq-sec-head col">
         <span class="bq-idx" aria-hidden="true">06</span>
@@ -396,7 +398,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Video: embed enmarcado con las mismas reglas duras ===== -->
-  <section v-if="showVideo" class="sp-video" aria-labelledby="sp-video-title">
+  <section v-if="showVideo && on('video')" class="sp-video" :style="{ order: pos('video') }" aria-labelledby="sp-video-title">
     <div class="sp-container">
       <header v-reveal class="sp-video-head">
         <h2 id="sp-video-title" class="sp-video-title">{{ videoTitle }}</h2>
@@ -412,7 +414,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== CTA: bloque de tinta a todo lo ancho ===== -->
-  <section v-if="showCta" class="bq-cta">
+  <section v-if="showCta && on('cta')" class="bq-cta" :style="{ order: pos('cta') }">
     <div class="sp-container bq-cta-inner">
       <h2 v-reveal class="bq-cta-title">{{ ctaTitle }}</h2>
       <p v-if="custom.cta_text" v-reveal="80" class="bq-cta-text">{{ custom.cta_text }}</p>
@@ -427,7 +429,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Contacto: canales e info en celdas + formulario compartido ===== -->
-  <section v-if="showContact" id="contacto" class="bq-sec bq-contact" aria-labelledby="bq-contact-title">
+  <section v-if="showContact && on('contact')" id="contacto" class="bq-sec bq-contact" :style="{ order: pos('contact') }" aria-labelledby="bq-contact-title">
     <div class="sp-container bq-contact-grid">
       <div class="bq-contact-info">
         <header v-reveal class="bq-sec-head col">
@@ -505,7 +507,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Palabra de cierre: la marca a todo lo ancho ===== -->
-  <div class="bq-word" aria-hidden="true"><span :style="nameFont">{{ shopName }}</span></div>
+  <div class="bq-word" :style="{ order: pos('contact') }" aria-hidden="true"><span :style="nameFont">{{ shopName }}</span></div>
 
   <!-- ===== Galería: visor (mismo modal que el resto de diseños) ===== -->
   <Transition name="sp-modal">

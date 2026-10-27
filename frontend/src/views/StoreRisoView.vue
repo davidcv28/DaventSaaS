@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-riso.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Riso": landing en risografía — papel crema con trama de puntos,
@@ -17,6 +18,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // sombras desplazadas, botones píldora y motion con resorte. El azul toma
 // el acento de la tienda. Es la portada real cuando la tienda elige 'riso'.
 const ctx = inject('storePage')
+const { on, pos } = useLayout('landing')
 const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced, loadPublicCatalog } = ctx
 
 const router = useRouter()
@@ -227,7 +229,7 @@ onBeforeUnmount(() => {
 <template>
 <div class="sp-page-root rs">
   <!-- ===== Hero: kicker, titular XXL a tres tintas, pie con sticker y acciones ===== -->
-  <section class="rs-hero">
+  <section v-if="on('hero')" class="rs-hero" :style="{ order: pos('hero') }">
     <div class="sp-container">
       <div class="rs-hero-top">
         <span class="rs-kicker">{{ shopName }} · {{ new Date().getFullYear() }}</span>
@@ -251,7 +253,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Cinta rosa inclinada con datos reales en loop ===== -->
-  <div class="rs-band" aria-hidden="true">
+  <div v-if="on('highlights')" class="rs-band" :style="{ order: pos('highlights') }" aria-hidden="true">
     <div class="rs-band-track">
       <span v-for="(t, i) in tickerItems" :key="`a-${i}`">{{ t }}</span>
       <span v-for="(t, i) in tickerItems" :key="`b-${i}`">{{ t }}</span>
@@ -259,14 +261,14 @@ onBeforeUnmount(() => {
   </div>
 
   <!-- ===== Cinta de anuncios: avisos del dueño en banda propia ===== -->
-  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+  <div v-if="showAnn && on('announcements')" class="sp-ann" :style="{ order: pos('announcements') }" role="note" aria-label="Anuncios de la tienda">
     <div class="sp-ann-track">
       <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
     </div>
   </div>
 
   <!-- ===== Cifras: tarjetas de tinta plana ===== -->
-  <section v-if="showStats" class="rs-sec rs-stats-sec" aria-label="Cifras del negocio">
+  <section v-if="showStats && on('stats')" class="rs-sec rs-stats-sec" :style="{ order: pos('stats') }" aria-label="Cifras del negocio">
     <div class="sp-container rs-stats">
       <div v-for="(s, i) in stats" :key="i" v-reveal="i * 60" class="rs-stat" :class="`t${i % 4}`">
         <strong>{{ s.value }}</strong>
@@ -276,7 +278,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Catálogo: chips de categoría + grilla de tarjetas con placa de color ===== -->
-  <section v-if="offerProducts.length" id="ofertas" class="rs-sec" aria-labelledby="rs-prod-title">
+  <section v-if="offerProducts.length && on('offers')" id="ofertas" class="rs-sec" :style="{ order: pos('offers') }" aria-labelledby="rs-prod-title">
     <div class="sp-container">
       <header v-reveal class="rs-sec-head">
         <h2 id="rs-prod-title" class="rs-h2">Ofertas <em>de la casa</em></h2>
@@ -299,7 +301,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Nosotros: tarjeta de título + copy ===== -->
-  <section v-if="hasAbout" id="nosotros" class="rs-sec" aria-labelledby="rs-about-title">
+  <section v-if="hasAbout && on('about')" id="nosotros" class="rs-sec" :style="{ order: pos('about') }" aria-labelledby="rs-about-title">
     <div class="sp-container rs-process">
       <header v-reveal class="rs-process-head">
         <span class="rs-kicker">Nosotros</span>
@@ -320,7 +322,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Qué ofrecemos: tarjetas con ícono en disco de color ===== -->
-  <section v-if="showServices" class="rs-sec" aria-labelledby="rs-serv-title">
+  <section v-if="showServices && on('services')" class="rs-sec" :style="{ order: pos('services') }" aria-labelledby="rs-serv-title">
     <div class="sp-container">
       <header v-reveal class="rs-sec-head">
         <h2 id="rs-serv-title" class="rs-h2">{{ servicesTitle }}</h2>
@@ -339,7 +341,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Testimonios ===== -->
-  <section v-if="showTestimonials" class="rs-sec" aria-labelledby="rs-test-title">
+  <section v-if="showTestimonials && on('testimonials')" class="rs-sec" :style="{ order: pos('testimonials') }" aria-labelledby="rs-test-title">
     <div class="sp-container">
       <header v-reveal class="rs-sec-head">
         <h2 id="rs-test-title" class="rs-h2">{{ testimonialsTitle }}</h2>
@@ -357,7 +359,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Galería ===== -->
-  <section v-if="showGallery" id="galeria" class="rs-sec" aria-labelledby="rs-gal-title">
+  <section v-if="showGallery && on('gallery')" id="galeria" class="rs-sec" :style="{ order: pos('gallery') }" aria-labelledby="rs-gal-title">
     <div class="sp-container">
       <header v-reveal class="rs-sec-head">
         <h2 id="rs-gal-title" class="rs-h2">Galería</h2>
@@ -376,7 +378,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Preguntas frecuentes ===== -->
-  <section v-if="showFaqs" class="rs-sec" aria-labelledby="rs-faq-title">
+  <section v-if="showFaqs && on('faq')" class="rs-sec" :style="{ order: pos('faq') }" aria-labelledby="rs-faq-title">
     <div class="sp-container rs-faq-grid">
       <header v-reveal class="rs-sec-head col">
         <h2 id="rs-faq-title" class="rs-h2">{{ faqsTitle }}</h2>
@@ -392,7 +394,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== CTA: bloque azul con sombra desplazada ===== -->
   <!-- ===== Video: embed en placas de tinta plana ===== -->
-  <section v-if="showVideo" class="sp-video" aria-labelledby="sp-video-title">
+  <section v-if="showVideo && on('video')" class="sp-video" :style="{ order: pos('video') }" aria-labelledby="sp-video-title">
     <div class="sp-container">
       <header v-reveal class="sp-video-head">
         <h2 id="sp-video-title" class="sp-video-title">{{ videoTitle }}</h2>
@@ -407,7 +409,7 @@ onBeforeUnmount(() => {
     </div>
   </section>
 
-  <section v-if="showCta" class="rs-sec">
+  <section v-if="showCta && on('cta')" class="rs-sec" :style="{ order: pos('cta') }">
     <div class="sp-container">
       <div class="rs-shop">
         <div>
@@ -426,7 +428,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Contacto ===== -->
-  <section v-if="showContact" id="contacto" class="rs-sec rs-contact" aria-labelledby="rs-contact-title">
+  <section v-if="showContact && on('contact')" id="contacto" class="rs-sec rs-contact" :style="{ order: pos('contact') }" aria-labelledby="rs-contact-title">
     <div class="sp-container rs-contact-grid">
       <div class="rs-contact-info">
         <header v-reveal class="rs-sec-head col">
@@ -503,7 +505,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Palabra de cierre: la marca a todo lo ancho en rosa multiply ===== -->
-  <div class="rs-word" aria-hidden="true"><span :style="nameFont">{{ shopName }}</span></div>
+  <div class="rs-word" :style="{ order: pos('contact') }" aria-hidden="true"><span :style="nameFont">{{ shopName }}</span></div>
 
   <!-- ===== Galería: visor (mismo modal que el resto de diseños) ===== -->
   <Transition name="sp-modal">

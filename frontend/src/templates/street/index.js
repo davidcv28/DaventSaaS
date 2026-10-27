@@ -12,7 +12,7 @@ export default {
     product: productViews.atelier
   },
   blocks: {
-    landing: ['hero', 'featured', 'gallery', 'about', 'contact'],
+    landing: ['hero', 'offers', 'gallery', 'about', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

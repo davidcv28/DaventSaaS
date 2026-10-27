@@ -7,6 +7,7 @@ import StTag from '../components/store/StTag.vue'
 import TplProductCard from '../components/store/TplProductCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-atelier.css'
+import { useLayout } from '../composables/useLayout.js'
 
 // Familia INDUMENTARIA — "Lookbook". La ropa es protagonista y la UI casi
 // desaparece: titular XXL que atraviesa la foto, pestañas tipográficas,
@@ -14,6 +15,7 @@ import '../assets/store-atelier.css'
 // mismo esqueleto: 'atelier' (editorial limpio, radio 2px) y 'street'
 // (crudo: Archivo Black, borde negro, relieve duro, radio 0).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, hasAbout, showContact, showCatalog, heroTitle } = p
 const variant = computed(() => (pageTemplate.value === 'street' ? 'street' : 'atelier'))
 
@@ -90,7 +92,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
 <template>
 <div class="sp-page-root at" :data-var="variant">
   <!-- ===== Hero asimétrico: titular en 3 tintas atravesando la imagen ===== -->
-  <header ref="heroEl" class="at-hero">
+  <header v-if="on('hero')" ref="heroEl" class="at-hero" :style="{ order: pos('hero') }">
     <span class="at-collection" aria-hidden="true">{{ p.collectionTag.value }}</span>
     <span v-if="variant === 'street'" class="at-sticker" aria-hidden="true">Nuevo<br />drop</span>
     <div v-if="p.heroImage.value" class="at-hero-media">
@@ -130,7 +132,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
 
   <!-- ===== Grilla editorial: ritmo 1 grande / 2 chicas / 1 grande invertida ===== -->
   <main class="at-main">
-    <section v-if="gridItems.length" class="at-grid" aria-label="Piezas en oferta">
+    <section v-if="gridItems.length && on('offers')" class="at-grid" :style="{ order: pos('offers') }" aria-label="Piezas en oferta">
       <TplProductCard
         v-for="(prod, i) in gridItems" :key="prod.id"
         class="at-card" :class="cellClass(i)"
@@ -150,7 +152,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
     </section>
 
     <!-- Estado vacío diseñado: 0 productos -->
-    <section v-else-if="showCatalog && !p.products.value.length" class="at-empty">
+    <section v-else-if="showCatalog && !p.products.value.length && on('offers')" class="at-empty" :style="{ order: pos('offers') }">
       <span class="at-empty-mark"><AppIcon name="scissors" :size="26" /></span>
       <h2>La colección se está preparando</h2>
       <p>{{ shopName }} está cargando sus piezas. Volvé pronto o consultanos directo.</p>
@@ -158,7 +160,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
     </section>
 
     <!-- ===== Look completo: hotspots sobre una imagen ===== -->
-    <section v-if="lookImage && lookProducts.length" v-reveal class="at-look" aria-labelledby="at-look-t">
+    <section v-if="lookImage && lookProducts.length && on('gallery')" v-reveal class="at-look" :style="{ order: pos('gallery') }" aria-labelledby="at-look-t">
       <figure class="at-look-media">
         <img :src="lookImage" :alt="`Look de ${shopName}`" loading="lazy" decoding="async" />
         <button
@@ -186,7 +188,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
     </section>
 
     <!-- ===== Sobre la marca (solo con datos) ===== -->
-    <section v-if="hasAbout" v-reveal class="at-about" aria-labelledby="at-about-t">
+    <section v-if="hasAbout && on('about')" v-reveal class="at-about" :style="{ order: pos('about') }" aria-labelledby="at-about-t">
       <h2 id="at-about-t" class="at-about-title">{{ custom.about_title?.trim() || shopName }}</h2>
       <p v-if="custom.about_text" class="at-about-text">{{ custom.about_text }}</p>
       <p v-if="custom.about_mission" class="at-about-mission">{{ custom.about_mission }}</p>
@@ -196,7 +198,7 @@ onBeforeUnmount(() => heroIO?.disconnect())
     </section>
 
     <!-- ===== Cierre: etiqueta de prenda ===== -->
-    <section v-if="showContact || location || p.waBase.value" v-reveal id="contacto" class="at-tag" aria-labelledby="at-tag-t">
+    <section v-if="(showContact || location || p.waBase.value) && on('contact')" v-reveal id="contacto" class="at-tag" :style="{ order: pos('contact') }" aria-labelledby="at-tag-t">
       <span class="at-tag-hole" aria-hidden="true"></span>
       <div class="at-tag-body">
         <h2 id="at-tag-t">{{ shopName }}</h2>

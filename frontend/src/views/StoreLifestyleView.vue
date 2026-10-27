@@ -6,6 +6,7 @@ import MarqueeBand from '../components/store/MarqueeBand.vue'
 import TrustBar from '../components/store/TrustBar.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-lifestyle.css'
+import { useLayout } from '../composables/useLayout.js'
 
 // Familia LIFESTYLE — boutiques, concept stores, marcas personales.
 // Se compra por deseo: el look y la colección mandan, no el precio.
@@ -14,6 +15,7 @@ import '../assets/store-lifestyle.css'
 // Variantes: 'vitrina' (asimetría de ventana, Playfair itálica) y
 // 'lookbook' (índice editorial — el layout pinta su papel --lb-*).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, heroTitle, heroTitleIsName, showCatalog } = p
 const variant = computed(() => (pageTemplate.value === 'lookbook' ? 'lookbook' : 'vitrina'))
 
@@ -48,7 +50,7 @@ onMounted(() => { p.loadCatalog() })
 <template>
 <div class="sp-page-root lf" :data-var="variant">
   <!-- ===== Hero: vidriera / portada de pliego ===== -->
-  <header class="lf-hero">
+  <header v-if="on('hero')" class="lf-hero" :style="{ order: pos('hero') }">
     <div class="lf-hero-in">
       <div class="lf-hero-copy">
         <p class="lf-issue">{{ variant === 'vitrina' ? `Nº ${p.year} · colección` : `vol. ${p.year} · índice` }}</p>
@@ -75,7 +77,7 @@ onMounted(() => { p.loadCatalog() })
 
   <main class="lf-main">
     <!-- ===== Índice de colección ===== -->
-    <section v-if="indexItems.length" v-reveal class="lf-sec" aria-labelledby="lf-idx-t">
+    <section v-if="indexItems.length && on('offers')" v-reveal class="lf-sec" :style="{ order: pos('offers') }" aria-labelledby="lf-idx-t">
       <div class="lf-sec-head">
         <h2 id="lf-idx-t" class="lf-sec-title">{{ variant === 'vitrina' ? 'En oferta' : 'Índice de ofertas' }}</h2>
         <RouterLink v-if="showCatalog" class="lf-sec-link" :to="p.catalogTo.value">Ver todo <AppIcon name="arrow-right" :size="15" /></RouterLink>
@@ -92,7 +94,7 @@ onMounted(() => { p.loadCatalog() })
 
 
     <!-- ===== Opiniones como cita ===== -->
-    <section v-if="p.testimonials.value.length" v-reveal class="lf-sec" aria-labelledby="lf-quotes-t">
+    <section v-if="p.testimonials.value.length && on('testimonials')" v-reveal class="lf-sec" :style="{ order: pos('testimonials') }" aria-labelledby="lf-quotes-t">
       <div class="lf-sec-head"><h2 id="lf-quotes-t" class="lf-sec-title">{{ variant === 'vitrina' ? 'Lo que dicen' : 'Referencias' }}</h2></div>
       <div class="lf-quotes">
         <figure v-for="(t, i) in p.testimonials.value.slice(0, 3)" :key="i" class="lf-quote">
@@ -103,7 +105,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== CTA final ===== -->
-    <section v-reveal class="lf-sec" aria-labelledby="lf-cta-t">
+    <section v-if="on('cta')" v-reveal class="lf-sec" :style="{ order: pos('cta') }" aria-labelledby="lf-cta-t">
       <div class="lf-cta">
         <h2 id="lf-cta-t">{{ variant === 'vitrina' ? 'Pasá por la vidriera.' : 'Fin del pliego.' }}</h2>
         <p>Escribinos por WhatsApp y te contamos disponibilidad, medios de pago y envíos.</p>

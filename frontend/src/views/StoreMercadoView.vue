@@ -8,6 +8,7 @@ import StepRail from '../components/store/StepRail.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-mercado.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia COMESTIBLES — "Mercado". Mesa servida: apetito primero, pedido
@@ -16,6 +17,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // y horarios con "Abierto ahora". Variantes: 'mercado' (cards cálidas) y
 // 'carta' (menú de restaurante: lista con puntos y precios alineados).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, hasAbout, showContact, showCatalog, heroTitle } = p
 const variant = computed(() => (pageTemplate.value === 'carta' ? 'carta' : 'mercado'))
 
@@ -93,7 +95,7 @@ onBeforeUnmount(() => sealIO?.disconnect())
 <template>
 <div class="sp-page-root mc" :data-var="variant">
   <!-- ===== Hero orgánico: arco + sello giratorio sobre crema/grano ===== -->
-  <header class="mc-hero">
+  <header v-if="on('hero')" class="mc-hero" :style="{ order: pos('hero') }">
     <div class="mc-hero-in">
       <figure v-if="p.heroImage.value" class="mc-hero-photo">
         <img :src="p.heroImage.value" :alt="`Plato de ${shopName}`" fetchpriority="high" decoding="async" />
@@ -136,7 +138,7 @@ onBeforeUnmount(() => sealIO?.disconnect())
 
   <main class="mc-main" id="mc-carta">
     <!-- ===== Variante mercado: cards cálidas con "+" de pedido ===== -->
-    <section v-if="variant === 'mercado' && gridItems.length" class="mc-grid" aria-label="Ofertas de la semana">
+    <section v-if="variant === 'mercado' && gridItems.length && on('offers')" class="mc-grid" :style="{ order: pos('offers') }" aria-label="Ofertas de la semana">
       <TplProductCard v-for="prod in gridItems" :key="prod.id" v-reveal class="mc-card" :p="prod"
         seal-shape="circle" ph-icon="coffee" :ph-size="28" :go="false"
         :add-href="p.waBase.value ? waOrder(prod) : ''" :add-label="`Pedir ${prod.name} por WhatsApp`"
@@ -149,7 +151,7 @@ onBeforeUnmount(() => sealIO?.disconnect())
     </section>
 
     <!-- ===== Variante carta: menú de restaurante ===== -->
-    <section v-else-if="variant === 'carta' && gridItems.length" class="mc-menu" aria-label="Ofertas de la carta">
+    <section v-else-if="variant === 'carta' && gridItems.length && on('offers')" class="mc-menu" :style="{ order: pos('offers') }" aria-label="Ofertas de la carta">
       <div v-for="g in menuGroups" :key="g.id" v-reveal class="mc-menu-group">
         <h2 class="mc-menu-title"><span>{{ g.name }}</span></h2>
         <ul class="mc-menu-list">
@@ -166,7 +168,7 @@ onBeforeUnmount(() => sealIO?.disconnect())
       </div>
     </section>
 
-    <section v-else-if="showCatalog && !p.products.value.length" class="mc-empty">
+    <section v-else-if="showCatalog && !p.products.value.length && on('offers')" class="mc-empty" :style="{ order: pos('offers') }">
       <span class="mc-empty-mark"><AppIcon name="coffee" :size="26" /></span>
       <h2>La cocina está preparando la carta</h2>
       <p>{{ shopName }} está subiendo sus productos. Escribinos y te contamos qué hay hoy.</p>
@@ -174,7 +176,7 @@ onBeforeUnmount(() => sealIO?.disconnect())
     </section>
 
     <!-- ===== Hoy en la carta (ofertas) ===== -->
-    <section v-if="todayOffers.length && variant === 'mercado'" v-reveal class="mc-today" aria-labelledby="mc-today-t">
+    <section v-if="todayOffers.length && variant === 'mercado' && on('offers')" v-reveal class="mc-today" :style="{ order: pos('steps') }" aria-labelledby="mc-today-t">
       <h2 id="mc-today-t"><span>Hoy en la carta</span></h2>
       <div class="mc-today-track">
         <TplProductCard v-for="prod in todayOffers" :key="prod.id" class="mc-today-card" :p="prod"
@@ -184,12 +186,12 @@ onBeforeUnmount(() => sealIO?.disconnect())
     </section>
 
     <!-- ===== Cómo pedir + horarios ===== -->
-    <section v-reveal class="mc-how" aria-labelledby="mc-how-t">
+    <section v-if="on('steps')" v-reveal class="mc-how" :style="{ order: pos('steps') }" aria-labelledby="mc-how-t">
       <h2 id="mc-how-t"><span>Cómo pedir</span></h2>
       <StepRail :steps="steps" />
     </section>
 
-    <div class="mc-bottom">
+    <div v-if="on('contact')" class="mc-bottom" :style="{ order: pos('contact') }">
       <ScheduleCard v-if="p.hours.value.length" :hours="p.hours.value" title="Horarios" />
       <section v-if="location || mapsUrl" v-reveal class="mc-zone" aria-labelledby="mc-zone-t">
         <h2 id="mc-zone-t"><span>Zona y entrega</span></h2>

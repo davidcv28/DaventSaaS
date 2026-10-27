@@ -12,7 +12,7 @@ export default {
     product: productViews.lifestyle
   },
   blocks: {
-    landing: ['hero', 'categories', 'featured', 'testimonials', 'cta'],
+    landing: ['hero', 'offers', 'testimonials', 'cta'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

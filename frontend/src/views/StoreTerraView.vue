@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-terra.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Terra": editorial cálido y artesanal. Papel crudo, titulares
@@ -17,6 +18,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // sello. La portada, el catálogo y la página de servicios comparten la
 // misma identidad (store-terra.css + store-services.css).
 const ctx = inject('storePage')
+const { on, pos } = useLayout('landing')
 const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced, loadPublicCatalog } = ctx
 
 const router = useRouter()
@@ -227,7 +229,7 @@ onBeforeUnmount(() => {
 <template>
 <div class="sp-page-root tr">
   <!-- ===== Portada: titular serif, bajada y arco con ficha flotante ===== -->
-  <section class="tr-hero">
+  <section v-if="on('hero')" class="tr-hero" :style="{ order: pos('hero') }">
     <div class="sp-container tr-hero-grid">
       <div class="tr-hero-copy">
         <p class="tr-eyebrow"><span class="tr-rule" aria-hidden="true"></span>{{ location || 'Hecho con dedicación' }}</p>
@@ -265,21 +267,21 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Cinta de valores ===== -->
-  <div class="tr-band" aria-hidden="true">
+  <div class="tr-band" :style="{ order: pos('announcements') }" aria-hidden="true">
     <div class="sp-container tr-band-inner">
       <span v-for="(t, i) in bandItems" :key="i" class="tr-band-item">{{ t }}<i>✦</i></span>
     </div>
   </div>
 
   <!-- ===== Anuncios ===== -->
-  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+  <div v-if="showAnn && on('announcements')" class="sp-ann" :style="{ order: pos('announcements') }" role="note" aria-label="Anuncios de la tienda">
     <div class="sp-ann-track">
       <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
     </div>
   </div>
 
   <!-- ===== Cifras ===== -->
-  <section v-if="showStats" class="tr-stats" aria-label="Cifras del negocio">
+  <section v-if="showStats && on('stats')" class="tr-stats" :style="{ order: pos('stats') }" aria-label="Cifras del negocio">
     <div class="sp-container tr-stats-row">
       <div v-for="(s, i) in stats" :key="i" v-reveal="i * 60" class="tr-stat">
         <strong>{{ s.value }}</strong>
@@ -289,7 +291,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Catálogo: selección en arcos ===== -->
-  <section v-if="gridProducts.length" id="catalogo" class="tr-sec" aria-labelledby="tr-prod-title">
+  <section v-if="gridProducts.length && on('offers')" id="catalogo" class="tr-sec" :style="{ order: pos('offers') }" aria-labelledby="tr-prod-title">
     <div class="sp-container">
       <header v-reveal class="tr-sec-head">
         <div>
@@ -310,7 +312,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Nosotros ===== -->
-  <section v-if="hasAbout" id="nosotros" class="tr-sec tr-about" aria-labelledby="tr-about-title">
+  <section v-if="hasAbout && on('about')" id="nosotros" class="tr-sec tr-about" :style="{ order: pos('about') }" aria-labelledby="tr-about-title">
     <div class="sp-container tr-about-grid">
       <figure v-reveal class="tr-about-media">
         <div class="tr-arch">
@@ -338,7 +340,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Servicios ===== -->
-  <section v-if="showServices" class="tr-sec" aria-labelledby="tr-serv-title">
+  <section v-if="showServices && on('services')" class="tr-sec" :style="{ order: pos('services') }" aria-labelledby="tr-serv-title">
     <div class="sp-container">
       <header v-reveal class="tr-sec-head">
         <div>
@@ -359,7 +361,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Testimonios ===== -->
-  <section v-if="showTestimonials" class="tr-sec tr-quotes" aria-labelledby="tr-test-title">
+  <section v-if="showTestimonials && on('testimonials')" class="tr-sec tr-quotes" :style="{ order: pos('testimonials') }" aria-labelledby="tr-test-title">
     <div class="sp-container">
       <header v-reveal class="tr-sec-head">
         <div>
@@ -381,7 +383,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Galería ===== -->
-  <section v-if="showGallery" id="galeria" class="tr-sec" aria-labelledby="tr-gal-title">
+  <section v-if="showGallery && on('gallery')" id="galeria" class="tr-sec" :style="{ order: pos('gallery') }" aria-labelledby="tr-gal-title">
     <div class="sp-container">
       <header v-reveal class="tr-sec-head">
         <div>
@@ -403,7 +405,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Preguntas frecuentes ===== -->
-  <section v-if="showFaqs" class="tr-sec tr-faq" aria-labelledby="tr-faq-title">
+  <section v-if="showFaqs && on('faq')" class="tr-sec tr-faq" :style="{ order: pos('faq') }" aria-labelledby="tr-faq-title">
     <div class="sp-container tr-faq-grid">
       <div>
         <p class="tr-eyebrow"><span class="tr-rule" aria-hidden="true"></span>Dudas</p>
@@ -419,7 +421,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Video ===== -->
-  <section v-if="showVideo" class="sp-video tr-video" aria-labelledby="tr-video-title">
+  <section v-if="showVideo && on('video')" class="sp-video tr-video" :style="{ order: pos('video') }" aria-labelledby="tr-video-title">
     <div class="sp-container">
       <header v-reveal class="sp-video-head">
         <h2 id="tr-video-title" class="sp-video-title">{{ videoTitle }}</h2>
@@ -435,7 +437,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Cierre ===== -->
-  <section v-if="showCta" class="tr-cta">
+  <section v-if="showCta && on('cta')" class="tr-cta" :style="{ order: pos('cta') }">
     <div class="sp-container tr-cta-inner">
       <div>
         <p class="tr-eyebrow light"><span class="tr-rule" aria-hidden="true"></span>Hablemos</p>
@@ -453,7 +455,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Contacto ===== -->
-  <section v-if="showContact" id="contacto" class="tr-sec tr-contact" aria-labelledby="tr-contact-title">
+  <section v-if="showContact && on('contact')" id="contacto" class="tr-sec tr-contact" :style="{ order: pos('contact') }" aria-labelledby="tr-contact-title">
     <div class="sp-container tr-contact-grid">
       <div class="tr-contact-info">
         <p class="tr-eyebrow"><span class="tr-rule" aria-hidden="true"></span>Contacto</p>
@@ -529,7 +531,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Firma de cierre ===== -->
-  <div class="tr-word" aria-hidden="true"><span :style="nameFont">{{ shopName }}</span></div>
+  <div class="tr-word" :style="{ order: pos('contact') }" aria-hidden="true"><span :style="nameFont">{{ shopName }}</span></div>
 
   <!-- ===== Visor de galería ===== -->
   <Transition name="sp-modal">

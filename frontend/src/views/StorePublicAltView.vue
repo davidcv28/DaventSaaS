@@ -8,6 +8,7 @@ import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/cat
 import { storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
+import { useLayout } from '../composables/useLayout.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-page-v2.css'
 import TplProductCard from '../components/store/TplProductCard.vue'
@@ -22,6 +23,9 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // (StoreHomeView la monta) y sigue abierta como vista previa en /<slug>/v2
 // (ruta store-alt): solo en ese caso se muestra la barra .sp2-preview.
 const ctx = inject('storePage')
+// Layout 'landing': el editor activa/ordena las secciones declaradas
+// por la plantilla (catálogo cerrado — sin HTML libre).
+const { on, pos } = useLayout('landing')
 const { slug, custom, shopName, nameFont, initial, location, hasAbout, showContact, showCatalog, hasDesignAdvanced, loadPublicCatalog } = ctx
 
 const router = useRouter()
@@ -310,7 +314,7 @@ onBeforeUnmount(() => {
 <div class="sp-page-root sp2">
   <!-- ===== Barra de vista previa: solo en /<slug>/v2 (ruta store-alt);
        cuando 'duo' es el diseño elegido esta composición ES la portada ===== -->
-  <div v-if="isPreview" class="sp2-preview">
+  <div v-if="isPreview" class="sp2-preview" :style="{ order: -1 }">
     <div class="sp-container sp2-preview-inner">
       <span class="sp2-preview-badge"><AppIcon name="eye" :size="13" /> Vista previa · Diseño Dúo</span>
       <span class="sp2-preview-note">Así se vería tu portada con el diseño Dúo: tu web actual no cambia.</span>
@@ -320,7 +324,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Presentación: hero partido sobre fondo claro — placa de imagen
        a la izquierda, identidad a la derecha (espejo de la opción 1) ===== -->
-  <section class="sp2-hero">
+  <section v-if="on('hero')" class="sp2-hero" :style="{ order: pos('hero') }">
     <div class="sp2-hero-decor" aria-hidden="true">
       <span class="sp2-blob"></span>
       <span class="sp2-ring"></span>
@@ -363,7 +367,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Cinta de anuncios: marquee en bucle bajo la portada ===== -->
-  <div v-if="showAnn" class="sp-ann" role="note" aria-label="Anuncios de la tienda">
+  <div v-if="showAnn && on('announcements')" class="sp-ann" :style="{ order: pos('announcements') }" role="note" aria-label="Anuncios de la tienda">
     <div class="sp-ann-track">
       <span v-for="(a, i) in annLoop" :key="i" class="sp-ann-item" :aria-hidden="i >= announcements.length"><AppIcon :name="serviceIcon(a.icon)" :size="14" />{{ a.text }}</span>
     </div>
@@ -371,7 +375,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Tus números: banda de acento pegada al hero (prueba social
        inmediata; en la opción 1 viaja a media página) ===== -->
-  <section v-if="showStats" class="sp2-stats" aria-label="Cifras del negocio">
+  <section v-if="showStats && on('stats')" class="sp2-stats" :style="{ order: pos('stats') }" aria-label="Cifras del negocio">
     <div class="sp-container sp2-stats-row">
       <div v-for="(s, i) in stats" :key="i" v-reveal="i * 80" class="sp2-stat">
         <strong>{{ s.value }}</strong>
@@ -382,7 +386,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Destacados: tira compacta dividida en columnas (en la opción 1
        son tarjetas sueltas sobre fondo) ===== -->
-  <section v-if="custom.show_highlights !== false" class="sp2-strip">
+  <section v-if="custom.show_highlights !== false && on('highlights')" class="sp2-strip" :style="{ order: pos('highlights') }">
     <div class="sp-container sp2-strip-row">
       <component
         :is="h.to ? 'RouterLink' : h.href ? 'a' : 'div'" v-for="h in highlights" :key="h.title"
@@ -396,7 +400,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Productos destacados: riel horizontal (en la opción 1 es una
        grilla) — la tarjeta entera abre la ficha ===== -->
-  <section v-if="railProducts.length" class="sp2-rail" aria-labelledby="sp2-rail-title">
+  <section v-if="railProducts.length && on('offers')" class="sp2-rail" :style="{ order: pos('offers') }" aria-labelledby="sp2-rail-title">
     <div class="sp-container">
       <div v-reveal class="sp2-sec-head">
         <div>
@@ -417,7 +421,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Nosotros espejado: foto a la izquierda, texto a la derecha y la
        tarjeta de trayectoria/misión dentro de la columna ===== -->
-  <section v-if="hasAbout" id="nosotros" class="sp2-about" aria-labelledby="sp2-about-title">
+  <section v-if="hasAbout && on('about')" id="nosotros" class="sp2-about" :style="{ order: pos('about') }" aria-labelledby="sp2-about-title">
     <div class="sp-container sp2-about-grid" :class="{ 'no-photo': !decorAbout }">
       <figure v-if="decorAbout" v-reveal class="sp2-about-photo">
         <img :src="decorAbout.url" :alt="`Imagen de ${shopName}`" loading="lazy" />
@@ -446,7 +450,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Qué ofrecemos: filas numeradas en vez de tarjetas ===== -->
-  <section v-if="showServices" class="sp2-services" aria-labelledby="sp2-services-title">
+  <section v-if="showServices && on('services')" class="sp2-services" :style="{ order: pos('services') }" aria-labelledby="sp2-services-title">
     <div class="sp-container">
       <p v-if="servicesEyebrow" v-reveal class="sp2-eyebrow">{{ servicesEyebrow }}</p>
       <h2 id="sp2-services-title" v-reveal class="sp2-title">{{ servicesTitle }}</h2>
@@ -468,7 +472,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Testimonios: columna de encabezado a la izquierda y citas
        apiladas a la derecha (la opción 1 es una grilla uniforme) ===== -->
-  <section v-if="showTestimonials" class="sp2-testimonials" aria-labelledby="sp2-testimonials-title">
+  <section v-if="showTestimonials && on('testimonials')" class="sp2-testimonials" :style="{ order: pos('testimonials') }" aria-labelledby="sp2-testimonials-title">
     <div class="sp-container sp2-testimonials-grid">
       <div v-reveal class="sp2-testimonials-head">
         <p v-if="testimonialsEyebrow" class="sp2-eyebrow">{{ testimonialsEyebrow }}</p>
@@ -488,7 +492,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Banda decorativa espejada: texto a la izquierda, imagen a la
        derecha (la opción 1 la pone al revés) ===== -->
-  <section v-if="decorBand" class="sp2-showcase">
+  <section v-if="decorBand" class="sp2-showcase" :style="{ order: pos('gallery') }">
     <div class="sp-container sp2-showcase-grid">
       <div v-reveal class="sp2-showcase-copy">
         <p class="sp2-eyebrow">{{ shopName }}</p>
@@ -508,7 +512,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Galería: tira horizontal con scroll en vez de grilla ===== -->
-  <section v-if="showGallery" id="galeria" class="sp2-gallery" aria-labelledby="sp2-gallery-title">
+  <section v-if="showGallery && on('gallery')" id="galeria" class="sp2-gallery" :style="{ order: pos('gallery') }" aria-labelledby="sp2-gallery-title">
     <div class="sp-container">
       <h2 id="sp2-gallery-title" v-reveal class="sp2-title">Galería</h2>
       <div class="sp2-gallery-track">
@@ -526,7 +530,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Preguntas frecuentes: encabezado centrado y respuestas en dos
        columnas (la opción 1 alinea el intro a la izquierda en una sola) ===== -->
-  <section v-if="showFaqs" class="sp2-faq" aria-labelledby="sp2-faq-title">
+  <section v-if="showFaqs && on('faq')" class="sp2-faq" :style="{ order: pos('faq') }" aria-labelledby="sp2-faq-title">
     <div class="sp-container">
       <div v-reveal class="sp2-faq-head">
         <p v-if="faqEyebrow" class="sp2-eyebrow">{{ faqEyebrow }}</p>
@@ -542,7 +546,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Video: embed de YouTube/Vimeo en su propia sección ===== -->
-  <section v-if="showVideo" class="sp-video" aria-labelledby="sp-video-title">
+  <section v-if="showVideo && on('video')" class="sp-video" :style="{ order: pos('video') }" aria-labelledby="sp-video-title">
     <div class="sp-container">
       <header v-reveal class="sp-video-head">
         <h2 id="sp-video-title" class="sp-video-title">{{ videoTitle }}</h2>
@@ -558,7 +562,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Llamado a la acción: tarjeta de acento contenida ===== -->
-  <section v-if="showCta" class="sp2-cta">
+  <section v-if="showCta && on('cta')" class="sp2-cta" :style="{ order: pos('cta') }">
     <div class="sp-container">
       <div v-reveal class="sp2-cta-card">
         <h2 class="sp2-cta-title">{{ ctaTitle }}</h2>
@@ -576,7 +580,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Contáctanos espejado: formulario a la izquierda, info a la
        derecha y el mapa debajo a todo lo ancho ===== -->
-  <section v-if="showContact" id="contacto" class="sp2-contact" aria-labelledby="sp2-contact-title">
+  <section v-if="showContact && on('contact')" id="contacto" class="sp2-contact" :style="{ order: pos('contact') }" aria-labelledby="sp2-contact-title">
     <div class="sp-container">
       <div class="sp2-contact-grid">
         <form v-reveal class="sp-form" novalidate @submit.prevent="submitContact">

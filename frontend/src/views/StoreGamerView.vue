@@ -10,6 +10,7 @@ import OfferSeal from '../components/store/OfferSeal.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-gamer.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia GAMER — se compra por spec y precio. El cliente de hardware/
@@ -18,6 +19,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // Variantes: 'arena' (tablero esports — HUD, clip-path, Orbitron) y
 // 'terminal' (consola de fósforo — ventana, prompt, log de arranque).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, heroTitle, heroTitleIsName, showCatalog } = p
 const variant = computed(() => (pageTemplate.value === 'terminal' ? 'terminal' : 'arena'))
 
@@ -97,7 +99,7 @@ onMounted(() => { p.loadCatalog() })
 <template>
 <div class="sp-page-root gm" :data-var="variant">
   <!-- ===== Hero: tablero esports (arena) / consola (terminal) ===== -->
-  <header class="gm-hero">
+  <header v-if="on('hero')" class="gm-hero" :style="{ order: pos('hero') }">
     <div class="gm-hero-in">
       <!-- Variante terminal: todo dentro de la ventana -->
       <div v-if="variant === 'terminal'" class="gm-term" v-reveal>
@@ -176,7 +178,7 @@ onMounted(() => { p.loadCatalog() })
 
   <main class="gm-main">
     <!-- ===== Drops: ofertas reales ===== -->
-    <section v-if="railOffers.length" v-reveal class="gm-sec" aria-labelledby="gm-drops-t">
+    <section v-if="railOffers.length && on('offers')" v-reveal class="gm-sec" :style="{ order: pos('offers') }" aria-labelledby="gm-drops-t">
       <div class="gm-sec-head">
         <h2 id="gm-drops-t" class="gm-sec-title">{{ variant === 'arena' ? 'Drops' : 'ls -l ./ofertas' }}</h2>
         <RouterLink v-if="showCatalog" class="gm-sec-link" :to="catalogOffersTo">{{ variant === 'arena' ? 'Todas las ofertas' : 'cat ofertas --all' }} <AppIcon name="arrow-right" :size="15" /></RouterLink>
@@ -201,7 +203,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== El inventario ===== -->
-    <section v-if="gridItems.length" class="gm-sec" aria-labelledby="gm-grid-t">
+    <section v-if="gridItems.length && on('featured')" class="gm-sec" :style="{ order: pos('featured') }" aria-labelledby="gm-grid-t">
       <div class="gm-sec-head">
         <h2 id="gm-grid-t" class="gm-sec-title">{{ variant === 'arena' ? 'Ofertas activas' : 'ls ./ofertas' }}</h2>
         <RouterLink v-if="showCatalog && extraCount" class="gm-sec-link" :to="p.catalogTo.value">{{ variant === 'arena' ? `Ver ${extraCount} más` : `tail -n +${extraCount}` }} <AppIcon name="arrow-right" :size="15" /></RouterLink>
@@ -217,7 +219,7 @@ onMounted(() => { p.loadCatalog() })
       </div>
     </section>
 
-    <section v-else-if="showCatalog && !p.products.value.length" class="gm-empty">
+    <section v-else-if="showCatalog && !p.products.value.length && on('featured')" class="gm-empty" :style="{ order: pos('featured') }">
       <span class="gm-empty-mark"><AppIcon name="zap" :size="26" aria-hidden="true" /></span>
       <h2>{{ variant === 'arena' ? 'Inventario en carga' : 'inventario: sin entradas' }}</h2>
       <p>{{ shopName }} está subiendo sus productos. Escribinos y te contamos qué hay hoy.</p>
@@ -225,7 +227,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Secciones ===== -->
-    <section v-if="p.departments.value.length > 1" v-reveal class="gm-sec" aria-labelledby="gm-dept-t">
+    <section v-if="p.departments.value.length > 1 && on('categories')" v-reveal class="gm-sec" :style="{ order: pos('categories') }" aria-labelledby="gm-dept-t">
       <div class="gm-sec-head"><h2 id="gm-dept-t" class="gm-sec-title">{{ variant === 'arena' ? 'Categorías' : 'ls ./secciones' }}</h2></div>
       <nav class="gm-depts" aria-label="Secciones del catálogo">
         <RouterLink v-for="d in p.departments.value" :key="d.id" class="gm-dept" :to="p.deptTo(d.id)">
@@ -235,7 +237,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Marcas ===== -->
-    <section v-if="p.brands.value.length" v-reveal class="gm-sec" aria-labelledby="gm-brands-t">
+    <section v-if="p.brands.value.length && on('brands')" v-reveal class="gm-sec" :style="{ order: pos('brands') }" aria-labelledby="gm-brands-t">
       <div class="gm-sec-head"><h2 id="gm-brands-t" class="gm-sec-title">{{ variant === 'arena' ? 'Marcas' : 'ls ./marcas' }}</h2></div>
       <div class="gm-brands">
         <RouterLink v-for="b in p.brands.value" :key="b.id" class="gm-brand" :to="{ ...p.catalogTo.value, query: { brand: b.id } }">{{ b.name }}</RouterLink>
@@ -243,7 +245,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Cómo comprar + datos ===== -->
-    <section v-reveal class="gm-sec" aria-labelledby="gm-how-t">
+    <section v-if="on('steps')" v-reveal class="gm-sec" :style="{ order: pos('steps') }" aria-labelledby="gm-how-t">
       <div class="gm-sec-head"><h2 id="gm-how-t" class="gm-sec-title">{{ variant === 'arena' ? 'Cómo comprar' : 'man comprar' }}</h2></div>
       <div class="gm-cols">
         <div class="gm-panel"><StepRail :steps="steps" /></div>
@@ -262,7 +264,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== FAQs de compatibilidad (solo si el dueño las cargó) ===== -->
-    <section v-if="p.faqs.value.length" v-reveal class="gm-sec" aria-labelledby="gm-faq-t">
+    <section v-if="p.faqs.value.length && on('faq')" v-reveal class="gm-sec" :style="{ order: pos('faq') }" aria-labelledby="gm-faq-t">
       <div class="gm-sec-head"><h2 id="gm-faq-t" class="gm-sec-title">{{ variant === 'arena' ? 'Preguntas frecuentes' : 'man dudas' }}</h2></div>
       <div class="gm-faqs">
         <details v-for="(f, i) in p.faqs.value.slice(0, 6)" :key="i" class="gm-faq">
@@ -273,7 +275,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Opiniones ===== -->
-    <section v-if="p.testimonials.value.length" v-reveal class="gm-sec" aria-labelledby="gm-quotes-t">
+    <section v-if="p.testimonials.value.length && on('testimonials')" v-reveal class="gm-sec" :style="{ order: pos('testimonials') }" aria-labelledby="gm-quotes-t">
       <div class="gm-sec-head"><h2 id="gm-quotes-t" class="gm-sec-title">{{ variant === 'arena' ? 'La comunidad' : 'cat ./reviews' }}</h2></div>
       <div class="gm-quotes">
         <figure v-for="(t, i) in p.testimonials.value.slice(0, 3)" :key="i" class="gm-quote">
@@ -284,7 +286,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== CTA final ===== -->
-    <section v-reveal class="gm-sec" aria-labelledby="gm-cta-t">
+    <section v-if="on('cta')" v-reveal class="gm-sec" :style="{ order: pos('cta') }" aria-labelledby="gm-cta-t">
       <div class="gm-cta">
         <h2 id="gm-cta-t">{{ variant === 'arena' ? 'Armá tu setup.' : 'init --pedido' }}</h2>
         <p>Consultanos por WhatsApp: confirmamos stock, specs y compatibilidad en el momento.</p>

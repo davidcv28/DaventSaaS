@@ -10,6 +10,7 @@ import OfferSeal from '../components/store/OfferSeal.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-ofertas.css'
+import { useLayout } from '../composables/useLayout.js'
 import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia OFERTAS — "el precio es el diseño". El cliente llega por el
@@ -20,6 +21,7 @@ import TplProductCard from '../components/store/TplProductCard.vue'
 // sellos rotados) y 'shop' (góndola — masthead con datos, grilla densa,
 // precio dominante).
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, heroTitle, showCatalog } = p
 const variant = computed(() => (pageTemplate.value === 'shop' ? 'shop' : 'promo'))
 
@@ -83,7 +85,7 @@ onMounted(() => { p.loadCatalog() })
 <template>
 <div class="sp-page-root of" :data-var="variant">
   <!-- ===== Hero: afiche de campaña (promo) / masthead de góndola (shop) ===== -->
-  <header class="of-hero">
+  <header v-if="on('hero')" class="of-hero" :style="{ order: pos('hero') }">
     <div class="of-hero-in">
       <div class="of-hero-copy">
         <p class="of-kicker"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ promoName || 'Ofertas' }}</p>
@@ -133,7 +135,7 @@ onMounted(() => { p.loadCatalog() })
 
   <main class="of-main">
     <!-- ===== Las ofertas: rail de tickets / grilla densa según variante ===== -->
-    <section v-if="railOffers.length" v-reveal class="of-sec" aria-labelledby="of-deals-t">
+    <section v-if="railOffers.length && on('offers')" v-reveal class="of-sec" :style="{ order: pos('offers') }" aria-labelledby="of-deals-t">
       <div class="of-sec-head">
         <h2 id="of-deals-t" class="of-sec-title">Las <em>ofertas</em></h2>
         <RouterLink v-if="showCatalog" class="of-sec-link" :to="catalogOffersTo">Todas <AppIcon name="arrow-right" :size="15" /></RouterLink>
@@ -148,7 +150,7 @@ onMounted(() => { p.loadCatalog() })
 
 
 
-    <section v-else-if="showCatalog" class="of-empty">
+    <section v-else-if="showCatalog && on('offers')" class="of-empty" :style="{ order: pos('offers') }">
       <span class="of-empty-mark"><AppIcon name="tag" :size="26" aria-hidden="true" /></span>
       <h2>El local está cargando precios</h2>
       <p>{{ shopName }} está subiendo sus productos. Escribinos y te contamos qué hay hoy.</p>
@@ -156,7 +158,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Secciones del local ===== -->
-    <section v-if="p.departments.value.length > 1" v-reveal class="of-sec" aria-labelledby="of-dept-t">
+    <section v-if="p.departments.value.length > 1 && on('categories')" v-reveal class="of-sec" :style="{ order: pos('categories') }" aria-labelledby="of-dept-t">
       <div class="of-sec-head"><h2 id="of-dept-t" class="of-sec-title">Secciones</h2></div>
       <nav class="of-depts" aria-label="Secciones del catálogo">
         <RouterLink v-for="d in p.departments.value" :key="d.id" class="of-dept" :to="p.deptTo(d.id)">
@@ -166,7 +168,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Cómo comprar + zona/horarios ===== -->
-    <section v-reveal class="of-sec" aria-labelledby="of-how-t">
+    <section v-if="on('steps')" v-reveal class="of-sec" :style="{ order: pos('steps') }" aria-labelledby="of-how-t">
       <div class="of-sec-head"><h2 id="of-how-t" class="of-sec-title">Cómo comprar</h2></div>
       <div class="of-cols">
         <div class="of-panel"><StepRail :steps="steps" /></div>
@@ -185,7 +187,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== Opiniones (solo si el dueño cargó testimonios) ===== -->
-    <section v-if="p.testimonials.value.length" v-reveal class="of-sec" aria-labelledby="of-quotes-t">
+    <section v-if="p.testimonials.value.length && on('testimonials')" v-reveal class="of-sec" :style="{ order: pos('testimonials') }" aria-labelledby="of-quotes-t">
       <div class="of-sec-head"><h2 id="of-quotes-t" class="of-sec-title">Lo que dicen</h2></div>
       <div class="of-quotes">
         <figure v-for="(t, i) in p.testimonials.value.slice(0, 3)" :key="i" class="of-quote">
@@ -196,7 +198,7 @@ onMounted(() => { p.loadCatalog() })
     </section>
 
     <!-- ===== CTA final ===== -->
-    <section v-reveal class="of-sec" aria-labelledby="of-cta-t">
+    <section v-if="on('cta')" v-reveal class="of-sec" :style="{ order: pos('cta') }" aria-labelledby="of-cta-t">
       <div class="of-cta">
         <h2 id="of-cta-t">El precio ya está.<br />Pedilo por WhatsApp.</h2>
         <p>Escribinos, confirmamos stock y coordinamos entrega o retiro en el momento.</p>

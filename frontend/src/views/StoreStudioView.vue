@@ -9,6 +9,7 @@ import TrustBar from '../components/store/TrustBar.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-studio.css'
+import { useLayout } from '../composables/useLayout.js'
 
 // Familia SERVICIOS — "Studio". Reducir la duda: prueba social arriba,
 // contacto a un toque. Hero conversacional con tarjeta flotante de
@@ -16,6 +17,7 @@ import '../assets/store-studio.css'
 // método en pasos, testimonios, FAQ y formulario corto que arma el
 // WhatsApp. 'proceso' invierte la jerarquía: el método ES la portada.
 const p = useStorePage()
+const { on, pos } = useLayout('landing')
 const { custom, shopName, location, pageTemplate, hasAbout, showContact, showServices, heroTitle } = p
 const variant = computed(() => (pageTemplate.value === 'proceso' ? 'proceso' : 'studio'))
 
@@ -139,7 +141,7 @@ onBeforeUnmount(() => {
 <template>
 <div class="sp-page-root sd" :data-var="variant" :style="{ '--sd-spine': spineProgress }">
   <!-- ===== Hero conversacional + tarjeta flotante de reseñas ===== -->
-  <header class="sd-hero">
+  <header v-if="on('hero')" class="sd-hero" :style="{ order: pos('hero') }">
     <div class="sd-hero-in">
       <div class="sd-hero-copy">
         <h1 class="sd-title">{{ headline }}</h1>
@@ -175,12 +177,12 @@ onBeforeUnmount(() => {
 
   <main ref="mainEl" class="sd-main">
     <!-- ===== Stats reales del dueño ===== -->
-    <section v-if="stats.length" v-reveal class="sd-stats" aria-label="Números">
+    <section v-if="stats.length && on('stats')" v-reveal class="sd-stats" :style="{ order: pos('stats') }" aria-label="Números">
       <div v-for="(s, i) in stats" :key="i" class="sd-stat"><strong>{{ s.value }}</strong><span>{{ s.label }}</span></div>
     </section>
 
     <!-- ===== Lista de servicios ===== -->
-    <section v-if="p.serviceItems.value.length" class="sd-services" aria-labelledby="sd-svc-t">
+    <section v-if="p.serviceItems.value.length && on('services')" class="sd-services" :style="{ order: pos('services') }" aria-labelledby="sd-svc-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">Servicios</p><h2 id="sd-svc-t">Qué hacemos</h2></header>
       <ul class="sd-svc-list">
         <li v-for="it in p.serviceItems.value" :key="it.id">
@@ -199,13 +201,13 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- ===== Cómo trabajamos (studio: debajo; proceso ya lo mostró) ===== -->
-    <section v-if="variant === 'studio'" ref="railWrap" class="sd-steps" aria-labelledby="sd-steps-t">
+    <section v-if="variant === 'studio' && on('steps')" ref="railWrap" class="sd-steps" :style="{ order: pos('steps') }" aria-labelledby="sd-steps-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">Método</p><h2 id="sd-steps-t">Cómo trabajamos</h2></header>
       <StepRail :steps="steps" :progress="railProgress" />
     </section>
 
     <!-- ===== Trabajos: mosaico real ===== -->
-    <section v-if="works.length" v-reveal class="sd-works" aria-labelledby="sd-works-t">
+    <section v-if="works.length && on('gallery')" v-reveal class="sd-works" :style="{ order: pos('gallery') }" aria-labelledby="sd-works-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">Portfolio</p><h2 id="sd-works-t">Trabajos recientes</h2></header>
       <div class="sd-works-grid">
         <figure v-for="(u, i) in works" :key="i">
@@ -216,7 +218,7 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- ===== Testimonios ===== -->
-    <section v-if="p.testimonials.value.length" v-reveal class="sd-testi" aria-labelledby="sd-testi-t">
+    <section v-if="p.testimonials.value.length && on('testimonials')" v-reveal class="sd-testi" :style="{ order: pos('testimonials') }" aria-labelledby="sd-testi-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">{{ custom.testimonials_title || 'Clientes' }}</p><h2 id="sd-testi-t">Lo que dicen</h2></header>
       <div class="sd-testi-track">
         <figure v-for="(t, i) in p.testimonials.value" :key="i" class="sd-testi-card">
@@ -228,7 +230,7 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- ===== FAQ ===== -->
-    <section v-if="faqsTop.length" v-reveal class="sd-faq" aria-labelledby="sd-faq-t">
+    <section v-if="faqsTop.length && on('faq')" v-reveal class="sd-faq" :style="{ order: pos('faq') }" aria-labelledby="sd-faq-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">Dudas</p><h2 id="sd-faq-t">{{ custom.faqs_title || 'Preguntas frecuentes' }}</h2></header>
       <ul class="sd-faq-list">
         <li v-for="(f, i) in faqsTop" :key="i" class="sd-faq-item" :class="{ on: faqOpen === i }">
@@ -241,7 +243,7 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- ===== Contacto: formulario corto + horarios ===== -->
-    <section v-if="showContact || p.waBase.value" v-reveal id="contacto" class="sd-contact" aria-labelledby="sd-contact-t">
+    <section v-if="(showContact || p.waBase.value) && on('contact')" v-reveal id="contacto" class="sd-contact" :style="{ order: pos('contact') }" aria-labelledby="sd-contact-t">
       <header class="sd-sec-h"><p class="sd-eyebrow">Contacto</p><h2 id="sd-contact-t">Contanos qué necesitás</h2></header>
       <div class="sd-contact-grid">
         <form v-if="p.waBase.value" class="sd-form" novalidate @submit.prevent="submit">
