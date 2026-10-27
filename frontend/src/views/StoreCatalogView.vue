@@ -30,7 +30,14 @@ const VARIANTS = {
   aurora: defineAsyncComponent(() => import('./catalog/CatalogAurora.vue')),
   bloque: defineAsyncComponent(() => import('./catalog/CatalogBloque.vue')),
   riso: defineAsyncComponent(() => import('./catalog/CatalogRiso.vue')),
-  terra: defineAsyncComponent(() => import('./catalog/CatalogTerra.vue'))
+  terra: defineAsyncComponent(() => import('./catalog/CatalogTerra.vue')),
+  atelier: defineAsyncComponent(() => import('./catalog/CatalogAtelier.vue')),
+  circuit: defineAsyncComponent(() => import('./catalog/CatalogCircuit.vue')),
+  lab: defineAsyncComponent(() => import('./catalog/CatalogCircuit.vue')),
+  mercado: defineAsyncComponent(() => import('./catalog/CatalogMercado.vue')),
+  carta: defineAsyncComponent(() => import('./catalog/CatalogCarta.vue')),
+  studio: defineAsyncComponent(() => import('./catalog/CatalogStudio.vue')),
+  proceso: defineAsyncComponent(() => import('./catalog/CatalogStudio.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || CatalogClassic)
 </script>

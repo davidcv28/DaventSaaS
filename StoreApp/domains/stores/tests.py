@@ -307,11 +307,19 @@ class StoreCoverGatingTests(TestCase):
 class StoreTemplateGatingTests(TestCase):
     """
     Plantillas de portada por nivel de plan: Básico elige Clásico o
-    Perspectiva, Estándar (has_design_plus) suma Urbano y Publicidad y
-    Premium (has_design_advanced) todo el catálogo. Un diseño fuera del
-    nivel se descarta del PATCH igual que los campos premium y la web
-    pública fuerza 'classic' si el guardado deja de estar permitido.
+    Perspectiva, Estándar (has_design_plus) suma Urbano/Publicidad y las
+    bases de familia (Atelier, Circuit, Mercado, Studio) y Premium
+    (has_design_advanced) todo el catálogo (incluidas las variantes Lab,
+    Carta y Proceso). Un diseño fuera del nivel se descarta del PATCH
+    igual que los campos premium y la web pública fuerza 'classic' si el
+    guardado deja de estar permitido.
     """
+
+    def setUp(self):
+        # Mismo motivo que el resto de la suite: plan_benefits_of keyea por
+        # PK y SQLite las reutiliza — sin limpiar, el plan de un test se
+        # filtra al siguiente y el gating de plantillas miente.
+        cache.clear()
 
     def _client(self, *benefit_codes):
         _, profile      =   _make_user(verified = True)
@@ -338,40 +346,41 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_basic_discards_plus_and_advanced_templates(self):
         client, _       =   self._client()
-        for key in ('street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique'):
+        for key in ('street', 'promo', 'atelier', 'circuit', 'mercado', 'studio', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique', 'lab', 'carta', 'proceso'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'classic')
 
     def test_standard_picks_plus_templates(self):
         client, _       =   self._client('has_design_plus')
-        for key in ('street', 'promo'):
+        for key in ('street', 'promo', 'atelier', 'circuit', 'mercado', 'studio'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
     def test_standard_discards_advanced_template(self):
         client, _       =   self._client('has_design_plus')
-        for key in ('terminal', 'lookbook', 'cobre', 'minimal', 'boutique'):
+        for key in ('terminal', 'lookbook', 'cobre', 'minimal', 'boutique', 'lab', 'carta', 'proceso'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'classic')
 
     def test_premium_picks_any_template(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        for key in ('classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique', 'terra'):
+        for key in ('classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique', 'terra', 'atelier', 'circuit', 'mercado', 'studio', 'lab', 'carta', 'proceso'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
     def test_removed_template_is_discarded(self):
-        #'atelier' salió del catálogo: no está en allowed_templates, así
-        #que el PATCH la descarta como a un diseño fuera del nivel.
+        #Una clave que no existe en el catálogo no está en
+        #allowed_templates: el PATCH la descarta como a un diseño fuera del
+        #nivel (mismo destino que tuvo la primera encarnación de 'atelier').
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        response        =   client.patch(f'{STORES_URL}customization/', {'template': 'atelier'}, format = 'json')
+        response        =   client.patch(f'{STORES_URL}customization/', {'template': 'diseno-borrado'}, format = 'json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['customization']['template'], 'classic')
 
     def test_public_payload_lists_allowed_templates(self):
         client, store   =   self._client('has_design_plus')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'duo', 'bloque', 'riso', 'street', 'promo'])
+        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'duo', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit', 'mercado', 'studio'])
 
     def test_downgraded_template_is_not_persisted(self):
         #Con el plan vigente guarda 'street'; si el beneficio se pierde, el

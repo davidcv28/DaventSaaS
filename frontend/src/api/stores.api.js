@@ -625,8 +625,25 @@ export const STORE_TEMPLATES = {
   boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' },
   signature:   { label: 'Signature',   tier: 'advanced', desc: 'Casa de autor: noche de espresso, marfil y tu acento, titulares Cinzel grabados, marcos de doble filete, sello de monograma y firma manuscrita.' },
   aurora:      { label: 'Aurora',      tier: 'advanced', desc: 'Observatorio de luz: noche profunda con cortinas de acento, raíl de datos fino, cielo panorámico con el mensaje en placa de vidrio esmerilado, departamentos como constelación y catálogo con barra de cristal fija.' },
-  terra:       { label: 'Terra',       tier: 'advanced', desc: 'Editorial cálido y artesanal: papel crudo, titulares serif Fraunces, imágenes en arco, reglas finas, numeración de sección y el acento de tu marca como sello. Portada, catálogo y servicios con la misma identidad.' }
+  terra:       { label: 'Terra',       tier: 'advanced', desc: 'Editorial cálido y artesanal: papel crudo, titulares serif Fraunces, imágenes en arco, reglas finas, numeración de sección y el acento de tu marca como sello. Portada, catálogo y servicios con la misma identidad.' },
+  atelier:     { label: 'Atelier',     tier: 'plus',     desc: 'Indumentaria editorial: titular XXL que atraviesa la foto, pestañas tipográficas, grilla de revista con ritmo, hotspots del look y ficha con guía de talles.' },
+  circuit:     { label: 'Circuit',     tier: 'plus',     desc: 'Tecnología en ficha técnica: producto flotante con halo, callouts conectados al hardware, bento de specs, precios en mono y comparador.' },
+  lab:         { label: 'Lab',         tier: 'advanced', desc: 'Tecnología en claro: el mismo esqueleto técnico de Circuit sobre papel blanco, foco en el producto y specs limpias.' },
+  mercado:     { label: 'Mercado',     tier: 'plus',     desc: 'Comestibles con apetito: foto en arco, sello giratorio, categorías en círculos, pedido directo por WhatsApp con el "+" de cada card.' },
+  carta:       { label: 'Carta',       tier: 'advanced', desc: 'Comestibles como menú de restaurante: lista con precios alineados, ítems del día y pedido por WhatsApp.' },
+  studio:      { label: 'Studio',      tier: 'plus',     desc: 'Servicios que dan confianza: reseñas flotando sobre el hero, lista de servicios con precio, método en pasos, FAQ y contacto directo.' },
+  proceso:     { label: 'Proceso',     tier: 'advanced', desc: 'Servicios como storytelling de método: el proceso es la portada — pasos numerados con progreso, trabajos y testimonios.' }
 }
+
+// Familias de diseño por categoría: agrupan las variantes para el selector
+// del dashboard (las keys de cada familia son TEMPLATE_CHOICES reales).
+export const STORE_TEMPLATE_FAMILIES = [
+  { key: 'moda',      label: 'Indumentaria', caption: 'Lookbook y street',   templates: ['atelier', 'street'] },
+  { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
+  { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },
+  { key: 'services',  label: 'Servicios',    caption: 'Estudio y proceso',   templates: ['studio', 'proceso'] }
+]
+export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de
 // allowed_templates_of del backend: mismo orden del catálogo). Sirve tanto

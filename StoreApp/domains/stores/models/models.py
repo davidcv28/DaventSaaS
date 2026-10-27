@@ -113,8 +113,12 @@ class StoreCustomization(models.Model):
     #viewset descarta del payload un diseño fuera del nivel del plan y
     #la web fuerza 'classic' si el guardado deja de estar permitido.
     TEMPLATE_BASE               =   ('classic', 'perspective', 'duo', 'bloque', 'riso')
-    TEMPLATE_PLUS               =   ('street', 'promo')
-    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'terra')
+    #Familias por categoría: la variante base de cada una va con
+    #has_design_plus (Estándar) y la variante extra solo con
+    #has_design_advanced (Premium). 'street' (Urbano) ya era plus — es la
+    #variante cruda de Indumentaria y queda en su nivel para no regresionar.
+    TEMPLATE_PLUS               =   ('street', 'promo', 'atelier', 'circuit', 'mercado', 'studio')
+    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'terra', 'lab', 'carta', 'proceso')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
@@ -132,6 +136,13 @@ class StoreCustomization(models.Model):
         ('signature',        'Signature'),
         ('aurora',           'Aurora'),
         ('terra',            'Terra'),
+        ('atelier',          'Atelier'),
+        ('circuit',          'Circuit'),
+        ('lab',              'Lab'),
+        ('mercado',          'Mercado'),
+        ('carta',            'Carta'),
+        ('studio',           'Studio'),
+        ('proceso',          'Proceso'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

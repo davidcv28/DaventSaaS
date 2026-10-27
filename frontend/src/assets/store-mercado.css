@@ -1,0 +1,181 @@
+/* ===== Familia COMESTIBLES — "Mercado" (mercado | carta) =====
+   Mesa servida: hero en arco sobre papel crema con grano, sello giratorio,
+   categorías en círculos, cards con "+" de pedido. Geometría: radios
+   20-32px, bordes punteados, sombras cálidas suaves. 'carta' comparte el
+   esqueleto pero la oferta se lee como menú de restaurante. */
+.mc {
+  --mc-ink: var(--sp-ink);
+  --mc-line: color-mix(in srgb, var(--mc-ink) 16%, transparent);
+  --mc-radius: 24px;
+  --mc-display: 'Fraunces', 'Georgia', serif;
+  --mc-paper: color-mix(in srgb, var(--sp-bg) 92%, #e8dcc4);
+}
+.mc[data-var='carta'] { --mc-display: 'Playfair Display', 'Georgia', serif; --mc-radius: 20px; }
+
+.mc-main { display: block; }
+
+/* ---------- Hero orgánico ---------- */
+.mc-hero { position: relative; padding: 20px 0 0; background: var(--mc-paper); overflow: clip; }
+.mc-hero::before { content: ''; position: absolute; inset: 0; opacity: .5; pointer-events: none; background-image: radial-gradient(color-mix(in srgb, var(--mc-ink) 7%, transparent) 1px, transparent 1px); background-size: 5px 5px; }
+.mc-hero-in { position: relative; display: flex; flex-direction: column; align-items: center; min-height: 64dvh; padding: 8px clamp(16px, 5vw, 48px) 20px; text-align: center; }
+.mc-hero-photo { position: relative; margin: 0 0 20px; width: min(74vw, 320px); }
+.mc-hero-photo > img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 999px 999px 28px 28px; border: 1px solid var(--mc-line); box-shadow: 0 18px 40px -18px color-mix(in srgb, var(--mc-ink) 45%, transparent); }
+.mc-seal { position: absolute; right: -34px; bottom: -26px; width: 96px; height: 96px; animation: mc-spin 20s linear infinite; }
+.mc-seal circle { fill: var(--store-accent); }
+.mc-seal .mc-seal-core { fill: color-mix(in srgb, var(--store-accent) 72%, #000); }
+.mc-seal text { font-family: 'JetBrains Mono', monospace; font-size: 8.4px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; fill: var(--store-accent-contrast, #fff); }
+@keyframes mc-spin { to { rotate: 1turn; } }
+.mc-open { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 12.5px; font-weight: 700; }
+.mc-open[data-state='open'] { color: #2c7a38; }
+.mc-open[data-state='closed'] { color: #a93226; }
+.mc-title { margin: 0; font-family: var(--mc-display); font-size: clamp(40px, 11vw, 96px); line-height: .95; letter-spacing: -.015em; font-weight: 600; }
+.mc-lede { margin: 14px auto 0; max-width: 50ch; font-size: 16px; line-height: 1.55; color: var(--sp-ink-2); }
+.mc-where { display: inline-flex; align-items: center; gap: 6px; margin: 12px 0 0; font-size: 13.5px; color: var(--sp-muted); }
+
+/* Barra de pedido rápido */
+.mc-quickbar { position: relative; display: flex; gap: 10px; padding: 14px clamp(16px, 5vw, 48px) 20px; overflow-x: auto; scrollbar-width: none; }
+.mc-quickbar::-webkit-scrollbar { display: none; }
+.mc-quick { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 56px; padding: 0 18px; border: 1.5px solid var(--mc-ink); border-radius: 999px; background: transparent; color: var(--mc-ink); font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: translate .15s; }
+.mc-quick.solid { background: var(--store-accent); border-color: var(--store-accent); color: var(--store-accent-contrast, #fff); }
+@media (hover: hover) { .mc-quick:hover { translate: 0 -2px; } }
+
+/* ---------- Categorías en círculos ---------- */
+.mc-cats { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; touch-action: pan-y; padding: 18px clamp(16px, 5vw, 48px) 10px; scrollbar-width: none; }
+.mc-cats::-webkit-scrollbar { display: none; }
+.mc-cat { flex: none; scroll-snap-align: start; display: grid; justify-items: center; gap: 7px; border: 0; background: none; cursor: pointer; padding: 0; }
+.mc-cat-img { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid transparent; display: grid; place-items: center; background: color-mix(in srgb, var(--store-accent) 14%, var(--sp-card)); color: var(--store-accent-ink); transition: border-color .15s, transform .15s; }
+.mc-cat-img img { width: 100%; height: 100%; object-fit: cover; }
+.mc-cat.on .mc-cat-img { border-color: var(--store-accent); }
+.mc-cat-name { font-size: 12px; font-weight: 600; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mc-ink); }
+@media (hover: hover) { .mc-cat:hover .mc-cat-img { transform: translateY(-2px); } }
+
+/* ---------- Grilla de cards (mercado) ---------- */
+.mc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px clamp(16px, 5vw, 48px) 8px; }
+.mc-card { position: relative; }
+.mc-card-media { position: relative; display: block; aspect-ratio: 1; border-radius: var(--mc-radius); overflow: hidden; background: color-mix(in srgb, var(--mc-ink) 6%, transparent); text-decoration: none; }
+.mc-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+@media (hover: hover) { .mc-card:hover .mc-card-media img { transform: scale(1.05); } }
+.mc-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--mc-ink) 30%, transparent); }
+.mc-card-price { position: absolute; left: 10px; bottom: 10px; padding: 5px 12px; border-radius: 999px; background: var(--sp-card-solid, var(--sp-card)); color: var(--mc-ink); font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, .4); }
+.mc-card-info { position: relative; display: grid; gap: 6px; padding: 10px 4px 0; }
+.mc-card-name { font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--mc-ink); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mc-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.mc-card-add { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--store-accent); color: var(--store-accent-contrast, #fff); text-decoration: none; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--store-accent) 80%, transparent); transition: transform .15s ease; }
+@media (hover: hover) { .mc-card-add:hover { transform: scale(1.1); } }
+.mc-card-add:active { transform: scale(.94); }
+
+/* ---------- Menú (carta) ---------- */
+.mc-menu { padding: 16px clamp(16px, 5vw, 48px) 8px; max-width: 760px; margin: 0 auto; }
+.mc-menu-group + .mc-menu-group { margin-top: 34px; }
+.mc-menu-title { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; font-family: var(--mc-display); font-size: clamp(24px, 4.6vw, 38px); font-weight: 600; }
+.mc-menu-title::after { content: ''; flex: 1; border-top: 1px dashed var(--mc-line); }
+.mc-menu-list { margin: 0; padding: 0; list-style: none; }
+.mc-menu-list li { position: relative; padding: 10px 52px 10px 0; border-bottom: 1px dashed color-mix(in srgb, var(--mc-ink) 10%, transparent); }
+.mc-menu-list li:last-child { border-bottom: 0; }
+.mc-menu-row { display: flex; align-items: baseline; gap: 8px; color: var(--mc-ink); text-decoration: none; }
+.mc-menu-name { font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.mc-menu-seal { position: static; width: 34px; height: 34px; font-size: 10px; flex: none; }
+.mc-menu-dots { flex: 1; border-bottom: 2px dotted color-mix(in srgb, var(--mc-ink) 30%, transparent); translate: 0 -4px; }
+.mc-menu-price { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; white-space: nowrap; }
+.mc-menu-price s { font-weight: 400; opacity: .5; margin-right: 7px; font-size: 12px; }
+.mc-menu-desc { margin: 3px 0 0; font-size: 13.5px; color: var(--sp-muted); max-width: 60ch; }
+.mc-menu-add { position: absolute; right: 0; top: 8px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--mc-ink); color: var(--mc-ink); text-decoration: none; }
+@media (hover: hover) { .mc-menu-add:hover { background: var(--store-accent); border-color: var(--store-accent); color: var(--store-accent-contrast, #fff); } }
+
+/* ---------- Hoy en la carta ---------- */
+.mc-today { padding: 40px clamp(16px, 5vw, 48px) 8px; }
+.mc-today h2, .mc-how h2, .mc-zone h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 20px; font-family: var(--mc-display); font-size: clamp(26px, 5vw, 42px); font-weight: 600; }
+.mc-today h2::after, .mc-how h2::after, .mc-zone h2::after { content: ''; flex: 1; border-top: 1px dashed var(--mc-line); }
+.mc-today-track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; touch-action: pan-y; padding-bottom: 8px; scrollbar-width: none; }
+.mc-today-track::-webkit-scrollbar { display: none; }
+.mc-today-card { position: relative; flex: none; width: min(64vw, 240px); scroll-snap-align: start; border: 1px dashed var(--mc-line); border-radius: var(--mc-radius); padding: 12px; background: color-mix(in srgb, var(--store-accent) 6%, transparent); }
+.mc-today-media { position: relative; display: block; aspect-ratio: 1; border-radius: 16px; overflow: hidden; text-decoration: none; }
+.mc-today-media img { width: 100%; height: 100%; object-fit: cover; }
+.mc-today-info { display: grid; gap: 3px; padding: 10px 2px 2px; }
+.mc-today-info strong { font-size: 14.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mc-today-price { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; }
+.mc-today-price s { font-weight: 400; opacity: .55; margin-right: 7px; font-size: 12px; }
+
+/* ---------- Cómo pedir / horarios / zona ---------- */
+.mc-how { padding: 40px clamp(16px, 5vw, 48px) 8px; }
+.mc-bottom { display: grid; gap: 28px; padding: 32px clamp(16px, 5vw, 48px) 72px; }
+.mc-zone-addr { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 15px; }
+.mc-zone-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.mc-zone .mc-quick { flex: 0 1 auto; height: 48px; font-size: 14px; }
+
+/* ---------- Vacío ---------- */
+.mc-empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 64px 24px; }
+.mc-empty-mark { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 1.5px dashed var(--mc-line); color: var(--store-accent-ink); }
+.mc-empty h2 { margin: 0; font-family: var(--mc-display); font-size: clamp(24px, 5vw, 38px); font-weight: 600; }
+.mc-empty p { margin: 0; max-width: 42ch; color: var(--sp-muted); }
+.mc-empty .mc-quick { margin-top: 12px; height: 50px; }
+
+/* ---------- Desktop ---------- */
+@media (min-width: 768px) {
+  .mc-hero-in { flex-direction: row; text-align: left; justify-content: center; gap: clamp(28px, 6vw, 80px); min-height: 70dvh; }
+  .mc-hero-photo { order: 2; width: min(36vw, 400px); margin: 0; }
+  .mc-hero-copy { max-width: 480px; }
+  .mc-seal { right: auto; left: -40px; }
+  .mc-quickbar { justify-content: center; }
+  .mc-quick { flex: 0 1 auto; min-width: 200px; }
+  .mc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .mc-menu { max-width: 860px; }
+  .mc-bottom { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+}
+@media (prefers-reduced-motion: reduce) { .mc-seal { animation: none; } .mc-card-media img { transition: none; } }
+
+/* ---------- Ficha de producto ---------- */
+.mc-pd { padding-bottom: 40px; }
+.mc-crumbs { display: flex; align-items: center; gap: 6px; padding: 14px clamp(16px, 5vw, 48px) 10px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--sp-muted); }
+.mc-crumbs a { color: inherit; text-decoration: none; }
+.mc-crumbs a:hover { color: var(--mc-ink); }
+.mc-crumbs span[aria-current] { color: var(--mc-ink); font-weight: 600; max-width: 45vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-pd-media { position: relative; }
+.mc-pd-blob { position: absolute; inset: 6% -10% -4% -10%; background: color-mix(in srgb, var(--store-accent) 12%, transparent); border-radius: 44% 56% 58% 42% / 50% 44% 56% 50%; pointer-events: none; }
+.mc-pd-gal { margin: 0; position: relative; }
+.mc-pd-gal img { height: min(78vw, 460px); border-radius: 0 0 32px 32px; object-fit: cover; }
+.mc-pd-seal { top: 14px; right: 14px; }
+.mc-pd-info { display: grid; gap: 14px; padding: 20px clamp(16px, 5vw, 48px) 28px; align-content: start; }
+.mc-pd-cat { margin: 0; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--store-accent-ink); }
+.mc-pd-name { margin: 0; font-family: var(--mc-display); font-size: clamp(30px, 7vw, 52px); line-height: 1; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mc-pd-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.mc-pd-price { display: flex; align-items: baseline; gap: 10px; }
+.mc-pd-price s { font-size: 16px; color: var(--sp-muted); }
+.mc-pd-price strong { font-family: var(--mc-display); font-size: clamp(30px, 7vw, 44px); font-weight: 700; }
+.mc-pd-price em { font-style: normal; font-size: 13px; color: var(--sp-muted); }
+.mc-qty { display: flex; align-items: center; gap: 12px; }
+.mc-qty-btn { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid var(--mc-ink); background: none; font-size: 22px; color: var(--mc-ink); cursor: pointer; }
+.mc-qty-btn:active { transform: scale(.92); }
+.mc-qty-n { min-width: 32px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; }
+.mc-qty-total { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; color: var(--store-accent-ink); }
+.mc-note { display: grid; gap: 6px; font-size: 14px; font-weight: 600; }
+.mc-note em { font-style: normal; font-weight: 400; color: var(--sp-muted); }
+.mc-note textarea { width: 100%; padding: 12px 14px; border: 1.5px dashed var(--mc-line); border-radius: 16px; background: transparent; color: var(--mc-ink); font: inherit; font-size: 16px; resize: vertical; }
+.mc-note textarea:focus-visible { outline: 2px solid var(--store-accent); outline-offset: 2px; }
+.mc-note small { justify-self: end; font-size: 11px; color: var(--sp-muted); }
+.mc-pd-ctas { display: flex; gap: 10px; align-items: center; }
+.mc-pd-buy { flex: 1; min-width: 0; }
+.mc-pd-share { flex: 0 0 56px; padding: 0; }
+.mc-pd-blocks { display: grid; gap: 12px; }
+.mc-pd-block { padding: 14px 16px; border: 1.5px dashed var(--mc-line); border-radius: 18px; }
+.mc-pd-block.warn { border-color: color-mix(in srgb, #c07f2a 55%, transparent); background: color-mix(in srgb, #e8a33c 8%, transparent); }
+.mc-pd-block h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.mc-pd-block p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--sp-ink-2); }
+.mc-pd-block dl { display: grid; grid-template-columns: minmax(90px, 40%) 1fr; gap: 6px 14px; margin: 0; }
+.mc-pd-block dt { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--sp-muted); }
+.mc-pd-block dd { margin: 0; font-size: 14.5px; }
+.mc-pd-desc { margin: 4px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--sp-ink-2); }
+.mc-pd-rail { padding: 34px clamp(16px, 5vw, 48px); }
+.mc-pd-rail h2 { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; font-family: var(--mc-display); font-size: clamp(24px, 4.5vw, 38px); font-weight: 600; }
+.mc-pd-rail h2::after { content: ''; flex: 1; border-top: 1px dashed var(--mc-line); }
+.mc-sbb { display: grid; line-height: 1.15; }
+.mc-sbb strong { font-size: 17px; font-family: var(--mc-display); }
+.mc-sbb em { font-style: normal; font-size: 11.5px; color: var(--sp-muted); }
+.mc-sbb-cta { height: 48px; padding: 0 20px; font-size: 14px; flex: none; }
+
+@media (min-width: 768px) {
+  .mc-pd-sheet { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 44px; padding: 0 clamp(20px, 4vw, 48px); align-items: start; }
+  .mc-pd-gal img { height: auto; aspect-ratio: 1; border-radius: 32px; }
+  .mc-pd-blob { inset: 4% -6% -3% -6%; }
+  .mc-pd-info { position: sticky; top: 24px; padding: 8px 0 28px; }
+}
