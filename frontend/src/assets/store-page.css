@@ -2870,8 +2870,9 @@ html { scroll-behavior: smooth; }
 }
 .store-page[data-store-template='lookbook'] .sp-stats-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0; padding: 0;
+  gap: 0; padding: 0; background: none; box-shadow: none;
 }
+.store-page[data-store-template='lookbook'] .sp-stats .sp-stats-title { color: var(--sp-bg); }
 .store-page[data-store-template='lookbook'] .sp-stat {
   padding: 0 clamp(18px, 3vw, 36px);
   border-right: 1px solid color-mix(in srgb, var(--sp-bg) 24%, transparent);
@@ -4187,6 +4188,7 @@ html { scroll-behavior: smooth; }
   color: var(--sp-accent-text); letter-spacing: -.02em;
 }
 .store-page[data-store-template='shop'] .sp-stat span { color: var(--sp-muted); font-size: 11px; letter-spacing: .07em; }
+.store-page[data-store-template='shop'] .sp-stats .sp-stats-title { color: var(--sp-ink); }
 
 /* Sobre nosotros: sin el chip de icono en el título; la tarjeta lateral
    pasa a cifra + misión sobre superficie limpia. */
@@ -4944,6 +4946,8 @@ html { scroll-behavior: smooth; }
   margin-top: clamp(56px, 7vw, 104px); padding: clamp(40px, 5vw, 68px) 0;
   background: var(--sp-ink); color: var(--cb-stone);
 }
+.store-page[data-store-template='cobre'] .sp-stats-grid { background: none; box-shadow: none; padding: 0; }
+.store-page[data-store-template='cobre'] .sp-stats .sp-stats-title { color: var(--cb-stone); }
 .store-page[data-store-template='cobre'] .sp-stat strong {
   font-family: var(--sp-display); font-weight: 400;
   font-size: clamp(52px, 6.4vw, 96px); line-height: .9; letter-spacing: .01em;
@@ -4951,7 +4955,8 @@ html { scroll-behavior: smooth; }
 }
 .store-page[data-store-template='cobre'] .sp-stat span {
   display: block; margin-top: 8px; font-size: 12px; font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase; color: var(--cb-soft);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--cb-stone) 62%, transparent);
 }
 
 /* --- Testimonios: tarjetas tile --- */
@@ -5904,6 +5909,8 @@ html { scroll-behavior: smooth; }
   margin-top: clamp(56px, 7vw, 104px); padding: clamp(44px, 5.5vw, 72px) 0;
   background: var(--mn-ink); color: var(--mn-paper);
 }
+.store-page[data-store-template='minimal'] .sp-stats-grid { background: none; box-shadow: none; padding: 0; }
+.store-page[data-store-template='minimal'] .sp-stats .sp-stats-title { color: var(--mn-paper); }
 .store-page[data-store-template='minimal'] .sp-stat strong {
   font-family: var(--sp-display); font-weight: 800;
   font-size: clamp(48px, 6vw, 88px); line-height: 1; letter-spacing: -.04em;
@@ -7077,6 +7084,8 @@ html { scroll-behavior: smooth; }
   margin-top: clamp(56px, 7vw, 104px); padding: clamp(44px, 5.5vw, 72px) 0;
   background: var(--bt-ink); color: var(--bt-paper);
 }
+.store-page[data-store-template='boutique'] .sp-stats-grid { background: none; box-shadow: none; padding: 0; }
+.store-page[data-store-template='boutique'] .sp-stats .sp-stats-title { color: var(--bt-paper); }
 .store-page[data-store-template='boutique'] .sp-stat strong {
   font-family: var(--sp-display); font-weight: 600;
   font-size: clamp(48px, 6vw, 88px); line-height: 1; color: var(--bt-paper);
@@ -8239,6 +8248,8 @@ html { scroll-behavior: smooth; }
   background: var(--sg-deep); color: var(--sg-ink);
   border-top: 4px double var(--sg-line); border-bottom: 4px double var(--sg-line);
 }
+.store-page[data-store-template='signature'] .sp-stats-grid { background: none; box-shadow: none; padding: 0; }
+.store-page[data-store-template='signature'] .sp-stats .sp-stats-title { color: var(--sg-ink); }
 .store-page[data-store-template='signature'] .sp-stat strong {
   font-family: var(--sp-display); font-weight: 600;
   font-size: clamp(48px, 6vw, 88px); line-height: 1; color: var(--sg-ink);
@@ -9355,6 +9366,8 @@ html { scroll-behavior: smooth; }
   color: var(--au-ink);
   border-top: 1px solid var(--au-line); border-bottom: 1px solid var(--au-line);
 }
+.store-page[data-store-template='aurora'] .sp-stats-grid { background: none; box-shadow: none; padding: 0; }
+.store-page[data-store-template='aurora'] .sp-stats .sp-stats-title { color: var(--au-ink); }
 .store-page[data-store-template='aurora'] .sp-stat strong {
   font-family: var(--sp-display); font-weight: 700;
   font-size: clamp(48px, 6vw, 84px); line-height: 1; color: var(--au-ink);
