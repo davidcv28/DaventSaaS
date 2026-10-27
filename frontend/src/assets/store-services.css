@@ -1115,6 +1115,25 @@
   background: var(--sv-acc);
   color: var(--sv-on-acc);
 }
+/* Terra: titulares con filete editorial (no la píldora base). */
+.store-page[data-store-template='terra'] .sv-hero h1 .hl { font-style: italic; }
+.store-page[data-store-template='terra'] .sv-hero h1 .hl::after { height: 1px; bottom: -.04em; border-radius: 0; background: var(--sv-acc); }
+/* Tarjetas con ícono en arco: la nicha crece como una ventana románica
+   y cada tarjeta lleva la numeración de sección (Nº 01) en la esquina. */
+.store-page[data-store-template='terra'] .sv-list { counter-reset: svt; }
+.store-page[data-store-template='terra'] .sv-item { counter-increment: svt; padding-top: 46px; }
+.store-page[data-store-template='terra'] .sv-item::before {
+  content: 'N.º ' counter(svt, decimal-leading-zero);
+  inset: auto; position: absolute; top: 18px; left: 22px; opacity: 1; background: none;
+  font-family: var(--sv-display); font-style: italic; font-size: 13px; letter-spacing: .1em; color: var(--sv-mute);
+}
+.store-page[data-store-template='terra'] .sv-item:hover::before { opacity: 1; }
+.store-page[data-store-template='terra'] .sv-item .ico {
+  width: 58px; height: auto; aspect-ratio: 3 / 3.6;
+  border-radius: 999px 999px 14px 14px;
+}
+.store-page[data-store-template='terra'] .sv-item h3 { font-family: var(--sv-display); font-weight: 500; font-size: 20px; }
+.store-page[data-store-template='terra'] .sv-item .meta { border-top-style: solid; }
 
 /* ============================================================
    MODERNIZACIÓN 2026 — reglas anti-colisión compartidas.
