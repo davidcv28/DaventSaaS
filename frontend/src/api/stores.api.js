@@ -632,13 +632,15 @@ export const STORE_TEMPLATES = {
   mercado:     { label: 'Mercado',     tier: 'plus',     desc: 'Comestibles con apetito: foto en arco, sello giratorio, categorías en círculos, pedido directo por WhatsApp con el "+" de cada card.' },
   carta:       { label: 'Carta',       tier: 'advanced', desc: 'Comestibles como menú de restaurante: lista con precios alineados, ítems del día y pedido por WhatsApp.' },
   studio:      { label: 'Studio',      tier: 'plus',     desc: 'Servicios que dan confianza: reseñas flotando sobre el hero, lista de servicios con precio, método en pasos, FAQ y contacto directo.' },
-  proceso:     { label: 'Proceso',     tier: 'advanced', desc: 'Servicios como storytelling de método: el proceso es la portada — pasos numerados con progreso, trabajos y testimonios.' }
+  proceso:     { label: 'Proceso',     tier: 'advanced', desc: 'Servicios como storytelling de método: el proceso es la portada — pasos numerados con progreso, trabajos y testimonios.' },
+  arena:       { label: 'Arena',       tier: 'plus',     desc: 'Tablero esports: HUD con datos del local, titulares Orbitron, esquinas cortadas, specs en mono y drops de ofertas; para hardware, periféricos y merch dev.' }
 }
 
 // Familias de diseño por categoría: agrupan las variantes para el selector
 // del dashboard (las keys de cada familia son TEMPLATE_CHOICES reales).
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'ofertas',   label: 'Ofertas',      caption: 'Campaña y góndola',   templates: ['promo', 'shop'] },
+  { key: 'gamer',     label: 'Gamer',        caption: 'Arena y consola',     templates: ['arena', 'terminal'] },
   { key: 'moda',      label: 'Indumentaria', caption: 'Lookbook y street',   templates: ['atelier', 'street'] },
   { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
   { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },
@@ -702,6 +704,7 @@ export const STORE_FONTS = {
   'manrope':          { label: 'Manrope',          family: "'Manrope', sans-serif",               google: 'Manrope:wght@400..800' },
   'archivo':          { label: 'Archivo',          family: "'Archivo', 'Helvetica Neue', sans-serif", google: 'Archivo:wdth,wght@62..125,400..900' },
   'bricolage-grotesque': { label: 'Bricolage Grotesque', family: "'Bricolage Grotesque', 'Arial Black', sans-serif", google: 'Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800' },
+  'orbitron':         { label: 'Orbitron',        family: "'Orbitron', 'Arial Black', sans-serif",    google: 'Orbitron:wght@500..900' },
   'figtree':          { label: 'Figtree',          family: "'Figtree', system-ui, sans-serif",     google: 'Figtree:wght@400..700' }
 }
 

@@ -21,6 +21,7 @@ const VARIANTS = {
   street: defineAsyncComponent(() => import('./catalog/CatalogStreet.vue')),
   promo: defineAsyncComponent(() => import('./catalog/CatalogOfertas.vue')),
   terminal: defineAsyncComponent(() => import('./catalog/CatalogTerminal.vue')),
+  arena: defineAsyncComponent(() => import('./catalog/CatalogGamer.vue')),
   lookbook: defineAsyncComponent(() => import('./catalog/CatalogLookbook.vue')),
   shop: defineAsyncComponent(() => import('./catalog/CatalogOfertas.vue')),
   cobre: defineAsyncComponent(() => import('./catalog/CatalogCobre.vue')),

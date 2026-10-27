@@ -380,7 +380,7 @@ class StoreTemplateGatingTests(TestCase):
     def test_public_payload_lists_allowed_templates(self):
         client, store   =   self._client('has_design_plus')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'duo', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit', 'mercado', 'studio'])
+        self.assertEqual(response.data['allowed_templates'], ['classic', 'perspective', 'duo', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit', 'mercado', 'studio', 'arena'])
 
     def test_downgraded_template_is_not_persisted(self):
         #Con el plan vigente guarda 'street'; si el beneficio se pierde, el
