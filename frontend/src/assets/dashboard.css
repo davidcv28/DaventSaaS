@@ -2,9 +2,37 @@
    Se carga solo con DashLayout (chunk del panel). Movimiento únicamente con
    transform/opacity (compositor) y una curva común. Se anula con
    prefers-reduced-motion al final. */
-:root { --ease-out: cubic-bezier(.22, .8, .3, 1); --ease-spring: cubic-bezier(.34, 1.4, .64, 1); }
+:root {
+  --ease-out: cubic-bezier(.22, .8, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.4, .64, 1);
+  --dur: .18s;
+
+  /* Elevación en 3 niveles: --bg (fondo) < --card (contenido) < --raise-2
+     (menús, sheets, toasts, popovers). --sunk es el pozo (inputs, zonas
+     incrustadas). --rail: barra lateral de marca, oscura en ambos temas. */
+  --raise-2: #ffffff;
+  --sunk: #f1f4f9;
+  --rail: #0f1130;
+  --rail-ink: #a5b4d4;
+  --rail-ink-hi: #ffffff;
+  --rail-line: rgba(255, 255, 255, .08);
+
+  --radius-lg: 16px;
+  --radius-xs: 6px;
+
+  /* Foco de teclado unificado del panel. */
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--brand-500);
+
+  /* Números de datos (stats, precios, contadores). */
+  --num: tabular-nums;
+}
+[data-theme='dark'] :root, [data-theme='dark'] {
+  --raise-2: #1e2547;
+  --sunk: #0a0f1d;
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--brand-400);
+}
 @keyframes nav-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
-@keyframes rise-in { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes shimmer { to { transform: translateX(100%); } }
 @keyframes pulse-ring { 0% { transform: scale(.9); opacity: .55; } 100% { transform: scale(1.7); opacity: 0; } }
 @keyframes float-soft { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -32,13 +60,17 @@
 .tb-swap-enter-from { opacity: 0; transform: translateY(6px); }
 .tb-swap-leave-to { opacity: 0; transform: translateY(-6px); }
 
-/* Entrada de secciones, cards y botones */
-.sec-on > * { animation: rise-in .5s var(--ease-out) both; }
-.sec-on > *:nth-child(2) { animation-delay: .04s; }
-.sec-on > *:nth-child(3) { animation-delay: .08s; }
-.sec-on > *:nth-child(4) { animation-delay: .12s; }
-.sec-on > *:nth-child(5) { animation-delay: .16s; }
-.sec-on > *:nth-child(n+6) { animation-delay: .2s; }
+/* Entrada de secciones, cards y botones: fade + 8px en <=200ms (regla UX:
+   el cambio de sección tiene que sentirse instantáneo, no una animación). */
+.sec-on > * { animation: rise-in var(--dur) var(--ease-out) both; }
+.sec-on > *:nth-child(2) { animation-delay: .03s; }
+.sec-on > *:nth-child(3) { animation-delay: .06s; }
+.sec-on > *:nth-child(4) { animation-delay: .09s; }
+.sec-on > *:nth-child(5) { animation-delay: .12s; }
+.sec-on > *:nth-child(n+6) { animation-delay: .15s; }
+/* Foco visible consistente en todo el panel. */
+.app :focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.app :focus:not(:focus-visible) { outline: none; box-shadow: none; }
 .card { transition: background-color .2s ease, border-color .2s ease, box-shadow .25s var(--ease-out); }
 .card:hover { border-color: var(--line-strong); }
 .btn { transition: transform .18s var(--ease-out), box-shadow .2s, background-color .2s, border-color .2s, color .2s, opacity .2s; }
@@ -130,6 +162,12 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar nav button, .stat, .steps-list li, .sec-on > *, .hero::before, .steps-num::after, .steps-num, .skel::after { animation: none !important; }
   .nav-indicator, .hero-progress-bar, .ring-fg, .steps-bar span { transition: none !important; }
+}
+
+/* Targets táctiles >=44px en pantallas táctiles (Fitts/pulgar). */
+@media (pointer: coarse) {
+  .sidebar nav button, .sec-tab, .qa, .tab, .dsg-tab, .side-foot .link { min-height: 44px; }
+  .steps-go, .icon-btn, .top-bell, .chat-send, .chat-attach, .chat-win-btn { width: 44px; height: 44px; }
 }
 
 /* ===== Secciones guiadas (lenguaje simple, pestañas con ayuda) ===== */

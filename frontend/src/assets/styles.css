@@ -301,15 +301,15 @@ h1, h2, h3 { letter-spacing: -.02em; }
 
 /* ===== Dashboard app ===== */
 .app { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 264px 1fr; }
-.sidebar { background: #0f1130; color: #fff; padding: 22px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: 100vh; border-right: 1px solid rgba(255, 255, 255, .06); }
+.sidebar { background: var(--rail, #0f1130); color: var(--rail-ink-hi, #fff); padding: 22px 14px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 0; height: 100vh; height: 100dvh; border-right: 1px solid var(--rail-line, rgba(255, 255, 255, .06)); }
 .sidebar .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .14em; font-size: 17px; padding: 0 8px; }
 .plan-badge { display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(129, 140, 248, .14); border: 1px solid rgba(129, 140, 248, .35); color: var(--brand-200); font-size: 12px; font-weight: 600; border-radius: 99px; padding: 6px 12px; }
 .plan-badge .icon { color: #34d399; }
 .side-panel { display: flex; flex-direction: column; gap: 18px; flex: 1; min-height: 0; }
 .menu-toggle { display: none; }
 .sidebar nav { display: grid; gap: 4px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .18) transparent; }
-.sidebar nav button { display: flex; align-items: center; gap: 12px; background: transparent; border: none; color: #a5b4d4; font: inherit; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; text-align: left; transition: background .15s, color .15s, box-shadow .15s; }
-.sidebar nav button:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+.sidebar nav button { display: flex; align-items: center; gap: 12px; background: transparent; border: none; color: var(--rail-ink, #a5b4d4); font: inherit; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; text-align: left; transition: background .15s, color .15s, box-shadow .15s; }
+.sidebar nav button:hover { background: rgba(255, 255, 255, .06); color: var(--rail-ink-hi, #fff); }
 .sidebar nav button.active { background: rgba(99, 102, 241, .22); color: #fff; box-shadow: inset 2px 0 0 var(--brand-400); }
 .sidebar nav button.active .icon { color: var(--brand-200); }
 .side-foot { margin-top: auto; flex-shrink: 0; display: grid; gap: 6px; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 14px; }
@@ -326,12 +326,12 @@ h1, h2, h3 { letter-spacing: -.02em; }
 /* Transición entre secciones del panel: al activarse una sección
    (v-show + .sec-on) los bloques directos entran escalonados, y las
    cards que aparecen después por datos async también animan su entrada. */
-@keyframes dash-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.sec-on > * { animation: dash-enter .38s cubic-bezier(.22, .8, .3, 1) both; }
-.sec-on > *:nth-child(2) { animation-delay: .05s; }
-.sec-on > *:nth-child(3) { animation-delay: .1s; }
-.sec-on > *:nth-child(4) { animation-delay: .15s; }
-.sec-on > *:nth-child(n+5) { animation-delay: .2s; }
+@keyframes dash-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.sec-on > * { animation: dash-enter .18s cubic-bezier(.22, .8, .3, 1) both; }
+.sec-on > *:nth-child(2) { animation-delay: .03s; }
+.sec-on > *:nth-child(3) { animation-delay: .06s; }
+.sec-on > *:nth-child(4) { animation-delay: .09s; }
+.sec-on > *:nth-child(n+5) { animation-delay: .12s; }
 
 /* Suaviza el cambio entre modo claro y nocturno en las superficies. */
 body { transition: background-color .2s ease, color .2s ease; }
