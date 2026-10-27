@@ -63,10 +63,15 @@ const setHeaderVar = () => {
 const onResize = () => { if (window.innerWidth > 860) close(); moveIndicator() }
 
 // Píldora activa: se mueve con transform (compositor), sin layout por frame.
+// El indicador vive dentro del <nav> scrolleable (position:absolute relativo
+// al nav), así que comparte el sistema de coordenadas del contenido: el
+// offsetTop del botón ya es la posición correcta — restar scrollTop lo
+// desplazaba hacia arriba a medida que el nav scrolleaba (desync al elegir
+// secciones bajas).
 function moveIndicator() {
   const el = btnEls.get(props.active)
   if (!el || !navEl.value) { indicator.value = { ...indicator.value, ready: false }; return }
-  indicator.value = { y: el.offsetTop - navEl.value.scrollTop, h: el.offsetHeight, ready: true }
+  indicator.value = { y: el.offsetTop, h: el.offsetHeight, ready: true }
 }
 
 watch(open, (v) => { document.body.style.overflow = v ? 'hidden' : '' })
