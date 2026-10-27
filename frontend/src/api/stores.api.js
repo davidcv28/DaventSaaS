@@ -644,6 +644,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'gamer',     label: 'Gamer',        caption: 'Arena y consola',     templates: ['arena', 'terminal'] },
   { key: 'general',   label: 'Generalista',  caption: 'Clásico y minimal',   templates: ['classic', 'minimal'] },
   { key: 'belleza',   label: 'Belleza',      caption: 'Calma y ceremonial',  templates: ['calma', 'signature'] },
+  { key: 'hogar',     label: 'Hogar',        caption: 'Riso y terra',        templates: ['riso', 'terra'] },
   { key: 'moda',      label: 'Indumentaria', caption: 'Lookbook y street',   templates: ['atelier', 'street'] },
   { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
   { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },

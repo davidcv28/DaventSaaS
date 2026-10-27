@@ -124,3 +124,9 @@
 .fam-thumb[data-fam='belleza'] .fc-c::after { content: ''; position: absolute; right: 8%; top: 28%; width: 14%; height: 44%; border-radius: 99px; background: var(--brand); }
 .fam-thumb[data-fam='belleza'] .fc-d { left: 16%; right: 16%; top: 71%; height: 11%; background: #fff; border: 1px solid #e7ddd0; border-radius: 99px; }
 .fam-thumb[data-fam='belleza'] .fc-d::after { content: ''; position: absolute; right: 8%; top: 28%; width: 14%; height: 44%; border-radius: 99px; background: color-mix(in srgb, var(--brand) 55%, #fff); }
+/* --- Hogar: taller riso — papel crema, tintas planas solapadas y sello desplazado --- */
+.fam-thumb[data-fam='hogar'] { background: #fff5e6; background-image: radial-gradient(color-mix(in srgb, #1e1a33 10%, transparent) .8px, transparent .8px); background-size: 7px 7px; }
+.fam-thumb[data-fam='hogar'] .fc-a { left: 14%; top: 10%; width: 38%; height: 30%; background: var(--brand); border-radius: 10px; border: 2px solid #1e1a33; box-shadow: 4px 4px 0 #1e1a33; }
+.fam-thumb[data-fam='hogar'] .fc-b { right: 12%; top: 18%; width: 26%; height: 22%; background: #ffcf3f; border-radius: 10px; border: 2px solid #1e1a33; box-shadow: 4px 4px 0 #1e1a33; }
+.fam-thumb[data-fam='hogar'] .fc-c { left: 22%; top: 50%; width: 56%; height: 8%; background: #1e1a33; border-radius: 3px; }
+.fam-thumb[data-fam='hogar'] .fc-d { left: 14%; right: 14%; bottom: 12%; height: 24%; background: repeating-linear-gradient(90deg, #fffdf8 0 30%, #ff5fa2 30% 32%, #fffdf8 32% 62%, #6fe0c0 62% 64%, #fffdf8 64% 100%); border: 2px solid #1e1a33; border-radius: 10px; box-shadow: 4px 4px 0 #1e1a33; }

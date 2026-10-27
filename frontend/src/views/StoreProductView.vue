@@ -22,7 +22,9 @@ const VARIANTS = {
   arena: defineAsyncComponent(() => import('./product/ProductGamer.vue')),
   terminal: defineAsyncComponent(() => import('./product/ProductGamer.vue')),
   calma: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
-  signature: defineAsyncComponent(() => import('./product/ProductBelleza.vue'))
+  signature: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
+  riso: defineAsyncComponent(() => import('./product/ProductHogar.vue')),
+  terra: defineAsyncComponent(() => import('./product/ProductHogar.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || ProductClassic)
 </script>
