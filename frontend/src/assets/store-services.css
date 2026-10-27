@@ -365,6 +365,70 @@
 .store-page[data-store-template='bloque'] .sv-btn--ghost { border: 2px solid var(--sv-fg); box-shadow: none; }
 .store-page[data-store-template='bloque'] .sv-btn--ghost:hover { background: var(--sv-fg); color: var(--sv-card); }
 .store-page[data-store-template='bloque'] .sv-btn--ghost .icon { color: inherit; }
+.store-page[data-store-template='bloque'] .sv-pill { border-radius: 0; border: 2px solid var(--sv-fg); font-family: var(--bq-mono, 'JetBrains Mono', monospace); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+
+/* El picker es una tabla numerada, no una grilla de tarjetas: filas con
+   filete de 2px, índice mono a la izquierda, ícono de tinta plana,
+   precio mono a la derecha y acción como texto subrayado. */
+.store-page[data-store-template='bloque'] .sv-list {
+  grid-template-columns: minmax(0, 1fr); gap: 0;
+  counter-reset: svb; border-top: 2px solid var(--sv-fg);
+}
+.store-page[data-store-template='bloque'] .sv-item {
+  counter-increment: svb; display: grid;
+  grid-template-columns: 64px 48px minmax(0, 1fr) auto;
+  grid-template-areas: 'idx ico name meta' 'idx ico desc meta' 'idx ico act meta';
+  column-gap: 18px; row-gap: 5px; align-items: center;
+  padding: 20px 12px 20px 4px; border: 0; border-bottom: 2px solid var(--sv-fg);
+  border-radius: 0; background: transparent; box-shadow: none;
+}
+.store-page[data-store-template='bloque'] .sv-item:hover { transform: none; background: color-mix(in srgb, var(--sv-fg) 5%, transparent); border-color: var(--sv-fg); }
+.store-page[data-store-template='bloque'] .sv-item::before {
+  content: counter(svb, decimal-leading-zero); position: static; opacity: 1;
+  grid-area: idx; align-self: start; padding-top: 3px; background: none;
+  font-family: var(--bq-mono, 'JetBrains Mono', monospace); font-size: 14px; font-weight: 700; color: var(--sv-mute);
+}
+.store-page[data-store-template='bloque'] .sv-item::after { display: none; }
+.store-page[data-store-template='bloque'] .sv-item .ico { grid-area: ico; width: 44px; height: 44px; border-radius: 0; }
+.store-page[data-store-template='bloque'] .sv-item h3 {
+  grid-area: name; padding: 0; margin: 0;
+  font-family: var(--sv-display); font-size: 17px; text-transform: uppercase; letter-spacing: -.01em;
+}
+.store-page[data-store-template='bloque'] .sv-item small { grid-area: desc; font-size: 13px; -webkit-line-clamp: 2; }
+.store-page[data-store-template='bloque'] .sv-item .meta {
+  grid-area: meta; margin: 0; padding: 0; border: 0;
+  flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; text-align: right;
+}
+.store-page[data-store-template='bloque'] .sv-item .price {
+  font-family: var(--bq-mono, 'JetBrains Mono', monospace); font-size: 15px; font-weight: 700;
+  background: none; padding: 0; border-radius: 0; color: var(--sv-fg);
+}
+.store-page[data-store-template='bloque'] .sv-item .dur { font-family: var(--bq-mono, 'JetBrains Mono', monospace); font-size: 12px; }
+.store-page[data-store-template='bloque'] .sv-item .act {
+  grid-area: act; justify-self: start; margin: 0; padding: 4px 0 0; min-height: 0;
+  border: 0; background: none; border-radius: 0;
+  font-family: var(--bq-mono, 'JetBrains Mono', monospace); font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--sv-acc);
+}
+.store-page[data-store-template='bloque'] .sv-item:hover .act { color: var(--sv-fg); }
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true'] {
+  background: var(--sv-fg); color: var(--sv-card); border-color: var(--sv-fg); box-shadow: none;
+}
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true']::before,
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true'] small,
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true'] .dur { color: color-mix(in srgb, var(--sv-card) 72%, transparent); }
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true'] .price,
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true'] .act { color: var(--sv-card); }
+.store-page[data-store-template='bloque'] .sv-item[aria-pressed='true'] .ico { background: var(--sv-card); color: var(--sv-fg); }
+@media (max-width: 768px) {
+  .store-page[data-store-template='bloque'] .sv-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'idx ico' 'name name' 'desc desc' 'meta meta' 'act act';
+    column-gap: 12px; padding: 16px 0;
+  }
+  .store-page[data-store-template='bloque'] .sv-item .ico { justify-self: end; width: 40px; height: 40px; }
+  .store-page[data-store-template='bloque'] .sv-item .meta { flex-direction: row; align-items: baseline; justify-content: space-between; text-align: left; }
+}
 
 /* ---------- Riso: impresión a tintas con placa dura ---------- */
 .store-page[data-store-template='riso'] .sv-page {
