@@ -20,6 +20,12 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    # Un curl colgado no debe consumir la cuota de Actions hasta el límite de 6h.
+    timeout-minutes: 5
+    # Si un ping se solapa con el siguiente, el viejo se descarta.
+    concurrency:
+      group: keepalive-render
+      cancel-in-progress: true
     steps:
       - name: Ping /healthz/
         run: |

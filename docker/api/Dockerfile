@@ -1,7 +1,4 @@
 # syntax=docker/dockerfile:1
-# check=skip=SecretsUsedInArgOrEnv
-# El client ID de Google es PÚBLICO por diseño: viaja en el bundle del
-# browser; no es un secreto — el check de ARG/ENV no aplica.
 # Imagen de la API DRF (gunicorn) — también la usa el worker Celery y el job migrate.
 
 # ---------- Stage 1: compila wheels de requirements.txt ----------
@@ -13,8 +10,9 @@ RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends gcc libpq-dev ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-# pip actualizado: es el binario que descarga de PyPI en este stage.
-RUN python -m pip install --upgrade pip
+# pip pinneado: el binario que descarga de PyPI en este stage. Sin pin, el
+# resolver cambia entre minors y el build deja de ser reproducible.
+RUN python -m pip install --upgrade "pip==24.3.1"
 WORKDIR /build
 COPY requirements.txt .
 RUN pip wheel --wheel-dir /wheels -r requirements.txt
@@ -27,8 +25,11 @@ RUN pip wheel --wheel-dir /wheels -r requirements.txt
 FROM node:22-alpine AS frontend
 WORKDIR /fe
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 COPY frontend/ ./
+# Vite hornea las VITE_* en build-time. Los ARG ya llegan al RUN como
+# variables de entorno: el bloque `ENV VITE_*=...` era redundante y era lo
+# único que disparaba el check SecretsUsedInArgOrEnv (de ahí el skip global).
 ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN=daventsaas.onrender.com
 ARG VITE_STORE_SUBDOMAINS=
@@ -38,12 +39,6 @@ ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
 # Login social (Google): el client ID NO se hornea — el frontend lo pide en
 # runtime a GET /api/config/ (env GOOGLE_CLIENT_ID del backend). Sin var
 # ahí el botón queda oculto.
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
-    VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
-    VITE_STORE_SUBDOMAINS=$VITE_STORE_SUBDOMAINS \
-    VITE_APP_URL=$VITE_APP_URL \
-    VITE_APP_NAME=$VITE_APP_NAME \
-    VITE_APP_TAGLINE=$VITE_APP_TAGLINE
 RUN npm run build
 
 # ---------- Stage 2: runtime mínimo, sin toolchain ----------
@@ -73,13 +68,19 @@ COPY requirements.txt .
 COPY --from=builder /wheels /wheels
 RUN pip install --no-index --find-links=/wheels -r requirements.txt \
     && rm -rf /wheels
-COPY . .
-COPY --from=frontend /fe/dist /app/frontend_dist
-COPY docker/api/entrypoint.sh /entrypoint.sh
+# --chown en el COPY en vez de `chown -R /app` después: el chown recursivo
+# generaba una capa extra con una copia completa de la app.
+COPY --chown=app:app . .
+COPY --chown=app:app --from=frontend /fe/dist /app/frontend_dist
+COPY --chown=app:app docker/api/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh \
     && mkdir -p /app/staticfiles /app/media \
-    && chown -R app:app /app
+    && chown app:app /app/staticfiles /app/media
 USER app
 EXPOSE 8000
+# Los compose declaran su propio healthcheck; este cubre Render y cualquier
+# `docker run` suelto (sin HEALTHCHECK, orquestadores externos no ven estado).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/healthz/',timeout=4)"
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "-c", "docker/api/gunicorn.conf.py", "DaventProject.wsgi:application"]

@@ -22,3 +22,12 @@ nul
 %TEMP%/
 Thumbs.db
 .DS_Store
+# Material criptográfico y secretos locales: nunca en una capa de imagen.
+# docker/certbot/ guarda el token de Cloudflare del ACME DNS-01 (chmod 600,
+# no commiteado) — sin esta línea, `COPY . .` lo horneaba y build-push lo
+# publicaba en GHCR.
+docker/certbot/
+.secrets/
+**/*.pem
+**/*.key
+*.csr

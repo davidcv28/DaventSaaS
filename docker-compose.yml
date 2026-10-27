@@ -18,6 +18,11 @@ x-api-env: &api-env
   REDIS_URL:             redis://:${REDIS_PASSWORD}@redis:6379/1
   CELERY_BROKER_URL:     redis://:${REDIS_PASSWORD}@redis:6379/0
   CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@redis:6379/0
+  # El job `migrate` hace collectstatic+migrate UNA vez por deploy: api/celery
+  # arrancan sin repetirlo (entrypoint los saltea con "0"). Evita que cada
+  # restart pague ~4-6s y que dos réplicas migren en paralelo.
+  RUN_MIGRATIONS:        "0"
+  RUN_COLLECTSTATIC:     "0"
 
 x-logging: &logging
   driver: json-file
@@ -49,17 +54,53 @@ services:
 
   # ---------------------------------------------------------------------------
   redis:
-    image: redis:7-alpine
+    image: redis:7.4-alpine
     restart: unless-stopped
     env_file: .env                       # REDIS_PASSWORD
     # Auth obligatoria aunque no esté expuesto: defensa en profundidad si otro
     # contenedor del host queda comprometido.
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    #
+    # maxmemory < límite del cgroup (384M): Redis NO lee cgroup limits, así que
+    # sin esto el kernel lo mata con SIGKILL cuando el RSS toca el techo (y con
+    # él caen el throttle de DRF y el broker de Celery).
+    # volatile-lru: evicta SOLO claves con TTL (contadores de throttle, caché).
+    # Las listas del broker Celery no tienen TTL -> jamás se evictan (con
+    # allkeys-lru se perdían tareas de pago). Con el default noeviction, el
+    # primer INCR del throttle sobre una instancia llena devuelve error -> 500.
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - volatile-lru
+      - --maxmemory-samples
+      - "10"
+      # Persistencia: AOF everysec (pérdida máx. 1s) + snapshots RDB de respaldo.
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --aof-use-rdb-preamble
+      - "yes"
+      - --save
+      - "900 1"
+      - --save
+      - "300 10"
+      # Un BGSAVE fallido (disco lleno) no debe congelar los writes de la API:
+      # la durabilidad la da el AOF, no el snapshot.
+      - --stop-writes-on-bgsave-error
+      - "no"
+      - --tcp-keepalive
+      - "60"
     networks: [internal_net]
     volumes:
       - redisdata:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep -q PONG"]
+      # REDISCLI_AUTH en vez de `-a`: `-a` deja la password en el argv del
+      # proceso (visible con `ps`) y ensucia el log con el warning de redis-cli.
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,23 +108,30 @@ services:
     cap_drop: [ALL]
     deploy:
       resources:
-        limits: {cpus: "0.5", memory: 256M}
+        # 384M de cgroup para 256mb de maxmemory: el ~33% restante cubre la
+        # fragmentación y el copy-on-write de un BGREWRITEAOF.
+        limits: {cpus: "0.5", memory: 384M}
     logging: *logging
 
   # ---------------------------------------------------------------------------
-  # Job one-shot: corre migraciones con la imagen NUEVA antes de que api/celery
-  # levanten (depends_on + service_completed_successfully lo garantiza en cada
-  # `compose up`, también en el deploy de CI).
+  # Job one-shot: publica estáticos y corre migraciones con la imagen NUEVA
+  # antes de que api/celery levanten (depends_on +
+  # service_completed_successfully lo garantiza en cada `compose up`, también
+  # en el deploy de CI). Es el ÚNICO lugar donde se hace: api/celery arrancan
+  # con RUN_MIGRATIONS/RUN_COLLECTSTATIC=0.
   migrate:
     image: ${API_IMAGE:-ghcr.io/davidcv28/daventsaas-api:latest}
     build:
       context: .
       dockerfile: docker/api/Dockerfile
     restart: "no"
-    command: ["python", "manage.py", "migrate", "--noinput"]
+    command: ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate --noinput"]
     env_file: .env
     environment: *api-env
     networks: [internal_net]
+    volumes:
+      # Sin esto collectstatic escribe en el rootfs read-only del job.
+      - static_data:/app/staticfiles
     depends_on:
       db: {condition: service_healthy}
     read_only: true
@@ -167,8 +215,8 @@ services:
     environment:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}   # envsubst del template de vhost
     ports:
-      - "80:80"                            # único servicio expuesto al host
-      - "443:443"
+      - "80:8080"                          # único servicio expuesto al host
+      - "443:8443"                         # nginx corre SIN privilegios
     networks: [edge_net]
     volumes:
       - static_data:/srv/static:ro
@@ -180,17 +228,18 @@ services:
     depends_on:
       api: {condition: service_healthy}
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
     security_opt: ["no-new-privileges:true"]
     cap_drop: [ALL]
-    cap_add: [NET_BIND_SERVICE]            # bind 80/443
+    # cap_add: NET_BIND_SERVICE ya no hace falta: la imagen es nginx-unprivileged
+    # (uid 101) y escucha 8080/8443; el mapeo 80->8080 lo hace Docker.
     read_only: true
-    # conf.d como tmpfs: envsubst escribe ahí el vhost renderizado al arrancar
-    # (además oculta el default.conf de fábrica de la imagen nginx).
-    tmpfs: [/tmp, /var/cache/nginx, /var/run, /etc/nginx/conf.d]
+    # /etc/nginx/conf.d como tmpfs: envsubst escribe ahí el vhost renderizado
+    # al arrancar (además oculta el default.conf de fábrica de la imagen).
+    tmpfs: [/tmp, /var/cache/nginx, /etc/nginx/conf.d]
     deploy:
       resources:
         limits: {cpus: "0.5", memory: 128M}
@@ -207,7 +256,9 @@ services:
   #   Renovación (cron en el host): docker compose --profile certbot run --rm \
   #     certbot renew && docker compose exec web nginx -s reload
   certbot:
-    image: certbot/dns-cloudflare:latest
+    # Pinneado: `latest` acá significa que el mismo commit puede renovar con
+    # otro cliente ACME (y un tag borrado rompe la renovación en silencio).
+    image: certbot/dns-cloudflare:v4.0.0
     profiles: ["certbot"]
     entrypoint: ["certbot"]
     command: ["renew"]

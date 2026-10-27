@@ -1,14 +1,19 @@
 # =============================================================================
 # DAVENT — CI/CD (GitHub Actions -> GHCR -> VPS Donweb por SSH)
 #
-#   lint   -> ruff (backend) + npm build del SPA (smoke, no hay eslint aún)
-#   test   -> check --deploy + migrate + test contra Postgres real (service)
-#   security -> bandit (código) + trivy fs (dependencias)
-#   build  -> imágenes api/web -> GHCR + trivy image scan (HIGH/CRITICAL)
-#   deploy -> SSH al VPS: pull + migrate + up -d (rolling, sin downtime)
+#   lint   -> ruff (backend). El SPA no se compila acá: lo compilan las dos
+#             imágenes en `build` (compilarlo tres veces era puro costo).
+#   test   -> check --deploy + makemigrations --check + test vs Postgres real
+#   security -> bandit + pip-audit + npm audit + gitleaks + trivy fs
+#   build  -> imágenes api/web -> GHCR + trivy image scan (gated por security)
+#   deploy -> SSH al VPS: inyecta secretos de webhook + pull + migrate +
+#             `up -d --wait` + healthz externo (sin downtime, sin falsos verdes)
 #
 # Secrets requeridos (repo Settings > Secrets):
 #   SSH_HOST, SSH_PORT, SSH_USERNAME, SSH_PRIVATE_KEY  -> acceso al VPS Donweb
+#   SSH_HOST_FINGERPRINT  -> host key pineada (ssh-keyscan -p PORT HOST | ssh-keygen -lf -)
+#   MP_WEBHOOK_SECRET     -> firma HMAC de los webhooks de Mercado Pago
+#   SECRET_MP_KEY         -> access token de Mercado Pago
 # Variables (repo Settings > Variables):
 #   PLATFORM_DOMAIN  -> dominio raíz (ej. davent.com) para el build de Vite
 # En el VPS (una sola vez): git clone del repo en /opt/davent + .env real +
@@ -27,6 +32,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# El token solo necesita leer el repo; `build` eleva `packages: write`.
+permissions:
+  contents: read
+
 env:
   API_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-api
   WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-web
@@ -35,39 +44,28 @@ jobs:
 
   # ---------------------------------------------------------------------------
   lint:
-    name: Lint (ruff) + build smoke del SPA
+    name: Lint (ruff)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Ruff (estilo + errores estáticos backend)
         run: |
           pip install ruff==0.8.6
           ruff check --output-format=github .
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Build del SPA (smoke test de compilación)
-        working-directory: frontend
-        env:
-          VITE_API_BASE_URL: /api
-          VITE_PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
-        run: |
-          npm ci --no-audit --no-fund
-          npm run build
-
   # ---------------------------------------------------------------------------
   test:
     name: Django check + tests contra Postgres
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -80,12 +78,17 @@ jobs:
           --health-cmd "pg_isready -U postgres -d davent_test"
           --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      SECRET_KEY: ci-not-secret
+      # W009: con menos de 50 chars Django lo marca en cada `check --deploy`.
+      SECRET_KEY: ci-only-secret-key-with-more-than-fifty-characters-000000
       DEBUG: "False"
       ALLOWED_HOSTS: localhost,127.0.0.1
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/davent_test
       CORS_ALLOWED_ORIGINS: http://localhost:5173
       SECRET_MP_KEY: TEST-dummy
+      # Dummy de CI (no es un secreto real): sin esto payments.E001 (checks.py,
+      # deploy=True) tumba el job y con él toda la cadena build -> deploy.
+      # Los tests de firma siguen usando su propio SECRET vía patch.dict.
+      MP_WEBHOOK_SECRET: ci-only-webhook-secret-not-real-000000000000
       # check --deploy exige un ADMIN_URL no predecible (users.E001)
       ADMIN_URL: ci-backoffice/
       # Los defaults seguros de prod (Secure cookies, redirect https) son los
@@ -109,21 +112,30 @@ jobs:
       - name: Checklist de despliegue de Django
         run: python manage.py check --deploy
 
-      - name: Migraciones (detecta modelos sin migrar / rotos)
-        run: python manage.py migrate --noinput
+      - name: Migraciones sin commitear (drift de modelos)
+        # `manage.py test` ya aplica TODAS las migraciones sobre la DB de test:
+        # un `migrate` acá era el mismo trabajo dos veces. Lo que falta de
+        # verdad es detectar un modelo cambiado sin su makemigrations.
+        run: python manage.py makemigrations --check --dry-run
 
       - name: Tests
         run: python manage.py test
 
   # ---------------------------------------------------------------------------
   security:
-    name: Bandit + Trivy (fs)
+    name: Bandit + pip-audit + Trivy (fs)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Bandit (SAST del código Python, severidad media+)
         run: |
@@ -139,6 +151,11 @@ jobs:
         working-directory: frontend
         run: npm audit --omit=dev --audit-level=high
 
+      - name: Gitleaks — secretos filtrados en el repo
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Trivy — vulnerabilidades en dependencias/archivos
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -153,7 +170,10 @@ jobs:
   build:
     name: Build + push imágenes + Trivy (image)
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    # `security` también gatea: sin esto la imagen se publicaba en GHCR
+    # mientras el SAST/audit todavía corrían.
+    needs: [lint, test, security]
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
@@ -187,13 +207,14 @@ jobs:
             type=sha,prefix=sha-,format=long
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
+      # En PR no se pushea ni se escanea (los Trivy tienen if != pull_request):
+      # `load: true` exportaba 800MB-1.5GB al daemon para nada.
       - name: Build API -> GHCR
         uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta-api.outputs.tags }}
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
@@ -204,7 +225,6 @@ jobs:
           context: .
           file: docker/web/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta-web.outputs.tags }}
           build-args: |
             VITE_API_BASE_URL=/api
@@ -239,21 +259,82 @@ jobs:
     needs: [build, security]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
+    timeout-minutes: 15
+    # El `concurrency` del workflow cancela a mitad de camino: si un push
+    # llega durante el deploy, abortaría entre `pull` y `up -d` dejando el
+    # host con migraciones nuevas y contenedores viejos. Los deploys se
+    # serializan, nunca se cancelan.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
-      - name: SSH -> pull imágenes + migrate + up rolling
+      # El secreto se materializa desde el env del step (no se interpola en el
+      # script: no aparece en argv ni en los logs) y viaja por scp.
+      - name: Materializar secretos de webhook (0600, efímero)
+        env:
+          MP_WEBHOOK_SECRET: ${{ secrets.MP_WEBHOOK_SECRET }}
+          SECRET_MP_KEY: ${{ secrets.SECRET_MP_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          {
+            printf 'MP_WEBHOOK_SECRET=%s\n' "$MP_WEBHOOK_SECRET"
+            printf 'SECRET_MP_KEY=%s\n' "$SECRET_MP_KEY"
+          } > davent-secrets.env
+
+      - name: Subir secretos al VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          source: davent-secrets.env
+          target: /opt/davent/.secrets
+          overwrite: true
+
+      - name: SSH -> secretos + pull imágenes + migrate + up rolling
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
           script: |
-            set -e
+            set -eu
             cd /opt/davent
+
+            # 1. Merge atómico de SOLO las claves que administra CI (el resto
+            #    del .env se respeta byte a byte).
+            umask 077
+            tmp=$(mktemp .env.XXXXXX)
+            grep -v -E '^(MP_WEBHOOK_SECRET|SECRET_MP_KEY)=' .env > "$tmp" || true
+            cat .secrets/davent-secrets.env >> "$tmp"
+            mv "$tmp" .env
+            chmod 600 .env
+            shred -u .secrets/davent-secrets.env 2>/dev/null || rm -f .secrets/davent-secrets.env
+
+            # 2. Preflight fail-closed: sin firma HMAC válida los pagos quedan
+            #    en 401 silencioso (check --deploy solo corre en el job test).
+            grep -q '^MP_WEBHOOK_SECRET=.\{32,\}' .env || { echo "FATAL: MP_WEBHOOK_SECRET ausente o <32 chars"; exit 1; }
+            grep -q '^SECRET_MP_KEY=.\{16,\}' .env     || { echo "FATAL: SECRET_MP_KEY ausente"; exit 1; }
+            grep -q '^SECRET_KEY=.\{32,\}' .env        || { echo "FATAL: SECRET_KEY ausente o <32 chars"; exit 1; }
+
+            # 3. Rotación por sha (nunca :latest).
             git pull --ff-only
             export API_IMAGE=${{ env.API_IMAGE }}:sha-${{ github.sha }}
             export WEB_IMAGE=${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
             docker compose pull
-            docker compose run --rm migrate          # migraciones ANTES de rotar
-            docker compose up -d --remove-orphans    # recreate rolling de api/celery/web
-            docker image prune -f
+            docker compose run --rm migrate
+
+            # 4. Rolling con espera real de healthchecks: si api/celery/web no
+            #    levantan, el job falla en vez de reportar verde.
+            docker compose up -d --remove-orphans --wait --wait-timeout 180
+
+            # 5. Verificación externa + GC de imágenes viejas (los tags
+            #    sha-<commit> se acumulaban hasta llenar el disco).
+            curl -fsS --retry 5 --retry-delay 3 -o /dev/null \
+              "https://${{ vars.PLATFORM_DOMAIN }}/healthz/"
+            docker image prune -f --filter "until=168h"

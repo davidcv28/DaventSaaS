@@ -279,11 +279,21 @@ Los certs quedan en el volumen `letsencrypt` (montado ro en `web`; el vhost
 
 ## 8. CI/CD (deploys futuros por push)
 
-El workflow `ci-cd.yml` ya tiene el job `deploy` (SSH → `git pull` +
-`compose pull` + `migrate` + `up -d`). En GitHub:
+El workflow `ci-cd.yml` ya tiene el job `deploy` (SSH → inyecta secretos de
+webhook + `git pull` + `compose pull` + `migrate` + `up -d --wait` + healthz
+externo). En GitHub:
 
 - **Secrets** (Settings → Secrets → Actions): `SSH_HOST`, `SSH_PORT`,
-  `SSH_USERNAME`, `SSH_PRIVATE_KEY`
+  `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `SSH_HOST_FINGERPRINT`,
+  `MP_WEBHOOK_SECRET`, `SECRET_MP_KEY`
+  - `SSH_HOST_FINGERPRINT` pineade la host key del VPS (sin esto el SSH no
+    verifica contra quién habla): `ssh-keyscan -p <puerto> <host> | ssh-keygen -lf -`
+  - `MP_WEBHOOK_SECRET` / `SECRET_MP_KEY` los escribe el deploy en el `.env`
+    del VPS (merge atómico, `chmod 600`) y **falla antes de tocar contenedores**
+    si faltan o son cortos: sin firma HMAC los webhooks de MP quedan en 401.
+  - Mejor definirlos en el **Environment `production`** (Settings →
+    Environments) para que requieran aprobación y no estén disponibles en
+    cualquier job del repo.
 - **Variable**: `PLATFORM_DOMAIN` = `davent.com.ar` (alimenta el build-arg
   `VITE_PLATFORM_DOMAIN` de la imagen web)
 

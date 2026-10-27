@@ -17,7 +17,7 @@ from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.services.models import StoreService
 from StoreApp.domains.services.services import SERVICES_MAX
-from StoreApp.domains.stores.models import Store, StoreCustomization
+from StoreApp.domains.stores.models import Store
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 STORES_URL    = '/api/stores/'
