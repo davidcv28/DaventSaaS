@@ -4875,8 +4875,8 @@ html { scroll-behavior: smooth; }
   background: var(--sp-ink); color: var(--cb-stone);
 }
 .store-page[data-store-template='cobre'] .sp-services > .sp-container {
-  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 20px clamp(32px, 5vw, 80px); align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: 10px 0; align-items: start;
 }
 .store-page[data-store-template='cobre'] .sp-services .sp-eyebrow,
 .store-page[data-store-template='cobre'] .sp-services .sp-section-title { grid-column: 1; }
@@ -4885,7 +4885,7 @@ html { scroll-behavior: smooth; }
   margin: 6px 0 0; color: var(--cb-stone);
 }
 .store-page[data-store-template='cobre'] .sp-services .sp-services-grid {
-  grid-column: 2; grid-row: 1 / -1;
+  grid-column: 1; grid-row: auto; margin-top: 18px;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
 }
 .store-page[data-store-template='cobre'] .sp-service {
@@ -4925,13 +4925,7 @@ html { scroll-behavior: smooth; }
 /* Móvil: la banda pasa a una sola columna y cada material queda
    placa + título con la descripción debajo del título. */
 @media (max-width: 900px) {
-  .store-page[data-store-template='cobre'] .sp-services > .sp-container {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .store-page[data-store-template='cobre'] .sp-services .sp-section-title { margin-bottom: 16px; }
-  .store-page[data-store-template='cobre'] .sp-services .sp-services-grid {
-    grid-column: 1; grid-row: auto;
-  }
   .store-page[data-store-template='cobre'] .sp-service {
     grid-template-columns: 44px minmax(0, 1fr);
     align-items: start; gap: 3px 16px; padding: 18px 0;
@@ -5395,8 +5389,6 @@ html { scroll-behavior: smooth; }
      años + misión en móvil, igual que pasaba en Minimal. */
   .store-page[data-store-template='cobre'] .sp-about-grid,
   .store-page[data-store-template='cobre'] .sp-about-grid.no-side { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .store-page[data-store-template='cobre'] .sp-services > .sp-container { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='cobre'] .sp-services .sp-services-grid { grid-column: 1; grid-row: auto; }
   .store-page[data-store-template='cobre'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
   .store-page[data-store-template='cobre'] .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
   .store-page[data-store-template='cobre'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -5874,14 +5866,14 @@ html { scroll-behavior: smooth; }
 
 /* --- Servicios: lista plana con filetes --- */
 .store-page[data-store-template='minimal'] .sp-services > .sp-container {
-  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 20px clamp(32px, 5vw, 80px); align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: 10px 0; align-items: start;
 }
 .store-page[data-store-template='minimal'] .sp-services .sp-eyebrow,
 .store-page[data-store-template='minimal'] .sp-services .sp-section-title { grid-column: 1; }
 .store-page[data-store-template='minimal'] .sp-services .sp-section-title { margin: 8px 0 0; }
 .store-page[data-store-template='minimal'] .sp-services .sp-services-grid {
-  grid-column: 2; grid-row: 1 / span 2;
+  grid-column: 1; grid-row: auto; margin-top: 16px;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
 }
 .store-page[data-store-template='minimal'] .sp-service {
@@ -6408,8 +6400,6 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='minimal'] .sp-about-grid,
   .store-page[data-store-template='minimal'] .sp-about-grid.no-side { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .store-page[data-store-template='minimal'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='minimal'] .sp-services > .sp-container { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='minimal'] .sp-services .sp-services-grid { grid-column: 1; grid-row: auto; }
   .store-page[data-store-template='minimal'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
   .store-page[data-store-template='minimal'] .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
   /* La tarjeta conserva su formato vertical de tile: la regla base la
@@ -7046,14 +7036,14 @@ html { scroll-behavior: smooth; }
 
 /* --- Servicios: lista plana con filetes (como el índice de una guía) --- */
 .store-page[data-store-template='boutique'] .sp-services > .sp-container {
-  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 20px clamp(32px, 5vw, 80px); align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: 10px 0; align-items: start;
 }
 .store-page[data-store-template='boutique'] .sp-services .sp-eyebrow,
 .store-page[data-store-template='boutique'] .sp-services .sp-section-title { grid-column: 1; }
 .store-page[data-store-template='boutique'] .sp-services .sp-section-title { margin: 8px 0 0; }
 .store-page[data-store-template='boutique'] .sp-services .sp-services-grid {
-  grid-column: 2; grid-row: 1 / span 2;
+  grid-column: 1; grid-row: auto; margin-top: 16px;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
 }
 .store-page[data-store-template='boutique'] .sp-service {
@@ -7616,8 +7606,6 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='boutique'] .sp-about-grid,
   .store-page[data-store-template='boutique'] .sp-about-grid.no-side { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .store-page[data-store-template='boutique'] .sp-about-side { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='boutique'] .sp-services > .sp-container { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='boutique'] .sp-services .sp-services-grid { grid-column: 1; grid-row: auto; }
   .store-page[data-store-template='boutique'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 14px; }
   .store-page[data-store-template='boutique'] .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 14px; }
   .store-page[data-store-template='boutique'] .sp-card { flex-direction: column; }
