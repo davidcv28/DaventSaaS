@@ -215,11 +215,11 @@
 .sv-quote .total { font-family: var(--sv-display); font-weight: 800; font-size: clamp(38px, 5vw, 58px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
 .sv-quote .count { font-size: 16px; opacity: .85; }
 .sv-quote ul { list-style: none; margin: 0; padding: 0; display: grid; }
-.sv-quote li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px dashed color-mix(in oklab, var(--sv-on-ink) 25%, transparent); font-size: 15px; animation: sv-slide .4s var(--sv-ease) both; }
+.sv-quote li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px dashed color-mix(in oklab, currentColor 25%, transparent); font-size: 15px; animation: sv-slide .4s var(--sv-ease) both; }
 .sv-quote li b { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sv-quote .empty-line { font-size: 15px; opacity: .7; padding: 10px 0; }
 @keyframes sv-slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
-.sv-quote .pay { font-size: 15px; background: color-mix(in oklab, var(--sv-on-ink) 10%, transparent); padding: 14px; border-radius: var(--sv-r-sm); line-height: 1.5; }
+.sv-quote .pay { font-size: 15px; background: color-mix(in oklab, currentColor 10%, transparent); padding: 14px; border-radius: var(--sv-r-sm); line-height: 1.5; }
 .sv-quote .pay b { color: var(--sv-pop); }
 .sv-quote .sv-btn { width: 100%; }
 
@@ -259,7 +259,7 @@
   padding: 10px 14px; border-radius: var(--sv-r-pill); border: var(--sv-bw) solid var(--sv-line); cursor: pointer; font-weight: 600; font-size: 15px;
   transition: transform .35s var(--sv-spring), background-color .2s, border-color .2s;
 }
-.sv-chips label:hover { transform: translateY(-2px); border-color: var(--sv-fg); }
+.sv-chips label:hover { transform: translateY(-2px); border-color: var(--sv-acc); background: color-mix(in srgb, var(--sv-acc) 14%, var(--sv-card)); }
 .sv-chips input:checked + label { background: var(--sv-fg); color: var(--sv-on-ink); border-color: var(--sv-fg); }
 .sv-chips input:focus-visible + label { outline: 3px solid var(--sv-focus); outline-offset: 2px; }
 .sv-form .sv-btn { width: 100%; }
@@ -571,7 +571,7 @@
 .store-page[data-store-template='aurora'] .sv-page {
   --sv-on-acc: var(--au-sky, #0b1020);
   --sv-on-pop: #fff;
-  --sv-on-ink: var(--au-ink, #eef2ff);
+  --sv-on-ink: var(--au-sky, #0a0f1e);
   --sv-r-pill: 999px; --sv-r-stage: 24px; --sv-r-lg: 18px; --sv-r-md: 16px; --sv-r-sm: 12px;
   --sv-btn-radius: 999px;
   --sv-bw: 1px;
@@ -691,9 +691,9 @@
 }
 .sv-quote .rm {
   flex: none; width: 24px; height: 24px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
-  background: color-mix(in oklab, var(--sv-on-ink) 14%, transparent); color: inherit; transition: background-color .2s, transform .3s var(--sv-spring);
+  background: color-mix(in oklab, currentColor 14%, transparent); color: inherit; transition: background-color .2s, transform .3s var(--sv-spring);
 }
-.sv-quote .rm:hover { background: color-mix(in oklab, var(--sv-on-ink) 28%, transparent); transform: rotate(90deg); }
+.sv-quote .rm:hover { background: color-mix(in oklab, currentColor 28%, transparent); transform: rotate(90deg); }
 .sv-quote .pay { display: flex; gap: 10px; align-items: flex-start; }
 .sv-quote .pay .icon { flex: none; margin-top: 2px; color: var(--sv-pop); }
 .sv-quote .sv-btn { background: var(--sv-pop); color: var(--sv-on-pop); }

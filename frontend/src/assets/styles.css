@@ -625,7 +625,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .check-list { display: grid; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .check-item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; cursor: pointer; transition: background .15s; }
 .check-item + .check-item { border-top: 1px solid var(--line-soft); }
-.check-item:hover { background: var(--brand-50); }
+.check-item:hover { background: var(--brand-soft); }
 .check-item input[type='checkbox'] { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--brand-600); cursor: pointer; }
 .check-item .check-text strong { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .check-item .check-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.45; }
@@ -660,7 +660,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .legal-foot a:hover { text-decoration: underline; }
 /* Sobre DAVENT: tarjeta del fundador y links dentro del legal-doc */
 .about-founder { display: flex; gap: 16px; align-items: flex-start; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
-.about-mono { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-50); border: 1px solid var(--brand-200); color: var(--brand-ink); font-weight: 800; font-size: 20px; flex: none; }
+.about-mono { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-soft); border: 1px solid var(--brand-soft-line); color: var(--brand-ink); font-weight: 800; font-size: 20px; flex: none; }
 .about-name { display: block; font-size: 15.5px; font-weight: 700; color: var(--ink); }
 .about-role { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
 .about-founder p { margin: 8px 0 0; }
@@ -1238,16 +1238,16 @@ body { transition: background-color .2s ease, color .2s ease; }
    ícono/pares y lista de reordenamiento de secciones de la portada. ===== */
 .mk-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 20px; }
 .mk-chip { padding: 8px 14px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
-.mk-chip:hover { border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-50); }
+.mk-chip:hover { border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-soft); }
 .mk-card { scroll-margin-top: 24px; }
 .mk-icon-field { display: flex; align-items: center; gap: 8px; }
-.mk-icon-preview { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border: 1px solid var(--line); border-radius: 9px; background: var(--brand-50); color: var(--brand-ink); }
+.mk-icon-preview { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border: 1px solid var(--line); border-radius: 9px; background: var(--brand-soft); color: var(--brand-ink); }
 .mk-icon-field .select { flex: 1; min-width: 0; }
 .mk-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .mk-order-list { display: grid; gap: 8px; margin: 14px 0 4px; }
 .mk-order-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .mk-order-item strong { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--ink); }
-.mk-order-num { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 8px; background: var(--brand-50); color: var(--brand-ink); font-size: 12px; font-weight: 700; }
+.mk-order-num { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 8px; background: var(--brand-soft); color: var(--brand-ink); font-size: 12px; font-weight: 700; }
 .mk-order-actions { flex-direction: row; }
 @media (max-width: 560px) {
   .mk-pair { grid-template-columns: 1fr; }
@@ -1277,7 +1277,7 @@ body { transition: background-color .2s ease, color .2s ease; }
 .carousel-add:disabled { opacity: .55; cursor: default; }
 /* Campos del diseño bloqueados por plan (has_design_advanced): se ven
    atenuados con un badge "Premium" y los controles quedan deshabilitados. */
-.lock-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; background: var(--brand-50); color: var(--brand-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 1px; }
+.lock-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; background: var(--brand-soft); color: var(--brand-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 1px; }
 .lock-badge .icon { color: var(--brand-500); }
 .field.locked .pick-strip, .field.locked .size-slider { opacity: .55; }
 .field.locked .font-chip, .field.locked .swatch, .field.locked .size-slider input[type='range'] { cursor: default; }

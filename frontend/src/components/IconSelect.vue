@@ -68,7 +68,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
 .isel-caret { flex: none; color: var(--muted); }
 .isel-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); max-height: 260px; overflow-y: auto; margin: 0; padding: 4px; list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 12px 28px rgba(15, 23, 42, .14); }
 .isel-opt { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; font-size: 14px; color: var(--ink); cursor: pointer; }
-.isel-opt.active { background: var(--brand-50, rgba(99, 102, 241, .08)); }
+.isel-opt.active { background: var(--brand-soft); color: var(--brand-ink); }
 .isel-opt.current { font-weight: 600; }
 .isel-check { flex: none; color: var(--brand-500); }
 </style>
