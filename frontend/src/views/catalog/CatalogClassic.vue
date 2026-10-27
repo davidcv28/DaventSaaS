@@ -9,6 +9,7 @@ import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
 import TplProductCard from '../../components/store/TplProductCard.vue'
 import { vReveal } from '../../directives/reveal.js'
+import { useLayout } from '../../composables/useLayout.js'
 
 // Página de catálogo de la web pública (/<slug>/catalogo): navegación por
 // categorías/marcas multi-selección, facetas por atributo, buscador,
@@ -22,6 +23,9 @@ const {
   clearFilters, hasFilters,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
+
+// Bloque 'banner' del layout de catálogo (premium): el editor lo apaga.
+const { on } = useLayout('catalog')
 
 // --- Portada: carrusel de destacados (premium), abre la página del
 // catálogo como vitrina del negocio ---
@@ -139,7 +143,7 @@ onBeforeUnmount(() => {
     <!-- Portada: carrusel de destacados (premium), vitrina sobre el catálogo.
          Tienda Pro no lo repite: la portada ya es el banner de la home y acá
          el catálogo tiene que entrar directo, sin una franja de imágenes. -->
-    <div v-if="hasDesignAdvanced && carousel.length" class="sp-catalog-banner">
+    <div v-if="hasDesignAdvanced && carousel.length && on('banner')" class="sp-catalog-banner">
       <div v-reveal class="sp-banner">
         <div ref="carouselEl" class="sp-carousel" :class="{ dragging }" @mouseenter="pauseSlideTimer" @mouseleave="restartSlideTimer" @focusin="pauseSlideTimer" @focusout="restartSlideTimer" @pointerdown="onSlideDragStart" @pointermove="onSlideDragMove" @pointerup="onSlideDragEnd" @pointercancel="onSlideDragEnd">
           <div class="sp-carousel-track" :style="trackStyle">

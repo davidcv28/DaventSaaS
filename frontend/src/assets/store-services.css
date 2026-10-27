@@ -87,6 +87,9 @@
 }
 .sv-page section { padding-block: clamp(48px, 8vw, 96px); }
 .sv-page section.sv-flush { padding-top: 0; }
+/* Cada bloque del layout vive en su propio .sp-container hijo de
+   #sv-main: el flex permite reordenarlos con `order` desde el editor. */
+#sv-main { display: flex; flex-direction: column; }
 .sv-page :focus-visible { outline: 3px solid var(--sv-focus); outline-offset: 3px; border-radius: 10px; }
 
 .sv-pill {

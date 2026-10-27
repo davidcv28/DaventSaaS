@@ -69,6 +69,7 @@ import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
+import LayoutEditor from '../components/LayoutEditor.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -278,6 +279,7 @@ const tabGroups = computed(() => {
     web.push(
       { id: 'pages', label: 'Plantillas', icon: 'layout-grid', hint: 'Qué páginas tiene tu web' },
       { id: 'design', label: 'Cómo se ve', icon: 'palette', hint: 'Textos, colores e imágenes' },
+      { id: 'blocks', label: 'Bloques', icon: 'sliders', hint: 'Qué secciones van y su orden' },
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
   }
@@ -4434,6 +4436,37 @@ async function changePassword() {
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
         <h3>El diseño web viene con tu plan</h3>
         <p>Activá una suscripción para personalizar el logo, el titular, la descripción y los botones de contacto de tu página pública.</p>
+        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+      </div>
+    </div>
+    <!-- ================= BLOQUES (editor interactivo de secciones) ================= -->
+    <div v-if="seen.blocks" v-show="section === 'blocks'" :class="{ 'sec-on': section === 'blocks' }">
+      <div class="page-head">
+        <div>
+          <h1>Bloques de mi página</h1>
+          <p>Elegí qué secciones tiene cada página y en qué orden. Los cambios se guardan solos.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+      </div>
+      <SectionTabs :tabs="tabGroups.web" active="blocks" @select="section = $event" />
+
+      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+
+      <template v-if="canCustomize">
+        <LayoutEditor
+          :template="designTemplate"
+          :premium="canDesignAdvanced"
+          :public-url="publicUrl"
+          :site-templates="designSiteTemplates"
+          @notify="pushToast"
+          @navigate="section = $event"
+        />
+      </template>
+      <div v-else class="empty">
+        <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
+        <h3>El editor de bloques viene con tu plan</h3>
+        <p>Activá una suscripción para decidir qué secciones lleva cada página de tu web pública.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>

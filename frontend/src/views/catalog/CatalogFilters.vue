@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { filtersUi, closeFilters, hasAnyFilterGroup } from '../../composables/catalogFiltersUi.js'
+import { useLayout } from '../../composables/useLayout.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogFiltersGroups from './CatalogFiltersGroups.vue'
 import '../../assets/store-filters.css'
@@ -19,6 +20,12 @@ const {
 } = useStoreCatalog()
 
 const hasAny = hasAnyFilterGroup(catalog, priceCeiling, offerTotal, newTotal)
+
+// Bloque 'filters' del layout de catálogo: apagado en el editor oculta
+// tanto la sidebar como el bottom sheet (y el botón que lo abre, que
+// vive en CatalogToolbar).
+const { on } = useLayout('catalog')
+const showFilters = computed(() => hasAny.value && on('filters'))
 
 const rootEl = ref(null)
 const sheetEl = ref(null)
@@ -82,7 +89,7 @@ onBeforeUnmount(() => {
 <template>
 <div ref="rootEl" class="cf-root">
   <!-- ===== Desktop: sidebar sticky junto a la grilla ===== -->
-  <aside v-if="hasAny" class="cf-side" aria-label="Filtros del catálogo">
+  <aside v-if="showFilters" class="cf-side" aria-label="Filtros del catálogo">
     <div class="cf-side-head">
       <strong class="cf-title">Filtros</strong>
       <span v-if="activeFilterCount" class="cf-badge" aria-hidden="true">{{ activeFilterCount }}</span>
@@ -95,7 +102,7 @@ onBeforeUnmount(() => {
 
   <!-- ===== Móvil: bottom sheet teleportado al body ===== -->
   <Teleport to="body">
-    <div v-if="filtersUi.open && hasAny" class="cf-layer">
+    <div v-if="filtersUi.open && showFilters" class="cf-layer">
       <div class="cf-backdrop" aria-hidden="true" @click="closeFilters"></div>
       <div
         ref="sheetEl" id="cf-sheet" class="cf-sheet"

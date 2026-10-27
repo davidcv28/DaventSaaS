@@ -6,6 +6,10 @@
 import { computed } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import { offerEndsLabel, promoScopeLabel } from '../../api/catalog.api.js'
+import { useLayout } from '../../composables/useLayout.js'
+
+// Bloque 'promo' del layout de catálogo: el editor puede apagarlo.
+const { on } = useLayout('catalog')
 
 const props = defineProps({
   promotions: { type: Array, default: () => [] },
@@ -23,7 +27,7 @@ const items = computed(() =>
 </script>
 
 <template>
-<div v-if="items.length" class="cv-promo" role="region" aria-label="Promociones vigentes">
+<div v-if="items.length && on('promo')" class="cv-promo" role="region" aria-label="Promociones vigentes">
   <ul class="cv-promo-list">
     <li v-for="(p, i) in items" :key="i" class="cv-promo-item">
       <AppIcon name="tag" :size="14" aria-hidden="true" />

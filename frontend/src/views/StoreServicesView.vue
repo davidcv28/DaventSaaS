@@ -14,9 +14,15 @@ import { storeHostSlug } from '../config/env.js'
 import { buildServiceRequestMessage, servicePriceLabel } from '../api/services.api.js'
 import { SERVICE_ICONS, serviceHue } from '../api/stores.api.js'
 import AppIcon from '../components/AppIcon.vue'
+import { useLayout } from '../composables/useLayout.js'
 import '../assets/store-services.css'
 
 const ctx = inject('storePage')
+// Layout de la superficie 'services': el editor (Diseño web → Bloques)
+// apaga/ordena las regiones del catálogo cerrado. Las secciones extra
+// (garantías, trabajos, opiniones, zona) quedan ancladas antes del
+// formulario de pedido.
+const { on, pos } = useLayout('services')
 const router = useRouter()
 const { custom, store, status, shopName, location, siteTemplates, showCatalog } = ctx
 
@@ -263,7 +269,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
 <template>
   <div class="sv-page">
     <main id="sv-main">
-      <div class="sp-container">
+      <div v-if="on('hero')" class="sp-container" :style="{ order: pos('hero') }">
         <!-- ===== Hero ===== -->
         <section class="sv-hero">
           <div>
@@ -292,14 +298,14 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
       </div>
 
       <!-- ===== Cinta marquee con los servicios ===== -->
-      <div v-if="bandItems.length" class="sv-band-wrap" aria-hidden="true">
+      <div v-if="bandItems.length && on('band')" class="sv-band-wrap" :style="{ order: pos('band') }" aria-hidden="true">
         <div class="sv-band">
           <div class="sv-band-track"><span v-for="(n, i) in bandItems" :key="i">{{ n }}</span></div>
         </div>
       </div>
 
-      <div class="sp-container">
-        <!-- ===== Picker + presupuesto ===== -->
+      <!-- ===== Picker + presupuesto (bloque 'picker', estructural) ===== -->
+      <div class="sp-container" :style="{ order: pos('picker') }">
         <section id="sv-servicios" aria-labelledby="sv-svc-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Servicios</span>
@@ -370,9 +376,11 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </aside>
           </div>
         </section>
+      </div>
 
-        <!-- ===== Cómo funciona ===== -->
-        <section v-if="steps.length" id="sv-proceso" class="sv-flush" aria-labelledby="sv-proc-title">
+      <!-- ===== Cómo funciona (bloque 'steps') ===== -->
+      <div v-if="steps.length && on('steps')" class="sp-container" :style="{ order: pos('steps') }">
+        <section id="sv-proceso" class="sv-flush" aria-labelledby="sv-proc-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Cómo funciona</span>
             <h2 id="sv-proc-title">Simple, de punta a punta.</h2>
@@ -385,8 +393,12 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </div>
           </div>
         </section>
+      </div>
 
-        <!-- ===== Pedido por WhatsApp ===== -->
+      <!-- ===== Secciones de contenido (garantías, trabajos, opiniones,
+                 zona): no son bloques del catálogo — quedan ancladas
+                 justo antes del formulario de pedido ===== -->
+      <div class="sp-container" :style="{ order: pos('form') }">
         <!-- ===== Beneficios y garantías (custom.benefits) ===== -->
         <section v-if="perks.length" id="sv-garantias" class="sv-flush" aria-labelledby="sv-perk-title">
           <div class="sv-head">
@@ -451,7 +463,10 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </ul>
           </div>
         </section>
+      </div>
 
+      <!-- ===== Pedido por WhatsApp (bloque 'form') ===== -->
+      <div v-if="on('form')" class="sp-container" :style="{ order: pos('form') }">
         <section id="sv-pedido" class="sv-flush" aria-labelledby="sv-book-title">
           <div class="sv-book">
             <div class="sv-book-info">
@@ -519,9 +534,11 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </div>
           </div>
         </section>
+      </div>
 
-        <!-- ===== Preguntas frecuentes (bloque compartido con la portada) ===== -->
-        <section v-if="faqs.length" id="sv-preguntas" class="sv-flush" aria-labelledby="sv-faq-title">
+      <!-- ===== Preguntas frecuentes (bloque 'faq', compartido con la portada) ===== -->
+      <div v-if="faqs.length && on('faq')" class="sp-container" :style="{ order: pos('faq') }">
+        <section id="sv-preguntas" class="sv-flush" aria-labelledby="sv-faq-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Preguntas</span>
             <h2 id="sv-faq-title">Lo que más nos preguntan.</h2>
