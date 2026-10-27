@@ -1020,6 +1020,11 @@ class PremiumFieldsGatingTests(TestCase):
     PATCH (no 403, no se guardan) — igual que show_location sin mapa.
     """
 
+    def setUp(self):
+        # plan_benefits_of keyea por PK y SQLite las reutiliza tras el
+        # rollback: sin limpiar, el premium de un test se filtra al otro.
+        cache.clear()
+
     def _client(self, **benefits):
         user, profile   =   _make_user(verified = True)
         _grant(profile, has_customization = True, **benefits)
@@ -1039,6 +1044,16 @@ class PremiumFieldsGatingTests(TestCase):
         custom      =   response.data['customization']
         self.assertEqual(custom['accent'], 'indigo')
         self.assertEqual(custom['name_font'], 'inter')
+
+    def test_popular_font_saved_with_premium(self):
+        # El selector del panel solo ofrece las fuentes populares del
+        # mercado; el backend acepta el superset de FONT_CHOICES (roboto
+        # entró al catálogo con la remisión del picker).
+        client      =   self._client(has_design_advanced = True)
+        response    =   client.patch(
+            f'{STORES_URL}customization/', {'name_font': 'roboto'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['name_font'], 'roboto')
 
     def test_show_location_discarded_without_map_benefit(self):
         client      =   self._client()

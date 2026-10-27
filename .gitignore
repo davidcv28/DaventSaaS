@@ -31,4 +31,6 @@ Thumbs.db
 # Capturas QA locales (los scripts qa_*.py / seed_bench.py sí se commitean)
 qa/
 _qa/
+.shots/
+_v/
 frontend/qa-look-harness.html

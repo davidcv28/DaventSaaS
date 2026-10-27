@@ -460,10 +460,11 @@ StoreCustomization        (diseño de la web pública)
     ├── show_hours
     ├── cta_title (≤120) / cta_text (≤280) / cta_label (≤40) / show_cta
     │                (banda final de acento; el botón → WhatsApp → contacto → catálogo)
-    ├── section_order (JSON, claves cerradas SECTION_ORDER =
-    │                'about|services|stats|gallery|testimonials|faq|cta';
-    │                el serializer descarta desconocidas y completa faltantes;
-    │                la web lo aplica como CSS order sobre .sp-page-root)
+    ├── section_order (JSON, legado: las secciones van en orden fijo
+    │                SECTION_ORDER — 14 claves; el serializer sigue
+    │                aceptándolo por compatibilidad y la web aplica
+    │                siempre el orden canónico como CSS order sobre
+    │                .sp-page-root; ya no es editable por el usuario)
     ├── contact_email (destino del formulario Contáctanos; vacío = email de la cuenta)
     ├── show_contact  (default true → sección Contáctanos en la web)
     ├── show_location (default true → mapa Google embebido en Contáctanos, has_location_map)

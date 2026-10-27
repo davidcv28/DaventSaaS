@@ -301,10 +301,11 @@ class StoreCustomization(models.Model):
     TEAM_MAX                    =   6
     TEAM_NAME_MAX               =   60
     TEAM_ROLE_MAX               =   60
-    #Orden de las secciones de la portada (claves cerradas): el hero va
-    #primero y el contacto último siempre; el serializer descarta claves
-    #desconocidas y completa las que falten al final en este orden base.
-    #La web pública lo aplica como CSS order sobre .sp-page-root (flex).
+    #Orden fijo de las secciones de la portada (claves cerradas): el hero
+    #va primero y el contacto último siempre. La web pública aplica siempre
+    #este orden canónico como CSS order sobre .sp-page-root (flex) — el
+    #usuario ya no lo puede cambiar; el campo section_order queda como
+    #dato histórico (el serializer sigue aceptándolo por compatibilidad).
     SECTION_ORDER               =   ('about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta')
     services                    =   models.JSONField(default = list, blank = True, verbose_name = 'Qué ofrecemos')
     services_title              =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Qué ofrecemos')

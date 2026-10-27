@@ -289,8 +289,10 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         return self._labels(value, StoreCustomization.SERVICE_SLOTS_MAX, StoreCustomization.SERVICE_SLOT_MAX, 'Debe ser una lista de franjas.')
 
     def validate_section_order(self, value):
-        #Solo claves del catálogo SECTION_ORDER, sin repetidas; las que no
-        #vengan conservan su orden base al final (PATCH parcial seguro).
+        #Campo legado: el orden de las secciones ya no es editable (la web
+        #aplica siempre SECTION_ORDER); se sigue aceptando el payload para
+        #no romper clientes viejos. Solo claves del catálogo, sin repetidas;
+        #las que no vengan conservan su orden base al final.
         if not isinstance(value, list):
             raise serializers.ValidationError('Debe ser una lista de secciones.')
         seen, order             =   set(), []
