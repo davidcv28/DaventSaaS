@@ -1185,6 +1185,51 @@
 .store-page[data-store-template='signature'] .sv-stage { border-color: var(--sv-line); }
 .store-page[data-store-template='signature'] .sv-item .price { font-weight: 500; letter-spacing: .04em; }
 
+/* Marcos de casa de autor: cada servicio es una placa con doble filete
+   (borde + filete interno a 5px), numeración romana cerimonial arriba
+   del título serif, y una fila de cierre con filetes. En móvil el
+   filete interno desaparece y queda el marco simple. */
+.store-page[data-store-template='signature'] .sv-list { counter-reset: svitem; }
+.store-page[data-store-template='signature'] .sv-item {
+  counter-increment: svitem; padding: 30px 26px 22px; border: 1px solid var(--sv-line); border-radius: 2px;
+  box-shadow: inset 0 0 0 3px var(--sv-card), inset 0 0 0 4px var(--sv-line);
+  background: var(--sv-card);
+}
+.store-page[data-store-template='signature'] .sv-item::before { display: none; }
+.store-page[data-store-template='signature'] .sv-item .ico {
+  width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 4px;
+  background: transparent; color: var(--sv-acc); border: 1px solid var(--sv-acc); box-shadow: none;
+}
+.store-page[data-store-template='signature'] .sv-item h3 {
+  font-family: var(--sv-display); font-size: 19px; font-weight: 500; letter-spacing: .06em;
+  text-transform: uppercase; text-align: center; overflow-wrap: anywhere; padding-right: 0;
+}
+.store-page[data-store-template='signature'] .sv-item h3::before {
+  content: counter(svitem, upper-roman); display: block; margin: 0 auto 10px; width: fit-content;
+  padding: 0 14px; font-size: 13px; letter-spacing: .3em; color: var(--sv-acc);
+  border-bottom: 1px solid var(--sv-acc); padding-bottom: 6px;
+}
+.store-page[data-store-template='signature'] .sv-item small { text-align: center; font-size: 13px; }
+.store-page[data-store-template='signature'] .sv-item .meta {
+  justify-content: center; gap: 18px; border-top: 1px solid var(--sv-line); padding-top: 14px; margin-top: 14px;
+}
+.store-page[data-store-template='signature'] .sv-item .price { font-family: var(--sv-display); font-size: 19px; background: none; padding: 0; }
+.store-page[data-store-template='signature'] .sv-item .dur { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+.store-page[data-store-template='signature'] .sv-item .act {
+  border: 0; border-top: 1px solid var(--sv-line); border-radius: 0; padding-top: 14px; margin: 14px 0 0;
+  letter-spacing: .24em; text-transform: uppercase; font-size: 11px; min-height: 48px;
+}
+.store-page[data-store-template='signature'] .sv-item .act::before { content: '· '; }
+.store-page[data-store-template='signature'] .sv-item .act::after { content: ' ·'; }
+.store-page[data-store-template='signature'] .sv-item::after {
+  top: 14px; right: 14px; border-radius: 0; border-style: solid; border-width: 1px;
+}
+.store-page[data-store-template='signature'] .sv-item[aria-pressed='true'] { border-color: var(--sv-acc); box-shadow: inset 0 0 0 3px var(--sv-card), inset 0 0 0 4px var(--sv-acc); }
+@media (max-width: 768px) {
+  .store-page[data-store-template='signature'] .sv-item { box-shadow: none; padding: 24px 20px 18px; }
+  .store-page[data-store-template='signature'] .sv-item[aria-pressed='true'] { box-shadow: none; }
+}
+
 /* ---------- Aurora: observatorio nocturno, acento en gradiente ---------- */
 .store-page[data-store-template='aurora'] .sv-page {
   --sv-on-acc: var(--au-sky, #0b1020);
