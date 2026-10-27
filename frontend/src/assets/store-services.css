@@ -455,6 +455,74 @@
   --sv-sh-form: var(--rs-shadow, 6px 6px 0 var(--sv-fg));
   --sv-ghost-sh: 4px 4px 0 var(--rs-ink, var(--sv-fg));
 }
+.store-page[data-store-template='riso'] .sv-pill {
+  background: var(--rs-yellow, #ffcf3f); color: var(--rs-ink, #1e1a33);
+  border: 2px solid var(--rs-ink, var(--sv-fg)); transform: rotate(-2deg); font-weight: 700;
+}
+.store-page[data-store-template='riso'] .sv-pill i { background: var(--rs-blue, var(--sv-acc)); }
+
+/* El picker son pegatinas redondas de tinta plana: colores alternados
+   (rosa/azul/amarillo/menta) con trama de puntos en multiply por encima,
+   borde de tinta y sombra desplazada. La selección marca la pegatina
+   con el aro interior punteado que ya simula el troquel del sticker. */
+.store-page[data-store-template='riso'] .sv-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr)); gap: 22px; }
+.store-page[data-store-template='riso'] .sv-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  min-height: 240px; padding: 26px 20px; border-radius: 46% 54% 52% 48% / 52% 48% 54% 46%;
+  border: 2px solid var(--rs-ink, var(--sv-fg)); box-shadow: var(--rs-shadow, 5px 5px 0 var(--sv-fg));
+  color: var(--rs-ink, #1e1a33); transition: transform .45s var(--rs-spring, ease), box-shadow .45s var(--rs-spring, ease);
+}
+.store-page[data-store-template='riso'] .sv-item:nth-child(4n + 1) { background: var(--rs-pink, #ff5fa2); }
+.store-page[data-store-template='riso'] .sv-item:nth-child(4n + 2) { background: var(--rs-blue, var(--sv-acc)); color: var(--rs-on-blue, #fff5e6); }
+.store-page[data-store-template='riso'] .sv-item:nth-child(4n + 3) { background: var(--rs-yellow, #ffcf3f); }
+.store-page[data-store-template='riso'] .sv-item:nth-child(4n + 4) { background: var(--rs-mint, #6fe0c0); }
+.store-page[data-store-template='riso'] .sv-item:nth-child(odd) { rotate: -1.6deg; }
+.store-page[data-store-template='riso'] .sv-item:nth-child(even) { rotate: 1.4deg; }
+.store-page[data-store-template='riso'] .sv-item::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: .22; pointer-events: none;
+  background-image: radial-gradient(var(--rs-ink, #1e1a33) 1px, transparent 1.5px); background-size: 9px 9px;
+  mix-blend-mode: multiply; transition: none;
+}
+.store-page[data-store-template='riso'] .sv-item:hover::before { opacity: .22; }
+.store-page[data-store-template='riso'] .sv-item:hover { transform: translate(-2px, -3px); box-shadow: 7px 8px 0 var(--rs-ink, var(--sv-fg)); border-color: var(--rs-ink, var(--sv-fg)); }
+.store-page[data-store-template='riso'] .sv-item h3 { padding: 0; margin-top: 10px; font-family: var(--rs-display, var(--sv-display)); font-weight: 800; font-size: 17.5px; line-height: 1.05; letter-spacing: -.01em; }
+.store-page[data-store-template='riso'] .sv-item small { color: inherit; opacity: .78; font-weight: 600; font-size: 12.5px; -webkit-line-clamp: 2; margin-top: 4px; }
+.store-page[data-store-template='riso'] .sv-item .meta { margin-top: 10px; padding: 0; border: 0; flex-direction: column; align-items: center; gap: 5px; }
+.store-page[data-store-template='riso'] .sv-item .dur { color: inherit; opacity: .85; font-weight: 700; }
+.store-page[data-store-template='riso'] .sv-item .price {
+  font-family: var(--rs-display, var(--sv-display)); font-size: 15px; color: inherit;
+  background: var(--rs-card, #fffdf8); border: 2px solid var(--rs-ink, var(--sv-fg)); border-radius: 999px; padding: 4px 12px;
+}
+.store-page[data-store-template='riso'] .sv-item:nth-child(4n + 2) .price { color: var(--rs-ink, #1e1a33); }
+.store-page[data-store-template='riso'] .sv-item .ico {
+  width: 52px; height: 52px; border-radius: 50%; background: var(--rs-card, #fffdf8); color: var(--rs-ink, #1e1a33);
+  border: 2px solid var(--rs-ink, var(--sv-fg)); box-shadow: none; order: -1;
+}
+.store-page[data-store-template='riso'] .sv-item:hover .ico { transform: rotate(-6deg) scale(1.05); }
+.store-page[data-store-template='riso'] .sv-item .act {
+  margin-top: 12px; padding: 8px 16px; min-height: 0; border-radius: 999px; font-size: 12.5px;
+  border: 2px solid var(--rs-ink, var(--sv-fg)); background: var(--rs-card, #fffdf8); color: var(--rs-ink, #1e1a33);
+  box-shadow: 2px 2px 0 var(--rs-ink, var(--sv-fg));
+}
+.store-page[data-store-template='riso'] .sv-item:hover .act { border-style: solid; border-color: var(--rs-ink, var(--sv-fg)); color: var(--rs-ink, #1e1a33); }
+.store-page[data-store-template='riso'] .sv-item::after {
+  top: 14px; right: 14px; width: 30px; height: 30px; font-size: 15px;
+  background: var(--rs-card, #fffdf8); color: var(--rs-ink, #1e1a33); border: 2px dashed var(--rs-ink, var(--sv-fg));
+}
+.store-page[data-store-template='riso'] .sv-item:hover::after { border-style: dashed; border-color: var(--rs-ink, var(--sv-fg)); color: var(--rs-ink, var(--sv-fg)); }
+.store-page[data-store-template='riso'] .sv-item[aria-pressed='true'] {
+  background: var(--rs-ink, var(--sv-fg)); color: var(--rs-paper, #fff5e6); border-color: var(--rs-ink, var(--sv-fg));
+  box-shadow: var(--rs-shadow, 5px 5px 0 var(--sv-fg));
+}
+.store-page[data-store-template='riso'] .sv-item[aria-pressed='true']::before { opacity: .1; }
+.store-page[data-store-template='riso'] .sv-item[aria-pressed='true'] .act { background: var(--rs-mint, #6fe0c0); color: var(--rs-ink, #1e1a33); }
+.store-page[data-store-template='riso'] .sv-item[aria-pressed='true']::after { background: var(--rs-mint, #6fe0c0); color: var(--rs-ink, #1e1a33); border: 2px solid var(--rs-ink, var(--sv-fg)); transform: none; }
+@media (max-width: 768px) {
+  .store-page[data-store-template='riso'] .sv-list { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='riso'] .sv-item { min-height: 0; padding: 22px 20px; rotate: 0deg; box-shadow: 4px 4px 0 var(--rs-ink, var(--sv-fg)); border-radius: 28px; }
+  .store-page[data-store-template='riso'] .sv-item:hover { transform: none; box-shadow: 4px 4px 0 var(--rs-ink, var(--sv-fg)); }
+  .store-page[data-store-template='riso'] .sv-item:hover .ico { transform: none; }
+}
 
 /* ---------- Street: sticker urbano, borde y sombra duros ---------- */
 .store-page[data-store-template='street'] .sv-page {
