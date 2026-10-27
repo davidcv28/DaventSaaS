@@ -142,7 +142,7 @@ onBeforeUnmount(() => {
           <RouterLink class="link" to="/terminos" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
           <RouterLink class="link" to="/denuncias" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
           <button class="link" @click="close(); emit('tour')"><AppIcon name="graduation-cap" :size="16" /> <span>Repetir la guía</span></button>
-          <button class="link" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
+          <button v-if="!forceTheme" class="link" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
           <div class="who"><span class="avatar sm">{{ initial }}</span> <span class="who-name">{{ userName }}</span></div>
           <button class="link" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
         </div>
@@ -230,7 +230,7 @@ onBeforeUnmount(() => {
           <RouterLink class="link" to="/terminos" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
           <RouterLink class="link" to="/denuncias" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
           <button class="link" @click="close(); emit('tour')"><AppIcon name="graduation-cap" :size="16" /> <span>Repetir la guía</span></button>
-          <button class="link" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
+          <button v-if="!forceTheme" class="link" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
           <div class="who"><span class="avatar sm">{{ initial }}</span> <span class="who-name">{{ userName }}</span></div>
           <button class="link" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
         </div>

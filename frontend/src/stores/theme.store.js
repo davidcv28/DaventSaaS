@@ -40,9 +40,9 @@ export const useThemeStore = defineStore('theme', () => {
     setTheme(isDark.value ? 'light' : 'dark')
   }
 
-  // Override temporal sin persistir (el panel es siempre oscuro — su UI
-  // clara quedó mal diseñada y se retiró el toggle). Al entrar guarda el
-  // tema vigente; al salir se restaura sin tocar localStorage.
+  // Override temporal sin persistir (el panel de administración es siempre
+  // oscuro). Al entrar guarda el tema vigente; al salir lo restaura sin
+  // tocar localStorage.
   let forcedPrev = null
   function forceDark() {
     if (forcedPrev === null) forcedPrev = theme.value
@@ -58,12 +58,15 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Llamar una vez desde main.js (index.html ya setea data-theme para evitar FOUC).
   function initTheme() {
-    theme.value = savedTheme() || systemTheme()
+    // /admin es siempre oscuro (misma regla que theme-init.js), así el store
+    // no pisa lo aplicado antes del primer paint.
+    const isAdmin = /^\/admin(\/|$)/.test(location.pathname)
+    theme.value = isAdmin ? 'dark' : savedTheme() || systemTheme()
     apply()
     window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', (e) => {
       // Mientras el usuario no elija a mano, el tema acompaña al SO.
-      // Con el override del panel activo no se aplica (queda en oscuro).
-      if (!savedTheme() && forcedPrev === null) {
+      // Con el override forzado (admin) no se aplica.
+      if (!isAdmin && !savedTheme() && forcedPrev === null) {
         theme.value = e.matches ? 'dark' : 'light'
         apply()
       }

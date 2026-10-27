@@ -899,3 +899,7 @@
 .toast-undo:hover { background: rgba(255,255,255,.09); }
 .toast-x { border: none; background: none; color: rgba(230,234,245,.6); padding: 4px; border-radius: 6px; cursor: pointer; display: grid; }
 .toast-x:hover { color: #fff; background: rgba(255,255,255,.09); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole, .tour-card, .tip-bubble, .toast, .empty-mini-cta { animation: none !important; transition: none !important; }
+}
