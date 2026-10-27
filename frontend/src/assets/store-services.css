@@ -386,7 +386,18 @@
   font-family: var(--sv-display); text-transform: uppercase; letter-spacing: .01em;
   text-shadow: 2px 2px 0 color-mix(in srgb, var(--sv-acc) 22%, var(--sv-card));
 }
-
+.store-page[data-store-template='perspective'] .sv-list { counter-reset: svitem; }
+.store-page[data-store-template='perspective'] .sv-item .meta { justify-content: flex-start; gap: 10px; }
+.store-page[data-store-template='perspective'] .sv-item .meta::before {
+  content: 'PLANO ' counter(svitem, decimal-leading-zero); counter-increment: svitem;
+  font-family: var(--sv-mono); font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--sv-mute);
+}
+.store-page[data-store-template='perspective'] .sv-item .price { margin-left: auto; font-family: var(--sv-display); font-size: 19px; }
+.store-page[data-store-template='perspective'] .sv-item .ico {
+  border: 1px solid var(--sv-line); color: var(--sv-fg);
+  background: linear-gradient(135deg, var(--sv-card), var(--sv-soft));
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--sv-acc) 20%, transparent), inset 0 1px 0 var(--sv-card);
+}
 @media (max-width: 768px) {
   .store-page[data-store-template='perspective'] .sv-item,
   .store-page[data-store-template='perspective'] .sv-item:hover {
