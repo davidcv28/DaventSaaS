@@ -114,3 +114,13 @@
 .fam-thumb[data-fam='services'] .fc-b::after { content: ''; position: absolute; left: 12%; bottom: 18%; width: 60%; height: 10%; background: #9aa6b8; border-radius: 2px; }
 .fam-thumb[data-fam='services'] .fc-c { left: 6%; bottom: 26%; width: 56%; height: 11%; background: var(--brand); border-radius: 7px; }
 .fam-thumb[data-fam='services'] .fc-d { left: 6%; bottom: 10%; width: 56%; height: 11%; border: 1.5px solid #1c2430; border-radius: 7px; }
+/* --- Belleza: spa sereno — halo suave, monograma en anillo y filas de servicio redondeadas --- */
+.fam-thumb[data-fam='belleza'] { background: #faf5ee; }
+.fam-thumb[data-fam='belleza']::before { content: ''; position: absolute; left: 50%; top: 4%; width: 60%; aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--brand) 16%, transparent), transparent 70%); }
+.fam-thumb[data-fam='belleza'] .fc-a { left: 50%; top: 9%; width: 22%; aspect-ratio: 1; translate: -50% 0; border: 1.5px solid var(--brand); border-radius: 50%; background: #fff; }
+.fam-thumb[data-fam='belleza'] .fc-a::after { content: ''; position: absolute; inset: 22%; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--brand) 55%, transparent); }
+.fam-thumb[data-fam='belleza'] .fc-b { left: 50%; top: 36%; width: 46%; height: 7%; translate: -50% 0; background: #3a342c; border-radius: 3px; }
+.fam-thumb[data-fam='belleza'] .fc-c { left: 16%; right: 16%; top: 54%; height: 11%; background: #fff; border: 1px solid #e7ddd0; border-radius: 99px; }
+.fam-thumb[data-fam='belleza'] .fc-c::after { content: ''; position: absolute; right: 8%; top: 28%; width: 14%; height: 44%; border-radius: 99px; background: var(--brand); }
+.fam-thumb[data-fam='belleza'] .fc-d { left: 16%; right: 16%; top: 71%; height: 11%; background: #fff; border: 1px solid #e7ddd0; border-radius: 99px; }
+.fam-thumb[data-fam='belleza'] .fc-d::after { content: ''; position: absolute; right: 8%; top: 28%; width: 14%; height: 44%; border-radius: 99px; background: color-mix(in srgb, var(--brand) 55%, #fff); }

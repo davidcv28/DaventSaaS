@@ -27,6 +27,7 @@ const VARIANTS = {
   cobre: defineAsyncComponent(() => import('./catalog/CatalogCobre.vue')),
   minimal: defineAsyncComponent(() => import('./catalog/CatalogMinimal.vue')),
   boutique: defineAsyncComponent(() => import('./catalog/CatalogBoutique.vue')),
+  calma: defineAsyncComponent(() => import('./catalog/CatalogBelleza.vue')),
   signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue')),
   aurora: defineAsyncComponent(() => import('./catalog/CatalogAurora.vue')),
   bloque: defineAsyncComponent(() => import('./catalog/CatalogBloque.vue')),

@@ -633,7 +633,8 @@ export const STORE_TEMPLATES = {
   carta:       { label: 'Carta',       tier: 'advanced', desc: 'Comestibles como menú de restaurante: lista con precios alineados, ítems del día y pedido por WhatsApp.' },
   studio:      { label: 'Studio',      tier: 'plus',     desc: 'Servicios que dan confianza: reseñas flotando sobre el hero, lista de servicios con precio, método en pasos, FAQ y contacto directo.' },
   proceso:     { label: 'Proceso',     tier: 'advanced', desc: 'Servicios como storytelling de método: el proceso es la portada — pasos numerados con progreso, trabajos y testimonios.' },
-  arena:       { label: 'Arena',       tier: 'plus',     desc: 'Tablero esports: HUD con datos del local, titulares Orbitron, esquinas cortadas, specs en mono y drops de ofertas; para hardware, periféricos y merch dev.' }
+  arena:       { label: 'Arena',       tier: 'plus',     desc: 'Tablero esports: HUD con datos del local, titulares Orbitron, esquinas cortadas, specs en mono y drops de ofertas; para hardware, periféricos y merch dev.' },
+  calma:       { label: 'Calma',       tier: 'plus',     desc: 'Bienestar sereno: aire y luz suave, Lora itálica, radios amplios, carta de servicios con duración y precio, resultados en galería y botón "Reservar turno" por WhatsApp.' }
 }
 
 // Familias de diseño por categoría: agrupan las variantes para el selector
@@ -642,6 +643,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'ofertas',   label: 'Ofertas',      caption: 'Campaña y góndola',   templates: ['promo', 'shop'] },
   { key: 'gamer',     label: 'Gamer',        caption: 'Arena y consola',     templates: ['arena', 'terminal'] },
   { key: 'general',   label: 'Generalista',  caption: 'Clásico y minimal',   templates: ['classic', 'minimal'] },
+  { key: 'belleza',   label: 'Belleza',      caption: 'Calma y ceremonial',  templates: ['calma', 'signature'] },
   { key: 'moda',      label: 'Indumentaria', caption: 'Lookbook y street',   templates: ['atelier', 'street'] },
   { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
   { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },

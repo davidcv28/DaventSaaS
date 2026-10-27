@@ -27,7 +27,9 @@ const FAMILY_VIEWS = {
   promo: defineAsyncComponent(() => import('./StoreOfertasView.vue')),
   shop: defineAsyncComponent(() => import('./StoreOfertasView.vue')),
   arena: defineAsyncComponent(() => import('./StoreGamerView.vue')),
-  terminal: defineAsyncComponent(() => import('./StoreGamerView.vue'))
+  terminal: defineAsyncComponent(() => import('./StoreGamerView.vue')),
+  calma: defineAsyncComponent(() => import('./StoreBellezaView.vue')),
+  signature: defineAsyncComponent(() => import('./StoreBellezaView.vue'))
 }
 const component = computed(() => {
   const tpl = ctx?.pageTemplate?.value

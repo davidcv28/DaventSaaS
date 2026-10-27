@@ -20,7 +20,9 @@ const VARIANTS = {
   promo: defineAsyncComponent(() => import('./product/ProductOfertas.vue')),
   shop: defineAsyncComponent(() => import('./product/ProductOfertas.vue')),
   arena: defineAsyncComponent(() => import('./product/ProductGamer.vue')),
-  terminal: defineAsyncComponent(() => import('./product/ProductGamer.vue'))
+  terminal: defineAsyncComponent(() => import('./product/ProductGamer.vue')),
+  calma: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
+  signature: defineAsyncComponent(() => import('./product/ProductBelleza.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || ProductClassic)
 </script>
