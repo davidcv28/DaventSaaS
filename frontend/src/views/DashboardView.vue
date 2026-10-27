@@ -1240,7 +1240,7 @@ async function saveBot() {
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
-const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [] })
+const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [] })
 const designTouched = reactive({})
 const designBusy = ref(false)
 const designTab = ref('content')
@@ -1519,6 +1519,48 @@ async function saveFaqs() {
   companyBusy.value = false
 }
 
+async function saveBenefits() {
+  companyErrs.benefits = ''
+  if (hasPartialRow(designForm.benefits || [], ['title', 'text'], ['title'])) {
+    companyErrs.benefits = 'Cada beneficio necesita al menos su título. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_benefits: Boolean(designForm.show_benefits),
+    benefits: cleanRows(designForm.benefits || [], ['icon', 'title', 'text'], ['title'])
+  })
+  companyBusy.value = false
+}
+
+async function saveTimeline() {
+  companyErrs.timeline = ''
+  if (hasPartialRow(designForm.timeline || [], ['label', 'text'], ['label', 'text'])) {
+    companyErrs.timeline = 'Cada hito necesita su rótulo (año o etapa) y el texto. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_timeline: Boolean(designForm.show_timeline),
+    timeline: cleanRows(designForm.timeline || [], ['label', 'text'], ['label', 'text'])
+  })
+  companyBusy.value = false
+}
+
+async function saveTeam() {
+  companyErrs.team = ''
+  if (hasPartialRow(designForm.team || [], ['name', 'role'], ['name'])) {
+    companyErrs.team = 'Cada integrante necesita su nombre. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    show_team: Boolean(designForm.show_team),
+    team: cleanRows(designForm.team || [], ['name', 'role'], ['name'])
+  })
+  companyBusy.value = false
+}
+
 async function saveHours() {
   companyErrs.hours = ''
   if (hasPartialRow(designForm.hours, ['label', 'value'], ['label', 'value'])) {
@@ -1602,6 +1644,9 @@ async function saveDesign() {
     show_about: Boolean(designForm.show_about),
     show_gallery: Boolean(designForm.show_gallery),
     show_highlights: Boolean(designForm.show_highlights),
+    show_offers: Boolean(designForm.show_offers),
+    show_brands: Boolean(designForm.show_brands),
+    show_countdown: Boolean(designForm.show_countdown),
     contact_email: designForm.contact_email.trim(),
     show_contact: Boolean(designForm.show_contact),
     theme: designForm.theme,
@@ -4146,6 +4191,27 @@ async function changePassword() {
                     <small>Formulario con verificación antispam, tus canales y el mapa.</small>
                   </span>
                 </label>
+                <label class="check-item">
+                  <input v-model="designForm.show_offers" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Ofertas</strong>
+                    <small>Tira de productos en oferta del catálogo. Se oculta sola si no hay ninguna vigente.</small>
+                  </span>
+                </label>
+                <label class="check-item">
+                  <input v-model="designForm.show_brands" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Marcas</strong>
+                    <small>Marquesina con las marcas cargadas en tu catálogo. Se oculta sola si no hay ninguna.</small>
+                  </span>
+                </label>
+                <label class="check-item">
+                  <input v-model="designForm.show_countdown" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Cuenta regresiva</strong>
+                    <small>Contador hasta el fin del descuento vigente más próximo. Se oculta sola si no hay ninguno con fecha.</small>
+                  </span>
+                </label>
                 <label class="check-item" :class="{ disabled: !canLocationMap }">
                   <input v-model="designForm.show_location" type="checkbox" :disabled="!canLocationMap" />
                   <span class="check-text">
@@ -4594,6 +4660,125 @@ async function changePassword() {
           </div>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveFaqs">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Garantías y beneficios ===== -->
+        <div id="mk-benefits" class="card mk-card">
+          <h3><AppIcon name="shield-check" :size="18" /> Garantías y beneficios</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_benefits" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Envíos, garantías, medios de pago, devoluciones. Se oculta sola si no cargás ninguno.</small>
+              </span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Beneficios <span class="hint-inline">({{ designForm.benefits.length }}/{{ mkLimits.benefits }})</span></label>
+            <div v-if="designForm.benefits.length" class="qa-list">
+              <div v-for="(b, i) in designForm.benefits" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <div class="mk-icon-field">
+                    <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[b.icon] ? b.icon : 'shield-check'" :size="17" /></span>
+                    <select v-model="b.icon" class="select" :aria-label="`Ícono del beneficio ${i + 1}`">
+                      <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                    </select>
+                  </div>
+                  <input v-model="b.title" class="input" type="text" :maxlength="mkLimits.benefitTitle" placeholder="Ej. Garantía de 30 días" :aria-label="`Título del beneficio ${i + 1}`" />
+                  <textarea v-model="b.text" class="textarea" rows="2" :maxlength="mkLimits.benefitText" placeholder="Una línea que lo describa" :aria-label="`Descripción del beneficio ${i + 1}`"></textarea>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.benefits.length - 1" :aria-label="`Bajar el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el beneficio ${i + 1}`" @click="designForm.benefits.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.benefits.length >= mkLimits.benefits" @click="addRow(designForm.benefits, mkLimits.benefits, { icon: 'shield-check', title: '', text: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar beneficio
+            </button>
+            <p v-if="companyErrs.benefits" class="field-error" role="alert">{{ companyErrs.benefits }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveBenefits">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Línea de tiempo ===== -->
+        <div id="mk-timeline" class="card mk-card">
+          <h3><AppIcon name="flag" :size="18" /> Línea de tiempo</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_timeline" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Los hitos del negocio: fundación, local nuevo, logros. Se oculta sola si no cargás ninguno.</small>
+              </span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Hitos <span class="hint-inline">({{ designForm.timeline.length }}/{{ mkLimits.timeline }})</span></label>
+            <div v-if="designForm.timeline.length" class="qa-list">
+              <div v-for="(t, i) in designForm.timeline" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <input v-model="t.label" class="input" type="text" :maxlength="mkLimits.timelineLabel" placeholder="Ej. 2015 o Hoy" :aria-label="`Rótulo del hito ${i + 1}`" />
+                  <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.timelineText" placeholder="Qué pasó en ese momento" :aria-label="`Texto del hito ${i + 1}`"></textarea>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.timeline.length - 1" :aria-label="`Bajar el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el hito ${i + 1}`" @click="designForm.timeline.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.timeline.length >= mkLimits.timeline" @click="addRow(designForm.timeline, mkLimits.timeline, { label: '', text: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar hito
+            </button>
+            <p v-if="companyErrs.timeline" class="field-error" role="alert">{{ companyErrs.timeline }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveTimeline">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Equipo ===== -->
+        <div id="mk-team" class="card mk-card">
+          <h3><AppIcon name="users" :size="18" /> Equipo</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_team" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Las personas detrás del negocio, con su rol. Se oculta sola si no cargás a nadie.</small>
+              </span>
+            </label>
+          </div>
+          <div class="field">
+            <label>Integrantes <span class="hint-inline">({{ designForm.team.length }}/{{ mkLimits.team }})</span></label>
+            <div v-if="designForm.team.length" class="qa-list">
+              <div v-for="(m, i) in designForm.team" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <div class="mk-pair">
+                    <input v-model="m.name" class="input" type="text" :maxlength="mkLimits.teamName" placeholder="Nombre" :aria-label="`Nombre del integrante ${i + 1}`" />
+                    <input v-model="m.role" class="input" type="text" :maxlength="mkLimits.teamRole" placeholder="Rol. Ej. Dueña, Técnica" :aria-label="`Rol del integrante ${i + 1}`" />
+                  </div>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el integrante ${i + 1}`" @click="moveRow(designForm.team, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.team.length - 1" :aria-label="`Bajar el integrante ${i + 1}`" @click="moveRow(designForm.team, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el integrante ${i + 1}`" @click="designForm.team.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.team.length >= mkLimits.team" @click="addRow(designForm.team, mkLimits.team, { name: '', role: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar integrante
+            </button>
+            <p v-if="companyErrs.team" class="field-error" role="alert">{{ companyErrs.team }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveTeam">Guardar sección</AppButton>
           </div>
         </div>
 

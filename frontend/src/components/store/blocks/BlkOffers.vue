@@ -5,9 +5,9 @@
 import { computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
-import { formatARS } from '../../../api/billing.api.js'
-import { productOffer, effectivePrice, offerPct, offerEndsLabel, productDiscount } from '../../../api/catalog.api.js'
+import { productOffer, offerEndsLabel, productDiscount } from '../../../api/catalog.api.js'
 import AppIcon from '../../AppIcon.vue'
+import TplProductCard from '../TplProductCard.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 
@@ -38,26 +38,11 @@ const openProduct = (p) => router.push(productTo(p))
         <RouterLink class="sp-shop-viewall" :to="catalogTo">Ver todo el catálogo <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
       </div>
       <div class="sp-shop-featured-grid">
-        <article
+        <TplProductCard
           v-for="(p, i) in offers" :key="p.id" v-reveal="(i % 4) * 80"
-          class="sp-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-          @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-        >
-          <div class="sp-card-img">
-            <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-            <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
-            <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Ver producto</span>
-            <span class="sp-card-flag offer">-{{ offerPct(p) }}%</span>
-            <span v-if="endsOf(p)" class="sp-card-flag ends">{{ endsOf(p) }}</span>
-          </div>
-          <div class="sp-card-body">
-            <h3 class="sp-card-name">{{ p.name }}</h3>
-            <div class="sp-card-foot">
-              <span class="sp-card-price"><s class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-              <span class="sp-card-go" aria-hidden="true">Ver más <AppIcon name="arrow-right" :size="16" /></span>
-            </div>
-          </div>
-        </article>
+          class="sp-card" :p="p" :stars="custom.show_reviews" stars-icon="star"
+          seal-shape="" offer-new quick="Ver producto" go-label="Ver más"
+          :save="endsOf(p)" @open="openProduct" />
       </div>
     </div>
   </section>
