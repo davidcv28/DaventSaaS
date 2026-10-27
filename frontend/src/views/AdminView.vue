@@ -673,6 +673,7 @@ async function logout() {
     plan-name="Administración"
     :user-name="displayName"
     :initial="initial"
+    force-theme="dark"
     @navigate="onNavigate"
     @logout="logout"
   >

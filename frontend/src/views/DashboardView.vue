@@ -8,6 +8,7 @@ import { useInvoicesStore } from '../stores/invoices.store.js'
 import { useStoreStore } from '../stores/store.store.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
 import { useServicesStore } from '../stores/services.store.js'
+import { useThemeStore } from '../stores/theme.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl,
@@ -51,6 +52,7 @@ import {
   documentKindFor
 } from '../validators/auth.validators.js'
 import DashLayout from '../components/DashLayout.vue'
+import GlobalSearch from '../components/GlobalSearch.vue'
 import PlanCard from '../components/PlanCard.vue'
 import SectionTabs from '../components/SectionTabs.vue'
 import AppInput from '../components/AppInput.vue'
@@ -73,13 +75,19 @@ const invoices = useInvoicesStore()
 const store = useStoreStore()
 const catalog = useCatalogStore()
 const services = useServicesStore()
+const theme = useThemeStore()
 
 // Sección activa con setter validado: un botón interno (o una sección que
 // desaparece del menú cuando vence el plan) jamás deja una vista vacía.
 const sectionInner = ref('overview')
 const section = computed({
   get: () => sectionInner.value,
-  set: (id) => { sectionInner.value = validIds.value.has(id) ? id : 'overview' }
+  set: (id) => {
+    // Las secciones bloqueadas no navegan: abren la vista previa del
+    // beneficio (también los `section = 'x'` internos pasan por acá).
+    if (navLocks.value?.[id]) { openLocked(id); return }
+    sectionInner.value = validIds.value.has(id) ? id : 'overview'
+  }
 })
 const busyPlan = ref(null)
 const couponCode = ref('')
@@ -255,15 +263,8 @@ const displayName = computed(() => auth.user?.username || auth.user?.email || 'U
 // computed apenas se registra (TDZ si queda debajo).
 const plan = computed(() => billing.currentPlan)
 
-// Menú del sidebar: el staff ve además la entrada al panel de administración.
-// Sin acceso vigente (is_current = grants_access del backend: suscripción
-// activa dentro de vigencia + gracia) solo quedan las secciones de cuenta;
-// catálogos, diseño, empresa, POS y el grupo Avanzado desaparecen. Dentro
-// del acceso, "Diseño web"/"Mi empresa" piden has_customization (todos los
-// planes). Estadísticas/QR-folletos van por flag propio; has_advanced_menu
-// (Premium) solo decide si se agrupan bajo el heading "Avanzado".
-// Apartados agrupados (pestañas dentro de una misma entrada del menú): el
-// menú queda corto y con nombres de lo que la persona quiere hacer.
+// Apartados agrupados (pestañas dentro de una misma sección): la navegación
+// apunta al primer apartado y las pestañas viven adentro.
 const tabGroups = computed(() => {
   const b = plan.value?.benefits || {}
   const hasAccess = Boolean(plan.value?.isCurrent)
@@ -275,11 +276,10 @@ const tabGroups = computed(() => {
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
   }
-  const promo = []
-  if (hasAccess) {
-    if (b.has_qr || b.has_flyers) promo.push({ id: 'tools', label: 'QR y folletos', icon: 'qr-code', hint: 'Para imprimir y repartir' })
-    if (b.has_stats) promo.push({ id: 'stats', label: 'Mis visitas', icon: 'trending-up', hint: 'Cuánta gente te mira' })
-  }
+  const promo = [
+    { id: 'tools', label: 'QR y folletos', icon: 'qr-code', hint: 'Para imprimir y repartir' },
+    { id: 'stats', label: 'Mis visitas', icon: 'trending-up', hint: 'Cuánta gente te mira' }
+  ]
   const billingTabs = [
     { id: 'plans', label: 'Mi plan', icon: 'crown', hint: 'Elegir o cambiar plan' },
     { id: 'payments', label: 'Pagos', icon: 'receipt', hint: 'Lo que pagaste' },
@@ -288,31 +288,64 @@ const tabGroups = computed(() => {
   return { web, promo, billing: billingTabs }
 })
 
-// Menú del sidebar. Cada entrada con pestañas apunta a su primer apartado.
-const navItems = computed(() => {
+// Qué secciones se bloquean por plan y con qué copy abre el candado
+// (vista previa del beneficio: 'expired' = suscripción vencida, 'upgrade' =
+// falta el beneficio en el plan actual).
+const SECTION_BENEFITS = {
+  services: ['has_services_site'],
+  reviews: ['has_product_comments'],
+  support: ['has_support_chat'],
+  bot: ['has_chatbot'],
+  stats: ['has_stats'],
+  tools: ['has_qr', 'has_flyers']
+}
+const LOCKED_FEATURES = {
+  catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
+  services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
+  pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
+  reviews: { icon: 'star', title: 'Opiniones de clientes', text: 'Tus clientes valoran tus productos y dejan comentarios que se muestran en tu web; vos decidís qué se ve.' },
+  support: { icon: 'message-circle', title: 'Chat con el equipo', text: 'Hablá directo con soporte desde el panel, con mensajes, imágenes y aviso de respuestas.' },
+  bot: { icon: 'bot', title: 'Asistente virtual', text: 'Un ayudante en tu web que responde solo las preguntas frecuentes de tus clientes, las 24 horas.' },
+  tools: { icon: 'qr-code', title: 'QR y folletos', text: 'Código QR y folletos listos para imprimir y repartir: del papel a tu web en un escaneo.' },
+  stats: { icon: 'trending-up', title: 'Estadísticas de visitas', text: 'Cuánta gente entra a tu web día por día durante el último mes.' }
+}
+
+// Por sección: null = accesible, 'expired' = plan vencido, 'upgrade' = falta
+// el beneficio. Los ítems bloqueados se muestran igual (con candado) para
+// que el usuario descubra lo que el plan superior le habilita.
+const navLocks = computed(() => {
   const b = plan.value?.benefits || {}
   const hasAccess = Boolean(plan.value?.isCurrent)
-  const g = tabGroups.value
-  const items = [{ id: 'overview', label: 'Inicio', icon: 'dashboard' }, { heading: 'Mi negocio' }]
-  if (hasAccess) items.push({ id: 'catalogs', label: 'Mis productos', icon: 'package' })
-  // La página Servicios (y su gestión) la habilita el flag has_services_site
-  // del plan (Estándar+): sin el beneficio la entrada no aparece — la
-  // tarjeta bloqueada vive en la sección Plantillas como upgrade.
-  if (hasAccess && b.has_services_site) items.push({ id: 'services', label: 'Mis servicios', icon: 'wrench' })
-  if (hasAccess) items.push({ id: 'reviews', label: 'Opiniones', icon: 'star' })
-  items.push({ id: 'store', label: 'Mi página web', icon: 'store' })
-  if (hasAccess) {
-    items.push({ id: 'pos', label: 'Vender en persona', icon: 'monitor' })
-    if (b.has_chatbot) items.push({ id: 'bot', label: 'Asistente de chat', icon: 'bot' })
-    if (g.promo.length) items.push({ id: g.promo[0].id, label: 'Promocionar', icon: 'megaphone' })
-    if (b.has_support_chat) items.push({ id: 'support', label: 'Soporte', icon: 'message-circle' })
+  const map = {}
+  const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats']) {
+    map[id] = !hasAccess ? 'expired' : gated(id) ? 'upgrade' : null
   }
-  items.push(
-    { heading: 'Mi suscripción' },
-    { id: 'plans', label: 'Plan y pagos', icon: 'credit-card' },
-    { id: 'settings', label: 'Mi cuenta', icon: 'user' }
-  )
-  return items
+  return map
+})
+
+// Menú por intención: lo que el dueño quiere hacer, no el módulo técnico.
+const navItems = computed(() => {
+  const L = navLocks.value
+  return [
+    { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
+    { heading: 'Vender' },
+    { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs },
+    { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
+    { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
+    { heading: 'Mi web' },
+    { id: 'store', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
+    { heading: 'Clientes' },
+    { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
+    { id: 'support', label: 'Ayuda y chat', icon: 'message-circle', hint: 'Hablar con el equipo', locked: L.support },
+    { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
+    { heading: 'Crecer' },
+    { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR y folletos para imprimir', locked: L.tools },
+    { id: 'stats', label: 'Mis visitas', icon: 'trending-up', hint: 'Quién entra a tu página', locked: L.stats },
+    { heading: 'Mi cuenta' },
+    { id: 'plans', label: 'Plan y pagos', icon: 'credit-card', hint: 'Suscripción, pagos y facturas' },
+    { id: 'settings', label: 'Mis datos', icon: 'user', hint: 'Cuenta y contraseña' }
+  ]
 })
 
 const validIds = computed(() => {
@@ -323,21 +356,118 @@ const validIds = computed(() => {
 
 // Entrada del menú que corresponde a la sección actual (las pestañas comparten una).
 const navActive = computed(() => {
+  const ids = new Set(navItems.value.filter((i) => i.id).map((i) => i.id))
+  if (ids.has(section.value)) return section.value
   for (const tabs of Object.values(tabGroups.value)) {
-    if (tabs.some((t) => t.id === section.value)) {
-      return navItems.value.find((i) => i.id && tabs.some((t) => t.id === i.id))?.id || section.value
-    }
+    if (tabs.some((t) => t.id === section.value)) return tabs[0].id
   }
   return section.value
 })
 
-// Si la sección activa desaparece (venció el plan), volver a Inicio.
+// Título de la sección actual (incluye apartados sin entrada propia en el
+// menú) y su sección padre para el botón "volver" y la miga de pan.
+const sectionTitle = computed(() => {
+  const hit = navItems.value.find((i) => i.id === section.value)
+  if (hit) return hit.label
+  for (const tabs of Object.values(tabGroups.value)) {
+    const t = tabs.find((t) => t.id === section.value)
+    if (t) return t.label
+  }
+  return 'Inicio'
+})
+const navParent = computed(() => {
+  for (const tabs of Object.values(tabGroups.value)) {
+    const idx = tabs.findIndex((t) => t.id === section.value)
+    if (idx > 0) return { id: tabs[0].id, label: tabs[0].label }
+    if (idx === 0) return null
+  }
+  return null
+})
+
+// Plan más barato que incluye alguno de los beneficios pedidos (para el
+// "Disponible en {plan}" del candado).
+function minPlanFor(keys) {
+  const list = Array.isArray(keys) ? keys : [keys]
+  const cands = billing.plans.filter((p) => !p.is_trial && list.some((k) => p.benefits?.[k]))
+  cands.sort((a, b) => Number(a.price) - Number(b.price))
+  return cands[0]?.name || null
+}
+const lockedFeature = ref(null)
+function openLocked(id) {
+  const meta = LOCKED_FEATURES[id] || { icon: 'lock', title: 'Función bloqueada', text: '' }
+  const reason = navLocks.value[id] || 'upgrade'
+  const planName = reason === 'upgrade' ? minPlanFor(SECTION_BENEFITS[id] || []) : null
+  lockedFeature.value = { id, reason, planName, ...meta }
+}
+function onLockedNav(item) { openLocked(item.id) }
+function goPlansFromLocked() {
+  lockedFeature.value = null
+  sectionInner.value = 'plans'
+}
+
+// Si la sección activa desaparece o se bloquea (venció el plan), volver a Inicio.
 watch(validIds, (ids) => {
-  if (!ids.has(section.value)) section.value = 'overview'
+  if (!ids.has(section.value)) sectionInner.value = 'overview'
+})
+watch(navLocks, (locks) => {
+  if (locks[section.value]) sectionInner.value = 'overview'
 })
 
 function onNavigate(id) {
   section.value = id
+}
+
+// --- Búsqueda global (⌘K / Ctrl+K) y tab bar móvil -----------------------
+const searchOpen = ref(false)
+
+// Comandos buscables: secciones (con sinónimos de lenguaje cotidiano) +
+// acciones frecuentes. Cada comando corre una función al elegirse.
+const searchCommands = computed(() => {
+  const cmds = []
+  const go = (id) => () => { section.value = id }
+  const KW = {
+    overview: 'inicio resumen home panel hoy comienzo',
+    catalogs: 'productos catalogo cargar subir precio foto stock mercaderia categoria marca articulo cosa vender',
+    services: 'servicios trabajos ofrezco duracion turnos profesional',
+    pos: 'vender persona local fisico cobrar caja punto venta mostrador ticket',
+    store: 'pagina web tienda diseno link direccion url dominio slug logo colores plantilla publicar pausar editar',
+    reviews: 'opiniones comentarios valoraciones estrellas clientes review reputacion',
+    support: 'ayuda soporte chat mensaje consulta hablar equipo problema duda',
+    bot: 'asistente chatbot automatico responder preguntas robot virtual',
+    tools: 'qr codigo folleto volante imprimir promocionar vidriera flyer repartir',
+    stats: 'estadisticas visitas metricas cuanta gente analytics numeros',
+    plans: 'plan suscripcion pagos facturas comprobantes precio renovar debito automatico mercado pago cupon descuento vencimiento abonar',
+    settings: 'cuenta datos contrasena email correo perfil fiscal cuit dni provincia ciudad celular nombre apellido seguridad'
+  }
+  for (const i of navItems.value.filter((x) => x.id)) {
+    cmds.push({ id: i.id, label: i.label, hint: i.hint || '', icon: i.icon, kw: KW[i.id] || '', locked: i.locked, run: go(i.id), group: 'Secciones' })
+  }
+  if (store.hasStore) {
+    cmds.push({ id: 'copy-link', label: 'Copiar mi link', hint: 'La dirección de tu web, lista para pegar', icon: 'copy', kw: 'copiar link url direccion compartir pegar', run: () => copyLink(), group: 'Acciones' })
+    cmds.push({ id: 'open-store', label: 'Ver mi página', hint: 'Abrirla como la ven tus clientes', icon: 'external-link', kw: 'ver tienda pagina publica preview abrir mirar', run: () => openStore(), group: 'Acciones' })
+    cmds.push({ id: 'share-wa', label: 'Compartir por WhatsApp', hint: 'Mandá tu link a tus contactos', icon: 'phone', kw: 'whatsapp compartir enviar link clientes mensaje', run: () => shareWhatsApp(), group: 'Acciones' })
+  }
+  cmds.push({ id: 'new-product', label: 'Cargar un producto', hint: 'Foto, precio y categoría', icon: 'plus', kw: 'nuevo producto agregar cargar subir crear', run: go('catalogs'), group: 'Acciones', locked: navLocks.value.catalogs })
+  cmds.push({ id: 'change-logo', label: 'Cambiar mi logo', hint: 'En Diseño → Logo y colores', icon: 'image', kw: 'logo cambiar subir imagen marca foto perfil', run: go('design'), group: 'Acciones', locked: navLocks.value.catalogs })
+  cmds.push({ id: 'theme', label: theme.isDark ? 'Modo claro' : 'Modo oscuro', hint: 'Cambiar la apariencia del panel', icon: theme.isDark ? 'sun' : 'moon', kw: 'tema oscuro claro modo nocturno dark light apariencia color', run: () => theme.toggleTheme(), group: 'Acciones' })
+  cmds.push({ id: 'coupon', label: 'Canjear un cupón', hint: 'Código promocional o de regalo', icon: 'gift', kw: 'cupon codigo promo promocional descuento regalo canjear', run: go('plans'), group: 'Acciones' })
+  cmds.push({ id: 'password', label: 'Cambiar contraseña', hint: 'Seguridad de tu cuenta', icon: 'key', kw: 'contrasena password clave seguridad cambiar', run: go('settings'), group: 'Acciones' })
+  cmds.push({ id: 'messages', label: 'Mensajes de soporte', hint: 'Abrir la conversación con el equipo', icon: 'message-circle', kw: 'mensajes chat soporte hablar conversacion inbox', run: () => onBellClick(), group: 'Acciones' })
+  return cmds
+})
+
+// Los 4 destinos del pulgar + "Más" (el quinto tab lo dibuja el layout).
+const mobileTabs = computed(() => [
+  { id: 'overview', label: 'Inicio', icon: 'dashboard' },
+  { id: 'catalogs', label: 'Vender', icon: 'package' },
+  { id: 'store', label: 'Mi web', icon: 'store' },
+  { id: 'chat', label: 'Mensajes', icon: 'message-circle', badge: chatUnread.value }
+])
+
+function shareWhatsApp() {
+  if (!publicUrl.value) return
+  const text = `Mirá mi tienda online: ${publicUrl.value}`
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
 
@@ -2661,10 +2791,16 @@ async function changePassword() {
   <DashLayout
     :active="navActive"
     :items="navItems"
+    :tabs="mobileTabs"
+    :parent="navParent"
+    :title="sectionTitle"
     :plan-name="plan?.name || ''"
     :user-name="displayName"
     :initial="initial"
     @navigate="onNavigate"
+    @locked="onLockedNav"
+    @search="searchOpen = true"
+    @messages="onBellClick"
     @logout="logout"
   >
     <template #topbar-actions>
@@ -5175,5 +5311,34 @@ async function changePassword() {
         </section>
       </Transition>
     </ChatDock>
+
+    <!-- Búsqueda global: Ctrl/⌘+K o "/" desde cualquier sección -->
+    <GlobalSearch v-model:open="searchOpen" :commands="searchCommands" />
+
+    <!-- Vista previa del beneficio bloqueado: candado del menú, búsqueda o
+         deep-link. 'expired' = renovar; 'upgrade' = plan superior. -->
+    <Teleport to="body">
+      <Transition name="sheet">
+        <div v-if="lockedFeature" class="lock-overlay" @click.self="lockedFeature = null">
+          <div class="lock-sheet" role="dialog" aria-modal="true" :aria-label="lockedFeature.title">
+            <button type="button" class="lock-x" aria-label="Cerrar" @click="lockedFeature = null"><AppIcon name="x" :size="16" /></button>
+            <span class="lock-icon"><AppIcon :name="lockedFeature.icon" :size="26" /></span>
+            <p class="lock-tag">
+              <AppIcon name="lock" :size="12" />
+              <span v-if="lockedFeature.reason === 'expired'">Tu plan venció — renová para volver a usarla</span>
+              <span v-else>Disponible en {{ lockedFeature.planName || 'planes superiores' }}</span>
+            </p>
+            <h3>{{ lockedFeature.title }}</h3>
+            <p class="lock-text">{{ lockedFeature.text }}</p>
+            <div class="lock-actions">
+              <button type="button" class="btn btn-auto" @click="goPlansFromLocked">
+                {{ lockedFeature.reason === 'expired' ? 'Renovar mi plan' : 'Ver planes' }}
+              </button>
+              <button type="button" class="btn ghost btn-auto" @click="lockedFeature = null">Ahora no</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </DashLayout>
 </template>
