@@ -1063,9 +1063,13 @@ onBeforeUnmount(() => {
       <h2 id="sp-services-title" v-reveal class="sp-section-title">{{ servicesTitle }}</h2>
       <div class="sp-services-grid">
         <article v-for="(s, i) in services" :key="i" v-reveal="(i % 3) * 80" class="sp-service">
-          <span class="sp-service-icon" aria-hidden="true"><AppIcon :name="serviceIcon(s.icon)" :size="22" /></span>
-          <strong>{{ s.title }}</strong>
-          <p v-if="s.text">{{ s.text }}</p>
+          <div class="sp-service-ring">
+            <span class="sp-service-glow" aria-hidden="true"></span>
+            <span class="sp-service-icon" aria-hidden="true"><AppIcon :name="serviceIcon(s.icon)" :size="20" /></span>
+          </div>
+          <strong class="sp-service-title">{{ s.title }}</strong>
+          <p v-if="s.text" class="sp-service-text">{{ s.text }}</p>
+          <span class="sp-service-line" aria-hidden="true"></span>
         </article>
       </div>
       <div v-if="servicesPage" class="sp-more">

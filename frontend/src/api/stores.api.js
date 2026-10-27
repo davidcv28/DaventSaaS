@@ -491,7 +491,28 @@ export const SERVICE_ICONS = {
   'calendar':       'Turnos',
   'flame':          'Novedades',
   'megaphone':      'Promos',
-  'check':          'Otro'
+  'check':          'Otro',
+  'sparkles':       'Destellos',
+  'award':          'Premio',
+  'hard-hat':       'Construcción',
+  'scissors':       'Corte / Estilo',
+  'coffee':         'Café / Bebidas',
+  'dumbbell':       'Deporte / Gimnasio',
+  'paw-print':      'Mascotas',
+  'flower':         'Flores / Naturaleza',
+  'book':           'Libros / Educación',
+  'graduation-cap': 'Cursos / Títulos',
+  'music':          'Música',
+  'film':           'Video / Cine',
+  'camera':         'Fotografía',
+  'heart':          'Salud / Bienestar',
+  'hand':           'Apoyo / Ayuda',
+  'leaf':           'Ecológico / Orgánico',
+  'umbrella':       'Protección / Respaldo',
+  'paintbrush':     'Pintura / Diseño',
+  'mic':            'Audio / Locución',
+  'trophy':         'Logros',
+  'diamond':        'Lujo / Joyería'
 }
 
 // Color identidad por ícono de servicio (hue HSL): el panel lo usa para las

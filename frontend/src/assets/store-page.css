@@ -1553,16 +1553,62 @@ html { scroll-behavior: smooth; }
    Cada bloque se ordena con CSS order (section_order) y se oculta solo
    cuando quedó sin contenido o el dueño apagó su interruptor. */
 
-/* Qué ofrecemos: tarjetas de servicios/ventajas con ícono (hermana de
-   los destacados del hero, pero dentro del flujo normal de la página). */
+/* ===== Qué ofrecemos: tarjetas de servicios con arte por plantilla =====
+   Cada tarjeta es una pieza visual: anillo de acento, ícono con brillo,
+   título con gradiente de texto y entrada escalonada al hacer scroll.
+   Todas las variantes heredan de .sp-service; las plantillas solo
+   sobreescriben colores, radios y comportamientos de hover. */
+
+/* --- Contenedor de sección --- */
 .sp-services { padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
-.sp-services .sp-section-title { margin: 6px 0 26px; }
-.sp-services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
-.sp-service { position: relative; display: grid; gap: 8px; align-content: start; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); transition: box-shadow .2s, border-color .2s, transform .25s var(--sp-ease); }
-.sp-service:hover { border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: var(--sp-shadow-md); transform: translateY(-3px); }
-.sp-service-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 10px 20px -10px var(--store-accent-ink); }
-.sp-service strong { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
-.sp-service p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--sp-muted); overflow-wrap: anywhere; }
+.sp-services .sp-section-title { margin: 0 0 10px; }
+.sp-services .sp-eyebrow { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--store-accent-ink); }
+.sp-services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+
+/* --- Tarjeta base --- */
+.sp-service { position: relative; isolation: isolate; display: grid; grid-template-rows: auto 1fr auto; gap: 0; padding: 26px 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); transition: transform .35s var(--sp-ease), box-shadow .35s var(--sp-ease), border-color .35s var(--sp-ease), background-color .35s var(--sp-ease); overflow: hidden; }
+.sp-service::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: destination-out; mask-composite: exclude; pointer-events: none; opacity: 0; transition: opacity .35s var(--sp-ease); }
+.sp-service:hover::before { opacity: 1; }
+
+/* --- Anillo decorativo alrededor del ícono --- */
+.sp-service-ring { position: relative; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; margin: 0 0 14px; z-index: 2; box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--store-accent-ink) 35%, transparent); }
+.sp-service-ring::after { content: ''; position: absolute; inset: -4px; border-radius: 20px; background: conic-gradient(from 90deg, transparent, color-mix(in srgb, var(--store-accent) 55%, transparent), transparent); opacity: 0; transition: opacity .4s var(--sp-ease), transform .6s linear; animation: sp-svc-ring-spin 10s linear infinite; }
+.sp-service:hover .sp-service-ring::after { opacity: 1; }
+
+/* --- Brillo que recorre el anillo --- */
+.sp-service-glow { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--store-accent) 45%, transparent), transparent 60%); opacity: 0; transition: opacity .4s var(--sp-ease); z-index: 1; }
+.sp-service:hover .sp-service-glow { opacity: 1; }
+
+/* --- Ícono dentro del anillo --- */
+.sp-service-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: linear-gradient(135deg, var(--store-accent), var(--store-accent-ink)); box-shadow: 0 10px 26px -12px var(--store-accent-ink); transition: transform .4s var(--sp-ease), filter .3s var(--sp-ease); z-index: 3; }
+.sp-service:hover .sp-service-icon { transform: scale(1.12) rotate(-3deg); filter: brightness(1.15); }
+
+/* --- Título y texto --- */
+.sp-service-title { margin: 0 0 8px; font-size: 16px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; color: var(--sp-ink); background: linear-gradient(135deg, var(--sp-ink), color-mix(in srgb, var(--store-accent-ink) 70%, var(--sp-ink-2))); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.sp-service p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.65; color: var(--sp-muted); overflow-wrap: anywhere; }
+
+/* --- Línea decorativa inferior (se revela en hover) --- */
+.sp-service-line { position: absolute; left: 24px; right: 24px; bottom: 16px; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--store-accent) 60%, var(--sp-line)), transparent); transform: scaleX(0); transform-origin: center; transition: transform .4s var(--sp-ease); pointer-events: none; }
+.sp-service:hover .sp-service-line { transform: scaleX(1); }
+
+/* --- Badge opcional (categoría / precio desde) --- */
+.sp-service-badge { position: absolute; top: 14px; right: 14px; z-index: 4; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, var(--store-accent-ink), var(--store-accent)); box-shadow: 0 6px 16px -6px var(--store-accent-ink); }
+
+/* --- Hover: eleva, ilumina y despliega la línea --- */
+.sp-service:hover { transform: translateY(-6px); box-shadow: var(--sp-shadow-md); border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); background: color-mix(in srgb, var(--sp-card) 92%, #fff); }
+.store-page[data-store-theme='dark'] .sp-service:hover { background: color-mix(in srgb, var(--sp-card-solid) 92%, #000); }
+
+/* --- Entrada escalonada: v-reveal ya dispara la animación --- */
+.sp-service { animation: sp-svc-fade-up .7s var(--sp-ease) both; opacity: 0; }
+.sp-rv.is-in .sp-service { animation: none; opacity: 1; }
+
+@keyframes sp-svc-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes sp-svc-ring-spin {
+  to { transform: rotate(360deg); }
+}
 
 /* Tus números: banda de acento con cifras grandes. */
 .sp-stats { padding-top: 64px; }
@@ -9696,3 +9742,109 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='aurora'] .sp-ann { background: color-mix(in srgb, var(--sp-card-solid, #0f1424) 55%, transparent); border-block-color: rgba(255, 255, 255, .12); }
 .store-page[data-store-template='aurora'] .sp-ann-item { color: rgba(235, 240, 255, .78); }
 .store-page[data-store-template='aurora'] .sp-video-frame { border-color: rgba(255, 255, 255, .14); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, .65); }
+
+/* =====================================================================
+   VARIANTES DE SERVICIOS POR PLANTILLA
+   Cada bloque sobreescribe .sp-service para que la sección "Qué ofrecemos"
+   hable el mismo idioma visual que el resto de la web. ===================================================================== */
+
+/* --- classic: tarjeta limpia, anillo sutil, borde fino --- */
+.store-page[data-store-template='classic'] .sp-service-ring { box-shadow: none; background: var(--store-accent-soft); color: var(--store-accent-ink); }
+.store-page[data-store-template='classic'] .sp-service-icon { box-shadow: none; background: var(--store-accent); }
+.store-page[data-store-template='classic'] .sp-service-ring::after { display: none; }
+.store-page[data-store-template='classic'] .sp-service:hover { transform: translateY(-4px); }
+
+/* --- perspective: rotación 3D sutil, planos flotantes --- */
+.store-page[data-store-template='perspective'] .sp-service:hover { transform: translateY(-6px) rotateX(3deg) rotateY(-2deg); }
+.store-page[data-store-template='perspective'] .sp-service-ring { box-shadow: 12px 12px 0 -4px color-mix(in srgb, var(--store-accent) 22%, transparent); }
+.store-page[data-store-template='perspective'] .sp-service-icon { box-shadow: 8px 8px 0 -4px color-mix(in srgb, var(--store-accent-ink) 30%, transparent); }
+
+/* --- promo: alto contraste, explosión de color --- */
+.store-page[data-store-template='promo'] .sp-service-ring { background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard); box-shadow: 0 0 30px color-mix(in srgb, var(--sp-yellow, #ffe14d) 45%, transparent); }
+.store-page[data-store-template='promo'] .sp-service-icon { background: var(--sp-ink-hard); color: #fff; box-shadow: none; }
+.store-page[data-store-template='promo'] .sp-service-title { -webkit-text-fill-color: var(--sp-ink-hard); }
+.store-page[data-store-template='promo'] .sp-service-badge { background: linear-gradient(135deg, var(--sp-yellow, #ffe14d), var(--sp-yellow, #ffe14d)); color: var(--sp-ink-hard); box-shadow: none; }
+.store-page[data-store-template='promo'] .sp-service:hover { border-color: var(--sp-yellow, #ffe14d); box-shadow: 0 0 40px color-mix(in srgb, var(--sp-yellow, #ffe14d) 30%, transparent); }
+
+/* --- street: borde grueso, esquinas rectas, rotación sutil --- */
+.store-page[data-store-template='street'] .sp-service { border-width: 2px; border-radius: 0; }
+.store-page[data-store-template='street'] .sp-service-ring { border-radius: 0; transform: rotate(-6deg); }
+.store-page[data-store-template='street'] .sp-service-icon { border-radius: 0; transform: rotate(6deg); }
+.store-page[data-store-template='street'] .sp-service-badge { border-radius: 0; transform: rotate(-4deg); }
+.store-page[data-store-template='street'] .sp-service-title { letter-spacing: -.04em; }
+.store-page[data-store-template='street'] .sp-service:hover { transform: translateY(-5px) rotate(-1deg); border-color: var(--store-accent); }
+
+/* --- terminal: consola fósforo, borde monocromático, cursor parpadeante --- */
+.store-page[data-store-template='terminal'] .sp-service { border-color: var(--store-accent-ink); background: color-mix(in srgb, var(--sp-bg) 90%, #000); }
+.store-page[data-store-template='terminal'] .sp-service-ring { background: var(--store-accent); color: var(--store-accent-ink); box-shadow: 0 0 20px var(--store-accent); }
+.store-page[data-store-template='terminal'] .sp-service-icon { box-shadow: 0 0 16px var(--store-accent); animation: sp-svc-cursor-blink 1.2s step-end infinite; }
+.store-page[data-store-template='terminal'] .sp-service-title { color: var(--store-accent); -webkit-text-fill-color: var(--store-accent); }
+.store-page[data-store-template='terminal'] .sp-service p { color: color-mix(in srgb, var(--sp-ink-2) 80%, var(--sp-muted)); }
+.store-page[data-store-template='terminal'] .sp-service:hover { border-color: var(--store-accent); box-shadow: 0 0 30px color-mix(in srgb, var(--store-accent) 35%, transparent); background: color-mix(in srgb, var(--store-accent) 8%, var(--sp-bg)); }
+@keyframes sp-svc-cursor-blink { 50% { opacity: 0; } }
+
+/* --- lookbook: pliego editorial, numeración, sin ícono visible --- */
+.store-page[data-store-template='lookbook'] .sp-service { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 0; padding: 28px 34px; border-radius: 0; border: 0; border-bottom: 1px solid var(--sp-line); box-shadow: none; background: transparent; animation: none; opacity: 1; }
+.store-page[data-store-template='lookbook'] .sp-service::before { display: none; }
+.store-page[data-store-template='lookbook'] .sp-service-line { display: none; }
+.store-page[data-store-template='lookbook'] .sp-service-badge { display: none; }
+.store-page[data-store-template='lookbook'] .sp-service-ring { display: none; }
+.store-page[data-store-template='lookbook'] .sp-service-glow { display: none; }
+.store-page[data-store-template='lookbook'] .sp-service-icon { width: 40px; height: 40px; border-radius: 0; background: none; color: var(--store-accent-ink); box-shadow: none; grid-row: 1 / span 2; }
+.store-page[data-store-template='lookbook'] .sp-service-title { margin: 0; font-family: var(--sp-display); font-size: 19px; font-weight: 400; letter-spacing: -.01em; color: var(--sp-ink); background: none; -webkit-text-fill-color: var(--sp-ink); }
+.store-page[data-store-template='lookbook'] .sp-service p { margin: 6px 0 0; color: var(--sp-muted); }
+.store-page[data-store-template='lookbook'] .sp-service:hover { background: color-mix(in srgb, var(--sp-ink) 3%, transparent); transform: none; }
+
+/* --- shop: vitrina marketplace, ícono compacto --- */
+.store-page[data-store-template='shop'] .sp-service { grid-template-rows: auto; gap: 14px; padding: 20px; }
+.store-page[data-store-template='shop'] .sp-service-ring { width: 44px; height: 44px; border-radius: 12px; margin: 0 0 10px; }
+.store-page[data-store-template='shop'] .sp-service-icon { width: 28px; height: 28px; border-radius: 8px; }
+.store-page[data-store-template='shop'] .sp-service-title { font-size: 15px; -webkit-text-fill-color: var(--sp-ink); }
+.store-page[data-store-template='shop'] .sp-service:hover { border-color: var(--store-accent); }
+
+/* --- cobre: piedra cálida, tinta, acento sólido como placa --- */
+.store-page[data-store-template='cobre'] .sp-service { border-color: color-mix(in srgb, var(--sp-ink) 20%, transparent); background: var(--sp-card-solid); }
+.store-page[data-store-template='cobre'] .sp-service-ring { background: var(--store-accent-ink); color: #fff; box-shadow: none; }
+.store-page[data-store-template='cobre'] .sp-service-icon { background: var(--store-accent); color: var(--store-accent-ink); box-shadow: none; }
+.store-page[data-store-template='cobre'] .sp-service-title { -webkit-text-fill-color: var(--sp-ink); }
+.store-page[data-store-template='cobre'] .sp-service-badge { background: var(--store-accent); color: var(--store-accent-ink); }
+.store-page[data-store-template='cobre'] .sp-service:hover { border-color: var(--store-accent); transform: translateY(-4px); }
+
+/* --- minimal: plano, sin sombra, solo línea de acento --- */
+.store-page[data-store-template='minimal'] .sp-service { border: 0; box-shadow: none; border-bottom: 2px solid var(--sp-line); border-radius: 0; padding: 24px 0; background: transparent; }
+.store-page[data-store-template='minimal'] .sp-service-ring { background: transparent; box-shadow: none; border: 2px solid var(--store-accent); color: var(--store-accent); }
+.store-page[data-store-template='minimal'] .sp-service-icon { background: none; color: var(--store-accent); box-shadow: none; }
+.store-page[data-store-template='minimal'] .sp-service-title { color: var(--sp-ink); -webkit-text-fill-color: var(--sp-ink); font-weight: 700; }
+.store-page[data-store-template='minimal'] .sp-service-badge { background: var(--store-accent); color: var(--store-accent-ink); box-shadow: none; border: 1px solid var(--store-accent); }
+.store-page[data-store-template='minimal'] .sp-service-line { display: none; }
+.store-page[data-store-template='minimal'] .sp-service:hover { border-bottom-color: var(--store-accent); transform: none; background: color-mix(in srgb, var(--store-accent) 5%, transparent); }
+.store-page[data-store-template='minimal'] .sp-service:hover .sp-service-ring { background: var(--mn-ink); color: var(--mn-paper); border-color: var(--mn-ink); }
+.store-page[data-store-template='minimal'] .sp-service:hover .sp-service-icon { background: var(--mn-ink); color: var(--mn-paper); }
+
+/* --- boutique: estructura por filetes, esquinas rectas, serif --- */
+.store-page[data-store-template='boutique'] .sp-service { border: 0; border-left: 3px solid var(--store-accent); border-radius: 0; padding: 22px 24px 22px 30px; background: var(--sp-card); box-shadow: none; }
+.store-page[data-store-template='boutique'] .sp-service-ring { width: 40px; height: 40px; border-radius: 0; transform: rotate(-4deg); margin: 0 0 10px; }
+.store-page[data-store-template='boutique'] .sp-service-icon { width: 26px; height: 26px; border-radius: 0; transform: rotate(4deg); }
+.store-page[data-store-template='boutique'] .sp-service-title { font-family: var(--sp-display); font-weight: 500; letter-spacing: -.02em; -webkit-text-fill-color: var(--sp-ink); }
+.store-page[data-store-template='boutique'] .sp-service-badge { border-radius: 0; transform: rotate(-2deg); }
+.store-page[data-store-template='boutique'] .sp-service:hover { border-left-color: var(--store-accent-ink); background: color-mix(in srgb, var(--store-accent) 6%, transparent); transform: translateX(6px); }
+
+/* --- signature: casa de autor, filetes y rombos, marfil y espresso --- */
+.store-page[data-store-template='signature'] .sp-service { border: 0; border-radius: 0; padding: 26px 24px; background: var(--sp-card); box-shadow: none; border-bottom: 1px solid var(--sp-line); }
+.store-page[data-store-template='signature'] .sp-service::before { display: none; }
+.store-page[data-store-template='signature'] .sp-service-ring { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--store-accent-ink); background: transparent; color: var(--store-accent-ink); box-shadow: none; margin: 0 0 12px; }
+.store-page[data-store-template='signature'] .sp-service-icon { width: 28px; height: 28px; border-radius: 50%; background: none; color: var(--store-accent-ink); box-shadow: none; }
+.store-page[data-store-template='signature'] .sp-service-title { font-family: var(--sp-display); font-weight: 400; letter-spacing: -.01em; -webkit-text-fill-color: var(--sp-ink); }
+.store-page[data-store-template='signature'] .sp-service-badge { border-radius: 0; background: var(--store-accent-ink); color: #fff; }
+.store-page[data-store-template='signature'] .sp-service-line { display: none; }
+.store-page[data-store-template='signature'] .sp-service:hover { border-bottom-color: var(--store-accent); background: color-mix(in srgb, var(--store-accent) 6%, transparent); transform: none; }
+
+/* --- aurora: vidrio esmerilado, cielo profundo, halo de luz --- */
+.store-page[data-store-template='aurora'] .sp-service { border: 1px solid color-mix(in srgb, #fff 12%, transparent); background: color-mix(in srgb, #fff 8%, transparent); box-shadow: 0 8px 32px -12px rgba(0, 0, 0, .45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 20px; }
+.store-page[data-store-template='aurora'] .sp-service::before { opacity: 0; }
+.store-page[data-store-template='aurora'] .sp-service-ring { background: linear-gradient(135deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 60%, #fff)); color: var(--store-accent-ink); box-shadow: 0 0 30px color-mix(in srgb, var(--store-accent) 45%, transparent); }
+.store-page[data-store-template='aurora'] .sp-service-icon { box-shadow: 0 0 20px color-mix(in srgb, var(--store-accent) 50%, transparent); }
+.store-page[data-store-template='aurora'] .sp-service-title { -webkit-text-fill-color: #fff; background: linear-gradient(135deg, #fff, color-mix(in srgb, #fff 85%, var(--sp-ink-2))); -webkit-background-clip: text; background-clip: text; }
+.store-page[data-store-template='aurora'] .sp-service p { color: color-mix(in srgb, #fff 75%, transparent); }
+.store-page[data-store-template='aurora'] .sp-service-badge { background: linear-gradient(135deg, #fff, color-mix(in srgb, #fff 80%, var(--store-accent-ink))); color: var(--store-accent-ink); box-shadow: 0 0 20px rgba(255,255,255,.6); }
+.store-page[data-store-template='aurora'] .sp-service:hover { border-color: color-mix(in srgb, var(--store-accent) 55%, #fff); box-shadow: 0 0 40px color-mix(in srgb, var(--store-accent) 35%, #fff); transform: translateY(-5px); background: color-mix(in srgb, #fff 14%, transparent); }
