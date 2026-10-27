@@ -201,7 +201,8 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
         </nav>
         <div class="lp-nav-cta">
           <RouterLink to="/login" class="lp-btn ghost lp-hide-sm">Ya tengo cuenta</RouterLink>
-          <RouterLink to="/register" class="lp-btn primary">Crear cuenta gratis</RouterLink>
+          <RouterLink to="/login" class="lp-btn ghost lp-login-btn">Ingresar</RouterLink>
+          <RouterLink to="/register" class="lp-btn primary lp-hide-sm">Crear cuenta gratis</RouterLink>
         </div>
         <button class="lp-burger" type="button" :aria-label="menu ? 'Cerrar menú' : 'Abrir menú'" :aria-expanded="menu" @click="menu = !menu">
           <span /><span /><span />
@@ -487,6 +488,8 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-links a:hover { color: #fff; }
 .lp-nav-cta { display: flex; flex: none; align-items: center; gap: 10px; }
 .lp-burger { display: none; }
+/* Botón "Ingresar" compacto: solo en la barra mobile (≤900px). */
+.lp-login-btn { display: none; }
 
 /* Menú mobile a pantalla completa (se monta fuera de la píldora fija). */
 .lp-menu { display: none; }
@@ -516,7 +519,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-checks li { display: flex; align-items: center; gap: 8px; }
 
 .lp-hero-visual { position: relative; flex: 1 1 380px; min-width: 0; display: grid; place-items: center; min-height: 560px; }
-.lp-phone { width: 300px; padding: 14px; border-radius: 40px; background: #0a0828; border: 3px solid #2f2a7c; box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 90px rgba(91, 77, 240, .3); }
+.lp-phone { width: min(300px, 100%); padding: 14px; border-radius: 40px; background: #0a0828; border: 3px solid #2f2a7c; box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 90px rgba(91, 77, 240, .3); }
 .lp-url { display: flex; align-items: center; gap: 6px; background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 12px; color: #5d6180; margin-bottom: 12px; }
 .lp-shop { display: flex; align-items: center; gap: 10px; background: #f5f6fb; padding: 12px; border-radius: 16px 16px 0 0; color: #1a1d3a; }
 .lp-shop div { display: flex; flex-direction: column; font-size: 13.5px; }
@@ -676,8 +679,13 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
   .lp-logo { width: 34px; height: 34px; border-radius: 10px; }
   .lp-brand-name { font-size: 16px; }
   .lp-nav-cta { margin-left: auto; }
-  .lp-nav-cta .lp-btn.primary { min-height: 40px; padding: 0 15px; font-size: 13.5px; }
+  .lp-nav-cta .lp-btn { min-height: 40px; padding: 0 15px; font-size: 13.5px; }
   .lp-hide-sm { display: none; }
+  .lp-login-btn { display: inline-flex; }
+  /* Los chips flotantes quedan anclados a los bordes del visual y en mobile
+     el hero se apila a todo lo ancho: sobresalen de la pantalla. */
+  .lp-chip { display: none; }
+  .lp-hero { padding-top: clamp(110px, 15vh, 150px); }
 
   .lp-burger { display: block; position: relative; flex: none; width: 44px; height: 44px; padding: 0; background: rgba(255, 255, 255, .07); border: 1px solid var(--line); border-radius: 50%; cursor: pointer; transition: background .2s, border-color .2s; }
   .lp-burger:hover { background: rgba(255, 255, 255, .14); }
@@ -729,7 +737,10 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
   .lp-bento { grid-template-columns: 1fr; }
   .lp-bento > .lp-card, .lp-bento > .wide, .lp-bento > .lp-design { grid-column: auto; }
   .lp-list { grid-template-columns: 1fr; }
-  .lp-chip.c-link, .lp-chip.c-toggle, .lp-chip.c-qr { display: none; }
+  /* CTAs a todo lo ancho: evita que el texto nowrap del botón principal
+     desborde el borde de las tarjetas en pantallas chicas. */
+  .lp-actions { flex-direction: column; }
+  .lp-actions .lp-btn { width: 100%; }
 }
 /* ---- Motion ---- */
 .lp-progress { position: fixed; inset: 0 0 auto 0; z-index: 50; height: 3px; transform-origin: 0 50%; transform: scaleX(var(--p, 0)); background: linear-gradient(90deg, #6366f1, #a5b4fc, #38bdf8); pointer-events: none; }
