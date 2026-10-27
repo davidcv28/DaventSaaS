@@ -607,8 +607,8 @@ export const STORE_THEMES = {
 //   'plus'     -> has_design_plus (Estándar y Premium)
 //   'advanced' -> has_design_advanced (Premium)
 // El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
-// 'classic' si el guardado deja de estar permitido (baja de plan o
-// plantilla retirada, como la extinta 'atelier').
+// 'classic' si el guardado deja de estar permitido (baja de plan o una
+// plantilla retirada del catálogo).
 export const STORE_TEMPLATES = {
   classic:     { label: 'Clásico',     tier: 'base',     desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
   perspective: { label: 'Perspectiva', tier: 'base',     desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },

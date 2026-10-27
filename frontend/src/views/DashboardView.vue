@@ -1258,28 +1258,44 @@ const storeThemes = STORE_THEMES
 // ('base' | 'plus' | 'advanced'). La vista previa usa el mismo fallback
 // que la web pública: 'classic' si el diseño queda fuera del plan.
 const storeTemplates = STORE_TEMPLATES
-// Familias por categoría (STORE_TEMPLATE_FAMILIES): el selector muestra 4
-// tarjetas-preview CSS — elegir una familia aplica su variante base (o la
-// primera permitida por el plan); la variante extra se cambia abajo.
+// Familias por categoría (STORE_TEMPLATE_FAMILIES): la categoría se elige
+// en un select y los estilos disponibles en otro — elegir una categoría
+// aplica su primera variante permitida por el plan. La miniatura es una
+// sola (.tpl-thumb[data-tpl]) y refleja el estilo aplicado.
 const templateFamilies = STORE_TEMPLATE_FAMILIES
-const currentFamily = computed(() => templateFamilies.find((f) => f.templates.includes(designForm.template)) || null)
 const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
 const familyTier = (f) => (f.templates.some((k) => STORE_TEMPLATES[k]?.tier !== 'advanced') ? 'Desde Estándar' : 'Premium')
-function pickFamily(f) {
+// Categoría vista en el select: sigue al diseño aplicado (alta de tienda,
+// corrección del plan) — salvo que la categoría elegida ya lo contenga:
+// 'lookbook' vive en 'general' y 'lifestyle' y queda donde lo eligieron.
+const selectedFamilyKey = ref('general')
+const selectedFamily = computed(() => templateFamilies.find((f) => f.key === selectedFamilyKey.value) || templateFamilies[0])
+const selectedFamilyAllowed = computed(() => selectedFamily.value.templates.filter((k) => allowedTemplates.value.includes(k)))
+watch(() => designForm.template, (key) => {
+  if (selectedFamily.value.templates.includes(key)) return
+  const f = templateFamilies.find((f) => f.templates.includes(key))
+  if (f) selectedFamilyKey.value = f.key
+}, { immediate: true })
+function onFamilyPick() {
   // La base de cada familia es 'plus'; si no está permitida, probamos con
   // cualquier variante que el plan sí habilite (fallback defensivo).
-  const first = f.templates.find((k) => allowedTemplates.value.includes(k))
+  const first = selectedFamilyAllowed.value[0]
   if (first) designForm.template = first
 }
-function pickVariant(key) {
-  if (allowedTemplates.value.includes(key)) designForm.template = key
+function stepTemplate(dir) {
+  // Las flechas de la miniatura recorren los estilos permitidos de la
+  // categoría elegida, con wrap-around.
+  const list = selectedFamilyAllowed.value
+  if (list.length < 2) return
+  const i = list.indexOf(designForm.template)
+  designForm.template = list[(i + dir + list.length) % list.length]
 }
 // Plantillas elegibles por nivel de plan (espejo del backend): Básico
 // elige base, Estándar suma 'plus' y Premium todo el catálogo.
 const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
 const designTemplate = computed(() => resolveStoreTemplate(designForm.template, allowedTemplates.value))
-// Si el guardado quedó fuera del nivel (baja de plan o plantilla retirada
-// como 'atelier') el select vuelve al primer diseño permitido.
+// Si el guardado quedó fuera del nivel (baja de plan o una plantilla
+// retirada del catálogo) el select vuelve al primer diseño permitido.
 watch(allowedTemplates, (list) => {
   if (!list.includes(designForm.template)) designForm.template = list[0] || 'classic'
 })
@@ -1303,7 +1319,8 @@ watch(() => store.store, (s) => {
   // hay que tenerla cargada cuando llega el valor guardado.
   ensureStoreFont(designForm.name_font)
   // Si el plan ya estaba cargado y el diseño guardado quedó fuera de su
-  // nivel (baja de plan o plantilla retirada), vuelve al primero permitido.
+  // nivel (baja de plan o plantilla retirada del catálogo), vuelve al
+  // primero permitido.
   if (!allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'classic'
 }, { immediate: true })
 
@@ -4180,39 +4197,40 @@ async function changePassword() {
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
             <div class="field">
-              <label id="design-fam-label"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
-              <div class="fam-strip" role="radiogroup" aria-labelledby="design-fam-label">
-                <button
-                  v-for="f in templateFamilies" :key="f.key" type="button"
-                  class="fam-card" :class="{ on: currentFamily?.key === f.key, locked: !familyAllowed(f) }"
-                  role="radio" :aria-checked="currentFamily?.key === f.key"
-                  :aria-disabled="!familyAllowed(f)" @click="pickFamily(f)"
-                >
-                  <span class="fam-thumb" :data-fam="f.key" aria-hidden="true"><i class="fc-a"></i><i class="fc-b"></i><i class="fc-c"></i><i class="fc-d"></i></span>
-                  <span class="fam-meta">
-                    <strong>{{ f.label }}</strong>
-                    <small>{{ f.caption }}</small>
-                    <span v-if="!familyAllowed(f)" class="fam-lock"><AppIcon name="lock" :size="11" /> {{ familyTier(f) }}</span>
-                    <span v-else-if="currentFamily?.key === f.key" class="fam-on"><AppIcon name="check" :size="11" /> Elegida</span>
-                  </span>
-                </button>
+              <label><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
+              <div class="tpl-selects">
+                <div class="tpl-field">
+                  <label for="design-family" class="tpl-label">Categoría</label>
+                  <select id="design-family" v-model="selectedFamilyKey" class="select" @change="onFamilyPick">
+                    <option
+                      v-for="f in templateFamilies" :key="f.key" :value="f.key"
+                      :disabled="!familyAllowed(f)"
+                    >{{ f.label }}<template v-if="!familyAllowed(f)"> · {{ familyTier(f) }}</template></option>
+                  </select>
+                </div>
+                <div class="tpl-field">
+                  <label for="design-template" class="tpl-label">Estilo</label>
+                  <select id="design-template" v-model="designForm.template" class="select">
+                    <option
+                      v-for="key in selectedFamily.templates" :key="key" :value="key"
+                      :disabled="!allowedTemplates.includes(key)"
+                    >{{ storeTemplates[key]?.label }}<template v-if="!allowedTemplates.includes(key)"> · {{ templatePlanLabel(key) }}</template></option>
+                  </select>
+                </div>
               </div>
-              <div v-if="currentFamily" class="fam-variants" role="radiogroup" aria-label="Variante de la familia">
-                <button
-                  v-for="key in currentFamily.templates" :key="key" type="button"
-                  class="fam-var" :class="{ on: designForm.template === key, locked: !allowedTemplates.includes(key) }"
-                  role="radio" :aria-checked="designForm.template === key"
-                  :aria-disabled="!allowedTemplates.includes(key)" @click="pickVariant(key)"
-                >
-                  {{ storeTemplates[key]?.label }}
-                  <span v-if="!allowedTemplates.includes(key)" class="fam-var-tier"><AppIcon name="lock" :size="10" /> {{ templatePlanLabel(key) }}</span>
-                </button>
+              <div class="pick-preview" aria-live="polite">
+                <span class="tpl-thumb pick-preview-thumb" :data-tpl="designForm.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
+                <div class="pick-preview-info">
+                  <span class="pick-preview-eyebrow">Diseño elegido</span>
+                  <strong>{{ storeTemplates[designForm.template]?.label }}</strong>
+                  <small>{{ storeTemplates[designForm.template]?.desc }}</small>
+                  <span class="pick-tier" :class="storeTemplates[designForm.template]?.tier">{{ templateTierLabel(designForm.template) }}</span>
+                </div>
+                <div class="pick-nav">
+                  <button type="button" class="icon-btn" aria-label="Diseño anterior" :disabled="selectedFamilyAllowed.length < 2" @click="stepTemplate(-1)"><AppIcon name="chevron-left" :size="15" /></button>
+                  <button type="button" class="icon-btn" aria-label="Diseño siguiente" :disabled="selectedFamilyAllowed.length < 2" @click="stepTemplate(1)"><AppIcon name="chevron-right" :size="15" /></button>
+                </div>
               </div>
-              <p class="fam-status" aria-live="polite">
-                Diseño: <strong>{{ storeTemplates[designForm.template]?.label }}</strong>
-                <span class="fam-status-desc">· {{ storeTemplates[designForm.template]?.desc }}</span>
-                <span class="fam-tier" :class="storeTemplates[designForm.template]?.tier">{{ templateTierLabel(designForm.template) }}</span>
-              </p>
               <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido. Los diseños bloqueados se habilitan subiendo de plan.</p>
             </div>
             <div class="field">
