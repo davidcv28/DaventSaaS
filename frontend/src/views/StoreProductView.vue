@@ -24,7 +24,9 @@ const VARIANTS = {
   calma: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
   signature: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
   riso: defineAsyncComponent(() => import('./product/ProductHogar.vue')),
-  terra: defineAsyncComponent(() => import('./product/ProductHogar.vue'))
+  terra: defineAsyncComponent(() => import('./product/ProductHogar.vue')),
+  vitrina: defineAsyncComponent(() => import('./product/ProductLifestyle.vue')),
+  lookbook: defineAsyncComponent(() => import('./product/ProductLifestyle.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || ProductClassic)
 </script>

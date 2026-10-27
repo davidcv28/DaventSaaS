@@ -1,0 +1,172 @@
+/* ===== Familia LIFESTYLE — boutiques, concept stores, marcas =====
+   Una vista cubre dos variantes ([data-var]):
+   - 'vitrina'  → la vidriera: composición asimétrica de ventana,
+     Playfair itálica, tags uppercase, imagen 3:4 protagonista — se
+     compra por deseo, el look primero.
+   - 'lookbook' → el pliego editorial: el layout ya pinta su paleta
+     papel (--lb-* via --sp-*), Fraunces, reglas finas, numeración —
+     se compra como índice de colección.
+   Dato clave del rubro: colecciones/looks — el cliente quiere ver el
+   conjunto antes que la ficha. Solo tokens --sp-* y --store-accent. */
+
+.lf {
+  --lf-display: 'Playfair Display', Georgia, serif;
+  --lf-body: 'Work Sans', var(--store-font), system-ui, sans-serif;
+  --lf-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --lf-ink: var(--sp-ink);
+  --lf-line: color-mix(in srgb, var(--sp-ink) 14%, transparent);
+  --lf-card: var(--sp-card-solid);
+  --lf-radius: 4px;
+  --lf-bw: 1px;
+  --lf-shadow: 0 24px 44px -26px color-mix(in srgb, var(--sp-ink) 45%, transparent);
+  --lf-ease: cubic-bezier(.25, .8, .3, 1);
+  --lf-dur: .22s;
+  font-family: var(--lf-body);
+  color: var(--lf-ink);
+  padding-bottom: clamp(64px, 8vw, 96px);
+}
+.lf[data-var='lookbook'] {
+  --lf-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --lf-body: 'Work Sans', var(--store-font), system-ui, sans-serif;
+  --lf-line: var(--sp-line);
+  --lf-radius: var(--sp-radius, 2px);
+  --lf-shadow: none;
+}
+.lf :is(h1, h2, h3, p, ol, ul, figure, dl, dd, dt) { margin: 0; padding: 0; }
+.lf :is(ol, ul) { list-style: none; }
+.lf img { display: block; }
+.lf s { text-decoration: line-through; }
+.lf :is(a, button, [role='link']):focus-visible { outline: 2px solid var(--store-accent); outline-offset: 3px; }
+
+.lf-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; padding: 0 24px; border: var(--lf-bw) solid var(--lf-ink); border-radius: var(--lf-radius); background: var(--lf-card); color: var(--lf-ink); font-family: var(--lf-body); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: transform var(--lf-dur) var(--lf-ease), box-shadow var(--lf-dur), background var(--lf-dur); }
+.lf-btn:hover { transform: translateY(-2px); box-shadow: var(--lf-shadow); }
+.lf-btn.solid { background: var(--store-accent); border-color: var(--store-accent); color: #fff; }
+.lf-btn.ghost { border-color: var(--lf-line); font-weight: 600; }
+.lf[data-var='lookbook'] .lf-btn { letter-spacing: .16em; }
+
+/* ---------- Hero: la vidriera / la portada del pliego ---------- */
+.lf-hero { position: relative; padding: clamp(30px, 6vw, 72px) 0 clamp(24px, 4vw, 48px); }
+.lf-hero-in { width: min(1140px, 100% - 36px); margin-inline: auto; display: grid; gap: clamp(20px, 3vw, 40px); }
+@media (min-width: 900px) {
+  .lf[data-var='vitrina'] .lf-hero-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; }
+}
+.lf-hero-copy { display: grid; gap: 16px; justify-items: start; }
+.lf[data-var='lookbook'] .lf-hero-copy { justify-items: center; text-align: center; }
+.lf-issue { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--sp-accent-text); }
+.lf[data-var='lookbook'] .lf-issue::before, .lf[data-var='lookbook'] .lf-issue::after { content: ''; width: 38px; height: 1px; background: var(--lf-line); }
+.lf-title { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: clamp(38px, 6.5vw, 76px); line-height: 1.03; text-wrap: balance; }
+.lf[data-var='lookbook'] .lf-title { font-style: normal; font-weight: 560; letter-spacing: .01em; }
+.lf-lede { max-width: 52ch; font-size: clamp(15px, 1.7vw, 17.5px); line-height: 1.65; color: var(--sp-ink-2); }
+.lf-hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+
+/* La ventana: collage de hasta 3 productos reales con números de pieza */
+.lf-window { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.lf-window .lf-frame:nth-child(2) { margin-top: clamp(20px, 4vw, 48px); }
+.lf-frame { position: relative; border: var(--lf-bw) solid var(--lf-line); border-radius: var(--lf-radius); overflow: hidden; background: var(--sp-surface); text-decoration: none; color: inherit; }
+.lf-frame img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; transition: transform .5s var(--lf-ease); }
+.lf-frame:hover img { transform: scale(1.04); }
+.lf-frame-ph { display: block; width: 100%; aspect-ratio: 3 / 4; display: grid; place-items: center; color: var(--sp-muted); }
+.lf-frame-tag { position: absolute; left: 10px; bottom: 10px; padding: 5px 11px; background: var(--lf-card); border: 1px solid var(--lf-line); font-family: var(--lf-mono); font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lf-frame-no { position: absolute; top: 10px; right: 10px; font-family: var(--lf-mono); font-size: 11px; font-weight: 700; color: var(--lf-card); text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.lf[data-var='lookbook'] .lf-frame-no { color: var(--sp-muted); text-shadow: none; }
+
+/* ---------- Secciones ---------- */
+.lf-main { width: min(1140px, 100% - 36px); margin-inline: auto; display: grid; gap: clamp(44px, 6vw, 80px); }
+.lf-sec { display: grid; gap: 20px; }
+.lf-sec-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.lf-sec-title { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: clamp(26px, 4vw, 44px); line-height: 1.05; }
+.lf[data-var='lookbook'] .lf-sec-title { font-style: normal; font-weight: 560; }
+.lf-sec-title em { font-style: normal; color: var(--sp-accent-text); }
+.lf-sec-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-accent-text); text-decoration: none; }
+.lf-sec-link:hover { text-decoration: underline; }
+
+/* Índice de colección (lookbook) / la selección (vitrina) */
+.lf-index { display: grid; border-top: 1px solid var(--lf-line); }
+.lf-index-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; padding: 15px 4px; border-bottom: 1px solid var(--lf-line); text-decoration: none; color: inherit; transition: background var(--lf-dur); }
+.lf-index-row:hover { background: color-mix(in srgb, var(--store-accent) 5%, transparent); }
+.lf-index-no { font-family: var(--lf-mono); font-size: 12px; font-weight: 700; color: var(--sp-muted); }
+.lf-index-name { font-family: var(--lf-display); font-size: clamp(17px, 2.2vw, 22px); font-weight: 500; }
+.lf[data-var='vitrina'] .lf-index-name { font-style: italic; }
+.lf-index-meta { font-family: var(--lf-mono); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lf-index-meta s { font-weight: 400; color: var(--sp-muted); margin-right: 8px; }
+
+/* Grilla de piezas */
+.lf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 768px) { .lf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; } }
+.lf-card { display: grid; grid-template-rows: auto 1fr; text-decoration: none; color: inherit; }
+.lf-card-media { position: relative; aspect-ratio: 3 / 4; background: var(--sp-surface); border: var(--lf-bw) solid var(--lf-line); border-radius: var(--lf-radius); overflow: hidden; }
+.lf-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--lf-ease); }
+.lf-card:hover .lf-card-media img { transform: scale(1.05); }
+.lf-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
+.lf-card-seal { position: absolute; top: 10px; left: 10px; }
+.lf-card-body { display: grid; gap: 5px; padding: 12px 2px 0; align-content: start; }
+.lf-card-cat { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--sp-muted); }
+.lf-card-name { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: 15.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lf[data-var='lookbook'] .lf-card-name { font-style: normal; }
+.lf-card-price { display: flex; align-items: baseline; gap: 8px; }
+.lf-card-price s { font-size: 12px; color: var(--sp-muted); }
+.lf-card-price strong { font-family: var(--lf-mono); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.lf-card-price strong.deal { color: var(--sp-accent-text); }
+
+/* Opiniones como cita de prensa */
+.lf-quotes { display: grid; gap: 14px; }
+@media (min-width: 768px) { .lf-quotes { grid-template-columns: repeat(3, 1fr); } }
+.lf-quote { display: grid; gap: 12px; align-content: start; padding: 22px 0 0; border-top: 2px solid var(--lf-ink); }
+.lf-quote-text { font-family: var(--lf-display); font-style: italic; font-size: 16px; line-height: 1.55; }
+.lf[data-var='lookbook'] .lf-quote-text { font-style: normal; }
+.lf-quote-by strong { display: block; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; }
+.lf-quote-by span { font-size: 12px; color: var(--sp-muted); }
+
+/* CTA final */
+.lf-cta { text-align: center; padding: clamp(30px, 6vw, 60px) clamp(18px, 4vw, 48px); border-top: 2px solid var(--lf-ink); border-bottom: 1px solid var(--lf-line); }
+.lf-cta h2 { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: clamp(28px, 5vw, 52px); line-height: 1.06; text-wrap: balance; }
+.lf[data-var='lookbook'] .lf-cta h2 { font-style: normal; font-weight: 560; }
+.lf-cta p { margin: 12px auto 22px; max-width: 46ch; color: var(--sp-ink-2); font-size: 15px; }
+.lf-cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+.lf-empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 56px 20px; }
+.lf-empty-mark { display: grid; place-items: center; width: 58px; height: 58px; border: 1.5px solid var(--lf-ink); color: var(--sp-accent-text); }
+.lf-empty h2 { font-family: var(--lf-display); font-size: 20px; font-weight: 600; }
+.lf-empty p { color: var(--sp-muted); max-width: 44ch; }
+
+/* =====================================================================
+   FICHA — la pieza en contexto (completá el look)
+   ===================================================================== */
+.lf-pd { width: min(1140px, 100% - 36px); margin-inline: auto; padding: 20px 0 40px; display: grid; gap: 28px; }
+.lf-crumbs { display: flex; align-items: center; gap: 6px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--sp-muted); flex-wrap: wrap; }
+.lf-crumbs a { color: inherit; font-weight: 600; text-decoration: none; }
+.lf-crumbs a:hover { text-decoration: underline; }
+.lf-crumbs [aria-current] { color: var(--lf-ink); font-weight: 600; }
+.lf-pd-sheet { display: grid; gap: clamp(22px, 4vw, 56px); }
+@media (min-width: 900px) { .lf-pd-sheet { grid-template-columns: minmax(0, 44%) minmax(0, 1fr); align-items: start; } }
+.lf-pd-media { position: relative; }
+.lf-pd-media .sgal { border: var(--lf-bw) solid var(--lf-line); border-radius: var(--lf-radius); overflow: hidden; }
+.lf-pd-seal { position: absolute; top: 14px; left: 14px; z-index: 2; }
+.lf-pd-info { display: grid; gap: 14px; align-content: start; }
+.lf-pd-cat { font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--sp-accent-text); }
+.lf-pd-name { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: clamp(28px, 3.8vw, 48px); line-height: 1.04; text-wrap: balance; }
+.lf[data-var='lookbook'] .lf-pd-name { font-style: normal; font-weight: 560; }
+.lf-pd-pricebox { display: grid; gap: 8px; padding: 16px 0; border-top: 1px solid var(--lf-line); border-bottom: 1px solid var(--lf-line); }
+.lf-pd-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; }
+.lf-pd-price s { font-size: clamp(15px, 1.7vw, 19px); color: var(--sp-muted); font-weight: 600; }
+.lf-pd-price strong { font-family: var(--lf-mono); font-size: clamp(28px, 3.6vw, 42px); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.lf-pd-save { font-size: 13px; font-weight: 800; color: var(--sp-accent-text); font-variant-numeric: tabular-nums; }
+.lf-pd-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+.lf-pd-buy { flex: 1 1 240px; }
+.lf-pd-rows { border-top: 1px solid var(--lf-line); }
+.lf-pd-rows .row { display: grid; grid-template-columns: minmax(110px, 36%) 1fr; gap: 10px; padding: 10px 2px; border-bottom: 1px dashed var(--lf-line); font-size: 14px; }
+.lf-pd-rows dt { color: var(--sp-muted); font-weight: 600; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.lf-pd-rows dd { font-family: var(--lf-mono); font-size: 13px; font-weight: 600; }
+.lf-pd-desc { font-size: 15px; line-height: 1.7; color: var(--sp-ink-2); }
+.lf-pd-rail .lf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 768px) { .lf-pd-rail .lf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.lf-sbb { display: grid; gap: 1px; }
+.lf-sbb strong { font-family: var(--lf-mono); font-size: 17px; font-variant-numeric: tabular-nums; }
+.lf-sbb em { font-style: normal; font-size: 11.5px; color: var(--sp-muted); }
+.lf-sbb-cta { min-height: 46px; }
+
+@media (max-width: 640px) { .lf-window { grid-template-columns: 1fr 1fr; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lf, .lf *, .lf *::before, .lf *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

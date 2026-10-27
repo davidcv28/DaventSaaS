@@ -117,7 +117,7 @@ class StoreCustomization(models.Model):
     #has_design_plus (Estándar) y la variante extra solo con
     #has_design_advanced (Premium). 'street' (Urbano) ya era plus — es la
     #variante cruda de Indumentaria y queda en su nivel para no regresionar.
-    TEMPLATE_PLUS               =   ('street', 'promo', 'atelier', 'circuit', 'mercado', 'studio', 'arena', 'calma')
+    TEMPLATE_PLUS               =   ('street', 'promo', 'atelier', 'circuit', 'mercado', 'studio', 'arena', 'calma', 'vitrina')
     TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'terra', 'lab', 'carta', 'proceso')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
@@ -145,6 +145,7 @@ class StoreCustomization(models.Model):
         ('proceso',          'Proceso'),
         ('arena',            'Arena'),
         ('calma',            'Calma'),
+        ('vitrina',          'Vitrina'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

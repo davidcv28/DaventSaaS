@@ -29,6 +29,7 @@ const VARIANTS = {
   boutique: defineAsyncComponent(() => import('./catalog/CatalogBoutique.vue')),
   calma: defineAsyncComponent(() => import('./catalog/CatalogBelleza.vue')),
   signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue')),
+  vitrina: defineAsyncComponent(() => import('./catalog/CatalogLifestyle.vue')),
   aurora: defineAsyncComponent(() => import('./catalog/CatalogAurora.vue')),
   bloque: defineAsyncComponent(() => import('./catalog/CatalogBloque.vue')),
   riso: defineAsyncComponent(() => import('./catalog/CatalogRiso.vue')),
