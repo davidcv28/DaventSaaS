@@ -20,7 +20,7 @@ import '../../assets/store-circuit.css'
 const {
   custom, shopName, pageTemplate, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
-  shownLabel, brandNameOf, categoryNameOf, openProduct
+  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 13 })
 
 const variant = computed(() => (pageTemplate.value === 'lab' ? 'lab' : 'circuit'))
@@ -84,7 +84,7 @@ const specsOf = (x) => {
           </TplProductCard>
         </BentoGrid>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

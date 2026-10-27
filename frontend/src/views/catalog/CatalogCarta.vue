@@ -18,7 +18,7 @@ import '../../assets/store-mercado.css'
 const {
   custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
-  shownLabel, categoryNameOf, openProduct
+  shownLabel, shownPct, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 20 })
 
 const groups = computed(() => {
@@ -73,7 +73,7 @@ const waOrder = (prod) => waNum.value
           </section>
         </div>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

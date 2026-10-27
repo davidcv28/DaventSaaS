@@ -19,7 +19,7 @@ import TplProductCard from '../../components/store/TplProductCard.vue'
 const {
   custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
-  shownLabel, openProduct
+  shownLabel, shownPct, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
 const dietaTone = (v) => (/vegano|vegetariano/.test(v) ? 'veg' : /tacc|gluten/.test(v) ? 'tacc' : /az[uú]car|keto|light/.test(v) ? 'sin-azucar' : '')
@@ -70,7 +70,7 @@ const waOrder = (prod) => waNum.value
           </TplProductCard>
         </div>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

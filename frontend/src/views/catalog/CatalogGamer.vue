@@ -19,7 +19,7 @@ import '../../assets/store-gamer.css'
 const {
   ctx, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters,
-  total, shownLabel, categoryNameOf, openProduct
+  total, shownLabel, shownPct, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
 const variant = computed(() => (ctx.pageTemplate.value === 'terminal' ? 'terminal' : 'arena'))
@@ -64,7 +64,7 @@ const specChips = (prod, n = 2) => Object.entries(prod.features || {}).slice(0, 
           </TplProductCard>
         </div>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

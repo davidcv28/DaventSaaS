@@ -18,7 +18,7 @@ import '../../assets/store-lifestyle.css'
 const {
   custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters,
-  total, shownLabel, categoryNameOf, openProduct
+  total, shownLabel, shownPct, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
 
@@ -56,7 +56,7 @@ const {
             new-label="Nueva" offer-new ph-icon="image" :go="false" @open="openProduct" />
         </div>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

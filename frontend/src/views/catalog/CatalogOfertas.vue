@@ -19,7 +19,7 @@ import '../../assets/store-ofertas.css'
 const {
   ctx, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters,
-  total, shownLabel, categoryNameOf, openProduct
+  total, shownLabel, shownPct, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
 const variant = computed(() => (ctx.pageTemplate.value === 'shop' ? 'shop' : 'promo'))
@@ -64,7 +64,7 @@ const endsOf = (prod) => offerEndsLabel(productDiscount(prod))
             @open="openProduct" />
         </div>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

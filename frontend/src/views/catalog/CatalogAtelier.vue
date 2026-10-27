@@ -18,7 +18,7 @@ import '../../assets/store-atelier.css'
 const {
   custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
-  shownLabel, brandNameOf, categoryNameOf, openProduct
+  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
 const cellClass = (i) => ['big', '', '', 'big inv'][i % 4]
@@ -67,7 +67,7 @@ const corteOf = (p) => {
           </TplProductCard>
         </div>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>

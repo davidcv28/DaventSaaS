@@ -20,7 +20,7 @@ import TplProductCard from '../../components/store/TplProductCard.vue'
 const {
   custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, pageTemplate,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
-  shownLabel, categoryNameOf, openProduct
+  shownLabel, shownPct, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 10 })
 const variant = computed(() => (pageTemplate.value === 'proceso' ? 'proceso' : 'studio'))
 
@@ -70,7 +70,7 @@ const tagsOf = (p) => {
           </li>
         </ul>
 
-        <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />
+        <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
     </div>
   </main>
