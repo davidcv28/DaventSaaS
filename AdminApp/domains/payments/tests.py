@@ -274,12 +274,13 @@ class WebhookDedupTests(TestCase):
     @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
     def test_failed_processing_releases_dedup_key(self, webhook_query):
         #Si el procesamiento explota, la marca se libera: el retry de MP con
-        #el mismo request-id no queda absorbido y puede reintentarse.
+        #el mismo request-id no queda absorbido y puede reintentarse. El error
+        #sale como 500 genérico (EXCEPTION_HANDLER), sin propagar la excepción.
         webhook_query.side_effect   =   [Exception('boom'), None]
         headers     =   _signature_headers('12345', request_id = 'req-retry')
         payload     =   {'type': 'payment', 'data': {'id': '12345'}}
-        with self.assertRaises(Exception):
-            self.client.post(SIGNED_URL, payload, format = 'json', **headers)
+        first       =   self.client.post(SIGNED_URL, payload, format = 'json', **headers)
+        self.assertEqual(first.status_code, 500)
         second      =   self.client.post(SIGNED_URL, payload, format = 'json', **headers)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(webhook_query.call_count, 2)
@@ -750,6 +751,23 @@ class WebhookSignedIdTests(TestCase):
         )
         self.assertEqual(response.status_code, 413)
         webhook_query.assert_not_called()
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_unhandled_error_returns_generic_500(self, webhook_query):
+        #Un bug en el procesamiento jamás devuelve la traza ni el mensaje
+        #interno al cliente: el EXCEPTION_HANDLER responde 500 genérico.
+        webhook_query.side_effect =   Exception('boom interno con datos de MP')
+        response    =   self.client.post(
+            SIGNED_URL,
+            {'type': 'payment', 'data': {'id': '12345'}},
+            format = 'json',
+            **_signature_headers('12345', request_id = 'req-500'),
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertNotIn('boom interno', response.content.decode())
+        self.assertNotIn('Traceback', response.content.decode())
+        self.assertNotIn('Exception', response.content.decode())
 
     @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
     @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')

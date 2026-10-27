@@ -16,7 +16,6 @@ Diseño:
 """
 import base64
 import logging
-import re
 import time
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
@@ -36,6 +35,7 @@ from django.core.cache import cache
 
 from AdminApp.domains.invoices.models import Invoice
 from AdminApp.domains.invoices.services import vault
+from DaventProject import logscrub
 
 logger          =   logging.getLogger(__name__)
 AR_TZ           =   ZoneInfo('America/Argentina/Buenos_Aires')
@@ -81,22 +81,12 @@ def _env() -> str:
     return  env if env in WSAA_URL else 'testing'
 
 
-_SECRET_PATTERNS    =   (
-    (re.compile(r'-----BEGIN [A-Z ]+-----.*?(-----END [A-Z ]+-----|$)', re.S), '[PEM]'),
-    (re.compile(r'(?i)(token|sign|cms|authorization|bearer)(["\'>=:\s]+)[A-Za-z0-9+/=_.\-]{16,}'), r'\1\2[REDACTED]'),
-    (re.compile(r'enc:v1:[A-Za-z0-9_.\-:]+'), '[ENC]'),
-    (re.compile(r'(?:[A-Za-z]:)?[\\/](?:[\w.\- ]+[\\/])+[\w.\-]+'), '[PATH]'),
-    (re.compile(r'\b\d{11}\b'), '[CUIT]'),
-)
-
-
+#El redactor de secretos vive en DaventProject.logscrub (mismo set de
+#patrones para afip_error y para el filtro global de stdout).
 def scrub(message) -> str:
     #Nada de material sensible (PEM, Token/Sign, rutas, CUIT) en afip_error ni
     #en logs: ese texto termina en la DB, el panel admin y stdout.
-    text    =   str(message)
-    for pattern, replacement in _SECRET_PATTERNS:
-        text    =   pattern.sub(replacement, text)
-    return  text[:500]
+    return  logscrub.scrub(message)
 
 
 def _read_pem(value : str, purpose : str = 'AFIP_CERT') -> bytes:

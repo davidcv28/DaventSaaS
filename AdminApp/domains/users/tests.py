@@ -813,3 +813,107 @@ class EncryptedProfileFieldsTests(TestCase):
             self.assertEqual(profile.phone, '+5491122334455')
             #Idempotente: nada que hacer con todo ya en la llave activa.
             call_command('rotate_encrypted_fields')
+
+
+#=========================================
+# FUGA DE DATOS EN LOGS / RESPUESTAS 500
+#=========================================
+import io as _io
+import logging as _logging
+
+from DaventProject.logscrub import ScrubSecretsFilter, scrub as _scrub
+
+_PEM_TEST   =   '-----BEGIN PRIVATE KEY-----\nMIIBVgIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----'
+_TOKEN_TEST =   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 'A' * 40 + '.sig12345'
+
+
+class LogScrubFilterTests(TestCase):
+    """El filtro global `scrub_secrets` sanitiza msg, args y trazas: ningún
+    logger — ni uno nuevo que loguee mal — vuelca secretos por stdout."""
+
+    def _emit(self, msg, *args, **kwargs):
+        stream      =   _io.StringIO()
+        handler     =   _logging.StreamHandler(stream)
+        handler.addFilter(ScrubSecretsFilter())
+        logger      =   _logging.getLogger('test.scrub')
+        logger.addHandler(handler)
+        logger.propagate    =   False
+        try:
+            logger.error(msg, *args, **kwargs)
+        finally:
+            logger.removeHandler(handler)
+        return stream.getvalue()
+
+    def test_pem_and_bearer_never_reach_stdout(self):
+        output      =   self._emit('fallo %s Authorization: Bearer %s', _PEM_TEST, _TOKEN_TEST)
+        self.assertNotIn('PRIVATE KEY', output)
+        self.assertNotIn('eyJ', output)
+        self.assertNotIn('A' * 40, output)
+
+    def test_pem_logged_as_arg_is_scrubbed(self):
+        #El caso peligroso: un dev loguea el objeto equivocado como arg.
+        output      =   self._emit('payload crudo: %s', _PEM_TEST)
+        self.assertNotIn('PRIVATE KEY', output)
+        self.assertIn('[PEM]', output)
+
+    def test_exception_traceback_is_scrubbed(self):
+        #logger.exception vuelca la traza en exc_text — el mensaje de la
+        #excepción tampoco puede llevar secretos a stdout.
+        try:
+            raise ValueError(f'no arranca {_PEM_TEST} token={_TOKEN_TEST}')
+        except ValueError:
+            output  =   self._emit('init roto', exc_info = True)
+        self.assertNotIn('PRIVATE KEY', output)
+        self.assertNotIn('eyJ', output)
+        self.assertIn('ValueError', output)     # la traza sigue siendo útil
+
+    def test_cuit_and_enc_tokens_are_scrubbed(self):
+        output      =   self._emit('cuit %s secreto %s', '20123456789', 'enc:v1:k1:abc123')
+        self.assertNotIn('20123456789', output)
+        self.assertNotIn('enc:v1:k1:', output)
+
+    def test_console_handler_has_the_filter_wired(self):
+        #El wiring real de settings.LOGGING: el handler 'console' lleva el
+        #filtro — cubre root + django.request (los 500 con traza).
+        console     =   _logging.getLogger().handlers[0]
+        self.assertTrue(
+            any(isinstance(f, ScrubSecretsFilter) for f in console.filters),
+            'El handler console del root no tiene ScrubSecretsFilter',
+        )
+        #End-to-end: un logger nuevo del proyecto sale por stdout sanitizado.
+        old_stream  =   console.stream
+        stream      =   _io.StringIO()
+        try:
+            console.stream  =   stream
+            _logging.getLogger('dev.nuevo').error('boom %s Authorization: Bearer %s', _PEM_TEST, _TOKEN_TEST)
+        finally:
+            console.stream  =   old_stream
+        output      =   stream.getvalue()
+        self.assertNotIn('PRIVATE KEY', output)
+        self.assertNotIn('eyJ', output)
+
+    def test_scrub_keeps_message_and_truncates(self):
+        self.assertEqual(_scrub('hola mundo'), 'hola mundo')
+        self.assertTrue(len(_scrub('x' * 1000)) <= 500)
+
+
+class GenericErrorResponseTests(TestCase):
+    """Un error interno de una vista DRF responde 500 genérico: sin traza,
+    sin el mensaje de la excepción, sin datos internos."""
+
+    def test_non_drf_exception_returns_generic_500(self):
+        from DaventProject.exceptions import exception_handler
+        from rest_framework.test import APIRequestFactory
+        request     =   APIRequestFactory().get('/api/fake/')
+        context     =   {'view': None, 'request': request}
+        try:
+            raise RuntimeError(f'secreto {_PEM_TEST}')
+        except RuntimeError as exc:
+            with self.assertLogs('DaventProject.exceptions', level = 'ERROR'):
+                response    =   exception_handler(exc, context)
+        self.assertEqual(response.status_code, 500)
+        body        =   str(response.data)
+        self.assertNotIn('PRIVATE KEY', body)
+        self.assertNotIn('RuntimeError', body)
+        self.assertNotIn('Traceback', body)
+        self.assertIn('Error interno', body)

@@ -116,6 +116,10 @@ REST_FRAMEWORK = {
     #throttle pasa a ser el ÚLTIMO valor — el que agregó el proxy. Si se suma
     #Cloudflare delante, subir a 2 vía NUM_TRUSTED_PROXIES.
     'NUM_PROXIES': config('NUM_TRUSTED_PROXIES', default = 1, cast = int),
+
+    #Excepciones no-DRF (bugs, errores internos): respuesta 500 genérica sin
+    #traza ni datos internos — el detalle queda en logs (filtro scrub_secrets).
+    'EXCEPTION_HANDLER': 'DaventProject.exceptions.exception_handler',
 }
 # JWT: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ (el JS del
 # frontend nunca lo lee — anti-robo por XSS); el ACCESS va solo en memoria del
@@ -383,9 +387,17 @@ SECRETS_HASH_KEY = config('SECRETS_HASH_KEY', default = '')
 # logger.warning/exception del proyecto (webhooks de MP, fallos de email,
 # auditoría de seguridad) se perdían en producción. stdout lo captura
 # gunicorn/Docker/Render; LOG_LEVEL se ajusta por .env si hace falta.
+# El filtro 'scrub_secrets' redacta PEM/tokens/Authorization/CUIT en TODOS
+# los mensajes, args y trazas (ver DaventProject.logscrub): un dev nuevo no
+# puede filtrar un secreto por stdout aunque loguee el objeto equivocado.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'scrub_secrets': {
+            '()': 'DaventProject.logscrub.ScrubSecretsFilter',
+        },
+    },
     'formatters': {
         'plain': {
             'format': '[{levelname}] {asctime} {name}: {message}',
@@ -396,6 +408,7 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'plain',
+            'filters': ['scrub_secrets'],
         },
     },
     'root': {
