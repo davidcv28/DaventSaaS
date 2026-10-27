@@ -832,9 +832,6 @@ onBeforeUnmount(() => {
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
               </button>
             </div>
-            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
-              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
-            </ul>
           </div>
           <div v-reveal="140" class="sp-cl-art">
             <figure class="sp-cl-frame" :class="{ 'is-logo': !clImg }">
@@ -845,6 +842,12 @@ onBeforeUnmount(() => {
             <span class="sp-cl-chip c1"><span class="sp-cl-chip-ico"><AppIcon :name="clChipA.icon" :size="15" :stroke="2.25" /></span>{{ clChipA.text }}</span>
             <span class="sp-cl-chip c2"><span class="sp-cl-chip-ico"><AppIcon :name="clChipB.icon" :size="15" :stroke="2.25" /></span>{{ clChipB.text }}</span>
           </div>
+          <!-- Barra de confianza bajo el hero: estado, ubicación y WhatsApp
+               a todo el ancho de la banda (una columna en pantallas chicas). -->
+          <ul v-if="heroMeta.length || whatsappUrl" v-reveal="360" class="sp-cl-trust">
+            <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+            <li v-if="whatsappUrl" class="sp-cl-trust-wa"><a :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="14" /> WhatsApp</a></li>
+          </ul>
         </template>
         <template v-else>
           <span v-reveal class="sp-ava">
