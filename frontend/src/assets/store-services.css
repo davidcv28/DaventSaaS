@@ -386,6 +386,7 @@
   font-family: var(--sv-display); text-transform: uppercase; letter-spacing: .01em;
   text-shadow: 2px 2px 0 color-mix(in srgb, var(--sv-acc) 22%, var(--sv-card));
 }
+
 @media (max-width: 768px) {
   .store-page[data-store-template='perspective'] .sv-item,
   .store-page[data-store-template='perspective'] .sv-item:hover {
@@ -678,7 +679,53 @@
 }
 .store-page[data-store-template='promo'] .sv-btn--ghost { border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); }
 .store-page[data-store-template='promo'] .sv-hero h1 .hl { color: var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sv-hero h1 .hl::after { border-radius: 3px; rotate: -1.5deg; background: var(--sp-yellow, #ffe14d); height: .38em; }
 .store-page[data-store-template='promo'] .sv-stage { border-color: var(--sp-ink-hard, #111827); }
+
+/* El picker es una góndola de ofertas: el precio manda (placa amarilla
+   gigante arriba), badge "OFERTA" rotado en la esquina y acción dura.
+   El círculo +/✓ migra a la izquierda para no chocar con el badge. */
+.store-page[data-store-template='promo'] .sv-item {
+  border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 6px 6px 0 var(--sp-ink-hard, #111827);
+  border-radius: 16px;
+}
+.store-page[data-store-template='promo'] .sv-item::before {
+  content: 'OFERTA'; inset: auto; position: absolute; top: 12px; right: 10px; z-index: 2;
+  padding: 3px 10px; rotate: 5deg; opacity: 1; background: var(--sv-acc); color: var(--sv-on-acc);
+  border: 2px solid var(--sp-ink-hard, #111827); border-radius: 6px;
+  font-size: 10px; font-weight: 900; letter-spacing: .12em; transition: none;
+}
+.store-page[data-store-template='promo'] .sv-item:hover::before { opacity: 1; }
+.store-page[data-store-template='promo'] .sv-item::after { right: auto; left: 12px; top: 12px; }
+.store-page[data-store-template='promo'] .sv-item .ico {
+  width: 46px; height: 46px; border-radius: 10px;
+  background: var(--sv-card); color: var(--sv-fg); border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827);
+}
+.store-page[data-store-template='promo'] .sv-item h3 { padding-right: 62px; text-transform: uppercase; font-weight: 850; letter-spacing: -.01em; }
+.store-page[data-store-template='promo'] .sv-item .meta { order: -2; margin: 0 0 12px; padding: 0; border: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
+.store-page[data-store-template='promo'] .sv-item .price {
+  order: -1; font-family: var(--sv-display); font-size: clamp(26px, 3vw, 34px); line-height: 1;
+  background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827);
+  border: 2px solid var(--sp-ink-hard, #111827); border-radius: 10px; padding: 7px 14px;
+  box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827); rotate: -1.2deg;
+}
+.store-page[data-store-template='promo'] .sv-item .dur { font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+.store-page[data-store-template='promo'] .sv-item .act {
+  border: 2px solid var(--sp-ink-hard, #111827); border-radius: 10px; background: var(--sp-yellow, #ffe14d);
+  color: var(--sp-ink-hard, #111827); font-weight: 900; text-transform: uppercase; letter-spacing: .05em;
+  box-shadow: 3px 3px 0 var(--sp-ink-hard, #111827);
+}
+.store-page[data-store-template='promo'] .sv-item:hover .act { border-color: var(--sp-ink-hard, #111827); color: var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sv-item[aria-pressed='true'] .act { background: var(--sv-fg); color: var(--sv-card); border-color: var(--sv-fg); }
+.store-page[data-store-template='promo'] .sv-item[aria-pressed='true']::before { content: '¡ELEGIDA!'; background: var(--sv-ok); color: var(--sv-on-ok); }
+@media (max-width: 768px) {
+  .store-page[data-store-template='promo'] .sv-item { box-shadow: 4px 4px 0 var(--sp-ink-hard, #111827); }
+  .store-page[data-store-template='promo'] .sv-item .price { rotate: 0deg; }
+}
+/* Barra móvil como CTA de afiche (amarillo, borde duro) — el bottom
+   con dock ya lo resuelve la regla .has-dock compartida. */
+.store-page[data-store-template='promo'] .sv-bar-main { background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); border: 2px solid var(--sp-ink-hard, #111827); box-shadow: 5px 5px 0 var(--sp-ink-hard, #111827); }
+.store-page[data-store-template='promo'] .sv-bar-cta { background: var(--sv-fg); color: var(--sv-card); }
 
 /* ---------- Terminal: consola fosforescente ---------- */
 .store-page[data-store-template='terminal'] .sv-page {
