@@ -25,11 +25,14 @@ from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.payments.services.services import (
     CancelPreapprovalQuery,
     CreatePaymentQuery,
+    PaymentWebhookQuery,
     SyncPreapprovalQuery,
     UpdateRevenueRollupsQuery,
 )
 
 WEBHOOK_URL = '/api/payments/webhook/'
+#MP real: el data.id firmado viaja en el query string, no en el body.
+SIGNED_URL  = WEBHOOK_URL + '?data.id=12345&topic=payment'
 SECRET      = 'test-webhook-secret'
 
 
@@ -50,9 +53,9 @@ class MercadoPagoWebhookSignatureTests(TestCase):
     #body, dejando 'data' como string (y el endpoint real recibe JSON de MP).
     client_class    =   APIClient
 
-    def _post(self, signature_headers = None):
+    def _post(self, signature_headers = None, url = None):
         return self.client.post(
-            WEBHOOK_URL,
+            url or SIGNED_URL,
             {'type': 'payment', 'data': {'id': '12345'}},
             format = 'json',
             **(signature_headers or {}),
@@ -212,7 +215,7 @@ class WebhookReplayTests(TestCase):
         #el mismo evento para siempre. ts >10min -> 401.
         old_ts          =   str(int(timezone.now().timestamp()) - 3600)
         response        =   self.client.post(
-            WEBHOOK_URL,
+            SIGNED_URL,
             {'type': 'payment', 'data': {'id': '12345'}},
             format = 'json',
             **_signature_headers('12345', ts = old_ts),
@@ -225,7 +228,7 @@ class WebhookReplayTests(TestCase):
         ts_ms           =   str(int(timezone.now().timestamp() * 1000))
         with patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery'):
             response    =   self.client.post(
-                WEBHOOK_URL,
+                SIGNED_URL,
                 {'type': 'payment', 'data': {'id': '12345'}},
                 format = 'json',
                 **_signature_headers('12345', ts = ts_ms),
@@ -247,8 +250,8 @@ class WebhookDedupTests(TestCase):
     def test_duplicate_delivery_is_deduped(self, webhook_query):
         headers     =   _signature_headers('12345', request_id = 'req-dup-1')
         payload     =   {'type': 'payment', 'data': {'id': '12345'}}
-        first       =   self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
-        second      =   self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
+        first       =   self.client.post(SIGNED_URL, payload, format = 'json', **headers)
+        second      =   self.client.post(SIGNED_URL, payload, format = 'json', **headers)
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 200)
         webhook_query.assert_called_once_with('12345')
@@ -261,7 +264,7 @@ class WebhookDedupTests(TestCase):
         payload     =   {'type': 'payment', 'data': {'id': '12345'}}
         for rid in ('req-a', 'req-b'):
             response    =   self.client.post(
-                WEBHOOK_URL, payload, format = 'json',
+                SIGNED_URL, payload, format = 'json',
                 **_signature_headers('12345', request_id = rid),
             )
             self.assertEqual(response.status_code, 200)
@@ -276,8 +279,8 @@ class WebhookDedupTests(TestCase):
         headers     =   _signature_headers('12345', request_id = 'req-retry')
         payload     =   {'type': 'payment', 'data': {'id': '12345'}}
         with self.assertRaises(Exception):
-            self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
-        second      =   self.client.post(WEBHOOK_URL, payload, format = 'json', **headers)
+            self.client.post(SIGNED_URL, payload, format = 'json', **headers)
+        second      =   self.client.post(SIGNED_URL, payload, format = 'json', **headers)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(webhook_query.call_count, 2)
 
@@ -678,7 +681,7 @@ class WebhookIdInjectionTests(TestCase):
     def test_path_traversal_id_never_reaches_mp_api(self, webhook_query):
         evil        =   '../users/me?x='
         response    =   self.client.post(
-            WEBHOOK_URL,
+            WEBHOOK_URL + f'?data.id={evil}&topic=payment',
             {'type': 'payment', 'data': {'id': evil}},
             format = 'json',
             **_signature_headers(evil),
@@ -692,3 +695,138 @@ class WebhookIdInjectionTests(TestCase):
             with self.assertRaises(serializers.ValidationError):
                 GetAuthorizedPayment('1/../../users')
             http.assert_not_called()
+
+
+#=========================================
+# WEBHOOK MP — DEFENSA EN PROFUNDIDAD
+#=========================================
+class WebhookSignedIdTests(TestCase):
+    """El data.id procesado es SOLO el firmado (query string): el del body no
+    está cubierto por la firma y un replay no puede redirigir el evento."""
+    client_class    =   APIClient
+
+    def setUp(self):
+        #El dedup por x-request-id vive en el cache compartido de la suite.
+        cache.clear()
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_body_id_is_ignored_when_query_id_signed(self, webhook_query):
+        #Body forjado con otro id + firma válida del query: se procesa el 12345
+        #firmado, jamás el 99999 del body (y queda logueado el mismatch).
+        url         =   WEBHOOK_URL + '?data.id=12345&topic=payment'
+        response    =   self.client.post(
+            url,
+            {'type': 'payment', 'data': {'id': '99999'}},
+            format = 'json',
+            **_signature_headers('12345', request_id = 'req-signed-1'),
+        )
+        self.assertEqual(response.status_code, 200)
+        webhook_query.assert_called_once_with('12345')
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_body_id_without_signed_query_id_is_rejected(self, webhook_query):
+        #Una firma válida sobre un id que NO viajó en el query string no vale:
+        #el data.id firmado es el único que cuenta.
+        response    =   self.client.post(
+            WEBHOOK_URL,
+            {'type': 'payment', 'data': {'id': '99999'}},
+            format = 'json',
+            **_signature_headers('99999', request_id = 'req-signed-2'),
+        )
+        self.assertEqual(response.status_code, 401)
+        webhook_query.assert_not_called()
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_rejects_oversized_body(self, webhook_query):
+        #Un webhook de MP legítimo es chico; >16KB se corta antes del parseo.
+        response    =   self.client.post(
+            SIGNED_URL,
+            {'type': 'payment', 'data': {'id': '12345', 'pad': 'x' * (17 * 1024)}},
+            format = 'json',
+            **_signature_headers('12345', request_id = 'req-signed-3'),
+        )
+        self.assertEqual(response.status_code, 413)
+        webhook_query.assert_not_called()
+
+    @patch.dict(os.environ, {'MP_WEBHOOK_SECRET': SECRET})
+    @patch('AdminApp.domains.payments.views.viewset.PaymentWebhookQuery')
+    def test_normal_sized_body_still_processed(self, webhook_query):
+        response    =   self.client.post(
+            SIGNED_URL,
+            {'type': 'payment', 'data': {'id': '12345'}},
+            format = 'json',
+            **_signature_headers('12345', request_id = 'req-signed-4'),
+        )
+        self.assertEqual(response.status_code, 200)
+        webhook_query.assert_called_once_with('12345')
+
+
+class PaymentLiveModeTests(TestCase):
+    """live_mode=False identifica cobros de prueba de MP: en producción se
+    rechazan antes de acreditar el plan; el detalle viaja al Payment."""
+
+    def _mp_payment(self, suscription, **overrides):
+        payload     =   {
+            'id'                :   555,
+            'status'            :   'approved',
+            'status_detail'     :   'accredited',
+            'live_mode'         :   True,
+            'external_reference':   str(suscription.id),
+            'transaction_amount':   1000,
+            'currency_id'       :   'ARS',
+            'date_approved'     :   '2026-10-27T10:00:00.000-03:00',
+        }
+        payload.update(overrides)
+        return payload
+
+    @override_settings(DEBUG = False)
+    @patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment')
+    def test_test_payment_rejected_in_production(self, get_payment):
+        suscription                 =   _make_suscription()
+        get_payment.return_value    =   self._mp_payment(suscription, live_mode = False)
+        with self.assertRaises(serializers.ValidationError):
+            CreatePaymentQuery({
+                'user'          :   suscription.user,
+                'suscription'   :   suscription,
+                'payment_id'    :   '555',
+            })
+        self.assertFalse(Payment.objects.filter(external_reference = '555').exists())
+
+    @override_settings(DEBUG = False)
+    @patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment')
+    def test_webhook_test_payment_rejected_in_production(self, get_payment):
+        suscription                 =   _make_suscription()
+        get_payment.return_value    =   self._mp_payment(suscription, live_mode = False)
+        with self.assertRaises(serializers.ValidationError):
+            PaymentWebhookQuery('555')
+        self.assertFalse(Payment.objects.filter(external_reference = '555').exists())
+
+    @override_settings(DEBUG = True)
+    @patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment')
+    def test_live_mode_and_status_detail_are_stored(self, get_payment):
+        suscription                 =   _make_suscription()
+        get_payment.return_value    =   self._mp_payment(suscription)
+        payment                     =   CreatePaymentQuery({
+            'user'          :   suscription.user,
+            'suscription'   :   suscription,
+            'payment_id'    :   '555',
+        })
+        self.assertEqual(payment.live_mode, True)
+        self.assertEqual(payment.mp_status_detail, 'accredited')
+
+    @override_settings(DEBUG = True)
+    @patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment')
+    def test_webhook_updates_live_mode_and_status_detail(self, get_payment):
+        suscription                 =   _make_suscription()
+        payment                     =   Payment.objects.create(
+            user = suscription.user, suscription = suscription, amount = 1000,
+            status = Payment.Status.PENDING, external_reference = '555',
+        )
+        get_payment.return_value    =   self._mp_payment(suscription, status_detail = 'accredited', live_mode = True)
+        PaymentWebhookQuery('555')
+        payment.refresh_from_db()
+        self.assertEqual(payment.live_mode, True)
+        self.assertEqual(payment.mp_status_detail, 'accredited')

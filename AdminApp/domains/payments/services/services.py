@@ -5,6 +5,7 @@ import requests
 from decimal import Decimal
 from datetime import timedelta
 from decouple import config
+from django.conf import settings
 from django.db import transaction, IntegrityError
 from django.db.models import F
 from django.db.models.functions import Greatest
@@ -45,6 +46,14 @@ def GetMercadoPagoPayment(payment_id) -> dict:
 #=================================
 # PAYMENT MODEL QUERYS
 #=================================
+def _reject_test_payment(mp_payment : dict):
+    #Un cobro con credenciales TEST de MP devuelve live_mode=False: en
+    #producción jamás debe acreditar un plan (con el token TEST cualquiera
+    #puede generar un payment aprobado falso). None (MP no lo informó)
+    #no bloquea: el campo queda registrado para trazabilidad.
+    if not settings.DEBUG and mp_payment.get('live_mode') is False:
+        raise serializers.ValidationError({'payment_id': 'Pago de prueba de Mercado Pago rechazado en producción'})
+
 
 #PAYMENT CREATE QUERY (verificación MP + idempotencia + atomicidad)
 def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payment:
@@ -66,6 +75,7 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
         return payment_exists
     if mp_payment is None:
         mp_payment      =   GetMercadoPagoPayment(payment_id)
+    _reject_test_payment(mp_payment)
     #OWNERSHIP DEL COBRO: la preferencia se crea con external_reference = id de
     #la suscripción. Sin este chequeo, un payment_id ajeno (el monto solo se
     #compara con el precio del plan) podía registrarse en la suscripción de
@@ -95,6 +105,8 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
                 currency            =   mp_payment.get('currency_id', 'ARS'),
                 status              =   status,
                 external_reference  =   str(mp_payment.get('id', payment_id)),
+                live_mode           =   mp_payment.get('live_mode'),
+                mp_status_detail    =   str(mp_payment.get('status_detail') or '')[:255],
                 paid_at             =   paid_at
             )
             #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
@@ -116,6 +128,7 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
 def PaymentWebhookQuery(payment_id):
     payment             =   Payment.objects.select_related('suscription__pending_plan_suscription').filter(external_reference = str(payment_id)).first()
     mp_payment          =   GetMercadoPagoPayment(payment_id)
+    _reject_test_payment(mp_payment)
     if not payment:
         #El webhook puede llegar antes que cualquier redirect/confirmación: se registra igual.
         #external_reference = id de suscripción, seteado al crear la preferencia.
@@ -135,10 +148,15 @@ def PaymentWebhookQuery(payment_id):
         #of=('self',): FOR UPDATE no puede aplicarse al lado nulable de un
         #outer join (pending_plan_suscription) — se bloquea solo la tabla base.
         payment             =   Payment.objects.select_for_update(of = ('self',)).select_related('suscription__pending_plan_suscription').get(pk = payment.pk)
-        old_status          =   payment.status
-        payment.status      =   new_status
-        payment.paid_at     =   paid_at
-        payment.save(update_fields = ['status', 'paid_at', 'updated_at'])
+        old_status              =   payment.status
+        payment.status          =   new_status
+        payment.paid_at         =   paid_at
+        #Trazabilidad MP: live_mode/status_detail llegan del payload verificado.
+        if 'live_mode' in mp_payment:
+            payment.live_mode           =   mp_payment.get('live_mode')
+        if mp_payment.get('status_detail'):
+            payment.mp_status_detail    =   str(mp_payment.get('status_detail'))[:255]
+        payment.save(update_fields = ['status', 'paid_at', 'live_mode', 'mp_status_detail', 'updated_at'])
         #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
         #renew solo si el pago entra a approved ahora: un webhook repetido no vuelve a extender
         if new_status == Payment.Status.APPROVED:

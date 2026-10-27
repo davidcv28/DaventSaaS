@@ -48,6 +48,9 @@ SYNC_SWEEP_SECONDS      =   15
 #TTL del dedup de entregas de webhook (ver el action webhook): cubre la
 #ventana de frescura de la firma — un replay más viejo ya cae por el ts.
 WEBHOOK_DEDUP_SECONDS   =   600
+#Un webhook legítimo de MP es un JSON chico ({type, data:{id}}); un body
+#gigante solo puede ser abuso/fuzzing -> 413 antes de tocar el payload.
+WEBHOOK_MAX_BODY        =   16 * 1024
 WEBHOOK_ID_RE           =   re.compile(r'[A-Za-z0-9_-]{1,64}')
 #=========================================
 # WEBHOOK SIGNATURE (HMAC-SHA256 según doc oficial de Mercado Pago)
@@ -123,14 +126,36 @@ class PaymentViewSet(PaymentBaseViewSet):
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'webhook')
     def webhook(self, request):
+        #Tamaño acotado: se rechaza por Content-Length y por el body real
+        #(un cliente puede mentir el header; request.body queda cacheado
+        #para los parsers de DRF así que leerlo no lo consume).
+        content_length  =   request.META.get('CONTENT_LENGTH')
+        try:
+            too_big     =   int(content_length or 0) > WEBHOOK_MAX_BODY
+        except (TypeError, ValueError):
+            too_big     =   True
+        if not too_big:
+            try:
+                too_big =   len(request.body or b'') > WEBHOOK_MAX_BODY
+            except Exception:
+                too_big =   False
+        if too_big:
+            logger.warning('Webhook de MP rechazado: body excede %s bytes', WEBHOOK_MAX_BODY)
+            return Response({'detail': 'Payload demasiado grande'}, status = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
         topic       =   request.data.get('type') or request.query_params.get('topic')
+        #El data.id FIRMADO es el del query string (doc oficial de MP: el
+        #manifest de la firma se arma con el parámetro data.id de la URL).
+        #El data.id del body NO está cubierto por la firma: procesarlo
+        #dejaría que un replay con body modificado redirija el evento a otro
+        #recurso. Regla: solo se procesa el valor firmado; un body que difiere
+        #queda logueado y se ignora (salvo el bypass dev sin firma, abajo).
+        signed_id   =   request.query_params.get('data.id') or request.query_params.get('id')
         #'data' puede llegar no-dict en requests malformados -> evitar 500.
         data        =   request.data.get('data')
-        resource_id =   data.get('id') if isinstance(data, dict) else None
-        resource_id =   resource_id or request.query_params.get('id')
+        body_id     =   data.get('id') if isinstance(data, dict) else None
+        resource_id =   str(signed_id) if signed_id is not None else None
         #El id se interpola en paths de la API de MP: solo alfanumérico corto
         #(un '../' o '?' permitiría redirigir la consulta autenticada con el token).
-        resource_id =   str(resource_id) if resource_id is not None else None
         if resource_id and not WEBHOOK_ID_RE.fullmatch(resource_id):
             logger.warning('Webhook de MP rechazado: id con formato inválido (topic=%s)', topic)
             return Response({'detail': 'Identificador inválido'}, status = status.HTTP_400_BAD_REQUEST)
@@ -138,6 +163,15 @@ class PaymentViewSet(PaymentBaseViewSet):
         if not _verify_mp_signature(request, resource_id):
             logger.warning('Webhook de MP rechazado: firma inválida (topic=%s id=%s)', topic, resource_id)
             return Response({'detail': 'Firma de webhook inválida'}, status = status.HTTP_401_UNAUTHORIZED)
+        if resource_id is None:
+            #Llegar acá sin data.id firmado solo es posible con el bypass dev
+            #(MP_WEBHOOK_ALLOW_UNSIGNED): ahí el id del body sirve de conveniencia
+            #local — en producción jamás se procesa un id no firmado.
+            resource_id =   str(body_id) if body_id is not None else None
+            if resource_id and not WEBHOOK_ID_RE.fullmatch(resource_id):
+                return Response({'detail': 'Identificador inválido'}, status = status.HTTP_400_BAD_REQUEST)
+        elif body_id and str(body_id) != resource_id:
+            logger.warning('Webhook de MP: data.id del body ignorado (body=%s, firmado=%s)', body_id, resource_id)
         #Dedup de entregas: MP reintenta el mismo evento y un replay dentro de
         #la ventana de frescura reenvía las mismas cabeceras. cache.add es
         #atómico — el primer delivery clama el request-id y los demás (aun

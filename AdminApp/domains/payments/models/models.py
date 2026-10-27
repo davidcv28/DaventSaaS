@@ -26,6 +26,10 @@ class Payment(models.Model):
     currency                    =   models.CharField(max_length = 3, default = 'ARS', verbose_name = 'Moneda')
     status                      =   models.CharField(max_length = 20, choices = Status.choices, default = Status.PENDING, verbose_name = 'Estado')
     external_reference          =   models.CharField(max_length = 255, unique = True, blank = True, null = True, verbose_name = 'Referencia externa (Mercado Pago)')
+    #Trazabilidad del origen del cobro: live_mode=False marca un pago hecho
+    #con credenciales TEST de MP — en producción se rechaza antes de acreditar.
+    live_mode                   =   models.BooleanField(null = True, blank = True, verbose_name = 'Cobro real (live) de Mercado Pago')
+    mp_status_detail            =   models.CharField(max_length = 255, blank = True, default = '', verbose_name = 'Detalle de estado de Mercado Pago')
     paid_at                     =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de pago')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     updated_at                  =   models.DateTimeField(auto_now = True)
