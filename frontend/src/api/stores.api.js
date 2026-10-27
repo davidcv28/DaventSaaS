@@ -641,6 +641,7 @@ export const STORE_TEMPLATES = {
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'ofertas',   label: 'Ofertas',      caption: 'Campaña y góndola',   templates: ['promo', 'shop'] },
   { key: 'gamer',     label: 'Gamer',        caption: 'Arena y consola',     templates: ['arena', 'terminal'] },
+  { key: 'general',   label: 'Generalista',  caption: 'Clásico y minimal',   templates: ['classic', 'minimal'] },
   { key: 'moda',      label: 'Indumentaria', caption: 'Lookbook y street',   templates: ['atelier', 'street'] },
   { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
   { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },

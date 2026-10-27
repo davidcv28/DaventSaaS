@@ -75,6 +75,14 @@
 .fam-thumb[data-fam='gamer'] .fc-c::after { content: ''; position: absolute; left: 12%; top: 48%; width: 76%; height: 8%; background: #3a4358; box-shadow: 0 8px 0 #3a4358; }
 .fam-thumb[data-fam='gamer'] .fc-d { left: 7%; right: 7%; bottom: 12%; height: 22%; border: 1.5px solid #3a4358; background: repeating-linear-gradient(90deg, #121724 0 27%, #3a4358 27% 29%, #121724 29% 60%, #3a4358 60% 62%, #121724 62% 100%); }
 
+/* --- Generalista: papel limpio, titular centrado y grilla simple --- */
+.fam-thumb[data-fam='general'] { background: #fafaf7; }
+.fam-thumb[data-fam='general'] .fc-a { left: 22%; top: 10%; width: 56%; height: 11%; background: #1c1c1e; }
+.fam-thumb[data-fam='general'] .fc-a::after { content: ''; position: absolute; left: 12%; top: 130%; width: 76%; height: 45%; background: #b9b9b3; }
+.fam-thumb[data-fam='general'] .fc-b { left: 34%; top: 34%; width: 32%; height: 8%; border: 1.5px solid #1c1c1e; background: #fff; }
+.fam-thumb[data-fam='general'] .fc-c { left: 7%; right: 7%; bottom: 34%; height: 22%; background: repeating-linear-gradient(90deg, #fff 0 29%, #c9c9c2 29% 31%, #fff 31% 62%, #c9c9c2 62% 64%, #fff 64% 100%); border: 1px solid #c9c9c2; }
+.fam-thumb[data-fam='general'] .fc-d { left: 38%; bottom: 12%; width: 24%; height: 9%; background: var(--brand); }
+
 /* --- Indumentaria: titular XXL cortando una foto + cinta --- */
 .fam-thumb[data-fam='moda'] { background: #efece5; }
 .fam-thumb[data-fam='moda'] .fc-a { left: 6%; top: 16%; width: 62%; height: 10%; border: 1.5px solid #16161a; border-radius: 0; background: transparent; }
