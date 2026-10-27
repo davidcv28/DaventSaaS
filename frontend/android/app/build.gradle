@@ -1,5 +1,18 @@
 apply plugin: 'com.android.application'
 
+// Firma del release: las credenciales salen de keystore.properties (en la raíz
+// de android/, gitignored) o de env vars DAVENT_KEYSTORE_* para builds en otro
+// entorno. Sin ninguna de las dos el signing config queda vacío y
+// assembleRelease falla — nunca hay fallback inseguro ni password en el repo.
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+ext.keystoreProp = { String key, String envVar ->
+    return keystoreProps.getProperty(key) ?: (System.getenv(envVar) ?: '')
+}
+
 android {
     namespace "com.davent.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -16,10 +29,22 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def storeFileValue = keystoreProp('storeFile', 'DAVENT_KEYSTORE_FILE')
+            if (storeFileValue) {
+                storeFile file(storeFileValue)
+                storePassword keystoreProp('storePassword', 'DAVENT_KEYSTORE_STORE_PASSWORD')
+                keyAlias keystoreProp('keyAlias', 'DAVENT_KEYSTORE_KEY_ALIAS')
+                keyPassword keystoreProp('keyPassword', 'DAVENT_KEYSTORE_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }
