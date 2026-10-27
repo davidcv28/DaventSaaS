@@ -59,6 +59,7 @@ import AlertMessage from '../components/AlertMessage.vue'
 import PasswordStrength from '../components/PasswordStrength.vue'
 import StorageMeter from '../components/StorageMeter.vue'
 import AppIcon from '../components/AppIcon.vue'
+import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 
@@ -1118,6 +1119,11 @@ const companyBusy = ref(false)
 const companyErrs = reactive({})
 const mkLimits = MARKETING_LIMITS
 const serviceIcons = SERVICE_ICONS
+const serviceIconOptions = Object.entries(SERVICE_ICONS).map(([value, label]) => ({ value, label, icon: value }))
+const serviceVisibilityOptions = [
+  { value: true, label: 'Visible en mi web', icon: 'eye' },
+  { value: false, label: 'Oculto', icon: 'eye-off' }
+]
 const sectionLabels = SECTION_ORDER_LABELS
 
 // Una fila "a medias" (algo escrito pero sin sus campos requeridos) avisa y
@@ -3084,28 +3090,23 @@ async function changePassword() {
                 </div>
               </div>
               <p class="lead">El precio es orientativo: podés dejarlo vacío y se muestra como «a convenir».</p>
-              <AppInput v-model="serviceForm.name" label="Nombre" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
+              <AppInput v-model="serviceForm.name" label="Nombre" icon="pencil" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
               <div class="grid-2">
-                <AppInput v-model="serviceForm.price" label="Precio orientativo" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
-                <AppInput v-model="serviceForm.duration" label="Duración estimada" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
+                <AppInput v-model="serviceForm.price" label="Precio orientativo" icon="tag" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
+                <AppInput v-model="serviceForm.duration" label="Duración estimada" icon="clock" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
               </div>
               <div class="grid-2">
                 <div class="field">
-                  <label for="svc-icon">Icono</label>
-                  <select id="svc-icon" v-model="serviceForm.icon" class="select">
-                    <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                  </select>
+                  <label for="svc-icon"><AppIcon name="sparkles" :size="14" class="label-icon" aria-hidden="true" />Icono</label>
+                  <IconSelect id="svc-icon" v-model="serviceForm.icon" :options="serviceIconOptions" />
                 </div>
                 <div class="field">
-                  <label for="svc-active">Visibilidad</label>
-                  <select id="svc-active" v-model="serviceForm.is_active" class="select">
-                    <option :value="true">Visible en mi web</option>
-                    <option :value="false">Oculto</option>
-                  </select>
+                  <label for="svc-active"><AppIcon name="eye" :size="14" class="label-icon" aria-hidden="true" />Visibilidad</label>
+                  <IconSelect id="svc-active" v-model="serviceForm.is_active" :options="serviceVisibilityOptions" />
                 </div>
               </div>
               <div class="field">
-                <label for="svc-description">Descripción corta</label>
+                <label for="svc-description"><AppIcon name="message-circle" :size="14" class="label-icon" aria-hidden="true" />Descripción corta</label>
                 <textarea id="svc-description" v-model="serviceForm.description" class="textarea" :class="{ invalid: serviceFieldErr('description') }" placeholder="Qué incluye o cómo se coordina (opcional)" :maxlength="serviceLimits.description" rows="2" @blur="serviceTouched.description = true"></textarea>
                 <p class="hint">{{ serviceForm.description.length }}/{{ serviceLimits.description }}</p>
                 <p v-if="serviceFieldErr('description')" class="field-error" role="alert">{{ serviceFieldErr('description') }}</p>
@@ -3162,9 +3163,7 @@ async function changePassword() {
               </header>
               <ul v-if="(designForm.service_steps || []).length" class="feat-rows" aria-labelledby="svc-steps-label">
                 <li v-for="(row, i) in designForm.service_steps" :key="i" class="feat-row svc-step-row">
-                  <select v-model="row.icon" class="select svc-step-icon" :aria-label="`Icono del paso ${i + 1}`">
-                    <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                  </select>
+                  <IconSelect v-model="row.icon" :id="`svc-step-icon-${i}`" class="svc-step-icon" :options="serviceIconOptions" :aria-label="`Icono del paso ${i + 1}`" />
                   <input v-model="row.title" class="input" type="text" :maxlength="servicePageLimits.stepTitle" placeholder="Título (ej. Confirmamos por WhatsApp)" :aria-label="`Título del paso ${i + 1}`" />
                   <input v-model="row.text" class="input" type="text" :maxlength="servicePageLimits.stepText" placeholder="Descripción breve" :aria-label="`Texto del paso ${i + 1}`" />
                   <button type="button" class="icon-btn danger" aria-label="Quitar paso" @click="removeServiceStep(i)"><AppIcon name="trash" :size="15" /></button>

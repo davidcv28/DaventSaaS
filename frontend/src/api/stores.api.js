@@ -523,7 +523,10 @@ export const SERVICE_HUES = {
   'star': 45, 'zap': 38, 'shield-check': 160, 'clock': 195, 'map-pin': 5, 'users': 265,
   'phone': 140, 'message-circle': 170, 'store': 20, 'credit-card': 225, 'wallet': 100,
   'crown': 48, 'badge-check': 155, 'trending-up': 130, 'calendar': 280, 'flame': 15,
-  'megaphone': 320, 'check': 200
+  'megaphone': 320, 'check': 200, 'sparkles': 290, 'award': 42, 'hard-hat': 36, 'scissors': 335, 'coffee': 25,
+  'dumbbell': 235, 'paw-print': 22, 'flower': 325, 'book': 210, 'graduation-cap': 240, 'music': 275,
+  'film': 255, 'camera': 185, 'heart': 345, 'hand': 30, 'leaf': 120, 'umbrella': 205,
+  'paintbrush': 310, 'mic': 0, 'trophy': 50, 'diamond': 190
 }
 export const serviceHue = (key) => SERVICE_HUES[key] ?? 250
 
