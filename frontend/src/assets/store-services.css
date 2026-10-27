@@ -949,6 +949,43 @@
   --sv-form-bw: 1px; --sv-form-bd: var(--sv-line);
 }
 
+/* Tarjetas de marketplace: compactas y densas — ícono como "foto de
+   producto" arriba en placa de color, nombre, precio grande, rating de
+   duración como chip y botón Agregar estilo e-commerce. */
+.store-page[data-store-template='shop'] .sv-item {
+  gap: 8px; padding: 14px;
+  border: 1px solid var(--sv-line); border-radius: var(--sv-r-md, 14px);
+  background: var(--sv-card);
+}
+.store-page[data-store-template='shop'] .sv-item:hover { transform: translateY(-3px); box-shadow: var(--sv-btn-sh-h); border-color: var(--sv-line); }
+.store-page[data-store-template='shop'] .sv-item[aria-pressed='true'] { border-color: var(--sv-acc); background: color-mix(in srgb, var(--sv-acc) 6%, var(--sv-card)); }
+.store-page[data-store-template='shop'] .sv-item .ico {
+  width: 100%; height: 88px; border-radius: 10px; margin-bottom: 4px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--sv-acc) 16%, var(--sv-card)), color-mix(in srgb, var(--sv-acc) 34%, var(--sv-card)));
+  color: var(--sv-acc);
+}
+.store-page[data-store-template='shop'] .sv-item h3 { font-size: 14.5px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.store-page[data-store-template='shop'] .sv-item small { font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.store-page[data-store-template='shop'] .sv-item .meta {
+  order: 3; margin: 0; padding: 0; border: 0; flex-direction: column; align-items: flex-start; gap: 6px;
+}
+.store-page[data-store-template='shop'] .sv-item .price { order: -1; font-size: 20px; font-weight: 800; color: var(--sv-fg); background: none; padding: 0; letter-spacing: -.02em; }
+.store-page[data-store-template='shop'] .sv-item .dur {
+  font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  background: var(--sv-soft); color: var(--sv-mute);
+}
+.store-page[data-store-template='shop'] .sv-item .act {
+  order: 4; border-radius: var(--sv-btn-radius, 14px); min-height: 44px;
+  font-size: 13px; font-weight: 700;
+}
+.store-page[data-store-template='shop'] .sv-item::after { width: 26px; height: 26px; font-size: 13px; }
+@media (max-width: 768px) {
+  /* Grilla 2col estricta de producto, sin overlaps. */
+  .store-page[data-store-template='shop'] .sv-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .store-page[data-store-template='shop'] .sv-item { min-width: 0; padding: 12px; }
+  .store-page[data-store-template='shop'] .sv-item .ico { height: 64px; }
+}
+
 /* ---------- Cobre: piedra cálida, plano, Bebas ---------- */
 .store-page[data-store-template='cobre'] .sv-page {
   --sv-r-pill: 4px; --sv-r-stage: 6px; --sv-r-lg: 6px; --sv-r-md: 6px; --sv-r-sm: 4px;
