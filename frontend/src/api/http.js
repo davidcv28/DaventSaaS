@@ -24,10 +24,14 @@ let accessToken = null
 // (request en vuelo): bloquea cualquier intento de refresh que "reviviría"
 // la sesión. Se libera al setear un access nuevo (login).
 let sessionEnded = false
+// Generación de la sesión: sube con cada access nuevo (login) y con el
+// logout. Un refresh que salió en la generación anterior se descarta al
+// aterrizar — evita que el token de la cuenta vieja pise el de la nueva.
+let sessionEpoch = 0
 
 export const tokenStorage = {
   getAccess: () => accessToken,
-  set: (access) => { if (access) { accessToken = access; sessionEnded = false } },
+  set: (access) => { if (access) { accessToken = access; sessionEnded = false; sessionEpoch++ } },
   clear: () => { accessToken = null }
 }
 
@@ -71,6 +75,7 @@ http.interceptors.request.use((config) => {
 const tokenEndpoint = (path) => `${env.apiBaseUrl.replace(/\/$/, '')}/token/${path}`
 
 async function refreshCall() {
+  const epoch = sessionEpoch
   const res = await axios.post(tokenEndpoint('refresh/'), {}, {
     timeout: 15000,
     withCredentials: true,
@@ -78,6 +83,12 @@ async function refreshCall() {
   })
   const { access } = res.data || {}
   if (!access) throw new Error('EMPTY_REFRESH')
+  // Un refresh que salió ANTES del logout o de un login nuevo puede aterrizar
+  // DESPUÉS: sin este corte, tokenStorage.set deja un access zombie en memoria
+  // — ensureSession() lo revive en /login y el guard rebota al panel ("logout
+  // no redirecciona"), o peor: el token de la cuenta vieja pisa el de la que
+  // acaba de entrar. Se descarta aunque sea válido.
+  if (sessionEnded || epoch !== sessionEpoch) throw new Error('SESSION_ENDED')
   tokenStorage.set(access)
   return access
 }
@@ -96,7 +107,9 @@ async function tryRefresh() {
       : refreshCall
     refreshPromise = job()
       .catch((err) => {
-        tokenStorage.clear()
+        // SESSION_ENDED = refresh descartado por época (logout o login nuevo):
+        // no tocar el storage — clear() borraría el access de la sesión nueva.
+        if (err?.message !== 'SESSION_ENDED') tokenStorage.clear()
         throw err
       })
       .finally(() => {
@@ -109,6 +122,10 @@ async function tryRefresh() {
 // Restaura la sesión al recargar el tab (el access en memoria se perdió).
 // Devuelve true si quedó un access válido.
 export async function restoreSession() {
+  // Sesión cerrada en este tab: no revivirla aunque quede algo en memoria
+  // (segunda capa tras el corte de refreshCall — cubre cualquier set que
+  // haya aterrizado entre el clear() del logout y sessionEnded=true).
+  if (sessionEnded) return false
   if (tokenStorage.getAccess()) return true
   try {
     await tryRefresh()
@@ -122,6 +139,7 @@ export async function restoreSession() {
 // el access en memoria. Falla silenciosamente si la cookie ya expiró.
 export async function logoutSession() {
   sessionEnded = true // ningún refresh puede resucitar la sesión saliente
+  sessionEpoch++     // los refresh en vuelo se descartan aunque respondan OK
   try {
     await axios.post(tokenEndpoint('logout/'), {}, {
       timeout: 10000,
@@ -153,8 +171,12 @@ http.interceptors.response.use(
         original.headers = { ...(original.headers || {}), Authorization: `Bearer ${access}` }
         return http(original)
       } catch (e) {
-        // Refresh fallido -> sesión expirada. El store redirige a /login?expired=1
-        window.dispatchEvent(new CustomEvent('davent:session-expired'))
+        // Refresh fallido -> sesión expirada. El store redirige a /login?expired=1.
+        // SESSION_ENDED no se reporta: el usuario está saliendo o ya entró otra
+        // cuenta — el evento haría location.assign y pisaría esa navegación.
+        if (e?.message !== 'SESSION_ENDED') {
+          window.dispatchEvent(new CustomEvent('davent:session-expired'))
+        }
         return Promise.reject(error)
       }
     }

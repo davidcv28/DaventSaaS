@@ -171,7 +171,9 @@ export const useAuthStore = defineStore('auth', () => {
     lastError.value = ''
     fieldErrors.value = {}
     tokenStorage.clear()
-    resetSessionStores()
+    // Un reset que rompiera no debe frenar el cierre: si logoutSession no
+    // corre, la cookie de refresh queda viva y la sesión reviviría sola.
+    try { resetSessionStores() } catch { /* limpieza best-effort */ }
     await logoutSession() // blacklist del refresh + borra cookies en backend
   }
 
