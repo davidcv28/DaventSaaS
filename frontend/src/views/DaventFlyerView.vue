@@ -186,7 +186,7 @@ function closeTab() {
             <span class="df-trial-ico"><AppIcon name="gift" :size="13" /></span>
             <div>
               <strong>Estamos regalando 30 días de Premium</strong>
-              <span>Registrate y canjeá el código <b class="df-trial-code">PROMO INAUGURACIÓN</b> en Plan y pagos.</span>
+              <span>Registrate y canjeá el código <b class="df-trial-code">PROMO</b> en Plan y pagos.</span>
               <small>Sin tarjeta ni datos de facturación.</small>
             </div>
           </div>
