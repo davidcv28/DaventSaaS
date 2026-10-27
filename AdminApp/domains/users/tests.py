@@ -644,3 +644,172 @@ class PublicConfigTests(TestCase):
             response    =   APIClient().get(CONFIG_URL)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['google_client_id'], '')
+
+
+#=========================================
+# CIFRADO EN REPOSO DE LA PII DEL PERFIL
+#=========================================
+import base64 as _b64
+import os as _os
+from datetime import timedelta as _td
+
+from django.core.management import call_command
+from django.db import connection, IntegrityError, transaction
+
+from AdminApp.domains.invoices.services import IssueInvoiceQuery
+from AdminApp.domains.invoices.services import afip as _afip, vault as _vault
+from AdminApp.domains.payments.models import Payment
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+from AdminApp.domains.users.models.fields import digest_for
+from AdminApp.domains.users.services import BillingMissingFieldsQuery
+
+ENCRYPTED_COLS  =   ('document', 'phone', 'first_name', 'last_name', 'address', 'business_name')
+
+
+def _ring(*kids):
+    return ','.join(f'{k}:{_b64.urlsafe_b64encode(_os.urandom(32)).decode().rstrip("=")}' for k in kids)
+
+
+def _full_profile(username, document = '30111222', phone = '+5491122334455'):
+    province, city  =   _location()
+    user            =   User.objects.create_user(username = username, email = f'{username}@gmail.com', password = STRONG_PASSWORD)
+    return UserProfile.objects.create(
+        user            =   user,
+        first_name      =   'Ana',
+        last_name       =   'Perez',
+        business_name   =   'Tienda Demo',
+        document        =   document,
+        province        =   province,
+        city            =   city,
+        address         =   'Calle Falsa 123',
+        phone           =   phone,
+        email_verified  =   True,
+    )
+
+
+class EncryptedProfileFieldsTests(TestCase):
+    """La PII fiscal/de contacto se guarda cifrada (AES-256-GCM) y se lee
+    en claro desde el ORM; la unicidad/búsqueda por igualdad vive en las
+    huellas HMAC <campo>_hash, nunca sobre el ciphertext."""
+
+    def _raw(self, profile, *columns):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f'SELECT {", ".join(columns)} FROM users_userprofile WHERE id = %s',
+                [profile.pk],
+            )
+            return dict(zip(columns, cursor.fetchone()))
+
+    def test_raw_sql_shows_ciphertext_never_plaintext(self):
+        profile     =   _full_profile('enc')
+        raw         =   self._raw(profile, *ENCRYPTED_COLS)
+        for column in ENCRYPTED_COLS:
+            self.assertTrue(str(raw[column]).startswith('enc:v1:'), column)
+        plaintext   =   ('30111222', '+5491122334455', 'Ana', 'Perez', 'Tienda Demo', 'Calle Falsa 123')
+        for column, expected in zip(ENCRYPTED_COLS, plaintext):
+            self.assertNotIn(expected, str(raw[column]))
+
+    def test_orm_and_serializer_read_plaintext(self):
+        profile     =   _full_profile('encread')
+        profile.refresh_from_db()
+        self.assertEqual(profile.document, '30111222')
+        self.assertEqual(profile.phone, '+5491122334455')
+        self.assertEqual(profile.business_name, 'Tienda Demo')
+
+    def test_empty_keyring_falls_back_to_derived_key(self):
+        #Dev/test sin SECRETS_MASTER_KEYS: el vault cifra con la llave
+        #derivada del SECRET_KEY (kid "self") — prod la exige (users.E002).
+        profile     =   _full_profile('encdev')
+        raw         =   self._raw(profile, 'document')['document']
+        self.assertEqual(_vault.token_kid(raw), 'self')
+
+    def test_document_uniqueness_lives_in_hash(self):
+        _full_profile('uno', document = '30111222')
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                _full_profile('dos', document = '30111222')
+        #La huella única no impide otro documento distinto.
+        self.assertIsNotNone(_full_profile('tres', document = '27999888', phone = '+5491177766655'))
+
+    def test_equality_search_uses_document_hash(self):
+        profile     =   _full_profile('busca', document = '30111222')
+        found       =   UserProfile.objects.filter(document_hash = digest_for('document', '30111222')).first()
+        self.assertEqual(found.pk, profile.pk)
+        self.assertEqual(found.document, '30111222')
+        #La huella normaliza igual que el viejo __iexact.
+        self.assertEqual(digest_for('document', ' 30111222 '), profile.document_hash)
+
+    def test_direct_lookup_on_encrypted_field_is_loud(self):
+        #filter(document=...) sobre ciphertext jamás matchearía: mejor un
+        #error explícito que un resultado vacío silencioso.
+        _full_profile('ruido')
+        with self.assertRaises(TypeError):
+            UserProfile.objects.filter(document = '30111222').exists()
+
+    def test_phone_uniqueness_lives_in_hash(self):
+        _full_profile('cel1', phone = '+5491122334455')
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                _full_profile('cel2', phone = '+5491122334455')
+
+    def test_duplicate_document_rejected_by_serializer(self):
+        _full_profile('orig', document = '30111222')
+        user, _     =   _make_user(username = 'otro', email = 'otro@gmail.com', document = '27999888')
+        client      =   APIClient()
+        client.force_authenticate(user = user)
+        response    =   client.patch('/api/profile/me/', {'document': '30111222'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('document', response.json())
+
+    def test_serializer_write_roundtrip(self):
+        user, profile   =   _make_user(username = 'patch', email = 'patch@gmail.com')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        response        =   client.patch('/api/profile/me/', {'document': '27999888', 'phone': '+5491199988877'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        profile.refresh_from_db()
+        self.assertEqual(profile.document, '27999888')
+        self.assertEqual(profile.phone, '+5491199988877')
+        raw             =   self._raw(profile, 'document', 'phone')
+        self.assertTrue(raw['document'].startswith('enc:v1:'))
+        self.assertTrue(raw['phone'].startswith('enc:v1:'))
+        self.assertEqual(profile.document_hash, digest_for('document', '27999888'))
+        self.assertEqual(profile.phone_hash, digest_for('phone', '+5491199988877'))
+
+    def test_billing_gate_and_invoice_flow_read_plaintext(self):
+        #IssueInvoiceQuery + _build_det (WSFE) consumen el documento en claro;
+        #el gate BillingMissingFieldsQuery no debe ver "faltantes" fantasma.
+        profile     =   _full_profile('factura', document = '30111222')
+        self.assertEqual(BillingMissingFieldsQuery(profile), [])
+        plan        =   SuscriptionPlan.objects.create(name = 'Plan enc', price = 1000)
+        suscription =   Suscription.objects.create(
+            user = profile, plan_suscription = plan, status = Suscription.STATUS_ACTIVE,
+            start_date = timezone.now(), end_date = timezone.now() + _td(days = 30),
+        )
+        payment     =   Payment.objects.create(
+            user = profile, suscription = suscription, amount = 1000,
+            status = Payment.Status.APPROVED, external_reference = 'enc-pay-1',
+            paid_at = timezone.now(),
+        )
+        invoice     =   IssueInvoiceQuery(payment)
+        det         =   _afip._build_det(invoice, 1, 11)
+        self.assertIn('<DocNro>30111222</DocNro>', det)
+
+    def test_rotate_encrypted_fields_command(self):
+        #Rotación keyring: datos bajo k1 -> se antepone k2 -> el comando
+        #re-cifra -> se retira k1 y todo sigue leyendo.
+        ring1       =   _ring('k1')
+        with self.settings(SECRETS_MASTER_KEYS = ring1):
+            profile     =   _full_profile('rotar', document = '30112233')
+            self.assertEqual(_vault.token_kid(self._raw(profile, 'document')['document']), 'k1')
+        ring2       =   _ring('k2')
+        with self.settings(SECRETS_MASTER_KEYS = f'{ring2},{ring1}'):
+            call_command('rotate_encrypted_fields', batch = 2)
+            self.assertEqual(_vault.token_kid(self._raw(profile, 'document')['document']), 'k2')
+            self.assertEqual(_vault.token_kid(self._raw(profile, 'phone')['phone']), 'k2')
+        with self.settings(SECRETS_MASTER_KEYS = ring2):
+            profile.refresh_from_db()
+            self.assertEqual(profile.document, '30112233')
+            self.assertEqual(profile.phone, '+5491122334455')
+            #Idempotente: nada que hacer con todo ya en la llave activa.
+            call_command('rotate_encrypted_fields')

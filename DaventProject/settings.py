@@ -365,9 +365,16 @@ AFIP = {
 }
 
 # Llaves maestras AES-256-GCM para secretos en reposo (AFIP_KEY/AFIP_CERT con
-# prefijo enc:v1:). "kid:base64url(32 bytes)" separadas por coma; la primera
-# cifra, todas descifran (rotación). Generar: manage.py encrypt_secret --gen-master-key k1
+# prefijo enc:v1: y la PII de UserProfile: documento, nombres, domicilio,
+# celular, razón social). "kid:base64url(32 bytes)" separadas por coma; la
+# primera cifra, todas descifran (rotación). Generar: manage.py encrypt_secret --gen-master-key k1
 SECRETS_MASTER_KEYS = config('SECRETS_MASTER_KEYS', default = '')
+
+# Llave de las huellas HMAC-SHA256 (document_hash/phone_hash) para igualdad y
+# unicidad sobre campos cifrados. NUNCA reutilizar SECRETS_MASTER_KEYS: una
+# leak de una no debe habilitar ataques contra la otra. Si está vacía se deriva
+# del SECRET_KEY (dev/test); en producción el deploy check la exige (users.E003).
+SECRETS_HASH_KEY = config('SECRETS_HASH_KEY', default = '')
 
 # Logging: sin esta sección Django no tiene handlers configurados y los
 # logger.warning/exception del proyecto (webhooks de MP, fallos de email,

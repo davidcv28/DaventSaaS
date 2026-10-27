@@ -27,3 +27,33 @@ def check_admin_url(app_configs, **kwargs):
             )
         ]
     return []
+
+
+@register(Tags.security, deploy = True)
+def check_secrets_keyring(app_configs, **kwargs):
+    #PII de UserProfile (documento, nombres, domicilio, celular, razón social)
+    #va cifrada AES-256-GCM. Sin keyring real el vault deriva una llave del
+    #SECRET_KEY: funciona pero queda acoplada a esa llave (rotarla rompería
+    #todo el ciphertext). En producción el keyring dedicado es obligatorio.
+    if settings.DEBUG:
+        return []
+    if not getattr(settings, 'SECRETS_MASTER_KEYS', '').strip():
+        return [
+            Error(
+                "SECRETS_MASTER_KEYS vacía en producción: los campos cifrados de "
+                "UserProfile caerían a la llave derivada del SECRET_KEY.",
+                hint = "Generar una con 'manage.py encrypt_secret --gen-master-key k1' y definirla en el entorno.",
+                id = 'users.E002',
+            )
+        ]
+    if not getattr(settings, 'SECRETS_HASH_KEY', '').strip():
+        return [
+            Error(
+                "SECRETS_HASH_KEY vacía en producción: las huellas de búsqueda "
+                "de los campos cifrados quedan derivadas del SECRET_KEY (si rota, "
+                "la unicidad/búsqueda de documento y celular se rompe en silencio).",
+                hint = "Definir SECRETS_HASH_KEY con un valor aleatorio distinto a la keyring de cifrado.",
+                id = 'users.E003',
+            )
+        ]
+    return []

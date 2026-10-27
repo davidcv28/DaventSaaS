@@ -11,6 +11,7 @@ AES-256-GCM con keyring rotativo:
   reutilizarse como AFIP_CERT (ni moverse a otro campo) sin fallar el tag.
 """
 import base64
+import hashlib
 import os
 import re
 
@@ -30,6 +31,16 @@ def _b64d(value : str) -> bytes:
     return base64.urlsafe_b64decode(value + '=' * (-len(value) % 4))
 
 
+#Kid usado cuando no hay keyring real (solo dev/test — ver _derived_key).
+FALLBACK_KID    =   'self'
+
+def _derived_key() -> bytes:
+    """Llave maestra estable derivada del SECRET_KEY, para dev/test sin
+    SECRETS_MASTER_KEYS. En producción el deploy check exige el keyring real:
+    derivarla del SECRET_KEY dejaría todo el ciphertext ilegible si rotara."""
+    return hashlib.sha256(f'davent-master-keyring:{settings.SECRET_KEY}'.encode('utf-8')).digest()
+
+
 def _keyring() -> dict:
     ring    =   {}
     for item in (getattr(settings, 'SECRETS_MASTER_KEYS', '') or '').split(','):
@@ -46,7 +57,21 @@ def _keyring() -> dict:
         if len(key) != 32:
             raise VaultError(f'La llave maestra "{kid}" debe ser de 32 bytes (AES-256)')
         ring[kid]   =   key
+    if not ring:
+        ring[FALLBACK_KID]  =   _derived_key()
     return ring
+
+
+def active_kid() -> str:
+    """Kid con el que se cifra ahora (la primera llave del keyring)."""
+    return next(iter(_keyring()))
+
+
+def token_kid(token : str) -> str:
+    """Kid con el que se cifró un token `enc:v1:<kid>:...` (sin descifrar)."""
+    if not is_encrypted(token):
+        raise VaultError('Valor no cifrado')
+    return token[len(PREFIX):].partition(':')[0]
 
 
 def generate_master_key(kid : str) -> str:
@@ -59,8 +84,6 @@ def is_encrypted(value : str) -> bool:
 
 def encrypt_secret(plaintext : bytes, purpose : str) -> str:
     ring    =   _keyring()
-    if not ring:
-        raise VaultError('SECRETS_MASTER_KEYS no está configurada')
     kid     =   next(iter(ring))
     nonce   =   os.urandom(12)
     blob    =   AESGCM(ring[kid]).encrypt(nonce, plaintext, purpose.encode())

@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from AdminApp.domains.users.models import UserProfile
+from AdminApp.domains.users.models.fields import digest_for
 from AdminApp.domains.users.services import (
     #USER QUERYS
     UpdateUserQuery, UpdatePasswordUserQuery, UpdateProfileQuery, RegisterUserQuery
@@ -118,7 +119,9 @@ class UserProfileValidatorsMixins:
         if not value:
             return value
         document_val        =   value.strip()
-        queryset            =   UserProfile.objects.filter(document__iexact = document_val)
+        #Igualdad sobre la huella HMAC (el documento viaja cifrado: no hay
+        #__iexact posible sobre ciphertext). digest_for normaliza casefold.
+        queryset            =   UserProfile.objects.filter(document_hash = digest_for('document', document_val))
         errors              =   []
         if self.instance:
             queryset        =   queryset.exclude(pk = self.instance.pk)
@@ -133,7 +136,7 @@ class UserProfileValidatorsMixins:
         if not value:
             return None
         phone_val           =   value.strip()
-        queryset            =   UserProfile.objects.filter(phone__iexact = phone_val)
+        queryset            =   UserProfile.objects.filter(phone_hash = digest_for('phone', phone_val))
         if self.instance:
             queryset        =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
