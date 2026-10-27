@@ -4864,7 +4864,11 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='cobre'] .sp-gallery-item img { transition: transform .5s var(--sp-ease); }
 .store-page[data-store-template='cobre'] .sp-gallery-item:hover img { transform: scale(1.03); }
 
-/* --- Servicios: lista de "materiales" sobre tinta --- */
+/* --- Servicios: lista de "materiales" sobre tinta ---
+   Cada fila es un renglón de ficha técnica: placa de acento + nombre en
+   condensada + descripción, separadas por filetes. Se apaga todo el arte
+   de la tarjeta genérica (anillo, brillo, línea, borde en hover) — y las
+   "variantes de tarjeta" del bloque del final no aplican a cobre. */
 .store-page[data-store-template='cobre'] .sp-services {
   padding-top: clamp(56px, 7vw, 104px); padding-bottom: clamp(56px, 7vw, 104px);
   background: var(--sp-ink); color: var(--cb-stone);
@@ -4880,25 +4884,60 @@ html { scroll-behavior: smooth; }
   margin: 6px 0 0; color: var(--cb-stone);
 }
 .store-page[data-store-template='cobre'] .sp-services .sp-services-grid {
-  grid-column: 2; grid-row: 1 / span 2;
+  grid-column: 2; grid-row: 1 / -1;
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
 }
 .store-page[data-store-template='cobre'] .sp-service {
-  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
-  gap: 8px 36px; padding: 24px 0;
+  grid-template-columns: 44px minmax(0, 200px) minmax(0, 1fr); grid-template-rows: none;
+  align-items: center; gap: 4px 20px; padding: 20px 0;
   border: 0; border-top: 1px solid var(--cb-line-dk); border-radius: 0;
   background: transparent; box-shadow: none;
 }
+.store-page[data-store-template='cobre'] .sp-service::before,
+.store-page[data-store-template='cobre'] .sp-service-line,
+.store-page[data-store-template='cobre'] .sp-service-glow { display: none; }
 .store-page[data-store-template='cobre'] .sp-service:last-child { border-bottom: 1px solid var(--cb-line-dk); }
-.store-page[data-store-template='cobre'] .sp-service:hover { transform: none; box-shadow: none; }
-.store-page[data-store-template='cobre'] .sp-service-icon {
-  width: auto; height: auto; background: none; border: 0; box-shadow: none;
-  color: var(--store-accent);
+.store-page[data-store-template='cobre'] .sp-service:hover {
+  transform: none; box-shadow: none; border-color: var(--cb-line-dk);
 }
-.store-page[data-store-template='cobre'] .sp-service strong { font-size: 18px; font-weight: 700; color: var(--cb-stone); }
+.store-page[data-store-template='cobre'] .sp-service-ring {
+  grid-row: 1; width: 44px; height: 44px; margin: 0; border-radius: 4px;
+  background: var(--store-accent); color: #fff; box-shadow: none;
+}
+.store-page[data-store-template='cobre'] .sp-service-ring::after { display: none; }
+.store-page[data-store-template='cobre'] .sp-service-icon {
+  width: auto; height: auto; border-radius: 0;
+  background: none; box-shadow: none; color: #fff;
+}
+.store-page[data-store-template='cobre'] .sp-service:hover .sp-service-icon { transform: none; filter: none; }
+.store-page[data-store-template='cobre'] .sp-service .sp-service-title {
+  margin: 0; font-family: var(--sp-display); font-weight: 400;
+  font-size: 24px; line-height: 1; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--cb-stone); background: none; -webkit-text-fill-color: var(--cb-stone);
+}
 .store-page[data-store-template='cobre'] .sp-service p {
-  grid-column: 2; grid-row: 1 / span 2; align-self: center;
-  margin: 0; font-size: 15px; line-height: 1.65; color: var(--cb-soft);
+  margin: 0; font-size: 15px; line-height: 1.6; color: var(--cb-soft);
+}
+.store-page[data-store-template='cobre'] .sp-services .sp-more {
+  grid-column: 1; align-self: end; justify-content: flex-start; margin-top: 24px;
+}
+/* Móvil: la banda pasa a una sola columna y cada material queda
+   placa + título con la descripción debajo del título. */
+@media (max-width: 900px) {
+  .store-page[data-store-template='cobre'] .sp-services > .sp-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-page[data-store-template='cobre'] .sp-services .sp-section-title { margin-bottom: 16px; }
+  .store-page[data-store-template='cobre'] .sp-services .sp-services-grid {
+    grid-column: 1; grid-row: auto;
+  }
+  .store-page[data-store-template='cobre'] .sp-service {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start; gap: 3px 16px; padding: 18px 0;
+  }
+  .store-page[data-store-template='cobre'] .sp-service .sp-service-ring { grid-row: 1 / span 2; }
+  .store-page[data-store-template='cobre'] .sp-service p { grid-column: 2; }
+  .store-page[data-store-template='cobre'] .sp-services .sp-more { margin-top: 22px; }
 }
 
 /* --- Cifras: banda de tinta, números condensados --- */
@@ -6854,7 +6893,7 @@ html { scroll-behavior: smooth; }
   transition: opacity .2s var(--sp-ease), transform .25s var(--sp-ease);
 }
 .store-page[data-store-template='boutique'] .sp-card:hover .tpc-quick,
-.store-page[data-store-template='boutique'] .sp-card:focus-visible .sp-card .tpc-quick { opacity: 1; transform: none; }
+.store-page[data-store-template='boutique'] .sp-card:focus-visible .tpc-quick { opacity: 1; transform: none; }
 .store-page[data-store-template='boutique'] .sp-card .tpc-flag {
   top: 10px; left: 10px; height: 24px; padding: 0 9px;
   border: 0; border-radius: 0;
@@ -8008,7 +8047,7 @@ html { scroll-behavior: smooth; }
   transition: opacity .2s var(--sp-ease), transform .25s var(--sp-ease);
 }
 .store-page[data-store-template='signature'] .sp-card:hover .tpc-quick,
-.store-page[data-store-template='signature'] .sp-card:focus-visible .sp-card .tpc-quick { opacity: 1; transform: none; }
+.store-page[data-store-template='signature'] .sp-card:focus-visible .tpc-quick { opacity: 1; transform: none; }
 .store-page[data-store-template='signature'] .sp-card .tpc-flag {
   top: 16px; left: 16px; height: 24px; padding: 0 9px;
   border: 1px solid var(--sg-line); border-radius: var(--sp-radius);
@@ -9142,7 +9181,7 @@ html { scroll-behavior: smooth; }
   opacity: 0; transition: opacity .2s var(--sp-ease), transform .25s var(--sp-ease);
 }
 .store-page[data-store-template='aurora'] .sp-card:hover .tpc-quick,
-.store-page[data-store-template='aurora'] .sp-card:focus-visible .sp-card .tpc-quick { opacity: 1; transform: translateX(-50%) translateY(0); }
+.store-page[data-store-template='aurora'] .sp-card:focus-visible .tpc-quick { opacity: 1; transform: translateX(-50%) translateY(0); }
 .store-page[data-store-template='aurora'] .sp-card .tpc-flag {
   position: absolute; top: 12px; left: 12px; z-index: 2;
   display: inline-flex; align-items: center; height: 26px; padding: 0 10px;
@@ -9865,13 +9904,8 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='shop'] .sp-service-title { font-size: 15px; -webkit-text-fill-color: var(--sp-ink); }
 .store-page[data-store-template='shop'] .sp-service:hover { border-color: var(--store-accent); }
 
-/* --- cobre: piedra cálida, tinta, acento sólido como placa --- */
-.store-page[data-store-template='cobre'] .sp-service { border-color: color-mix(in srgb, var(--sp-ink) 20%, transparent); background: var(--sp-card-solid); }
-.store-page[data-store-template='cobre'] .sp-service-ring { background: var(--store-accent-ink); color: #fff; box-shadow: none; }
-.store-page[data-store-template='cobre'] .sp-service-icon { background: var(--store-accent); color: var(--store-accent-ink); box-shadow: none; }
-.store-page[data-store-template='cobre'] .sp-service-title { -webkit-text-fill-color: var(--sp-ink); }
-.store-page[data-store-template='cobre'] .sp-service-badge { background: var(--store-accent); color: var(--store-accent-ink); }
-.store-page[data-store-template='cobre'] .sp-service:hover { border-color: var(--store-accent); transform: translateY(-4px); }
+/* --- cobre: su "Qué ofrecemos" es una lista de materiales sobre tinta
+   (ver el bloque propio más arriba), no una grilla de tarjetas. --- */
 
 /* --- minimal: plano, sin sombra, solo línea de acento --- */
 .store-page[data-store-template='minimal'] .sp-service { border: 0; box-shadow: none; border-bottom: 2px solid var(--sp-line); border-radius: 0; padding: 24px 0; background: transparent; }
