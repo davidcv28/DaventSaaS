@@ -12,7 +12,7 @@ import { useThemeStore } from '../stores/theme.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl,
-  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily,
+  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, storeThemeVars, storeFontFamily,
   STORE_TEMPLATE_FAMILIES,
   allowedTemplatesFor, resolveStoreTemplate,
   SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
@@ -748,8 +748,8 @@ async function ensureCatalog() {
 }
 watch(section, (s) => {
   if (s === 'catalogs' || s === 'pos') ensureCatalog()
-  // Al entrar a Diseño: la fuente elegida ya tiene que estar; el resto del
-  // catálogo se trae en un único <link> para previsualizar cada opción.
+  // Al entrar a Diseño: la fuente guardada ya tiene que estar cargada
+  // para que la vista previa muestre el nombre con la tipografía real.
   if (s === 'design') {
     ensureStoreFont(designForm.name_font)
   }
@@ -1228,9 +1228,10 @@ async function saveBot() {
 
 // --- Diseño web: personalización de la página pública ---
 // Contenido, logo y tema claro/oscuro: beneficio has_customization (en todos
-// los planes; el backend lo fuerza en PATCH). Fuente, tamaño, acento y
-// carrusel son premium (has_design_advanced): fuente/tamaño/acento se ven
-// bloqueados y el carrusel directamente no se muestra.
+// los planes; el backend lo fuerza en PATCH). Portada, tamaño del nombre,
+// acento y carrusel son premium (has_design_advanced): se ven bloqueados y
+// el carrusel directamente no se muestra. La fuente quedó fija en el
+// backend: el valor guardado viaja igual en el payload y lo usa la web.
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
@@ -1290,19 +1291,6 @@ function templateTierLabel(key) {
   const tier = STORE_TEMPLATES[key]?.tier
   return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Todos los planes'
 }
-function stepTemplate(dir) {
-  const list = allowedTemplates.value
-  if (!list.length) return
-  const i = list.indexOf(designForm.template)
-  designForm.template = list[(i + dir + list.length) % list.length]
-}
-function stepFont(dir) {
-  if (!canDesignAdvanced.value) return
-  const keys = Object.keys(STORE_FONTS)
-  const i = keys.indexOf(designForm.name_font)
-  designForm.name_font = keys[(i + dir + keys.length) % keys.length]
-}
-const fontPreviewStyle = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
 function pickAccent(key) {
   if (canDesignAdvanced.value) designForm.accent = key
 }
@@ -1311,6 +1299,9 @@ function pickAccent(key) {
 watch(() => store.store, (s) => {
   if (!s) return
   Object.assign(designForm, store.customization)
+  // La fuente ya no se elige acá pero la vista previa la sigue aplicando:
+  // hay que tenerla cargada cuando llega el valor guardado.
+  ensureStoreFont(designForm.name_font)
   // Si el plan ya estaba cargado y el diseño guardado quedó fuera de su
   // nivel (baja de plan o plantilla retirada), vuelve al primero permitido.
   if (!allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'classic'
@@ -1844,7 +1835,6 @@ const carouselInput = ref(null)
 const carouselBusy = ref(false)
 const carouselErr = ref('')
 const carouselImages = computed(() => store.customization.carousel || [])
-const storeFonts = STORE_FONTS
 const fontSizeMin = NAME_FONT_SIZE_MIN
 const fontSizeMax = NAME_FONT_SIZE_MAX
 const designShopName = computed(() => designForm.display_name || business.value || 'Tu negocio')
@@ -1852,10 +1842,6 @@ const designShopName = computed(() => designForm.display_name || business.value 
 // oculta el link, el CTA y la página Catálogo igual que la web real.
 const designCatalogOn = computed(() => designForm.show_catalog !== false)
 const designNameFont = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
-
-// Si cambia la fuente elegida, traerla en el momento (la lista ya las carga
-// todas al entrar a Diseño; esto cubre selecciones previas al primer ingreso).
-watch(() => designForm.name_font, (f) => ensureStoreFont(f))
 
 async function onCarouselPicked(event) {
   const file = event.target.files?.[0]
@@ -4194,13 +4180,13 @@ async function changePassword() {
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
             <div class="field">
-              <label for="design-template"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
-              <div class="fam-strip" role="radiogroup" aria-label="Familia de diseño">
+              <label id="design-fam-label"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
+              <div class="fam-strip" role="radiogroup" aria-labelledby="design-fam-label">
                 <button
                   v-for="f in templateFamilies" :key="f.key" type="button"
                   class="fam-card" :class="{ on: currentFamily?.key === f.key, locked: !familyAllowed(f) }"
                   role="radio" :aria-checked="currentFamily?.key === f.key"
-                  :disabled="!familyAllowed(f)" @click="pickFamily(f)"
+                  :aria-disabled="!familyAllowed(f)" @click="pickFamily(f)"
                 >
                   <span class="fam-thumb" :data-fam="f.key" aria-hidden="true"><i class="fc-a"></i><i class="fc-b"></i><i class="fc-c"></i><i class="fc-d"></i></span>
                   <span class="fam-meta">
@@ -4216,73 +4202,18 @@ async function changePassword() {
                   v-for="key in currentFamily.templates" :key="key" type="button"
                   class="fam-var" :class="{ on: designForm.template === key, locked: !allowedTemplates.includes(key) }"
                   role="radio" :aria-checked="designForm.template === key"
-                  :disabled="!allowedTemplates.includes(key)" @click="pickVariant(key)"
+                  :aria-disabled="!allowedTemplates.includes(key)" @click="pickVariant(key)"
                 >
                   {{ storeTemplates[key]?.label }}
                   <span v-if="!allowedTemplates.includes(key)" class="fam-var-tier"><AppIcon name="lock" :size="10" /> {{ templatePlanLabel(key) }}</span>
                 </button>
               </div>
-              <select id="design-template" v-model="designForm.template" class="select">
-                <option
-                  v-for="(t, key) in storeTemplates" :key="key" :value="key"
-                  :disabled="!allowedTemplates.includes(key)"
-                >
-                  {{ t.label }}<template v-if="!allowedTemplates.includes(key)"> · Plan {{ templatePlanLabel(key) }}</template>
-                </option>
-              </select>
-              <div class="pick-preview" aria-live="polite">
-                <span class="tpl-thumb pick-preview-thumb" :data-tpl="designForm.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
-                <div class="pick-preview-info">
-                  <span class="pick-preview-eyebrow">Diseño elegido</span>
-                  <strong>{{ storeTemplates[designForm.template]?.label }}</strong>
-                  <small>{{ storeTemplates[designForm.template]?.desc }}</small>
-                  <span class="pick-tier" :class="storeTemplates[designForm.template]?.tier">{{ templateTierLabel(designForm.template) }}</span>
-                </div>
-                <div class="pick-nav">
-                  <button type="button" class="icon-btn" aria-label="Diseño anterior" @click="stepTemplate(-1)"><AppIcon name="chevron-left" :size="15" /></button>
-                  <button type="button" class="icon-btn" aria-label="Diseño siguiente" @click="stepTemplate(1)"><AppIcon name="chevron-right" :size="15" /></button>
-                </div>
-              </div>
+              <p class="fam-status" aria-live="polite">
+                Diseño: <strong>{{ storeTemplates[designForm.template]?.label }}</strong>
+                <span class="fam-status-desc">· {{ storeTemplates[designForm.template]?.desc }}</span>
+                <span class="fam-tier" :class="storeTemplates[designForm.template]?.tier">{{ templateTierLabel(designForm.template) }}</span>
+              </p>
               <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido. Los diseños bloqueados se habilitan subiendo de plan.</p>
-            </div>
-            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="Las fuentes, el color de acento, la imagen de portada, el carrusel y las decoraciones se habilitan con el Plan premium. Los diseños Urbano y Publicidad vienen desde el Estándar." />
-            <div v-if="!canDesignAdvanced" class="btn-row">
-              <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
-            </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label for="design-font"><AppIcon name="type" :size="14" class="label-icon" aria-hidden="true" />Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <select id="design-font" v-model="designForm.name_font" class="select" :disabled="!canDesignAdvanced">
-                <option v-for="(f, key) in storeFonts" :key="key" :value="key">{{ f.label }}</option>
-              </select>
-              <div class="pick-preview font-preview" aria-live="polite">
-                <span class="font-preview-aa" :style="fontPreviewStyle" aria-hidden="true">Aa</span>
-                <div class="pick-preview-info">
-                  <span class="pick-preview-eyebrow">{{ storeFonts[designForm.name_font]?.label }}</span>
-                  <strong class="font-preview-name" :style="fontPreviewStyle">{{ designShopName }}</strong>
-                  <small class="font-preview-sample" :style="fontPreviewStyle">Catálogo online · Nuevos ingresos 0123456789</small>
-                </div>
-                <div class="pick-nav">
-                  <button type="button" class="icon-btn" aria-label="Fuente anterior" :disabled="!canDesignAdvanced" @click="stepFont(-1)"><AppIcon name="chevron-left" :size="15" /></button>
-                  <button type="button" class="icon-btn" aria-label="Fuente siguiente" :disabled="!canDesignAdvanced" @click="stepFont(1)"><AppIcon name="chevron-right" :size="15" /></button>
-                </div>
-              </div>
-              <p class="hint">Se aplica a todo el texto de tu web: nombre, secciones y catálogo.</p>
-            </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label for="design-name-size">Tamaño del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="size-slider">
-                <input
-                  id="design-name-size"
-                  v-model.number="designForm.name_font_size"
-                  type="range"
-                  :min="fontSizeMin"
-                  :max="fontSizeMax"
-                  step="1"
-                  :disabled="!canDesignAdvanced"
-                />
-                <span class="size-value">{{ designForm.name_font_size }} px</span>
-              </div>
-              <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
             </div>
             <div class="field">
               <label id="design-theme-label">Tema</label>
@@ -4300,11 +4231,8 @@ async function changePassword() {
               <p class="hint">Claro u oscuro: se aplica a la barra superior, la portada y todo tu catálogo.</p>
             </div>
             <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label for="design-accent">Color de acento <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <select id="design-accent" v-model="designForm.accent" class="select" :disabled="!canDesignAdvanced">
-                <option v-for="(a, key) in storeAccents" :key="key" :value="key">{{ a.label }}</option>
-              </select>
-              <div class="pick-strip swatches compact" aria-label="Vista previa de cada color">
+              <label id="design-accent-label">Color de acento <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="swatches" role="group" aria-labelledby="design-accent-label">
                 <button
                   v-for="(a, key) in storeAccents" :key="key" type="button"
                   class="swatch" :class="{ active: designForm.accent === key }"
@@ -4319,6 +4247,29 @@ async function changePassword() {
               </div>
               <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
             </div>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label for="design-name-size">Tamaño del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="size-slider">
+                <input
+                  id="design-name-size"
+                  v-model.number="designForm.name_font_size"
+                  type="range"
+                  :min="fontSizeMin"
+                  :max="fontSizeMax"
+                  step="1"
+                  :disabled="!canDesignAdvanced"
+                />
+                <span class="size-value">{{ designForm.name_font_size }} px</span>
+              </div>
+              <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
+            </div>
+            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="El color de acento, el tamaño del nombre, la imagen de portada, el carrusel y las decoraciones se habilitan con el Plan premium. Algunos diseños también vienen desde el Estándar." />
+            <div v-if="!canDesignAdvanced" class="btn-row">
+              <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
+            </div>
+          </div>
+          <div class="dsg-savebar">
+            <AppButton :loading="designBusy" type="button" @click="saveDesign">Guardar diseño</AppButton>
           </div>
           </div>
 

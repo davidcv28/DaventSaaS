@@ -1,201 +1,7 @@
 /* =====================================================================
-   Miniaturas de los diseños de la web (selector "Diseño de tu web").
-   Cada .tpl-thumb dibuja un mini-sitio completo: barra de navegación,
-   portada propia del estilo y una fila de 3 productos (<i><b></b>x3</i>).
-   Todo se resuelve con gradientes + 3 pseudo-elementos, sin imágenes.
-   Variables por estilo:
-     --tp-bg/nav/hero/line  superficies   --tp-card/img  tarjeta y foto
-     --tp-ink/mute/acc      tipografía y acento (acento = el del dueño)
-   ===================================================================== */
-.tpl-thumb {
-  --tp-acc: var(--brand-500); --tp-bg: #f6f8fc; --tp-nav: #fff; --tp-line: rgba(15, 23, 42, .1);
-  --tp-hero: linear-gradient(#e8eef7, #e8eef7); --tp-card: #fff; --tp-img: #d9e2f1; --tp-ink: #0f172a; --tp-mute: #b4bfd0;
-  position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; isolation: isolate;
-  transition: transform .28s cubic-bezier(.2, .8, .2, 1), box-shadow .28s;
-  background:
-    linear-gradient(var(--tp-acc), var(--tp-acc)) 5% 3.4% / 7% 5.2% no-repeat,
-    linear-gradient(var(--tp-mute), var(--tp-mute)) 68% 4.8% / 11% 2.4% no-repeat,
-    linear-gradient(var(--tp-mute), var(--tp-mute)) 92% 4.8% / 11% 2.4% no-repeat,
-    linear-gradient(var(--tp-line), var(--tp-line)) 0 12% / 100% 1px no-repeat,
-    linear-gradient(var(--tp-nav), var(--tp-nav)) 0 0 / 100% 12% no-repeat,
-    var(--tp-hero) 0 22.64% / 100% 47% no-repeat,
-    var(--tp-bg);
-}
-.tpl-thumb::before, .tpl-thumb::after { content: ''; position: absolute; z-index: 1; pointer-events: none; }
-.tpl-thumb i { position: absolute; z-index: 1; left: 6%; right: 6%; top: 64%; bottom: 7%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4%; opacity: 1; background: none; border-radius: 0; }
-.tpl-thumb i b {
-  display: block; min-width: 0; border-radius: 4px; border: 1px solid var(--tp-line); background-color: var(--tp-card);
-  background-image:
-    linear-gradient(var(--tp-acc), var(--tp-acc)),
-    linear-gradient(var(--tp-ink), var(--tp-ink)),
-    linear-gradient(var(--tp-img), var(--tp-img));
-  background-repeat: no-repeat;
-  background-size: 34% 2px, 68% 2px, 100% 62%;
-  background-position: 6px 94%, 6px 80%, 0 0;
-}
-.tpl-thumb i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(color-mix(in srgb, var(--tp-img) 78%, var(--tp-acc)), color-mix(in srgb, var(--tp-img) 78%, var(--tp-acc))); }
-.tpl-thumb-btn:hover .tpl-thumb, .tpl-thumb-btn.active .tpl-thumb { transform: translateY(-1px); box-shadow: 0 8px 18px -10px rgba(15, 23, 42, .45); }
-.tpl-thumb-btn { width: 132px; }
-.pick-preview-thumb { width: 172px; }
-@media (prefers-reduced-motion: no-preference) {
-  .pick-preview-thumb::before { animation: tpl-float 4.2s ease-in-out infinite; }
-}
-@keyframes tpl-float { 50% { translate: 0 -3px; } }
-@media (max-width: 640px) { .tpl-thumb-btn { width: 112px; } .pick-preview-thumb { width: 100%; } }
-
-/* Clásico: portada de acento con marca blanca centrada y botones. */
-.tpl-thumb[data-tpl='classic'] { --tp-hero: linear-gradient(135deg, var(--tp-acc), color-mix(in srgb, var(--tp-acc) 55%, #1e1b4b)); }
-.tpl-thumb[data-tpl='classic']::before { left: 50%; top: 17%; width: 13%; aspect-ratio: 1; border-radius: 28%; background: #fff; transform: translateX(-50%); box-shadow: 0 5px 10px -4px rgba(0, 0, 0, .35); }
-.tpl-thumb[data-tpl='classic']::after { left: 24%; right: 24%; top: 37%; height: 3.2%; border-radius: 99px; background: #fff; box-shadow: 0 7px 0 -.5px rgba(255, 255, 255, .55), 0 15px 0 -.5px rgba(255, 255, 255, .0); }
-
-/* Perspectiva: piso isométrico, rombo flotante y título con relieve. */
-.tpl-thumb[data-tpl='perspective'] { --tp-bg: #f3f6fa; --tp-hero: linear-gradient(180deg, #f1f6fb 0 58%, #dde8f1 58%); }
-.tpl-thumb[data-tpl='perspective']::before { right: 12%; top: 22%; width: 18%; aspect-ratio: 1; border-radius: 12%; background: var(--tp-acc); transform: rotate(45deg) skew(-8deg, -8deg); box-shadow: -6px 6px 0 color-mix(in srgb, var(--tp-acc) 30%, transparent), -12px 12px 0 color-mix(in srgb, var(--tp-acc) 12%, transparent); }
-.tpl-thumb[data-tpl='perspective']::after { left: 8%; top: 26%; width: 44%; height: 4.4%; border-radius: 2px; background: #111827; box-shadow: 2px 2px 0 color-mix(in srgb, var(--tp-acc) 40%, transparent), 0 9px 0 #8fa0b6; }
-.tpl-thumb[data-tpl='perspective'] i b { transform: perspective(160px) rotateX(10deg); box-shadow: 0 4px 6px -3px rgba(15, 23, 42, .35); }
-
-/* Dúo: placa de imagen a la izquierda, texto a la derecha. */
-.tpl-thumb[data-tpl='duo'] { --tp-hero: linear-gradient(#edf1f7, #edf1f7); --tp-bg: #f7f9fc; }
-.tpl-thumb[data-tpl='duo']::before { left: 6%; top: 17%; width: 31%; height: 36%; border-radius: 7px; background: linear-gradient(150deg, var(--tp-acc), color-mix(in srgb, var(--tp-acc) 60%, #0f172a)); box-shadow: 0 8px 12px -8px rgba(15, 23, 42, .5); }
-.tpl-thumb[data-tpl='duo']::after { right: 7%; top: 22%; width: 47%; height: 4.2%; border-radius: 2px; background: #0f172a; box-shadow: 0 8px 0 -.5px #0f172a, 0 19px 0 -1px #94a3b8, 0 26px 0 -1px #94a3b8; }
-.tpl-thumb[data-tpl='duo'] i { top: 66%; grid-template-columns: repeat(3, 38%); overflow: hidden; }
-
-/* Urbano: papel, bordes gruesos, sombra dura y pegatina. */
-.tpl-thumb[data-tpl='street'] { --tp-bg: #fff; --tp-nav: #fff; --tp-line: #111827; --tp-hero: linear-gradient(#fff, #fff); --tp-ink: #111827; --tp-img: #e5e7eb; --tp-mute: #6b7280; }
-.tpl-thumb[data-tpl='street']::before { right: 9%; top: 19%; width: 17%; aspect-ratio: 1; border-radius: 50%; background: var(--tp-acc); border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
-.tpl-thumb[data-tpl='street']::after { left: 7%; top: 24%; width: 54%; height: 8%; background: #111827; box-shadow: 3px 3px 0 var(--tp-acc), 0 14px 0 -3px #111827; }
-.tpl-thumb[data-tpl='street'] i b { border: 1.5px solid #111827; border-radius: 1px; box-shadow: 2px 2px 0 #111827; }
-.tpl-thumb[data-tpl='street'] i b:nth-child(2) { translate: 0 -2px; }
-
-/* Publicidad: afiche de acento con tramado, sello y cinta de ofertas. */
-.tpl-thumb[data-tpl='promo'] { --tp-nav: color-mix(in srgb, var(--tp-acc) 45%, #1e1b4b); --tp-mute: rgba(255, 255, 255, .6); --tp-line: #ffe14d; --tp-hero: linear-gradient(120deg, var(--tp-acc), #3730a3); --tp-bg: #f7f7fb; }
-.tpl-thumb[data-tpl='promo']::before { right: 8%; top: 18%; width: 19%; aspect-ratio: 1; border-radius: 50%; background: #ffe14d; border: 2px solid #111827; box-shadow: 2px 2px 0 #111827; }
-.tpl-thumb[data-tpl='promo']::after { left: 8%; top: 24%; width: 46%; height: 6%; border-radius: 2px; background: #fff; box-shadow: 0 11px 0 #ffe14d, 0 0 0 100px rgba(255, 255, 255, 0); }
-.tpl-thumb[data-tpl='promo'] i b { border-radius: 5px; border-color: rgba(15, 23, 42, .12); box-shadow: 0 5px 8px -5px rgba(55, 48, 163, .55); }
-.tpl-thumb[data-tpl='promo'] i b:first-child { outline: 1.5px solid #ffe14d; outline-offset: -1px; }
-
-/* Terminal: pantalla de fósforo, puntos de ventana, prompt y cursor. */
-.tpl-thumb[data-tpl='terminal'] { --tp-bg: #0b0f0c; --tp-nav: #111713; --tp-line: color-mix(in srgb, var(--tp-acc) 35%, transparent); --tp-hero: radial-gradient(circle at 85% 0%, color-mix(in srgb, var(--tp-acc) 30%, #0b0f0c), #0b0f0c 70%); --tp-card: #101712; --tp-img: #1c2a20; --tp-ink: #4f6355; --tp-mute: #2c3a30; border-color: #1d2a21; }
-.tpl-thumb[data-tpl='terminal']::before { left: 15%; top: 3.6%; width: 5px; height: 5px; border-radius: 50%; background: #ff5f57; box-shadow: 8px 0 0 #febc2e, 16px 0 0 #28c840; }
-.tpl-thumb[data-tpl='terminal']::after { left: 7%; top: 26%; width: 50%; height: 3.4%; border-radius: 1px; background: #cfe9d6; box-shadow: 0 9px 0 -.5px #55705d, 0 17px 0 -.5px #3a4d40; }
-.tpl-thumb[data-tpl='terminal'] i { grid-template-columns: 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 3px; top: 63%; }
-.tpl-thumb[data-tpl='terminal'] i b { border-radius: 2px; border-color: #1d2a21; background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(#4f6355, #4f6355), linear-gradient(#2a3b2f, #2a3b2f), linear-gradient(var(--tp-img), var(--tp-img)); background-size: 9% 2px, 38% 2px, 22% 2px, 12% 100%; background-position: 96% 50%, 22% 50%, 62% 50%, 0 0; }
-.tpl-thumb[data-tpl='terminal'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(#4f6355, #4f6355), linear-gradient(#2a3b2f, #2a3b2f), linear-gradient(var(--tp-img), var(--tp-img)); }
-
-/* Lookbook: papel cálido, titular serif y pliegos numerados. */
-.tpl-thumb[data-tpl='lookbook'] { --tp-bg: #f4f0e7; --tp-nav: #f4f0e7; --tp-line: #d9d0c0; --tp-hero: linear-gradient(#f4f0e7, #f4f0e7); --tp-card: #faf7f0; --tp-img: #e2dacb; --tp-ink: #1a1613; --tp-mute: #a99d8d; --tp-acc: #8c5a3c; border-color: #d9d0c0; }
-.tpl-thumb[data-tpl='lookbook']::before { right: 7%; top: 18%; width: 30%; height: 38%; background: linear-gradient(160deg, #e9dfcd, #cdbfa6); border: 1px solid #1a1613; box-shadow: 3px 3px 0 #e2dacb, 3px 3px 0 1px #1a1613; }
-.tpl-thumb[data-tpl='lookbook']::after { left: 8%; top: 20%; width: 42%; height: 5%; background: #1a1613; box-shadow: 0 9px 0 -1px #1a1613, 0 18px 0 -1px #1a1613, 0 31px 0 -2px #8c8375; }
-.tpl-thumb[data-tpl='lookbook'] i b { border-radius: 0; background-size: 34% 1.5px, 68% 1.5px, 100% 72%; border-color: #cfc5b3; }
-.tpl-thumb[data-tpl='lookbook'] i b:nth-child(2) { translate: 0 3px; }
-
-/* Tienda Pro: masthead de acento, buscador y banner con promos. */
-.tpl-thumb[data-tpl='shop'] { --tp-bg: #f1f4fa; --tp-hero: linear-gradient(#f1f4fa, #f1f4fa);
-  background:
-    linear-gradient(#fff, #fff) 50% 17% / 56% 7% no-repeat,
-    linear-gradient(rgba(255, 255, 255, .85), rgba(255, 255, 255, .85)) 5% 9% / 14% 5% no-repeat,
-    linear-gradient(#c4cde0, #c4cde0) 8% 29.5% / 10% 2.4% no-repeat,
-    linear-gradient(#c4cde0, #c4cde0) 38% 29.5% / 10% 2.4% no-repeat,
-    linear-gradient(#c4cde0, #c4cde0) 68% 29.5% / 10% 2.4% no-repeat,
-    linear-gradient(#fff, #fff) 0 33% / 100% 12% no-repeat,
-    linear-gradient(var(--tp-acc), color-mix(in srgb, var(--tp-acc) 70%, #0b1020)) 0 0 / 100% 30% no-repeat,
-    #f1f4fa; }
-.tpl-thumb[data-tpl='shop']::before { left: 6%; top: 36%; width: 64%; height: 25%; border-radius: 4px; background: linear-gradient(105deg, var(--tp-acc), color-mix(in srgb, var(--tp-acc) 50%, #ffb347)); box-shadow: 0 5px 8px -5px rgba(15, 23, 42, .5); }
-.tpl-thumb[data-tpl='shop']::after { right: 6%; top: 36%; width: 20%; height: 25%; border-radius: 4px; background: #fff; border: 1px solid var(--tp-line); box-shadow: inset 0 -9px 0 -4px color-mix(in srgb, var(--tp-acc) 40%, #fff); }
-.tpl-thumb[data-tpl='shop'] i { top: 66%; }
-.tpl-thumb[data-tpl='shop'] i b { border-radius: 4px; background-size: 34% 2px, 68% 2px, 100% 58%; }
-
-/* Cobre: piedra y tinta, titular condensado y bloques de acento. */
-.tpl-thumb[data-tpl='cobre'] { --tp-bg: #e9e8e4; --tp-nav: #e9e8e4; --tp-line: rgba(16, 19, 24, .16); --tp-hero: linear-gradient(#e9e8e4, #e9e8e4); --tp-card: #f2f1ed; --tp-img: #cfcdc6; --tp-ink: #101318; --tp-mute: #8a8d94; border-color: #cfcdc6; }
-.tpl-thumb[data-tpl='cobre']::before { right: 7%; top: 17%; width: 30%; height: 38%; border-radius: 2px; background: var(--tp-acc); box-shadow: -9px 9px 0 -2px #101318; }
-.tpl-thumb[data-tpl='cobre']::after { left: 7%; top: 19%; width: 46%; height: 8%; background: #101318; box-shadow: 0 13px 0 -2px #101318, 0 27px 0 -1px var(--tp-acc); }
-.tpl-thumb[data-tpl='cobre'] i b { border-radius: 2px; background-size: 34% 2px, 68% 2px, 100% 66%; border-color: rgba(16, 19, 24, .14); }
-.tpl-thumb[data-tpl='cobre'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#101318, #101318); }
-
-/* Minimal: barra de anuncio, hero tipográfico y tarjetas sin cromo. */
-.tpl-thumb[data-tpl='minimal'] { --tp-bg: #fafaf8; --tp-nav: #fafaf8; --tp-line: #e3e2dd; --tp-hero: linear-gradient(#111, #111); --tp-card: transparent; --tp-img: #efeeea; --tp-ink: #111; --tp-mute: #b6b5af; border-color: #e3e2dd;
-  background:
-    linear-gradient(#111, #111) 5% 5% / 7% 4.5% no-repeat,
-    linear-gradient(#b6b5af, #b6b5af) 68% 5.5% / 11% 2.2% no-repeat,
-    linear-gradient(#b6b5af, #b6b5af) 92% 5.5% / 11% 2.2% no-repeat,
-    linear-gradient(#e3e2dd, #e3e2dd) 0 14% / 100% 1px no-repeat,
-    linear-gradient(#111, #111) 0 0 / 100% 4% no-repeat,
-    #fafaf8; }
-.tpl-thumb[data-tpl='minimal']::before { left: 8%; top: 24%; width: 50%; height: 6%; background: #111; box-shadow: 0 10px 0 -1px #111, 0 22px 0 -1.5px #a9a8a2; }
-.tpl-thumb[data-tpl='minimal']::after { left: 8%; top: 49%; width: 22%; height: 5%; background: var(--tp-acc); box-shadow: 0 0 0 0 transparent; }
-.tpl-thumb[data-tpl='minimal'] i b { border: 0; border-radius: 1px; background-size: 34% 1.5px, 68% 1.5px, 100% 70%; background-position: 0 95%, 0 82%, 0 0; }
-.tpl-thumb[data-tpl='minimal'] i b:nth-child(1) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(#111, #111), linear-gradient(#efeeea, #efeeea); }
-
-/* Boutique: marfil, serif, barra de anuncio y placa de prenda. */
-.tpl-thumb[data-tpl='boutique'] { --tp-bg: #f6f4ee; --tp-nav: #f6f4ee; --tp-line: #e0dacd; --tp-card: #fff; --tp-img: #ece7dc; --tp-ink: #1c1917; --tp-mute: #b3a99a; --tp-hero: linear-gradient(#f6f4ee, #f6f4ee); border-color: #e0dacd;
-  background:
-    linear-gradient(#1c1917, #1c1917) 5% 5.6% / 7% 4.5% no-repeat,
-    linear-gradient(#b3a99a, #b3a99a) 68% 6% / 11% 2.2% no-repeat,
-    linear-gradient(#b3a99a, #b3a99a) 92% 6% / 11% 2.2% no-repeat,
-    linear-gradient(#e0dacd, #e0dacd) 0 14% / 100% 1px no-repeat,
-    linear-gradient(#1c1917, #1c1917) 0 0 / 100% 4% no-repeat,
-    #f6f4ee; }
-.tpl-thumb[data-tpl='boutique']::before { right: 8%; top: 22%; width: 29%; height: 35%; background: linear-gradient(165deg, #f0eadc, #d9cfba); border: 1px solid #e0dacd; box-shadow: 0 6px 10px -7px rgba(28, 25, 23, .6); }
-.tpl-thumb[data-tpl='boutique']::after { left: 8%; top: 25%; width: 44%; height: 5.4%; background: #1c1917; box-shadow: 0 11px 0 -1px #1c1917, 0 24px 0 -2px #a89e90, 0 36px 0 -1px var(--tp-acc); }
-.tpl-thumb[data-tpl='boutique'] i b { border-radius: 0; background-size: 34% 1.5px, 68% 1.5px, 100% 70%; }
-.tpl-thumb[data-tpl='boutique'] i b:nth-child(2) { translate: 0 3px; }
-
-/* Bloque: papel y tinta, reglas visibles, titular XXL en barras duras y
-   sello de acento — el mini-sitio es una grilla suiza. */
-.tpl-thumb[data-tpl='bloque'] { --tp-bg: #f1f1ec; --tp-nav: #f1f1ec; --tp-line: #0b0b0b; --tp-hero: linear-gradient(#f1f1ec, #f1f1ec); --tp-card: #f1f1ec; --tp-img: #dcdcd4; --tp-ink: #0b0b0b; --tp-mute: #6b6b66; border-color: #0b0b0b; border-width: 1.5px; }
-.tpl-thumb[data-tpl='bloque']::before { right: 8%; top: 17%; width: 13%; aspect-ratio: 1; background: var(--tp-acc); }
-.tpl-thumb[data-tpl='bloque']::after { left: 6%; top: 20%; width: 52%; height: 7.5%; background: #0b0b0b; box-shadow: 0 12px 0 -1px #0b0b0b, 0 24px 0 -1.5px #6b6b66; }
-.tpl-thumb[data-tpl='bloque'] i { top: 62%; gap: 3px; }
-.tpl-thumb[data-tpl='bloque'] i b { border: 1.5px solid #0b0b0b; border-radius: 0; background-size: 34% 2px, 68% 2px, 100% 66%; }
-
-/* Riso: papel crema con trama, titular a tintas rosa y azul, sello amarillo
-   y tarjetas redondas con sombra desplazada — risografía. */
-.tpl-thumb[data-tpl='riso'] { --tp-bg: #fff5e6; --tp-nav: #fff5e6; --tp-line: #1e1a33; --tp-hero: radial-gradient(rgba(30, 26, 51, .14) 1px, transparent 1.3px) 0 0 / 6px 6px, #fff5e6; --tp-card: #fffdf8; --tp-img: #ff5fa2; --tp-ink: #1e1a33; --tp-mute: #6e6883; border-color: #1e1a33; border-width: 1.5px; }
-.tpl-thumb[data-tpl='riso']::before { right: 9%; top: 19%; width: 21%; aspect-ratio: 1; border-radius: 50%; background: #ffcf3f; border: 1.5px solid #1e1a33; box-shadow: 2px 2px 0 #1e1a33; }
-.tpl-thumb[data-tpl='riso']::after { left: 7%; top: 19%; width: 44%; height: 7.5%; border-radius: 2px; background: #ff5fa2; box-shadow: 0 12px 0 -1px #3550f5, 0 24px 0 -1.5px #1e1a33; }
-.tpl-thumb[data-tpl='riso'] i b { border: 1.5px solid #1e1a33; border-radius: 6px; box-shadow: 1.5px 1.5px 0 #1e1a33; background-size: 34% 2px, 68% 2px, 100% 66%; }
-.tpl-thumb[data-tpl='riso'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#ffcf3f, #ffcf3f); }
-.tpl-thumb[data-tpl='riso'] i b:nth-child(3) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#6fe0c0, #6fe0c0); }
-
-/* Signature: noche de espresso, placa enmarcada en doble filete y
-   titular grabado — el acento es la rúbrica de la casa. */
-.tpl-thumb[data-tpl='signature'] { --tp-bg: #16130f; --tp-nav: #16130f; --tp-line: rgba(242, 236, 220, .16); --tp-hero: radial-gradient(circle at 82% -10%, color-mix(in srgb, var(--tp-acc) 30%, transparent), transparent 60%), #16130f; --tp-card: #1e1a14; --tp-img: #2a251d; --tp-ink: #f2ecdc; --tp-mute: #544c3e; border-color: #2c2620; }
-.tpl-thumb[data-tpl='signature']::before { right: 8%; top: 20%; width: 27%; height: 40%; border: 1px solid rgba(242, 236, 220, .45); border-radius: 1px; background: linear-gradient(160deg, #3a332a, #241f18); box-shadow: inset 0 0 0 3px #16130f, inset 0 0 0 4px rgba(242, 236, 220, .22); }
-.tpl-thumb[data-tpl='signature']::after { left: 8%; top: 24%; width: 46%; height: 5.4%; background: #f2ecdc; box-shadow: 0 11px 0 -1px #f2ecdc, 0 26px 0 -1px #7a7263, 0 37px 0 0 var(--tp-acc); }
-.tpl-thumb[data-tpl='signature'] i b { border-radius: 1px; border-color: rgba(242, 236, 220, .2); background-size: 34% 1.5px, 68% 1.5px, 100% 66%; }
-.tpl-thumb[data-tpl='signature'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#332c22, #332c22); }
-
-/* Signature: noche de espresso, marfil y acento con marcos de doble filete. */
-.tpl-thumb[data-tpl='signature'] { --tp-bg: #17110d; --tp-nav: #17110d; --tp-line: color-mix(in srgb, var(--tp-acc) 38%, transparent); --tp-hero: radial-gradient(circle at 50% 0%, #2c1f16, #17110d 72%); --tp-card: #1f1711; --tp-img: #3a2a1e; --tp-ink: #e9dcc5; --tp-mute: #5a4838; border-color: #2e2218; }
-.tpl-thumb[data-tpl='signature']::before { left: 50%; top: 16%; width: 12%; aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--tp-acc); background: radial-gradient(circle, color-mix(in srgb, var(--tp-acc) 35%, transparent), transparent 70%); transform: translateX(-50%); box-shadow: 0 0 0 3px #17110d, 0 0 0 4px color-mix(in srgb, var(--tp-acc) 45%, transparent); }
-.tpl-thumb[data-tpl='signature']::after { left: 26%; right: 26%; top: 40%; height: 3%; border-radius: 99px; background: #e9dcc5; box-shadow: 0 8px 0 -.5px color-mix(in srgb, #e9dcc5 50%, transparent), 0 15px 0 -1px var(--tp-acc); }
-.tpl-thumb[data-tpl='signature'] i b { border-radius: 1px; border-color: color-mix(in srgb, var(--tp-acc) 45%, transparent); outline: 1px solid color-mix(in srgb, var(--tp-acc) 22%, transparent); outline-offset: 2px; background-size: 34% 1.5px, 68% 1.5px, 100% 66%; }
-
-/* Aurora: cielo nocturno con cortina de luz, placa panorámica y tarjeta
-   de vidrio solapando su borde inferior. */
-.tpl-thumb[data-tpl='aurora'] { --tp-bg: #070b16; --tp-nav: #070b16; --tp-line: rgba(238, 242, 252, .13); --tp-card: #101728; --tp-img: #1a2440; --tp-ink: #eef2fc; --tp-mute: #46557a; border-color: #1c2740;
-  background:
-    linear-gradient(var(--tp-acc), var(--tp-acc)) 5% 3.4% / 7% 5.2% no-repeat,
-    linear-gradient(var(--tp-mute), var(--tp-mute)) 68% 4.8% / 11% 2.4% no-repeat,
-    linear-gradient(var(--tp-mute), var(--tp-mute)) 92% 4.8% / 11% 2.4% no-repeat,
-    linear-gradient(var(--tp-line), var(--tp-line)) 0 12% / 100% 1px no-repeat,
-    linear-gradient(rgba(7, 11, 22, .72), rgba(7, 11, 22, .72)) 0 0 / 100% 12% no-repeat,
-    linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--tp-acc) 38%, transparent) 46%, transparent 60%) 0 12% / 100% 57% no-repeat,
-    radial-gradient(circle at 78% 16%, color-mix(in srgb, var(--tp-acc) 26%, transparent), transparent 52%),
-    #0a0f1e; }
-.tpl-thumb[data-tpl='aurora']::before { left: 6%; right: 6%; top: 15%; height: 34%; border-radius: 10px; border: 1px solid rgba(238, 242, 252, .18); background: linear-gradient(120deg, color-mix(in srgb, var(--tp-acc) 42%, #1a2440), #101728); }
-.tpl-thumb[data-tpl='aurora']::after { left: 10%; top: 37%; width: 46%; height: 19%; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .22); background: color-mix(in srgb, #070b16 62%, transparent); box-shadow: 0 8px 16px -8px rgba(3, 6, 14, .8), inset 34% 0 0 -2px transparent; }
-.tpl-thumb[data-tpl='aurora'] i b { border-radius: 6px; border-color: rgba(238, 242, 252, .16); background-color: transparent; background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(color-mix(in srgb, #070b16 60%, transparent), color-mix(in srgb, #070b16 60%, transparent)), linear-gradient(var(--tp-img), var(--tp-img)); background-size: 34% 1.5px, 68% 1.5px, 84% 26%, 100% 100%; background-position: 8% 86%, 8% 76%, 8% 100%, 0 0; }
-.tpl-thumb[data-tpl='aurora'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(color-mix(in srgb, #070b16 60%, transparent), color-mix(in srgb, #070b16 60%, transparent)), linear-gradient(color-mix(in srgb, var(--tp-img) 70%, var(--tp-acc)), color-mix(in srgb, var(--tp-img) 70%, var(--tp-acc))); }
-
-/* Terra: papel cálido, arco de portada y barras serif. */
-.tpl-thumb[data-tpl='terra'] { --tp-bg: #f7f1e6; --tp-nav: #fbf5eb; --tp-line: rgba(36, 29, 24, .14); --tp-hero: linear-gradient(#f3eadb, #f3eadb); --tp-card: #fffaf2; --tp-img: #e6d8c4; --tp-ink: #241d18; --tp-mute: #b7a691; }
-.tpl-thumb[data-tpl='terra']::before { left: 8%; top: 18%; width: 36%; height: 34%; border-radius: 999px 999px 8px 8px; background: linear-gradient(160deg, color-mix(in srgb, var(--tp-acc) 45%, #fffaf2), var(--tp-acc)); }
-.tpl-thumb[data-tpl='terra']::after { right: 8%; top: 22%; width: 42%; height: 3.6%; border-radius: 99px; background: var(--tp-ink); box-shadow: 0 8px 0 -1px var(--tp-ink), 0 19px 0 -1px var(--tp-mute), 0 26px 0 -1px var(--tp-mute); }
-.tpl-thumb[data-tpl='terra'] i b { border-radius: 12px 12px 4px 4px; }
-
-/* =====================================================================
    Selector de FAMILIAS de diseño (Dashboard → "Diseño de tu web").
+   Único control para elegir plantilla: una .fam-card por familia (elige
+   su primera variante permitida) + .fam-variants con pills por variante.
    Cada .fam-thumb dibuja el esqueleto de la familia con 4 <i> genéricos:
    no es una imagen, es una mini-composición CSS real.
    ===================================================================== */
@@ -206,13 +12,13 @@
 }
 .fam-strip::-webkit-scrollbar { display: none; }
 .fam-card {
-  flex: none; width: 160px; min-height: 200px; scroll-snap-align: start;
+  flex: none; width: 160px; min-width: 0; min-height: 200px; scroll-snap-align: start;
   display: grid; grid-template-rows: 128px auto; gap: 0; padding: 0;
   border: 1.5px solid var(--line); border-radius: 14px; background: var(--card);
   font: inherit; color: var(--ink); cursor: pointer; overflow: hidden;
   transition: border-color .15s, box-shadow .15s, transform .15s;
 }
-.fam-card:hover { border-color: var(--brand-400, var(--brand)); }
+@media (hover: hover) { .fam-card:hover { border-color: var(--brand-400, var(--brand)); } }
 .fam-card.on { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
 .fam-card.locked { opacity: .55; cursor: not-allowed; }
 .fam-card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
@@ -233,9 +39,20 @@
 .fam-var.on { border-color: var(--brand); background: var(--brand-soft); }
 .fam-var.locked { opacity: .55; cursor: not-allowed; }
 .fam-var-tier { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; color: var(--muted); }
+
+/* Línea de estado bajo el selector: qué diseño quedó aplicado y su tier. */
+.dsg-card .fam-status { display: flex; align-items: baseline; gap: 4px 8px; flex-wrap: wrap; margin: 2px 0 8px; font-size: 12.5px; color: var(--muted); }
+.fam-status strong { color: var(--ink); font-weight: 700; }
+.fam-status-desc { min-width: 0; overflow-wrap: anywhere; }
+.fam-tier { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--ok-line); background: var(--ok-bg); color: var(--ok-ink); }
+.fam-tier.plus { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); }
+.fam-tier.advanced { border-color: transparent; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; }
+
 @media (max-width: 640px) {
-  .fam-strip { margin-inline: -4px; padding-inline: 4px; }
-  .fam-card { width: 72%; }
+  /* Al pulgar: la tira deja de ser carrusel y pasa a grilla 2×2 sin
+     overflow horizontal; el thumb baja para que el meta no colisione. */
+  .fam-strip { display: grid; grid-template-columns: 1fr 1fr; overflow: visible; scroll-snap-type: none; touch-action: auto; padding-bottom: 0; }
+  .fam-card { width: auto; min-height: 0; grid-template-rows: 100px auto; }
 }
 
 /* --- Indumentaria: titular XXL cortando una foto + cinta --- */

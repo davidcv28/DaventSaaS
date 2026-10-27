@@ -693,14 +693,14 @@ body { transition: background-color .2s ease, color .2s ease; }
 
 /* ===== Diseño web (editor del dashboard) ===== */
 .theme-options { display: flex; gap: 10px; }
-.theme-option { display: flex; align-items: center; gap: 10px; flex: 1; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
-.theme-option:hover { border-color: var(--line-strong); }
+.theme-option { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+@media (hover: hover) { .theme-option:hover { border-color: var(--line-strong); } }
 .theme-option.active { border-color: var(--brand-500); box-shadow: var(--ring); }
 .theme-thumb { width: 34px; height: 22px; border-radius: 5px; border: 1px solid var(--line); background: linear-gradient(180deg, #fff 55%, #eef2ff 55%); flex: none; }
 .theme-thumb[data-store-theme='dark'] { background: linear-gradient(180deg, #151b2e 55%, #28304d 55%); }
 .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
 .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; background: var(--swatch); color: #fff; display: grid; place-items: center; cursor: pointer; padding: 0; transition: transform .1s, box-shadow .15s; }
-.swatch:hover { transform: scale(1.06); }
+@media (hover: hover) { .swatch:hover { transform: scale(1.06); } }
 .swatch.active { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--swatch); }
 .design-preview { --sp-bg: color-mix(in srgb, var(--store-accent-soft, #eef2ff) 74%, #f4f6fb); --sp-card: rgba(255, 255, 255, .58); --sp-ink: #0f172a; --sp-ink-2: #334155; --sp-muted: #64748b; --sp-line: color-mix(in srgb, var(--store-accent) 34%, #d7dce8); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--sp-bg); color: var(--sp-ink); margin-bottom: 18px; font-family: var(--store-font, inherit); }
 .design-preview[data-store-theme='dark'] { --sp-bg: #0d1220; --sp-card: #151b2e; --sp-ink: #e8ecf7; --sp-ink-2: #c3cbdf; --sp-muted: #93a0bd; --sp-line: #28304d; }
@@ -733,7 +733,12 @@ body { transition: background-color .2s ease, color .2s ease; }
 .logo-box { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .logo-thumb { width: 56px; height: 56px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: grid; place-items: center; overflow: hidden; flex: none; }
 .logo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.logo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.logo-actions { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+@media (max-width: 480px) {
+  /* Logo y portada apilados: los botones ocupan todo el ancho bajo el thumb. */
+  .logo-actions { flex: 1 1 100%; }
+  .logo-actions .btn { flex: 1 1 0; min-height: 44px; }
+}
 /* Medidor de almacenamiento de imágenes (StorageMeter.vue): usado en
    Resumen y en la sección Mi catálogo. */
 .storage-meter { display: grid; gap: 8px; }
@@ -750,18 +755,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 .dp-map { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 14px 18px 16px; padding: 10px; border: 1px dashed var(--sp-line); border-radius: 10px; background: var(--sp-soft); font-size: 11.5px; color: var(--sp-muted); }
 .dp-map .icon { color: var(--store-accent); }
 
-/* Selector de diseño de la web: combobox accesible (.select con todas las
-   plantillas; las fuera del plan van disabled) + tira de miniaturas
-   wireframe como atajo visual. El mismo patrón aplica a fuentes
-   (.font-chip) y acentos (.swatches.compact). */
-.pick-strip { display: flex; gap: 8px; margin-top: 10px; padding: 2px; overflow-x: auto; scrollbar-width: thin; }
-.tpl-thumb-btn { position: relative; flex: none; width: 118px; display: grid; gap: 5px; justify-items: stretch; padding: 4px 4px 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); font: inherit; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
-.tpl-thumb-btn:hover { border-color: var(--line-strong); }
-.tpl-thumb-btn.active { border-color: var(--brand-500); box-shadow: var(--ring); }
-.tpl-thumb-btn[aria-disabled='true'] { opacity: .55; cursor: default; }
-.tpl-thumb-btn[aria-disabled='true']:hover { border-color: var(--line); }
-.tpl-thumb-name { font-size: 10px; font-weight: 700; color: var(--ink-2); text-align: center; }
-.tpl-thumb-lock { position: absolute; top: 7px; right: 7px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); color: var(--muted); }
 /* Perspectiva: hero claro con rombo isométrico flotante y título tinta. */
 /* Publicidad: afiche amarillo/acento con sello y cinta */
 .design-preview[data-store-template='promo'] .dp-nav { background: var(--store-accent-ink); border-bottom: 3px solid #ffe14d; }
@@ -792,11 +785,13 @@ body { transition: background-color .2s ease, color .2s ease; }
 .cover-thumb { display: grid; place-items: center; width: 128px; aspect-ratio: 16 / 9; flex: none; border: 1px dashed var(--line-strong); border-radius: 8px; overflow: hidden; background: var(--surface); color: var(--muted); }
 .cover-thumb:not(.empty) { border-style: solid; border-color: var(--line); }
 .cover-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 480px) {
+  .cover-thumb { width: 100%; max-width: 300px; }
+}
 .dp-hero.has-cover { background: linear-gradient(120deg, color-mix(in srgb, var(--store-accent-ink) 82%, transparent), color-mix(in srgb, var(--store-accent) 48%, transparent)), var(--dp-cover) center / cover no-repeat; color: #fff; }
 .design-preview[data-store-template='street'] .dp-hero.has-cover { background: linear-gradient(120deg, rgba(15, 23, 42, .78), rgba(15, 23, 42, .3)), var(--dp-cover) center / cover no-repeat; color: #fff; }
 .design-preview .dp-hero.has-cover .dp-title, .design-preview .dp-hero.has-cover .dp-desc { color: #fff; }
 .design-preview .dp-hero.has-cover .dp-btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .6); }
-@media (max-width: 640px) { .tpl-thumb-btn { width: 104px; } }
 
 /* Vista previa por diseño (data-store-template): refleja la portada real. */
 /* Perspectiva: misma banda clara de la web real (hero centrado). */
@@ -1252,17 +1247,11 @@ body { transition: background-color .2s ease, color .2s ease; }
 @media (max-width: 560px) {
   .mk-pair { grid-template-columns: 1fr; }
 }
-/* Tiras de vista previa junto a los combobox de Diseño web: cada chip de
-   fuente se renderiza con su propia familia y cada punto de acento con su
-   color; ambos escriben el mismo v-model del <select>. */
-.font-chip { flex: none; padding: 6px 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
-.font-chip:hover { border-color: var(--line-strong); }
-.font-chip.active { border-color: var(--brand-500); box-shadow: var(--ring); }
-.font-chip[aria-disabled='true'], .swatch[aria-disabled='true'] { opacity: .55; cursor: default; }
-.font-chip[aria-disabled='true']:hover { border-color: var(--line); }
-.swatches.compact .swatch { width: 26px; height: 26px; flex: none; }
+/* Puntos de acento del Diseño web: cada .swatch pinta su color y escribe
+   designForm.accent directo (1 tap; el estado se marca con check + ring). */
+.swatch[aria-disabled='true'] { opacity: .55; cursor: default; }
 .size-slider { display: flex; align-items: center; gap: 12px; }
-.size-slider input[type='range'] { flex: 1; height: 40px; accent-color: var(--brand-500); cursor: pointer; }
+.size-slider input[type='range'] { flex: 1; min-width: 0; height: 40px; accent-color: var(--brand-500); cursor: pointer; }
 .size-value { flex: none; min-width: 56px; padding: 7px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink-2); font-size: 13px; font-weight: 700; text-align: center; }
 .carousel-box { display: flex; gap: 10px; flex-wrap: wrap; }
 .carousel-thumb { position: relative; width: 108px; height: 72px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
@@ -1279,9 +1268,8 @@ body { transition: background-color .2s ease, color .2s ease; }
    atenuados con un badge "Premium" y los controles quedan deshabilitados. */
 .lock-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; background: var(--brand-soft); color: var(--brand-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 1px; }
 .lock-badge .icon { color: var(--brand-500); }
-.field.locked .pick-strip, .field.locked .size-slider { opacity: .55; }
-.field.locked .font-chip, .field.locked .swatch, .field.locked .size-slider input[type='range'] { cursor: default; }
-.field.locked .font-chip:hover { border-color: var(--line); }
+.field.locked .swatches, .field.locked .size-slider { opacity: .55; }
+.field.locked .swatch, .field.locked .size-slider input[type='range'] { cursor: default; }
 .field.locked .swatch:hover { transform: none; }
 .qr-box { display: grid; place-items: center; margin: 8px 0 16px; }
 .qr-box img { width: 180px; height: 180px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; padding: 10px; }
@@ -1450,7 +1438,6 @@ body { transition: background-color .2s ease, color .2s ease; }
   .sp-main { padding: 28px 16px 40px; }
   .sp-search { flex: none; width: 100%; }
   .sp-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .theme-options { flex-direction: column; }
   .tax-add { grid-template-columns: 1fr; }
   .tabs { overflow-x: auto; }
   .pos-body { grid-template-columns: 1fr; }
@@ -1522,7 +1509,6 @@ body { transition: background-color .2s ease, color .2s ease; }
    previa (~370px entre marca y links) desbordaba toda la sección en
    pantallas < ~400px y el borde derecho quedaba recortado. */
 .dsg-card { margin-bottom: 0; min-width: 0; }
-.dsg-card .pick-strip.tpl-thumbs, .dsg-card .pick-strip.font-chips, .dsg-card .pick-strip.swatches { flex-wrap: wrap; overflow-x: visible; }
 .dsg-preview { position: sticky; top: 16px; margin-bottom: 0; min-width: 0; }
 .dsg-preview .design-preview { max-height: 60vh; overflow-y: auto; }
 @media (max-width: 1100px) {

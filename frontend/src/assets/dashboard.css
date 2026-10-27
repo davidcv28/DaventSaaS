@@ -168,6 +168,11 @@
 @media (pointer: coarse) {
   .sidebar nav button, .sec-tab, .qa, .tab, .dsg-tab, .side-foot .link { min-height: 44px; }
   .steps-go, .icon-btn, .top-bell, .chat-send, .chat-attach, .chat-win-btn { width: 44px; height: 44px; }
+  /* Swatches y pills del editor de diseño: el color queda en 34px pero el
+     hit-area sube a 44px con un ::before invisible (no agranda el círculo). */
+  .swatch { position: relative; }
+  .swatch::before { content: ''; position: absolute; inset: -5px; border-radius: 50%; }
+  .fam-var { min-height: 44px; }
 }
 
 /* ===== Secciones guiadas (lenguaje simple, pestañas con ayuda) ===== */
@@ -240,30 +245,24 @@
 .field label .counter, .counter { float: right; font-size: 11.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 .counter.warn { color: var(--warn); }
 
-/* Selector con vista previa única (diseño de la web / fuente) */
-.pick-preview { position: relative; display: flex; align-items: center; gap: 14px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, var(--brand-soft), transparent 75%), var(--card); }
-.pick-preview-thumb { flex: none; width: 172px; box-shadow: var(--shadow-sm); }
-.pick-preview-info { display: grid; gap: 3px; min-width: 0; flex: 1; }
-.pick-preview-info strong { font-size: 16px; line-height: 1.2; }
-.pick-preview-info small { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
-.pick-preview-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-ink); }
-.pick-tier { justify-self: start; margin-top: 4px; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--ok-line); background: var(--ok-bg); color: var(--ok-ink); }
-.pick-tier.plus { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); }
-.pick-tier.advanced { border-color: transparent; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; }
-.pick-nav { flex: none; display: flex; flex-direction: column; gap: 6px; }
-.pick-nav .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
-.font-preview-aa { flex: none; display: grid; place-items: center; width: 74px; height: 74px; border-radius: 16px; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; font-size: 34px; line-height: 1; box-shadow: 0 8px 18px -8px rgba(99, 102, 241, .75); }
-.font-preview-name { font-size: 22px !important; overflow-wrap: anywhere; }
-.font-preview-sample { font-size: 13px !important; }
-@media (max-width: 560px) {
-  .pick-preview { flex-wrap: wrap; }
-  .pick-preview-thumb { width: 100%; }
-  /* margin auto: si la fila de flechas salta sola a otra línea queda a la derecha */
-  .pick-nav { flex-direction: row; margin-left: auto; }
-  /* basis blando: el texto pide ~180px; si no entra con las flechas
-     en la misma línea, ellas caen a una fila propia alineadas a la
-     derecha en vez de aplastar el nombre de la tienda. */
-  .pick-preview-info { flex-basis: 180px; }
+/* Barra de guardado del editor de diseño: sticky al pie de .dsg-main —
+   flota sobre el borde inferior mientras se scrollea el formulario y se
+   asienta al final, sin tener que llegar al aside. Solo <=1100px (en
+   desktop el botón vive en la vista previa fija). z-index 40: por debajo
+   de la tab bar (70) y del chat/SupportBot (90+). */
+.dsg-savebar { display: none; }
+@media (max-width: 1100px) {
+  .dsg-savebar {
+    display: block; position: sticky; bottom: 14px; z-index: 40; margin-top: 2px;
+    padding: 10px; border: 1px solid var(--line); border-radius: 16px;
+    background: color-mix(in srgb, var(--card) 86%, transparent);
+    backdrop-filter: blur(12px) saturate(1.25); -webkit-backdrop-filter: blur(12px) saturate(1.25);
+    box-shadow: 0 10px 30px -10px rgba(9, 12, 24, .35);
+  }
+}
+@media (max-width: 860px) {
+  /* Despeja la tab bar inferior (mismo offset que .dock-fab). */
+  .dsg-savebar { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
 
 /* Resumen */
