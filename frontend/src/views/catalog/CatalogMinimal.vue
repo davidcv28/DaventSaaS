@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Minimal: lo esencial — sin hero ni cromo. Un título chico, una línea
 // fina con las categorías como texto separado por barras y una grilla de
@@ -49,20 +49,11 @@ const {
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-mn-grid" :class="{ loading: catalogStatus === 'loading' }">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 50"
-        class="cv-mn-item" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-      >
-        <div class="cv-mn-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-mn-ph"><AppIcon name="package" :size="26" /></span>
-        </div>
-        <h3 class="cv-mn-name">{{ p.name }}</h3>
-        <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="dot" :size="12" />
-        <p class="cv-mn-meta">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') || '\u00a0' }}</p>
-        <p class="cv-mn-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}<em v-if="productOffer(p) != null"> −{{ offerPct(p) }}%</em></p>
-      </article>
+        class="cv-mn-item" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="dot" seal-shape="" :go="false" :ph-size="26"
+        @open="openProduct" />
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

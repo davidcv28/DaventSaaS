@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import '../../assets/store-gamer.css'
 
 // Catálogo GAMER (variante 'arena'; 'terminal' conserva CatalogTerminal).
@@ -52,30 +52,16 @@ const specChips = (prod, n = 2) => Object.entries(prod.features || {}).slice(0, 
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-gm-grid" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="prod in visibleProducts" :key="prod.id"
             class="gm-card cv-gm-card" :class="{ enter: catalogStatus === 'loading' }"
-            role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`"
-            @click="openProduct(prod)" @keydown.enter="openProduct(prod)"
-          >
-            <span class="gm-card-media">
-              <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-              <span v-else class="gm-card-ph"><AppIcon name="zap" :size="26" /></span>
-              <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" shape="corner" class="gm-card-seal" />
-              <span v-else-if="isNewProduct(prod)" class="gm-card-new">New</span>
-            </span>
-            <span class="gm-card-body">
-              <span v-if="categoryNameOf(prod)" class="gm-card-cat">{{ categoryNameOf(prod) }}</span>
-              <span class="gm-card-name">{{ prod.name }}</span>
-              <span v-if="specChips(prod).length" class="gm-card-specs">
-                <span v-for="schip in specChips(prod)" :key="schip" class="gm-card-spec">{{ schip }}</span>
-              </span>
-              <span class="gm-card-price">
-                <s v-if="productOffer(prod) != null">{{ formatARS(prod.price) }}</s>
-                <strong :class="{ deal: productOffer(prod) != null }">{{ formatARS(effectivePrice(prod)) }}</strong>
-              </span>
-            </span>
-          </article>
+            :p="prod" :cat="categoryNameOf(prod)"
+            seal-shape="corner"
+            offer-new new-label="New" ph-icon="zap" :go="false" @open="openProduct">
+            <template v-if="specChips(prod).length" #tags>
+              <span class="gm-card-specs"><span v-for="schip in specChips(prod)" :key="schip" class="gm-card-spec">{{ schip }}</span></span>
+            </template>
+          </TplProductCard>
         </div>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

@@ -9,10 +9,9 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
 import '../../assets/store-mercado.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Mercado (Comestibles): el catálogo como mostrador — header con serif
 // cálida y las cards de 24px con pill de precio y "+" de pedido directo,
@@ -59,20 +58,16 @@ const waOrder = (prod) => waNum.value
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-mc-grid" :class="{ loading: catalogStatus === 'loading' }">
-          <article v-for="prod in visibleProducts" :key="prod.id" class="mc-card">
-            <button type="button" class="mc-card-media" @click="openProduct(prod)" :aria-label="prod.name">
-              <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-              <span v-else class="mc-card-ph"><AppIcon name="coffee" :size="28" /></span>
-              <span class="mc-card-price">{{ formatARS(effectivePrice(prod)) }}</span>
-              <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" shape="circle" />
-            </button>
-            <div class="mc-card-info">
-              <button type="button" class="mc-card-name" @click="openProduct(prod)">{{ prod.name }}</button>
-              <ProductStars v-if="prod.rating_count" :avg="prod.rating_avg" :count="prod.rating_count" icon="heart" :size="11" />
-              <div v-if="dietTagsOf(prod).length" class="mc-card-tags"><StTag v-for="t in dietTagsOf(prod)" :key="t.label" kind="dieta" :label="t.label" :icon="t.icon" :tone="t.tone" /></div>
-              <a v-if="waNum" class="mc-card-add" :href="waOrder(prod)" target="_blank" rel="noopener" :aria-label="`Pedir ${prod.name} por WhatsApp`"><AppIcon name="plus" :size="20" /></a>
-            </div>
-          </article>
+          <TplProductCard v-for="prod in visibleProducts" :key="prod.id"
+            class="mc-card" :p="prod" :stars="!!prod.rating_count" stars-icon="heart" :stars-size="11"
+            seal-shape="circle" ph-icon="coffee" :go="false"
+            :add-href="waNum ? waOrder(prod) : ''" :add-label="`Pedir ${prod.name} por WhatsApp`"
+            @open="openProduct">
+            <template #media-extra><span class="mc-card-price">{{ formatARS(effectivePrice(prod)) }}</span></template>
+            <template v-if="dietTagsOf(prod).length" #tags>
+              <span class="mc-card-tags"><StTag v-for="t in dietTagsOf(prod)" :key="t.label" kind="dieta" :label="t.label" :icon="t.icon" :tone="t.tone" /></span>
+            </template>
+          </TplProductCard>
         </div>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

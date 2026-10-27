@@ -8,7 +8,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import '../../assets/store-lifestyle.css'
 
 // Catálogo LIFESTYLE (variante 'vitrina'; 'lookbook' conserva
@@ -48,27 +48,12 @@ const {
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-lf-grid" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="prod in visibleProducts" :key="prod.id"
             class="lf-card cv-lf-card" :class="{ enter: catalogStatus === 'loading' }"
-            role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`"
-            @click="openProduct(prod)" @keydown.enter="openProduct(prod)"
-          >
-            <span class="lf-card-media">
-              <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-              <span v-else class="lf-card-ph"><AppIcon name="image" :size="26" /></span>
-              <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" shape="corner" class="lf-card-seal" />
-              <span v-else-if="isNewProduct(prod)" class="cv-lf-new">Nueva</span>
-            </span>
-            <span class="lf-card-body">
-              <span v-if="categoryNameOf(prod)" class="lf-card-cat">{{ categoryNameOf(prod) }}</span>
-              <span class="lf-card-name">{{ prod.name }}</span>
-              <span class="lf-card-price">
-                <s v-if="productOffer(prod) != null">{{ formatARS(prod.price) }}</s>
-                <strong :class="{ deal: productOffer(prod) != null }">{{ formatARS(effectivePrice(prod)) }}</strong>
-              </span>
-            </span>
-          </article>
+            :p="prod" :cat="categoryNameOf(prod)"
+            seal-shape="corner"
+            new-label="Nueva" offer-new ph-icon="image" :go="false" @open="openProduct" />
         </div>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

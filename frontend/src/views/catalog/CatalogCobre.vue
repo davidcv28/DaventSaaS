@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Cobre: retail de indumentaria — placa de acento con titular condensado,
 // barra de colección fija con las categorías como pestañas, y una grilla de
@@ -57,27 +57,13 @@ const {
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-cb-grid" :class="{ loading: catalogStatus === 'loading' }">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 60"
-        class="cv-cb-tile" :class="{ feat: i === 0 && total > 4 }" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-      >
-        <div class="cv-cb-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-cb-ph"><AppIcon name="package" :size="30" /></span>
-          <span v-if="productOffer(p) != null" class="cv-cb-plate">-{{ offerPct(p) }}%</span>
-          <span v-else-if="isNewProduct(p)" class="cv-cb-plate ink">Nuevo</span>
-          <span class="cv-cb-hover" aria-hidden="true">Ver producto <AppIcon name="arrow-right" :size="15" /></span>
-        </div>
-        <div class="cv-cb-cap">
-          <div>
-            <h3 class="cv-cb-name">{{ p.name }}</h3>
-            <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="gem" :size="12" />
-            <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-cb-meta">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' / ') }}</p>
-          </div>
-          <p class="cv-cb-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
-        </div>
-      </article>
+        class="cv-cb-tile" :class="{ feat: i === 0 && total > 4 }" :p="p"
+        :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="gem" seal-shape="" offer-new
+        new-label="Nuevo" quick="Ver producto" :go="false" :ph-size="30"
+        @open="openProduct" />
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

@@ -13,11 +13,12 @@ import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl,
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, storeThemeVars, storeFontFamily,
+  STORE_FONTS, STORE_FONT_GROUPS, STORE_FONT_PICKER,
   STORE_TEMPLATE_FAMILIES,
   allowedTemplatesFor, resolveStoreTemplate,
   SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
   siteTemplatesLimit, allowedSiteTemplatesFor, normalizeSiteTemplates, resolveSiteTemplates,
-  ensureStoreFont, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
+  ensureStoreFont, ensureStoreFontPicker, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
   validateDisplayName, validateHeadline, validateDescription,
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
   validateContactEmail,
@@ -748,10 +749,12 @@ async function ensureCatalog() {
 }
 watch(section, (s) => {
   if (s === 'catalogs' || s === 'pos') ensureCatalog()
-  // Al entrar a Diseño: la fuente guardada ya tiene que estar cargada
-  // para que la vista previa muestre el nombre con la tipografía real.
+  // Al entrar a Diseño: la fuente elegida ya tiene que estar; el resto del
+  // picker (las populares) se trae en un único <link> para que las flechas
+  // y la vista previa muestren cada tipografía real al instante.
   if (s === 'design') {
     ensureStoreFont(designForm.name_font)
+    ensureStoreFontPicker()
   }
   if (s === 'bot') ensureBot()
   if (s === 'stats' && canStats.value) store.loadStats()
@@ -1228,10 +1231,12 @@ async function saveBot() {
 
 // --- Diseño web: personalización de la página pública ---
 // Contenido, logo y tema claro/oscuro: beneficio has_customization (en todos
-// los planes; el backend lo fuerza en PATCH). Portada, tamaño del nombre,
-// acento y carrusel son premium (has_design_advanced): se ven bloqueados y
-// el carrusel directamente no se muestra. La fuente quedó fija en el
-// backend: el valor guardado viaja igual en el payload y lo usa la web.
+// los planes; el backend lo fuerza en PATCH). Fuente, portada, tamaño del
+// nombre, acento y carrusel son premium (has_design_advanced): se ven
+// bloqueados y el carrusel directamente no se muestra. La fuente se elige
+// solo entre las populares del mercado (STORE_FONT_GROUPS): el backend
+// acepta el superset de FONT_CHOICES así un valor guardado de otra época
+// sigue validando — el select lo agrega como opción extra "Guardada".
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
@@ -1311,12 +1316,38 @@ function pickAccent(key) {
   if (canDesignAdvanced.value) designForm.accent = key
 }
 
+// Fuente de la web (premium): el select agrupa las populares por estilo
+// (optgroups). Si la guardada no está en el picker — retirada de la
+// oferta o display de plantilla — se agrega un grupo "Guardada" para no
+// perder la selección ni romper la vista previa.
+const storeFonts = STORE_FONTS
+const fontGroups = computed(() => {
+  const groups = STORE_FONT_GROUPS.slice()
+  const saved = designForm.name_font
+  if (saved && !STORE_FONT_PICKER.includes(saved) && STORE_FONTS[saved]) {
+    groups.push({ label: 'Guardada', keys: [saved] })
+  }
+  return groups
+})
+const fontStepList = computed(() => fontGroups.value.flatMap((g) => g.keys))
+function stepFont(dir) {
+  if (!canDesignAdvanced.value) return
+  const list = fontStepList.value
+  if (!list.length) return
+  const i = list.indexOf(designForm.name_font)
+  designForm.name_font = list[(i + dir + list.length) % list.length]
+}
+const fontPreviewStyle = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
+// Si cambia la fuente elegida, traerla en el momento (cubre una "Guardada"
+// fuera del picker, que el link colectivo no incluye).
+watch(() => designForm.name_font, (f) => ensureStoreFont(f))
+
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
   if (!s) return
   Object.assign(designForm, store.customization)
-  // La fuente ya no se elige acá pero la vista previa la sigue aplicando:
-  // hay que tenerla cargada cuando llega el valor guardado.
+  // La fuente guardada tiene que estar cargada cuando llega el valor:
+  // la vista previa del panel y el picker la muestran con la tipografía real.
   ensureStoreFont(designForm.name_font)
   // Si el plan ya estaba cargado y el diseño guardado quedó fuera de su
   // nivel (baja de plan o plantilla retirada del catálogo), vuelve al
@@ -4233,6 +4264,27 @@ async function changePassword() {
               </div>
               <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido. Los diseños bloqueados se habilitan subiendo de plan.</p>
             </div>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label for="design-font"><AppIcon name="type" :size="14" class="label-icon" aria-hidden="true" />Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <select id="design-font" v-model="designForm.name_font" class="select" :disabled="!canDesignAdvanced">
+                <optgroup v-for="g in fontGroups" :key="g.label" :label="g.label">
+                  <option v-for="key in g.keys" :key="key" :value="key">{{ storeFonts[key]?.label }}</option>
+                </optgroup>
+              </select>
+              <div class="pick-preview font-preview" aria-live="polite">
+                <span class="font-preview-aa" :style="fontPreviewStyle" aria-hidden="true">Aa</span>
+                <div class="pick-preview-info">
+                  <span class="pick-preview-eyebrow">{{ storeFonts[designForm.name_font]?.label }}</span>
+                  <strong class="font-preview-name" :style="fontPreviewStyle">{{ designShopName }}</strong>
+                  <small class="font-preview-sample" :style="fontPreviewStyle">Catálogo online · Nuevos ingresos 0123456789</small>
+                </div>
+                <div class="pick-nav">
+                  <button type="button" class="icon-btn" aria-label="Fuente anterior" :disabled="!canDesignAdvanced" @click="stepFont(-1)"><AppIcon name="chevron-left" :size="15" /></button>
+                  <button type="button" class="icon-btn" aria-label="Fuente siguiente" :disabled="!canDesignAdvanced" @click="stepFont(1)"><AppIcon name="chevron-right" :size="15" /></button>
+                </div>
+              </div>
+              <p class="hint">Se aplica a todo el texto de tu web: nombre, secciones y catálogo. Ofrecemos solo tipografías populares y probadas.</p>
+            </div>
             <div class="field">
               <label id="design-theme-label">Tema</label>
               <div class="theme-options" role="radiogroup" aria-labelledby="design-theme-label">
@@ -4281,7 +4333,7 @@ async function changePassword() {
               </div>
               <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
             </div>
-            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="El color de acento, el tamaño del nombre, la imagen de portada, el carrusel y las decoraciones se habilitan con el Plan premium. Algunos diseños también vienen desde el Estándar." />
+            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="La fuente, el color de acento, el tamaño del nombre, la imagen de portada, el carrusel y las decoraciones se habilitan con el Plan premium. Algunos diseños también vienen desde el Estándar." />
             <div v-if="!canDesignAdvanced" class="btn-row">
               <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
             </div>

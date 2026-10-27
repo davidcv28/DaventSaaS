@@ -706,8 +706,15 @@ export function resolveStoreTemplate(value, allowed) {
 // Fuentes del nombre junto al logo: catálogo cerrado de Google Fonts
 // (espejo de StoreCustomization.FONT_CHOICES). `google` es el query del
 // css2 de Google Fonts; null = ya viene cargada (Inter va en index.html).
+// Es el superset para RENDERIZAR — una tienda con una fuente guardada de
+// otra época o una display de plantilla (p.ej. Orbitron en 'arena') la
+// sigue mostrando; el selector del dashboard ofrece solo las populares
+// (STORE_FONT_GROUPS / STORE_FONT_PICKER).
 export const STORE_FONTS = {
   'inter':            { label: 'Inter',            family: 'Inter, system-ui, sans-serif',        google: null },
+  'roboto':           { label: 'Roboto',           family: "'Roboto', sans-serif",                google: 'Roboto:wght@400;500;700;900' },
+  'open-sans':        { label: 'Open Sans',        family: "'Open Sans', sans-serif",             google: 'Open+Sans:wght@400..800' },
+  'lato':             { label: 'Lato',             family: "'Lato', sans-serif",                  google: 'Lato:wght@400;700;900' },
   'montserrat':       { label: 'Montserrat',       family: "'Montserrat', sans-serif",            google: 'Montserrat:wght@400..800' },
   'poppins':          { label: 'Poppins',          family: "'Poppins', sans-serif",               google: 'Poppins:wght@400;600;700;800' },
   'raleway':          { label: 'Raleway',          family: "'Raleway', sans-serif",               google: 'Raleway:wght@400..800' },
@@ -746,9 +753,23 @@ export function storeFontFamily(nameFont) {
   return (STORE_FONTS[nameFont] || STORE_FONTS.inter).family
 }
 
+// Selector del Diseño web: SOLO las fuentes más populares del mercado
+// (Google Fonts de adopción masiva), agrupadas por estilo para el
+// <optgroup> del select. Las display/exóticas del superset no se ofrecen:
+// quedan para renderizar diseños guardados y tipografía propia de
+// plantillas — nunca para elección libre del usuario.
+export const STORE_FONT_GROUPS = [
+  { label: 'Sans serif',  keys: ['inter', 'roboto', 'open-sans', 'lato', 'montserrat', 'poppins', 'raleway', 'nunito', 'dm-sans', 'work-sans', 'rubik', 'manrope'] },
+  { label: 'Serif',       keys: ['playfair-display', 'merriweather', 'lora'] },
+  { label: 'Display',     keys: ['oswald', 'bebas-neue', 'anton'] },
+  { label: 'Manuscritas', keys: ['dancing-script', 'pacifico'] },
+]
+export const STORE_FONT_PICKER = STORE_FONT_GROUPS.flatMap((g) => g.keys)
+
 // Carga on-demand de la fuente elegida: inyecta el <link> del css2 una sola
 // vez por familia. La web pública y el folleto solo piden la del diseño;
-// el selector del dashboard carga el listado completo (ensureStoreFontList).
+// el selector del dashboard trae las del picker en un único <link>
+// (ensureStoreFontPicker) para que la vista previa las muestre al instante.
 const loadedFonts = new Set()
 const FONT_CSS_BASE = 'https://fonts.googleapis.com/css2'
 
@@ -768,16 +789,17 @@ export function ensureStoreFont(nameFont) {
   injectFontLink(`store-font-${nameFont}`, `${FONT_CSS_BASE}?family=${font.google}&display=swap`)
 }
 
-export function ensureStoreFontList() {
-  if (loadedFonts.has('__all__')) return
-  loadedFonts.add('__all__')
-  Object.keys(STORE_FONTS).forEach((k) => loadedFonts.add(k))
-  const families = Object.values(STORE_FONTS)
-    .filter((f) => f.google)
-    .map((f) => `family=${f.google}`)
+export function ensureStoreFontPicker() {
+  if (loadedFonts.has('__picker__')) return
+  loadedFonts.add('__picker__')
+  STORE_FONT_PICKER.forEach((k) => loadedFonts.add(k))
+  const families = STORE_FONT_PICKER
+    .map((k) => STORE_FONTS[k]?.google)
+    .filter(Boolean)
     .sort()
+    .map((g) => `family=${g}`)
     .join('&')
-  injectFontLink('store-fonts-all', `${FONT_CSS_BASE}?${families}&display=swap`)
+  injectFontLink('store-fonts-picker', `${FONT_CSS_BASE}?${families}&display=swap`)
 }
 
 // Tamaño del nombre junto al logo (espejo de los validators del modelo).

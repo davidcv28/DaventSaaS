@@ -9,9 +9,8 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import BentoGrid from '../../components/store/BentoGrid.vue'
 import '../../assets/store-circuit.css'
 
@@ -61,37 +60,28 @@ const specsOf = (x) => {
 
         <!-- lab: inventario medido — filas numeradas, spec inline -->
         <ul v-if="variant === 'lab' && catalog.products.length" class="ci-lab-rows" :class="{ loading: catalogStatus === 'loading' }">
-          <li v-for="item in visibleProducts" :key="item.id" role="link" tabindex="0"
-            :aria-label="`${item.name} — ${formatARS(effectivePrice(item))}`"
-            @click="openProduct(item)" @keydown.enter="openProduct(item)" @keydown.space.prevent="openProduct(item)">
-            <span class="ci-lr-media"><img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" decoding="async" /><AppIcon v-else name="package" :size="20" /><OfferSeal v-if="productOffer(item) != null" :pct="offerPct(item)" shape="corner" /></span>
-            <span class="ci-lr-body">
-              <span class="ci-lr-name">{{ item.name }}</span>
-              <span class="ci-lr-specs"><StTag v-for="s in specsOf(item)" :key="s" kind="spec" :label="s" /><ProductStars v-if="item.rating_count" :avg="item.rating_avg" :count="item.rating_count" icon="hexagon" :size="11" /></span>
-            </span>
-            <span class="ci-lr-price"><s v-if="productOffer(item) != null">{{ formatARS(item.price) }}</s>{{ formatARS(effectivePrice(item)) }}</span>
+          <li v-for="item in visibleProducts" :key="item.id">
+            <TplProductCard
+              class="ci-lr" layout="row" :p="item" :stars="!!item.rating_count"
+              stars-icon="hexagon" :stars-size="11" seal-shape="corner" :go="false"
+              :ph-size="20" @open="openProduct">
+              <template v-if="specsOf(item).length" #tags>
+                <span class="ci-lr-specs"><StTag v-for="s in specsOf(item)" :key="s" kind="spec" :label="s" /></span>
+              </template>
+            </TplProductCard>
           </li>
         </ul>
 
         <!-- circuit: bento rígido con specs -->
         <BentoGrid v-else-if="catalog.products.length" class="cv-ci-grid" :class="{ loading: catalogStatus === 'loading' }" :items="visibleProducts" :is-offer="isOffer" :is-featured="isFeatured" v-slot="{ item }">
-          <article
-            class="ci-cell" role="link" tabindex="0"
-            :aria-label="`${item.name} — ${formatARS(effectivePrice(item))}`"
-            @click="openProduct(item)" @keydown.enter="openProduct(item)" @keydown.space.prevent="openProduct(item)"
-          >
-            <img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" decoding="async" />
-            <span v-else class="ci-cell-ph"><AppIcon name="package" :size="28" /></span>
-            <OfferSeal v-if="productOffer(item) != null" :pct="offerPct(item)" shape="corner" />
-            <span class="ci-cell-info">
-              <span class="ci-cell-name">{{ item.name }}</span>
-              <ProductStars v-if="item.rating_count" :avg="item.rating_avg" :count="item.rating_count" icon="hexagon" :size="11" />
-              <span class="ci-cell-row">
-                <span class="ci-cell-specs"><StTag v-for="s in specsOf(item)" :key="s" kind="spec" :label="s" /></span>
-                <span class="ci-cell-price"><s v-if="productOffer(item) != null">{{ formatARS(item.price) }}</s>{{ formatARS(effectivePrice(item)) }}</span>
-              </span>
-            </span>
-          </article>
+          <TplProductCard
+            class="ci-cell" :p="item" :stars="!!item.rating_count"
+            stars-icon="hexagon" :stars-size="11" seal-shape="corner" :go="false"
+            :ph-size="28" @open="openProduct">
+            <template v-if="specsOf(item).length" #tags>
+              <span class="ci-cell-specs"><StTag v-for="s in specsOf(item)" :key="s" kind="spec" :label="s" /></span>
+            </template>
+          </TplProductCard>
         </BentoGrid>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

@@ -10,6 +10,7 @@ import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Dúo: pantalla partida — a la izquierda un panel fijo con la presentación
 // y debajo la sidebar de filtros (CatalogFilters); a la derecha el catálogo
@@ -43,24 +44,10 @@ const {
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="5" @retry="loadCatalog" @clear="clearFilters" />
       <ol v-if="catalog.products.length" class="cv-du-rows" :class="{ loading: catalogStatus === 'loading' }">
         <li v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 60">
-          <article class="cv-du-row" role="link" tabindex="0" :aria-label="`Ver ${p.name}`" @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)">
-            <div class="cv-du-media">
-              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-              <span v-else class="cv-du-ph"><AppIcon name="package" :size="28" /></span>
-            </div>
-            <div class="cv-du-copy">
-              <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-du-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
-              <h3 class="cv-du-name">{{ p.name }}</h3>
-              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="moon" :size="12" />
-              <p v-if="p.description" class="cv-du-desc">{{ p.description }}</p>
-              <div class="cv-du-foot">
-                <span class="cv-du-price-tag"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-                <span v-if="productOffer(p) != null" class="cv-du-flag">-{{ offerPct(p) }}%</span>
-                <span v-else-if="isNewProduct(p)" class="cv-du-flag new">Nuevo</span>
-                <span class="cv-du-go" aria-hidden="true"><AppIcon name="arrow-right" :size="16" /></span>
-              </div>
-            </div>
-          </article>
+          <TplProductCard class="cv-du-row" layout="row" :p="p"
+              :cat="categoryNameOf(p)" :brand="brandNameOf(p)" :desc="p.description || ''"
+              :stars="custom.show_reviews" stars-icon="moon" seal-shape="" offer-new
+              go-label="" :ph-size="28" @open="openProduct" />
         </li>
       </ol>
       <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

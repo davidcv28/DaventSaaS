@@ -10,7 +10,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Urbano: streetwear — titular XXL en outline, cinta de ticker con las
 // categorías y fichas numeradas de borde grueso que se escalonan en la
@@ -58,26 +58,14 @@ const pad = (n) => String(n + 1).padStart(2, '0')
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-st-grid" :class="{ loading: catalogStatus === 'loading' }">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 60"
-        class="cv-st-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)" @keydown.space.prevent="openProduct(p)"
-      >
-        <div class="cv-st-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-st-ph"><AppIcon name="package" :size="30" /></span>
-          <span class="cv-st-num" aria-hidden="true">#{{ pad(i) }}</span>
-          <span v-if="productOffer(p) != null" class="cv-st-off">-{{ offerPct(p) }}%</span>
-          <span v-else-if="isNewProduct(p)" class="cv-st-off new">New</span>
-        </div>
-        <div class="cv-st-body">
-          <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-st-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' / ') }}</p>
-          <h3 class="cv-st-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="zap" :size="12" />
-          <p class="cv-st-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
-        </div>
-        <span class="cv-st-arrow" aria-hidden="true"><AppIcon name="arrow-up-right" :size="18" /></span>
-      </article>
+        class="cv-st-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="zap" seal-shape="" offer-new
+        new-label="New" :index="`#${pad(i)}`" :go="false" :ph-size="30"
+        @open="openProduct">
+        <template #after><span class="cv-st-arrow" aria-hidden="true"><AppIcon name="arrow-up-right" :size="18" /></span></template>
+      </TplProductCard>
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" text="Más piezas" @more="showMore" />

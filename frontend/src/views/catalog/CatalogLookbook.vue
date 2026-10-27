@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Lookbook: el catálogo como edición de revista — título serif con índice de
 // contenidos (las categorías, numeradas) y pliegos de imagen en columnas con
@@ -54,20 +54,11 @@ const pad = (n) => String(n).padStart(2, '0')
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-lb-sheets" :class="{ loading: catalogStatus === 'loading' }">
-      <figure v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 80" class="cv-lb-sheet" role="link" tabindex="0" :aria-label="`Ver ${p.name}`" @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)">
-        <div class="cv-lb-plate">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-lb-ph"><AppIcon name="package" :size="30" /></span>
-          <span v-if="productOffer(p) != null" class="cv-lb-seal">-{{ offerPct(p) }}%</span>
-        </div>
-        <figcaption>
-          <span class="cv-lb-no">Nº {{ pad(i + 1) }}</span>
-          <h3 class="cv-lb-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="diamond" :size="12" />
-          <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-lb-meta">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' — ') }}</p>
-          <p class="cv-lb-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
-        </figcaption>
-      </figure>
+      <TplProductCard
+        v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 80"
+        tag="figure" class="cv-lb-sheet" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="diamond" seal-shape=""
+        :index="`Nº ${pad(i + 1)}`" :go="false" :ph-size="30" @open="openProduct" />
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" text="Pasar la página" @more="showMore" />

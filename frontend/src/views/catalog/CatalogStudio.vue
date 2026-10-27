@@ -9,10 +9,9 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
 import '../../assets/store-studio.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Studio/Proceso (Servicios): misma lista ordenada, dos lecturas —
 // studio = cards redondeadas con CTA implícito; proceso = índice de
@@ -59,22 +58,15 @@ const tagsOf = (p) => {
 
         <ul v-if="catalog.products.length" class="cv-sd-list" :class="{ loading: catalogStatus === 'loading' }">
           <li v-for="prod in visibleProducts" :key="prod.id">
-            <article class="sd-svc" role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`" @click="openProduct(prod)" @keydown.enter="openProduct(prod)" @keydown.space.prevent="openProduct(prod)">
-              <span class="sd-svc-icon">
-                <img v-if="prod.image" :src="prod.image" alt="" loading="lazy" class="sd-svc-thumb" />
-                <AppIcon v-else name="package" :size="22" />
-              </span>
-              <span class="sd-svc-body">
-                <strong>{{ prod.name }}</strong>
-                <span v-if="prod.description" class="sd-svc-desc">{{ prod.description }}</span>
-                <ProductStars v-if="prod.rating_count" :avg="prod.rating_avg" :count="prod.rating_count" icon="star" :size="11" />
-                <span v-if="tagsOf(prod).length" class="sd-svc-tags"><StTag v-for="t in tagsOf(prod)" :key="t.label" kind="modalidad" :label="t.label" :icon="t.icon" /></span>
-              </span>
-              <span class="sd-svc-price">
-                <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" :shape="variant === 'proceso' ? 'corner' : 'ribbon'" small />
-                {{ formatARS(effectivePrice(prod)) }}
-              </span>
-            </article>
+            <TplProductCard
+              class="sd-svc" layout="row" :p="prod" :desc="prod.description || ''"
+              :stars="!!prod.rating_count" stars-icon="star" :stars-size="11"
+              :seal-shape="variant === 'proceso' ? 'corner' : 'ribbon'" :go="false"
+              :ph-size="22" @open="openProduct">
+              <template v-if="tagsOf(prod).length" #tags>
+                <span class="sd-svc-tags"><StTag v-for="t in tagsOf(prod)" :key="t.label" kind="modalidad" :label="t.label" :icon="t.icon" /></span>
+              </template>
+            </TplProductCard>
           </li>
         </ul>
 

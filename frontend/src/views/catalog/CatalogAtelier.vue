@@ -8,9 +8,8 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import '../../assets/store-atelier.css'
 
 // Atelier (Indumentaria): el catálogo como pliego de colección — índice
@@ -53,27 +52,19 @@ const corteOf = (p) => {
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-at-grid" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="(prod, i) in visibleProducts" :key="prod.id"
             class="at-card" :class="[cellClass(i), { enter: catalogStatus === 'loading' }]"
-            role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`"
-            @click="openProduct(prod)" @keydown.enter="openProduct(prod)" @keydown.space.prevent="openProduct(prod)"
-          >
-            <span class="at-card-media">
-              <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-              <span v-else class="at-card-ph"><AppIcon name="scissors" :size="30" /></span>
-              <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" shape="corner" />
-            </span>
-            <span class="at-card-info">
-              <span class="at-card-eyebrow">{{ [categoryNameOf(prod), brandNameOf(prod)].filter(Boolean).join(' · ') || 'Colección' }}</span>
-              <span class="at-card-name">{{ prod.name }}</span>
-              <ProductStars v-if="prod.rating_count" :avg="prod.rating_avg" :count="prod.rating_count" icon="scissors" :size="12" />
+            :p="prod" :cat="categoryNameOf(prod) || brandNameOf(prod) || 'Colección'"
+            :stars="!!prod.rating_count" stars-icon="scissors" seal-shape="corner"
+            ph-icon="scissors" :ph-size="30" :go="false" @open="openProduct">
+            <template v-if="corteOf(prod)" #foot="{ price, oldPrice, offer }">
               <span class="at-card-row">
-                <StTag v-if="corteOf(prod)" kind="corte" :label="corteOf(prod)" />
-                <span class="at-card-price"><s v-if="productOffer(prod) != null">{{ formatARS(prod.price) }}</s>{{ formatARS(effectivePrice(prod)) }}</span>
+                <StTag kind="corte" :label="corteOf(prod)" />
+                <span class="tpc-price"><s v-if="offer != null">{{ oldPrice }}</s><strong :class="{ deal: offer != null }">{{ price }}</strong></span>
               </span>
-            </span>
-          </article>
+            </template>
+          </TplProductCard>
         </div>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

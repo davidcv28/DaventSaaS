@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Aurora (observatorio de luz): el catálogo se lee como la mesa del
 // observatorio — cabecera con lecturas finas, la constelación de
@@ -57,27 +57,11 @@ const {
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-au-grid" :class="{ loading: catalogStatus === 'loading' }">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 60"
-        class="cv-au-card" :class="{ polar: i === 0 }" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-      >
-        <div class="cv-au-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-au-ph"><AppIcon name="package" :size="26" /></span>
-          <span class="cv-au-quick" aria-hidden="true"><AppIcon name="eye" :size="14" /> Ver pieza</span>
-          <span v-if="isNewProduct(p)" class="cv-au-flag">Nuevo</span>
-          <span v-if="productOffer(p) != null" class="cv-au-flag offer">-{{ offerPct(p) }}%</span>
-          <div class="cv-au-label">
-            <span class="cv-au-label-copy">
-              <span v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-au-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</span>
-              <h3 class="cv-au-name">{{ p.name }}</h3>
-              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="sparkles" :size="11" />
-            </span>
-            <span class="cv-au-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-          </div>
-        </div>
-      </article>
+        class="cv-au-card" :class="{ polar: i === 0 }" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="sparkles" :stars-size="11" seal-shape=""
+        quick="Ver pieza" :go="false" :ph-size="26" @open="openProduct" />
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

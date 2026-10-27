@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Signature (casa de autor): el catálogo como vitrina ceremonial — dateline
 // grabado, título Cinzel centrado con ornamento de rombo, el índice de
@@ -52,24 +52,11 @@ const {
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-sg-grid" :class="{ loading: catalogStatus === 'loading' }">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 70"
-        class="cv-sg-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-      >
-        <div class="cv-sg-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-sg-ph"><AppIcon name="package" :size="26" /></span>
-          <span v-if="productOffer(p) != null" class="cv-sg-flag">-{{ offerPct(p) }}%</span>
-          <span v-else-if="isNewProduct(p)" class="cv-sg-flag">Nuevo</span>
-        </div>
-        <div class="cv-sg-body">
-          <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-sg-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
-          <h3 class="cv-sg-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="pencil" :size="12" />
-          <p class="cv-sg-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
-        </div>
-      </article>
+        class="cv-sg-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="pencil" seal-shape="" offer-new
+        :go="false" :ph-size="26" @open="openProduct" />
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

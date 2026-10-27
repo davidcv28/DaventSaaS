@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import '../../assets/store-ofertas.css'
 
 // Catálogo OFERTAS: el precio manda. Cabecera con el mejor descuento real
@@ -54,30 +54,14 @@ const endsOf = (prod) => offerEndsLabel(productDiscount(prod))
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-of-grid" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="prod in visibleProducts" :key="prod.id"
             class="of-card cv-of-card" :class="{ enter: catalogStatus === 'loading' }"
-            role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`"
-            @click="openProduct(prod)" @keydown.enter="openProduct(prod)"
-          >
-            <span class="of-card-media">
-              <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-              <span v-else class="of-card-ph"><AppIcon name="percent" :size="26" /></span>
-              <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" :shape="variant === 'promo' ? 'ticket' : 'corner'" class="of-card-seal" />
-              <span v-else-if="isNewProduct(prod)" class="of-card-new">Nuevo</span>
-            </span>
-            <span class="of-card-body">
-              <span v-if="categoryNameOf(prod)" class="of-card-cat">{{ categoryNameOf(prod) }}</span>
-              <span class="of-card-name">{{ prod.name }}</span>
-              <span class="of-card-price">
-                <s v-if="productOffer(prod) != null">{{ formatARS(prod.price) }}</s>
-                <strong :class="{ deal: productOffer(prod) != null }">{{ formatARS(effectivePrice(prod)) }}</strong>
-              </span>
-              <span v-if="productOffer(prod) != null" class="of-card-save">
-                Ahorrás {{ formatARS(savings(prod)) }}<em v-if="endsOf(prod)"> · {{ endsOf(prod) }}</em>
-              </span>
-            </span>
-          </article>
+            :p="prod" :cat="categoryNameOf(prod)"
+            :seal-shape="variant === 'promo' ? 'ticket' : 'corner'"
+            offer-new ph-icon="percent" :go="false"
+            :save="productOffer(prod) != null ? `Ahorrás ${formatARS(savings(prod))}${endsOf(prod) ? ' · ' + endsOf(prod) : ''}` : ''"
+            @open="openProduct" />
         </div>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

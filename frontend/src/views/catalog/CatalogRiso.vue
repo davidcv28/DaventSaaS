@@ -10,6 +10,7 @@ import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
 import '../../assets/store-riso.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Riso: el catálogo en risografía — titular a dos tintas, aside unificado
 // como tarjeta con sombra desplazada y grilla de tarjetas con placa de
@@ -51,30 +52,12 @@ const toneOf = (p) => TONES[Math.max(0, catalog.value.categories.findIndex((c) =
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-rs-cards" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 50"
-            class="rs-card" :class="`t-${toneOf(p)}`" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-            @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-          >
-            <figure class="rs-plate">
-              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-              <span v-else class="rs-plate-ph"><AppIcon name="package" :size="44" /></span>
-              <span class="rs-idx">{{ String(i + 1).padStart(3, '0') }}</span>
-              <span v-if="productOffer(p) != null" class="rs-badge">−{{ offerPct(p) }}%</span>
-              <span v-else-if="isNewProduct(p)" class="rs-badge">Nuevo</span>
-            </figure>
-            <div class="rs-info">
-              <div class="rs-info-row">
-                <h3>{{ p.name }}</h3>
-                <span class="rs-price">
-                  <s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>
-                  {{ formatARS(effectivePrice(p)) }}
-                </span>
-              </div>
-              <p>{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') || '\u00a0' }}</p>
-            </div>
-            <span class="rs-add" aria-hidden="true">Ver producto</span>
-          </article>
+            tag="figure" class="rs-card" :class="`t-${toneOf(p)}`" :p="p"
+            :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+            seal-shape="" offer-new :index="String(i + 1).padStart(3, '0')"
+            go-label="Ver producto" :ph-size="44" @open="openProduct" />
         </div>
 
         <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

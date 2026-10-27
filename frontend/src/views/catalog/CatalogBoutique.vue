@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Boutique: departamentos primero — título serif centrado con ornamento,
 // una fila de departamentos redondos con la foto de su primera prenda y una
@@ -55,25 +55,11 @@ const {
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-bt-grid" :class="{ loading: catalogStatus === 'loading' }">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 70"
-        class="cv-bt-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-      >
-        <div class="cv-bt-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-bt-ph"><AppIcon name="package" :size="28" /></span>
-          <span v-if="productOffer(p) != null" class="cv-bt-flag">-{{ offerPct(p) }}%</span>
-          <span v-else-if="isNewProduct(p)" class="cv-bt-flag">Nuevo</span>
-          <span class="cv-bt-view" aria-hidden="true">Ver producto</span>
-        </div>
-        <div class="cv-bt-body">
-          <p v-if="brandNameOf(p) || categoryNameOf(p)" class="cv-bt-eyebrow">{{ brandNameOf(p) || categoryNameOf(p) }}</p>
-          <h3 class="cv-bt-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="crown" :size="12" />
-          <p class="cv-bt-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
-        </div>
-      </article>
+        class="cv-bt-card" :p="p" :cat="brandNameOf(p) || categoryNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="crown" seal-shape="" offer-new
+        quick="Ver producto" :go="false" :ph-size="28" @open="openProduct" />
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

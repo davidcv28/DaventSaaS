@@ -70,9 +70,15 @@ class StoreCustomization(models.Model):
     ]
     FONT_INTER                  =   'inter'
     # Catálogo cerrado de Google Fonts (espejo de STORE_FONTS en stores.api.js):
-    # el frontend las carga on-demand desde fonts.googleapis.com.
+    # el frontend las carga on-demand desde fonts.googleapis.com. Acepta el
+    # superset completo — el selector del dashboard ofrece solo las populares
+    # (STORE_FONT_PICKER) pero una fuente guardada de otra época o una display
+    # de plantilla (orbitron en 'arena') sigue validando el PATCH.
     FONT_CHOICES                =   [
         (FONT_INTER,             'Inter'),
+        ('roboto',               'Roboto'),
+        ('open-sans',            'Open Sans'),
+        ('lato',                 'Lato'),
         ('montserrat',           'Montserrat'),
         ('poppins',              'Poppins'),
         ('raleway',              'Raleway'),
@@ -89,6 +95,7 @@ class StoreCustomization(models.Model):
         ('anton',                'Anton'),
         ('archivo-black',        'Archivo Black'),
         ('righteous',            'Righteous'),
+        ('orbitron',             'Orbitron'),
         ('playfair-display',     'Playfair Display'),
         ('merriweather',         'Merriweather'),
         ('lora',                 'Lora'),

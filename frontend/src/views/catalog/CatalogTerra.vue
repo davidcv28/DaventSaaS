@@ -10,6 +10,7 @@ import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
 import '../../assets/store-terra.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Terra: catálogo editorial — titular serif, filtros en una columna de
 // papel unificada y productos en tarjetas con arco. Misma mecánica
@@ -49,26 +50,10 @@ const {
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-tr-cards" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 50"
-            class="tr-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-            @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-          >
-            <figure class="tr-card-media">
-              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-              <span v-else class="tr-card-ph"><AppIcon name="package" :size="26" /></span>
-              <span v-if="isNewProduct(p)" class="tr-tag">Nuevo</span>
-              <span v-if="productOffer(p) != null" class="tr-tag offer">−{{ offerPct(p) }}%</span>
-            </figure>
-            <div class="tr-card-body">
-              <p class="tr-card-kicker">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') || '\u00a0' }}</p>
-              <h3 class="tr-card-name">{{ p.name }}</h3>
-              <p class="tr-card-price">
-                <s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>
-                {{ formatARS(effectivePrice(p)) }}
-              </p>
-            </div>
-          </article>
+            tag="figure" class="tr-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+            seal-shape="" :go="false" :ph-size="26" @open="openProduct" />
         </div>
 
         <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

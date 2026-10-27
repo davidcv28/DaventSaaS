@@ -7,7 +7,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import { vReveal } from '../../directives/reveal.js'
 
 // Página de catálogo de la web pública (/<slug>/catalogo): navegación por
@@ -174,11 +174,8 @@ onBeforeUnmount(() => {
         <h2 id="sp-catalog-title" class="sp-section-title" v-reveal>{{ hasFilters ? 'Resultados' : 'Todos los productos' }}</h2>
         <CatalogToolbar />
 
-        <div v-if="catalogStatus === 'loading' && !catalog.products.length" class="sp-grid" aria-busy="true">
-          <div v-for="n in 8" :key="n" class="sp-card sp-skeleton" aria-hidden="true">
-            <div class="sp-card-img"></div>
-            <div class="sp-card-body"><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
-          </div>
+        <div v-if="catalogStatus === 'loading' && !catalog.products.length" class="sp-grid cv-skels" aria-busy="true">
+          <span v-for="n in 8" :key="n" class="cv-skel" aria-hidden="true"></span>
         </div>
 
         <div v-else-if="catalogStatus === 'error'" class="sp-empty">
@@ -189,38 +186,18 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-else-if="catalog.products.length" class="sp-grid" :class="{ loading: catalogStatus === 'loading' }" @pointermove="onCardMove">
-          <article
+          <TplProductCard
             v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 70"
-            class="sp-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-            @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-          >
-            <div class="sp-card-img">
-              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-              <span v-else class="sp-card-placeholder"><AppIcon name="package" :size="28" /></span>
-              <span class="sp-card-quick" aria-hidden="true"><AppIcon name="eye" :size="15" /> Ver producto</span>
-              <span v-if="isNewProduct(p)" class="sp-card-flag">Nuevo</span>
-              <span v-if="productOffer(p) != null" class="sp-card-flag offer">-{{ offerPct(p) }}%</span>
-            </div>
-            <div class="sp-card-body">
-              <p v-if="categoryNameOf(p) || brandNameOf(p)" class="sp-card-eyebrow">
-                <span v-if="categoryNameOf(p)">{{ categoryNameOf(p) }}</span>
-                <i v-if="categoryNameOf(p) && brandNameOf(p)" aria-hidden="true"></i>
-                <span v-if="brandNameOf(p)">{{ brandNameOf(p) }}</span>
-              </p>
-              <h3 class="sp-card-name">{{ p.name }}</h3>
-              <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="star" :size="12" />
-              <p v-if="productDiscount(p)" class="sp-card-promo">
+            class="sp-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+            :stars="custom.show_reviews" stars-icon="star" seal-shape="" quick="Ver producto"
+            go-label="Ver más" @open="openProduct">
+            <template v-if="productDiscount(p)" #tags>
+              <p class="sp-card-promo">
                 <AppIcon name="tag" :size="12" aria-hidden="true" />
                 {{ productDiscount(p).name }}<span v-if="offerEndsLabel(productDiscount(p))" class="sp-card-promo-ends"> · {{ offerEndsLabel(productDiscount(p)) }}</span>
               </p>
-              <div class="sp-card-foot">
-                <span class="sp-card-price"><s v-if="productOffer(p) != null" class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-                <span class="sp-card-go" aria-hidden="true">
-                  Ver más <AppIcon name="arrow-right" :size="15" />
-                </span>
-              </div>
-            </div>
-          </article>
+            </template>
+          </TplProductCard>
         </div>
 
         <div v-else class="sp-empty">

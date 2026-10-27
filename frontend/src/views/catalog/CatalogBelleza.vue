@@ -8,7 +8,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import OfferSeal from '../../components/store/OfferSeal.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 import '../../assets/store-belleza.css'
 
 // Catálogo BELLEZA (variante 'calma'; 'signature' conserva
@@ -48,27 +48,12 @@ const {
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-be-grid" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="prod in visibleProducts" :key="prod.id"
             class="be-card cv-be-card" :class="{ enter: catalogStatus === 'loading' }"
-            role="link" tabindex="0" :aria-label="`${prod.name} — ${formatARS(effectivePrice(prod))}`"
-            @click="openProduct(prod)" @keydown.enter="openProduct(prod)"
-          >
-            <span class="be-card-media">
-              <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-              <span v-else class="be-card-ph"><AppIcon name="sparkles" :size="26" /></span>
-              <OfferSeal v-if="productOffer(prod) != null" :pct="offerPct(prod)" shape="corner" class="be-card-seal" />
-              <span v-else-if="isNewProduct(prod)" class="cv-be-new">Nuevo</span>
-            </span>
-            <span class="be-card-body">
-              <span v-if="categoryNameOf(prod)" class="cv-be-cat">{{ categoryNameOf(prod) }}</span>
-              <span class="be-card-name">{{ prod.name }}</span>
-              <span class="be-card-price">
-                <s v-if="productOffer(prod) != null">{{ formatARS(prod.price) }}</s>
-                <strong :class="{ deal: productOffer(prod) != null }">{{ formatARS(effectivePrice(prod)) }}</strong>
-              </span>
-            </span>
-          </article>
+            :p="prod" :cat="categoryNameOf(prod)"
+            seal-shape="corner"
+            offer-new ph-icon="sparkles" :go="false" @open="openProduct" />
         </div>
 
         <CatalogMore :has-more="hasMoreProducts" :label="shownLabel" @more="showMore" />

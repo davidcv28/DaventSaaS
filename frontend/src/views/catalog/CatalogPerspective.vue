@@ -9,7 +9,7 @@ import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
-import ProductStars from '../../components/ProductStars.vue'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Perspectiva: el catálogo como un escenario en profundidad — piso con punto
 // de fuga bajo el título extruido, categorías como planos flotantes y
@@ -65,25 +65,13 @@ function untilt(e) {
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-pe-grid" :class="{ loading: catalogStatus === 'loading' }" @pointermove="tilt" @pointerout="untilt">
-      <article
+      <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 80"
-        class="cv-pe-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-        @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-      >
-        <div class="cv-pe-media">
-          <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-          <span v-else class="cv-pe-ph"><AppIcon name="package" :size="30" /></span>
-          <span v-if="productOffer(p) != null" class="cv-pe-badge">-{{ offerPct(p) }}%</span>
-          <span v-else-if="isNewProduct(p)" class="cv-pe-badge new">Nuevo</span>
-        </div>
-        <div class="cv-pe-plinth" aria-hidden="true"></div>
-        <div class="cv-pe-body">
-          <p v-if="categoryNameOf(p) || brandNameOf(p)" class="cv-pe-eyebrow">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' · ') }}</p>
-          <h3 class="cv-pe-name">{{ p.name }}</h3>
-          <ProductStars v-if="custom.show_reviews && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" icon="hexagon" :size="12" />
-          <p class="cv-pe-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</p>
-        </div>
-      </article>
+        class="cv-pe-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        :stars="custom.show_reviews" stars-icon="hexagon" seal-shape="" offer-new
+        :go="false" :ph-size="30" @open="openProduct">
+        <template #after><span class="cv-pe-plinth" aria-hidden="true"></span></template>
+      </TplProductCard>
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />

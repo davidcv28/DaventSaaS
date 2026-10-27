@@ -10,6 +10,7 @@ import CatalogPromoBanner from './CatalogPromoBanner.vue'
 import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
 import '../../assets/store-bloque.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Bloque: el catálogo como índice de archivo — cabecera con meta en mono y
 // titular XXL, aside de filtros como celdas regladas (CatalogFilters) y
@@ -48,27 +49,11 @@ const {
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-bq-cards" :class="{ loading: catalogStatus === 'loading' }">
-          <article
+          <TplProductCard
             v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 50"
-            class="bq-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-            @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-          >
-            <figure class="bq-card-plate">
-              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-              <span v-else class="bq-card-ph"><AppIcon name="package" :size="26" /></span>
-              <span v-if="isNewProduct(p)" class="bq-card-flag">Nuevo</span>
-              <span v-if="productOffer(p) != null" class="bq-card-flag offer">−{{ offerPct(p) }}%</span>
-            </figure>
-            <div class="bq-card-row">
-              <span class="bq-card-idx" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-              <h3 class="bq-card-name">{{ p.name }}</h3>
-              <span class="bq-card-price">
-                <s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>
-                {{ formatARS(effectivePrice(p)) }}
-              </span>
-            </div>
-            <p class="bq-card-cat">{{ [categoryNameOf(p), brandNameOf(p)].filter(Boolean).join(' / ') || '\u00a0' }}</p>
-          </article>
+            class="bq-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+            seal-shape="" :index="String(i + 1).padStart(2, '0')" :go="false"
+            :ph-size="26" @open="openProduct" />
         </div>
 
         <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
