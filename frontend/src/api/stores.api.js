@@ -348,6 +348,18 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_video: true,
   catalog_note: '',
   footer_text: '',
+  // Bloques del rediseño de portada (espejo del modelo): garantías, hitos y
+  // equipo viajan en JSON; ofertas/marcas/cuenta regresiva son automáticos
+  // y solo conservan su show_* (se auto-ocultan sin datos).
+  benefits: [],
+  show_benefits: true,
+  timeline: [],
+  show_timeline: true,
+  team: [],
+  show_team: true,
+  show_offers: true,
+  show_brands: true,
+  show_countdown: true,
   contact_email: '',
   show_contact: true,
   theme: 'light',
@@ -459,6 +471,9 @@ export const MARKETING_LIMITS = {
   testimonials: 6, testimonialName: 60, testimonialDetail: 80, testimonialText: 300,
   faqs: 8, faqQ: 140, faqA: 500,
   hours: 8, hourLabel: 60, hourValue: 60,
+  benefits: 6, benefitTitle: 40, benefitText: 90,
+  timeline: 6, timelineLabel: 24, timelineText: 160,
+  team: 6, teamName: 60, teamRole: 60,
   ctaTitle: 120, ctaText: 280, ctaLabel: 40,
   announcements: 6, announcementText: 60,
   videoUrl: 300, videoTitle: 80,
@@ -533,17 +548,28 @@ export const serviceHue = (key) => SERVICE_HUES[key] ?? 250
 // Orden de las secciones de la portada (espejo de SECTION_ORDER del modelo):
 // el dueño las reordena desde "Mi empresa"; el hero queda primero y el
 // contacto último siempre.
-export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'video', 'cta']
+export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta']
 export const SECTION_ORDER_LABELS = {
   about:        'Sobre nosotros',
   services:     'Qué ofrecemos',
   stats:        'Tus números',
+  benefits:     'Garantías',
+  offers:       'Ofertas',
+  brands:       'Marcas',
+  countdown:    'Cuenta regresiva',
   gallery:      'Galería',
   testimonials: 'Testimonios',
+  timeline:     'Trayectoria',
+  team:         'Equipo',
   faq:          'Preguntas frecuentes',
   video:        'Video',
   cta:          'Llamado a la acción'
 }
+// Bloques automáticos (sin contenido propio en customization): la sección
+// Ofertas sale del catálogo (ítems con oferta efectiva), la marquesina de
+// las marcas cargadas y la cuenta regresiva del descuento vigente con fin
+// más próximo. Solo tienen show_* — se auto-ocultan cuando no hay datos.
+export const AUTO_SECTION_KEYS = ['offers', 'brands', 'countdown']
 
 // Video de la portada: el backend normaliza a la URL de embed oficial
 // (youtube-nocookie / player.vimeo) — el iframe usa video_url tal cual.

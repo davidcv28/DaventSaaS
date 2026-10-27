@@ -278,11 +278,27 @@ class StoreCustomization(models.Model):
     VIDEO_TITLE_MAX             =   80
     CATALOG_NOTE_MAX            =   160
     FOOTER_TEXT_MAX             =   160
+    #Bloques extra de la portada (rediseño): garantías/beneficios, hitos de
+    #trayectoria y equipo viajan en JSON como el resto de las listas de
+    #marketing. Ofertas, marcas y cuenta regresiva NO tienen JSON propio:
+    #la primera sale del catálogo (productos con oferta efectiva), la
+    #segunda de las marcas cargadas y la tercera del descuento vigente con
+    #ends_at más próximo — se auto-ocultan cuando no hay datos y solo
+    #conservan su show_* para que el dueño las apague a mano.
+    BENEFITS_MAX                =   6
+    BENEFIT_TITLE_MAX           =   40
+    BENEFIT_TEXT_MAX            =   90
+    TIMELINE_MAX                =   6
+    TIMELINE_LABEL_MAX          =   24
+    TIMELINE_TEXT_MAX           =   160
+    TEAM_MAX                    =   6
+    TEAM_NAME_MAX               =   60
+    TEAM_ROLE_MAX               =   60
     #Orden de las secciones de la portada (claves cerradas): el hero va
     #primero y el contacto último siempre; el serializer descarta claves
     #desconocidas y completa las que falten al final en este orden base.
     #La web pública lo aplica como CSS order sobre .sp-page-root (flex).
-    SECTION_ORDER               =   ('about', 'services', 'stats', 'gallery', 'testimonials', 'faq', 'video', 'cta')
+    SECTION_ORDER               =   ('about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta')
     services                    =   models.JSONField(default = list, blank = True, verbose_name = 'Qué ofrecemos')
     services_title              =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Qué ofrecemos')
     show_services               =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Qué ofrecemos')
@@ -312,6 +328,24 @@ class StoreCustomization(models.Model):
     video_url                   =   models.CharField(max_length = VIDEO_URL_MAX, blank = True, verbose_name = 'Video (URL de embed)')
     video_title                 =   models.CharField(max_length = VIDEO_TITLE_MAX, blank = True, verbose_name = 'Título de la sección Video')
     show_video                  =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Video')
+    #===== Bloques del rediseño de portada =====
+    #Garantías/beneficios del negocio: filas {icon, title, text} en tira
+    #compacta (envíos, garantía, pagos, devoluciones...).
+    benefits                    =   models.JSONField(default = list, blank = True, verbose_name = 'Garantías y beneficios')
+    show_benefits               =   models.BooleanField(default = True, verbose_name = 'Mostrar garantías y beneficios')
+    #Hitos del negocio: filas {label, text} que la web dibuja como línea de
+    #tiempo (fundación, local nuevo, hitos de ventas...).
+    timeline                    =   models.JSONField(default = list, blank = True, verbose_name = 'Hitos del negocio')
+    show_timeline               =   models.BooleanField(default = True, verbose_name = 'Mostrar línea de tiempo')
+    #Equipo: filas {name, role} — la web muestra tarjetas con iniciales.
+    team                        =   models.JSONField(default = list, blank = True, verbose_name = 'Equipo')
+    show_team                   =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Equipo')
+    #Bloques automáticos (sin contenido propio): la tira de ofertas sale
+    #del catálogo, la marquesina de las marcas cargadas y la cuenta
+    #regresiva del descuento vigente con fin más próximo.
+    show_offers                 =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Ofertas')
+    show_brands                 =   models.BooleanField(default = True, verbose_name = 'Mostrar marquesina de marcas')
+    show_countdown              =   models.BooleanField(default = True, verbose_name = 'Mostrar cuenta regresiva de ofertas')
     #Textos sueltos: aviso que encabeza la página del catálogo y una línea
     #extra en el pie de la web pública.
     catalog_note                =   models.CharField(max_length = CATALOG_NOTE_MAX, blank = True, verbose_name = 'Aviso en el catálogo')

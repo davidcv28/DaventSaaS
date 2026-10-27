@@ -221,6 +221,18 @@ CustomizationFields           =   {
         'label'             :   'Orden de las secciones de la portada',
         'required'          :   False,
     },
+    'benefits'              :   {
+        'label'             :   'Garantías y beneficios',
+        'required'          :   False,
+    },
+    'timeline'              :   {
+        'label'             :   'Hitos del negocio',
+        'required'          :   False,
+    },
+    'team'                  :   {
+        'label'             :   'Equipo',
+        'required'          :   False,
+    },
     'announcements'         :   {
         'label'             :   'Cinta de anuncios',
         'required'          :   False,

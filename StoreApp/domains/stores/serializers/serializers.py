@@ -111,6 +111,9 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     catalog_note                =   serializers.CharField(**CustomizationFields['catalog_note'])
     footer_text                 =   serializers.CharField(**CustomizationFields['footer_text'])
     site_templates              =   serializers.JSONField(**CustomizationFields['site_templates'])
+    benefits                    =   serializers.JSONField(**CustomizationFields['benefits'])
+    timeline                    =   serializers.JSONField(**CustomizationFields['timeline'])
+    team                        =   serializers.JSONField(**CustomizationFields['team'])
     service_steps               =   serializers.JSONField(**CustomizationFields['service_steps'])
     service_days                =   serializers.JSONField(**CustomizationFields['service_days'])
     service_slots               =   serializers.JSONField(**CustomizationFields['service_slots'])
@@ -136,6 +139,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order',
             'announcements', 'show_announcements', 'video_url', 'video_title', 'show_video',
             'catalog_note', 'footer_text',
+            'benefits', 'show_benefits', 'timeline', 'show_timeline', 'team', 'show_team',
+            'show_offers', 'show_brands', 'show_countdown',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
             'site_templates', 'service_steps', 'service_days', 'service_slots', 'service_ask_address',
@@ -245,6 +250,34 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             clean.append(text)
             if len(clean) >= max_items:
                 break
+        return clean
+
+    def validate_benefits(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.BENEFITS_MAX, 'Debe ser una lista de beneficios.'):
+            icon                =   str(item.get('icon') or '').strip().lower()
+            title               =   str(item.get('title') or '').strip()[:StoreCustomization.BENEFIT_TITLE_MAX]
+            text                =   str(item.get('text') or '').strip()[:StoreCustomization.BENEFIT_TEXT_MAX]
+            if title:
+                clean.append({'icon': icon if icon in StoreCustomization.SERVICE_ICONS else 'shield-check', 'title': title, 'text': text})
+        return clean
+
+    def validate_timeline(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.TIMELINE_MAX, 'Debe ser una lista de hitos.'):
+            label               =   str(item.get('label') or '').strip()[:StoreCustomization.TIMELINE_LABEL_MAX]
+            text                =   str(item.get('text') or '').strip()[:StoreCustomization.TIMELINE_TEXT_MAX]
+            if label and text:
+                clean.append({'label': label, 'text': text})
+        return clean
+
+    def validate_team(self, value):
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.TEAM_MAX, 'Debe ser una lista de integrantes.'):
+            name                =   str(item.get('name') or '').strip()[:StoreCustomization.TEAM_NAME_MAX]
+            role                =   str(item.get('role') or '').strip()[:StoreCustomization.TEAM_ROLE_MAX]
+            if name:
+                clean.append({'name': name, 'role': role})
         return clean
 
     def validate_service_days(self, value):
