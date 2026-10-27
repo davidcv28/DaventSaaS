@@ -18,6 +18,8 @@ export const FLYER_LAYOUTS = [
     ph: { title: 'Ej. Hacemos que tu casa respire', subtitle: 'Ej. Diseño, calidad y compromiso en cada detalle', badge: 'Ej. Nueva etapa', bulletsLabel: 'Etiquetas de la marca', bullets: ['Ej. Calidad', 'Ej. Confianza', 'Ej. Garantía', ''] } },
   { id: 'servicios', kind: 'empresa', label: 'Servicios', icon: 'checklist', desc: 'Fondo oscuro con tus servicios en lista numerada.',
     ph: { title: 'Ej. Todo para tu hogar', subtitle: 'Ej. Un equipo, una sola llamada', badge: 'Ej. Servicio 24 hs', bulletsLabel: 'Servicios', bullets: ['Ej. Plomería y gas', 'Ej. Electricidad', 'Ej. Pintura y reformas', 'Ej. Mantenimiento'] } },
+  { id: 'ficha', kind: 'empresa', label: 'Ficha de servicio', icon: 'wrench', desc: 'Foto al costado y tus servicios numerados: claro, cálido y directo.',
+    ph: { title: 'Ej. Electricista matriculado', subtitle: 'Ej. Instalaciones, urgencias y mantenimiento en tu zona', badge: 'Ej. 24 hs', bulletsLabel: 'Servicios', bullets: ['Ej. Instalaciones eléctricas', 'Ej. Urgencias las 24 hs', 'Ej. Tableros y automatización', 'Ej. Presupuesto sin cargo'] } },
   { id: 'anuncio', kind: 'empresa', label: 'Anuncio', icon: 'flame', desc: 'Para novedades: inauguración, nueva sucursal o aniversario.',
     ph: { title: 'Ej. Nueva sucursal en el centro', subtitle: 'Ej. Te esperamos con sorpresas y regalos', badge: 'Ej. INAUGURACIÓN', bulletsLabel: 'Detalles (fecha, dirección, horario)', bullets: ['Ej. Sábado 15 de marzo', 'Ej. Av. Belgrano 450', 'Ej. De 9 a 21 hs', ''] } },
 

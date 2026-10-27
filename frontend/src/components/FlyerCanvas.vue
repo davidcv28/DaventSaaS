@@ -16,6 +16,9 @@ const props = defineProps({
 
 const initial = computed(() => (props.shopName || 'T').slice(0, 1).toUpperCase())
 const bullets = computed(() => (props.design.bullets || []).map((b) => String(b || '').trim()).filter(Boolean))
+// En la ficha de servicio la lista es el corazón del diseño: con el borrador
+// vacío se muestran 4 filas de ejemplo para que se entienda qué completar.
+const serviceRows = computed(() => (bullets.value.length ? bullets.value : Array(4).fill('Nombre del servicio')))
 const title = computed(() => props.design.title?.trim() || 'Tu titular acá')
 const subtitle = computed(() => props.design.subtitle?.trim() || '')
 const badge = computed(() => props.design.badge?.trim() || '')
@@ -26,7 +29,7 @@ const showLogo = computed(() => props.design.showLogo !== false)
 const shortUrl = computed(() => props.url.replace(/^https?:\/\//, ''))
 
 const CATALOG = { vitrina: 4, lista: 6, destacado: 4, moda: 3, urbano: 4, electro: 4, ofertazo: 3 }
-const NEW_LAYOUTS = ['corporativo', 'manifiesto', 'servicios', 'anuncio', 'moda', 'urbano', 'electro', 'ofertazo']
+const NEW_LAYOUTS = ['corporativo', 'manifiesto', 'servicios', 'ficha', 'anuncio', 'moda', 'urbano', 'electro', 'ofertazo']
 const isNew = computed(() => NEW_LAYOUTS.includes(props.design.layout))
 const isCatalog = computed(() => props.design.layout in CATALOG && !isNew.value)
 const items = computed(() => {
@@ -166,6 +169,34 @@ const money = (n) => (n == null ? '$ 0' : formatARS(n))
         <ol v-if="bullets.length" class="fc-sv-list">
           <li v-for="(b, i) in bullets" :key="i"><b>{{ String(i + 1).padStart(2, '0') }}</b><span>{{ b }}</span></li>
         </ol>
+      </div>
+
+      <div v-else-if="design.layout === 'ficha'" class="fc-fi">
+        <div class="fc-nt-top">
+          <div v-if="showLogo" class="fc-brand big">
+            <img v-if="logo" class="fc-logo" :src="logo" alt="" />
+            <span v-else class="fc-mono">{{ initial }}</span>
+            <strong>{{ shopName }}</strong>
+          </div>
+          <span v-if="badge" class="fc-pill">{{ badge }}</span>
+        </div>
+        <div class="fc-fi-head">
+          <span class="fc-fi-kicker"><AppIcon name="wrench" :size="12" :stroke="2.2" /> Servicios</span>
+          <h2 class="fc-title">{{ title }}</h2>
+          <p v-if="subtitle" class="fc-sub">{{ subtitle }}</p>
+        </div>
+        <div class="fc-fi-body">
+          <div class="fc-fi-photo">
+            <img v-if="design.photo" :src="design.photo" alt="" />
+            <span v-else class="fc-photo-empty"><AppIcon name="image" :size="40" :stroke="1.4" /></span>
+          </div>
+          <ol class="fc-fi-list">
+            <li v-for="(b, i) in serviceRows" :key="i">
+              <span class="fc-fi-n">{{ String(i + 1).padStart(2, '0') }}</span>
+              <span class="fc-fi-name">{{ b }}</span>
+            </li>
+          </ol>
+        </div>
       </div>
 
       <div v-else-if="design.layout === 'anuncio'" class="fc-an">
@@ -578,6 +609,27 @@ const money = (n) => (n == null ? '$ 0' : formatARS(n))
 .fc-sv-list b { flex: none; font-size: 6cqw; font-weight: 900; color: var(--store-accent, #818cf8); letter-spacing: -.03em; min-width: 9cqw; }
 .fc-servicios .fc-foot { margin-top: 2cqw; background: var(--store-accent, #6366f1); color: #fff; }
 .fc-servicios .fc-cta { color: #fde047; }
+
+/* FICHA DE SERVICIO */
+.fc-ficha { background: radial-gradient(120% 78% at 100% 0, color-mix(in srgb, var(--store-accent, #6366f1) 12%, transparent), transparent 62%), #f7f5f0; }
+.fc-ficha::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.8cqw; background: linear-gradient(180deg, var(--store-accent-ink, #4338ca), var(--store-accent, #6366f1)); pointer-events: none; }
+.fc-ficha .fc-pill { background: transparent; color: var(--store-accent-ink, #4338ca); border: .45cqw solid currentColor; }
+.fc-fi { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 3cqw; padding: 5.5cqw 6cqw 0 7.6cqw; }
+.fc-fi-head { display: grid; gap: 1.6cqw; }
+.fc-fi-kicker { display: inline-flex; align-items: center; gap: 1.6cqw; font-size: 2.9cqw; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: var(--store-accent-ink, #4338ca); }
+.fc-fi-kicker::after { content: ''; flex: 1; height: .4cqw; background: currentColor; opacity: .3; }
+.fc-fi .fc-title { font-size: 9.2cqw; line-height: .98; color: #171512; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; }
+.fc-fi .fc-sub { font-size: 3.4cqw; color: #57534e; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.fc-fi-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 42% 1fr; gap: 4cqw; }
+.fc-fi-photo { position: relative; min-height: 0; border-radius: 4.4cqw 4.4cqw 1.4cqw 4.4cqw; overflow: hidden; background: #e6e1d6; box-shadow: 0 1.8cqw 4.4cqw rgba(28, 25, 23, .16); }
+.fc-fi-photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fc-fi-list { list-style: none; margin: 0; padding: 0; min-height: 0; display: grid; grid-auto-rows: 1fr; }
+.fc-fi-list li { min-height: 0; overflow: hidden; display: flex; align-items: center; gap: 3cqw; border-bottom: .3cqw dashed rgba(28, 25, 23, .22); }
+.fc-fi-list li:last-child { border-bottom: 0; }
+.fc-fi-n { flex: none; width: 7.6cqw; height: 7.6cqw; border-radius: 50%; display: grid; place-items: center; background: var(--store-accent-ink, #4338ca); color: #fff; font-size: 3cqw; font-weight: 900; letter-spacing: -.02em; }
+.fc-fi-name { min-width: 0; font-size: 3.4cqw; font-weight: 800; line-height: 1.18; color: #171512; overflow-wrap: anywhere; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.fc-ficha .fc-foot { margin-top: 3.4cqw; background: linear-gradient(120deg, var(--store-accent-ink, #4338ca), var(--store-accent, #6366f1)); color: #fff; }
+.fc-ficha .fc-cta { color: #fde047; }
 
 /* ANUNCIO */
 .fc-anuncio { background: #fff8e1; }
