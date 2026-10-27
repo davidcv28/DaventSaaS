@@ -29,7 +29,8 @@ const VARIANTS = {
   signature: defineAsyncComponent(() => import('./catalog/CatalogSignature.vue')),
   aurora: defineAsyncComponent(() => import('./catalog/CatalogAurora.vue')),
   bloque: defineAsyncComponent(() => import('./catalog/CatalogBloque.vue')),
-  riso: defineAsyncComponent(() => import('./catalog/CatalogRiso.vue'))
+  riso: defineAsyncComponent(() => import('./catalog/CatalogRiso.vue')),
+  terra: defineAsyncComponent(() => import('./catalog/CatalogTerra.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || CatalogClassic)
 </script>

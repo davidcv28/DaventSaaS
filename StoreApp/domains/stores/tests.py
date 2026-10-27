@@ -356,7 +356,7 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_premium_picks_any_template(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        for key in ('classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique'):
+        for key in ('classic', 'perspective', 'duo', 'street', 'promo', 'terminal', 'lookbook', 'cobre', 'minimal', 'boutique', 'terra'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 

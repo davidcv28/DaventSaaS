@@ -624,7 +624,8 @@ export const STORE_TEMPLATES = {
   minimal:     { label: 'Minimal',     tier: 'advanced', desc: 'Catálogo editorial esencial: papel claro y tinta, barra de anuncio, hero tipográfico, tarjetas 3:4 sin cromo y cierre en bloque de tinta.' },
   boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' },
   signature:   { label: 'Signature',   tier: 'advanced', desc: 'Casa de autor: noche de espresso, marfil y tu acento, titulares Cinzel grabados, marcos de doble filete, sello de monograma y firma manuscrita.' },
-  aurora:      { label: 'Aurora',      tier: 'advanced', desc: 'Observatorio de luz: noche profunda con cortinas de acento, raíl de datos fino, cielo panorámico con el mensaje en placa de vidrio esmerilado, departamentos como constelación y catálogo con barra de cristal fija.' }
+  aurora:      { label: 'Aurora',      tier: 'advanced', desc: 'Observatorio de luz: noche profunda con cortinas de acento, raíl de datos fino, cielo panorámico con el mensaje en placa de vidrio esmerilado, departamentos como constelación y catálogo con barra de cristal fija.' },
+  terra:       { label: 'Terra',       tier: 'advanced', desc: 'Editorial cálido y artesanal: papel crudo, titulares serif Fraunces, imágenes en arco, reglas finas, numeración de sección y el acento de tu marca como sello. Portada, catálogo y servicios con la misma identidad.' }
 }
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de

@@ -801,3 +801,98 @@
   .sv-stage-ring, .sv-flow li.is-now .dot { animation: none; }
   .sv-item .act { opacity: 1; translate: none; }
 }
+
+/* ---------- Terra: editorial cálido, arcos y titulares serif ---------- */
+.store-page[data-store-template='terra'] .sv-page {
+  --sv-bg: var(--tr-paper, #f7f1e6);
+  --sv-fg: var(--tr-ink, #241d18);
+  --sv-mute: var(--tr-mute, #7d6c5c);
+  --sv-card: var(--tr-card, #fffaf2);
+  --sv-soft: var(--tr-soft, #efe3d1);
+  --sv-line: var(--tr-line, rgba(36, 29, 24, .16));
+  --sv-acc: var(--store-accent-ink, #4338ca);
+  --sv-on-acc: #fff;
+  --sv-pop: var(--store-accent, #6366f1);
+  --sv-on-pop: #fff;
+  --sv-display: var(--tr-serif, 'Fraunces', Georgia, serif);
+  --sv-body: var(--tr-sans, var(--store-font, sans-serif));
+  --sv-mark: color-mix(in srgb, var(--sv-pop) 16%, transparent);
+  --sv-band-bg: var(--sv-fg);
+  --sv-band-fg: var(--sv-bg);
+  --sv-r-pill: 999px;
+  --sv-r-stage: 999px 999px 28px 28px;
+  --sv-r-lg: 26px;
+  --sv-r-md: 18px;
+  --sv-r-sm: 12px;
+  --sv-btn-radius: 999px;
+  --sv-bw: 1px;
+  --sv-sh-pop: 0 24px 48px -30px rgba(36, 29, 24, .5);
+  --sv-sh-panel: 0 24px 48px -30px rgba(36, 29, 24, .5);
+  --sv-sh-form: 0 24px 48px -30px rgba(36, 29, 24, .45);
+  --sv-btn-bg: var(--sv-acc);
+  --sv-btn-fg: var(--sv-on-acc);
+  --sv-btn-bg-h: var(--sv-acc);
+  --sv-btn-fg-h: var(--sv-on-acc);
+  --sv-btn-bd: 0;
+  --sv-btn-sh: 0 12px 22px -16px var(--sv-acc);
+  --sv-btn-sh-h: 0 16px 26px -14px var(--sv-acc);
+  --sv-btn-sh-a: 0 6px 12px -10px var(--sv-acc);
+  --sv-btn-move: translateY(-2px);
+  --sv-btn-press: translateY(0);
+  --sv-ghost-sh: none;
+  --sv-item-move: translateY(-3px);
+  --sv-band-tilt: none;
+  --sv-head-case: none;
+  --sv-head-ls: -.02em;
+  --sv-btn-case: none;
+  --sv-btn-ls: 0;
+  --sv-spring: cubic-bezier(.22, .61, .36, 1);
+}
+.store-page[data-store-template='terra'][data-store-theme='dark'] .sv-page {
+  --sv-bg: #16110e;
+  --sv-fg: #f3e9dc;
+  --sv-mute: #a3927f;
+  --sv-card: #211a15;
+  --sv-soft: #271f18;
+  --sv-line: rgba(243, 233, 220, .18);
+  --sv-acc: var(--store-accent, #6366f1);
+  --sv-on-acc: #fff;
+  --sv-band-bg: var(--sv-fg);
+  --sv-band-fg: var(--sv-bg);
+  --sv-sh-pop: 0 24px 48px -28px rgba(0, 0, 0, .7);
+  --sv-sh-panel: 0 24px 48px -28px rgba(0, 0, 0, .7);
+  --sv-sh-form: 0 24px 48px -28px rgba(0, 0, 0, .6);
+}
+.store-page[data-store-template='terra'] .sv-page :is(h1, h2) { font-family: var(--sv-display); font-weight: 500; }
+.store-page[data-store-template='terra'] .sv-quote .total { font-family: var(--sv-display); font-weight: 500; }
+.store-page[data-store-template='terra'] .sv-eyebrow { color: var(--sv-acc); letter-spacing: .2em; }
+.store-page[data-store-template='terra'] .sv-stage {
+  background: radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--sv-pop) 15%, transparent), transparent 72%), var(--sv-soft);
+  border-color: var(--sv-line);
+}
+.store-page[data-store-template='terra'] .sv-stage-ring { border-radius: 999px 999px 0 0; }
+.store-page[data-store-template='terra'] .sv-item { border-radius: var(--sv-r-md); border: 1px solid var(--sv-line); background: var(--sv-card); }
+.store-page[data-store-template='terra'] .sv-item[aria-pressed='true'] { border-color: var(--sv-acc); box-shadow: 0 0 0 1px var(--sv-acc), var(--sv-sh-pop); }
+.store-page[data-store-template='terra'] .sv-quote { border-radius: var(--sv-r-lg); }
+.store-page[data-store-template='terra'] .sv-btn { font-weight: 700; }
+.store-page[data-store-template='terra'] .sv-btn--ghost { background: transparent; border: 1px solid var(--sv-line); color: var(--sv-fg); }
+.store-page[data-store-template='terra'] .sv-btn--ghost:hover { border-color: var(--sv-fg); }
+.store-page[data-store-template='terra'] .sv-band { background: var(--sv-fg); color: var(--sv-bg); transform: none; }
+.store-page[data-store-template='terra'] .sv-band span { font-family: var(--sv-display); font-style: italic; }
+.store-page[data-store-template='terra'] .sv-item .ico,
+.store-page[data-store-template='terra'] .sv-quote .q-ico {
+  background: color-mix(in srgb, var(--sv-acc) 12%, var(--sv-card));
+  color: var(--sv-acc);
+  border: 1px solid var(--sv-line);
+  box-shadow: none;
+}
+.store-page[data-store-template='terra'] .sv-item .act {
+  border-style: solid;
+  border-color: var(--sv-line);
+  background: transparent;
+}
+.store-page[data-store-template='terra'] .sv-item[aria-pressed='true'] .act {
+  border-color: transparent;
+  background: var(--sv-acc);
+  color: var(--sv-on-acc);
+}

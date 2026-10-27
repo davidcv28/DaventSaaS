@@ -50,6 +50,13 @@ const pageTemplate = computed(() => resolveStoreTemplate(custom.value.template, 
 // Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
 const isShop = computed(() => pageTemplate.value === 'shop')
+
+// Terra: la hoja del diseño también tiñe el chrome (barra, pie, dock) en
+// páginas que no montan la portada (servicios, ficha). Se carga on-demand y
+// una sola vez; la portada y el catálogo ya la importan estáticamente.
+watch(pageTemplate, (tpl) => {
+  if (tpl === 'terra') import('../assets/store-terra.css')
+}, { immediate: true })
 // Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
 // visitante puede alternarlo con el botón del nav (solo para esta visita).
 const visitorTheme = ref(null) // null = tema de la tienda
@@ -314,7 +321,7 @@ onMounted(async () => {
     // monospace de 'terminal' y el serif editorial de 'lookbook'. Misma
     // carga on-demand que name_font; el resto del texto sigue con la fuente
     // elegida por el dueño.
-    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'], shop: ['rubik'], cobre: ['bebas-neue', 'dm-sans'], minimal: ['manrope'], boutique: ['playfair-display', 'raleway'], signature: ['cinzel', 'dancing-script'], aurora: ['sora', 'space-grotesk'], bloque: ['archivo', 'jetbrains-mono'], riso: ['bricolage-grotesque', 'figtree'] }
+    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'], shop: ['rubik'], cobre: ['bebas-neue', 'dm-sans'], minimal: ['manrope'], boutique: ['playfair-display', 'raleway'], signature: ['cinzel', 'dancing-script'], aurora: ['sora', 'space-grotesk'], bloque: ['archivo', 'jetbrains-mono'], riso: ['bricolage-grotesque', 'figtree'], terra: ['fraunces'] }
     TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'

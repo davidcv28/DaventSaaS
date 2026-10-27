@@ -10,6 +10,7 @@ import StorePublicView from './StorePublicView.vue'
 import StorePublicAltView from './StorePublicAltView.vue'
 import StoreBloqueView from './StoreBloqueView.vue'
 import StoreRisoView from './StoreRisoView.vue'
+import StoreTerraView from './StoreTerraView.vue'
 
 const ctx = inject('storePage')
 const component = computed(() => {
@@ -17,6 +18,7 @@ const component = computed(() => {
   if (tpl === 'duo') return StorePublicAltView
   if (tpl === 'bloque') return StoreBloqueView
   if (tpl === 'riso') return StoreRisoView
+  if (tpl === 'terra') return StoreTerraView
   return StorePublicView
 })
 </script>
