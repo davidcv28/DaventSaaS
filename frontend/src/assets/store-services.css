@@ -157,27 +157,53 @@
 /* ---------- Picker de servicios + presupuesto ---------- */
 .sv-services { display: grid; grid-template-columns: 1.4fr .9fr; gap: 22px; align-items: start; }
 @media (max-width: 920px) { .sv-services { grid-template-columns: 1fr; } }
-.sv-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 560px) { .sv-list { grid-template-columns: 1fr; } }
+.sv-pick { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.sv-pick-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sv-pick-count { display: inline-flex; align-items: center; gap: 9px; font-size: 14.5px; font-weight: 600; color: var(--sv-mute); }
+.sv-pick-count b { font-family: var(--sv-display); color: var(--sv-fg); font-variant-numeric: tabular-nums; }
+.sv-pick-count .icon { color: var(--sv-acc); }
+.sv-pick-clear {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--sv-r-pill);
+  border: var(--sv-bw) solid var(--sv-line); background: var(--sv-card); color: var(--sv-mute);
+  font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  transition: color .2s, border-color .2s, transform .3s var(--sv-spring);
+}
+.sv-pick-clear:hover { color: var(--sv-fg); border-color: var(--sv-fg); transform: translateY(-1px); }
+.sv-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr)); gap: 16px; }
 .sv-item {
-  position: relative; display: grid; gap: 8px; padding: 20px; border-radius: var(--sv-r-md); background: var(--sv-card);
-  border: var(--sv-bw) solid var(--sv-line); cursor: pointer; transition: transform .4s var(--sv-spring), border-color .25s, background-color .25s;
+  position: relative; display: grid; gap: 10px; padding: 22px; border-radius: var(--sv-r-md); background: var(--sv-card);
+  border: var(--sv-bw) solid var(--sv-line); cursor: pointer;
+  transition: transform .4s var(--sv-spring), border-color .25s, background-color .25s, box-shadow .3s;
   text-align: left; font: inherit; color: inherit; width: 100%;
 }
 .sv-item:hover { transform: var(--sv-item-move); }
-.sv-item .ico { width: 48px; height: 48px; border-radius: var(--sv-r-sm); background: var(--sv-soft); display: grid; place-items: center; color: var(--sv-fg); transition: transform .4s var(--sv-spring); }
-.sv-item:hover .ico { transform: rotate(-10deg) scale(1.08); }
-.sv-item h3 { font-size: 17px; font-weight: 700; line-height: 1.25; margin-top: 6px; }
-.sv-item small { color: var(--sv-mute); font-size: 14px; }
-.sv-item .dur { display: inline-flex; align-items: center; gap: 6px; color: var(--sv-mute); font-size: 13px; font-weight: 600; }
-.sv-item .price { font-family: var(--sv-display); font-weight: 700; font-size: 16px; color: var(--sv-acc); font-variant-numeric: tabular-nums; }
-.sv-item::after {
-  content: '✓'; position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 50%;
-  display: grid; place-items: center; font-weight: 800; background: var(--sv-card); color: transparent; border: 2px solid var(--sv-line);
-  transition: background-color .3s, color .3s, transform .4s var(--sv-spring);
+/* Tile de ícono: color identidad por servicio (--h = SERVICE_HUES), grande
+   y con gradiente — como un ícono de app, se reconoce de un vistazo. */
+.sv-item .ico {
+  width: 62px; height: 62px; border-radius: calc(var(--sv-r-md) - 6px); display: grid; place-items: center; line-height: 0;
+  color: #fff;
+  background: linear-gradient(135deg, hsl(var(--h, 250) 74% 56%), hsl(calc(var(--h, 250) + 28) 72% 42%));
+  box-shadow: 0 10px 22px -10px hsl(var(--h, 250) 80% 45% / .55), inset 0 1.5px 0 rgba(255, 255, 255, .28);
+  transition: transform .4s var(--sv-spring), background-color .3s, color .3s, box-shadow .3s;
 }
-.sv-item[aria-pressed='true'] { border-color: var(--sv-acc); background: color-mix(in oklab, var(--sv-pop) 10%, var(--sv-card)); }
-.sv-item[aria-pressed='true']::after { background: var(--sv-acc); color: var(--sv-on-acc); border-color: var(--sv-acc); transform: scale(1.1) rotate(-8deg); }
+.sv-item:hover .ico { transform: rotate(-6deg) scale(1.07); }
+.sv-item h3 { font-size: 18px; font-weight: 700; line-height: 1.25; margin-top: 4px; }
+.sv-item small { color: var(--sv-mute); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sv-item .dur { display: inline-flex; align-items: center; gap: 6px; color: var(--sv-mute); font-size: 13px; font-weight: 600; }
+.sv-item .price { font-family: var(--sv-display); font-weight: 700; font-size: 17px; color: var(--sv-acc); font-variant-numeric: tabular-nums; }
+/* Check de selección: "+" vacío invita a agregar, "✓" verde confirma */
+.sv-item::after {
+  content: '+'; position: absolute; top: 18px; right: 18px; width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 800; font-size: 17px; line-height: 1;
+  background: var(--sv-card); color: var(--sv-mute); border: 2px dashed var(--sv-line);
+  transition: background-color .3s, color .3s, border-color .3s, transform .4s var(--sv-spring);
+}
+.sv-item:hover::after { border-style: solid; border-color: var(--sv-acc); color: var(--sv-acc); }
+.sv-item[aria-pressed='true'] {
+  border-color: var(--sv-acc); background: color-mix(in oklab, var(--sv-pop) 10%, var(--sv-card));
+  box-shadow: 0 14px 30px -16px color-mix(in srgb, var(--sv-acc) 50%, transparent);
+}
+.sv-item[aria-pressed='true']::after { content: '✓'; background: var(--sv-ok); color: var(--sv-on-ok); border: 2px solid var(--sv-ok); transform: scale(1.08) rotate(-8deg); }
 
 .sv-quote {
   position: sticky; top: 92px; background: var(--sv-fg); color: var(--sv-on-ink);
@@ -634,17 +660,19 @@
 }
 .sv-item:hover::before, .sv-item[aria-pressed='true']::before { opacity: 1; }
 .sv-item:hover { border-color: color-mix(in srgb, var(--sv-acc) 55%, var(--sv-line)); }
-.sv-item .ico { transition: transform .4s var(--sv-spring), background-color .3s, color .3s; }
-.sv-item[aria-pressed='true'] .ico { background: var(--sv-acc); color: var(--sv-on-acc); }
-.sv-item h3 { padding-right: 34px; }
 .sv-item .meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--sv-line); }
-.sv-item .price { padding: 4px 10px; border-radius: var(--sv-r-pill); background: var(--sv-soft); }
+.sv-item .price { padding: 5px 12px; border-radius: var(--sv-r-pill); background: var(--sv-soft); }
+/* CTA siempre visible: la tarjeta entera es el botón, y este pill muestra
+   el estado de un vistazo ("+ Agregar" dashed → "✓ En tu pedido" verde). */
 .sv-item .act {
-  display: inline-flex; align-items: center; justify-self: start; gap: 6px; font-size: 13px; font-weight: 700; color: var(--sv-acc);
-  opacity: .0; translate: 0 6px; transition: opacity .3s, translate .35s var(--sv-spring);
+  margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 14px; border-radius: var(--sv-btn-radius); font-size: 14px; font-weight: 700;
+  color: var(--sv-acc); border: 1.5px dashed color-mix(in srgb, var(--sv-acc) 45%, var(--sv-line));
+  background: color-mix(in srgb, var(--sv-acc) 6%, transparent);
+  transition: background-color .25s, color .25s, border-color .25s;
 }
-.sv-item:hover .act, .sv-item:focus-visible .act, .sv-item[aria-pressed='true'] .act { opacity: 1; translate: 0 0; }
-@media (hover: none) { .sv-item .act { opacity: 1; translate: 0 0; color: var(--sv-mute); } .sv-item[aria-pressed='true'] .act { color: var(--sv-acc); } }
+.sv-item:hover .act { border-style: solid; border-color: var(--sv-acc); }
+.sv-item[aria-pressed='true'] .act { background: var(--sv-ok); border: 1.5px solid var(--sv-ok); color: var(--sv-on-ok); }
 .sv-item:active { transform: scale(.985); }
 .sv-item[aria-pressed='true'] { animation: sv-select .45s var(--sv-spring); }
 @keyframes sv-select { 0% { scale: 1; } 40% { scale: 1.025; } 100% { scale: 1; } }
@@ -655,7 +683,11 @@
 @keyframes sv-bump { 0% { scale: 1; } 35% { scale: 1.07; } 100% { scale: 1; } }
 .sv-quote .total { transform-origin: left center; }
 .sv-quote li { align-items: center; }
-.sv-quote li span { flex: 1; min-width: 0; }
+.sv-quote li .q-name { flex: 1; min-width: 0; }
+.sv-quote .q-ico {
+  flex: none; width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; line-height: 0;
+  color: #fff; background: linear-gradient(135deg, hsl(var(--h, 250) 74% 56%), hsl(calc(var(--h, 250) + 28) 72% 42%));
+}
 .sv-quote .rm {
   flex: none; width: 24px; height: 24px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center;
   background: color-mix(in oklab, var(--sv-on-ink) 14%, transparent); color: inherit; transition: background-color .2s, transform .3s var(--sv-spring);
@@ -743,7 +775,25 @@
 .store-page[data-store-template='promo'] .sv-quote .sv-btn { background: var(--sp-yellow, #ffe14d); color: var(--sp-ink-hard, #111827); }
 .store-page[data-store-template='riso'] .sv-quote .sv-btn { background: var(--rs-pink, var(--sv-pop)); color: var(--rs-ink, var(--sv-on-pop)); }
 .store-page[data-store-template='street'] .sv-item .ico, .store-page[data-store-template='promo'] .sv-item .ico,
-.store-page[data-store-template='riso'] .sv-item .ico { border: 2px solid var(--sv-fg); }
+.store-page[data-store-template='riso'] .sv-item .ico { border: 2px solid var(--sv-fg); box-shadow: 3px 3px 0 var(--sv-fg); }
+
+/* Tiles de ícono: los estilos monocromos/editoriales los aplanan a la
+   tinta propia (el color identidad multicolor queda para las plantillas
+   expresivas) — y en terminal el tile es el acento fosforescente. */
+.store-page[data-store-template='terminal'] .sv-item .ico, .store-page[data-store-template='terminal'] .sv-quote .q-ico {
+  background: var(--tm-acc, #7cf29a); color: var(--tm-bg, #0a0f0b); box-shadow: 0 0 16px var(--tm-glow, rgba(124, 242, 154, .3));
+}
+.store-page[data-store-template='bloque'] .sv-item .ico, .store-page[data-store-template='bloque'] .sv-quote .q-ico,
+.store-page[data-store-template='lookbook'] .sv-item .ico, .store-page[data-store-template='lookbook'] .sv-quote .q-ico,
+.store-page[data-store-template='minimal'] .sv-item .ico, .store-page[data-store-template='minimal'] .sv-quote .q-ico,
+.store-page[data-store-template='boutique'] .sv-item .ico, .store-page[data-store-template='boutique'] .sv-quote .q-ico,
+.store-page[data-store-template='cobre'] .sv-item .ico, .store-page[data-store-template='cobre'] .sv-quote .q-ico,
+.store-page[data-store-template='signature'] .sv-item .ico, .store-page[data-store-template='signature'] .sv-quote .q-ico {
+  background: var(--sv-fg); color: var(--sv-card); box-shadow: none;
+}
+.store-page[data-store-template='bloque'] .sv-item:hover .ico, .store-page[data-store-template='lookbook'] .sv-item:hover .ico,
+.store-page[data-store-template='minimal'] .sv-item:hover .ico, .store-page[data-store-template='boutique'] .sv-item:hover .ico,
+.store-page[data-store-template='cobre'] .sv-item:hover .ico, .store-page[data-store-template='signature'] .sv-item:hover .ico { transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .sv-rv { opacity: 1; translate: none; }

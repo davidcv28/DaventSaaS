@@ -23,7 +23,7 @@ import {
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES, formatStorageMB,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
-  MARKETING_LIMITS, SERVICE_ICONS, SECTION_ORDER_LABELS, resolveSectionOrder,
+  MARKETING_LIMITS, SERVICE_ICONS, SECTION_ORDER_LABELS, resolveSectionOrder, serviceHue,
   validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl
 } from '../api/stores.api.js'
 import {
@@ -1472,14 +1472,6 @@ async function moveService(s, dir) {
 function serviceIcon(key) {
   return SERVICE_ICONS[key] ? key : 'wrench'
 }
-const SERVICE_HUES = {
-  'package': 215, 'truck': 28, 'wrench': 250, 'tag': 330, 'percent': 350, 'gift': 300,
-  'star': 45, 'zap': 38, 'shield-check': 160, 'clock': 195, 'map-pin': 5, 'users': 265,
-  'phone': 140, 'message-circle': 170, 'store': 20, 'credit-card': 225, 'wallet': 100,
-  'crown': 48, 'badge-check': 155, 'trending-up': 130, 'calendar': 280, 'flame': 15,
-  'megaphone': 320, 'check': 200
-}
-const serviceHue = (key) => SERVICE_HUES[key] ?? 250
 const serviceStats = computed(() => {
   const list = services.items
   const active = list.filter((s) => s.is_active).length

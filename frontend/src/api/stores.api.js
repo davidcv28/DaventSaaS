@@ -494,6 +494,18 @@ export const SERVICE_ICONS = {
   'check':          'Otro'
 }
 
+// Color identidad por ícono de servicio (hue HSL): el panel lo usa para las
+// tarjetas del admin y la página Servicios para los tiles del picker — mismo
+// ícono, mismo color en toda la plataforma.
+export const SERVICE_HUES = {
+  'package': 215, 'truck': 28, 'wrench': 250, 'tag': 330, 'percent': 350, 'gift': 300,
+  'star': 45, 'zap': 38, 'shield-check': 160, 'clock': 195, 'map-pin': 5, 'users': 265,
+  'phone': 140, 'message-circle': 170, 'store': 20, 'credit-card': 225, 'wallet': 100,
+  'crown': 48, 'badge-check': 155, 'trending-up': 130, 'calendar': 280, 'flame': 15,
+  'megaphone': 320, 'check': 200
+}
+export const serviceHue = (key) => SERVICE_HUES[key] ?? 250
+
 // Orden de las secciones de la portada (espejo de SECTION_ORDER del modelo):
 // el dueño las reordena desde "Mi empresa"; el hero queda primero y el
 // contacto último siempre.

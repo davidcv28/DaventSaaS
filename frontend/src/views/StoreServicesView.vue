@@ -12,6 +12,7 @@ import { ref, computed, inject, watch, nextTick, onMounted, onBeforeUnmount } fr
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../config/env.js'
 import { buildServiceRequestMessage, servicePriceLabel } from '../api/services.api.js'
+import { SERVICE_ICONS, serviceHue } from '../api/stores.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import '../assets/store-services.css'
 
@@ -45,6 +46,11 @@ function toggle(id) {
   chosen.value = next
 }
 const chosenItems = computed(() => items.value.filter((it) => chosen.value.has(it.id)))
+function clearAll() { chosen.value = new Set() }
+// Cada servicio se ve con su ícono + color identidad (mismo sistema del
+// panel: SERVICE_ICONS/SERVICE_HUES en stores.api.js); el tile grande con
+// gradiente hace la lista legible de un vistazo.
+const serviceIcon = (key) => (SERVICE_ICONS[key] ? key : 'wrench')
 // Solo los servicios con precio cargado entran al total (null = "a convenir").
 const total = computed(() => chosenItems.value.reduce((sum, it) => sum + Number(it.price || 0), 0))
 const hasUnpriced = computed(() => chosenItems.value.some((it) => it.price == null))
@@ -256,23 +262,36 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             <p>Cuando el negocio cargue su lista, acá vas a poder armar tu presupuesto.</p>
           </div>
           <div v-else class="sv-services">
-            <div class="sv-list" role="group" aria-label="Servicios disponibles">
-              <button
-                v-for="(it, i) in items" :key="it.id" v-reveal type="button" class="sv-item" :style="stagger(i)"
-                :aria-pressed="chosen.has(it.id)" @click="toggle(it.id)"
-              >
-                <span class="ico"><AppIcon :name="it.icon || 'wrench'" :size="22" /></span>
-                <h3>{{ it.name }}</h3>
-                <small v-if="it.description">{{ it.description }}</small>
-                <span class="meta">
-                  <span v-if="it.duration" class="dur"><AppIcon name="clock" :size="13" /> {{ it.duration }}</span>
-                  <span class="price">{{ servicePriceLabel(it) }}</span>
+            <div class="sv-pick">
+              <div class="sv-pick-bar">
+                <span class="sv-pick-count" aria-live="polite">
+                  <AppIcon name="checklist" :size="16" aria-hidden="true" />
+                  <template v-if="chosenItems.length"><b>{{ chosenItems.length }}</b>&nbsp;de {{ items.length }} elegidos</template>
+                  <template v-else>{{ items.length }} {{ items.length === 1 ? 'servicio disponible' : 'servicios disponibles' }} — tocá para elegir</template>
                 </span>
-                <span class="act" aria-hidden="true">
-                  <AppIcon :name="chosen.has(it.id) ? 'check' : 'plus'" :size="14" :stroke="2.4" />
-                  {{ chosen.has(it.id) ? 'Agregado' : 'Agregar' }}
-                </span>
-              </button>
+                <button v-if="chosenItems.length" type="button" class="sv-pick-clear" @click="clearAll">
+                  <AppIcon name="x" :size="14" :stroke="2.4" /> Limpiar
+                </button>
+              </div>
+              <div class="sv-list" role="group" aria-label="Servicios disponibles">
+                <button
+                  v-for="(it, i) in items" :key="it.id" v-reveal type="button" class="sv-item"
+                  :style="{ '--i': Math.min(i, 8), '--h': serviceHue(it.icon) }"
+                  :aria-pressed="chosen.has(it.id)" @click="toggle(it.id)"
+                >
+                  <span class="ico"><AppIcon :name="serviceIcon(it.icon)" :size="30" /></span>
+                  <h3>{{ it.name }}</h3>
+                  <small v-if="it.description">{{ it.description }}</small>
+                  <span class="meta">
+                    <span v-if="it.duration" class="dur"><AppIcon name="clock" :size="14" /> {{ it.duration }}</span>
+                    <span class="price">{{ servicePriceLabel(it) }}</span>
+                  </span>
+                  <span class="act" aria-hidden="true">
+                    <AppIcon :name="chosen.has(it.id) ? 'check' : 'plus'" :size="15" :stroke="2.6" />
+                    {{ chosen.has(it.id) ? 'En tu pedido' : 'Agregar' }}
+                  </span>
+                </button>
+              </div>
             </div>
 
             <aside id="sv-quote" class="sv-quote" aria-live="polite" aria-label="Presupuesto orientativo">
@@ -283,8 +302,9 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
               </div>
               <ul>
                 <li v-if="!chosenItems.length" class="empty-line">Todavía no elegiste nada.</li>
-                <li v-for="it in chosenItems" :key="it.id">
-                  <span>{{ it.name }}</span><b>{{ servicePriceLabel(it) }}</b>
+                <li v-for="it in chosenItems" :key="it.id" :style="{ '--h': serviceHue(it.icon) }">
+                  <span class="q-ico" aria-hidden="true"><AppIcon :name="serviceIcon(it.icon)" :size="13" /></span>
+                  <span class="q-name">{{ it.name }}</span><b>{{ servicePriceLabel(it) }}</b>
                   <button type="button" class="rm" :aria-label="`Quitar ${it.name}`" @click="toggle(it.id)"><AppIcon name="x" :size="13" :stroke="2.4" /></button>
                 </li>
               </ul>
