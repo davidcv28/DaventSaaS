@@ -726,3 +726,128 @@
   .more-sheet, .sheet-nav > button .icon, .tabbar > button .icon { transition: none !important; }
   .sheet-scrim { animation: none !important; }
 }
+
+/* ===== Fase C: "Tu negocio hoy" — plan strip, alertas, acción, stats ===== */
+
+/* Franja de plan compacta (reemplaza al hero de suscripción). */
+.plan-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 6px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.ps-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.ps-dot.ok { background: var(--ok); }
+.ps-dot.warn { background: var(--warn); }
+.ps-dot.bad { background: var(--danger); }
+.ps-name { font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; }
+.ps-meta { color: var(--muted); font-size: 13px; }
+.ps-bar { flex: 1 1 90px; max-width: 180px; height: 5px; border-radius: 99px; background: var(--line-soft); overflow: hidden; }
+.ps-bar span { display: block; height: 100%; border-radius: inherit; background: var(--brand-500); transform-origin: left center; transition: transform .8s var(--ease-out) .2s; }
+.ps-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.plan-note { margin: -2px 4px 12px; font-size: 12.5px; color: var(--muted); }
+
+/* Botón chip (franjas compactas: plan, alertas). */
+.chip-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--card); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .18s, color .18s, background-color .18s, transform .18s var(--ease-out); }
+.chip-btn:hover { border-color: var(--brand-soft-line); color: var(--brand-ink); transform: translateY(-1px); }
+.chip-btn.strong { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+.chip-btn.strong:hover { background: var(--brand-600); color: #fff; }
+.chip-btn:disabled { opacity: .6; cursor: default; transform: none; }
+
+/* Cola de alertas: la más urgente arriba, el resto desplegable. */
+.aq { margin: 0 0 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); overflow: hidden; }
+.aq-main { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.aq-icon { flex: none; }
+.aq-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.aq-body strong { font-size: 14px; font-weight: 650; }
+.aq-body span { font-size: 13px; color: var(--muted); }
+.aq.a-danger { border-color: var(--danger-line); background: var(--danger-bg); }
+.aq.a-warn { border-color: var(--warn-line); background: var(--warn-bg); }
+.aq.a-info { border-color: var(--info-line); background: var(--info-bg); }
+.aq.a-brand { border-color: var(--brand-soft-line); background: var(--brand-soft); }
+.aq.a-danger .aq-icon { color: var(--danger-ink); }
+.aq.a-warn .aq-icon { color: var(--warn-ink); }
+.aq.a-info .aq-icon { color: var(--info-ink); }
+.aq.a-brand .aq-icon { color: var(--brand-ink); }
+.aq.a-danger .aq-body span, .aq.a-warn .aq-body span, .aq.a-info .aq-body span { color: inherit; opacity: .8; }
+.aq-more { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 4px 10px; border: none; border-radius: 8px; background: transparent; color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.aq-more:hover { background: rgba(0, 0, 0, .05); }
+.aq-list { border-top: 1px solid var(--line-soft); }
+.aq-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line-soft); }
+.aq-row:first-child { border-top: none; }
+.aq-row .aq-body strong { font-size: 13.5px; }
+.aq-row .aq-body span { font-size: 12.5px; }
+.aq-row.a-danger .aq-icon { color: var(--danger-ink); }
+.aq-row.a-warn .aq-icon { color: var(--warn-ink); }
+.aq-row.a-info .aq-icon { color: var(--info-ink); }
+
+/* Grid "Tu negocio hoy": acción recomendada + preview viva a la derecha. */
+.today { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); grid-template-areas: 'next wp' 'stats wp' 'steps feed'; align-items: start; }
+.today > .next-do { grid-area: next; }
+.today > .wp-card { grid-area: wp; position: sticky; top: 84px; }
+.today > .stats { grid-area: stats; }
+.today > .steps-card { grid-area: steps; }
+.today > .feed-card { grid-area: feed; }
+
+/* Acción recomendada: única decisión principal (Hick). */
+.next-do { position: relative; overflow: hidden; padding: 24px 26px; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); border-color: var(--brand-soft-line); }
+.next-do-tag { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--brand-ink); }
+.next-do h2 { margin: 0 0 4px; font-size: 21px; letter-spacing: -.015em; }
+.next-do p { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; }
+.next-do-cta { min-height: 46px; padding: 10px 20px; font-size: 15px; }
+.next-do-step { display: block; margin-top: 12px; font-size: 12px; color: var(--muted); }
+
+/* Vista previa viva: mini navegador con el mock real del diseño. */
+.wp-card h3 { margin-bottom: 12px; }
+.wp-frame { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--sunk); }
+.wp-url { display: flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 11.5px; color: var(--muted); background: var(--card); border-bottom: 1px solid var(--line-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wp-mini { border-radius: 0; border: 0; max-height: 240px; overflow: hidden; pointer-events: none; }
+.wp-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.wp-actions .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.wp-empty { padding: 18px 4px 6px; text-align: center; }
+.wp-empty p { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+
+/* Stats con contexto: valor + delta + sparkline. */
+.stat-body { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.stat-body strong { font-size: 24px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.stat-body small { color: var(--muted); font-size: 12.5px; }
+.stat-sub { display: block; margin-top: 4px; font-size: 11.5px; color: var(--muted); }
+.stat-delta { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; font-size: 11.5px; font-weight: 700; color: var(--ok-ink); }
+.stat-delta.down { color: var(--warn-ink); }
+.stat-spark { position: absolute; right: 12px; bottom: 10px; width: 84px; height: 26px; opacity: .9; }
+.stat-spark .spk-line { stroke: var(--brand-500); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.stat-spark .spk-area { fill: var(--brand-500); opacity: .14; }
+
+/* Checklist */
+.steps-msg { margin: -4px 0 12px; font-size: 13.5px; color: var(--muted); }
+.steps-card.complete .steps-msg { color: var(--ok-ink); font-weight: 600; }
+.steps-card.complete .steps-bar span { background: var(--ok); }
+
+/* Feed de actividad */
+.feed-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.feed-list li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line-soft); }
+.feed-list li:first-child { border-top: none; padding-top: 2px; }
+.feed-icon { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--brand-soft); color: var(--brand-ink); }
+.feed-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.feed-body strong { font-size: 13.5px; font-weight: 600; }
+.feed-body small { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-cta { flex: none; min-height: 32px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--brand-ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background-color .18s, border-color .18s; }
+.feed-cta:hover { background: var(--brand-soft); border-color: var(--brand-soft-line); }
+.feed-empty { margin: 4px 0 8px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.feed-storage { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+
+@media (max-width: 960px) {
+  .today { grid-template-columns: 1fr; grid-template-areas: 'next' 'stats' 'steps' 'wp' 'feed'; }
+  .today > .wp-card { position: static; }
+}
+@media (max-width: 640px) {
+  .plan-strip { gap: 8px 10px; }
+  .ps-bar { flex-basis: 100%; order: 3; max-width: none; }
+  .ps-actions { order: 4; margin-left: 0; width: 100%; }
+  .ps-actions .chip-btn { flex: 1; justify-content: center; }
+  .aq-main { flex-wrap: wrap; }
+  .aq-body { flex-basis: calc(100% - 30px); }
+  .aq-main .chip-btn { flex: 1; justify-content: center; }
+  .aq-more { flex: 1; justify-content: center; }
+  .next-do { padding: 20px; }
+  .next-do-cta { width: 100%; justify-content: center; }
+  .stat-spark { position: static; width: 100%; height: 24px; margin-top: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-bar span { transition: none !important; }
+}
