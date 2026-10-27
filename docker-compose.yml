@@ -237,8 +237,12 @@ services:
     # cap_add: NET_BIND_SERVICE ya no hace falta: la imagen es nginx-unprivileged
     # (uid 101) y escucha 8080/8443; el mapeo 80->8080 lo hace Docker.
     read_only: true
-    # /etc/nginx/conf.d como tmpfs: envsubst escribe ahí el vhost renderizado
-    # al arrancar (además oculta el default.conf de fábrica de la imagen).
+    # nginx-unprivileged escribe SOLO en estos tmpfs (rootfs inmutable):
+    # /tmp = pid, /var/cache/nginx = body/proxy temp, /etc/nginx/conf.d =
+    # vhost renderizado por envsubst al arrancar (además oculta el default.conf
+    # de fábrica de la imagen). Si alguno falta, el healthcheck nunca pasa y
+    # `docker compose up -d --wait` (paso 4 del deploy) tumba el job en vez de
+    # dejar el sitio caído con un deploy verde.
     tmpfs: [/tmp, /var/cache/nginx, /etc/nginx/conf.d]
     deploy:
       resources:

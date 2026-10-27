@@ -392,6 +392,12 @@ class MarketingFieldsTests(TestCase):
     claves conocidas completándose con el orden base.
     """
 
+    def setUp(self):
+        # El cache de beneficios se keyea por PK y SQLite reutiliza PKs tras
+        # el rollback: sin limpiar, el plan de un test se filtra al que corre
+        # sin plan y el gate responde 200 en vez de 403.
+        cache.clear()
+
     def _client(self, with_plan = True):
         _, profile      =   _make_user(verified = True)
         if with_plan:
@@ -756,6 +762,12 @@ class VisitCounterTests(TestCase):
     Contador de visitas: una fila por tienda/día, dedupe best-effort por
     hash(IP+UA) y métricas del panel solo con el beneficio has_stats.
     """
+
+    def setUp(self):
+        # El dedupe de visitas usa cache con hash(IP+UA+fecha): en tests la IP
+        # es siempre 127.0.0.1, así que sin limpiar el cache la segunda visita
+        # se descarta como duplicada del test anterior y no se crea la fila.
+        cache.clear()
 
     def _setup(self, **benefits):
         _, profile      =   _make_user(verified = True)

@@ -8,6 +8,7 @@ tienda en los endpoints del dueño.
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -68,6 +69,12 @@ def _grant(profile, **benefits):
 
 class ServiceEntitlementTests(TestCase):
     """Los servicios del dueño se gestionan solo con has_services_site."""
+
+    def setUp(self):
+        # El cache de beneficios se keyea por PK y SQLite reutiliza PKs tras
+        # el rollback: sin limpiar, el plan del test anterior se filtra al que
+        # corre sin plan y el gate responde 200 en vez de 403.
+        cache.clear()
 
     def _client(self, services = True, with_plan = True):
         _, profile      =   _make_user('duenio')

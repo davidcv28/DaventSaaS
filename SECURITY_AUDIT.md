@@ -582,3 +582,130 @@ por incompatibilidad de infraestructura, no por capricho.
 **Verificación ejecutada**: `manage.py check` 0 issues · `manage.py test`
 306 tests OK · `npm run build` OK · migración `chat.0001` aplicada ·
 `seed_benefits` actualiza el flag en cada entorno.
+
+---
+
+## 15. Auditoría de infraestructura: contenedores, Redis y pipeline — 2026-10-27
+
+**Alcance:** `docker/api/Dockerfile`, `docker/web/Dockerfile`, `docker-compose.yml`,
+`docker/api/entrypoint.sh`, `.dockerignore`, `docker/web/templates/default.conf.template`
+(plantilla de vhost) y `.github/workflows/ci-cd.yml`.
+**Commit de remediación:** `e78f2b1` (`fix: harden container/CI stack`).
+
+### 15.1 Hallazgos remediados
+
+| Sev. | Hallazgo | Remediación |
+|------|----------|-------------|
+| **P0** | El job `test` no definía `MP_WEBHOOK_SECRET` → `payments.E001` (check `deploy=True`) devolvía **exit 1**. Con `test` rojo, `build` (`needs: [lint, test]`) y `deploy` nunca corrían: **ningún push a `main` llegaba al VPS** | Dummy `MP_WEBHOOK_SECRET` de CI (no es un secreto real) + `SECRET_KEY` de 50+ chars |
+| **P0** | Redis sin `maxmemory` (default `0`) ni política: con cgroup de 256M el kernel lo mataba por OOM (Redis no lee cgroup limits). Al caer, `RedisCache` lanzaba en cada `INCR` del throttle → **500 en toda la API**; y las tareas en vuelo de Celery se perdían | `--maxmemory 256mb` + `--maxmemory-policy volatile-lru` (evicta solo claves con TTL: contadores de throttle y caché; las listas del broker no tienen TTL y nunca se tocan) + cgroup 384M |
+| **P0** | La imagen `web` corría **nginx como root** (sin `USER`), con `NET_BIND_SERVICE` regalado para el puerto 80 | `nginxinc/nginx-unprivileged` (uid 101, 8080/8443); sin `NET_BIND_SERVICE` |
+| **P1** | `cancel-in-progress: true` en el `concurrency` del workflow **abortaba deploys a mitad de camino** (entre `compose pull` y `up -d`) | `concurrency: deploy-production` con `cancel-in-progress: false` a nivel de job |
+| **P1** | `.dockerignore` no excluía `docker/certbot/` ni `*.pem`/`*.key`: el token de Cloudflare del ACME DNS-01 podía hornearse con `COPY . .` y publicarse en GHCR | Patrones agregados al `.dockerignore` |
+| **P1** | El deploy no verificaba la host key SSH (MITM sobre el canal que mueve secretos) y `up -d` reportaba verde con contenedores en crash-loop | `fingerprint` pineada + `up -d --wait --wait-timeout 180` + `curl /healthz/` |
+| **P1** | `build` no dependía de `security`: la imagen se publicaba en GHCR antes del SAST | `needs: [lint, test, security]` |
+| **P2** | El SPA se compilaba **3 veces** por pipeline (lint + 2 Dockerfiles); `migrate` duplicaba el trabajo de `manage.py test`; `load: true` exportaba 800MB-1.5GB al daemon en cada PR | Lint sin build del SPA; `makemigrations --check`; sin `load` en PR |
+| **P2** | Cada restart de `api` repetía `collectstatic` + `migrate` (~4-6s) y dos réplicas podían migrar en paralelo | El job `migrate` hace ambos una vez; `api`/`celery` con `RUN_*=0` |
+| **P2** | `docker image prune -f` solo borraba *dangling*: los tags `sha-<commit>` llenaban el disco del VPS | `prune --filter until=168h` |
+
+### 15.2 Checklist de secretos — OBLIGATORIO antes del próximo deploy
+
+> **Regla:** los valores **nunca** se commitean, ni en `.env.example`, ni en
+> `render.yaml`, ni en este documento. Acá va solo el nombre y el propósito.
+> El deploy **falla a propósito** (preflight fail-closed) si faltan.
+
+#### A. GitHub → Settings → **Environments → `production`** (no en repo-level)
+
+El job `deploy` usa `environment: production`: cargarlos ahí permite exigir
+aprobación manual y que no estén disponibles para cualquier workflow del repo.
+
+- [ ] `SSH_HOST_FINGERPRINT` — host key del VPS pineada. Sin esto `appleboy/ssh-action`
+      no verifica contra quién habla (MITM sobre el canal del deploy).
+      Obtener con: `ssh-keyscan -p <SSH_PORT> <SSH_HOST> | ssh-keygen -lf -`
+- [ ] `MP_WEBHOOK_SECRET` — clave secreta del panel de Mercado Pago
+      (*Webhooks → Clave secreta*). Firma HMAC-SHA256 de los webhooks.
+      **Vacío = todos los pagos entrantes se rechazan con 401** (fail-closed) y
+      `payments.E001` rompe `check --deploy`. El preflight exige ≥32 chars.
+- [ ] `SECRET_MP_KEY` — access token de producción de Mercado Pago.
+      Sin él, `checkout`/`subscription` no pueden crear la preferencia.
+      El preflight exige ≥16 chars.
+
+Ya existentes (no cambian): `SSH_HOST`, `SSH_PORT`, `SSH_USERNAME`,
+`SSH_PRIVATE_KEY` · Variable: `PLATFORM_DOMAIN`.
+
+#### B. Render → Dashboard → *Environment* (Blueprint `render.yaml`, `sync: false`)
+
+Render no recibe secretos por el pipeline: se cargan una vez en el dashboard
+y el Blueprint **no** los pisa (`sync: false`).
+
+- [ ] `MP_WEBHOOK_SECRET`
+- [ ] `SECRET_MP_KEY`
+- [ ] (ya existentes, para referencia) `SECRET_KEY`, `DATABASE_URL` de Neon,
+      `EMAIL_HOST_PASSWORD`, claves R2, `GOOGLE_CLIENT_ID`, `SECRETS_MASTER_KEYS`
+
+#### C. VPS `/opt/davent/.env`
+
+El deploy escribe `MP_WEBHOOK_SECRET` y `SECRET_MP_KEY` con un **merge atómico**
+(`mktemp` + `mv`, `umask 077`, `chmod 600`) y borra el archivo temporal con
+`shred`. El resto del `.env` se respeta byte a byte — no lo sobrescribe.
+
+- [ ] Verificar que `.env` exista y sea `600`: `ls -l /opt/davent/.env`
+- [ ] `SECRET_KEY` ≥32 chars (ideal 50+, si no Django marca `security.W009`)
+
+#### D. Verificación post-carga (antes de mergear el próximo deploy)
+
+```bash
+# 1. Preflight local contra el .env del VPS
+grep -c '^MP_WEBHOOK_SECRET=.\{32,\}' /opt/davent/.env   # -> 1
+grep -c '^SECRET_MP_KEY=.\{16,\}'     /opt/davent/.env   # -> 1
+
+# 2. El check de Django en el contenedor (debe salir 0)
+docker compose exec api python manage.py check --deploy
+
+# 3. Webhook firmado de punta a punta (sandbox de MP) -> 200 en el log
+docker compose logs -f api | grep -i 'webhook'
+```
+
+**Rotación:** cambiar el valor en GitHub/Render → el próximo deploy lo escribe
+en el `.env` del VPS. No hace falta tocar el servidor a mano.
+
+### 15.3 Blindaje del contenedor `web` (nginx sin privilegios)
+
+`read_only: true` + `tmpfs` es **obligatorio** para `nginx-unprivileged`: el
+rootfs es inmutable y nginx solo escribe en los tmpfs declarados.
+
+```yaml
+  web:
+    ports:
+      - "80:8080"      # host 80 -> nginx 8080 (uid 101, sin root)
+      - "443:8443"
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]    # ya no hay cap_add: NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp                  # pid file (nginx.conf de la imagen: /tmp/nginx.pid)
+      - /var/cache/nginx      # client_body_temp / proxy_temp
+      - /etc/nginx/conf.d     # envsubst escribe el vhost renderizado al arrancar
+```
+
+`docker compose up -d --wait --wait-timeout 180` (paso 4 del deploy) es el
+preflight: si nginx no puede escribir en algún tmpfs, el healthcheck nunca
+pasa y **el job falla** en vez de dejar el sitio caído con un deploy verde.
+
+### 15.4 Patrón: aislamiento de cache en tests (falso positivo de SQLite)
+
+`plan_benefits_of` cachea por PK (`planben:<pk>`) y el throttle de DRF keyea
+por `scope + user.pk`. SQLite **reutiliza PKs** después del rollback de cada
+`TestCase`, así que el cache del test anterior se filtra al siguiente:
+
+- gate de plan → `201` en vez de `403` (el plan cacheado de otro test);
+- `coupon_redeem` 10/h → `429` a mitad de la clase (contador acumulado);
+- dedupe de visitas `hash(IP+UA+fecha)` → la segunda visita se descarta.
+
+**Regla:** toda clase de test que dependa de beneficios, throttles o del
+dedupe de visitas debe empezar con `cache.clear()` en `setUp()`. Postgres no
+lo necesita (las secuencias no retroceden), pero el aislamiento no debe
+depender del motor: el test tiene que pasar igual en SQLite.
+
+**Verificación ejecutada:** `manage.py test` → **369 tests OK, 0 fallos**
+(antes: 10 fallos + 1 error, idénticos en `HEAD`), `manage.py check --deploy`
+exit 0, `ruff check` limpio, `docker compose config -q` OK.
