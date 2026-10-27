@@ -8,6 +8,7 @@ una suscripción vigente queda pendiente hasta acreditar el pago.
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -241,6 +242,14 @@ class GrantsAccessTests(TestCase):
 
 class CouponRedeemTests(TestCase):
     """Canje de cupones: un canje por usuario, sin pisar un plan pago vigente."""
+
+    def setUp(self):
+        # Los contadores del throttle viven en el cache compartido del proceso.
+        # SQLite reutiliza PKs tras el rollback de cada test, así que la clave
+        # del throttle (scope + user.pk) se repite entre tests y los 10/h de
+        # `coupon_redeem` se agotan a mitad de la clase -> 429 en vez del
+        # status esperado. Limpiar el cache aísla cada test.
+        cache.clear()
 
     def _client(self):
         user, profile   =   _make_user('cliente')

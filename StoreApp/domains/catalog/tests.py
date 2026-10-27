@@ -78,6 +78,12 @@ class CatalogOwnerIsolationTests(TestCase):
     objetos de otro comercio no se leen ni se tocan.
     """
 
+    def setUp(self):
+        # plan_benefits_of cachea por PK (`planben:<pk>`) y SQLite reutiliza
+        # PKs tras el rollback de cada test: sin limpiar, el plan del test
+        # anterior se filtra al que corre sin plan y el gate deja de dar 403.
+        cache.clear()
+
     def _owner(self, username = 'duenio', slug = 'mi-tienda', with_plan = True, **benefits):
         user, profile   =   _make_user(username)
         if with_plan:
@@ -247,6 +253,11 @@ class ProductValidationTests(TestCase):
 
 class RemoveBackgroundGateTests(TestCase):
     """El editor de fondo es un recurso caro: solo con catálogo habilitado."""
+
+    def setUp(self):
+        # Mismo motivo que CatalogOwnerIsolationTests: el cache de beneficios
+        # se keyea por PK y SQLite reutiliza PKs entre tests.
+        cache.clear()
 
     def test_remove_background_forbidden_without_plan(self):
         user, profile   =   _make_user('duenio')
