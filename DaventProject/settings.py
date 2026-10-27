@@ -362,6 +362,9 @@ AFIP = {
     'cuit'      : config('AFIP_CUIT', default = ''),
     'cert'      : config('AFIP_CERT', default = ''),
     'key'       : config('AFIP_KEY', default = ''),
+    #Passphrase de la clave privada (opcional). Acepta enc:v1: para no dejarla
+    #en claro: manage.py encrypt_secret --purpose AFIP_KEY_PASSPHRASE --file -
+    'key_passphrase': config('AFIP_KEY_PASSPHRASE', default = ''),
 }
 
 # Llaves maestras AES-256-GCM para secretos en reposo (AFIP_KEY/AFIP_CERT con

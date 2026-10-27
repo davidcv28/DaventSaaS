@@ -301,3 +301,154 @@ class AfipErrorScrubTests(TestCase):
         self.assertEqual(invoice.afip_status, Invoice.AfipStatus.ERROR)
         self.assertNotIn('PRIVATE KEY', invoice.afip_error)
         self.assertNotIn('Z' * 50, invoice.afip_error)
+
+
+#=========================================
+# HARDENING AFIP/ARCA (defusedxml, passphrase, deploy checks)
+#=========================================
+import tempfile
+from unittest.mock import Mock
+
+from AdminApp.domains.invoices import checks as _inv_checks
+from AdminApp.domains.invoices.services.afip import _key_passphrase, _sign_tra
+
+
+class DefusedXmlParsingTests(TestCase):
+    """Los XML que llegan de ARCA se parsean con defusedxml: un envelope con
+    entidades/XXE no puede expandirse ni leer archivos del host."""
+
+    def test_afip_module_uses_defusedxml(self):
+        from defusedxml import ElementTree as SafeET
+        self.assertIs(_afip.ET, SafeET)
+
+    def test_entity_declaration_is_blocked(self):
+        payload =   (b'<?xml version="1.0"?><!DOCTYPE r [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>'
+                     b'<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
+                     b'<soap:Body><r>&xxe;</r></soap:Body></soap:Envelope>')
+        with patch.object(_afip.requests, 'post', return_value = Mock(status_code = 200, content = payload)):
+            with self.assertRaises(AfipError) as ctx:
+                _afip._soap_post('https://wsaahomo.afip.gov.ar/ws/services/LoginCms', '<x/>')
+        self.assertIn('inseguro', str(ctx.exception))
+
+    def test_malformed_xml_still_reports_parse_error(self):
+        with patch.object(_afip.requests, 'post', return_value = Mock(status_code = 200, content = b'no xml <<<')):
+            with self.assertRaises(AfipError) as ctx:
+                _afip._soap_post('https://wsaahomo.afip.gov.ar/ws/services/LoginCms', '<x/>')
+        self.assertIn('no-XML', str(ctx.exception))
+
+
+class AfipKeyPassphraseTests(TestCase):
+    """La clave privada puede venir con passphrase (AFIP_KEY_PASSPHRASE),
+    también cifrada enc:v1: — nunca más password=None fijo."""
+
+    def _keypair(self, passphrase = None):
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from django.utils import timezone
+        key     =   rsa.generate_private_key(public_exponent = 65537, key_size = 2048)
+        enc     =   serialization.BestAvailableEncryption(passphrase) if passphrase else serialization.NoEncryption()
+        key_pem =   key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            enc,
+        )
+        name    =   x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'DAVENT test')])
+        cert    =   (
+            x509.CertificateBuilder()
+            .subject_name(name).issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(timezone.now() - timedelta(days = 1))
+            .not_valid_after(timezone.now() + timedelta(days = 1))
+            .sign(key, hashes.SHA256())
+        )
+        return key_pem, cert.public_bytes(serialization.Encoding.PEM)
+
+    def test_empty_passphrase_returns_none(self):
+        with override_settings(AFIP = {'key_passphrase': ''}):
+            self.assertIsNone(_key_passphrase())
+
+    def test_plain_passphrase_returns_bytes(self):
+        with override_settings(AFIP = {'key_passphrase': 'secreto123'}):
+            self.assertEqual(_key_passphrase(), b'secreto123')
+
+    def test_encrypted_passphrase_is_decrypted(self):
+        with override_settings(SECRETS_MASTER_KEYS = _ring('k1')):
+            token   =   _vault.encrypt_secret(b'clave-afip', 'AFIP_KEY_PASSPHRASE')
+            with override_settings(AFIP = {'key_passphrase': token}):
+                self.assertEqual(_key_passphrase(), b'clave-afip')
+
+    def test_sign_tra_with_protected_key(self):
+        key_pem, cert_pem     =   self._keypair(passphrase = b'clave123')
+        afip_cfg    =   {'enabled': True, 'env': 'testing', 'cuit': '20123456789',
+                         'cert': cert_pem.decode(), 'key': key_pem.decode(),
+                         'key_passphrase': 'clave123'}
+        with override_settings(AFIP = afip_cfg, DEBUG = True):
+            cms     =   _sign_tra(_afip._build_tra())
+        self.assertTrue(cms)                    # CMS base64 no vacío
+        import base64 as _b64m
+        self.assertTrue(_b64m.b64decode(cms))   # der válido
+
+    def test_sign_tra_wrong_passphrase_fails_loud(self):
+        key_pem, cert_pem     =   self._keypair(passphrase = b'clave123')
+        afip_cfg    =   {'enabled': True, 'env': 'testing', 'cuit': '20123456789',
+                         'cert': cert_pem.decode(), 'key': key_pem.decode(),
+                         'key_passphrase': 'otra-clave'}
+        with override_settings(AFIP = afip_cfg, DEBUG = True):
+            with self.assertRaises(AfipError):
+                _sign_tra(_afip._build_tra())
+
+
+class AfipDeployCheckTests(TestCase):
+    """`manage.py check --deploy` corta un deploy de ARCA con secretos flojos."""
+
+    AFIP_BASE   =   {'enabled': True, 'env': 'production', 'cuit': '20123456789', 'cert': 'x'}
+
+    def _ids(self, afip_cfg, **settings_kwargs):
+        with override_settings(AFIP = afip_cfg, DEBUG = False, **settings_kwargs):
+            return {msg.id for msg in _inv_checks.check_afip_secrets(None)}
+
+    def test_disabled_afip_never_flags(self):
+        self.assertEqual(self._ids({'enabled': False}, SECRETS_MASTER_KEYS = ''), set())
+
+    def test_empty_keyring_is_an_error(self):
+        cfg     =   {**self.AFIP_BASE, 'key': 'enc:v1:k1:abc'}
+        self.assertIn('invoices.E001', self._ids(cfg, SECRETS_MASTER_KEYS = ''))
+
+    def test_plaintext_key_is_an_error(self):
+        cfg     =   {**self.AFIP_BASE, 'key': _PEM}
+        ids     =   self._ids(cfg, SECRETS_MASTER_KEYS = _ring('k1'))
+        self.assertIn('invoices.E002', ids)
+
+    def test_encrypted_key_passes(self):
+        cfg     =   {**self.AFIP_BASE, 'key': 'enc:v1:k1:abc'}
+        self.assertEqual(self._ids(cfg, SECRETS_MASTER_KEYS = _ring('k1')), set())
+
+    def test_key_file_passes_when_permissions_safe(self):
+        with tempfile.NamedTemporaryFile(suffix = '.key', delete = False) as fh:
+            fh.write(_PEM.encode())
+        try:
+            cfg =   {**self.AFIP_BASE, 'key': fh.name}
+            with patch('AdminApp.domains.invoices.checks._insecure_permissions', return_value = False):
+                self.assertEqual(self._ids(cfg, SECRETS_MASTER_KEYS = _ring('k1')), set())
+        finally:
+            _os.unlink(fh.name)
+
+    def test_key_file_world_readable_warns(self):
+        with tempfile.NamedTemporaryFile(suffix = '.key', delete = False) as fh:
+            fh.write(_PEM.encode())
+        try:
+            cfg =   {**self.AFIP_BASE, 'key': fh.name}
+            with patch('AdminApp.domains.invoices.checks._insecure_permissions', return_value = True):
+                self.assertIn('invoices.W001', self._ids(cfg, SECRETS_MASTER_KEYS = _ring('k1')))
+        finally:
+            _os.unlink(fh.name)
+
+    def test_insecure_permissions_posix_logic(self):
+        with patch('AdminApp.domains.invoices.checks.os.name', 'posix'):
+            with patch('AdminApp.domains.invoices.checks.os.stat', return_value = Mock(st_mode = 0o600)):
+                self.assertFalse(_inv_checks._insecure_permissions('/x/clave.key'))
+            with patch('AdminApp.domains.invoices.checks.os.stat', return_value = Mock(st_mode = 0o644)):
+                self.assertTrue(_inv_checks._insecure_permissions('/x/clave.key'))

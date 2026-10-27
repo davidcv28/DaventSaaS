@@ -18,12 +18,16 @@ import base64
 import logging
 import re
 import time
-import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 from zoneinfo import ZoneInfo
 
 import requests
+#defusedxml: los envelopes/tickets que parsea este módulo vienen de la red —
+#bloquea entidades expandidas/XXE que xml.etree acepta sin quejarse.
+from defusedxml import ElementTree as ET
+from defusedxml.common import DefusedXmlException
+from xml.etree.ElementTree import Element   #solo type hints: el parseo va por defusedxml
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import pkcs7
@@ -118,7 +122,7 @@ def _read_pem(value : str, purpose : str = 'AFIP_CERT') -> bytes:
         raise AfipError('No se pudo leer el archivo PEM configurado')
 
 
-def _find_text(root : ET.Element, tag : str):
+def _find_text(root : Element, tag : str):
     #Búsqueda por nombre local (ignora namespaces): los envelopes de ARCA
     #varían prefijos entre ambiente y método.
     for el in root.iter():
@@ -127,7 +131,7 @@ def _find_text(root : ET.Element, tag : str):
     return None
 
 
-def _soap_post(url : str, body : str) -> ET.Element:
+def _soap_post(url : str, body : str) -> Element:
     envelope    =   (
         '<?xml version="1.0" encoding="utf-8"?>'
         f'<soapenv:Envelope xmlns:soapenv="{SOAP_NS}">'
@@ -146,6 +150,8 @@ def _soap_post(url : str, body : str) -> ET.Element:
         raise AfipError(f'ARCA respondió HTTP {response.status_code}')
     try:
         root    =   ET.fromstring(response.content)
+    except DefusedXmlException:
+        raise AfipError('ARCA devolvió un XML inseguro (entidades/XXE)')
     except ET.ParseError:
         raise AfipError('ARCA devolvió una respuesta no-XML')
     fault   =   next((el for el in root.iter() if el.tag.rsplit('}', 1)[-1] == 'Fault'), None)
@@ -177,11 +183,29 @@ def _build_tra() -> bytes:
     return  tra.encode('utf-8')
 
 
+def _key_passphrase() -> bytes:
+    #Passphrase de la clave privada (AFIP_KEY_PASSPHRASE). Acepta un valor
+    #cifrado enc:v1: con purpose propio — nunca va en claro en el .env si se
+    #puede evitar. Vacía -> clave sin contraseña (password=None).
+    raw     =   (settings.AFIP.get('key_passphrase') or '').strip()
+    if not raw:
+        return None
+    if vault.is_encrypted(raw):
+        try:
+            raw     =   vault.decrypt_secret(raw, 'AFIP_KEY_PASSPHRASE').decode('utf-8')
+        except vault.VaultError as exc:
+            raise AfipError(str(exc))
+    return raw.encode('utf-8')
+
+
 def _sign_tra(tra : bytes) -> str:
     cfg     =   settings.AFIP
     try:
         cert    =   x509.load_pem_x509_certificate(_read_pem(cfg['cert']))
-        key     =   serialization.load_pem_private_key(_read_pem(cfg['key'], 'AFIP_KEY'), password = None)
+        key     =   serialization.load_pem_private_key(
+            _read_pem(cfg['key'], 'AFIP_KEY'),
+            password = _key_passphrase(),
+        )
         der     =   (
             pkcs7.PKCS7SignatureBuilder()
             .set_data(tra)
@@ -213,7 +237,7 @@ def _wsaa_ticket() -> tuple:
         token       =   _find_text(ticket, 'token')
         sign        =   _find_text(ticket, 'sign')
         expires_raw =   _find_text(ticket, 'expirationTime')
-    except ET.ParseError:
+    except (DefusedXmlException, ET.ParseError):
         raise AfipError('WSAA devolvió un ticket inválido')
     if not token or not sign:
         raise AfipError('WSAA devolvió un ticket sin credenciales')

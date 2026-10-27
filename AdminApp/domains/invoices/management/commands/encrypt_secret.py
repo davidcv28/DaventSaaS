@@ -18,7 +18,7 @@ class Command(BaseCommand):
     help = 'Cifra o rota secretos fiscales (AFIP_KEY / AFIP_CERT) con AES-256-GCM'
 
     def add_arguments(self, parser):
-        parser.add_argument('--purpose', choices = ['AFIP_KEY', 'AFIP_CERT'])
+        parser.add_argument('--purpose', choices = ['AFIP_KEY', 'AFIP_CERT', 'AFIP_KEY_PASSPHRASE'])
         parser.add_argument('--file', help = 'Archivo PEM a cifrar (default: stdin)')
         parser.add_argument('--rotate', help = 'Token enc:v1:... a re-cifrar con la llave activa')
         parser.add_argument('--gen-master-key', metavar = 'KID', help = 'Genera una llave maestra nueva')
