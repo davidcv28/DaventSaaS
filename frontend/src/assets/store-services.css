@@ -252,6 +252,7 @@
 .sv-field input:focus { border-color: var(--sv-acc); box-shadow: 0 0 0 4px color-mix(in oklab, var(--sv-acc) 18%, transparent); }
 .sv-field .err { font-size: 14px; color: var(--sv-acc); min-height: 1.2em; font-weight: 600; }
 .sv-field.bad input { border-color: var(--sv-acc); }
+.sv-field.bad legend { color: var(--sv-acc); }
 .sv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .sv-chips input { position: absolute; opacity: 0; pointer-events: none; }
 .sv-chips label {

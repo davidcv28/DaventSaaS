@@ -139,9 +139,13 @@ function submit() {
     visitor: f
   })
   const url = `${waBase.value}?text=${encodeURIComponent(message)}`
-  // window.open puede volver null si el navegador bloquea el popup (común en
-  // móviles); en ese caso navegamos en la misma pestaña — wa.me abre la app.
-  if (!window.open(url, '_blank', 'noopener')) window.location.href = url
+  // Con 'noopener' window.open devuelve SIEMPRE null aunque la pestaña se
+  // abra (spec) — el fallback navegaba la web a wa.me en todos los envíos.
+  // Se abre sin noopener y se corta el opener a mano; null real = popup
+  // bloqueado → fallback a la misma pestaña (wa.me abre la app).
+  const w = window.open(url, '_blank')
+  if (!w || w.closed) window.location.href = url
+  else { try { w.opener = null } catch { /* cross-origin: no hace falta */ } }
   sentOk.value = true
 }
 
@@ -376,7 +380,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
                 <input id="sv-addr" v-model="form.address" autocomplete="street-address" placeholder="Calle, número y barrio">
                 <span class="err" aria-live="polite">{{ errors.address || '' }}</span>
               </div>
-              <fieldset class="sv-field">
+              <fieldset class="sv-field" :class="{ bad: errors.day }">
                 <legend>Día preferido</legend>
                 <div class="sv-chips">
                   <template v-for="(d, i) in days" :key="d">
@@ -385,7 +389,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
                 </div>
                 <span class="err" aria-live="polite">{{ errors.day || '' }}</span>
               </fieldset>
-              <fieldset class="sv-field">
+              <fieldset class="sv-field" :class="{ bad: errors.slot }">
                 <legend>Franja horaria</legend>
                 <div class="sv-chips">
                   <template v-for="(s, i) in slots" :key="s">
