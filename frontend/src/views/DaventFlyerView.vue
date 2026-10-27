@@ -101,8 +101,9 @@ function closeTab() {
 .df-trial .df-trial-ico { flex: none; width: 22px; height: 22px; border-radius: 6px; background: #fde047; color: #422006; display: flex; align-items: center; justify-content: center; line-height: 0; }
 .df-trial-ico :deep(svg) { display: block; margin: 0; }
 .df-trial strong { display: block; font-size: 9.2px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: #422006; }
-.df-trial div span { display: block; font-size: 8.1px; line-height: 1.35; color: #78350f; margin-top: 1px; }
-.df-trial b { font-weight: 900; letter-spacing: .03em; color: #92400e; }
+.df-trial div span { display: block; font-size: 8.1px; line-height: 1.55; color: #78350f; margin-top: 1px; }
+.df-trial-code { padding: 0 4px; border-radius: 3px; background: #fde68a; font-weight: 900; letter-spacing: .04em; color: #7c2d12; white-space: nowrap; }
+.df-trial small { display: block; margin-top: 2px; font-size: 7.4px; font-weight: 700; letter-spacing: .02em; color: #a16207; }
 
 .df-plans { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
 .df-plans-head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 8.6px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: #4338ca; }
@@ -182,8 +183,9 @@ function closeTab() {
           <div class="df-trial">
             <span class="df-trial-ico"><AppIcon name="gift" :size="13" /></span>
             <div>
-              <strong>Estamos regalando cupones de inauguración</strong>
-              <span>Código <b>PROMO INAUGURACIÓN</b> con acceso a todas las funciones premium del sistema.</span>
+              <strong>Estamos regalando 30 días de Premium</strong>
+              <span>Registrate y canjeá el código <b class="df-trial-code">PROMO INAUGURACIÓN</b> en Plan y pagos.</span>
+              <small>Sin tarjeta ni datos de facturación.</small>
             </div>
           </div>
 
