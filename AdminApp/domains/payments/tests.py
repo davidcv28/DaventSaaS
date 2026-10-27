@@ -25,6 +25,7 @@ from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.payments.services.services import (
     CancelPreapprovalQuery,
     CreatePaymentQuery,
+    CreatePreapprovalQuery,
     PaymentWebhookQuery,
     SyncPreapprovalQuery,
     UpdateRevenueRollupsQuery,
@@ -203,6 +204,71 @@ class PreapprovalCancelTests(TestCase):
             end_date    =   timezone.now() - timedelta(days = 1),
         )
         self.assertTrue(suscription.grants_access())
+
+
+class PreapprovalCreateTests(TestCase):
+    """Alta del débito automático (CreatePreapprovalQuery). Regresión del
+    doble cobro: en el modelo pending de MP la primera cuota queda generada
+    como pago pendiente y el checkout del init_point la cobra en el acto —
+    start_date no la difiere. free_trial marca ese período como ya pagado:
+    con el período abonado debe viajar en días hasta end_date."""
+
+    def setUp(self):
+        cache.clear()
+
+    def _create(self, sdk):
+        sdk.preapproval.return_value.create.return_value    =   {'status': 201, 'response': {'id': 'pre-1'}}
+        return CreatePreapprovalQuery
+
+    @patch(f'{SERVICES_MODULE}.sdk')
+    def test_paid_period_sets_free_trial_until_end_date(self, sdk):
+        suscription =   _make_suscription(
+            auto_renew      =   False,
+            preapproval_id  =   None,
+            end_date        =   timezone.now() + timedelta(days = 20, hours = 1),
+        )
+        self._create(sdk)(suscription)
+        recurring   =   sdk.preapproval.return_value.create.call_args.args[0]['auto_recurring']
+        self.assertEqual(recurring['start_date'], suscription.end_date.isoformat())
+        self.assertEqual(recurring['free_trial'], {'frequency': 21, 'frequency_type': 'days'})
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.preapproval_id, 'pre-1')
+
+    @patch(f'{SERVICES_MODULE}.sdk')
+    def test_pending_payment_has_no_free_trial(self, sdk):
+        #Sin período pago el cargo del checkout ES el pago del plan.
+        suscription =   _make_suscription(
+            auto_renew      =   False,
+            preapproval_id  =   None,
+            status          =   Suscription.STATUS_PENDING_PAYMENT,
+        )
+        self._create(sdk)(suscription)
+        recurring   =   sdk.preapproval.return_value.create.call_args.args[0]['auto_recurring']
+        self.assertNotIn('free_trial', recurring)
+        self.assertNotIn('start_date', recurring)
+
+    @patch(f'{SERVICES_MODULE}.sdk')
+    def test_expired_period_has_no_free_trial(self, sdk):
+        #end_date vencido: la primera cuota del checkout es la renovación.
+        suscription =   _make_suscription(
+            auto_renew      =   False,
+            preapproval_id  =   None,
+            end_date        =   timezone.now() - timedelta(hours = 2),
+        )
+        self._create(sdk)(suscription)
+        recurring   =   sdk.preapproval.return_value.create.call_args.args[0]['auto_recurring']
+        self.assertNotIn('free_trial', recurring)
+        self.assertNotIn('start_date', recurring)
+
+    @patch(f'{SERVICES_MODULE}.sdk')
+    def test_free_plan_cannot_create_debit(self, sdk):
+        #Un débito de $0 (plan trial) no tiene sentido en MP: se rechaza.
+        suscription =   _make_suscription(auto_renew = False, preapproval_id = None)
+        suscription.plan_suscription.price    =   0
+        suscription.plan_suscription.save(update_fields = ['price'])
+        with self.assertRaises(serializers.ValidationError):
+            CreatePreapprovalQuery(suscription)
+        sdk.preapproval.return_value.create.assert_not_called()
 
 
 class WebhookReplayTests(TestCase):

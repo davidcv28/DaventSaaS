@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 import mercadopago
 import requests
@@ -313,6 +314,10 @@ def GetPreapproval(preapproval_id) -> dict:
 def CreatePreapprovalQuery(suscription) -> dict:
     #Cobra el plan pendiente si existe; el vigente si no
     plan                =   suscription.pending_plan_suscription or suscription.plan_suscription
+    #Un débito de $0 (plan trial) no tiene sentido en MP ni reemplaza el alta
+    #paga: el plan pago se elige antes de autorizar la tarjeta.
+    if plan.price <= 0:
+        raise serializers.ValidationError({'plan_suscription': 'Elegí un plan pago para activar el débito automático.'})
     #MP exige back_url pública https (obligatoria en preapprovals; rechaza
     #localhost). En dev se usa una URL neutra y el retorno lo cubre /sync/.
     back_url            =   f'{FRONTEND_URL}/dashboard?sub=return' if FRONTEND_URL.startswith('https://') else 'https://www.mercadopago.com.ar'
@@ -330,9 +335,22 @@ def CreatePreapprovalQuery(suscription) -> dict:
         },
     }
     #Si el período ya está pago, el primer débito se agenda al vencimiento:
-    #evita cobrar dos veces el mismo mes.
+    #evita cobrar dos veces el mismo mes. OJO: en el modelo pending de MP la
+    #primera cuota queda generada como pago pendiente y el checkout del
+    #init_point la cobra en el acto — start_date solo ancla la recurrencia,
+    #no difiere esa cuota. free_trial es el mecanismo que la cubre: MP marca
+    #el primer pago como "ya pagado" y el primer cargo real cae al terminar
+    #el período abonado. Va en días con ceil para que nunca caiga dentro de
+    #la ventana ya paga (el sobrante de horas lo absorbe GRACE_DAYS con el
+    #débito ya autorizado).
     if suscription.status == SUSCRIPTION_STATUS_ACTIVE and suscription.end_date and suscription.end_date > timezone.now():
         preapproval_data['auto_recurring']['start_date']    =   suscription.end_date.isoformat()
+        days_left   =   math.ceil((suscription.end_date - timezone.now()).total_seconds() / 86400)
+        if days_left > 0:
+            preapproval_data['auto_recurring']['free_trial']    =   {
+                'frequency'     :   days_left,
+                'frequency_type':   'days',
+            }
     mp_result           =   sdk.preapproval().create(preapproval_data)
     if mp_result.get('status') not in (200, 201):
         raise serializers.ValidationError({'suscription': 'No se pudo iniciar el débito automático en Mercado Pago'})
