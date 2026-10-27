@@ -903,3 +903,6 @@
 @media (prefers-reduced-motion: reduce) {
   .tour-hole, .tour-card, .tip-bubble, .toast, .empty-mini-cta { animation: none !important; transition: none !important; }
 }
+
+/* Foco administrado al cambiar de sección: el título recibe el foco sin aro visible. */
+.topbar-title:focus { outline: none; }

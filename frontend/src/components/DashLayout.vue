@@ -70,10 +70,14 @@ function moveIndicator() {
 }
 
 watch(open, (v) => { document.body.style.overflow = v ? 'hidden' : '' })
-watch(() => props.active, async () => {
+const titleEl = ref(null)
+watch(() => props.active, async (s, prev) => {
   await nextTick()
   moveIndicator()
   window.scrollTo({ top: 0, behavior: 'smooth' })
+  // Foco administrado: al cambiar de sección el título recibe el foco para
+  // que teclado y lector de pantalla anuncien el destino.
+  if (prev !== undefined) titleEl.value?.focus({ preventScroll: true })
 })
 watch(() => props.items, async () => { await nextTick(); moveIndicator() })
 
@@ -148,7 +152,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </aside>
-    <div class="main">
+    <main class="main" aria-label="Contenido">
       <header class="topbar">
         <button
           v-if="parent"
@@ -159,7 +163,7 @@ onBeforeUnmount(() => {
         >
           <AppIcon name="chevron-left" :size="18" />
         </button>
-        <div class="topbar-title">
+        <div ref="titleEl" class="topbar-title" tabindex="-1">
           <AppIcon v-if="current?.icon" :name="current.icon" :size="18" class="topbar-icon" />
           <Transition name="tb-swap" mode="out-in">
             <span :key="currentLabel" class="crumbs">
@@ -178,7 +182,7 @@ onBeforeUnmount(() => {
         <span class="avatar sm" :title="userName">{{ initial }}</span>
       </header>
       <slot />
-    </div>
+    </main>
 
     <!-- Tab bar móvil: 4 destinos + "Más" (abre el sheet con todo el menú) -->
     <nav v-if="hasTabs" class="tabbar" aria-label="Secciones principales">
