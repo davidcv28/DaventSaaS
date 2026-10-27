@@ -61,7 +61,7 @@ const tagsOf = (p) => {
             <TplProductCard
               class="sd-svc" layout="row" :p="prod" :desc="prod.description || ''"
               :stars="!!prod.rating_count" stars-icon="star" :stars-size="11"
-              :seal-shape="variant === 'proceso' ? 'corner' : 'ribbon'" :go="false"
+              seal-shape="" :go="false"
               :ph-size="22" @open="openProduct">
               <template v-if="tagsOf(prod).length" #tags>
                 <span class="sd-svc-tags"><StTag v-for="t in tagsOf(prod)" :key="t.label" kind="modalidad" :label="t.label" :icon="t.icon" /></span>

@@ -1,34 +1,13 @@
 <script setup>
 // Ficha de producto de la web pública (/<slug>/producto/<id>): el diseño
-// configurado (pageTemplate) elige la composición. Las plantillas clásicas
-// comparten la ficha marketplace de product/ProductClassic.vue y cada
-// familia por categoría trae la suya (talle/spec/pedido/presupuesto) sobre
-// el mismo contexto `storePage` que provee StorePublicLayout.
-import { computed, inject, defineAsyncComponent } from 'vue'
-import ProductClassic from './product/ProductClassic.vue'
+// configurado (pageTemplate) elige la composición declarada en su Template
+// Definition (templates/<id>/index.js) sobre el mismo contexto `storePage`
+// que provee StorePublicLayout.
+import { computed, inject } from 'vue'
+import { surfaceComponent } from '../templates/index.js'
 
 const ctx = inject('storePage')
-const VARIANTS = {
-  atelier: defineAsyncComponent(() => import('./product/ProductAtelier.vue')),
-  street: defineAsyncComponent(() => import('./product/ProductAtelier.vue')),
-  circuit: defineAsyncComponent(() => import('./product/ProductCircuit.vue')),
-  lab: defineAsyncComponent(() => import('./product/ProductCircuit.vue')),
-  mercado: defineAsyncComponent(() => import('./product/ProductMercado.vue')),
-  carta: defineAsyncComponent(() => import('./product/ProductMercado.vue')),
-  studio: defineAsyncComponent(() => import('./product/ProductStudio.vue')),
-  proceso: defineAsyncComponent(() => import('./product/ProductStudio.vue')),
-  promo: defineAsyncComponent(() => import('./product/ProductOfertas.vue')),
-  shop: defineAsyncComponent(() => import('./product/ProductOfertas.vue')),
-  arena: defineAsyncComponent(() => import('./product/ProductGamer.vue')),
-  terminal: defineAsyncComponent(() => import('./product/ProductGamer.vue')),
-  calma: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
-  signature: defineAsyncComponent(() => import('./product/ProductBelleza.vue')),
-  riso: defineAsyncComponent(() => import('./product/ProductHogar.vue')),
-  terra: defineAsyncComponent(() => import('./product/ProductHogar.vue')),
-  vitrina: defineAsyncComponent(() => import('./product/ProductLifestyle.vue')),
-  lookbook: defineAsyncComponent(() => import('./product/ProductLifestyle.vue'))
-}
-const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || ProductClassic)
+const component = computed(() => surfaceComponent(ctx?.pageTemplate?.value, 'product'))
 </script>
 
 <template>

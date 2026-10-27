@@ -11,6 +11,7 @@ import StepRail from '../../components/store/StepRail.vue'
 import StTag from '../../components/store/StTag.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-studio.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha SERVICIOS: cabecera 16:10, Tag-Modalidad, "Qué incluye" y
 // "Qué necesitás" desde features con checks, galería/reseñas, CTA doble
@@ -138,11 +139,9 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
         <h2 id="sd-rel-t">Otros servicios</h2>
         <ul class="sd-svc-list">
           <li v-for="r in rail" :key="r.id">
-            <RouterLink class="sd-svc" :to="p.productTo(r)">
-              <span class="sd-svc-icon"><img v-if="r.image" :src="r.image" alt="" loading="lazy" class="sd-svc-thumb" /><AppIcon v-else name="wrench" :size="22" /></span>
-              <span class="sd-svc-body"><strong>{{ r.name }}</strong><span v-if="r.description" class="sd-svc-desc">{{ r.description }}</span></span>
-              <span class="sd-svc-price">{{ p.formatARS(p.effectivePrice(r)) }}</span>
-            </RouterLink>
+            <TplProductCard class="sd-svc" layout="row" :p="r"
+              :desc="r.description || ''" ph-icon="wrench" :ph-size="22"
+              seal-shape="" :go="false" @open="p.openProduct" />
           </li>
         </ul>
       </section>

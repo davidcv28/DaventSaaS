@@ -10,6 +10,7 @@ import SwipeGallery from '../../components/store/SwipeGallery.vue'
 import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-lifestyle.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha LIFESTYLE: la pieza en contexto. El cliente de boutique mira
 // la imagen, la colección a la que pertenece y qué combina — precio
@@ -117,20 +118,8 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="lf-pd-rail lf-sec" aria-labelledby="lf-rel-t">
         <div class="lf-sec-head"><h2 id="lf-rel-t" class="lf-sec-title">{{ variant === 'vitrina' ? 'Completá el look' : 'Piezas relacionadas' }}</h2></div>
         <div class="lf-grid">
-          <RouterLink v-for="r in rail" :key="r.id" class="lf-card" :to="p.productTo(r)">
-            <span class="lf-card-media">
-              <img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" />
-              <span v-else class="lf-card-ph"><AppIcon name="image" :size="24" aria-hidden="true" /></span>
-              <OfferSeal v-if="p.productOffer(r) != null" :pct="p.offerPct(r)" shape="corner" class="lf-card-seal" />
-            </span>
-            <span class="lf-card-body">
-              <span class="lf-card-name">{{ r.name }}</span>
-              <span class="lf-card-price">
-                <s v-if="p.productOffer(r) != null">{{ p.formatARS(r.price) }}</s>
-                <strong :class="{ deal: p.productOffer(r) != null }">{{ p.formatARS(p.effectivePrice(r)) }}</strong>
-              </span>
-            </span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="lf-card" :p="r"
+            seal-shape="corner" ph-icon="image" :ph-size="24" :go="false" @open="p.openProduct" />
         </div>
       </section>
 

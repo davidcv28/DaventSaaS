@@ -4,7 +4,7 @@ import { useStorePage } from '../composables/useStorePage.js'
 import AppIcon from '../components/AppIcon.vue'
 import MarqueeBand from '../components/store/MarqueeBand.vue'
 import StTag from '../components/store/StTag.vue'
-import OfferSeal from '../components/store/OfferSeal.vue'
+import TplProductCard from '../components/store/TplProductCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-atelier.css'
 
@@ -45,11 +45,15 @@ const bandItems = computed(() => {
   return items
 })
 
-// Rail de categorías como pestañas tipográficas grandes (no chips).
-const tabs = computed(() => p.departments.value.slice(0, 8))
+// Rail de categorías como pestañas tipográficas grandes (no chips):
+// solo departamentos con al menos una oferta real.
+const tabs = computed(() => p.departments.value.filter((d) => p.products.value.some((x) => x.category === d.id && p.productOffer(x) != null)).slice(0, 8))
 const activeTab = ref(null) // null = todo
+// Landing = info de empresa + ofertas: la grilla editorial solo muestra
+// piezas con oferta real (si no hay, la sección no se pinta).
 const gridItems = computed(() => {
-  const list = activeTab.value == null ? p.products.value : p.products.value.filter((x) => x.category === activeTab.value)
+  const offers = p.products.value.filter((x) => p.productOffer(x) != null)
+  const list = activeTab.value == null ? offers : offers.filter((x) => x.category === activeTab.value)
   return list.slice(0, 12)
 })
 // Ritmo editorial: 1 grande (4:5), 2 chicas (3:4), 1 grande invertida.
@@ -126,31 +130,27 @@ onBeforeUnmount(() => heroIO?.disconnect())
 
   <!-- ===== Grilla editorial: ritmo 1 grande / 2 chicas / 1 grande invertida ===== -->
   <main class="at-main">
-    <section v-if="gridItems.length" class="at-grid" aria-label="Selección de productos">
-      <RouterLink
+    <section v-if="gridItems.length" class="at-grid" aria-label="Piezas en oferta">
+      <TplProductCard
         v-for="(prod, i) in gridItems" :key="prod.id"
         class="at-card" :class="cellClass(i)"
-        :to="p.productTo(prod)"
-        :aria-label="`${prod.name} — ${p.formatARS(p.effectivePrice(prod))}`"
-      >
-        <span class="at-card-media">
-          <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-          <span v-else class="at-card-ph"><AppIcon name="scissors" :size="30" /></span>
-          <span v-if="variant === 'street'" class="at-card-num" aria-hidden="true">#{{ pad(i) }}</span>
-          <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" :shape="variant === 'street' ? 'ticket' : 'corner'" />
-        </span>
-        <span class="at-card-info">
-          <span class="at-card-name">{{ prod.name }}</span>
+        :p="prod" :cat="p.catOf(prod) || p.brandOf(prod) || 'Colección'"
+        :seal-shape="variant === 'street' ? 'ticket' : 'corner'"
+        ph-icon="scissors" :ph-size="30" :go="false"
+        :index="variant === 'street' ? `#${pad(i)}` : null"
+        :new-label="variant === 'street' ? 'New' : 'Nuevo'" offer-new
+        @open="p.openProduct">
+        <template v-if="corteOf(prod)" #foot="{ price, oldPrice, offer }">
           <span class="at-card-row">
-            <StTag v-if="corteOf(prod)" kind="corte" :label="corteOf(prod)" />
-            <span class="at-card-price"><s v-if="p.productOffer(prod) != null">{{ p.formatARS(prod.price) }}</s>{{ p.formatARS(p.effectivePrice(prod)) }}</span>
+            <StTag kind="corte" :label="corteOf(prod)" />
+            <span class="tpc-price"><s v-if="offer != null">{{ oldPrice }}</s>{{ price }}</span>
           </span>
-        </span>
-      </RouterLink>
+        </template>
+      </TplProductCard>
     </section>
 
     <!-- Estado vacío diseñado: 0 productos -->
-    <section v-else-if="showCatalog" class="at-empty">
+    <section v-else-if="showCatalog && !p.products.value.length" class="at-empty">
       <span class="at-empty-mark"><AppIcon name="scissors" :size="26" /></span>
       <h2>La colección se está preparando</h2>
       <p>{{ shopName }} está cargando sus piezas. Volvé pronto o consultanos directo.</p>

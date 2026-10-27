@@ -11,6 +11,7 @@ import BottomSheet from '../../components/store/BottomSheet.vue'
 import StTag from '../../components/store/StTag.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-atelier.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha INDUMENTARIA: galería swipe arriba (4:5), nombre display, selector
 // de talle en cuadrados mono + guía en sheet, colores en swatches,
@@ -199,10 +200,9 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="lookRail.length" class="at-rail" aria-labelledby="at-rail-t">
         <h2 id="at-rail-t">Completá el look</h2>
         <div class="at-rail-track">
-          <RouterLink v-for="r in lookRail" :key="r.id" class="at-card" :to="p.productTo(r)">
-            <span class="at-card-media"><img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" /><span v-else class="at-card-ph"><AppIcon name="scissors" :size="26" /></span></span>
-            <span class="at-card-info"><span class="at-card-name">{{ r.name }}</span><span class="at-card-price">{{ p.formatARS(p.effectivePrice(r)) }}</span></span>
-          </RouterLink>
+          <TplProductCard v-for="r in lookRail" :key="r.id" class="at-card" :p="r"
+            :seal-shape="variant === 'street' ? 'ticket' : 'corner'" ph-icon="scissors" :ph-size="26"
+            :go="false" @open="p.openProduct" />
         </div>
       </section>
 

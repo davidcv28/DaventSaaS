@@ -145,39 +145,40 @@
 .rs-card.t-blue { --c: var(--rs-blue); }
 .rs-card.t-yellow { --c: var(--rs-yellow); }
 .rs-card.t-mint { --c: var(--rs-mint); }
-.rs-plate {
+.rs-card .tpc-media {
   position: relative; margin: 0; aspect-ratio: 5 / 4; display: grid; place-items: center; overflow: hidden;
   border-bottom: 2px solid var(--rs-ink); background-color: var(--c, var(--rs-pink));
   background-image: radial-gradient(rgba(30, 26, 51, .22) 1.2px, transparent 1.6px); background-size: 9px 9px;
 }
-.rs-plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: multiply; transition: transform .6s var(--rs-spring); }
-.rs-card:hover .rs-plate img { transform: scale(1.06) rotate(-1deg); }
-.rs-plate-ph { color: #1e1a33; mix-blend-mode: multiply; transition: transform .6s var(--rs-spring); }
-.rs-card:hover .rs-plate-ph { transform: rotate(-8deg) scale(1.08); }
-.rs-idx {
+.rs-card .tpc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: multiply; transition: transform .6s var(--rs-spring); }
+.rs-card:hover .tpc-media img { transform: scale(1.06) rotate(-1deg); }
+.rs-card .tpc-ph { color: #1e1a33; mix-blend-mode: multiply; transition: transform .6s var(--rs-spring); }
+.rs-card:hover .tpc-ph { transform: rotate(-8deg) scale(1.08); }
+.rs-card .tpc-idx {
   position: absolute; top: 12px; left: 12px; padding: 2px 9px; border-radius: 999px;
   background: var(--rs-card); color: var(--rs-ink); border: 2px solid var(--rs-ink); font-size: 11px; font-weight: 700;
 }
-.rs-badge {
+.rs-card .tpc-flag {
   position: absolute; top: 12px; right: 12px; padding: 3px 10px; border-radius: 999px;
   background: var(--rs-ink); color: var(--rs-paper); font-size: 11px; font-weight: 700;
 }
-.rs-info { padding: 16px 18px 6px; display: grid; gap: 6px; flex: 1; align-content: start; }
-.rs-info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.rs-info h3 {
+.rs-card .tpc-body { padding: 16px 18px 6px; gap: 6px; }
+.rs-card .tpc-foot { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: auto; padding: 0 18px 18px; }
+.rs-card .tpc-price { align-self: flex-end; }
+.rs-card .tpc-body h3 {
   margin: 0; min-width: 0; font-family: var(--rs-display); font-weight: 700; font-size: 20px; line-height: 1.1;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.rs-price { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--rs-blue); white-space: nowrap; }
-.rs-price s { color: var(--rs-mute); font-weight: 500; font-size: .85em; margin-right: 6px; }
-.rs-info p { margin: 0; font-size: 13.5px; color: var(--rs-mute); }
-.rs-add {
+.rs-card .tpc-price { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--rs-blue); white-space: nowrap; }
+.rs-card .tpc-price s { color: var(--rs-mute); font-weight: 500; font-size: .85em; margin-right: 6px; }
+.rs-card .tpc-body p { margin: 0; font-size: 13.5px; color: var(--rs-mute); }
+.rs-card .tpc-go {
   margin: 12px 18px 18px; padding: 11px; border-radius: 999px; border: 2px solid var(--rs-ink); text-align: center;
   background: var(--rs-blue); color: var(--rs-on-blue); font-weight: 700; font-size: 14px; box-shadow: 3px 3px 0 var(--rs-ink);
   transition: transform .35s var(--rs-spring), box-shadow .35s var(--rs-spring);
 }
-.rs-card:hover .rs-add { transform: translate(-2px, -2px) rotate(-1deg); box-shadow: 5px 5px 0 var(--rs-ink); }
-.rs-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
+.rs-card:hover .tpc-go { transform: translate(-2px, -2px) rotate(-1deg); box-shadow: 5px 5px 0 var(--rs-ink); }
+.rs-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); grid-auto-rows: 1fr; gap: 24px; }
 
 /* =====================================================================
    Landing — .rs
@@ -407,11 +408,11 @@
 }
 @media (max-width: 480px) {
   .rs-cards, .cv-rs-cards { grid-template-columns: 1fr 1fr; gap: 14px; }
-  .rs-info { padding: 12px 12px 4px; }
-  .rs-info h3 { font-size: 16px; }
-  .rs-info-row { flex-direction: column; gap: 2px; }
-  .rs-add { margin: 10px 12px 12px; padding: 9px; font-size: 13px; }
-  .rs-info p { display: none; }
+  .rs-card .tpc-body { padding: 12px 12px 4px; }
+  .rs-card .tpc-body h3 { font-size: 16px; }
+  .rs-card .tpc-foot { flex-direction: column; gap: 2px; }
+  .rs-card .tpc-go { margin: 10px 12px 12px; padding: 9px; font-size: 13px; }
+  .rs-card .tpc-body p { display: none; }
   .rs-band { margin-inline: -16px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -472,3 +473,9 @@
 .store-page[data-store-template='riso'] .sp-ann-item svg { color: var(--rs-ink); }
 .store-page[data-store-template='riso'] .sp-video-title { font-family: var(--rs-display, inherit); }
 .store-page[data-store-template='riso'] .sp-video-frame { border: 2.5px solid var(--rs-ink); border-radius: 6px; box-shadow: var(--rs-shadow, 8px 8px 0 rgba(31, 41, 55, .9)); }
+
+/* ===== TplProductCard: adaptación riso ===== */
+.rs-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-radius: 22px; --tpc-pad: 0; }
+.rs-card.tpc .tpc-media { --tpc-ratio: 5 / 4; border-bottom: 2px solid var(--rs-ink); background-color: var(--c, var(--rs-pink)); background-image: radial-gradient(rgba(30, 26, 51, .22) 1.2px, transparent 1.6px); background-size: 9px 9px; }
+.rs-card.tpc .tpc-eyebrow { font-size: 13.5px; color: var(--rs-mute); font-weight: 500; }
+.rs-card.tpc .tpc-name { font-family: var(--rs-display); font-size: 20px; line-height: 1.1; }

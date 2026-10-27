@@ -234,30 +234,30 @@
   cursor: pointer; transition: translate .14s steps(2, jump-none), box-shadow .14s;
 }
 .bq-card:hover { translate: -3px -3px; box-shadow: 5px 5px 0 var(--bq-cobalt); }
-.bq-card-plate {
+.bq-card .tpc-media {
   position: relative; margin: 0; aspect-ratio: 1 / 1;
   border-bottom: 2px solid var(--bq-rule); background: var(--sp-soft); overflow: hidden;
 }
-.bq-card-plate img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.bq-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--bq-mute); }
-.bq-card-flag {
+.bq-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bq-card .tpc-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--bq-mute); }
+.bq-card .tpc-flag {
   position: absolute; top: 10px; left: 10px; padding: 4px 8px;
   background: var(--bq-ink); color: var(--bq-paper);
   font-family: var(--bq-mono); font-size: 10px; font-weight: 500;
   text-transform: uppercase; letter-spacing: .1em;
 }
-.bq-card-flag.offer { left: auto; right: 10px; background: var(--bq-cobalt); color: var(--bq-on-cobalt); }
-.bq-card-row { display: flex; align-items: baseline; gap: 10px; padding: 12px 14px 4px; }
-.bq-card-idx { font-family: var(--bq-mono); font-size: 10.5px; color: var(--bq-mute); flex: none; }
-.bq-card-name {
+.bq-card .tpc-flag.offer { left: auto; right: 10px; background: var(--bq-cobalt); color: var(--bq-on-cobalt); }
+.bq-card .tpc-foot { display: flex; align-items: baseline; gap: 10px; padding: 12px 14px 4px; margin-top: auto; }
+.bq-card .tpc-idx { font-family: var(--bq-mono); font-size: 10.5px; color: var(--bq-mute); flex: none; }
+.bq-card .tpc-name {
   margin: 0; flex: 1 1 auto; min-width: 0;
   font-family: var(--bq-display); font-weight: 700; font-size: 13.5px;
   text-transform: uppercase; letter-spacing: .01em; line-height: 1.2;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.bq-card-price { font-family: var(--bq-display); font-weight: 700; font-size: 13.5px; white-space: nowrap; }
-.bq-card-price s { color: var(--bq-mute); font-weight: 400; margin-right: 6px; font-size: 12px; }
-.bq-card-cat { margin: 0; padding: 0 14px 12px; font-family: var(--bq-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--bq-mute); }
+.bq-card .tpc-price { font-family: var(--bq-display); font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+.bq-card .tpc-price s { color: var(--bq-mute); font-weight: 400; margin-right: 6px; font-size: 12px; }
+.bq-card .tpc-eyebrow { padding: 0 14px 12px; font-family: var(--bq-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--bq-mute); }
 
 /* Nosotros: split */
 .bq-about-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 48px; }
@@ -418,7 +418,7 @@
 }
 @media (max-width: 480px) {
   .bq-cards, .cv-bq-cards { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .bq-card-cat { display: none; }
+  .bq-card .tpc-eyebrow { display: none; }
 }
 
 /* =====================================================================
@@ -478,3 +478,11 @@
 .store-page[data-store-template='bloque'] .sp-ann-item svg { color: var(--bq-on-cobalt, #fff); }
 .store-page[data-store-template='bloque'] .sp-video-title { font-family: var(--bq-display, inherit); text-transform: uppercase; letter-spacing: -.01em; }
 .store-page[data-store-template='bloque'] .sp-video-frame { border: 2px solid var(--bq-ink); border-radius: 0; box-shadow: 8px 8px 0 var(--bq-ink); }
+
+/* ===== TplProductCard: adaptación bloque ===== */
+.bq-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-radius: 0; --tpc-pad: 0 14px 14px; }
+.bq-card.tpc .tpc-media { aspect-ratio: 1 / 1; border: 2px solid var(--bq-ink); }
+.bq-card.tpc .tpc-idx { position: absolute; left: 10px; top: 10px; bottom: auto; inset-inline-start: 10px; padding: 2px 8px; background: var(--bq-card); border: 2px solid var(--bq-ink); font-family: var(--bq-mono); font-size: 10.5px; font-weight: 700; color: var(--bq-ink); }
+.bq-card.tpc .tpc-body { padding: 12px 14px 0; }
+.bq-cards { grid-auto-rows: 1fr; }
+.cv-bq-cards { grid-auto-rows: 1fr; }

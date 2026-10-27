@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-bloque.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Bloque": grid suizo de bordes duros — papel y tinta con reglas
 // visibles, titulares Archivo XXL en mayúsculas, metadata en JetBrains Mono,
@@ -61,7 +62,8 @@ const videoTitle = computed(() => custom.value.video_title?.trim() || 'Mirá nue
 
 // Catálogo: vitrina de recientes en grilla (misma fuente que el riel de Dúo).
 const catalog = ref({ categories: [], brands: [], products: [] })
-const gridProducts = computed(() => catalog.value.products.slice(0, 8))
+// Landing = empresa + ofertas: el módulo de catálogo solo muestra ofertas.
+const gridProducts = computed(() => catalog.value.products.filter((p) => productOffer(p) != null).slice(0, 8))
 const catOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
 const brandOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 
@@ -277,35 +279,20 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Catálogo: cabecera numerada + grilla de placas duras ===== -->
-  <section v-if="gridProducts.length" id="catalogo" class="bq-sec" aria-labelledby="bq-prod-title">
+  <section v-if="gridProducts.length" id="ofertas" class="bq-sec" aria-labelledby="bq-prod-title">
     <div class="sp-container">
       <header v-reveal class="bq-sec-head">
         <span class="bq-idx" aria-hidden="true">01</span>
-        <h2 id="bq-prod-title" class="bq-h2">Catálogo</h2>
+        <h2 id="bq-prod-title" class="bq-h2">Ofertas</h2>
         <RouterLink class="bq-sec-link" :to="catalogTo">Ver todo <AppIcon name="arrow-right" :size="14" /></RouterLink>
       </header>
       <div class="bq-cards">
-        <article
+        <TplProductCard
           v-for="(p, i) in gridProducts" :key="p.id" v-reveal="(i % 4) * 60"
-          class="bq-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-          @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-        >
-          <figure class="bq-card-plate">
-            <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-            <span v-else class="bq-card-ph"><AppIcon name="package" :size="26" /></span>
-            <span v-if="isNewProduct(p)" class="bq-card-flag">Nuevo</span>
-            <span v-if="productOffer(p) != null" class="bq-card-flag offer">−{{ offerPct(p) }}%</span>
-          </figure>
-          <div class="bq-card-row">
-            <span class="bq-card-idx" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-            <h3 class="bq-card-name">{{ p.name }}</h3>
-            <span class="bq-card-price">
-              <s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>
-              {{ formatARS(effectivePrice(p)) }}
-            </span>
-          </div>
-          <p v-if="catOf(p) || brandOf(p)" class="bq-card-cat">{{ [catOf(p), brandOf(p)].filter(Boolean).join(' / ') }}</p>
-        </article>
+          tag="figure" class="bq-card" :p="p"
+          :cat="catOf(p)" :brand="brandOf(p)"
+          seal-shape="" :index="String(i + 1).padStart(2, '0')" :go="false"
+          :ph-size="26" @open="openProduct" />
       </div>
     </div>
   </section>

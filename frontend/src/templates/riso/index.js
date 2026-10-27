@@ -1,0 +1,19 @@
+import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOCKS } from '../_shared.js'
+
+// Template Definition 'riso' — superficies + bloques soportados por
+// superficie (el orden declarativo de cada lista es el layout por
+// defecto). Los ids pertenecen al catálogo cerrado de templates/blocks.js
+// (espejo de TEMPLATE_BLOCKS del backend).
+export default {
+  fonts: ["bricolage-grotesque","figtree"],
+  surfaces: {
+    landing: landingViews.riso,
+    catalog: catalogViews.riso,
+    product: productViews.hogar
+  },
+  blocks: {
+    landing: ['hero', 'highlights', 'announcements', 'stats', 'featured', 'about', 'services', 'testimonials', 'gallery', 'faq', 'video', 'cta', 'contact'],
+    catalog: CATALOG_BLOCKS,
+    services: SERVICES_BLOCKS
+  }
+}

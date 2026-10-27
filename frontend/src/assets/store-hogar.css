@@ -86,17 +86,17 @@
 .hg[data-var='riso'] .hg-card { border-color: var(--hg-ink); box-shadow: 4px 4px 0 var(--hg-ink); }
 .hg[data-var='riso'] .hg-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--hg-ink); }
 .hg[data-var='terra'] .hg-card:hover { transform: translateY(-3px); box-shadow: var(--hg-shadow); }
-.hg-card-media { position: relative; aspect-ratio: 1 / 1; background: var(--sp-surface); }
-.hg[data-var='terra'] .hg-card-media { aspect-ratio: 4 / 5; }
-.hg-card-media img { width: 100%; height: 100%; object-fit: cover; }
-.hg-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
-.hg-card-seal { position: absolute; top: 10px; left: 10px; }
-.hg-card-body { display: grid; gap: 6px; padding: 12px 14px 14px; align-content: start; }
-.hg-card-name { font-weight: 700; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.hg-card-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
-.hg-card-price s { font-size: 12px; color: var(--sp-muted); }
-.hg-card-price strong { font-family: var(--hg-mono); font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.hg-card-price strong.deal { color: var(--sp-accent-text); }
+.hg-card .tpc-media { position: relative; aspect-ratio: 1 / 1; background: var(--sp-surface); }
+.hg[data-var='terra'] .hg-card .tpc-media { aspect-ratio: 4 / 5; }
+.hg-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; }
+.hg-card .tpc-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
+.hg-card .os { position: absolute; top: 10px; left: 10px; }
+.hg-card .tpc-body { display: grid; gap: 6px; padding: 12px 14px 14px; align-content: start; }
+.hg-card .tpc-name { font-weight: 700; font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hg-card .tpc-price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+.hg-card .tpc-price s { font-size: 12px; color: var(--sp-muted); }
+.hg-card .tpc-price strong { font-family: var(--hg-mono); font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hg-card .tpc-price strong.deal { color: var(--sp-accent-text); }
 
 .hg-sec { display: grid; gap: 20px; }
 .hg-sec-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
@@ -116,3 +116,7 @@
 @media (prefers-reduced-motion: reduce) {
   .hg, .hg *, .hg *::before, .hg *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* TplProductCard: riel hogar */
+.hg-card.tpc { display: flex; --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-ratio: 4 / 5; --tpc-pad: 12px 14px 14px; }
+.hg-card.tpc .tpc-body { align-content: start; }

@@ -258,6 +258,11 @@
 .pick-tier.advanced { border-color: transparent; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; }
 .pick-nav { flex: none; display: flex; flex-direction: column; gap: 6px; }
 .pick-nav .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+/* Vista previa de la fuente: la "Aa" y el nombre de la tienda se
+   renderizan con la familia elegida (fontPreviewStyle en línea). */
+.font-preview-aa { flex: none; display: grid; place-items: center; width: 74px; height: 74px; border-radius: 16px; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; font-size: 34px; line-height: 1; box-shadow: 0 8px 18px -8px rgba(99, 102, 241, .75); }
+.font-preview-name { font-size: 22px !important; overflow-wrap: anywhere; }
+.font-preview-sample { font-size: 13px !important; }
 @media (max-width: 560px) {
   .pick-preview { flex-wrap: wrap; }
   .pick-preview-thumb { width: 100%; }

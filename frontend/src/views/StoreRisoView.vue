@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-riso.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Riso": landing en risografía — papel crema con trama de puntos,
 // tintas planas (rosa/azul/amarillo/menta) que se solapan con multiply,
@@ -51,8 +52,11 @@ const showStats = computed(() => custom.value.show_stats !== false && stats.valu
 // Catálogo: vitrina de recientes en grilla con chips de categoría locales.
 const catalog = ref({ categories: [], brands: [], products: [] })
 const activeCat = ref(null)
-const chipCats = computed(() => catalog.value.categories.filter((c) => catalog.value.products.some((p) => p.category === c.id)).slice(0, 6))
-const gridProducts = computed(() => catalog.value.products.filter((p) => activeCat.value == null || p.category === activeCat.value).slice(0, 8))
+// Landing = empresa + ofertas: la sección de placas solo muestra piezas
+// con oferta real (las chips filtran sobre ese conjunto).
+const offerProducts = computed(() => catalog.value.products.filter((p) => productOffer(p) != null))
+const chipCats = computed(() => catalog.value.categories.filter((c) => offerProducts.value.some((p) => p.category === c.id)).slice(0, 6))
+const gridProducts = computed(() => offerProducts.value.filter((p) => activeCat.value == null || p.category === activeCat.value).slice(0, 8))
 const PLATE_TONES = ['pink', 'blue', 'yellow', 'mint']
 const toneOf = (p) => PLATE_TONES[Math.max(0, catalog.value.categories.findIndex((c) => c.id === p.category)) % PLATE_TONES.length]
 const catOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
@@ -272,40 +276,22 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Catálogo: chips de categoría + grilla de tarjetas con placa de color ===== -->
-  <section v-if="catalog.products.length" id="catalogo" class="rs-sec" aria-labelledby="rs-prod-title">
+  <section v-if="offerProducts.length" id="ofertas" class="rs-sec" aria-labelledby="rs-prod-title">
     <div class="sp-container">
       <header v-reveal class="rs-sec-head">
-        <h2 id="rs-prod-title" class="rs-h2">Catálogo <em>destacado</em></h2>
+        <h2 id="rs-prod-title" class="rs-h2">Ofertas <em>de la casa</em></h2>
         <div class="rs-chips" role="group" aria-label="Filtrar productos">
           <button type="button" class="rs-chip" :aria-pressed="activeCat == null" @click="activeCat = null">Todo</button>
           <button v-for="c in chipCats" :key="c.id" type="button" class="rs-chip" :aria-pressed="activeCat === c.id" @click="activeCat = c.id">{{ c.name }}</button>
         </div>
       </header>
       <div class="rs-cards">
-        <article
+        <TplProductCard
           v-for="(p, i) in gridProducts" :key="p.id" v-reveal="(i % 4) * 60"
-          class="rs-card" :class="`t-${toneOf(p)}`" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-          @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-        >
-          <figure class="rs-plate">
-            <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-            <span v-else class="rs-plate-ph"><AppIcon name="package" :size="44" /></span>
-            <span class="rs-idx">{{ String(i + 1).padStart(3, '0') }}</span>
-            <span v-if="productOffer(p) != null" class="rs-badge">−{{ offerPct(p) }}%</span>
-            <span v-else-if="isNewProduct(p)" class="rs-badge">Nuevo</span>
-          </figure>
-          <div class="rs-info">
-            <div class="rs-info-row">
-              <h3>{{ p.name }}</h3>
-              <span class="rs-price">
-                <s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>
-                {{ formatARS(effectivePrice(p)) }}
-              </span>
-            </div>
-            <p v-if="catOf(p) || brandOf(p)">{{ [catOf(p), brandOf(p)].filter(Boolean).join(' · ') }}</p>
-          </div>
-          <span class="rs-add" aria-hidden="true">Ver producto</span>
-        </article>
+          tag="figure" class="rs-card" :class="`t-${toneOf(p)}`" :p="p"
+          :cat="catOf(p)" :brand="brandOf(p)"
+          seal-shape="" offer-new :index="String(i + 1).padStart(3, '0')"
+          go-label="Ver producto" :ph-size="44" @open="openProduct" />
       </div>
       <p v-if="!gridProducts.length" class="rs-empty">No hay productos en esta categoría todavía.</p>
       <RouterLink class="rs-btn card rs-more" :to="catalogTo">Ver todo el catálogo <span class="rs-arr" aria-hidden="true">→</span></RouterLink>

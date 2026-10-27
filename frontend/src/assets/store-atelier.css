@@ -71,17 +71,17 @@
 .at-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 22px clamp(16px, 5vw, 48px) 8px; }
 .at-card { position: relative; display: flex; flex-direction: column; color: var(--at-ink); text-decoration: none; }
 .at-card.big { grid-column: 1 / -1; }
-.at-card-media { position: relative; display: block; aspect-ratio: 3 / 4; overflow: hidden; background: color-mix(in srgb, var(--at-ink) 6%, transparent); border: 1px solid var(--at-line); border-radius: var(--at-radius); }
-.at-card.big .at-card-media { aspect-ratio: 4 / 5; }
-.at-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
-@media (hover: hover) { .at-card:hover .at-card-media img { transform: scale(1.06); } }
-.at-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--at-ink) 30%, transparent); }
-.at-card-info { display: grid; gap: 6px; padding: 10px 2px 4px; }
-.at-card-name { font-size: 14.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.at-card.big .at-card-name { font-family: var(--at-display); font-size: clamp(19px, 3vw, 30px); text-transform: uppercase; letter-spacing: var(--at-track); -webkit-line-clamp: 1; }
+.at-card .tpc-media { position: relative; display: block; aspect-ratio: 3 / 4; overflow: hidden; background: color-mix(in srgb, var(--at-ink) 6%, transparent); border: 1px solid var(--at-line); border-radius: var(--at-radius); }
+.at-card.big .tpc-media { aspect-ratio: 4 / 5; }
+.at-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
+@media (hover: hover) { .at-card:hover .tpc-media img { transform: scale(1.06); } }
+.at-card .tpc-ph { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--at-ink) 30%, transparent); }
+.at-card .tpc-body { display: grid; gap: 6px; padding: 10px 2px 4px; }
+.at-card .tpc-name { font-size: 14.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.at-card.big .tpc-name { font-family: var(--at-display); font-size: clamp(19px, 3vw, 30px); text-transform: uppercase; letter-spacing: var(--at-track); -webkit-line-clamp: 1; }
 .at-card-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.at-card-price { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; margin-left: auto; }
-.at-card-price s { font-weight: 400; opacity: .55; margin-right: 6px; }
+.at-card .tpc-price { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; margin-left: auto; }
+.at-card .tpc-price s { font-weight: 400; opacity: .55; margin-right: 6px; }
 
 /* ---------- Look completo (hotspots) ---------- */
 .at-look { display: grid; gap: 18px; padding: 56px clamp(16px, 5vw, 48px); }
@@ -135,7 +135,7 @@
 .at-empty .at-cta { margin-top: 12px; }
 
 /* ---------- Street: relieve duro, borde grueso ---------- */
-[data-var='street'] .at-card-media, [data-var='street'] .at-tag, [data-var='street'] .at-look-media > img { border-color: var(--at-ink); border-width: var(--at-bw); box-shadow: var(--at-bump); }
+[data-var='street'] .at-card .tpc-media, [data-var='street'] .at-tag, [data-var='street'] .at-look-media > img { border-color: var(--at-ink); border-width: var(--at-bw); box-shadow: var(--at-bump); }
 [data-var='street'] .at-tag { border-style: solid; }
 [data-var='street'] .at-tabs { border-bottom: 3px solid var(--at-ink); }
 [data-var='street'] .at-tab.on { text-decoration-thickness: 5px; }
@@ -157,14 +157,14 @@
 @media (max-width: 420px) { .at-sticker { width: 92px; height: 92px; font-size: 12.5px; } }
 .at-hero.off .at-sticker { animation-play-state: paused; }
 @keyframes at-wob { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(-2deg) scale(1.05); } }
-.at-card-num { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 3px 8px; background: var(--at-ink); color: var(--sp-bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
-[data-var='street'] .at-card-media img { filter: contrast(1.04) saturate(1.05); }
+.at-card .tpc-idx { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 3px 8px; background: var(--at-ink); color: var(--sp-bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+[data-var='street'] .at-card .tpc-media img { filter: contrast(1.04) saturate(1.05); }
 /* La cinta cruza levemente inclinada. */
 [data-var='street'] .mband { rotate: -1.1deg; scale: 1.02; border-block: 3px solid var(--at-ink); }
 /* ---------- Atelier: fades lentos + subrayado dibujado ---------- */
 .at[data-var='atelier'] .sp-rv { transition-duration: 1.1s; }
-.at[data-var='atelier'] .at-card-name { width: fit-content; background-image: linear-gradient(currentColor, currentColor); background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 1.5px; transition: background-size .45s ease; padding-bottom: 3px; }
-@media (hover: hover) { .at[data-var='atelier'] .at-card:hover .at-card-name { background-size: 100% 1.5px; } }
+.at[data-var='atelier'] .at-card .tpc-name { width: fit-content; background-image: linear-gradient(currentColor, currentColor); background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 1.5px; transition: background-size .45s ease; padding-bottom: 3px; }
+@media (hover: hover) { .at[data-var='atelier'] .at-card:hover .tpc-name { background-size: 100% 1.5px; } }
 .at[data-var='atelier'] :is(.at-about-title, .at-look-copy h2, .at-rail h2) { position: relative; padding-bottom: 14px; }
 .at[data-var='atelier'] :is(.at-about-title, .at-look-copy h2, .at-rail h2)::after { content: ''; position: absolute; left: 0; bottom: 0; width: 72px; height: 1.5px; background: var(--at-ink); transform: scaleX(0); transform-origin: left; transition: transform .7s cubic-bezier(.2, .8, .2, 1) .25s; }
 .at[data-var='atelier'] .sp-rv.is-in :is(.at-about-title, .at-look-copy h2, .at-rail h2)::after, .at[data-var='atelier'] .at-rail h2::after { transform: scaleX(1); }
@@ -209,15 +209,15 @@
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .at-hotspot { animation: none; }
-  .at-card-media img { transition: none; }
+  .at-card .tpc-media img { transition: none; }
   .at-sticker { animation: none; }
   .at[data-var='atelier'] .sp-rv { transition-duration: .01s; }
 }
 @media (forced-colors: active) {
   [data-var='street'] .at-hero::after { display: none; }
   .at-sticker { background: Canvas; color: CanvasText; }
-  .at-card-num { background: CanvasText; color: Canvas; }
-  [data-var='street'] :is(.at-card-media, .at-tag, .at-look-media > img, .at-cta, .at-spot-card) { box-shadow: none; }
+  .at-card .tpc-idx { background: CanvasText; color: Canvas; }
+  [data-var='street'] :is(.at-card .tpc-media, .at-tag, .at-look-media > img, .at-cta, .at-spot-card) { box-shadow: none; }
 }
 
 /* ---------- Ficha de producto ---------- */
@@ -281,3 +281,13 @@
   .at-pd-info { position: sticky; top: 24px; padding: 8px 0 32px; }
   .at-crumbs { padding-bottom: 22px; }
 }
+
+/* ===== TplProductCard: adaptación atelier/street ===== */
+.at-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-radius: 0; --tpc-shadow: none; --tpc-pad: 10px 2px 4px; --tpc-gap: 6px; overflow: visible; }
+.at-card.tpc .tpc-media { aspect-ratio: 3 / 4; border: 1px solid var(--at-line); border-radius: var(--at-radius); }
+.at-card.big .tpc-media { aspect-ratio: 4 / 5; }
+.at-card.tpc .tpc-body { padding: var(--tpc-pad); }
+.at-card.tpc .tpc-foot { padding-top: 0; }
+.at-card.tpc .tpc-price { margin-inline-start: auto; }
+.at-card.big .tpc-name { -webkit-line-clamp: 1; min-height: 0; }
+.at-card .tpc-idx { top: 8px; bottom: auto; inset-inline-start: 8px; padding: 3px 8px; background: var(--at-ink); color: var(--sp-bg); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; }

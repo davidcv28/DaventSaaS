@@ -10,6 +10,7 @@ import SwipeGallery from '../../components/store/SwipeGallery.vue'
 import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-ofertas.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha OFERTAS: el precio manda. Placa con precio tachado + ahorro en
 // pesos + vencimiento real del descuento; cantidad para compras por
@@ -138,20 +139,9 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="of-pd-rail of-sec" aria-labelledby="of-rel-t">
         <div class="of-sec-head"><h2 id="of-rel-t" class="of-sec-title">Otras <em>ofertas</em></h2></div>
         <div class="of-tickets">
-          <RouterLink v-for="r in rail" :key="r.id" class="of-ticket" :to="p.productTo(r)">
-            <span class="of-ticket-media">
-              <img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" />
-              <span v-else class="of-ticket-ph"><AppIcon name="percent" :size="22" aria-hidden="true" /></span>
-              <OfferSeal v-if="p.productOffer(r) != null" :pct="p.offerPct(r)" shape="ticket" class="of-ticket-seal" />
-            </span>
-            <span class="of-ticket-body">
-              <span class="of-ticket-name">{{ r.name }}</span>
-              <span class="of-ticket-price">
-                <s v-if="p.productOffer(r) != null">{{ p.formatARS(r.price) }}</s>
-                <strong>{{ p.formatARS(p.effectivePrice(r)) }}</strong>
-              </span>
-            </span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="of-ticket" :p="r"
+            seal-shape="ticket" ph-icon="percent" :ph-size="22" :go="false"
+            @open="p.openProduct" />
         </div>
       </section>
 

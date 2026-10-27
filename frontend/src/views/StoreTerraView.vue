@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-terra.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Terra": editorial cálido y artesanal. Papel crudo, titulares
 // Fraunces, imágenes en arco, reglas finas y el acento de la marca como
@@ -82,7 +83,8 @@ const videoTitle = computed(() => custom.value.video_title?.trim() || 'Mirá nue
 
 // --- Catálogo: selección de recientes.
 const catalog = ref({ categories: [], brands: [], products: [] })
-const gridProducts = computed(() => catalog.value.products.slice(0, 4))
+// Landing = empresa + ofertas: la sección solo muestra productos en oferta.
+const gridProducts = computed(() => catalog.value.products.filter((p) => productOffer(p) != null).slice(0, 4))
 const catOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
 const brandOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 
@@ -292,31 +294,17 @@ onBeforeUnmount(() => {
       <header v-reveal class="tr-sec-head">
         <div>
           <p class="tr-eyebrow"><span class="tr-rule" aria-hidden="true"></span>Selección</p>
-          <h2 id="tr-prod-title" class="tr-h2">Lo último que sumamos</h2>
+          <h2 id="tr-prod-title" class="tr-h2">Ofertas de la tienda</h2>
         </div>
         <RouterLink class="tr-link" :to="catalogTo">Ver todo el catálogo <AppIcon name="arrow-right" :size="14" /></RouterLink>
       </header>
       <div class="tr-grid">
-        <article
+        <TplProductCard
           v-for="(p, i) in gridProducts" :key="p.id" v-reveal="(i % 4) * 70"
-          class="tr-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-          @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-        >
-          <figure class="tr-card-media">
-            <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-            <span v-else class="tr-card-ph"><AppIcon name="package" :size="26" /></span>
-            <span v-if="isNewProduct(p)" class="tr-tag">Nuevo</span>
-            <span v-if="productOffer(p) != null" class="tr-tag offer">−{{ offerPct(p) }}%</span>
-          </figure>
-          <div class="tr-card-body">
-            <p v-if="catOf(p) || brandOf(p)" class="tr-card-kicker">{{ [catOf(p), brandOf(p)].filter(Boolean).join(' · ') }}</p>
-            <h3 class="tr-card-name">{{ p.name }}</h3>
-            <p class="tr-card-price">
-              <s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>
-              {{ formatARS(effectivePrice(p)) }}
-            </p>
-          </div>
-        </article>
+          tag="figure" class="tr-card" :p="p"
+          :cat="catOf(p)" :brand="brandOf(p)"
+          seal-shape="" offer-new :ph-size="26" :go="false"
+          @open="openProduct" />
       </div>
     </div>
   </section>

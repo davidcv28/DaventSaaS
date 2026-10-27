@@ -26,7 +26,7 @@ import {
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES, formatStorageMB,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
-  MARKETING_LIMITS, SERVICE_ICONS, SECTION_ORDER_LABELS, resolveSectionOrder, serviceHue,
+  MARKETING_LIMITS, SERVICE_ICONS, serviceHue,
   validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl
 } from '../api/stores.api.js'
 import {
@@ -1405,8 +1405,6 @@ const serviceVisibilityOptions = [
   { value: true, label: 'Visible en mi web', icon: 'eye' },
   { value: false, label: 'Oculto', icon: 'eye-off' }
 ]
-const sectionLabels = SECTION_ORDER_LABELS
-
 // Una fila "a medias" (algo escrito pero sin sus campos requeridos) avisa y
 // no deja guardar — mismo criterio que las preguntas del chatbot.
 function hasPartialRow(rows, keys, required) {
@@ -1437,8 +1435,7 @@ const mkNav = [
   { id: 'mk-cta', label: 'Llamado a la acción' },
   { id: 'mk-ann', label: 'Anuncios' },
   { id: 'mk-video', label: 'Video' },
-  { id: 'mk-extras', label: 'Extras' },
-  { id: 'mk-order', label: 'Orden' }
+  { id: 'mk-extras', label: 'Extras' }
 ]
 function scrollToCard(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1591,24 +1588,6 @@ async function saveExtras() {
     catalog_note: designForm.catalog_note.trim(),
     footer_text: designForm.footer_text.trim()
   })
-  companyBusy.value = false
-}
-
-// Orden de las secciones de la portada: claves cerradas espejo del backend
-// (resolveSectionOrder descarta desconocidas y completa las faltantes);
-// la web lo aplica como CSS order. Hero primero y Contáctanos último siempre.
-const sectionOrderList = computed(() => resolveSectionOrder(designForm.section_order))
-function moveSection(key, direction) {
-  const order = [...sectionOrderList.value]
-  const index = order.indexOf(key)
-  const target = index + direction
-  if (index < 0 || target < 0 || target >= order.length) return
-  ;[order[index], order[target]] = [order[target], order[index]]
-  designForm.section_order = order
-}
-async function saveSectionOrder() {
-  companyBusy.value = true
-  await store.saveCustomization({ section_order: sectionOrderList.value })
   companyBusy.value = false
 }
 
@@ -4735,7 +4714,7 @@ async function changePassword() {
           </div>
           <AppInput v-model="designForm.video_url" label="Link del video" name="company_video_url" placeholder="https://www.youtube.com/watch?v=…" hint="Pegá el link completo de YouTube o Vimeo. Vacío: la sección no se muestra." maxlength="300" />
           <AppInput v-model="designForm.video_title" label="Título de la sección" name="company_video_title" placeholder="Mirá nuestro local en video" hint="Vacío: se muestra 'Mirá nuestro video'." maxlength="80" />
-          <p class="hint">Podés reordenarla entre las secciones desde el bloque "Orden".</p>
+          <p class="hint">Aparece en un orden fijo entre las secciones de tu página.</p>
           <p v-if="companyErrs.video" class="field-error" role="alert">{{ companyErrs.video }}</p>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveVideo">Guardar sección</AppButton>
@@ -4753,25 +4732,6 @@ async function changePassword() {
           </div>
         </div>
 
-        <!-- ===== Orden de las secciones ===== -->
-        <div id="mk-order" class="card mk-card">
-          <h3><AppIcon name="arrow-down-wide-narrow" :size="18" /> Orden de las secciones</h3>
-          <p>Definí en qué orden aparecen los bloques de tu página principal. La portada va primero y Contáctanos último siempre.</p>
-          <div class="mk-order-list">
-            <div v-for="(key, i) in sectionOrderList" :key="key" class="mk-order-item">
-              <span class="mk-order-num" aria-hidden="true">{{ i + 1 }}</span>
-              <strong>{{ sectionLabels[key] }}</strong>
-              <span class="qa-actions mk-order-actions">
-                <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir ${sectionLabels[key]}`" @click="moveSection(key, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                <button type="button" class="icon-btn" :disabled="i === sectionOrderList.length - 1" :aria-label="`Bajar ${sectionLabels[key]}`" @click="moveSection(key, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-              </span>
-            </div>
-          </div>
-          <p class="hint">Las secciones vacías o apagadas se saltan solas: el orden aplica solo a las visibles.</p>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveSectionOrder">Guardar orden</AppButton>
-          </div>
-        </div>
       </template>
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>

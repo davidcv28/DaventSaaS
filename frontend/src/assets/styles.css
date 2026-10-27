@@ -1239,11 +1239,6 @@ body { transition: background-color .2s ease, color .2s ease; }
 .mk-icon-preview { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border: 1px solid var(--line); border-radius: 9px; background: var(--brand-soft); color: var(--brand-ink); }
 .mk-icon-field .select { flex: 1; min-width: 0; }
 .mk-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.mk-order-list { display: grid; gap: 8px; margin: 14px 0 4px; }
-.mk-order-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
-.mk-order-item strong { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--ink); }
-.mk-order-num { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 8px; background: var(--brand-soft); color: var(--brand-ink); font-size: 12px; font-weight: 700; }
-.mk-order-actions { flex-direction: row; }
 @media (max-width: 560px) {
   .mk-pair { grid-template-columns: 1fr; }
 }
@@ -1268,8 +1263,8 @@ body { transition: background-color .2s ease, color .2s ease; }
    atenuados con un badge "Premium" y los controles quedan deshabilitados. */
 .lock-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 9px; border-radius: 99px; background: var(--brand-soft); color: var(--brand-ink); font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; vertical-align: 1px; }
 .lock-badge .icon { color: var(--brand-500); }
-.field.locked .swatches, .field.locked .size-slider { opacity: .55; }
-.field.locked .swatch, .field.locked .size-slider input[type='range'] { cursor: default; }
+.field.locked .swatches, .field.locked .size-slider, .field.locked .pick-preview { opacity: .55; }
+.field.locked .swatch, .field.locked .size-slider input[type='range'], .field.locked .icon-btn { cursor: default; }
 .field.locked .swatch:hover { transform: none; }
 .qr-box { display: grid; place-items: center; margin: 8px 0 16px; }
 .qr-box img { width: 180px; height: 180px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; padding: 10px; }

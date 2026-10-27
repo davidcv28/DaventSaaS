@@ -12,6 +12,7 @@ import StoreBot from '../components/StoreBot.vue'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
+import { templateFonts } from '../templates/index.js'
 import '../assets/store-page.css'
 // Las hojas de las landing alternativas también definen el cromado
 // (topbar/pie) y la ficha de producto de su diseño: se cargan acá para que
@@ -20,6 +21,9 @@ import '../assets/store-page.css'
 import '../assets/store-page-v2.css'
 import '../assets/store-bloque.css'
 import '../assets/store-riso.css'
+// Contrato de geometría de la tarjeta de producto unificada (TplProductCard)
+// — lo usan todos los catálogos y los rieles de ofertas de las landings.
+import '../assets/store-tpl-card.css'
 
 // Layout de la web pública del cliente (sin auth): barra superior + pie +
 // transición suave entre sus páginas (Inicio y Catálogo). Resuelve la tienda
@@ -356,13 +360,11 @@ onMounted(async () => {
     store.value = await storesApi.publicStore(slug.value)
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
-    // Fuentes propias de la plantilla (titulares): condensada de letrero
-    // en 'perspective', peso pesado de streetwear en 'street', el par
-    // monospace de 'terminal' y el serif editorial de 'lookbook'. Misma
-    // carga on-demand que name_font; el resto del texto sigue con la fuente
+    // Fuentes propias de la plantilla (titulares): las declara la Template
+    // Definition (`fonts` en templates/<id>/index.js). Misma carga
+    // on-demand que name_font; el resto del texto sigue con la fuente
     // elegida por el dueño.
-    const TEMPLATE_FONTS = { perspective: ['oswald', 'poppins'], street: ['archivo-black', 'space-grotesk'], terminal: ['space-mono', 'jetbrains-mono'], lookbook: ['fraunces', 'work-sans'], promo: ['archivo-black', 'jetbrains-mono'], shop: ['rubik', 'jetbrains-mono'], cobre: ['bebas-neue', 'dm-sans'], minimal: ['manrope'], boutique: ['playfair-display', 'raleway'], signature: ['cinzel', 'dancing-script'], aurora: ['sora', 'space-grotesk'], bloque: ['archivo', 'jetbrains-mono'], riso: ['bricolage-grotesque', 'figtree'], terra: ['fraunces'], atelier: ['archivo', 'oswald'], circuit: ['space-grotesk', 'jetbrains-mono'], lab: ['manrope', 'jetbrains-mono'], mercado: ['fraunces', 'nunito'], carta: ['playfair-display', 'lora'], studio: ['manrope', 'work-sans'], proceso: ['space-grotesk', 'work-sans', 'jetbrains-mono'], arena: ['orbitron', 'space-grotesk'], calma: ['lora', 'nunito'], vitrina: ['playfair-display', 'work-sans'] }
-    TEMPLATE_FONTS[pageTemplate.value]?.forEach(ensureStoreFont)
+    templateFonts(pageTemplate.value).forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'
     errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'

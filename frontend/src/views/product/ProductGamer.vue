@@ -10,6 +10,7 @@ import SwipeGallery from '../../components/store/SwipeGallery.vue'
 import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-gamer.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha GAMER: la spec sheet manda. Tabla de características con valores
 // en mono (featureRows ya las ordena el schema de la categoría), precio en
@@ -133,20 +134,9 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="gm-pd-rail gm-sec" aria-labelledby="gm-rel-t">
         <div class="gm-sec-head"><h2 id="gm-rel-t" class="gm-sec-title">{{ variant === 'arena' ? 'Combiná con' : 'ls ./relacionados' }}</h2></div>
         <div class="gm-drops">
-          <RouterLink v-for="r in rail" :key="r.id" class="gm-drop" :to="p.productTo(r)">
-            <span class="gm-drop-media">
-              <img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" />
-              <span v-else class="gm-drop-ph"><AppIcon name="zap" :size="22" aria-hidden="true" /></span>
-              <OfferSeal v-if="p.productOffer(r) != null" :pct="p.offerPct(r)" shape="corner" class="gm-drop-seal" />
-            </span>
-            <span class="gm-drop-body">
-              <span class="gm-drop-name">{{ r.name }}</span>
-              <span class="gm-drop-price">
-                <s v-if="p.productOffer(r) != null">{{ p.formatARS(r.price) }}</s>
-                <strong :class="{ deal: p.productOffer(r) != null }">{{ p.formatARS(p.effectivePrice(r)) }}</strong>
-              </span>
-            </span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="gm-drop" :p="r"
+            seal-shape="corner" ph-icon="zap" :ph-size="22" :go="false"
+            @open="p.openProduct" />
         </div>
       </section>
 

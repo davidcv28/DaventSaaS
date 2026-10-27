@@ -10,6 +10,7 @@ import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import StTag from '../../components/store/StTag.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-mercado.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha COMESTIBLES: foto en arco, tags de dieta, precio por unidad,
 // selector de cantidad + nota que viaja en el mensaje de WhatsApp,
@@ -159,10 +160,9 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="mc-pd-rail" aria-labelledby="mc-rel-t">
         <h2 id="mc-rel-t"><span>Combiná con…</span></h2>
         <div class="mc-today-track">
-          <RouterLink v-for="r in rail" :key="r.id" class="mc-today-card" :to="p.productTo(r)">
-            <span class="mc-today-media"><img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" /><span v-else class="mc-card-ph"><AppIcon name="coffee" :size="24" /></span></span>
-            <span class="mc-today-info"><strong>{{ r.name }}</strong><span class="mc-today-price">{{ p.formatARS(p.effectivePrice(r)) }}</span></span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="mc-today-card" :p="r"
+            seal-shape="circle" ph-icon="coffee" :ph-size="24" :go="false"
+            @open="p.openProduct" />
         </div>
       </section>
 

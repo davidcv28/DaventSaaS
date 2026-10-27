@@ -4,7 +4,6 @@ import { useStorePage } from '../composables/useStorePage.js'
 import AppIcon from '../components/AppIcon.vue'
 import MarqueeBand from '../components/store/MarqueeBand.vue'
 import TrustBar from '../components/store/TrustBar.vue'
-import OfferSeal from '../components/store/OfferSeal.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-lifestyle.css'
 
@@ -21,12 +20,13 @@ const variant = computed(() => (pageTemplate.value === 'lookbook' ? 'lookbook' :
 // ===== La vidriera / el pliego: piezas reales destacadas =====
 const featured = computed(() => p.products.value.filter((x) => x.image).slice(0, 2))
 const windowItems = computed(() => featured.value.length ? featured.value : p.products.value.slice(0, 2))
+// Landing = info de empresa + ofertas: el índice editorial muestra solo
+// piezas con oferta real (si no hay, la sección no se pinta).
 const indexItems = computed(() => {
-  const ranked = [...p.products.value].sort((a, b) => (p.offerPct(b) || 0) - (p.offerPct(a) || 0))
+  const ranked = p.products.value.filter((x) => p.productOffer(x) != null)
+    .sort((a, b) => (p.offerPct(b) || 0) - (p.offerPct(a) || 0))
   return ranked.slice(0, 6)
 })
-const gridItems = computed(() => p.products.value.slice(0, 8))
-const extraCount = computed(() => Math.max(0, p.products.value.length - gridItems.value.length))
 
 const offersCount = computed(() => p.products.value.filter((x) => p.productOffer(x) != null).length)
 const bandItems = computed(() => [
@@ -77,7 +77,7 @@ onMounted(() => { p.loadCatalog() })
     <!-- ===== Índice de colección ===== -->
     <section v-if="indexItems.length" v-reveal class="lf-sec" aria-labelledby="lf-idx-t">
       <div class="lf-sec-head">
-        <h2 id="lf-idx-t" class="lf-sec-title">{{ variant === 'vitrina' ? 'La selección' : 'Índice de la colección' }}</h2>
+        <h2 id="lf-idx-t" class="lf-sec-title">{{ variant === 'vitrina' ? 'En oferta' : 'Índice de ofertas' }}</h2>
         <RouterLink v-if="showCatalog" class="lf-sec-link" :to="p.catalogTo.value">Ver todo <AppIcon name="arrow-right" :size="15" /></RouterLink>
       </div>
       <div class="lf-index">
@@ -89,30 +89,7 @@ onMounted(() => { p.loadCatalog() })
       </div>
     </section>
 
-    <!-- ===== Piezas ===== -->
-    <section v-if="gridItems.length" v-reveal class="lf-sec" aria-labelledby="lf-grid-t">
-      <div class="lf-sec-head">
-        <h2 id="lf-grid-t" class="lf-sec-title">{{ variant === 'vitrina' ? 'En vidriera' : 'Las piezas' }}</h2>
-        <RouterLink v-if="showCatalog && extraCount" class="lf-sec-link" :to="p.catalogTo.value">Ver {{ extraCount }} más <AppIcon name="arrow-right" :size="15" /></RouterLink>
-      </div>
-      <div class="lf-grid">
-        <RouterLink v-for="prod in gridItems" :key="prod.id" class="lf-card" :to="p.productTo(prod)">
-          <span class="lf-card-media">
-            <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-            <span v-else class="lf-card-ph"><AppIcon name="image" :size="26" aria-hidden="true" /></span>
-            <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" shape="corner" class="lf-card-seal" />
-          </span>
-          <span class="lf-card-body">
-            <span v-if="p.catOf(prod)" class="lf-card-cat">{{ p.catOf(prod) }}</span>
-            <span class="lf-card-name">{{ prod.name }}</span>
-            <span class="lf-card-price">
-              <s v-if="p.productOffer(prod) != null">{{ p.formatARS(prod.price) }}</s>
-              <strong :class="{ deal: p.productOffer(prod) != null }">{{ p.formatARS(p.effectivePrice(prod)) }}</strong>
-            </span>
-          </span>
-        </RouterLink>
-      </div>
-    </section>
+
 
     <!-- ===== Opiniones como cita ===== -->
     <section v-if="p.testimonials.value.length" v-reveal class="lf-sec" aria-labelledby="lf-quotes-t">

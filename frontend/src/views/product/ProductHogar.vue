@@ -10,6 +10,7 @@ import SwipeGallery from '../../components/store/SwipeGallery.vue'
 import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-hogar.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha HOGAR (compartida por 'riso' y 'terra'; 'cobre' es extra
 // absorbido y conserva ProductClassic). En deco/muebles la compra se
@@ -119,20 +120,8 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="hg-pd-rail hg-sec" aria-labelledby="hg-rel-t">
         <div class="hg-sec-head"><h2 id="hg-rel-t" class="hg-sec-title">{{ variant === 'riso' ? 'Más del taller' : 'De la misma colección' }}</h2></div>
         <div class="hg-grid">
-          <RouterLink v-for="r in rail" :key="r.id" class="hg-card" :to="p.productTo(r)">
-            <span class="hg-card-media">
-              <img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" />
-              <span v-else class="hg-card-ph"><AppIcon name="package" :size="24" aria-hidden="true" /></span>
-              <OfferSeal v-if="p.productOffer(r) != null" :pct="p.offerPct(r)" shape="corner" class="hg-card-seal" />
-            </span>
-            <span class="hg-card-body">
-              <span class="hg-card-name">{{ r.name }}</span>
-              <span class="hg-card-price">
-                <s v-if="p.productOffer(r) != null">{{ p.formatARS(r.price) }}</s>
-                <strong :class="{ deal: p.productOffer(r) != null }">{{ p.formatARS(p.effectivePrice(r)) }}</strong>
-              </span>
-            </span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="hg-card" :p="r"
+            seal-shape="corner" ph-icon="package" :ph-size="24" :go="false" @open="p.openProduct" />
         </div>
       </section>
 

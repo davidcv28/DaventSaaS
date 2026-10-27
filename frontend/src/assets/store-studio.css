@@ -346,3 +346,21 @@
   .sd[data-var='proceso'] .sd-main::after { background: Highlight; }
   .sd-cta { border: 1px solid ButtonText; }
 }
+
+/* ===== TplProductCard: adaptación studio (filas de servicio/producto) ===== */
+/* La card-row producto hereda el look de la fila de servicio: media en
+   riel cuadrado, cuerpo con desc + tags, precio anclado abajo-derecha. */
+.sd-svc.tpc { display: flex; }
+.sd-svc.tpc .tpc-media { --tpc-ratio: auto; width: 72px; align-self: stretch; border-radius: var(--sd-r-sm); background: color-mix(in srgb, var(--sd-acc) 14%, transparent); }
+.sd-svc.tpc .tpc-media img { object-fit: cover; }
+.sd-svc.tpc .tpc-body { gap: 5px; padding: 0; }
+.sd-svc.tpc .tpc-name { font-size: 15.5px; font-weight: 600; -webkit-line-clamp: 1; min-height: 0; }
+.sd[data-var='proceso'] .sd-svc.tpc .tpc-name { font-family: var(--sd-display); }
+.sd-svc.tpc .tpc-desc { -webkit-line-clamp: 2; min-height: 0; font-size: 13.5px; }
+.sd-svc.tpc .tpc-foot { padding-top: 2px; }
+.sd-svc.tpc .tpc-price { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; margin-inline-start: auto; }
+.sd[data-var='proceso'] .sd-svc.tpc .tpc-price { font-family: var(--sd-mono); font-weight: 500; }
+.sd-svc.tpc .os { top: auto; bottom: -8px; }
+.sd-svc.tpc .tpc-flags { inset: 4px auto auto 4px; }
+.sd-svc.tpc .tpc-flag { padding: 2px 6px; font-size: 9.5px; border-radius: 4px; }
+.sd-svc.tpc .os { display: none; }

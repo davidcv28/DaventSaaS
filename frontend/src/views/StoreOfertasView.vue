@@ -10,6 +10,7 @@ import OfferSeal from '../components/store/OfferSeal.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-ofertas.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia OFERTAS — "el precio es el diseño". El cliente llega por el
 // número: en 5 segundos tiene que ver cuánto cuesta, cuánto se ahorra,
@@ -38,14 +39,7 @@ const endsLabel = computed(() => {
 })
 const endsOf = (prod) => offerEndsLabel(productDiscount(prod))
 
-// Góndola: ofertas primero (por %), después el resto del surtido.
-const ranked = computed(() => {
-  const rest = p.products.value.filter((x) => p.productOffer(x) == null)
-  return [...rankedOffers.value, ...rest]
-})
 const railOffers = computed(() => rankedOffers.value.slice(0, 8))
-const gridItems = computed(() => ranked.value.slice(0, 12))
-const extraCount = computed(() => Math.max(0, p.products.value.length - gridItems.value.length))
 
 // Banda marquee + barra de confianza (todo dato real, sin relleno).
 const bandItems = computed(() => [
@@ -145,49 +139,14 @@ onMounted(() => { p.loadCatalog() })
         <RouterLink v-if="showCatalog" class="of-sec-link" :to="catalogOffersTo">Todas <AppIcon name="arrow-right" :size="15" /></RouterLink>
       </div>
       <div class="of-tickets">
-        <RouterLink v-for="prod in railOffers" :key="prod.id" class="of-ticket" :to="p.productTo(prod)">
-          <span class="of-ticket-media">
-            <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-            <span v-else class="of-ticket-ph"><AppIcon name="percent" :size="26" aria-hidden="true" /></span>
-            <OfferSeal :pct="p.offerPct(prod)" shape="ticket" class="of-ticket-seal" />
-          </span>
-          <span class="of-ticket-body">
-            <span class="of-ticket-name">{{ prod.name }}</span>
-            <span class="of-ticket-price">
-              <s>{{ p.formatARS(prod.price) }}</s>
-              <strong>{{ p.formatARS(p.effectivePrice(prod)) }}</strong>
-            </span>
-            <span v-if="savings(prod) > 0" class="of-ticket-save">Ahorrás {{ p.formatARS(savings(prod)) }}</span>
-          </span>
-        </RouterLink>
+        <TplProductCard v-for="prod in railOffers" :key="prod.id" class="of-ticket" :p="prod"
+          seal-shape="ticket" ph-icon="percent" :ph-size="26" :go="false"
+          :save="savings(prod) > 0 ? `Ahorrás ${p.formatARS(savings(prod))}` : ''"
+          @open="p.openProduct" />
       </div>
     </section>
 
-    <!-- ===== Góndola ===== -->
-    <section v-if="gridItems.length" class="of-sec" aria-labelledby="of-grid-t">
-      <div class="of-sec-head">
-        <h2 id="of-grid-t" class="of-sec-title">{{ variant === 'promo' ? 'Todo el local' : 'El surtido' }}</h2>
-        <RouterLink v-if="showCatalog && extraCount" class="of-sec-link" :to="p.catalogTo.value">Ver {{ extraCount }} más <AppIcon name="arrow-right" :size="15" /></RouterLink>
-      </div>
-      <div class="of-grid">
-        <RouterLink v-for="prod in gridItems" :key="prod.id" v-reveal class="of-card" :to="p.productTo(prod)">
-          <span class="of-card-media">
-            <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-            <span v-else class="of-card-ph"><AppIcon name="package" :size="26" aria-hidden="true" /></span>
-            <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" shape="corner" class="of-card-seal" />
-            <span v-else-if="p.isNewProduct(prod)" class="of-card-new">Nuevo</span>
-          </span>
-          <span class="of-card-body">
-            <span v-if="p.catOf(prod)" class="of-card-cat">{{ p.catOf(prod) }}</span>
-            <span class="of-card-name">{{ prod.name }}</span>
-            <span class="of-card-price">
-              <s v-if="p.productOffer(prod) != null">{{ p.formatARS(prod.price) }}</s>
-              <strong :class="{ deal: p.productOffer(prod) != null }">{{ p.formatARS(p.effectivePrice(prod)) }}</strong>
-            </span>
-          </span>
-        </RouterLink>
-      </div>
-    </section>
+
 
     <section v-else-if="showCatalog" class="of-empty">
       <span class="of-empty-mark"><AppIcon name="tag" :size="26" aria-hidden="true" /></span>

@@ -8,6 +8,7 @@ import StepRail from '../components/store/StepRail.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-mercado.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia COMESTIBLES — "Mercado". Mesa servida: apetito primero, pedido
 // a un toque. Hero en arco sobre crema con grano + sello giratorio, rail
@@ -38,8 +39,10 @@ const mapsUrl = computed(() => {
 // Categorías como círculos de 72px (foto de su primer producto o inicial).
 const circles = computed(() => p.departments.value.slice(0, 10))
 const activeCat = ref(null)
+// Landing = info del comercio + ofertas: solo ítems con oferta real.
 const gridItems = computed(() => {
-  const list = activeCat.value == null ? p.products.value : p.products.value.filter((x) => x.category === activeCat.value)
+  const offers = p.products.value.filter((x) => p.productOffer(x) != null)
+  const list = activeCat.value == null ? offers : offers.filter((x) => x.category === activeCat.value)
   return list.slice(0, 12)
 })
 
@@ -133,24 +136,20 @@ onBeforeUnmount(() => sealIO?.disconnect())
 
   <main class="mc-main" id="mc-carta">
     <!-- ===== Variante mercado: cards cálidas con "+" de pedido ===== -->
-    <section v-if="variant === 'mercado' && gridItems.length" class="mc-grid" aria-label="Productos">
-      <article v-for="prod in gridItems" :key="prod.id" v-reveal class="mc-card">
-        <RouterLink class="mc-card-media" :to="p.productTo(prod)" :aria-label="prod.name">
-          <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-          <span v-else class="mc-card-ph"><AppIcon name="coffee" :size="28" /></span>
-          <span class="mc-card-price">{{ p.formatARS(p.effectivePrice(prod)) }}</span>
-          <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" shape="circle" />
-        </RouterLink>
-        <div class="mc-card-info">
-          <RouterLink class="mc-card-name" :to="p.productTo(prod)">{{ prod.name }}</RouterLink>
-          <div v-if="dietTagsOf(prod).length" class="mc-card-tags"><StTag v-for="t in dietTagsOf(prod)" :key="t.label" kind="dieta" :label="t.label" :icon="t.icon" :tone="t.tone" /></div>
-          <a v-if="p.waBase.value" class="mc-card-add" :href="waOrder(prod)" target="_blank" rel="noopener" :aria-label="`Pedir ${prod.name} por WhatsApp`"><AppIcon name="plus" :size="20" /></a>
-        </div>
-      </article>
+    <section v-if="variant === 'mercado' && gridItems.length" class="mc-grid" aria-label="Ofertas de la semana">
+      <TplProductCard v-for="prod in gridItems" :key="prod.id" v-reveal class="mc-card" :p="prod"
+        seal-shape="circle" ph-icon="coffee" :ph-size="28" :go="false"
+        :add-href="p.waBase.value ? waOrder(prod) : ''" :add-label="`Pedir ${prod.name} por WhatsApp`"
+        @open="p.openProduct">
+        <template #media-extra><span class="mc-card-price">{{ p.formatARS(p.effectivePrice(prod)) }}</span></template>
+        <template v-if="dietTagsOf(prod).length" #tags>
+          <span class="mc-card-tags"><StTag v-for="t in dietTagsOf(prod)" :key="t.label" kind="dieta" :label="t.label" :icon="t.icon" :tone="t.tone" /></span>
+        </template>
+      </TplProductCard>
     </section>
 
     <!-- ===== Variante carta: menú de restaurante ===== -->
-    <section v-else-if="variant === 'carta' && gridItems.length" class="mc-menu" aria-label="La carta">
+    <section v-else-if="variant === 'carta' && gridItems.length" class="mc-menu" aria-label="Ofertas de la carta">
       <div v-for="g in menuGroups" :key="g.id" v-reveal class="mc-menu-group">
         <h2 class="mc-menu-title"><span>{{ g.name }}</span></h2>
         <ul class="mc-menu-list">
@@ -167,7 +166,7 @@ onBeforeUnmount(() => sealIO?.disconnect())
       </div>
     </section>
 
-    <section v-else-if="showCatalog" class="mc-empty">
+    <section v-else-if="showCatalog && !p.products.value.length" class="mc-empty">
       <span class="mc-empty-mark"><AppIcon name="coffee" :size="26" /></span>
       <h2>La cocina está preparando la carta</h2>
       <p>{{ shopName }} está subiendo sus productos. Escribinos y te contamos qué hay hoy.</p>
@@ -178,17 +177,9 @@ onBeforeUnmount(() => sealIO?.disconnect())
     <section v-if="todayOffers.length && variant === 'mercado'" v-reveal class="mc-today" aria-labelledby="mc-today-t">
       <h2 id="mc-today-t"><span>Hoy en la carta</span></h2>
       <div class="mc-today-track">
-        <article v-for="prod in todayOffers" :key="prod.id" class="mc-today-card">
-          <RouterLink class="mc-today-media" :to="p.productTo(prod)">
-            <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" />
-            <span v-else class="mc-card-ph"><AppIcon name="percent" :size="24" /></span>
-            <OfferSeal :pct="p.offerPct(prod)" shape="circle" />
-          </RouterLink>
-          <div class="mc-today-info">
-            <strong>{{ prod.name }}</strong>
-            <span class="mc-today-price"><s>{{ p.formatARS(prod.price) }}</s>{{ p.formatARS(p.effectivePrice(prod)) }}</span>
-          </div>
-        </article>
+        <TplProductCard v-for="prod in todayOffers" :key="prod.id" class="mc-today-card" :p="prod"
+          seal-shape="circle" ph-icon="percent" :ph-size="24" :go="false"
+          @open="p.openProduct" />
       </div>
     </section>
 

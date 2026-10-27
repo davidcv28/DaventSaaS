@@ -2,7 +2,6 @@
 import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
-import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'

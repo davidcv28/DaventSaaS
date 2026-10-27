@@ -10,6 +10,7 @@ import AppIcon from '../components/AppIcon.vue'
 import { vReveal } from '../directives/reveal.js'
 import { openStatus } from '../utils/storeHours.js'
 import '../assets/store-page-v2.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Diseño "Dúo" (antes prototipo "Opción 2"): la misma información de la
 // portada actual con los elementos acomodados distinto — hero sobre fondo
@@ -63,7 +64,8 @@ const heroMeta = computed(() => {
 // de producto, sin repetir. Sin imágenes la placa cae al logo/inicial.
 const cover = computed(() => (hasDesignAdvanced.value ? custom.value.cover || '' : ''))
 const catalog = ref({ categories: [], brands: [], products: [] })
-const railProducts = computed(() => catalog.value.products.slice(0, 10))
+// Landing = empresa + ofertas: el riel solo muestra productos con oferta real.
+const railProducts = computed(() => catalog.value.products.filter((p) => productOffer(p) != null).slice(0, 10))
 const catOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
 const brandOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 const heroImgPool = computed(() => [...new Set([
@@ -398,29 +400,17 @@ onBeforeUnmount(() => {
     <div class="sp-container">
       <div v-reveal class="sp2-sec-head">
         <div>
-          <p class="sp2-eyebrow">Recién llegados</p>
-          <h2 id="sp2-rail-title" class="sp2-title">Productos destacados</h2>
+          <p class="sp2-eyebrow">Ofertas</p>
+          <h2 id="sp2-rail-title" class="sp2-title">Promociones vigentes</h2>
         </div>
         <RouterLink class="sp2-viewall" :to="catalogTo">Ver todo el catálogo <AppIcon name="arrow-right" :size="14" class="sp-arrow" /></RouterLink>
       </div>
       <div class="sp2-rail-track">
-        <article
+        <TplProductCard
           v-for="(p, i) in railProducts" :key="p.id" v-reveal="(i % 4) * 80"
-          class="sp2-card" role="link" tabindex="0" :aria-label="`Ver ${p.name}`"
-          @click="openProduct(p)" @keydown.enter.prevent="openProduct(p)"
-        >
-          <div class="sp2-card-img">
-            <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-            <span v-else class="sp2-card-placeholder"><AppIcon name="package" :size="28" /></span>
-            <span v-if="isNewProduct(p)" class="sp2-card-flag">Nuevo</span>
-            <span v-if="productOffer(p) != null" class="sp2-card-flag offer">-{{ offerPct(p) }}%</span>
-          </div>
-          <div class="sp2-card-body">
-            <p v-if="catOf(p) || brandOf(p)" class="sp2-card-cat">{{ [catOf(p), brandOf(p)].filter(Boolean).join(' · ') }}</p>
-            <h3 class="sp2-card-name">{{ p.name }}</h3>
-            <span class="sp2-card-price"><s v-if="productOffer(p) != null">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-          </div>
-        </article>
+          class="sp2-card" :p="p" :cat="catOf(p)" :brand="brandOf(p)"
+          seal-shape="" offer-new :ph-size="28" :go="false"
+          @open="openProduct" />
       </div>
     </div>
   </section>

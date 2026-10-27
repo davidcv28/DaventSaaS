@@ -10,6 +10,7 @@ import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import SpecStrip from '../../components/store/SpecStrip.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-circuit.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha TECNOLOGÍA: visor con zoom, SpecStrip de atributos clave bajo el
 // título, precio en mono, pestañas sticky (Resumen / Specs / En la caja /
@@ -161,10 +162,8 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="ci-pd-rail" aria-labelledby="ci-pd-rel-t">
         <h2 id="ci-pd-rel-t">También te puede servir</h2>
         <div class="ci-rail-track">
-          <RouterLink v-for="r in rail" :key="r.id" class="ci-rail-card" :to="p.productTo(r)">
-            <span class="ci-rail-media"><img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" /><span v-else class="ci-card-ph"><AppIcon name="package" :size="24" /></span></span>
-            <span class="ci-rail-info"><strong>{{ r.name }}</strong><em>{{ p.formatARS(p.effectivePrice(r)) }}</em></span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="ci-rail-card" :p="r"
+            :ph-size="24" :go="false" @open="p.openProduct" />
         </div>
       </section>
 

@@ -10,6 +10,7 @@ import SwipeGallery from '../../components/store/SwipeGallery.vue'
 import StickyBuyBar from '../../components/store/StickyBuyBar.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import '../../assets/store-belleza.css'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Ficha BELLEZA: confianza + reserva. En estética/spa el producto se
 // acerca al ritual del local: precio claro, datos reales (features) y un
@@ -116,20 +117,9 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       <section v-if="rail.length" class="be-pd-rail be-sec" aria-labelledby="be-rel-t">
         <div class="be-sec-head"><h2 id="be-rel-t" class="be-sec-title">{{ variant === 'calma' ? 'También te puede gustar' : 'De la misma casa' }}</h2></div>
         <div class="be-grid">
-          <RouterLink v-for="r in rail" :key="r.id" class="be-card" :to="p.productTo(r)">
-            <span class="be-card-media">
-              <img v-if="r.image" :src="r.image" :alt="r.name" loading="lazy" />
-              <span v-else class="be-card-ph"><AppIcon name="sparkles" :size="24" aria-hidden="true" /></span>
-              <OfferSeal v-if="p.productOffer(r) != null" :pct="p.offerPct(r)" shape="corner" class="be-card-seal" />
-            </span>
-            <span class="be-card-body">
-              <span class="be-card-name">{{ r.name }}</span>
-              <span class="be-card-price">
-                <s v-if="p.productOffer(r) != null">{{ p.formatARS(r.price) }}</s>
-                <strong :class="{ deal: p.productOffer(r) != null }">{{ p.formatARS(p.effectivePrice(r)) }}</strong>
-              </span>
-            </span>
-          </RouterLink>
+          <TplProductCard v-for="r in rail" :key="r.id" class="be-card" :p="r"
+            :cat="p.catOf(r)" :seal-shape="variant === 'signature' ? 'ribbon' : 'corner'"
+            ph-icon="sparkles" :ph-size="24" :go="false" @open="p.openProduct" />
         </div>
       </section>
 

@@ -75,17 +75,17 @@
 /* ---------- Grilla de cards (mercado) ---------- */
 .mc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px clamp(16px, 5vw, 48px) 8px; }
 .mc-card { position: relative; }
-.mc-card-media { position: relative; display: block; aspect-ratio: 1; border-radius: var(--mc-radius); overflow: hidden; background: color-mix(in srgb, var(--mc-ink) 6%, transparent); text-decoration: none; }
-.mc-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
-@media (hover: hover) { .mc-card:hover .mc-card-media img { transform: scale(1.05); } }
-.mc-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--mc-ink) 30%, transparent); }
+.mc-card .tpc-media { position: relative; display: block; aspect-ratio: 1; border-radius: var(--mc-radius); overflow: hidden; background: color-mix(in srgb, var(--mc-ink) 6%, transparent); text-decoration: none; }
+.mc-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+@media (hover: hover) { .mc-card:hover .tpc-media img { transform: scale(1.05); } }
+.mc-card .tpc-ph, .mc-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: color-mix(in srgb, var(--mc-ink) 30%, transparent); }
 .mc-card-price { position: absolute; left: 10px; bottom: 10px; padding: 5px 12px; border-radius: 999px; background: var(--sp-card-solid, var(--sp-card)); color: var(--mc-ink); font-size: 13.5px; font-weight: 700; box-shadow: 0 4px 14px -6px rgba(0, 0, 0, .4); }
-.mc-card-info { position: relative; display: grid; gap: 6px; padding: 10px 4px 0; }
-.mc-card-name { font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--mc-ink); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mc-card .tpc-body { position: relative; gap: 6px; padding: 10px 4px 0; }
+.mc-card .tpc-name { font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--mc-ink); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .mc-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-.mc-card-add { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--store-accent); color: var(--mc-on-acc); text-decoration: none; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--store-accent) 80%, transparent); transition: transform .15s ease; }
-@media (hover: hover) { .mc-card-add:hover { transform: scale(1.1); } }
-.mc-card-add:active { transform: scale(.94); }
+.mc-card .tpc-add { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--store-accent); color: var(--mc-on-acc); text-decoration: none; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--store-accent) 80%, transparent); transition: transform .15s ease; }
+@media (hover: hover) { .mc-card .tpc-add:hover { transform: scale(1.1); } }
+.mc-card .tpc-add:active { transform: scale(.94); }
 
 /* ---------- Menú (carta) ---------- */
 .mc-menu { padding: 16px clamp(16px, 5vw, 48px) 8px; max-width: 760px; margin: 0 auto; }
@@ -112,12 +112,12 @@
 .mc-today-track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; touch-action: pan-y; padding-bottom: 8px; scrollbar-width: none; }
 .mc-today-track::-webkit-scrollbar { display: none; }
 .mc-today-card { position: relative; flex: none; width: min(64vw, 240px); scroll-snap-align: start; border: 1px dashed var(--mc-line); border-radius: var(--mc-radius); padding: 12px; background: color-mix(in srgb, var(--store-accent) 6%, transparent); }
-.mc-today-media { position: relative; display: block; aspect-ratio: 1; border-radius: 16px; overflow: hidden; text-decoration: none; }
-.mc-today-media img { width: 100%; height: 100%; object-fit: cover; }
-.mc-today-info { display: grid; gap: 3px; padding: 10px 2px 2px; }
-.mc-today-info strong { font-size: 14.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.mc-today-price { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; }
-.mc-today-price s { font-weight: 400; opacity: .55; margin-right: 7px; font-size: 12px; }
+.mc-today-card .tpc-media { position: relative; display: block; aspect-ratio: 1; border-radius: 16px; overflow: hidden; text-decoration: none; }
+.mc-today-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; }
+.mc-today-card .tpc-body { gap: 3px; padding: 10px 2px 2px; }
+.mc-today-card .tpc-name { font-size: 14.5px; font-weight: 700; }
+.mc-today-card .tpc-price { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; }
+.mc-today-card .tpc-price s { font-weight: 400; opacity: .55; margin-right: 7px; font-size: 12px; }
 
 /* ---------- Cómo pedir / horarios / zona ---------- */
 .mc-how { padding: 40px clamp(16px, 5vw, 48px) 8px; }
@@ -145,7 +145,7 @@
   .mc-menu { max-width: 860px; }
   .mc-bottom { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 }
-@media (prefers-reduced-motion: reduce) { .mc-seal { animation: none; } .mc-card-media img { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .mc-seal { animation: none; } .mc-card .tpc-media img { transition: none; } }
 
 /* ---------- Ficha de producto ---------- */
 .mc-pd { padding-bottom: 40px; }
@@ -306,3 +306,14 @@
 .mc[data-var='carta'] .spd-sec-title { color: var(--mc-chalk); font-style: italic; }
 .mc[data-var='carta'] .spd-rev-empty { color: color-mix(in srgb, var(--mc-chalk) 62%, transparent); }
 .mc[data-var='carta'] .mc-qty-total { color: color-mix(in srgb, var(--store-accent) 55%, var(--mc-chalk)); }
+
+/* ===== TplProductCard: adaptación mercado ===== */
+.mc-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-pad: 10px 4px 0; overflow: visible; }
+.mc-card.tpc .tpc-media { border-radius: var(--mc-radius); }
+.mc-card.tpc .tpc-foot { padding-top: 0; }
+
+.mc-grid { grid-auto-rows: 1fr; }
+
+/* TplProductCard: riel "hoy" */
+.mc-today-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-radius: 16px; --tpc-pad: 10px 2px 2px; }
+.mc-today-card.tpc .tpc-media { border-radius: 16px; }

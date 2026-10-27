@@ -79,8 +79,9 @@
   color: var(--tpc-idx-ink, var(--sp-muted, #64748b));
   pointer-events: none;
 }
-/* Fila de flags planos (cuando el diseño no usa OfferSeal): nuevo a la
-   izquierda, oferta a la derecha — nunca colisionan entre sí. */
+/* Fila de flags planos (cuando el diseño no usa OfferSeal): el flag de
+   "nuevo" queda a la izquierda y el de oferta a la derecha (como tenían
+   las pieles originales) — nunca colisionan entre sí. */
 .tpc-flags {
   position: absolute;
   top: 10px;
@@ -114,7 +115,7 @@
   white-space: nowrap;
 }
 .tpc-flag.offer {
-  order: -1;
+  order: 2;
   background: var(--tpc-offer-bg, var(--store-accent, #4f46e5));
   color: var(--tpc-offer-ink, #fff);
   border-color: transparent;

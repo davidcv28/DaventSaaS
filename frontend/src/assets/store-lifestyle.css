@@ -94,19 +94,19 @@
 .lf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (min-width: 768px) { .lf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; } }
 .lf-card { display: grid; grid-template-rows: auto 1fr; text-decoration: none; color: inherit; }
-.lf-card-media { position: relative; aspect-ratio: 3 / 4; background: var(--sp-surface); border: var(--lf-bw) solid var(--lf-line); border-radius: var(--lf-radius); overflow: hidden; }
-.lf-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--lf-ease); }
-.lf-card:hover .lf-card-media img { transform: scale(1.05); }
-.lf-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
-.lf-card-seal { position: absolute; top: 10px; left: 10px; }
-.lf-card-body { display: grid; gap: 5px; padding: 12px 2px 0; align-content: start; }
-.lf-card-cat { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--sp-muted); }
-.lf-card-name { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: 15.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.lf[data-var='lookbook'] .lf-card-name { font-style: normal; }
-.lf-card-price { display: flex; align-items: baseline; gap: 8px; }
-.lf-card-price s { font-size: 12px; color: var(--sp-muted); }
-.lf-card-price strong { font-family: var(--lf-mono); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.lf-card-price strong.deal { color: var(--sp-accent-text); }
+.lf-card .tpc-media { position: relative; aspect-ratio: 3 / 4; background: var(--sp-surface); border: var(--lf-bw) solid var(--lf-line); border-radius: var(--lf-radius); overflow: hidden; }
+.lf-card .tpc-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--lf-ease); }
+.lf-card:hover .tpc-media img { transform: scale(1.05); }
+.lf-card .tpc-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
+.lf-card .os { position: absolute; top: 10px; left: 10px; }
+.lf-card .tpc-body { gap: 5px; padding: 12px 2px 0; align-content: start; }
+.lf-card .tpc-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--sp-muted); }
+.lf-card .tpc-name { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: 15.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lf[data-var='lookbook'] .lf-card .tpc-name { font-style: normal; }
+.lf-card .tpc-price { display: flex; align-items: baseline; gap: 8px; }
+.lf-card .tpc-price s { font-size: 12px; color: var(--sp-muted); }
+.lf-card .tpc-price strong { font-family: var(--lf-mono); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.lf-card .tpc-price strong.deal { color: var(--sp-accent-text); }
 
 /* Opiniones como cita de prensa */
 .lf-quotes { display: grid; gap: 14px; }
@@ -170,3 +170,7 @@
 @media (prefers-reduced-motion: reduce) {
   .lf, .lf *, .lf *::before, .lf *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ===== TplProductCard: adaptación lifestyle ===== */
+.lf-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-pad: 12px 2px 0; overflow: visible; }
+.lf-card.tpc .tpc-media { border: var(--lf-bw) solid var(--lf-line); border-radius: var(--lf-radius); aspect-ratio: 3 / 4; }

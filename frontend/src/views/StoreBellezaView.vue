@@ -5,10 +5,10 @@ import { servicePriceLabel } from '../api/services.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import MarqueeBand from '../components/store/MarqueeBand.vue'
 import TrustBar from '../components/store/TrustBar.vue'
-import OfferSeal from '../components/store/OfferSeal.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-belleza.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia BELLEZA — se compra tiempo y confianza. El cliente de
 // estética/spa/peluquería decide por: qué servicios hay, cuánto duran,
@@ -29,12 +29,9 @@ const waGeneral = p.waGeneral
 
 // ===== Productos (la boutique del local) =====
 const offers = computed(() => p.products.value.filter((x) => p.productOffer(x) != null))
-const gridItems = computed(() => {
-  const ranked = [...offers.value].sort((a, b) => p.offerPct(b) - p.offerPct(a))
-  const rest = p.products.value.filter((x) => p.productOffer(x) == null)
-  return [...ranked, ...rest].slice(0, 8)
-})
-const extraCount = computed(() => Math.max(0, p.products.value.length - gridItems.value.length))
+// Landing = solo ofertas reales, ordenadas por % de descuento.
+const gridItems = computed(() => [...offers.value].sort((a, b) => p.offerPct(b) - p.offerPct(a)).slice(0, 8))
+const extraCount = computed(() => Math.max(0, offers.value.length - gridItems.value.length))
 
 // ===== Datos de confianza (solo reales) =====
 const stats = computed(() => [
@@ -121,24 +118,13 @@ onMounted(() => { p.loadCatalog() })
     <!-- ===== Productos ===== -->
     <section v-if="gridItems.length" v-reveal class="be-sec" aria-labelledby="be-grid-t">
       <div class="be-sec-head">
-        <h2 id="be-grid-t" class="be-sec-title">{{ variant === 'calma' ? 'Para llevarte a casa' : 'La boutique' }}</h2>
+        <h2 id="be-grid-t" class="be-sec-title">{{ variant === 'calma' ? 'Ofertas para llevarte' : 'Ofertas de la boutique' }}</h2>
         <RouterLink v-if="showCatalog && extraCount" class="be-sec-link" :to="p.catalogTo.value">Ver {{ extraCount }} más <AppIcon name="arrow-right" :size="15" /></RouterLink>
       </div>
       <div class="be-grid">
-        <RouterLink v-for="prod in gridItems" :key="prod.id" class="be-card" :to="p.productTo(prod)">
-          <span class="be-card-media">
-            <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-            <span v-else class="be-card-ph"><AppIcon name="sparkles" :size="26" aria-hidden="true" /></span>
-            <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" shape="corner" class="be-card-seal" />
-          </span>
-          <span class="be-card-body">
-            <span class="be-card-name">{{ prod.name }}</span>
-            <span class="be-card-price">
-              <s v-if="p.productOffer(prod) != null">{{ p.formatARS(prod.price) }}</s>
-              <strong :class="{ deal: p.productOffer(prod) != null }">{{ p.formatARS(p.effectivePrice(prod)) }}</strong>
-            </span>
-          </span>
-        </RouterLink>
+        <TplProductCard v-for="prod in gridItems" :key="prod.id" class="be-card" :p="prod"
+          :cat="p.catOf(prod)" :seal-shape="variant === 'signature' ? 'ribbon' : 'corner'"
+          ph-icon="sparkles" :ph-size="26" :go="false" @open="p.openProduct" />
       </div>
     </section>
 

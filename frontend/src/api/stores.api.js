@@ -318,8 +318,8 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_about: true,
   // Secciones de marketing de la portada (se editan en "Mi empresa"): cada
   // bloque se apaga con su show_* y además se oculta solo en la web cuando
-  // quedó vacío. section_order ordena las secciones de la portada (claves
-  // de SECTION_ORDER_KEYS); el hero va primero y el contacto último.
+  // quedó vacío. Las secciones de la portada se muestran en un orden fijo
+  // (SECTION_ORDER_KEYS); el hero va primero y el contacto último.
   services: [],
   services_title: '',
   show_services: true,
@@ -545,26 +545,10 @@ export const SERVICE_HUES = {
 }
 export const serviceHue = (key) => SERVICE_HUES[key] ?? 250
 
-// Orden de las secciones de la portada (espejo de SECTION_ORDER del modelo):
-// el dueño las reordena desde "Mi empresa"; el hero queda primero y el
-// contacto último siempre.
+// Orden fijo de las secciones de la portada (espejo de SECTION_ORDER del
+// modelo): la web pública lo aplica siempre así — no es editable por el
+// usuario; el hero queda primero y el contacto último siempre.
 export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta']
-export const SECTION_ORDER_LABELS = {
-  about:        'Sobre nosotros',
-  services:     'Qué ofrecemos',
-  stats:        'Tus números',
-  benefits:     'Garantías',
-  offers:       'Ofertas',
-  brands:       'Marcas',
-  countdown:    'Cuenta regresiva',
-  gallery:      'Galería',
-  testimonials: 'Testimonios',
-  timeline:     'Trayectoria',
-  team:         'Equipo',
-  faq:          'Preguntas frecuentes',
-  video:        'Video',
-  cta:          'Llamado a la acción'
-}
 // Bloques automáticos (sin contenido propio en customization): la sección
 // Ofertas sale del catálogo (ítems con oferta efectiva), la marquesina de
 // las marcas cargadas y la cuenta regresiva del descuento vigente con fin
@@ -582,13 +566,6 @@ export function validateVideoUrl(value) {
   if (/^(https?:\/\/)?(www\.)?youtu\.be\/[\w-]{6,20}/i.test(v)) return ''
   if (/^(https?:\/\/)?(www\.|player\.)?vimeo\.com\/(video\/)?\d{5,}/i.test(v)) return ''
   return 'Solo se admiten videos de YouTube o Vimeo. Pegá el link completo del video.'
-}
-
-// Orden efectivo: respeta lo guardado, descarta claves desconocidas y
-// completa al final las que falten (mismo criterio del serializer).
-export function resolveSectionOrder(saved) {
-  const clean = (Array.isArray(saved) ? saved : []).filter((k, i, arr) => SECTION_ORDER_KEYS.includes(k) && arr.indexOf(k) === i)
-  return [...clean, ...SECTION_ORDER_KEYS.filter((k) => !clean.includes(k))]
 }
 
 export function validateSectionTitle(value) {

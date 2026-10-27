@@ -8,6 +8,7 @@ import AppIcon from '../../components/AppIcon.vue'
 import ProductStars from '../../components/ProductStars.vue'
 import ProductReviews from '../../components/ProductReviews.vue'
 import { vReveal } from '../../directives/reveal.js'
+import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Página de producto estilo marketplace (/<slug>/producto/<id>): migas,
 // galería a la izquierda y panel de compra a la derecha (precio, CTA de
@@ -259,15 +260,8 @@ onMounted(() => {
       <section v-if="related.length" v-reveal="80" class="spd-related" aria-labelledby="spd-rel-title">
         <h2 id="spd-rel-title" class="spd-sec-title">También te puede interesar</h2>
         <div class="spd-rel-grid">
-          <RouterLink v-for="p in related" :key="p.id" class="spd-rel" :to="productTo(p)">
-            <span class="spd-rel-img">
-              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-              <AppIcon v-else name="package" :size="24" aria-hidden="true" />
-              <span v-if="productOffer(p) != null" class="sp-card-flag offer">-{{ offerPct(p) }}%</span>
-            </span>
-            <span class="spd-rel-name">{{ p.name }}</span>
-            <span class="spd-rel-price"><s v-if="productOffer(p) != null" class="sp-price-old">{{ formatARS(p.price) }}</s>{{ formatARS(effectivePrice(p)) }}</span>
-          </RouterLink>
+          <TplProductCard v-for="r in related" :key="r.id" class="spd-rel" :p="r"
+            seal-shape="" :ph-size="24" :go="false" @open="(r2) => router.push(productTo(r2))" />
         </div>
       </section>
     </template>

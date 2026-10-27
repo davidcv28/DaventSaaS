@@ -10,6 +10,7 @@ import OfferSeal from '../components/store/OfferSeal.vue'
 import ScheduleCard from '../components/store/ScheduleCard.vue'
 import { vReveal } from '../directives/reveal.js'
 import '../assets/store-gamer.css'
+import TplProductCard from '../components/store/TplProductCard.vue'
 
 // Familia GAMER — se compra por spec y precio. El cliente de hardware/
 // periféricos/merch dev compara: en 5 segundos necesita ver qué se vende,
@@ -39,11 +40,9 @@ const star = computed(() => topDeal.value || p.products.value[0] || null)
 const specChips = (prod, n = 3) => p.featureRows(prod).slice(0, n).map(([k, v]) => `${k}: ${v}`)
 
 const railOffers = computed(() => rankedOffers.value.slice(0, 4))
-const gridItems = computed(() => {
-  const rest = p.products.value.filter((x) => x !== star.value)
-  return rest.slice(0, 9)
-})
-const extraCount = computed(() => Math.max(0, p.products.value.length - gridItems.value.length - (star.value ? 1 : 0)))
+// Landing = solo ofertas reales (los "drops" aparte ya cubren el resto).
+const gridItems = computed(() => offers.value.filter((x) => x !== star.value).slice(0, 9))
+const extraCount = computed(() => Math.max(0, offers.value.length - gridItems.value.length - (star.value && p.productOffer(star.value) != null ? 1 : 0)))
 
 // Stats del tablero / líneas del log (todo dato real).
 const hudChips = computed(() => [
@@ -204,33 +203,21 @@ onMounted(() => { p.loadCatalog() })
     <!-- ===== El inventario ===== -->
     <section v-if="gridItems.length" class="gm-sec" aria-labelledby="gm-grid-t">
       <div class="gm-sec-head">
-        <h2 id="gm-grid-t" class="gm-sec-title">{{ variant === 'arena' ? 'El inventario' : 'ls ./inventario' }}</h2>
+        <h2 id="gm-grid-t" class="gm-sec-title">{{ variant === 'arena' ? 'Ofertas activas' : 'ls ./ofertas' }}</h2>
         <RouterLink v-if="showCatalog && extraCount" class="gm-sec-link" :to="p.catalogTo.value">{{ variant === 'arena' ? `Ver ${extraCount} más` : `tail -n +${extraCount}` }} <AppIcon name="arrow-right" :size="15" /></RouterLink>
       </div>
       <div class="gm-grid">
-        <RouterLink v-for="prod in gridItems" :key="prod.id" v-reveal class="gm-card" :to="p.productTo(prod)">
-          <span class="gm-card-media">
-            <img v-if="prod.image" :src="prod.image" :alt="prod.name" loading="lazy" decoding="async" />
-            <span v-else class="gm-card-ph"><AppIcon name="zap" :size="26" aria-hidden="true" /></span>
-            <OfferSeal v-if="p.productOffer(prod) != null" :pct="p.offerPct(prod)" shape="corner" class="gm-card-seal" />
-            <span v-else-if="p.isNewProduct(prod)" class="gm-card-new">New</span>
-          </span>
-          <span class="gm-card-body">
-            <span v-if="p.catOf(prod)" class="gm-card-cat">{{ p.catOf(prod) }}</span>
-            <span class="gm-card-name">{{ prod.name }}</span>
-            <span v-if="specChips(prod, 2).length" class="gm-card-specs">
-              <span v-for="schip in specChips(prod, 2)" :key="schip" class="gm-card-spec">{{ schip }}</span>
-            </span>
-            <span class="gm-card-price">
-              <s v-if="p.productOffer(prod) != null">{{ p.formatARS(prod.price) }}</s>
-              <strong :class="{ deal: p.productOffer(prod) != null }">{{ p.formatARS(p.effectivePrice(prod)) }}</strong>
-            </span>
-          </span>
-        </RouterLink>
+        <TplProductCard v-for="prod in gridItems" :key="prod.id" v-reveal class="gm-card" :p="prod"
+          :cat="p.catOf(prod)" seal-shape="corner" offer-new new-label="New"
+          ph-icon="zap" :ph-size="26" :go="false" @open="p.openProduct">
+          <template v-if="specChips(prod, 2).length" #tags>
+            <span class="gm-card-specs"><span v-for="schip in specChips(prod, 2)" :key="schip" class="gm-card-spec">{{ schip }}</span></span>
+          </template>
+        </TplProductCard>
       </div>
     </section>
 
-    <section v-else-if="showCatalog" class="gm-empty">
+    <section v-else-if="showCatalog && !p.products.value.length" class="gm-empty">
       <span class="gm-empty-mark"><AppIcon name="zap" :size="26" aria-hidden="true" /></span>
       <h2>{{ variant === 'arena' ? 'Inventario en carga' : 'inventario: sin entradas' }}</h2>
       <p>{{ shopName }} está subiendo sus productos. Escribinos y te contamos qué hay hoy.</p>
