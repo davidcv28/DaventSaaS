@@ -395,17 +395,17 @@
 /* =====================================================================
    Responsive y movimiento
    ===================================================================== */
-@media (max-width: 1020px) {
+@media (max-width: 1024px) {
   .rs-process, .rs-faq-grid, .rs-contact-grid { grid-template-columns: 1fr; gap: 28px; }
   .rs-sec-head.col { margin-bottom: 4px; }
 }
-@media (max-width: 860px) {
+@media (max-width: 1024px) {
   .rs-hero-foot { grid-template-columns: 1fr; }
   .rs-sticker { justify-self: center; }
   .rs-shop { grid-template-columns: 1fr; }
   .cv-rs-intro { grid-template-columns: 1fr; align-items: start; }
 }
-@media (max-width: 540px) {
+@media (max-width: 480px) {
   .rs-cards, .cv-rs-cards { grid-template-columns: 1fr 1fr; gap: 14px; }
   .rs-info { padding: 12px 12px 4px; }
   .rs-info h3 { font-size: 16px; }
@@ -460,7 +460,7 @@
 .store-page[data-store-template='riso'] .spd-rel-img { border: 2px solid var(--rs-ink); border-radius: 12px; background: var(--sp-surface); }
 .store-page[data-store-template='riso'] .spd-rel-name { font-weight: 700; color: var(--rs-ink); }
 .store-page[data-store-template='riso'] .spd-rel-price { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--rs-blue); }
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .store-page[data-store-template='riso'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--rs-ink); }
 }
 

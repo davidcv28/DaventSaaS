@@ -380,7 +380,7 @@
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1080px) {
+@media (max-width: 1024px) {
   .tr .tr-hero-grid { grid-template-columns: 1fr; gap: 44px; }
   .tr-hero-media { max-width: 520px; width: 100%; justify-self: center; }
   .tr-hero-card { left: 18px; }
@@ -391,7 +391,7 @@
   .tr-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tr-quote-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .tr-h1 { font-size: clamp(38px, 11vw, 56px); }
   .tr-arch { max-height: 420px; }
   .tr-hero-card { min-width: 148px; padding: 13px 18px; }
@@ -420,13 +420,13 @@
    unificaron en CatalogFilters/CatalogToolbar (store-filters.css). */
 .cv-tr-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(18px, 2.2vw, 28px); }
 .cv-tr-cards.loading { opacity: .55; }
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .cv-tr-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .cv-tr-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .cv-tr-cards { grid-template-columns: 1fr; }
   .cv-tr-intro { align-items: flex-start; }
   .cv-tr-main { padding-top: 24px; padding-bottom: 72px; }

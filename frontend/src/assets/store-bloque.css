@@ -396,11 +396,11 @@
 /* =====================================================================
    Responsive
    ===================================================================== */
-@media (max-width: 1020px) {
+@media (max-width: 1024px) {
   .bq-about-grid, .bq-faq-grid, .bq-contact-grid { grid-template-columns: 1fr; gap: 30px; }
   .bq-sec-head.col { margin-bottom: 22px; }
 }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .bq-hero { padding-top: 34px; }
   .bq-hero-foot { grid-template-columns: 1fr; }
   .bq-hero-foot > * + * { border-left: 0; border-top: 1.5px solid var(--bq-rule); }
@@ -416,7 +416,7 @@
   .bq-cards, .cv-bq-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
   .bq-cta-inner { padding-block: 60px; }
 }
-@media (max-width: 460px) {
+@media (max-width: 480px) {
   .bq-cards, .cv-bq-cards { grid-template-columns: 1fr 1fr; gap: 12px; }
   .bq-card-cat { display: none; }
 }
@@ -466,7 +466,7 @@
 .store-page[data-store-template='bloque'] .spd-rel-img { border-radius: 0; border: 1px solid var(--bq-line); background: var(--sp-surface); }
 .store-page[data-store-template='bloque'] .spd-rel-name { font-weight: 650; color: var(--bq-ink); }
 .store-page[data-store-template='bloque'] .spd-rel-price { font-family: var(--bq-mono); font-weight: 700; }
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .store-page[data-store-template='bloque'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--bq-rule); }
 }
 

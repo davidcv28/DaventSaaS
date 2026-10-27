@@ -28,7 +28,7 @@
 /* --- Terminal: cursor de bloque en el título y brillo de fósforo --- */
 .cv-tm-row:not(.head):hover .cv-tm-name { text-shadow: 0 0 12px color-mix(in srgb, var(--tm-acc) 65%, transparent); }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   /* Las grillas de 3 diseños ignoraban el corte móvil por especificidad */
   .cv .cv-pe-grid, .cv .cv-st-grid, .cv .cv-pr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; }
   .cv .cv-pe-grid { gap: 34px 14px; }
@@ -86,7 +86,7 @@
   .cv-mn-grid, .cv-bt-grid { margin-top: 28px; }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 768px) {
   /* Clásico: grilla de 2 columnas con tarjetas compactas */
   .store-page[data-store-template] .sp-catalog .sp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .store-page[data-store-template] .sp-catalog .sp-card-body { padding: 12px 12px 14px; gap: 6px; }
@@ -98,7 +98,7 @@
 }
 
 /* Pantallas muy angostas: las filas deslizables sangran al margen real (14px) */
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .cv :is(.cv-pe-planes, .cv-pe-brands, .cv-st-stickers, .cv-pr-chips, .cv-mn-cats, .cv-mn-brands, .cv-bt-brands, .cv-cb-sub, .cv-tm-flags, .cv-du-tags, .cv-lb-sorts) { margin-inline: -14px; padding-inline: 14px; }
   .cv-tm-row.head > span:nth-child(2) { display: none; }
 }

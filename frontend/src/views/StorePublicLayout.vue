@@ -72,6 +72,8 @@ const location = computed(() => [store.value?.city_name, store.value?.province_n
 const year = new Date().getFullYear()
 const mainAnchor = ref(null)
 const topSearchInput = ref(null)
+const menuBtn = ref(null)
+const menuDrawer = ref(null)
 // Buscador colapsable del header (móvil): al abrir lleva el foco al input.
 function toggleTopSearch() {
   ui.searchOpen = !ui.searchOpen
@@ -138,6 +140,18 @@ const navMenuLinks = computed(() => {
 const hasNavMenu = computed(() => status.value === 'success' && !isShop.value && navMenuLinks.value.length > 0)
 const onMenuKey = (e) => { if (e.key === 'Escape') ui.menuOpen = false }
 watch(() => route.fullPath, () => { ui.menuOpen = false; ui.searchOpen = false })
+// Drawer de navegación: mientras está abierto bloquea el scroll del body,
+// lleva el foco al botón de cerrar y lo devuelve al burger al cerrarse.
+watch(() => ui.menuOpen, async (open) => {
+  document.documentElement.classList.toggle('sp-lock', open)
+  if (open) {
+    await nextTick()
+    menuDrawer.value?.querySelector('.sp-drawer-close')?.focus()
+  } else if (menuDrawer.value?.contains(document.activeElement)) {
+    menuBtn.value?.focus()
+  }
+})
+onBeforeUnmount(() => document.documentElement.classList.remove('sp-lock'))
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isServices = computed(() => route.name === 'store-services')
 const isProduct = computed(() => route.name === 'store-product')
@@ -375,6 +389,7 @@ onBeforeUnmount(() => {
       <div class="sp-container sp-top-inner">
         <button
           v-if="hasNavMenu"
+          ref="menuBtn"
           type="button"
           class="sp-burger"
           :aria-label="ui.menuOpen ? 'Cerrar menú' : 'Abrir menú'"
@@ -463,7 +478,7 @@ onBeforeUnmount(() => {
     <!-- Menú móvil (solo navegación): los filtros del catálogo NO viven
          acá — van en CatalogFilters (bottom sheet propio). -->
     <div v-if="hasNavMenu" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
-    <nav v-if="hasNavMenu" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" aria-label="Menú de la tienda">
+    <nav v-if="hasNavMenu" ref="menuDrawer" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" aria-label="Menú de la tienda">
       <div class="sp-drawer-head">
         <strong>{{ shopName }}</strong>
         <button type="button" class="sp-drawer-close" aria-label="Cerrar menú" @click="ui.menuOpen = false">
