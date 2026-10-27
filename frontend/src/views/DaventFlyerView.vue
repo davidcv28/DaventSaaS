@@ -98,15 +98,17 @@ function closeTab() {
 .df-tick { flex: none; width: 14px; height: 14px; border-radius: 50%; background: #dcfce7; color: #15803d; display: grid; place-items: center; }
 
 .df-trial { display: flex; align-items: center; gap: 8px; padding: 7px 9px; background: #fffbeb; border: 1px solid #fde68a; border-left: 3px solid #f59e0b; border-radius: 8px; }
-.df-trial-ico { flex: none; width: 20px; height: 20px; border-radius: 6px; background: #fde047; color: #422006; display: grid; place-items: center; }
+.df-trial .df-trial-ico { flex: none; width: 22px; height: 22px; border-radius: 6px; background: #fde047; color: #422006; display: flex; align-items: center; justify-content: center; line-height: 0; }
+.df-trial-ico :deep(svg) { display: block; margin: 0; }
 .df-trial strong { display: block; font-size: 9.2px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: #422006; }
-.df-trial span { display: block; font-size: 8.1px; color: #78350f; margin-top: 1px; }
+.df-trial div span { display: block; font-size: 8.1px; line-height: 1.35; color: #78350f; margin-top: 1px; }
+.df-trial b { font-weight: 900; letter-spacing: .03em; color: #92400e; }
 
 .df-plans { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
 .df-plans-head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 8.6px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: #4338ca; }
 .df-plans-head::after { content: ''; flex: 1; height: 1px; background: #ddd6fe; }
 .df-table { flex: 1; min-height: 0; display: grid; grid-auto-rows: 1fr; border: 1px solid #e7e2f6; border-radius: 10px; overflow: hidden; background: #fff; }
-.df-plan { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-top: 1px solid #efebfa; }
+.df-plan { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-top: 2px solid #bfb0ee; }
 .df-plan:first-child { border-top: 0; }
 .df-plan-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .df-plan-name strong { font-size: 10.4px; font-weight: 900; color: #1e1b4b; }
@@ -178,10 +180,10 @@ function closeTab() {
           </ul>
 
           <div class="df-trial">
-            <span class="df-trial-ico"><AppIcon name="gift" :size="12" /></span>
+            <span class="df-trial-ico"><AppIcon name="gift" :size="13" /></span>
             <div>
-              <strong>1 día gratis con funciones Premium</strong>
-              <span>Registrate y probá todo el sistema, sin tarjeta.</span>
+              <strong>Estamos regalando cupones de inauguración</strong>
+              <span>Código <b>PROMO INAUGURACIÓN</b> con acceso a todas las funciones premium del sistema.</span>
             </div>
           </div>
 
