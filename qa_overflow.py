@@ -110,7 +110,7 @@ with sync_playwright() as pw:
         stop_server(); set_template(tpl); start_server()
         if not wait_template(tpl):
             print(f'WARN {tpl}: no levantó, salto', flush=True); continue
-        for w, h, name in [(320, 700, '320'), (360, 340, 'landscape')]:
+        for w, h, name in [(320, 700, '320'), (360, 340, 'landscape'), (430, 700, '430'), (390, 700, '390')]:
             ctx = browser.new_context(viewport={'width': w, 'height': h}, reduced_motion='reduce')
             page = ctx.new_page()
             try:

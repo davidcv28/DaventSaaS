@@ -21,11 +21,16 @@ from playwright.sync_api import sync_playwright
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = os.path.join(ROOT, 'venv', 'Scripts', 'python.exe')
 FRONT = 'http://localhost:5173/bench-store/catalogo'
+HOME = 'http://localhost:5173/bench-store'
+SVC = 'http://localhost:5173/bench-store/servicios'
 API = 'http://127.0.0.1:8000/api/stores/public/bench-store/'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'before'
 ONLY = sys.argv[2:] or None
 WIDTHS = [320, 360, 390, 768, 1024, 1440]
 MOBILE = {320, 360, 390, 768}
+# Matriz plantilla × superficie: home/servicios se capturan en un ancho
+# móvil y uno desktop por plantilla (el catálogo cubre WIDTHS completos).
+MATRIX_W = [390, 1440]
 TEMPLATES = ['classic', 'perspective', 'duo', 'bloque', 'riso', 'terra', 'street', 'atelier',
              'circuit', 'lab', 'mercado', 'carta', 'studio', 'proceso', 'promo', 'shop', 'arena',
              'terminal', 'calma', 'signature', 'vitrina', 'lookbook', 'cobre', 'minimal',
@@ -157,6 +162,18 @@ with sync_playwright() as pw:
                 print(f'FAIL {tpl} {w}: {e}')
             finally:
                 ctx.close()
+        for w in MATRIX_W:
+            for url, tag in [(HOME, 'home'), (SVC, 'svc')]:
+                ctx = browser.new_context(viewport={'width': w, 'height': 900}, reduced_motion='reduce')
+                page = ctx.new_page()
+                try:
+                    page.goto(url, wait_until='networkidle', timeout=30000)
+                    page.wait_for_timeout(700)
+                    shot(page, f'qa/{OUT}/{tpl}-{w}-{tag}.png')
+                except Exception as e:
+                    print(f'FAIL {tpl} {w} {tag}: {e}')
+                finally:
+                    ctx.close()
         print(f'done {tpl}', flush=True)
     browser.close()
 # El último server queda vivo para seguir trabajando (el hijo no muere con el
