@@ -1,8 +1,19 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { Capacitor } from '@capacitor/core'
 
 const STORAGE_KEY = 'davent:theme'
 const META_COLOR = { light: '#4f46e5', dark: '#0d1220' }
+
+// En nativo la status bar acompaña al tema activo (ambos fondos piden iconos
+// claros). El import dinámico evita cargar el plugin en el bundle web.
+function syncNativeBars(theme) {
+  if (!Capacitor.isNativePlatform()) return
+  import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+    StatusBar.setBackgroundColor({ color: META_COLOR[theme] }).catch(() => {})
+    StatusBar.setStyle({ style: Style.Light }).catch(() => {})
+  }).catch(() => {})
+}
 
 function systemTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -27,6 +38,7 @@ export const useThemeStore = defineStore('theme', () => {
     document.documentElement.dataset.theme = theme.value
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', META_COLOR[theme.value])
+    syncNativeBars(theme.value)
   }
 
   function setTheme(next) {
