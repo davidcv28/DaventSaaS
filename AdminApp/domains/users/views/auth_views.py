@@ -2,6 +2,7 @@ import logging
 import secrets
 from datetime import timedelta
 
+from decouple import config
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from rest_framework import status
@@ -347,14 +348,45 @@ class PublicConfigView(APIView):
     del token) y ningún hardcode en el código, la imagen ni el build.
     Es público por diseño (Google exige el ID en la página para renderizar
     el botón); vacío = feature apagada (botón oculto).
+    Además publica el bloque 'app' con la metadata de la APK distribuida
+    por web directa (env APP_APK_*): el update checker in-app lo consulta
+    al boot. Sin APP_APK_VERSION_NAME + APP_APK_URL el bloque no viaja
+    (todavía no hay app publicada).
     """
     permission_classes  =   [AllowAny]
     throttle_classes    =   [PublicConfigRateThrottle]
 
     def get(self, request):
-        response    =   Response({'google_client_id': GOOGLE_CLIENT_ID})
+        payload     =   {'google_client_id': GOOGLE_CLIENT_ID}
+        app         =   self._app_info()
+        if app:
+            payload['app']  =   app
+        response    =   Response(payload)
         response['Cache-Control']   =   'no-store'
         return response
+
+    @staticmethod
+    def _env_int(name : str) -> int:
+        try:
+            return int(config(name, default = '') or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    def _app_info(self):
+        """Metadata de la APK publicada (env APP_APK_*). None si no hay app."""
+        version_name    =   config('APP_APK_VERSION_NAME', default = '').strip()
+        apk_url         =   config('APP_APK_URL', default = '').strip()
+        if not version_name or not apk_url:
+            return None
+        app =   {
+            'version_name'  :   version_name,
+            'version_code'  :   self._env_int('APP_APK_VERSION_CODE'),
+            'apk_url'       :   apk_url,
+        }
+        min_code        =   self._env_int('APP_APK_MIN_SUPPORTED_CODE')
+        if min_code:
+            app['min_supported']    =   min_code
+        return app
 
 
 class GoogleAuthView(APIView):

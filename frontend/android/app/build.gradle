@@ -13,6 +13,14 @@ ext.keystoreProp = { String key, String envVar ->
     return keystoreProps.getProperty(key) ?: (System.getenv(envVar) ?: '')
 }
 
+// Versionado: fuente de verdad en app-version.properties (commiteado).
+// versionCode sube en cada publicación; el server expone el mismo número
+// vía GET /api/config/ para el update checker in-app.
+def appVersionProps = new Properties()
+rootProject.file('app-version.properties').withInputStream { appVersionProps.load(it) }
+def appVersionCode = appVersionProps.getProperty('versionCode', '1') as int
+def appVersionName = appVersionProps.getProperty('versionName', '1.0')
+
 android {
     namespace "com.davent.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -20,8 +28,8 @@ android {
         applicationId "com.davent.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
