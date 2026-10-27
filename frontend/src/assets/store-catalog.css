@@ -217,71 +217,6 @@
 }
 
 /* =====================================================================
-   PUBLICIDAD — folleto de campaña con ofertas y CTA a WhatsApp
-   ===================================================================== */
-.cv-pr-poster { position: relative; overflow: hidden; padding: 44px 0 84px; color: #fff; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 16px, transparent 16px 32px), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 34px), 0 100%); }
-.cv-pr-burst { position: absolute; right: -8%; top: 50%; width: 130vmax; height: 130vmax; margin-top: -65vmax; background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .13) 0 8deg, transparent 8deg 16deg); -webkit-mask-image: radial-gradient(closest-side, #000 10%, transparent 62%); mask-image: radial-gradient(closest-side, #000 10%, transparent 62%); animation: cv-pr-spin 90s linear infinite; }
-@keyframes cv-pr-spin { to { transform: rotate(360deg); } }
-.cv-pr-poster-in { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
-.cv-pr-poster .cv-crumbs, .cv-pr-poster .cv-crumbs [aria-current] { color: rgba(255, 255, 255, .88); }
-.cv-pr-tag { display: inline-flex; align-items: center; gap: 8px; margin-top: 26px; padding: 6px 14px; border-radius: 99px; background: rgba(0, 0, 0, .22); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.cv-pr-title { margin-top: 14px; font-size: clamp(42px, 7.4vw, 100px); line-height: .98; font-weight: 900; letter-spacing: -.03em; text-transform: uppercase; }
-.cv-pr-title mark { display: inline-block; padding: 0 .16em; background: #ffe14d; color: #111827; transform: rotate(-2deg); box-shadow: 6px 6px 0 rgba(0, 0, 0, .25); }
-.cv-pr-sub { margin-top: 18px; font-size: 17px; font-weight: 600; max-width: 46ch; color: rgba(255, 255, 255, .92); }
-.cv-pr-seal { flex: none; display: grid; place-content: center; justify-items: center; width: 168px; height: 168px; border-radius: 50%; background: #ffe14d; color: #111827; border: 4px dashed #111827; box-shadow: 0 0 0 6px #ffe14d, 8px 10px 0 6px rgba(0, 0, 0, .22); transform: rotate(12deg); animation: cv-pr-pulse 2.6s ease-in-out infinite; }
-.cv-pr-seal small { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
-.cv-pr-seal strong { font-size: 52px; font-weight: 900; line-height: 1; letter-spacing: -.04em; }
-@keyframes cv-pr-pulse { 0%, 100% { transform: rotate(12deg) scale(1); } 50% { transform: rotate(8deg) scale(1.06); } }
-.cv-pr-main { margin-top: -6px; }
-.cv-pr-h { display: flex; align-items: center; gap: 10px; margin: 44px 0 18px; font-size: 24px; font-weight: 900; letter-spacing: -.02em; text-transform: uppercase; color: var(--sp-ink); }
-.cv-pr-h svg { color: var(--sp-accent-text); }
-.cv-pr-rail { display: flex; gap: 22px; overflow-x: auto; padding: 10px 8px 26px; margin: 0 -8px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
-.cv-pr-poster-card { position: relative; flex: 0 0 280px; scroll-snap-align: start; background: var(--sp-card-solid); border: 2px solid var(--sp-ink); border-radius: 20px; box-shadow: 6px 6px 0 var(--store-accent); transition: transform .2s var(--sp-ease), box-shadow .2s var(--sp-ease); }
-.cv-pr-poster-card:hover { transform: translate(-3px, -3px) rotate(-.6deg); box-shadow: 9px 9px 0 var(--store-accent); }
-.cv-pr-poster-media { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 17px 17px 0 0; background: var(--sp-surface); }
-.cv-pr-poster-media img { width: 100%; height: 100%; object-fit: cover; }
-.cv-pr-ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--sp-muted); }
-.cv-pr-star { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; background: #ffe14d; color: #111827; border: 2px solid #111827; font-size: 18px; font-weight: 900; transform: rotate(10deg); box-shadow: 3px 3px 0 #111827; }
-.cv-pr-poster-body { padding: 14px 18px 18px; }
-.cv-pr-poster-body h3 { font-size: 17px; font-weight: 800; line-height: 1.2; color: var(--sp-ink); }
-.cv-pr-was { margin-top: 8px; font-size: 13px; color: var(--sp-muted); text-decoration: line-through; }
-.cv-pr-now { font-size: 30px; font-weight: 900; letter-spacing: -.03em; color: var(--sp-accent-text); line-height: 1.1; }
-/* Urgencia de la promo vigente ("Termina mañana") bajo el precio, en
-   poster y tarjeta de grilla — la fecha la da product.discount.ends_at. */
-.cv-pr-ends { margin-top: 6px; font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--sp-accent-text); }
-/* La barra de filtros y los chips de categorías/marcas se unificaron en
-   CatalogFilters + CatalogToolbar. */
-.cv-pr .cv-skels { --cv-cols: 4; }
-.cv-pr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; margin-top: 26px; }
-.cv-pr-card { display: flex; flex-direction: column; overflow: hidden; background: var(--sp-card-solid); border: 1px solid var(--sp-line); border-radius: 20px; box-shadow: var(--sp-shadow-sm); transition: var(--cv-rv), box-shadow .25s var(--sp-ease), border-color .25s; }
-.cv-pr-card:hover { box-shadow: var(--sp-shadow-md); border-color: var(--store-accent); }
-.cv-pr-media { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--sp-surface); }
-.cv-pr-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--sp-ease); }
-.cv-pr-card:hover .cv-pr-media img { transform: scale(1.06); }
-.cv-pr-flag { position: absolute; top: 12px; left: 12px; padding: 5px 12px; background: #ffe14d; color: #111827; border: 2px solid #111827; border-radius: 6px; font-size: 14px; font-weight: 900; transform: rotate(-4deg); box-shadow: 3px 3px 0 #111827; }
-.cv-pr-flag.new { background: var(--store-accent-ink); color: #fff; border-color: #fff; box-shadow: 3px 3px 0 rgba(0, 0, 0, .3); }
-.cv-pr-body { display: flex; flex-direction: column; flex: 1; padding: 14px 16px 16px; }
-.cv-pr-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-muted); }
-.cv-pr-name { margin-top: 4px; font-size: 16px; font-weight: 800; line-height: 1.25; color: var(--sp-ink); }
-.cv-pr-price { margin: 8px 0 14px; font-size: 24px; font-weight: 900; letter-spacing: -.03em; color: var(--sp-accent-text); }
-.cv-pr-price s { font-size: 14px; color: var(--sp-muted); letter-spacing: 0; }
-.cv-pr-price + .cv-pr-ends { margin: -8px 0 12px; }
-.cv-pr-cta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; padding: 12px; border-radius: 12px; background: #0f7a3d; color: #fff; font-size: 14px; font-weight: 800; text-decoration: none; transition: filter .15s, transform .15s; }
-button.cv-pr-cta { background: var(--store-accent-ink); }
-.cv-pr-cta:hover { filter: brightness(1.12); transform: translateY(-1px); }
-@media (max-width: 768px) {
-  .cv-pr-poster { padding: 32px 0 68px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), 0 100%); }
-  .cv-pr-seal { position: absolute; right: 0; top: 8px; width: 96px; height: 96px; border-width: 3px; box-shadow: 0 0 0 4px #ffe14d; }
-  .cv-pr-seal strong { font-size: 28px; }
-  .cv-pr-seal small { font-size: 10px; }
-  .cv-pr-poster-card { flex-basis: 232px; }
-  .cv-pr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-  .cv-pr-body { padding: 12px; }
-  .cv-pr-price { font-size: 19px; }
-  .cv-pr .cv-skels { --cv-cols: 2; }
-}
-
-/* =====================================================================
    TERMINAL — salida de consola
    ===================================================================== */
 .cv-tm { position: relative; padding: 36px 0 84px; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .028) 0 1px, transparent 1px 4px), radial-gradient(900px 420px at 80% -10%, color-mix(in srgb, var(--store-accent) 18%, transparent), transparent 64%), var(--tm-bg); color: var(--tm-fg); font-family: var(--sp-mono); font-size: 14px; }
@@ -378,51 +313,6 @@ button.cv-pr-cta { background: var(--store-accent-ink); }
   .cv-lb-sheet { margin-bottom: 34px; }
   .cv-lb-name { font-size: 19px; }
   .cv-lb .cv-skels { --cv-cols: 2; --cv-gap: 14px; }
-}
-
-/* =====================================================================
-   TIENDA PRO — resultados de marketplace
-   ===================================================================== */
-.cv-sh { padding-top: 22px; --cv-shadow: var(--sp-shop-shadow, 0 1px 2px rgba(15, 23, 42, .06), 0 10px 26px -20px rgba(15, 23, 42, .45)); }
-/* La sidebar propia de Shop se retiró: la columna de filtros la provee
-   CatalogFilters dentro de .cf-body (ver store-filters.css). */
-.cv-sh-top { display: flex; align-items: flex-start; gap: 12px; }
-.cv-sh-top .cf-toolbar { flex: 1; min-width: 0; }
-.cv-sh-view { flex: none; display: inline-flex; border: 1px solid var(--sp-line); border-radius: 8px; overflow: hidden; }
-.cv-sh-view button { display: grid; place-items: center; width: 38px; height: 34px; color: var(--sp-muted); }
-.cv-sh-view button.on { background: var(--store-accent-ink); color: #fff; }
-.cv-sh .cv-skels { --cv-cols: 3; --cv-gap: 14px; --cv-skel-r: 14px; }
-.cv-sh-items { display: grid; gap: 14px; margin-top: 14px; }
-.cv-sh-items.is-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.cv-sh-card { display: flex; flex-direction: column; overflow: hidden; background: var(--sp-card-solid); border: 1px solid var(--sp-line); border-radius: 14px; box-shadow: var(--cv-shadow); transition: var(--cv-rv), box-shadow .25s var(--sp-ease), border-color .25s; }
-.cv-sh-card:hover { border-color: color-mix(in srgb, var(--store-accent) 55%, var(--sp-line)); box-shadow: 0 2px 4px rgba(15, 23, 42, .08), 0 18px 34px -18px rgba(15, 23, 42, .45); }
-.cv-sh-media { aspect-ratio: 1; overflow: hidden; background: var(--sp-surface); }
-.cv-sh-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--sp-ease); }
-.cv-sh-card:hover .cv-sh-media img { transform: scale(1.04); }
-.cv-sh-ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--sp-muted); }
-.cv-sh-body { display: flex; flex-direction: column; flex: 1; padding: 14px 16px 18px; border-top: 1px solid var(--sp-line); }
-.cv-sh-eyebrow { font-size: 12px; color: var(--sp-muted); }
-.cv-sh-name { margin-top: 2px; font-family: var(--sp-display); font-weight: 400; font-size: 15.5px; line-height: 1.32; color: var(--sp-ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.cv-sh-desc { display: none; margin-top: 8px; font-size: 13.5px; color: var(--sp-muted); }
-.cv-sh-was { margin-top: 10px; font-size: 13px; color: var(--sp-muted); text-decoration: line-through; }
-.cv-sh-price-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-top: auto; padding-top: 6px; }
-.cv-sh-price-now { font-size: 24px; font-weight: 500; color: var(--sp-ink); letter-spacing: -.01em; }
-.cv-sh-off { font-size: 13px; font-weight: 700; color: #0a7d3b; }
-.cv-sh-new { padding: 2px 8px; border-radius: 4px; background: var(--store-accent-soft); color: var(--sp-accent-text); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
-.cv-sh-items.is-list .cv-sh-card { flex-direction: row; }
-.cv-sh-items.is-list .cv-sh-media { flex: none; width: 220px; aspect-ratio: 1; }
-.cv-sh-items.is-list .cv-sh-body { border-top: 0; border-left: 1px solid var(--sp-line); padding: 18px 22px; }
-.cv-sh-items.is-list .cv-sh-name { font-size: 18px; }
-.cv-sh-items.is-list .cv-sh-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-@media (max-width: 1024px) { .cv-sh-items.is-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 768px) {
-  .cv-sh-items.is-grid { gap: 10px; }
-  .cv-sh-body { padding: 10px 12px 14px; }
-  .cv-sh-price-now { font-size: 19px; }
-  .cv-sh-items.is-list .cv-sh-media { width: 120px; }
-  .cv-sh-items.is-list .cv-sh-body { padding: 12px; }
-  .cv-sh-items.is-list .cv-sh-desc { display: none; }
-  .cv-sh .cv-skels { --cv-cols: 2; --cv-gap: 10px; }
 }
 
 /* =====================================================================

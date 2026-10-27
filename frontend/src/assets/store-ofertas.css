@@ -1,0 +1,218 @@
+/* ===== Familia OFERTAS — venta por precio =====
+   Una vista cubre dos variantes con identidad propia ([data-var]):
+   - 'promo'  → el afiche de campaña: UN deal domina, titular XXL
+     condensado, bordes gruesos con sombra dura, sello de % rotado.
+   - 'shop'   → la góndola: masthead con datos reales, densidad de
+     producto, precio en placa de acento, bordes finos y sombra suave.
+   Todo se pinta con tokens --sp-* y --store-accent (temas + 6 acentos). */
+
+.of {
+  --of-display: 'Archivo Black', 'Archivo', sans-serif;
+  --of-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --of-ink: var(--sp-ink);
+  --of-line: color-mix(in srgb, var(--sp-ink) 16%, transparent);
+  --of-card: var(--sp-card-solid);
+  --of-radius: 14px;
+  --of-bw: 2.5px;
+  --of-shadow: 6px 6px 0 color-mix(in srgb, var(--sp-ink) 88%, transparent);
+  --of-ease: cubic-bezier(.34, 1.3, .4, 1);
+  --of-dur: .2s;
+  color: var(--of-ink);
+  padding-bottom: clamp(64px, 8vw, 96px);
+}
+.of[data-var='shop'] {
+  --of-display: 'Rubik', 'Archivo', sans-serif;
+  --of-radius: 16px;
+  --of-bw: 1px;
+  --of-shadow: 0 16px 34px -20px rgba(15, 23, 42, .4);
+  --of-ease: var(--sp-ease);
+}
+.of :is(h1, h2, h3, p, ol, ul, figure, dl, dd) { margin: 0; padding: 0; }
+.of :is(ol, ul) { list-style: none; }
+.of img { display: block; }
+.of s { text-decoration: line-through; }
+.of :is(a, button, [role='link']):focus-visible { outline: 2px solid var(--store-accent); outline-offset: 3px; }
+
+/* ---------- Hero ---------- */
+.of-hero { position: relative; overflow: hidden; padding: clamp(28px, 5vw, 64px) 0 clamp(34px, 5vw, 72px); }
+.of-hero-in { width: min(1200px, 100% - 36px); margin-inline: auto; display: grid; gap: clamp(22px, 4vw, 48px); }
+.of-hero-copy { display: grid; gap: 16px; align-content: center; justify-items: start; min-width: 0; }
+@media (min-width: 900px) { .of-hero-in:has(.of-deal) { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; } }
+.of-kicker { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 6px 14px; border: var(--of-bw) solid var(--of-ink); border-radius: 99px; background: var(--store-accent); color: #fff; font-family: var(--of-mono); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; box-shadow: var(--of-shadow); }
+.of[data-var='shop'] .of-kicker { background: var(--of-card); color: var(--of-ink); box-shadow: none; }
+.of-title { max-width: 16ch; font-family: var(--of-display); font-weight: 400; font-size: clamp(42px, 9.5vw, 108px); line-height: .94; letter-spacing: -.01em; text-transform: uppercase; text-wrap: balance; }
+.of[data-var='shop'] .of-title { font-weight: 800; font-size: clamp(34px, 6vw, 72px); line-height: 1.02; letter-spacing: -.03em; text-transform: none; }
+.of-title em { font-style: normal; color: var(--sp-accent-text); }
+.of-lede { max-width: 52ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.55; color: var(--sp-ink-2); }
+.of-hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.of-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 52px; padding: 0 24px; border: var(--of-bw) solid var(--of-ink); border-radius: var(--of-radius); background: var(--of-card); color: var(--of-ink); font-weight: 800; font-size: 15px; text-decoration: none; cursor: pointer; box-shadow: var(--of-shadow); transition: transform var(--of-dur) var(--of-ease), box-shadow var(--of-dur) var(--of-ease); }
+.of-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 color-mix(in srgb, var(--sp-ink) 88%, transparent); }
+.of[data-var='shop'] .of-btn:hover { box-shadow: 0 20px 38px -20px rgba(15, 23, 42, .5); }
+.of-btn.solid { background: var(--store-accent-ink); border-color: var(--store-accent-ink); color: #fff; }
+.of-btn.accent { background: var(--store-accent); border-color: var(--of-ink); color: #fff; }
+.of-ends { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 99px; background: color-mix(in srgb, var(--store-accent) 14%, var(--of-card)); border: 1.5px dashed var(--store-accent-ink); color: var(--sp-accent-text); font-family: var(--of-mono); font-size: 12.5px; font-weight: 700; }
+
+/* Deal protagonista */
+.of-deal { position: relative; display: grid; grid-template-columns: minmax(0, 44%) minmax(0, 1fr); border: var(--of-bw) solid var(--of-ink); border-radius: calc(var(--of-radius) + 6px); background: var(--of-card); box-shadow: var(--of-shadow); overflow: hidden; }
+.of[data-var='promo'] .of-deal { rotate: -1.2deg; }
+.of-deal-media { position: relative; min-height: 240px; background: var(--sp-surface); }
+.of-deal-media img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.of-deal-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
+.of-deal-seal { position: absolute; top: 14px; left: 14px; transform: rotate(-7deg); }
+.of-deal-info { display: grid; gap: 12px; align-content: center; padding: clamp(20px, 3.5vw, 40px); }
+.of-deal-flag { font-family: var(--of-mono); font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--sp-accent-text); }
+.of-deal-name { font-family: var(--of-display); font-weight: 400; font-size: clamp(22px, 3vw, 36px); line-height: 1.04; text-transform: uppercase; text-wrap: balance; }
+.of[data-var='shop'] .of-deal-name { font-weight: 800; text-transform: none; letter-spacing: -.02em; }
+.of-deal-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; }
+.of-deal-price s { font-size: clamp(16px, 1.8vw, 20px); color: var(--sp-muted); font-weight: 600; }
+.of-deal-price strong { font-family: var(--of-mono); font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.of-save { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 5px 12px; border-radius: 99px; background: var(--store-accent); color: #fff; font-family: var(--of-mono); font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.of-deal-meta { display: flex; flex-wrap: wrap; gap: 10px 18px; font-size: 13.5px; color: var(--sp-muted); }
+.of-deal-meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Stats strip (shop masthead) */
+.of-stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.of-stat { display: grid; gap: 1px; padding: 12px 18px; border: var(--of-bw) solid var(--of-line); border-radius: var(--of-radius); background: var(--of-card); }
+.of-stat b { font-family: var(--of-mono); font-size: clamp(18px, 2.2vw, 26px); font-weight: 800; font-variant-numeric: tabular-nums; }
+.of-stat span { font-size: 12px; color: var(--sp-muted); font-weight: 600; }
+
+/* ---------- Secciones ---------- */
+.of-main { width: min(1200px, 100% - 36px); margin-inline: auto; display: grid; gap: clamp(48px, 7vw, 88px); padding-bottom: 24px; }
+.of-sec { display: grid; gap: 18px; }
+.of-sec-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.of-sec-title { font-family: var(--of-display); font-weight: 400; font-size: clamp(26px, 4vw, 44px); line-height: 1; text-transform: uppercase; letter-spacing: -.01em; }
+.of[data-var='shop'] .of-sec-title { font-weight: 800; text-transform: none; letter-spacing: -.02em; font-size: clamp(24px, 3.4vw, 36px); }
+.of-sec-title em { font-style: normal; color: var(--sp-accent-text); }
+.of-sec-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--sp-accent-text); text-decoration: none; }
+.of-sec-link:hover { text-decoration: underline; }
+
+/* Rail de tickets (promo) */
+.of-tickets { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 300px); gap: 18px; overflow-x: auto; scroll-snap-type: x proximity; padding: 6px 8px 16px 2px; scrollbar-width: thin; }
+.of-ticket { position: relative; scroll-snap-align: start; display: grid; grid-template-rows: auto 1fr; border: var(--of-bw) solid var(--of-ink); border-radius: var(--of-radius); background: var(--of-card); box-shadow: var(--of-shadow); overflow: hidden; text-decoration: none; color: inherit; transition: transform var(--of-dur) var(--of-ease), box-shadow var(--of-dur) var(--of-ease); }
+.of-ticket:hover { transform: translate(-3px, -3px) rotate(-.6deg); box-shadow: 9px 9px 0 var(--store-accent-ink); }
+.of-ticket-media { position: relative; aspect-ratio: 4 / 3; background: var(--sp-surface); border-bottom: var(--of-bw) solid var(--of-ink); }
+.of-ticket-media img { width: 100%; height: 100%; object-fit: cover; }
+.of-ticket-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
+.of-ticket-body { display: grid; gap: 8px; padding: 14px 16px 16px; }
+.of-ticket-name { font-weight: 800; font-size: 15px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.of-ticket-price { display: flex; align-items: baseline; gap: 8px; }
+.of-ticket-price s { font-size: 13px; color: var(--sp-muted); }
+.of-ticket-price strong { font-family: var(--of-mono); font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.of-ticket-save { font-family: var(--of-mono); font-size: 11px; font-weight: 700; color: var(--sp-accent-text); }
+.of-ticket-seal { position: absolute; top: 10px; right: 10px; transform: rotate(6deg); }
+
+/* Grilla de góndola */
+.of-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.of-card { position: relative; display: grid; grid-template-rows: auto 1fr; border: var(--of-bw) solid var(--of-line); border-radius: var(--of-radius); background: var(--of-card); overflow: hidden; text-decoration: none; color: inherit; transition: transform var(--of-dur) var(--of-ease), box-shadow var(--of-dur) var(--of-ease), border-color var(--of-dur); }
+.of[data-var='promo'] .of-card { border-color: var(--of-ink); box-shadow: var(--of-shadow); }
+.of-card:hover { transform: translateY(-3px); border-color: var(--store-accent); box-shadow: var(--of-shadow); }
+.of-card-media { position: relative; aspect-ratio: 4 / 3; background: var(--sp-surface); }
+.of-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--sp-ease); }
+.of-card:hover .of-card-media img { transform: scale(1.04); }
+.of-card-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sp-muted); }
+.of-card-body { display: grid; gap: 7px; padding: 12px 14px 14px; align-content: start; }
+.of-card-cat { font-family: var(--of-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-muted); }
+.of-card-name { font-weight: 700; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.of-card-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 9px; margin-top: 2px; }
+.of-card-price s { font-size: 12px; color: var(--sp-muted); }
+.of-card-price strong { font-family: var(--of-mono); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.of-card-price strong.deal { color: var(--sp-accent-text); }
+.of-card-seal { position: absolute; top: 10px; left: 10px; }
+.of[data-var='promo'] .of-card-seal { transform: rotate(-6deg); }
+.of-card-new { position: absolute; top: 10px; right: 10px; padding: 3px 9px; border-radius: 99px; background: var(--of-ink); color: var(--sp-card-solid); font-family: var(--of-mono); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* Departamentos como placas */
+.of-depts { display: flex; flex-wrap: wrap; gap: 10px; }
+.of-dept { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: var(--of-bw) solid var(--of-ink); border-radius: 99px; background: var(--of-card); color: inherit; font-weight: 700; font-size: 14px; text-decoration: none; box-shadow: var(--of-shadow); transition: transform var(--of-dur) var(--of-ease); }
+.of[data-var='shop'] .of-dept { border-color: var(--of-line); box-shadow: none; }
+.of-dept:hover { transform: translate(-2px, -2px); border-color: var(--store-accent); }
+.of-dept small { font-family: var(--of-mono); color: var(--sp-accent-text); font-weight: 800; }
+
+/* Cómo comprar + zona */
+.of-cols { display: grid; gap: 22px; }
+@media (min-width: 900px) { .of-cols { grid-template-columns: 1.3fr 1fr; align-items: start; } }
+.of-panel { border: var(--of-bw) solid var(--of-ink); border-radius: calc(var(--of-radius) + 4px); background: var(--of-card); padding: clamp(18px, 3vw, 30px); box-shadow: var(--of-shadow); }
+.of[data-var='shop'] .of-panel { border-color: var(--of-line); }
+.of-panel h3 { font-family: var(--of-display); font-size: 19px; text-transform: uppercase; margin-bottom: 18px; }
+.of[data-var='shop'] .of-panel h3 { font-weight: 800; text-transform: none; }
+.of-zone-addr { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 14px; }
+.of-zone-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.of-zone-ctas .of-btn { min-height: 46px; font-size: 14px; }
+
+/* Opiniones */
+.of-quotes { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .of-quotes { grid-template-columns: repeat(3, 1fr); } }
+.of-quote { display: grid; gap: 10px; align-content: start; padding: 20px; border: var(--of-bw) solid var(--of-line); border-radius: var(--of-radius); background: var(--of-card); }
+.of[data-var='promo'] .of-quote { border-color: var(--of-ink); box-shadow: 4px 4px 0 var(--of-line); }
+.of-quote-text { font-size: 14.5px; line-height: 1.55; }
+.of-quote-by strong { display: block; font-size: 13.5px; }
+.of-quote-by span { font-size: 12.5px; color: var(--sp-muted); }
+
+/* CTA final */
+.of-cta { position: relative; overflow: hidden; text-align: center; padding: clamp(30px, 6vw, 64px) clamp(18px, 4vw, 48px); border: var(--of-bw) solid var(--of-ink); border-radius: calc(var(--of-radius) + 8px); background: color-mix(in srgb, var(--store-accent) 12%, var(--of-card)); box-shadow: var(--of-shadow); }
+.of[data-var='shop'] .of-cta { border-color: var(--of-line); }
+.of-cta h2 { font-family: var(--of-display); font-weight: 400; font-size: clamp(28px, 5.5vw, 56px); line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.of[data-var='shop'] .of-cta h2 { font-weight: 800; text-transform: none; letter-spacing: -.02em; }
+.of-cta p { margin: 12px auto 20px; max-width: 46ch; color: var(--sp-ink-2); font-size: 15px; }
+.of-cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+/* Estado vacío */
+.of-empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 56px 20px; }
+.of-empty-mark { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; border: var(--of-bw) solid var(--of-ink); background: var(--store-accent); color: #fff; box-shadow: var(--of-shadow); transform: rotate(-6deg); }
+.of-empty h2 { font-family: var(--of-display); font-size: 22px; text-transform: uppercase; }
+.of[data-var='shop'] .of-empty h2 { font-weight: 800; text-transform: none; }
+.of-empty p { color: var(--sp-muted); max-width: 44ch; }
+
+/* =====================================================================
+   FICHA — el precio manda
+   ===================================================================== */
+.of-pd { width: min(1160px, 100% - 36px); margin-inline: auto; padding: 20px 0 40px; display: grid; gap: 30px; }
+.of-crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-muted); flex-wrap: wrap; }
+.of-crumbs a { color: inherit; font-weight: 600; text-decoration: none; }
+.of-crumbs a:hover { text-decoration: underline; }
+.of-crumbs [aria-current] { color: var(--of-ink); font-weight: 600; }
+.of-pd-sheet { display: grid; gap: clamp(22px, 4vw, 52px); }
+@media (min-width: 900px) { .of-pd-sheet { grid-template-columns: minmax(0, 46%) minmax(0, 1fr); align-items: start; } }
+.of-pd-media { position: relative; }
+.of-pd-media .sgal { border: var(--of-bw) solid var(--of-ink); border-radius: calc(var(--of-radius) + 6px); overflow: hidden; box-shadow: var(--of-shadow); }
+.of[data-var='shop'] .of-pd-media .sgal { border-color: var(--of-line); }
+.of-pd-seal { position: absolute; top: 16px; left: 16px; z-index: 2; transform: rotate(-7deg) scale(1.15); }
+.of-pd-info { display: grid; gap: 14px; align-content: start; }
+.of-pd-cat { font-family: var(--of-mono); font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--sp-accent-text); }
+.of-pd-name { font-family: var(--of-display); font-weight: 400; font-size: clamp(26px, 3.6vw, 42px); line-height: 1.02; text-transform: uppercase; text-wrap: balance; }
+.of[data-var='shop'] .of-pd-name { font-weight: 800; text-transform: none; letter-spacing: -.02em; }
+.of-pd-pricebox { display: grid; gap: 8px; padding: 18px 20px; border: var(--of-bw) solid var(--of-ink); border-radius: var(--of-radius); background: var(--of-card); box-shadow: var(--of-shadow); }
+.of[data-var='shop'] .of-pd-pricebox { border-color: var(--of-line); }
+.of-pd-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; }
+.of-pd-price s { font-size: clamp(16px, 1.8vw, 20px); color: var(--sp-muted); font-weight: 600; }
+.of-pd-price strong { font-family: var(--of-mono); font-size: clamp(32px, 4.4vw, 50px); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.of-pd-save { font-family: var(--of-mono); font-size: 13px; font-weight: 800; color: var(--sp-accent-text); font-variant-numeric: tabular-nums; }
+.of-pd-ends { display: inline-flex; align-items: center; gap: 7px; width: fit-content; font-family: var(--of-mono); font-size: 12.5px; font-weight: 700; color: var(--sp-accent-text); }
+.of-pd-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+.of-pd-buy { flex: 1 1 240px; }
+.of-pd-gal { aspect-ratio: 4 / 3; border-radius: calc(var(--of-radius) + 6px); }
+.of-qty { display: inline-flex; align-items: center; gap: 0; width: fit-content; border: var(--of-bw) solid var(--of-ink); border-radius: 99px; background: var(--of-card); box-shadow: var(--of-shadow); overflow: hidden; }
+.of[data-var='shop'] .of-qty { border-color: var(--of-line); box-shadow: none; }
+.of-qty-btn { display: grid; place-items: center; width: 48px; height: 48px; border: 0; background: transparent; color: inherit; font-size: 22px; font-weight: 800; cursor: pointer; transition: background .15s; }
+.of-qty-btn:hover { background: var(--store-accent-soft); }
+.of-qty-n { min-width: 40px; text-align: center; font-family: var(--of-mono); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.of-qty-total { padding-inline: 14px 18px; font-family: var(--of-mono); font-size: 15px; font-weight: 800; color: var(--sp-accent-text); font-variant-numeric: tabular-nums; }
+.of-pd-rows { border: var(--of-bw) solid var(--of-line); border-radius: var(--of-radius); background: var(--of-card); padding: 6px 18px; }
+.of-pd-rows .row { display: grid; grid-template-columns: minmax(110px, 38%) 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--of-line); font-size: 14px; }
+.of-pd-rows .row:last-child { border-bottom: 0; }
+.of-pd-rows dt { color: var(--sp-muted); font-weight: 600; }
+.of-pd-rows dd { font-family: var(--of-mono); font-size: 13px; font-weight: 600; }
+.of-pd-desc { font-size: 15px; line-height: 1.6; color: var(--sp-ink-2); }
+.of-pd-rail .of-tickets { grid-auto-columns: minmax(200px, 240px); }
+.of-sbb { display: grid; gap: 1px; }
+.of-sbb strong { font-family: var(--of-mono); font-size: 17px; font-variant-numeric: tabular-nums; }
+.of-sbb em { font-style: normal; font-size: 11.5px; color: var(--sp-muted); }
+.of-sbb-cta { min-height: 46px; }
+@media (max-width: 640px) {
+  .of-deal { grid-template-columns: 1fr; }
+  .of-deal-media { min-height: 0; aspect-ratio: 16 / 10; }
+  .of-grid { gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .of, .of *, .of *::before, .of *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

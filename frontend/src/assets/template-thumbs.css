@@ -55,6 +55,16 @@
   .fam-card { width: auto; min-height: 0; grid-template-rows: 100px auto; }
 }
 
+/* --- Ofertas: afiche con sombra dura, sello de % y tickets de precio --- */
+.fam-thumb[data-fam='ofertas'] { background: #f6f3ec; }
+.fam-thumb[data-fam='ofertas'] .fc-a { left: 6%; top: 10%; width: 58%; height: 46%; border: 2px solid #17171c; border-radius: 10px; background: #fff; box-shadow: 4px 4px 0 #17171c; }
+.fam-thumb[data-fam='ofertas'] .fc-a::before { content: ''; position: absolute; left: 10%; top: 16%; width: 56%; height: 12%; background: #17171c; }
+.fam-thumb[data-fam='ofertas'] .fc-a::after { content: ''; position: absolute; left: 10%; top: 42%; width: 74%; height: 8%; background: #b9b4a8; box-shadow: 0 9px 0 #b9b4a8; }
+.fam-thumb[data-fam='ofertas'] .fc-b { right: 8%; top: 8%; width: 26%; aspect-ratio: 1; border-radius: 50%; background: var(--brand); border: 2px dashed #fff; box-shadow: 0 0 0 2px var(--brand), 3px 3px 0 2px #17171c; transform: rotate(10deg); }
+.fam-thumb[data-fam='ofertas'] .fc-c { right: 8%; top: 46%; width: 26%; height: 10%; border-radius: 5px; background: #17171c; }
+.fam-thumb[data-fam='ofertas'] .fc-c::after { content: ''; position: absolute; left: 10%; top: 34%; width: 62%; height: 32%; background: #fff; border-radius: 2px; }
+.fam-thumb[data-fam='ofertas'] .fc-d { left: 6%; right: 6%; bottom: 10%; height: 26%; border: 2px solid #17171c; border-radius: 8px; background: repeating-linear-gradient(90deg, transparent 0 31.5%, #17171c 31.5% 33.5%, transparent 33.5% 65.5%, #17171c 65.5% 67.5%, transparent 67.5% 100%), #fff; }
+
 /* --- Indumentaria: titular XXL cortando una foto + cinta --- */
 .fam-thumb[data-fam='moda'] { background: #efece5; }
 .fam-thumb[data-fam='moda'] .fc-a { left: 6%; top: 16%; width: 62%; height: 10%; border: 1.5px solid #16161a; border-radius: 0; background: transparent; }

@@ -16,7 +16,9 @@ const VARIANTS = {
   mercado: defineAsyncComponent(() => import('./product/ProductMercado.vue')),
   carta: defineAsyncComponent(() => import('./product/ProductMercado.vue')),
   studio: defineAsyncComponent(() => import('./product/ProductStudio.vue')),
-  proceso: defineAsyncComponent(() => import('./product/ProductStudio.vue'))
+  proceso: defineAsyncComponent(() => import('./product/ProductStudio.vue')),
+  promo: defineAsyncComponent(() => import('./product/ProductOfertas.vue')),
+  shop: defineAsyncComponent(() => import('./product/ProductOfertas.vue'))
 }
 const component = computed(() => VARIANTS[ctx?.pageTemplate?.value] || ProductClassic)
 </script>

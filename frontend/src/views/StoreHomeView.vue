@@ -23,7 +23,9 @@ const FAMILY_VIEWS = {
   mercado: defineAsyncComponent(() => import('./StoreMercadoView.vue')),
   carta: defineAsyncComponent(() => import('./StoreMercadoView.vue')),
   studio: defineAsyncComponent(() => import('./StoreStudioView.vue')),
-  proceso: defineAsyncComponent(() => import('./StoreStudioView.vue'))
+  proceso: defineAsyncComponent(() => import('./StoreStudioView.vue')),
+  promo: defineAsyncComponent(() => import('./StoreOfertasView.vue')),
+  shop: defineAsyncComponent(() => import('./StoreOfertasView.vue'))
 }
 const component = computed(() => {
   const tpl = ctx?.pageTemplate?.value

@@ -616,10 +616,10 @@ export const STORE_TEMPLATES = {
   bloque:      { label: 'Bloque',      tier: 'base',     desc: 'Grid suizo de bordes duros: papel y tinta con reglas visibles, titulares XXL en mayúsculas, metadata en mono y tu acento a bloque.' },
   riso:        { label: 'Riso',        tier: 'base',     desc: 'Risografía: papel crema con trama de puntos, tintas planas rosa, azul, amarillo y menta que se solapan, sombras desplazadas, formas redondas y tu acento como azul.' },
   street:      { label: 'Urbano',      tier: 'plus',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
-  promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Pensado para promocionar: afiche con sello giratorio, CTA a WhatsApp y cinta de ofertas.' },
+  promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Campaña de liquidación: afiche con el mejor descuento real, sello de %, precio tachado y pedido directo por WhatsApp.' },
   terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' },
   lookbook:    { label: 'Lookbook',    tier: 'advanced', desc: 'Editorial de moda: papel cálido, titulares serif de revista, pliegos de imagen numerados y catálogo como índice de colección.' },
-  shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Estilo marketplace: barra superior con buscador, menú de secciones, portada tipo banner con promos y productos destacados.' },
+  shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Venta por volumen: góndola densa con datos del local, ofertas con ahorro en pesos y grilla de precio dominante.' },
   cobre:       { label: 'Cobre',       tier: 'advanced', desc: 'Retail de indumentaria: piedra y tinta, titulares condensados XXL en mayúsculas, placas de acento, tira de beneficios y grilla de colección.' },
   minimal:     { label: 'Minimal',     tier: 'advanced', desc: 'Catálogo editorial esencial: papel claro y tinta, barra de anuncio, hero tipográfico, tarjetas 3:4 sin cromo y cierre en bloque de tinta.' },
   boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' },
@@ -638,6 +638,7 @@ export const STORE_TEMPLATES = {
 // Familias de diseño por categoría: agrupan las variantes para el selector
 // del dashboard (las keys de cada familia son TEMPLATE_CHOICES reales).
 export const STORE_TEMPLATE_FAMILIES = [
+  { key: 'ofertas',   label: 'Ofertas',      caption: 'Campaña y góndola',   templates: ['promo', 'shop'] },
   { key: 'moda',      label: 'Indumentaria', caption: 'Lookbook y street',   templates: ['atelier', 'street'] },
   { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
   { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },
