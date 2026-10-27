@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useStorePage } from '../composables/useStorePage.js'
 import AppIcon from '../components/AppIcon.vue'
 import MarqueeBand from '../components/store/MarqueeBand.vue'
@@ -77,13 +77,25 @@ const bandItems = computed(() => {
 })
 const productsTop = computed(() => p.products.value)
 
-onMounted(() => { p.loadCatalog() })
+// Scan-line del panel nocturno (circuit): se pausa cuando el hero sale
+// de pantalla — la clase .off corta la animación decorativa.
+const heroEl = ref(null)
+let heroIO = null
+
+onMounted(() => {
+  p.loadCatalog()
+  if (typeof IntersectionObserver !== 'undefined' && heroEl.value) {
+    heroIO = new IntersectionObserver(([e]) => heroEl.value?.classList.toggle('off', !e.isIntersecting))
+    heroIO.observe(heroEl.value)
+  }
+})
+onBeforeUnmount(() => heroIO?.disconnect())
 </script>
 
 <template>
 <div class="sp-page-root ci" :data-var="variant">
   <!-- ===== Hero técnico: producto flotando + callouts conectados ===== -->
-  <header class="ci-hero">
+  <header ref="heroEl" class="ci-hero">
     <div class="ci-hero-grid-bg" aria-hidden="true"></div>
     <div class="ci-hero-stage">
       <div v-if="heroImg" class="ci-hero-product" v-reveal>

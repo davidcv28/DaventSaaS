@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
@@ -14,14 +15,16 @@ import StTag from '../../components/store/StTag.vue'
 import BentoGrid from '../../components/store/BentoGrid.vue'
 import '../../assets/store-circuit.css'
 
-// Circuit/Lab (Tecnología): el catálogo como datasheet — header técnico en
-// mono y los productos en el mismo bento rígido de la portada (destacado
-// 2x2 con specs). Filtros/orden: bloques compartidos.
+// Circuit/Lab (Tecnología): el catálogo como datasheet. circuit = bento
+// rígido con specs (mismo lenguaje que el inserto nocturno de la portada);
+// lab = "inventario medido": filas numeradas con spec inline y precio mono.
 const {
-  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  custom, shopName, pageTemplate, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
   shownLabel, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 13 })
+
+const variant = computed(() => (pageTemplate.value === 'lab' ? 'lab' : 'circuit'))
 
 const isOffer = (x) => productOffer(x) != null
 const isFeatured = (x) => isNewProduct(x)
@@ -35,7 +38,7 @@ const specsOf = (x) => {
 </script>
 
 <template>
-<div class="sp-page-root cv cv-ci">
+<div class="sp-page-root cv cv-ci" :data-var="variant">
   <header class="cv-ci-head">
     <div class="cv-wrap">
       <nav class="cv-crumbs" aria-label="Ruta">
@@ -43,7 +46,7 @@ const specsOf = (x) => {
         <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="13" aria-hidden="true" />
         <span aria-current="page">Catálogo</span>
       </nav>
-      <h1 class="cv-ci-title">Inventario<span class="cv-ci-count">[{{ total }}]</span></h1>
+      <h1 class="cv-ci-title">Inventario<span class="cv-ci-count">{{ variant === 'lab' ? `N=${total}` : `[${total}]` }}</span></h1>
       <p class="cv-ci-sub">{{ shopName }} — stock completo, spec por spec.</p>
     </div>
   </header>
@@ -56,11 +59,26 @@ const specsOf = (x) => {
         <CatalogToolbar />
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
-        <BentoGrid v-if="catalog.products.length" class="cv-ci-grid" :class="{ loading: catalogStatus === 'loading' }" :items="visibleProducts" :is-offer="isOffer" :is-featured="isFeatured" v-slot="{ item }">
+        <!-- lab: inventario medido — filas numeradas, spec inline -->
+        <ul v-if="variant === 'lab' && catalog.products.length" class="ci-lab-rows" :class="{ loading: catalogStatus === 'loading' }">
+          <li v-for="item in visibleProducts" :key="item.id" role="link" tabindex="0"
+            :aria-label="`${item.name} — ${formatARS(effectivePrice(item))}`"
+            @click="openProduct(item)" @keydown.enter="openProduct(item)" @keydown.space.prevent="openProduct(item)">
+            <span class="ci-lr-media"><img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" decoding="async" /><AppIcon v-else name="package" :size="20" /><OfferSeal v-if="productOffer(item) != null" :pct="offerPct(item)" shape="corner" /></span>
+            <span class="ci-lr-body">
+              <span class="ci-lr-name">{{ item.name }}</span>
+              <span class="ci-lr-specs"><StTag v-for="s in specsOf(item)" :key="s" kind="spec" :label="s" /><ProductStars v-if="item.rating_count" :avg="item.rating_avg" :count="item.rating_count" icon="hexagon" :size="11" /></span>
+            </span>
+            <span class="ci-lr-price"><s v-if="productOffer(item) != null">{{ formatARS(item.price) }}</s>{{ formatARS(effectivePrice(item)) }}</span>
+          </li>
+        </ul>
+
+        <!-- circuit: bento rígido con specs -->
+        <BentoGrid v-else-if="catalog.products.length" class="cv-ci-grid" :class="{ loading: catalogStatus === 'loading' }" :items="visibleProducts" :is-offer="isOffer" :is-featured="isFeatured" v-slot="{ item }">
           <article
             class="ci-cell" role="link" tabindex="0"
             :aria-label="`${item.name} — ${formatARS(effectivePrice(item))}`"
-            @click="openProduct(item)" @keydown.enter="openProduct(item)"
+            @click="openProduct(item)" @keydown.enter="openProduct(item)" @keydown.space.prevent="openProduct(item)"
           >
             <img v-if="item.image" :src="item.image" :alt="item.name" loading="lazy" decoding="async" />
             <span v-else class="ci-cell-ph"><AppIcon name="package" :size="28" /></span>
@@ -91,4 +109,6 @@ const specsOf = (x) => {
 .cv-ci-grid { margin-top: 18px; position: relative; }
 .cv-ci-grid.loading { opacity: .55; pointer-events: none; }
 .cv-ci-grid .ci-cell { cursor: pointer; }
+.cv-ci[data-var='lab'] .cv-ci-title { font-family: 'Manrope', sans-serif; letter-spacing: -.02em; }
+.cv-ci .ci-lab-rows.loading { opacity: .55; pointer-events: none; }
 </style>

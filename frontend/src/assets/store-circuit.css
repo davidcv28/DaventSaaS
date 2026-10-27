@@ -1,9 +1,12 @@
 /* ===== Familia TECNOLOGÍA — "Circuit" (circuit | lab) =====
-   Esqueleto de ficha técnica: grilla de ingeniería, producto flotando con
-   halo, callouts conectados, bento rígido, mono para datos. 'circuit' =
-   densidad oscura/halo fuerte; 'lab' = mismo esqueleto en claro, halo
-   suave, menos brillo. Geometría: radio 14px + esquina superior derecha
-   cortada (clip-path 12px). */
+   Dos variantes con el mismo esqueleto y pieles opuestas:
+     circuit = datasheet vivo sobre panel nocturno ("night lab"): el hero
+               es un inserto oscuro con grilla y scan-line, notches
+               clip-path, glow contenido.
+     lab     = vitrina de producto sobre papel milimetrado: showcase
+               claro con marcas de registro, specs como anotaciones de
+               margen, esquinas escuadras, CERO glow/notch/gradiente.
+   Texto sobre acento con --ci-on-acc (computado por luminancia real). */
 .ci {
   --ci-ink: var(--sp-ink);
   --ci-line: color-mix(in srgb, var(--ci-ink) 14%, transparent);
@@ -11,9 +14,26 @@
   --ci-display: 'Space Grotesk', var(--store-font, sans-serif);
   --ci-mono: 'JetBrains Mono', monospace;
   --ci-halo: .22;
+  --ci-on-acc: #fff;
+  --ci-on-acc: oklch(from var(--store-accent) calc(0.97 - clamp(0, (l - 0.5) * 10000, 1) * 0.75) 0 0);
+  --ci-focus: var(--store-accent-ink);
 }
-.ci[data-var='lab'] { --ci-display: 'Manrope', var(--store-font, sans-serif); --ci-halo: .12; --ci-radius: 16px; }
-[data-store-theme='dark'] .ci[data-var='lab'] { --ci-halo: .2; }
+
+/* circuit: tokens del inserto nocturno */
+.ci[data-var='circuit'] {
+  --ci-night: #0d1320;
+  --ci-night-2: #151d30;
+  --ci-night-ink: #e9edf5;
+  --ci-night-dim: color-mix(in srgb, #e9edf5 62%, transparent);
+  --ci-night-line: color-mix(in srgb, #e9edf5 15%, transparent);
+}
+
+/* lab: papel milimetrado — sin halo, esquinas escuadras */
+.ci[data-var='lab'] { --ci-display: 'Manrope', var(--store-font, sans-serif); --ci-halo: 0; --ci-radius: 4px; }
+
+.ci :where(a, button, [role='link'], input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--ci-focus); outline-offset: 3px;
+}
 
 /* ---------- Hero técnico ---------- */
 .ci-hero { position: relative; min-height: 88dvh; display: flex; flex-direction: column; overflow: clip; }
@@ -36,7 +56,7 @@
 .ci-title .acc { background: linear-gradient(120deg, var(--store-accent-ink), var(--store-accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .ci-lede { margin: 12px auto 0; max-width: 52ch; font-size: 15.5px; line-height: 1.55; color: var(--sp-ink-2); }
 .ci-hero-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
-.ci-cta { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; background: var(--store-accent); color: var(--store-accent-contrast, #fff); border: 1px solid transparent; border-radius: var(--ci-radius); font-size: 14px; font-weight: 700; text-decoration: none; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: translate .15s, filter .15s; }
+.ci-cta { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 22px; background: var(--store-accent); color: var(--ci-on-acc); border: 1px solid transparent; border-radius: var(--ci-radius); font-size: 14px; font-weight: 700; text-decoration: none; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: translate .15s, filter .15s; }
 .ci-cta.ghost { background: transparent; color: var(--ci-ink); border-color: var(--ci-line); }
 @media (hover: hover) { .ci-cta:hover { translate: 0 -2px; filter: brightness(1.06); } }
 .ci-hero-strip { width: 100%; max-width: 560px; }
@@ -179,4 +199,104 @@
   .ci-pd-gal img { height: auto; max-height: none; border: 1px solid var(--ci-line); border-radius: var(--ci-radius); }
   .ci-pd-info { position: sticky; top: 64px; padding: 8px 0 28px; }
   .ci-pd-strip { margin: 2px 0; }
+}
+
+/* ================================================================
+   VARIANTE · circuit — inserto nocturno ("night lab")
+   El hero es un panel oscuro sobre papel: grilla fina, callouts de
+   vidrio oscuro y un scan-line que barre el panel (pausa offscreen).
+   ================================================================ */
+.ci[data-var='circuit'] .ci-hero { background: var(--ci-night); color: var(--ci-night-ink); }
+.ci[data-var='circuit'] .ci-hero-grid-bg { background-image: linear-gradient(var(--ci-night-line) 1px, transparent 1px), linear-gradient(90deg, var(--ci-night-line) 1px, transparent 1px); opacity: .6; -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 40%, #000 40%, transparent 80%); mask-image: radial-gradient(ellipse 90% 75% at 50% 40%, #000 40%, transparent 80%); }
+.ci[data-var='circuit'] .ci-hero::after { content: ''; position: absolute; inset-inline: 0; top: 0; height: 140px; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--store-accent) 10%, transparent) 55%, transparent); animation: ci-scan 5.2s linear infinite; pointer-events: none; }
+.ci[data-var='circuit'] .ci-hero.off::after { animation-play-state: paused; }
+@keyframes ci-scan { from { translate: 0 -160px; } to { translate: 0 calc(100% + 160px); } }
+.ci[data-var='circuit'] .ci-title, .ci[data-var='circuit'] .ci-lede { color: var(--ci-night-ink); }
+.ci[data-var='circuit'] .ci-lede { color: var(--ci-night-dim); }
+.ci[data-var='circuit'] .ci-eyebrow { color: color-mix(in srgb, var(--store-accent) 70%, #fff); }
+.ci[data-var='circuit'] .ci-callout { background: color-mix(in srgb, var(--ci-night-2) 88%, transparent); border-color: var(--ci-night-line); color: var(--ci-night-ink); }
+.ci[data-var='circuit'] .ci-callout strong { color: var(--ci-night-dim); }
+.ci[data-var='circuit'] .ci-callout em, .ci[data-var='circuit'] .ci-callout svg { color: color-mix(in srgb, var(--store-accent) 72%, #fff); }
+.ci[data-var='circuit'] .ci-lines line { stroke: var(--ci-night-line); }
+.ci[data-var='circuit'] .ci-dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--store-accent) 30%, transparent); }
+.ci[data-var='circuit'] .ci-hero .ci-cta.ghost { color: var(--ci-night-ink); border-color: var(--ci-night-line); }
+.ci[data-var='circuit'] .ci-trust { color: var(--ci-night-ink); }
+.ci[data-var='circuit'] .ci-trust .trust-bar { border-color: var(--ci-night-line); }
+.ci[data-var='circuit'] .ci-trust .trust-bar li + li { border-color: var(--ci-night-line); }
+/* notch doble en el pie del panel: el inserto "termina" en corte */
+.ci[data-var='circuit'] .ci-hero { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%); }
+
+/* ================================================================
+   VARIANTE · lab — vitrina sobre papel milimetrado
+   Grilla de cuaderno a cobertura plena, marcas de registro '+' en el
+   marco del producto, anotaciones de margen, formas escuadras.
+   ================================================================ */
+.ci[data-var='lab'] .ci-hero { background:
+  linear-gradient(var(--ci-line) 1px, transparent 1px),
+  linear-gradient(90deg, var(--ci-line) 1px, transparent 1px),
+  var(--sp-bg);
+  background-size: 24px 24px, 24px 24px, auto; background-position: center top;
+}
+.ci[data-var='lab'] .ci-hero-grid-bg { display: none; }
+.ci[data-var='lab'] .ci-hero-stage::before, .ci[data-var='lab'] .ci-hero-stage::after {
+  content: '+'; position: absolute; font-family: var(--ci-mono); font-size: 16px; line-height: 1;
+  color: color-mix(in srgb, var(--ci-ink) 34%, transparent); z-index: 1; pointer-events: none;
+}
+.ci[data-var='lab'] .ci-hero-stage::before { top: 10px; left: 10px; }
+.ci[data-var='lab'] .ci-hero-stage::after { top: 10px; right: 10px; }
+.ci[data-var='lab'] .ci-hero-product { border: 1px solid var(--ci-line); background: var(--sp-card); padding: 10px; }
+.ci[data-var='lab'] .ci-hero-product::before { content: none; }
+.ci[data-var='lab'] .ci-hero-product::after { content: '+'; position: absolute; right: 8px; bottom: 6px; font-family: var(--ci-mono); font-size: 13px; color: color-mix(in srgb, var(--ci-ink) 30%, transparent); }
+.ci[data-var='lab'] .ci-hero-product > img { filter: none; }
+/* anotaciones de margen: tarjeta de papel con regla lateral */
+.ci[data-var='lab'] .ci-callout { background: var(--sp-card); border: 1px solid var(--ci-line); border-left: 2px solid var(--store-accent); border-radius: 0; padding: 6px 10px; backdrop-filter: none; }
+.ci[data-var='lab'] .ci-callout strong { color: color-mix(in srgb, var(--ci-ink) 55%, transparent); }
+/* geometría escuadra: sin notch en toda la variante */
+.ci[data-var='lab'] :where(.ci-cta, .ci-cell, .ci-sup-card, .ci-empty-mark, .ci-compare-scroll, .ci-cell-ph) { clip-path: none; border-radius: 2px; }
+.ci[data-var='lab'] .ci-cta { border: 1px solid var(--store-accent); }
+.ci[data-var='lab'] .ci-cta.ghost { border-color: var(--ci-ink); }
+.ci[data-var='lab'] .ci-title .acc { background: none; color: var(--store-accent-ink); text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 8px; }
+.ci[data-var='lab'] .ci-dot { border-radius: 0; width: 9px; height: 9px; box-shadow: none; }
+
+/* lab · catálogo = "inventario medido": filas numeradas, spec inline */
+.ci-lab-rows { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--ci-line); counter-reset: lab-row; }
+.ci-lab-rows > li { display: grid; grid-template-columns: 44px 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--ci-line); }
+.ci-lab-rows > li::before { counter-increment: lab-row; content: counter(lab-row, decimal-leading-zero); font-family: var(--ci-mono); font-size: 11px; color: color-mix(in srgb, var(--ci-ink) 45%, transparent); }
+.ci-lab-rows a { display: contents; color: inherit; text-decoration: none; }
+.ci-lab-rows a:focus-visible { outline: none; }
+.ci-lab-rows a:focus-visible .ci-lr-name { text-decoration: underline; }
+.ci-lab-rows .ci-lr-media { width: 56px; aspect-ratio: 1; border: 1px solid var(--ci-line); background: var(--sp-card); display: grid; place-items: center; overflow: hidden; }
+.ci-lab-rows .ci-lr-media img { width: 100%; height: 100%; object-fit: contain; }
+.ci-lab-rows .ci-lr-body { min-width: 0; display: grid; gap: 3px; }
+.ci-lab-rows .ci-lr-name { font-family: var(--ci-display); font-size: 15px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-lab-rows .ci-lr-specs { display: flex; gap: 5px; flex-wrap: wrap; }
+.ci-lab-rows .ci-lr-price { font-family: var(--ci-mono); font-size: 14px; font-weight: 700; text-align: right; white-space: nowrap; }
+.ci-lab-rows .ci-lr-price s { display: block; font-size: 11px; font-weight: 400; color: var(--sp-muted); }
+.ci-lab-rows .ci-lr-media { position: relative; }
+.ci-lab-rows > li { position: relative; cursor: pointer; }
+.ci-lab-rows > li:hover { background: color-mix(in srgb, var(--store-accent) 5%, transparent); }
+@media (max-width: 560px) {
+  .ci-lab-rows > li { grid-template-columns: 30px 48px minmax(0, 1fr); }
+  .ci-lab-rows .ci-lr-price { grid-column: 3; text-align: left; margin-top: 2px; }
+  .ci-lab-rows .ci-lr-price s { display: inline; margin-right: 6px; }
+}
+
+/* lab · ficha = datasheet anotado */
+.ci[data-var='lab'] .ci-pd-gal img { border-radius: 2px; }
+.ci[data-var='lab'] .ci-pd-media { position: relative; border: 1px solid var(--ci-line); background: var(--sp-card); padding: 14px; }
+.ci[data-var='lab'] .ci-pd-media::after { content: '+ +'; position: absolute; top: 6px; right: 10px; font-family: var(--ci-mono); font-size: 11px; letter-spacing: .3em; color: color-mix(in srgb, var(--ci-ink) 30%, transparent); }
+.ci[data-var='lab'] .ci-spec-table th { font-family: var(--ci-mono); font-weight: 500; color: color-mix(in srgb, var(--ci-ink) 55%, transparent); text-transform: none; letter-spacing: .02em; }
+.ci[data-var='lab'] .ci-spec-table td { border-left: 2px solid var(--store-accent); padding-left: 14px; }
+
+/* scan/draw respetan reduced-motion (la línea ya queda dibujada) */
+@media (prefers-reduced-motion: reduce) {
+  .ci[data-var='circuit'] .ci-hero::after { animation: none; opacity: 0; }
+  .ci-lines line { animation: none; stroke-dashoffset: 0; }
+}
+@media (forced-colors: active) {
+  .ci[data-var='circuit'] .ci-hero { background: Canvas; color: CanvasText; clip-path: none; }
+  .ci[data-var='circuit'] .ci-hero::after, .ci[data-var='lab'] .ci-hero-stage::before, .ci[data-var='lab'] .ci-hero-stage::after, .ci[data-var='lab'] .ci-hero-product::after { display: none; }
+  .ci[data-var='circuit'] :where(.ci-title, .ci-lede, .ci-callout, .ci-cta.ghost, .ci-trust) { color: CanvasText; }
+  .ci[data-var='lab'] .ci-callout { border-left-color: Highlight; }
+  .ci[data-var='lab'] .ci-spec-table td { border-left-color: Highlight; }
 }
