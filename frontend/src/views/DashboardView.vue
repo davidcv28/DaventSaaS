@@ -13,6 +13,7 @@ import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl,
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_FONTS, storeThemeVars, storeFontFamily,
+  STORE_TEMPLATE_FAMILIES,
   allowedTemplatesFor, resolveStoreTemplate,
   SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
   siteTemplatesLimit, allowedSiteTemplatesFor, normalizeSiteTemplates, resolveSiteTemplates,
@@ -52,7 +53,6 @@ import {
   documentKindFor
 } from '../validators/auth.validators.js'
 import DashLayout from '../components/DashLayout.vue'
-import GlobalSearch from '../components/GlobalSearch.vue'
 import PlanCard from '../components/PlanCard.vue'
 import SectionTabs from '../components/SectionTabs.vue'
 import AppInput from '../components/AppInput.vue'
@@ -65,6 +65,9 @@ import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 import ChatDock from '../components/ChatDock.vue'
+import GlobalSearch from '../components/GlobalSearch.vue'
+import TourGuide from '../components/TourGuide.vue'
+import TipHint from '../components/TipHint.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -242,6 +245,7 @@ async function saveAccount() {
     })
     if (res.ok) {
       accountMsg.value = res.message
+      pushToast('Tus datos quedaron guardados ✓')
       await fillAccountForm()
     } else {
       accountErr.value = auth.lastError
@@ -417,8 +421,21 @@ function onNavigate(id) {
   section.value = id
 }
 
-// --- Búsqueda global (⌘K / Ctrl+K) y tab bar móvil -----------------------
+// --- Búsqueda global (⌘K / Ctrl+K), tour de primera vez y toast ----------
 const searchOpen = ref(false)
+const tourOpen = ref(false)
+
+// Toast "Guardado ✓": feedback optimista flotante; con deshacer donde la
+// acción es reversible (toggles, pausa de la web).
+const toast = ref(null)
+let toastTimer = null
+function pushToast(msg, undo) {
+  clearTimeout(toastTimer)
+  toast.value = { msg, undo: undo || null }
+  toastTimer = setTimeout(() => { toast.value = null }, 4200)
+}
+function closeToast() { clearTimeout(toastTimer); toast.value = null }
+function focusField(id) { document.getElementById(id)?.focus() }
 
 // Comandos buscables: secciones (con sinónimos de lenguaje cotidiano) +
 // acciones frecuentes. Cada comando corre una función al elegirse.
@@ -616,6 +633,7 @@ async function saveRename() {
   if (ok) {
     renameSlug.value = ''
     clearRenameCheck()
+    pushToast('Tu link cambió ✓')
   }
 }
 
@@ -642,8 +660,13 @@ function openPreview() {
 async function togglePublished() {
   if (!store.store || storeBusy.value) return
   storeBusy.value = true
-  await store.update({ is_published: !store.store.is_published })
+  const ok = await store.update({ is_published: !store.store.is_published })
   storeBusy.value = false
+  if (ok) {
+    const paused = !store.store.is_published
+    pushToast(paused ? 'Tu web está pausada: tus clientes no la ven' : 'Tu web volvió a estar publicada',
+      async () => { await store.update({ is_published: !store.store.is_published }) })
+  }
 }
 
 // --- Mis catálogos: productos, categorías y marcas de la tienda ---
@@ -892,6 +915,7 @@ async function saveProduct() {
   if (res.ok) {
     if (res.storage) store.storage = res.storage
     if (res.imageError) catalog.notice = `${res.imageError} (el producto se guardó sin imagen nueva).`
+    pushToast(productEditing.value ? 'Cambios guardados ✓' : 'Producto publicado ✓')
     resetProductForm()
   }
 }
@@ -1233,6 +1257,22 @@ const storeThemes = STORE_THEMES
 // ('base' | 'plus' | 'advanced'). La vista previa usa el mismo fallback
 // que la web pública: 'classic' si el diseño queda fuera del plan.
 const storeTemplates = STORE_TEMPLATES
+// Familias por categoría (STORE_TEMPLATE_FAMILIES): el selector muestra 4
+// tarjetas-preview CSS — elegir una familia aplica su variante base (o la
+// primera permitida por el plan); la variante extra se cambia abajo.
+const templateFamilies = STORE_TEMPLATE_FAMILIES
+const currentFamily = computed(() => templateFamilies.find((f) => f.templates.includes(designForm.template)) || null)
+const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
+const familyTier = (f) => (f.templates.some((k) => STORE_TEMPLATES[k]?.tier !== 'advanced') ? 'Desde Estándar' : 'Premium')
+function pickFamily(f) {
+  // La base de cada familia es 'plus'; si no está permitida, probamos con
+  // cualquier variante que el plan sí habilite (fallback defensivo).
+  const first = f.templates.find((k) => allowedTemplates.value.includes(k))
+  if (first) designForm.template = first
+}
+function pickVariant(key) {
+  if (allowedTemplates.value.includes(key)) designForm.template = key
+}
 // Plantillas elegibles por nivel de plan (espejo del backend): Básico
 // elige base, Estándar suma 'plus' y Premium todo el catálogo.
 const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
@@ -1370,7 +1410,7 @@ async function saveCompany() {
   if (COMPANY_FIELDS.some((k) => designErrors.value[k])) return
   companyBusy.value = true
   const years = designForm.about_years
-  await store.saveCustomization({
+  const ok = await store.saveCustomization({
     about_title: designForm.about_title.trim(),
     about_text: designForm.about_text.trim(),
     about_years: years === '' || years === null || years === undefined ? null : Number(years),
@@ -1378,6 +1418,7 @@ async function saveCompany() {
     about_specialties: designForm.about_specialties.trim()
   })
   companyBusy.value = false
+  if (ok) pushToast('Guardado ✓')
 }
 
 async function saveServices() {
@@ -1564,8 +1605,9 @@ async function saveDesign() {
   payload.template = designForm.template
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
-  await store.saveCustomization(payload)
+  const okDesign = await store.saveCustomization(payload)
   designBusy.value = false
+  if (okDesign) pushToast('Diseño guardado ✓')
 }
 
 // Páginas de la web (site_templates): multi-selección de catálogo cerrado
@@ -1667,7 +1709,10 @@ async function saveService() {
   serviceBusy.value = true
   const ok = await services.saveService(serviceEditing.value?.id, servicePayload(serviceForm))
   serviceBusy.value = false
-  if (ok) resetServiceForm()
+  if (ok) {
+    pushToast(serviceEditing.value ? 'Cambios guardados ✓' : 'Servicio publicado ✓')
+    resetServiceForm()
+  }
 }
 async function removeService(s) {
   await services.removeService(s.id)
@@ -1735,7 +1780,7 @@ async function saveServicePage() {
     return
   }
   svcBusy.value = true
-  await store.saveCustomization({
+  const okSvcPage = await store.saveCustomization({
     service_steps: cleanRows(designForm.service_steps || [], ['icon', 'title', 'text'], ['title', 'text']),
     service_days: (designForm.service_days || []).map((s) => String(s).trim()).filter(Boolean),
     service_slots: (designForm.service_slots || []).map((s) => String(s).trim()).filter(Boolean),
@@ -1744,6 +1789,7 @@ async function saveServicePage() {
     service_pay_note: (designForm.service_pay_note || '').trim()
   })
   svcBusy.value = false
+  if (okSvcPage) pushToast('Guardado ✓')
 }
 
 // Valoraciones/comentarios de la web pública: toggles instantáneos como
@@ -1758,7 +1804,8 @@ async function toggleShowReviews() {
   designForm.show_reviews = !prev
   reviewToggleBusy.value = true
   const ok = await store.saveCustomization({ show_reviews: designForm.show_reviews })
-  if (!ok) designForm.show_reviews = prev
+  if (!ok) { designForm.show_reviews = prev }
+  else pushToast(`Las valoraciones ${designForm.show_reviews ? 'se muestran' : 'se ocultaron'} en tu web`, toggleShowReviews)
   reviewToggleBusy.value = false
 }
 async function toggleShowComments() {
@@ -1767,7 +1814,8 @@ async function toggleShowComments() {
   designForm.show_comments = !prev
   reviewToggleBusy.value = true
   const ok = await store.saveCustomization({ show_comments: designForm.show_comments })
-  if (!ok) designForm.show_comments = prev
+  if (!ok) { designForm.show_comments = prev }
+  else pushToast(`Los comentarios ${designForm.show_comments ? 'se muestran' : 'se ocultaron'} en tu web`, toggleShowComments)
   reviewToggleBusy.value = false
 }
 
@@ -1998,6 +2046,11 @@ onMounted(async () => {
   payments.sync().then(async (synced) => {
     if (synced > 0) await Promise.all([billing.loadMine(), payments.loadPayments()])
   })
+  // Tour de primera vez: se muestra una sola vez por dispositivo y se
+  // relanza desde "Repetir la guía" en el menú.
+  try {
+    if (localStorage.getItem('davent:tour:done') !== '1') setTimeout(() => { tourOpen.value = true }, 900)
+  } catch {}
 })
 
 watch(() => carouselImages.value.length, (total) => {
@@ -2874,6 +2927,7 @@ async function changePassword() {
     @locked="onLockedNav"
     @search="searchOpen = true"
     @messages="onBellClick"
+    @tour="tourOpen = true"
     @logout="logout"
   >
     <template #topbar-actions>
@@ -2933,6 +2987,7 @@ async function changePassword() {
         <span class="ps-actions">
           <button v-if="plan.autoRenew" type="button" class="chip-btn" @click="confirmCancel = true">Cancelar débito</button>
           <button v-else-if="!plan.isTrial && plan.isCurrent" type="button" class="chip-btn" :disabled="renewBusy" @click="activateAutoRenew"><AppIcon name="refresh" :size="13" /> Activar débito</button>
+          <TipHint v-if="plan.isCurrent" text="Débito automático: Mercado Pago te cobra el plan solo cada mes, sin que tengas que acordarte. Podés darlo de baja cuando quieras." />
           <button type="button" class="chip-btn strong" @click="section = 'plans'">{{ plan.isTrial ? 'Ver planes' : 'Cambiar plan' }}</button>
         </span>
       </div>
@@ -3256,7 +3311,10 @@ async function changePassword() {
             <div class="card">
               <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
               <StorageMeter />
-              <div v-if="!catalog.products.length" class="empty-mini"><AppIcon name="package" :size="22" /><p>Todavía no cargaste productos. Completá el formulario de al lado para publicar el primero.</p></div>
+              <div v-if="!catalog.products.length" class="empty-mini">
+                <AppIcon name="package" :size="22" />
+                <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusField('prod_name')">Cargar el primero</button></div>
+              </div>
               <template v-else>
                 <label class="prod-search">
                   <AppIcon name="search" :size="16" aria-hidden="true" />
@@ -3609,7 +3667,10 @@ async function changePassword() {
 
             <div class="card">
               <h3><AppIcon name="wrench" :size="18" /> Tus servicios</h3>
-              <div v-if="!services.items.length" class="empty-mini"><AppIcon name="wrench" :size="22" /><p>Todavía no cargaste servicios. El primero se publica desde el formulario de al lado.</p></div>
+              <div v-if="!services.items.length" class="empty-mini">
+                <AppIcon name="wrench" :size="22" />
+                <div><p>Todavía no cargaste servicios. Contá qué hacés, cuánto tarda y a qué precio.</p><button type="button" class="empty-mini-cta" @click="focusField('svc_name')">Cargar el primero</button></div>
+              </div>
               <ul v-else class="svc-list">
                 <li v-for="(s, i) in services.items" :key="s.id" class="svc-card" :class="{ off: !s.is_active, editing: serviceEditing?.id === s.id }" :style="{ '--h': serviceHue(s.icon) }">
                   <span class="svc-ico"><AppIcon :name="serviceIcon(s.icon)" :size="22" aria-hidden="true" /></span>
@@ -3769,7 +3830,10 @@ async function changePassword() {
         <div class="card">
           <h3><AppIcon name="checklist" :size="18" /> Opiniones recibidas</h3>
           <p class="hint">Podés borrar las que no quieras mostrar en tu web.</p>
-          <div v-if="!catalog.reviews.length" class="empty-mini">Todavía no recibiste opiniones. Cuando un visitante deje una valoración o un comentario aparece acá.</div>
+          <div v-if="!catalog.reviews.length" class="empty-mini">
+            <AppIcon name="star" :size="22" />
+            <div><p>Todavía no recibiste opiniones. Compartí tu link y pediles a tus clientes que te dejen una valoración.</p><button type="button" class="empty-mini-cta" @click="copyLink">Copiar mi link</button></div>
+          </div>
           <ul v-else class="rev-list">
             <li v-for="r in catalog.reviews" :key="r.id" class="rev-item">
               <div class="rev-head">
@@ -3833,7 +3897,7 @@ async function changePassword() {
         <details class="card more-card">
           <summary><AppIcon name="pencil" :size="18" /> Cambiar mi dirección <small>Solo si de verdad lo necesitás</small></summary>
           <div class="field">
-            <label for="rename-slug">Nuevo link</label>
+            <label for="rename-slug">Nuevo link <TipHint text="El «slug» es la última parte de tu dirección web: lo que va después de la barra. Tiene que ser corto y fácil de decir, como el nombre de tu negocio." /></label>
             <div class="slug-box" :class="{ invalid: renameKind === 'err' || !!store.fieldErrors.slug }">
               <span class="slug-prefix">{{ slugPrefix }}</span>
               <input
@@ -4131,6 +4195,33 @@ async function changePassword() {
             </div>
             <div class="field">
               <label for="design-template"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
+              <div class="fam-strip" role="radiogroup" aria-label="Familia de diseño">
+                <button
+                  v-for="f in templateFamilies" :key="f.key" type="button"
+                  class="fam-card" :class="{ on: currentFamily?.key === f.key, locked: !familyAllowed(f) }"
+                  role="radio" :aria-checked="currentFamily?.key === f.key"
+                  :disabled="!familyAllowed(f)" @click="pickFamily(f)"
+                >
+                  <span class="fam-thumb" :data-fam="f.key" aria-hidden="true"><i class="fc-a"></i><i class="fc-b"></i><i class="fc-c"></i><i class="fc-d"></i></span>
+                  <span class="fam-meta">
+                    <strong>{{ f.label }}</strong>
+                    <small>{{ f.caption }}</small>
+                    <span v-if="!familyAllowed(f)" class="fam-lock"><AppIcon name="lock" :size="11" /> {{ familyTier(f) }}</span>
+                    <span v-else-if="currentFamily?.key === f.key" class="fam-on"><AppIcon name="check" :size="11" /> Elegida</span>
+                  </span>
+                </button>
+              </div>
+              <div v-if="currentFamily" class="fam-variants" role="radiogroup" aria-label="Variante de la familia">
+                <button
+                  v-for="key in currentFamily.templates" :key="key" type="button"
+                  class="fam-var" :class="{ on: designForm.template === key, locked: !allowedTemplates.includes(key) }"
+                  role="radio" :aria-checked="designForm.template === key"
+                  :disabled="!allowedTemplates.includes(key)" @click="pickVariant(key)"
+                >
+                  {{ storeTemplates[key]?.label }}
+                  <span v-if="!allowedTemplates.includes(key)" class="fam-var-tier"><AppIcon name="lock" :size="10" /> {{ templatePlanLabel(key) }}</span>
+                </button>
+              </div>
               <select id="design-template" v-model="designForm.template" class="select">
                 <option
                   v-for="(t, key) in storeTemplates" :key="key" :value="key"
@@ -5482,6 +5573,21 @@ async function changePassword() {
 
     <!-- Búsqueda global: Ctrl/⌘+K o "/" desde cualquier sección -->
     <GlobalSearch v-model:open="searchOpen" :commands="searchCommands" />
+
+    <!-- Tour de primera vez (4 pasos sobre el menú) -->
+    <TourGuide v-model:open="tourOpen" />
+
+    <!-- Toast "Guardado ✓" con deshacer donde la acción es reversible -->
+    <Teleport to="body">
+      <Transition name="toast">
+        <div v-if="toast" class="toast" role="status">
+          <AppIcon name="circle-check" :size="17" class="toast-ok" />
+          <span class="toast-msg">{{ toast.msg }}</span>
+          <button v-if="toast.undo" type="button" class="toast-undo" @click="toast.undo(); closeToast()">Deshacer</button>
+          <button type="button" class="toast-x" aria-label="Cerrar" @click="closeToast"><AppIcon name="x" :size="14" /></button>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Vista previa del beneficio bloqueado: candado del menú, búsqueda o
          deep-link. 'expired' = renovar; 'upgrade' = plan superior. -->

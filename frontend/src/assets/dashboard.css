@@ -851,3 +851,51 @@
 @media (prefers-reduced-motion: reduce) {
   .ps-bar span { transition: none !important; }
 }
+
+/* ===== Fase D: tooltips, tour, toast ===== */
+
+/* Tooltip "¿qué es esto?" junto a términos técnicos. */
+.tip { position: relative; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 4px; vertical-align: -3px; border: none; border-radius: 50%; background: var(--sunk); color: var(--muted); cursor: help; }
+.tip:hover, .tip:focus-visible { color: var(--brand-ink); background: var(--brand-soft); }
+.tip-bubble { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(3px); width: max-content; max-width: 230px; padding: 8px 11px; border-radius: 9px; background: var(--rail, #0f1130); color: #e6eaf5; font-size: 12px; font-weight: 400; line-height: 1.45; text-align: left; white-space: normal; box-shadow: var(--shadow-md); opacity: 0; visibility: hidden; transition: opacity .16s, transform .16s var(--ease-out), visibility .16s; z-index: 60; pointer-events: none; }
+.tip-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--rail, #0f1130); }
+.tip:hover .tip-bubble, .tip:focus-visible .tip-bubble, .tip-bubble.on { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+/* Tour de primera vez: hueco con sombra que ilumina el target. */
+.tour { position: fixed; inset: 0; z-index: 210; }
+.tour-hole { position: fixed; border-radius: 14px; box-shadow: 0 0 0 4000px rgba(8, 10, 24, .62); transition: left .3s var(--ease-out), top .3s var(--ease-out), width .3s var(--ease-out), height .3s var(--ease-out); }
+.tour-card { position: fixed; width: min(300px, calc(100vw - 32px)); padding: 18px 18px 16px; border-radius: var(--radius); background: var(--raise-2); border: 1px solid var(--line); box-shadow: var(--shadow); animation: rise-in .2s var(--ease-out) both; }
+.tour-card.center { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.tour-step { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--brand-ink); }
+.tour-card h3 { margin: 3px 0 5px; font-size: 17px; letter-spacing: -.01em; }
+.tour-card p { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.tour-dots { display: flex; gap: 5px; margin-bottom: 12px; }
+.tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong); }
+.tour-dots i.on { background: var(--brand-500); transform: scale(1.25); }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-spacer { flex: 1; }
+.tour-skip { border: none; background: none; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; padding: 8px; border-radius: 8px; cursor: pointer; }
+.tour-skip:hover { color: var(--ink); background: var(--sunk); }
+
+/* Toast "Guardado" con deshacer. */
+.toast-wrap { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); z-index: 220; width: max-content; max-width: calc(100vw - 24px); pointer-events: none; }
+@media (min-width: 901px) { .toast-wrap { bottom: 28px; } }
+.toast { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 999px; background: var(--rail, #0f1130); color: #e6eaf5; font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow); pointer-events: auto; }
+.toast-ico { color: var(--brand-300, #8b7cf7); display: grid; }
+.toast-msg { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast-act { border: none; background: none; color: var(--brand-300, #a79bff); font: inherit; font-size: 13px; font-weight: 700; padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+.toast-act:hover { background: rgba(255,255,255,.09); }
+.toast-enter-active, .toast-leave-active { transition: all .2s var(--ease-out); }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(8px); }
+
+/* CTA dentro de los empty states. */
+.empty-mini { display: flex; align-items: flex-start; gap: 12px; }
+.empty-mini > svg { flex-shrink: 0; margin-top: 2px; }
+.empty-mini-cta { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 10px; border: none; background: var(--brand-500); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform .12s var(--ease-out), filter .15s; }
+.empty-mini-cta:hover { filter: brightness(1.08); }
+.empty-mini-cta:active { transform: scale(.97); }
+.toast-ok { color: #8be3a6; display: grid; flex-shrink: 0; }
+.toast-undo { border: none; background: none; color: var(--brand-300, #a79bff); font: inherit; font-size: 13px; font-weight: 700; padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+.toast-undo:hover { background: rgba(255,255,255,.09); }
+.toast-x { border: none; background: none; color: rgba(230,234,245,.6); padding: 4px; border-radius: 6px; cursor: pointer; display: grid; }
+.toast-x:hover { color: #fff; background: rgba(255,255,255,.09); }
