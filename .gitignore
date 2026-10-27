@@ -17,6 +17,8 @@ db.sqlite3
 # Frontend
 node_modules/
 frontend/dist/
+# APKs firmadas generadas por `npm run release:apk` — jamás commitear
+frontend/apk-dist/
 # Páginas solo-dev (ej. set-token.html): jamás commitear ni shipear
 frontend/dev-tools/
 
