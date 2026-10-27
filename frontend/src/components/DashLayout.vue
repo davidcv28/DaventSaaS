@@ -131,6 +131,7 @@ onBeforeUnmount(() => {
           <Transition name="tb-swap" mode="out-in"><strong :key="active">{{ current?.label || 'Resumen' }}</strong></Transition>
         </div>
         <span class="topbar-date">{{ todayLabel }}</span>
+        <slot name="topbar-actions" />
         <span class="avatar sm" :title="userName">{{ initial }}</span>
       </header>
       <slot />

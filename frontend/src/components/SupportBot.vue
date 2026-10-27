@@ -2,25 +2,20 @@
 import { ref, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { billingApi, formatARS } from '../api/billing.api.js'
-import { publicStoreUrl } from '../api/stores.api.js'
-import { useBillingStore } from '../stores/billing.store.js'
-import { useStoreStore } from '../stores/store.store.js'
 import AppIcon from './AppIcon.vue'
 import BrandLogo from './BrandLogo.vue'
 
-// Bot de ayuda (no es IA: responde con opciones fijas). Dos modos:
-// - Plantilla de autenticación (login/registro/recupero): temas de venta.
-// - Panel autenticado: consultas sobre la cuenta (lee los stores Pinia).
+// Bot de ayuda (no es IA: responde con opciones fijas) solo para la
+// plantilla de autenticación (login/registro/recupero): temas de venta.
+// En el panel ya no flota — el asistente vive como contacto del equipo en
+// el chat de soporte (DashboardView), con las mismas respuestas automáticas.
 // No aparece en la web pública del cliente ni en las páginas legales, y se
 // oculta en las vistas de impresión (factura / folleto).
 const route = useRoute()
-const billing = useBillingStore()
-const store = useStoreStore()
 const HIDDEN_ROUTES = new Set(['invoice-print', 'store-flyer', 'davent-flyer'])
 const visible = computed(() =>
-  Boolean(route.meta?.requiresAuth || route.meta?.requiresGuest) && !HIDDEN_ROUTES.has(route.name)
+  Boolean(route.meta?.requiresGuest) && !HIDDEN_ROUTES.has(route.name)
 )
-const isPanel = computed(() => Boolean(route.meta?.requiresAuth))
 
 const open = ref(false)
 const greeted = ref(false)
@@ -43,56 +38,8 @@ const TOPICS = [
   { id: 'tech', label: '¿Necesito saber de tecnología?', kw: 'tecnologia programar dificil facil conocimientos' }
 ]
 
-const PANEL_TOPICS = [
-  { id: 'sub', label: 'Mi suscripción', kw: 'suscripcion plan dias restantes vencida vigente' },
-  { id: 'link', label: 'Mi link público', kw: 'link url publico direccion dominio slug web' },
-  { id: 'products', label: 'Cargar productos', kw: 'productos producto catalogo cargar subir categorias marcas fotos' },
-  { id: 'design', label: 'Diseño de mi web', kw: 'diseno logo color fuente carrusel personalizar portada' },
-  { id: 'renew', label: 'Renovación del plan', kw: 'renovacion renovar debito automatico vencimiento' },
-  { id: 'invoices', label: 'Pagos y facturas', kw: 'facturas factura pagos comprobantes historial cobros' }
-]
-
-const topics = computed(() => (isPanel.value ? PANEL_TOPICS : TOPICS))
 // Temas todavía no preguntados: se ofrecen como mensajes sugeridos en el chat.
-const pending = computed(() => topics.value.filter((t) => !asked.value.has(t.id)))
-
-// Respuestas del modo panel: salen de los stores ya cargados por el dashboard.
-function panelAnswer(id) {
-  const plan = billing.currentPlan
-  switch (id) {
-    case 'sub': {
-      if (!plan) return 'Todavía no tenés una suscripción activa. En la sección Planes elegís el que mejor te quede y se activa cuando se acredita el pago.'
-      const parts = [`Tu plan actual es ${plan.name}.`]
-      if (plan.remaining != null) parts.push(`Te quedan ${plan.remaining} días.`)
-      if (plan.autoRenew) parts.push('El débito automático está activo: se renueva solo cada mes.')
-      else if (plan.cancelledAt) parts.push('La renovación automática está desactivada: al terminar el período vas a tener que pagar de nuevo.')
-      const pending = billing.subscription?.pending_plan_name
-      if (pending) parts.push(`Tenés un cambio a ${pending} pendiente.`)
-      if (!plan.isCurrent) parts.push('Ojo: tu suscripción está vencida. En Planes podés reactivarla.')
-      return parts.join(' ')
-    }
-    case 'link': {
-      const s = store.store
-      if (!s) return 'Todavía no reservaste tu link público.'
-      const state = s.is_published ? 'Está activo.' : 'Está pausado: podés reactivarlo desde "Mi tienda".'
-      return `Tu link público es ${publicStoreUrl(s.slug)} — ese es el que compartís con tus clientes. ${state}`
-    }
-    case 'products':
-      return 'En "Mis catálogos" cargás productos con foto, nombre, precio, categoría y marca. Todo lo que publiques aparece al instante en tu web pública. Las categorías y marcas se crean en las pestañas de ese mismo panel.'
-    case 'design': {
-      const mapa = plan?.benefits?.has_location_map ? ', el mapa de ubicación' : ''
-      if (plan?.benefits?.has_design_advanced) return 'En "Diseño web" personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada, mapa de ubicación y botones de WhatsApp y redes.'
-      if (plan?.benefits?.has_customization) return `En "Diseño web" personalizás el logo, el nombre, el titular, la descripción, el tema claro/oscuro${mapa} y los botones de WhatsApp y redes. El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium.`
-      return 'Con una suscripción activa podés personalizar el diseño de tu web (logo, textos, tema y botones de contacto). El color de acento, las fuentes y el carrusel son del Plan premium. En "Planes" elegís el que mejor te quede.'
-    }
-    case 'renew':
-      return 'Podés pagar cada mes a mano desde "Planes", o activar el débito automático con Mercado Pago y el plan se renueva solo. Si un débito falla, Mercado Pago reintenta durante unos días y tu plan sigue activo mientras tanto.'
-    case 'invoices':
-      return 'En "Pagos" ves el historial de cobros con su estado; en "Facturas" están los comprobantes de cada pago acreditado, listos para imprimir o bajar en PDF.'
-    default:
-      return ''
-  }
-}
+const pending = computed(() => TOPICS.filter((t) => !asked.value.has(t.id)))
 
 const ANSWERS = {
   what: 'DAVENT es una plataforma para comercios: te creás una cuenta, elegís el link de tu tienda y publicás un catálogo con fotos y precios. Tus clientes entran al link, ven tus productos y te contactan directo. También nos ocupamos de la suscripción, los pagos y las facturas.',
@@ -112,19 +59,13 @@ function toggle() {
   open.value = !open.value
   if (open.value && !greeted.value) {
     greeted.value = true
-    messages.value.push({ from: 'bot', text: greeting.value })
+    messages.value.push({ from: 'bot', text: greeting })
     scrollDown()
     nextTick(() => inputEl.value?.focus())
   }
 }
 
-const greeting = computed(() =>
-  isPanel.value
-    ? '¿En qué te ayudo? Elegí un tema y te explico cómo funciona.'
-    : '¡Hola! Soy el asistente de DAVENT. Elegí una opción y te cuento cómo funciona la plataforma.'
-)
-
-const publicUrl = computed(() => (store.store ? publicStoreUrl(store.store.slug) : ''))
+const greeting = '¡Hola! Soy el asistente de DAVENT. Elegí una opción y te cuento cómo funciona la plataforma.'
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') // diacríticos U+0300–U+036F
 
@@ -135,7 +76,7 @@ function findTopic(text) {
   if (!t) return null
   let best = null
   let score = 0
-  for (const topic of topics.value) {
+  for (const topic of TOPICS) {
     const q = norm(`${topic.label} ${topic.kw}`)
     let s = 0
     if (t === norm(topic.label)) s += 20
@@ -151,17 +92,11 @@ function findTopic(text) {
   return score >= 3 ? best : null
 }
 
-const FALLBACK = computed(() =>
-  isPanel.value
-    ? 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas.'
-    : 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas — o creá tu cuenta y lo descubrís desde el panel.'
-)
+const FALLBACK = 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas — o creá tu cuenta y lo descubrís desde el panel.'
 
 function answer(topic) {
   asked.value = new Set([...asked.value, topic.id])
-  if (isPanel.value) {
-    messages.value.push({ from: 'bot', text: panelAnswer(topic.id) })
-  } else if (topic.id === 'plans') {
+  if (topic.id === 'plans') {
     answerPlans()
   } else {
     messages.value.push({ from: 'bot', text: ANSWERS[topic.id] })
@@ -193,7 +128,7 @@ function send() {
     const topic = findTopic(text)
     if (topic) answer(topic)
     else {
-      messages.value.push({ from: 'bot', text: FALLBACK.value })
+      messages.value.push({ from: 'bot', text: FALLBACK })
       scrollDown()
     }
   }, 400)
@@ -232,16 +167,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 // Al cambiar de ruta el panel se cierra para no tapar contenido.
 watch(() => route.fullPath, () => { open.value = false })
-
-// Si cambia el contexto (público ↔ panel) la conversación se reinicia.
-watch(isPanel, () => {
-  messages.value = []
-  greeted.value = false
-  typing.value = false
-  draft.value = ''
-  asked.value = new Set()
-  open.value = false
-})
 </script>
 
 <template>
@@ -309,11 +234,8 @@ watch(isPanel, () => {
             <AppIcon name="arrow-right" :size="16" />
           </button>
         </form>
-        <footer v-if="!isPanel" class="bot-foot">
+        <footer class="bot-foot">
           <RouterLink to="/register" class="bot-cta">Crear mi cuenta <AppIcon name="arrow-right" :size="14" /></RouterLink>
-        </footer>
-        <footer v-else-if="publicUrl" class="bot-foot">
-          <a :href="publicUrl" target="_blank" rel="noopener" class="bot-cta">Ver mi web pública <AppIcon name="external-link" :size="14" /></a>
         </footer>
       </section>
     </Transition>

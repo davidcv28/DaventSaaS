@@ -62,6 +62,7 @@ import AppIcon from '../components/AppIcon.vue'
 import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
+import ChatDock from '../components/ChatDock.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1825,6 +1826,17 @@ const chatFiles = ref([])
 const chatFileInput = ref(null)
 const CHAT_FILES_MAX = 4
 const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).length)
+// El chat (heartbeat incluido) solo corre con el beneficio del plan; el
+// asistente automático queda disponible para cualquier cuenta como contacto.
+const canChat = computed(() => Boolean(plan.value?.benefits?.has_support_chat))
+// El asistente figura como un integrante más del equipo de soporte: es un
+// contacto local (respuestas automáticas, nunca toca la API del chat).
+const BOT_MEMBER = { id: 'bot', name: 'Asistente DAVENT', online: true, bot: true }
+const chatContacts = computed(() => canChat.value ? [BOT_MEMBER, ...chatStaff.value] : [BOT_MEMBER])
+const botMode = computed(() => Boolean(chatTarget.value?.bot))
+// Panel de contactos que abre la burbuja flotante.
+const chatDockPanel = ref(false)
+const chatDockContent = computed(() => (chatOpen.value ? 'win' : chatDockPanel.value ? 'panel' : null))
 //El objetivo del chat se resuelve contra el roster vivo: si cambia su
 //presencia, el header refleja el estado nuevo sin reabrir la ventana.
 const chatPeer = computed(() => {
@@ -1847,14 +1859,46 @@ function resizeChatInput() {
 }
 
 function onChatKey(e) {
-  if (e.key === 'Escape' && chatOpen.value && section.value === 'support') closeChat()
+  if (e.key !== 'Escape') return
+  if (chatOpen.value) closeChat()
+  if (chatDockPanel.value) chatDockPanel.value = false
+}
+
+// Alterna lo que tenga abierto la burbuja: si hay panel/ventana visible los
+// cierra; si no, abre la lista de contactos.
+function onDockToggle() {
+  if (chatDockPanel.value) { chatDockPanel.value = false; return }
+  if (chatOpen.value) { closeChat(); return }
+  chatDockPanel.value = true
+  if (canChat.value) beatChat() // roster fresco al abrir los contactos
+}
+
+// La campana del topbar abre la conversación de una: el hilo con el equipo
+// si el plan lo habilita, si no, el asistente automático.
+function onBellClick() {
+  if (chatOpen.value) { closeChat(); return }
+  openChat(canChat.value ? null : BOT_MEMBER)
 }
 
 function openChat(member = null) {
   chatTarget.value = member
   chatOpen.value = true
   chatMin.value = false
+  chatDockPanel.value = false
   window.addEventListener('keydown', onChatKey)
+  if (member?.bot) {
+    // Conversación local con el asistente: no hay hilo en el servidor ni
+    // lectura que marcar — el saludo se agrega la primera vez.
+    resetChatFiles()
+    if (!botMsgs.value.length) botPush(false, BOT_GREETING)
+    nextTick(() => {
+      scrollChat()
+      resizeChatInput()
+      chatInputEl.value?.focus({ preventScroll: true })
+    })
+    return
+  }
+  if (!canChat.value) { openChat(BOT_MEMBER); return }
   // Al abrir se trae el historial: el GET marca los mensajes del staff
   // como leídos (por eso solo corre con la ventana abierta).
   loadChat()
@@ -1994,7 +2038,7 @@ async function pollChat() {
   // Ventana cerrada o minimizada tampoco se pollea: el GET marca los
   // mensajes del staff como leídos y el cliente todavía no los vio —
   // el no-leído sigue contando por el heartbeat (badge en el header).
-  if (!chatOpen.value || chatMin.value || document.hidden || chatPolling) return
+  if (!chatOpen.value || chatMin.value || botMode.value || document.hidden || chatPolling) return
   chatPolling = true
   try {
     const data = await fetchChatMessages({ after: chatLastId.value })
@@ -2024,6 +2068,7 @@ async function beatChat() {
 }
 
 async function sendChat() {
+  if (botMode.value) { sendBotChat(); return }
   const body = chatInput.value.trim()
   const files = chatFiles.value
   if ((!body && !files.length) || chatBusy.value) return
@@ -2076,17 +2121,134 @@ async function sendChat() {
   }
 }
 
+// --- Asistente automático (contacto del equipo, respuestas locales) ---
+// Mismas respuestas que tenía el SupportBot en modo panel: temas sugeridos
+// + texto libre matcheado por keywords. Todo local, sin API.
+const PANEL_TOPICS = [
+  { id: 'sub', label: 'Mi suscripción', kw: 'suscripcion plan dias restantes vencida vigente' },
+  { id: 'link', label: 'Mi link público', kw: 'link url publico direccion dominio slug web' },
+  { id: 'products', label: 'Cargar productos', kw: 'productos producto catalogo cargar subir categorias marcas fotos' },
+  { id: 'design', label: 'Diseño de mi web', kw: 'diseno logo color fuente carrusel personalizar portada' },
+  { id: 'renew', label: 'Renovación del plan', kw: 'renovacion renovar debito automatico vencimiento' },
+  { id: 'invoices', label: 'Pagos y facturas', kw: 'facturas factura pagos comprobantes historial cobros' }
+]
+const BOT_GREETING = 'Hola, soy el asistente de DAVENT. Elegí un tema o escribime tu consulta y te explico cómo funciona.'
+const BOT_FALLBACK = 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas — o escribí al equipo de soporte, que responde a la brevedad.'
+const botMsgs = ref([])
+const botTyping = ref(false)
+const botAsked = ref(new Set())
+let botSeq = 0
+// Temas todavía no preguntados: se ofrecen como mensajes sugeridos en el chat.
+const botPending = computed(() => PANEL_TOPICS.filter((t) => !botAsked.value.has(t.id)))
+
+function panelAnswer(id) {
+  const p = plan.value
+  switch (id) {
+    case 'sub': {
+      if (!p) return 'Todavía no tenés una suscripción activa. En la sección Planes elegís el que mejor te quede y se activa cuando se acredita el pago.'
+      const parts = [`Tu plan actual es ${p.name}.`]
+      if (p.remaining != null) parts.push(`Te quedan ${p.remaining} días.`)
+      if (p.autoRenew) parts.push('El débito automático está activo: se renueva solo cada mes.')
+      else if (p.cancelledAt) parts.push('La renovación automática está desactivada: al terminar el período vas a tener que pagar de nuevo.')
+      const pending = billing.subscription?.pending_plan_name
+      if (pending) parts.push(`Tenés un cambio a ${pending} pendiente.`)
+      if (!p.isCurrent) parts.push('Ojo: tu suscripción está vencida. En Planes podés reactivarla.')
+      return parts.join(' ')
+    }
+    case 'link': {
+      const s = store.store
+      if (!s) return 'Todavía no reservaste tu link público.'
+      const state = s.is_published ? 'Está activo.' : 'Está pausado: podés reactivarlo desde "Mi tienda".'
+      return `Tu link público es ${publicStoreUrl(s.slug)} — ese es el que compartís con tus clientes. ${state}`
+    }
+    case 'products':
+      return 'En "Mis catálogos" cargás productos con foto, nombre, precio, categoría y marca. Todo lo que publiques aparece al instante en tu web pública. Las categorías y marcas se crean en las pestañas de ese mismo panel.'
+    case 'design': {
+      const b = p?.benefits || {}
+      const mapa = b.has_location_map ? ', el mapa de ubicación' : ''
+      if (b.has_design_advanced) return 'En "Diseño web" personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada, mapa de ubicación y botones de WhatsApp y redes.'
+      if (b.has_customization) return `En "Diseño web" personalizás el logo, el nombre, el titular, la descripción, el tema claro/oscuro${mapa} y los botones de WhatsApp y redes. El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium.`
+      return 'Con una suscripción activa podés personalizar el diseño de tu web (logo, textos, tema y botones de contacto). El color de acento, las fuentes y el carrusel son del Plan premium. En "Planes" elegís el que mejor te quede.'
+    }
+    case 'renew':
+      return 'Podés pagar cada mes a mano desde "Planes", o activar el débito automático con Mercado Pago y el plan se renueva solo. Si un débito falla, Mercado Pago reintenta durante unos días y tu plan sigue activo mientras tanto.'
+    case 'invoices':
+      return 'En "Pagos" ves el historial de cobros con su estado; en "Facturas" están los comprobantes de cada pago acreditado, listos para imprimir o bajar en PDF.'
+    default:
+      return ''
+  }
+}
+
+const normChatText = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+// Matching del texto libre contra etiqueta + keywords del tema (mismo
+// criterio que el SupportBot: exacto > inclusión > solape de palabras >3).
+function findBotTopic(text) {
+  const t = normChatText(text)
+  if (!t) return null
+  let best = null
+  let score = 0
+  for (const topic of PANEL_TOPICS) {
+    const q = normChatText(`${topic.label} ${topic.kw}`)
+    let s = 0
+    if (t === normChatText(topic.label)) s += 20
+    else if (t.length > 3 && q.includes(t)) s += 6
+    for (const w of q.split(/[^a-z0-9ñ]+/).filter((w) => w.length > 3)) {
+      if (t.includes(w)) s += 2
+    }
+    if (s > score) { score = s; best = topic }
+  }
+  return score >= 3 ? best : null
+}
+
+function botPush(mine, body) {
+  botMsgs.value.push({
+    id: `bot-${++botSeq}`, mine, bot: !mine,
+    sender_name: mine ? 'Vos' : BOT_MEMBER.name,
+    body, created_at: new Date().toISOString()
+  })
+  nextTick(scrollChat)
+}
+
+function botAnswer(topicId) {
+  botAsked.value = new Set([...botAsked.value, topicId])
+  botPush(false, panelAnswer(topicId))
+}
+
+function selectBotTopic(t) {
+  if (botTyping.value) return
+  botPush(true, t.label)
+  botTyping.value = true
+  // Pausa breve de "escribiendo…" como en el asistente de las tiendas.
+  window.setTimeout(() => { botTyping.value = false; botAnswer(t.id) }, 450)
+}
+
+function sendBotChat() {
+  const text = chatInput.value.trim()
+  if (!text || botTyping.value) return
+  chatInput.value = ''
+  nextTick(resizeChatInput)
+  botPush(true, text.slice(0, 2000))
+  botTyping.value = true
+  window.setTimeout(() => {
+    botTyping.value = false
+    const topic = findBotTopic(text)
+    if (topic) botAnswer(topic.id)
+    else botPush(false, BOT_FALLBACK)
+  }, 450)
+}
+
 // ~2.5s de poll: latencia media de ~1.2s contra ~2.5s antes. El throttle
 // del scope 'chat' (5000/h) cubre este ritmo en ambos lados.
 const CHAT_POLL_MS = 2500
-const CHAT_BEAT_MS = 30000
+const CHAT_BEAT_MS = 45000
 
 function startChat() {
   stopChat()
   beatChat()
   // Si la ventana quedó abierta al cambiar de sección, se refresca el
   // hilo; si no, alcanza con el heartbeat (marca presencia + no-leídos).
-  if (chatOpen.value) loadChat()
+  if (chatOpen.value && !botMode.value) loadChat()
   chatPollTimer = setInterval(pollChat, CHAT_POLL_MS)
   chatBeatTimer = setInterval(beatChat, CHAT_BEAT_MS)
 }
@@ -2098,13 +2260,18 @@ function stopChat() {
   chatBeatTimer = null
 }
 
-// Los timers solo viven mientras la sección Ayuda está abierta.
-watch(section, (s) => { s === 'support' ? startChat() : stopChat() })
+// Presencia siempre activa mientras el panel está montado: el usuario figura
+// "en línea" para el staff (y ve al staff conectado) sin entrar a Soporte.
+// Sin el beneficio solo queda el asistente local — el heartbeat daría 403.
+watch(canChat, (on) => {
+  if (on) startChat()
+  else { stopChat(); if (chatOpen.value && !botMode.value) closeChat() }
+}, { immediate: true })
 
 // Al volver al tab: tick inmediato (los intervals no corrían con la pestaña
 // oculta) — el usuario ve los mensajes nuevos sin esperar al próximo ciclo.
 function onChatVisible() {
-  if (document.visibilityState === 'visible' && section.value === 'support') {
+  if (document.visibilityState === 'visible' && canChat.value) {
     pollChat()
     beatChat()
   }
@@ -2500,6 +2667,24 @@ async function changePassword() {
     @navigate="onNavigate"
     @logout="logout"
   >
+    <template #topbar-actions>
+      <!-- Campana de mensajería: punto verde = equipo en línea, badge = no
+           leídos. Abre la conversación directa (o el asistente si el plan
+           no habilita el chat con el staff). -->
+      <button
+        type="button"
+        class="top-bell"
+        :aria-label="chatOpen ? 'Cerrar mensajes' : 'Abrir mensajes'"
+        title="Mensajes"
+        :aria-expanded="chatOpen"
+        @click="onBellClick"
+      >
+        <AppIcon name="bell" :size="19" />
+        <span class="bell-status" :class="{ on: chatStaffOnline }" aria-hidden="true"></span>
+        <span v-if="chatUnread" class="chat-badge bell-badge">{{ chatUnread > 99 ? '99+' : chatUnread }}</span>
+      </button>
+    </template>
+
     <!-- Banner global: correo sin verificar (bloquea crear la web pública) -->
     <div v-if="needsEmailVerification" class="cta-banner">
       <div>
@@ -4471,17 +4656,17 @@ async function changePassword() {
             <h3>Equipo de soporte</h3>
             <span class="support-count">{{ chatOnlineCount }}/{{ chatStaff.length }}</span>
           </div>
-          <p v-if="!chatStaff.length" class="chat-empty">Sin integrantes disponibles por ahora.</p>
-          <ul v-else class="support-list">
-            <li v-for="s in chatStaff" :key="s.id">
-              <button type="button" class="support-member" :class="{ on: s.online }" @click="contactStaff(s)">
-                <span class="support-avatar">
-                  {{ staffInitials(s.name) }}
+          <ul class="support-list">
+            <li v-for="s in chatContacts" :key="s.id">
+              <button type="button" class="support-member" :class="{ on: s.online, bot: s.bot }" @click="contactStaff(s)">
+                <span class="support-avatar" :class="{ bot: s.bot }">
+                  <AppIcon v-if="s.bot" name="bot" :size="19" />
+                  <template v-else>{{ staffInitials(s.name) }}</template>
                   <span class="support-status" :class="{ on: s.online }"></span>
                 </span>
                 <span class="support-info">
                   <strong>{{ s.name }}</strong>
-                  <small>{{ s.online ? 'En línea ahora' : 'Desconectado' }}</small>
+                  <small>{{ s.bot ? 'Respuestas automáticas' : (s.online ? 'En línea ahora' : 'Desconectado') }}</small>
                 </span>
                 <AppIcon class="support-go" name="message-circle" :size="16" />
               </button>
@@ -4510,128 +4695,6 @@ async function changePassword() {
           </ul>
         </div>
       </div>
-
-      <!-- Ventana flotante de conversación (estilo chat de Facebook,
-           calcada del panel admin): minimiza al header, cierra con Esc o
-           la X, badge de no-leídos mientras está minimizada (el polling
-           se pausa para no marcar leídos sin verlos) y foco al textarea
-           al abrir/expandir/enviar. -->
-      <Transition name="chatwin">
-        <section
-          v-if="chatOpen"
-          class="chat-win"
-          :class="{ min: chatMin }"
-          role="dialog"
-          aria-modal="false"
-          :aria-label="`Conversación con ${chatPeer?.name || 'equipo DAVENT'}`"
-        >
-          <header class="chat-win-head" @click="toggleChatMin">
-            <span class="support-avatar">
-              {{ staffInitials(chatPeer?.name || 'DAVENT') }}
-              <span class="support-status" :class="{ on: chatPeer ? chatPeer.online : chatStaffOnline }"></span>
-            </span>
-            <div class="chat-modal-who">
-              <strong>{{ chatPeer?.name || 'Equipo DAVENT' }}</strong>
-              <small><span class="chat-win-state" :class="{ on: chatPeer ? chatPeer.online : chatStaffOnline }">{{ chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Desconectado · responde a la brevedad') : (chatStaffOnline ? 'Equipo en línea' : 'Respuesta diferida') }}</span></small>
-            </div>
-            <span class="chat-win-actions">
-              <span v-if="chatMin && chatUnread" class="chat-badge">{{ chatUnread }}</span>
-              <button
-                type="button"
-                class="chat-win-btn"
-                :aria-label="chatMin ? 'Expandir chat' : 'Minimizar chat'"
-                :title="chatMin ? 'Expandir' : 'Minimizar'"
-                @click.stop="toggleChatMin"
-              >
-                <AppIcon :name="chatMin ? 'chevron-up' : 'chevron-down'" :size="15" />
-              </button>
-              <button
-                type="button"
-                class="chat-win-btn"
-                aria-label="Cerrar chat"
-                title="Cerrar"
-                @click.stop="closeChat"
-              >
-                <AppIcon name="x" :size="15" />
-              </button>
-            </span>
-          </header>
-
-          <template v-if="!chatMin">
-            <div ref="chatBoxEl" class="chat-box">
-              <p v-if="!chatMessages.length" class="chat-empty">
-                Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
-              </p>
-              <template v-for="r in chatRows(chatMessages)" :key="r.key">
-                <div v-if="r.day" class="chat-day">{{ r.day }}</div>
-                <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
-                  <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
-                  <div class="chat-stack">
-                    <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
-                      <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
-                        <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
-                      </a>
-                      <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
-                    </div>
-                    <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
-                  </div>
-                </div>
-              </template>
-            </div>
-
-            <!-- Adjuntos en cola: preview local antes de subir -->
-            <div v-if="chatFiles.length" class="chat-files">
-              <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
-                <img :src="f.url" :alt="f.file.name">
-                <button type="button" class="chat-file-x" aria-label="Quitar imagen" @click="removeChatFile(i)">
-                  <AppIcon name="x" :size="10" />
-                </button>
-              </div>
-            </div>
-
-            <div class="chat-composer">
-              <input
-                ref="chatFileInput"
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                multiple
-                hidden
-                @change="onChatFiles"
-              >
-              <button
-                type="button"
-                class="chat-attach"
-                :disabled="chatBusy || chatFiles.length >= CHAT_FILES_MAX"
-                aria-label="Adjuntar imagen"
-                title="Adjuntar imagen"
-                @click="pickChatImages"
-              >
-                <AppIcon name="image" :size="17" />
-              </button>
-              <textarea
-                ref="chatInputEl"
-                v-model="chatInput"
-                class="chat-text"
-                rows="1"
-                maxlength="2000"
-                placeholder="Escribí tu mensaje…"
-                aria-label="Mensaje para soporte"
-                @input="resizeChatInput"
-                @keydown.enter="onComposerEnter"
-              ></textarea>
-              <button
-                type="button"
-                class="chat-send"
-                :disabled="(!chatInput.trim() && !chatFiles.length) || chatBusy"
-                aria-label="Enviar mensaje"
-                @click="sendChat"
-              >
-                <AppIcon name="send" :size="17" />
-              </button>
-            </div>
-          </template>
-        </section>
-      </Transition>
     </div>
     <!-- ================= PLANES ================= -->
     <div v-if="seen.plans" v-show="section === 'plans'" :class="{ 'sec-on': section === 'plans' }">
@@ -4923,5 +4986,194 @@ async function changePassword() {
         </div>
       </div>
     </div>
+
+    <!-- Burbuja de mensajería estilo Messenger (arrastrable, queda anclada
+         a una arista): punto verde = equipo en línea, badge = no leídos.
+         Abre el panel de contactos o la ventana de conversación. -->
+    <ChatDock
+      :content="chatDockContent"
+      :online="chatStaffOnline"
+      :unread="chatUnread"
+      :minimized="chatMin"
+      label="Mensajes de soporte"
+      @toggle="onDockToggle"
+    >
+      <!-- Panel de contactos: el asistente automático figura como un
+           integrante más del equipo. -->
+      <div v-if="chatDockPanel" class="chat-dock-panel">
+        <div class="chat-threads-head">
+          <h3><AppIcon name="message-circle" :size="16" /> Soporte DAVENT</h3>
+          <span class="presence-chip" :class="{ on: chatStaffOnline }">
+            <span class="presence-dot"></span>
+            {{ chatStaffOnline ? `${chatOnlineCount} en línea` : 'Desconectado' }}
+          </span>
+        </div>
+        <ul class="support-list dock">
+          <li v-for="s in chatContacts" :key="s.id">
+            <button type="button" class="support-member" :class="{ on: s.online, bot: s.bot }" @click="openChat(s)">
+              <span class="support-avatar" :class="{ bot: s.bot }">
+                <AppIcon v-if="s.bot" name="bot" :size="19" />
+                <template v-else>{{ staffInitials(s.name) }}</template>
+                <span class="support-status" :class="{ on: s.online }"></span>
+              </span>
+              <span class="support-info">
+                <strong>{{ s.name }}</strong>
+                <small>{{ s.bot ? 'Respuestas automáticas' : (s.online ? 'En línea ahora' : 'Desconectado') }}</small>
+              </span>
+              <AppIcon class="support-go" name="chevron-right" :size="16" />
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Ventana flotante de conversación (estilo chat de Facebook):
+           minimiza al header, cierra con Esc o la X, badge de no-leídos
+           mientras está minimizada (el polling se pausa para no marcar
+           leídos sin verlos) y foco al textarea al abrir/expandir/enviar. -->
+      <Transition v-else-if="chatOpen" name="chatwin">
+        <section
+          class="chat-win"
+          :class="{ min: chatMin, bot: botMode }"
+          role="dialog"
+          aria-modal="false"
+          :aria-label="`Conversación con ${chatPeer?.name || 'equipo DAVENT'}`"
+        >
+          <header class="chat-win-head" @click="toggleChatMin">
+            <span class="support-avatar" :class="{ bot: botMode }">
+              <AppIcon v-if="botMode" name="bot" :size="18" />
+              <template v-else>{{ staffInitials(chatPeer?.name || 'DAVENT') }}</template>
+              <span class="support-status" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }"></span>
+            </span>
+            <div class="chat-modal-who">
+              <strong>{{ chatPeer?.name || 'Equipo DAVENT' }}</strong>
+              <small><span class="chat-win-state" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }">{{ botMode ? 'Respuestas automáticas · siempre disponible' : chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Desconectado · responde a la brevedad') : (chatStaffOnline ? 'Equipo en línea' : 'Respuesta diferida') }}</span></small>
+            </div>
+            <span class="chat-win-actions">
+              <span v-if="chatMin && chatUnread && !botMode" class="chat-badge">{{ chatUnread }}</span>
+              <button
+                type="button"
+                class="chat-win-btn"
+                :aria-label="chatMin ? 'Expandir chat' : 'Minimizar chat'"
+                :title="chatMin ? 'Expandir' : 'Minimizar'"
+                @click.stop="toggleChatMin"
+              >
+                <AppIcon :name="chatMin ? 'chevron-up' : 'chevron-down'" :size="15" />
+              </button>
+              <button
+                type="button"
+                class="chat-win-btn"
+                aria-label="Cerrar chat"
+                title="Cerrar"
+                @click.stop="closeChat"
+              >
+                <AppIcon name="x" :size="15" />
+              </button>
+            </span>
+          </header>
+
+          <template v-if="!chatMin">
+            <div ref="chatBoxEl" class="chat-box">
+              <template v-if="botMode">
+                <template v-for="r in chatRows(botMsgs)" :key="r.key">
+                  <div v-if="r.day" class="chat-day">{{ r.day }}</div>
+                  <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
+                    <span v-if="!r.m.mine" class="chat-avatar bot" :class="{ ghost: !r.last }"><AppIcon name="bot" :size="14" /></span>
+                    <div class="chat-stack">
+                      <div class="chat-msg"><p class="chat-body">{{ r.m.body }}</p></div>
+                      <span v-if="r.last" class="chat-meta">{{ fmtChatTime(r.m.created_at) }}</span>
+                    </div>
+                  </div>
+                </template>
+                <div v-if="botTyping" class="chat-row first last">
+                  <span class="chat-avatar bot"><AppIcon name="bot" :size="14" /></span>
+                  <div class="chat-msg"><p class="chat-typing"><i /><i /><i /></p></div>
+                </div>
+                <div v-if="botPending.length && !botTyping" class="chat-sugg">
+                  <button
+                    v-for="t in botPending" :key="t.id" type="button"
+                    class="chat-sugg-msg"
+                    @click="selectBotTopic(t)"
+                  >
+                    {{ t.label }}
+                  </button>
+                </div>
+              </template>
+              <template v-else>
+                <p v-if="!chatMessages.length" class="chat-empty">
+                  Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
+                </p>
+                <template v-for="r in chatRows(chatMessages)" :key="r.key">
+                  <div v-if="r.day" class="chat-day">{{ r.day }}</div>
+                  <div v-else class="chat-row" :class="{ mine: r.m.mine, first: r.first, last: r.last, 'gap-top': r.first }">
+                    <span v-if="!r.m.mine" class="chat-avatar" :class="{ ghost: !r.last }">{{ chatInitials(r.m.sender_name) }}</span>
+                    <div class="chat-stack">
+                      <div class="chat-msg" :class="{ pending: r.m.pending, media: r.m.image_url && !r.m.body }">
+                        <a v-if="r.m.image_url" class="chat-img-link" :href="r.m.image_url" target="_blank" rel="noopener" title="Abrir imagen en pestaña nueva">
+                          <img class="chat-img" :src="r.m.image_url" alt="Imagen adjunta" loading="lazy">
+                        </a>
+                        <p v-if="r.m.body" class="chat-body">{{ r.m.body }}</p>
+                      </div>
+                      <span v-if="r.last" class="chat-meta">{{ r.m.pending ? 'Enviando…' : fmtChatTime(r.m.created_at) }}</span>
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </div>
+
+            <!-- Adjuntos en cola: preview local antes de subir -->
+            <div v-if="chatFiles.length" class="chat-files">
+              <div v-for="(f, i) in chatFiles" :key="f.url" class="chat-file">
+                <img :src="f.url" :alt="f.file.name">
+                <button type="button" class="chat-file-x" aria-label="Quitar imagen" @click="removeChatFile(i)">
+                  <AppIcon name="x" :size="10" />
+                </button>
+              </div>
+            </div>
+
+            <div class="chat-composer">
+              <input
+                ref="chatFileInput"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                multiple
+                hidden
+                @change="onChatFiles"
+              >
+              <button
+                v-if="!botMode"
+                type="button"
+                class="chat-attach"
+                :disabled="chatBusy || chatFiles.length >= CHAT_FILES_MAX"
+                aria-label="Adjuntar imagen"
+                title="Adjuntar imagen"
+                @click="pickChatImages"
+              >
+                <AppIcon name="image" :size="17" />
+              </button>
+              <textarea
+                ref="chatInputEl"
+                v-model="chatInput"
+                class="chat-text"
+                rows="1"
+                maxlength="2000"
+                :placeholder="botMode ? 'Preguntale al asistente…' : 'Escribí tu mensaje…'"
+                :aria-label="botMode ? 'Pregunta para el asistente' : 'Mensaje para soporte'"
+                @input="resizeChatInput"
+                @keydown.enter="onComposerEnter"
+              ></textarea>
+              <button
+                type="button"
+                class="chat-send"
+                :disabled="(!chatInput.trim() && !chatFiles.length) || chatBusy || botTyping"
+                aria-label="Enviar mensaje"
+                @click="sendChat"
+              >
+                <AppIcon name="send" :size="17" />
+              </button>
+            </div>
+          </template>
+        </section>
+      </Transition>
+    </ChatDock>
   </DashLayout>
 </template>

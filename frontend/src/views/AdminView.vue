@@ -10,6 +10,7 @@ import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.
 import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
 import { extractApiError } from '../api/http.js'
 import DashLayout from '../components/DashLayout.vue'
+import ChatDock from '../components/ChatDock.vue'
 import AppInput from '../components/AppInput.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
@@ -138,6 +139,9 @@ const chatBoxEl = ref(null)
 const chatInputEl = ref(null)
 const chatMin = ref(false)
 const chatQuery = ref('')
+// Bandeja que abre la burbuja flotante (ataljo a la sección Chat).
+const chatDockOpen = ref(false)
+const chatDockContent = computed(() => (chatActive.value ? 'win' : chatDockOpen.value ? 'panel' : null))
 // Adjuntos en cola: [{file, url}] — objectURL local para la vista previa;
 // el archivo viaja al bucket/disco del backend, nunca a la DB.
 const chatFiles = ref([])
@@ -243,8 +247,11 @@ let chatThreadsLoading = false
 
 async function loadChatThreads() {
   // Oculto no se pollea (al volver hay tick inmediato) y nunca se enciman
-  // dos requests si una tardó más que el intervalo.
+  // dos requests si una tardó más que el intervalo. La bandeja solo se
+  // fetchea cuando hay UI que la muestre: sección Chat, el panel de la
+  // burbuja o una ventana abierta (refresca su unread/last_message).
   if (document.hidden || chatThreadsLoading) return
+  if (section.value !== 'chat' && !chatDockOpen.value && !chatActive.value) return
   chatThreadsLoading = true
   try {
     const data = await fetchChat()
@@ -263,6 +270,7 @@ async function loadChatThreads() {
 async function openChatThread(thread) {
   chatActive.value = thread
   chatMin.value = false
+  chatDockOpen.value = false
   chatMsgs.value = []
   chatLastId.value = 0
   chatErr.value = ''
@@ -310,7 +318,19 @@ function closeChatWindow() {
 }
 
 function onChatKey(e) {
-  if (e.key === 'Escape' && chatActive.value && section.value === 'chat') closeChatWindow()
+  if (e.key !== 'Escape') return
+  if (chatActive.value) closeChatWindow()
+  if (chatDockOpen.value) chatDockOpen.value = false
+}
+
+// Alterna lo que tenga abierto la burbuja: panel/ventana visible se cierra;
+// si no, abre la bandeja de conversaciones.
+function onDockToggle() {
+  if (chatDockOpen.value) { chatDockOpen.value = false; return }
+  if (chatActive.value) { closeChatWindow(); return }
+  chatDockOpen.value = true
+  loadChatThreads()
+  beatChat()
 }
 
 let chatMsgsPolling = false
@@ -417,18 +437,22 @@ function stopChat() {
   chatBeatTimer = null
 }
 
-watch(section, (s) => { s === 'chat' ? startChat() : stopChat() })
+// Presencia + bandeja corren con el panel montado: los clientes figuran
+// "en línea" y el badge marca no-leídos sin abrir la sección Chat. Las
+// lecturas pesadas (bandeja, hilo) siguen guardadas por su visibilidad.
+watch(section, (s) => { if (s === 'chat') { loadChatThreads(); beatChat() } })
 
 // Al volver al tab: tick inmediato (los intervals no corrían con la pestaña
 // oculta) — el staff ve los mensajes nuevos sin esperar al próximo ciclo.
 function onChatVisible() {
-  if (document.visibilityState === 'visible' && section.value === 'chat') {
+  if (document.visibilityState === 'visible') {
     pollChatMsgs()
     loadChatThreads()
     beatChat()
   }
 }
 onMounted(() => {
+  startChat()
   document.addEventListener('visibilitychange', onChatVisible)
   document.addEventListener('keydown', onChatKey)
 })
@@ -646,6 +670,23 @@ async function logout() {
     @navigate="onNavigate"
     @logout="logout"
   >
+    <template #topbar-actions>
+      <!-- Campana de mensajería: punto verde = clientes en línea, badge =
+           mensajes sin leer. Abre la bandeja rápida de conversaciones. -->
+      <button
+        type="button"
+        class="top-bell"
+        :aria-label="chatDockOpen ? 'Cerrar mensajes' : 'Abrir mensajes'"
+        title="Mensajes"
+        :aria-expanded="chatDockOpen || Boolean(chatActive)"
+        @click="onDockToggle"
+      >
+        <AppIcon name="bell" :size="19" />
+        <span class="bell-status" :class="{ on: chatOnlineCount > 0 }" aria-hidden="true"></span>
+        <span v-if="chatUnread" class="chat-badge bell-badge">{{ chatUnread > 99 ? '99+' : chatUnread }}</span>
+      </button>
+    </template>
+
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'">
       <div class="page-head">
@@ -1222,13 +1263,62 @@ async function logout() {
         </div>
         <p v-else class="chat-threads-empty">{{ chatThreads.length ? 'Ninguna conversación coincide con la búsqueda.' : 'Ningún cliente escribió todavía.' }}</p>
       </div>
+    </div>
+
+    <!-- Burbuja de mensajería estilo Messenger (arrastrable, queda anclada
+         a una arista): punto verde = clientes en línea, badge = no leídos.
+         Abre la bandeja rápida o la ventana de conversación. -->
+    <ChatDock
+      :content="chatDockContent"
+      :online="chatOnlineCount > 0"
+      :unread="chatUnread"
+      :minimized="chatMin"
+      label="Mensajes de clientes"
+      @toggle="onDockToggle"
+    >
+      <!-- Bandeja rápida: mismas conversaciones de la sección Chat. -->
+      <div v-if="chatDockOpen" class="chat-dock-panel">
+        <div class="chat-threads-head">
+          <h3><AppIcon name="message-circle" :size="16" /> Conversaciones</h3>
+          <label class="chat-inbox-search">
+            <AppIcon name="search" :size="14" />
+            <input v-model="chatQuery" type="search" placeholder="Buscar cliente…" aria-label="Buscar conversación" />
+          </label>
+          <span v-if="chatThreads.length" class="support-count">{{ chatThreads.length }}</span>
+        </div>
+        <div v-if="filteredChatThreads.length" class="chat-thread-list dock">
+          <button
+            v-for="t in filteredChatThreads"
+            :key="t.id"
+            type="button"
+            class="chat-thread"
+            :class="{ unread: t.unread }"
+            @click="openChatThread(t)"
+          >
+            <span class="support-avatar">
+              {{ chatInitials(t.customer.name) }}
+              <span class="support-status" :class="{ on: t.online }"></span>
+            </span>
+            <span class="chat-thread-body">
+              <span class="chat-thread-head">
+                <strong>{{ t.customer.name }}</strong>
+                <span v-if="t.last_message" class="chat-thread-time">{{ fmtChatTime(t.last_message.created_at) }}</span>
+              </span>
+              <span class="chat-thread-row">
+                <span class="chat-thread-last">{{ t.last_message ? (t.last_message.body || 'Imagen adjunta') : 'Sin mensajes' }}</span>
+                <span v-if="t.unread" class="chat-badge">{{ t.unread }}</span>
+              </span>
+            </span>
+          </button>
+        </div>
+        <p v-else class="chat-threads-empty">{{ chatThreads.length ? 'Ninguna conversación coincide con la búsqueda.' : 'Ningún cliente escribió todavía.' }}</p>
+      </div>
 
       <!-- Ventana flotante de conversación (estilo chat de Facebook):
            se minimiza al header, cierra con Esc o la X, y al abrirse el
            foco cae en el textarea. -->
-      <Transition name="chatwin">
+      <Transition v-else-if="chatActive" name="chatwin">
         <section
-          v-if="chatActive"
           class="chat-win"
           :class="{ min: chatMin }"
           role="dialog"
@@ -1337,6 +1427,6 @@ async function logout() {
           </template>
         </section>
       </Transition>
-    </div>
+    </ChatDock>
   </DashLayout>
 </template>

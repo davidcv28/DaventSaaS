@@ -481,3 +481,66 @@
   .chat-inbox-search { padding: 6px 11px; }
   .chat-threads-head { flex-wrap: wrap; }
 }
+
+/* ===== Burbuja de mensajería (chat-head estilo Messenger, arrastrable) =====
+   El contenedor no ocupa lugar: la burbuja y la caja del contenido se
+   posicionan fixed contra el viewport (la caja se ancla sobre la burbuja
+   según donde quedó). z-index 96: por encima del asistente (90). */
+.chat-dock { position: fixed; z-index: 96; inset: auto; pointer-events: none; }
+.chat-dock > * { pointer-events: auto; }
+.dock-fab { position: fixed; right: 18px; bottom: 18px; display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; cursor: grab; box-shadow: 0 14px 30px -10px rgba(9, 12, 24, .55), 0 4px 12px -6px rgba(99, 102, 241, .55); touch-action: none; user-select: none; -webkit-user-select: none; transition: transform .15s var(--ease-out), box-shadow .2s; }
+.dock-fab:hover { transform: scale(1.06); }
+.dock-fab:active, .dock-fab.dragging { cursor: grabbing; }
+.chat-dock.dragging .dock-fab { transition: none; transform: scale(1.04); box-shadow: 0 18px 38px -12px rgba(9, 12, 24, .6), 0 6px 16px -6px rgba(99, 102, 241, .55); }
+.dock-fab:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 3px; }
+.dock-status { position: absolute; right: 1px; bottom: 1px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); border: 2.5px solid var(--card); }
+.dock-status.on { background: var(--ok, #10b981); box-shadow: 0 0 0 3px rgba(16, 185, 129, .22); }
+.dock-badge { position: absolute; top: -5px; right: -5px; }
+/* Caja anclada a la burbuja: la posición/tamaño los marca el componente
+   (estilo inline); el contenido la llena. */
+.chat-dock-box { position: fixed; z-index: 96; }
+.chat-dock-box .chat-win { position: static; right: auto; bottom: auto; width: 100%; height: 100%; max-height: none; }
+.chat-dock-box.min .chat-win { height: auto; }
+.chat-dock.left .chat-win { transform-origin: 0% 100%; }
+/* Panel desplegable (contactos del cliente / bandeja del staff). */
+.chat-dock-panel { display: flex; flex-direction: column; max-height: inherit; border: 1px solid var(--line); border-radius: 20px; background: var(--card); box-shadow: 0 24px 60px -18px rgba(9, 12, 24, .55), 0 4px 14px -6px rgba(9, 12, 24, .2); overflow: hidden; animation: chat-in .2s var(--ease-out); }
+.chat-dock-panel .chat-threads-head { flex: none; flex-wrap: wrap; }
+.chat-dock-panel .support-list { padding: 8px; max-height: 300px; }
+.chat-dock-panel .chat-thread-list { flex: 1; min-height: 0; max-height: 300px; }
+
+/* Campana de mensajería en la barra superior (punto = en línea, badge = no leídos). */
+.top-bell { position: relative; display: grid; place-items: center; width: 38px; height: 38px; flex: none; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink-2); cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .15s var(--ease-out); }
+.top-bell:hover { background: var(--brand-soft); color: var(--brand-ink); border-color: var(--brand-soft-line); transform: translateY(-1px); }
+.top-bell:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.bell-status { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); border: 2px solid var(--card); }
+.bell-status.on { background: var(--ok, #10b981); box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
+.bell-badge { position: absolute; top: -6px; right: -6px; }
+
+/* Asistente automático como contacto del equipo: avatar con gradiente de
+   marca y sugerencias clickeables dentro de la conversación. */
+.support-avatar.bot, .chat-avatar.bot { background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; }
+.chat-sugg { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-top: 8px; }
+.chat-sugg-msg { max-width: 88%; border: 1.5px solid var(--brand-500); border-radius: 12px; border-bottom-right-radius: 4px; background: var(--card); color: var(--brand-ink); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.45; padding: 9px 12px; cursor: pointer; text-align: left; transition: background .15s, transform .1s; }
+.chat-sugg-msg:hover { background: var(--brand-soft); }
+.chat-sugg-msg:active { transform: scale(.98); }
+.chat-sugg-msg:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.chat-typing { display: inline-flex; gap: 4px; align-items: center; margin: 0; min-width: 38px; }
+.chat-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: chat-dot 1s infinite; }
+.chat-typing i:nth-child(2) { animation-delay: .15s; }
+.chat-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes chat-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+@media (max-width: 640px) {
+  /* En móvil la ventana sigue siendo full-screen; el panel baja como sheet. */
+  .chat-dock-box { left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important; width: 100% !important; max-height: none; }
+  .chat-dock-box.win { height: 100dvh !important; }
+  .chat-dock-box.win.min { height: auto !important; }
+  .chat-dock-box.panel { max-height: min(70dvh, 430px) !important; }
+  .chat-dock-panel { border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; }
+  .chat-dock-panel .support-list, .chat-dock-panel .chat-thread-list { max-height: none; }
+  .dock-fab { width: 54px; height: 54px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-typing i { animation: none; }
+}
