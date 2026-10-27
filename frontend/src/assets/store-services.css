@@ -1,7 +1,7 @@
 /* ============================================================
    Página "Servicios" de la web del cliente (StoreServicesView).
    Se adapta a la plantilla activa de la tienda: todos los tokens
-   se derivan de --sp-*/--store-* (que cada plantilla define en
+   se derivan de --sp-* / --store-* (que cada plantilla define en
    store-page.css / store-bloque.css / store-riso.css), y abajo hay
    un bloque de ajuste por data-store-template. El layout conserva
    la mecánica propia: picker con presupuesto animado, cinta,
@@ -601,7 +601,7 @@
 
 /* Entrada escalonada al hacer scroll (v-reveal) */
 .sv-rv { opacity: 0; translate: 0 24px; }
-.sv-rv.sv-in { animation: sv-rise .65s var(--sv-ease) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.sv-rv.sv-in { opacity: 1; translate: 0 0; animation: sv-rise .65s var(--sv-ease) both; animation-delay: calc(var(--i, 0) * 70ms); }
 @keyframes sv-rise { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
 
 /* Hero: chips de confianza + halo animado detrás del icono */
