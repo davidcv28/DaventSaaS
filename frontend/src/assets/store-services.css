@@ -878,6 +878,60 @@
 .store-page[data-store-template='lookbook'] .sv-stage { border-color: var(--sv-line); }
 .store-page[data-store-template='lookbook'] .sv-eyebrow { font-weight: 600; letter-spacing: .2em; }
 
+/* Índice tipográfico de revista: cada servicio es una entrada con
+   numeración editorial enorme a la izquierda, filete de 1px abajo y
+   precio serif. Nada de tarjetas — el aire y los filetes ordenan. */
+.store-page[data-store-template='lookbook'] .sv-list {
+  grid-template-columns: 1fr; gap: 0; counter-reset: svitem;
+}
+.store-page[data-store-template='lookbook'] .sv-item {
+  display: flex; flex-direction: row; align-items: flex-start; flex-wrap: wrap; gap: 4px 22px;
+  padding: 26px 0; border: 0; border-bottom: 1px solid var(--sv-line); border-radius: 0;
+  background: transparent; box-shadow: none; text-align: left;
+}
+.store-page[data-store-template='lookbook'] .sv-item::before { display: none; }
+.store-page[data-store-template='lookbook'] .sv-item::after {
+  /* el círculo +/✓ migra a la línea del precio */
+  position: static; order: 6; margin-left: auto; align-self: center; opacity: 1;
+  border-radius: 50%; background: transparent; color: var(--sv-fg);
+}
+.store-page[data-store-template='lookbook'] .sv-item:hover::after { opacity: 1; }
+.store-page[data-store-template='lookbook'] .sv-item[aria-pressed='true']::after { background: var(--sv-fg); color: var(--sv-card); }
+.store-page[data-store-template='lookbook'] .sv-item .ico { display: none; }
+.store-page[data-store-template='lookbook'] .sv-item h3 {
+  font-family: var(--sv-display); font-size: clamp(21px, 2.2vw, 27px); font-weight: 500;
+  font-style: italic; letter-spacing: -.01em; max-width: 460px; overflow-wrap: anywhere;
+}
+.store-page[data-store-template='lookbook'] .sv-item h3::before {
+  content: counter(svitem, decimal-leading-zero); counter-increment: svitem;
+  display: inline-block; min-width: 74px; margin-right: 18px;
+  font-family: var(--sv-display); font-size: 1.9em; font-style: normal; line-height: .8;
+  color: var(--sv-acc); vertical-align: -.08em;
+}
+.store-page[data-store-template='lookbook'] .sv-item small {
+  order: 4; flex-basis: 100%; padding-left: 92px; max-width: 560px; font-size: 13.5px; line-height: 1.6;
+}
+.store-page[data-store-template='lookbook'] .sv-item .meta {
+  order: 3; margin-left: auto; margin-top: 6px; padding: 0; border: 0;
+  display: flex; align-items: baseline; gap: 16px;
+}
+.store-page[data-store-template='lookbook'] .sv-item .dur { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; }
+.store-page[data-store-template='lookbook'] .sv-item .price {
+  font-family: var(--sv-display); font-size: 21px; font-weight: 500; background: none; padding: 0;
+}
+.store-page[data-store-template='lookbook'] .sv-item .act {
+  order: 7; flex-basis: 100%; margin-top: 8px; padding: 0 0 0 92px; justify-content: flex-start;
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase; min-height: 44px;
+  border: 0; background: none; box-shadow: none; color: var(--sv-mute);
+}
+.store-page[data-store-template='lookbook'] .sv-item .act::before { content: '— '; }
+.store-page[data-store-template='lookbook'] .sv-item:hover .act { color: var(--sv-acc); }
+.store-page[data-store-template='lookbook'] .sv-item[aria-pressed='true'] { background: color-mix(in srgb, var(--sv-fg) 3%, transparent); }
+@media (max-width: 768px) {
+  .store-page[data-store-template='lookbook'] .sv-item h3::before { min-width: 56px; margin-right: 12px; }
+  .store-page[data-store-template='lookbook'] .sv-item small, .store-page[data-store-template='lookbook'] .sv-item .act { padding-left: 68px; }
+}
+
 /* ---------- Shop: marketplace limpio ---------- */
 .store-page[data-store-template='shop'] .sv-page {
   --sv-r-pill: 999px; --sv-r-stage: 20px; --sv-r-lg: 16px; --sv-r-md: 14px; --sv-r-sm: 10px;
