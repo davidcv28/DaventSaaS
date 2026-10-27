@@ -499,6 +499,12 @@ function suscriptionStatusMeta(status) {
   return { kind: 'muted', label: status || '—' }
 }
 
+// Nombre del cliente en el listado de suscripciones: nombre y apellido del
+// perfil; si todavía no cargó los datos fiscales se cae a la razón social.
+function clientName(s) {
+  return [s.first_name, s.last_name].filter(Boolean).join(' ') || s.business_name || '—'
+}
+
 // Estado público de la web: el bloqueo staff pisa cualquier otro estado;
 // publicada + suscripción vigente => en vivo.
 function webStatus(s) {
@@ -895,8 +901,8 @@ async function logout() {
             </thead>
             <tbody>
               <tr v-for="s in admin.suscriptions" :key="s.id">
-                <td data-label="Cliente"><strong>{{ s.business_name || '—' }}</strong><br /><small class="muted">{{ s.user_name }} · {{ s.user_email }}</small></td>
-                <td data-label="Plan">{{ s.plan_name }} · {{ formatARS(s.plan_price) }}</td>
+                <td data-label="Cliente"><strong>{{ clientName(s) }}</strong><br /><small class="muted">{{ s.user_name }} · {{ s.user_email }}</small></td>
+                <td data-label="Plan">{{ s.plan_name }}</td>
                 <td data-label="Estado"><span class="pill" :class="suscriptionStatusMeta(s.status).kind">{{ suscriptionStatusMeta(s.status).label }}</span></td>
                 <td data-label="Plan pendiente">{{ s.pending_plan_name || '—' }}</td>
                 <td data-label="Inicio">{{ fmtDate(s.start_date) }}</td>
