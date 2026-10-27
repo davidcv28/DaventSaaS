@@ -125,7 +125,12 @@ function submit() {
   pickError.value = items.value.length && !chosenItems.value.length ? 'Elegí al menos un servicio arriba para armar tu pedido.' : ''
   if (pickError.value) e.pick = pickError.value
   errors.value = e
-  if (Object.keys(e).length) { sentOk.value = false; return }
+  if (Object.keys(e).length) {
+    sentOk.value = false
+    // Sin esto el error queda fuera de pantalla y el botón parece no responder.
+    nextTick(() => document.querySelector('.sv-form .bad, .sv-form .sv-sel.bad')?.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' }))
+    return
+  }
   if (!waBase.value) return
   const message = buildServiceRequestMessage({
     shopName: shopName.value,
@@ -133,7 +138,10 @@ function submit() {
     total: total.value,
     visitor: f
   })
-  window.open(`${waBase.value}?text=${encodeURIComponent(message)}`, '_blank', 'noopener')
+  const url = `${waBase.value}?text=${encodeURIComponent(message)}`
+  // window.open puede volver null si el navegador bloquea el popup (común en
+  // móviles); en ese caso navegamos en la misma pestaña — wa.me abre la app.
+  if (!window.open(url, '_blank', 'noopener')) window.location.href = url
   sentOk.value = true
 }
 
