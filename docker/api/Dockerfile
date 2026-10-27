@@ -31,6 +31,7 @@ RUN npm ci
 COPY frontend/ ./
 ARG VITE_API_BASE_URL=/api
 ARG VITE_PLATFORM_DOMAIN=daventsaas.onrender.com
+ARG VITE_STORE_SUBDOMAINS=
 ARG VITE_APP_URL=https://daventsaas.onrender.com
 ARG VITE_APP_NAME=DAVENT
 ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
@@ -39,6 +40,7 @@ ARG VITE_APP_TAGLINE="Gestion SaaS para e-commerce tecnologicos"
 # ahí el botón queda oculto.
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PLATFORM_DOMAIN=$VITE_PLATFORM_DOMAIN \
+    VITE_STORE_SUBDOMAINS=$VITE_STORE_SUBDOMAINS \
     VITE_APP_URL=$VITE_APP_URL \
     VITE_APP_NAME=$VITE_APP_NAME \
     VITE_APP_TAGLINE=$VITE_APP_TAGLINE
