@@ -271,6 +271,113 @@ class PreapprovalCreateTests(TestCase):
         sdk.preapproval.return_value.create.assert_not_called()
 
 
+class SubscriptionActionTests(TestCase):
+    """POST /api/payments/subscription/ (alta/retoma del débito MP):
+    gate de datos fiscales antes de tocar MP, retoma idempotente del
+    init_point pendiente y respuesta authorized. El alta se serializa por
+    fila (select_for_update) — activaciones concurrentes confluyen en el
+    MISMO preapproval."""
+
+    URL =   '/api/payments/subscription/'
+    VIEWS =   'AdminApp.domains.payments.views.viewset'
+
+    def setUp(self):
+        cache.clear()
+
+    def _client(self):
+        profile, suscription    =   _suscription_for('cliente')
+        client                  =   APIClient()
+        client.force_authenticate(user = profile.user)
+        return client, profile, suscription
+
+    @patch(f'{VIEWS}.CreatePreapprovalQuery')
+    def test_requires_billing_fields_before_mp(self, create):
+        #Usuario activo por cupón sin datos fiscales: primero el form de
+        #facturación (400 billing_required) — jamás se crea el débito en MP.
+        client, profile, _  =   self._client()
+        profile.document    =   None
+        profile.save(update_fields = ['document'])
+        response    =   client.post(self.URL, {}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('document', response.json()['billing_required'])
+        create.assert_not_called()
+
+    @patch(f'{VIEWS}.UpdatePreapprovalPlanQuery')
+    @patch(f'{VIEWS}.GetPreapproval')
+    @patch(f'{VIEWS}.CreatePreapprovalQuery')
+    @patch(f'{VIEWS}.SyncPreapprovalQuery')
+    def test_retake_returns_same_init_point_without_recreating(self, sync, create, get_pa, update_pa):
+        #Segunda activación (doble click/retry): con el alta ya persistida
+        #retoma el MISMO init_point — no crea un segundo preapproval.
+        client, _, suscription    =   self._client()
+        suscription.preapproval_id    =   'pre-7'
+        suscription.save(update_fields = ['preapproval_id'])
+        sync.return_value   =   'pending'
+        get_pa.return_value =   {'status': 'pending', 'init_point': 'https://mp/sub/pre-7'}
+        response    =   client.post(self.URL, {}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['init_point'], 'https://mp/sub/pre-7')
+        self.assertEqual(response.json()['preapproval_id'], 'pre-7')
+        create.assert_not_called()
+        update_pa.assert_called_once()
+
+    @patch(f'{VIEWS}.UpdatePreapprovalPlanQuery')
+    @patch(f'{VIEWS}.CreatePreapprovalQuery')
+    @patch(f'{VIEWS}.SyncPreapprovalQuery')
+    def test_authorized_returns_auto_renew(self, sync, create, update_pa):
+        client, _, suscription    =   self._client()
+        suscription.preapproval_id    =   'pre-8'
+        suscription.auto_renew        =   True
+        suscription.save(update_fields = ['preapproval_id', 'auto_renew'])
+        sync.return_value   =   'authorized'
+        response    =   client.post(self.URL, {}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['auto_renew'])
+        create.assert_not_called()
+        #Sin plan pendiente no se toca el débito ya autorizado.
+        update_pa.assert_not_called()
+
+    @patch(f'{VIEWS}.UpdatePreapprovalPlanQuery')
+    @patch(f'{VIEWS}.GetPreapproval')
+    @patch(f'{VIEWS}.CreatePreapprovalQuery')
+    @patch(f'{VIEWS}.SyncPreapprovalQuery')
+    def test_repeat_activation_creates_only_one_preapproval(self, sync, create, get_pa, update_pa):
+        #Dos altas encoladas por el lock de fila: la primera crea en MP, la
+        #segunda ve el preapproval persistido y retoma — un solo alta remota.
+        client, _, _    =   self._client()
+        def _created(sub):
+            sub.preapproval_id  =   'pre-9'
+            sub.save(update_fields = ['preapproval_id'])
+            return {'status': 'pending', 'init_point': 'https://mp/sub/pre-9'}
+        create.side_effect  =   _created
+        sync.side_effect    =   [None, 'pending']
+        get_pa.return_value =   {'status': 'pending', 'init_point': 'https://mp/sub/pre-9'}
+        first   =   client.post(self.URL, {}, format = 'json')
+        second  =   client.post(self.URL, {}, format = 'json')
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.json()['init_point'], 'https://mp/sub/pre-9')
+        self.assertEqual(create.call_count, 1)
+
+    @patch(f'{VIEWS}.CancelPreapprovalByIdQuery')
+    @patch(f'{VIEWS}.CreatePreapprovalQuery')
+    @patch(f'{VIEWS}.SyncPreapprovalQuery')
+    def test_orphan_preapproval_compensated_on_failure(self, sync, create, cancel):
+        #El alta remota se concretó pero la persistencia local falló: el
+        #preapproval huérfano se cancela en MP y el error original se propaga.
+        client, _, _    =   self._client()
+        def _boom(sub):
+            sub.preapproval_id  =   'pre-orphan'
+            raise RuntimeError('commit failed')
+        sync.return_value   =   None
+        create.side_effect  =   _boom
+        response    =   client.post(self.URL, {}, format = 'json')
+        #El exception_handler global convierte el error interno en 500 JSON;
+        #lo importante es que el preapproval huérfano quedó cancelado en MP.
+        self.assertEqual(response.status_code, 500)
+        cancel.assert_called_once_with('pre-orphan')
+
+
 class WebhookReplayTests(TestCase):
     """Ventana anti-replay: una firma válida pero vieja ya no se procesa."""
     client_class    =   APIClient

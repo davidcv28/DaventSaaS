@@ -29,6 +29,7 @@ from AdminApp.domains.payments.services import (
     UpdatePreapprovalPlanQuery,
     SyncPreapprovalQuery,
     CancelPreapprovalQuery,
+    CancelPreapprovalByIdQuery,
     PreapprovalWebhookQuery,
     AuthorizedPaymentWebhookQuery,
     SUSCRIPTION_STATUS_PENDING_PAYMENT,
@@ -291,28 +292,56 @@ class PaymentViewSet(PaymentBaseViewSet):
     @action(detail = False, methods = ['post'], url_path = 'subscription')
     def subscription(self, request):
         suscription     =   self._resolve_suscription(request)
+        previous_preapproval_id =   suscription.preapproval_id
+        #CONCURRENCIA/IDEMPOTENCIA: el preapproval es un recurso externo único
+        #por suscripción — dos altas en paralelo (doble click, dos pestañas)
+        #creaban dos débitos en MP y el cliente terminaba autorizando cobros
+        #duplicados. select_for_update serializa el alta/baja/retoma: el
+        #segundo request espera el commit del primero, ve el preapproval_id
+        #ya persistido y retoma el MISMO init_point. También cierra la
+        #ventana contra RedeemCouponQuery, que bloquea la misma fila.
         try:
-            mp_status   =   SyncPreapprovalQuery(suscription)
-        except serializers.ValidationError:
-            #Preapproval_id viejo/inválido en MP: se descarta y se crea uno nuevo
-            mp_status   =   None
-        #Ya autorizado: si hay plan pendiente nuevo, se actualiza el monto del próximo débito
-        if mp_status == 'authorized':
-            if suscription.pending_plan_suscription_id:
-                UpdatePreapprovalPlanQuery(suscription)
-            return Response(
-                {
-                    'status'        :   'authorized',
-                    'auto_renew'    :   True,
-                    'preapproval_id':   suscription.preapproval_id,
-                }, status = status.HTTP_200_OK)
-        if mp_status == 'pending':
-            #Autorización en curso: se retoma el mismo init_point con el monto al día
-            UpdatePreapprovalPlanQuery(suscription)
-            preapproval     =   GetPreapproval(suscription.preapproval_id)
-        else:
-            #Sin débito o cancelado/pausado: se crea uno nuevo
-            preapproval     =   CreatePreapprovalQuery(suscription)
+            with transaction.atomic():
+                suscription =   Suscription.objects.select_for_update(of = ('self',)).select_related(
+                    'plan_suscription', 'pending_plan_suscription', 'user__user').get(pk = suscription.pk)
+                #Snapshot ya bajo lock: solo un id distinto A ESTE puede ser
+                #huérfano propio (un id nuevo heredado de otro request que
+                #commiteó antes de nuestro lock es legítimo y jamás se toca).
+                previous_preapproval_id =   suscription.preapproval_id
+                try:
+                    mp_status   =   SyncPreapprovalQuery(suscription)
+                except serializers.ValidationError:
+                    #Preapproval_id viejo/inválido en MP: se descarta y se crea uno nuevo
+                    mp_status   =   None
+                #Ya autorizado: si hay plan pendiente nuevo, se actualiza el monto del próximo débito
+                if mp_status == 'authorized':
+                    if suscription.pending_plan_suscription_id:
+                        UpdatePreapprovalPlanQuery(suscription)
+                    return Response(
+                        {
+                            'status'        :   'authorized',
+                            'auto_renew'    :   True,
+                            'preapproval_id':   suscription.preapproval_id,
+                        }, status = status.HTTP_200_OK)
+                if mp_status == 'pending':
+                    #Autorización en curso: se retoma el mismo init_point con el monto al día
+                    UpdatePreapprovalPlanQuery(suscription)
+                    preapproval     =   GetPreapproval(suscription.preapproval_id)
+                else:
+                    #Sin débito o cancelado/pausado: se crea uno nuevo
+                    preapproval     =   CreatePreapprovalQuery(suscription)
+        except Exception:
+            #COMPENSACIÓN del recurso externo: si el alta remota se concretó
+            #pero el commit local falló, el preapproval queda huérfano en MP —
+            #autorizable y cobrando sin registro local ni forma de baja desde
+            #la UI. Se cancela best-effort (CancelPreapprovalByIdQuery ya
+            #traga sus errores) y se propaga el original. La misma red vive
+            #en CreatePreapprovalQuery cuando la que falla es la escritura
+            #del save() — acá se cubre la ventana del commit del atomic.
+            orphan_id   =   getattr(suscription, 'preapproval_id', None)
+            if orphan_id and orphan_id != previous_preapproval_id:
+                CancelPreapprovalByIdQuery(orphan_id)
+            raise
         is_sandbox      =   str(config('SECRET_MP_KEY', default = '')).startswith('TEST-')
         #En preapprovals MP no devuelve sandbox_init_point: el init_point es uno solo.
         return Response(
@@ -328,12 +357,16 @@ class PaymentViewSet(PaymentBaseViewSet):
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'cancel-renewal')
     def cancel_renewal(self, request):
-        suscription =   Suscription.objects.filter(user__user = request.user).first()
-        if not suscription:
-            raise serializers.ValidationError({'suscription': 'No tenés una suscripción para dar de baja'})
-        if not suscription.auto_renew and suscription.cancelled_at:
-            return Response({'Exito': 'La renovación automática ya estaba desactivada', 'auto_renew': False}, status = status.HTTP_200_OK)
-        CancelPreapprovalQuery(suscription)
+        #Mismo lock que subscription: una baja concurrente con un alta en
+        #vuelo no puede quedar leyendo el estado pre-commit (bajaba "sin
+        #débito" mientras el alta persistía un preapproval nuevo).
+        with transaction.atomic():
+            suscription =   Suscription.objects.select_for_update(of = ('self',)).filter(user__user = request.user).first()
+            if not suscription:
+                raise serializers.ValidationError({'suscription': 'No tenés una suscripción para dar de baja'})
+            if not suscription.auto_renew and suscription.cancelled_at:
+                return Response({'Exito': 'La renovación automática ya estaba desactivada', 'auto_renew': False}, status = status.HTTP_200_OK)
+            CancelPreapprovalQuery(suscription)
         return Response(
             {
                 'Exito'     :   'Renovación automática desactivada. Tu plan sigue vigente hasta el fin del período ya pago.',
