@@ -46,6 +46,8 @@ import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
 import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
+import { isAndroidDevice } from '../api/app.api.js'
+import { Capacitor } from '@capacitor/core'
 import { extractApiError } from '../api/http.js'
 import { env, storeSubdomains } from '../config/env.js'
 import {
@@ -127,6 +129,19 @@ async function resendVerification() {
   } finally {
     verifyBusy.value = false
   }
+}
+
+// --- Banner de la app Android ---
+// Solo en navegador móvil Android (en la APK nativa no aplica) y descartable:
+// el cierre queda en localStorage para no insistir en cada visita.
+const apkBannerDismissed = ref(false)
+try { apkBannerDismissed.value = localStorage.getItem('davent:apk-banner') === '0' } catch { /* noop */ }
+const showApkBanner = computed(() =>
+  !apkBannerDismissed.value && isAndroidDevice() && !Capacitor.isNativePlatform()
+)
+function dismissApkBanner() {
+  apkBannerDismissed.value = true
+  try { localStorage.setItem('davent:apk-banner', '0') } catch { /* noop */ }
 }
 
 // --- Cuenta: edición de correo + perfil fiscal ---
@@ -3020,6 +3035,20 @@ async function changePassword() {
     </div>
     <AlertMessage v-if="verifyMsg" kind="success" :message="verifyMsg" />
     <AlertMessage v-if="verifyErr" kind="error" :message="verifyErr" />
+
+    <!-- Banner app Android: solo en web móvil Android (no dentro de la APK) -->
+    <div v-if="showApkBanner" class="cta-banner apk-banner">
+      <div>
+        <strong>DAVENT en tu teléfono.</strong><br />
+        Instalá la app y gestioná tu negocio sin abrir el navegador.
+      </div>
+      <div class="apk-banner-actions">
+        <RouterLink to="/descargar" class="btn light btn-auto">Descargar app</RouterLink>
+        <button type="button" class="apk-banner-x" aria-label="Ocultar aviso" @click="dismissApkBanner">
+          <AppIcon name="x" :size="15" />
+        </button>
+      </div>
+    </div>
 
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">

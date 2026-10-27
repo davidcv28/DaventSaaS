@@ -433,6 +433,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
           <small>© {{ new Date().getFullYear() }} DAVENT · Hecho en Argentina</small>
         </span>
         <nav>
+          <RouterLink to="/descargar">Descargar app</RouterLink>
           <RouterLink to="/acerca-de">Sobre DAVENT</RouterLink>
           <RouterLink to="/terminos">Términos y condiciones</RouterLink>
           <RouterLink to="/denuncias">Denunciar contenido</RouterLink>

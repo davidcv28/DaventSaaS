@@ -20,6 +20,7 @@ const homeLabel = computed(() => (auth.isAuthenticated ? 'Volver al panel' : 'Vo
         <BrandLogo :size="30" /> <span>DAVENT</span>
       </RouterLink>
       <nav class="legal-nav" aria-label="Enlaces legales">
+        <RouterLink to="/descargar">Descargar app</RouterLink>
         <RouterLink to="/acerca-de">Sobre DAVENT</RouterLink>
         <RouterLink to="/terminos">Términos y condiciones</RouterLink>
         <RouterLink to="/denuncias">Denunciar contenido</RouterLink>

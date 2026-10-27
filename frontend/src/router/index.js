@@ -14,6 +14,7 @@ const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
 const ReportView = () => import('../views/ReportView.vue')
 const AboutView = () => import('../views/AboutView.vue')
+const DownloadView = () => import('../views/DownloadView.vue')
 const InvoicePrintView = () => import('../views/InvoicePrintView.vue')
 const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const CompletePhoneView = () => import('../views/CompletePhoneView.vue')
@@ -155,6 +156,13 @@ const routes = [
     name: 'report',
     component: ReportView,
     meta: { title: 'Denunciar contenido' }
+  },
+  // Descarga de la APK (distribución web directa): pública para todos.
+  {
+    path: '/descargar',
+    name: 'download',
+    component: DownloadView,
+    meta: { title: 'Descargar la app' }
   },
   // Folleto imprimible de mi tienda: se abre en pestaña aparte (sesión vía cookie httpOnly)
   {

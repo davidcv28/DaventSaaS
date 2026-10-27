@@ -13,7 +13,11 @@ export const env = {
   platformHost,
   // Origen del sitio principal (login, dashboard, legales). Desde un
   // subdominio de tienda las rutas de plataforma viven acá, no en el host actual.
-  appUrl: import.meta.env.VITE_APP_URL || `${protocol}//${platformHost}`
+  appUrl: import.meta.env.VITE_APP_URL || `${protocol}//${platformHost}`,
+  // URL estable de descarga de la APK (distribución web directa). El server
+  // publica la vigente vía GET /api/config/ (bloque 'app') — este valor es el
+  // fallback cuando todavía no hay metadata o el endpoint no responde.
+  appApkUrl: import.meta.env.VITE_APP_APK_URL || 'https://davent.com/apk/davent-latest.apk'
 }
 
 // Subdominios de infraestructura: nunca son una tienda (además el backend los
