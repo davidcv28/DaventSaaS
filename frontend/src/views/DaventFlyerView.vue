@@ -80,7 +80,7 @@ function closeTab() {
 .df { width: min(100%, 105mm); min-height: 148mm; background: #fff; color: #1e1b4b; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
 /* ---------- CABECERA ---------- */
-.df-top { position: relative; overflow: hidden; padding: 13px 16px 15px; color: #fff; background: radial-gradient(130% 130% at 100% 0, #8b5cf6 0%, #6d28d9 42%, #4338ca 100%); }
+.df-top { position: relative; overflow: hidden; padding: 11px 16px 13px; color: #fff; background: radial-gradient(130% 130% at 100% 0, #8b5cf6 0%, #6d28d9 42%, #4338ca 100%); }
 .df-top::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, .18) 1px, transparent 1.4px); background-size: 9px 9px; opacity: .45; }
 .df-top::after { content: ''; position: absolute; right: -52px; top: -66px; width: 158px; height: 158px; border-radius: 50%; border: 20px solid rgba(255, 255, 255, .09); }
 .df-brand { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; }
@@ -88,34 +88,34 @@ function closeTab() {
 .df-brand :deep(.brand-logo) { display: block; background: #fff; padding: 2px; border-radius: 9px; box-shadow: 0 2px 6px rgba(30, 27, 75, .35); }
 .df-brand strong { display: block; font-size: 13.5px; font-weight: 800; letter-spacing: .22em; line-height: 1; }
 .df-brand span { display: block; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: #ddd6fe; margin-top: 3px; }
-.df-hook { position: relative; z-index: 1; margin: 11px 0 0; font-size: 22px; font-weight: 900; line-height: 1.06; letter-spacing: -.035em; color: #fff; }
+.df-hook { position: relative; z-index: 1; margin: 9px 0 0; font-size: 22px; font-weight: 900; line-height: 1.06; letter-spacing: -.035em; color: #fff; }
 .df-hook em { font-style: normal; background: #fde047; color: #1e1b4b; padding: 1px 5px; border-radius: 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.df-sub { position: relative; z-index: 1; margin: 7px 0 0; font-size: 9.4px; line-height: 1.45; color: #e9e4ff; }
+.df-sub { position: relative; z-index: 1; margin: 6px 0 0; font-size: 9.4px; line-height: 1.45; color: #e9e4ff; }
 
 /* ---------- CUERPO ---------- */
-.df-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: #fbfaff; }
+.df-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 10px 16px; background: #fbfaff; }
 
-.df-perks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.df-perks li { display: flex; align-items: flex-start; gap: 6px; padding: 7px 8px; background: #fff; border: 1px solid #ece7fa; border-radius: 8px; font-size: 8.6px; font-weight: 700; line-height: 1.3; color: #1e1b4b; }
+.df-perks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.df-perks li { display: flex; align-items: flex-start; gap: 6px; padding: 5px 7px; background: #fff; border: 1px solid #ece7fa; border-radius: 8px; font-size: 8.3px; font-weight: 700; line-height: 1.25; color: #1e1b4b; }
 .df-tick { flex: none; width: 14px; height: 14px; border-radius: 50%; background: #dcfce7; color: #15803d; display: grid; place-items: center; }
 
 .df-trial { display: flex; align-items: center; gap: 8px; padding: 7px 9px; background: #fffbeb; border: 1px solid #fde68a; border-left: 3px solid #f59e0b; border-radius: 8px; }
 .df-trial .df-trial-ico { flex: none; width: 22px; height: 22px; border-radius: 6px; background: #fde047; color: #422006; display: flex; align-items: center; justify-content: center; line-height: 0; }
 .df-trial-ico :deep(svg) { display: block; margin: 0; }
 .df-trial strong { display: block; font-size: 9.2px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: #422006; }
-.df-trial div span { display: block; font-size: 8.1px; line-height: 1.55; color: #78350f; margin-top: 1px; }
+.df-trial div span { display: block; font-size: 8.1px; line-height: 1.45; color: #78350f; margin-top: 1px; }
 .df-trial-code { padding: 0 4px; border-radius: 3px; background: #fde68a; font-weight: 900; letter-spacing: .04em; color: #7c2d12; white-space: nowrap; }
-.df-trial small { display: block; margin-top: 2px; font-size: 7.4px; font-weight: 700; letter-spacing: .02em; color: #a16207; }
 
-.df-plans { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.df-plans { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 5px; }
 .df-plans-head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 8.6px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: #4338ca; }
 .df-plans-head::after { content: ''; flex: 1; height: 1px; background: #ddd6fe; }
-.df-table { flex: 1; min-height: 0; display: grid; grid-auto-rows: 1fr; border: 1px solid #e7e2f6; border-radius: 10px; overflow: hidden; background: #fff; }
-.df-plan { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-top: 2px solid #bfb0ee; }
+.df-table { flex: 1; min-height: 0; display: grid; grid-auto-rows: minmax(0, 1fr); border: 1px solid #e7e2f6; border-radius: 10px; overflow: hidden; background: #fff; }
+.df-plan { min-height: 0; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-top: 2px solid #bfb0ee; }
 .df-plan:first-child { border-top: 0; }
+.df-plan-main { min-width: 0; }
 .df-plan-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.df-plan-name strong { font-size: 10.4px; font-weight: 900; color: #1e1b4b; }
-.df-plan small { display: block; font-size: 8.1px; line-height: 1.3; color: #6b6485; margin-top: 2px; }
+.df-plan-name strong { font-size: 10.4px; font-weight: 900; color: #1e1b4b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.df-plan small { display: block; font-size: 8.1px; line-height: 1.3; color: #6b6485; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .df-plan-price { flex: none; text-align: right; white-space: nowrap; }
 .df-plan-price b { font-size: 10.8px; font-weight: 900; color: #4338ca; font-variant-numeric: tabular-nums; }
 .df-plan-price span { font-size: 7.6px; font-weight: 700; color: #8b83a8; }
@@ -128,7 +128,7 @@ function closeTab() {
 .df-plans-empty { flex: 1; display: grid; place-items: center; padding: 12px; border: 1px dashed #ddd6fe; border-radius: 10px; font-size: 9px; font-weight: 700; line-height: 1.4; color: #6b6485; text-align: center; }
 
 /* ---------- PIE ---------- */
-.df-cta { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: radial-gradient(130% 150% at 0% 0, #312e81, #17153a 72%); color: #fff; border-top: 4px solid #fde047; }
+.df-cta { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: radial-gradient(130% 150% at 0% 0, #312e81, #17153a 72%); color: #fff; border-top: 4px solid #fde047; }
 .df-qr { flex: none; background: #fff; border-radius: 8px; padding: 5px 5px 3px; display: grid; justify-items: center; gap: 1px; }
 .df-qr img { width: 62px; height: 62px; display: block; }
 .df-qr span { font-size: 6.8px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: #1e1b4b; }
@@ -186,8 +186,7 @@ function closeTab() {
             <span class="df-trial-ico"><AppIcon name="gift" :size="13" /></span>
             <div>
               <strong>Estamos regalando 30 días de Premium</strong>
-              <span>Registrate y canjeá el código <b class="df-trial-code">PROMO</b> en Plan y pagos.</span>
-              <small>Sin tarjeta ni datos de facturación.</small>
+              <span>Registrate y canjeá el código <b class="df-trial-code">PROMO</b> en Plan y pagos. Sin tarjeta ni datos de facturación.</span>
             </div>
           </div>
 
