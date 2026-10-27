@@ -100,7 +100,7 @@ onMounted(() => { p.loadCatalog() })
       <div class="ci-hero-copy">
         <p class="ci-eyebrow"><AppIcon name="terminal" :size="13" /> {{ catEyebrow }}</p>
         <h1 class="ci-title">
-          <span v-for="(w, i) in titleWords" :key="i" :class="{ acc: i === titleWords.length - 1 && titleWords.length > 1 }">{{ w }} </span>
+          <span v-for="(w, i) in titleWords" :key="i" :class="{ acc: i === titleWords.length - 1 && titleWords.length > 1 }">{{ w + (i < titleWords.length - 1 ? ' ' : '') }}</span>
         </h1>
         <p v-if="custom.description" class="ci-lede">{{ custom.description.slice(0, 90) }}{{ custom.description.length > 90 ? '…' : '' }}</p>
         <div class="ci-hero-ctas">

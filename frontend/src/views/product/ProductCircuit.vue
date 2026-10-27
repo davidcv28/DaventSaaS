@@ -101,7 +101,10 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
       </nav>
 
       <article id="ci-pd-resumen" class="ci-pd-sheet">
-        <SwipeGallery class="ci-pd-gal" :images="product.image ? [product.image] : []" :alt="product.name" ratio="1 / 1" />
+        <div class="ci-pd-media">
+          <SwipeGallery class="ci-pd-gal" :images="product.image ? [product.image] : []" :alt="product.name" ratio="1 / 1" />
+          <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="corner" />
+        </div>
 
         <div class="ci-pd-info">
           <p class="ci-pd-cat">{{ [brand, catName].filter(Boolean).join(' · ') || 'Equipo' }}</p>
@@ -113,7 +116,6 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
           <div class="ci-pd-price">
             <s v-if="p.productOffer(product) != null">{{ p.formatARS(product.price) }}</s>
             <strong>{{ p.formatARS(p.effectivePrice(product)) }}</strong>
-            <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="corner" small />
           </div>
 
           <div ref="ctaRef" class="ci-pd-ctas">

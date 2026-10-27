@@ -74,7 +74,7 @@
 .mc-menu-list li:last-child { border-bottom: 0; }
 .mc-menu-row { display: flex; align-items: baseline; gap: 8px; color: var(--mc-ink); text-decoration: none; }
 .mc-menu-name { font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
-.mc-menu-seal { position: static; width: 34px; height: 34px; font-size: 10px; flex: none; }
+.mc-menu-name .os.mc-menu-seal { position: static; width: 34px; height: 34px; font-size: 10px; flex: none; }
 .mc-menu-dots { flex: 1; border-bottom: 2px dotted color-mix(in srgb, var(--mc-ink) 30%, transparent); translate: 0 -4px; }
 .mc-menu-price { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; white-space: nowrap; }
 .mc-menu-price s { font-weight: 400; opacity: .5; margin-right: 7px; font-size: 12px; }

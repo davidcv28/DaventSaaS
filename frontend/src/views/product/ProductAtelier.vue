@@ -120,7 +120,7 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
           <div class="at-pd-price">
             <s v-if="p.productOffer(product) != null">{{ p.formatARS(product.price) }}</s>
             <strong>{{ p.formatARS(p.effectivePrice(product)) }}</strong>
-            <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" :shape="variant === 'street' ? 'ticket' : 'corner'" small class="at-pd-seal" />
+            <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="ticket" small class="at-pd-seal" />
           </div>
 
           <!-- Talle -->

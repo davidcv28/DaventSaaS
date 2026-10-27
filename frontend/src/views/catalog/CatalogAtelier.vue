@@ -11,6 +11,7 @@ import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
+import '../../assets/store-atelier.css'
 
 // Atelier (Indumentaria): el catálogo como pliego de colección — índice
 // tipográfico, misma grilla editorial 1-2-1 de la portada y Tag-Corte en

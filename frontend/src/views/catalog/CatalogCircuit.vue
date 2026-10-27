@@ -12,6 +12,7 @@ import ProductStars from '../../components/ProductStars.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
 import BentoGrid from '../../components/store/BentoGrid.vue'
+import '../../assets/store-circuit.css'
 
 // Circuit/Lab (Tecnología): el catálogo como datasheet — header técnico en
 // mono y los productos en el mismo bento rígido de la portada (destacado

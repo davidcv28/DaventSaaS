@@ -71,7 +71,10 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
 
     <template v-else-if="status === 'ready' && product">
       <article class="sd-pd-sheet">
-        <SwipeGallery class="sd-pd-gal" :images="product.image ? [product.image] : []" :alt="product.name" ratio="16 / 10" />
+        <div class="sd-pd-media">
+          <SwipeGallery class="sd-pd-gal" :images="product.image ? [product.image] : []" :alt="product.name" ratio="16 / 10" />
+          <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="ribbon" small />
+        </div>
 
         <div class="sd-pd-info">
           <p class="sd-pd-cat">{{ catName || 'Servicio' }}</p>
@@ -85,7 +88,6 @@ onMounted(() => { if (p.custom.value.show_catalog !== false) load() })
           <div class="sd-pd-price">
             <s v-if="p.productOffer(product) != null">{{ p.formatARS(product.price) }}</s>
             <strong>{{ p.formatARS(p.effectivePrice(product)) }}</strong>
-            <OfferSeal v-if="p.productOffer(product) != null" :pct="p.offerPct(product)" shape="ribbon" small />
           </div>
 
           <div ref="ctaRef" class="sd-pd-ctas">

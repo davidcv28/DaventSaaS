@@ -11,6 +11,7 @@ import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 import OfferSeal from '../../components/store/OfferSeal.vue'
 import StTag from '../../components/store/StTag.vue'
+import '../../assets/store-studio.css'
 
 // Studio/Proceso (Servicios): el catálogo como lista ordenada — cards
 // horizontales de ancho completo, icono en cuadrado, tags de modalidad y

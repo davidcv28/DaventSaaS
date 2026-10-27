@@ -52,7 +52,7 @@
 /* ---------- Servicios ---------- */
 .sd-services { padding: 0 clamp(16px, 5vw, 48px); margin-bottom: var(--sd-gap); }
 .sd-svc-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.sd-svc { display: flex; align-items: center; gap: 14px; min-height: 96px; padding: 14px 16px; border: 1px solid var(--sd-line); border-radius: var(--sd-radius); color: var(--sd-ink); text-decoration: none; transition: border-color .15s, translate .15s; }
+.sd-svc { position: relative; display: flex; align-items: center; gap: 14px; min-height: 96px; padding: 14px 16px; border: 1px solid var(--sd-line); border-radius: var(--sd-radius); color: var(--sd-ink); text-decoration: none; transition: border-color .15s, translate .15s; }
 @media (hover: hover) { .sd-svc:hover { border-color: color-mix(in srgb, var(--sd-ink) 34%, transparent); translate: 0 -2px; } }
 .sd-svc-icon { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: color-mix(in srgb, var(--store-accent) 14%, transparent); color: var(--store-accent-ink); }
 .sd-svc-body { flex: 1; min-width: 0; display: grid; gap: 5px; }
@@ -125,6 +125,7 @@
 .sd-crumbs a:hover { color: var(--sd-ink); }
 .sd-crumbs span[aria-current] { color: var(--sd-ink); font-weight: 600; max-width: 45vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sd-pd-sheet { display: grid; gap: 0; }
+.sd-pd-media { position: relative; }
 .sd-pd-gal { margin: 0; }
 .sd-pd-gal img { height: min(64vw, 420px); }
 .sd-pd-info { display: grid; gap: 14px; padding: 20px clamp(16px, 5vw, 48px) 28px; align-content: start; }
