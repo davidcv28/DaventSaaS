@@ -50,3 +50,13 @@ class StoreService(models.Model):
         ]
     def __str__(self):
         return f'{self.name} ({self.store.slug})'
+#=========================================
+# PUBLIC CACHE BUST (ver stores/public_cache.py: la página "Servicios" se
+# refresca al toque cuando el dueño edita su lista)
+#=========================================
+from django.db.models.signals import post_delete, post_save
+def _bust_public_service(sender, instance, **kwargs):
+    from StoreApp.domains.stores.public_cache import bump_public_store
+    bump_public_store(instance.store_id)
+post_save.connect(_bust_public_service, sender = StoreService)
+post_delete.connect(_bust_public_service, sender = StoreService)

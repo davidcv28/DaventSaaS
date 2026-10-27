@@ -88,6 +88,10 @@ class Suscription(models.Model):
             self.end_date   =   self.start_date + timedelta(days = 30)
         super().save(*args, **kwargs)
         _bust_benefits_cache(self.user_id)
+        #El cambio de plan altera los beneficios que compone el payload
+        #público (allowed_templates, has_public_link...) → bustea también.
+        from StoreApp.domains.stores.public_cache import bump_public_owner
+        bump_public_owner(self.user_id)
     #=========================================
     # ACCESS UNTIL (fin real del acceso, con gracia si hay débito automático)
     #=========================================
@@ -101,7 +105,11 @@ class Suscription(models.Model):
         return self.status == self.STATUS_ACTIVE and bool(self.end_date) and timezone.now() <= self.access_until()
 
 from django.db.models.signals import post_delete
-post_delete.connect(lambda sender, instance, **kwargs: _bust_benefits_cache(instance.user_id), sender = Suscription)
+def _bust_public_on_delete(sender, instance, **kwargs):
+    _bust_benefits_cache(instance.user_id)
+    from StoreApp.domains.stores.public_cache import bump_public_owner
+    bump_public_owner(instance.user_id)
+post_delete.connect(_bust_public_on_delete, sender = Suscription)
 #=========================================
 #COUPON MODEL
 #=========================================

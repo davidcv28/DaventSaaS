@@ -1,7 +1,9 @@
+import hashlib
 import json
 import logging
 import re
 from datetime import timedelta
+from django.core.cache import cache
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -30,6 +32,7 @@ from StoreApp.domains.stores.services                import (
     issue_captcha, verify_captcha, send_contact_message, contact_target,
     record_store_visit, visit_stats_of,
 )
+from StoreApp.domains.stores.public_cache            import public_cache_stamp
 from .viewset_base   import StoreBaseViewSet
 from .viewset_config import StoreConfigs
 from DaventProject.throttling import PublicReadThrottle
@@ -73,6 +76,12 @@ CATALOG_IDS_MAX         =   50
 #los más frecuentes; los atributos con menos uso quedan fuera del panel).
 CATALOG_FACET_GROUPS    =   12
 CATALOG_FACET_VALUES    =   30
+#TTL del cache server-side de los payloads públicos (web de cliente): solo
+#barre entradas huérfanas — la frescura la garantiza el versionado (epoch,
+#ver) que bustea al instante en cada save/delete de lo que compone el
+#payload (ver public_cache.py). Una tienda viral cuesta ~1 fetch a cache
+#por pageview en vez de ~8 queries a la DB.
+PUBLIC_CACHE_TTL        =   120
 #=========================================
 # HELPERS
 #=========================================
@@ -166,6 +175,14 @@ def _product_haystack(product):
 def _natural_key(text):
     """Orden "humano" de los valores de una faceta: 2 < 10, S < XL."""
     return [int(piece) if piece.isdigit() else piece.casefold() for piece in re.split(r'(\d+)', str(text))]
+
+def _params_fingerprint(request):
+    #Huella estable de la querystring para el cache del catálogo público:
+    #el payload varía por cada filtro (?q=, ?category=, ?sort=...), así que
+    #la key lleva params canonizados (orden de parámetros y de valores no
+    #cambia la respuesta — ?a=1&b=2 y ?b=2&a=1 comparten entrada).
+    canonical =   sorted((k, tuple(sorted(v))) for k, v in request.query_params.lists())
+    return hashlib.md5(repr(canonical).encode()).hexdigest()
 
 def _apply_order(queryset, order):
     """
@@ -302,16 +319,27 @@ class StoreViewSet(StoreBaseViewSet):
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
-        #La página "Servicios" viaja en el mismo payload cuando está
-        #habilitada en los site_templates efectivos: una sola query extra
-        #y solo en ese caso (service_items sale [] en el resto).
-        from StoreApp.domains.services.services import effective_site_templates
-        if 'services' in effective_site_templates(store):
-            from StoreApp.domains.services.models import StoreService
-            store._service_items    =   list(StoreService.objects.filter(store = store, is_active = True))
+        #Cache server-side del payload (PUBLIC_CACHE_TTL): es idéntico para
+        #todos los visitantes — una tienda con tráfico viral deja de pegarle
+        #a la DB por pageview. Quedan vivos el fetch del store (1 query:
+        #unpublish/block cortan al instante) y el conteo de visitas, que va
+        #por fuera del cache y siempre corre. La versión (epoch,ver) bustea
+        #al instante ante cualquier save/delete de lo que compone el payload.
+        epoch, ver  =   public_cache_stamp(store.pk)
+        cache_key   =   f'store:public:v1:{store.pk}:{epoch}:{ver}'
+        data        =   cache.get(cache_key)
+        if data is None:
+            #La página "Servicios" viaja en el mismo payload cuando está
+            #habilitada en los site_templates efectivos: una sola query extra
+            #y solo en ese caso (service_items sale [] en el resto).
+            from StoreApp.domains.services.services import effective_site_templates
+            if 'services' in effective_site_templates(store):
+                from StoreApp.domains.services.models import StoreService
+                store._service_items    =   list(StoreService.objects.filter(store = store, is_active = True))
+            data    =   dict(StorePublicSerializer(store).data)
+            cache.set(cache_key, data, PUBLIC_CACHE_TTL)
         record_store_visit(store, request)
-        serializer  =   StorePublicSerializer(store)
-        response    =   Response(serializer.data, status = status.HTTP_200_OK)
+        response    =   Response(data, status = status.HTTP_200_OK)
         #Cache corta: la misma visita no repide la ficha al navegar entre
         #Inicio/Catálogo/Producto ni al volver atrás. El conteo de visitas no
         #se ve afectado (la dedup por visitante/día ya corre en cache.add).
@@ -361,11 +389,6 @@ class StoreViewSet(StoreBaseViewSet):
     #=========================================
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/catalog', throttle_classes = [PublicReadThrottle])
     def public_catalog(self, request, slug = None):
-        from StoreApp.domains.catalog.models import Product
-        from StoreApp.domains.catalog.serializers.serializers import (
-            CategorySerializer, BrandSerializer, ProductPublicSerializer, DiscountPublicSerializer,
-        )
-        from StoreApp.domains.catalog.services.services import running_discounts_of, effective_pricing_of
         store           =   get_object_or_404(
             Store.objects.select_related('user', 'customization'),
             slug = slug, is_published = True, is_blocked = False,
@@ -384,6 +407,29 @@ class StoreViewSet(StoreBaseViewSet):
         from StoreApp.domains.services.services import effective_site_templates
         if 'catalog' not in effective_site_templates(store):
             raise Http404
+        #Cache server-side idem public(): la key lleva (epoch, versión de la
+        #tienda, huella de la query) — cada filtro/búsqueda genera un payload
+        #distinto y los kill-switches de arriba quedan vivos en cada request.
+        epoch, ver  =   public_cache_stamp(store.pk)
+        cache_key   =   f'store:catalog:v1:{store.pk}:{epoch}:{ver}:{_params_fingerprint(request)}'
+        data        =   cache.get(cache_key)
+        if data is None:
+            data    =   self._public_catalog_data(request, store, customization)
+            cache.set(cache_key, data, PUBLIC_CACHE_TTL)
+        response    =   Response(data, status = status.HTTP_200_OK)
+        #Idem /public/<slug>/: el visitante que pasa de la portada al catálogo
+        #o a una ficha no vuelve a pegarle a la API por el mismo listado.
+        patch_cache_control(response, public = True, max_age = 30)
+        return response
+    #=========================================
+    # PUBLIC CATALOG payload (todo el cómputo pesado; la action lo cachea)
+    #=========================================
+    def _public_catalog_data(self, request, store, customization):
+        from StoreApp.domains.catalog.models import Product
+        from StoreApp.domains.catalog.serializers.serializers import (
+            CategorySerializer, BrandSerializer, ProductPublicSerializer, DiscountPublicSerializer,
+        )
+        from StoreApp.domains.catalog.services.services import running_discounts_of, effective_pricing_of
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
         #La valoración solo se anota si el dueño habilitó opiniones y el
         #plan las incluye (has_product_comments, premium): score 0-5 =
@@ -529,23 +575,16 @@ class StoreViewSet(StoreBaseViewSet):
         #vencimiento) para que las plantillas armen su propio banner —
         #ordenadas de mayor a menor descuento.
         promotions      =   sorted(discounts, key = lambda d: d.percent, reverse = True)
-        response        =   Response(
-            {
-                'categories'    :   CategorySerializer(categories, many = True).data,
-                'brands'        :   BrandSerializer(brands, many = True).data,
-                'promotions'    :   DiscountPublicSerializer(promotions, many = True).data,
-                'products'      :   ProductPublicSerializer(items, many = True).data,
-                'facets'        :   facet_list,
-                'offer_count'   :   offer_count,
-                'new_count'     :   new_count,
-                'price_max'     :   price_max,
-            },
-            status = status.HTTP_200_OK,
-        )
-        #Idem /public/<slug>/: el visitante que pasa de la portada al catálogo
-        #o a una ficha no vuelve a pegarle a la API por el mismo listado.
-        patch_cache_control(response, public = True, max_age = 30)
-        return response
+        return {
+            'categories'    :   CategorySerializer(categories, many = True).data,
+            'brands'        :   BrandSerializer(brands, many = True).data,
+            'promotions'    :   DiscountPublicSerializer(promotions, many = True).data,
+            'products'      :   ProductPublicSerializer(items, many = True).data,
+            'facets'        :   facet_list,
+            'offer_count'   :   offer_count,
+            'new_count'     :   new_count,
+            'price_max'     :   price_max,
+        }
     #=========================================
     # CONTACT (formulario "Contáctanos" de la web pública, antispam)
     #=========================================

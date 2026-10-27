@@ -57,5 +57,14 @@ class UserProfile(models.Model):
                             models.Index(fields = ['province'], name = 'idx_userprofile_province'),
                             models.Index(fields = ['city'], name = 'idx_userprofile_city'),
                             ]
+#=========================================
+# PUBLIC CACHE BUST (ver stores/public_cache.py: el payload público expone
+# ubicación/datos del perfil — un cambio refresca la web al instante)
+#=========================================
+from django.db.models.signals import post_save
+def _bust_public_profile(sender, instance, **kwargs):
+    from StoreApp.domains.stores.public_cache import bump_public_owner
+    bump_public_owner(instance.pk)
+post_save.connect(_bust_public_profile, sender = UserProfile)
         
         

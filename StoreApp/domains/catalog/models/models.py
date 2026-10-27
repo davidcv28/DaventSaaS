@@ -171,3 +171,15 @@ class ProductReview(models.Model):
         ]
     def __str__(self):
         return f'{self.name} sobre {self.product.name} ({self.store.slug})'
+#=========================================
+# PUBLIC CACHE BUST (ver stores/public_cache.py: editar/borrar catálogo,
+# marcas, categorías, ofertas u opiniones refresca la web pública al toque)
+#=========================================
+from django.db.models.signals import post_delete, post_save
+def _bust_public_catalog(sender, instance, **kwargs):
+    from StoreApp.domains.stores.public_cache import bump_public_store
+    bump_public_store(instance.store_id)
+for _model in (Category, Brand, Product, Discount, ProductReview):
+    post_save.connect(_bust_public_catalog, sender = _model)
+    post_delete.connect(_bust_public_catalog, sender = _model)
+del _model

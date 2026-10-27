@@ -78,5 +78,9 @@ def _bust_plan_benefits(sender, instance, **kwargs):
     from AdminApp.domains.suscriptions.models.models import Suscription, _bust_benefits_cache
     profiles    =   Suscription.objects.filter(plan_suscription_id = instance.plan_id).values_list('user_id', flat = True)
     _bust_benefits_cache(*profiles)
+    #El cambio de beneficios del plan altera los payloads públicos de TODAS
+    #las webs suscriptas (allowed_templates, flags de páginas) → epoch global.
+    from StoreApp.domains.stores.public_cache import bump_public_epoch
+    bump_public_epoch()
 post_save.connect(_bust_plan_benefits, sender = PlanBenefit)
 post_delete.connect(_bust_plan_benefits, sender = PlanBenefit)

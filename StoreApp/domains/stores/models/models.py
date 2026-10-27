@@ -114,7 +114,7 @@ class StoreCustomization(models.Model):
     #la web fuerza 'classic' si el guardado deja de estar permitido.
     TEMPLATE_BASE               =   ('classic', 'perspective', 'duo', 'bloque', 'riso')
     TEMPLATE_PLUS               =   ('street', 'promo')
-    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora')
+    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'terra')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('perspective',      'Perspectiva'),
@@ -131,6 +131,7 @@ class StoreCustomization(models.Model):
         ('boutique',         'Boutique'),
         ('signature',        'Signature'),
         ('aurora',           'Aurora'),
+        ('terra',            'Terra'),
     ]
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
@@ -413,3 +414,19 @@ class StoreDailyVisit(models.Model):
         ]
     def __str__(self):
         return f'{self.store.slug}@{self.date}:{self.count}'
+#=========================================
+# PUBLIC CACHE BUST (ver public_cache.py: las ediciones del dueño se ven
+# al instante en su web pública — el payload no queda servido viejo)
+#=========================================
+from django.db.models.signals import post_delete, post_save
+def _bust_public_store(sender, instance, **kwargs):
+    #La versión se keyea por store_id (atributo plano de la FK): no hace
+    #fetch y sobrevive a los post_delete en cascada del propio Store.
+    from StoreApp.domains.stores.public_cache import bump_public_store
+    bump_public_store(instance.pk if sender is Store else instance.store_id)
+for _model in (Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot):
+    #StoreDailyVisit queda afuera a propósito: escribe en cada visita
+    #contada y bustearía el cache constantemente (no alimenta el payload).
+    post_save.connect(_bust_public_store, sender = _model)
+    post_delete.connect(_bust_public_store, sender = _model)
+del _model
