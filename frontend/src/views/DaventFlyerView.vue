@@ -21,18 +21,20 @@ const aboutUrl = `${env.appUrl}/acerca-de`
 const shortUrl = aboutUrl.replace(/^https?:\/\//, '')
 
 const perks = [
-  'Generá tu propia página web y vendé más',
-  'Catálogo con fotos y precios — o solo vidriera',
-  'Contacto directo con tus clientes',
-  'QR y folletos para tu local'
+  'Tu web con catálogo o página de servicios',
+  'Asistencia en tiempo real con nuestro equipo',
+  'Pedidos y consultas por WhatsApp',
+  'QR y folletos para tu local',
+  'Estadísticas de visitas de tu web',
+  'Diseños web pensados para tu rubro'
 ]
 
 // Una línea que cuenta qué suma cada plan (los planes vienen de
 // /api/plans/ con precio vivo; el copy diferencial es curado por slug).
 const PLAN_LINES = {
   basico: 'Web con catálogo · hasta 100 productos',
-  estandar: '+ QR, galería, mapa y folletos',
-  premium: '+ productos ilimitados y diseño completo'
+  estandar: '+ QR, folletos y página de servicios',
+  premium: '+ asistencia en tiempo real y diseño completo'
 }
 const PLAN_NAMES = { basico: 'Básico', estandar: 'Estándar', premium: 'Premium' }
 
