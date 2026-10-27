@@ -5,16 +5,17 @@ import { productOffer, effectivePrice, offerPct } from '../../api/catalog.api.js
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Terminal: el catálogo como salida de consola — barra de ventana, prompt
-// con el buscador, filtros como flags [--cat=...] y los productos como un
-// listado `ls -l` con columnas ordenables y vista previa de la fila activa.
+// y los productos como un listado `ls -l` con columnas ordenables. Los
+// filtros van en la sidebar/sheet unificada, vestida de consola vía tokens.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
-  featureFilters, onlyOffer, onlyNew, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, pickFeature, toggleOffer, toggleNew,
-  clearCategories, clearFilters, hasFilters, total, facets, offerTotal, newTotal,
+  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, sort,
+  visibleProducts, hasMoreProducts, showMore,
+  clearFilters, hasFilters, total,
   shownLabel, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 15 })
 
@@ -45,32 +46,12 @@ const pad = (n) => String(n + 1).padStart(3, '0')
         </nav>
         <h1 class="cv-tm-title"><span aria-hidden="true">$</span> ls -l ./catalogo</h1>
 
-        <label class="cv-tm-prompt">
-          <span aria-hidden="true">&gt; grep -i</span>
-          <input v-model="ui.search" type="search" placeholder="buscar…" aria-label="Buscar productos" spellcheck="false" autocomplete="off" />
-        </label>
-
-        <div class="cv-tm-flags" role="group" aria-label="Filtros">
-          <button type="button" class="cv-tm-flag" :class="{ on: !activeCategories.length }" @click="clearCategories">[--all]</button>
-          <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-tm-flag" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">[--cat={{ slugify(cat.name) }}]</button>
-          <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-tm-flag brand" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">[--brand={{ slugify(b.name) }}]</button>
-          <template v-for="f in facets" :key="f.name">
-            <button
-              v-for="v in f.values" :key="`${f.name}-${v.value}`" type="button" class="cv-tm-flag"
-              :class="{ on: (featureFilters[f.name] || []).includes(v.value) }" :aria-pressed="(featureFilters[f.name] || []).includes(v.value)"
-              @click="pickFeature(f.name, v.value)"
-            >[--{{ slugify(f.name) }}={{ slugify(v.value) }}]</button>
-          </template>
-          <button v-if="offerTotal" type="button" class="cv-tm-flag" :class="{ on: onlyOffer }" :aria-pressed="onlyOffer" @click="toggleOffer">[--oferta]</button>
-          <button v-if="newTotal" type="button" class="cv-tm-flag" :class="{ on: onlyNew }" :aria-pressed="onlyNew" @click="toggleNew">[--nuevo]</button>
-          <span class="cv-tm-range">
-            --min=<input v-model="priceMin" type="text" inputmode="decimal" placeholder="0" aria-label="Precio mínimo" />
-            --max=<input v-model="priceMax" type="text" inputmode="decimal" placeholder="∞" aria-label="Precio máximo" />
-          </span>
-          <button v-if="hasFilters" type="button" class="cv-tm-flag clear" @click="clearFilters">[reset]</button>
-        </div>
-
         <CatalogPromoBanner :promotions="catalog.promotions" />
+
+        <div class="cf-body">
+          <CatalogFilters />
+          <div class="cf-main">
+        <CatalogToolbar />
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 
         <div v-if="catalog.products.length" class="cv-tm-table" role="table" :class="{ loading: catalogStatus === 'loading' }" aria-label="Productos">
@@ -101,6 +82,8 @@ const pad = (n) => String(n + 1).padStart(3, '0')
           <button v-if="hasMoreProducts && catalogStatus !== 'error'" type="button" class="cv-tm-more" @click="showMore">[ver más ↓]</button>
           <span v-else>EOF</span>
         </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

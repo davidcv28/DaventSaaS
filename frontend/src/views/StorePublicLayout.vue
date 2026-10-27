@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, provide, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, provide, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS
@@ -71,6 +71,12 @@ const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
 const location = computed(() => [store.value?.city_name, store.value?.province_name].filter(Boolean).join(', '))
 const year = new Date().getFullYear()
 const mainAnchor = ref(null)
+const topSearchInput = ref(null)
+// Buscador colapsable del header (móvil): al abrir lleva el foco al input.
+function toggleTopSearch() {
+  ui.searchOpen = !ui.searchOpen
+  if (ui.searchOpen) nextTick(() => topSearchInput.value?.focus())
+}
 function skipToContent() {
   const target = document.querySelector('.sp-page-root') || mainAnchor.value
   if (!target) return
@@ -111,7 +117,27 @@ const botConfig = computed(() => (status.value === 'success' ? store.value?.chat
 
 // Estado compartido con la vista del catálogo: buscador del header, burger y
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
-const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false })
+// searchOpen: buscador colapsado del header en móvil (botón lupa).
+const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false, searchOpen: false })
+
+// Menú hamburguesa = SOLO navegación de la tienda: los filtros del catálogo
+// viven en CatalogFilters (sidebar desktop / bottom sheet móvil), no en el
+// drawer. Misma lista de destinos que .sp-top-links.
+const navMenuLinks = computed(() => {
+  const links = []
+  if (!landingOff.value) links.push({ to: homeTo.value, label: 'Inicio' })
+  if (showServices.value) links.push({ to: servicesTo.value, label: 'Servicios' })
+  if (showCatalog.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
+  if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros' })
+  if (showGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería' })
+  if (showContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto' })
+  return links
+})
+// El burger se muestra cuando hay navegación que esconder — Tienda Pro usa
+// su propia fila .sp-shop-nav (visible también en móvil).
+const hasNavMenu = computed(() => status.value === 'success' && !isShop.value && navMenuLinks.value.length > 0)
+const onMenuKey = (e) => { if (e.key === 'Escape') ui.menuOpen = false }
+watch(() => route.fullPath, () => { ui.menuOpen = false; ui.searchOpen = false })
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isServices = computed(() => route.name === 'store-services')
 const isProduct = computed(() => route.name === 'store-product')
@@ -328,11 +354,13 @@ onMounted(async () => {
     errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'
   }
   window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('keydown', onMenuKey)
   onScroll()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('keydown', onMenuKey)
   clearSeo?.()
   applyFavicon(null)
 })
@@ -346,10 +374,10 @@ onBeforeUnmount(() => {
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
       <div class="sp-container sp-top-inner">
         <button
-          v-if="isCatalog && ui.hasCatalogNav"
+          v-if="hasNavMenu"
           type="button"
           class="sp-burger"
-          :aria-label="ui.menuOpen ? 'Cerrar menú' : 'Abrir menú de categorías'"
+          :aria-label="ui.menuOpen ? 'Cerrar menú' : 'Abrir menú'"
           :aria-expanded="ui.menuOpen"
           aria-controls="sp-drawer"
           @click="ui.menuOpen = !ui.menuOpen"
@@ -379,13 +407,26 @@ onBeforeUnmount(() => {
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
-        <label v-if="isCatalog || (isShop && showCatalog)" class="sp-search sp-search-top" :class="{ 'is-shop': isShop }">
+        <label v-if="isCatalog || (isShop && showCatalog)" class="sp-search sp-search-top" :class="{ 'is-shop': isShop, open: ui.searchOpen }" id="sp-top-search">
           <AppIcon name="search" :size="16" aria-hidden="true" />
-          <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''" @keydown.enter="submitTopSearch" />
+          <input ref="topSearchInput" v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''; ui.searchOpen = false" @keydown.enter="submitTopSearch" />
           <button v-if="ui.search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="ui.search = ''"><AppIcon name="x" :size="14" /></button>
           <button v-if="isShop && !isCatalog" type="button" class="sp-search-go" aria-label="Buscar en el catálogo" @click="submitTopSearch"><AppIcon name="arrow-right" :size="15" /></button>
         </label>
         <div class="sp-top-end">
+          <!-- Buscador colapsable en móvil: la lupa abre la barra bajo el
+               header (Esc, Enter o la misma lupa la cierran). -->
+          <button
+            v-if="isCatalog || (isShop && showCatalog)"
+            type="button"
+            class="sp-icon-btn sp-search-toggle"
+            :aria-label="ui.searchOpen ? 'Cerrar búsqueda' : 'Buscar productos'"
+            :aria-expanded="ui.searchOpen"
+            aria-controls="sp-top-search"
+            @click="toggleTopSearch"
+          >
+            <AppIcon :name="ui.searchOpen ? 'x' : 'search'" :size="17" />
+          </button>
           <RouterLink v-if="topCta" class="sp-top-cta" :to="topCta.to">
             <AppIcon :name="topCta.icon" :size="16" /> {{ topCta.label }}
           </RouterLink>
@@ -418,6 +459,25 @@ onBeforeUnmount(() => {
         </div>
       </nav>
     </header>
+
+    <!-- Menú móvil (solo navegación): los filtros del catálogo NO viven
+         acá — van en CatalogFilters (bottom sheet propio). -->
+    <div v-if="hasNavMenu" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
+    <nav v-if="hasNavMenu" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" aria-label="Menú de la tienda">
+      <div class="sp-drawer-head">
+        <strong>{{ shopName }}</strong>
+        <button type="button" class="sp-drawer-close" aria-label="Cerrar menú" @click="ui.menuOpen = false">
+          <AppIcon name="x" :size="18" />
+        </button>
+      </div>
+      <div class="sp-nav-group" role="group">
+        <RouterLink
+          v-for="l in navMenuLinks" :key="l.label"
+          :to="l.to" class="sp-nav-item"
+          @click="ui.menuOpen = false"
+        ><span>{{ l.label }}</span><AppIcon name="chevron-right" :size="15" aria-hidden="true" /></RouterLink>
+      </div>
+    </nav>
 
     <span id="sp-main" ref="mainAnchor" tabindex="-1" class="sp-main-anchor"></span>
 

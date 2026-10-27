@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Minimal: lo esencial — sin hero ni cromo. Un título chico, una línea
-// fina con las categorías como texto separado por barras, buscador y orden
-// al costado, y una grilla de fotos 3:4 sin bordes con nombre y precio.
+// fina con las categorías como texto separado por barras y una grilla de
+// fotos 3:4 sin bordes con nombre y precio.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, productCount,
+  custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, clearCategories, clearFilters, hasFilters, productCount,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -39,19 +39,12 @@ const {
         <button type="button" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todo</button>
         <template v-for="cat in catalog.categories" :key="cat.id"><i aria-hidden="true">/</i><button type="button" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <small class="cf-n">{{ cat.products_count ?? 0 }}</small></button></template>
       </div>
-      <div class="cv-mn-tools">
-        <label class="cv-mn-field"><AppIcon name="search" :size="14" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="Buscar" aria-label="Buscar productos" /></label>
-        <div class="cv-mn-field cv-mn-range"><input v-model="priceMin" type="text" inputmode="decimal" placeholder="Desde $" aria-label="Precio mínimo" /><i aria-hidden="true">–</i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="Hasta $" aria-label="Precio máximo" /></div>
-        <label class="cv-mn-field"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="13" aria-hidden="true" /></label>
-      </div>
     </div>
-    <div v-if="catalog.brands.length || hasFilters" class="cv-mn-brands">
-      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <small class="cf-n">{{ b.products_count ?? 0 }}</small></button>
-      <button v-if="hasFilters" type="button" class="reset" @click="clearFilters">Limpiar</button>
-    </div>
-    <CatalogFacets />
-    <CatalogTags />
 
+    <div class="cf-body">
+      <CatalogFilters />
+      <div class="cf-main">
+    <CatalogToolbar />
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
@@ -73,6 +66,8 @@ const {
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
+      </div>
+    </div>
   </main>
 </div>
 </template>

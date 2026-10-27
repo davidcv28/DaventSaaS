@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Boutique: departamentos primero — título serif centrado con ornamento,
 // una fila de departamentos redondos con la foto de su primera prenda y una
 // grilla de 3 columnas con marco fino y barra "Ver prenda" al pasar.
 const {
-  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total, catThumbs,
+  custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, clearCategories, clearFilters, hasFilters, total, catThumbs,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -47,18 +47,10 @@ const {
   </header>
 
   <main class="cv-wrap cv-bt-main">
-    <div class="cv-bt-bar" role="group" aria-label="Filtros del catálogo">
-      <label class="cv-bt-field cv-bt-search"><AppIcon name="search" :size="15" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" /></label>
-      <div class="cv-bt-field"><input v-model="priceMin" type="text" inputmode="decimal" placeholder="Desde $" aria-label="Precio mínimo" /><i aria-hidden="true">—</i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="Hasta $" aria-label="Precio máximo" /></div>
-      <label class="cv-bt-field"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="13" aria-hidden="true" /></label>
-    </div>
-    <div v-if="catalog.brands.length || hasFilters" class="cv-bt-brands">
-      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
-      <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="13" /> Limpiar</button>
-    </div>
-    <CatalogFacets />
-    <CatalogTags />
-
+    <div class="cf-body">
+      <CatalogFilters />
+      <div class="cf-main">
+    <CatalogToolbar />
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
@@ -85,6 +77,8 @@ const {
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
+      </div>
+    </div>
   </main>
 </div>
 </template>

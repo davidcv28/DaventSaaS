@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -8,16 +8,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Publicidad: el catálogo como folleto de campaña — afiche con ráfaga, un
 // carril "Ofertas" con carteles de descuento y la grilla completa donde cada
 // producto cierra con un botón directo a WhatsApp.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total, offerCount,
+  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total, offerCount,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct, askUrl, whatsappUrl
 } = useStoreCatalog({ pageSize: 12 })
 
@@ -68,19 +68,10 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
 
     <section aria-labelledby="cv-pr-all-t">
       <h2 id="cv-pr-all-t" class="cv-pr-h"><AppIcon name="tag" :size="20" /> {{ hasFilters ? 'Resultados' : 'Todos los productos' }}</h2>
-      <div class="cv-pr-bar" role="group" aria-label="Filtros del catálogo">
-        <label class="cv-pr-box cv-pr-search"><AppIcon name="search" :size="16" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="¿Qué estás buscando?" aria-label="Buscar productos" /></label>
-        <div class="cv-pr-box"><span>$</span><input v-model="priceMin" type="text" inputmode="decimal" placeholder="Mínimo" aria-label="Precio mínimo" /><b aria-hidden="true">a</b><span>$</span><input v-model="priceMax" type="text" inputmode="decimal" placeholder="Máximo" aria-label="Precio máximo" /></div>
-        <label class="cv-pr-box"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="14" aria-hidden="true" /></label>
-      </div>
-      <div class="cv-pr-chips" role="group" aria-label="Categorías y marcas">
-        <button type="button" class="cv-pr-chip" :class="{ on: !activeCategories.length && !activeBrands.length }" @click="clearFilters">Todo</button>
-        <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-pr-chip" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
-        <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-pr-chip alt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
-      </div>
-      <CatalogFacets />
-      <CatalogTags />
-
+      <div class="cf-body">
+        <CatalogFilters />
+        <div class="cf-main">
+      <CatalogToolbar />
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
       <div v-if="catalog.products.length" class="cv-pr-grid" :class="{ loading: catalogStatus === 'loading' }">
@@ -104,6 +95,8 @@ const topPct = computed(() => offers.value.reduce((m, p) => Math.max(m, offerPct
       </div>
 
       <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
+        </div>
+      </div>
     </section>
   </main>
 </div>

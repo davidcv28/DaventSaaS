@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -8,16 +8,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Urbano: streetwear — titular XXL en outline, cinta de ticker con las
-// categorías, filtros como stickers con sombra dura y fichas numeradas de
-// borde grueso que se escalonan en la grilla.
+// categorías y fichas numeradas de borde grueso que se escalonan en la
+// grilla. Los filtros van en la sidebar/sheet unificada (CatalogFilters).
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, hasFilters, total,
+  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
@@ -50,33 +50,11 @@ const pad = (n) => String(n + 1).padStart(2, '0')
   </div>
 
   <main class="cv-wrap cv-st-main">
-    <div class="cv-st-bar" role="group" aria-label="Filtros del catálogo">
-      <label class="cv-st-box cv-st-search">
-        <AppIcon name="search" :size="16" aria-hidden="true" />
-        <input v-model="ui.search" type="search" placeholder="Buscar" aria-label="Buscar productos" />
-      </label>
-      <div class="cv-st-box">
-        <span>$</span><input v-model="priceMin" type="text" inputmode="decimal" placeholder="Min" aria-label="Precio mínimo" />
-        <b aria-hidden="true">/</b>
-        <span>$</span><input v-model="priceMax" type="text" inputmode="decimal" placeholder="Max" aria-label="Precio máximo" />
-      </div>
-      <label class="cv-st-box">
-        <select v-model="sort" aria-label="Ordenar por">
-          <option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
-        </select>
-        <AppIcon name="chevron-down" :size="14" aria-hidden="true" />
-      </label>
-    </div>
-
-    <div class="cv-st-stickers" role="group" aria-label="Categorías y marcas">
-      <button type="button" class="cv-st-pill" :class="{ on: !activeCategories.length && !activeBrands.length }" @click="clearFilters">Todo</button>
-      <button v-for="cat in catalog.categories" :key="`c${cat.id}`" type="button" class="cv-st-pill" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
-      <button v-for="b in catalog.brands" :key="`b${b.id}`" type="button" class="cv-st-pill brand" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
-    </div>
-    <CatalogFacets />
-    <CatalogTags />
-
+    <div class="cf-body">
+      <CatalogFilters />
+      <div class="cf-main">
     <CatalogPromoBanner :promotions="catalog.promotions" />
+    <CatalogToolbar />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-st-grid" :class="{ loading: catalogStatus === 'loading' }">
@@ -103,6 +81,8 @@ const pad = (n) => String(n + 1).padStart(2, '0')
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" text="Más piezas" @more="showMore" />
+      </div>
+    </div>
   </main>
 </div>
 </template>

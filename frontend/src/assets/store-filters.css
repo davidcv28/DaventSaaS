@@ -1,0 +1,524 @@
+/* ==========================================================================
+   Filtro de catálogo unificado — layout neutro (todas las plantillas)
+   --------------------------------------------------------------------------
+   La estructura la ponen CatalogFilters + CatalogFiltersGroups +
+   CatalogToolbar. Cada plantilla SOLO aporta variables de tema en su
+   raíz (los fallbacks de abajo usan la paleta --sp-* / --store-* que ya
+   define la tienda):
+
+     --cf-bg       fondo del panel / sheet
+     --cf-fg       texto principal
+     --cf-muted    texto secundario / conteos
+     --cf-border   bordes y separadores
+     --cf-accent   color de opciones activas, checkbox y foco
+     --cf-radius   radio del panel y controles
+     --cf-font     familia tipográfica del panel
+
+   Ninguna hoja de plantilla debería pisar el layout (.cf-*): solo tokens.
+   ========================================================================== */
+
+/* ---------- contenedor compartido: sidebar + columna principal ---------- */
+.cf-root { display: contents }
+
+.cf-body {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.cf-main { flex: 1 1 auto; min-width: 0 }
+
+/* ---------- tokens por defecto (sidebar y sheet) ---------- */
+.cf-side,
+.cf-sheet {
+  --cf-bg: var(--sp-card-solid, #fff);
+  --cf-fg: var(--sp-ink, #16161c);
+  --cf-muted: var(--sp-muted, #666);
+  --cf-border: var(--sp-line, rgba(0, 0, 0, .12));
+  --cf-accent: var(--store-accent-ink, var(--store-accent, #2f4fe0));
+  --cf-radius: 16px;
+  --cf-font: var(--store-font, inherit);
+  font-family: var(--cf-font);
+  color: var(--cf-fg);
+}
+
+/* ---------- desktop: sidebar ---------- */
+.cf-side {
+  flex: 0 0 264px;
+  width: 264px;
+  min-width: 0;
+  position: sticky;
+  top: 84px; /* bajo el header fijo */
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 96px);
+  background: var(--cf-bg);
+  border: 1px solid var(--cf-border);
+  border-radius: var(--cf-radius);
+  overflow: hidden;
+}
+.cf-side-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cf-border);
+}
+.cf-title { font-size: .95rem; font-weight: 700; letter-spacing: .01em }
+.cf-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--cf-accent);
+  color: var(--cf-bg); /* acento sobre fondo — par contrastado del tema */
+  font-size: .72rem;
+  font-weight: 700;
+}
+.cf-clear {
+  margin-left: auto;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: none;
+  border: 0;
+  color: var(--cf-accent);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cf-clear:hover { text-decoration: underline }
+.cf-side-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cf-border) transparent;
+}
+
+/* ---------- acordeones ---------- */
+.cf-group + .cf-group { border-top: 1px solid var(--cf-border) }
+.cf-gname {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-size: .82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--cf-muted);
+  -webkit-tap-highlight-color: transparent;
+}
+.cf-gname::-webkit-details-marker { display: none }
+.cf-gname::marker { display: none; content: '' }
+.cf-gcaret { transition: transform .18s ease; flex: 0 0 auto }
+.cf-group[open] > .cf-gname .cf-gcaret { transform: rotate(180deg) }
+.cf-gname:hover { color: var(--cf-fg) }
+
+.cf-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px 12px;
+  max-height: 256px; /* listas largas con scroll interno, nunca desbordan */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cf-border) transparent;
+}
+.cf-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: calc(var(--cf-radius) * .55);
+  background: none;
+  color: var(--cf-fg);
+  font: inherit;
+  font-size: .9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.cf-opt::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--cf-border);
+  border-radius: 5px;
+  background: transparent;
+  transition: background .12s ease, border-color .12s ease;
+}
+.cf-opt:hover { background: color-mix(in srgb, var(--cf-fg) 6%, transparent) }
+.cf-opt.on {
+  color: var(--cf-accent);
+  font-weight: 600;
+}
+.cf-opt.on::before {
+  border-color: var(--cf-accent);
+  background: var(--cf-accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 11px no-repeat;
+}
+.cf-opt-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cf-n {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: .76rem;
+  font-weight: 500;
+  font-style: normal;
+  color: var(--cf-muted);
+}
+/* Swatches de color: dot en vez de checkbox */
+.cf-opt-sw::before { display: none }
+.cf-sw {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cf-border);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35);
+}
+.cf-opt-sw.on .cf-sw { border-color: var(--cf-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-accent) 45%, transparent) }
+.cf-more {
+  margin: 0 16px 12px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--cf-accent);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cf-more:hover { text-decoration: underline }
+
+/* Precio */
+.cf-price { display: flex; align-items: center; gap: 8px; padding: 2px 8px 4px }
+.cf-price-field {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--cf-border);
+  border-radius: calc(var(--cf-radius) * .55);
+  background: var(--cf-bg);
+  color: var(--cf-muted);
+}
+.cf-price-field:focus-within { border-color: var(--cf-accent) }
+.cf-price-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--cf-fg);
+  font: inherit;
+  font-size: 16px; /* evita el zoom de iOS */
+}
+.cf-price-sep { color: var(--cf-muted) }
+.cf-price-hint { margin: 0; padding: 0 10px 4px; font-size: .76rem; color: var(--cf-muted) }
+
+.cf-hint { margin: 12px 16px; font-size: .8rem; color: var(--cf-muted) }
+
+/* ---------- barra de resultados ---------- */
+.cf-toolbar { min-width: 0; margin-bottom: 16px }
+.cf-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cf-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
+  border-radius: 999px;
+  background: var(--cf-bg, var(--sp-card-solid, #fff));
+  color: var(--cf-fg, inherit);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cf-open-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--cf-accent, var(--store-accent-ink, #2f4fe0));
+  color: var(--cf-bg, #fff);
+  font-size: .72rem;
+}
+.cf-count-line { margin: 0; font-size: .86rem; color: var(--sp-muted, #666); white-space: nowrap }
+.cf-search {
+  flex: 1 1 180px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
+  border-radius: 999px;
+  background: var(--cf-bg, var(--sp-card-solid, #fff));
+  color: var(--sp-muted, #666);
+}
+.cf-search:focus-within { border-color: var(--cf-accent, var(--store-accent-ink, #2f4fe0)) }
+.cf-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--cf-fg, inherit);
+  font: inherit;
+  font-size: 16px;
+}
+.cf-search-clear {
+  display: inline-flex;
+  padding: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.cf-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
+  border-radius: 999px;
+  background: var(--cf-bg, var(--sp-card-solid, #fff));
+  color: var(--cf-fg, inherit);
+  position: relative;
+}
+.cf-sort-label { font-size: .82rem; color: var(--sp-muted, #666) }
+.cf-sort select {
+  appearance: none;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: .88rem;
+  padding-right: 16px;
+  cursor: pointer;
+}
+.cf-sort-caret { position: absolute; right: 10px; pointer-events: none; color: var(--sp-muted, #666) }
+
+/* chips de filtros activos (defaults — cada plantilla puede seguir
+   definiendo su look de .cf-tag en store-facets.css) */
+.cf-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px }
+.cf-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
+  border-radius: 999px;
+  background: var(--cf-bg, var(--sp-card-solid, #fff));
+  color: var(--cf-fg, inherit);
+  font: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+}
+.cf-tag:hover { border-color: var(--cf-accent, var(--store-accent-ink, #2f4fe0)) }
+.cf-tag-x { font-style: normal; font-weight: 700; line-height: 1 }
+.cf-tag.clear { color: var(--cf-accent, var(--store-accent-ink, #2f4fe0)); font-weight: 600 }
+
+/* ---------- móvil: bottom sheet ---------- */
+.cf-layer { position: fixed; inset: 0; z-index: 120 }
+.cf-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 14, .55);
+  animation: cf-fade .2s ease;
+}
+.cf-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: min(90dvh, 780px);
+  background: var(--cf-bg);
+  color: var(--cf-fg);
+  border-radius: var(--cf-radius) var(--cf-radius) 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  animation: cf-up .26s cubic-bezier(.32, .72, .35, 1);
+  overflow: hidden;
+}
+.cf-sheet::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -18px;
+  border-radius: 999px;
+  background: var(--cf-border);
+}
+.cf-sheet-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--cf-border);
+}
+.cf-sheet-close {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-right: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--cf-fg);
+  cursor: pointer;
+}
+.cf-sheet-close:hover { background: color-mix(in srgb, var(--cf-fg) 8%, transparent) }
+/* con botón de cerrar, "Limpiar todo" del header queda a la izquierda del X */
+.cf-sheet-head .cf-clear { margin-left: 0 }
+.cf-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding-bottom: 8px;
+}
+.cf-sheet-foot {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--cf-border);
+  background: var(--cf-bg);
+}
+.cf-btn {
+  flex: 1 1 0;
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cf-accent);
+  color: var(--cf-bg);
+  font: inherit;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cf-btn.ghost {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  background: none;
+  border: 1px solid var(--cf-border);
+  color: var(--cf-fg);
+  font-weight: 600;
+}
+.cf-btn:disabled { opacity: .45; cursor: default }
+
+/* body scroll lock mientras el sheet está abierto */
+html.cf-lock { overflow: hidden }
+html.cf-lock body { overflow: hidden; overscroll-behavior: none }
+
+/* ---------- foco accesible ---------- */
+.cf-opt:focus-visible,
+.cf-gname:focus-visible,
+.cf-more:focus-visible,
+.cf-clear:focus-visible,
+.cf-open:focus-visible,
+.cf-sheet-close:focus-visible,
+.cf-btn:focus-visible,
+.cf-tag:focus-visible,
+.cf-search-clear:focus-visible {
+  outline: 2px solid var(--cf-accent, var(--store-accent-ink, #2f4fe0));
+  outline-offset: 2px;
+}
+
+/* =====================================================================
+   Tokens por plantilla — la piel del panel vive acá, NUNCA el layout.
+   Se definen en la raíz .store-page (data-store-template) para que el
+   sidebar los herede y el sheet los copie en línea al abrirse.
+   ===================================================================== */
+/* Tema oscuro: acento más claro para que las opciones activas y el foco
+   sigan pasando AA sobre paneles oscuros. Va antes: los acentos propios
+   de cada plantilla (--tm-acc, --rs-pink...) la pisan igual. */
+.store-page[data-store-theme='dark'] { --cf-accent: var(--store-accent); }
+.store-page[data-store-template='perspective'] { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 10px; }
+.store-page[data-store-template='duo'] { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 14px; }
+.store-page[data-store-template='street'] { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-ink); --cf-accent: var(--store-accent-ink); --cf-radius: 8px; --cf-font: var(--sp-body); }
+.store-page[data-store-template='promo'] { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 18px; }
+.store-page[data-store-template='terminal'] { --cf-bg: var(--tm-bg); --cf-fg: var(--tm-fg); --cf-muted: var(--tm-dim); --cf-border: var(--tm-line); --cf-accent: var(--tm-acc); --cf-radius: 6px; --cf-font: var(--sp-mono); }
+.store-page[data-store-template='lookbook'] { --cf-bg: var(--lb-paper); --cf-fg: var(--lb-ink); --cf-muted: var(--lb-dim); --cf-border: var(--lb-rule); --cf-accent: var(--store-accent-ink); --cf-radius: 4px; }
+.store-page[data-store-template='shop'] { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 12px; }
+.store-page[data-store-template='cobre'] { --cf-bg: var(--cb-tile); --cf-fg: var(--cb-ink); --cf-muted: var(--cb-muted); --cf-border: var(--cb-line-dk); --cf-accent: var(--store-accent-ink); --cf-radius: 0; }
+.store-page[data-store-template='minimal'] { --cf-bg: var(--mn-paper); --cf-fg: var(--mn-ink); --cf-muted: var(--mn-muted); --cf-border: var(--mn-line); --cf-accent: var(--mn-ink); --cf-radius: 2px; }
+.store-page[data-store-template='boutique'] { --cf-bg: var(--bt-surface); --cf-fg: var(--bt-ink); --cf-muted: var(--bt-muted); --cf-border: var(--bt-line); --cf-accent: var(--bt-ink); --cf-radius: 0; }
+.store-page[data-store-template='signature'] { --cf-bg: var(--sg-panel); --cf-fg: var(--sg-ink); --cf-muted: var(--sg-muted); --cf-border: var(--sg-line); --cf-accent: var(--store-accent); --cf-radius: var(--sp-radius); }
+.store-page[data-store-template='aurora'] { --cf-bg: var(--au-panel); --cf-fg: var(--au-ink); --cf-muted: var(--au-muted); --cf-border: var(--au-line); --cf-accent: var(--store-accent); --cf-radius: 18px; }
+.store-page[data-store-template='bloque'] { --cf-bg: var(--bq-paper); --cf-fg: var(--bq-ink); --cf-muted: var(--bq-mute); --cf-border: var(--bq-line); --cf-accent: var(--bq-ink); --cf-radius: 0; --cf-font: var(--bq-mono); }
+.store-page[data-store-template='riso'] { --cf-bg: var(--rs-card); --cf-fg: var(--rs-ink); --cf-muted: var(--rs-mute); --cf-border: color-mix(in srgb, var(--rs-ink) 25%, transparent); --cf-accent: var(--rs-pink); --cf-radius: 14px; --cf-font: var(--rs-body); }
+.store-page[data-store-template='terra'] { --cf-bg: var(--tr-card); --cf-fg: var(--tr-ink); --cf-muted: var(--tr-mute); --cf-border: var(--tr-line); --cf-accent: var(--tr-acc); --cf-radius: 18px; --cf-font: var(--tr-sans); }
+
+/* ---------- breakpoints ---------- */
+@media (max-width: 1023px) {
+  .cf-body { display: block }
+  .cf-side { display: none }
+  .cf-toolbar-row { gap: 10px }
+  .cf-search { order: 3; flex-basis: 100% }
+  .cf-sort { margin-left: auto }
+}
+@media (min-width: 1024px) {
+  .cf-open { display: none }
+}
+@media (min-width: 1280px) {
+  .cf-side { flex-basis: 272px; width: 272px }
+}
+
+/* ---------- animaciones ---------- */
+@keyframes cf-up { from { transform: translateY(100%) } to { transform: translateY(0) } }
+@keyframes cf-fade { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  .cf-sheet, .cf-backdrop, .cf-gcaret { animation: none; transition: none }
+}

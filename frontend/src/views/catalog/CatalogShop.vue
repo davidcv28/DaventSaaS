@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -8,21 +8,20 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
-// Tienda Pro: resultados de marketplace — columna de filtros a la izquierda,
-// barra de resultados con orden y selector grilla/lista, chips de filtros
-// activos y tarjetas de producto con precio y descuento destacados. El
-// buscador es el del masthead (ui.search).
+// Tienda Pro: resultados de marketplace — sidebar de filtros unificada
+// (CatalogFilters), barra de resultados (CatalogToolbar) con selector
+// grilla/lista propio y tarjetas con precio y descuento destacados.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters,
-  activeCategoryName, activeTags, shownLabel, shownPct, productCount, brandNameOf, categoryNameOf, openProduct
+  custom, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters,
+  activeCategoryName, shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
 const view = ref('grid') // grid | list
-const filtersOpen = ref(false)
 </script>
 
 <template>
@@ -35,50 +34,16 @@ const filtersOpen = ref(false)
       <template v-if="activeCategoryName"><AppIcon name="chevron-right" :size="13" aria-hidden="true" /><span aria-current="page">{{ activeCategoryName }}</span></template>
     </nav>
 
-    <div class="cv-sh-layout">
-      <aside class="cv-sh-side" :class="{ open: filtersOpen }" aria-label="Filtros">
-        <section v-if="catalog.categories.length" class="cv-sh-box">
-          <h2>Categorías</h2>
-          <ul>
-            <li><button type="button" :class="{ on: !activeCategories.length }" @click="clearCategories">Todas</button></li>
-            <li v-for="cat in catalog.categories" :key="cat.id"><button type="button" class="check" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)"><i aria-hidden="true"></i>{{ cat.name }} <small class="cf-n">{{ cat.products_count ?? 0 }}</small></button></li>
-          </ul>
-        </section>
-        <section v-if="catalog.brands.length" class="cv-sh-box">
-          <h2>Marca</h2>
-          <ul>
-            <li v-for="b in catalog.brands" :key="b.id"><button type="button" class="check" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)"><i aria-hidden="true"></i>{{ b.name }} <small class="cf-n">{{ b.products_count ?? 0 }}</small></button></li>
-          </ul>
-        </section>
-        <section class="cv-sh-box">
-          <CatalogFacets />
-        </section>
-        <section class="cv-sh-box">
-          <h2>Precio</h2>
-          <div class="cv-sh-price">
-            <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Mínimo" aria-label="Precio mínimo" />
-            <span aria-hidden="true">—</span>
-            <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Máximo" aria-label="Precio máximo" />
-          </div>
-        </section>
-        <button v-if="hasFilters" type="button" class="cv-sh-reset" @click="clearFilters"><AppIcon name="x" :size="14" /> Limpiar filtros</button>
-      </aside>
+    <div class="cf-body">
+      <CatalogFilters />
 
-      <section class="cv-sh-results" aria-label="Resultados">
-        <div class="cv-sh-bar">
-          <p class="cv-sh-count" role="status" aria-live="polite"><strong>{{ catalogStatus === 'success' || catalog.products.length ? productCount : 'Cargando…' }}</strong></p>
-          <button type="button" class="cv-sh-filter-btn" :aria-expanded="filtersOpen" @click="filtersOpen = !filtersOpen"><AppIcon name="layout-grid" :size="15" /> Filtros</button>
-          <label class="cv-sh-sort"><span>Ordenar por</span>
-            <select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select>
-          </label>
+      <section class="cv-sh-results cf-main" aria-label="Resultados">
+        <div class="cv-sh-top">
+          <CatalogToolbar />
           <div class="cv-sh-view" role="group" aria-label="Vista">
             <button type="button" :class="{ on: view === 'grid' }" :aria-pressed="view === 'grid'" aria-label="Vista en grilla" @click="view = 'grid'"><AppIcon name="layout-grid" :size="16" /></button>
             <button type="button" :class="{ on: view === 'list' }" :aria-pressed="view === 'list'" aria-label="Vista en lista" @click="view = 'list'"><AppIcon name="menu" :size="16" /></button>
           </div>
-        </div>
-
-        <div v-if="hasFilters" class="cv-sh-chips" aria-label="Filtros activos">
-          <button v-for="t in activeTags" :key="t.key" type="button" @click="t.remove()">{{ t.label }} <AppIcon name="x" :size="12" /></button>
         </div>
 
         <CatalogPromoBanner :promotions="catalog.promotions" />

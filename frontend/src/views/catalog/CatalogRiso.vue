@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import '../../assets/store-riso.css'
 
-// Riso: el catálogo en risografía — titular a dos tintas, buscador píldora,
-// aside de filtros como tarjeta con sombra desplazada y grilla de tarjetas
-// con placa de color y trama de puntos. Mismo estado que el resto de diseños.
+// Riso: el catálogo en risografía — titular a dos tintas, aside unificado
+// como tarjeta con sombra desplazada y grilla de tarjetas con placa de
+// color y trama de puntos. Mismo estado que el resto de diseños.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, clearPrice, hasFilters,
-  hasPriceFilter, productCount, activeTags,
+  custom, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
@@ -38,58 +38,15 @@ const toneOf = (p) => TONES[Math.max(0, catalog.value.categories.findIndex((c) =
         <span class="rs-kicker tilt">Catálogo · {{ catalog.categories.length }} categorías</span>
         <h1 class="cv-rs-title"><span class="a">Todo</span><br><span class="b">a la vez.</span></h1>
       </div>
-      <label class="cv-rs-search">
-        <span class="sr-only">Buscar productos</span>
-        <input v-model="ui.search" type="search" placeholder="Buscar en el catálogo" autocomplete="off" />
-        <span class="cv-rs-search-btn" aria-hidden="true"><AppIcon name="search" :size="16" /></span>
-      </label>
     </header>
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
 
-    <div class="cv-rs-grid">
-      <aside class="cv-rs-aside" aria-label="Filtros">
-        <div v-if="catalog.categories.length" class="cv-rs-fset">
-          <p class="cv-rs-fset-name">Categoría</p>
-          <button
-            v-for="cat in catalog.categories" :key="cat.id" type="button"
-            class="cv-rs-opt" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)"
-            @click="pickCategory(cat.id)"
-          ><span>{{ cat.name }}</span><span class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</span></button>
-        </div>
-        <div v-if="catalog.brands.length" class="cv-rs-fset">
-          <p class="cv-rs-fset-name">Marca</p>
-          <button
-            v-for="b in catalog.brands" :key="b.id" type="button"
-            class="cv-rs-opt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)"
-            @click="pickBrand(b.id)"
-          ><span>{{ b.name }}</span><span class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</span></button>
-        </div>
-        <CatalogFacets />
-        <div class="cv-rs-fset">
-          <p class="cv-rs-fset-name">Precio</p>
-          <div class="cv-rs-range">
-            <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Desde" aria-label="Precio mínimo" />
-            <span aria-hidden="true">–</span>
-            <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Hasta" aria-label="Precio máximo" />
-          </div>
-          <button v-if="hasPriceFilter" type="button" class="cv-rs-opt reset" @click="clearPrice"><span>Limpiar precio</span></button>
-        </div>
-        <button v-if="hasFilters" type="button" class="cv-rs-clear" @click="clearFilters">Limpiar filtros</button>
-      </aside>
+    <div class="cf-body">
+      <CatalogFilters />
 
-      <div class="cv-rs-results">
-        <div class="cv-rs-rbar">
-          <p class="cv-rs-count" role="status" aria-live="polite">{{ productCount }}</p>
-          <label class="cv-rs-sort">
-            <span class="sr-only">Ordenar por</span>
-            <select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select>
-          </label>
-        </div>
-
-        <div v-if="hasFilters" class="cv-rs-tags">
-          <button v-for="t in activeTags" :key="t.key" type="button" class="cv-rs-tag" :aria-label="`Quitar filtro ${t.label}`" @click="t.remove()">{{ t.label }}</button>
-        </div>
+      <div class="cv-rs-results cf-main">
+        <CatalogToolbar />
 
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 

@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Cobre: retail de indumentaria — placa de acento con titular condensado,
 // barra de colección fija con las categorías como pestañas, y una grilla de
 // tiles 4:5 donde la primera pieza se muestra como destacada a doble tamaño.
 const {
-  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
+  custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, clearCategories, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 9 })
 </script>
@@ -45,22 +45,14 @@ const {
         <button type="button" :class="{ on: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todo</button>
         <button v-for="cat in catalog.categories" :key="cat.id" type="button" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)">{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
       </div>
-      <div class="cv-cb-tools">
-        <label class="cv-cb-tool"><AppIcon name="search" :size="15" aria-hidden="true" /><input v-model="ui.search" type="search" placeholder="Buscar" aria-label="Buscar productos" /></label>
-        <div class="cv-cb-tool cv-cb-range"><input v-model="priceMin" type="text" inputmode="decimal" placeholder="$ min" aria-label="Precio mínimo" /><i aria-hidden="true"></i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="$ max" aria-label="Precio máximo" /></div>
-        <label class="cv-cb-tool"><select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select><AppIcon name="chevron-down" :size="14" aria-hidden="true" /></label>
-      </div>
     </div>
-    <div v-if="catalog.brands.length || hasFilters" class="cv-wrap cv-cb-sub">
-      <span v-if="catalog.brands.length">Marca</span>
-      <button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
-      <button v-if="hasFilters" type="button" class="reset" @click="clearFilters"><AppIcon name="x" :size="13" /> Limpiar</button>
-    </div>
-    <div class="cv-wrap"><CatalogFacets /></div>
   </div>
 
   <main class="cv-wrap cv-cb-main">
-    <CatalogTags />
+    <div class="cf-body">
+      <CatalogFilters />
+      <div class="cf-main">
+    <CatalogToolbar />
     <CatalogPromoBanner :promotions="catalog.promotions" />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 
@@ -89,6 +81,8 @@ const {
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
+      </div>
+    </div>
   </main>
 </div>
 </template>

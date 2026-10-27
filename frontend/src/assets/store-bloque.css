@@ -382,71 +382,14 @@
   font-size: clamp(2.4rem, 7.5vw, 5.6rem); line-height: .9;
   letter-spacing: -.025em; text-transform: uppercase; font-stretch: 105%;
 }
-.cv-bq-search {
-  display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px;
-  border: 2px solid var(--bq-rule); background: var(--bq-paper); color: var(--bq-mute);
-}
-.cv-bq-search input {
-  flex: 1; min-width: 0; border: 0; background: none; color: var(--bq-ink);
-  font-family: var(--bq-mono); font-size: 12.5px; outline: none;
-}
-.cv-bq-search input::placeholder { color: var(--bq-mute); }
-.cv-bq-search:focus-within { border-color: var(--bq-cobalt); color: var(--bq-cobalt); }
+/* El buscador del intro se unificó en CatalogToolbar. */
 
-.cv-bq-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; padding-top: 26px; border-top: 2px solid var(--bq-rule); }
-.cv-bq-aside { position: sticky; top: calc(var(--sp-top-h, 64px) + 16px); align-self: start; }
-.cv-bq-fset { padding: 16px 0; border-bottom: 1.5px solid var(--bq-line); }
-.cv-bq-fset:first-child { padding-top: 0; }
-.cv-bq-fset-name { margin: 0 0 12px; font-family: var(--bq-mono); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .12em; color: var(--bq-mute); }
-.cv-bq-opt {
-  display: block; width: 100%; margin: 0 0 4px; padding: 7px 10px;
-  border: 1.5px solid var(--bq-line); background: transparent; color: var(--bq-ink);
-  font-family: var(--bq-mono); font-size: 11.5px; text-transform: uppercase;
-  letter-spacing: .06em; text-align: left; cursor: pointer;
-  transition: background .12s, color .12s, border-color .12s;
-}
-.cv-bq-opt:hover { border-color: var(--bq-rule); }
-.cv-bq-opt.on { background: var(--bq-ink); border-color: var(--bq-ink); color: var(--bq-paper); }
-.cv-bq-opt.reset { color: var(--bq-mute); }
-.cv-bq-range { display: flex; align-items: center; gap: 8px; }
-.cv-bq-range input {
-  width: 100%; min-width: 0; height: 38px; padding: 0 10px;
-  border: 1.5px solid var(--bq-rule); background: var(--bq-paper); color: var(--bq-ink);
-  font-family: var(--bq-mono); font-size: 12px; outline: none;
-}
-.cv-bq-range input:focus { border-color: var(--bq-cobalt); }
-.cv-bq-clear {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
-  padding: 7px 12px; border: 1.5px solid var(--bq-ink); background: var(--bq-ink);
-  color: var(--bq-paper); font-family: var(--bq-mono); font-size: 11px;
-  text-transform: uppercase; letter-spacing: .08em; cursor: pointer;
-}
-.cv-bq-clear:hover { background: var(--bq-cobalt); border-color: var(--bq-cobalt); color: var(--bq-on-cobalt); }
-
-.cv-bq-rbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding-bottom: 14px; border-bottom: 1.5px solid var(--bq-rule); margin-bottom: 18px;
-}
-.cv-bq-count { margin: 0; font-family: var(--bq-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--bq-mute); }
-.cv-bq-sort { display: flex; align-items: center; gap: 10px; }
-.cv-bq-sort select {
-  height: 38px; padding: 0 10px; border: 1.5px solid var(--bq-rule);
-  background: var(--bq-paper); color: var(--bq-ink);
-  font-family: var(--bq-mono); font-size: 11.5px; text-transform: uppercase;
-  letter-spacing: .06em; border-radius: 0; outline: none; cursor: pointer;
-}
-.cv-bq-sort select:focus { border-color: var(--bq-cobalt); }
-.cv-bq-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-.cv-bq-tag {
-  display: inline-flex; align-items: center; gap: 7px; padding: 5px 8px 5px 11px;
-  border: 1.5px solid var(--bq-rule);
-  font-family: var(--bq-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
-}
-.cv-bq-tag button {
-  display: grid; place-items: center; width: 16px; height: 16px; padding: 0;
-  border: 0; background: var(--bq-ink); color: var(--bq-paper); cursor: pointer;
-}
-.cv-bq-tag button:hover { background: var(--bq-cobalt); color: var(--bq-on-cobalt); }
+/* El layout de dos columnas lo da .cf-body (sidebar unificada); el filete
+   de archivo sobre la zona de resultados se conserva como identidad. */
+.cv-bq .cf-body { padding-top: 26px; border-top: 2px solid var(--bq-rule); }
+/* La barra de resultados (contador/orden/tags) y la sidebar propia se
+   reemplazaron por CatalogToolbar + CatalogFilters (store-filters.css). */
+.cv-bq .cf-toolbar-row { padding-bottom: 14px; border-bottom: 1.5px solid var(--bq-rule); }
 .cv-bq-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; transition: opacity .15s; }
 .cv-bq-cards.loading { opacity: .45; pointer-events: none; }
 
@@ -456,10 +399,6 @@
 @media (max-width: 1020px) {
   .bq-about-grid, .bq-faq-grid, .bq-contact-grid { grid-template-columns: 1fr; gap: 30px; }
   .bq-sec-head.col { margin-bottom: 22px; }
-  .cv-bq-grid { grid-template-columns: 1fr; }
-  .cv-bq-aside { position: static; display: flex; flex-wrap: wrap; gap: 18px 26px; padding-bottom: 20px; border-bottom: 1.5px solid var(--bq-line); }
-  .cv-bq-fset { flex: 1 1 200px; border-bottom: 0; padding: 0; }
-  .cv-bq-clear { margin-top: 0; }
 }
 @media (max-width: 760px) {
   .bq-hero { padding-top: 34px; }

@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
-// Dúo: pantalla partida — a la izquierda un panel fijo con la presentación,
-// la navegación por categorías y los filtros; a la derecha el catálogo como
-// lista de fichas horizontales (foto + copy), una por renglón.
+// Dúo: pantalla partida — a la izquierda un panel fijo con la presentación
+// y debajo la sidebar de filtros (CatalogFilters); a la derecha el catálogo
+// como lista de fichas horizontales (foto + copy), una por renglón.
 const {
-  ui, custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
+  custom, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 10 })
 </script>
@@ -24,54 +24,21 @@ const {
 <template>
 <div class="sp-page-root cv cv-du">
   <div class="cv-wrap cv-du-split">
-    <aside class="cv-du-side" aria-label="Navegación del catálogo">
-      <nav class="cv-crumbs" aria-label="Ruta">
-        <RouterLink v-if="custom.site_mode !== 'catalog'" :to="homeTo">Inicio</RouterLink>
-        <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="13" aria-hidden="true" />
-        <span aria-current="page">Catálogo</span>
-      </nav>
-      <h1 class="cv-du-title">Todo lo que<br /><em>{{ shopName }}</em> tiene para vos</h1>
-      <p class="cv-du-count" role="status" aria-live="polite"><strong>{{ total }}</strong> {{ total === 1 ? 'producto' : 'productos' }}<template v-if="catalog.categories.length"> · <strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</template></p>
-
-      <label class="cv-du-search">
-        <AppIcon name="search" :size="16" aria-hidden="true" />
-        <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" />
-      </label>
-
-      <div v-if="catalog.categories.length" class="cv-du-group">
-        <p class="cv-du-label">Categorías</p>
-        <button type="button" class="cv-du-link" :class="{ on: !activeCategories.length }" @click="clearCategories"><span>Todas</span></button>
-        <button v-for="cat in catalog.categories" :key="cat.id" type="button" class="cv-du-link" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)" @click="pickCategory(cat.id)"><span>{{ cat.name }}</span><i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
-      </div>
-
-      <div v-if="catalog.brands.length" class="cv-du-group">
-        <p class="cv-du-label">Marcas</p>
-        <div class="cv-du-tags">
-          <button v-for="b in catalog.brands" :key="b.id" type="button" class="cv-du-tag" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
-        </div>
-      </div>
-
-      <CatalogFacets />
-
-      <div class="cv-du-group">
-        <p class="cv-du-label">Precio</p>
-        <div class="cv-du-price">
-          <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Desde" aria-label="Precio mínimo" />
-          <i aria-hidden="true"></i>
-          <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Hasta" aria-label="Precio máximo" />
-        </div>
-        <label class="cv-du-sort">
-          <select v-model="sort" aria-label="Ordenar por">
-            <option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
-          </select>
-          <AppIcon name="chevron-down" :size="14" aria-hidden="true" />
-        </label>
-      </div>
-      <button v-if="hasFilters" type="button" class="cv-du-clear" @click="clearFilters"><AppIcon name="x" :size="14" /> Limpiar filtros</button>
-    </aside>
+    <div class="cv-du-cols">
+      <aside class="cv-du-side" aria-label="Presentación">
+        <nav class="cv-crumbs" aria-label="Ruta">
+          <RouterLink v-if="custom.site_mode !== 'catalog'" :to="homeTo">Inicio</RouterLink>
+          <AppIcon v-if="custom.site_mode !== 'catalog'" name="chevron-right" :size="13" aria-hidden="true" />
+          <span aria-current="page">Catálogo</span>
+        </nav>
+        <h1 class="cv-du-title">Todo lo que<br /><em>{{ shopName }}</em> tiene para vos</h1>
+        <p class="cv-du-count" role="status" aria-live="polite"><strong>{{ total }}</strong> {{ total === 1 ? 'producto' : 'productos' }}<template v-if="catalog.categories.length"> · <strong>{{ catalog.categories.length }}</strong> {{ catalog.categories.length === 1 ? 'categoría' : 'categorías' }}</template></p>
+      </aside>
+      <CatalogFilters />
+    </div>
 
     <section class="cv-du-list" aria-label="Productos">
-      <CatalogTags />
+      <CatalogToolbar />
       <CatalogPromoBanner :promotions="catalog.promotions" />
       <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="5" @retry="loadCatalog" @clear="clearFilters" />
       <ol v-if="catalog.products.length" class="cv-du-rows" :class="{ loading: catalogStatus === 'loading' }">

@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import '../../assets/store-terra.css'
 
-// Terra: catálogo editorial — titular serif, buscador en píldora, filtros
-// en una columna de papel y productos en tarjetas con arco. Misma mecánica
+// Terra: catálogo editorial — titular serif, filtros en una columna de
+// papel unificada y productos en tarjetas con arco. Misma mecánica
 // compartida (useStoreCatalog) que el resto de las plantillas.
 const {
-  ui, custom, homeTo, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearFilters, clearPrice, hasFilters,
-  hasPriceFilter, productCount, activeTags,
+  custom, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, productCount,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 </script>
@@ -36,56 +36,15 @@ const {
         <h1 class="cv-tr-title">Todo lo que tenemos</h1>
         <p class="cv-tr-count" role="status" aria-live="polite">{{ productCount }}</p>
       </div>
-      <label class="cv-tr-search">
-        <AppIcon name="search" :size="17" aria-hidden="true" />
-        <input v-model="ui.search" type="search" placeholder="Buscar un producto…" aria-label="Buscar productos" />
-      </label>
     </header>
 
     <CatalogPromoBanner :promotions="catalog.promotions" />
 
-    <div class="cv-tr-grid">
-      <aside class="cv-tr-aside" aria-label="Filtros">
-        <div v-if="catalog.categories.length" class="cv-tr-fset">
-          <p class="cv-tr-fname">Categoría</p>
-          <button
-            v-for="cat in catalog.categories" :key="cat.id" type="button"
-            class="cv-tr-opt" :class="{ on: activeCategories.includes(cat.id) }" :aria-pressed="activeCategories.includes(cat.id)"
-            @click="pickCategory(cat.id)"
-          >{{ cat.name }} <i class="cf-n" aria-hidden="true">{{ cat.products_count ?? 0 }}</i></button>
-        </div>
-        <div v-if="catalog.brands.length" class="cv-tr-fset">
-          <p class="cv-tr-fname">Marca</p>
-          <button
-            v-for="b in catalog.brands" :key="b.id" type="button"
-            class="cv-tr-opt" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)"
-            @click="pickBrand(b.id)"
-          >{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button>
-        </div>
-        <CatalogFacets />
-        <div class="cv-tr-fset">
-          <p class="cv-tr-fname">Precio</p>
-          <div class="cv-tr-range">
-            <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Desde" aria-label="Precio mínimo" />
-            <span aria-hidden="true">–</span>
-            <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Hasta" aria-label="Precio máximo" />
-          </div>
-          <button v-if="hasPriceFilter" type="button" class="cv-tr-opt reset" @click="clearPrice">Limpiar precio</button>
-        </div>
-        <button v-if="hasFilters" type="button" class="cv-tr-clear" @click="clearFilters">Borrar filtros <AppIcon name="x" :size="13" /></button>
-      </aside>
+    <div class="cf-body">
+      <CatalogFilters />
 
-      <div class="cv-tr-results">
-        <div class="cv-tr-rbar">
-          <label class="cv-tr-sort">
-            <span>Ordenar por</span>
-            <select v-model="sort" aria-label="Ordenar por"><option v-for="o in SORT_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option></select>
-          </label>
-        </div>
-
-        <div v-if="hasFilters" class="cv-tr-tags">
-          <span v-for="t in activeTags" :key="t.key" class="cv-tr-tag">{{ t.label }} <button type="button" :aria-label="`Quitar filtro ${t.label}`" @click="t.remove()"><AppIcon name="x" :size="11" /></button></span>
-        </div>
+      <div class="cv-tr-results cf-main">
+        <CatalogToolbar />
 
         <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" @retry="loadCatalog" @clear="clearFilters" />
 

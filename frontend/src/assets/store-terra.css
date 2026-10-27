@@ -416,58 +416,12 @@
   font-size: clamp(38px, 5vw, 68px); line-height: 1; letter-spacing: -.03em; color: var(--tr-ink);
 }
 .cv-tr-count { margin: 10px 0 0; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--tr-mute); }
-.cv-tr-search {
-  display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 20px;
-  border-radius: 999px; border: 1px solid var(--tr-line); background: var(--tr-card);
-  min-width: min(100%, 320px);
-}
-.cv-tr-search input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 14px; color: var(--tr-ink); outline: none; }
-.cv-tr-search .icon { flex: none; color: var(--tr-mute); }
-.cv-tr-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: clamp(24px, 3vw, 44px); align-items: start; }
-.cv-tr-aside {
-  position: sticky; top: calc(var(--sp-top-h) + 24px); display: grid; gap: 22px;
-  padding: 22px; border-radius: 20px; border: 1px solid var(--tr-line); background: var(--tr-card);
-}
-.cv-tr-fset { display: grid; gap: 6px; }
-.cv-tr-fname { margin: 0 0 2px; font-size: 9.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--tr-mute); }
-.cv-tr-opt {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 7px 0; border: 0; border-bottom: 1px solid var(--tr-line-soft);
-  background: transparent; font: inherit; font-size: 13.5px; color: var(--tr-ink-2);
-  text-align: left; cursor: pointer; transition: color .15s;
-}
-.cv-tr-opt:hover { color: var(--tr-acc); }
-.cv-tr-opt.on { color: var(--tr-acc); font-weight: 700; }
-.cv-tr-opt .cf-n { font-style: normal; font-size: 11px; color: var(--tr-mute); }
-.cv-tr-opt.reset { border: 0; padding-top: 10px; color: var(--tr-acc); font-size: 12px; }
-.cv-tr-range { display: flex; align-items: center; gap: 8px; }
-.cv-tr-range input {
-  width: 100%; min-width: 0; padding: 8px 10px; border-radius: 10px;
-  border: 1px solid var(--tr-line); background: var(--tr-paper);
-  font: inherit; font-size: 13px; color: var(--tr-ink);
-}
-.cv-tr-clear { justify-self: start; border: 0; background: none; color: var(--tr-acc); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-.cv-tr-rbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
-.cv-tr-sort { display: inline-flex; align-items: center; gap: 10px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tr-mute); }
-.cv-tr-sort select {
-  border: 1px solid var(--tr-line); background: var(--tr-card); border-radius: 999px;
-  padding: 8px 14px; font: inherit; font-size: 12.5px; letter-spacing: 0; text-transform: none; color: var(--tr-ink);
-}
-.cv-tr-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-.cv-tr-tag {
-  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
-  border-radius: 999px; border: 1px solid var(--tr-line); background: var(--tr-card);
-  font-size: 12px; color: var(--tr-ink-2);
-}
-.cv-tr-tag button { display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--tr-mute); cursor: pointer; }
+/* El buscador del intro, el aside de papel y la barra de orden/tags se
+   unificaron en CatalogFilters/CatalogToolbar (store-filters.css). */
 .cv-tr-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(18px, 2.2vw, 28px); }
 .cv-tr-cards.loading { opacity: .55; }
 @media (max-width: 1200px) {
   .cv-tr-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 1080px) {
-  .cv-tr-grid { grid-template-columns: 1fr; }
-  .cv-tr-aside { position: static; }
 }
 @media (max-width: 900px) {
   .cv-tr-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }

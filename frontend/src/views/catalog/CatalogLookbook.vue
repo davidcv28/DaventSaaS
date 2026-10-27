@@ -1,5 +1,5 @@
 <script setup>
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
@@ -7,16 +7,16 @@ import { vReveal } from '../../directives/reveal.js'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
-import CatalogTags from './CatalogTags.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 
 // Lookbook: el catálogo como edición de revista — título serif con índice de
-// contenidos (las categorías, numeradas), filtros escritos como texto
-// subrayado y pliegos de imagen en columnas con proporciones alternadas.
+// contenidos (las categorías, numeradas) y pliegos de imagen en columnas con
+// proporciones alternadas. Los filtros van en la sidebar/sheet unificada.
 const {
-  ui, custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, clearCategories, clearFilters, hasFilters, total,
+  custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories,
+  visibleProducts, hasMoreProducts, showMore, pickCategory, clearCategories, clearFilters, hasFilters, total,
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
@@ -47,16 +47,10 @@ const pad = (n) => String(n).padStart(2, '0')
 
   <main class="cv-wrap cv-lb-main">
     <CatalogPromoBanner :promotions="catalog.promotions" />
-    <div class="cv-lb-bar" role="group" aria-label="Filtros del catálogo">
-      <label class="cv-lb-line"><span>Buscar</span><input v-model="ui.search" type="search" placeholder="una pieza…" aria-label="Buscar productos" /></label>
-      <div class="cv-lb-line"><span>Precio</span><input v-model="priceMin" type="text" inputmode="decimal" placeholder="desde" aria-label="Precio mínimo" /><i aria-hidden="true">–</i><input v-model="priceMax" type="text" inputmode="decimal" placeholder="hasta" aria-label="Precio máximo" /></div>
-      <div class="cv-lb-line cv-lb-sorts" role="group" aria-label="Ordenar por"><span>Orden</span><button v-for="o in SORT_OPTIONS" :key="o.value" type="button" :class="{ on: sort === o.value }" :aria-pressed="sort === o.value" @click="sort = o.value">{{ o.label.replace(' (A-Z)', '') }}</button></div>
-      <div v-if="catalog.brands.length" class="cv-lb-line cv-lb-sorts" role="group" aria-label="Marcas"><span>Firmas</span><button v-for="b in catalog.brands" :key="b.id" type="button" :class="{ on: activeBrands.includes(b.id) }" :aria-pressed="activeBrands.includes(b.id)" @click="pickBrand(b.id)">{{ b.name }} <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i></button></div>
-      <button v-if="hasFilters" type="button" class="cv-lb-reset" @click="clearFilters">Quitar filtros</button>
-    </div>
-    <CatalogFacets />
-    <CatalogTags />
-
+    <div class="cf-body">
+      <CatalogFilters />
+      <div class="cf-main">
+    <CatalogToolbar />
     <CatalogFeedback :status="catalogStatus" :empty="!catalog.products.length" :has-filters="hasFilters" :skeletons="6" @retry="loadCatalog" @clear="clearFilters" />
 
     <div v-if="catalog.products.length" class="cv-lb-sheets" :class="{ loading: catalogStatus === 'loading' }">
@@ -77,6 +71,8 @@ const pad = (n) => String(n).padStart(2, '0')
     </div>
 
     <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" text="Pasar la página" @more="showMore" />
+      </div>
+    </div>
   </main>
 </div>
 </template>

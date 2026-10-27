@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, watchEffect, onMounted, onBeforeUnmount } from 'vue'
-import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
 import { formatARS } from '../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogPromoBanner from './CatalogPromoBanner.vue'
-import CatalogFacets from './CatalogFacets.vue'
+import CatalogFilters from './CatalogFilters.vue'
+import CatalogToolbar from './CatalogToolbar.vue'
 import ProductStars from '../../components/ProductStars.vue'
 import { vReveal } from '../../directives/reveal.js'
 
@@ -13,25 +14,14 @@ import { vReveal } from '../../directives/reveal.js'
 // categorías/marcas multi-selección, facetas por atributo, buscador,
 // filtro de precios y orden. Cada tarjeta abre la ficha completa del
 // producto (/<slug>/producto/<id>, estilo marketplace). El estado lo da
-// useStoreCatalog (compartido con CatalogFacets vía provide/inject);
-// el buscador del header y el burger comparten `ui` con el layout.
+// useStoreCatalog y los filtros los monta CatalogFilters (sidebar en
+// desktop, bottom sheet en móvil) junto a la barra CatalogToolbar.
 const {
-  ui, custom, hasDesignAdvanced, shopName, homeTo, catalog, catalogStatus, loadCatalog,
-  activeCategories, activeBrands, priceMin, priceMax, sort,
-  visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand,
-  clearCategories, clearFilters, hasFilters, hasCatalogNav, activeTags, productCount,
-  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct,
-  facets, offerTotal, newTotal
+  custom, hasDesignAdvanced, shopName, homeTo, catalog, catalogStatus, loadCatalog,
+  visibleProducts, hasMoreProducts, showMore,
+  clearFilters, hasFilters,
+  shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
-
-// El burger/drawer aparece con categorías o marcas y también si solo hay
-// facetas/filtros rápidos (oferta, novedades) — así nunca quedan ocultos.
-const hasDrawer = computed(() => hasCatalogNav.value || facets.value.length > 0 || offerTotal.value > 0 || newTotal.value > 0)
-watchEffect(() => { ui.hasCatalogNav = hasDrawer.value })
-
-const onKey = (e) => {
-  if (e.key === 'Escape') ui.menuOpen = false
-}
 
 // --- Portada: carrusel de destacados (premium), abre la página del
 // catálogo como vitrina del negocio ---
@@ -107,14 +97,10 @@ function onCardMove(event) {
 
 onMounted(() => {
   restartSlideTimer()
-  window.addEventListener('keydown', onKey)
 })
 
 onBeforeUnmount(() => {
   clearInterval(slideTimer)
-  ui.menuOpen = false
-  ui.hasCatalogNav = false
-  window.removeEventListener('keydown', onKey)
 })
 </script>
 
@@ -180,96 +166,13 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div class="sp-layout" :class="{ 'has-nav': hasDrawer }">
-      <div v-if="hasDrawer" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
-      <aside v-if="hasDrawer" id="sp-drawer" class="sp-drawer" :class="{ open: ui.menuOpen }" aria-label="Filtros del catálogo">
-        <div class="sp-drawer-head">
-          <strong>Explorar</strong>
-          <button type="button" class="sp-drawer-close" aria-label="Cerrar menú" @click="ui.menuOpen = false">
-            <AppIcon name="x" :size="18" />
-          </button>
-        </div>
-        <nav v-if="catalog.categories.length" class="sp-nav-group" aria-label="Categorías">
-          <p class="sp-nav-heading">Categorías</p>
-          <button
-            v-for="c in catalog.categories" :key="`c-${c.id}`" type="button"
-            class="sp-nav-item" :class="{ active: activeCategories.includes(c.id) }"
-            :aria-pressed="activeCategories.includes(c.id)"
-            @click="pickCategory(c.id)"
-          >
-            <AppIcon name="layout-grid" :size="15" /> <span>{{ c.name }}</span> <i class="cf-n" aria-hidden="true">{{ c.products_count ?? 0 }}</i>
-          </button>
-        </nav>
-        <nav v-if="catalog.brands.length" class="sp-nav-group" aria-label="Marcas">
-          <p class="sp-nav-heading">Marcas</p>
-          <button
-            v-for="b in catalog.brands" :key="`b-${b.id}`" type="button"
-            class="sp-nav-item" :class="{ active: activeBrands.includes(b.id) }"
-            :aria-pressed="activeBrands.includes(b.id)"
-            @click="pickBrand(b.id)"
-          >
-            <AppIcon name="tag" :size="15" /> <span>{{ b.name }}</span> <i class="cf-n" aria-hidden="true">{{ b.products_count ?? 0 }}</i>
-          </button>
-        </nav>
-        <CatalogFacets />
-        <button v-if="hasFilters" type="button" class="sp-nav-clear" @click="clearFilters(); ui.menuOpen = false">
-          <AppIcon name="x" :size="14" /> Limpiar filtros
-        </button>
-      </aside>
+    <div class="cf-body">
+      <CatalogFilters />
 
-      <section class="sp-catalog" aria-labelledby="sp-catalog-title">
+      <section class="sp-catalog cf-main" aria-labelledby="sp-catalog-title">
         <CatalogPromoBanner :promotions="catalog.promotions" />
-        <div v-if="catalog.categories.length" class="sp-quick" role="group" aria-label="Categorías rápidas">
-          <button type="button" class="sp-quick-pill" :class="{ active: !activeCategories.length }" :aria-pressed="!activeCategories.length" @click="clearCategories">Todas</button>
-          <button
-            v-for="c in catalog.categories" :key="`q-${c.id}`" type="button"
-            class="sp-quick-pill" :class="{ active: activeCategories.includes(c.id) }" :aria-pressed="activeCategories.includes(c.id)"
-            @click="pickCategory(c.id)"
-          >{{ c.name }}</button>
-        </div>
-        <div v-reveal class="sp-toolbar">
-          <div class="sp-toolbar-title">
-            <h2 id="sp-catalog-title" class="sp-section-title">{{ hasFilters ? 'Resultados' : 'Todos los productos' }}</h2>
-            <span v-if="catalogStatus === 'success'" class="sp-count" role="status" aria-live="polite">{{ productCount }}</span>
-          </div>
-          <label class="sp-search sp-search-inline">
-            <AppIcon name="search" :size="16" aria-hidden="true" />
-            <input v-model="ui.search" type="search" placeholder="Buscar productos" aria-label="Buscar productos" @keydown.esc.stop="ui.search = ''" />
-            <button v-if="ui.search" type="button" class="sp-search-clear" aria-label="Borrar búsqueda" @click="ui.search = ''"><AppIcon name="x" :size="14" /></button>
-          </label>
-        </div>
-
-        <div v-reveal="60" class="sp-filters" role="group" aria-label="Filtros del catálogo">
-          <div class="sp-field">
-            <span class="sp-field-label">Precio</span>
-            <div class="sp-price" role="group" aria-label="Filtrar por rango de precios">
-              <span class="sp-currency" aria-hidden="true">$</span>
-              <input v-model="priceMin" type="text" inputmode="decimal" placeholder="Mínimo" aria-label="Precio mínimo" />
-              <span class="sp-price-sep" aria-hidden="true"></span>
-              <span class="sp-currency" aria-hidden="true">$</span>
-              <input v-model="priceMax" type="text" inputmode="decimal" placeholder="Máximo" aria-label="Precio máximo" />
-            </div>
-          </div>
-          <div class="sp-field">
-            <label class="sp-field-label" for="sp-sort-select">Ordenar por</label>
-            <div class="sp-sort">
-              <select id="sp-sort-select" v-model="sort">
-                <option value="name">Nombre (A-Z)</option>
-                <option value="recent">Más recientes</option>
-                <option value="price_asc">Menor precio</option>
-                <option value="price_desc">Mayor precio</option>
-              </select>
-              <AppIcon name="chevron-down" :size="14" class="sp-sort-caret" aria-hidden="true" />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="hasFilters" class="sp-chips" aria-label="Filtros activos">
-          <button v-for="t in activeTags" :key="t.key" type="button" class="sp-chip" @click="t.remove()">
-            {{ t.label }} <AppIcon name="x" :size="12" />
-          </button>
-          <button type="button" class="sp-chip clear" @click="clearFilters">Limpiar</button>
-        </div>
+        <h2 id="sp-catalog-title" class="sp-section-title" v-reveal>{{ hasFilters ? 'Resultados' : 'Todos los productos' }}</h2>
+        <CatalogToolbar />
 
         <div v-if="catalogStatus === 'loading' && !catalog.products.length" class="sp-grid" aria-busy="true">
           <div v-for="n in 8" :key="n" class="sp-card sp-skeleton" aria-hidden="true">

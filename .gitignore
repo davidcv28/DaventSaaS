@@ -27,3 +27,7 @@ Thumbs.db
 .DS_Store
 .vscode/
 *.log
+
+# Capturas QA locales (los scripts qa_*.py / seed_bench.py sí se commitean)
+qa/
+frontend/qa-look-harness.html
