@@ -330,6 +330,31 @@
 }
 .store-page[data-store-template='classic'] .sv-item:nth-child(4n + 1) .ico { width: 72px; height: 72px; }
 
+/* ---------- Duo: el picker es un carril horizontal con scroll-snap ---------- */
+.store-page[data-store-template='duo'] .sv-page {
+  --sv-r-lg: 20px; --sv-r-md: 16px; --sv-r-sm: 12px;
+  --sv-bw: 1px;
+  --sv-band-tilt: none;
+  --sv-btn-sh: 0 10px 22px -14px color-mix(in srgb, var(--sv-acc) 55%, transparent);
+  --sv-btn-sh-h: 0 14px 28px -14px color-mix(in srgb, var(--sv-acc) 60%, transparent);
+  --sv-btn-sh-a: 0 4px 10px -8px color-mix(in srgb, var(--sv-acc) 55%, transparent);
+  --sv-btn-move: translateY(-2px);
+  --sv-btn-press: translateY(0);
+  --sv-item-move: translateY(-3px);
+  --sv-sh-pop: var(--shadow-2); --sv-sh-panel: var(--shadow-2); --sv-sh-form: var(--shadow-1);
+  --sv-form-bw: 1px; --sv-form-bd: var(--sv-line);
+}
+.store-page[data-store-template='duo'] .sv-list {
+  display: flex; gap: 16px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 4px;
+  padding: 6px 4px 20px; scrollbar-width: thin;
+  /* Fundido en el borde derecho: insinúa la siguiente tarjeta (peek). */
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 52px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 52px), transparent);
+}
+.store-page[data-store-template='duo'] .sv-item { flex: 0 0 min(300px, 78%); scroll-snap-align: start; }
+.store-page[data-store-template='duo'] .sv-item[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--sv-acc), var(--shadow-2); }
+
 /* ---------- Perspective: letrero Oswald + sombras de acento ---------- */
 .store-page[data-store-template='perspective'] .sv-page {
   --sv-head-case: uppercase; --sv-head-ls: -.01em;
@@ -341,6 +366,32 @@
   --sv-sh-pop: 12px 12px 0 color-mix(in srgb, var(--sv-pop) 34%, transparent);
   --sv-sh-panel: 12px 12px 0 color-mix(in srgb, var(--sv-acc) 30%, transparent);
   --sv-sh-form: 10px 10px 0 color-mix(in srgb, var(--sv-pop) 28%, transparent);
+}
+/* Las tarjetas son "planos" apilados: dos capas desplazadas en el acento
+   detrás de la placa y títulos Oswald con relieve de letra de imprenta.
+   Bajo 768px la elevación se acota a 6px (regla anti-colisión global). */
+.store-page[data-store-template='perspective'] .sv-item {
+  box-shadow:
+    6px 6px 0 -2px color-mix(in srgb, var(--sv-acc) 26%, transparent),
+    12px 12px 0 -6px color-mix(in srgb, var(--sv-acc) 13%, transparent);
+  transition: transform .35s var(--sv-ease), box-shadow .35s var(--sv-ease), border-color .25s, background-color .25s;
+}
+.store-page[data-store-template='perspective'] .sv-item:hover {
+  transform: translate(-3px, -4px);
+  box-shadow:
+    9px 9px 0 -2px color-mix(in srgb, var(--sv-acc) 34%, transparent),
+    17px 17px 0 -6px color-mix(in srgb, var(--sv-acc) 16%, transparent);
+}
+.store-page[data-store-template='perspective'] .sv-item h3 {
+  font-family: var(--sv-display); text-transform: uppercase; letter-spacing: .01em;
+  text-shadow: 2px 2px 0 color-mix(in srgb, var(--sv-acc) 22%, var(--sv-card));
+}
+@media (max-width: 768px) {
+  .store-page[data-store-template='perspective'] .sv-item,
+  .store-page[data-store-template='perspective'] .sv-item:hover {
+    transform: none;
+    box-shadow: 4px 4px 0 -1px color-mix(in srgb, var(--sv-acc) 26%, transparent);
+  }
 }
 
 /* ---------- Bloque: retícula editorial dura, tinta plana ---------- */
@@ -542,6 +593,64 @@
   --sv-sh-form: 8px 8px 0 color-mix(in srgb, var(--sv-fg) 22%, transparent);
 }
 .store-page[data-store-template='street'] .sv-btn--ghost { border: 2px solid var(--sv-fg); box-shadow: 5px 5px 0 color-mix(in srgb, var(--sv-fg) 20%, transparent); }
+
+/* El picker imprime tickets de drop: stub de tinta a la izquierda con la
+   numeración "DROP 0X" en vertical y un código de barras (la baldosa del
+   ícono), cuerpo con el nombre condensado, precio grande y acción dura. */
+.store-page[data-store-template='street'] .sv-list { counter-reset: svd; gap: 18px; }
+.store-page[data-store-template='street'] .sv-item {
+  counter-increment: svd; display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  grid-template-areas: 'stub name' 'stub desc' 'stub meta' 'stub act';
+  column-gap: 0; row-gap: 6px; padding: 0;
+  border: 2px solid var(--sv-fg); border-radius: 10px;
+  background: var(--sv-card); box-shadow: 5px 5px 0 var(--sv-pop); overflow: hidden;
+}
+.store-page[data-store-template='street'] .sv-item::before {
+  content: 'DROP ' counter(svd, decimal-leading-zero);
+  position: static; grid-area: stub; opacity: 1;
+  display: grid; place-items: center; padding: 14px 0;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  background: var(--sv-fg); color: var(--sv-card);
+  border-right: 2px dashed var(--sv-card);
+  font-size: 10.5px; font-weight: 800; letter-spacing: .22em; white-space: nowrap;
+}
+.store-page[data-store-template='street'] .sv-item::after { display: none; }
+.store-page[data-store-template='street'] .sv-item .ico {
+  grid-area: stub; place-self: end center; z-index: 1;
+  width: 30px; height: 34px; margin-bottom: 12px; padding: 0; border: 0; border-radius: 0;
+  background: repeating-linear-gradient(90deg, var(--sv-card) 0 2px, transparent 2px 5px);
+  box-shadow: none; color: transparent;
+}
+.store-page[data-store-template='street'] .sv-item .ico svg { display: none; }
+.store-page[data-store-template='street'] .sv-item:hover .ico { transform: none; }
+.store-page[data-store-template='street'] .sv-item h3 {
+  grid-area: name; padding: 16px 16px 0 18px; margin: 0;
+  font-family: var(--sv-display); text-transform: uppercase; letter-spacing: 0; font-size: 17px; line-height: 1.05;
+}
+.store-page[data-store-template='street'] .sv-item small { grid-area: desc; padding: 0 16px 0 18px; font-size: 12.5px; -webkit-line-clamp: 2; }
+.store-page[data-store-template='street'] .sv-item .meta { grid-area: meta; margin: 2px 16px 0 18px; padding: 8px 0 0; border-top: 1px dashed var(--sv-line); }
+.store-page[data-store-template='street'] .sv-item .price {
+  font-family: var(--sv-display); font-size: 20px; background: none; padding: 0; border-radius: 0; color: var(--sv-fg);
+}
+.store-page[data-store-template='street'] .sv-item .act {
+  grid-area: act; margin: 10px 16px 14px 18px; min-height: 42px;
+  border: 2px solid var(--sv-fg); border-radius: 4px; background: var(--sv-card); color: var(--sv-fg);
+  font-size: 12.5px; text-transform: uppercase; letter-spacing: .08em;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--sv-fg) 25%, transparent);
+}
+.store-page[data-store-template='street'] .sv-item:hover .act { border-color: var(--sv-fg); color: var(--sv-fg); }
+.store-page[data-store-template='street'] .sv-item[aria-pressed='true'] {
+  border-color: var(--sv-fg); background: color-mix(in srgb, var(--sv-pop) 16%, var(--sv-card));
+  box-shadow: 5px 5px 0 var(--sv-fg);
+}
+.store-page[data-store-template='street'] .sv-item[aria-pressed='true']::before { background: var(--sv-acc); color: var(--sv-on-acc); border-right-color: var(--sv-on-acc); }
+.store-page[data-store-template='street'] .sv-item[aria-pressed='true'] .ico { background: repeating-linear-gradient(90deg, var(--sv-on-acc) 0 2px, transparent 2px 5px); }
+.store-page[data-store-template='street'] .sv-item[aria-pressed='true'] .act { background: var(--sv-fg); color: var(--sv-card); border-color: var(--sv-fg); }
+@media (max-width: 768px) {
+  .store-page[data-store-template='street'] .sv-list { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='street'] .sv-item { box-shadow: 4px 4px 0 var(--sv-pop); }
+}
 
 /* ---------- Promo: afiche de oferta, tarjetas blancas con placa ---------- */
 .store-page[data-store-template='promo'] .sv-page {
