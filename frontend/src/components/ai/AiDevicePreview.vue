@@ -3,7 +3,8 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import DesignPreview from '../design/DesignPreview.vue'
 import { storeThemeVars } from '../../api/stores.api.js'
-import { STUDIO_MSG, isStudioMessage, studioUpdate } from '../../studio/contract.js'
+import { STUDIO_MSG, isStudioMessage } from '../../studio/contract.js'
+import { buildStudioUpdate, originOf, previewSrc } from './aiPreviewPayload.js'
 
 // Vista previa por dispositivo de una propuesta de "Diseñar con IA".
 // Monta la LANDING REAL de la tienda en un iframe (?studio=1) y le empuja la
@@ -49,13 +50,8 @@ const canToggleNight = computed(() => Boolean(props.nightMode?.enabled))
 const scalePct = computed(() => Math.round(scale.value * 100))
 
 // Landing real: mismo camino que el lienzo del Studio (/<slug>?studio=1).
-const src = computed(() => (props.publicUrl ? `${props.publicUrl}?studio=1` : ''))
+const src = computed(() => previewSrc(props.publicUrl))
 const live = computed(() => Boolean(src.value) && !failed.value)
-// El subdominio de la tienda puede ser otro origen: se postea al origen real
-// del iframe (mismo criterio que el lienzo del Studio).
-function targetOrigin() {
-  try { return new URL(src.value, window.location.href).origin } catch { return window.location.origin }
-}
 
 const previewForm = computed(() => (canToggleNight.value
   ? { ...props.form, theme: dark.value ? 'dark' : 'light' }
@@ -74,57 +70,23 @@ const screenStyle = computed(() => ({
 
 // ---------------------------------------------------------------------------
 // studio:update — la propuesta como si fuera el borrador del Studio.
+// El mensaje se arma en aiPreviewPayload.js: la miniatura de la tarjeta y
+// este modal mandan exactamente lo mismo.
 // ---------------------------------------------------------------------------
-const clone = (value) => {
-  try { return JSON.parse(JSON.stringify(value)) } catch { return null }
-}
-// Campos del form que NO van como `custom`: el tema y el layout viajan en sus
-// propias claves del mensaje.
-const CUSTOM_SKIP = new Set(['site_theme', 'site_theme_draft', 'layout_config', 'layout_config_draft', 'template', 'template_draft'])
-
-// copy_draft -> campos de negocio de la web (los nombres cambian: `steps`
-// se persiste en service_steps).
-function draftFields(draft) {
-  if (!draft || typeof draft !== 'object') return {}
-  const out = {}
-  for (const key of ('about_text', 'about_mission', 'faqs', 'services', 'announcements')) {
-    if (draft[key]) out[key] = draft[key]
-  }
-  if (Array.isArray(draft.steps) && draft.steps.length) out.service_steps = draft.steps
-  return out
-}
-
-function buildUpdate() {
-  const custom = {}
-  for (const [key, value] of Object.entries(props.form || {})) {
-    if (!CUSTOM_SKIP.has(key)) custom[key] = value
-  }
-  Object.assign(
-    custom,
-    props.proposal?.copy || {},
-    draftFields(props.proposal?.copy_draft),
-    {
-      display_name: props.shopName || custom.display_name,
-      logo: props.logo || null,
-      cover: props.cover || null
-    }
-  )
-  const message = studioUpdate({
-    theme: props.proposal?.site_theme || props.form?.site_theme || {},
-    layout: clone(props.proposal?.layout_config || {}) || {},
-    template: props.template,
-    device: device.value
-  })
-  message.mode = dark.value ? 'dark' : 'light'
-  message.custom = clone(custom) || {}
-  return message
-}
-
 let postTimer = null
 function postNow() {
   const win = frameEl.value?.contentWindow
   if (!win || !live.value) return
-  win.postMessage(buildUpdate(), targetOrigin())
+  win.postMessage(buildStudioUpdate({
+    proposal: props.proposal,
+    form: props.form,
+    template: props.template,
+    mode: dark.value ? 'dark' : 'light',
+    device: device.value,
+    shopName: props.shopName,
+    logo: props.logo,
+    cover: props.cover
+  }), originOf(src.value))
 }
 function queuePost() {
   clearTimeout(postTimer)

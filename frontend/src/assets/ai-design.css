@@ -408,6 +408,22 @@
 .aid-mini .dsg-preview-head, .aid-mini .dp-toolbar { display: none; }
 .aid-mini .dp-stage { max-height: 300px; min-height: 180px; }
 
+/* Miniatura EXACTA de la propuesta: la landing real embebida y escalada al
+   ancho de la tarjeta (AiLiveThumb). El iframe no recibe clics: el overlay
+   "Ver en grande" de la tarjeta queda arriba. */
+.aid-thumb { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; background: var(--sunk); }
+.aid-thumb-frame {
+  position: absolute; top: 0; left: 0; border: 0;
+  transform-origin: top left; pointer-events: none; background: var(--card);
+}
+.aid-thumb-skel {
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg, var(--sunk) 30%, var(--card) 50%, var(--sunk) 70%);
+  background-size: 220% 100%;
+  animation: aid-thumb-sweep 1.4s ease-in-out infinite;
+}
+@keyframes aid-thumb-sweep { from { background-position: 120% 0; } to { background-position: -40% 0; } }
+
 .aidp-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 
 /* La preview de la tarjeta se abre con un botón transparente encima. */
@@ -649,5 +665,6 @@
   .aid-skel::after { animation: none; display: none; }
   .aid-modal { animation: none; }
   .aidv-skel { animation: none; }
+  .aid-thumb-skel { animation: none; }
   .aid-head { background: var(--card); }
 }

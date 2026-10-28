@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import AppIcon from '../AppIcon.vue'
-import DesignPreview from '../design/DesignPreview.vue'
+import AiLiveThumb from './AiLiveThumb.vue'
 import AiImageRequest from './AiImageRequest.vue'
 import AiDraftCopy from './AiDraftCopy.vue'
 
@@ -59,7 +59,8 @@ const nightText = computed(() => {
 
     <div class="aidp-media">
       <div class="aid-mini">
-        <DesignPreview
+        <AiLiveThumb
+          :proposal="proposal"
           :form="form"
           :vars="vars"
           :template="template"
@@ -68,9 +69,9 @@ const nightText = computed(() => {
           :logo="logo"
           :cover="cover"
           :advanced="advanced"
-          :catalog-on="true"
           :show-map="showMap"
           :name-font="nameFont"
+          :public-url="publicUrl"
         />
       </div>
       <button
