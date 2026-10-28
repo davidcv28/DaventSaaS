@@ -919,3 +919,37 @@ Si algo falla, pegar acá la salida del paso rojo:
 No ejecutables en este entorno: `trivy` (binario ausente y daemon de Docker
 apagado) y `gitleaks` (no instalado) — ambos corren en CI y en
 `security-schedule.yml`. El DAST sigue pendiente de staging (§17.4).
+
+### 17.6 Verificación de "listo para lanzar" (2026-10-28)
+
+Lo que se pudo probar localmente, y lo que se corrigió al probarlo:
+
+| Comprobación | Comando | Resultado |
+|--------------|---------|-----------|
+| Config de producción completa | `DEBUG=False SECURE_SSL_REDIRECT=True SESSION_COOKIE_SECURE=True CSRF_COOKIE_SECURE=True SECURE_HSTS_SECONDS=31536000 SECRET_KEY=<60ch> ADMIN_URL=ci-backoffice/ ... manage.py check --deploy` | **0 errores** (solo `security.W021`, HSTS preload: decisión de dominio) |
+| Config Render (proxy termina TLS) | `SECURE_SSL_REDIRECT=False` + `SECURE_PROXY_SSL=True` | pasa `project.E001` — el redirect se delega al proxy con header configurado |
+| Drift de migraciones | `manage.py makemigrations --check --dry-run` | `No changes detected` |
+| Checks de sistema | `manage.py check` | 0 issues |
+| Dependencias consistentes | `pip check` | `No broken requirements` |
+| Build del SPA | `npm run build` | OK (5.9 s) |
+| YAML de deploy | `yaml.safe_load` sobre `ci-cd.yml`, `security-schedule.yml`, `dependabot.yml`, `render.yaml`, `docker-compose.yml` | todos parsean |
+
+**Regresión encontrada y corregida (P0 de pipeline):** el job `test` de CI
+exportaba `SECURE_SSL_REDIRECT/SESSION_COOKIE_SECURE/CSRF_COOKIE_SECURE=False`
+a nivel de job. Con `project.E001-E003` eso habría **puesto el pipeline en rojo**
+en el primer push. Fix: esas tres variables se movieron al paso `Tests` (donde
+el test client las necesita), y `check --deploy` corre antes con los defaults de
+producción. Además `project.E001` ahora acepta `SECURE_SSL_REDIRECT=False`
+cuando `SECURE_PROXY_SSL_HEADER` está configurado (topología Docker/Render,
+donde el proxy redirige y manda `X-Forwarded-Proto`).
+
+**Preflight del deploy ampliado** (`.github/workflows/ci-cd.yml`, corre en el
+VPS contra el `.env` real):
+
+- `DEBUG=True` → aborta (expondría trazas/settings en producción).
+- `ADMIN_URL` ausente o `admin`/`admin/` → aborta (mismo criterio que `users.E001`).
+
+**Render:** `SECRETS_MASTER_KEYS` y `SECRETS_HASH_KEY` ahora están declaradas en
+`render.yaml` con `sync: false`. Antes solo vivían en el dashboard y el
+Blueprint no las conocía; si faltan, la PII de Render se cifra con la llave
+derivada del `SECRET_KEY` y queda ilegible al definirlas después.

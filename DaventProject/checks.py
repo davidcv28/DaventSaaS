@@ -24,7 +24,21 @@ def check_production_transport_security(app_configs, **kwargs):
     if settings.DEBUG:
         return []
     errors      =   []
+    proxy       =   bool(getattr(settings, 'SECURE_PROXY_SSL_HEADER', None))
+    #El redirect puede delegarse al proxy (nginx/Render) SIEMPRE que el header
+    #X-Forwarded-Proto esté configurado: ahí quien termina TLS es el proxy y
+    #Django ve https real. Sin redirect y sin proxy, el tráfico viaja en claro.
+    if not getattr(settings, 'SECURE_SSL_REDIRECT', False) and not proxy:
+        errors.append(Error(
+            'SECURE_SSL_REDIRECT está apagado con DEBUG=False y no hay '
+            'SECURE_PROXY_SSL_HEADER: el tráfico viaja sin HTTPS forzado.',
+            hint = 'Dejar SECURE_SSL_REDIRECT=True (default de producción) o '
+                   'configurar el proxy con SECURE_PROXY_SSL=True.',
+            id = 'project.E001',
+        ))
     for name, check_id in _REQUIRED_TRUE.items():
+        if name == 'SECURE_SSL_REDIRECT':
+            continue
         if not getattr(settings, name, False):
             errors.append(Error(
                 f'{name} está apagado con DEBUG=False: el tráfico viaja sin HTTPS forzado.',
@@ -37,7 +51,7 @@ def check_production_transport_security(app_configs, **kwargs):
             hint = 'Dejar el default de producción (31536000) o definir un valor > 0.',
             id = 'project.E004',
         ))
-    if not getattr(settings, 'SECURE_PROXY_SSL_HEADER', None):
+    if not proxy:
         errors.append(Error(
             'SECURE_PROXY_SSL_HEADER no está configurado con DEBUG=False: detrás de '
             'nginx/Cloudflare request.is_secure() ve http y el redirect entra en loop.',

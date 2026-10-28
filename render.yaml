@@ -101,6 +101,15 @@ services:
       - key: MP_PAYER_EMAIL
         sync: false                       # payer de prueba (solo credenciales TEST)
 
+      # ---- Keyring de PII (users.E002/E003) ------------------------------------
+      # Declaradas acá con sync:false para que el Blueprint no las borre y
+      # Render las exija: sin ellas la PII se cifra con la llave derivada del
+      # SECRET_KEY y, al definirlas después, esas filas quedan ilegibles.
+      - key: SECRETS_MASTER_KEYS
+        sync: false
+      - key: SECRETS_HASH_KEY
+        sync: false
+
       # ---- Cloudflare R2 (imágenes de tienda) ----------------------------------
       - key: S3_API
         sync: false

@@ -101,13 +101,10 @@ jobs:
       SECRETS_HASH_KEY: ci-only-hash-key-000000000000000000000000000000
       # check --deploy exige un ADMIN_URL no predecible (users.E001)
       ADMIN_URL: ci-backoffice/
-      # Los defaults seguros de prod (Secure cookies, redirect https) son los
-      # deseados en un deploy real, pero el test client de Django habla http
-      # plano: con ellos activos la suite perdería las cookies de sesión y
-      # todo request sería un 301. check --deploy igual corre sus checks E*.
-      SECURE_SSL_REDIRECT: "False"
-      SESSION_COOKIE_SECURE: "False"
-      CSRF_COOKIE_SECURE: "False"
+      # OJO: SECURE_SSL_REDIRECT / SESSION_COOKIE_SECURE / CSRF_COOKIE_SECURE
+      # NO se bajan acá. `check --deploy` (paso siguiente) corre con los
+      # defaults de producción (DEBUG=False) y project.E001-E005 validan que
+      # nadie los apague. Solo el paso `Tests` los relaja para el test client.
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -129,6 +126,13 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
 
       - name: Tests
+        env:
+          # El test client de Django habla http plano: con las cookies secure
+          # y el redirect activos perdería la sesión y todo request sería un
+          # 301. El paso `check --deploy` ya validó la config real de prod.
+          SECURE_SSL_REDIRECT: "False"
+          SESSION_COOKIE_SECURE: "False"
+          CSRF_COOKIE_SECURE: "False"
         run: python manage.py test
 
   # ---------------------------------------------------------------------------
@@ -334,6 +338,17 @@ jobs:
             grep -q '^MP_WEBHOOK_SECRET=.\{32,\}' .env || { echo "FATAL: MP_WEBHOOK_SECRET ausente o <32 chars"; exit 1; }
             grep -q '^SECRET_MP_KEY=.\{16,\}' .env     || { echo "FATAL: SECRET_MP_KEY ausente"; exit 1; }
             grep -q '^SECRET_KEY=.\{32,\}' .env        || { echo "FATAL: SECRET_KEY ausente o <32 chars"; exit 1; }
+            # 2b. DEBUG=True en producción expone trazas, settings y SQL.
+            #     `check --deploy` NO corre al arrancar el contenedor: este es
+            #     el único gate que lo mira en el .env real del VPS.
+            if grep -q '^DEBUG=True' .env; then echo "FATAL: DEBUG=True en el .env de producción"; exit 1; fi
+            # 2c. ADMIN_URL no predecible (mismo criterio que users.E001): con
+            #     el default 'admin/' el panel queda a un escaneo de distancia.
+            ADMIN_PATH=$(grep '^ADMIN_URL=' .env | cut -d= -f2- | tr -d '\r')
+            [ -n "$ADMIN_PATH" ] || { echo "FATAL: ADMIN_URL ausente (users.E001)"; exit 1; }
+            case "$ADMIN_PATH" in
+              admin|admin/) echo "FATAL: ADMIN_URL no puede ser 'admin/' (users.E001)"; exit 1 ;;
+            esac
             # Keyring de PII: SIN esto el contenedor arranca cifrando
             # document/phone/nombres con la llave derivada del SECRET_KEY
             # (kid "self"). Al definir el keyring real después, _keyring() deja

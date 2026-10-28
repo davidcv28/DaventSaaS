@@ -942,8 +942,18 @@ class ProductionTransportChecksTests(TestCase):
         ), [])
 
     def test_ssl_redirect_off_is_error(self):
-        ids = [e.id for e in self._run(SECURE_SSL_REDIRECT = False)]
+        ids = [e.id for e in self._run(SECURE_SSL_REDIRECT = False, SECURE_PROXY_SSL_HEADER = None)]
         self.assertIn('project.E001', ids)
+
+    def test_ssl_redirect_off_is_ok_when_proxy_terminates_tls(self):
+        #Topología Docker/Render: el proxy redirige y manda X-Forwarded-Proto.
+        self.assertEqual(self._run(
+            SECURE_SSL_REDIRECT        = False,
+            SESSION_COOKIE_SECURE      = True,
+            CSRF_COOKIE_SECURE         = True,
+            SECURE_HSTS_SECONDS        = 31536000,
+            SECURE_PROXY_SSL_HEADER    = ('HTTP_X_FORWARDED_PROTO', 'https'),
+        ), [])
 
     def test_secure_cookies_off_are_errors(self):
         ids = [e.id for e in self._run(SESSION_COOKIE_SECURE = False, CSRF_COOKIE_SECURE = False)]
