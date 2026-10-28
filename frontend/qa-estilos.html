@@ -86,20 +86,6 @@
     app.use(pinia)
     app.mount('#app')
     window.__qa_ready = true
-
-    // Debug: rects de la fila de herramientas para QA de ancho.
-    setTimeout(() => {
-      const out = ['tools', 'search', 'fbtn', 'grid', 'card'].map((k) => {
-        const el = document.querySelector(`.psg-${k}`)
-        if (!el) return `${k}: n/a`
-        const r = el.getBoundingClientRect()
-        return `${k}: x=${Math.round(r.left)} w=${Math.round(r.width)}`
-      })
-      const pre = document.createElement('pre')
-      pre.id = 'qa-debug'
-      pre.textContent = `vw=${innerWidth} docw=${document.documentElement.scrollWidth}\n` + out.join('\n')
-      document.body.appendChild(pre)
-    }, 800)
   </script>
 </body>
 </html>

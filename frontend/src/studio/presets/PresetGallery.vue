@@ -415,7 +415,10 @@ const trialPreset = computed(() => (api.tryingId.value ? api.presets.find((p) =>
 .psg-chip.is-tpl { color: var(--muted); font-weight: 600; }
 .psg-chip.is-reco { background: var(--brand-soft); border-color: transparent; color: var(--brand-ink); }
 .psg-chip.is-lock { background: rgba(217, 119, 6, .1); border-color: rgba(217, 119, 6, .35); color: #b45309; }
-.psg-acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.psg-acts { display: flex; gap: 6px; align-items: center; }
+/* Solo cuando hay CTA de plan (tarjeta bloqueada) la fila envuelve y el
+   CTA cae a una línea propia de ancho completo. */
+.psg-acts:has(.psg-btn.is-plans) { flex-wrap: wrap; }
 .psg-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   min-height: 44px; padding: 8px 12px; border-radius: 9px;
