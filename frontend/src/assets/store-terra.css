@@ -7,7 +7,8 @@
    desde store-services.css. Tokens propios --tr-* mapean la paleta
    del tema (data-store-theme) para que claro/oscuro funcionen.
    ===================================================================== */
-.store-page[data-store-template='terra'] {
+.cv-tr {
+  background: var(--sp-bg);
   --tr-paper: #f7f1e6;
   --tr-paper-2: #f1e7d7;
   --tr-ink: #241d18;
@@ -34,7 +35,7 @@
   --sp-soft: var(--tr-soft);
   --sp-radius: 18px;
 }
-.store-page[data-store-template='terra'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-tr {
   --tr-paper: #16110e;
   --tr-paper-2: #1d1712;
   --tr-ink: #f3e9dc;

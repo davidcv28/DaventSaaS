@@ -7,7 +7,7 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["bricolage-grotesque","figtree"],
   surfaces: {
-    landing: landingViews.riso,
+    landing: landingViews.sp,
     catalog: catalogViews.riso,
     product: productViews.hogar
   },

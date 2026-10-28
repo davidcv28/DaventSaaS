@@ -7,7 +7,7 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["lora","nunito"],
   surfaces: {
-    landing: landingViews.belleza,
+    landing: landingViews.sp,
     catalog: catalogViews.belleza,
     product: productViews.belleza
   },

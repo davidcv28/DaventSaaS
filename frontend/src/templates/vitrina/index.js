@@ -7,7 +7,7 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["playfair-display","work-sans"],
   surfaces: {
-    landing: landingViews.lifestyle,
+    landing: landingViews.sp,
     catalog: catalogViews.lifestyle,
     product: productViews.lifestyle
   },

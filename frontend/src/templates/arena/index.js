@@ -7,12 +7,12 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["orbitron","space-grotesk"],
   surfaces: {
-    landing: landingViews.gamer,
+    landing: landingViews.sp,
     catalog: catalogViews.gamer,
     product: productViews.gamer
   },
   blocks: {
-    landing: ['hero', 'offers', 'featured', 'categories', 'brands', 'steps', 'faq', 'testimonials', 'cta'],
+    landing: ['hero', 'offers', 'featured', 'categories', 'brands', 'timeline', 'faq', 'testimonials', 'cta'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

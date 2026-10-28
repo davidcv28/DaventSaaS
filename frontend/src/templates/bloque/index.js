@@ -7,7 +7,7 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["archivo","jetbrains-mono"],
   surfaces: {
-    landing: landingViews.bloque,
+    landing: landingViews.sp,
     catalog: catalogViews.bloque,
     product: productViews.classic
   },

@@ -1028,7 +1028,7 @@ html { scroll-behavior: smooth; }
    Banda clara con halo del acento, piso isométrico y planos flotantes en
    capas (markup propio), titular extruido con sombras apiladas y cinta de
    marca en marquee al pie. Los elementos se "elevan" con sombras corridas. */
-.store-page[data-store-template='perspective'] { --sp-px-ink: #111827; }
+.cv-pe { --sp-px-ink: #111827; }
 .store-page[data-store-template='perspective'] .sp-hero-band {
   color: var(--sp-ink);
   background:
@@ -1181,7 +1181,7 @@ html { scroll-behavior: smooth; }
 }
 
 /* ---------- Publicidad: afiche promocional ---------- */
-.store-page[data-store-template='promo'] { --sp-yellow: #ffe14d; --sp-ink-hard: #111827; }
+.store-page[data-store-tpl='promo'] .cv-of { --sp-yellow: #ffe14d; --sp-ink-hard: #111827; }
 .store-page[data-store-template='promo'] .sp-hero-band { overflow: hidden; background-size: auto; background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .08) 0 16px, transparent 16px 32px), linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); animation: sp-pr-stripes 6s linear infinite; }
 .store-page[data-store-template='promo'][data-store-theme='dark'] .sp-hero-band { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .06) 0 16px, transparent 16px 32px), linear-gradient(120deg, color-mix(in srgb, var(--store-accent) 70%, #0d1220), var(--store-accent-ink)); }
 @keyframes sp-pr-stripes { to { background-position: 45px 0, 0 0; } }
@@ -1804,7 +1804,7 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { .sp-cl-chip, .sp-cl-ring, .sp-cl-orbit, .sp-cl-spark { animation: none; } .sp-cl-frame { transition: none; } }
 
 /* ---------- Perspectiva v3: Oswald de letrero + Poppins ---------- */
-.store-page[data-store-template='perspective'] { --sp-display: 'Oswald', var(--store-font), sans-serif; --sp-body: 'Poppins', var(--store-font), sans-serif; }
+.cv-pe { --sp-display: 'Oswald', var(--store-font), sans-serif; --sp-body: 'Poppins', var(--store-font), sans-serif; }
 /* Titulares condensados de letrero; el nombre conserva la fuente del
    dueño (inline style cuando el h1 es el nombre). */
 .store-page[data-store-template='perspective'] .sp-hero-title,
@@ -1859,7 +1859,7 @@ html { scroll-behavior: smooth; }
    Papel claro con tinta dura: titulares XXL en Archivo Black, palabra
    fantasma outlineada, pegatina giratoria, código de barras, cinta de
    colección y relieve de sombras corridas. Cuerpo en Space Grotesk. */
-.store-page[data-store-template='street'] { --sp-display: 'Archivo Black', 'Arial Black', sans-serif; --sp-body: 'Space Grotesk', var(--store-font), sans-serif; --sp-radius: 14px; }
+.cv-st { --sp-display: 'Archivo Black', 'Arial Black', sans-serif; --sp-body: 'Space Grotesk', var(--store-font), sans-serif; --sp-radius: 14px; }
 .store-page[data-store-template='street'] .sp-hero-band {
   color: var(--sp-ink);
   background: var(--sp-card-solid);
@@ -2073,7 +2073,8 @@ html { scroll-behavior: smooth; }
    la pantalla la página sigue el tema: hairlines, radios mínimos y brillo
    de acento en vez de sombras corridas. El nombre conserva la fuente del
    dueño (h1.is-name y .sp-name, como en las demás plantillas). */
-.store-page[data-store-template='terminal'] {
+.cv-tm {
+  background: var(--sp-bg);
   --sp-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --sp-display: 'Space Mono', 'JetBrains Mono', ui-monospace, monospace;
   --sp-radius: 6px;
@@ -2406,7 +2407,8 @@ html { scroll-behavior: smooth; }
    Sin gradientes, sin glow, sin sombras: el diseño lo sostienen la
    tipografía, el aire y las reglas. Funciona en tema claro (papel) y
    oscuro (noche de atelier); el nombre conserva la fuente del dueño. */
-.store-page[data-store-template='lookbook'] {
+.cv-lb {
+  background: var(--sp-bg);
   --lb-paper: #f4f0e7;
   --lb-paper-2: #ece5d8;
   --lb-ink: #1a1613;
@@ -2431,7 +2433,7 @@ html { scroll-behavior: smooth; }
   font-size: 15.5px;
   color-scheme: light;
 }
-.store-page[data-store-template='lookbook'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-lb {
   --lb-paper: #14110e;
   --lb-paper-2: #1d1915;
   --lb-ink: #f2ebdf;
@@ -3651,20 +3653,20 @@ html { scroll-behavior: smooth; }
    Titulares en Rubik; radios chicos (10–16px) y superficies blancas
    sobre el fondo teñido para separar "escaparate" de "contenido". */
 
-.store-page[data-store-template='shop'] {
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] {
   --sp-display: 'Rubik', var(--store-font), sans-serif;
   --sp-top-h: 110px;
   --sp-shop-radius: 14px;
   --sp-shop-shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 10px 26px -20px rgba(15, 23, 42, .45);
 }
-.store-page[data-store-theme='dark'][data-store-template='shop'] {
+.store-page[data-store-theme='dark'][data-store-template='cobre'][data-store-tpl='shop'] {
   --sp-shop-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 12px 28px -20px rgba(0, 0, 0, .8);
 }
 
 /* La home de escritorio esconde la barra para el resto de los diseños;
    en el marketplace el masthead ES la entrada de la tienda. */
 @media (min-width: 1101px) {
-  .store-page.is-home[data-store-template='shop'] .sp-top { display: block; }
+  .store-page.is-home[data-store-template='cobre'][data-store-tpl='shop'] .sp-top { display: block; }
 }
 
 /* El nombre de la tienda viaja con una segunda línea (ubicación) en el
@@ -3680,28 +3682,28 @@ html { scroll-behavior: smooth; }
 .sp-shop-brand-meta .icon { flex: none; color: rgba(255, 255, 255, .9); }
 
 /* ---------- Cabecera: identidad + buscador + secciones ---------- */
-.store-page[data-store-template='shop'] .sp-top {
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-top {
   background: linear-gradient(180deg, var(--store-accent-ink), color-mix(in srgb, var(--store-accent-ink) 86%, #000));
 }
-.store-page[data-store-template='shop'] .sp-top-inner { height: 64px; gap: 20px; }
-.store-page[data-store-template='shop'] .sp-brand { flex: 1 1 0; min-width: 0; }
-.store-page[data-store-template='shop'] .sp-brand-copy { flex: none; min-width: 0; }
-.store-page[data-store-template='shop'] .sp-mono.sm,
-.store-page[data-store-template='shop'] .sp-logo.sm { width: 38px; height: 38px; border-radius: 11px; font-size: 16px; }
-.store-page[data-store-template='shop'] .sp-name {
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-top-inner { height: 64px; gap: 20px; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-brand { flex: 1 1 0; min-width: 0; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-brand-copy { flex: none; min-width: 0; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-mono.sm,
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-logo.sm { width: 38px; height: 38px; border-radius: 11px; font-size: 16px; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-name {
   font-size: clamp(15px, 1.2vw, 18px); font-weight: 700; letter-spacing: -.015em;
 }
 /* Buscador central: píldora blanca ancha como en los e-commerce; el botón
    de la lupa envía al catálogo con ?q=. */
-.store-page[data-store-template='shop'] .sp-search-top {
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search-top {
   flex: 1 1 auto; max-width: 560px; height: 42px; padding: 0 7px 0 15px;
   border: 0; border-radius: 10px; background: #fff;
   box-shadow: 0 8px 22px -16px rgba(0, 0, 0, .6);
 }
-.store-page[data-store-template='shop'] .sp-search-top > .icon { color: var(--store-accent-ink); }
-.store-page[data-store-template='shop'] .sp-search-top input { color: #0f172a; font-size: 14px; }
-.store-page[data-store-template='shop'] .sp-search-top input::placeholder { color: #94a3b8; }
-.store-page[data-store-template='shop'] .sp-search-top .sp-search-clear { color: #64748b; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search-top > .icon { color: var(--store-accent-ink); }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search-top input { color: #0f172a; font-size: 14px; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search-top input::placeholder { color: #94a3b8; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search-top .sp-search-clear { color: #64748b; }
 .sp-search-go {
   flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px;
   padding: 0; border: none; border-radius: 7px; cursor: pointer;
@@ -3709,7 +3711,7 @@ html { scroll-behavior: smooth; }
   color: #fff; transition: filter .15s;
 }
 .sp-search-go:hover { filter: brightness(1.12); }
-.store-page[data-store-template='shop'] .sp-top-end { flex: 1 1 0; justify-content: flex-end; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-top-end { flex: 1 1 0; justify-content: flex-end; }
 
 /* Fila de secciones: barra clara pegada al masthead. En móvil no se
    esconde — scrollea en horizontal para no perder la navegación. */
@@ -3731,7 +3733,7 @@ html { scroll-behavior: smooth; }
   color: var(--sp-accent-text);
   background: color-mix(in srgb, var(--store-accent) 11%, transparent);
 }
-.store-page[data-store-theme='dark'][data-store-template='shop'] .sp-shop-nav { border-bottom-color: rgba(255, 255, 255, .1); }
+.store-page[data-store-theme='dark'][data-store-template='cobre'][data-store-tpl='shop'] .sp-shop-nav { border-bottom-color: rgba(255, 255, 255, .1); }
 .sp-shop-nav-note {
   flex: none; font-size: 11px; font-weight: 600; letter-spacing: .04em;
   color: var(--sp-muted); white-space: nowrap;
@@ -4103,11 +4105,11 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='shop'] .sp-quick-pill.active {
   background: var(--store-accent-ink); box-shadow: none;
 }
-.store-page[data-store-template='shop'] .sp-drawer {
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-drawer {
   top: calc(var(--sp-top-h) + 18px); padding: 14px 12px; border-radius: 14px;
   box-shadow: var(--sp-shop-shadow);
 }
-.store-page[data-store-template='shop'] .sp-nav-item { border-radius: 8px; font-size: 13.5px; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-nav-item { border-radius: 8px; font-size: 13.5px; }
 .store-page[data-store-template='shop'] .sp-toolbar { margin-bottom: 16px; }
 .store-page[data-store-template='shop'] .sp-toolbar-title { align-items: center; }
 .store-page[data-store-template='shop'] .sp-section-title { font-family: var(--sp-display); font-size: 19px; letter-spacing: -.01em; }
@@ -4122,7 +4124,7 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='shop'] .sp-chips { margin: -6px 0 18px; }
 .store-page[data-store-template='shop'] .sp-chip { border-radius: 7px; }
 .store-page[data-store-template='shop'] .sp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.store-page[data-store-template='shop'] .sp-search { border-radius: 9px; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search { border-radius: 9px; }
 
 /* ---------- Ficha de producto: proporción de marketplace ----------
    La foto manda pero el panel de compra no queda relegado a una tira:
@@ -4243,7 +4245,7 @@ html { scroll-behavior: smooth; }
   display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   gap: 40px; align-items: start;
 }
-.store-page[data-store-template='shop'] .sp-faq-intro { position: sticky; top: calc(var(--sp-top-h) + 22px); }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-faq-intro { position: sticky; top: calc(var(--sp-top-h) + 22px); }
 .store-page[data-store-template='shop'] .sp-faq-intro .sp-section-title { margin: 6px 0 10px; }
 .store-page[data-store-template='shop'] .sp-faq-list { max-width: none; gap: 10px; }
 .store-page[data-store-template='shop'] .sp-faq-item { border-radius: 12px; box-shadow: none; }
@@ -4294,11 +4296,11 @@ html { scroll-behavior: smooth; }
 }
 
 /* Pie: tres columnas (marca + Tienda + Información). */
-.store-page[data-store-template='shop'] .sp-foot-grid {
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-foot-grid {
   grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, .7fr));
   gap: 36px;
 }
-.store-page[data-store-template='shop'] .sp-foot { margin-top: 64px; }
+.store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-foot { margin-top: 64px; }
 .sp-foot-desc {
   margin: 6px 0 0; max-width: 46ch;
   font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, .68);
@@ -4367,17 +4369,17 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 760px) {
   .store-page[data-store-template='shop'] .sp-container { padding: 0 20px; }
-  .store-page[data-store-template='shop'] { --sp-top-h: 154px; }
-  .store-page[data-store-template='shop'] .sp-top-inner { flex-wrap: wrap; height: auto; padding: 9px 20px 10px; row-gap: 9px; }
-  .store-page[data-store-template='shop'] .sp-search.sp-search-top { display: flex; order: 10; flex: 1 1 100%; max-width: none; }
-  .store-page[data-store-template='shop'] .sp-brand { flex: 1 1 0; }
-  .store-page[data-store-template='shop'] .sp-top-end { flex: 0 0 auto; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] { --sp-top-h: 154px; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-top-inner { flex-wrap: wrap; height: auto; padding: 9px 20px 10px; row-gap: 9px; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search.sp-search-top { display: flex; order: 10; flex: 1 1 100%; max-width: none; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-brand { flex: 1 1 0; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-top-end { flex: 0 0 auto; }
   /* El buscador del masthead ya filtra en vivo: el inline del catálogo
      sería el mismo campo dos veces. */
-  .store-page[data-store-template='shop'] .sp-search.sp-search-inline { display: none; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-search.sp-search-inline { display: none; }
   /* El pill "Catálogo" del masthead repetía el link de la fila de
      secciones: en móvil alcanza con el menú. */
-  .store-page[data-store-template='shop'] .sp-top-cta { display: none; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-top-cta { display: none; }
   .sp-shop-nav-inner { min-height: 42px; gap: 10px; }
   .sp-shop-nav-note { display: none; }
   .sp-shop-nav-links a { padding: 8px 9px; font-size: 11px; }
@@ -4422,8 +4424,8 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='shop'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .store-page[data-store-template='shop'] .sp-contact { padding: 44px 0; }
   .store-page[data-store-template='shop'] .sp-map-frame iframe { height: 240px; }
-  .store-page[data-store-template='shop'] .sp-foot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-  .store-page[data-store-template='shop'] .sp-foot-brand { grid-column: 1 / -1; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-foot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-foot-brand { grid-column: 1 / -1; }
   .store-page[data-store-template='shop'] .sp-cat-hero-inner { padding: 16px 20px 20px; gap: 10px; }
   .store-page[data-store-template='shop'] .sp-cat-title { font-size: 26px; }
   .store-page[data-store-template='shop'] .sp-cat-head-icon { width: 40px; height: 40px; }
@@ -4448,7 +4450,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='shop'] .sp-stat { border-left: 0; border-top: 1px solid var(--sp-line); padding: 14px 18px; justify-items: start; text-align: left; }
   .store-page[data-store-template='shop'] .sp-stat:first-child { border-top: 0; }
   .store-page[data-store-template='shop'] .sp-services-grid { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-store-template='shop'] .sp-foot-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='cobre'][data-store-tpl='shop'] .sp-foot-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-store-template='shop'] .sp-card,
@@ -5451,7 +5453,8 @@ html { scroll-behavior: smooth; }
    van sin cromo sobre tiles de superficie, la tienda se filtra con
    píldoras cuadradas y el cierre es una banda de tinta con botón de
    papel. */
-.store-page[data-store-template='minimal'] {
+.cv-mn {
+  background: var(--sp-bg);
   --mn-paper: #fafaf8;
   --mn-surface: #ffffff;
   --mn-surface2: #efeeea;
@@ -5478,7 +5481,7 @@ html { scroll-behavior: smooth; }
   font-size: 16px;
   color-scheme: light;
 }
-.store-page[data-store-template='minimal'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-mn {
   --mn-paper: #0f0f0e;
   --mn-surface: #181817;
   --mn-surface2: #222220;
@@ -6581,7 +6584,8 @@ html { scroll-behavior: smooth; }
    cuadradas y grilla 3:4; la ficha es la "tarjeta de producto" del
    estándar de indumentaria: foto grande, nombre en serif, precio,
    CTA de tinta y tabla de características por filetes. */
-.store-page[data-store-template='boutique'] {
+.cv-bt {
+  background: var(--sp-bg);
   --bt-paper: #f6f4ee;
   --bt-surface: #ffffff;
   --bt-surface2: #eeeae0;
@@ -6608,7 +6612,7 @@ html { scroll-behavior: smooth; }
   font-size: 16px;
   color-scheme: light;
 }
-.store-page[data-store-template='boutique'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-bt {
   --bt-paper: #131110;
   --bt-surface: #1b1816;
   --bt-surface2: #232019;
@@ -7701,7 +7705,8 @@ html { scroll-behavior: smooth; }
    casilleros numerados y el cierre como pliego de marfil. El catálogo
    repite el sistema (índice grabado + placas) y la ficha es el documento
    de la pieza: galería enmarcada, nombre Cinzel y botón de marfil. */
-.store-page[data-store-template='signature'] {
+.cv-sg {
+  background: var(--sp-bg);
   --sg-night: #16130f;
   --sg-deep: #0e0c09;
   --sg-panel: #1e1a14;
@@ -7734,7 +7739,7 @@ html { scroll-behavior: smooth; }
 }
 /* La casa es oscura también en el tema claro: la identidad de una firma
    no cambia con el interruptor, solo la profundidad de la noche. */
-.store-page[data-store-template='signature'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-sg {
   --sg-night: #100e0b;
   --sg-deep: #090807;
   --sg-panel: #1a1712;
@@ -8734,7 +8739,8 @@ html { scroll-behavior: smooth; }
    dentro de cada placa, las secciones van en paneles de vidrio y el
    cierre es el propio cielo. El catálogo usa barra de cristal fija,
    constelación de chips y la primera pieza como estrella polar. */
-.store-page[data-store-template='aurora'] {
+.cv-au {
+  background: var(--sp-bg);
   --au-sky: #0a0f1e;
   --au-deep: #060911;
   --au-panel: #101728;
@@ -8769,7 +8775,7 @@ html { scroll-behavior: smooth; }
 }
 /* La noche también en el tema claro: la aurora solo existe contra el
    cielo oscuro; el interruptor solo cambia la profundidad de la noche. */
-.store-page[data-store-template='aurora'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-au {
   --au-sky: #070b16;
   --au-deep: #04060c;
   --au-panel: #0d1424;

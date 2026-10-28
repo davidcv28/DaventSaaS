@@ -7,12 +7,12 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["space-grotesk","work-sans","jetbrains-mono"],
   surfaces: {
-    landing: landingViews.studio,
+    landing: landingViews.sp,
     catalog: catalogViews.studio,
     product: productViews.studio
   },
   blocks: {
-    landing: ['hero', 'stats', 'services', 'steps', 'gallery', 'testimonials', 'faq', 'contact'],
+    landing: ['hero', 'stats', 'services', 'timeline', 'gallery', 'testimonials', 'faq', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

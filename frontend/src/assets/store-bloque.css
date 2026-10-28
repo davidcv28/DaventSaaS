@@ -7,7 +7,8 @@
    Tokens propios (--bq-*) mapean la paleta del tema (data-store-theme);
    la landing usa clases .bq-* y el catálogo .cv-bq (mismo archivo).
    ===================================================================== */
-.store-page[data-store-template='bloque'] {
+.cv-bq {
+  background: var(--sp-bg);
   --bq-paper: #f1f1ec;
   --bq-ink: #0b0b0b;
   --bq-mute: #6b6b66;
@@ -28,7 +29,7 @@
   --sp-soft: rgba(11, 11, 11, .05);
   --sp-radius: 0;
 }
-.store-page[data-store-template='bloque'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-bq {
   --bq-paper: #101010;
   --bq-ink: #edede6;
   --bq-mute: #8f8f86;

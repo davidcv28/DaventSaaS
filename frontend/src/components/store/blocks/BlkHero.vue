@@ -14,8 +14,8 @@ import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 const props = defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
-const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
-const tpl = pageTemplate
+const { slug, custom, shopName, nameFont, initial, location, designTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
+const tpl = designTemplate
 
 const year = new Date().getFullYear()
 const { featured: shopCatalog } = useFeaturedCatalog()

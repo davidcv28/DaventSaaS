@@ -6,7 +6,8 @@
    acento de la tienda; el resto de tintas son fijas.
    Landing: clases .rs-*  ·  Catálogo: .cv-rs-* (mismo archivo).
    ===================================================================== */
-.store-page[data-store-template='riso'] {
+.cv-rs {
+  background: var(--sp-bg);
   --rs-paper: #fff5e6;
   --rs-ink: #1e1a33;
   --rs-mute: #6e6883;
@@ -35,7 +36,7 @@
   background-image: radial-gradient(var(--rs-dot) 1px, transparent 1.4px);
   background-size: 14px 14px;
 }
-.store-page[data-store-template='riso'][data-store-theme='dark'] {
+.store-page[data-store-theme='dark'] .cv-rs {
   --rs-paper: #161426;
   --rs-ink: #fff5e6;
   --rs-mute: #a29cb8;

@@ -12,7 +12,7 @@ import StoreBot from '../components/StoreBot.vue'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
-import { templateFonts } from '../templates/index.js'
+import { templateFonts, DESIGN_TEMPLATE } from '../templates/index.js'
 import '../assets/store-page.css'
 // Las hojas de las landing alternativas también definen el cromado
 // (topbar/pie) y la ficha de producto de su diseño: se cargan acá para que
@@ -51,6 +51,11 @@ const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advance
 // Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
 // plan o plantilla retirada — se fuerza 'classic'.
 const pageTemplate = computed(() => resolveStoreTemplate(custom.value.template, store.value?.allowed_templates))
+// Diseño base del storefront: todas las superficies renderizan la piel
+// 'cobre' (data-store-template + variante tpl de los bloques). La plantilla
+// elegida sigue viajando por ctx (pageTemplate) para el arreglo de bloques
+// y las vistas de catálogo/ficha, y por data-store-tpl como identidad.
+const designTemplate = computed(() => DESIGN_TEMPLATE)
 // Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
 const isShop = computed(() => pageTemplate.value === 'shop')
@@ -254,7 +259,7 @@ function loadPublicCatalog(params = {}) {
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, siteTemplates, ui,
+  hasDesignAdvanced, pageTemplate, designTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, siteTemplates, ui,
   loadPublicCatalog
 })
 
@@ -365,6 +370,7 @@ onMounted(async () => {
     // on-demand que name_font; el resto del texto sigue con la fuente
     // elegida por el dueño.
     templateFonts(pageTemplate.value).forEach(ensureStoreFont)
+    templateFonts(designTemplate.value).forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'
     errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'
@@ -383,7 +389,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
+  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="designTemplate" :data-store-tpl="pageTemplate" :style="themeVars">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">

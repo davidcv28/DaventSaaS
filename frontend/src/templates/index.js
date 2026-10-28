@@ -52,6 +52,13 @@ export const TEMPLATE_DEFS = {
   boutique, aurora
 }
 
+// Diseño base del sistema: todas las plantillas renderizan la piel de
+// 'cobre' (data-store-template + variante tpl dentro de los bloques);
+// la identidad de cada plantilla queda en el arreglo estratégico de sus
+// bloques (blocks.* por superficie) y en su catálogo/ficha mientras se
+// migran a la misma base.
+export const DESIGN_TEMPLATE = 'cobre'
+
 export function templateDef(id) {
   return TEMPLATE_DEFS[id] || TEMPLATE_DEFS.classic
 }

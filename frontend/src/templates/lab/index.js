@@ -7,12 +7,12 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["manrope","jetbrains-mono"],
   surfaces: {
-    landing: landingViews.circuit,
+    landing: landingViews.sp,
     catalog: catalogViews.circuit,
     product: productViews.circuit
   },
   blocks: {
-    landing: ['hero', 'featured', 'compare', 'contact'],
+    landing: ['hero', 'featured', 'benefits', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

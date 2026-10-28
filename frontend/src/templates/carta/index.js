@@ -7,12 +7,12 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 export default {
   fonts: ["playfair-display","lora"],
   surfaces: {
-    landing: landingViews.mercado,
+    landing: landingViews.sp,
     catalog: catalogViews.carta,
     product: productViews.mercado
   },
   blocks: {
-    landing: ['hero', 'offers', 'steps', 'contact'],
+    landing: ['hero', 'offers', 'timeline', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

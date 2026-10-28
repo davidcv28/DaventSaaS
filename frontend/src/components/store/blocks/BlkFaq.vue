@@ -8,8 +8,8 @@ import { vReveal } from '../../../directives/reveal.js'
 const props = defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
-const { custom, pageTemplate, showContact } = ctx
-const tpl = pageTemplate
+const { custom, designTemplate, showContact } = ctx
+const tpl = designTemplate
 
 const faqs = computed(() => (Array.isArray(custom.value.faqs) ? custom.value.faqs : []))
 const show = computed(() => custom.value.show_faq !== false && faqs.value.length > 0)
