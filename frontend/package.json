@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^7.6.9",
+    "@capacitor/cli": "^8.5.3",
     "@vitejs/plugin-vue": "^5.1.2",
     "vite": "^5.4.8"
   },
