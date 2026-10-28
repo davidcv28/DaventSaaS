@@ -33,6 +33,34 @@ StoresFields                =   {
 # CUSTOMIZATION FIELDS
 #=========================================
 CustomizationFields           =   {
+    'accent_custom'         :   {
+        'label'             :   'Color de acento personalizado',
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'max_length'        :   7,
+        'error_messages'    :   {'max_length': 'Ingresá un color hexadecimal válido, por ejemplo #1a7f5a.'},
+    },
+    'cover_overlay'         :   {
+        'label'             :   'Oscurecimiento de la portada',
+        'required'          :   False,
+        'min_value'         :   0,
+        'max_value'         :   80,
+        'error_messages'    :   {'min_value': 'El oscurecimiento va de 0 a 80', 'max_value': 'El oscurecimiento va de 0 a 80', 'invalid': 'El oscurecimiento debe ser un número entero'},
+    },
+    'cover_focus_x'         :   {
+        'label'             :   'Punto focal horizontal',
+        'required'          :   False,
+        'min_value'         :   0,
+        'max_value'         :   100,
+        'error_messages'    :   {'min_value': 'El punto focal va de 0 a 100', 'max_value': 'El punto focal va de 0 a 100', 'invalid': 'El punto focal debe ser un número entero'},
+    },
+    'cover_focus_y'         :   {
+        'label'             :   'Punto focal vertical',
+        'required'          :   False,
+        'min_value'         :   0,
+        'max_value'         :   100,
+        'error_messages'    :   {'min_value': 'El punto focal va de 0 a 100', 'max_value': 'El punto focal va de 0 a 100', 'invalid': 'El punto focal debe ser un número entero'},
+    },
     'display_name'          :   {
         'label'             :   'Nombre visible',
         'style'             :   {'placeholder': 'El nombre que ven tus clientes'},

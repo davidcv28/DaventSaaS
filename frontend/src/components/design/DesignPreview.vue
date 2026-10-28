@@ -79,7 +79,7 @@ function schedule() {
   if (!raf) raf = requestAnimationFrame(measure)
 }
 
-watch(() => [props.ring, device.value, mode.value, props.open, props.logo, props.cover, props.template, props.form.accent, props.form.name_font, props.form.name_font_size, props.form.headline, props.form.description, props.shopName], () => nextTick(schedule), { flush: 'post' })
+watch(() => [props.ring, device.value, mode.value, props.open, props.logo, props.cover, props.template, props.form.accent, props.form.accent_custom, props.form.logo_scale, props.form.logo_mode, props.form.cover_overlay, props.form.cover_focus_x, props.form.cover_focus_y, props.form.name_font, props.form.name_font_size, props.form.headline, props.form.description, props.shopName], () => nextTick(schedule), { flush: 'post' })
 
 onMounted(() => {
   mq?.addEventListener('change', onMq)
@@ -128,7 +128,7 @@ const heroCover = computed(() => (props.advanced && props.cover ? { '--dp-cover'
       </div>
     </div>
     <div ref="stage" class="dp-stage">
-      <div ref="frame" class="design-preview dp-frame" :class="`dev-${device}`" :data-store-theme="mode" :data-store-template="template" :style="vars">
+      <div ref="frame" class="design-preview dp-frame" :class="`dev-${device}`" :data-store-theme="mode" :data-store-template="template" :data-logo-mode="advanced ? form.logo_mode : null" :data-has-logo="logo ? '' : null" :data-mono="advanced ? form.mono_style : null" :style="vars">
         <div class="dp-nav" aria-hidden="true">
           <span class="dp-nav-brand">
             <img v-if="logo" class="dp-nav-logo" :src="logo" alt="" />

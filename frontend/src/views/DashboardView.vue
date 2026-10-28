@@ -1280,7 +1280,8 @@ const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location
 const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_product_comments))
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
-const designPreviewVars = computed(() => storeThemeVars(designForm))
+const IDENTITY_DEFAULTS = { accent_custom: '', logo_scale: 'm', logo_mode: 'logo_name', mono_style: 'accent', cover_overlay: 0, cover_focus_x: 50, cover_focus_y: 50 }
+const designPreviewVars = computed(() => storeThemeVars(canDesignAdvanced.value ? designForm : { ...designForm, ...IDENTITY_DEFAULTS }))
 // Plantillas elegibles por nivel de plan (espejo del backend): Básico
 // elige base, Estándar suma 'plus' y Premium todo el catálogo.
 const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
@@ -1294,10 +1295,25 @@ watch(allowedTemplates, (list) => {
 // fuera del picker, que el link colectivo no incluye).
 watch(() => designForm.name_font, (f) => ensureStoreFont(f))
 
+let lastServerDesign = null
+let acceptServerDesign = false
+// Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
+const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', ...Object.keys(IDENTITY_DEFAULTS)]
+const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
   if (!s) return
+  // Subir un logo/portada o guardar otra sección refresca la tienda: lo que
+  // el usuario editó y todavía no guardó en el diseño se conserva (salvo
+  // justo después de guardar el diseño, donde manda lo que devolvió el server).
+  const keep = {}
+  if (lastServerDesign && !acceptServerDesign) {
+    DESIGN_FIELDS.forEach((k) => { if (designFieldValue(designForm[k]) !== designFieldValue(lastServerDesign[k])) keep[k] = designForm[k] })
+  }
+  acceptServerDesign = false
   Object.assign(designForm, store.customization)
+  Object.assign(designForm, keep)
+  lastServerDesign = Object.fromEntries(DESIGN_FIELDS.map((k) => [k, { ...CUSTOMIZATION_DEFAULTS, ...store.customization }[k]]))
   // La fuente guardada tiene que estar cargada cuando llega el valor:
   // la vista previa del panel y el picker la muestran con la tipografía real.
   ensureStoreFont(designForm.name_font)
@@ -1590,13 +1606,11 @@ async function saveExtras() {
 
 // Cambios sin guardar del editor de diseño: solo los campos que viajan en
 // saveDesign (las demás secciones guardan por su cuenta).
-const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location']
-const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
 const designDirty = computed(() => {
   if (!store.store) return false
   const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
   return DESIGN_FIELDS.some((k) => {
-    if (!canDesignAdvanced.value && ['name_font', 'name_font_size', 'accent'].includes(k)) return false
+    if (!canDesignAdvanced.value && (['name_font', 'name_font_size', 'accent'].includes(k) || k in IDENTITY_DEFAULTS)) return false
     return designFieldValue(designForm[k]) !== designFieldValue(base[k])
   })
 })
@@ -1648,6 +1662,7 @@ async function saveDesign() {
   Object.keys(designForm).forEach((k) => { designTouched[k] = true })
   if (Object.keys(designErrors.value).some((k) => !COMPANY_FIELDS.includes(k))) return
   designBusy.value = true
+  acceptServerDesign = true
   const payload = {
     display_name: designForm.display_name.trim(),
     headline: designForm.headline.trim(),
@@ -1671,7 +1686,14 @@ async function saveDesign() {
     Object.assign(payload, {
       name_font: designForm.name_font,
       name_font_size: Number(designForm.name_font_size),
-      accent: designForm.accent
+      accent: designForm.accent,
+      accent_custom: designForm.accent_custom || '',
+      logo_scale: designForm.logo_scale,
+      logo_mode: designForm.logo_mode,
+      mono_style: designForm.mono_style,
+      cover_overlay: Number(designForm.cover_overlay),
+      cover_focus_x: Number(designForm.cover_focus_x),
+      cover_focus_y: Number(designForm.cover_focus_y)
     })
   }
   // La plantilla viaja siempre: el backend la descarta del payload si
@@ -1680,6 +1702,7 @@ async function saveDesign() {
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   const okDesign = await store.saveCustomization(payload)
+  acceptServerDesign = false
   designBusy.value = false
   if (okDesign) pushToast('Diseño guardado ✓')
 }

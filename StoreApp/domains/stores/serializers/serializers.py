@@ -86,6 +86,10 @@ class StoreChatbotSerializer(serializers.ModelSerializer):
 #=========================================
 class StoreCustomizationSerializer(serializers.ModelSerializer):
     display_name                =   serializers.CharField(**CustomizationFields['display_name'])
+    accent_custom               =   serializers.CharField(**CustomizationFields['accent_custom'])
+    cover_overlay               =   serializers.IntegerField(**CustomizationFields['cover_overlay'])
+    cover_focus_x               =   serializers.IntegerField(**CustomizationFields['cover_focus_x'])
+    cover_focus_y               =   serializers.IntegerField(**CustomizationFields['cover_focus_y'])
     headline                    =   serializers.CharField(**CustomizationFields['headline'])
     description                 =   serializers.CharField(**CustomizationFields['description'])
     about_title                 =   serializers.CharField(**CustomizationFields['about_title'])
@@ -134,6 +138,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         model                   =   StoreCustomization
         fields                  =   [
             'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent', 'template',
+            'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y',
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'services', 'services_title', 'show_services', 'stats', 'show_stats',
             'testimonials', 'testimonials_title', 'show_testimonials',
@@ -372,6 +377,12 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         data['site_mode']       =   site_mode_of(templates)
         return data
 
+    def validate_accent_custom(self, value):
+        value                   =   (value or '').strip()
+        if value and not re.fullmatch(StoreCustomization.HEX_COLOR_RE, value):
+            raise serializers.ValidationError('Ingresá un color hexadecimal válido, por ejemplo #1a7f5a.')
+        return value.lower()
+
     def validate_whatsapp(self, value):
         value                   =   value.strip().replace(' ', '').replace('-', '')
         if value and not validate_whatsapp(value):
@@ -410,6 +421,11 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
         if not profile_has_benefit(customization.store.user, 'has_product_comments'):
             data['show_reviews']    =   False
             data['show_comments']   =   False
+        #La identidad visual Premium nueva no se muestra si el plan bajó
+        #(los valores quedan guardados y reaparecen al volver a Premium).
+        if not profile_has_benefit(customization.store.user, 'has_design_advanced'):
+            data.update(accent_custom = '', logo_scale = 'm', logo_mode = 'logo_name', mono_style = 'accent',
+                        cover_overlay = 0, cover_focus_x = 50, cover_focus_y = 50)
         #site_templates viaja EFECTIVO al público: lo guardado intersectado
         #con el plan vigente y recortado al cupo (la página Servicios sale
         #sola al bajar de Estándar; al subir reaparece con sus ítems).

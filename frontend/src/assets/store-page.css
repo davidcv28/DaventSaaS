@@ -10139,3 +10139,13 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='arena'] [class*='-title'],
 .store-page[data-store-template='calma'] [class*='-title'],
 .store-page[data-store-template='vitrina'] [class*='-title'] { font-family: var(--sp-display); }
+
+/* ===== Identidad visual Premium (accent_custom, logo, portada) =====
+   Todo parte de variables con default neutro (--store-logo-scale:1,
+   --store-cover-overlay:0, --store-cover-pos:50% 50%): sin datos nuevos la
+   web se ve igual que antes. */
+.store-page .sp-top :is(.sp-logo.sm, .sp-mono.sm), .store-page .sp-ava { zoom: var(--store-logo-scale, 1); }
+.store-page[data-logo-mode='logo_only'][data-has-logo] :is(.sp-brand-copy, .sp-hero-title.is-name) { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.store-page[data-mono='neutral'] .sp-mono { background: linear-gradient(135deg, #475569, #1e293b); color: #fff; }
+.store-page[data-mono='neutral'] .sp-top .sp-mono { background: #fff; color: #334155; }
+.sp-hero-cover img { object-position: var(--store-cover-pos, 50% 50%); filter: brightness(calc(1 - var(--store-cover-overlay, 0))); }

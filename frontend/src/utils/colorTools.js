@@ -108,3 +108,70 @@ export async function extractLogoColors(src, { cors = true, max = 5 } = {}) {
   ctx.drawImage(img, 0, 0, w, h)
   return quantizeColors(ctx.getImageData(0, 0, w, h).data, max)
 }
+
+const PAGE_BG = { light: '#f4f6fb', dark: '#0d1220' }
+
+export const isHex = (v) => /^#[0-9a-fA-F]{6}$/.test(String(v || ''))
+
+export function normalizeHex(value) {
+  let h = String(value || '').trim().replace(/^#/, '').toLowerCase()
+  if (/^[0-9a-f]{3}$/.test(h)) h = h.replace(/./g, '$&$&')
+  return /^[0-9a-f]{6}$/.test(h) ? `#${h}` : ''
+}
+
+export function rgbToHsl([r, g, b]) {
+  const [x, y, z] = [r / 255, g / 255, b / 255]
+  const max = Math.max(x, y, z)
+  const min = Math.min(x, y, z)
+  const l = (max + min) / 2
+  if (max === min) return [0, 0, l]
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  const h = max === x ? (y - z) / d + (y < z ? 6 : 0) : max === y ? (z - x) / d + 2 : (x - y) / d + 4
+  return [h * 60, s, l]
+}
+
+export function hslToHex(h, s, l) {
+  const a = s * Math.min(l, 1 - l)
+  const f = (n) => {
+    const k = (n + h / 30) % 12
+    return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))
+  }
+  return rgbToHex([f(0) * 255, f(8) * 255, f(4) * 255])
+}
+
+export function hexHsl(hex) {
+  return rgbToHsl(hexToRgb(hex))
+}
+
+export function deriveAccent(hex) {
+  const [h, s, l] = hexHsl(hex)
+  let il = Math.max(0.08, l - 0.07)
+  let ink = hslToHex(h, s, il)
+  while (contrastRatio('#ffffff', ink) < 4.5 && il > 0.05) {
+    il -= 0.02
+    ink = hslToHex(h, s, il)
+  }
+  return { hex: hex.toLowerCase(), ink, soft: hslToHex(h, Math.min(s, 0.9), 0.96) }
+}
+
+export function fixAccent(hex, theme = 'light') {
+  const bg = PAGE_BG[theme] || PAGE_BG.light
+  const [h, s, l0] = hexHsl(hex)
+  const dir = theme === 'dark' ? 1 : -1
+  let l = l0
+  let cur = hex.toLowerCase()
+  for (let i = 0; i < 60 && contrastRatio(cur, bg) < 3 && l > 0.04 && l < 0.96; i += 1) {
+    l += dir * 0.02
+    cur = hslToHex(h, s, l)
+  }
+  return { hex: cur, changed: cur !== hex.toLowerCase() }
+}
+
+export function harmonicAccent(currentHex, theme = 'light') {
+  const [h, s] = hexHsl(currentHex || '#4f46e5')
+  const turn = [30, 150, 180, 210][Math.floor(Math.random() * 4)]
+  const sat = Math.min(0.8, Math.max(0.5, s + (Math.random() - 0.5) * 0.2))
+  const light = 0.36 + Math.random() * 0.12
+  return fixAccent(hslToHex((h + turn) % 360, sat, light), theme).hex
+}

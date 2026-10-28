@@ -47,7 +47,7 @@ Viewsets del dominio Stores.
 #igual y los valores ya guardados quedan intactos. Las plantillas se
 #validan aparte, por nivel de plan (allowed_templates_of del servicio).
 logger                  =   logging.getLogger(__name__)
-DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent')
+DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent', 'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y')
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)

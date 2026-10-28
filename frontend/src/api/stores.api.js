@@ -1,5 +1,6 @@
 import { http } from './http.js'
 import { storeUrl } from '../config/env.js'
+import { isHex, deriveAccent } from '../utils/colorTools.js'
 
 // Dominio stores (StoreApp):
 // GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization,
@@ -364,6 +365,13 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_contact: true,
   theme: 'light',
   accent: 'indigo',
+  accent_custom: '',
+  logo_scale: 'm',
+  logo_mode: 'logo_name',
+  mono_style: 'accent',
+  cover_overlay: 0,
+  cover_focus_x: 50,
+  cover_focus_y: 50,
   template: 'classic',
   whatsapp: '',
   instagram: '',
@@ -793,17 +801,32 @@ export function accentMeta(accent) {
   return STORE_ACCENTS[accent] || STORE_ACCENTS.indigo
 }
 
+export const LOGO_SCALES = { s: 0.8, m: 1, l: 1.3 }
+
+export function effectiveAccent(customization) {
+  const c = customization || {}
+  return isHex(c.accent_custom) ? deriveAccent(c.accent_custom) : accentMeta(c.accent)
+}
+
 export function storeThemeVars(customization) {
   const c = { ...CUSTOMIZATION_DEFAULTS, ...(customization || {}) }
-  const a = accentMeta(c.accent)
+  const a = effectiveAccent(c)
   return {
     '--store-accent': a.hex,
     '--store-accent-ink': a.ink,
     '--store-accent-soft': a.soft,
     '--store-name-size': `${storeNameSize(c.name_font_size)}px`,
     //La fuente elegida aplica a TODO el texto de la web (herencia desde la raíz).
-    '--store-font': storeFontFamily(c.name_font)
+    '--store-font': storeFontFamily(c.name_font),
+    '--store-logo-scale': LOGO_SCALES[c.logo_scale] || 1,
+    '--store-cover-overlay': Math.min(80, Math.max(0, Number(c.cover_overlay) || 0)) / 100,
+    '--store-cover-pos': `${clampPct(c.cover_focus_x)}% ${clampPct(c.cover_focus_y)}%`
   }
+}
+
+function clampPct(v) {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50
 }
 
 const WHATSAPP_PATTERN = /^\+?\d{8,15}$/

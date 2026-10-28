@@ -1537,6 +1537,11 @@ body { transition: background-color .2s ease, color .2s ease; }
    min-content como piso de la columna: la barra .dp-nav de la vista
    previa (~370px entre marca y links) desbordaba toda la sección en
    pantallas < ~400px y el borde derecho quedaba recortado. */
+.dp-frame .dp-nav-logo, .dp-frame .dp-nav-mono, .dp-frame .dp-logo, .dp-frame .dp-mono { zoom: var(--store-logo-scale, 1); }
+.dp-frame[data-logo-mode='logo_only'][data-has-logo] :is(.dp-nav-name, .dp-title.is-name) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.dp-frame[data-mono='neutral'] .dp-mono { background: linear-gradient(135deg, #475569, #1e293b); }
+.dp-frame[data-mono='neutral'] .dp-nav-mono { color: #334155; }
+.design-preview .dp-hero.has-cover { background-position: 0 0, var(--store-cover-pos, 50% 50%) !important; box-shadow: inset 0 0 0 999px rgba(0, 0, 0, var(--store-cover-overlay, 0)); }
 .dsg-card { margin-bottom: 0; min-width: 0; }
 .dsg-preview { position: sticky; top: 84px; margin-bottom: 0; min-width: 0; }
 .dsg-preview .design-preview { margin-bottom: 0; }

@@ -397,7 +397,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :style="themeVars">
+  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="themeVars">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">

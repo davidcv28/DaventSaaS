@@ -1267,3 +1267,124 @@ class LayoutConfigTests(TestCase):
             f'{STORES_URL}customization/', {'template': 'duo'}, format = 'json')
         config      =   response.data['customization']['layout_config']
         self.assertEqual([b['id'] for b in config['landing']['blocks']], ['contact', 'hero'])
+
+
+class IdentityFieldsTests(TestCase):
+    """
+    Identidad visual Premium (accent_custom, logo_scale/logo_mode, overlay y
+    punto focal de la portada): validación de formato y rango, descarte sin
+    has_design_advanced y aislamiento entre clientes.
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def _client(self, username = 'duenio', **benefits):
+        user, profile   =   _make_named_user(username)
+        _grant(profile, has_customization = True, has_public_link = True, **benefits)
+        Store.objects.create(user = profile, slug = f'tienda-{username}')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client
+
+    def _patch(self, client, payload):
+        return client.patch(f'{STORES_URL}customization/', payload, format = 'json')
+
+    def test_defaults_do_not_change_existing_stores(self):
+        client      =   self._client(has_design_advanced = True)
+        custom      =   client.get(f'{STORES_URL}customization/').data
+        self.assertEqual(custom['accent_custom'], '')
+        self.assertEqual(custom['logo_scale'], 'm')
+        self.assertEqual(custom['logo_mode'], 'logo_name')
+        self.assertEqual(custom['mono_style'], 'accent')
+        self.assertEqual(custom['cover_overlay'], 0)
+        self.assertEqual((custom['cover_focus_x'], custom['cover_focus_y']), (50, 50))
+
+    def test_valid_values_saved_with_premium(self):
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {
+            'accent_custom': '#1A7F5A', 'logo_scale': 'l', 'logo_mode': 'logo_only',
+            'mono_style': 'neutral', 'cover_overlay': 40, 'cover_focus_x': 20, 'cover_focus_y': 80,
+        })
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['accent_custom'], '#1a7f5a')
+        self.assertEqual((custom['logo_scale'], custom['logo_mode'], custom['mono_style']), ('l', 'logo_only', 'neutral'))
+        self.assertEqual((custom['cover_overlay'], custom['cover_focus_x'], custom['cover_focus_y']), (40, 20, 80))
+
+    def test_invalid_hex_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for bad in ('red', '#12345', '#1234567', '#gggggg', '123456', 'javascript:alert(1)'):
+            response    =   self._patch(client, {'accent_custom': bad})
+            self.assertEqual(response.status_code, 400, bad)
+            self.assertIn('accent_custom', response.data)
+
+    def test_empty_hex_clears_custom_accent(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'accent_custom': '#1a7f5a'})
+        response    =   self._patch(client, {'accent_custom': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['accent_custom'], '')
+
+    def test_overlay_and_focus_ranges(self):
+        client      =   self._client(has_design_advanced = True)
+        for payload in ({'cover_overlay': 81}, {'cover_overlay': -1}, {'cover_focus_x': 101},
+                        {'cover_focus_y': -5}, {'cover_overlay': 'mucho'}):
+            response    =   self._patch(client, payload)
+            self.assertEqual(response.status_code, 400, payload)
+        for payload in ({'cover_overlay': 0}, {'cover_overlay': 80}, {'cover_focus_x': 0}, {'cover_focus_y': 100}):
+            self.assertEqual(self._patch(client, payload).status_code, 200, payload)
+
+    def test_invalid_choices_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for payload in ({'logo_scale': 'xl'}, {'logo_mode': 'otro'}, {'mono_style': 'rojo'}):
+            self.assertEqual(self._patch(client, payload).status_code, 400, payload)
+
+    def test_discarded_without_premium(self):
+        client      =   self._client()
+        response    =   self._patch(client, {
+            'accent_custom': '#1a7f5a', 'logo_scale': 'l', 'logo_mode': 'logo_only',
+            'mono_style': 'neutral', 'cover_overlay': 40, 'cover_focus_x': 20, 'cover_focus_y': 80,
+        })
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['accent_custom'], '')
+        self.assertEqual((custom['logo_scale'], custom['logo_mode'], custom['mono_style']), ('m', 'logo_name', 'accent'))
+        self.assertEqual((custom['cover_overlay'], custom['cover_focus_x'], custom['cover_focus_y']), (0, 50, 50))
+
+    def test_discarded_even_if_value_is_invalid_without_premium(self):
+        client      =   self._client()
+        self.assertEqual(self._patch(client, {'accent_custom': 'no-es-hex', 'cover_overlay': 999}).status_code, 200)
+
+    def test_public_ignores_values_after_downgrade(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'accent_custom': '#1a7f5a', 'cover_overlay': 40})
+        self.assertEqual(APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']['accent_custom'], '#1a7f5a')
+        PlanBenefit.objects.filter(benefit__code = 'has_design_advanced').delete()
+        cache.clear()
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']
+        self.assertEqual(public['accent_custom'], '')
+        self.assertEqual(public['cover_overlay'], 0)
+
+    def test_public_exposes_new_fields(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'logo_scale': 's', 'cover_focus_x': 10})
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']
+        for key in ('accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y'):
+            self.assertIn(key, public)
+        self.assertEqual((public['logo_scale'], public['cover_focus_x']), ('s', 10))
+
+    def test_client_cannot_edit_another_customization(self):
+        owner       =   self._client('duenio', has_design_advanced = True)
+        other       =   self._client('intruso', has_design_advanced = True)
+        self._patch(owner, {'accent_custom': '#112233'})
+        self._patch(other, {'accent_custom': '#aabbcc', 'cover_overlay': 70})
+        mine        =   StoreCustomization.objects.get(store__slug = 'tienda-duenio')
+        theirs      =   StoreCustomization.objects.get(store__slug = 'tienda-intruso')
+        self.assertEqual((mine.accent_custom, mine.cover_overlay), ('#112233', 0))
+        self.assertEqual((theirs.accent_custom, theirs.cover_overlay), ('#aabbcc', 70))
+
+    def test_anonymous_cannot_patch(self):
+        self._client(has_design_advanced = True)
+        response    =   APIClient().patch(f'{STORES_URL}customization/', {'accent_custom': '#112233'}, format = 'json')
+        self.assertIn(response.status_code, (401, 403))

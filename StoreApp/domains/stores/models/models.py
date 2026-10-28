@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from AdminApp.domains.users.models import UserProfile
 """
 
@@ -186,6 +186,22 @@ class StoreCustomization(models.Model):
     theme                       =   models.CharField(max_length = 10, choices = THEME_CHOICES, default = THEME_LIGHT, verbose_name = 'Tema')
     template                    =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_CLASSIC, verbose_name = 'Diseño de la web')
     accent                      =   models.CharField(max_length = 10, choices = ACCENT_CHOICES, default = ACCENT_INDIGO, verbose_name = 'Color de acento')
+    #Identidad visual Premium (has_design_advanced; el viewset descarta estos
+    #campos sin el flag y la web pública los ignora si el plan bajó). Todos
+    #con default neutro: una tienda existente se ve idéntica.
+    #accent_custom vacío = usar el preset `accent`; con valor manda sobre él.
+    #logo_scale (S/M/L) y no `logo_size`: ese nombre ya es el peso del logo en bytes.
+    HEX_COLOR_RE                =   r'^#[0-9a-fA-F]{6}$'
+    LOGO_SCALE_CHOICES          =   [('s', 'Chico'), ('m', 'Mediano'), ('l', 'Grande')]
+    LOGO_MODE_CHOICES           =   [('logo_name', 'Logo y nombre'), ('logo_only', 'Solo logo')]
+    MONO_STYLE_CHOICES          =   [('accent', 'Color de acento'), ('neutral', 'Neutro')]
+    accent_custom               =   models.CharField(max_length = 7, blank = True, default = '', validators = [RegexValidator(HEX_COLOR_RE, 'Ingresá un color hexadecimal válido, por ejemplo #1a7f5a.')], verbose_name = 'Color de acento personalizado')
+    logo_scale                  =   models.CharField(max_length = 1, choices = LOGO_SCALE_CHOICES, default = 'm', verbose_name = 'Tamaño del logo en la web')
+    logo_mode                   =   models.CharField(max_length = 10, choices = LOGO_MODE_CHOICES, default = 'logo_name', verbose_name = 'Logo y nombre o solo logo')
+    mono_style                  =   models.CharField(max_length = 7, choices = MONO_STYLE_CHOICES, default = 'accent', verbose_name = 'Color del monograma sin logo')
+    cover_overlay               =   models.PositiveSmallIntegerField(default = 0, validators = [MinValueValidator(0), MaxValueValidator(80)], verbose_name = 'Oscurecimiento de la portada (%)')
+    cover_focus_x               =   models.PositiveSmallIntegerField(default = 50, validators = [MinValueValidator(0), MaxValueValidator(100)], verbose_name = 'Punto focal de la portada (X %)')
+    cover_focus_y               =   models.PositiveSmallIntegerField(default = 50, validators = [MinValueValidator(0), MaxValueValidator(100)], verbose_name = 'Punto focal de la portada (Y %)')
     whatsapp                    =   models.CharField(max_length = 20, blank = True, verbose_name = 'WhatsApp')
     instagram                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Instagram')
     tiktok                      =   models.CharField(max_length = 40, blank = True, verbose_name = 'TikTok')

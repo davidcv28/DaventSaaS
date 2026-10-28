@@ -1,13 +1,14 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import {
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_TEMPLATE_FAMILIES,
   STORE_FONTS, STORE_FONT_GROUPS, STORE_FONT_PICKER, storeFontFamily, ensureStoreFont, ensureStoreFontPicker,
   NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX, allowedTemplatesFor,
-  validateLogoFile, validateImageFile, LOGO_ACCEPT, formatStorageMB
+  validateLogoFile, validateImageFile, LOGO_ACCEPT, formatStorageMB, effectiveAccent
 } from '../../api/stores.api.js'
-import { extractLogoColors, nearestAccent, hexToRgb, contrastRatio } from '../../utils/colorTools.js'
+import { extractLogoColors, contrastRatio, deriveAccent, fixAccent, harmonicAccent, normalizeHex, isHex } from '../../utils/colorTools.js'
+import { PALETTES } from '../../utils/palettes.js'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -33,9 +34,9 @@ const currentCover = computed(() => store.customization.cover || '')
 
 const done = computed(() => ({
   identity: Boolean(currentLogo.value),
-  colors: props.form.accent !== CUSTOMIZATION_DEFAULTS.accent || props.form.theme !== CUSTOMIZATION_DEFAULTS.theme,
+  colors: props.form.accent !== CUSTOMIZATION_DEFAULTS.accent || isHex(props.form.accent_custom) || props.form.theme !== CUSTOMIZATION_DEFAULTS.theme,
   type: props.form.name_font !== CUSTOMIZATION_DEFAULTS.name_font || Number(props.form.name_font_size) !== CUSTOMIZATION_DEFAULTS.name_font_size,
-  style: Boolean(currentCover.value) || props.form.template !== CUSTOMIZATION_DEFAULTS.template
+  style: Boolean(currentCover.value) || props.form.template !== CUSTOMIZATION_DEFAULTS.template || props.form.cover_overlay > 0
 }))
 const doneCount = computed(() => steps.filter((s) => done.value[s.id]).length)
 
@@ -138,12 +139,35 @@ async function onRemoveCover() {
 
 const storeThemes = STORE_THEMES
 const storeAccents = STORE_ACCENTS
-const accentMeta = computed(() => STORE_ACCENTS[props.form.accent] || STORE_ACCENTS.indigo)
+const accentMeta = computed(() => effectiveAccent(props.form))
 function pickAccent(key) {
-  if (advanced.value) props.form.accent = key
+  if (!advanced.value) return
+  props.form.accent = key
+  props.form.accent_custom = ''
 }
 function pickTheme(key) {
   props.form.theme = key
+}
+
+const hexDraft = ref(props.form.accent_custom || '')
+const hexErr = ref('')
+watch(() => props.form.accent_custom, (v) => { hexDraft.value = v || ''; hexErr.value = '' })
+function setCustom(hex) {
+  if (!advanced.value) return
+  const n = normalizeHex(hex)
+  if (n) props.form.accent_custom = n
+}
+function onHexInput(e) {
+  if (!advanced.value) return
+  const raw = e.target.value.trim()
+  hexDraft.value = raw
+  if (!raw) { hexErr.value = ''; props.form.accent_custom = ''; return }
+  const n = normalizeHex(raw)
+  hexErr.value = n ? '' : 'Ingresá 6 caracteres hexadecimales, por ejemplo #1a7f5a.'
+  if (n) props.form.accent_custom = n
+}
+function onHexBlur() {
+  if (!hexErr.value) hexDraft.value = props.form.accent_custom || ''
 }
 
 const logoColors = ref([])
@@ -176,11 +200,14 @@ watch([currentLogo, open], () => {
   if (open.value === 'colors') analyzeLogo()
 }, { immediate: true })
 
-const closestAccentKey = computed(() => (logoColors.value.length ? nearestAccent(hexToRgb(logoColors.value[0]), STORE_ACCENTS) : null))
 function useLogoColor() {
-  if (!advanced.value || !closestAccentKey.value) return
-  props.form.accent = closestAccentKey.value
-  colorMsg.value = `Elegimos ${STORE_ACCENTS[closestAccentKey.value].label}, el preset más parecido a tu logo.`
+  if (!advanced.value || !logoColors.value.length) return
+  const exact = logoColors.value[0]
+  const fixed = fixAccent(exact, props.form.theme)
+  props.form.accent_custom = fixed.hex
+  colorMsg.value = fixed.changed
+    ? `Usamos el color de tu logo (${exact}) y lo ajustamos a ${fixed.hex} para que se lea bien.`
+    : `Usamos el color exacto de tu logo: ${exact}.`
 }
 
 const pageBg = computed(() => (props.form.theme === 'dark' ? '#0d1220' : '#f4f6fb'))
@@ -188,10 +215,11 @@ const meters = computed(() => {
   const a = accentMeta.value
   const bg = contrastRatio(a.hex, pageBg.value)
   const btn = contrastRatio('#ffffff', a.ink)
+  const dark = props.form.theme === 'dark'
   return [
     {
       key: 'bg', label: 'Acento sobre el fondo', ratio: bg, ok: bg >= 3,
-      text: bg >= 3 ? 'Los detalles de color se distinguen bien del fondo.' : 'Los detalles cuestan verse sobre este fondo: probá otro acento o el otro tema.'
+      text: bg >= 3 ? 'Los detalles de color se distinguen bien del fondo.' : `Los detalles cuestan verse sobre este fondo: probá un acento más ${dark ? 'claro' : 'oscuro'} o el otro tema.`
     },
     {
       key: 'btn', label: 'Texto del botón sobre el acento', ratio: btn, ok: btn >= 4.5,
@@ -199,6 +227,42 @@ const meters = computed(() => {
     }
   ]
 })
+const needsFix = computed(() => meters.value.some((m) => !m.ok))
+const fixMsg = ref('')
+function fixContrast() {
+  if (!advanced.value) return
+  const fixed = fixAccent(accentMeta.value.hex, props.form.theme)
+  props.form.accent_custom = fixed.hex
+  const msg = fixed.changed ? `Ajustamos el acento a ${fixed.hex} para que cumpla el contraste AA.` : ''
+  nextTick(() => { fixMsg.value = msg })
+}
+watch(() => [props.form.accent, props.form.accent_custom, props.form.theme], () => { fixMsg.value = '' })
+
+const paletteVars = (p) => {
+  const a = deriveAccent(p.accent)
+  return { '--pa': a.hex, '--pi': a.ink, '--ps': a.soft }
+}
+const paletteActive = (p) => props.form.accent_custom === p.accent && props.form.theme === p.theme
+function applyPalette(p) {
+  if (!advanced.value) return
+  props.form.accent_custom = p.accent
+  props.form.theme = p.theme
+}
+const surpriseMsg = ref('')
+function surprise() {
+  if (!advanced.value) return
+  const next = harmonicAccent(accentMeta.value.hex, props.form.theme)
+  props.form.accent_custom = next
+  surpriseMsg.value = `Probamos ${next}. Si no te convence, deshacelo o sorprendete de nuevo.`
+}
+watch(() => props.form.accent_custom, (v) => { if (!v) surpriseMsg.value = '' })
+
+const LOGO_SCALE_OPTS = [{ id: 's', label: 'S', name: 'Chico' }, { id: 'm', label: 'M', name: 'Mediano' }, { id: 'l', label: 'L', name: 'Grande' }]
+const LOGO_MODE_OPTS = [{ id: 'logo_name', label: 'Logo y nombre', icon: 'panel-top' }, { id: 'logo_only', label: 'Solo logo', icon: 'image' }]
+const MONO_OPTS = [{ id: 'accent', label: 'Color de acento' }, { id: 'neutral', label: 'Neutro' }]
+function setIdentity(key, value) {
+  if (advanced.value) props.form[key] = value
+}
 
 const fontFilter = ref('all')
 const storeFonts = STORE_FONTS
@@ -251,18 +315,145 @@ function templateTierLabel(key) {
   return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Todos los planes'
 }
 
+const cropView = ref('desktop')
+const CROP_RATIOS = { desktop: 2.8, mobile: 0.9 }
+const imgRatio = ref(1.6)
+const cropDragging = ref(false)
+function onCoverLoad(e) {
+  const i = e.target
+  if (i.naturalWidth && i.naturalHeight) imgRatio.value = i.naturalWidth / i.naturalHeight
+}
+const cropRect = computed(() => {
+  const ri = imgRatio.value
+  const rc = CROP_RATIOS[cropView.value]
+  const w = ri >= rc ? (rc / ri) * 100 : 100
+  const h = ri >= rc ? 100 : (ri / rc) * 100
+  return { w, h, x: ((100 - w) * props.form.cover_focus_x) / 100, y: ((100 - h) * props.form.cover_focus_y) / 100 }
+})
+const cropStyle = computed(() => ({ left: `${cropRect.value.x}%`, top: `${cropRect.value.y}%`, width: `${cropRect.value.w}%`, height: `${cropRect.value.h}%` }))
+const clampPct = (v) => Math.round(Math.min(100, Math.max(0, v)))
+function focusFromPointer(e) {
+  const r = e.currentTarget?.getBoundingClientRect()
+  if (!r || !r.width || !r.height) return
+  const px = ((e.clientX - r.left) / r.width) * 100
+  const py = ((e.clientY - r.top) / r.height) * 100
+  const { w, h } = cropRect.value
+  props.form.cover_focus_x = w >= 99.9 ? 50 : clampPct(((px - w / 2) / (100 - w)) * 100)
+  props.form.cover_focus_y = h >= 99.9 ? 50 : clampPct(((py - h / 2) / (100 - h)) * 100)
+}
+function onCropDown(e) {
+  if (!advanced.value || (e.pointerType === 'mouse' && e.button !== 0)) return
+  cropDragging.value = true
+  e.currentTarget.setPointerCapture(e.pointerId)
+  focusFromPointer(e)
+  setRing('cover')
+}
+function onCropMove(e) {
+  if (cropDragging.value) focusFromPointer(e)
+}
+function onCropUp(e) {
+  cropDragging.value = false
+  try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ya liberada */ }
+}
+function onCropKey(e) {
+  if (!advanced.value) return
+  const step = e.shiftKey ? 10 : 2
+  const d = { ArrowLeft: ['cover_focus_x', -step], ArrowRight: ['cover_focus_x', step], ArrowUp: ['cover_focus_y', -step], ArrowDown: ['cover_focus_y', step] }[e.key]
+  if (!d) return
+  e.preventDefault()
+  props.form[d[0]] = clampPct(props.form[d[0]] + d[1])
+}
+function centerFocus() {
+  if (!advanced.value) return
+  props.form.cover_focus_x = 50
+  props.form.cover_focus_y = 50
+}
+
+const HISTORY_FIELDS = ['theme', 'accent', 'accent_custom', 'name_font', 'name_font_size', 'template', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y']
+const HISTORY_MAX = 20
+const snapshot = () => Object.fromEntries(HISTORY_FIELDS.map((k) => [k, props.form[k]]))
+const past = ref([])
+const future = ref([])
+let current = snapshot()
+let resetNext = false
+let coalesce = null
+let lastKeys = ''
+let applying = false
+const canUndo = computed(() => past.value.length > 0)
+const canRedo = computed(() => future.value.length > 0)
+watch(() => store.store, () => {
+  resetNext = true
+  nextTick(() => { resetNext = false })
+})
+watch(() => JSON.stringify(snapshot()), () => {
+  if (resetNext) {
+    past.value = []
+    future.value = []
+    current = snapshot()
+    return
+  }
+  if (applying) { applying = false; current = snapshot(); return }
+  const next = snapshot()
+  const keys = HISTORY_FIELDS.filter((k) => next[k] !== current[k]).join()
+  if (!coalesce || keys !== lastKeys) {
+    past.value = [...past.value, current].slice(-HISTORY_MAX)
+    future.value = []
+  }
+  lastKeys = keys
+  clearTimeout(coalesce)
+  coalesce = setTimeout(() => { coalesce = null }, 500)
+  current = next
+})
+function applySnapshot(snap) {
+  applying = true
+  clearTimeout(coalesce)
+  coalesce = null
+  Object.assign(props.form, snap)
+  nextTick(() => { applying = false; current = snapshot() })
+}
+function undo() {
+  if (!canUndo.value) return
+  const prev = past.value[past.value.length - 1]
+  past.value = past.value.slice(0, -1)
+  future.value = [...future.value, current]
+  applySnapshot(prev)
+}
+function redo() {
+  if (!canRedo.value) return
+  const next = future.value[future.value.length - 1]
+  future.value = future.value.slice(0, -1)
+  past.value = [...past.value, current].slice(-HISTORY_MAX)
+  applySnapshot(next)
+}
+function onRootKey(e) {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey) return
+  const key = e.key.toLowerCase()
+  if (key !== 'z' && key !== 'y') return
+  const t = e.target
+  if (t instanceof HTMLElement && (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && !['range', 'color', 'checkbox', 'radio', 'file'].includes(t.type)))) return
+  e.preventDefault()
+  if (key === 'y' || e.shiftKey) redo()
+  else undo()
+}
+onBeforeUnmount(() => clearTimeout(coalesce))
+
 onBeforeUnmount(dropLocalLogo)
 </script>
 
 <template>
-  <div class="card dsg-card dl-root">
+  <div class="card dsg-card dl-root" @keydown="onRootKey">
     <h3><AppIcon name="palette" :size="18" /> Logo y colores</h3>
 
     <div class="dl-progress">
       <div class="dl-progress-head">
         <strong><AppIcon name="badge-check" :size="16" aria-hidden="true" /> Identidad visual</strong>
-        <span class="dl-progress-count">{{ doneCount }}/4</span>
+        <span class="dl-history">
+          <button type="button" class="dl-hbtn" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer el último cambio" @click="undo"><AppIcon name="undo" :size="17" aria-hidden="true" /></button>
+          <button type="button" class="dl-hbtn" :disabled="!canRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer el cambio" @click="redo"><AppIcon name="redo" :size="17" aria-hidden="true" /></button>
+          <span class="dl-progress-count">{{ doneCount }}/4</span>
+        </span>
       </div>
+
       <div class="dl-bar" role="progressbar" aria-label="Identidad visual completada" aria-valuemin="0" aria-valuemax="4" :aria-valuenow="doneCount">
         <span :style="{ transform: `scaleX(${doneCount / 4})` }"></span>
       </div>
@@ -329,7 +520,34 @@ onBeforeUnmount(dropLocalLogo)
               <p v-if="storageText" class="hint">{{ storageText }}</p>
               <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
             </div>
+            <div class="field" :class="{ locked: !advanced }" @focusin="setRing('logo')">
+              <label id="design-logo-scale-label"><AppIcon name="sliders" :size="14" class="label-icon" aria-hidden="true" />Tamaño del logo <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="dl-seg" role="group" aria-labelledby="design-logo-scale-label">
+                <button v-for="o in LOGO_SCALE_OPTS" :key="o.id" type="button" class="dl-seg-btn" :class="{ active: form.logo_scale === o.id }" :aria-pressed="form.logo_scale === o.id" :aria-label="o.name" :title="o.name" :aria-disabled="!advanced" @click="setIdentity('logo_scale', o.id)">{{ o.label }}</button>
+              </div>
+              <p class="hint">Cambia el logo en la barra y en la portada de tu web.</p>
+            </div>
+            <div class="field" :class="{ locked: !advanced }" @focusin="setRing('logo')">
+              <label id="design-logo-mode-label"><AppIcon name="panel-top" :size="14" class="label-icon" aria-hidden="true" />Cómo se muestra <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="dl-seg wide" role="group" aria-labelledby="design-logo-mode-label">
+                <button v-for="o in LOGO_MODE_OPTS" :key="o.id" type="button" class="dl-seg-btn" :class="{ active: form.logo_mode === o.id }" :aria-pressed="form.logo_mode === o.id" :aria-disabled="!advanced" @click="setIdentity('logo_mode', o.id)"><AppIcon :name="o.icon" :size="16" aria-hidden="true" /><span class="dl-ell">{{ o.label }}</span></button>
+              </div>
+              <p class="hint">{{ currentLogo ? 'Con "Solo logo" el nombre queda oculto junto al logo (lo leen los lectores de pantalla).' : 'Se aplica cuando subas un logo.' }}</p>
+            </div>
+            <div v-if="!currentLogo" class="field" :class="{ locked: !advanced }" @focusin="setRing('logo')">
+              <label id="design-mono-label"><AppIcon name="palette" :size="14" class="label-icon" aria-hidden="true" />Monograma sin logo <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="dl-seg wide" role="group" aria-labelledby="design-mono-label">
+                <button v-for="o in MONO_OPTS" :key="o.id" type="button" class="dl-seg-btn" :class="{ active: form.mono_style === o.id }" :aria-pressed="form.mono_style === o.id" :aria-disabled="!advanced" @click="setIdentity('mono_style', o.id)"><span class="dl-ell">{{ o.label }}</span></button>
+              </div>
+              <p class="hint">La inicial de tu negocio, con tu acento o en gris neutro.</p>
+            </div>
+            <div v-if="!advanced" class="dl-lock">
+              <AppIcon name="lock" :size="16" aria-hidden="true" />
+              <span>El tamaño y el modo del logo vienen con el Plan premium.</span>
+              <button type="button" class="btn ghost btn-auto" @click="emit('go-plans')">Ver planes</button>
+            </div>
           </template>
+
 
           <template v-else-if="s.id === 'colors'">
             <div class="field" @focusin="setRing('accent')">
@@ -352,17 +570,41 @@ onBeforeUnmount(dropLocalLogo)
               <div class="swatches dl-swatches" role="group" aria-labelledby="design-accent-label">
                 <button
                   v-for="(a, key) in storeAccents" :key="key" type="button"
-                  class="swatch" :class="{ active: form.accent === key }"
+                  class="swatch" :class="{ active: form.accent === key && !form.accent_custom }"
                   :style="{ '--swatch': a.hex }"
                   :title="a.label" :aria-label="`Color ${a.label}`"
                   :aria-disabled="!advanced"
-                  :aria-pressed="form.accent === key"
+                  :aria-pressed="form.accent === key && !form.accent_custom"
                   @click="pickAccent(key)"
                 >
-                  <AppIcon v-if="form.accent === key" name="check" :size="14" :stroke="2.5" />
+                  <AppIcon v-if="form.accent === key && !form.accent_custom" name="check" :size="14" :stroke="2.5" />
                 </button>
               </div>
-              <p class="hint">Se aplica a la portada, los botones y los detalles.</p>
+              <div class="dl-custom">
+                <label class="dl-colorpick" :class="{ active: form.accent_custom }" :style="{ '--swatch': accentMeta.hex }" title="Elegir un color propio">
+                  <input type="color" :value="accentMeta.hex" :disabled="!advanced" aria-label="Elegir un color propio" @input="setCustom($event.target.value)" />
+                  <AppIcon name="pipette" :size="18" aria-hidden="true" />
+                </label>
+                <div class="dl-hexbox">
+                  <label for="design-accent-hex" class="tpl-label">Color propio (hex)</label>
+                  <input id="design-accent-hex" class="dl-hex" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="7" placeholder="#1a7f5a" :value="hexDraft" :disabled="!advanced" :aria-invalid="Boolean(hexErr)" aria-describedby="design-accent-hex-err" @input="onHexInput" @blur="onHexBlur" />
+                </div>
+                <button type="button" class="btn ghost btn-auto dl-surprise" :disabled="!advanced" @click="surprise"><AppIcon name="refresh" :size="16" /> Sorprendeme</button>
+              </div>
+              <p v-if="hexErr" id="design-accent-hex-err" class="field-error" role="alert">{{ hexErr }}</p>
+              <p v-if="surpriseMsg" class="hint" role="status">{{ surpriseMsg }} <button type="button" class="dl-link" :disabled="!canUndo" @click="undo">Deshacer</button></p>
+              <p v-else class="hint">Elegí un preset o cualquier color: calculamos solos los tonos oscuro y suave.</p>
+            </div>
+            <div class="field" :class="{ locked: !advanced }" @focusin="setRing('accent')">
+              <label id="design-palettes-label"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Paletas por rubro <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="dl-pals" role="group" aria-labelledby="design-palettes-label">
+                <button v-for="p in PALETTES" :key="p.id" type="button" class="dl-pal" :class="{ active: paletteActive(p) }" :data-t="p.theme" :style="paletteVars(p)" :aria-pressed="paletteActive(p)" :aria-disabled="!advanced" @click="applyPalette(p)">
+                  <span class="dl-pal-web" aria-hidden="true"><i class="dl-pal-nav"></i><i class="dl-pal-hero"><b></b></i><i class="dl-pal-row"><b></b><b></b></i></span>
+                  <span class="dl-pal-name dl-ell">{{ p.label }}</span>
+                  <small class="dl-pal-hint">{{ p.hint }}</small>
+                </button>
+              </div>
+              <p class="hint">Aplica el acento y el tema juntos.</p>
             </div>
             <div class="field dl-logo-color" :class="{ locked: !advanced }">
               <label><AppIcon name="pipette" :size="14" class="label-icon" aria-hidden="true" />Color de tu logo</label>
@@ -370,12 +612,12 @@ onBeforeUnmount(dropLocalLogo)
                 <div class="dl-chips" aria-live="polite">
                   <span v-if="colorBusy" class="spinner" aria-hidden="true"></span>
                   <span v-for="c in logoColors" :key="c" class="dl-chip" :style="{ background: c }" :title="c" role="img" :aria-label="`Color dominante ${c}`"></span>
-                  <button type="button" class="btn ghost btn-auto dl-use-logo" :disabled="!advanced || !closestAccentKey || colorBusy" @click="useLogoColor">
+                  <button type="button" class="btn ghost btn-auto dl-use-logo" :disabled="!advanced || !logoColors.length || colorBusy" @click="useLogoColor">
                     <AppIcon name="pipette" :size="16" /> Usar color de mi logo
                   </button>
                 </div>
                 <p v-if="colorMsg" class="hint" role="status">{{ colorMsg }}</p>
-                <p v-else class="hint">Elegimos el acento más parecido a los colores de tu logo.</p>
+                <p v-else class="hint">Usamos el color exacto de tu logo y lo ajustamos si hace falta para que se lea.</p>
               </template>
               <p v-else class="hint">Subí tu logo en Identidad y te sugerimos un acento.</p>
             </div>
@@ -388,9 +630,14 @@ onBeforeUnmount(dropLocalLogo)
                 </div>
               </div>
             </div>
+            <div v-if="advanced && needsFix" class="dl-fix">
+              <button type="button" class="btn ghost btn-auto" @click="fixContrast"><AppIcon name="check" :size="16" /> Corregir automáticamente</button>
+            </div>
+            <p v-if="fixMsg" class="hint" role="status">{{ fixMsg }}</p>
             <div v-if="!advanced" class="dl-lock">
               <AppIcon name="lock" :size="16" aria-hidden="true" />
               <span>El color de acento viene con el Plan premium.</span>
+
               <button type="button" class="btn ghost btn-auto" @click="emit('go-plans')">Ver planes</button>
             </div>
           </template>
@@ -459,6 +706,35 @@ onBeforeUnmount(dropLocalLogo)
               <p class="hint">Foto apaisada y luminosa de hasta 4 MB; la ajustamos sola.</p>
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
+            <div v-if="currentCover" class="field dl-crop" :class="{ locked: !advanced }" @focusin="setRing('cover')">
+              <label id="design-crop-label"><AppIcon name="image" :size="14" class="label-icon" aria-hidden="true" />Punto focal y recorte</label>
+              <div class="dl-seg wide" role="group" aria-label="Ver el recorte en">
+                <button type="button" class="dl-seg-btn" :class="{ active: cropView === 'desktop' }" :aria-pressed="cropView === 'desktop'" @click="cropView = 'desktop'"><AppIcon name="monitor" :size="16" aria-hidden="true" /><span class="dl-ell">Escritorio</span></button>
+                <button type="button" class="dl-seg-btn" :class="{ active: cropView === 'mobile' }" :aria-pressed="cropView === 'mobile'" @click="cropView = 'mobile'"><AppIcon name="smartphone" :size="16" aria-hidden="true" /><span class="dl-ell">Móvil</span></button>
+              </div>
+              <div class="dl-crop-wrap"><div class="dl-crop-stage" :class="{ dragging: cropDragging }" @pointerdown="onCropDown" @pointermove="onCropMove" @pointerup="onCropUp" @pointercancel="onCropUp">
+                <img :src="currentCover" alt="" draggable="false" @load="onCoverLoad" />
+                <div
+                  class="dl-crop-win" role="slider" tabindex="0" :style="cropStyle"
+                  aria-labelledby="design-crop-label" :aria-valuenow="form.cover_focus_x" aria-valuemin="0" aria-valuemax="100"
+                  :aria-valuetext="`Horizontal ${form.cover_focus_x} por ciento, vertical ${form.cover_focus_y} por ciento`"
+                  :aria-disabled="!advanced" @keydown="onCropKey"
+                ><span class="dl-crop-dot" aria-hidden="true"></span></div>
+              </div></div>
+              <div class="dl-crop-foot">
+                <p class="hint">Arrastrá el recuadro (o usá las flechas) para elegir qué parte se ve en {{ cropView === 'mobile' ? 'celulares' : 'pantallas grandes' }}.</p>
+                <button type="button" class="btn ghost btn-auto" :disabled="!advanced || (form.cover_focus_x === 50 && form.cover_focus_y === 50)" @click="centerFocus"><AppIcon name="refresh" :size="16" /> Centrar</button>
+              </div>
+            </div>
+            <div class="field" :class="{ locked: !advanced }" @focusin="setRing('cover')">
+              <label for="design-cover-overlay"><AppIcon name="moon" :size="14" class="label-icon" aria-hidden="true" />Oscurecer la portada <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="size-slider">
+                <input id="design-cover-overlay" v-model.number="form.cover_overlay" type="range" min="0" max="80" step="5" :disabled="!advanced" />
+                <span class="size-value">{{ form.cover_overlay }}%</span>
+              </div>
+              <p class="hint">Ayuda a que el texto se lea sobre fotos claras.</p>
+            </div>
+
             <div class="field" @focusin="setRing('cover')">
               <label for="design-family"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
               <div class="tpl-selects">
@@ -596,4 +872,59 @@ onBeforeUnmount(dropLocalLogo)
   .dl-panel { animation: none; }
   .dl-bar span, .dl-chev, .dl-font { transition: none; }
 }
+
+.dl-history { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.dl-hbtn { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink-2); cursor: pointer; transition: background .15s, opacity .15s; }
+.dl-hbtn:hover:not(:disabled) { background: var(--surface); }
+.dl-hbtn:disabled { opacity: .4; cursor: default; }
+.dl-hbtn:focus-visible, .dl-seg-btn:focus-visible, .dl-pal:focus-visible, .dl-link:focus-visible, .dl-crop-win:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.dl-seg { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); max-width: 100%; }
+.dl-seg.wide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+.dl-seg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 44px; min-height: 44px; padding: 6px 14px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: var(--ink-2); cursor: pointer; transition: background .15s, color .15s; }
+.dl-seg-btn > span { min-width: 0; }
+.dl-seg-btn.active { background: var(--brand-500); color: #fff; }
+.field.locked .dl-seg-btn, .field.locked .dl-pal, .field.locked .dl-hex, .field.locked .dl-colorpick { opacity: .6; cursor: default; }
+
+.dl-custom { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-top: 12px; min-width: 0; }
+.dl-colorpick { position: relative; display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--swatch); color: #fff; cursor: pointer; overflow: hidden; }
+.dl-colorpick.active { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--swatch); }
+.dl-colorpick:focus-within { outline: 2px solid var(--brand-500); outline-offset: 4px; }
+.dl-colorpick input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.dl-colorpick .icon { pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); }
+.dl-hexbox { display: grid; gap: 4px; flex: 1 1 130px; min-width: 0; }
+.dl-hex { width: 100%; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--ink); font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 16px; }
+.dl-hex:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 1px; }
+.dl-hex[aria-invalid='true'] { border-color: var(--danger); }
+.dl-surprise { min-height: 44px; }
+.dl-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; border: 0; background: none; font: inherit; font-weight: 700; color: var(--brand-ink); text-decoration: underline; cursor: pointer; }
+.dl-link:disabled { opacity: .5; cursor: default; }
+.dl-fix { display: flex; min-width: 0; }
+.dl-fix .btn { min-height: 44px; }
+
+.dl-pals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@container (min-width: 520px) { .dl-pals { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.dl-pal { display: grid; gap: 5px; align-content: start; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.dl-pal.active { border-color: var(--brand-500); box-shadow: var(--ring); }
+.dl-pal-web { display: flex; flex-direction: column; height: 72px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #f4f6fb; }
+.dl-pal[data-t='dark'] .dl-pal-web { background: #0d1220; border-color: #28304d; }
+.dl-pal-nav { display: block; flex: none; height: 9px; background: var(--pi); }
+.dl-pal-hero { display: grid; place-items: center; flex: 1 1 auto; background: linear-gradient(120deg, var(--pa), var(--pi)); }
+.dl-pal-hero b { width: 38%; height: 6px; border-radius: 9px; background: #fff; }
+.dl-pal-row { display: flex; flex: none; gap: 4px; padding: 5px; }
+.dl-pal-row b { flex: 1; height: 12px; border-radius: 3px; background: var(--ps); }
+.dl-pal[data-t='dark'] .dl-pal-row b { background: rgba(255, 255, 255, .14); }
+.dl-pal-name { font-size: 13px; font-weight: 700; }
+.dl-pal-hint { color: var(--muted); font-size: 11.5px; line-height: 1.3; overflow-wrap: anywhere; }
+
+.dl-crop-wrap { display: flex; justify-content: center; min-width: 0; margin-top: 10px; }
+.dl-crop-stage { position: relative; max-width: 100%; overflow: hidden; line-height: 0; border: 1px solid var(--line); border-radius: 12px; background: #0b0f1a; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.dl-crop-stage.dragging { cursor: grabbing; }
+.dl-crop-stage img { display: block; width: auto; height: auto; max-width: 100%; max-height: min(50dvh, 340px); pointer-events: none; }
+.dl-crop-win { position: absolute; box-sizing: border-box; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 0 0 999px rgba(8, 10, 24, .55); display: grid; place-items: center; }
+.dl-crop-dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, .4); }
+.dl-crop-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 8px; min-width: 0; }
+.dl-crop-foot .hint { flex: 1 1 180px; margin: 0; }
+.dl-crop-foot .btn { min-height: 44px; }
+.field.locked .dl-crop-stage { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .dl-hbtn, .dl-seg-btn { transition: none; } }
 </style>
