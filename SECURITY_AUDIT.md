@@ -836,3 +836,69 @@ venv/Scripts/python.exe -m pip_audit -r requirements.txt
 `boto3`/`onnxruntime` no los actualiza Dependabot a ciegas: el cooldown de
 `.github/dependabot.yml` (7 días) respeta la misma ventana.
 
+
+---
+
+## §17 Cierre de riesgos residuales (ronda 2026-10-28)
+
+Alcance: los ítems que §16 dejó abiertos (P0 de despliegue, P1 de código y de
+cadena de suministro, validación externa). Cada fila trae el comando que la
+prueba; lo que no se pudo ejecutar desde el repo se marca como tal.
+
+### 17.1 Hallazgos cerrados
+
+| # | Hallazgo | Sev. | Fix aplicado | Verificación ejecutada |
+|---|----------|------|--------------|------------------------|
+| 1 | Cabeceras de transporte dependían de que el `.env` no las apagara: `SECURE_SSL_REDIRECT=False` pasaba `check --deploy` sin ruido | **P0** | `DaventProject/checks.py`: `project.E001-E005` fallan `check --deploy` con `DEBUG=False` si `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_HSTS_SECONDS>0` o `SECURE_PROXY_SSL_HEADER` quedaron apagados. Registrado desde `UsersAppConfig.ready()` | `manage.py test AdminApp.domains.users.tests.ProductionTransportChecksTests` (6 tests, OK) · `manage.py check --deploy` en dev: sin errores nuevos |
+| 2 | Adjunto del chat podía salir por la **URL pública** del bucket (si `R2_PUBLIC_URL` está configurada) — link permanente para cualquiera que lo tenga | **P1** | `storage.object_url(key, private=True, expires=...)` ignora la base pública; `chat_image_url` firma con TTL de **1 h** (`CHAT_IMAGE_TTL_SECONDS`). El archivo sigue validado por el pipeline auditado de stores (firma real de bytes, 4 MB antes de leer, `MAX_IMAGE_PIXELS=40M` → `DecompressionBombError`, recodificación a WebP sin EXIF) | `manage.py test StoreApp.domains.stores.tests.ObjectUrlPrivacyTests` · `AdminApp.domains.chat` (suite completa) |
+| 3 | Cobros `approved` de MP sin fila local (residual W-5) invisibles | **P1** | `manage.py audit_orphan_payments [--days N] [--include-test] [--json]`: pagina `payment.search(status=approved)`, cruza `Payment.external_reference` (id de pago MP) y `external_reference` (id de suscripción), lista monto/moneda/fecha/motivo y **loguea** — no crea `Payment` ni acredita nada | `manage.py test AdminApp.domains.payments.tests.AuditOrphanPaymentsTests` (2 tests: no escribe, filtra sandbox) |
+| 4 | `review.email` y chat viejo se conservaban indefinidamente (Ley 25.326) | **P1** | `manage.py purge_personal_data --days N [--dry-run]`: anonimiza `ProductReview.email` y borra `ChatMessage` + adjunto (R2/MEDIA) anteriores al corte. No toca `Payment`/`Suscription`/`Invoice` por diseño | `manage.py test AdminApp.domains.users.test_retention` (dry-run, purga real con borrado de adjunto, idempotencia) |
+| 5 | CVEs nuevas solo se veían cuando alguien pusheaba | **P1** | `.github/workflows/security-schedule.yml` (lunes 06:00 UTC + `workflow_dispatch`): pip-audit, npm audit `--omit=dev`, trivy fs con los mismos pins que CI | YAML revisado; se valida en el primer run programado (Actions → Security schedule) |
+| 6 | Actualizaciones de dependencias sin ventana de maduración | **P2** | `.github/dependabot.yml`: pip/npm/github-actions/docker, `cooldown.default-days: 7`, parches agrupados. El cooldown **no** aplica a security updates | Config revisada contra el esquema de Dependabot (Insights → Dependency graph) |
+| 7 | Fechas de adopción de los pins diferidos no estaban fijadas | **P2** | §16.7: `boto3` 1.43.120 → 2026-11-03, `onnxruntime` 1.31.1 → 2026-11-02, Django 5.2.19 → 2026-11-10 (publicación + 7 d) | Comandos de verificación listados en §16.7 |
+| 8 | DAST y rotación de secretos sin procedimiento escrito | **P2** | `SECURITY_RUNBOOK.md`: ZAP baseline contra staging, tokens de prueba por área, rotación keyring → `SECRET_KEY` → MP con el orden que evita perder PII | Documento operativo (no ejecutable desde el repo) |
+
+### 17.2 Checklist de secretos — comando por secreto
+
+Marcado **verificable desde el repo** (V) o **solo en el panel** (P).
+
+| Secreto | Dónde | Comando / cómo verificar | Quién |
+|---------|-------|--------------------------|-------|
+| `MP_WEBHOOK_SECRET` (≥32) | GitHub Env `production`, Render, VPS | `grep -c '^MP_WEBHOOK_SECRET=.\{32,\}' /opt/davent/.env` → `1`; en Render: Dashboard → Environment (valor enmascarado, solo se ve si se edita) | P |
+| `SECRET_MP_KEY` (≥16) | ídem | `grep -c '^SECRET_MP_KEY=.\{16,\}' /opt/davent/.env` → `1`; prueba real: `manage.py audit_orphan_payments --days 1` responde 200 (si el token es inválido, MP devuelve 401 y el comando lo reporta) | P |
+| `SECRETS_MASTER_KEYS` | VPS `/opt/davent/.env`, Render | `docker compose exec api python manage.py check --deploy` → 0 errores (`users.E002/E003`); `docker compose exec api python manage.py shell -c "from AdminApp.domains.invoices.services import vault; print(vault.active_kid())"` | P |
+| `SECRETS_HASH_KEY` | ídem | mismo `check --deploy`; no tiene verificación de valor (es HMAC de unicidad) — se valida indirectamente con el alta de un perfil duplicado | P |
+| `SSH_HOST_FINGERPRINT` | GitHub Env `production` | `ssh-keyscan -p $SSH_PORT $SSH_HOST \| ssh-keygen -lf -` y comparar con el secret | P |
+| `SECRET_KEY` (≥50) | VPS, Render | `docker compose exec api python -c "from django.conf import settings; print(len(settings.SECRET_KEY))"` → `>=50`; Django lo marca como `security.W009` si no | P (V solo el largo, no el valor) |
+| Preflight completo | GitHub | `gh run view --log --job deploy \| grep -i preflight` (o Actions → CI/CD → job `deploy` → paso *Preflight*) | P |
+
+### 17.3 Estado del primer run de CI del commit `1a78b03`
+
+**No verificable desde este entorno**: no hay `gh` instalado ni credenciales de
+Actions. Qué mirar (Actions → *CI/CD* → run de `1a78b03`):
+
+1. `lint` — `ruff check` limpio.
+2. `test` — `check --deploy`, `makemigrations --check`, `manage.py test` (los
+   dummies de CI cubren `MP_WEBHOOK_SECRET`/`SECRETS_*`).
+3. `security` — bandit, pip-audit, npm audit, gitleaks, trivy fs.
+4. `build` — dos imágenes a GHCR + trivy image.
+5. `deploy` — preflight de secretos, scp, ssh, `up -d --wait`, `curl /healthz/`.
+
+Si algo falla, pegar acá la salida del paso rojo:
+`Actions → run → job → paso → "Download log"` (o `gh run view <id> --log-failed`).
+
+> Nota: los commits de esta ronda (`7d607f4`, `7cfc491`, `a478ea6`) disparan
+> runs nuevos; el criterio es que el **último** run de `main` quede verde.
+
+### 17.4 Residuales honestos (lo que sigue abierto)
+
+| Residual | Por qué queda abierto | Mitigación actual |
+|----------|----------------------|-------------------|
+| Sin antivirus/escaneo de adjuntos | El pipeline solo garantiza que es una imagen decodificable (Pillow), no que sea benigna. Un polyglot/esteganografía pasa | Recodificación a WebP (destruye el archivo original y cualquier payload embebido en el contenedor), tamaño ≤4 MB, 40 MP, servido con `Content-Type: image/webp`, URL firmada de 1 h. No se ejecuta ni se sirve como HTML |
+| URL firmada es bearer | Quien la tenga la usa durante 1 h | TTL corto + key UUID no adivinable + solo se emite a los dos participantes del hilo. Firma por usuario requeriría proxy de media propio (fuera de alcance) |
+| Media local en VPS sin R2 | Si `R2_*` no está configurado, nginx sirve `/media/chat/...` como público (key UUID) | Documentado; en producción el bucket está configurado. Si se corre sin R2, tratar `/media/` como no público |
+| `audit_orphan_payments` es solo lectura | Acreditar automáticamente un huérfano puede duplicar un cobro legítimo | Lista + log para reconciliación manual en el panel de MP (decisión de producto, no técnica) |
+| Retención por defecto 365 d | No hay cron que lo ejecute | Comando idempotente listo; falta agendarlo (cron del VPS o Celery beat) — acción de despliegue |
+| `SECRETS_HASH_KEY` sin rotación | Rotarla rompe `document_hash`/`phone_hash` ya emitidos | Documentado como no rotable en caliente (runbook §3.3) |
+| DAST no ejecutado | Requiere staging accesible y ventana | Runbook listo (§1-§2); ejecución pendiente del operador |
+| Primer run de CI | Sin acceso a Actions desde el entorno del agente | §17.3 |
