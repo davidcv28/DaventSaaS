@@ -2,12 +2,17 @@
 #determinismo. Los helpers siguen el patrón de tests.py del dominio (plan +
 #suscripción vigente con los beneficios pedidos).
 
+import io
+import tempfile
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import TestCase
+from django.core.files.storage import default_storage
+from django.test import TestCase, override_settings
 from django.utils import timezone
+from PIL import Image
 from rest_framework.test import APIClient
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
@@ -15,12 +20,16 @@ from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Product
 from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS
-from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization
+from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage
+from StoreApp.domains.stores.services import allowed_templates_of
+from StoreApp.domains.stores.services import storage
+from StoreApp.domains.stores.services.ai_design import generate as generate_ai_design
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 STORES_URL  =   '/api/stores/'
 AI_URL      =   f'{STORES_URL}ai-design/'
 APPLY_URL   =   f'{STORES_URL}ai-design/apply/'
+IMAGE_URL   =   f'{STORES_URL}ai-design/image/'
 
 
 def _grant(profile, **benefits):
@@ -66,8 +75,9 @@ class AiDesignBase(TestCase):
     def setUp(self):
         cache.clear()
 
-    def _store(self, advanced = True, ai = True, customization = True, products = 0, username = 'duenio'):
+    def _store(self, advanced = True, ai = True, customization = True, products = 0, username = 'duenio', limits = False):
         user, profile   =   _make_user(username)
+        extra           =   {'max_gallery_images': 10, 'max_images': 30, 'max_storage_mb': 50} if limits else {}
         _grant(
             profile,
             has_public_link         =   True,
@@ -75,6 +85,7 @@ class AiDesignBase(TestCase):
             has_design_plus         =   advanced,
             has_design_advanced     =   advanced,
             has_ai_design           =   ai,
+            **extra,
         )
         store   =   Store.objects.create(user = profile, slug = f'tienda-{username}')
         draft   =   StoreCustomization.objects.create(
@@ -102,7 +113,7 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/1')
+        self.assertEqual(first.json()['engine'], 'ai-design/2')
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -148,9 +159,13 @@ class AiDesignGenerateTests(AiDesignBase):
             self.assertNotIn('banner', ids)
 
     def test_template_outside_plan_never_returned(self):
-        store, _    =   self._store(advanced = False, products = 3)
-        data        =   self._client(store).post(AI_URL, {}, format = 'json').json()
-        allowed     =   {'classic', 'duo'}
+        #Plan sin has_ai_design ni has_design_plus: la whitelist real queda
+        #en el nivel Básico. Se llama al motor directo porque el endpoint
+        #responde 403 sin el flag (acá probamos la whitelist, no el gate).
+        store, _    =   self._store(advanced = False, ai = False, products = 3)
+        data        =   generate_ai_design(store, {})
+        allowed     =   set(allowed_templates_of(store.user))
+        self.assertEqual(allowed, {'classic', 'duo'})
         for proposal in data['proposals']:
             self.assertIn(proposal['template'], allowed)
 
@@ -162,7 +177,15 @@ class AiDesignGenerateTests(AiDesignBase):
         for block_id in ('testimonials', 'faq', 'gallery', 'stats'):
             if block_id in landing:
                 self.assertFalse(landing[block_id]['enabled'])
-        self.assertIn('testimonials', data['missing'])
+        self.assertIn('testimonials', [item['code'] for item in data['missing']])
+
+    def test_missing_is_list_of_objects(self):
+        store, _    =   self._store()
+        data        =   self._client(store).post(AI_URL, {}, format = 'json').json()
+        self.assertTrue(data['missing'])
+        for item in data['missing']:
+            self.assertEqual(set(item), {'code', 'label', 'hint', 'action'})
+            self.assertTrue(item['code'] and item['label'] and item['action'])
 
     def test_hero_first_and_contact_last(self):
         store, _    =   self._store(products = 6)
@@ -255,3 +278,218 @@ class AiDesignApplyTests(AiDesignBase):
         store, _    =   self._store()
         response    =   self._client(store).post(APPLY_URL, {'proposal_id': 'p1'}, format = 'json')
         self.assertEqual(response.status_code, 400)
+
+
+class AiDesignV2Tests(AiDesignBase):
+    """Ronda 2: diseños exclusivos de IA, copy_draft, autofill y pedido de imágenes."""
+
+    def _generate(self, store, payload = None):
+        client  =   self._client(store)
+        data    =   {'rubro': 'belleza', 'tone': 'moderno', 'goals': ['mostrar_trabajos']}
+        data.update(payload or {})
+        return client, client.post(AI_URL, data, format = 'json').json()
+
+    def _apply(self, client, data, autofill = None):
+        payload =   {'seed': data['seed'], 'proposal_id': data['proposals'][0]['id']}
+        if autofill is not None:
+            payload['autofill']   =   autofill
+        return client.post(APPLY_URL, payload, format = 'json')
+
+    def test_ai_templates_used_when_plan_allows(self):
+        store, _    =   self._store()
+        _, data     =   self._generate(store)
+        self.assertEqual(data['engine'], 'ai-design/2')
+        templates   =   [proposal['template'] for proposal in data['proposals']]
+        self.assertTrue(any(template in ('ai_lumen', 'ai_pulse') for template in templates))
+
+    def test_ai_templates_never_outside_plan(self):
+        #Sin has_ai_design los ai_* no están en la whitelist del plan y el
+        #motor no los devuelve (se llama al motor directo: el endpoint ya
+        #responde 403 sin el flag).
+        store, _    =   self._store(ai = False)
+        data        =   generate_ai_design(store, {'rubro': 'belleza', 'goals': ['mostrar_trabajos']})
+        allowed     =   set(allowed_templates_of(store.user))
+        self.assertFalse({'ai_lumen', 'ai_pulse'} & allowed)
+        for proposal in data['proposals']:
+            self.assertIn(proposal['template'], allowed)
+            self.assertNotIn(proposal['template'], ('ai_lumen', 'ai_pulse'))
+
+    def test_ai_proposal_uses_bold_blocks_and_look(self):
+        store, _    =   self._store()
+        _, data     =   self._generate(store)
+        proposal    =   next(item for item in data['proposals'] if item['template'] in ('ai_lumen', 'ai_pulse'))
+        landing     =   {block['id']: block for block in proposal['layout_config']['landing']['blocks']}
+        self.assertIn(landing['hero'].get('variant'), ('cinema', 'editorial', 'full'))
+        self.assertEqual(proposal['site_theme']['containers']['surface'], 'glass' if proposal['template'] == 'ai_lumen' else 'flat')
+        self.assertTrue(proposal['why'])
+
+    def test_copy_draft_respects_model_limits(self):
+        store, _    =   self._store(products = 4)
+        _, data     =   self._generate(store)
+        for proposal in data['proposals']:
+            draft   =   proposal['copy_draft']
+            self.assertLessEqual(len(draft.get('about_text', '')), StoreCustomization.about_text.field.max_length)
+            self.assertLessEqual(len(draft.get('about_mission', '')), StoreCustomization.about_mission.field.max_length)
+            for row in draft.get('faqs', []):
+                self.assertLessEqual(len(row['q']), StoreCustomization.FAQ_Q_MAX)
+                self.assertLessEqual(len(row['a']), StoreCustomization.FAQ_A_MAX)
+            for row in draft.get('services', []):
+                self.assertLessEqual(len(row['name']), StoreCustomization.SERVICE_TITLE_MAX)
+                self.assertLessEqual(len(row['desc']), StoreCustomization.SERVICE_TEXT_MAX)
+            for row in draft.get('steps', []):
+                self.assertLessEqual(len(row['title']), StoreCustomization.SERVICE_STEP_TITLE_MAX)
+                self.assertLessEqual(len(row['desc']), StoreCustomization.SERVICE_STEP_TEXT_MAX)
+            for row in draft.get('announcements', []):
+                self.assertLessEqual(len(row['text']), StoreCustomization.ANNOUNCEMENT_TEXT_MAX)
+
+    def test_copy_draft_skips_fields_with_content(self):
+        store, customization  =   self._store()
+        StoreCustomization.objects.filter(pk = customization.pk).update(
+            about_text      =   'Texto propio',
+            about_mission   =   'Misión propia',
+            faqs            =   [{'q': '¿Envían?', 'a': 'Sí'}],
+            services        =   [{'icon': 'truck', 'title': 'Envíos', 'text': 'A todo el país'}],
+        )
+        _, data =   self._generate(store)
+        draft   =   data['proposals'][0]['copy_draft']
+        for key in ('about_text', 'about_mission', 'faqs', 'services'):
+            self.assertNotIn(key, draft)
+        self.assertIn('steps', draft)
+
+    def test_autofill_false_keeps_business_fields_empty(self):
+        store, customization  =   self._store()
+        client, data          =   self._generate(store)
+        response              =   self._apply(client, data)
+        self.assertEqual(response.status_code, 200)
+        customization.refresh_from_db()
+        self.assertEqual(customization.about_text, '')
+        self.assertEqual(customization.about_mission, '')
+        self.assertEqual(customization.faqs, [])
+        self.assertEqual(customization.services, [])
+        self.assertEqual(customization.service_steps, [])
+
+    def test_autofill_true_writes_only_empty(self):
+        store, customization  =   self._store()
+        StoreCustomization.objects.filter(pk = customization.pk).update(about_mission = 'Misión propia')
+        client, data          =   self._generate(store)
+        response              =   self._apply(client, data, autofill = True)
+        self.assertEqual(response.status_code, 200)
+        customization.refresh_from_db()
+        self.assertTrue(customization.about_text)
+        self.assertEqual(customization.about_mission, 'Misión propia')
+        self.assertTrue(customization.faqs)
+        self.assertTrue(customization.services)
+        self.assertTrue(customization.service_steps)
+        self.assertTrue(customization.announcements)
+        #Las filas escritas respetan la forma del modelo (icon/title/text).
+        for row in customization.services:
+            self.assertEqual(set(row), {'icon', 'title', 'text'})
+        for row in customization.faqs:
+            self.assertEqual(set(row), {'q', 'a'})
+
+    def test_apply_never_writes_forbidden_business_fields(self):
+        store, customization  =   self._store()
+        StoreCustomization.objects.filter(pk = customization.pk).update(
+            testimonials    =   [{'name': 'Ana', 'detail': 'Clienta', 'text': 'Muy buena atención'}],
+            stats           =   [{'value': '+10', 'label': 'Años'}],
+            contact_email   =   'hola@negocio.com',
+            whatsapp        =   '1122334455',
+            hours           =   [{'label': 'Lun a vie', 'value': '9 a 18 h'}],
+            catalog_note    =   'Aviso propio',
+        )
+        before              =   StoreCustomization.objects.get(pk = customization.pk)
+        client, data        =   self._generate(store)
+        response            =   self._apply(client, data, autofill = True)
+        self.assertEqual(response.status_code, 200)
+        customization.refresh_from_db()
+        for field in ('testimonials', 'stats', 'contact_email', 'whatsapp', 'hours', 'catalog_note'):
+            self.assertEqual(getattr(customization, field), getattr(before, field))
+
+    def test_image_requests_only_without_own_images(self):
+        store, _    =   self._store()
+        _, data     =   self._generate(store)
+        proposal    =   data['proposals'][0]
+        self.assertTrue(proposal['image_requests'])
+        self.assertLessEqual(len(proposal['image_requests']), 2)
+        for request in proposal['image_requests']:
+            self.assertIn(request['target'], ('cover', 'gallery'))
+            self.assertIn(request['min_count'], (2, 3, 4))
+            for unlock in request['unlocks']:
+                block_id    =   unlock.split(':')[0]
+                self.assertIn(block_id, TEMPLATE_BLOCKS['landing'])
+        #Con galería propia ya no pide fotos.
+        StoreGalleryImage.objects.create(store = store, image_key = 'gallery/1.webp', image_size = 10)
+        _, data     =   self._generate(store)
+        self.assertEqual(data['proposals'][0]['image_requests'], [])
+
+
+class AiDesignImageTests(AiDesignBase):
+    """POST /api/stores/ai-design/image/: foto del pedido -> galería en WebP."""
+
+    def setUp(self):
+        super().setUp()
+        self.media      =   tempfile.mkdtemp()
+        self.override   =   override_settings(MEDIA_ROOT = self.media)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+
+    def _file(self, size = (1400, 900), color = (200, 30, 60), fmt = 'PNG'):
+        buffer  =   io.BytesIO()
+        Image.new('RGB', size, color).save(buffer, format = fmt)
+        buffer.seek(0)
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return SimpleUploadedFile('foto.png', buffer.read(), content_type = 'image/png')
+
+    def test_upload_creates_webp_gallery_image(self):
+        store, _    =   self._store(limits = True)
+        client      =   self._client(store)
+        with patch.object(storage, 'storage_configured', return_value = False):
+            response =  client.post(IMAGE_URL, {'image': self._file(), 'request_id': 'local'}, format = 'multipart')
+        self.assertEqual(response.status_code, 200)
+        payload     =   response.json()
+        self.assertEqual(payload['gallery']['count'], 1)
+        image       =   StoreGalleryImage.objects.get(pk = payload['image']['id'])
+        self.assertEqual(image.kind, StoreGalleryImage.KIND_GALLERY)
+        self.assertEqual(image.position, 0)
+        with default_storage.open(image.image_key, 'rb') as handle:
+            head    =   handle.read(16)
+        #Firma real del archivo guardado: RIFF....WEBP.
+        self.assertTrue(head.startswith(b'RIFF'))
+        self.assertEqual(head[8:12], b'WEBP')
+        self.assertGreater(image.image_size, 0)
+        self.assertEqual(payload['image']['url'], f'/media/{image.image_key}')
+
+    def test_upload_without_ai_design_is_403(self):
+        store, _    =   self._store(ai = False, limits = True)
+        response    =   self._client(store).post(IMAGE_URL, {'image': self._file()}, format = 'multipart')
+        self.assertEqual(response.status_code, 403)
+
+    def test_upload_without_file_is_400(self):
+        store, _    =   self._store(limits = True)
+        response    =   self._client(store).post(IMAGE_URL, {}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+
+    def test_invalid_file_is_400(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        store, _    =   self._store(limits = True)
+        upload      =   SimpleUploadedFile('x.png', b'no soy una imagen', content_type = 'image/png')
+        response    =   self._client(store).post(IMAGE_URL, {'image': upload}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+
+    def test_upload_respects_storage_quota(self):
+        store, customization  =   self._store(limits = True)
+        PlanBenefit.objects.filter(plan__suscription__user = store.user, benefit__code = 'max_storage_mb').update(value = 0)
+        with patch.object(storage, 'storage_configured', return_value = False):
+            response =  self._client(store).post(IMAGE_URL, {'image': self._file()}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(StoreGalleryImage.objects.count(), 0)
+
+    def test_image_throttle_after_limit(self):
+        store, _    =   self._store(limits = True)
+        client      =   self._client(store)
+        codes       =   [
+            client.post(IMAGE_URL, {'image': self._file()}, format = 'multipart').status_code
+            for _ in range(62)
+        ]
+        self.assertEqual(codes[0], 200)
+        self.assertEqual(codes[-1], 429)

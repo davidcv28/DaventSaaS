@@ -19,15 +19,21 @@ import hashlib
 import json
 import random
 import unicodedata
+from uuid import uuid4
 
+from django.conf import settings
 from django.core.cache import cache
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db import transaction
 
 from StoreApp.domains.stores.layout_blocks  import TEMPLATE_BLOCKS, clean_layout_config
-from StoreApp.domains.stores.models         import StoreCustomization
+from StoreApp.domains.stores.models         import Store, StoreCustomization, StoreGalleryImage
 from StoreApp.domains.stores.site_theme     import clean_site_theme
 
 from . import ai_design_copy
 from . import ai_design_recipes as R
+from . import imaging, storage
 from .services import allowed_templates_of, profile_has_benefit
 
 ENGINE_VERSION              =   R.ENGINE_VERSION
@@ -48,6 +54,28 @@ MISSING_LABELS              =   {
     'team':         'los integrantes del equipo',
     'video':        'un video del negocio',
     'products':     'productos en el catálogo',
+}
+#Cada faltante viaja como objeto {code, label, hint, action}: el frontend
+#usa `action` para abrir la sección que lo resuelve. 'images' es el pedido
+#de fotos de "Diseñar con IA"; 'empresa' y 'catalog' son secciones del panel.
+MISSING_HINTS                =   {
+    'about':        'Contá en dos o tres frases qué hacés y para quién.',
+    'gallery':      'Subí 3 fotos horizontales de tu local o tus trabajos.',
+    'testimonials': 'Una frase real de un cliente alcanza para empezar.',
+    'faqs':         'Las tres preguntas que más te hacen por WhatsApp.',
+    'stats':        'Años de trayectoria, clientes o trabajos hechos.',
+    'categories':   'Agrupá el catálogo en dos o más categorías.',
+    'brands':       'Cargá las marcas que trabajás.',
+    'offers':       'Poné un precio de oferta en algún producto.',
+    'team':         'Sumá a las personas que atienden.',
+    'video':        'Pegá el link de YouTube o Vimeo del negocio.',
+    'products':     'Cargá tus primeros productos con foto y precio.',
+}
+MISSING_ACTIONS              =   {
+    'about': 'empresa', 'gallery': 'images', 'testimonials': 'empresa',
+    'faqs': 'empresa', 'stats': 'empresa', 'categories': 'catalog',
+    'brands': 'empresa', 'offers': 'catalog', 'team': 'empresa',
+    'video': 'empresa', 'products': 'catalog',
 }
 
 
@@ -77,6 +105,11 @@ def _facts(store, customization):
         'gallery'       :   store.gallery_images.count(),
         'carousel'      :   store.carousel_images.count(),
         'offers'        :   products.exclude(offer_price__isnull = True).count(),
+        #Cuánto texto real hay cargado: una web con relato pide una
+        #plantilla con más libertad tipográfica (los ai_*).
+        'text_chars'    :   len(customization.about_text or '') + len(customization.description or '') + sum(
+            len(str(row.get('text') or '')) for row in (customization.services or []) if isinstance(row, dict)
+        ),
     }
     #La cuenta regresiva necesita un descuento CON vencimiento: sin fecha no
     #hay nada que contar y el bloque quedaría mintiendo.
@@ -190,13 +223,34 @@ def _request_seed(payload):
 def _score_templates(facts, stats, answers, allowed):
     """
     Puntúa las plantillas del plan: afinidad rubro (orden de la receta) y
-    tono, objetivo, densidad de datos y volumen de catálogo/imágenes.
+    tono, objetivo, densidad de datos y volumen de catálogo/imágenes. Los
+    dos diseños exclusivos de IA (solo presentes en `allowed` con
+    has_ai_design) suman señales de "libertad": fotos propias, textos
+    largos, rubro visual y objetivos de mostrar trabajos/confianza.
     Devuelve las permitidas ordenadas de mejor a peor (empate: orden del rubro).
     """
     rubro_order =   list(R.RUBROS[answers['rubro']]['templates'])
+    #Los ai_* no viven en las recetas por rubro: se suman al final del pool
+    #y la whitelist del plan decide si existen (nunca se hardcodea acá).
+    for template in R.AI_TEMPLATES:
+        if template not in rubro_order:
+            rubro_order.append(template)
     goal        =   answers['goals'][0]
     goal_boost  =   R.TEMPLATE_GOAL_AFFINITY.get(goal, ())
     density     =   sum(1 for key in ('products', 'images', 'gallery', 'testimonials', 'stats', 'team', 'timeline', 'benefits', 'faqs') if facts.get(key))
+    #Señales de libertad visual: cuanta más materia real hay, mejor se
+    #defiende una plantilla audaz sin quedar vacía.
+    freedom     =   0
+    if stats['gallery'] >= 3 or stats['images'] >= 6:
+        freedom += 2
+    if stats['text_chars'] >= 240:
+        freedom += 1
+    if answers['rubro'] in R.VISUAL_RUBROS:
+        freedom += 2
+    if goal in ('mostrar_trabajos', 'dar_confianza'):
+        freedom += 2
+    if answers['tone'] in ('moderno', 'audaz'):
+        freedom += 1
     scored      =   []
     for index, template in enumerate(rubro_order):
         if template not in allowed:
@@ -205,6 +259,8 @@ def _score_templates(facts, stats, answers, allowed):
         score   +=  R.TEMPLATE_TONE_AFFINITY.get(template, {}).get(answers['tone'], 0)
         score   +=  3 if template in goal_boost else 0
         score   +=  min(density, 6)
+        if template in R.AI_TEMPLATES:
+            score   +=  min(freedom, 5)
         #Catálogo grande pide grilla densa; web de vidriera (sin productos)
         #respira mejor con una plantilla editorial.
         if stats['products'] >= 12 and template in ('vitrina', 'duo'):
@@ -223,12 +279,35 @@ def _score_templates(facts, stats, answers, allowed):
 #=========================================
 # ARMADO DEL LAYOUT
 #=========================================
-def _order_for(surface, answers):
+def _pattern_for(template, answers, shift):
+    """
+    Patrón "pro" de un diseño de IA: el más afín al objetivo, rotado por la
+    propuesta para que dos sugerencias con la misma plantilla no cuenten la
+    misma historia. None para las plantillas del plan (usan las recetas).
+    """
+    patterns    =   R.AI_PATTERNS.get(template)
+    if not patterns:
+        return None
+    goal        =   answers['goals'][0]
+    ordered     =   sorted(
+        range(len(patterns)),
+        key = lambda index: (goal not in patterns[index]['goals'], index),
+    )
+    return patterns[ordered[shift % len(ordered)]]
+
+
+def _order_for(surface, answers, pattern = None):
     """Orden de bloques para la superficie: receta del objetivo + prioridad del rubro."""
     rubro       =   R.RUBROS[answers['rubro']]
     base        =   list(rubro['priority'][surface])
     off         =   set()
-    if surface == 'landing':
+    if surface == 'landing' and pattern:
+        #Los ai_* no usan la receta por objetivo: el patrón ya trae el orden
+        #audaz y apaga lo que le rompe el ritmo.
+        off     =   set(pattern['off'])
+        order   =   [block for block in pattern['order'] if block in TEMPLATE_BLOCKS[surface]]
+        order  +=   [block for block in base if block not in order]
+    elif surface == 'landing':
         recipe  =   R.GOAL_RECIPES[answers['goals'][0]]
         off     =   set(recipe['off'])
         order   =   [block for block in recipe['order'] if block in TEMPLATE_BLOCKS[surface]]
@@ -243,12 +322,17 @@ def _order_for(surface, answers):
     return order, off
 
 
-def _variant_for(surface, block_id, answers, rng, shift):
+def _variant_for(surface, block_id, answers, rng, shift, pattern = None):
     """Variante del bloque: la preferida del rubro (y del objetivo para el hero)."""
     spec        =   TEMPLATE_BLOCKS[surface].get(block_id) or {}
     variants    =   spec.get('variants')
     if not variants:
         return None
+    if pattern and surface == 'landing':
+        #El patrón de IA manda: fija la variante que sostiene su lenguaje.
+        chosen  =   pattern['variants'].get(block_id)
+        if chosen in variants:
+            return chosen
     pool        =   [variant for variant in R.RUBROS[answers['rubro']]['variants'].get(block_id, ()) if variant in variants]
     if surface == 'landing' and block_id == 'hero':
         goal_variant    =   R.GOAL_RECIPES[answers['goals'][0]]['hero_variant']
@@ -263,8 +347,8 @@ def _variant_for(surface, block_id, answers, rng, shift):
     return pool[rng.randrange(len(pool))]
 
 
-def _build_surface(surface, facts, answers, rng, shift):
-    order, off      =   _order_for(surface, answers)
+def _build_surface(surface, facts, answers, rng, shift, pattern = None):
+    order, off      =   _order_for(surface, answers, pattern)
     blocks          =   []
     for block_id in order:
         spec    =   TEMPLATE_BLOCKS[surface].get(block_id)
@@ -275,7 +359,7 @@ def _build_surface(surface, facts, answers, rng, shift):
         #dueño lo vea y lo active cuando cargue el dato).
         enabled =   True if gate is None else bool(facts.get(gate))
         block   =   {'id': block_id, 'enabled': enabled}
-        variant =   _variant_for(surface, block_id, answers, rng, shift)
+        variant =   _variant_for(surface, block_id, answers, rng, shift, pattern)
         if variant:
             block['variant']    =   variant
         blocks.append(block)
@@ -317,18 +401,20 @@ def _enforce_hierarchy(blocks):
     return head + middle + social + cta + tail
 
 
-def _layout(store, facts, answers, rng, shift):
+def _layout(store, facts, answers, rng, shift, pattern = None):
     layout  =   {}
     for surface in ('landing', 'catalog', 'services'):
-        layout[surface] =   _build_surface(surface, facts, answers, rng, shift)
+        layout[surface] =   _build_surface(surface, facts, answers, rng, shift, pattern)
     return layout
 
 
 #=========================================
 # LOOK (site_theme parcial)
 #=========================================
-def _theme(answers, rng, shift):
-    look_id =   R.RUBROS[answers['rubro']]['look']
+def _theme(answers, rng, shift, template = None):
+    #Los diseños exclusivos de IA traen su propio look (vidrio/luz vs.
+    #tipografía XL); el resto usa el look del rubro.
+    look_id =   R.AI_LOOKS.get(template) or R.RUBROS[answers['rubro']]['look']
     theme   =   copy.deepcopy(R.LOOKS[look_id])
     #El tono ajusta energía (curvas, aire, movimiento), no la identidad.
     for section, values in R.TONE_TWEAKS[answers['tone']].items():
@@ -343,7 +429,10 @@ def _theme(answers, rng, shift):
 #=========================================
 # NOTAS Y "POR QUÉ"
 #=========================================
-def _why(answers, template, index):
+def _why(answers, template, index, pattern = None):
+    if pattern:
+        #El patrón de IA ya explica su propia apuesta visual.
+        return pattern['why'][:160]
     goal    =   answers['goals'][0]
     base    =   R.GOAL_RECIPES[goal]['why']
     if index == 0:
@@ -369,6 +458,47 @@ def _notes(facts, stats, answers, template, has_advanced):
 
 
 #=========================================
+# PEDIDO DE IMÁGENES (qué fotos faltan para que la web se vea profesional)
+#=========================================
+def _image_requests(stats, layout):
+    """
+    0 a 2 pedidos de fotos. Solo cuando la tienda no tiene imágenes propias
+    (galería ni productos) y algún bloque de imagen quedó apagado: pedir
+    fotos que no van a cambiar nada es ruido. `unlocks` lista los bloques y
+    la variante de portada que se encenderían con esas fotos.
+    """
+    if stats['gallery'] or stats['images']:
+        return []
+    landing     =   {block['id']: block for block in layout['landing']['blocks']}
+    hero        =   landing.get('hero') or {}
+    hero_unlock =   f"hero:{hero.get('variant')}" if hero.get('variant') else 'hero'
+    requests    =   [{
+        'id'            :   'local',
+        'purpose'       :   'portada',
+        'label'         :   'Fotos de tu local o tus trabajos',
+        'hint'          :   '3 fotos horizontales, con luz natural y el local ordenado.',
+        'target'        :   'cover',
+        'min_count'     :   3,
+        'aspect'        :   '16:9',
+        'unlocks'       :   ['gallery', hero_unlock],
+    }]
+    #Segundo pedido solo si hay catálogo: la vitrina sin fotos de producto
+    #es la sección que más pierde.
+    if stats['products'] > 0 and 'featured' in landing:
+        requests.append({
+            'id'            :   'productos',
+            'purpose'       :   'catálogo',
+            'label'         :   'Fotos de tus productos',
+            'hint'          :   '2 o 3 fotos por producto, fondo liso y buena luz.',
+            'target'        :   'gallery',
+            'min_count'     :   2,
+            'aspect'        :   '1:1',
+            'unlocks'       :   ['featured'],
+        })
+    return requests[:2]
+
+
+#=========================================
 # GENERACIÓN DE PROPUESTAS
 #=========================================
 def _proposal_count(allowed, facts):
@@ -385,6 +515,12 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         templates   =   [StoreCustomization.TEMPLATE_CLASSIC]
     rng             =   random.Random(seed)
     count           =   _proposal_count(allowed, facts)
+    #Con los ai_* habilitados, al menos una propuesta los usa: si el puntaje
+    #no los dejó arriba, la segunda propuesta pasa a ser la mejor de IA
+    #(siempre dentro de la whitelist del plan).
+    ai_allowed      =   [template for template in templates if template in R.AI_TEMPLATES]
+    if ai_allowed and count >= 2 and not any(template in R.AI_TEMPLATES for template in templates[:count]):
+        templates[1]    =   ai_allowed[0]
     proposals       =   []
     signatures      =   set()
     for index in range(count):
@@ -392,28 +528,39 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         #nunca haya dos iguales (misma plantilla => otro orden/variantes).
         shift       =   0 if index == 0 else index
         template    =   templates[index % len(templates)]
+        pattern     =   _pattern_for(template, answers, shift)
         for attempt in range(4):
-            layout  =   _layout(store, facts, answers, rng, shift + attempt)
+            layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
             signature = (template, tuple(block['id'] for block in layout['landing']['blocks']))
             if signature not in signatures:
                 break
         signatures.add(signature)
-        theme   =   _theme(answers, rng, shift + attempt)
+        theme   =   _theme(answers, rng, shift + attempt, template)
         text    =   ai_design_copy.build(store, customization, answers['rubro'], answers['tone'], facts, stats, rng)
         proposals.append({
             'id'            :   f'p{index + 1}',
-            'label'         :   R.GOAL_RECIPES[answers['goals'][0]]['labels'][index % 3][:32],
-            'why'           :   _why(answers, template, index),
+            'label'         :   (pattern['label'] if pattern else R.GOAL_RECIPES[answers['goals'][0]]['labels'][index % 3])[:32],
+            'why'           :   _why(answers, template, index, pattern),
             'template'      :   template,
             'site_theme'    :   theme,
             'layout_config' :   clean_layout_config(layout, has_advanced),
             'copy'          :   text,
             'notes'         :   _notes(facts, stats, answers, template, has_advanced),
+            'copy_draft'    :   ai_design_copy.draft_business_fields(store, customization, answers['rubro'], answers['tone'], facts, stats, rng),
+            'image_requests':   _image_requests(stats, layout),
         })
     return {
         'engine'    :   ENGINE_VERSION,
         'seed'      :   seed,
-        'missing'   :   [key for key in MISSING_ORDER if not facts.get(key)][:6],
+        'missing'   :   [
+            {
+                'code'      :   key,
+                'label'     :   MISSING_LABELS.get(key, key),
+                'hint'      :   MISSING_HINTS.get(key, ''),
+                'action'    :   MISSING_ACTIONS.get(key, 'empresa'),
+            }
+            for key in MISSING_ORDER if not facts.get(key)
+        ][:6],
         'proposals' :   proposals,
     }
 
@@ -465,12 +612,79 @@ def _apply_titles(layout, rubro):
     return layout
 
 
-def apply(store, seed, proposal_id):
+#=========================================
+# AUTOFILL DE DATOS DE NEGOCIO (copy_draft -> campos vacíos)
+#=========================================
+#Iconos por defecto al convertir el borrador en filas del modelo: el
+#catálogo de iconos es cerrado y el copy_draft no los elige (es texto).
+_DRAFT_ICONS                =   {'services': 'package', 'steps': 'check', 'announcements': 'megaphone'}
+
+
+def _draft_rows(key, rows):
+    """
+    copy_draft usa nombres pensados para la UI ({name, desc} en servicios,
+    {title, desc} en pasos); el modelo guarda {icon, title, text} (y
+    {icon, text} en anuncios). Se mapea acá y se recorta otra vez a los
+    topes del modelo.
+    """
+    clean   =   []
+    for row in rows or []:
+        if key == 'faqs':
+            question    =   str(row.get('q') or '').strip()[:StoreCustomization.FAQ_Q_MAX]
+            answer      =   str(row.get('a') or '').strip()[:StoreCustomization.FAQ_A_MAX]
+            if question and answer:
+                clean.append({'q': question, 'a': answer})
+            continue
+        if key == 'announcements':
+            text        =   str(row.get('text') or '').strip()[:StoreCustomization.ANNOUNCEMENT_TEXT_MAX]
+            if text:
+                clean.append({'icon': _DRAFT_ICONS[key], 'text': text})
+            continue
+        if key == 'services':
+            title       =   str(row.get('name') or '').strip()[:StoreCustomization.SERVICE_TITLE_MAX]
+            text        =   str(row.get('desc') or '').strip()[:StoreCustomization.SERVICE_TEXT_MAX]
+        else:
+            title       =   str(row.get('title') or '').strip()[:StoreCustomization.SERVICE_STEP_TITLE_MAX]
+            text        =   str(row.get('desc') or '').strip()[:StoreCustomization.SERVICE_STEP_TEXT_MAX]
+        if title and text:
+            clean.append({'icon': _DRAFT_ICONS[key], 'title': title, 'text': text})
+    return clean
+
+
+#Clave del copy_draft -> campo del modelo (los pasos y los anuncios no se
+#llaman igual en la API que en StoreCustomization).
+_DRAFT_FIELDS               =   {
+    'about_text': 'about_text', 'about_mission': 'about_mission',
+    'faqs': 'faqs', 'services': 'services', 'steps': 'service_steps',
+    'announcements': 'announcements',
+}
+
+
+def _apply_draft(customization, draft):
+    """
+    Escribe el copy_draft SOLO en los campos que siguen vacíos. Nunca toca
+    testimonios, cifras, precios, contacto, redes ni horarios — el motor no
+    inventa datos del negocio (ni los pisa si el dueño ya los cargó).
+    Devuelve la lista de campos escritos.
+    """
+    written =   []
+    for key, field in _DRAFT_FIELDS.items():
+        value   =   (draft or {}).get(key)
+        if not value or getattr(customization, field):
+            continue
+        setattr(customization, field, _draft_rows(key, value) if isinstance(value, list) else value)
+        written.append(field)
+    return written
+
+
+def apply(store, seed, proposal_id, autofill = False):
     """
     Recalcula la propuesta con el mismo motor y la escribe en el BORRADOR.
     Solo toca layout_config_draft, site_theme_draft, template_draft y los
     campos de copy que estén VACÍOS — nunca lo publicado ni los datos de
-    negocio que ya cargó el dueño.
+    negocio que ya cargó el dueño. Con autofill=True suma el copy_draft a
+    los datos de negocio vacíos (about, misión, FAQs, servicios, pasos,
+    anuncios), también sin pisar nada.
     """
     try:
         seed    =   int(seed)
@@ -503,4 +717,67 @@ def apply(store, seed, proposal_id):
         if value and not getattr(customization, field):
             setattr(customization, field, value)
             updated.append(field)
-    customization.save(update_fields = updated)
+    if autofill:
+        updated.extend(_apply_draft(customization, proposal.get('copy_draft') or {}))
+    customization.save(update_fields = list(dict.fromkeys(updated)))
+
+
+#=========================================
+# PEDIDO DE IMÁGENES (upload de las fotos que pide la propuesta)
+#=========================================
+def upload_design_image(store, upload):
+    """
+    Valida, normaliza (WebP 78, 1600px, sin recorte) y guarda una foto del
+    pedido de imágenes como StoreGalleryImage(kind='gallery') al final del
+    orden, consumiendo la misma cuota del plan que la galería. En R2 si hay
+    bucket; si no (dev), en MEDIA_ROOT — el archivo nunca va a la base.
+    Lanza ValueError con mensaje es-AR si el archivo, el cupo o la cuota
+    no dan.
+    """
+    error   =   storage.validate_image_file(upload)
+    if error:
+        raise ValueError(error)
+    body, ext, content_type =   imaging.normalize_image(upload, 'ai_gallery')
+    size    =   len(body)
+    #Fast path antes de subir: cupo de galería/imágenes y cuota del plan.
+    storage._check_gallery_slot(store, StoreGalleryImage.KIND_GALLERY)
+    storage._check_image_slot(store, is_new = True)
+    storage._check_quota(store, size)
+    key     =   f'stores/{store.pk}/gallery/{uuid4().hex}.{ext}'
+    if storage.storage_configured():
+        storage.put_object(key, body, content_type)
+    else:
+        key     =   default_storage.save(key, ContentFile(body))
+    try:
+        with transaction.atomic():
+            #Los cupos se rechequean bajo lock de la fila de la tienda.
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            storage._check_gallery_slot(locked, StoreGalleryImage.KIND_GALLERY)
+            storage._check_image_slot(locked, is_new = True)
+            new_used    =   storage._check_quota(locked, size)
+            last        =   locked.gallery_images.filter(kind = StoreGalleryImage.KIND_GALLERY).order_by('-position').first()
+            image       =   StoreGalleryImage.objects.create(
+                store       =   locked,
+                kind        =   StoreGalleryImage.KIND_GALLERY,
+                image_key   =   key,
+                image_size  =   size,
+                position    =   (last.position + 1) if last else 0,
+            )
+            storage._consume_quota(locked, new_used)
+    except ValueError:
+        if storage.storage_configured():
+            storage._delete_object(key)
+        else:
+            default_storage.delete(key)
+        raise
+    store.storage_used_bytes    =   locked.storage_used_bytes
+    return image
+
+
+def design_image_url(image):
+    """URL visible de una imagen del pedido: bucket público o /media en dev."""
+    url     =   storage.object_url(image.image_key)
+    if url:
+        return url
+    media   =   f'{settings.MEDIA_URL}{image.image_key}'
+    return media if media.startswith('/') else f'/{media}'

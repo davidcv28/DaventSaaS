@@ -125,6 +125,11 @@ class StoreCustomization(models.Model):
     TEMPLATE_BASE               =   ('classic', 'duo')
     TEMPLATE_PLUS               =   ('calma', 'vitrina')
     TEMPLATE_ADVANCED           =   ('cobre', 'minimal')
+    #Patrones exclusivos del motor "Diseñar con IA" (has_ai_design): NO son
+    #elegibles a mano — no aparecen en el selector del panel (Plantillas ni
+    #Studio) ni en STORE_TEMPLATES del frontend. Solo el motor los propone
+    #y allowed_templates_of los habilita para la web pública.
+    TEMPLATE_AI                 =   ('ai_lumen', 'ai_pulse')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
         ('duo',              'Dúo'),
@@ -132,6 +137,8 @@ class StoreCustomization(models.Model):
         ('vitrina',          'Vitrina'),
         ('cobre',            'Cobre'),
         ('minimal',          'Minimal'),
+        ('ai_lumen',         'Lumen (IA)'),
+        ('ai_pulse',         'Pulse (IA)'),
     ]
     #Mapa de retirada -> habilitada más cercana del mismo nivel (mig.
     #0049): cada una preserva algo de la identidad elegida — las base

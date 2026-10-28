@@ -102,6 +102,10 @@ REST_FRAMEWORK = {
         #recorre catálogo/galería y arma 2-3 propuestas — 20/h alcanza para
         #probar variantes sin que sirva para martillar el endpoint.
         'ai_design': '20/hour',
+        #Fotos del pedido de imágenes de "Diseñar con IA": cada POST procesa
+        #una imagen (Pillow) y consume cuota de la tienda — 60/h alcanza para
+        #cargar varias propuestas sin servir para inundar el storage.
+        'ai_design_image': '60/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a
         #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
         'content_report': '5/hour',

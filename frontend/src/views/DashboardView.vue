@@ -367,7 +367,7 @@ const navItems = computed(() => {
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
     { heading: 'Mi web' },
     { id: 'store', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
-    { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Tu web armada por vos en un minuto', locked: L.ai },
+    { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Tu web armada en un minuto', locked: L.ai },
     { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
     { id: 'support', label: 'Ayuda y chat', icon: 'message-circle', hint: 'Hablar con el equipo', locked: L.support },

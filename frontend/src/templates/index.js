@@ -50,12 +50,17 @@ import cobre       from './cobre/index.js'
 import minimal     from './minimal/index.js'
 import boutique    from './boutique/index.js'
 import aurora      from './aurora/index.js'
+// Patrones exclusivos del motor de IA (has_ai_design): no están en el
+// catálogo seleccionable, pero se registran acá para que la web pública
+// los renderice cuando el motor los propone.
+import ai_lumen    from './ai_lumen/index.js'
+import ai_pulse    from './ai_pulse/index.js'
 
 export const TEMPLATE_DEFS = {
   classic, perspective, duo, bloque, riso, terra, street, atelier,
   circuit, lab, mercado, carta, studio, proceso, promo, shop, arena,
   terminal, calma, signature, vitrina, lookbook, cobre, minimal,
-  boutique, aurora
+  boutique, aurora, ai_lumen, ai_pulse
 }
 
 // Sistema de bloques base 'cobre': todas las plantillas montan los mismos

@@ -29,6 +29,12 @@ PRODUCT_CANVAS          =   1000
 MAX_SIDE_COVER          =   2200
 MAX_SIDE_LOGO           =   800
 MAX_SIDE_CHAT           =   1600
+#Galería generada desde "Diseñar con IA": pesa menos que la galería del
+#Studio a propósito — el dueño sube varias fotos de una vez desde el celular
+#y el resultado se muestra en grillas con lazy-load, así que 78 de calidad
+#(en vez de 86) se nota apenas y ahorra cuota de almacenamiento por imagen.
+AI_WEBP_QUALITY         =   78
+MAX_SIDE_AI             =   1600
 COVER_MIN_RATIO         =   1.0               # portadas verticales se recortan a cuadrado (el hero es apaisado)
 GALLERY_RATIO           =   (3 / 4, 16 / 9)   # (alto máximo relativo, ancho máximo relativo)
 BG_MODEL_URL            =   'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx'
@@ -64,10 +70,10 @@ def _clamp_ratio(image):
     if ratio < low:
         return ImageOps.fit(image, (width, int(width / low)), method = Image.LANCZOS, centering = (0.5, 0.35))
     return image
-def _encode(image):
+def _encode(image, quality = WEBP_QUALITY):
     buffer          =   io.BytesIO()
     # method=6: máximo esfuerzo de compresión (más lento, archivos menores).
-    image.save(buffer, format = 'WEBP', quality = WEBP_QUALITY, method = 6)
+    image.save(buffer, format = 'WEBP', quality = quality, method = 6)
     return buffer.getvalue()
 def normalize_image(upload, kind = 'gallery'):
     """
@@ -75,10 +81,14 @@ def normalize_image(upload, kind = 'gallery'):
     kind: 'gallery' | 'decor' (acota proporción, conserva color), 'logo'
     (conserva la transparencia), 'chat' (adjunto de soporte: conserva la
     composición original — una captura recortada no le sirve a nadie — y
-    limpia EXIF) o 'product' | 'cover' | 'carousel' (aplana sobre blanco).
+    limpia EXIF), 'ai_gallery' (foto del pedido de imágenes de "Diseñar con
+    IA": igual que 'chat', sin recorte, porque el dueño encuadró su local o
+    su trabajo y no queremos mutilarlo; sale más liviana que la galería) o
+    'product' | 'cover' | 'carousel' (aplana sobre blanco).
     Lanza ValueError si no es una imagen legible.
     """
     image           =   _open(upload)
+    quality         =   WEBP_QUALITY
     if kind == 'product':
         image       =   _flatten_white(image)
         max_side    =   MAX_SIDE_PRODUCT
@@ -90,6 +100,12 @@ def normalize_image(upload, kind = 'gallery'):
         # Solo orientación EXIF + tope de lado; NO se recorta ni aplana.
         image       =   image.convert('RGBA') if 'A' in image.getbands() else image.convert('RGB')
         max_side    =   MAX_SIDE_CHAT
+    elif kind == 'ai_gallery':
+        # Foto del pedido de imágenes: sin recorte (el encuadre es del dueño)
+        # y con calidad más baja que 'gallery' — se sube de a varias.
+        image       =   image.convert('RGBA') if 'A' in image.getbands() else image.convert('RGB')
+        max_side    =   MAX_SIDE_AI
+        quality     =   AI_WEBP_QUALITY
     elif kind in ('cover', 'carousel'):
         image       =   _flatten_white(image)
         width, height   =   image.size
@@ -101,7 +117,7 @@ def normalize_image(upload, kind = 'gallery'):
         image       =   _clamp_ratio(image)
         max_side    =   MAX_SIDE_GALLERY
     image.thumbnail((max_side, max_side), Image.LANCZOS)
-    return _encode(image), 'webp', 'image/webp'
+    return _encode(image, quality), 'webp', 'image/webp'
 #=========================================
 # BACKGROUND REMOVAL (U²-Net / onnxruntime)
 #=========================================

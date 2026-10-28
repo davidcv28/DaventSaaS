@@ -14,6 +14,17 @@ _DESCRIPTION_MAX            =   800
 _CTA_TITLE_MAX              =   120
 _CTA_TEXT_MAX               =   280
 _CTA_LABEL_MAX              =   40
+#Topes de los campos de negocio que rellena el autofill. Espejo de
+#StoreCustomization (los importa el motor para no duplicar números acá).
+_ABOUT_MAX                  =   2000
+_MISSION_MAX                =   400
+_FAQ_Q_MAX                  =   140
+_FAQ_A_MAX                  =   500
+_SERVICE_NAME_MAX           =   60
+_SERVICE_DESC_MAX           =   160
+_STEP_TITLE_MAX             =   60
+_STEP_DESC_MAX              =   160
+_ANNOUNCEMENT_MAX           =   60
 
 #Cómo nombra cada rubro lo que vende: es la palabra que ordena casi todas
 #las frases (evita decir "productos" en una peluquería).
@@ -239,3 +250,112 @@ def title_for(block_id, rubro):
     """Título de sección para props.title del borrador (nunca inventa un bloque)."""
     specific    =   (R.BLOCK_TITLES.get(rubro) or {}).get(block_id)
     return _clip(specific or GENERIC_TITLES.get(block_id) or '', 80)
+
+
+#=========================================
+# BORRADORES DE NEGOCIO (autofill de "Diseñar con IA")
+#=========================================
+#Lo que el dueño "no sabe qué escribir": sobre nosotros, misión, FAQs,
+#servicios, pasos y un anuncio. Frases es-AR neutras, sin números, precios
+#ni promesas verificables (nada de horarios, envíos o garantías que el
+#negocio no declaró). Son un punto de partida editable, no datos.
+DRAFT_MISSIONS              =   {
+    'comercio':     'Queremos que comprar acá sea simple: lo que buscás, con alguien que te asesora y te dice la verdad.',
+    'gastronomia':  'Queremos que cada visita se sienta como en casa: cocina cuidada, atención con tiempo y ganas de que vuelvas.',
+    'indumentaria': 'Queremos que encuentres prendas que te representen, elegidas con criterio y sin apuro.',
+    'servicios_profesionales': 'Queremos resolver tu problema con un proceso claro: qué hacemos, cuánto lleva y qué necesitamos de vos.',
+    'salud':        'Queremos que te sientas escuchado: atención con tiempo, explicaciones claras y seguimiento.',
+    'belleza':      'Queremos que salgas conforme con lo que ves y con cómo te tratamos durante el turno.',
+    'construccion': 'Queremos que la obra salga como la pensaste: presupuesto claro, plazos acordados y trabajo prolijo.',
+    'tecnologia':   'Queremos que la tecnología te resuelva, no que te complique: soluciones concretas y explicadas sin tecnicismos.',
+    'educacion':    'Queremos que aprendas de verdad: contenidos aplicables y acompañamiento durante el curso.',
+    'turismo':      'Queremos que disfrutes el viaje y no te ocupes de la logística: todo coordinado y explicado antes de salir.',
+    'mascotas':     'Queremos que tu mascota esté bien y que vos te vayas tranquilo, con indicaciones claras.',
+    'arte':         'Queremos que cada pieza llegue a alguien que la valore: trabajo de autor, hecho de a una.',
+    'otro':         'Queremos que sepas qué esperar de nosotros: atención directa, trabajo cuidado y respuestas claras.',
+}
+
+#Primera pregunta frecuente por rubro (la que de verdad frena la consulta).
+DRAFT_FIRST_FAQ             =   {
+    'comercio':     ('¿Cómo hago un pedido?', 'Escribinos por el formulario de contacto o por WhatsApp y te confirmamos cómo seguir.'),
+    'gastronomia':  ('¿Cómo reservo una mesa?', 'Escribinos por el formulario o por WhatsApp y te confirmamos la reserva.'),
+    'indumentaria': ('¿Cómo consulto por un talle?', 'Escribinos por el formulario o por WhatsApp con el modelo que te interesa y te respondemos.'),
+    'servicios_profesionales': ('¿Cómo pido una consulta?', 'Dejanos tu consulta en el formulario de la web y coordinamos una primera conversación.'),
+    'salud':        ('¿Cómo pido un turno?', 'Escribinos por el formulario o por WhatsApp y te confirmamos el horario disponible.'),
+    'belleza':      ('¿Cómo reservo un turno?', 'Elegí el servicio y escribinos por el formulario o por WhatsApp: te confirmamos el día.'),
+    'construccion': ('¿Cómo pido un presupuesto?', 'Contanos qué tenés en mente por el formulario de la web y coordinamos una visita.'),
+    'tecnologia':   ('¿Cómo empiezo?', 'Contanos el problema por el formulario y te proponemos un camino concreto.'),
+    'educacion':    ('¿Cómo me inscribo?', 'Consultá por el formulario de la web: te pasamos fechas y modalidad.'),
+    'turismo':      ('¿Cómo reservo una experiencia?', 'Escribinos con las fechas y la cantidad de personas y te pasamos las opciones.'),
+    'mascotas':     ('¿Cómo pido un turno?', 'Escribinos por el formulario o por WhatsApp y coordinamos la atención.'),
+    'arte':         ('¿Cómo consulto por una pieza?', 'Escribinos por la obra que te gustó y coordinamos la entrega.'),
+    'otro':         ('¿Cómo hago una consulta?', 'Escribinos por el formulario de contacto de la web y te respondemos a la brevedad.'),
+}
+
+
+def _about_text(ctx, copy, flavor, facts):
+    parts   =   [flavor['open'].format(**ctx) + ctx['city_clause'] + ctx['years_clause'] + ctx['spec_clause'] + '.']
+    parts.append(copy['service_line'].format(**ctx))
+    parts.append('Cada consulta la responde alguien del negocio: sin intermediarios y con el detalle que necesitás.')
+    if facts.get('products'):
+        parts.append(f'En la web podés ver los {ctx["products"]} {copy["what"]} que tenemos publicados.')
+    elif facts.get('gallery'):
+        parts.append('En la galería vas a ver cómo trabajamos.')
+    parts.append(flavor['close'].format(**{**ctx, 'place': ctx['place_name']}))
+    return ' '.join(parts)
+
+
+def _faqs(rubro, ctx, facts):
+    first       =   DRAFT_FIRST_FAQ.get(rubro) or DRAFT_FIRST_FAQ['otro']
+    rows        =   [
+        {'q': _clip(first[0], _FAQ_Q_MAX), 'a': _clip(first[1], _FAQ_A_MAX)},
+        {'q': '¿Cómo sé qué me conviene?', 'a': _clip('Contanos qué buscás y te orientamos: si algo no es para vos, te lo decimos.', _FAQ_A_MAX)},
+    ]
+    if facts.get('products') or facts.get('gallery'):
+        rows.append({'q': '¿Puedo ver antes de decidir?', 'a': _clip('Sí: en el catálogo y la galería de la web vas a encontrar lo que hacemos.', _FAQ_A_MAX)})
+    else:
+        rows.append({'q': '¿Dónde puedo ver más?', 'a': _clip('Escribinos y te compartimos más detalles de lo que necesitás.', _FAQ_A_MAX)})
+    return rows
+
+
+def _services(copy, ctx):
+    rows        =   [
+        ('Asesoramiento personalizado', f'Te ayudamos a elegir {copy["what"]} según lo que necesitás.'),
+        ('Atención directa', 'Hablás con el negocio, no con un robot: consultás por la web y te respondemos.'),
+        ('Seguimiento', 'Después de tu consulta seguimos disponibles para lo que necesites.'),
+    ]
+    return [{'name': _clip(name, _SERVICE_NAME_MAX), 'desc': _clip(text.format(**ctx), _SERVICE_DESC_MAX)} for name, text in rows]
+
+
+def _steps(ctx):
+    rows        =   [
+        ('Contanos qué necesitás', 'Escribinos por el formulario de contacto o por el botón de WhatsApp.'),
+        ('Te respondemos', 'Confirmamos los detalles de lo que buscás, sin compromiso.'),
+        ('Coordinamos', 'Acordamos cómo seguir: entrega, turno o visita, según tu caso.'),
+    ]
+    return [{'title': _clip(title, _STEP_TITLE_MAX), 'desc': _clip(text, _STEP_DESC_MAX)} for title, text in rows]
+
+
+def draft_business_fields(store, customization, rubro, tone, facts, stats, rng):
+    """
+    copy_draft de la propuesta: SOLO los campos de negocio que están vacíos,
+    con los topes del modelo. Nunca devuelve testimonios, cifras, precios,
+    contacto, redes ni horarios — el motor no inventa datos del negocio.
+    """
+    copy        =   RUBRO_COPY.get(rubro) or RUBRO_COPY['otro']
+    flavor      =   TONE_COPY.get(tone) or TONE_COPY['moderno']
+    ctx         =   _context(store, customization, rubro, facts, stats)
+    draft       =   {}
+    if not str(customization.about_text or '').strip():
+        draft['about_text']         =   _clip(_about_text(ctx, copy, flavor, facts), _ABOUT_MAX)
+    if not str(customization.about_mission or '').strip():
+        draft['about_mission']      =   _clip(DRAFT_MISSIONS.get(rubro, DRAFT_MISSIONS['otro']), _MISSION_MAX)
+    if not (customization.faqs or []):
+        draft['faqs']               =   _faqs(rubro, ctx, facts)
+    if not (customization.services or []):
+        draft['services']           =   _services(copy, ctx)
+    if not (customization.service_steps or []):
+        draft['steps']              =   _steps(ctx)
+    if not (customization.announcements or []):
+        draft['announcements']      =   [{'text': _clip(f'{ctx["name"]}: novedades y propuestas para vos', _ANNOUNCEMENT_MAX)}]
+    return draft

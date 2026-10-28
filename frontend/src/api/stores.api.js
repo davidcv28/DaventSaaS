@@ -708,6 +708,12 @@ export const STORE_TEMPLATE_FAMILIES = [
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
+// Patrones EXCLUSIVOS del motor "Diseñar con IA" (has_ai_design): existen
+// en TEMPLATE_CHOICES y en TEMPLATE_DEFS, pero NO en STORE_TEMPLATES ni en
+// STORE_TEMPLATE_FAMILIES — el selector del panel nunca los ofrece. Solo
+// llegan desde una propuesta del motor o desde allowed_templates.
+export const AI_ONLY_TEMPLATES = ['ai_lumen', 'ai_pulse']
+
 // Plantillas elegibles según los beneficios del plan vigente (espejo de
 // allowed_templates_of del backend: mismo orden del catálogo). Sirve tanto
 // con el dict de benefits del plan como con la lista allowed_templates que
@@ -716,17 +722,24 @@ const TEMPLATE_TIER_BENEFIT = { base: null, plus: 'has_design_plus', advanced: '
 
 export function allowedTemplatesFor(benefits = {}) {
   if (!benefits.has_customization) return ['classic']
-  return Object.keys(STORE_TEMPLATES).filter((key) => {
+  const list = Object.keys(STORE_TEMPLATES).filter((key) => {
     const need = TEMPLATE_TIER_BENEFIT[STORE_TEMPLATES[key].tier]
     return !need || Boolean(benefits[need])
   })
+  // Espejo de allowed_templates_of: los patrones del motor de IA viajan en
+  // la whitelist solo con has_ai_design. El selector no los lee de acá
+  // (itera STORE_TEMPLATES), así que siguen invisibles para el panel.
+  if (benefits.has_ai_design) list.push(...AI_ONLY_TEMPLATES)
+  return list
 }
 
 // Normaliza un diseño guardado contra la whitelist: 'classic' si el valor
-// no existe en el catálogo o quedó fuera del nivel del plan.
+// no existe en el catálogo o quedó fuera del nivel del plan. Los patrones
+// exclusivos de IA son válidos aunque no estén en STORE_TEMPLATES.
 export function resolveStoreTemplate(value, allowed) {
   const list = Array.isArray(allowed) && allowed.length ? allowed : ['classic']
-  return STORE_TEMPLATES[value] && list.includes(value) ? value : 'classic'
+  const known = Boolean(STORE_TEMPLATES[value]) || AI_ONLY_TEMPLATES.includes(value)
+  return known && list.includes(value) ? value : 'classic'
 }
 
 // Fuentes del nombre junto al logo: catálogo cerrado de Google Fonts

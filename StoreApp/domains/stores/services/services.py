@@ -90,6 +90,10 @@ def allowed_templates_of(profile):
         allowed         +=  StoreCustomization.TEMPLATE_PLUS
     if benefits.get('has_design_advanced'):
         allowed         +=  StoreCustomization.TEMPLATE_ADVANCED
+    #Patrones del motor de IA: exclusivos de has_ai_design, después de los
+    #avanzados. Sin ese beneficio nunca aparecen (ni se ofrecen a mano).
+    if benefits.get('has_ai_design'):
+        allowed         +=  StoreCustomization.TEMPLATE_AI
     return tuple(allowed)
 #=========================================
 # RECORD STORE VISIT (+1 por visitante/día, sin guardar IPs)

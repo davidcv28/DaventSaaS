@@ -9,7 +9,7 @@
 #para el texto. Nada de acá llega al cliente sin pasar por
 #clean_layout_config y por la whitelist de plantillas del plan.
 
-ENGINE_VERSION              =   'ai-design/1'
+ENGINE_VERSION              =   'ai-design/2'
 
 TONES                       =   ('calido', 'serio', 'moderno', 'audaz')
 DEFAULT_TONE                =   'moderno'
@@ -129,6 +129,26 @@ LOOKS                       =   {
         'background':   {'type': 'solid', 'overlay': 'none'},
         'motion':       {'reveal': 'rise', 'hover': 'lift', 'intensity': 'subtle'},
     },
+    #Los dos looks EXCLUSIVOS de IA (solo con has_ai_design). No son un
+    #"tema más": son el presupuesto de piel de ai_lumen y ai_pulse, con la
+    #energía que el resto de los looks no se permite (vidrio + luz vs.
+    #tipografía XL sobre grilla).
+    'lumen': {
+        'palette':      {'primary': '#a78bfa', 'secondary': '#7c3aed', 'accent': '#a78bfa', 'bg': '#07070c', 'surface': '#12121c', 'text': '#f5f3ff', 'muted': '#a5a3b8', 'border': '#26243a'},
+        'containers':   {'radius': 'lg', 'shadow': 'deep', 'border': 'thin', 'density': 'spacious', 'surface': 'glass'},
+        'typography':   {'heading': 'bricolage-grotesque', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 600, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'pill', 'style': 'gradient', 'size': 'lg'},
+        'background':   {'type': 'mesh', 'overlay': 'soft'},
+        'motion':       {'reveal': 'stagger', 'hover': 'glow', 'intensity': 'medium'},
+    },
+    'pulse': {
+        'palette':      {'primary': '#0b0b0b', 'secondary': '#e11d48', 'accent': '#e11d48', 'bg': '#fbfaf7', 'surface': '#ffffff', 'text': '#0b0b0b', 'muted': '#5f5f5f', 'border': '#e5e2da'},
+        'containers':   {'radius': 'none', 'shadow': 'none', 'border': 'bold', 'density': 'compact', 'surface': 'flat'},
+        'typography':   {'heading': 'archivo', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 800, 'letterSpacing': '-0.03em'},
+        'buttons':      {'shape': 'square', 'style': 'solid', 'size': 'lg'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'stagger', 'hover': 'lift', 'intensity': 'bold'},
+    },
 }
 
 #Acentos alternativos por look: la semilla elige uno para que dos
@@ -147,6 +167,8 @@ ACCENTS                     =   {
     'patitas':  ('#0d9488', '#f59e0b', '#4f46e5'),
     'galeria':  ('#b45309', '#1f2937', '#7c3aed'),
     'neutro':   ('#4f46e5', '#0f766e', '#b45309'),
+    'lumen':    ('#a78bfa', '#22d3ee', '#f472b6'),
+    'pulse':    ('#e11d48', '#111111', '#2563eb'),
 }
 
 #El tono no cambia la paleta (esa la manda el rubro): cambia la energía —
@@ -166,21 +188,86 @@ TEMPLATE_TONE_AFFINITY      =   {
     'vitrina':  {'moderno': 3, 'audaz': 2, 'calido': 1, 'serio': 1},
     'cobre':    {'calido': 3, 'audaz': 2, 'moderno': 1, 'serio': 0},
     'minimal':  {'serio': 3, 'moderno': 2, 'calido': 0, 'audaz': 1},
+    'ai_lumen': {'moderno': 3, 'audaz': 2, 'serio': 1, 'calido': 0},
+    'ai_pulse': {'audaz': 3, 'moderno': 3, 'calido': 1, 'serio': 0},
 }
 
 TEMPLATE_LABELS             =   {
     'classic': 'Clásico', 'duo': 'Dúo', 'calma': 'Calma',
     'vitrina': 'Vitrina', 'cobre': 'Cobre', 'minimal': 'Minimal',
+    'ai_lumen': 'Lumen', 'ai_pulse': 'Pulse',
 }
 
 #Afinidad plantilla ↔ objetivo: suma al puntaje la plantilla que mejor
 #cuenta esa historia (vitrina para vender, cobre/minimal para mostrar obra).
 TEMPLATE_GOAL_AFFINITY      =   {
-    'vender_online':        ('vitrina', 'duo'),
-    'mostrar_servicios':    ('duo', 'vitrina'),
-    'conseguir_consultas':  ('calma', 'classic'),
-    'dar_confianza':        ('classic', 'calma'),
-    'mostrar_trabajos':     ('cobre', 'minimal'),
+    'vender_online':        ('vitrina', 'duo', 'ai_pulse'),
+    'mostrar_servicios':    ('duo', 'vitrina', 'ai_lumen'),
+    'conseguir_consultas':  ('calma', 'classic', 'ai_lumen'),
+    'dar_confianza':        ('classic', 'calma', 'ai_lumen'),
+    'mostrar_trabajos':     ('cobre', 'minimal', 'ai_lumen', 'ai_pulse'),
+}
+
+#=========================================
+# DISEÑOS EXCLUSIVOS DE IA
+#=========================================
+#Solo viajan en allowed_templates_of cuando el plan tiene has_ai_design
+#(el motor NO hardcodea la whitelist: consulta la del plan). Son dos
+#lenguajes distintos, no dos variantes del mismo:
+#  ai_lumen -> oscuro cinematográfico, vidrio y luz (fotos grandes, aire).
+#  ai_pulse -> editorial cinético, tipografía XL y grilla desplazada.
+AI_TEMPLATES                =   ('ai_lumen', 'ai_pulse')
+AI_LOOKS                    =   {'ai_lumen': 'lumen', 'ai_pulse': 'pulse'}
+
+#Rubros donde la web ES la vidriera: la libertad visual de los ai_* suma.
+VISUAL_RUBROS               =   frozenset({'belleza', 'arte', 'turismo', 'gastronomia', 'indumentaria', 'construccion', 'mascotas'})
+
+#Patrones "pro" de los diseños de IA: combinaciones de bloques/variantes
+#que las recetas por objetivo no se permiten (galería masonry + banda de
+#cifras, editorial + comparativa, carrusel de testimonios como cierre
+#social...). `goals` ordena la afinidad; `off` apaga lo que rompe el ritmo.
+#Todo id/variante de acá existe en layout_blocks.TEMPLATE_BLOCKS.
+AI_PATTERNS                 =   {
+    'ai_lumen': (
+        {
+            'id':       'lumen_cinema',
+            'label':    'Lumen cinematográfico',
+            'why':      'Portada cinema a sangre, galería masonry y una banda de cifras en vidrio: la web se lee como un trailer del negocio.',
+            'goals':    ('mostrar_trabajos', 'dar_confianza', 'vender_online'),
+            'order':    ('hero', 'announcements', 'gallery', 'stats', 'featured', 'benefits', 'testimonials', 'faq', 'cta', 'contact'),
+            'off':      ('countdown', 'brands', 'compare'),
+            'variants': {'hero': 'cinema', 'gallery': 'masonry', 'stats': 'band', 'benefits': 'bento', 'testimonials': 'carousel', 'cta': 'band'},
+        },
+        {
+            'id':       'lumen_story',
+            'label':    'Lumen historia',
+            'why':      'Portada editorial con la trayectoria, el equipo y los testimonios en carrusel: la confianza se construye por relato.',
+            'goals':    ('dar_confianza', 'conseguir_consultas', 'mostrar_servicios'),
+            'order':    ('hero', 'about', 'timeline', 'gallery', 'team', 'stats', 'testimonials', 'faq', 'cta', 'contact'),
+            'off':      ('countdown', 'brands', 'compare', 'offers'),
+            'variants': {'hero': 'editorial', 'gallery': 'rail', 'testimonials': 'masonry', 'stats': 'cards', 'cta': 'card'},
+        },
+    ),
+    'ai_pulse': (
+        {
+            'id':       'pulse_editorial',
+            'label':    'Pulse editorial',
+            'why':      'Titular XL, servicios en bloques grandes y comparativa antes de la prueba social: se entiende la propuesta en dos scrolls.',
+            'goals':    ('mostrar_servicios', 'conseguir_consultas', 'vender_online'),
+            'order':    ('hero', 'highlights', 'services', 'featured', 'compare', 'testimonials', 'faq', 'cta', 'contact'),
+            'off':      ('countdown', 'brands'),
+            'variants': {'hero': 'editorial', 'featured': 'masonry', 'testimonials': 'carousel', 'faq': 'cols', 'cta': 'band'},
+        },
+        {
+            'id':       'pulse_grid',
+            'label':    'Pulse grilla',
+            'why':      'Portada a sangre y grilla de cuatro columnas con categorías y ofertas: ritmo de revista para un catálogo amplio.',
+            'goals':    ('vender_online', 'mostrar_trabajos'),
+            'order':    ('hero', 'categories', 'featured', 'offers', 'gallery', 'benefits', 'testimonials', 'faq', 'cta', 'contact'),
+            'off':      ('countdown', 'brands', 'compare'),
+            'variants': {'hero': 'full', 'categories': 'rail', 'featured': 'cols4', 'offers': 'rail', 'gallery': 'grid', 'benefits': 'bento', 'testimonials': 'carousel', 'faq': 'cols', 'cta': 'band'},
+        },
+    ),
 }
 
 #=========================================

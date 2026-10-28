@@ -37,6 +37,7 @@ from StoreApp.domains.stores.services                import (
 from StoreApp.domains.stores.public_cache            import public_cache_stamp
 from StoreApp.domains.stores.services.ai_design      import (
     AiDesignError, apply as apply_ai_design, generate as generate_ai_design,
+    upload_design_image, design_image_url,
 )
 from .viewset_base   import StoreBaseViewSet
 from .viewset_config import StoreConfigs
@@ -254,6 +255,13 @@ class AiDesignThrottle(UserRateThrottle):
     #recorre catálogo y galería — el scope acota el abuso sin molestar al
     #dueño que prueba variantes.
     scope   =   'ai_design'
+#=========================================
+# AI DESIGN IMAGE THROTTLE (fotos del pedido de imágenes, rate en settings)
+#=========================================
+class AiDesignImageThrottle(UserRateThrottle):
+    #Cada foto se recodifica con Pillow y consume cuota del plan: 60/h deja
+    #subir las 2-3 fotos de cada propuesta sin abrir la puerta al storage.
+    scope   =   'ai_design_image'
 #=========================================
 # STORE VIEWSET
 #=========================================
@@ -849,7 +857,9 @@ class StoreViewSet(StoreBaseViewSet):
                 status = status.HTTP_403_FORBIDDEN,
             )
         try:
-            apply_ai_design(store, request.data.get('seed'), request.data.get('proposal_id'))
+            autofill    =   request.data.get('autofill')
+            autofill    =   autofill if isinstance(autofill, bool) else str(autofill or '').strip().lower() in ('1', 'true', 'yes', 'on')
+            apply_ai_design(store, request.data.get('seed'), request.data.get('proposal_id'), autofill = autofill)
         except AiDesignError as error:
             return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
         customization   =   StoreCustomization.objects.get_or_create(store = store)[0]
@@ -858,6 +868,39 @@ class StoreViewSet(StoreBaseViewSet):
                 'Exito'         : 'Aplicamos el diseño a tu borrador. Revisalo y publicalo cuando te guste.',
                 'customization' :   StoreCustomizationSerializer(customization).data,
                 'storage'       :   storage_payload(store, store.user),
+            },
+            status = status.HTTP_200_OK,
+        )
+
+    @action(detail = False, methods = ['post'], url_path = 'ai-design/image', throttle_classes = [AiDesignImageThrottle])
+    def ai_design_image(self, request):
+        #Foto del pedido de imágenes de la propuesta: se guarda como imagen
+        #de galería (WebP liviano, sin recorte) y consume la cuota del plan.
+        #El `request_id` es informativo para la UI (qué pedido resolvió).
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_design'):
+            return Response(
+                {'detail': 'El diseño automático está disponible en tu plan actual.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        upload      =   request.FILES.get('image')
+        if upload is None:
+            return Response({'image': 'Tenés que adjuntar una imagen.'}, status = status.HTTP_400_BAD_REQUEST)
+        try:
+            image   =   upload_design_image(store, upload)
+        except ValueError as error:
+            return Response({'image': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                'Exito'     : 'La foto se sumó a tu galería',
+                'image'     : {'id': image.pk, 'url': design_image_url(image)},
+                'storage'   : storage_payload(store, store.user),
+                'gallery'   : {'count': store.gallery_images.count()},
             },
             status = status.HTTP_200_OK,
         )
