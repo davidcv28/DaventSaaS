@@ -50,7 +50,7 @@ export function hasSessionCookie() {
 // Instancia única (FRONTEND_RULES §0: prohibido axios suelto en vistas)
 export const http = axios.create({
   baseURL: env.apiBaseUrl,
-  timeout: 15000,
+  timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
   withCredentials: true, // la cookie de sesión viaja en refresh/logout
   headers: { 'Content-Type': 'application/json' }
 })
@@ -77,7 +77,7 @@ const tokenEndpoint = (path) => `${env.apiBaseUrl.replace(/\/$/, '')}/token/${pa
 async function refreshCall() {
   const epoch = sessionEpoch
   const res = await axios.post(tokenEndpoint('refresh/'), {}, {
-    timeout: 15000,
+    timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
     withCredentials: true,
     headers: { 'X-CSRFToken': csrfToken() }
   })
