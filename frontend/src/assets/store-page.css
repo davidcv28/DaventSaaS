@@ -1536,8 +1536,13 @@ html { scroll-behavior: smooth; }
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-sub { color: rgba(255, 255, 255, .85); }
 /* Marcas de la última palabra: acento sobre el velo oscuro (el filete o
    la cursiva propios del diseño se conservan). */
-.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-lb-mark, .sp-cb-mark, .sp-mn-mark, .sp-bt-mark) { color: var(--store-accent); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-lb-mark, .sp-cb-mark, .sp-mn-mark, .sp-bt-mark) { color: var(--sp-band-mark, #fff); }
 .store-page[data-store-template='lookbook'] .sp-hero-band.has-cover .sp-lb-mark { color: #fff; }
+/* Cualquier última palabra del nombre sobre una portada usa el acento
+   aclarado para el velo oscuro (Calma, Vitrina, Terminal y Street incluidos):
+   un acento oscuro sobre la foto dejaba el nombre a medias. */
+.store-page .sp-hero-band.has-cover :is(.sp-cb-mark, .sp-mn-mark, .sp-bt-mark, .sp-cm-mark, .sp-vt-mark, .sp-tm-mark) { color: var(--sp-band-mark, #fff); }
+.store-page .sp-hero-band.has-cover .sp-st-mark { -webkit-text-stroke-color: var(--sp-band-mark, #fff); }
 /* Kickers y datelines en tinta clara con el acento del negocio. */
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-cb-kicker, .sp-mn-kicker, .sp-bt-kicker, .sp-lb-dateline) { color: rgba(255, 255, 255, .78); }
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-cb-kicker, .sp-mn-kicker, .sp-bt-kicker, .sp-lb-dateline) :is(svg, .icon) { color: var(--store-accent); }

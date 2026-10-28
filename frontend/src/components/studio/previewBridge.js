@@ -88,6 +88,7 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
     vars['--sp-band-c4'] = band.c4
     vars['--sp-band-base1'] = band.base1
     vars['--sp-band-base2'] = band.base2
+    vars['--sp-band-mark'] = band.mark
   }
   // El rol "Primario" manda en botones sólidos (el acento queda para
   // enlaces y detalles): si el tema lo fija, pisa el accent-ink de siempre.

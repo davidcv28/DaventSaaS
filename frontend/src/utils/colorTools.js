@@ -169,6 +169,17 @@ export function deriveAccent(hex) {
 
 const mixHex = (a, b, t) => rgbToHex(hexToRgb(a).map((c, i) => c + (hexToRgb(b)[i] - c) * t))
 
+// Aclara `hex` (mismo tono) hasta cumplir `min` contra un fondo oscuro.
+function onDark(hex, bg = '#0d1220', min = 3) {
+  if (contrastRatio(hex, bg) >= min) return hex
+  const [h, s, l0] = hexHsl(hex)
+  for (let l = Math.max(l0, 0.02); l <= 1; l += 0.02) {
+    const c = hslToHex(h, s, l)
+    if (contrastRatio(c, bg) >= min) return c
+  }
+  return '#ffffff'
+}
+
 // Colores de una banda de acento (hero, inicial, placas) SIEMPRE legibles con
 // texto blanco: si el acento es claro (amarillo, celeste, lima) se usa su
 // tinta oscurecida como base. Devuelve tonos del mismo lado de la escala para
@@ -182,7 +193,11 @@ export function bandPalette(accentHex) {
     c3: mixHex(safe, '#000000', 0.1),
     c4: mixHex(safe, '#000000', 0.42),
     base1: safe,
-    base2: mixHex(safe, '#000000', 0.28)
+    base2: mixHex(safe, '#000000', 0.28),
+    // Acento para texto sobre el velo oscuro de una portada (última palabra
+    // del nombre en Cobre/Minimal/Boutique): se aclara hasta 3:1 (texto
+    // grande) si el acento es oscuro.
+    mark: onDark(safe)
   }
 }
 

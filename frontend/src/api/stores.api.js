@@ -836,6 +836,7 @@ export function storeThemeVars(customization) {
     '--sp-band-c4': band.c4,
     '--sp-band-base1': band.base1,
     '--sp-band-base2': band.base2,
+    '--sp-band-mark': band.mark,
     '--store-name-size': `${storeNameSize(c.name_font_size)}px`,
     //La fuente elegida aplica a TODO el texto de la web (herencia desde la raíz).
     '--store-font': storeFontFamily(c.name_font),

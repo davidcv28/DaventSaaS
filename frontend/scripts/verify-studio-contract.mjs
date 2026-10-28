@@ -253,6 +253,8 @@ for (const accent of ['#eab308', '#38bdf8', '#4ade80', '#00e67a', '#e11d48', '#4
   const layers = ['c1', 'c2', 'c3', 'c4', 'base1', 'base2']
   check(`banda ${accent} mantiene texto blanco AA`, layers.every((k) => contrastRatio('#ffffff', band[k]) >= 4.5),
     JSON.stringify(band))
+  check(`marca de acento ${accent} legible sobre el velo`, contrastRatio(band.mark, '#0d1220') >= 3,
+    `${band.mark}`)
 }
 
 console.log('')
