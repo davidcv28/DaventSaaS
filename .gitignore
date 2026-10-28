@@ -37,3 +37,4 @@ qa_out/
 .shots/
 _v/
 frontend/qa-look-harness.html
+qa_token.tmp
