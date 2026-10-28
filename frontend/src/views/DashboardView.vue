@@ -1288,8 +1288,11 @@ const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits
 const designTemplate = computed(() => resolveStoreTemplate(designForm.template, allowedTemplates.value))
 // Si el guardado quedó fuera del nivel (baja de plan o una plantilla
 // retirada del catálogo) el select vuelve al primer diseño permitido.
+// Solo con beneficios ya resueltos: si el plan todavía no llegó la lista
+// queda en base y degradaría cualquier plantilla plus/advanced guardada
+// (dirty falso al montar y un save que pisa el template real).
 watch(allowedTemplates, (list) => {
-  if (!list.includes(designForm.template)) designForm.template = list[0] || 'classic'
+  if (plan.value?.benefits && !list.includes(designForm.template)) designForm.template = list[0] || 'classic'
 })
 // Si cambia la fuente elegida, traerla en el momento (cubre una "Guardada"
 // fuera del picker, que el link colectivo no incluye).
@@ -1319,8 +1322,9 @@ watch(() => store.store, (s) => {
   ensureStoreFont(designForm.name_font)
   // Si el plan ya estaba cargado y el diseño guardado quedó fuera de su
   // nivel (baja de plan o plantilla retirada del catálogo), vuelve al
-  // primero permitido.
-  if (!allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'classic'
+  // primero permitido. Con beneficios aún sin resolver no se degrada:
+  // la lista vendría en base y pisaría una plantilla superior guardada.
+  if (plan.value?.benefits && !allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'classic'
 }, { immediate: true })
 
 const designErrors = computed(() => {
@@ -1621,6 +1625,9 @@ const studioRef = ref(null)
 const studioDirty = ref(false)
 const studioTheme = ref(null)
 const studioSavedTheme = ref(null)
+// Ensayo del Studio: layout_config + plantilla en prueba (emitidos por
+// update:layout). null = sin ensayo -> saveDesign manda lo de siempre.
+const studioExtras = ref(null)
 const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
 const studioPreviewSrc = computed(() => (store.store?.slug ? `${env.appUrl}/${store.store.slug}?studio=1` : ''))
 function onStudioNav(target) {
@@ -1712,12 +1719,17 @@ async function saveDesign() {
     })
   }
   // La plantilla viaja siempre: el backend la descarta del payload si
-  // quedó fuera del nivel del plan (allowed_templates_of).
-  payload.template = designForm.template
+  // quedó fuera del nivel del plan (allowed_templates_of). El ensayo del
+  // Studio (preset) pisa la del form cuando existe.
+  payload.template = studioExtras.value?.template || designForm.template
   // El tema del Studio viaja como site_theme: el backend lo sanea y gatea
   // por plan (clean_site_theme descarta en silencio lo que el plan no
   // cubre). Solo se envía si el Studio llegó a montarse.
   if (studioTheme.value) payload.site_theme = studioTheme.value
+  // Ensayo de layout (preset aplicado en el Studio): viaja como
+  // layout_config — clean_layout_config valida ids/variantes/bloques
+  // premium contra el plan de la misma forma que el editor de bloques.
+  if (studioExtras.value?.layout_config) payload.layout_config = studioExtras.value.layout_config
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   const okDesign = await store.saveCustomization(payload)
@@ -4085,8 +4097,10 @@ async function changePassword() {
           :dirty="designDirty"
           :initial-theme="studioTheme"
           :saved-theme="studioSavedTheme"
+          :initial-extras="studioExtras"
           @update:dirty="studioDirty = $event"
           @update:theme="studioTheme = $event"
+          @update:layout="studioExtras = $event"
           @save="saveDesign"
           @discard="discardDesign"
           @navigate="onStudioNav"

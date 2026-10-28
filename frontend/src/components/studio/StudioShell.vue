@@ -14,7 +14,7 @@
 // Responsive: 3 columnas en escritorio; panel colapsable en tablet; en
 // móvil el lienzo va a pantalla completa, el panel es un bottom sheet
 // arrastrable de 3 alturas y el riel queda fijo abajo sin tapar contenido.
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick, provide } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import AppButton from '../AppButton.vue'
 import StudioCanvas from './StudioCanvas.vue'
@@ -29,7 +29,9 @@ import { useStudioHistory } from './useStudioHistory.js'
 import {
   resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage
 } from '../../studio/contract.js'
-import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont } from '../../api/stores.api.js'
+import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
+import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
+import { STUDIO_PRESETS, presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -42,9 +44,10 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
   dirty: { type: Boolean, default: false }, // dirty de los campos persistibles (designDirty del padre)
   initialTheme: { type: Object, default: null }, // último borrador emitido: el draft sobrevive al cambio de pestaña
-  savedTheme: { type: Object, default: null }    // último tema guardado (punto de guardado estable entre montajes)
+  savedTheme: { type: Object, default: null },   // último tema guardado (punto de guardado estable entre montajes)
+  initialExtras: { type: Object, default: null } // último ensayo emitido {layout_config, template} — sobrevive al remontar
 })
-const emit = defineEmits(['save', 'discard', 'navigate', 'update:dirty', 'update:theme'])
+const emit = defineEmits(['save', 'discard', 'navigate', 'update:dirty', 'update:theme', 'update:layout'])
 
 // ---------------------------------------------------------------------------
 // Borrador siteTheme
@@ -59,8 +62,21 @@ const seed = computed(() => mergeTheme(
 ))
 const savedOverride = ref(null)
 const base = computed(() => savedOverride.value || props.savedTheme || resolveSiteTheme(seed.value))
-const draft = reactive({ theme: props.initialTheme ? clone(props.initialTheme) : clone(base.value) })
+// draft.layout = layout_config de ensayo (contrato); draft.template =
+// plantilla en prueba (puede ser de un nivel superior al plan — la preview
+// la muestra igual; el backend gatea al guardar). null = lo guardado.
+const savedLayout = ref(clone(props.customization?.layout_config || null))
+const draft = reactive({
+  theme: props.initialTheme ? clone(props.initialTheme) : clone(base.value),
+  // El ensayo emitido antes del remount (initialExtras) tiene prioridad
+  // sobre el guardado: el usuario no pierde un "Probar" al cambiar de tab.
+  layout: clone(props.initialExtras?.layout_config ?? savedLayout.value),
+  template: props.initialExtras?.template || null
+})
 const themeDirty = computed(() => JSON.stringify(draft.theme) !== JSON.stringify(base.value))
+const layoutDirty = computed(() =>
+  draft.template !== null || JSON.stringify(draft.layout) !== JSON.stringify(savedLayout.value)
+)
 
 // El servidor empezó a devolver site_theme (o cambió): resembrar completo.
 watch(() => JSON.stringify(props.customization?.site_theme || {}), () => {
@@ -69,6 +85,14 @@ watch(() => JSON.stringify(props.customization?.site_theme || {}), () => {
 })
 // Igual cuando el padre marca un nuevo punto de guardado estable.
 watch(() => props.savedTheme, (t) => { if (t) savedOverride.value = null })
+// Layout guardado que cambió afuera (otro tab/editor): resembrar solo si
+// no hay ensayo en curso — un preset aplicado y todavía no guardado no se
+// pisa por un refresh del store.
+watch(() => JSON.stringify(props.customization?.layout_config || null), (j) => {
+  const wasClean = !layoutDirty.value
+  savedLayout.value = j ? JSON.parse(j) : null
+  if (wasClean) draft.layout = clone(savedLayout.value)
+})
 // Cambios guardados de la semilla (acento/fuente): se reinyectan al draft
 // sin pisar el resto de las secciones (radios, sombras, botones...).
 watch(() => [props.customization?.accent, props.customization?.accent_custom, props.customization?.name_font], () => {
@@ -79,10 +103,21 @@ watch(() => [props.customization?.accent, props.customization?.accent_custom, pr
 })
 // Los campos de diseño ya persistibles (acento, fuente del nombre) se
 // editan en Estilos y se reflejan acá: el tema del borrador los sigue.
-watch(() => [props.form.accent, props.form.accent_custom, props.form.name_font], () => {
-  const p = formThemePatch(props.form)
-  Object.assign(draft.theme.palette, p.palette)
-  Object.assign(draft.theme.typography, p.typography)
+// Cada campo inyecta solo su grupo: un cambio de acento no toca la
+// tipografía (un preset puede llevar heading distinto a la fuente del
+// nombre y no se pierde al recolorear).
+// suppressFormTheme silencia estas inyecciones un ciclo: al descartar, el
+// padre revierte los campos del form y el borrador vuelve al baseline
+// guardado — reinyectar ahí desharía esa restauración.
+let suppressFormTheme = false
+watch(() => [props.form.accent, props.form.accent_custom], () => {
+  if (suppressFormTheme) return
+  Object.assign(draft.theme.palette, formThemePatch(props.form).palette)
+})
+watch(() => props.form.name_font, (f) => {
+  if (suppressFormTheme || !f) return
+  draft.theme.typography.heading = f
+  draft.theme.typography.body = f
 })
 
 // ---------------------------------------------------------------------------
@@ -98,11 +133,16 @@ const LOOK_FIELDS = [
 function snapshot() {
   const f = {}
   LOOK_FIELDS.forEach((k) => { f[k] = clone(props.form[k]) })
-  return { f, t: clone(draft.theme) }
+  return { f, t: clone(draft.theme), l: clone(draft.layout), pt: draft.template }
 }
 function applySnapshot(snap) {
   LOOK_FIELDS.forEach((k) => { props.form[k] = clone(snap.f[k]) })
   draft.theme = clone(snap.t)
+  draft.layout = clone(snap.l === undefined ? savedLayout.value : snap.l)
+  draft.template = snap.pt === undefined ? null : snap.pt
+  // El modo del visor sigue al tema restaurado (un preset oscuro no deja
+  // la página pintada de noche después de Deshacer).
+  viewerTheme.value = props.form.theme === 'dark' ? 'dark' : 'light'
 }
 const history = useStudioHistory({ max: 60 })
 const { canUndo, canRedo } = history
@@ -110,23 +150,51 @@ history.reset(snapshot())
 watch(() => JSON.stringify(snapshot()), () => history.observe(snapshot()))
 function undo() { const s = history.undo(); if (s) applySnapshot(s) }
 function redo() { const s = history.redo(); if (s) applySnapshot(s) }
-const anyDirty = computed(() => themeDirty.value || props.dirty)
+const anyDirty = computed(() => themeDirty.value || layoutDirty.value || props.dirty)
 
-// Dirty combinado del Studio (tema) + tema vigente para el payload del padre.
-watch(themeDirty, (v) => emit('update:dirty', v), { immediate: true })
+// Dirty combinado del Studio (tema + ensayo de layout/plantilla) y valores
+// vigentes para el payload del padre (saveDesign arma site_theme y, con
+// ensayo, layout_config + template).
+watch(() => themeDirty.value || layoutDirty.value, (v) => emit('update:dirty', v), { immediate: true })
 watch(() => JSON.stringify(draft.theme), () => emit('update:theme', clone(draft.theme)), { immediate: true })
+// Solo se emite layout_config cuando el ensayo difiere de lo guardado:
+// reenviar el layout intacto en un save de diseño cualquiera expone los
+// bloques que LayoutEditor preserva verbatim a la poda del backend.
+watch(() => JSON.stringify([draft.layout, draft.template]), () => emit('update:layout', {
+  layout_config: JSON.stringify(draft.layout) !== JSON.stringify(savedLayout.value) ? clone(draft.layout) : null,
+  template: draft.template
+}), { immediate: true })
 
+// Vuelta del borrador al baseline guardado (Descartar / cerrar sin
+// guardar). La supresión de las inyecciones form->tema dura hasta el
+// próximo tick: los watchers del revert del form flushean antes que el
+// callback y quedarían pisando el tema recién restaurado.
+function resetDraftToBase() {
+  suppressFormTheme = true
+  draft.theme = clone(base.value)
+  draft.layout = clone(savedLayout.value)
+  draft.template = null
+  trial.value = null
+  viewerTheme.value = props.form.theme === 'dark' ? 'dark' : 'light'
+  nextTick(() => { suppressFormTheme = false })
+}
 function discard() {
   emit('discard')                 // el padre revierte los campos de `form`
-  draft.theme = clone(base.value)
   savedOverride.value = null
+  resetDraftToBase()
   nextTick(() => history.reset(snapshot()))
 }
 function markSaved() {
   savedOverride.value = clone(draft.theme)
+  savedLayout.value = clone(draft.layout)
+  draft.template = null
+  trial.value = null
   history.reset(snapshot())
 }
-function discardDraft() { draft.theme = clone(base.value); history.reset(snapshot()) }
+function discardDraft() {
+  resetDraftToBase()
+  nextTick(() => history.reset(snapshot()))
+}
 
 // ---------------------------------------------------------------------------
 // Vista previa en vivo (postMessage del contrato, debounce 60 ms)
@@ -147,9 +215,11 @@ function buildUpdate() {
   const msg = studioUpdate({
     theme: comparing.value ? base.value : draft.theme,
     // clone(): el layout de la store es un proxy reactivo — postMessage no
-    // puede structured-clonar proxies (DataCloneError).
-    layout: clone(props.customization?.layout_config || {}),
-    template: liveTemplate.value,
+    // puede structured-clonar proxies (DataCloneError). draft.layout es el
+    // layout de ensayo (preset) o el guardado; draft.template permite
+    // previsualizar plantillas de otro nivel sin tocar form.template.
+    layout: clone(draft.layout || {}),
+    template: draft.template || liveTemplate.value,
     device: device.value
   })
   msg.mode = viewerTheme.value // aditivo al contrato: claro/oscuro del visor
@@ -165,7 +235,7 @@ function queueUpdate() {
   postTimer = setTimeout(postNow, 60)
 }
 watch(
-  () => JSON.stringify([draft.theme, comparing.value, device.value, viewerTheme.value, liveTemplate.value, props.customization?.layout_config]),
+  () => JSON.stringify([draft.theme, draft.layout, draft.template, comparing.value, device.value, viewerTheme.value, liveTemplate.value]),
   queueUpdate
 )
 
@@ -177,7 +247,93 @@ function onFrameLoad(iframe) {
   syncFontLink(frameDoc(), props.form.name_font || draft.theme.typography.heading)
 }
 watch(() => props.form.name_font, (f) => { ensureStoreFont(f); syncFontLink(frameDoc(), f) })
-watch(() => draft.theme.typography.heading, (f) => syncFontLink(frameDoc(), f))
+watch(() => [draft.theme.typography.heading, draft.theme.typography.body], ([h, b]) => {
+  syncFontLink(frameDoc(), h)
+  if (b && b !== h) syncFontLink(frameDoc(), b)
+})
+
+// ---------------------------------------------------------------------------
+// Presets ("Estilos"): probar = ensayo deshacible del look completo;
+// aplicar = lo mismo pero queda en el borrador (el Guardar de la barra lo
+// persiste); combinar = una sola pieza del preset (paleta / tipografía /
+// distribución) sin tocar el resto del borrador.
+// El `trial` guarda el snapshot previo al primer ensayo de la sesión:
+// "Deshacer" vuelve exactamente ahí, "Quedarla" solo cierra el modo prueba.
+// ---------------------------------------------------------------------------
+const trial = ref(null) // {id, snap}
+const tryingId = computed(() => trial.value?.id || null)
+
+async function applyPreset(p, part = 'all') {
+  const t = resolveSiteTheme(p.theme)
+  const all = part === 'all'
+  // (1) Los campos persistibles se escriben primero y en el mismo gesto:
+  // el watcher form->theme corre en el siguiente flush, así si el preset
+  // se aplica DESPUÉS de nextTick su versión de palette/typography gana.
+  if (all) {
+    if (props.benefits?.has_design_advanced) {
+      props.form.accent_custom = t.palette.accent
+    } else {
+      // Sin diseño avanzado el acento libre no viaja: se mapea al slug
+      // más cercano del catálogo base. accent_custom queda intacto (un
+      // valor guardado en otra época de plan se conserva, no se pisa).
+      const slug = nearestAccent(hexToRgb(t.palette.accent), STORE_ACCENTS)
+      if (slug) props.form.accent = slug
+    }
+    props.form.name_font = t.typography.body
+    props.form.theme = p.pageTheme || 'light'
+    draft.layout = clone(p.layout)
+    draft.template = p.template
+  } else if (part === 'layout') {
+    // La distribución se re-expande sobre la plantilla vigente (la en
+    // ensayo o la guardada): los ids que la plantilla no soporta quedan
+    // fuera en vez de ensuciar la config.
+    draft.layout = clone(layoutForTemplate(p, draft.template || liveTemplate.value))
+  }
+  await nextTick()
+  if (all || part === 'palette') draft.theme.palette = clone(t.palette)
+  if (all || part === 'typography') draft.theme.typography = clone(t.typography)
+  if (all) {
+    ;['containers', 'buttons', 'background', 'motion', 'mobile'].forEach((k) => {
+      draft.theme[k] = clone(t[k])
+    })
+    viewerTheme.value = p.pageTheme || 'light'
+  }
+  if (all || part === 'typography') {
+    ensureStoreFont(t.typography.heading)
+    ensureStoreFont(t.typography.body)
+    syncFontLink(frameDoc(), t.typography.heading)
+    syncFontLink(frameDoc(), t.typography.body)
+  }
+}
+
+function tryPreset(p) {
+  if (!trial.value) trial.value = { id: p.id, snap: snapshot() }
+  else trial.value = { ...trial.value, id: p.id }
+  applyPreset(p, 'all')
+}
+function revertTrial() {
+  if (!trial.value) return
+  applySnapshot(trial.value.snap)
+  trial.value = null
+}
+function keepTrial() { trial.value = null }
+async function applyAndSave(p) {
+  trial.value = null
+  await applyPreset(p, 'all')
+  emit('save')
+}
+
+provide('studioPresets', {
+  presets: STUDIO_PRESETS,
+  tryingId,
+  lockOf: (p) => presetLock(p, props.benefits),
+  tryIt: tryPreset,
+  apply: applyPreset,
+  applyAndSave,
+  revertTrial,
+  keepTrial,
+  goPlans: () => emit('navigate', 'plans')
+})
 
 // Handshake del iframe: al montar (o tras recargar) pide el estado vigente.
 function onMessage(e) {
@@ -369,7 +525,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
       >
         <StudioPanel
           :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
-          :site-templates="siteTemplates" :layout="customization?.layout_config || null"
+          :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config || null"
           :can-flyers="canFlyers" :shop-name="shopName"
           @navigate="emit('navigate', $event)" @ring="ringTarget"
         />

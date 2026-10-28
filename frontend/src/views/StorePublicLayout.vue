@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS
+  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -93,10 +93,16 @@ const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advance
 // marca el nivel del plan (Básico: Clásico/Perspectiva; Estándar suma
 // Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
 // plan o plantilla retirada — se fuerza 'classic'.
-const pageTemplate = computed(() => resolveStoreTemplate(
-  (studioMode.value && studioTemplate.value) || custom.value.template,
-  store.value?.allowed_templates
-))
+// En modo Studio la plantilla en ensayo se resuelve contra el catálogo
+// completo (los presets bloqueados también se pueden probar — el gate de
+// allowed_templates solo corre al guardar). Fuera del Studio manda la
+// whitelist del plan como siempre.
+const pageTemplate = computed(() => {
+  if (studioMode.value && studioTemplate.value) {
+    return resolveStoreTemplate(studioTemplate.value, Object.keys(STORE_TEMPLATES))
+  }
+  return resolveStoreTemplate(custom.value.template, store.value?.allowed_templates)
+})
 // Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
 const isShop = computed(() => pageTemplate.value === 'shop')

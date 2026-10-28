@@ -11,6 +11,7 @@
 import { computed } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import DesignLookTab from '../design/DesignLookTab.vue'
+import PresetGallery from '../../studio/presets/PresetGallery.vue'
 import { STORE_FONT_GROUPS, STORE_FONTS, ensureStoreFont } from '../../api/stores.api.js'
 import { deriveAccent } from '../../utils/colorTools.js'
 import { normalizeHex } from '../../studio/contract.js'
@@ -108,8 +109,10 @@ const onLookRing = (key) => emit('ring', RING_MAP[key] || key)
 </script>
 
 <template>
-  <!-- ===== Estilos: la edición guiada actual queda embebida tal cual ===== -->
+  <!-- ===== Estilos: galería de presets + la edición guiada embebida ===== -->
   <div v-if="tool === 'estilos'" class="stp stp-look">
+    <PresetGallery :benefits="benefits" />
+    <p class="stp-sec">Personalización fina</p>
     <DesignLookTab :form="form" :benefits="benefits" :shop-name="shopName" @go-plans="emit('navigate', 'plans')" @ring="onLookRing" />
   </div>
 
