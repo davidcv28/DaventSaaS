@@ -167,8 +167,26 @@ export function deriveAccent(hex) {
   return { hex: hex.toLowerCase(), ink, soft: hslToHex(h, Math.min(s, 0.9), 0.96) }
 }
 
-export function fixAccent(hex, theme = 'light') {
-  const bg = PAGE_BG[theme] || PAGE_BG.light
+const mixHex = (a, b, t) => rgbToHex(hexToRgb(a).map((c, i) => c + (hexToRgb(b)[i] - c) * t))
+
+// Colores de una banda de acento (hero, inicial, placas) SIEMPRE legibles con
+// texto blanco: si el acento es claro (amarillo, celeste, lima) se usa su
+// tinta oscurecida como base. Devuelve tonos del mismo lado de la escala para
+// que el nombre de la empresa no desaparezca sobre el fondo.
+export function bandPalette(accentHex) {
+  const hex = isHex(accentHex) ? accentHex.toLowerCase() : '#4f46e5'
+  const safe = contrastRatio('#ffffff', hex) >= 4.5 ? hex : deriveAccent(hex).ink
+  return {
+    c1: safe,
+    c2: mixHex(safe, '#000000', 0.22),
+    c3: mixHex(safe, '#000000', 0.1),
+    c4: mixHex(safe, '#000000', 0.42),
+    base1: safe,
+    base2: mixHex(safe, '#000000', 0.28)
+  }
+}
+
+export function fixAccent(hex, theme = 'light') {  const bg = PAGE_BG[theme] || PAGE_BG.light
   const [h, s, l0] = hexHsl(hex)
   const dir = theme === 'dark' ? 1 : -1
   let l = l0

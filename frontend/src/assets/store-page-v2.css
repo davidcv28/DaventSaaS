@@ -69,7 +69,7 @@
 .sp2-hero-meta .icon { color: var(--sp-accent-text); }
 
 /* --- Tus números: banda de acento pegada al hero --- */
-.sp2-stats { background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); color: #fff; }
+.sp2-stats { background: linear-gradient(120deg, var(--sp-band-c1, var(--store-accent)), var(--store-accent-ink)); color: #fff; }
 .sp2-stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; padding-top: 32px; padding-bottom: 32px; text-align: center; }
 .sp2-stat strong { display: block; font-size: clamp(24px, 3vw, 36px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
 .sp2-stat span { display: block; margin-top: 5px; font-size: 12.5px; color: rgba(255, 255, 255, .82); }
@@ -180,7 +180,7 @@ a.sp2-strip-item:hover { background: var(--store-accent-soft); }
 
 /* --- CTA: tarjeta de acento contenida --- */
 .sp2-cta { padding: 8px 0 72px; }
-.sp2-cta-card { position: relative; overflow: hidden; padding: 56px 32px; border-radius: 24px; background: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); color: #fff; text-align: center; box-shadow: var(--sp-shadow-md); }
+.sp2-cta-card { position: relative; overflow: hidden; padding: 56px 32px; border-radius: 24px; background: linear-gradient(120deg, var(--sp-band-c1, var(--store-accent)), var(--store-accent-ink)); color: #fff; text-align: center; box-shadow: var(--sp-shadow-md); }
 .sp2-cta-card::before, .sp2-cta-card::after { content: ''; position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .1); pointer-events: none; }
 .sp2-cta-card::before { width: 260px; height: 260px; left: -90px; top: -110px; }
 .sp2-cta-card::after { width: 200px; height: 200px; right: -70px; bottom: -90px; }

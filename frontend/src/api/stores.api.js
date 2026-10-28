@@ -1,6 +1,6 @@
 import { http, publicHttp } from './http.js'
 import { storeUrl } from '../config/env.js'
-import { isHex, deriveAccent } from '../utils/colorTools.js'
+import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
 
 // Dominio stores (StoreApp):
 // GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization,
@@ -824,10 +824,18 @@ export function effectiveAccent(customization) {
 export function storeThemeVars(customization) {
   const c = { ...CUSTOMIZATION_DEFAULTS, ...(customization || {}) }
   const a = effectiveAccent(c)
+  const band = bandPalette(a.hex)
   return {
     '--store-accent': a.hex,
     '--store-accent-ink': a.ink,
     '--store-accent-soft': a.soft,
+    // Banda de acento con texto blanco garantizado (hero, inicial, placas).
+    '--sp-band-c1': band.c1,
+    '--sp-band-c2': band.c2,
+    '--sp-band-c3': band.c3,
+    '--sp-band-c4': band.c4,
+    '--sp-band-base1': band.base1,
+    '--sp-band-base2': band.base2,
     '--store-name-size': `${storeNameSize(c.name_font_size)}px`,
     //La fuente elegida aplica a TODO el texto de la web (herencia desde la raíz).
     '--store-font': storeFontFamily(c.name_font),

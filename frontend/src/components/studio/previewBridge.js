@@ -12,6 +12,7 @@ import {
   resolveSiteTheme, hexToRgb, rgbToHex, textOn
 } from '../../studio/contract.js'
 import { STORE_FONTS, ensureStoreFont, effectiveAccent } from '../../api/stores.api.js'
+import { deriveAccent, bandPalette } from '../../utils/colorTools.js'
 import { pickTargetFor } from './studioModel.js'
 
 function mixHex(a, b, t) {
@@ -72,9 +73,21 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
 
   if (on('palette.accent') || on('palette.primary')) {
     const accent = on('palette.accent') ? p.accent : p.primary
+    // La tinta se deriva del acento hasta garantizar texto blanco (AA): un
+    // acento claro (amarillo/celeste) ya no deja el nombre ilegible en la
+    // barra superior ni en los botones.
+    const ink = deriveAccent(accent).ink
     vars['--store-accent'] = accent
-    vars['--store-accent-ink'] = mixHex(accent, '#000000', 0.3)
-    vars['--store-accent-soft'] = mixHex(accent, '#ffffff', 0.88)
+    vars['--store-accent-ink'] = ink
+    vars['--store-accent-soft'] = deriveAccent(accent).soft
+    // Banda del hero y superficies de acento con texto blanco.
+    const band = bandPalette(accent)
+    vars['--sp-band-c1'] = band.c1
+    vars['--sp-band-c2'] = band.c2
+    vars['--sp-band-c3'] = band.c3
+    vars['--sp-band-c4'] = band.c4
+    vars['--sp-band-base1'] = band.base1
+    vars['--sp-band-base2'] = band.base2
   }
   // El rol "Primario" manda en botones sólidos (el acento queda para
   // enlaces y detalles): si el tema lo fija, pisa el accent-ink de siempre.

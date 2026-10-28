@@ -12,6 +12,7 @@ import {
 import {
   analyzeStudioHealth, repairPalette, palettePasses, CONTRAST_PAIRS, pairColors
 } from '../src/components/studio/health.js'
+import { bandPalette } from '../src/utils/colorTools.js'
 
 let failures = 0
 function check(name, cond, extra = '') {
@@ -245,6 +246,14 @@ const noLayout = analyzeStudioHealth({
 check('sin layout no se ofrecen fixes de bloque', !noLayout.some((i) => i.fix?.kind === 'block'), JSON.stringify(noLayout.map((i) => i.fix?.kind || null)))
 check('todos los pares de contraste tienen clave única', new Set(CONTRAST_KEYS).size === CONTRAST_KEYS.length)
 check('palettePasses acepta la paleta default', palettePasses(SITE_THEME_DEFAULTS.palette))
+
+console.log('— banda de acento (nombre de la empresa legible) —')
+for (const accent of ['#eab308', '#38bdf8', '#4ade80', '#00e67a', '#e11d48', '#4f46e5', '#000000', '#ffffff', 'no-es-color']) {
+  const band = bandPalette(accent)
+  const layers = ['c1', 'c2', 'c3', 'c4', 'base1', 'base2']
+  check(`banda ${accent} mantiene texto blanco AA`, layers.every((k) => contrastRatio('#ffffff', band[k]) >= 4.5),
+    JSON.stringify(band))
+}
 
 console.log('')
 if (failures) { console.error(`${failures} chequeo(s) fallaron`); process.exit(1) }
