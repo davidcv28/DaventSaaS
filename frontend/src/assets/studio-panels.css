@@ -233,27 +233,27 @@
 .stl-head-tx p b { color: var(--ink-2); font-weight: 700; }
 
 /* --- Nivel 2: ajustes rápidos (tema+logo arriba, acento+fuente a ancho) --- */
-.stl-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.stl-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 8px; min-width: 0; }
+.stl-quick > * { min-width: 0; max-width: 100%; }
 .stl-quick .stl-wide { grid-column: 1 / -1; }
 .stl-quick .stp-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .stl-quick .stp-seg .stp-opt { padding: 5px 8px; }
-.stl-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.stl-logo { display: flex; flex-direction: column; align-items: stretch; gap: 8px; height: 100%; min-width: 0; }
 .stl-logo-thumb {
-  flex: none; display: grid; place-items: center; width: 44px; height: 44px;
+  display: grid; place-items: center; width: 100%; aspect-ratio: 16 / 9; min-height: 56px;
   border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
   color: var(--muted); overflow: hidden;
 }
-.stl-logo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.stl-logo-acts { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.stl-logo-acts .btn { min-height: 44px; padding: 8px 12px; font-size: 12.5px; }
-.stl-logo-acts .icon-btn { width: 44px; height: 44px; }
+.stl-logo-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.stl-logo-acts { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: auto; }
+.stl-logo-acts .btn { min-height: 44px; padding: 8px 12px; font-size: 12.5px; min-width: 0; }
+.stl-logo-acts .icon-btn { flex: none; width: 44px; height: 44px; }
 .stl-logo-acts .icon-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
-/* Acento: swatches en carril (los 8 presets + color propio al final). */
-.stl-accents { display: flex; gap: 8px; overflow-x: auto; padding: 6px 4px; margin: -2px; overscroll-behavior-x: contain; scrollbar-width: none; }
-.stl-accents::-webkit-scrollbar { display: none; }
+/* Acento: grilla completa (los 8 presets + color propio), sin scroll. */
+.stl-accents { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; padding: 2px; min-width: 0; max-width: 100%; }
 .stl-swatch {
-  flex: none; position: relative; display: grid; place-items: center;
+  position: relative; display: grid; place-items: center; justify-self: center;
   width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
   background: var(--sw); color: #fff; cursor: pointer;
   transition: box-shadow .15s;
@@ -264,13 +264,12 @@
 .stl-swatch-pick input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }
 .stl-swatch-pick .icon { pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); }
 
-/* Fuente: chips con muestra real en carril con snap suave. */
-.stl-fonts { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px; margin: -2px; scroll-snap-type: x proximity; overscroll-behavior-x: contain; scrollbar-width: none; }
-.stl-fonts::-webkit-scrollbar { display: none; }
+/* Fuente: grilla completa de tarjetas con muestra real, sin scroll. */
+.stl-fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; padding: 2px; min-width: 0; max-width: 100%; }
 .stl-font {
-  flex: none; scroll-snap-align: start; position: relative;
+  position: relative; min-width: 0;
   display: grid; justify-items: center; align-content: center; gap: 2px;
-  min-width: 76px; min-height: 66px; padding: 8px 6px;
+  min-height: 66px; padding: 8px 6px;
   border: 1px solid var(--line); border-radius: 10px; background: var(--card);
   color: var(--ink); font: inherit; cursor: pointer; transition: border-color .15s;
 }
@@ -278,7 +277,11 @@
 .stl-font.active { border-color: var(--brand-500); box-shadow: var(--ring); background: var(--brand-soft); }
 .stl-font:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .stl-font-aa { font-size: 24px; line-height: 1.15; }
-.stl-font-n { max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10.5px; font-weight: 600; color: var(--ink-2); }
+.stl-font-n {
+  max-width: 100%; overflow: hidden; font-size: 10.5px; font-weight: 600; color: var(--ink-2);
+  line-height: 1.25; text-align: center; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
 
 /* --- Nivel 3: encabezado-plegable (mismo ritmo visual que los otros niveles) --- */
 .stl-adv-h { margin: 0; font-size: inherit; font-weight: inherit; }

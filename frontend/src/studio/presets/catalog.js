@@ -512,6 +512,14 @@ export const STUDIO_PRESETS = PRESETS.map((raw) => {
   }
 })
 
+// Subconjunto curado que lista el select del panel "Estilos" (2 base, 2 plus,
+// 2 advanced). El catálogo completo sigue disponible para guardar/aplicar.
+export const PRESET_PICKER_IDS = [
+  'neo-brutalista', 'corporativo',
+  'bento', 'pastel-suave',
+  'editorial-minima', 'lujo-serif'
+]
+
 export function presetById(id) {
   return STUDIO_PRESETS.find((p) => p.id === id) || null
 }

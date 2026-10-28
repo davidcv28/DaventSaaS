@@ -7,7 +7,7 @@
 // en el backend al guardar).
 import { ref, computed, inject, onMounted, watch } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
-import { detectRubro, presetLock } from './catalog.js'
+import { detectRubro, presetLock, PRESET_PICKER_IDS } from './catalog.js'
 import { STORE_TEMPLATES } from '../../api/stores.api.js'
 import { useStoreStore } from '../../stores/store.store.js'
 import { useCatalogStore } from '../../stores/catalog.store.js'
@@ -45,28 +45,35 @@ const recommended = computed(() => {
 })
 
 // ---------------------------------------------------------------------------
-// Select agrupado por nivel de plan (Básico / Estándar / Premium)
+// Select de estilos (subconjunto curado de 6; el catálogo completo queda en
+// api.presets para guardado, gating y presets ya aplicados)
 // ---------------------------------------------------------------------------
 const TIER_LABEL = { base: 'Básico', plus: 'Estándar', advanced: 'Premium' }
-const TIER_ORDER = ['base', 'plus', 'advanced']
 const lockOf = (p) => presetLock(p, props.benefits)
 const tplLabel = (p) => STORE_TEMPLATES[p.template]?.label || p.template
 // "En uso": la plantilla guardada coincide y no hay prueba en vivo.
 const isCurrent = (p) => !api.tryingId.value && custom.value.template === p.template
 
-const groups = computed(() => TIER_ORDER
-  .map((t) => ({ id: t, label: TIER_LABEL[t], items: api.presets.filter((p) => p.tier === t) }))
-  .filter((g) => g.items.length))
-function optionLabel(p) {
+const pickerItems = computed(() => PRESET_PICKER_IDS
+  .map((id) => api.presets.find((p) => p.id === id))
+  .filter(Boolean))
+function optionLabel(p, forceUse = false) {
   return `${p.name} — ${tplLabel(p)}`
     + (recommended.value.has(p.id) ? ' · tu rubro' : '')
-    + (isCurrent(p) ? ' · en uso' : '')
+    + (forceUse || isCurrent(p) ? ' · en uso' : '')
     + (lockOf(p) ? ' · requiere plan superior' : '')
 }
 
 // Valor del select: el preset cuya plantilla coincide con la guardada; al
 // probar otro sigue al ensayo. Tras Deshacer vuelve al "en uso".
 const inUseId = computed(() => api.presets.find((p) => custom.value.template === p.template)?.id || '')
+// Estilos en uso / en prueba que no están entre los 6: se agregan al final
+// para que el select nunca quede sin una opción que coincida con `sel`.
+const extraItems = computed(() => {
+  const picked = new Set(PRESET_PICKER_IDS)
+  const ids = [...new Set([inUseId.value, api.tryingId.value].filter((id) => id && !picked.has(id)))]
+  return ids.map((id) => api.presets.find((p) => p.id === id)).filter(Boolean)
+})
 const sel = ref(inUseId.value)
 watch(inUseId, (id) => { if (!api.tryingId.value) sel.value = id })
 watch(() => api.tryingId.value, (id) => { if (id) sel.value = id })
@@ -89,9 +96,8 @@ const trialPreset = computed(() => (api.tryingId.value ? api.presets.find((p) =>
       <label for="psg-style" class="psg-lbl">Estilo prediseñado</label>
       <select id="psg-style" v-model="sel" class="stp-select psg-select" @change="onPick">
         <option value="" disabled>Elegí un estilo…</option>
-        <optgroup v-for="g in groups" :key="g.id" :label="g.label">
-          <option v-for="p in g.items" :key="p.id" :value="p.id">{{ optionLabel(p) }}</option>
-        </optgroup>
+        <option v-for="p in pickerItems" :key="p.id" :value="p.id">{{ optionLabel(p) }}</option>
+        <option v-for="p in extraItems" :key="p.id" :value="p.id">{{ optionLabel(p, p.id === inUseId) }}</option>
       </select>
       <p class="psg-hint">Se aplica en la vista previa al elegirlo. Nada se guarda hasta que guardás vos.</p>
     </div>
@@ -125,7 +131,7 @@ const trialPreset = computed(() => (api.tryingId.value ? api.presets.find((p) =>
   background: var(--brand-soft); color: var(--brand-ink); font-size: 12.5px;
 }
 .psg-trial-tx { flex: 1 1 auto; min-width: 0; line-height: 1.4; }
-.psg-trial-acts { display: flex; gap: 6px; flex: none; flex-wrap: wrap; }
+.psg-trial-acts { display: flex; gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
 .psg-mini {
   display: inline-flex; align-items: center; gap: 5px; min-height: 44px;
   padding: 4px 12px; border: 1px solid var(--line); border-radius: 8px;
