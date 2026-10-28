@@ -241,9 +241,10 @@ const navMenuLinks = computed(() => {
 // su propia fila .sp-shop-nav (visible también en móvil).
 const hasNavMenu = computed(() => status.value === 'success' && !isShop.value && navMenuLinks.value.length > 0)
 
-// Tema mobile.nav: 'bottom' monta la tab bar (4 destinos + "Más") en lugar
-// del burger; 'top' y 'drawer' conservan el header + drawer lateral.
-const mobileNav = computed(() => pageAttrs.value['data-st-nav'] || 'top')
+// Tema mobile.nav: 'bottom' (default de la web pública) monta la tab bar
+// (4 destinos + "Más") en lugar del burger; 'top' conserva el header con
+// burger + drawer lateral y 'drawer' deja solo marca + burger.
+const mobileNav = computed(() => pageAttrs.value['data-st-nav'] || 'bottom')
 // Prioridad de destinos en la tab bar: Inicio → Catálogo → Servicios → Contacto.
 const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Servicios', 'Contacto']
 const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Servicios: 'wrench', Contacto: 'message-circle' }
@@ -557,7 +558,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->

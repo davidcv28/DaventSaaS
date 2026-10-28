@@ -11029,15 +11029,15 @@ html { scroll-behavior: smooth; }
   }
   .store-page[data-st-card='overlay'] :is(.tpc-name, .tpc-eyebrow, .tpc-price, .tpc-save, .tpc-price s) { color: #fff; }
 
-  /* mobile.nav = 'bottom': el header queda arriba (marca + lupa + CTA) y la
-     navegación baja a la tab bar fija — el patrón del dashboard, no el header
-     entero abajo. */
-  .store-page[data-st-nav='bottom'] { padding-bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
-  .store-page[data-st-nav='bottom'] .sp-burger { display: none; }
-  .store-page[data-st-nav='bottom'] .sp-dock { bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
-  .store-page[data-st-nav='bottom'] .sp-bot { bottom: calc(var(--sp-tabbar-h) + 16px + env(safe-area-inset-bottom)); }
-  .store-page[data-st-nav='bottom'].has-dock .sp-bot { bottom: calc(var(--sp-tabbar-h) + 76px + env(safe-area-inset-bottom)); }
-  .store-page[data-st-nav='bottom'].has-dock .sp-foot { padding-bottom: calc(var(--sp-tabbar-h) + 96px + env(safe-area-inset-bottom)); }
+  /* Tab bar montada (mobile.nav = 'bottom' o default de la web): el header
+     queda arriba (marca + lupa + CTA) y la navegación baja a la barra fija —
+     el patrón del dashboard, no el header entero abajo. */
+  .store-page[data-st-tabbar] { padding-bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
+  .store-page[data-st-tabbar] .sp-burger { display: none; }
+  .store-page[data-st-tabbar] .sp-dock { bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
+  .store-page[data-st-tabbar] .sp-bot { bottom: calc(var(--sp-tabbar-h) + 16px + env(safe-area-inset-bottom)); }
+  .store-page[data-st-tabbar].has-dock .sp-bot { bottom: calc(var(--sp-tabbar-h) + 76px + env(safe-area-inset-bottom)); }
+  .store-page[data-st-tabbar].has-dock .sp-foot { padding-bottom: calc(var(--sp-tabbar-h) + 96px + env(safe-area-inset-bottom)); }
   .store-page[data-st-nav='drawer'] .sp-top-links { display: none; }
 
   .store-page[data-st-sticky-cta='true'] .sp-dock { display: flex; }

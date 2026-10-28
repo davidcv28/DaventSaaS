@@ -123,7 +123,7 @@ export const SITE_THEME_DEFAULTS = deepFreeze({
     intensity: 'subtle'
   },
   mobile: {
-    nav: 'top',
+    nav: 'bottom',
     gridCols: 1,
     cardStyle: 'standard',
     stickyCta: false,
