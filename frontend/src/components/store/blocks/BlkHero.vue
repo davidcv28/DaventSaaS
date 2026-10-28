@@ -566,6 +566,100 @@ onBeforeUnmount(() => clearInterval(clock))
             </a>
           </div>
         </template>
+        <template v-else-if="tpl === 'duo'">
+          <!-- Duo (editorial a dos tintas): portada partida — copy a la
+               izquierda y placas de producto a la derecha sobre la banda de
+               acento. En mobile la placa principal abre como portada y el
+               copy sigue debajo. -->
+          <div class="sp-du-copy">
+            <p v-reveal class="sp-du-eyebrow">
+              <i aria-hidden="true"></i><AppIcon :name="heroBadgeIcon || 'store'" :size="13" :stroke="2.5" /> {{ heroBadge }}<i aria-hidden="true"></i>
+            </p>
+            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <em class="sp-du-mark">{{ titleSplit.last }}</em></h1>
+            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
+            <div v-reveal="280" class="sp-hero-ctas">
+              <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
+              <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+            </ul>
+          </div>
+          <div v-reveal="140" class="sp-du-art">
+            <figure class="sp-du-plate" :class="{ 'is-logo': !cbTileA && custom.logo }">
+              <img v-if="cbTileA" :src="cbTileA" alt="" fetchpriority="high" />
+              <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+              <span v-else class="sp-du-initial" aria-hidden="true">{{ initial }}</span>
+              <figcaption>{{ cbTileALabel }}</figcaption>
+            </figure>
+            <figure v-if="cbTileB" class="sp-du-plate alt" aria-hidden="true">
+              <img :src="cbTileB" alt="" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </template>
+        <template v-else-if="tpl === 'calma'">
+          <!-- Calma (bienestar): portada serena — columna única centrada con
+               aire generoso, serif suave y una placa redondeada debajo del
+               copy; la banda se tiñe apenas con el acento de la tienda. -->
+          <div class="sp-cm-copy">
+            <p v-reveal class="sp-cm-eyebrow">
+              <span class="sp-cm-leaf" aria-hidden="true"></span>{{ heroBadge }}
+            </p>
+            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <em class="sp-cm-mark">{{ titleSplit.last }}</em></h1>
+            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
+            <div v-reveal="280" class="sp-hero-ctas">
+              <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
+              <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+            </ul>
+            <figure v-if="cbTileA || custom.logo" v-reveal="380" class="sp-cm-plate" :class="{ 'is-logo': !cbTileA }">
+              <img v-if="cbTileA" :src="cbTileA" alt="" fetchpriority="high" />
+              <img v-else :src="custom.logo" :alt="`Logo de ${shopName}`" />
+            </figure>
+          </div>
+        </template>
+        <template v-else-if="tpl === 'vitrina'">
+          <!-- Vitrina (boutique editorial): banda de tinta oscura — copy a la
+               izquierda con dateline y serif de alto contraste; a la derecha
+               la "vidriera": placa en arco con doble filete y rótulo Nº 01. -->
+          <div class="sp-vt-copy">
+            <p v-reveal class="sp-vt-dateline">
+              <i aria-hidden="true"></i><span>{{ heroBadge }}</span><i aria-hidden="true"></i><span>{{ year }}</span>
+            </p>
+            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <em class="sp-vt-mark">{{ titleSplit.last }}</em></h1>
+            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
+            <div v-reveal="280" class="sp-hero-ctas">
+              <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+              <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
+              <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+              <button type="button" class="sp-icon-btn" :aria-label="copied ? 'Link copiado' : 'Compartir tienda'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
+                <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
+              </button>
+            </div>
+            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+              <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+            </ul>
+          </div>
+          <div v-reveal="140" class="sp-vt-art">
+            <figure class="sp-vt-plate" :class="{ 'is-logo': !cbTileA && custom.logo }">
+              <img v-if="cbTileA" :src="cbTileA" alt="" fetchpriority="high" />
+              <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+              <span v-else class="sp-vt-initial" aria-hidden="true">{{ initial }}</span>
+              <figcaption>{{ cbTileALabel }}</figcaption>
+            </figure>
+            <span class="sp-vt-tag" aria-hidden="true">Nº 01</span>
+          </div>
+        </template>
         <template v-else-if="tpl === 'classic'">
           <!-- Clásico: hero partido — copy alineado a la izquierda y una
                placa de presentación (foto o logo) con chips flotantes de

@@ -5,7 +5,7 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS, SERVICES_BLOC
 // defecto). Los ids pertenecen al catálogo cerrado de templates/blocks.js
 // (espejo de TEMPLATE_BLOCKS del backend).
 export default {
-  fonts: [],
+  fonts: ['fraunces'],
   surfaces: {
     landing: landingViews.sp,
     catalog: catalogViews.duo,
