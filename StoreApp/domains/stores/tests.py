@@ -165,6 +165,46 @@ class StoreCatalogToggleTests(TestCase):
         self.assertFalse(response.data['customization']['show_catalog'])
 
 
+class PublicEndpointsIgnoreStaleTokenTests(TestCase):
+    """
+    DRF autentica antes de evaluar permisos: con un Bearer vencido las
+    acciones públicas (AllowAny) devolvían 401 y ensuciaban la consola de la
+    web de tienda. Sin autenticadores en esas acciones el token rancio se
+    ignora y el visitante anónimo lee igual.
+    """
+
+    def setUp(self):
+        _, profile     =   _make_user(verified = True)
+        _grant(profile, has_public_link = True, has_product_comments = True)
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        StoreCustomization.objects.create(
+            store               =   Store.objects.get(slug = 'mi-tienda'),
+            show_catalog        =   True,
+            show_reviews        =   True,
+            show_contact        =   True,
+            site_templates      =   ['landing', 'catalog'],
+        )
+
+    def _get(self, path):
+        return APIClient().get(path, HTTP_AUTHORIZATION = 'Bearer token-vencido')
+
+    def test_public_store_ok_with_stale_bearer(self):
+        self.assertEqual(self._get(f'{STORES_URL}public/mi-tienda/').status_code, 200)
+
+    def test_public_catalog_ok_with_stale_bearer(self):
+        self.assertEqual(self._get(f'{STORES_URL}public/mi-tienda/catalog/').status_code, 200)
+
+    def test_contact_captcha_ok_with_stale_bearer(self):
+        self.assertEqual(self._get(f'{STORES_URL}public/mi-tienda/contact/captcha/').status_code, 200)
+
+    def test_review_captcha_ok_with_stale_bearer(self):
+        self.assertEqual(self._get(f'{STORES_URL}public/mi-tienda/reviews/captcha/').status_code, 200)
+
+    def test_protected_endpoint_still_rejects_stale_bearer(self):
+        #El corte de auth es solo para acciones públicas: el panel sigue 401.
+        self.assertEqual(self._get(f'{STORES_URL}stats/').status_code, 401)
+
+
 class StoreListMineTests(TestCase):
     """
     El listado /stores/ de un staff trae todas las webs (panel admin); con

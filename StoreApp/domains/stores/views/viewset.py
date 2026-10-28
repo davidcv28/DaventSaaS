@@ -246,9 +246,27 @@ class StoreReviewThrottle(AnonRateThrottle):
 #=========================================
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
+    #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+
+    def initialize_request(self, request, *args, **kwargs):
+        #get_authenticators() corre dentro de super().initialize_request(),
+        #antes de que ViewSetMixin resuelva self.action: lo dejamos listo acá
+        #para poder desactivar la autenticación en las acciones públicas.
+        self.action =   self.action_map.get(request.method.lower())
+        return super().initialize_request(request, *args, **kwargs)
+
+    def get_authenticators(self):
+        #DRF autentica ANTES de evaluar permisos: con un Bearer vencido (access
+        #zombie tras expirar la sesión) el 401 se disparaba igual en endpoints
+        #AllowAny y la consola se llenaba de errores en la web pública. Las
+        #acciones públicas no necesitan identidad: cero autenticadores.
+        if self.action in self.PUBLIC_ACTIONS:
+            return []
+        return super().get_authenticators()
 
     def get_permissions(self):
-        if self.action in ('public', 'public_catalog', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews'):
+        if self.action in self.PUBLIC_ACTIONS:
             return [AllowAny()]
         if self.action in ('block', 'unblock'):
             return [IsAdminUser()]

@@ -1,4 +1,4 @@
-import { http } from './http.js'
+import { http, publicHttp } from './http.js'
 import { storeUrl } from '../config/env.js'
 import { isHex, deriveAccent } from '../utils/colorTools.js'
 
@@ -162,39 +162,39 @@ export const storesApi = {
   async publicStore(slug, { preview } = {}) {
     // ?preview=<token firmado>: el backend muestra el borrador del Studio
     // (link temporal de "compartir vista previa") en vez de lo publicado.
-    const { data } = await http.get(`/stores/public/${slug}/`, { params: preview ? { preview } : {} })
+    const { data } = await publicHttp.get(`/stores/public/${slug}/`, { params: preview ? { preview } : {} })
     return data
   },
 
   async publicCatalog(slug, params = {}) {
-    const { data } = await http.get(`/stores/public/${slug}/catalog/`, { params: normalizeCatalogParams(params) })
+    const { data } = await publicHttp.get(`/stores/public/${slug}/catalog/`, { params: normalizeCatalogParams(params) })
     return data
   },
 
   async contactCaptcha(slug) {
-    const { data } = await http.get(`/stores/public/${slug}/contact/captcha/`)
+    const { data } = await publicHttp.get(`/stores/public/${slug}/contact/captcha/`)
     return data
   },
 
   async sendContact(slug, payload) {
-    const { data } = await http.post(`/stores/public/${slug}/contact/`, payload)
+    const { data } = await publicHttp.post(`/stores/public/${slug}/contact/`, payload)
     return data
   },
 
   // Opiniones de producto (valoraciones/comentarios de visitantes): mismo
   // captcha firmado que el contacto + honeypot 'website' en el payload.
   async reviewCaptcha(slug) {
-    const { data } = await http.get(`/stores/public/${slug}/reviews/captcha/`)
+    const { data } = await publicHttp.get(`/stores/public/${slug}/reviews/captcha/`)
     return data
   },
 
   async productReviews(slug, productId) {
-    const { data } = await http.get(`/stores/public/${slug}/products/${productId}/reviews/`)
+    const { data } = await publicHttp.get(`/stores/public/${slug}/products/${productId}/reviews/`)
     return data
   },
 
   async sendProductReview(slug, productId, payload) {
-    const { data } = await http.post(`/stores/public/${slug}/products/${productId}/reviews/`, payload)
+    const { data } = await publicHttp.post(`/stores/public/${slug}/products/${productId}/reviews/`, payload)
     return data
   },
 
