@@ -98,6 +98,21 @@ import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
 //                                        -> la web pública lo recibe en `chatbot` del payload
 //                                           de /public/<slug>/ solo si está habilitado y el
 //                                           plan lo incluye (None en otro caso)
+// Diseñar con IA (motor local determinista, sin llamadas a servicios de IA):
+// POST /api/stores/ai-design/            Bearer {rubro?, goals?: string[],
+//                                                  tone?: calido|serio|moderno|audaz,
+//                                                  audience?, must_have?: string[], seed?}
+//                                        -> {engine, seed, missing: string[],
+//                                            proposals: [{id, label, why, template, site_theme,
+//                                              layout_config, copy: {headline, description,
+//                                              cta_title, cta_text, cta_label}, notes}]}
+//                                        (2 o 3 propuestas; template siempre dentro de
+//                                         allowed_templates_of(user); 403 sin has_customization
+//                                         o sin has_ai_design; 429 throttle 'ai_design' 20/h)
+// POST /api/stores/ai-design/apply/      Bearer {seed, proposal_id} -> {Exito, customization, storage}
+//                                        (recalcula server-side y escribe SOLO el borrador;
+//                                         el copy solo rellena campos vacíos; publicar y
+//                                         descartar siguen por customization/publish|discard)
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -205,6 +220,19 @@ export const storesApi = {
 
   async updateCustomization(payload) {
     const { data } = await http.patch('/stores/customization/', payload)
+    return data
+  },
+
+  // Diseñar con IA: propuestas (2-3) a partir de las respuestas del dueño y
+  // aplicación de una al borrador. El backend recalcula: apply solo recibe
+  // seed + proposal_id, nunca el layout del cliente.
+  async aiDesign(payload = {}) {
+    const { data } = await http.post('/stores/ai-design/', payload)
+    return data
+  },
+
+  async aiDesignApply({ seed, proposal_id }) {
+    const { data } = await http.post('/stores/ai-design/apply/', { seed, proposal_id })
     return data
   },
 

@@ -72,6 +72,7 @@ import TipHint from '../components/TipHint.vue'
 import LayoutEditor from '../components/LayoutEditor.vue'
 import DesignPreview from '../components/design/DesignPreview.vue'
 import StudioShell from '../components/studio/StudioShell.vue'
+import AiDesignView from './design/AiDesignView.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -298,6 +299,7 @@ const tabGroups = computed(() => {
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
     web.push(
+      { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Propuestas automáticas' },
       { id: 'pages', label: 'Plantillas', icon: 'layout-grid', hint: 'Qué páginas tiene tu web' },
       { id: 'design', label: 'Cómo se ve', icon: 'palette', hint: 'Textos, colores e imágenes' },
       { id: 'blocks', label: 'Bloques', icon: 'sliders', hint: 'Qué secciones van y su orden' },
@@ -320,6 +322,7 @@ const tabGroups = computed(() => {
 // (vista previa del beneficio: 'expired' = suscripción vencida, 'upgrade' =
 // falta el beneficio en el plan actual).
 const SECTION_BENEFITS = {
+  ai: ['has_ai_design'],
   services: ['has_services_site'],
   reviews: ['has_product_comments'],
   support: ['has_support_chat'],
@@ -328,6 +331,7 @@ const SECTION_BENEFITS = {
   tools: ['has_qr', 'has_flyers']
 }
 const LOCKED_FEATURES = {
+  ai: { icon: 'sparkles', title: 'Diseñá tu web con IA', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
@@ -346,7 +350,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'ai']) {
     map[id] = !hasAccess ? 'expired' : gated(id) ? 'upgrade' : null
   }
   return map
@@ -363,6 +367,7 @@ const navItems = computed(() => {
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
     { heading: 'Mi web' },
     { id: 'store', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
+    { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Tu web armada por vos en un minuto', locked: L.ai },
     { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
     { id: 'support', label: 'Ayuda y chat', icon: 'message-circle', hint: 'Hablar con el equipo', locked: L.support },
@@ -1676,6 +1681,18 @@ async function discardStudioDraft() {
   await nextTick()
   studioRef.value?.discardDraft()
   pushToast('Borrador descartado')
+}
+
+// Diseñar con IA: la vista aplica/publica/descarta sobre el borrador y avisa
+// acá para refrescar el estado de la tienda y mover al usuario si pidió seguir
+// a mano. El banner de resultado vive dentro de la vista.
+async function onAiApplied(payload) {
+  await store.refreshCustomization()
+  const action = payload?.action
+  pushToast(action === 'publish' ? 'Publicado: tu web ya muestra los cambios ✓'
+    : action === 'discard' ? 'Borrador descartado'
+    : 'Diseño aplicado al borrador')
+  if (payload?.section) sectionInner.value = payload.section
 }
 async function restoreStudioVersion(versionId) {
   studioActionBusy.value = `restore:${versionId}`
@@ -4166,6 +4183,10 @@ async function changePassword() {
         <div><strong>Servicios es un plan Estándar</strong><small>Sumala a tu web subiendo de plan: presupuestos orientativos y pedidos por WhatsApp.</small></div>
         <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
       </div>
+    </div>
+    <!-- ================= DISEÑAR CON IA ================= -->
+    <div v-if="seen.ai" v-show="section === 'ai'" :class="{ 'sec-on': section === 'ai' }">
+      <AiDesignView :plan="plan" @applied="onAiApplied" @navigate="section = $event" />
     </div>
     <!-- ================= DISEÑO WEB ================= -->
     <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">

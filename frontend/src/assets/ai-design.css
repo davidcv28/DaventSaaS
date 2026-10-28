@@ -1,0 +1,176 @@
+/* ===== Diseñar con IA (sección "ai" del panel) =====
+   Se importa solo desde AiDesignView.vue. Usa los tokens de styles.css y
+   dashboard.css (--card, --sunk, --line, --ink-2, --brand-*, --radius) para
+   que claro/oscuro y el resto del panel queden coherentes. Movimiento solo
+   con transform/opacity y anulado con prefers-reduced-motion. */
+
+.aid { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* Anuncio para lectores de pantalla (carga / resultado). */
+.aid-live {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.aid-ask { display: grid; gap: 16px; min-width: 0; }
+.aid-block { display: grid; gap: 14px; padding: 20px; min-width: 0; }
+.aid-block h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 17px; }
+.aid-step {
+  display: grid; place-items: center; flex: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--brand-50); color: var(--brand-700);
+  font-size: 13px; font-weight: 700; font-variant-numeric: var(--num);
+}
+[data-theme='dark'] .aid-step { background: rgba(99, 102, 241, .22); color: var(--brand-200); }
+.aid-hint { margin: -6px 0 0; color: var(--muted); font-size: 13px; }
+
+.aid-field { display: grid; gap: 8px; min-width: 0; }
+.aid-label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.aid-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.aid-chip {
+  min-height: 40px; padding: 8px 14px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); color: var(--ink-2);
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+.aid-chip:hover { border-color: var(--brand-400); color: var(--ink); }
+.aid-chip.on { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+.aid-chip:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+.aid-input {
+  width: 100%; min-height: 42px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--sunk); color: var(--ink); font: inherit; font-size: 14px;
+}
+.aid-input::placeholder { color: var(--muted); }
+.aid-input:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+
+.aid-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.aid-check {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card); cursor: pointer; font-size: 14px;
+  transition: border-color var(--dur) var(--ease-out);
+}
+.aid-check:hover { border-color: var(--brand-400); }
+.aid-check input { width: 18px; height: 18px; flex: none; accent-color: var(--brand-500); }
+.aid-check:focus-within { outline: var(--focus-ring); outline-offset: 2px; }
+
+.aid-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.aid-actions .btn { min-height: 44px; }
+
+/* Esqueleto de carga: nunca un spinner infinito. */
+.aid-loading { display: grid; gap: 14px; }
+.aid-loading-text { margin: 0; color: var(--muted); font-size: 13px; }
+.aid-skel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.aid-skel { position: relative; display: grid; gap: 12px; padding: 18px; overflow: hidden; }
+.aid-skel::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .18), transparent);
+  transform: translateX(-100%); animation: aid-shimmer 1.2s infinite;
+}
+[data-theme='dark'] .aid-skel::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .06), transparent); }
+.aid-skel-line { height: 12px; border-radius: 6px; background: var(--sunk); }
+.aid-skel-line.w40 { width: 40%; }
+.aid-skel-line.w60 { width: 60%; }
+.aid-skel-line.w90 { width: 90%; }
+.aid-skel-box { height: 140px; border-radius: 10px; background: var(--sunk); }
+@keyframes aid-shimmer { to { transform: translateX(100%); } }
+
+.aid-results { display: grid; gap: 16px; min-width: 0; }
+
+/* Banner de resultado: reusa .cta-banner del panel. */
+.aid-banner { align-items: center; }
+.aid-banner-text { display: grid; gap: 3px; min-width: 0; }
+.aid-banner-text span { font-size: 13px; opacity: .92; }
+.aid-banner-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.aid-banner-actions .btn { min-height: 44px; }
+.aid-note {
+  width: min(260px, 100%); min-height: 40px;
+  background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .38); color: #fff;
+}
+.aid-note::placeholder { color: rgba(255, 255, 255, .78); }
+.aid-note:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.aid-missing {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+  padding: 14px 16px; border: 1px dashed var(--line-strong); border-radius: var(--radius);
+  background: var(--card); color: var(--ink-2); font-size: 13px;
+}
+.aid-missing p { flex: 1 1 220px; margin: 0; }
+.aid-missing .btn { min-height: 40px; }
+
+.aid-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; min-width: 0; }
+.aid-card { display: flex; flex-direction: column; gap: 12px; padding: 18px; min-width: 0; }
+.aid-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aid-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.aid-card-head h2 { margin: 0 0 4px; font-size: 17px; overflow-wrap: anywhere; }
+.aid-card-head p { margin: 0; color: var(--muted); font-size: 13px; }
+.aid-badge {
+  flex: none; padding: 4px 9px; border-radius: 999px;
+  background: var(--brand-50); color: var(--brand-700);
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+[data-theme='dark'] .aid-badge { background: rgba(99, 102, 241, .2); color: var(--brand-200); }
+
+/* Mini preview: DesignPreview real, sin su chrome de panel. */
+.aid-mini { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--sunk); }
+.aid-mini .dsg-preview { padding: 10px; border: 0; background: transparent; box-shadow: none; }
+.aid-mini .dsg-preview-head, .aid-mini .dp-toolbar { display: none; }
+.aid-mini .dp-stage { max-height: 300px; min-height: 180px; }
+
+.aid-notes { display: grid; gap: 4px; margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+.aid-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.aid-card-actions .btn { flex: 1 1 140px; min-height: 44px; }
+.aid-applied { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--brand-600); font-size: 12px; font-weight: 600; }
+[data-theme='dark'] .aid-applied { color: var(--brand-200); }
+
+.aid-error {
+  margin: 0; padding: 10px 12px; border-radius: 10px;
+  background: rgba(220, 38, 38, .08); color: #b91c1c; font-size: 13px;
+}
+[data-theme='dark'] .aid-error { background: rgba(248, 113, 113, .12); color: #fca5a5; }
+.aid-error-box { display: flex; align-items: flex-start; gap: 14px; padding: 20px; }
+.aid-error-box h2 { margin: 0 0 6px; font-size: 17px; }
+.aid-error-box p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+/* Vista previa en grande */
+.aid-modal {
+  position: fixed; inset: 0; z-index: 95;
+  display: grid; place-items: center; padding: 16px;
+  background: rgba(8, 10, 24, .55);
+  animation: aid-fade .16s ease both;
+}
+.aid-modal-box {
+  display: flex; flex-direction: column; gap: 12px;
+  width: min(760px, 100%); max-height: calc(100dvh - 32px); padding: 18px;
+  border-radius: var(--radius-lg); background: var(--card);
+  box-shadow: 0 24px 60px -20px rgba(9, 12, 24, .55);
+}
+.aid-modal-box:focus-visible { outline: none; }
+.aid-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.aid-modal-head h2 { margin: 0 0 4px; font-size: 18px; overflow-wrap: anywhere; }
+.aid-modal-head p { margin: 0; color: var(--muted); font-size: 13px; }
+.aid-modal-body { min-height: 0; overflow: auto; }
+.aid-modal-body .dp-stage { max-height: none; }
+.aid-modal-foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.aid-modal-foot .btn { min-height: 44px; }
+@keyframes aid-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 640px) {
+  .aid-block { padding: 16px; }
+  .aid-grid, .aid-skel-grid, .aid-checks { grid-template-columns: 1fr; }
+  .aid-banner-actions, .aid-actions, .aid-modal-foot { width: 100%; }
+  .aid-banner-actions .btn, .aid-actions .btn, .aid-modal-foot .btn, .aid-card-actions .btn { flex: 1 1 100%; }
+  .aid-note { width: 100%; }
+  .aid-modal { padding: 0; }
+  .aid-modal-box { width: 100%; max-height: 100dvh; border-radius: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aid-chip, .aid-check { transition: none; }
+  .aid-skel::after { animation: none; display: none; }
+  .aid-modal { animation: none; }
+}
