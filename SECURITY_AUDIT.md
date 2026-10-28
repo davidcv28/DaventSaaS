@@ -902,3 +902,20 @@ Si algo falla, pegar acá la salida del paso rojo:
 | `SECRETS_HASH_KEY` sin rotación | Rotarla rompe `document_hash`/`phone_hash` ya emitidos | Documentado como no rotable en caliente (runbook §3.3) |
 | DAST no ejecutado | Requiere staging accesible y ventana | Runbook listo (§1-§2); ejecución pendiente del operador |
 | Primer run de CI | Sin acceso a Actions desde el entorno del agente | §17.3 |
+
+### 17.5 Ejecución completa de verificación (2026-10-28, local)
+
+| Comando | Resultado |
+|---------|-----------|
+| `manage.py test` (suite completa) | **509 tests, OK** (238 s) |
+| `manage.py test AdminApp.domains.users.test_headers` | 3 OK — CSP + `nosniff` + `X-Frame-Options` + `Referrer-Policy` en HTML de Django; JSON sin CSP; CSP previa no se pisa |
+| `manage.py test AdminApp.domains.chat.tests.ChatAttachmentTests` | 7 OK — incluye >4 MB, `content_type` mentiroso y PNG truncado con firma válida |
+| `ruff check .` | limpio |
+| `bandit -r ... -ll` | 0 HIGH / 0 MEDIUM (38 low) |
+| `pip-audit -r requirements.txt` | 0 vulnerabilidades |
+| `npm audit --omit=dev --audit-level=high` | 0 vulnerabilidades |
+| `DEBUG=False manage.py check --deploy` | 0 errores de código. Solo `payments.E001` y `users.E002` por secretos ausentes en el `.env` **local** (en producción los exige el preflight) + `security.W009` (SECRET_KEY de dev) y `security.W021` (HSTS preload, decisión de dominio) |
+
+No ejecutables en este entorno: `trivy` (binario ausente y daemon de Docker
+apagado) y `gitleaks` (no instalado) — ambos corren en CI y en
+`security-schedule.yml`. El DAST sigue pendiente de staging (§17.4).

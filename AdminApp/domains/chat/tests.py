@@ -323,6 +323,29 @@ class ChatAttachmentTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(ChatMessage.objects.exists())
 
+    def test_oversize_image_rejected_before_reading(self):
+        #4 MB + 1: se corta por tamaño antes de decodificar.
+        big         =   SimpleUploadedFile('grande.png', b'\x89PNG\r\n\x1a\n' + b'\0' * (4 * 1024 * 1024), content_type = 'image/png')
+        response    =   _client(self.user).post(CHAT_SEND_URL, {'image': big}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('MB', str(response.data['image'][0]))
+        self.assertFalse(ChatMessage.objects.exists())
+
+    def test_declared_image_without_real_signature_rejected(self):
+        #content_type mentiroso: el cuerpo no es una imagen -> firma real falla.
+        fake        =   SimpleUploadedFile('foto.png', b'<script>alert(1)</script>', content_type = 'image/png')
+        response    =   _client(self.user).post(CHAT_SEND_URL, {'image': fake}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(ChatMessage.objects.exists())
+
+    def test_truncated_image_with_valid_header_rejected_by_decoder(self):
+        #Firma PNG válida + cuerpo corrupto: la revalidación con Pillow es la
+        #que corta (no alcanza con mirar los primeros bytes).
+        truncated   =   SimpleUploadedFile('rota.png', b'\x89PNG\r\n\x1a\n' + b'garbage', content_type = 'image/png')
+        response    =   _client(self.user).post(CHAT_SEND_URL, {'image': truncated}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(ChatMessage.objects.exists())
+
     def test_text_plus_image_same_message(self):
         response    =   _client(self.user).post(
             CHAT_SEND_URL, {'body': 'mirá esta captura', 'image': self._png()}, format = 'multipart',
