@@ -1,8 +1,8 @@
 <script setup>
-// Panel "Estilos" — flujo guiado en 3 niveles (mobile-first):
-//   1 · Elegí un estilo   -> galería de presets (protagonista)
-//   2 · Ajustes rápidos   -> tema, acento, fuente y logo (lo más tocado)
-//   3 · Personalización   -> DesignLookTab completo, colapsado por defecto
+// Panel "Estilos" — un solo camino: elegir el look mirando.
+//   · Elegí el estilo de tu web  -> galería visual (protagonista)
+//   · Ajustá el estilo elegido   -> modo, color de botones, letra y logo
+//   · Más ajustes de diseño      -> DesignLookTab completo, plegado
 // Sin lógica de datos propia: escribe los mismos campos de `form` que
 // DesignLookTab y dispara los mismos eventos (ring/navigate/set-viewer).
 // Cada control vive en un PanelField con data-focus del contrato, así el
@@ -35,17 +35,14 @@ const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
 const RING_MAP = { logo: 'chrome.nav', accent: 'buttons', font: 'typo', cover: 'hero' }
 const onLookRing = (key) => emit('ring', RING_MAP[key] || key)
 
-// ---------------------------------------------------------------------------
-// Nivel 3: personalización avanzada (progresiva — arranca plegada)
-// ---------------------------------------------------------------------------
 const advOpen = ref(false)
 
 // ---------------------------------------------------------------------------
-// Nivel 2 — Tema claro/oscuro (persiste + cambia el modo del visor)
+// Claro u oscuro: cambia el juego de colores del estilo sin re-elegirlo.
 // ---------------------------------------------------------------------------
 const themeOpts = [
-  { id: 'light', label: 'Claro' },
-  { id: 'dark', label: 'Oscuro' }
+  { id: 'light', label: 'Claro', icon: 'sun' },
+  { id: 'dark', label: 'Oscuro', icon: 'moon' }
 ]
 function pickTheme(id) {
   props.form.theme = id
@@ -53,7 +50,7 @@ function pickTheme(id) {
 }
 
 // ---------------------------------------------------------------------------
-// Nivel 2 — Acento: los 8 presets del catálogo + color propio (Premium).
+// Color de los botones: los 8 presets del catálogo + color propio (Premium).
 // Misma escritura que DesignLookTab: accent slug o accent_custom hex.
 // ---------------------------------------------------------------------------
 const accents = STORE_ACCENTS
@@ -70,22 +67,21 @@ function setCustomAccent(hex) {
 }
 
 // ---------------------------------------------------------------------------
-// Nivel 2 — Tipografía: chips del catálogo popular en carril con snap.
-// Si quedó guardada una fuente fuera del picker (preset/otra época) se
-// muestra al principio — mismo criterio que el grupo "Guardada" del LookTab.
+// Letra: catálogo popular. Una fuente guardada fuera del picker se muestra
+// igual, al principio — mismo criterio que el grupo "Guardada" del LookTab.
 // ---------------------------------------------------------------------------
 const fontKeys = computed(() => {
   const saved = props.form.name_font
   return saved && !STORE_FONT_PICKER.includes(saved) ? [saved, ...STORE_FONT_PICKER] : STORE_FONT_PICKER
 })
 function pickFont(key) {
-  if (!advanced.value) return
+  if (!advanced.value || !key) return
   ensureStoreFont(key)
   props.form.name_font = key
 }
 
 // ---------------------------------------------------------------------------
-// Nivel 2 — Logo: misma subida que DesignLookTab (validación + store).
+// Logo: misma subida que DesignLookTab (validación + store).
 // ---------------------------------------------------------------------------
 const logoInput = ref(null)
 const logoBusy = ref(false)
@@ -116,21 +112,18 @@ async function onRemoveLogo() {
 
 onMounted(() => {
   ensureStoreFont(props.form.name_font)
-  // El carril de fuentes muestra sus muestras reales: una sola hoja css2.
+  // La muestra "Aa" y la lista se ven con su letra real: una sola hoja css2.
   setTimeout(ensureStoreFontPicker, 400)
 })
 </script>
 
 <template>
-  <div class="stl-flow">
-    <!-- ============ Nivel 1 · Elegí un estilo ============ -->
-    <section class="stl" aria-labelledby="stl-h-presets">
-      <header class="stl-head">
-        <span class="stl-n" aria-hidden="true">1</span>
-        <div class="stl-head-tx">
-          <h3 id="stl-h-presets">Elegí un estilo</h3>
-          <p>Probá en vivo; nada se guarda hasta Guardar.</p>
-        </div>
+  <div class="est">
+    <!-- ============ Elegí el estilo de tu web ============ -->
+    <section class="est-pick" aria-labelledby="est-h">
+      <header class="est-head">
+        <h3 id="est-h">Elegí el estilo de tu web</h3>
+        <p>Tocá uno y mirá la vista previa.</p>
       </header>
       <PresetGallery
         :benefits="benefits"
@@ -139,103 +132,99 @@ onMounted(() => {
       />
     </section>
 
-    <!-- ============ Nivel 2 · Ajustes rápidos ============ -->
-    <section class="stl" aria-labelledby="stl-h-quick">
-      <header class="stl-head">
-        <span class="stl-n" aria-hidden="true">2</span>
-        <div class="stl-head-tx">
-          <h3 id="stl-h-quick">Ajustes rápidos</h3>
-          <p>Lo esencial sobre el estilo elegido: tema, acento, fuente y logo.</p>
-        </div>
+    <!-- ============ Ajustá el estilo elegido ============ -->
+    <section class="est-tune" aria-labelledby="est-h-tune">
+      <header class="est-tune-head">
+        <h3 id="est-h-tune">Ajustá el estilo elegido</h3>
+        <p>Cambios finos: no reemplazan el estilo, lo afinan.</p>
       </header>
 
-      <div class="stl-quick">
-        <PanelField label="Tema" focus="page" need="none" :benefits="benefits">
-          <div class="stp-seg" role="group" aria-label="Tema claro u oscuro de la página">
-            <button
-              v-for="o in themeOpts" :key="o.id" type="button"
-              class="stp-opt" :class="{ active: form.theme === o.id }"
-              :aria-pressed="form.theme === o.id" @click="pickTheme(o.id)"
-            >{{ o.label }}</button>
-          </div>
-        </PanelField>
+      <PanelField label="Claro u oscuro" focus="page" need="none" :benefits="benefits">
+        <div class="stp-seg est-seg" role="group" aria-label="Modo de color de la web">
+          <button
+            v-for="o in themeOpts" :key="o.id" type="button"
+            class="stp-opt" :class="{ active: form.theme === o.id }"
+            :aria-pressed="form.theme === o.id" @click="pickTheme(o.id)"
+          >
+            <AppIcon :name="o.icon" :size="14" aria-hidden="true" /> {{ o.label }}
+          </button>
+        </div>
+      </PanelField>
 
-        <PanelField label="Logo" focus="chrome.nav" need="none" :benefits="benefits">
-          <div class="stl-logo">
-            <span class="stl-logo-thumb">
-              <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu tienda" />
-              <AppIcon v-else name="image" :size="20" aria-hidden="true" />
-            </span>
-            <div class="stl-logo-acts">
-              <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir logo" @change="onLogoPicked" />
-              <button type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="logoInput?.click()">
-                <span v-if="logoBusy" class="spinner" aria-hidden="true"></span>
-                <AppIcon v-else name="upload" :size="15" aria-hidden="true" />
-                {{ currentLogo ? 'Cambiar' : 'Subir' }}
-              </button>
-              <button v-if="currentLogo" type="button" class="icon-btn" :disabled="logoBusy" aria-label="Quitar el logo" @click="onRemoveLogo">
-                <AppIcon name="x" :size="15" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-          <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
-        </PanelField>
+      <PanelField
+        label="Color de los botones" focus="buttons" need="advanced" :benefits="benefits"
+        hint="Se mezcla con los colores de arriba: tiñe botones, enlaces y detalles."
+      >
+        <div class="est-accents" role="group" aria-label="Color de los botones">
+          <button
+            v-for="(a, key) in accents" :key="key" type="button"
+            class="est-swatch" :class="{ active: form.accent === key && !form.accent_custom }"
+            :style="{ '--sw': a.hex }" :title="a.label"
+            :aria-label="`Color ${a.label}`" :aria-pressed="form.accent === key && !form.accent_custom"
+            @click="pickAccent(key)"
+          ><AppIcon v-if="form.accent === key && !form.accent_custom" name="check" :size="15" :stroke="2.6" aria-hidden="true" /></button>
+          <label class="est-swatch est-swatch-pick" :class="{ active: form.accent_custom }" :style="{ '--sw': accentMeta.hex }" title="Elegir otro color">
+            <input type="color" :value="accentMeta.hex" aria-label="Elegir otro color de botones" @input="setCustomAccent($event.target.value)" />
+            <AppIcon name="pipette" :size="16" aria-hidden="true" />
+          </label>
+        </div>
+      </PanelField>
 
-        <PanelField class="stl-wide" label="Acento" focus="buttons" need="advanced" :benefits="benefits" hint="Color de botones, enlaces y detalles.">
-          <div class="stl-accents" role="group" aria-label="Color de acento">
-            <button
-              v-for="(a, key) in accents" :key="key" type="button"
-              class="stl-swatch" :class="{ active: form.accent === key && !form.accent_custom }"
-              :style="{ '--sw': a.hex }" :title="a.label"
-              :aria-label="`Acento ${a.label}`" :aria-pressed="form.accent === key && !form.accent_custom"
-              @click="pickAccent(key)"
-            ><AppIcon v-if="form.accent === key && !form.accent_custom" name="check" :size="15" :stroke="2.5" aria-hidden="true" /></button>
-            <label class="stl-swatch stl-swatch-pick" :class="{ active: form.accent_custom }" :style="{ '--sw': accentMeta.hex }" title="Color propio">
-              <input type="color" :value="accentMeta.hex" aria-label="Elegir un color de acento propio" @input="setCustomAccent($event.target.value)" />
-              <AppIcon name="pipette" :size="16" aria-hidden="true" />
-            </label>
-          </div>
-        </PanelField>
+      <PanelField label="Letra de tu web" focus="typo" need="advanced" :benefits="benefits">
+        <div class="est-font">
+          <span class="est-font-aa" :style="{ fontFamily: storeFontFamily(form.name_font) }" aria-hidden="true">Aa</span>
+          <select
+            class="stp-select" :value="form.name_font" aria-label="Letra de tu web"
+            @change="pickFont($event.target.value)"
+          >
+            <option v-for="key in fontKeys" :key="key" :value="key">{{ STORE_FONTS[key]?.label || key }}</option>
+          </select>
+        </div>
+      </PanelField>
 
-        <PanelField class="stl-wide" label="Tipografía" focus="typo" need="advanced" :benefits="benefits" hint="Se aplica a todo el texto de tu página.">
-          <div class="stl-fonts" role="group" aria-label="Fuente de tu página">
-            <button
-              v-for="key in fontKeys" :key="key" type="button"
-              class="stl-font" :class="{ active: form.name_font === key }"
-              :aria-pressed="form.name_font === key" :title="STORE_FONTS[key]?.label"
-              @click="pickFont(key)"
-            >
-              <span class="stl-font-aa" :style="{ fontFamily: storeFontFamily(key) }" aria-hidden="true">Aa</span>
-              <span class="stl-font-n">{{ STORE_FONTS[key]?.label }}</span>
+      <PanelField label="Logo" focus="chrome.nav" need="none" :benefits="benefits">
+        <div class="est-logo">
+          <span class="est-logo-thumb">
+            <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu tienda" />
+            <AppIcon v-else name="image" :size="18" aria-hidden="true" />
+          </span>
+          <div class="est-logo-acts">
+            <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir logo" @change="onLogoPicked" />
+            <button type="button" class="btn ghost btn-auto est-logo-btn" :disabled="logoBusy" @click="logoInput?.click()">
+              <span v-if="logoBusy" class="spinner" aria-hidden="true"></span>
+              <AppIcon v-else name="upload" :size="14" aria-hidden="true" />
+              {{ currentLogo ? 'Cambiar' : 'Subir' }}
+            </button>
+            <button v-if="currentLogo" type="button" class="icon-btn est-logo-x" :disabled="logoBusy" aria-label="Quitar el logo" @click="onRemoveLogo">
+              <AppIcon name="x" :size="15" aria-hidden="true" />
             </button>
           </div>
-        </PanelField>
-      </div>
+        </div>
+        <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
+      </PanelField>
 
       <PanelLock
         v-if="!advanced"
-        text="El acento y la tipografía vienen con el Plan premium."
+        text="El color de los botones y la letra vienen con el Plan premium."
         @plans="emit('navigate', 'plans')"
       />
     </section>
 
-    <!-- ============ Nivel 3 · Personalización avanzada ============ -->
-    <section class="stl" :class="{ 'stl-open': advOpen }">
-      <h3 class="stl-adv-h">
-        <button
-          type="button" class="stl-adv-btn" data-focus="hero"
-          :aria-expanded="advOpen" aria-controls="stl-adv-body"
-          @click="advOpen = !advOpen"
-        >
-          <span class="stl-n" aria-hidden="true">3</span>
-          <span class="stl-adv-tx">
-            <strong>Personalización avanzada</strong>
-            <small>Portada, tamaños, contraste y diseño en detalle.</small>
-          </span>
-          <AppIcon class="stl-chev" name="chevron-down" :size="17" aria-hidden="true" />
-        </button>
-      </h3>
-      <div v-show="advOpen" id="stl-adv-body" class="stl-adv-body">
+    <!-- ============ Más ajustes de diseño (plegado) ============ -->
+    <section class="est-more" :class="{ 'is-open': advOpen }">
+      <button
+        type="button" class="est-more-btn" data-focus="hero"
+        :aria-expanded="advOpen" aria-controls="est-more-body"
+        @click="advOpen = !advOpen"
+      >
+        <AppIcon class="est-more-ico" name="sliders" :size="16" aria-hidden="true" />
+        <span class="est-more-tx">
+          <strong>Más ajustes de diseño</strong>
+          <small>Portada, tamaños, contraste y botones.</small>
+        </span>
+        <AppIcon class="est-chev" name="chevron-down" :size="17" aria-hidden="true" />
+      </button>
+      <div v-show="advOpen" id="est-more-body" class="est-more-body">
         <DesignLookTab
           :form="form" :benefits="benefits" :shop-name="shopName"
           @go-plans="emit('navigate', 'plans')" @ring="onLookRing"
@@ -244,3 +233,77 @@ onMounted(() => {
     </section>
   </div>
 </template>
+
+<style scoped>
+.est { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ===== Encabezado del camino principal ===== */
+.est-pick { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.est-head h3 { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+.est-head p { margin: 2px 0 0; font-size: 12px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
+
+/* ===== Ajustes subordinados al estilo ===== */
+.est-tune {
+  display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  padding-top: 12px; border-top: 1px solid var(--line-soft);
+}
+.est-tune-head h3 { margin: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
+.est-tune-head p { margin: 2px 0 0; font-size: 11.5px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
+.est-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Color de botones: grilla completa, sin scroll. */
+.est-accents { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; min-width: 0; }
+.est-swatch {
+  position: relative; display: grid; place-items: center; justify-self: center;
+  width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--sw); color: #fff; cursor: pointer; transition: box-shadow .14s;
+}
+.est-swatch.active { outline: 2px solid var(--ink); outline-offset: 2px; }
+.est-swatch:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.est-swatch-pick { border: 1px dashed rgba(255, 255, 255, .55); }
+.est-swatch-pick input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.est-swatch-pick .icon { pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); }
+
+/* Letra: muestra real + lista, en una sola línea. */
+.est-font { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.est-font-aa {
+  flex: none; display: grid; place-items: center; width: 44px; height: 44px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface);
+  color: var(--ink); font-size: 20px; line-height: 1;
+}
+.est-font .stp-select { flex: 1; min-width: 0; }
+
+/* Logo: miniatura + acciones en una línea. */
+.est-logo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.est-logo-thumb {
+  flex: none; display: grid; place-items: center; width: 44px; height: 44px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface);
+  color: var(--muted); overflow: hidden;
+}
+.est-logo-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.est-logo-acts { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.est-logo-btn { min-height: 44px; padding: 8px 12px; font-size: 12.5px; }
+.est-logo-x { flex: none; width: 44px; height: 44px; }
+.est-logo-x:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+
+/* ===== Más ajustes (secundario, plegado) ===== */
+.est-more { padding-top: 12px; border-top: 1px solid var(--line-soft); min-width: 0; }
+.est-more-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; min-width: 0;
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); color: var(--ink-2); font: inherit; text-align: left; cursor: pointer;
+}
+.est-more-btn:hover { border-color: var(--brand-500); }
+.est-more-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.est-more-ico { flex: none; color: var(--muted); }
+.est-more-tx { flex: 1; display: grid; gap: 1px; min-width: 0; }
+.est-more-tx strong { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.est-more-tx small { font-size: 11px; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
+.est-chev { flex: none; color: var(--muted); transition: transform .18s ease; }
+.est-more.is-open .est-chev { transform: rotate(180deg); }
+.est-more-body { display: grid; gap: 12px; min-width: 0; padding-top: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .est-swatch, .est-chev { transition: none; }
+}
+</style>

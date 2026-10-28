@@ -57,6 +57,7 @@
     // Stub de 'studioPresets': misma API que StudioShell (ensayo deshacible).
     const trial = ref(null)
     const tryingId = computed(() => trial.value?.id || null)
+    const tryingPalette = computed(() => trial.value?.palette || 'original')
     const snap = () => JSON.parse(JSON.stringify(form))
     function applyPreset(p, part = 'all') {
       const t = p.theme || {}
@@ -77,6 +78,11 @@
       presets: STUDIO_PRESETS,
       tryingId,
       tryIt: (p) => { if (!trial.value) trial.value = { id: p.id, snap: snap() }; else trial.value = { id: p.id }; applyPreset(p) },
+      tryPalette: (p, paletteId) => {
+        if (!trial.value) trial.value = { id: p.id, palette: paletteId, snap: snap() }
+        else trial.value = { ...trial.value, id: p.id, palette: paletteId }
+      },
+      tryingPalette,
       apply: applyPreset,
       applyAndSave: (p) => { trial.value = null; applyPreset(p) },
       revertTrial: () => { if (trial.value?.snap) Object.assign(form, trial.value.snap); trial.value = null },
