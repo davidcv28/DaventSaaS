@@ -319,7 +319,7 @@ html.sp-lock body { overflow: hidden; overscroll-behavior: none; }
 .sp-captcha-row .sp-input { flex: 1; }
 .sp-captcha-row .sp-icon-btn { width: 42px; height: 42px; flex: none; border-radius: 10px; }
 /* Honeypot antispam: fuera de pantalla, los bots lo completan igual. */
-.sp-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.sp-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; visibility: hidden; }
 .sp-form-error { margin: 0; font-size: 13.5px; color: #dc2626; }
 .sp-form-ok { margin: 0; font-size: 13.5px; font-weight: 600; color: #047857; }
 .sp-form .sp-btn { justify-self: start; }
@@ -1545,7 +1545,7 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='lookbook'] .sp-hero-band.has-cover .sp-lb-dateline i { background: rgba(255, 255, 255, .3); }
 .store-page[data-store-template='cobre'] .sp-hero-band.has-cover .sp-cb-kicker,
 .store-page[data-store-template='minimal'] .sp-hero-band.has-cover .sp-mn-kicker,
-.store-page[data-store-template='boutique'] .sp-hero-band.has-cover .sp-bt-kicker { color: var(--store-accent); }
+.store-page[data-store-template='boutique'] .sp-hero-band.has-cover .sp-bt-kicker { color: rgba(255, 255, 255, .85); }
 /* CTAs: el sólido de cada diseño pasa a placa clara; los fantasmas y los
    enlaces subrayados se iluminan; el compartir vuelve al vidrio. */
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-ctas .sp-btn { color: #fff; border-color: rgba(255, 255, 255, .75); }
@@ -4028,7 +4028,7 @@ html { scroll-behavior: smooth; }
   color: var(--sp-ink);
 }
 .sp-shop-viewall {
-  display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px;
+  display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 15px;
   border: 1px solid var(--sp-line); border-radius: 9px;
   background: var(--sp-card-solid); color: var(--sp-ink-2);
   font-size: 12.5px; font-weight: 700; text-decoration: none; white-space: nowrap;
@@ -5217,7 +5217,7 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='cobre'] .sp-foot-brand span,
 .store-page[data-store-template='cobre'] .sp-foot-copy { color: var(--cb-soft); }
 .store-page[data-store-template='cobre'] .sp-foot-heading {
-  color: var(--store-accent); font-size: 12px; font-weight: 700;
+  color: color-mix(in srgb, var(--store-accent) 45%, var(--cb-stone, #f5f2ea)); font-size: 12px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase;
 }
 .store-page[data-store-template='cobre'] .sp-foot-col a {
@@ -6197,7 +6197,7 @@ html { scroll-behavior: smooth; }
   color: color-mix(in srgb, var(--mn-paper) 62%, transparent);
 }
 .store-page[data-store-template='minimal'] .sp-foot-heading {
-  color: var(--store-accent); font-size: 11px; font-weight: 700;
+  color: color-mix(in srgb, var(--store-accent) 45%, var(--mn-paper, #f5f2ea)); font-size: 11px; font-weight: 700;
   letter-spacing: .14em; text-transform: uppercase;
 }
 .store-page[data-store-template='minimal'] .sp-foot-col a {
