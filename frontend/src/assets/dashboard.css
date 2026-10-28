@@ -276,25 +276,47 @@
   .pick-preview-info { flex-basis: 180px; }
 }
 
-/* Barra de guardado del editor de diseño: sticky al pie de .dsg-main —
-   flota sobre el borde inferior mientras se scrollea el formulario y se
-   asienta al final, sin tener que llegar al aside. Solo <=1100px (en
-   desktop el botón vive en la vista previa fija). z-index 40: por debajo
-   de la tab bar (70) y del chat/SupportBot (90+). */
-.dsg-savebar { display: none; }
+/* Barra de guardado del editor de diseño: sticky al pie de .dsg-main en
+   todos los anchos (indicador de cambios, Descartar, Guardar y, <=1100px,
+   el botón de la vista previa). z-index 40: por debajo de la hoja de la
+   vista previa (60), la tab bar (70) y del chat/SupportBot (90+). */
+.dsg-savebar {
+  position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 40; margin-top: 2px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 16px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px) saturate(1.25); -webkit-backdrop-filter: blur(12px) saturate(1.25);
+  box-shadow: 0 10px 30px -10px rgba(9, 12, 24, .35);
+}
+.dsg-savebar.dirty { border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
+.dsg-state { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 150px; min-width: 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+.dsg-state span { min-width: 0; overflow-wrap: anywhere; }
+.dsg-state .icon { flex: none; color: var(--ok); }
+.dsg-dot { position: relative; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }
+.dsg-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--warn); animation: dsg-dot 1.6s ease-out infinite; }
+@keyframes dsg-dot { 0% { opacity: .6; transform: scale(1); } 100% { opacity: 0; transform: scale(2.4); } }
+.dsg-state.dirty { color: var(--ink); }
+.dsg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; }
+.dsg-actions .btn { min-height: 44px; flex: 1 1 auto; min-width: 0; width: auto; }
+.dsg-actions .btn:last-child { flex-grow: 2; }
+.dsg-preview-open { display: none !important; }
 @media (max-width: 1100px) {
-  .dsg-savebar {
-    display: block; position: sticky; bottom: 14px; z-index: 40; margin-top: 2px;
-    padding: 10px; border: 1px solid var(--line); border-radius: 16px;
-    background: color-mix(in srgb, var(--card) 86%, transparent);
-    backdrop-filter: blur(12px) saturate(1.25); -webkit-backdrop-filter: blur(12px) saturate(1.25);
-    box-shadow: 0 10px 30px -10px rgba(9, 12, 24, .35);
-  }
+  .dsg-preview-open { display: inline-flex !important; flex: 0 1 auto; min-width: 0; width: auto; min-height: 44px; }
+  .dsg-actions { flex: 1 1 100%; }
 }
 @media (max-width: 860px) {
-  /* Despeja la tab bar inferior (mismo offset que .dock-fab). */
   .dsg-savebar { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
+@media (prefers-reduced-motion: reduce) {
+  .dsg-dot::after { animation: none; opacity: 0; }
+}
+.dsg-confirm { position: fixed; inset: 0; z-index: 99; display: grid; place-items: center; padding: 16px; background: rgba(9, 12, 24, .52); animation: dsg-fade .16s ease-out both; }
+.dsg-confirm-box { display: grid; gap: 10px; width: min(420px, 100%); max-height: 90dvh; overflow: auto; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); box-shadow: 0 24px 60px -18px rgba(9, 12, 24, .55); }
+.dsg-confirm-box h3 { margin: 0; overflow-wrap: anywhere; }
+.dsg-confirm-box p { margin: 0; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.dsg-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.dsg-confirm-actions .btn { flex: 1 1 140px; min-height: 44px; width: auto; }
+@media (prefers-reduced-motion: reduce) { .dsg-confirm { animation: none; } }
 
 /* Resumen */
 .stat.t-indigo .stat-icon, .qa-icon.t-indigo { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useBillingStore } from '../stores/billing.store.js'
 import { usePaymentsStore } from '../stores/payments.store.js'
@@ -12,19 +12,17 @@ import { useThemeStore } from '../stores/theme.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl,
-  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, storeThemeVars, storeFontFamily,
-  STORE_FONTS, STORE_FONT_GROUPS, STORE_FONT_PICKER,
-  STORE_TEMPLATE_FAMILIES,
+  CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
   allowedTemplatesFor, resolveStoreTemplate,
   SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
   siteTemplatesLimit, allowedSiteTemplatesFor, normalizeSiteTemplates, resolveSiteTemplates,
-  ensureStoreFont, ensureStoreFontPicker, NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX,
+  ensureStoreFont, ensureStoreFontPicker,
   validateDisplayName, validateHeadline, validateDescription,
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
   validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
   normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
-  validateLogoFile, validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES, formatStorageMB,
+  validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
   MARKETING_LIMITS, SERVICE_ICONS, serviceHue,
   validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl
@@ -72,6 +70,8 @@ import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
 import LayoutEditor from '../components/LayoutEditor.vue'
+import DesignLookTab from '../components/design/DesignLookTab.vue'
+import DesignPreview from '../components/design/DesignPreview.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -93,7 +93,13 @@ const section = computed({
     // Las secciones bloqueadas no navegan: abren la vista previa del
     // beneficio (también los `section = 'x'` internos pasan por acá).
     if (navLocks.value?.[id]) { openLocked(id); return }
-    sectionInner.value = validIds.value.has(id) ? id : 'overview'
+    const next = validIds.value.has(id) ? id : 'overview'
+    if (sectionInner.value === 'design' && next !== 'design' && designDirty.value) {
+      leaveGuard.target = next
+      leaveGuard.open = true
+      return
+    }
+    sectionInner.value = next
   }
 })
 const busyPlan = ref(null)
@@ -1275,44 +1281,6 @@ const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_prod
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const designPreviewVars = computed(() => storeThemeVars(designForm))
-const storeAccents = STORE_ACCENTS
-const storeThemes = STORE_THEMES
-// Diseños de la web (STORE_TEMPLATES): cada plantilla declara su tier
-// ('base' | 'plus' | 'advanced'). La vista previa usa el mismo fallback
-// que la web pública: 'classic' si el diseño queda fuera del plan.
-const storeTemplates = STORE_TEMPLATES
-// Familias por categoría (STORE_TEMPLATE_FAMILIES): la categoría se elige
-// en un select y los estilos disponibles en otro — elegir una categoría
-// aplica su primera variante permitida por el plan. La miniatura es una
-// sola (.tpl-thumb[data-tpl]) y refleja el estilo aplicado.
-const templateFamilies = STORE_TEMPLATE_FAMILIES
-const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
-const familyTier = (f) => (f.templates.some((k) => STORE_TEMPLATES[k]?.tier !== 'advanced') ? 'Desde Estándar' : 'Premium')
-// Categoría vista en el select: sigue al diseño aplicado (alta de tienda,
-// corrección del plan) — salvo que la categoría elegida ya lo contenga:
-// 'lookbook' vive en 'general' y 'lifestyle' y queda donde lo eligieron.
-const selectedFamilyKey = ref('general')
-const selectedFamily = computed(() => templateFamilies.find((f) => f.key === selectedFamilyKey.value) || templateFamilies[0])
-const selectedFamilyAllowed = computed(() => selectedFamily.value.templates.filter((k) => allowedTemplates.value.includes(k)))
-watch(() => designForm.template, (key) => {
-  if (selectedFamily.value.templates.includes(key)) return
-  const f = templateFamilies.find((f) => f.templates.includes(key))
-  if (f) selectedFamilyKey.value = f.key
-}, { immediate: true })
-function onFamilyPick() {
-  // La base de cada familia es 'plus'; si no está permitida, probamos con
-  // cualquier variante que el plan sí habilite (fallback defensivo).
-  const first = selectedFamilyAllowed.value[0]
-  if (first) designForm.template = first
-}
-function stepTemplate(dir) {
-  // Las flechas de la miniatura recorren los estilos permitidos de la
-  // categoría elegida, con wrap-around.
-  const list = selectedFamilyAllowed.value
-  if (list.length < 2) return
-  const i = list.indexOf(designForm.template)
-  designForm.template = list[(i + dir + list.length) % list.length]
-}
 // Plantillas elegibles por nivel de plan (espejo del backend): Básico
 // elige base, Estándar suma 'plus' y Premium todo el catálogo.
 const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
@@ -1322,40 +1290,6 @@ const designTemplate = computed(() => resolveStoreTemplate(designForm.template, 
 watch(allowedTemplates, (list) => {
   if (!list.includes(designForm.template)) designForm.template = list[0] || 'classic'
 })
-function templatePlanLabel(key) {
-  const tier = STORE_TEMPLATES[key]?.tier
-  return tier === 'plus' ? 'Estándar' : tier === 'advanced' ? 'Premium' : ''
-}
-function templateTierLabel(key) {
-  const tier = STORE_TEMPLATES[key]?.tier
-  return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Todos los planes'
-}
-function pickAccent(key) {
-  if (canDesignAdvanced.value) designForm.accent = key
-}
-
-// Fuente de la web (premium): el select agrupa las populares por estilo
-// (optgroups). Si la guardada no está en el picker — retirada de la
-// oferta o display de plantilla — se agrega un grupo "Guardada" para no
-// perder la selección ni romper la vista previa.
-const storeFonts = STORE_FONTS
-const fontGroups = computed(() => {
-  const groups = STORE_FONT_GROUPS.slice()
-  const saved = designForm.name_font
-  if (saved && !STORE_FONT_PICKER.includes(saved) && STORE_FONTS[saved]) {
-    groups.push({ label: 'Guardada', keys: [saved] })
-  }
-  return groups
-})
-const fontStepList = computed(() => fontGroups.value.flatMap((g) => g.keys))
-function stepFont(dir) {
-  if (!canDesignAdvanced.value) return
-  const list = fontStepList.value
-  if (!list.length) return
-  const i = list.indexOf(designForm.name_font)
-  designForm.name_font = list[(i + dir + list.length) % list.length]
-}
-const fontPreviewStyle = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
 // Si cambia la fuente elegida, traerla en el momento (cubre una "Guardada"
 // fuera del picker, que el link colectivo no incluye).
 watch(() => designForm.name_font, (f) => ensureStoreFont(f))
@@ -1654,6 +1588,62 @@ async function saveExtras() {
   companyBusy.value = false
 }
 
+// Cambios sin guardar del editor de diseño: solo los campos que viajan en
+// saveDesign (las demás secciones guardan por su cuenta).
+const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location']
+const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
+const designDirty = computed(() => {
+  if (!store.store) return false
+  const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
+  return DESIGN_FIELDS.some((k) => {
+    if (!canDesignAdvanced.value && ['name_font', 'name_font_size', 'accent'].includes(k)) return false
+    return designFieldValue(designForm[k]) !== designFieldValue(base[k])
+  })
+})
+function discardDesign() {
+  const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
+  DESIGN_FIELDS.forEach((k) => { designForm[k] = base[k] })
+  Object.keys(designTouched).forEach((k) => { delete designTouched[k] })
+  ensureStoreFont(designForm.name_font)
+}
+const lookRing = ref(null)
+const previewSheet = ref(false)
+const previewBottom = ref(80)
+const dsgBar = ref(null)
+const leaveStay = ref(null)
+function measureSheet() {
+  const r = dsgBar.value?.getBoundingClientRect()
+  previewBottom.value = r ? Math.max(0, Math.round(window.innerHeight - r.top + 8)) : 80
+}
+watch(previewSheet, (on) => { if (on) nextTick(measureSheet) })
+const leaveGuard = reactive({ open: false, target: null, route: null })
+watch(() => leaveGuard.open, (on) => { if (on) nextTick(() => leaveStay.value?.focus()) })
+function onBeforeUnload(e) {
+  if (designDirty.value) { e.preventDefault(); e.returnValue = '' }
+}
+function confirmLeave(discard) {
+  const { target, route: to } = leaveGuard
+  leaveGuard.open = false
+  leaveGuard.target = null
+  leaveGuard.route = null
+  if (!discard) return
+  discardDesign()
+  if (to) router.push(to)
+  else if (target) sectionInner.value = target
+}
+onBeforeRouteLeave((to) => {
+  if (!designDirty.value) return true
+  leaveGuard.route = to
+  leaveGuard.open = true
+  return false
+})
+window.addEventListener('beforeunload', onBeforeUnload)
+window.addEventListener('resize', measureSheet)
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', onBeforeUnload)
+  window.removeEventListener('resize', measureSheet)
+})
+
 async function saveDesign() {
   Object.keys(designForm).forEach((k) => { designTouched[k] = true })
   if (Object.keys(designErrors.value).some((k) => !COMPANY_FIELDS.includes(k))) return
@@ -1928,8 +1918,6 @@ const carouselInput = ref(null)
 const carouselBusy = ref(false)
 const carouselErr = ref('')
 const carouselImages = computed(() => store.customization.carousel || [])
-const fontSizeMin = NAME_FONT_SIZE_MIN
-const fontSizeMax = NAME_FONT_SIZE_MAX
 const designShopName = computed(() => designForm.display_name || business.value || 'Tu negocio')
 // Espejo del catálogo público (se apaga desde "Mi catálogo"): la vista previa
 // oculta el link, el CTA y la página Catálogo igual que la web real.
@@ -2029,71 +2017,11 @@ async function onMoveGallery(imageId, direction) {
   if (!ok) galleryErr.value = store.lastError
 }
 
-// Logo de la web pública (has_customization): sube directo a R2 vía /stores/customization/logo/.
-// Consume la cuota del beneficio max_storage_mb; el backend devuelve `storage` actualizado.
-const logoInput = ref(null)
-const logoBusy = ref(false)
-const logoErr = ref('')
+// Logo y portada de la web pública: la subida/quita vive en DesignLookTab;
+// acá quedan los accesos de lectura que comparten la vista previa y el resto del panel.
 const LOGO_ACCEPT_TYPES = LOGO_ACCEPT
-
 const currentLogo = computed(() => store.customization.logo || '')
-const storageText = computed(() => {
-  const s = store.storage
-  if (!s) return ''
-  const used = formatStorageMB(s.used_bytes)
-  return s.max_mb === null
-    ? `Usás ${used} MB de almacenamiento de imágenes`
-    : `Usás ${used} MB de ${s.max_mb} MB de almacenamiento de imágenes`
-})
-
-async function onLogoPicked(event) {
-  const file = event.target.files?.[0]
-  event.target.value = ''
-  if (!file) return
-  logoErr.value = validateLogoFile(file)
-  if (logoErr.value) return
-  logoBusy.value = true
-  const ok = await store.uploadLogo(file)
-  logoBusy.value = false
-  if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
-}
-
-async function onRemoveLogo() {
-  if (logoBusy.value) return
-  logoErr.value = ''
-  logoBusy.value = true
-  const ok = await store.removeLogo()
-  logoBusy.value = false
-  if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
-}
-
-// Imagen de portada (premium, has_design_advanced): fondo del hero de la web.
-// Comparte cuota con logo/galería; el backend la normaliza a WebP.
-const coverInput = ref(null)
-const coverBusy = ref(false)
-const coverErr = ref('')
 const currentCover = computed(() => store.customization.cover || '')
-
-async function onCoverPicked(event) {
-  const file = event.target.files?.[0]
-  event.target.value = ''
-  if (!file || !canDesignAdvanced.value) return
-  coverErr.value = validateImageFile(file)
-  if (coverErr.value) return
-  coverBusy.value = true
-  const ok = await store.uploadCover(file)
-  coverBusy.value = false
-  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
-}
-
-async function onRemoveCover() {
-  if (coverBusy.value || !canDesignAdvanced.value) return
-  coverErr.value = ''
-  coverBusy.value = true
-  const ok = await store.removeCover()
-  coverBusy.value = false
-  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
-}
 
 onMounted(async () => {
   // Puente entre pestañas: el retorno de MP cae en la pestaña del checkout,
@@ -4257,212 +4185,46 @@ async function changePassword() {
               </div>
             </div>
           </div>
-          <div v-show="designTab === 'look'" class="card dsg-card">
-            <h3><AppIcon name="palette" :size="18" /> Apariencia</h3>
-            <div class="field">
-              <label id="design-logo-label">Logo</label>
-              <div class="logo-box">
-                <span class="logo-thumb">
-                  <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu tienda" />
-                  <AppIcon v-else name="image" :size="20" aria-hidden="true" />
-                </span>
-                <div class="logo-actions">
-                  <input
-                    ref="logoInput"
-                    type="file"
-                    class="sr-only"
-                    :accept="LOGO_ACCEPT_TYPES"
-                    aria-labelledby="design-logo-label"
-                    @change="onLogoPicked"
-                  />
-                  <button type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="logoInput?.click()">
-                    <span v-if="logoBusy" class="spinner" aria-hidden="true"></span>
-                    <AppIcon v-else name="upload" :size="16" />
-                    {{ currentLogo ? 'Cambiar logo' : 'Subir logo' }}
-                  </button>
-                  <button v-if="currentLogo" type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="onRemoveLogo">Quitar</button>
-                </div>
-              </div>
-              <p class="hint">PNG, JPG, WebP o GIF de hasta 2 MB. Aparece en la barra superior y la portada de tu web.</p>
-              <p v-if="storageText" class="hint">{{ storageText }}</p>
-              <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
+          <DesignLookTab
+            v-show="designTab === 'look'"
+            :form="designForm"
+            :benefits="plan?.benefits || {}"
+            :shop-name="designShopName"
+            @go-plans="section = 'plans'"
+            @ring="lookRing = $event"
+          />
+          <div ref="dsgBar" class="dsg-savebar" :class="{ dirty: designDirty }">
+            <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
+              <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
+              <AppIcon v-else name="circle-check" :size="16" aria-hidden="true" />
+              <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
+            </p>
+            <button type="button" class="btn ghost btn-auto dsg-preview-open" :aria-expanded="previewSheet" @click="previewSheet = !previewSheet"><AppIcon name="eye" :size="16" /> Ver vista previa</button>
+            <div class="dsg-actions">
+              <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
+              <AppButton :loading="designBusy" type="button" @click="saveDesign">Guardar diseño</AppButton>
             </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-cover-label">Imagen de portada <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="cover-box">
-                <span class="cover-thumb" :class="{ empty: !currentCover }">
-                  <img v-if="currentCover" :src="currentCover" alt="Portada actual de tu web" />
-                  <AppIcon v-else name="image" :size="22" aria-hidden="true" />
-                </span>
-                <div class="logo-actions">
-                  <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-cover-label" :disabled="!canDesignAdvanced" @change="onCoverPicked" />
-                  <button type="button" class="btn ghost btn-auto" :disabled="coverBusy || !canDesignAdvanced" @click="coverInput?.click()">
-                    <span v-if="coverBusy" class="spinner" aria-hidden="true"></span>
-                    <AppIcon v-else name="upload" :size="16" />
-                    {{ currentCover ? 'Cambiar portada' : 'Subir portada' }}
-                  </button>
-                  <button v-if="currentCover && canDesignAdvanced" type="button" class="btn ghost btn-auto" :disabled="coverBusy" @click="onRemoveCover">Quitar</button>
-                </div>
-              </div>
-              <p class="hint">Foto de hasta 4 MB que decora el fondo de tu página principal. La ajustamos automáticamente; elegí una imagen apaisada y luminosa.</p>
-              <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
-            </div>
-            <div class="field">
-              <label><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
-              <div class="tpl-selects">
-                <div class="tpl-field">
-                  <label for="design-family" class="tpl-label">Categoría</label>
-                  <select id="design-family" v-model="selectedFamilyKey" class="select" @change="onFamilyPick">
-                    <option
-                      v-for="f in templateFamilies" :key="f.key" :value="f.key"
-                      :disabled="!familyAllowed(f)"
-                    >{{ f.label }}<template v-if="!familyAllowed(f)"> · {{ familyTier(f) }}</template></option>
-                  </select>
-                </div>
-                <div class="tpl-field">
-                  <label for="design-template" class="tpl-label">Estilo</label>
-                  <select id="design-template" v-model="designForm.template" class="select">
-                    <option
-                      v-for="key in selectedFamily.templates" :key="key" :value="key"
-                      :disabled="!allowedTemplates.includes(key)"
-                    >{{ storeTemplates[key]?.label }}<template v-if="!allowedTemplates.includes(key)"> · {{ templatePlanLabel(key) }}</template></option>
-                  </select>
-                </div>
-              </div>
-              <div class="pick-preview" aria-live="polite">
-                <span class="tpl-thumb pick-preview-thumb" :data-tpl="designForm.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
-                <div class="pick-preview-info">
-                  <span class="pick-preview-eyebrow">Diseño elegido</span>
-                  <strong>{{ storeTemplates[designForm.template]?.label }}</strong>
-                  <small>{{ storeTemplates[designForm.template]?.desc }}</small>
-                  <span class="pick-tier" :class="storeTemplates[designForm.template]?.tier">{{ templateTierLabel(designForm.template) }}</span>
-                </div>
-                <div class="pick-nav">
-                  <button type="button" class="icon-btn" aria-label="Diseño anterior" :disabled="selectedFamilyAllowed.length < 2" @click="stepTemplate(-1)"><AppIcon name="chevron-left" :size="15" /></button>
-                  <button type="button" class="icon-btn" aria-label="Diseño siguiente" :disabled="selectedFamilyAllowed.length < 2" @click="stepTemplate(1)"><AppIcon name="chevron-right" :size="15" /></button>
-                </div>
-              </div>
-              <p class="hint">Cambia la estructura completa de tu portada: podés alternar sin perder tu contenido. Los diseños bloqueados se habilitan subiendo de plan.</p>
-            </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label for="design-font"><AppIcon name="type" :size="14" class="label-icon" aria-hidden="true" />Fuente de tu web <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <select id="design-font" v-model="designForm.name_font" class="select" :disabled="!canDesignAdvanced">
-                <optgroup v-for="g in fontGroups" :key="g.label" :label="g.label">
-                  <option v-for="key in g.keys" :key="key" :value="key">{{ storeFonts[key]?.label }}</option>
-                </optgroup>
-              </select>
-              <div class="pick-preview font-preview" aria-live="polite">
-                <span class="font-preview-aa" :style="fontPreviewStyle" aria-hidden="true">Aa</span>
-                <div class="pick-preview-info">
-                  <span class="pick-preview-eyebrow">{{ storeFonts[designForm.name_font]?.label }}</span>
-                  <strong class="font-preview-name" :style="fontPreviewStyle">{{ designShopName }}</strong>
-                  <small class="font-preview-sample" :style="fontPreviewStyle">Catálogo online · Nuevos ingresos 0123456789</small>
-                </div>
-                <div class="pick-nav">
-                  <button type="button" class="icon-btn" aria-label="Fuente anterior" :disabled="!canDesignAdvanced" @click="stepFont(-1)"><AppIcon name="chevron-left" :size="15" /></button>
-                  <button type="button" class="icon-btn" aria-label="Fuente siguiente" :disabled="!canDesignAdvanced" @click="stepFont(1)"><AppIcon name="chevron-right" :size="15" /></button>
-                </div>
-              </div>
-              <p class="hint">Se aplica a todo el texto de tu web: nombre, secciones y catálogo. Ofrecemos solo tipografías populares y probadas.</p>
-            </div>
-            <div class="field">
-              <label id="design-theme-label">Tema</label>
-              <div class="theme-options" role="radiogroup" aria-labelledby="design-theme-label">
-                <button
-                  v-for="(t, key) in storeThemes" :key="key" type="button"
-                  class="theme-option" :class="{ active: designForm.theme === key }"
-                  :aria-pressed="designForm.theme === key"
-                  @click="designForm.theme = key"
-                >
-                  <span class="theme-thumb" :data-store-theme="key"></span>
-                  {{ t.label }}
-                </button>
-              </div>
-              <p class="hint">Claro u oscuro: se aplica a la barra superior, la portada y todo tu catálogo.</p>
-            </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-accent-label">Color de acento <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="swatches" role="group" aria-labelledby="design-accent-label">
-                <button
-                  v-for="(a, key) in storeAccents" :key="key" type="button"
-                  class="swatch" :class="{ active: designForm.accent === key }"
-                  :style="{ '--swatch': a.hex }"
-                  :title="a.label" :aria-label="`Color ${a.label}`"
-                  :aria-disabled="!canDesignAdvanced"
-                  :aria-pressed="designForm.accent === key"
-                  @click="pickAccent(key)"
-                >
-                  <AppIcon v-if="designForm.accent === key" name="check" :size="13" :stroke="2.5" />
-                </button>
-              </div>
-              <p class="hint">Se aplica a la portada, los botones y los detalles de tu página.</p>
-            </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label for="design-name-size">Tamaño del nombre <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="size-slider">
-                <input
-                  id="design-name-size"
-                  v-model.number="designForm.name_font_size"
-                  type="range"
-                  :min="fontSizeMin"
-                  :max="fontSizeMax"
-                  step="1"
-                  :disabled="!canDesignAdvanced"
-                />
-                <span class="size-value">{{ designForm.name_font_size }} px</span>
-              </div>
-              <p class="hint">Alto del nombre en la portada de tu web ({{ fontSizeMin }} a {{ fontSizeMax }} px).</p>
-            </div>
-            <AlertMessage v-if="!canDesignAdvanced" kind="info" message="La fuente, el color de acento, el tamaño del nombre, la imagen de portada, el carrusel y las decoraciones se habilitan con el Plan premium. Algunos diseños también vienen desde el Estándar." />
-            <div v-if="!canDesignAdvanced" class="btn-row">
-              <button type="button" class="btn ghost btn-auto" @click="section = 'plans'">Ver planes</button>
-            </div>
-          </div>
-          <div class="dsg-savebar">
-            <AppButton :loading="designBusy" type="button" @click="saveDesign">Guardar diseño</AppButton>
           </div>
           </div>
 
-        <aside class="card dsg-preview">
-          <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
-          <div class="design-preview" :data-store-theme="designForm.theme" :data-store-template="designTemplate" :style="designPreviewVars">
-            <div class="dp-nav" aria-hidden="true">
-              <span class="dp-nav-brand">
-                <img v-if="currentLogo" class="dp-nav-logo" :src="currentLogo" alt="" />
-                <span v-else class="dp-nav-mono" aria-hidden="true">{{ businessInitial }}</span>
-                <span class="dp-nav-name" :style="designNameFont">{{ designShopName }}</span>
-              </span>
-              <span class="dp-nav-links">
-                <span class="dp-nav-item">Inicio</span>
-                <span v-if="designCatalogOn" class="dp-nav-item">Catálogo</span>
-                <span class="dp-nav-item">Contacto</span>
-              </span>
-            </div>
-            <div class="dp-hero" :class="{ 'has-cover': canDesignAdvanced && currentCover }" :style="canDesignAdvanced && currentCover ? { '--dp-cover': `url(${currentCover})` } : null">
-              <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
-              <span v-else class="dp-mono" aria-hidden="true">{{ businessInitial }}</span>
-              <span class="dp-badge">{{ designForm.headline ? designShopName : (designCatalogOn ? 'Catálogo online' : 'Sitio oficial') }}</span>
-              <strong class="dp-title" :class="{ 'is-name': !designForm.headline }" :style="designForm.headline ? null : designNameFont">{{ designForm.headline || designShopName }}</strong>
-              <span v-if="designForm.description" class="dp-desc">{{ designForm.description }}</span>
-              <div class="dp-cta">
-                <span v-if="designCatalogOn" class="dp-btn">Ver catálogo</span>
-                <span class="dp-btn ghost">Contáctanos</span>
-              </div>
-            </div>
-            <div v-if="designCatalogOn && canDesignAdvanced && carouselImages.length" class="dp-catalog">
-              <span class="dp-section-label"><AppIcon name="layout-grid" :size="11" /> Página Catálogo</span>
-              <div class="dp-carousel">
-                <div class="dp-carousel-track" :style="{ transform: `translateX(-${previewSlide * 100}%)` }">
-                  <img v-for="img in carouselImages" :key="img.id" class="dp-carousel-img" :src="img.url" alt="" draggable="false" />
-                </div>
-              </div>
-            </div>
-            <div v-if="canLocationMap && designForm.show_location" class="dp-map" aria-hidden="true">
-              <AppIcon name="map-pin" :size="13" /> Mapa con la ubicación de tu negocio
-            </div>
-          </div>
-          <AppButton :loading="designBusy" @click="saveDesign">Guardar diseño</AppButton>
-        </aside>
+        <DesignPreview
+          v-model:open="previewSheet"
+          :form="designForm"
+          :vars="designPreviewVars"
+          :template="designTemplate"
+          :shop-name="designShopName"
+          :initial="businessInitial"
+          :logo="currentLogo"
+          :cover="currentCover"
+          :advanced="canDesignAdvanced"
+          :catalog-on="designCatalogOn"
+          :show-map="canLocationMap && Boolean(designForm.show_location)"
+          :carousel="carouselImages"
+          :slide="previewSlide"
+          :name-font="designNameFont"
+          :ring="designTab === 'look' ? lookRing : null"
+          :sheet-bottom="previewBottom"
+        />
         </div>
       </template>
       <div v-else class="empty">
@@ -5807,6 +5569,16 @@ async function changePassword() {
     <GlobalSearch v-model:open="searchOpen" :commands="searchCommands" />
 
     <!-- Tour de primera vez (4 pasos sobre el menú) -->
+    <div v-if="leaveGuard.open" class="dsg-confirm" role="presentation" @keydown.esc="confirmLeave(false)">
+      <div class="dsg-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="dsg-leave-title" aria-describedby="dsg-leave-desc">
+        <h3 id="dsg-leave-title">Tenés cambios sin guardar</h3>
+        <p id="dsg-leave-desc">Si salís ahora, se pierden los cambios que hiciste en el diseño de tu página.</p>
+        <div class="dsg-confirm-actions">
+          <button type="button" class="btn ghost btn-auto" ref="leaveStay" @click="confirmLeave(false)">Seguir editando</button>
+          <button type="button" class="btn btn-auto" @click="confirmLeave(true)">Salir sin guardar</button>
+        </div>
+      </div>
+    </div>
     <TourGuide v-model:open="tourOpen" />
 
     <!-- Toast "Guardado ✓" con deshacer donde la acción es reversible -->
