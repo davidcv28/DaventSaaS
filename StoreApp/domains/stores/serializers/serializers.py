@@ -351,7 +351,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         profile                 =   getattr(store, 'user', None)
         has_advanced            =   profile_has_benefit(profile, 'has_design_advanced') if profile is not None else False
         has_plus                =   has_advanced or (profile_has_benefit(profile, 'has_design_plus') if profile is not None else False)
-        cleaned                 =   clean_site_theme(value, has_plus = has_plus, has_advanced = has_advanced, store = store)
+        has_style               =   has_plus or (profile_has_benefit(profile, 'has_customization') if profile is not None else False)
+        cleaned                 =   clean_site_theme(value, has_plus = has_plus, has_advanced = has_advanced, has_style = has_style, store = store)
         return merge_theme(getattr(self.instance, field, None), cleaned)
 
     def validate_site_theme(self, value):
@@ -480,12 +481,14 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
             data.update(accent_custom = '', logo_scale = 'm', logo_mode = 'logo_name', mono_style = 'accent',
                         cover_overlay = 0, cover_focus_x = 50, cover_focus_y = 50)
         #El tema del Studio viaja EFECTIVO según el plan: con has_design_plus
-        #solo el subconjunto básico (radius/density); sin beneficios de
-        #diseño, {} — una tienda sin site_theme se ve idéntica a hoy.
+        #el subconjunto básico (radius/density) + el estilo; el plan Básico
+        #solo el estilo y su juego de colores; sin beneficios, {} — una
+        #tienda sin site_theme se ve idéntica a hoy.
         data['site_theme']      =   filter_site_theme(
             customization.site_theme,
             has_plus        =   profile_has_benefit(customization.store.user, 'has_design_plus'),
             has_advanced    =   profile_has_benefit(customization.store.user, 'has_design_advanced'),
+            has_style       =   profile_has_benefit(customization.store.user, 'has_customization'),
         )
         #site_templates viaja EFECTIVO al público: lo guardado intersectado
         #con el plan vigente y recortado al cupo (la página Servicios sale

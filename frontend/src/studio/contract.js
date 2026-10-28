@@ -36,6 +36,13 @@ export const STUDIO_SURFACES = ['landing', 'catalog', 'services']
 export const STUDIO_DEVICES = ['mobile', 'tablet', 'desktop']
 export const STUDIO_TIERS = ['base', 'plus', 'advanced']
 
+// Juego de colores por estilo (fuentes + contenedores) con variante clara y
+// oscura. El bloque NO vive en los defaults: se deriva de palette cuando el
+// tema no lo trae, así una tienda sin estilo se ve idéntica a hoy.
+export const STUDIO_STYLE_MODES = ['light', 'dark']
+export const STYLE_FONT_KEYS = ['heading', 'body', 'muted', 'link']
+export const STYLE_CONTAINER_KEYS = ['bg', 'surface', 'border', 'onSurface']
+
 export const STUDIO_ENUMS = {
   radius:     ['none', 'sm', 'md', 'lg', 'xl', 'pill'],
   shadow:     ['none', 'soft', 'medium', 'deep'],
@@ -192,7 +199,7 @@ export function resolveSiteTheme(partial = {}) {
   const weight = Number(typ.weightHeading)
   const cols = Number(mb.gridCols)
 
-  return {
+  const resolved = {
     palette,
     containers: {
       radius: pickEnum(STUDIO_ENUMS.radius, con.radius, d.containers.radius),
@@ -231,6 +238,26 @@ export function resolveSiteTheme(partial = {}) {
       heroHeight: pickEnum(STUDIO_ENUMS.heroHeight, mb.heroHeight, d.mobile.heroHeight)
     }
   }
+  // Juego de colores del estilo: solo viaja si el tema lo trae (parcial,
+  // sembrado desde el preset elegido). Las claves ausentes se completan con
+  // la derivación del palette para que un bloque incompleto no rompa.
+  if (p.styleColors && typeof p.styleColors === 'object') {
+    const block = {}
+    for (const mode of STUDIO_STYLE_MODES) {
+      const set = sanitizeStyleSet(p.styleColors[mode])
+      if (!set) continue
+      const derived = styleColorsFromPalette(palette, mode)
+      block[mode] = {
+        fonts: { ...derived.fonts, ...set.fonts },
+        containers: { ...derived.containers, ...set.containers }
+      }
+    }
+    if (Object.keys(block).length) resolved.styleColors = block
+  }
+  if (p.style && typeof p.style === 'object' && typeof p.style.id === 'string' && p.style.id.trim()) {
+    resolved.style = { id: p.style.id.trim().slice(0, 60) }
+  }
+  return resolved
 }
 
 // ---------------------------------------------------------------------------
@@ -290,6 +317,93 @@ export function textOn(bg, min = 4.5) {
 }
 
 // ---------------------------------------------------------------------------
+// Juego de colores del estilo: fuentes + contenedores por modo. El set
+// "nativo" sale del palette del preset; el modo opuesto usa una base neutra
+// (clara u oscura) con el acento del preset. Todo texto pasa AA contra
+// containers.surface y containers.bg (fixContrast 4.5).
+// ---------------------------------------------------------------------------
+
+const STYLE_NEUTRAL = {
+  light: { bg: '#f4f6fb', surface: '#ffffff', text: '#0f172a', muted: '#5b6678', border: '#e2e6f0' },
+  dark: { bg: '#0b1220', surface: '#111a2c', text: '#f1f5f9', muted: '#94a3b8', border: '#243049' }
+}
+
+function paletteMode(palette) {
+  return luminance(normalizeHex(palette?.bg) || '#ffffff') < 0.5 ? 'dark' : 'light'
+}
+
+function legibleOn(fg, bg, surface) {
+  let out = fixContrast(fg, bg, 4.5)
+  out = fixContrast(out, surface, 4.5)
+  if (contrastRatio(out, bg) < 4.5) out = fixContrast(out, bg, 4.5)
+  return out
+}
+
+export function styleColorsFromPalette(palette = SITE_THEME_DEFAULTS.palette, mode = 'light') {
+  const target = mode === 'dark' ? 'dark' : 'light'
+  const p = palette && typeof palette === 'object' ? palette : {}
+  const base = paletteMode(p) === target
+    ? { bg: p.bg, surface: p.surface, text: p.text, muted: p.muted, border: p.border, accent: p.accent }
+    : { ...STYLE_NEUTRAL[target], accent: p.accent }
+  const bg = normalizeHex(base.bg) || STYLE_NEUTRAL[target].bg
+  const surface = normalizeHex(base.surface) || STYLE_NEUTRAL[target].surface
+  const text = normalizeHex(base.text) || STYLE_NEUTRAL[target].text
+  const muted = normalizeHex(base.muted) || STYLE_NEUTRAL[target].muted
+  const border = normalizeHex(base.border) || STYLE_NEUTRAL[target].border
+  const accent = normalizeHex(base.accent) || SITE_THEME_DEFAULTS.palette.accent
+  const heading = legibleOn(text, bg, surface)
+  return {
+    fonts: {
+      heading,
+      body: heading,
+      muted: legibleOn(muted, bg, surface),
+      link: legibleOn(accent, bg, surface)
+    },
+    containers: { bg, surface, border, onSurface: heading }
+  }
+}
+
+export function styleColorsBlock(palette = SITE_THEME_DEFAULTS.palette) {
+  return {
+    light: styleColorsFromPalette(palette, 'light'),
+    dark: styleColorsFromPalette(palette, 'dark')
+  }
+}
+
+// Sanea un set (enum cerrado de claves + hex). null = no había nada válido.
+export function sanitizeStyleSet(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const fonts = raw.fonts && typeof raw.fonts === 'object' ? raw.fonts : {}
+  const con = raw.containers && typeof raw.containers === 'object' ? raw.containers : {}
+  const out = { fonts: {}, containers: {} }
+  let any = false
+  for (const key of STYLE_FONT_KEYS) {
+    const hex = normalizeHex(fonts[key])
+    if (hex) { out.fonts[key] = hex; any = true }
+  }
+  for (const key of STYLE_CONTAINER_KEYS) {
+    const hex = normalizeHex(con[key])
+    if (hex) { out.containers[key] = hex; any = true }
+  }
+  return any ? out : null
+}
+
+// Set del modo pedido para un tema (resuelto o parcial). Sin bloque, se
+// deriva del palette: el preset se ve igual que hoy.
+export function resolveStyleColors(theme, mode = 'light') {
+  const t = theme && typeof theme === 'object' ? theme : {}
+  const key = mode === 'dark' ? 'dark' : 'light'
+  const set = sanitizeStyleSet(t.styleColors?.[key])
+  const palette = resolveSiteTheme(t).palette
+  if (!set) return styleColorsFromPalette(palette, key)
+  const derived = styleColorsFromPalette(palette, key)
+  return {
+    fonts: { ...derived.fonts, ...set.fonts },
+    containers: { ...derived.containers, ...set.containers }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // themeToCssVars: tema resuelto -> '--st-*' para :style en el contenedor.
 // resolveFont: opcional — pasar storeFontFamily (stores.api.js) para que los
 // slugs del catálogo salgan como familia real; un valor con ','/'"' ya se
@@ -303,9 +417,10 @@ function fontOf(value, resolveFont) {
   return typeof resolveFont === 'function' ? resolveFont(v) : v
 }
 
-export function themeToCssVars(theme, resolveFont) {
+export function themeToCssVars(theme, resolveFont, mode = 'light') {
   const t = resolveSiteTheme(theme)
   const p = t.palette
+  const style = resolveStyleColors(t, mode)
   const scale = SCALE_CSS[t.typography.scale]
   const density = DENSITY_CSS[t.containers.density]
   const btn = BTN_SIZE[t.buttons.size]
@@ -349,7 +464,15 @@ export function themeToCssVars(theme, resolveFont) {
     '--st-bg-layer': bgLayer,
     '--st-bg-overlay': OVERLAY_CSS[t.background.overlay],
     '--st-motion-dur': MOTION_MS[t.motion.intensity],
-    '--st-grid-cols': String(t.mobile.gridCols)
+    '--st-grid-cols': String(t.mobile.gridCols),
+    '--st-style-font-heading': style.fonts.heading,
+    '--st-style-font-body': style.fonts.body,
+    '--st-style-font-muted': style.fonts.muted,
+    '--st-style-font-link': style.fonts.link,
+    '--st-style-container-bg': style.containers.bg,
+    '--st-style-container-surface': style.containers.surface,
+    '--st-style-container-border': style.containers.border,
+    '--st-style-container-on-surface': style.containers.onSurface
   }
 }
 
@@ -380,6 +503,11 @@ export function themeExplicitKeys(partial) {
       if (content[key] !== undefined && content[key] !== null) out.add(`${section}.${key}`)
     }
   }
+  // Bloques anidados: viajan como una sola clave (el juego de colores se
+  // elige entero por modo).
+  if (partial.styleColors && typeof partial.styleColors === 'object'
+    && Object.keys(partial.styleColors).length) out.add('styleColors')
+  if (partial.style && typeof partial.style === 'object' && partial.style.id) out.add('style.id')
   return out
 }
 
@@ -420,7 +548,15 @@ export const STUDIO_VAR_KEYS = {
   '--st-bg-layer': ['background.type', 'background.value'],
   '--st-bg-overlay': ['background.overlay'],
   '--st-motion-dur': ['motion.intensity'],
-  '--st-grid-cols': ['mobile.gridCols']
+  '--st-grid-cols': ['mobile.gridCols'],
+  '--st-style-font-heading': ['styleColors'],
+  '--st-style-font-body': ['styleColors'],
+  '--st-style-font-muted': ['styleColors'],
+  '--st-style-font-link': ['styleColors'],
+  '--st-style-container-bg': ['styleColors'],
+  '--st-style-container-surface': ['styleColors'],
+  '--st-style-container-border': ['styleColors'],
+  '--st-style-container-on-surface': ['styleColors']
 }
 
 // Filtra el set completo de themeToCssVars a las variables cuyo campo está
@@ -440,11 +576,12 @@ export function pickThemeVars(vars, explicit = null) {
 // el contenedor para que el CSS seleccione por [data-st-btn-style='ghost'].
 // Con `explicit`, solo viaja la variante de un campo elegido: sin el
 // atributo el CSS no toca el look de la plantilla.
-export function themeDataAttrs(theme, explicit = null) {
+export function themeDataAttrs(theme, explicit = null, mode = 'light') {
   const t = resolveSiteTheme(theme)
   const keys = explicit ? (explicit instanceof Set ? explicit : new Set(explicit)) : null
   const on = (key) => !keys || keys.has(key)
   return {
+    'data-st-style': on('styleColors') ? (mode === 'dark' ? 'dark' : 'light') : null,
     'data-st-surface': on('containers.surface') ? t.containers.surface : null,
     'data-st-density': on('containers.density') ? t.containers.density : null,
     'data-st-radius': on('containers.radius') ? t.containers.radius : null,
@@ -526,7 +663,7 @@ export function presetToPatch(preset) {
   return {
     template: p.template,
     layout_config: p.layout,
-    site_theme: p.theme
+    site_theme: { ...p.theme, style: { id: p.id } }
   }
 }
 

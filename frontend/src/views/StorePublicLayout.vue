@@ -108,7 +108,9 @@ const studioVars = computed(() => (
     : {}
 ))
 const studioAttrs = computed(() => (
-  studioMode.value && studioTheme.value ? studioPreviewAttrs(studioTheme.value, studioExplicit.value) : {}
+  studioMode.value && studioTheme.value
+    ? studioPreviewAttrs(studioTheme.value, studioExplicit.value, pageTheme.value)
+    : {}
 ))
 const themeVars = computed(() => storeThemeVars(custom.value))
 // Tema guardado (site_theme): se emite SIEMPRE, no solo en modo Studio, para
@@ -121,7 +123,7 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 const publishedThemeVars = computed(() => (
   studioMode.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
 ))
-const publishedThemeAttrs = computed(() => (studioMode.value ? {} : storeSiteThemeAttrs(custom.value)))
+const publishedThemeAttrs = computed(() => (studioMode.value ? {} : storeSiteThemeAttrs(custom.value, pageTheme.value)))
 // Fuentes del tema guardado (título/cuerpo) on-demand: puede elegir una
 // familia distinta de la del nombre. Un stack CSS no es slug y no hace nada.
 watch(

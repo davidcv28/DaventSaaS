@@ -16,7 +16,7 @@ import { defaultLayout } from '../../templates/index.js'
 import { blockSpec } from '../../templates/blocks.js'
 import { STORE_FONTS, STORE_TEMPLATES } from '../../api/stores.api.js'
 import { deriveAccent } from '../../utils/colorTools.js'
-import { STUDIO_SURFACES, resolveStudioPreset } from '../contract.js'
+import { STUDIO_SURFACES, resolveStudioPreset, styleColorsBlock } from '../contract.js'
 
 // ---------------------------------------------------------------------------
 // Spec compacto -> layout_config del contrato.
@@ -66,8 +66,12 @@ function pal(accent, over = {}) {
 }
 
 function theme(t) {
+  const palette = pal(t.accent, t.pal)
   return {
-    palette: pal(t.accent, t.pal),
+    palette,
+    // Juego de colores del estilo (fuentes + contenedores) en claro y
+    // oscuro, derivado del palette y con AA garantizado por el contrato.
+    styleColors: styleColorsBlock(palette),
     containers: t.containers || {},
     typography: {
       heading: t.heading || t.font || 'inter',

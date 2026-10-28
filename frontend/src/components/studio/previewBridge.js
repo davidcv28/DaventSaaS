@@ -9,7 +9,7 @@
 //    claro/oscuro del visor y carga de la fuente elegida.
 import {
   themeToCssVars, themeDataAttrs, themeExplicitKeys, pickThemeVars,
-  resolveSiteTheme, hexToRgb, rgbToHex, textOn
+  resolveSiteTheme, resolveStyleColors, hexToRgb, rgbToHex, textOn
 } from '../../studio/contract.js'
 import { STORE_FONTS, ensureStoreFont, effectiveAccent } from '../../api/stores.api.js'
 import { deriveAccent, bandPalette, adaptPalette } from '../../utils/colorTools.js'
@@ -74,7 +74,7 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   }
   // Con resolvedor: --st-font-* sale como familia real (no el slug del
   // catálogo), así el CSS puede consumirlo directo sin perder la fuente.
-  const all = themeToCssVars(t, fontFamilyOf)
+  const all = themeToCssVars(t, fontFamilyOf, pageTheme)
   const vars = pickThemeVars(all, keys)
   const p = t.palette
 
@@ -145,12 +145,28 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   }
   if (on('mobile.gridCols')) vars['--sp-grid-cols'] = all['--st-grid-cols']
   if (on('motion.intensity')) vars['--sp-motion-dur'] = all['--st-motion-dur']
+  // Juego de colores del estilo elegido (fuentes + contenedores) del modo
+  // vigente: manda sobre los roles de palette para que el estilo se vea
+  // completo aun cuando el plan solo persiste este subconjunto (Básico).
+  if (on('styleColors')) {
+    const sc = resolveStyleColors(t, pageTheme)
+    vars['--sp-ink'] = sc.fonts.heading
+    vars['--sp-ink-2'] = sc.fonts.body
+    vars['--sp-muted'] = sc.fonts.muted
+    vars['--sp-accent-text'] = sc.fonts.link
+    vars['--sp-card'] = sc.containers.surface
+    vars['--sp-card-solid'] = sc.containers.surface
+    vars['--sp-surface'] = sc.containers.surface
+    vars['--sp-line'] = sc.containers.border
+    // Solo con fondo sólido: una malla/degradado/imagen propia se conserva.
+    if (t.background.type === 'solid' && !t.background.value) vars['--sp-bg'] = sc.containers.bg
+  }
   return vars
 }
 
 // Atributos data-st-* del contrato (variantes discretas) para .store-page.
-export function studioPreviewAttrs(theme, explicit = null) {
-  return { ...themeDataAttrs(theme, explicit), 'data-st-themed': '' }
+export function studioPreviewAttrs(theme, explicit = null, mode = 'light') {
+  return { ...themeDataAttrs(theme, explicit, mode), 'data-st-themed': '' }
 }
 
 // ---------------------------------------------------------------------------
@@ -172,10 +188,10 @@ export function storeSiteThemeVars(customization, pageTheme = 'light') {
   return studioPreviewVars(merged, pageTheme, themeExplicitKeys(theme))
 }
 
-export function storeSiteThemeAttrs(customization) {
+export function storeSiteThemeAttrs(customization, pageTheme = 'light') {
   const theme = customization?.site_theme
   if (!theme || typeof theme !== 'object' || !Object.keys(theme).length) return {}
-  return studioPreviewAttrs(theme, themeExplicitKeys(theme))
+  return studioPreviewAttrs(theme, themeExplicitKeys(theme), pageTheme)
 }
 
 // ---------------------------------------------------------------------------

@@ -29,11 +29,14 @@ Reglas:
 Gating por plan (mismo criterio que `accent` — descarte silencioso, no
 400): todo el tema exige has_design_advanced salvo el subconjunto básico
 SITE_THEME_PLUS_KEYS (radius/density de containers) que alcanza con
-has_design_plus. Sin ninguno de los dos beneficios el viewset ya saca el
-campo del payload; clean_site_theme además filtra las claves que sobran
-para el plan y el serializer mergea el resultado sobre lo guardado, así
-los valores premium almacenados sobreviven una baja de plan (reaparecen
-al volver).
+has_design_plus. El plan Básico (has_style, derivado de has_customization)
+solo persiste SITE_THEME_STYLE_KEYS: el estilo elegido (style.id, si su
+plantilla entra en el plan) y su juego de colores de fuentes/contenedores
+en claro y oscuro (styleColors, hex + AA). Sin beneficios de diseño el
+viewset ya saca el campo del payload; clean_site_theme además filtra las
+claves que sobran para el plan y el serializer mergea el resultado sobre lo
+guardado, así los valores premium almacenados sobreviven una baja de plan
+(reaparecen al volver).
 
 """
 SITE_THEME_MAX_BYTES    =   4096
@@ -62,6 +65,23 @@ _INTENSITY      =   ('subtle', 'medium', 'bold')
 _NAV            =   ('top', 'bottom', 'drawer')
 _CARD_STYLE     =   ('standard', 'compact', 'overlay')
 _HERO_HEIGHT    =   ('compact', 'tall')
+#Estilos del selector (mismos 8 del PRESET_PICKER_IDS del catálogo). El id
+#solo se guarda si la plantilla del preset entra en el nivel del plan.
+_STYLE_IDS      =   ('neo-brutalista', 'corporativo', 'denim-urbano', 'bento',
+                     'pastel-suave', 'atelier-moda', 'editorial-minima', 'lujo-serif')
+_STYLE_PRESET_TEMPLATES =   {
+    'neo-brutalista'    :   'duo',
+    'corporativo'       :   'classic',
+    'denim-urbano'      :   'duo',
+    'bento'             :   'vitrina',
+    'pastel-suave'      :   'calma',
+    'atelier-moda'      :   'vitrina',
+    'editorial-minima'  :   'minimal',
+    'lujo-serif'        :   'cobre',
+}
+_STYLE_MODES            =   ('light', 'dark')
+_STYLE_FONT_KEYS        =   ('heading', 'body', 'muted', 'link')
+_STYLE_CONTAINER_KEYS   =   ('bg', 'surface', 'border', 'onSurface')
 
 #spec por sección: clave -> (kind, extra). kinds: hex|enum|font|int|bool|css|bg.
 _SECTION_SPECS  =   {
@@ -102,12 +122,24 @@ _SECTION_SPECS  =   {
         'stickyCta' :   ('bool',),
         'heroHeight':   ('enum', _HERO_HEIGHT),
     },
+    'style'         :   {
+        'id'        :   ('enum', _STYLE_IDS),
+    },
+    'styleColors'   :   {mode: ('styleSet',) for mode in _STYLE_MODES},
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
 #resto de las secciones/claves exige has_design_advanced (Premium).
 SITE_THEME_PLUS_KEYS    =   frozenset({
     ('containers', 'radius'),
     ('containers', 'density'),
+})
+#Piso del plan Básico (has_customization): el estilo elegido + su juego de
+#colores de fuentes y contenedores en claro/oscuro. Nada de tipografía,
+#fondo, movimiento ni paleta libres.
+SITE_THEME_STYLE_KEYS   =   frozenset({
+    ('style', 'id'),
+    ('styleColors', 'light'),
+    ('styleColors', 'dark'),
 })
 #=========================================
 # VALIDADORES DE VALOR
@@ -174,6 +206,60 @@ def _v_css(raw):
         raise serializers.ValidationError('El fondo no admite URLs ni funciones externas.')
     return value
 
+def _contrast_ratio(a, b):
+    """WCAG 2.1 (misma fórmula que contrastRatio del contrato)."""
+    def channel(value):
+        s   =   value / 255
+        return s / 12.92 if s <= 0.03928 else ((s + 0.055) / 1.055) ** 2.4
+    def lum(hex_value):
+        h   =   hex_value.lstrip('#')
+        r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+    la, lb  =   lum(a), lum(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+def _v_style_set(raw, mode):
+    """Juego de colores de un modo: fuentes y contenedores con hex normalizado
+    y AA (4.5) de cada color de texto sobre surface y bg."""
+    if not isinstance(raw, dict):
+        raise serializers.ValidationError(f'El set "{mode}" debe ser un objeto con fuentes y contenedores.')
+    unknown =   [key for key in raw if key not in ('fonts', 'containers')]
+    if unknown:
+        raise serializers.ValidationError(f'Clave desconocida en "{mode}": "{unknown[0]}".')
+    fonts       =   raw.get('fonts') or {}
+    containers  =   raw.get('containers') or {}
+    if not isinstance(fonts, dict) or not isinstance(containers, dict):
+        raise serializers.ValidationError(f'Las fuentes y contenedores de "{mode}" deben ser objetos.')
+    for key in fonts:
+        if key not in _STYLE_FONT_KEYS:
+            raise serializers.ValidationError(f'Color de fuente desconocido en "{mode}": "{key}".')
+    for key in containers:
+        if key not in _STYLE_CONTAINER_KEYS:
+            raise serializers.ValidationError(f'Color de contenedor desconocido en "{mode}": "{key}".')
+    out =   {'fonts': {}, 'containers': {}}
+    for key, value in fonts.items():
+        color   =   _norm_hex(value)
+        if color is None:
+            raise serializers.ValidationError(f'"{key}": ingresá un color válido (hex #RRGGBB).')
+        out['fonts'][key]   =   color
+    for key, value in containers.items():
+        color   =   _norm_hex(value)
+        if color is None:
+            raise serializers.ValidationError(f'"{key}": ingresá un color válido (hex #RRGGBB).')
+        out['containers'][key]  =   color
+    bases   =   [out['containers'][key] for key in ('surface', 'bg') if key in out['containers']]
+    for key, color in out['fonts'].items():
+        for base in bases:
+            if _contrast_ratio(color, base) < 4.5:
+                raise serializers.ValidationError(
+                    f'El color de fuente "{key}" no alcanza contraste AA sobre el contenedor.'
+                )
+    on_surface  =   out['containers'].get('onSurface')
+    for base in bases:
+        if on_surface and _contrast_ratio(on_surface, base) < 4.5:
+            raise serializers.ValidationError('El texto sobre superficie no alcanza contraste AA.')
+    return out
+
 def _store_image_urls(store):
     """URLs servibles de las imágenes propias de la tienda (logo, portada,
     carrusel, galería/decoración) — único origen válido de un fondo image."""
@@ -190,7 +276,7 @@ def _store_image_urls(store):
 #=========================================
 # CLEAN / FILTER / MERGE
 #=========================================
-def clean_site_theme(value, *, has_plus = False, has_advanced = False, store = None):
+def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style = False, store = None):
     """
     Valida y sanea el site_theme recibido según el contrato del Studio.
     Devuelve un dict PARCIAL (solo lo enviado, ya normalizado): el merge
@@ -211,7 +297,14 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, store = N
     clean       =   {}
     for section, content in value.items():
         spec    =   _SECTION_SPECS[section]
-        allowed =   {key for key in spec if has_advanced or (section, key) in SITE_THEME_PLUS_KEYS}
+        if has_advanced:
+            allowed =   set(spec)
+        elif has_plus:
+            allowed =   {key for key in spec if (section, key) in SITE_THEME_PLUS_KEYS or (section, key) in SITE_THEME_STYLE_KEYS}
+        elif has_style:
+            allowed =   {key for key in spec if (section, key) in SITE_THEME_STYLE_KEYS}
+        else:
+            allowed =   set()
         if not allowed:
             continue    #sección entera reservada a otro plan: descarte silencioso
         if not isinstance(content, dict):
@@ -241,8 +334,24 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, store = N
                 out[key]    =   _v_tracking(raw)
             elif kind == 'bg':
                 out[key]    =   _clean_bg_value(raw, store)
+            elif kind == 'styleSet':
+                out[key]    =   _v_style_set(raw, key)
         if out:
             clean[section]  =   out
+    #El id del estilo solo viaja si su plantilla entra en el nivel del plan
+    #(Básico: classic/duo; Estándar suma calma/vitrina; Premium, todo).
+    style   =   clean.get('style')
+    if style and 'id' in style:
+        template    =   _STYLE_PRESET_TEMPLATES.get(style['id'])
+        try:
+            from .services.services import allowed_templates_of
+            allowed_tpls    =   allowed_templates_of(store.user) if store is not None else ()
+        except Exception:
+            allowed_tpls    =   ()
+        if not template or template not in allowed_tpls:
+            style.pop('id', None)
+        if not style:
+            clean.pop('style', None)
     return clean
 
 def _clean_bg_value(raw, store):
@@ -263,11 +372,12 @@ def _clean_bg_value(raw, store):
         return value
     return _v_css(value)
 
-def filter_site_theme(theme, *, has_plus = False, has_advanced = False):
+def filter_site_theme(theme, *, has_plus = False, has_advanced = False, has_style = False):
     """
     site_theme EFECTIVO para la web pública según el plan vigente — espejo
     del descarte del PATCH: con has_design_advanced pasa todo lo guardado;
-    con has_design_plus solo el subconjunto básico (radius/density); sin
+    con has_design_plus el subconjunto básico (radius/density) + el estilo;
+    con solo has_style (Básico) el estilo y su juego de colores; sin
     beneficios de diseño, {} (los defaults del contrato replican el look
     actual). Lo guardado no se toca: reaparece si el plan vuelve.
     """
@@ -275,13 +385,14 @@ def filter_site_theme(theme, *, has_plus = False, has_advanced = False):
         return {}
     if has_advanced:
         return dict(theme)
-    if not has_plus:
+    if not has_plus and not has_style:
         return {}
+    keep_set    =   SITE_THEME_PLUS_KEYS | SITE_THEME_STYLE_KEYS if has_plus else SITE_THEME_STYLE_KEYS
     out     =   {}
     for section, content in theme.items():
         if not isinstance(content, dict):
             continue
-        keep    =   {key: val for key, val in content.items() if (section, key) in SITE_THEME_PLUS_KEYS}
+        keep    =   {key: val for key, val in content.items() if (section, key) in keep_set}
         if keep:
             out[section]    =   keep
     return out

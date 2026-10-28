@@ -1632,14 +1632,80 @@ class SiteThemeTests(TestCase):
             }})
             self.assertEqual(response.status_code, 400)
 
-    def test_theme_discarded_without_design_benefits(self):
-        #Sin has_design_plus ni has_design_advanced el campo entero se
-        #descarta del PATCH (como `accent`): ni siquiera se valida.
+    def _style_colors(self, **over):
+        #Set completo que pasa AA en ambos modos (mismos valores que deriva
+        #el contrato para un preset claro).
+        light = {
+            'fonts': {'heading': '#0f172a', 'body': '#0f172a', 'muted': '#5b6678', 'link': '#4f46e5'},
+            'containers': {'bg': '#f4f6fb', 'surface': '#ffffff', 'border': '#e2e6f0', 'onSurface': '#0f172a'},
+        }
+        dark = {
+            'fonts': {'heading': '#f1f5f9', 'body': '#f1f5f9', 'muted': '#94a3b8', 'link': '#a5b4fc'},
+            'containers': {'bg': '#0b1220', 'surface': '#111a2c', 'border': '#243049', 'onSurface': '#f1f5f9'},
+        }
+        light.update(over.get('light') or {})
+        return {'light': light, 'dark': dark}
+
+    def test_basic_saves_only_style_and_colors(self):
+        #Plan Básico (has_customization): persiste el estilo elegido y su
+        #juego de colores; paleta/tipografía/fondo/movimiento se descartan.
         client      =   self._client()
-        for payload in ('basura', {'palette': {'primary': '#112233'}}, {'hack': {'<': 'script'}}):
-            response    =   self._patch(client, {'site_theme': payload})
-            self.assertEqual(response.status_code, 200, payload)
-            self.assertEqual(response.data['customization']['site_theme'], {})
+        response    =   self._patch(client, {'site_theme': {
+            'style'         :   {'id': 'corporativo'},
+            'styleColors'   :   self._style_colors(),
+            'palette'       :   {'primary': '#112233'},
+            'typography'    :   {'heading': 'oswald'},
+            'background'    :   {'type': 'gradient', 'value': 'linear-gradient(#fff, #000)'},
+            'motion'        :   {'reveal': 'stagger'},
+        }})
+        self.assertEqual(response.status_code, 200)
+        theme       =   response.data['customization']['site_theme']
+        self.assertEqual(set(theme), {'style', 'styleColors'})
+        self.assertEqual(theme['style'], {'id': 'corporativo'})
+        self.assertEqual(theme['styleColors']['light']['containers']['surface'], '#ffffff')
+
+    def test_basic_style_id_above_plan_is_dropped(self):
+        #bento usa la plantilla vitrina (Estándar): el id se descarta pero
+        #los colores del estilo sí se guardan.
+        client      =   self._client()
+        response    =   self._patch(client, {'site_theme': {
+            'style': {'id': 'bento'}, 'styleColors': self._style_colors(),
+        }})
+        self.assertEqual(response.status_code, 200)
+        theme       =   response.data['customization']['site_theme']
+        self.assertNotIn('style', theme)
+        self.assertIn('styleColors', theme)
+
+    def test_basic_advanced_sections_discarded_or_rejected(self):
+        #Las secciones avanzadas se descartan en silencio; una sección
+        #desconocida o un color inválido del set sí son 400.
+        client      =   self._client()
+        response    =   self._patch(client, {'site_theme': {'typography': {'heading': 'oswald'}}})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['site_theme'], {})
+        response    =   self._patch(client, {'site_theme': {'hack': {'<': 'script'}}})
+        self.assertEqual(response.status_code, 400)
+        bad         =   self._style_colors()
+        bad['light']['fonts']['link'] = 'rojo'
+        response    =   self._patch(client, {'site_theme': {'styleColors': bad}})
+        self.assertEqual(response.status_code, 400)
+
+    def test_basic_style_colors_need_contrast(self):
+        client      =   self._client()
+        bad         =   self._style_colors()
+        bad['light']['fonts']['heading'] = '#fefefe'   # casi blanco sobre blanco
+        response    =   self._patch(client, {'site_theme': {'styleColors': bad}})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('contraste', str(response.data['site_theme']))
+
+    def test_public_exposes_basic_style(self):
+        client      =   self._client()
+        self._patch(client, {'site_theme': {
+            'style': {'id': 'corporativo'}, 'styleColors': self._style_colors(),
+        }})
+        theme       =   self._public_theme('tienda-duenio')
+        self.assertEqual(theme['style'], {'id': 'corporativo'})
+        self.assertIn('styleColors', theme)
 
     def test_plus_keeps_only_basic_subset(self):
         #has_design_plus (Estándar): solo radius/density de containers; el

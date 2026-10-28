@@ -129,10 +129,10 @@ onMounted(() => {
         <span class="stl-n" aria-hidden="true">1</span>
         <div class="stl-head-tx">
           <h3 id="stl-h-presets">Elegí un estilo</h3>
-          <p>Un look completo en un toque. <b>Probar</b> lo ves en vivo y se deshace; nada se guarda hasta que guardás vos.</p>
+          <p>Probá en vivo; nada se guarda hasta Guardar.</p>
         </div>
       </header>
-      <PresetGallery :benefits="benefits" />
+      <PresetGallery :benefits="benefits" :mode="form.theme === 'dark' ? 'dark' : 'light'" />
     </section>
 
     <!-- ============ Nivel 2 · Ajustes rápidos ============ -->

@@ -30,12 +30,14 @@ import {
 } from './previewBridge.js'
 import { useStudioHistory } from './useStudioHistory.js'
 import {
-  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys, normalizeHex
+  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys, normalizeHex,
+  styleColorsBlock
 } from '../../studio/contract.js'
 import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb, adaptPalette } from '../../utils/colorTools.js'
 import { STUDIO_PRESETS, presetLock, layoutForTemplate } from '../../studio/presets/index.js'
+import PanelLock from './panels/PanelLock.vue'
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -107,6 +109,8 @@ const draft = reactive({
 // ---------------------------------------------------------------------------
 const explicit = ref(new Set())
 let lastThemeJson = '{}'
+// Bloques anidados que viajan como UNA decisión (juego de colores por modo).
+const ATOMIC_SECTIONS = new Set(['styleColors', 'style'])
 function seedExplicit() {
   const stored = props.customization?.site_theme_draft || props.customization?.site_theme || {}
   const set = themeExplicitKeys(stored)
@@ -114,6 +118,10 @@ function seedExplicit() {
     .forEach((k) => set.add(k))
   const defaults = resolveSiteTheme({})
   for (const section of Object.keys(draft.theme || {})) {
+    if (ATOMIC_SECTIONS.has(section)) {
+      if (draft.theme[section]) set.add(section)
+      continue
+    }
     for (const key of Object.keys(defaults[section] || {})) {
       if (JSON.stringify(draft.theme[section]?.[key]) !== JSON.stringify(defaults[section][key])) {
         set.add(`${section}.${key}`)
@@ -127,6 +135,10 @@ seedExplicit()
 watch(() => JSON.stringify(draft.theme), () => {
   const prev = lastThemeJson ? JSON.parse(lastThemeJson) : {}
   for (const section of Object.keys(draft.theme || {})) {
+    if (ATOMIC_SECTIONS.has(section)) {
+      if (JSON.stringify(prev?.[section]) !== JSON.stringify(draft.theme[section])) explicit.value.add(section)
+      continue
+    }
     for (const key of Object.keys(draft.theme[section] || {})) {
       if (JSON.stringify(prev?.[section]?.[key]) !== JSON.stringify(draft.theme[section]?.[key])) {
         explicit.value.add(`${section}.${key}`)
@@ -233,6 +245,10 @@ watch(() => themeDirty.value || layoutDirty.value, (v) => emit('update:dirty', v
 function pruneTheme(theme, keys) {
   const out = {}
   for (const [section, content] of Object.entries(theme || {})) {
+    if (ATOMIC_SECTIONS.has(section)) {
+      if (keys.has(section) && content && Object.keys(content).length) out[section] = content
+      continue
+    }
     const kept = {}
     for (const [key, value] of Object.entries(content || {})) {
       if (keys.has(`${section}.${key}`)) kept[key] = value
@@ -438,6 +454,10 @@ async function applyPreset(p, part = 'all') {
     ;['containers', 'buttons', 'background', 'motion', 'mobile'].forEach((k) => {
       draft.theme[k] = clone(t[k])
     })
+    // Juego de colores del estilo (fuentes + contenedores) en ambos modos
+    // y el id del preset: es lo único que el plan Básico persiste.
+    draft.theme.styleColors = clone(t.styleColors || styleColorsBlock(t.palette))
+    draft.theme.style = { id: p.id }
     viewerTheme.value = p.pageTheme || 'light'
   }
   if (all || part === 'typography') {
@@ -493,15 +513,23 @@ onBeforeUnmount(() => {
 
 // Click en la preview -> herramienta + control del panel (foco + flash).
 const tool = ref('estilos')
-// Sin el beneficio premium el Studio solo abre "Estilos": el resto de las
-// herramientas queda fuera del riel (el gating de datos lo hace el backend).
+// El Studio completo (todas las herramientas) exige has_design_plus: el
+// plan Básico solo edita "Estilos" (el resto se muestra bloqueado como
+// upsell y el gating de datos lo hace el backend).
 const estilosOnly = computed(() => (
-  Object.keys(props.benefits || {}).length > 0 && !props.benefits?.has_design_advanced
+  Object.keys(props.benefits || {}).length > 0 && !props.benefits?.has_design_plus
 ))
-const tools = computed(() => (estilosOnly.value ? STUDIO_TOOLS.filter((t) => t.id === 'estilos') : STUDIO_TOOLS))
+// El riel NUNCA oculta herramientas: las bloqueadas son el upsell.
+const tools = computed(() => STUDIO_TOOLS)
 watch(estilosOnly, (only) => { if (only && tool.value !== 'estilos') tool.value = 'estilos' })
+const lockedTool = ref('')
+const lockedDef = computed(() => STUDIO_TOOLS.find((t) => t.id === lockedTool.value) || null)
+const isLocked = (id) => estilosOnly.value && id !== 'estilos'
 const panelBodyEl = ref(null)
-const toolDef = computed(() => STUDIO_TOOLS.find((t) => t.id === tool.value) || STUDIO_TOOLS[0])
+const toolDef = computed(() => {
+  const def = STUDIO_TOOLS.find((t) => t.id === tool.value)
+  return def && !isLocked(def.id) ? def : STUDIO_TOOLS[0]
+})
 function onPick(target) {
   // Un click en la preview puede apuntar a una herramienta fuera del plan:
   // pickTool avisa y caemos a Estilos para que el panel nunca quede vacío.
@@ -581,12 +609,14 @@ function sheetUp() {
 function pickTool(id) {
   const def = STUDIO_TOOLS.find((t) => t.id === id)
   if (!def) return false
-  if (!tools.value.some((t) => t.id === id)) {
-    // Sin has_design_advanced el riel solo tiene Estilos: avisar en vez de
-    // tragarnos el click en silencio.
-    showToast(`${def.label} viene con un plan superior`)
+  if (isLocked(id)) {
+    // Bloqueo por código (deep link, búsqueda, click en la preview, atajos):
+    // el panel sigue en Estilos y el aviso de upsell queda visible.
+    lockedTool.value = id
+    showToast(`${def.label} viene con el plan Estándar`)
     return false
   }
+  lockedTool.value = ''
   tool.value = id
   panelOpen.value = true
   if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
@@ -751,7 +781,7 @@ function importTheme(raw) {
     const data = JSON.parse(raw)
     const theme = data?.theme ?? data // acepta el formato exportado o un tema pelado
     if (!theme || typeof theme !== 'object' || Array.isArray(theme)) throw new Error('bad theme')
-    const known = ['palette', 'containers', 'typography', 'buttons', 'background', 'motion', 'mobile']
+    const known = ['palette', 'containers', 'typography', 'buttons', 'background', 'motion', 'mobile', 'styleColors', 'style']
     if (!known.some((k) => theme[k] && typeof theme[k] === 'object')) throw new Error('empty theme')
     const resolved = resolveSiteTheme(theme)
     draft.theme = resolved
@@ -836,12 +866,15 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
       <div class="sts-rail-list" role="tablist" aria-orientation="vertical" aria-label="Herramientas de diseño">
         <button
           v-for="t in tools" :key="t.id" type="button" role="tab"
-          class="sts-tool" :class="{ active: tool === t.id }"
-          :aria-selected="tool === t.id" :title="t.desc"
+          class="sts-tool" :class="{ active: tool === t.id, locked: isLocked(t.id) }"
+          :aria-selected="tool === t.id"
+          :aria-disabled="isLocked(t.id) ? 'true' : null"
+          :title="isLocked(t.id) ? `${t.label} — disponible desde el plan Estándar` : t.desc"
           @click="pickTool(t.id)"
         >
           <AppIcon :name="t.icon" :size="19" />
           <span class="sts-tool-lb">{{ t.label }}</span>
+          <AppIcon v-if="isLocked(t.id)" class="sts-tool-lock" name="lock" :size="11" aria-hidden="true" />
         </button>
       </div>
       <button
@@ -878,6 +911,12 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
         ref="panelBodyEl" class="sts-panel-body" role="tabpanel"
         @focusin="onPanelEvent" @input="onPanelEvent" @change="onPanelEvent" @click="onPanelEvent"
       >
+        <div v-if="lockedDef" class="sts-upsell">
+          <PanelLock
+            :text="`${lockedDef.label} está disponible desde el plan Estándar.`"
+            @plans="emit('navigate', 'plans')"
+          />
+        </div>
         <StudioPanel
           :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
           :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config_draft || customization?.layout_config || null"
@@ -974,6 +1013,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 }
 .sts-rail-list { display: flex; flex-direction: column; gap: 2px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .sts-tool {
+  position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   min-height: 52px; padding: 7px 2px 5px; border: 0; border-radius: 10px;
   background: transparent; color: var(--ink-2); font: inherit; font-size: 10.5px;
@@ -981,6 +1021,13 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 }
 .sts-tool:hover { color: var(--ink); background: var(--line-soft); }
 .sts-tool.active { background: var(--brand-soft); color: var(--brand-ink); }
+.sts-tool.locked { color: var(--muted); opacity: .72; }
+.sts-tool.locked:hover { color: var(--ink-2); background: var(--line-soft); opacity: 1; }
+.sts-tool-lock {
+  position: absolute; top: 4px; right: 5px; padding: 1px;
+  border-radius: 4px; background: var(--surface); color: var(--muted);
+}
+.sts-upsell { margin-bottom: 10px; }
 .sts-tool:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
 .sts-tool-lb { line-height: 1.05; text-align: center; hyphens: auto; overflow-wrap: break-word; max-width: 100%; }
 .sts-collapse { margin-top: 8px; color: var(--muted); }

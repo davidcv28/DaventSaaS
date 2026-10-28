@@ -57,9 +57,11 @@ LOCATION_FIELDS         =   ('show_location',)
 #(has_product_comments): sin el flag ambos toggles se descartan del PATCH.
 REVIEW_FIELDS           =   ('show_reviews', 'show_comments')
 #El tema del Studio exige algún beneficio de diseño (has_design_plus da el
-#subconjunto básico radius/density; has_design_advanced, el tema completo):
-#sin ninguno el campo entero se descarta del PATCH como los campos premium
-#y lo guardado queda intacto; el filtro fino por sección corre en el
+#subconjunto básico radius/density; has_design_advanced, el tema completo).
+#El plan Básico (has_customization) conserva el campo pero solo persiste el
+#estilo elegido + su juego de colores de fuentes/contenedores. Sin ningún
+#beneficio el campo entero se descarta del PATCH como los campos premium y
+#lo guardado queda intacto; el filtro fino por sección corre en el
 #serializer vía site_theme.clean_site_theme.
 SITE_THEME_FIELDS       =   ('site_theme', 'site_theme_draft')
 #Link temporal "compartir vista previa": token firmado (TimestampSigner,
@@ -772,7 +774,7 @@ class StoreViewSet(StoreBaseViewSet):
             discard.extend(LOCATION_FIELDS)
         if not profile_has_benefit(store.user, 'has_product_comments'):
             discard.extend(REVIEW_FIELDS)
-        if not profile_has_benefit(store.user, 'has_design_plus') and not profile_has_benefit(store.user, 'has_design_advanced'):
+        if not profile_has_benefit(store.user, 'has_design_plus') and not profile_has_benefit(store.user, 'has_design_advanced') and not profile_has_benefit(store.user, 'has_customization'):
             discard.extend(SITE_THEME_FIELDS)
         if discard:
             data        =   request.data.copy()
