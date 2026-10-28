@@ -20,6 +20,8 @@ import ContainersPanel from './panels/ContainersPanel.vue'
 import BackgroundPanel from './panels/BackgroundPanel.vue'
 import MobilePanel from './panels/MobilePanel.vue'
 import MotionPanel from './panels/MotionPanel.vue'
+import HealthPanel from './panels/HealthPanel.vue'
+import PublishPanel from './panels/PublishPanel.vue'
 import { SURFACE_LABELS } from './studioModel.js'
 import '../../assets/studio-panels.css'
 
@@ -33,9 +35,35 @@ const props = defineProps({
   canFlyers: { type: Boolean, default: false },
   shopName: { type: String, default: '' },
   customization: { type: Object, default: () => ({}) },
-  viewer: { type: String, default: 'light' }
+  viewer: { type: String, default: 'light' },
+  // Salud de tu web: contenido contra el que se contrastan las secciones.
+  healthCtx: { type: Object, default: () => ({}) },
+  // Publicar: estado del flujo borrador → web (lo maneja el Dashboard).
+  hasUnpublished: { type: Boolean, default: false },
+  localDirty: { type: Boolean, default: false },
+  versions: { type: Array, default: () => [] },
+  versionsLoading: { type: Boolean, default: false },
+  actionBusy: { type: String, default: '' },
+  shareUrl: { type: String, default: '' },
+  shareExpires: { type: String, default: '' }
 })
-const emit = defineEmits(['navigate', 'ring', 'set-viewer'])
+const emit = defineEmits([
+  'navigate', 'ring', 'set-viewer',
+  'fix', 'publish', 'discard-draft', 'restore', 'share', 'load-versions',
+  'export-theme', 'import-theme'
+])
+
+// Importar tema (.json): el archivo se lee acá y el objeto crudo sube al
+// shell, que lo valida con resolveSiteTheme antes de aplicarlo al borrador.
+function onImportFile(e) {
+  const file = e.target?.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => emit('import-theme', String(reader.result || ''))
+  reader.onerror = () => emit('import-theme', '')
+  reader.readAsText(file)
+}
 
 // --- Distribución (solo lectura en esta fase: la edición vive en Bloques) ---
 const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
@@ -88,6 +116,20 @@ const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
     :theme="theme" :benefits="benefits"
     @navigate="emit('navigate', $event)"
   />
+  <HealthPanel
+    v-else-if="tool === 'salud'"
+    :theme="theme" :form="form" :layout="layout" :ctx="healthCtx"
+    @navigate="emit('navigate', $event)" @fix="emit('fix', $event)"
+  />
+  <PublishPanel
+    v-else-if="tool === 'publicar'"
+    :has-unpublished="hasUnpublished" :local-dirty="localDirty"
+    :versions="versions" :versions-loading="versionsLoading" :busy="actionBusy"
+    :share-url="shareUrl" :share-expires="shareExpires"
+    @publish="emit('publish', $event)" @discard="emit('discard-draft')"
+    @restore="emit('restore', $event)" @share="emit('share')"
+    @load-versions="emit('load-versions')"
+  />
 
   <!-- ===== Distribución ===== -->
   <div v-else-if="tool === 'distribucion'" class="stp">
@@ -130,6 +172,21 @@ const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
         </button>
       </div>
       <small class="stp-hint2">Claro u oscuro: se guarda con tu diseño. El mismo control está en Colores con la comparación lado a lado.</small>
+    </div>
+    <div class="stp-card">
+      <span class="stp-card-ico"><AppIcon name="download" :size="22" /></span>
+      <strong>Tema en JSON</strong>
+      <p>Exportá el tema actual como archivo o importá uno validado: colores, contenedores, tipografía, botones, fondo, movimiento y móvil.</p>
+      <div class="stp-seg">
+        <button type="button" class="btn secondary btn-auto" @click="emit('export-theme')">
+          <AppIcon name="download" :size="14" /> Exportar
+        </button>
+        <label class="btn secondary btn-auto stp-import">
+          <AppIcon name="upload" :size="14" /> Importar
+          <input type="file" accept=".json,application/json" class="sr-only" @change="onImportFile" />
+        </label>
+      </div>
+      <small class="stp-hint2">El archivo importado se valida contra el esquema del tema antes de aplicarlo al borrador.</small>
     </div>
     <div class="stp-card stp-soon">
       <span class="stp-card-ico"><AppIcon name="sliders" :size="22" /></span>

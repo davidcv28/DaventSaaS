@@ -301,3 +301,53 @@
 @media (prefers-reduced-motion: reduce) {
   .stl-swatch, .stl-font, .stl-chev { transition: none; }
 }
+
+/* ===== Overlays del Studio: ayuda (?), búsqueda (Ctrl+K), onboarding =====
+   Se renderizan dentro de .sts (position:relative lo aporta el shell):
+   cubren el Studio entero sin salirse del overlay móvil (z 80). */
+.stx-overlay { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 18px; background: rgba(15, 23, 42, .38); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.stx-overlay.stx-top { place-items: start center; padding-top: 9vh; }
+.stx-card { width: min(430px, 100%); max-height: min(78vh, 560px); display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; background: var(--card); box-shadow: 0 22px 60px -18px rgba(2, 6, 23, .45); animation: stx-pop .18s ease; }
+@keyframes stx-pop { from { transform: translateY(8px) scale(.98); opacity: 0; } }
+.stx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.stx-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; }
+.stx-x { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.stx-x:hover { background: var(--line-soft); color: var(--ink); }
+.stx-body { padding: 12px 14px 16px; overflow-y: auto; }
+.stx-group + .stx-group { margin-top: 14px; }
+.stx-group h4 { margin: 0 0 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.stx-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.stx-group li { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-2); }
+.stx-keys { flex: none; display: inline-flex; gap: 4px; min-width: 96px; color: var(--ink-2); }
+.stx-keys kbd { padding: 3px 7px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: var(--surface); font: inherit; font-size: 11px; font-weight: 700; }
+
+/* Paleta Ctrl+K */
+.stx-search { overflow: hidden; }
+.stx-search-box { display: flex; align-items: center; gap: 9px; padding: 12px 14px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.stx-search-box input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 14px; outline: none; }
+.stx-esc { padding: 3px 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 10.5px; font-weight: 700; }
+.stx-results { list-style: none; margin: 0; padding: 6px; max-height: 320px; overflow-y: auto; }
+.stx-r { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; cursor: pointer; }
+.stx-r.active, .stx-r:hover { background: var(--brand-soft); }
+.stx-r-ico { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: var(--line-soft); color: var(--ink-2); }
+.stx-r-t { flex: 1; min-width: 0; display: grid; }
+.stx-r-t strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stx-r-t small { font-size: 11px; color: var(--muted); }
+.stx-r-go { color: var(--muted); flex: none; }
+.stx-empty { padding: 18px 12px; font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* Onboarding 3 pasos */
+.stx-onboard { align-items: center; text-align: center; padding: 26px 22px 18px; gap: 8px; }
+.stx-ob-ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--brand-soft); color: var(--brand-ink); }
+.stx-onboard h3 { margin: 4px 0 0; font-size: 17px; }
+.stx-onboard > p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.55; max-width: 34ch; }
+.stx-ob-dots { display: flex; gap: 6px; margin-top: 10px; }
+.stx-ob-dot { width: 22px; height: 22px; border: 0; border-radius: 50%; background: transparent; cursor: pointer; position: relative; }
+.stx-ob-dot::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--line); }
+.stx-ob-dot.active::after { background: var(--brand-500); }
+.stx-ob-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin-top: 14px; }
+
+/* Importar tema: label disfrazado de botón */
+.stp-import { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+
+@media (prefers-reduced-motion: reduce) { .stx-card { animation: none; } }

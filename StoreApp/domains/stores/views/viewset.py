@@ -5,6 +5,7 @@ import logging
 import re
 from datetime import timedelta
 from django.core.cache import cache
+from django.core.signing import TimestampSigner, BadSignature
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -61,6 +62,13 @@ REVIEW_FIELDS           =   ('show_reviews', 'show_comments')
 #y lo guardado queda intacto; el filtro fino por sección corre en el
 #serializer vía site_theme.clean_site_theme.
 SITE_THEME_FIELDS       =   ('site_theme', 'site_theme_draft')
+#Link temporal "compartir vista previa": token firmado (TimestampSigner,
+#salt propio) que habilita la vista del borrador en la web pública sin
+#auth. Vence solo (PREVIEW_SHARE_TTL) — no hay modelo ni revocación:
+#se regenera desde customization/share/. El objeto firmado lleva el pk
+#de la tienda: un token no sirve para previsualizar otra web.
+PREVIEW_SHARE_TTL       =   3 * 24 * 3600   #3 días
+PREVIEW_SIGNER_SALT     =   'davent.stores.preview'
 #Ordenamientos admitidos por el catálogo público (whitelist cerrada: el
 #param ?sort= jamás llega crudo al order_by). Sin sort válido queda el
 #ordering del Meta de Product (name, id). Los precios ordenan/filtran por
@@ -326,6 +334,23 @@ class StoreViewSet(StoreBaseViewSet):
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
+        #Modo vista previa (?preview=<token firmado>): la web muestra el
+        #BORRADOR del Studio (layout/tema/plantilla) — el swap se hace en
+        #la instancia antes de serializar, así filter_site_theme aplica el
+        #mismo gating de plan. Va por fuera del cache compartido (el
+        #payload difiere del público y es tráfico de una sola persona),
+        #no suma visita a las estadísticas y viaja no-store.
+        if self._preview_ok(request, store):
+            customization       =   getattr(store, 'customization', None)
+            if customization is not None:
+                customization.layout_config   =   customization.layout_config_draft
+                customization.site_theme        =   customization.site_theme_draft
+                customization.template          =   customization.template_draft
+            data                =   dict(StorePublicSerializer(store).data)
+            data['preview']     =   True
+            response            =   Response(data, status = status.HTTP_200_OK)
+            patch_cache_control(response, private = True, no_store = True)
+            return response
         #Cache server-side del payload (PUBLIC_CACHE_TTL): es idéntico para
         #todos los visitantes — una tienda con tráfico viral deja de pegarle
         #a la DB por pageview. Quedan vivos el fetch del store (1 query:
@@ -737,11 +762,14 @@ class StoreViewSet(StoreBaseViewSet):
                 data.pop(field, None)
         #Plantilla según el nivel del plan (Básico: Clásico/Perspectiva;
         #Estándar suma Urbano/Publicidad; Premium, todo): un diseño fuera
-        #del nivel se descarta del payload como los campos premium.
-        if 'template' in data and data.get('template') not in allowed_templates_of(store.user):
-            if data is request.data:
-                data        =   request.data.copy()
-            data.pop('template')
+        #del nivel se descarta del payload como los campos premium. El
+        #borrador corre la misma whitelist (template_draft).
+        allowed_templates       =   allowed_templates_of(store.user)
+        for name in ('template', 'template_draft'):
+            if name in data and data.get(name) not in allowed_templates:
+                if data is request.data:
+                    data        =   request.data.copy()
+                data.pop(name)
         serializer        =   StoreCustomizationSerializer(customization, data = data, partial = (request.method == 'PATCH'))
         serializer.is_valid(raise_exception = True)
         serializer.save()
@@ -770,7 +798,13 @@ class StoreViewSet(StoreBaseViewSet):
         note                =   str(request.data.get('note') or '').strip()[:140]
         customization.layout_config =   copy.deepcopy(customization.layout_config_draft) or {}
         customization.site_theme    =   copy.deepcopy(customization.site_theme_draft) or {}
-        customization.save(update_fields = ['layout_config', 'site_theme', 'updated_at'])
+        #La plantilla del borrador publica solo si sigue en la whitelist
+        #del plan (una baja de plan no la re-habilita); si no aplica, el
+        #borrador queda resuelto al publicado — has_unpublished limpio.
+        if customization.template_draft in allowed_templates_of(store.user):
+            customization.template    =   customization.template_draft
+        customization.template_draft    =   customization.template
+        customization.save(update_fields = ['layout_config', 'site_theme', 'template', 'template_draft', 'updated_at'])
         StudioVersion.objects.create(
             store       =   store,
             snapshot    =   {
@@ -804,7 +838,8 @@ class StoreViewSet(StoreBaseViewSet):
         customization, _    =   StoreCustomization.objects.get_or_create(store = store)
         customization.layout_config_draft   =   copy.deepcopy(customization.layout_config) or {}
         customization.site_theme_draft      =   copy.deepcopy(customization.site_theme) or {}
-        customization.save(update_fields = ['layout_config_draft', 'site_theme_draft', 'updated_at'])
+        customization.template_draft        =   customization.template
+        customization.save(update_fields = ['layout_config_draft', 'site_theme_draft', 'template_draft', 'updated_at'])
         return Response(
             {
                 'Exito'         : 'Descartaste los cambios sin publicar',
@@ -854,10 +889,13 @@ class StoreViewSet(StoreBaseViewSet):
             fields                             +=   ['site_theme', 'site_theme_draft']
         template            =   snapshot.get('template')
         #La plantilla se restaura solo si sigue en la whitelist del plan
-        #(una baja de plan no re-habilita una plantilla premium).
+        #(una baja de plan no re-habilita una plantilla premium). El
+        #borrador siempre queda alineado al publicado final.
         if template in allowed_templates_of(store.user):
             customization.template              =   template
             fields.append('template')
+        customization.template_draft            =   customization.template
+        fields.append('template_draft')
         if fields:
             customization.save(update_fields = fields + ['updated_at'])
         return Response(
@@ -867,6 +905,44 @@ class StoreViewSet(StoreBaseViewSet):
             },
             status = status.HTTP_200_OK,
         )
+    #=========================================
+    # SHARE PREVIEW (link temporal al borrador del Studio, sin auth)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'customization/share')
+    def customization_share(self, request):
+        #Emite el token firmado para /<slug>?preview=<token>: la web
+        #pública muestra el borrador del Studio (layout/tema/plantilla)
+        #a quien tenga el link — pensado para mostrar el diseño a un
+        #cliente antes de publicarlo. Vence en PREVIEW_SHARE_TTL.
+        store               =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        token               =   TimestampSigner(salt = PREVIEW_SIGNER_SALT).sign_object({'s': store.pk})
+        return Response(
+            {
+                'token'         :   token,
+                'path'          :   f'/{store.slug}?preview={token}',
+                'expires_at'    :   (timezone.now() + timedelta(seconds = PREVIEW_SHARE_TTL)).isoformat(),
+                'ttl'           :   PREVIEW_SHARE_TTL,
+            },
+            status = status.HTTP_200_OK,
+        )
+
+    def _preview_ok(self, request, store):
+        #?preview=<token> válido solo si la firma es íntegra, no venció y
+        #apunta a ESTA tienda. Token inválido/ajeno = visitante normal
+        #(ve lo publicado — el link malo no rompe la web ni filtra nada).
+        token               =   request.query_params.get('preview')
+        if not token:
+            return False
+        try:
+            data            =   TimestampSigner(salt = PREVIEW_SIGNER_SALT).unsign_object(token, max_age = PREVIEW_SHARE_TTL)
+        except (BadSignature, ValueError):
+            return False
+        return isinstance(data, dict) and data.get('s') == store.pk
     #=========================================
     # LOGO (subir/quitar el logo de la web, multipart)
     #=========================================

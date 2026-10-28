@@ -6594,6 +6594,14 @@ html { scroll-behavior: smooth; }
 .sp-foot .sp-foot-social a { color: #fff; background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .3); }
 .sp-foot .sp-foot-social a:hover { background: #fff; color: var(--store-accent-ink); border-color: #fff; }
 
+/* Link temporal "compartir vista previa": píldora no interactiva que avisa
+   que la página muestra el borrador del Studio. z-index bajo la topbar
+   (44+) y la dock (43) — decorativo, pointer-events off. */
+.sp-preview-badge { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 42; padding: 8px 16px; border-radius: 999px; background: color-mix(in srgb, var(--sp-ink, #0f172a) 88%, transparent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .02em; pointer-events: none; box-shadow: 0 8px 22px -10px rgba(2, 6, 23, .5); white-space: nowrap; max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 720px) {
+  .store-page.has-dock .sp-preview-badge { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
 /* Barra fija de contacto (solo móvil) */
 .sp-dock { display: none; }
 @media (max-width: 720px) {

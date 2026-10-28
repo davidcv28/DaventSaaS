@@ -41,9 +41,10 @@ class StoreSerializer(StoreMixinValidator, StoreCreateMixin, serializers.ModelSe
 #=========================================
 class StoreCarouselImageSerializer(serializers.ModelSerializer):
     url                         =   serializers.SerializerMethodField()
+    size                        =   serializers.IntegerField(source = 'image_size', read_only = True)
     class Meta:
         model                   =   StoreCarouselImage
-        fields                  =   ['id', 'url', 'position']
+        fields                  =   ['id', 'url', 'position', 'size']
     def get_url(self, image):
         return object_url(image.image_key)
 #=========================================
@@ -51,9 +52,10 @@ class StoreCarouselImageSerializer(serializers.ModelSerializer):
 #=========================================
 class StoreGalleryImageSerializer(serializers.ModelSerializer):
     url                         =   serializers.SerializerMethodField()
+    size                        =   serializers.IntegerField(source = 'image_size', read_only = True)
     class Meta:
         model                   =   StoreGalleryImage
-        fields                  =   ['id', 'url', 'position']
+        fields                  =   ['id', 'url', 'position', 'size']
     def get_url(self, image):
         return object_url(image.image_key)
 #=========================================
@@ -142,7 +144,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model                   =   StoreCustomization
         fields                  =   [
-            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent', 'template',
+            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'accent', 'template', 'template_draft',
             'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y',
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'services', 'services_title', 'show_services', 'stats', 'show_stats',
@@ -159,9 +161,9 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'site_templates', 'service_steps', 'service_days', 'service_slots', 'service_ask_address',
             'service_price_note', 'service_pay_note',
             'show_highlights', 'show_reviews', 'show_comments',
-            'logo', 'cover', 'carousel', 'gallery', 'decor', 'updated_at',
+            'logo', 'cover', 'logo_size', 'cover_size', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
-        read_only_fields        =   ['updated_at']
+        read_only_fields        =   ['updated_at', 'logo_size', 'cover_size']
     def get_logo(self, customization):
         return object_url(customization.logo_key)
     def get_cover(self, customization):
@@ -335,6 +337,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         return (
             (customization.layout_config_draft or {}) != (customization.layout_config or {})
             or (customization.site_theme_draft or {}) != (customization.site_theme or {})
+            or customization.template_draft != customization.template
         )
 
     def _clean_theme(self, value, field):
@@ -408,7 +411,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         #Guardar un publicado también alinea su borrador (el editor de hoy
         #guarda y deja la web al día en el mismo paso); un *_draft explícito
         #en el payload manda sobre esta copia.
-        for name in ('layout_config', 'site_theme'):
+        for name in ('layout_config', 'site_theme', 'template'):
             draft                   =   f'{name}_draft'
             if name in attrs and draft not in attrs:
                 attrs[draft]        =   attrs[name]
@@ -461,7 +464,7 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
     #estado de sincronía quedan para el dueño (Studio/panel).
     class Meta(StoreCustomizationSerializer.Meta):
         fields              =   [f for f in StoreCustomizationSerializer.Meta.fields
-                                 if f not in ('contact_email', 'layout_config_draft', 'site_theme_draft', 'has_unpublished')]
+                                 if f not in ('contact_email', 'layout_config_draft', 'site_theme_draft', 'template_draft', 'has_unpublished')]
     def to_representation(self, customization):
         data                =   super().to_representation(customization)
         #Las opiniones (valoraciones y comentarios) son premium

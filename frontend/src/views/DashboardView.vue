@@ -11,7 +11,7 @@ import { useServicesStore } from '../stores/services.store.js'
 import { useThemeStore } from '../stores/theme.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
-  normalizeSlug, publicStoreUrl,
+  normalizeSlug, publicStoreUrl, storesApi,
   CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
   allowedTemplatesFor, resolveStoreTemplate,
   SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
@@ -1629,6 +1629,76 @@ const studioSavedTheme = ref(null)
 // update:layout). null = sin ensayo -> saveDesign manda lo de siempre.
 const studioExtras = ref(null)
 const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
+
+// --- Studio: flujo borrador → publicar ------------------------------------
+// has_unpublished llega en el customization anidado (backend: drafts ≠
+// publicado). versions/busy/share alimentan el panel "Publicar".
+const hasUnpublished = computed(() => Boolean(store.customization?.has_unpublished))
+const studioVersions = ref([])
+const studioVersionsLoading = ref(false)
+const studioActionBusy = ref('')
+const studioShare = ref(null) // {url, expiresAt}
+const studioHealthCtx = computed(() => ({
+  carousel: store.customization?.carousel || [],
+  gallery: store.customization?.gallery || [],
+  logoSize: store.customization?.logo_size || 0,
+  coverSize: store.customization?.cover_size || 0,
+  products: catalog.products || [],
+  categories: catalog.categories || [],
+  catalogLoaded: catalog.status === 'success' || (catalog.products || []).length > 0,
+  servicesCount: (services.items || []).length,
+  servicesLoaded: services.status === 'success' || (services.items || []).length > 0
+}))
+
+async function loadStudioVersions() {
+  studioVersionsLoading.value = true
+  try { studioVersions.value = await storesApi.studioVersions() }
+  catch { /* el panel muestra el vacío; no interrumpe el flujo */ }
+  finally { studioVersionsLoading.value = false }
+}
+async function publishStudio(note) {
+  if (designDirtyAll.value) return
+  studioActionBusy.value = 'publish'
+  const ok = await store.publishCustomization(note)
+  studioActionBusy.value = ''
+  if (!ok) return
+  await nextTick()
+  studioSavedTheme.value = studioTheme.value
+  studioRef.value?.markSaved()
+  pushToast('Publicado: tu web ya muestra los cambios ✓')
+  loadStudioVersions()
+}
+async function discardStudioDraft() {
+  studioActionBusy.value = 'discard'
+  const ok = await store.discardCustomization()
+  studioActionBusy.value = ''
+  if (!ok) return
+  await nextTick()
+  studioRef.value?.discardDraft()
+  pushToast('Borrador descartado')
+}
+async function restoreStudioVersion(versionId) {
+  studioActionBusy.value = `restore:${versionId}`
+  const ok = await store.restoreStudioVersion(versionId)
+  studioActionBusy.value = ''
+  if (!ok) return
+  await nextTick()
+  studioRef.value?.discardDraft()
+  pushToast('Versión restaurada ✓')
+}
+async function shareStudioPreview() {
+  studioActionBusy.value = 'share'
+  const res = await store.createShareLink()
+  studioActionBusy.value = ''
+  if (!res) return
+  studioShare.value = res
+  try {
+    await navigator.clipboard.writeText(res.url)
+    pushToast('Enlace copiado: la vista previa vence en 72 h ✓')
+  } catch {
+    pushToast('Enlace generado: copialo desde el panel Publicar')
+  }
+}
 // Relativo a propósito: el iframe hereda el origen actual y queda
 // same-origin siempre. Con env.appUrl (localhost fijo en dev) el puente
 // postMessage moría en silencio si el panel se abría por 127.0.0.1, la IP
@@ -1636,7 +1706,8 @@ const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
 const studioPreviewSrc = computed(() => (store.store?.slug ? `/${store.store.slug}?studio=1` : ''))
 function onStudioNav(target) {
   if (target === 'tools') { section.value = 'tools'; toolsTab.value = 'studio' }
-  else if (target === 'blocks' || target === 'plans') section.value = target
+  else if (['blocks', 'plans', 'company', 'catalogs', 'services'].includes(target)) section.value = target
+  else if (['content', 'images', 'sections'].includes(target)) designTab.value = target
   else if (target === 'close') designTab.value = 'content'
 }
 function discardDesign() {
@@ -1684,7 +1755,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', measureSheet)
 })
 
-async function saveDesign() {
+async function saveDesign(asDraft = false) {
   Object.keys(designForm).forEach((k) => { designTouched[k] = true })
   if (Object.keys(designErrors.value).some((k) => !COMPANY_FIELDS.includes(k))) return
   designBusy.value = true
@@ -1725,15 +1796,26 @@ async function saveDesign() {
   // La plantilla viaja siempre: el backend la descarta del payload si
   // quedó fuera del nivel del plan (allowed_templates_of). El ensayo del
   // Studio (preset) pisa la del form cuando existe.
-  payload.template = studioExtras.value?.template || designForm.template
-  // El tema del Studio viaja como site_theme: el backend lo sanea y gatea
-  // por plan (clean_site_theme descarta en silencio lo que el plan no
+  // En modo borrador (save del Studio) template/layout/tema viajan en sus
+  // columnas *_draft: la web sigue mostrando lo publicado hasta "Publicar".
+  // `template` publicado NO se envía en ese modo: el serializer lo copiaría
+  // al borrador (validate()) y pisaría un ensayo guardado en template_draft.
+  if (asDraft) {
+    const trialTemplate = studioExtras.value?.template
+    const formTemplateChanged = designForm.template !== (store.customization?.template || 'classic')
+    const nextTemplate = trialTemplate || (formTemplateChanged ? designForm.template : null)
+    if (nextTemplate) payload.template_draft = nextTemplate
+  } else {
+    payload.template = studioExtras.value?.template || designForm.template
+  }
+  // El tema del Studio viaja como site_theme(_draft): el backend lo sanea y
+  // gatea por plan (clean_site_theme descarta en silencio lo que el plan no
   // cubre). Solo se envía si el Studio llegó a montarse.
-  if (studioTheme.value) payload.site_theme = studioTheme.value
+  if (studioTheme.value) payload[asDraft ? 'site_theme_draft' : 'site_theme'] = studioTheme.value
   // Ensayo de layout (preset aplicado en el Studio): viaja como
-  // layout_config — clean_layout_config valida ids/variantes/bloques
+  // layout_config(_draft) — clean_layout_config valida ids/variantes/bloques
   // premium contra el plan de la misma forma que el editor de bloques.
-  if (studioExtras.value?.layout_config) payload.layout_config = studioExtras.value.layout_config
+  if (studioExtras.value?.layout_config) payload[asDraft ? 'layout_config_draft' : 'layout_config'] = studioExtras.value.layout_config
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   const okDesign = await store.saveCustomization(payload)
@@ -1742,7 +1824,7 @@ async function saveDesign() {
   if (okDesign) {
     studioSavedTheme.value = studioTheme.value
     studioRef.value?.markSaved()
-    pushToast('Diseño guardado ✓')
+    pushToast(asDraft ? 'Borrador guardado ✓' : 'Diseño guardado ✓')
   }
 }
 
@@ -4105,9 +4187,21 @@ async function changePassword() {
           @update:dirty="studioDirty = $event"
           @update:theme="studioTheme = $event"
           @update:layout="studioExtras = $event"
-          @save="saveDesign"
+          :health-ctx="studioHealthCtx"
+          :has-unpublished="hasUnpublished"
+          :versions="studioVersions"
+          :versions-loading="studioVersionsLoading"
+          :action-busy="studioActionBusy"
+          :share-url="studioShare?.url || ''"
+          :share-expires="studioShare?.expiresAt || ''"
+          @save="saveDesign(true)"
           @discard="discardDesign"
           @navigate="onStudioNav"
+          @publish="publishStudio"
+          @discard-draft="discardStudioDraft"
+          @restore="restoreStudioVersion"
+          @share="shareStudioPreview"
+          @load-versions="loadStudioVersions"
         />
         <div v-else class="dsg-layout">
           <div class="dsg-main">
@@ -4279,7 +4373,7 @@ async function changePassword() {
             <button type="button" class="btn ghost btn-auto dsg-preview-open" :aria-expanded="previewSheet" @click="previewSheet = !previewSheet"><AppIcon name="eye" :size="16" /> Ver vista previa</button>
             <div class="dsg-actions">
               <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
-              <AppButton :loading="designBusy" type="button" @click="saveDesign">Guardar diseño</AppButton>
+              <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
             </div>
           </div>
           </div>

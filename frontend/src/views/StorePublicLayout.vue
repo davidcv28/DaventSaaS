@@ -63,6 +63,10 @@ function onLayoutMessage(e) {
 // guardar nada; studio:focus dibuja el anillo; studio:ready le avisa al
 // host para que reenvíe el estado vigente (handshake).
 const studioMode = computed(() => route.query.studio === '1')
+// Link temporal "compartir vista previa" (?preview=<token firmado>): la API
+// devuelve el borrador del Studio en vez de lo publicado (data.preview=true).
+const previewToken = computed(() => String(route.query.preview || ''))
+const previewMode = computed(() => Boolean(previewToken.value && store.value?.preview))
 const studioTheme = ref(null)      // siteTheme del borrador
 const studioTemplate = ref(null)   // template del borrador
 const studioViewMode = ref(null)   // claro/oscuro del visor (msg.mode)
@@ -417,7 +421,7 @@ onMounted(async () => {
   // La página Servicios no necesita el catálogo: sus ítems viajan en el
   // payload público de la tienda (service_items).
   try {
-    store.value = await storesApi.publicStore(slug.value)
+    store.value = await storesApi.publicStore(slug.value, { preview: previewToken.value })
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
     // Fuentes propias de la plantilla (titulares): las declara la Template
@@ -433,14 +437,19 @@ onMounted(async () => {
   window.addEventListener('keydown', onMenuKey)
   window.addEventListener('message', onLayoutMessage)
   window.addEventListener('message', onStudioMessage)
-  if (studioMode.value) {
-    // El modo Studio debe sobrevivir a la navegación interna del preview
-    // (nav, catálogo, ficha): sin el query, onStudioMessage se apaga en
-    // silencio y la vista previa queda "congelada" hasta recargar.
+  if (studioMode.value || previewToken.value) {
+    // El modo Studio (?studio=1) y el link de vista previa (?preview=<token>)
+    // deben sobrevivir a la navegación interna: sin el query, onStudioMessage
+    // se apaga en silencio y el link compartido "cae" a lo publicado.
+    const keep = {}
+    if (studioMode.value) keep.studio = '1'
+    if (previewToken.value) keep.preview = previewToken.value
     removeStudioGuard = router.beforeEach((to) => (
-      to.query.studio === '1' ? true : { path: to.path, query: { ...to.query, studio: '1' }, hash: to.hash }
+      Object.keys(keep).every((k) => to.query[k] === keep[k])
+        ? true
+        : { path: to.path, query: { ...to.query, ...keep }, hash: to.hash }
     ))
-    if (window.parent !== window) {
+    if (studioMode.value && window.parent !== window) {
       window.parent.postMessage(studioReady(), parentOrigin)
     }
   }
@@ -461,6 +470,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="[themeVars, studioVars]" v-bind="studioAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
+    <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>

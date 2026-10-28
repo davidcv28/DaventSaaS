@@ -1855,3 +1855,137 @@ class StudioDraftPublishTests(TestCase):
             ('post', f'{STORES_URL}customization/restore/1/'),
         ):
             self.assertIn(getattr(APIClient(), method)(url).status_code, (401, 403), url)
+
+    #===== template_draft (la plantilla también es borrador del Studio) =====
+
+    def test_published_template_syncs_draft(self):
+        #Guardar la plantilla publicada alinea su borrador, igual que
+        #site_theme/layout_config (el editor clásico sigue de un paso).
+        client      =   self._client()
+        custom      =   self._patch(client, {'template': 'duo'}).data['customization']
+        self.assertEqual(custom['template'], 'duo')
+        self.assertEqual(custom['template_draft'], 'duo')
+        self.assertFalse(custom['has_unpublished'])
+
+    def test_draft_template_not_visible_in_public(self):
+        client      =   self._client()
+        response    =   self._patch(client, {'template_draft': 'duo'})
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['template'], 'classic')
+        self.assertEqual(custom['template_draft'], 'duo')
+        self.assertTrue(custom['has_unpublished'])
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']
+        self.assertEqual(public['template'], 'classic')
+        self.assertNotIn('template_draft', public)
+
+    def test_draft_template_keeps_plan_gate(self):
+        #El borrador corre la misma whitelist por nivel: 'shop' es
+        #advanced y un plan básico lo descarta en silencio del payload.
+        client      =   self._client()
+        response    =   self._patch(client, {'template_draft': 'shop'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['template_draft'], 'classic')
+        self.assertFalse(response.data['customization']['has_unpublished'])
+
+    def test_publish_applies_draft_template(self):
+        client      =   self._client()
+        self._patch(client, {'template_draft': 'duo'})
+        response    =   client.post(f'{STORES_URL}customization/publish/')
+        custom      =   response.data['customization']
+        self.assertEqual(custom['template'], 'duo')
+        self.assertEqual(custom['template_draft'], 'duo')
+        self.assertFalse(custom['has_unpublished'])
+        self.assertEqual(StudioVersion.objects.get().snapshot['template'], 'duo')
+        self.assertEqual(APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']['template'], 'duo')
+
+    def test_publish_resolves_draft_template_outside_plan(self):
+        #Baja de plan con borrador premium pendiente: publish no lo
+        #re-habilita — queda el publicado y el borrador se resuelve a él.
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'template_draft': 'shop'})
+        PlanBenefit.objects.filter(benefit__code = 'has_design_advanced').delete()
+        cache.clear()
+        response    =   client.post(f'{STORES_URL}customization/publish/')
+        custom      =   response.data['customization']
+        self.assertEqual(custom['template'], 'classic')
+        self.assertEqual(custom['template_draft'], 'classic')
+        self.assertFalse(custom['has_unpublished'])
+
+    def test_discard_reverts_draft_template(self):
+        client      =   self._client()
+        self._patch(client, {'template': 'duo'})
+        self._patch(client, {'template_draft': 'riso'})
+        response    =   client.post(f'{STORES_URL}customization/discard/')
+        custom      =   response.data['customization']
+        self.assertEqual(custom['template'], 'duo')
+        self.assertEqual(custom['template_draft'], 'duo')
+        self.assertFalse(custom['has_unpublished'])
+
+    #===== Compartir vista previa (token firmado -> web con el borrador) =====
+
+    def _share(self, client):
+        return client.post(f'{STORES_URL}customization/share/')
+
+    def test_share_preview_shows_draft(self):
+        #El link temporal muestra el borrador completo del Studio (tema,
+        #layout y plantilla) a un visitante anónimo, marcado con preview.
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {
+            'site_theme_draft'  :   {'palette': {'primary': '#112233'}},
+            'template_draft'    :   'duo',
+            'layout_config_draft':  {'landing': {'blocks': [{'id': 'hero', 'enabled': True, 'order': 0}]}},
+        })
+        data        =   self._share(client).data
+        self.assertIn('preview=', data['path'])
+        #El path es frontend (/{slug}?preview=t): se re-arma como API.
+        url         =   f"{STORES_URL}public/tienda-duenio/?preview={data['token']}"
+        public      =   APIClient().get(url)
+        self.assertEqual(public.status_code, 200)
+        custom      =   public.data['customization']
+        self.assertTrue(public.data['preview'])
+        self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(custom['template'], 'duo')
+        self.assertEqual(custom['layout_config']['landing']['blocks'][0]['id'], 'hero')
+        self.assertNotIn('template_draft', custom)
+        self.assertNotIn('site_theme_draft', custom)
+
+    def test_preview_bad_or_foreign_token_shows_published(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'site_theme_draft': {'palette': {'primary': '#112233'}}, 'template_draft': 'duo'})
+        #Token basura: el visitante ve lo publicado, como si no viniera.
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/?preview=basura').data
+        self.assertNotIn('preview', public)
+        self.assertEqual(public['customization']['site_theme'], {})
+        #Token de otra tienda no habilita el borrador acá.
+        other       =   self._client('otra', has_design_advanced = True)
+        other_token =   self._share(other).data['token']
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/?preview={other_token}').data
+        self.assertNotIn('preview', public)
+        self.assertEqual(public['customization']['site_theme'], {})
+
+    def test_preview_tampered_signature_shows_published(self):
+        client      =   self._client()
+        token       =   self._share(client).data['token']
+        tampered    =   token[:-4] + ('AAAA' if token[-4:] != 'AAAA' else 'BBBB')
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/?preview={tampered}').data
+        self.assertNotIn('preview', public)
+
+    def test_preview_does_not_count_visit(self):
+        #La vista previa es tráfico del dueño/su cliente, no de la web:
+        #no suma al contador ni consume el dedupe del visitante.
+        client      =   self._client()
+        token       =   self._share(client).data['token']
+        APIClient().get(f'{STORES_URL}public/tienda-duenio/?preview={token}')
+        self.assertFalse(StoreDailyVisit.objects.exists())
+
+    def test_share_requires_customization_benefit(self):
+        user, profile   =   _make_named_user('duenio')
+        _grant(profile, has_public_link = True)
+        Store.objects.create(user = profile, slug = 'tienda-duenio')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        self.assertEqual(self._share(client).status_code, 403)
+
+    def test_share_requires_auth(self):
+        self.assertIn(APIClient().post(f'{STORES_URL}customization/share/').status_code, (401, 403))

@@ -361,6 +361,7 @@ class StoreCustomization(models.Model):
     #discard copia publicado→draft.
     layout_config_draft         =   models.JSONField(default = dict, blank = True, verbose_name = 'Bloques (borrador)')
     site_theme_draft            =   models.JSONField(default = dict, blank = True, verbose_name = 'Tema visual (borrador)')
+    template_draft              =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_CLASSIC, verbose_name = 'Diseño de la web (borrador)')
     #Cinta de anuncios bajo la portada y sección Video: bloques extra de
     #marketing que el dueño configura desde "Mi empresa".
     announcements               =   models.JSONField(default = list, blank = True, verbose_name = 'Cinta de anuncios')

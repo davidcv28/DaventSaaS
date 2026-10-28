@@ -64,6 +64,15 @@ import { isHex, deriveAccent } from '../utils/colorTools.js'
 //                                           descarta show_location; sin 'has_product_comments'
 //                                           (premium) descarta show_comments
 //                                        -> {Exito, customization, storage: {used_bytes, max_mb}}
+// Flujo borrador → publicar del Studio (los *_draft editan sin tocar la
+// web; publish aplica y guarda versión — últimas 10 por tienda):
+// POST   /api/stores/customization/publish/   Bearer {note?} -> {Exito, customization}
+// POST   /api/stores/customization/discard/   Bearer -> {Exito, customization}
+// GET    /api/stores/customization/versions/  Bearer -> [{id, note, created_at, snapshot}]
+// POST   /api/stores/customization/restore/<id>/ Bearer -> {Exito, customization}
+// POST   /api/stores/customization/share/     Bearer -> {token, path, expires_at, ttl}
+//                                        (link temporal /<slug>?preview=<t>: la web
+//                                        muestra el borrador sin auth, vence en 72 h)
 // POST   /api/stores/customization/logo/ Bearer multipart {logo: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/logo/ Bearer   -> quita el logo y libera la cuota
 //                                        -> 403 si falta has_customization; 400 si excede max_storage_mb
@@ -150,8 +159,10 @@ export const storesApi = {
     return data
   },
 
-  async publicStore(slug) {
-    const { data } = await http.get(`/stores/public/${slug}/`)
+  async publicStore(slug, { preview } = {}) {
+    // ?preview=<token firmado>: el backend muestra el borrador del Studio
+    // (link temporal de "compartir vista previa") en vez de lo publicado.
+    const { data } = await http.get(`/stores/public/${slug}/`, { params: preview ? { preview } : {} })
     return data
   },
 
@@ -194,6 +205,31 @@ export const storesApi = {
 
   async updateCustomization(payload) {
     const { data } = await http.patch('/stores/customization/', payload)
+    return data
+  },
+
+  // Studio — flujo borrador → publicar: publish aplica los *_draft a la
+  // web y guarda la versión; discard los vuelve a lo publicado; versions
+  // lista el historial y restore recupera un snapshot; sharePreview emite
+  // el token firmado del link temporal /<slug>?preview=<token> (72 h).
+  async publishCustomization(note = '') {
+    const { data } = await http.post('/stores/customization/publish/', { note })
+    return data
+  },
+  async discardCustomization() {
+    const { data } = await http.post('/stores/customization/discard/')
+    return data
+  },
+  async studioVersions() {
+    const { data } = await http.get('/stores/customization/versions/')
+    return data
+  },
+  async restoreStudioVersion(versionId) {
+    const { data } = await http.post(`/stores/customization/restore/${versionId}/`)
+    return data
+  },
+  async sharePreview() {
+    const { data } = await http.post('/stores/customization/share/')
     return data
   },
 

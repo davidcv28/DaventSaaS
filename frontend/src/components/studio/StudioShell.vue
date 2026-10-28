@@ -19,6 +19,9 @@ import AppIcon from '../AppIcon.vue'
 import AppButton from '../AppButton.vue'
 import StudioCanvas from './StudioCanvas.vue'
 import StudioPanel from './StudioPanel.vue'
+import StudioHelp from './StudioHelp.vue'
+import StudioSearch from './StudioSearch.vue'
+import StudioOnboarding from './StudioOnboarding.vue'
 import {
   STUDIO_TOOLS, seedStudioTheme, formThemePatch, mergeTheme, clone, toolForTarget
 } from './studioModel.js'
@@ -45,27 +48,39 @@ const props = defineProps({
   dirty: { type: Boolean, default: false }, // dirty de los campos persistibles (designDirty del padre)
   initialTheme: { type: Object, default: null }, // último borrador emitido: el draft sobrevive al cambio de pestaña
   savedTheme: { type: Object, default: null },   // último tema guardado (punto de guardado estable entre montajes)
-  initialExtras: { type: Object, default: null } // último ensayo emitido {layout_config, template} — sobrevive al remontar
+  initialExtras: { type: Object, default: null }, // último ensayo emitido {layout_config, template} — sobrevive al remontar
+  // Flujo borrador → publicar + salud de la web (los maneja el Dashboard).
+  healthCtx: { type: Object, default: () => ({}) },
+  hasUnpublished: { type: Boolean, default: false },
+  versions: { type: Array, default: () => [] },
+  versionsLoading: { type: Boolean, default: false },
+  actionBusy: { type: String, default: '' },
+  shareUrl: { type: String, default: '' },
+  shareExpires: { type: String, default: '' }
 })
-const emit = defineEmits(['save', 'discard', 'navigate', 'update:dirty', 'update:theme', 'update:layout'])
+const emit = defineEmits([
+  'save', 'discard', 'navigate', 'update:dirty', 'update:theme', 'update:layout',
+  'publish', 'discard-draft', 'restore', 'share', 'load-versions'
+])
 
 // ---------------------------------------------------------------------------
 // Borrador siteTheme
 // ---------------------------------------------------------------------------
-// Punto de guardado: lo que devuelve el servidor (semilla + site_theme
-// persistido — hoy el serializer puede no devolverlo todavía) o, tras un
-// save OK, la copia optimista (savedOverride) hasta que el servidor empiece
-// a reflejar site_theme.
+// Punto de guardado: lo que devuelve el servidor (semilla + el BORRADOR
+// persistido — site_theme_draft, con caída al publicado para filas viejas
+// sin draft) o, tras un save OK, la copia optimista (savedOverride).
 const seed = computed(() => mergeTheme(
   seedStudioTheme(props.customization || {}),
-  props.customization?.site_theme || {}
+  props.customization?.site_theme_draft || props.customization?.site_theme || {}
 ))
 const savedOverride = ref(null)
 const base = computed(() => savedOverride.value || props.savedTheme || resolveSiteTheme(seed.value))
 // draft.layout = layout_config de ensayo (contrato); draft.template =
 // plantilla en prueba (puede ser de un nivel superior al plan — la preview
 // la muestra igual; el backend gatea al guardar). null = lo guardado.
-const savedLayout = ref(clone(props.customization?.layout_config || null))
+const savedLayout = ref(clone(
+  props.customization?.layout_config_draft || props.customization?.layout_config || null
+))
 const draft = reactive({
   theme: props.initialTheme ? clone(props.initialTheme) : clone(base.value),
   // El ensayo emitido antes del remount (initialExtras) tiene prioridad
@@ -78,17 +93,18 @@ const layoutDirty = computed(() =>
   draft.template !== null || JSON.stringify(draft.layout) !== JSON.stringify(savedLayout.value)
 )
 
-// El servidor empezó a devolver site_theme (o cambió): resembrar completo.
-watch(() => JSON.stringify(props.customization?.site_theme || {}), () => {
+// El borrador del servidor cambió (save propio, discard, restore):
+// resembrar completo.
+watch(() => JSON.stringify(props.customization?.site_theme_draft || {}), () => {
   savedOverride.value = null
   draft.theme = resolveSiteTheme(seed.value)
 })
 // Igual cuando el padre marca un nuevo punto de guardado estable.
 watch(() => props.savedTheme, (t) => { if (t) savedOverride.value = null })
-// Layout guardado que cambió afuera (otro tab/editor): resembrar solo si
-// no hay ensayo en curso — un preset aplicado y todavía no guardado no se
-// pisa por un refresh del store.
-watch(() => JSON.stringify(props.customization?.layout_config || null), (j) => {
+// Layout del borrador que cambió afuera (otro tab/editor/discard): resembrar
+// solo si no hay ensayo en curso — un preset aplicado y todavía no guardado
+// no se pisa por un refresh del store.
+watch(() => JSON.stringify(props.customization?.layout_config_draft || null), (j) => {
   const wasClean = !layoutDirty.value
   savedLayout.value = j ? JSON.parse(j) : null
   if (wasClean) draft.layout = clone(savedLayout.value)
@@ -208,7 +224,11 @@ const zoom = ref(100)
 const viewerTheme = ref(props.customization?.theme === 'dark' ? 'dark' : 'light')
 const comparing = ref(false)
 const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))
-const liveTemplate = computed(() => resolveStoreTemplate(props.form.template, allowedTemplates.value))
+// Plantilla vigente del borrador: el ensayo guardado en template_draft si
+// existe (un "Probar" ya guardado sigue mostrándose), si no la publicada.
+const liveTemplate = computed(() => resolveStoreTemplate(
+  props.customization?.template_draft || props.form.template, allowedTemplates.value
+))
 const canFlyers = computed(() => Boolean(props.benefits?.has_flyers))
 const frameDoc = () => canvasRef.value?.iframeEl?.contentDocument || null
 
@@ -453,13 +473,145 @@ function onPanelNav(target) {
 }
 
 // ---------------------------------------------------------------------------
+// "Salud de tu web": los arreglos con fix automático se aplican al borrador
+// (paleta/tema/bloque); los de contenido navegan a su sección.
+// ---------------------------------------------------------------------------
+function applyHealthFix(fix) {
+  if (!fix) return
+  if (fix.kind === 'palette') {
+    draft.theme.palette[fix.key] = fix.value
+  } else if (fix.kind === 'theme') {
+    (draft.theme[fix.group] ??= {})[fix.key] = fix.value
+  } else if (fix.kind === 'block') {
+    const b = draft.layout?.[fix.surface]?.blocks?.find((x) => x.id === fix.id)
+    if (b) b.enabled = false
+  } else {
+    return
+  }
+  showToast('Arreglo aplicado al borrador')
+}
+
+// ---------------------------------------------------------------------------
+// Ayuda (?), búsqueda de ajustes (Ctrl+K) y onboarding de primera vez.
+// ---------------------------------------------------------------------------
+const showHelp = ref(false)
+const showSearch = ref(false)
+const showOnboard = ref(false)
+const ONBOARD_KEY = 'davent.studio.seen.v1'
+onMounted(() => {
+  try { if (!window.localStorage.getItem(ONBOARD_KEY)) showOnboard.value = true } catch { /* sin storage: no se persiste */ }
+})
+function closeOnboarding() {
+  showOnboard.value = false
+  try { window.localStorage.setItem(ONBOARD_KEY, '1') } catch { /* idem */ }
+}
+
+// Índice de la búsqueda: herramientas + campos clave con su data-focus (el
+// pick enfoca el control exacto como un click en la vista previa).
+const SEARCH_INDEX = [
+  { tool: 'estilos',      focus: 'hero',       label: 'Presets de diseño',            hint: 'Estilos', kw: 'preset estilo combinado look plantilla tema' },
+  { tool: 'colores',      focus: 'page',       label: 'Paleta y colores',             hint: 'Colores', kw: 'color paleta acento primario fondo texto' },
+  { tool: 'colores',      focus: 'buttons',    label: 'Contraste accesible',          hint: 'Colores', kw: 'contraste aa legibilidad accesible' },
+  { tool: 'tipografia',   focus: 'typo',       label: 'Fuentes y tipografía',         hint: 'Tipografía', kw: 'fuente letra tipografia texto peso escala' },
+  { tool: 'contenedores', focus: 'card',       label: 'Bordes, sombras y tarjetas',   hint: 'Contenedores', kw: 'borde sombra radio tarjeta contenedor densidad' },
+  { tool: 'contenedores', focus: 'buttons',    label: 'Botones',                      hint: 'Contenedores', kw: 'boton forma estilo cta' },
+  { tool: 'fondo',        focus: 'page',       label: 'Fondo de la página',           hint: 'Fondo', kw: 'fondo degradado imagen patron mesh' },
+  { tool: 'distribucion', focus: 'blk',        label: 'Bloques y orden de secciones', hint: 'Distribución', kw: 'bloque seccion orden distribucion layout' },
+  { tool: 'movil',        focus: 'chrome.nav', label: 'Navegación móvil',             hint: 'Móvil', kw: 'movil celular nav menu bottom drawer' },
+  { tool: 'movil',        focus: 'hero',       label: 'Portada en celular',           hint: 'Móvil', kw: 'movil hero portada altura grilla' },
+  { tool: 'movimiento',   focus: 'page',       label: 'Animaciones y revelado',       hint: 'Movimiento', kw: 'animacion movimiento reveal hover efecto' },
+  { tool: 'folletos',     focus: null,         label: 'Folletos imprimibles',         hint: 'Folletos', kw: 'folleto flyer imprimir qr' },
+  { tool: 'avanzado',     focus: 'page',       label: 'Tema claro u oscuro',          hint: 'Avanzado', kw: 'oscuro claro modo dark light tema' },
+  { tool: 'avanzado',     focus: null,         label: 'Importar o exportar el tema',  hint: 'Avanzado', kw: 'json importar exportar tema backup archivo' },
+  { tool: 'salud',        focus: null,         label: 'Salud de tu web',              hint: 'Salud', kw: 'salud revision contraste imagenes accesibilidad chequeo' },
+  { tool: 'publicar',     focus: null,         label: 'Publicar, versiones y compartir', hint: 'Publicar', kw: 'publicar version historial restaurar compartir enlace link borrador' }
+]
+const searchEntries = computed(() => [
+  ...STUDIO_TOOLS.map((t) => ({ id: `tool-${t.id}`, label: t.label, hint: t.desc, icon: t.icon, tool: t.id, focus: null, kw: t.label })),
+  ...SEARCH_INDEX.map((e, i) => ({ id: `f-${i}`, icon: STUDIO_TOOLS.find((t) => t.id === e.tool)?.icon || 'sliders', ...e }))
+])
+function onSearchPick(entry) {
+  pickTool(entry.tool)
+  if (!entry.focus) return
+  nextTick(() => {
+    const field = panelBodyEl.value?.querySelector(`[data-focus="${entry.focus}"]`)
+    if (!field) return
+    field.classList.add('sts-flash')
+    field.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    field.querySelector('input, select, button, [tabindex]')?.focus({ preventScroll: true })
+    setTimeout(() => field.classList.remove('sts-flash'), 1400)
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Importar / exportar el tema (JSON validado por el contrato).
+// ---------------------------------------------------------------------------
+const fileToast = ref('')
+let toastTimer = null
+function showToast(msg) {
+  clearTimeout(toastTimer)
+  fileToast.value = msg
+  toastTimer = setTimeout(() => { fileToast.value = '' }, 3400)
+}
+function exportTheme() {
+  const payload = { app: 'davent', kind: 'site_theme', version: 1, theme: clone(draft.theme) }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `tema-${props.customization?.template || 'web'}.json`
+  a.click()
+  URL.revokeObjectURL(a.href)
+  showToast('Tema exportado')
+}
+function importTheme(raw) {
+  try {
+    const data = JSON.parse(raw)
+    const theme = data?.theme ?? data // acepta el formato exportado o un tema pelado
+    if (!theme || typeof theme !== 'object' || Array.isArray(theme)) throw new Error('bad theme')
+    const known = ['palette', 'containers', 'typography', 'buttons', 'background', 'motion', 'mobile']
+    if (!known.some((k) => theme[k] && typeof theme[k] === 'object')) throw new Error('empty theme')
+    const resolved = resolveSiteTheme(theme)
+    draft.theme = resolved
+    viewerTheme.value = props.form.theme === 'dark' ? 'dark' : 'light'
+    showToast('Tema importado al borrador')
+  } catch {
+    showToast('El archivo no es un tema válido (.json del Studio)')
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Teclado: Ctrl+Z / Ctrl+Shift+Z (capture — también anula el undo interno de
-// los paneles embebidos para que el historial sea único) y Esc de fullscreen.
+// los paneles embebidos para que el historial sea único), Ctrl+S guarda el
+// borrador, Ctrl+K busca, "?" abre la ayuda y Esc cierra en cascada.
 // ---------------------------------------------------------------------------
 function onKey(e) {
-  if (e.key === 'Escape' && fullscreen.value) { fullscreen.value = false; return }
+  if (e.key === 'Escape') {
+    if (showSearch.value) { showSearch.value = false; return }
+    if (showHelp.value) { showHelp.value = false; return }
+    if (showOnboard.value) { showOnboard.value = false; return }
+    if (fullscreen.value) { fullscreen.value = false }
+    return
+  }
+  const inField = e.target?.closest?.('input, textarea, select, [contenteditable="true"]')
+  if (!inField && e.key === '?') {
+    e.preventDefault()
+    showHelp.value = !showHelp.value
+    return
+  }
   if (!(e.ctrlKey || e.metaKey) || e.altKey) return
   const k = e.key.toLowerCase()
+  if (k === 'k') {
+    e.preventDefault()
+    e.stopPropagation()
+    showSearch.value = !showSearch.value
+    return
+  }
+  if (k === 's') {
+    e.preventDefault()
+    e.stopPropagation()
+    emit('save')
+    return
+  }
   if (k !== 'z' && k !== 'y') return
   e.preventDefault()
   e.stopPropagation()
@@ -467,7 +619,10 @@ function onKey(e) {
   else undo()
 }
 onMounted(() => window.addEventListener('keydown', onKey, true))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey, true))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey, true)
+  clearTimeout(toastTimer)
+})
 
 // Comparar antes/después: mantener presionado envía el tema guardado.
 function compareStart() { comparing.value = true }
@@ -542,11 +697,20 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
       >
         <StudioPanel
           :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
-          :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config || null"
+          :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config_draft || customization?.layout_config || null"
           :can-flyers="canFlyers" :shop-name="shopName"
           :customization="customization" :viewer="viewerTheme"
+          :health-ctx="healthCtx"
+          :has-unpublished="hasUnpublished" :local-dirty="anyDirty"
+          :versions="versions" :versions-loading="versionsLoading" :action-busy="actionBusy"
+          :share-url="shareUrl" :share-expires="shareExpires"
           @navigate="onPanelNav" @ring="ringTarget"
           @set-viewer="(v) => { if (v === 'light' || v === 'dark') viewerTheme = v }"
+          @fix="applyHealthFix"
+          @publish="emit('publish', $event)" @discard-draft="emit('discard-draft')"
+          @restore="emit('restore', $event)" @share="emit('share')"
+          @load-versions="emit('load-versions')"
+          @export-theme="exportTheme" @import-theme="importTheme"
         />
       </div>
     </section>
@@ -566,7 +730,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
       <p class="sts-state" :class="{ dirty: anyDirty }" role="status">
         <span v-if="anyDirty" class="sts-dot" aria-hidden="true"></span>
         <AppIcon v-else name="circle-check" :size="15" aria-hidden="true" />
-        <span>{{ anyDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
+        <span>{{ anyDirty ? 'Cambios sin guardar' : (hasUnpublished ? 'Borrador sin publicar' : 'Todo guardado') }}</span>
       </p>
       <div class="sts-hist">
         <button type="button" class="sts-opt" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" @click="undo"><AppIcon name="undo" :size="16" /></button>
@@ -578,11 +742,28 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
           @keydown.space.prevent="compareStart" @keyup.space="compareEnd" @blur="compareEnd"
         ><AppIcon name="eye" :size="16" /><span class="sts-opt-lb">Comparar</span></button>
       </div>
+      <div class="sts-hist sts-utils">
+        <button type="button" class="sts-opt" title="Buscar ajustes (Ctrl+K)" aria-label="Buscar ajustes" @click="showSearch = true"><AppIcon name="search" :size="16" /></button>
+        <button type="button" class="sts-opt" title="Ayuda y atajos (?)" aria-label="Ayuda y atajos" @click="showHelp = true"><AppIcon name="circle-help" :size="16" /></button>
+      </div>
       <div class="sts-acts">
         <button type="button" class="btn ghost btn-auto" :disabled="busy" @click="discard"><AppIcon name="undo" :size="15" /> Descartar</button>
-        <AppButton :loading="busy" type="button" @click="emit('save')">Guardar</AppButton>
+        <button
+          v-if="hasUnpublished && !anyDirty" type="button" class="btn secondary btn-auto"
+          :disabled="actionBusy === 'publish'" title="Llevar el borrador guardado a tu web"
+          @click="emit('publish', '')"
+        ><AppIcon name="rocket" :size="15" /> Publicar</button>
+        <AppButton :loading="busy" type="button" title="Guardar borrador (Ctrl+S)" @click="emit('save')">Guardar borrador</AppButton>
       </div>
     </footer>
+
+    <!-- ===== Overlays: ayuda (?), búsqueda (Ctrl+K), onboarding y toast ===== -->
+    <StudioHelp v-if="showHelp" @close="showHelp = false" />
+    <StudioSearch v-if="showSearch" :entries="searchEntries" @select="onSearchPick" @close="showSearch = false" />
+    <StudioOnboarding v-if="showOnboard" @done="closeOnboarding" />
+    <Transition name="sts-toast">
+      <p v-if="fileToast" class="sts-toast" role="status"><AppIcon name="circle-check" :size="14" /> {{ fileToast }}</p>
+    </Transition>
   </div>
 </template>
 
@@ -590,6 +771,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 /* ===== Grid 3 zonas + savebar ===== */
 .sts {
   --rail-w: 68px; --panel-w: 320px;
+  position: relative; /* ancla de los overlays (ayuda, buscador, onboarding) */
   display: grid;
   grid-template-columns: var(--rail-w) var(--panel-w) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
@@ -670,7 +852,21 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 .sts-opt[aria-pressed='true'] { background: var(--brand-soft); color: var(--brand-ink); }
 .sts-opt:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .sts-cmp { user-select: none; -webkit-user-select: none; touch-action: none; }
+.sts-utils { margin-left: auto; }
+.sts-utils + .sts-acts { margin-left: 0; }
 .sts-acts { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+
+/* Toast local del Studio (fixes de salud, exportar/importar tema): sube
+   desde la savebar sin tapar el lienzo. */
+.sts-toast {
+  position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 9px 14px;
+  border-radius: 10px; background: var(--ink, #0f172a); color: #fff; font-size: 12.5px;
+  font-weight: 600; box-shadow: 0 10px 26px -10px rgba(2, 6, 23, .45); z-index: 65;
+  white-space: nowrap; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis;
+}
+.sts-toast-enter-active, .sts-toast-leave-active { transition: opacity .18s ease, transform .18s ease; }
+.sts-toast-enter-from, .sts-toast-leave-to { opacity: 0; transform: translate(-50%, 6px); }
 
 /* ===== Tablet: panel colapsable ===== */
 @media (max-width: 1100px) {
@@ -741,10 +937,12 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
   .sts-stop:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
   .sts-panel-x { display: none; }
   .sts-panel-body { padding: 12px 14px 18px; }
+  .sts-toast { bottom: calc(var(--rail-h) + 118px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sts-dot { animation: none; }
   .sts-tool, .sts-opt, .sts-panel { transition: none; }
+  .sts-toast-enter-active, .sts-toast-leave-active { transition: none; }
 }
 </style>

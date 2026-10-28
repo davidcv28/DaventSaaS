@@ -277,6 +277,75 @@ export const useStoreStore = defineStore('store', () => {
     }
   }
 
+  // Studio — borrador → publicar: publish aplica los *_draft a la web y
+  // guarda versión; discard los revierte al publicado; restore recupera
+  // un snapshot. Las tres actualizan customization y dejan el Studio
+  // re-sembrado (has_unpublished queda en el payload).
+  async function publishCustomization(note = '') {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.publishCustomization(note)
+      notice.value = data?.Exito || 'Publicaste los cambios de tu web.'
+      applyCustomizationData(data)
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
+  async function discardCustomization() {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.discardCustomization()
+      notice.value = data?.Exito || 'Descartaste los cambios sin publicar.'
+      applyCustomizationData(data)
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
+  async function restoreStudioVersion(versionId) {
+    if (!store.value) return false
+    lastError.value = ''
+    fieldErrors.value = {}
+    notice.value = ''
+    try {
+      const data = await storesApi.restoreStudioVersion(versionId)
+      notice.value = data?.Exito || 'Restauraste esa versión de tu web.'
+      applyCustomizationData(data)
+      return true
+    } catch (e) {
+      setApiError(e)
+      return false
+    }
+  }
+
+  // Link temporal "compartir vista previa" del borrador (72 h): el token
+  // firmado habilita /<slug>?preview=<token> sin auth. Devuelve la URL
+  // absoluta lista para pegar o null si falla.
+  async function createShareLink() {
+    if (!store.value) return null
+    lastError.value = ''
+    fieldErrors.value = {}
+    try {
+      const data = await storesApi.sharePreview()
+      const url = `${window.location.origin}${data.path}`
+      return { url, expiresAt: data.expires_at, ttl: data.ttl }
+    } catch (e) {
+      setApiError(e)
+      return null
+    }
+  }
+
   async function refreshCustomization() {
     try {
       const data = await storesApi.customization()
@@ -347,6 +416,7 @@ export const useStoreStore = defineStore('store', () => {
     saveCustomization, uploadLogo, removeLogo, uploadCover, removeCover,
     addCarouselImage, removeCarouselImage, moveCarouselImage, refreshCustomization,
     addGalleryImage, removeGalleryImage, moveGalleryImage,
+    publishCustomization, discardCustomization, restoreStudioVersion, createShareLink,
     loadMine, claim, update, reset, loadStats, chatbot, loadChatbot, saveChatbot
   }
 })

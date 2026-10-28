@@ -16,7 +16,9 @@ export const STUDIO_TOOLS = [
   { id: 'movil',        icon: 'smartphone',   label: 'Móvil',        desc: 'Navegación, grilla y portada en pantallas chicas.' },
   { id: 'movimiento',   icon: 'zap',          label: 'Movimiento',   desc: 'Revelado al bajar, reacción al mouse e intensidad.' },
   { id: 'folletos',     icon: 'printer',      label: 'Folletos',     desc: 'Piezas imprimibles con tu identidad (QR y ofertas).' },
-  { id: 'avanzado',     icon: 'sliders',      label: 'Avanzado',     desc: 'Tema claro/oscuro y ajustes finos del diseño.' }
+  { id: 'avanzado',     icon: 'sliders',      label: 'Avanzado',     desc: 'Tema claro/oscuro y ajustes finos del diseño.' },
+  { id: 'salud',        icon: 'shield-check', label: 'Salud',        desc: 'Revisión de tu web: contraste, imágenes, textos y secciones.' },
+  { id: 'publicar',     icon: 'rocket',       label: 'Publicar',     desc: 'Borrador a tu web, historial de versiones y link para compartir.' }
 ]
 
 export const SURFACE_LABELS = { landing: 'Inicio', catalog: 'Catálogo', services: 'Servicios' }
