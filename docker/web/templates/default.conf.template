@@ -43,6 +43,22 @@ server {
     }
 }
 
+# ---------- Apex -> www (canónico: www.${PLATFORM_DOMAIN}) ----------
+# Exacto (sin punto inicial) para ganarle al server_name wildcard de abajo:
+# nginx prioriza el nombre exacto sobre el comodín. Las tiendas siguen en
+# <slug>.${PLATFORM_DOMAIN} — nunca en www.<slug>.<dominio>.
+server {
+    listen 8443 ssl;
+    listen [::]:8443 ssl;
+    server_name ${PLATFORM_DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${PLATFORM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${PLATFORM_DOMAIN}/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    return 301 https://www.${PLATFORM_DOMAIN}$request_uri;
+}
+
 # ---------- HTTPS: SPA + API + estáticos ----------
 server {
     listen 8443 ssl;

@@ -113,11 +113,11 @@ GUNICORN_THREADS=4
 ```
 PLATFORM_DOMAIN=davent.com.ar
 ALLOWED_HOSTS=.davent.com.ar                  # el punto = apex + *.subdominios
-CORS_ALLOWED_ORIGINS=https://davent.com.ar
+CORS_ALLOWED_ORIGINS=https://www.davent.com.ar,https://davent.com.ar
 CORS_ALLOW_CREDENTIALS=True
-CSRF_TRUSTED_ORIGINS=https://davent.com.ar,https://*.davent.com.ar
-FRONTEND_URL=https://davent.com.ar
-BACKEND_URL=https://davent.com.ar             # links de mails
+CSRF_TRUSTED_ORIGINS=https://www.davent.com.ar,https://davent.com.ar,https://*.davent.com.ar
+FRONTEND_URL=https://www.davent.com.ar        # canónico www (apex -> 301 www)
+BACKEND_URL=https://www.davent.com.ar         # links de mails
 SECURE_PROXY_SSL=True
 SECURE_SSL_REDIRECT=False                     # el 80->443 lo hace nginx
 SESSION_COOKIE_SECURE=True
@@ -127,6 +127,11 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS=True
 SECURE_HSTS_PRELOAD=False
 DEBUG=False
 ```
+
+> **URLs canónicas (regla fija, ver `AGENTS.md`)**: plataforma en
+> `https://www.davent.com.ar` (el apex lo redirige nginx) y cada tienda en
+> `https://<slug>.davent.com.ar` — **un solo label**. Nunca `www.<slug>.davent.com.ar`:
+> el wildcard DNS y el cert `*.davent.com.ar` no cubren dos niveles.
 
 > Subdominios `<slug>.davent.com.ar`: en el build de la imagen `web` pasar
 > `VITE_PLATFORM_DOMAIN=davent.com.ar` (sale de `PLATFORM_DOMAIN` del `.env`
