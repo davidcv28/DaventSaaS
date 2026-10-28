@@ -25,6 +25,7 @@ function fetchClientId() {
 // ambos lados el botón no se muestra (feature apagada).
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { Capacitor } from '@capacitor/core'
+import { SocialLogin } from '@capgo/capacitor-social-login'
 import { useAuthStore } from '../stores/auth.store.js'
 
 const props = defineProps({
@@ -36,6 +37,8 @@ const auth = useAuthStore()
 
 const clientId = ref(import.meta.env.VITE_GOOGLE_CLIENT_ID || '')
 const visible = ref(Boolean(clientId.value))
+const isNative = Capacitor.isNativePlatform()
+let nativeReady = false
 
 const googleEl = ref(null)
 const busy = ref(false)
@@ -119,19 +122,58 @@ async function onGoogleCredential({ credential }) {
   }
 }
 
+// APK (nativo): Google bloquea el OAuth dentro de WebViews (403
+// disallowed_useragent), así que el sign-in corre por el plugin nativo
+// (Credential Manager de Android → account picker del SO). El webClientId
+// es el mismo GOOGLE_CLIENT_ID del backend: el idToken que devuelve lleva
+// ese aud y lo verifica el mismo POST /api/auth/google/ de la web.
+async function initNative() {
+  try {
+    await SocialLogin.initialize({ google: { webClientId: clientId.value } })
+    nativeReady = true
+    visible.value = true
+  } catch {
+    emit('error', 'No pudimos cargar el ingreso con Google. Intentá de nuevo.')
+  }
+}
+
+async function onNativeGoogleTap() {
+  if (!nativeReady || busy.value) return
+  busy.value = true
+  try {
+    const res = await SocialLogin.login({ provider: 'google', options: {} })
+    const credential = res?.result?.idToken
+    if (!credential) throw new Error('no-id-token')
+    const login = await auth.socialLogin(credential)
+    if (login.ok) {
+      emit('done', login)
+    } else {
+      emit('error', auth.lastError || 'No pudimos iniciar sesión. Intentá de nuevo.')
+    }
+  } catch (err) {
+    // El usuario puede cerrar el picker de cuentas — no es un error.
+    const msg = String(err?.message || err || '').toLowerCase()
+    if (!msg.includes('cancel') && !msg.includes('12501')) {
+      emit('error', 'No pudimos iniciar sesión con Google. Intentá de nuevo.')
+    }
+  } finally {
+    busy.value = false
+  }
+}
+
 onMounted(async () => {
-  // APK (WebView nativo): Google bloquea el flujo OAuth dentro de webviews
-  // (403 disallowed_useragent). El botón se oculta hasta integrar el plugin
-  // nativo de Google Sign-In — el login por email/clave sigue funcionando.
-  if (Capacitor.isNativePlatform()) return
   // Sin override horneado, el ID se resuelve en runtime contra el backend.
   if (!clientId.value) {
     clientId.value = await fetchClientId()
     if (!clientId.value) return // feature apagada en el backend
-    visible.value = true
-    // El div del botón existe recién cuando v-if se repinta.
-    await nextTick()
   }
+  if (isNative) {
+    initNative()
+    return
+  }
+  visible.value = true
+  // El div del botón existe recién cuando v-if se repinta.
+  await nextTick()
   initGoogle()
 })
 
@@ -142,7 +184,11 @@ onUnmounted(() => resizeObs?.disconnect())
   <div v-if="visible" class="social-auth">
     <div class="auth-divider"><span>{{ mode === 'register' ? 'o registrate con' : 'o ingresá con' }}</span></div>
     <div class="social-buttons">
-      <div ref="googleEl" class="google-btn" :class="{ 'is-busy': busy }"></div>
+      <button v-if="isNative" type="button" class="google-native-btn" :disabled="busy" @click="onNativeGoogleTap">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.92l-3.87-3c-1.07.72-2.44 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.29v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.27A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.55.38-2.27v-3.1H1.29a12 12 0 0 0 0 10.74l3.98-3.1z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.8l3.44-3.44A11.98 11.98 0 0 0 12 0 12 12 0 0 0 1.29 6.63l3.98 3.1C6.22 6.88 8.87 4.77 12 4.77z"/></svg>
+        <span>{{ mode === 'register' ? 'Registrate con Google' : 'Continuar con Google' }}</span>
+      </button>
+      <div v-else ref="googleEl" class="google-btn" :class="{ 'is-busy': busy }"></div>
     </div>
     <p class="social-terms">
       Al continuar aceptás los <RouterLink to="/terminos" target="_blank">Términos y condiciones</RouterLink>.

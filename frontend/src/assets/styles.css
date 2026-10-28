@@ -259,6 +259,11 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .google-btn { display: flex; justify-content: center; min-width: 0; min-height: 44px; overflow: hidden; }
 .google-btn iframe { max-width: 100%; }
 .google-btn.is-busy { opacity: .6; pointer-events: none; }
+/* Variante nativa (APK): el sign-in corre por Credential Manager — el botón
+   es propio pero conserva la identidad de marca de Google (G + outline). */
+.google-native-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 44px; padding: 0 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--card, #fff); color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+.google-native-btn:hover { background: var(--bg-soft, #f6f7fb); }
+.google-native-btn:disabled { opacity: .6; cursor: default; }
 .social-terms { margin: 12px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
 .social-terms a { color: var(--brand-ink); font-weight: 600; text-decoration: none; }
 .social-terms a:hover { text-decoration: underline; }

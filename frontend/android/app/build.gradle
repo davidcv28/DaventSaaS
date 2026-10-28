@@ -63,6 +63,15 @@ repositories {
     }
 }
 
+// androidx.browser 1.9.0 (transitiva de credentials-play-services-auth, plugin
+// social-login) exige compileSdk 36 — el proyecto compila contra 35. Se fija
+// la 1.8.x hasta subir compileSdk/AGP.
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.browser:browser:1.8.0'
+    }
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
