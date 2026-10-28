@@ -16,11 +16,12 @@ const { custom } = ctx
 const items = computed(() => (Array.isArray(custom.value.benefits) ? custom.value.benefits : []))
 const show = computed(() => custom.value.show_benefits !== false && items.value.length > 0)
 const title = computed(() => props.block?.props?.title?.trim() || 'Garantías y beneficios')
+const variant = computed(() => props.block?.variant || 'cards')
 const icon = (key) => (SERVICE_ICONS[key] ? key : 'shield-check')
 </script>
 
 <template>
-  <section v-if="show" class="sp-benefits" aria-labelledby="sp-benefits-title">
+  <section v-if="show" class="sp-benefits" :class="`is-${variant}`" :data-blk-variant="variant !== 'cards' ? variant : null" aria-labelledby="sp-benefits-title">
     <div class="sp-container">
       <h2 id="sp-benefits-title" v-reveal class="sp-section-title">{{ title }}</h2>
       <div class="sp-benefits-grid">

@@ -21,6 +21,7 @@ const { featured: shopCatalog } = useFeaturedCatalog()
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const offers = computed(() => shopCatalog.value.products.filter((p) => productOffer(p) != null).slice(0, 4))
 const show = computed(() => custom.value.show_offers !== false && offers.value.length > 0)
+const variant = computed(() => props.block?.variant || 'grid')
 const title = computed(() => props.block?.props?.title?.trim() || 'Ofertas vigentes')
 const endsOf = (p) => offerEndsLabel(productDiscount(p))
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
@@ -28,7 +29,7 @@ const openProduct = (p) => router.push(productTo(p))
 </script>
 
 <template>
-  <section v-if="showCatalog && show" class="sp-offers" aria-labelledby="sp-offers-title">
+  <section v-if="showCatalog && show" class="sp-offers" :class="`is-${variant}`" :data-blk-variant="variant !== 'grid' ? variant : null" aria-labelledby="sp-offers-title">
     <div class="sp-container">
       <div class="sp-shop-featured-head">
         <div class="sp-shop-featured-copy">

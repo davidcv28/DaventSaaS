@@ -11,11 +11,12 @@ import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 
-defineProps({ block: { type: Object, default: null } })
+const props = defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
 const { slug, showCatalog } = ctx
 const { featured: shopCatalog } = useFeaturedCatalog()
+const variant = computed(() => props.block?.variant || 'row')
 
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const deptTo = (id) => ({ ...catalogTo.value, query: { category: id } })
@@ -31,8 +32,8 @@ const shopDepts = computed(() => shopCatalog.value.categories
 </script>
 
 <template>
-  <div v-if="shopDepts.length" class="sp-container">
-    <div class="sp-shop-depts" :style="{ maxWidth: `${(shopDepts.length + (showCatalog ? 1 : 0)) * 156}px` }" aria-label="Departamentos del catálogo">
+  <div v-if="shopDepts.length" class="sp-container" :data-blk-variant="variant !== 'row' ? variant : null">
+    <div class="sp-shop-depts" :class="{ 'is-rail': variant === 'rail' }" :style="variant === 'rail' ? null : { maxWidth: `${(shopDepts.length + (showCatalog ? 1 : 0)) * 156}px` }" aria-label="Departamentos del catálogo">
       <RouterLink v-for="d in shopDepts" :key="d.id" v-reveal class="sp-shop-dept" :to="deptTo(d.id)">
         <span class="sp-shop-dept-thumb">
           <img v-if="d.image" :src="d.image" alt="" loading="lazy" />

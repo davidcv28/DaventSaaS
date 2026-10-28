@@ -690,3 +690,52 @@
 .store-page[data-store-template='riso'] .cv-note { border-bottom: 2px solid var(--rs-ink); background: var(--rs-paper); font-weight: 700; }
 .store-page[data-store-template='terminal'] .cv-note { font-family: var(--sp-mono, monospace); letter-spacing: .12em; }
 .store-page[data-store-template='promo'] .cv-note { background: var(--sp-ink-hard, #111827); border-bottom: 3px solid var(--sp-ink-hard, #111827); color: var(--sp-yellow, #ffe14d); text-transform: uppercase; }
+
+/* =====================================================================
+   VARIANTES DE COMPOSICIÓN DEL CATÁLOGO — StoreCatalogView marca la
+   página con data-cv-grid / data-cv-filters según la variante elegida
+   para los bloques 'grid' y 'filters' del layout. Las reglas apuntan a
+   cualquier grilla de productos ([class*='-grid']:has(> .tpc)), así la
+   misma variante funciona en todas las plantillas sin tocar cada vista;
+   las plantillas con grilla propia (carta, terminal) la ignoran. Sin
+   config nueva queda 'auto' = el look actual de cada plantilla.
+   ===================================================================== */
+.cv-outer[data-cv-grid='cols2'] [class*='-grid']:has(> .tpc),
+.cv-outer[data-cv-grid='cols3'] [class*='-grid']:has(> .tpc),
+.cv-outer[data-cv-grid='cols4'] [class*='-grid']:has(> .tpc),
+.cv-outer[data-cv-grid='lead'] [class*='-grid']:has(> .tpc) {
+  grid-template-columns: repeat(var(--cv-ncols, 2), minmax(0, 1fr));
+}
+.cv-outer[data-cv-grid='cols2'] { --cv-ncols: 2 }
+.cv-outer[data-cv-grid='cols3'] { --cv-ncols: 3 }
+.cv-outer[data-cv-grid='cols4'] { --cv-ncols: 4 }
+.cv-outer[data-cv-grid='lead']  { --cv-ncols: 4 }
+.cv-outer[data-cv-grid='lead'] [class*='-grid']:has(> .tpc) > .tpc:first-child { grid-column: span 2 }
+.cv-outer[data-cv-grid='masonry'] [class*='-grid']:has(> .tpc) {
+  display: block; column-width: 230px; column-gap: 18px;
+}
+.cv-outer[data-cv-grid='masonry'] [class*='-grid']:has(> .tpc) > .tpc {
+  break-inside: avoid; margin-bottom: 18px;
+}
+/* list: una columna con la tarjeta en formato fila (foto a la izquierda). */
+.cv-outer[data-cv-grid='list'] [class*='-grid']:has(> .tpc) {
+  grid-template-columns: minmax(0, 1fr); gap: 12px;
+}
+.cv-outer[data-cv-grid='list'] [class*='-grid']:has(> .tpc) > .tpc { flex-direction: row; align-items: stretch }
+.cv-outer[data-cv-grid='list'] [class*='-grid']:has(> .tpc) > .tpc .tpc-media { width: 128px; flex: none; aspect-ratio: auto; height: auto; align-self: stretch }
+.cv-outer[data-cv-grid='list'] [class*='-grid']:has(> .tpc) > .tpc .tpc-body { min-width: 0 }
+/* quick: el botón de vista rápida queda fijo bajo la foto. */
+.cv-outer[data-cv-grid='quick'] [class*='-grid']:has(> .tpc) .tpc-quick { opacity: 1; translate: -50% 0; padding: 8px 16px }
+@media (max-width: 1024px) {
+  .cv-outer[data-cv-grid='cols4'],
+  .cv-outer[data-cv-grid='lead'] { --cv-ncols: 3 }
+}
+@media (max-width: 640px) {
+  .cv-outer[data-cv-grid='cols3'],
+  .cv-outer[data-cv-grid='cols4'],
+  .cv-outer[data-cv-grid='lead'] { --cv-ncols: 2 }
+  .cv-outer[data-cv-grid='lead'] [class*='-grid']:has(> .tpc) > .tpc:first-child { grid-column: span 2 }
+  .cv-outer[data-cv-grid='masonry'] [class*='-grid']:has(> .tpc) { column-width: 160px; column-gap: 12px }
+  .cv-outer[data-cv-grid='masonry'] [class*='-grid']:has(> .tpc) > .tpc { margin-bottom: 12px }
+  .cv-outer[data-cv-grid='list'] [class*='-grid']:has(> .tpc) > .tpc .tpc-media { width: 104px }
+}

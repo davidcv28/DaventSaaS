@@ -1,13 +1,17 @@
 <script setup>
+import { computed } from 'vue'
 import { useStoreCatalog, SORT_OPTIONS } from '../../composables/useStoreCatalog.js'
 import { filtersUi, openFilters, hasAnyFilterGroup } from '../../composables/catalogFiltersUi.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogTags from './CatalogTags.vue'
+import CatalogChips from './CatalogChips.vue'
 import { useLayout } from '../../composables/useLayout.js'
 import '../../assets/store-filters.css'
 
-// Bloques 'filters' y 'sort' del layout de catálogo: el editor los apaga.
-const { on } = useLayout('catalog')
+// Bloques 'filters' y 'sort' del layout de catálogo: el editor los apaga;
+// la variante 'chips' de 'filters' cambia la sidebar por un riel rápido.
+const { on, st } = useLayout('catalog')
+const chipsMode = computed(() => st('filters').variant === 'chips')
 
 // Barra de resultados del catálogo público, alineada con la grilla:
 // botón "Filtros (n)" (solo móvil — abre el bottom sheet), contador de
@@ -51,6 +55,7 @@ const hasAny = hasAnyFilterGroup(catalog, priceCeiling, offerTotal, newTotal)
       <AppIcon name="chevron-down" :size="14" class="cf-sort-caret" aria-hidden="true" />
     </label>
   </div>
+  <CatalogChips v-if="chipsMode && on('filters')" />
   <CatalogTags v-if="on('filters')" />
 </div>
 </template>

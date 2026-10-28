@@ -30,10 +30,11 @@ const ctaLink = computed(() => {
 })
 const ctaLabel = computed(() => custom.value.cta_label?.trim()
   || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to === servicesTo.value ? 'Ver servicios' : 'Ver catálogo'))
+const ctaVariant = computed(() => props.block?.variant || 'card')
 </script>
 
 <template>
-  <section v-if="show" class="sp-cta">
+  <section v-if="show" class="sp-cta" :class="`is-${ctaVariant}`" :data-blk-variant="ctaVariant !== 'card' ? ctaVariant : null">
     <div class="sp-container sp-cta-inner">
       <h2 v-reveal class="sp-cta-title">{{ ctaTitle }}</h2>
       <p v-if="custom.cta_text" v-reveal="80" class="sp-cta-text">{{ custom.cta_text }}</p>

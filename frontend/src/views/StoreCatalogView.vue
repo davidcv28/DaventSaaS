@@ -16,13 +16,18 @@ const ctx = inject('storePage')
 // Aviso configurable del dueño: tira informativa arriba del catálogo
 // (envíos, medios de pago, retiro). Vacío -> no se muestra. Es un bloque
 // del layout del catálogo ('note'): el editor puede apagarlo.
-const { on } = useLayout('catalog')
+const { on, st } = useLayout('catalog')
 const catalogNote = computed(() => (ctx?.custom?.value?.catalog_note || '').trim())
 const component = computed(() => surfaceComponent(ctx?.pageTemplate?.value, 'catalog'))
+// Las variantes de composición de 'grid' y 'filters' viajan como
+// data-attrs de la página: la hoja de catálogo las aplica sobre cualquier
+// vista (la grilla se marca con :has(> .tpc)) sin tocar cada plantilla.
+const gridVariant = computed(() => st('grid').variant || 'auto')
+const filtersVariant = computed(() => st('filters').variant || 'panel')
 </script>
 
 <template>
-  <div class="cv-outer">
+  <div class="cv-outer" :data-cv-grid="gridVariant" :data-cv-filters="filtersVariant">
     <p v-if="catalogNote && on('note')" data-blk="note" class="cv-note" role="note"><AppIcon name="megaphone" :size="15" />{{ catalogNote }}</p>
     <component :is="component" />
   </div>

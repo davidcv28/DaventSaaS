@@ -53,6 +53,11 @@ const mapUrl = computed(() => (
 ))
 // Enlace directo al mapa: sirve de salida si el navegador bloquea el embed.
 const mapLink = computed(() => (mapAddress.value ? `https://maps.google.com/?q=${encodeURIComponent(mapAddress.value)}` : ''))
+// Variante 'map': el mapa entra a la grilla junto a la columna de info
+// (dirección + horarios + canales) y el formulario ocupa todo el ancho
+// debajo. Sin dirección cargada queda la composición de tarjeta.
+const contactVariant = computed(() => props.block?.variant || 'card')
+const isMap = computed(() => contactVariant.value === 'map' && Boolean(mapUrl.value))
 
 async function loadCaptcha() {
   captchaLoading.value = true
@@ -98,9 +103,9 @@ onMounted(() => {
 
 <template>
   <!-- ===== Contáctanos (formulario + canales + mapa de ubicación) ===== -->
-  <section v-if="showContact" id="contacto" class="sp-contact" aria-labelledby="sp-contact-title">
+  <section v-if="showContact" id="contacto" class="sp-contact" :data-blk-variant="contactVariant !== 'card' ? contactVariant : null" aria-labelledby="sp-contact-title">
     <div class="sp-container">
-      <div class="sp-contact-grid">
+      <div class="sp-contact-grid" :class="{ 'is-map': isMap }">
         <div v-reveal class="sp-contact-info">
           <p class="sp-eyebrow">Contacto</p>
           <h2 id="sp-contact-title" class="sp-contact-title">{{ contactTitle }}</h2>
@@ -190,18 +195,18 @@ onMounted(() => {
             </div>
           </template>
         </form>
-      </div>
-      <div v-if="mapUrl" v-reveal="120" class="sp-map-frame">
-        <iframe
-          :src="mapUrl"
-          title="Mapa con la ubicación del negocio"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          allowfullscreen
-        ></iframe>
-        <a class="sp-map-open" :href="mapLink" target="_blank" rel="noopener">
-          <AppIcon name="map-pin" :size="14" /> Abrir en Google Maps <AppIcon name="arrow-up-right" :size="13" />
-        </a>
+        <div v-if="mapUrl" v-reveal="120" class="sp-map-frame">
+          <iframe
+            :src="mapUrl"
+            title="Mapa con la ubicación del negocio"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+          <a class="sp-map-open" :href="mapLink" target="_blank" rel="noopener">
+            <AppIcon name="map-pin" :size="14" /> Abrir en Google Maps <AppIcon name="arrow-up-right" :size="13" />
+          </a>
+        </div>
       </div>
     </div>
   </section>

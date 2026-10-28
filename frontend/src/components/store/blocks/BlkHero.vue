@@ -10,8 +10,14 @@ import { openStatus } from '../../../utils/storeHours.js'
 import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
+import BlkHeroAlt from './BlkHeroAlt.vue'
 
 const props = defineProps({ block: { type: Object, default: null } })
+
+// Variantes de composición (markup propio, una sola piel compartida);
+// 'full'/'compact' siguen con la composición clásica por plantilla.
+const ALT = ['centered', 'split', 'cinema', 'editorial', 'search', 'slides']
+const isAlt = computed(() => ALT.includes(props.block?.variant))
 
 const ctx = inject('storePage')
 const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
@@ -34,11 +40,16 @@ const cover = computed(() => (hasDesignAdvanced.value ? custom.value.cover || ''
 
 // Imágenes del carrusel: alimentan placas y tarjetas del hero por diseño.
 const shopImgs = computed(() => (custom.value.carousel || []).map((i) => i.url))
-const shopSlideImg = computed(() => cover.value || shopImgs.value[0] || '')
-const shopPromoImgs = computed(() => shopImgs.value.slice(cover.value ? 0 : 1, cover.value ? 2 : 3))
-// Minimal: placa del hero — portada propia, primera imagen del carrusel o,
-// en su defecto, el logo sobre el tile de la paleta.
-const mnArtImg = computed(() => cover.value || shopImgs.value[0] || '')
+// Pool de imágenes interiores (placas, banners, miniaturas): carrusel y
+// productos con foto. La portada ya es el fondo de la banda en todos los
+// diseños, así que solo vuelve a aparecer en una placa si no hay otra
+// imagen disponible.
+const auxImgs = computed(() => [...shopImgs.value, ...shopCatalog.value.products.map((p) => p.image)].filter(Boolean))
+const shopSlideImg = computed(() => auxImgs.value[0] || cover.value || '')
+const shopPromoImgs = computed(() => auxImgs.value.slice(1, 3))
+// Minimal: placa del hero — primera imagen del carrusel o, en su defecto,
+// el logo sobre el tile de la paleta.
+const mnArtImg = computed(() => auxImgs.value[0] || cover.value || '')
 const mnArtProduct = computed(() => shopCatalog.value.products.find((p) => p.image === mnArtImg.value))
 // Barra de anuncio (strip de tinta del diseño editorial): nunca promete
 // una oferta que la tienda no tiene cargada.
@@ -52,11 +63,12 @@ const mnNotice = computed(() => {
   }
   return parts.join(' · ')
 })
-const lbPlateImg = computed(() => cover.value || shopImgs.value[0] || shopCatalog.value.products.find((p) => p.image)?.image || '')
-// Cobre: placas del hero — portada, carrusel y primeros productos con foto,
-// sin repetir la misma imagen en ambas placas. Boutique, Signature y Aurora
-// reusam el mismo pool para sus placas/pliegos.
-const cbImgs = computed(() => [cover.value, ...shopImgs.value, ...shopCatalog.value.products.map((p) => p.image)].filter(Boolean))
+const lbPlateImg = computed(() => auxImgs.value[0] || cover.value || '')
+// Cobre: placas del hero — carrusel y primeros productos con foto, sin
+// repetir la misma imagen en ambas placas. La portada solo cierra el pool
+// como último recurso porque ya es el fondo de la banda. Boutique,
+// Signature y Aurora reusam el mismo pool para sus placas/pliegos.
+const cbImgs = computed(() => [...auxImgs.value, cover.value].filter(Boolean))
 const cbTileA = computed(() => cbImgs.value[0] || '')
 const cbTileB = computed(() => cbImgs.value.find((u) => u !== cbTileA.value) || '')
 const cbTileProduct = (img) => shopCatalog.value.products.find((p) => p.image === img)
@@ -150,11 +162,12 @@ onBeforeUnmount(() => clearInterval(clock))
 
 <template>
   <!-- ===== Presentación (portada de la empresa) ===== -->
-  <section class="sp-hero" :class="{ 'is-compact': block?.variant === 'compact' }">
-    <div class="sp-hero-band" :class="{ 'has-cover': cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature' && tpl !== 'aurora' }">
+  <BlkHeroAlt v-if="isAlt" :block="block" />
+  <section v-else class="sp-hero" :class="{ 'is-compact': block?.variant === 'compact' }">
+    <div class="sp-hero-band" :class="{ 'has-cover': cover }">
       <!-- Minimal y Boutique: barra de anuncio (strip editorial del diseño) -->
       <p v-if="tpl === 'minimal' || tpl === 'boutique'" class="sp-mn-announce">{{ mnNotice }}</p>
-      <div v-if="cover && tpl !== 'lookbook' && tpl !== 'shop' && tpl !== 'cobre' && tpl !== 'minimal' && tpl !== 'boutique' && tpl !== 'signature' && tpl !== 'aurora'" class="sp-hero-cover" aria-hidden="true">
+      <div v-if="cover" class="sp-hero-cover" aria-hidden="true">
         <img :src="cover" alt="" fetchpriority="high" />
       </div>
       <div class="sp-hero-decor" aria-hidden="true">

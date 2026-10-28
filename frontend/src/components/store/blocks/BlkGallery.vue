@@ -32,6 +32,7 @@ const decorBand = computed(() => decorPool.value[0] || null)
 const showcaseTitle = computed(() => (showContact.value ? 'Hablemos de lo que buscás' : `Conocé ${shopName.value}`))
 const showcaseText = computed(() => custom.value.about_mission?.trim() || '')
 const galleryTitle = computed(() => props.block?.props?.title?.trim() || 'Galería')
+const galleryVariant = computed(() => props.block?.variant || 'grid')
 
 const lightboxIndex = ref(-1)
 const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
@@ -73,7 +74,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   </section>
 
   <!-- ===== Galería ===== -->
-  <section v-if="showGallery" id="galeria" class="sp-gallery" aria-labelledby="sp-gallery-title">
+  <section v-if="showGallery" id="galeria" class="sp-gallery" :class="`is-${galleryVariant}`" :data-blk-variant="galleryVariant !== 'grid' ? galleryVariant : null" aria-labelledby="sp-gallery-title">
     <div class="sp-container">
       <h2 id="sp-gallery-title" v-reveal class="sp-section-title">{{ galleryTitle }}</h2>
       <div class="sp-gallery-grid">

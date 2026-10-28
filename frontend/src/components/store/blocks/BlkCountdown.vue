@@ -10,7 +10,7 @@ import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 
-defineProps({ block: { type: Object, default: null } })
+const props = defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
 const { slug, custom, showCatalog } = ctx
@@ -29,6 +29,7 @@ const next = computed(() => {
   return best
 })
 const show = computed(() => custom.value.show_countdown !== false && Boolean(next.value))
+const cdVariant = computed(() => props.block?.variant || 'card')
 
 const now = ref(Date.now())
 let clock = null
@@ -49,7 +50,7 @@ onBeforeUnmount(() => clearInterval(clock))
 </script>
 
 <template>
-  <section v-if="showCatalog && show" class="sp-countdown" aria-labelledby="sp-countdown-title">
+  <section v-if="showCatalog && show" class="sp-countdown" :class="`is-${cdVariant}`" :data-blk-variant="cdVariant !== 'card' ? cdVariant : null" aria-labelledby="sp-countdown-title">
     <div class="sp-container">
       <div v-reveal class="sp-cd-inner">
         <div class="sp-cd-copy">

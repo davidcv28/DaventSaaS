@@ -1521,6 +1521,70 @@ html { scroll-behavior: smooth; }
 .store-page[data-store-template='promo'] .sp-hero-cover::after { background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 16px, transparent 16px 32px), linear-gradient(112deg, color-mix(in srgb, var(--store-accent-ink) 90%, transparent), color-mix(in srgb, var(--store-accent) 70%, transparent)); }
 .store-page[data-store-template='promo'] .sp-hero-band.has-cover { animation: none; }
 
+/* ---------- Portada de fondo en los diseños editoriales ----------
+   Lookbook, Cobre, Minimal, Boutique, Tienda Pro, Signature y Aurora
+   también llevan la portada como fondo de la banda. El velo se tiñe con
+   el propio "papel" de cada diseño (o con su noche, en Signature/Aurora)
+   para que la tinta del sistema conserve contraste y la foto quede como
+   textura de fondo visible en los bordes. */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-cover::after {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--sp-bg) 82%, transparent) 0%,
+    color-mix(in srgb, var(--sp-bg) 58%, transparent) 44%,
+    color-mix(in srgb, var(--sp-bg) 76%, transparent) 100%);
+}
+/* El velo de lectura bajo el contenido también va en papel, no en negro:
+   la tinta oscura de estos diseños seguiría aplastada por la sombra. */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-inner::before {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--sp-bg) 58%, transparent),
+    color-mix(in srgb, var(--sp-bg) 38%, transparent) 45%,
+    color-mix(in srgb, var(--sp-bg) 62%, transparent));
+}
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-title,
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-sub {
+  text-shadow: 0 1px 16px color-mix(in srgb, var(--sp-bg) 85%, transparent);
+}
+/* Tienda Pro usa la superficie sólida de tarjeta como "papel" (la var
+   --sp-bg oscuro es un degradado y no mezcla en color-mix). */
+.store-page[data-store-template='shop'] .sp-hero-cover::after {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--sp-card-solid) 82%, transparent) 0%,
+    color-mix(in srgb, var(--sp-card-solid) 58%, transparent) 44%,
+    color-mix(in srgb, var(--sp-card-solid) 76%, transparent) 100%);
+}
+.store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-inner::before {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--sp-card-solid) 58%, transparent),
+    color-mix(in srgb, var(--sp-card-solid) 38%, transparent) 45%,
+    color-mix(in srgb, var(--sp-card-solid) 62%, transparent));
+}
+.store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-title,
+.store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-sub { text-shadow: 0 1px 16px color-mix(in srgb, var(--sp-card-solid) 85%, transparent); }
+/* Minimal/Boutique: el strip de anuncio queda por encima de la foto. */
+.store-page:is([data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-mn-announce { position: relative; z-index: 1; }
+/* Signature y Aurora ya son bandas de noche con tinta clara: el velo va
+   con su propio oscuro y conserva el halo negro compartido del copy. */
+.store-page[data-store-template='signature'] .sp-hero-cover::after {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--sg-night) 74%, transparent) 0%,
+    color-mix(in srgb, var(--sg-night) 56%, transparent) 48%,
+    color-mix(in srgb, var(--sg-night) 72%, transparent) 100%);
+}
+.store-page[data-store-template='aurora'] .sp-hero-cover::after {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--au-deep) 68%, transparent) 0%,
+    color-mix(in srgb, var(--au-sky) 50%, transparent) 50%,
+    color-mix(in srgb, var(--au-deep) 66%, transparent) 100%);
+}
+/* Aurora con portada: el cielo panorámico interno deja de duplicar la
+   foto — el media-panel pasa a mostrar el carrusel/producto sobre el
+   mismo fondo, así que se achica para que la portada respire detrás. */
+.store-page[data-store-template='aurora'] .sp-hero-band.has-cover .sp-au-media img { filter: brightness(.82) saturate(1.02); }
+/* El texto del hero oscuro no lleva el halo claro de los diseños papel. */
+.store-page:is([data-store-template='signature'], [data-store-template='aurora']) .sp-hero-band.has-cover .sp-hero-title,
+.store-page:is([data-store-template='signature'], [data-store-template='aurora']) .sp-hero-band.has-cover .sp-hero-sub { text-shadow: 0 2px 22px rgba(0, 0, 0, .42); }
+
 /* ---------- Tipografía v3: cada modelo con voz propia ---------- */
 /* Clásico: titular con regla de acento, bajada más legible, secciones con degradé. */
 .store-page[data-store-template='classic'] .sp-hero-title { text-wrap: balance; text-shadow: 0 2px 26px rgba(0, 0, 0, .22); }
@@ -10149,3 +10213,228 @@ html { scroll-behavior: smooth; }
 .store-page[data-mono='neutral'] .sp-mono { background: linear-gradient(135deg, #475569, #1e293b); color: #fff; }
 .store-page[data-mono='neutral'] .sp-top .sp-mono { background: #fff; color: #334155; }
 .sp-hero-cover img { object-position: var(--store-cover-pos, 50% 50%); filter: brightness(calc(1 - var(--store-cover-overlay, 0))); }
+
+/* =====================================================================
+   VARIANTES DE COMPOSICIÓN DE BLOQUES — disposiciones alternativas del
+   editor de layout (hero, vitrina/ofertas, departamentos, garantías,
+   testimonios, marcas, galería, FAQ, CTA, contacto, cuenta regresiva).
+   Todo lee el tema del sitio via --st-* con fallback al look actual:
+   sin siteTheme la web se ve igual que antes. Cada variante lleva su
+   regla móvil explícita (apilado, riel con scroll-snap o grilla 1-2 col).
+   ===================================================================== */
+
+/* ---------- Hero alternativo (.sp-hal): centered / split / cinema /
+   editorial / search / slides comparten una sola piel — banda de
+   acento (o imagen con velo del tema) + copy del hero clásico. ------ */
+.sp-hal {
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--st-primary, var(--store-accent)), var(--st-secondary, var(--store-accent-ink)));
+  color: var(--st-on-primary, #fff);
+}
+.sp-hal-bg { position: absolute; inset: 0; }
+.sp-hal-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .55s ease; }
+.sp-hal-bg img.on { opacity: 1; }
+.sp-hal-veil { position: absolute; inset: 0; background: var(--st-bg-overlay, linear-gradient(160deg, rgb(9 11 24 / .5), rgb(9 11 24 / .82))); }
+.sp-hal-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; padding-block: clamp(52px, 7.5vw, 104px); }
+.sp-hal-copy { min-width: 0; max-width: 720px; }
+.sp-hal-mark { display: inline-grid; place-items: center; width: 64px; height: 64px; margin-bottom: 18px; border-radius: 50%; overflow: hidden; background: rgb(255 255 255 / .16); border: 1px solid rgb(255 255 255 / .34); font-size: 24px; font-weight: 800; }
+.sp-hal-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-hal-badge { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 6px 15px; border-radius: 99px; border: 1px solid rgb(255 255 255 / .42); background: rgb(255 255 255 / .14); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: 11.5px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; overflow-wrap: anywhere; }
+.sp-hal-dateline { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgb(255 255 255 / .82); }
+.sp-hal-dateline i { width: 34px; height: 1px; background: rgb(255 255 255 / .4); }
+.sp-hal-title { margin: 18px 0 0; max-width: 22ch; font-size: var(--st-h1-size, clamp(30px, 4.8vw, 50px)); font-weight: var(--st-weight-heading, 800); letter-spacing: var(--st-tracking, -.03em); line-height: 1.1; overflow-wrap: anywhere; text-wrap: balance; }
+.sp-hal-title.is-name { font-size: clamp(28px, 6vw, var(--store-name-size, 48px)); }
+.sp-hal-sub { margin: 18px 0 0; max-width: 62ch; font-size: 15.5px; line-height: 1.75; color: rgb(255 255 255 / .88); white-space: pre-line; overflow-wrap: anywhere; }
+.sp-hal-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.sp-hal-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--st-btn-h, 46px); padding: 0 var(--st-btn-px, 24px); border-radius: var(--st-btn-radius, 99px); border: 1px solid transparent; background: var(--st-on-primary, #fff); color: var(--st-primary, var(--store-accent-ink)); font-size: var(--st-btn-fs, 14.5px); font-weight: 700; font-family: inherit; text-decoration: none; cursor: pointer; transition: filter .15s, background .15s, border-color .15s; }
+.sp-hal-btn:hover { filter: brightness(.94); }
+.sp-hal-btn.is-ghost { background: transparent; border-color: rgb(255 255 255 / .55); color: var(--st-on-primary, #fff); }
+.sp-hal-btn.is-ghost:hover { background: rgb(255 255 255 / .14); border-color: #fff; filter: none; }
+.sp-hal-iconbtn { display: inline-grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgb(255 255 255 / .4); background: rgb(255 255 255 / .14); color: var(--st-on-primary, #fff); cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: background .15s, border-color .15s; }
+.sp-hal-iconbtn:hover { background: rgb(255 255 255 / .26); border-color: #fff; }
+.sp-hal-meta { list-style: none; display: flex; align-items: center; gap: 10px 24px; flex-wrap: wrap; margin: 22px 0 0; padding: 0; font-size: 13px; color: rgb(255 255 255 / .78); }
+.sp-hal-meta li { display: inline-flex; align-items: center; gap: 7px; }
+.sp-hal-meta .sp-open.is-open { color: #86efac; }
+.sp-hal-meta .sp-open.is-closed { color: #fca5a5; }
+.sp-hal-meta .sp-live-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+:is(.sp-hal-btn, .sp-hal-iconbtn, .sp-hal-arrow, .sp-hal-dot, .sp-hal-cat):focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* centered: columna única centrada con la marca arriba. El width explícito
+   evita que el margin:auto la vuelva fit-content y desborde la pista. */
+.sp-hal.is-centered .sp-hal-copy { width: 100%; margin-inline: auto; text-align: center; }
+.sp-hal.is-centered .sp-hal-title,
+.sp-hal.is-centered .sp-hal-sub { margin-inline: auto; }
+.sp-hal.is-centered .sp-hal-ctas,
+.sp-hal.is-centered .sp-hal-meta { justify-content: center; }
+
+/* split: copy a la izquierda y placa de imagen a la derecha. */
+.sp-hal.is-split .sp-hal-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; gap: 44px; }
+.sp-hal-media { margin: 0; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--st-radius, var(--sp-radius)); overflow: hidden; background: rgb(255 255 255 / .12); border: 1px solid rgb(255 255 255 / .26); box-shadow: var(--st-shadow, var(--sp-shadow-md)); }
+.sp-hal-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-hal-initial { font-size: 88px; font-weight: 800; opacity: .5; }
+
+/* cinema: casi pantalla completa con velo fuerte y video en visor. */
+.sp-hal.is-cinema .sp-hal-grid { min-height: min(88dvh, 860px); align-content: center; }
+.sp-hal-video { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; background: rgb(6 8 16 / .78); }
+.sp-hal-video .sp-modal-close { background: rgb(15 23 42 / .55); border-color: transparent; color: #fff; }
+.sp-hal-video .sp-modal-close:hover { background: rgb(15 23 42 / .85); color: #fff; }
+.sp-hal-video-frame { width: min(960px, 100%); aspect-ratio: 16 / 9; border-radius: var(--st-radius, var(--sp-radius)); overflow: hidden; background: #000; box-shadow: 0 30px 80px -20px rgb(0 0 0 / .7); }
+.sp-hal-video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* editorial: titular gigante con línea de fecha/lugar. */
+.sp-hal.is-editorial .sp-hal-grid { padding-block: clamp(60px, 9vw, 120px); }
+.sp-hal.is-editorial .sp-hal-title { max-width: 14ch; font-size: clamp(42px, 8.6vw, 118px); line-height: .98; letter-spacing: -.045em; }
+.sp-hal.is-editorial .sp-hal-sub { font-size: clamp(15px, 1.6vw, 18px); }
+
+/* search: buscador grande centrado + accesos por categoría. */
+.sp-hal.is-search .sp-hal-copy { width: 100%; margin-inline: auto; text-align: center; max-width: 680px; }
+.sp-hal.is-search .sp-hal-title,
+.sp-hal.is-search .sp-hal-sub { margin-inline: auto; }
+.sp-hal.is-search .sp-hal-ctas { justify-content: center; }
+.sp-hal-search { display: flex; align-items: center; gap: 4px; margin: 26px auto 0; max-width: 560px; min-height: 54px; padding: 4px 4px 4px 16px; border-radius: var(--st-btn-radius, 99px); border: 1px solid rgb(255 255 255 / .3); background: var(--st-surface, var(--sp-card-solid, #fff)); color: var(--st-text, var(--sp-ink)); box-shadow: var(--st-shadow, var(--sp-shadow-md)); }
+.sp-hal-search > svg { flex: none; color: var(--st-muted, var(--sp-muted)); }
+.sp-hal-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: inherit; font: inherit; font-size: 16px; }
+.sp-hal-search-btn { flex: none; min-height: 46px; padding: 0 22px; border: 0; border-radius: var(--st-btn-radius, 99px); background: var(--st-primary, var(--store-accent-ink)); color: var(--st-on-primary, #fff); font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.sp-hal-search-btn:hover { filter: brightness(1.12); }
+.sp-hal-cats { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.sp-hal-cat { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 99px; border: 1px solid rgb(255 255 255 / .34); color: rgb(255 255 255 / .9); font-size: 12.5px; font-weight: 600; text-decoration: none; }
+.sp-hal-cat:hover { background: rgb(255 255 255 / .14); border-color: #fff; color: #fff; }
+
+/* slides: flechas (>=900px) y dots del carrusel de fondo. */
+.sp-hal-arrow { position: absolute; top: 50%; translate: 0 -50%; z-index: 2; display: none; place-items: center; width: 46px; height: 46px; border: 1px solid rgb(255 255 255 / .4); border-radius: 50%; background: rgb(9 11 24 / .34); color: #fff; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.sp-hal-arrow.prev { left: 18px; }
+.sp-hal-arrow.next { right: 18px; }
+@media (min-width: 900px) { .sp-hal-arrow { display: grid; } }
+.sp-hal-dots { position: absolute; bottom: 16px; left: 0; right: 0; z-index: 2; display: flex; justify-content: center; gap: 6px; }
+.sp-hal-dot { position: relative; width: 26px; height: 26px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.sp-hal-dot::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: rgb(255 255 255 / .5); transition: background .15s, transform .15s; }
+.sp-hal-dot.on::after { background: #fff; transform: scale(1.3); }
+
+@media (max-width: 860px) {
+  .sp-hal.is-split .sp-hal-grid { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+}
+@media (max-width: 640px) {
+  .sp-hal-grid { padding-block: 44px 60px; }
+  .sp-hal.is-editorial .sp-hal-title { font-size: clamp(36px, 12vw, 64px); }
+  .sp-hal.is-cinema .sp-hal-grid { min-height: min(78dvh, 620px); }
+  .sp-hal-search { min-height: 50px; }
+  .sp-hal-search-btn { padding: 0 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-hal-bg img { transition: none; }
+}
+
+/* ---------- Vitrina/Ofertas: composiciones de la grilla destacada ---- */
+.sp-shop-featured.is-cols2 .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sp-shop-featured.is-cols3 .sp-shop-featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sp-shop-featured.is-cols4 .sp-shop-featured-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sp-shop-featured.is-masonry .sp-shop-featured-grid { display: block; column-width: 240px; column-gap: 16px; }
+.sp-shop-featured.is-masonry .sp-shop-featured-grid > .tpc { break-inside: avoid; margin-bottom: 16px; }
+.sp-shop-featured.is-lead .sp-shop-featured-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sp-shop-featured.is-lead .sp-shop-featured-grid > .tpc:first-child { grid-column: span 2; }
+/* rail: riel horizontal con snap intencional (nunca desborda la página). */
+:is(.sp-shop-featured, .sp-offers).is-rail .sp-shop-featured-grid {
+  display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: thin;
+  padding: 2px 2px 12px; -webkit-overflow-scrolling: touch;
+}
+:is(.sp-shop-featured, .sp-offers).is-rail .sp-shop-featured-grid > .tpc { flex: 0 0 min(248px, 70vw); scroll-snap-align: start; }
+/* quick: el botón de vista rápida queda fijo abajo de la foto. */
+:is(.sp-shop-featured, .sp-offers).is-quick .tpc-quick { opacity: 1; translate: -50% 0; padding: 8px 16px; }
+/* cats: carruseles por categoría — un riel con header por grupo. */
+.sp-shop-cats-group + .sp-shop-cats-group { margin-top: 30px; }
+.sp-shop-cats-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.sp-shop-cats-name { margin: 0; font-size: 16px; font-weight: 800; color: var(--st-text, var(--sp-ink)); overflow-wrap: anywhere; }
+.sp-shop-cats-more { display: inline-flex; align-items: center; gap: 4px; flex: none; font-size: 12.5px; font-weight: 700; color: var(--st-accent, var(--sp-accent-text)); text-decoration: none; }
+.sp-shop-cats-more:hover { text-decoration: underline; }
+.sp-shop-rail { display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding: 2px 2px 12px; -webkit-overflow-scrolling: touch; }
+.sp-shop-rail > .tpc { flex: 0 0 min(240px, 68vw); scroll-snap-align: start; }
+@media (max-width: 860px) {
+  .sp-shop-featured.is-cols3 .sp-shop-featured-grid,
+  .sp-shop-featured.is-cols4 .sp-shop-featured-grid,
+  .sp-shop-featured.is-lead .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .sp-shop-featured.is-masonry .sp-shop-featured-grid { column-width: 150px; column-gap: 10px; }
+  .sp-shop-featured.is-masonry .sp-shop-featured-grid > .tpc { margin-bottom: 10px; }
+  .sp-shop-featured.is-cols2 .sp-shop-featured-grid { gap: 10px; }
+}
+
+/* ---------- Departamentos: riel con snap ---------- */
+.sp-shop-depts.is-rail { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; max-width: none; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+.sp-shop-depts.is-rail > .sp-shop-dept { flex: 0 0 128px; scroll-snap-align: start; }
+
+/* ---------- Garantías: bento ---------- */
+.sp-benefits.is-bento .sp-benefits-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; }
+.sp-benefits.is-bento .sp-benefit { border-radius: var(--st-radius, var(--sp-radius)); border-color: var(--st-border, var(--sp-line)); background: var(--st-surface, var(--sp-card)); }
+.sp-benefits.is-bento .sp-benefit:first-child { grid-column: span 2; grid-row: span 2; align-content: center; gap: 14px; padding: 28px; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 12%, var(--st-surface, var(--sp-card))); }
+.sp-benefits.is-bento .sp-benefit:first-child .sp-benefit-icon { width: 52px; height: 52px; }
+@media (max-width: 860px) {
+  .sp-benefits.is-bento .sp-benefits-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sp-benefits.is-bento .sp-benefit:first-child { grid-column: span 2; grid-row: auto; }
+}
+@media (max-width: 480px) {
+  .sp-benefits.is-bento .sp-benefits-grid { grid-template-columns: minmax(0, 1fr); }
+  .sp-benefits.is-bento .sp-benefit:first-child { grid-column: auto; }
+}
+
+/* ---------- Testimonios: carrusel y masonry ---------- */
+.sp-testimonials-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.sp-testimonials-head .sp-section-title { margin-bottom: 0; }
+.sp-rail-nav { display: flex; gap: 8px; flex: none; }
+.sp-rail-btn { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--st-border, var(--sp-line)); background: var(--st-surface, var(--sp-card)); color: var(--st-text, var(--sp-ink-2)); cursor: pointer; transition: border-color .15s, color .15s; }
+.sp-rail-btn:hover { border-color: var(--st-accent, var(--store-accent)); color: var(--st-accent, var(--sp-accent-text)); }
+.sp-testimonials.is-carousel .sp-testimonials-grid { display: flex; gap: 16px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding: 2px 2px 12px; margin-top: 22px; -webkit-overflow-scrolling: touch; }
+.sp-testimonials.is-carousel .sp-testimonial { flex: 0 0 min(330px, 82vw); scroll-snap-align: start; }
+.sp-testimonials.is-masonry .sp-testimonials-grid { display: block; column-width: 300px; column-gap: 18px; }
+.sp-testimonials.is-masonry .sp-testimonial { break-inside: avoid; margin-bottom: 18px; }
+@media (max-width: 560px) {
+  .sp-testimonials.is-masonry .sp-testimonials-grid { column-width: 100%; }
+}
+
+/* ---------- Marcas: logos en grilla ---------- */
+.sp-brands-logos { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0; padding: 0; }
+.sp-brands-logo { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 14px 16px; border: 1px solid var(--st-border, var(--sp-line)); border-radius: var(--st-radius, var(--sp-radius)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); }
+.sp-brands-logo strong { min-width: 0; font-size: 14px; font-weight: 700; color: var(--st-text, var(--sp-ink)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-brands-logo-initial { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 13%, transparent); color: var(--st-accent, var(--sp-accent-text)); font-size: 15px; font-weight: 800; }
+
+/* ---------- Galería: masonry y riel ---------- */
+.sp-gallery.is-masonry .sp-gallery-grid { display: block; column-width: 230px; column-gap: 14px; }
+.sp-gallery.is-masonry .sp-gallery-item { display: block; width: 100%; break-inside: avoid; margin-bottom: 14px; aspect-ratio: auto; }
+.sp-gallery.is-masonry .sp-gallery-item img { height: auto; }
+.sp-gallery.is-rail .sp-gallery-grid { display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.sp-gallery.is-rail .sp-gallery-item { flex: 0 0 min(300px, 76vw); scroll-snap-align: start; }
+@media (max-width: 560px) {
+  .sp-gallery.is-masonry .sp-gallery-grid { column-width: 150px; column-gap: 10px; }
+  .sp-gallery.is-masonry .sp-gallery-item { margin-bottom: 10px; }
+}
+
+/* ---------- FAQ: dos columnas y lista abierta ---------- */
+.sp-faq.is-cols .sp-faq-list { max-width: none; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.sp-faq.is-list .sp-faq-item { padding: 18px 20px; }
+.sp-faq.is-list .sp-faq-q { display: block; font-size: 14.5px; font-weight: 700; color: var(--st-text, var(--sp-ink)); }
+.sp-faq.is-list .sp-faq-answer { padding: 8px 0 0; }
+@media (max-width: 720px) {
+  .sp-faq.is-cols .sp-faq-list { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- CTA: banda a todo lo ancho ---------- */
+.sp-cta.is-band .sp-container { max-width: none; padding-inline: 0; }
+.sp-cta.is-band .sp-cta-inner { border-radius: 0; }
+.sp-cta.is-band .sp-cta-btn { background: var(--st-on-primary, #fff); color: var(--st-primary, var(--store-accent-ink)); }
+
+/* ---------- Contacto: mapa + horarios ---------- */
+.sp-contact-grid > .sp-map-frame { grid-column: 1 / -1; margin-top: 28px; }
+.sp-contact-grid.is-map .sp-contact-info { order: 1; }
+.sp-contact-grid.is-map .sp-map-frame { order: 2; grid-column: auto; margin-top: 0; align-self: stretch; display: grid; }
+.sp-contact-grid.is-map .sp-map-frame iframe { height: 100%; min-height: 320px; }
+.sp-contact-grid.is-map .sp-map-frame .sp-map-open { align-self: start; }
+.sp-contact-grid.is-map .sp-form { order: 3; grid-column: 1 / -1; }
+@media (max-width: 767px) {
+  .sp-contact-grid > .sp-map-frame { margin-top: 0; }
+  .sp-contact-grid.is-map .sp-map-frame iframe { min-height: 260px; }
+}
+
+/* ---------- Cuenta regresiva: banda ---------- */
+.sp-countdown.is-band .sp-container { max-width: none; padding-inline: 0; }
+.sp-countdown.is-band .sp-cd-inner { border-radius: 0; }

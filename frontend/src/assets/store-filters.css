@@ -544,3 +544,38 @@ html.cf-lock body { overflow: hidden; overscroll-behavior: none }
 @media (prefers-reduced-motion: reduce) {
   .cf-sheet, .cf-backdrop, .cf-gcaret { animation: none; transition: none }
 }
+
+/* ---------- chips rápidos (variante 'chips' del bloque 'filters') ----------
+   Riel horizontal dentro de CatalogToolbar: categorías, marcas, ofertas
+   y novedades como chips multi-selección + acceso al panel completo.
+   El desborde queda contenido en el riel (scroll propio, nunca de página). */
+.cf-chipbar {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 12px; padding-bottom: 4px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity; scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.cf-chip {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  min-height: 44px; padding: 0 16px;
+  border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
+  border-radius: 999px;
+  background: var(--cf-bg, var(--sp-card-solid, #fff));
+  color: var(--cf-fg, inherit);
+  font: inherit; font-size: .82rem; font-weight: 600;
+  cursor: pointer; scroll-snap-align: start;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.cf-chip:hover { border-color: var(--cf-accent, var(--store-accent-ink, #2f4fe0)) }
+.cf-chip.on {
+  border-color: var(--cf-accent, var(--store-accent-ink, #2f4fe0));
+  background: var(--cf-accent, var(--store-accent-ink, #2f4fe0));
+  color: var(--st-on-primary, #fff);
+}
+.cf-chipbar-sep { flex: none; width: 1px; height: 24px; background: var(--cf-border, var(--sp-line, rgba(0,0,0,.15))) }
+.cf-chipbar-more { border-style: dashed; color: var(--cf-accent, var(--store-accent-ink, #2f4fe0)) }
+.cf-chip:focus-visible { outline: 2px solid var(--cf-accent, var(--store-accent-ink, #2f4fe0)); outline-offset: 2px }
+@media (prefers-reduced-motion: reduce) {
+  .cf-chip { transition: none }
+}

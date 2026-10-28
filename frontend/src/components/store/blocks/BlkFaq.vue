@@ -16,10 +16,11 @@ const show = computed(() => custom.value.show_faq !== false && faqs.value.length
 const faqsTitle = computed(() => props.block?.props?.title?.trim() || custom.value.faqs_title?.trim() || 'Preguntas frecuentes')
 const eyebrowUnless = (label, title) => (String(title || '').trim().toLowerCase() === label.toLowerCase() ? '' : label)
 const faqEyebrow = computed(() => eyebrowUnless('Dudas frecuentes', faqsTitle.value))
+const faqVariant = computed(() => props.block?.variant || 'accordion')
 </script>
 
 <template>
-  <section v-if="show" class="sp-faq" aria-labelledby="sp-faq-title">
+  <section v-if="show" class="sp-faq" :class="`is-${faqVariant}`" :data-blk-variant="faqVariant !== 'accordion' ? faqVariant : null" aria-labelledby="sp-faq-title">
     <div class="sp-container sp-faq-wrap">
       <div class="sp-faq-intro">
         <p v-if="faqEyebrow" class="sp-eyebrow">{{ faqEyebrow }}</p>
@@ -29,7 +30,13 @@ const faqEyebrow = computed(() => eyebrowUnless('Dudas frecuentes', faqsTitle.va
           <a v-if="showContact" href="#contacto">Escribinos</a><template v-else>Consultanos por WhatsApp.</template>
         </p>
       </div>
-      <div class="sp-faq-list">
+      <div v-if="faqVariant === 'list'" class="sp-faq-list">
+        <div v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item is-open">
+          <strong class="sp-faq-q">{{ f.q }}</strong>
+          <p class="sp-faq-answer">{{ f.a }}</p>
+        </div>
+      </div>
+      <div v-else class="sp-faq-list">
         <details v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item">
           <summary>{{ f.q }}<span class="sp-faq-caret" aria-hidden="true"><AppIcon name="chevron-down" :size="16" /></span></summary>
           <p class="sp-faq-answer">{{ f.a }}</p>

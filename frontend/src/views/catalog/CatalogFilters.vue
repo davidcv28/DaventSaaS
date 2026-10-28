@@ -23,9 +23,12 @@ const hasAny = hasAnyFilterGroup(catalog, priceCeiling, offerTotal, newTotal)
 
 // Bloque 'filters' del layout de catálogo: apagado en el editor oculta
 // tanto la sidebar como el bottom sheet (y el botón que lo abre, que
-// vive en CatalogToolbar).
-const { on } = useLayout('catalog')
+// vive en CatalogToolbar). La variante 'chips' reemplaza la sidebar por
+// el riel de chips rápidos del toolbar — el sheet sigue disponible como
+// panel completo desde "Todos los filtros".
+const { on, st } = useLayout('catalog')
 const showFilters = computed(() => hasAny.value && on('filters'))
+const chipsMode = computed(() => st('filters').variant === 'chips')
 
 const rootEl = ref(null)
 const sheetEl = ref(null)
@@ -89,7 +92,7 @@ onBeforeUnmount(() => {
 <template>
 <div ref="rootEl" class="cf-root">
   <!-- ===== Desktop: sidebar sticky junto a la grilla ===== -->
-  <aside v-if="showFilters" class="cf-side" aria-label="Filtros del catálogo">
+  <aside v-if="showFilters && !chipsMode" class="cf-side" aria-label="Filtros del catálogo">
     <div class="cf-side-head">
       <strong class="cf-title">Filtros</strong>
       <span v-if="activeFilterCount" class="cf-badge" aria-hidden="true">{{ activeFilterCount }}</span>
