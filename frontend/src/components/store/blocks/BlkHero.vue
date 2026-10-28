@@ -113,6 +113,9 @@ const titleSplit = computed(() => {
   const words = heroTitle.value.split(/\s+/)
   return words.length > 1 ? { head: words.slice(0, -1).join(' '), last: words[words.length - 1] } : { head: '', last: heroTitle.value }
 })
+// Titular por palabras: las cuatro portadas del plan Estándar entran con
+// máscara (cada palabra sube desde su recorte) — sin medir líneas ni JS.
+const heroWords = computed(() => heroTitle.value.split(/\s+/).filter(Boolean))
 // Sin catálogo la web es una vidriera: el badge de fallback es "Sitio oficial".
 const heroBadge = computed(() => (heroTitleIsName.value ? (location.value || (showCatalog.value ? 'Catálogo online' : 'Sitio oficial')) : shopName.value))
 const heroBadgeIcon = computed(() => (heroTitleIsName.value ? (location.value ? 'map-pin' : 'store') : ''))
@@ -156,14 +159,49 @@ async function share() {
   }
 }
 
-onMounted(() => { clock = setInterval(() => { now.value = new Date() }, 60000) })
-onBeforeUnmount(() => clearInterval(clock))
+// Parallax de la placa: desplazamiento ≤ 3.5% del alto, solo con puntero
+// fino y sin reduced-motion. Un rAF por scroll, lectura de rect barata.
+const heroEl = ref(null)
+const finePointer = window.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches
+const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+let scrollRaf = 0
+let settleTimer = null
+function onHeroScroll() {
+  if (scrollRaf) return
+  scrollRaf = requestAnimationFrame(() => {
+    scrollRaf = 0
+    const el = heroEl.value
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    if (r.bottom < -80 || r.top > window.innerHeight) return
+    const p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height)))
+    el.style.setProperty('--sp-hero-shift', `${(p * -14).toFixed(2)}px`)
+  })
+}
+
+onMounted(() => {
+  clock = setInterval(() => { now.value = new Date() }, 60000)
+  // Red de seguridad de la entrada orquestada: si por lo que sea las
+  // animaciones no corren (pestaña en segundo plano, motor sin
+  // animaciones), la portada queda en su estado final visible.
+  settleTimer = setTimeout(() => { heroEl.value?.classList.add('is-settled') }, 2200)
+  if (finePointer && !reduceMotion) {
+    window.addEventListener('scroll', onHeroScroll, { passive: true })
+    onHeroScroll()
+  }
+})
+onBeforeUnmount(() => {
+  clearInterval(clock)
+  clearTimeout(settleTimer)
+  window.removeEventListener('scroll', onHeroScroll)
+  if (scrollRaf) cancelAnimationFrame(scrollRaf)
+})
 </script>
 
 <template>
   <!-- ===== Presentación (portada de la empresa) ===== -->
   <BlkHeroAlt v-if="isAlt" :block="block" />
-  <section v-else class="sp-hero" :class="{ 'is-compact': block?.variant === 'compact' }">
+  <section v-else ref="heroEl" class="sp-hero" :class="{ 'is-compact': block?.variant === 'compact' }">
     <div class="sp-hero-band" :class="{ 'has-cover': cover }">
       <!-- Minimal y Boutique: barra de anuncio (strip editorial del diseño) -->
       <p v-if="tpl === 'minimal' || tpl === 'boutique'" class="sp-mn-announce">{{ mnNotice }}</p>
@@ -247,12 +285,6 @@ onBeforeUnmount(() => clearInterval(clock))
             </svg>
             <span class="sp-bt-seal-core"><AppIcon name="star" :size="20" :stroke="1.5" /></span>
           </span>
-        </template>
-        <template v-else-if="tpl === 'classic'">
-          <span class="sp-cl-ring"></span>
-          <span class="sp-cl-orbit"><i></i></span>
-          <span class="sp-cl-spark s1"><AppIcon name="plus" :size="18" :stroke="2.5" /></span>
-          <span class="sp-cl-spark s2"><AppIcon name="plus" :size="14" :stroke="2.5" /></span>
         </template>
         <template v-else-if="tpl === 'cobre'">
           <span class="sp-cb-stitch t1"></span>
@@ -567,17 +599,24 @@ onBeforeUnmount(() => clearInterval(clock))
           </div>
         </template>
         <template v-else-if="tpl === 'duo'">
-          <!-- Duo (editorial a dos tintas): portada partida — copy a la
-               izquierda y placas de producto a la derecha sobre la banda de
-               acento. En mobile la placa principal abre como portada y el
-               copy sigue debajo. -->
+          <!-- Duo (editorial a dos tintas): portada partida 60/40 — raíl
+               vertical de edición, copy a la izquierda y la placa dominante
+               a la derecha, sangrada al borde de la banda. En mobile la
+               placa abre como portada y el copy sigue debajo. -->
+          <div class="sp-du-rail" aria-hidden="true">
+            <span class="sp-du-rail-top">{{ location || 'Tienda online' }}</span>
+            <i class="sp-du-rail-line"></i>
+            <span class="sp-du-rail-year">{{ year }}</span>
+          </div>
           <div class="sp-du-copy">
-            <p v-reveal class="sp-du-eyebrow">
-              <i aria-hidden="true"></i><AppIcon :name="heroBadgeIcon || 'store'" :size="13" :stroke="2.5" /> {{ heroBadge }}<i aria-hidden="true"></i>
+            <p class="sp-du-dateline sp-hero-rise" style="--d: 0ms">
+              <i aria-hidden="true"></i><span>{{ heroBadge }}</span><i aria-hidden="true"></i>
             </p>
-            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <em class="sp-du-mark">{{ titleSplit.last }}</em></h1>
-            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
-            <div v-reveal="280" class="sp-hero-ctas">
+            <h1 class="sp-hero-title sp-words" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">
+              <template v-for="(w, i) in heroWords" :key="i"><span class="sp-w" :style="{ '--i': i }"><span class="sp-w-i" :class="{ 'is-accent': i === heroWords.length - 1 }">{{ w }}</span></span>{{ ' ' }}</template>
+            </h1>
+            <p v-if="custom.description" class="sp-hero-sub sp-hero-rise" style="--d: 340ms">{{ custom.description }}</p>
+            <div class="sp-hero-ctas sp-hero-rise" style="--d: 420ms">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
               <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
@@ -585,11 +624,11 @@ onBeforeUnmount(() => clearInterval(clock))
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
               </button>
             </div>
-            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+            <ul v-if="heroMeta.length" class="sp-du-ficha sp-hero-rise" style="--d: 500ms">
               <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
           </div>
-          <div v-reveal="140" class="sp-du-art">
+          <div class="sp-du-art sp-hero-art-in" style="--d: 140ms">
             <figure class="sp-du-plate" :class="{ 'is-logo': !cbTileA && custom.logo }">
               <img v-if="cbTileA" :src="cbTileA" alt="" fetchpriority="high" />
               <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
@@ -603,15 +642,17 @@ onBeforeUnmount(() => clearInterval(clock))
         </template>
         <template v-else-if="tpl === 'calma'">
           <!-- Calma (bienestar): portada serena — columna única centrada con
-               aire generoso, serif suave y una placa redondeada debajo del
-               copy; la banda se tiñe apenas con el acento de la tienda. -->
+               aire generoso, Lora en el acento y una placa redondeada debajo
+               del copy sobre un halo de luz suave. -->
           <div class="sp-cm-copy">
-            <p v-reveal class="sp-cm-eyebrow">
+            <p class="sp-cm-eyebrow sp-hero-rise" style="--d: 0ms">
               <span class="sp-cm-leaf" aria-hidden="true"></span>{{ heroBadge }}
             </p>
-            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <em class="sp-cm-mark">{{ titleSplit.last }}</em></h1>
-            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
-            <div v-reveal="280" class="sp-hero-ctas">
+            <h1 class="sp-hero-title sp-words" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">
+              <template v-for="(w, i) in heroWords" :key="i"><span class="sp-w" :style="{ '--i': i }"><span class="sp-w-i" :class="{ 'is-accent': i === heroWords.length - 1 }">{{ w }}</span></span>{{ ' ' }}</template>
+            </h1>
+            <p v-if="custom.description" class="sp-hero-sub sp-hero-rise" style="--d: 400ms">{{ custom.description }}</p>
+            <div class="sp-hero-ctas sp-hero-rise" style="--d: 480ms">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
               <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
@@ -619,26 +660,31 @@ onBeforeUnmount(() => clearInterval(clock))
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
               </button>
             </div>
-            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+            <ul v-if="heroMeta.length" class="sp-hero-meta sp-hero-rise" style="--d: 540ms">
               <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
-            <figure v-if="cbTileA || custom.logo" v-reveal="380" class="sp-cm-plate" :class="{ 'is-logo': !cbTileA }">
+          </div>
+          <div v-if="cbTileA || custom.logo" class="sp-cm-art sp-hero-art-in" style="--d: 260ms">
+            <figure class="sp-cm-plate" :class="{ 'is-logo': !cbTileA }">
               <img v-if="cbTileA" :src="cbTileA" alt="" fetchpriority="high" />
               <img v-else :src="custom.logo" :alt="`Logo de ${shopName}`" />
             </figure>
           </div>
         </template>
         <template v-else-if="tpl === 'vitrina'">
-          <!-- Vitrina (boutique editorial): banda de tinta oscura — copy a la
-               izquierda con dateline y serif de alto contraste; a la derecha
-               la "vidriera": placa en arco con doble filete y rótulo Nº 01. -->
+          <!-- Vitrina (boutique editorial): banda de tinta — copy a la
+               izquierda con dateline y Playfair de alto contraste; a la
+               derecha la "vidriera": placa en arco con marco fino y rótulo,
+               y un pie de museo a todo lo ancho cerrando la portada. -->
           <div class="sp-vt-copy">
-            <p v-reveal class="sp-vt-dateline">
+            <p class="sp-vt-dateline sp-hero-rise" style="--d: 0ms">
               <i aria-hidden="true"></i><span>{{ heroBadge }}</span><i aria-hidden="true"></i><span>{{ year }}</span>
             </p>
-            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ titleSplit.head }} <em class="sp-vt-mark">{{ titleSplit.last }}</em></h1>
-            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
-            <div v-reveal="280" class="sp-hero-ctas">
+            <h1 class="sp-hero-title sp-words" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">
+              <template v-for="(w, i) in heroWords" :key="i"><span class="sp-w" :style="{ '--i': i }"><span class="sp-w-i" :class="{ 'is-accent': i === heroWords.length - 1 }">{{ w }}</span></span>{{ ' ' }}</template>
+            </h1>
+            <p v-if="custom.description" class="sp-hero-sub sp-hero-rise" style="--d: 320ms">{{ custom.description }}</p>
+            <div class="sp-hero-ctas sp-hero-rise" style="--d: 400ms">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
               <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
@@ -646,11 +692,12 @@ onBeforeUnmount(() => clearInterval(clock))
                 <AppIcon :name="copied ? 'check' : 'share-2'" :size="17" />
               </button>
             </div>
-            <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-meta">
+            <ul v-if="heroMeta.length" class="sp-hero-meta sp-hero-rise" style="--d: 460ms">
               <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             </ul>
           </div>
-          <div v-reveal="140" class="sp-vt-art">
+          <div class="sp-vt-art sp-hero-art-in" style="--d: 120ms">
+            <span class="sp-vt-frame" aria-hidden="true"></span>
             <figure class="sp-vt-plate" :class="{ 'is-logo': !cbTileA && custom.logo }">
               <img v-if="cbTileA" :src="cbTileA" alt="" fetchpriority="high" />
               <img v-else-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
@@ -659,19 +706,30 @@ onBeforeUnmount(() => clearInterval(clock))
             </figure>
             <span class="sp-vt-tag" aria-hidden="true">Nº 01</span>
           </div>
+          <p class="sp-vt-shelf sp-hero-rise" style="--d: 560ms">
+            <span class="sp-vt-shelf-label">{{ cbTileALabel }}</span>
+            <i aria-hidden="true"></i>
+            <span>{{ location || 'Tienda online' }}</span>
+            <i aria-hidden="true"></i>
+            <span>{{ year }}</span>
+          </p>
         </template>
         <template v-else-if="tpl === 'classic'">
-          <!-- Clásico: hero partido — copy alineado a la izquierda y una
-               placa de presentación (foto o logo) con chips flotantes de
-               datos reales del negocio. -->
+          <!-- Clásico: orden y confianza — grilla visible en la banda, copy a
+               la izquierda con filete de acento y una placa recta con ficha
+               de datos; la barra de confianza cierra a todo lo ancho. -->
           <div class="sp-cl-copy">
-            <p v-reveal class="sp-hero-badge">
-              <AppIcon v-if="heroBadgeIcon" :name="heroBadgeIcon" :size="13" />
-              {{ heroBadge }}
+            <p class="sp-cl-ledger sp-hero-rise" style="--d: 0ms">
+              <i class="sp-cl-ledger-rule" aria-hidden="true"></i>
+              <span class="sp-cl-ledger-name">{{ heroBadge }}</span>
+              <span class="sp-cl-ledger-sep" aria-hidden="true"></span>
+              <span>{{ year }}</span>
             </p>
-            <h1 v-reveal="120" class="sp-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
-            <p v-if="custom.description" v-reveal="200" class="sp-hero-sub">{{ custom.description }}</p>
-            <div v-reveal="280" class="sp-hero-ctas">
+            <h1 class="sp-hero-title sp-words" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">
+              <template v-for="(w, i) in heroWords" :key="i"><span class="sp-w" :style="{ '--i': i }"><span class="sp-w-i">{{ w }}</span></span>{{ ' ' }}</template>
+            </h1>
+            <p v-if="custom.description" class="sp-hero-sub sp-hero-rise" style="--d: 300ms">{{ custom.description }}</p>
+            <div class="sp-hero-ctas sp-hero-rise" style="--d: 380ms">
               <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
               <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
               <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
@@ -680,18 +738,20 @@ onBeforeUnmount(() => clearInterval(clock))
               </button>
             </div>
           </div>
-          <div v-reveal="140" class="sp-cl-art">
+          <div class="sp-cl-art sp-hero-art-in" style="--d: 160ms">
             <figure class="sp-cl-frame" :class="{ 'is-logo': !clImg }">
               <img v-if="clImg" :src="clImg" alt="" fetchpriority="high" />
               <img v-else-if="custom.logo" class="sp-cl-logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
               <span v-else class="sp-cl-initial" aria-hidden="true">{{ initial }}</span>
             </figure>
-            <span class="sp-cl-chip c1"><span class="sp-cl-chip-ico"><AppIcon :name="clChipA.icon" :size="15" :stroke="2.25" /></span>{{ clChipA.text }}</span>
-            <span class="sp-cl-chip c2"><span class="sp-cl-chip-ico"><AppIcon :name="clChipB.icon" :size="15" :stroke="2.5" /></span>{{ clChipB.text }}</span>
+            <div class="sp-cl-fiche">
+              <span class="sp-cl-chip c1"><span class="sp-cl-chip-ico"><AppIcon :name="clChipA.icon" :size="15" :stroke="2.25" /></span>{{ clChipA.text }}</span>
+              <span class="sp-cl-chip c2"><span class="sp-cl-chip-ico"><AppIcon :name="clChipB.icon" :size="15" :stroke="2.5" /></span>{{ clChipB.text }}</span>
+            </div>
           </div>
           <!-- Barra de confianza bajo el hero: estado, ubicación y WhatsApp
                a todo el ancho de la banda (una columna en pantallas chicas). -->
-          <ul v-if="heroMeta.length || whatsappUrl" v-reveal="360" class="sp-cl-trust">
+          <ul v-if="heroMeta.length || whatsappUrl" class="sp-cl-trust sp-hero-rise" style="--d: 480ms">
             <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
             <li v-if="whatsappUrl" class="sp-cl-trust-wa"><a :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="14" /> WhatsApp</a></li>
           </ul>
