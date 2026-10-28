@@ -79,7 +79,11 @@ if (failed) {
 // ---------- Build ----------
 function step(title, cmd, args, opts = {}) {
   console.log(`\n— ${title} —`)
-  const r = spawnSync(cmd, args, { cwd: FRONTEND, stdio: 'inherit', shell: isWin, env: process.env, ...opts })
+  // Con shell:true, cmd pasa por cmd.exe → un path con espacios ("SaaS DAVENT")
+  // hay que entrecomillarlo o se parte en el espacio.
+  const useShell = opts.shell ?? isWin
+  const exe = isWin && useShell && /\s/.test(cmd) && !cmd.startsWith('"') ? `"${cmd}"` : cmd
+  const r = spawnSync(exe, args, { cwd: FRONTEND, stdio: 'inherit', shell: isWin, env: process.env, ...opts })
   if (r.status !== 0) {
     console.error(`\n✗ Falló: ${title}`)
     process.exit(r.status ?? 1)
@@ -101,7 +105,8 @@ step('Vite build (producción APK)', 'npx', ['vite', 'build'], {
 // 2. Sync web assets + plugins al proyecto Android.
 step('cap sync android', 'npx', ['cap', 'sync', 'android'])
 
-// 3. assembleRelease firmado.
+// 3. assembleRelease firmado (el path se cita solo en step() por el espacio
+// de "SaaS DAVENT").
 step('gradlew assembleRelease', join(ANDROID, isWin ? 'gradlew.bat' : 'gradlew'), ['assembleRelease'], { cwd: ANDROID })
 
 // 4. Staging: copiar el APK firmado con nombre de versión.
