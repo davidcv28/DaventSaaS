@@ -18,12 +18,35 @@ import { http } from './http.js'
 // GET  /api/verify-email/     ?uid&token -> backend marca y redirige al frontend
 // POST /api/verify-email/resend/ (Bearer) -> 200
 
+// Diagnóstico APK: dentro del WebView de Capacitor una request a /api/* que no
+// sale a la red puede devolver el index.html del fallback SPA (la API vive en
+// otro origen real). Se detecta: una respuesta no-objeto muestra la causa en
+// pantalla en vez de fallar en silencio. Y un timeout propio cubre el caso en
+// que la capa nativa (CapacitorHttp) ignora el timeout de axios.
+function expectJson(data, op) {
+  if (!data || typeof data !== 'object') {
+    const err = new Error('non-json response')
+    err.response = { status: 500, data: { detail: `Diagnóstico: el servidor devolvió HTML en vez de JSON (${op}). Reportá este mensaje.` } }
+    throw err
+  }
+  return data
+}
+
+function withDiag(promise, op, ms = 45000) {
+  const timeout = new Promise((_, reject) => setTimeout(() => {
+    const err = new Error('diag timeout')
+    err.response = { status: 408, data: { detail: `Diagnóstico: el servidor no respondió en 45s (${op}). Reportá este mensaje.` } }
+    reject(err)
+  }, ms))
+  return Promise.race([promise, timeout])
+}
+
 export const authApi = {
   async login({ username, password, remember = false }) {
     // remember=true -> refresh de 30 días + cookie persistente ("mantener
     // sesión iniciada"); false -> cookie de sesión del navegador.
-    const { data } = await http.post('/token/', { username, password, remember })
-    return data
+    const { data } = await withDiag(http.post('/token/', { username, password, remember }), 'token')
+    return expectJson(data, 'token')
   },
 
   // El refresh real viaja por cookie y lo ejecuta http.js (tryRefresh);
@@ -130,8 +153,8 @@ export const authApi = {
   // El celular no viaja en los datos del provider: si falta, la respuesta trae
   // requires_phone y el router fuerza /completar-celular antes del panel.
   async googleLogin(credential, remember = true) {
-    const { data } = await http.post('/auth/google/', { credential, remember })
-    return data
+    const { data } = await withDiag(http.post('/auth/google/', { credential, remember }), 'google')
+    return expectJson(data, 'google')
   }
 }
 
