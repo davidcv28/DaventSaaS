@@ -25,6 +25,15 @@ const emit = defineEmits(['notify', 'navigate'])
 const store = useStoreStore()
 const catalog = useCatalogStore()
 
+// Sección del panel donde vive el contenido de un bloque (spec.edit).
+const SRC_LABELS = {
+  company: 'Mi empresa',
+  catalogs: 'Mis catálogos',
+  services: 'Mis servicios',
+  design: 'Diseño'
+}
+const srcLabel = (b) => SRC_LABELS[specOf(b).edit] || ''
+
 const surface = ref('landing')
 const draft = ref({ landing: [], catalog: [], services: [] })
 const undoStack = ref([])
@@ -114,7 +123,7 @@ buildDraft()
 // el draft anterior queda en el historial por si fue un error.
 watch(() => props.template, () => { buildDraft() })
 
-const blocks = computed(() => draft.value[surface] || [])
+const blocks = computed(() => draft.value[surface.value] || [])
 const specOf = (b) => blockSpec(surface.value, b.id) || {}
 const isLocked = (b) => Boolean(specOf(b).locked)
 const isPremiumLocked = (b) => Boolean(specOf(b).premium && !props.premium)
@@ -291,7 +300,7 @@ onUnmounted(() => { clearTimeout(saveTimer); clearTimeout(savedTimer) })
             <button type="button" class="btn ghost btn-auto btn-sm" @click="resetSurface"><AppIcon name="refresh" :size="14" /> Restablecer</button>
           </div>
         </div>
-        <p class="blk-hint">Activá, apagá y ordená las secciones de esta página. Lo que apagás se oculta sin perder su contenido.</p>
+        <p class="blk-hint">Cada fila es una sección de la página, en el mismo orden en que aparece en tu web. Lo que apagás se oculta sin borrar nada; lo marcado «Sin contenido» aparece recién cuando cargás esos datos.</p>
 
         <ul class="blk-list">
           <li
@@ -310,6 +319,10 @@ onUnmounted(() => { clearTimeout(saveTimer); clearTimeout(savedTimer) })
                 <span v-if="isLocked(b)" class="blk-tag"><AppIcon name="lock" :size="10" /> Fijo</span>
                 <span v-else-if="isPremiumLocked(b)" class="blk-tag premium"><AppIcon name="crown" :size="10" /> Premium</span>
                 <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes">Sin contenido</span>
+                <small v-if="specOf(b).desc" class="blk-desc">
+                  {{ specOf(b).desc }}
+                  <button v-if="specOf(b).edit" type="button" class="blk-link" @click="$emit('navigate', specOf(b).edit)">Lo cargás en {{ srcLabel(b) }}</button>
+                </small>
               </span>
               <label class="blk-toggle" :class="{ disabled: isLocked(b) || isPremiumLocked(b) }" :title="isLocked(b) ? 'Este bloque es parte de la página y no se puede apagar' : isPremiumLocked(b) ? 'Disponible con diseño avanzado (plan Premium)' : ''">
                 <input type="checkbox" :checked="b.enabled" :disabled="isLocked(b) || isPremiumLocked(b)" @change="toggleBlock(b)" />

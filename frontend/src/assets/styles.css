@@ -1569,6 +1569,10 @@ body { transition: background-color .2s ease, color .2s ease; }
 .blk-tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: var(--surface); color: var(--ink-3); border: 1px solid var(--line); white-space: nowrap; }
 .blk-tag.premium { color: var(--warn-700, #92600a); background: var(--warn-100, #fdf3d8); border-color: var(--warn-200, #f0dca8); }
 .blk-tag.empty { color: var(--ink-3); border-style: dashed; }
+/* Descripción del bloque: cae a su propio renglón dentro de .blk-name
+   (width:100% sobre el flex-wrap) y aclara qué muestra + dónde se carga. */
+.blk-desc { flex: 1 0 100%; margin-top: -2px; font-size: 12px; font-weight: 400; color: var(--ink-3); line-height: 1.4; }
+.blk-desc .blk-link { margin-left: 4px; font-size: 12px; white-space: nowrap; }
 .blk-toggle { position: relative; display: inline-block; width: 36px; height: 20px; flex: none; }
 .blk-toggle.disabled { opacity: .45; }
 .blk-toggle input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
