@@ -15,6 +15,7 @@ Chequeos ejecutables por página (home, catálogo, servicios):
   - contraste: sample de texto principal (color vs fondo efectivo ≥ 4.5)
 """
 import os, sys, time, json, threading, subprocess, urllib.request
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DaventProject.settings')
 import django
 django.setup()
@@ -171,7 +172,11 @@ CONTRAST = r"""() => {
   const bgOf = (el) => {
     let p = el
     while (p) {
-      const bg = getComputedStyle(p).backgroundColor
+      const cs = getComputedStyle(p)
+      // Gradientes/imágenes de fondo no se pueden medir como color plano —
+      // se salta el elemento en vez de falsificar el ratio.
+      if (cs.backgroundImage && cs.backgroundImage !== 'none') return null
+      const bg = cs.backgroundColor
       if (bg && bg !== 'rgba(0, 0, 0, 0)' && !bg.endsWith(', 0)')) return bg
       p = p.parentElement
     }
@@ -183,7 +188,9 @@ CONTRAST = r"""() => {
     const r = el.getBoundingClientRect()
     const cs = getComputedStyle(el)
     if (!r.width || !r.height || !el.innerText?.trim() || el.innerText.length > 200) continue
-    const fg = lum(cs.color), bg = lum(bgOf(el))
+    const bgC = bgOf(el)
+    if (bgC == null) continue
+    const fg = lum(cs.color), bg = lum(bgC)
     if (fg == null || bg == null) continue
     const ratio = (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05)
     if (ratio < 4.5 && parseFloat(cs.fontSize) < 24) {

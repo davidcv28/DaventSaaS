@@ -171,7 +171,7 @@
 .sv-head { display: grid; gap: 14px; max-width: 720px; margin-bottom: clamp(28px, 4vw, 44px); }
 .sv-head h2 { font-size: clamp(28px, 4.2vw, 50px); }
 .sv-head p { color: var(--sv-mute); font-size: 18px; }
-.sv-eyebrow { font-weight: 700; font-size: 14px; color: var(--sv-acc); text-transform: uppercase; letter-spacing: .08em; }
+.sv-eyebrow { font-weight: 700; font-size: 14px; color: color-mix(in srgb, var(--sv-acc) 65%, var(--sv-fg)); text-transform: uppercase; letter-spacing: .08em; }
 
 /* ---------- Picker de servicios + presupuesto ---------- */
 .sv-services { display: grid; grid-template-columns: 1.4fr .9fr; gap: 22px; align-items: start; }
@@ -276,6 +276,7 @@
 .sv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .sv-chips input { position: absolute; opacity: 0; pointer-events: none; }
 .sv-chips label {
+  display: inline-flex; align-items: center; min-height: 44px;
   padding: 10px 14px; border-radius: var(--sv-r-pill); border: var(--sv-bw) solid var(--sv-line); cursor: pointer; font-weight: 600; font-size: 15px;
   transition: transform .35s var(--sv-spring), background-color .2s, border-color .2s;
 }

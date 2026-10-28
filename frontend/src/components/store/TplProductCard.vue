@@ -73,7 +73,7 @@ const ariaLabel = computed(() =>
     </span>
     <span class="tpc-body">
       <span v-if="eyebrow" class="tpc-eyebrow">{{ eyebrow }}</span>
-      <h3 class="tpc-name">{{ p.name }}</h3>
+      <h2 class="tpc-name">{{ p.name }}</h2>
       <ProductStars v-if="stars && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :icon="starsIcon" :size="starsSize" />
       <span v-if="desc" class="tpc-desc">{{ desc }}</span>
       <slot name="tags" :p="p" />

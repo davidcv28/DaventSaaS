@@ -140,7 +140,7 @@
 /* ---------- Ficha de producto ---------- */
 .ci-pd { padding-bottom: 40px; }
 .ci-crumbs { display: flex; align-items: center; gap: 6px; padding: 14px clamp(16px, 5vw, 48px) 10px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--sp-muted); }
-.ci-crumbs a { color: inherit; text-decoration: none; }
+.ci-crumbs a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -11px 0;  color: inherit; text-decoration: none; }
 .ci-crumbs a:hover { color: var(--ci-ink); }
 .ci-crumbs span[aria-current] { color: var(--ci-ink); font-weight: 600; max-width: 45vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ci-tabs { position: sticky; top: 0; z-index: 20; display: flex; gap: 4px; padding: 6px clamp(16px, 5vw, 48px); background: color-mix(in srgb, var(--sp-bg) 86%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--ci-line); overflow-x: auto; scrollbar-width: none; }

@@ -47,7 +47,7 @@
 /* ---------- Ficha ---------- */
 .hg-pd { width: min(1100px, 100% - 36px); margin-inline: auto; padding: 20px 0 40px; display: grid; gap: 28px; }
 .hg-crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-muted); flex-wrap: wrap; }
-.hg-crumbs a { color: inherit; font-weight: 600; text-decoration: none; }
+.hg-crumbs a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -11px 0;  color: inherit; font-weight: 600; text-decoration: none; }
 .hg-crumbs a:hover { text-decoration: underline; }
 .hg-crumbs [aria-current] { color: var(--hg-ink); font-weight: 600; }
 .hg-pd-sheet { display: grid; gap: clamp(22px, 4vw, 52px); }

@@ -77,7 +77,7 @@
 .lf-sec-title { font-family: var(--lf-display); font-weight: 500; font-style: italic; font-size: clamp(26px, 4vw, 44px); line-height: 1.05; }
 .lf[data-var='lookbook'] .lf-sec-title { font-style: normal; font-weight: 560; }
 .lf-sec-title em { font-style: normal; color: var(--sp-accent-text); }
-.lf-sec-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-accent-text); text-decoration: none; }
+.lf-sec-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-accent-text); text-decoration: none; }
 .lf-sec-link:hover { text-decoration: underline; }
 
 /* Índice de colección (lookbook) / la selección (vitrina) */
@@ -134,7 +134,7 @@
    ===================================================================== */
 .lf-pd { width: min(1140px, 100% - 36px); margin-inline: auto; padding: 20px 0 40px; display: grid; gap: 28px; }
 .lf-crumbs { display: flex; align-items: center; gap: 6px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--sp-muted); flex-wrap: wrap; }
-.lf-crumbs a { color: inherit; font-weight: 600; text-decoration: none; }
+.lf-crumbs a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -11px 0;  color: inherit; font-weight: 600; text-decoration: none; }
 .lf-crumbs a:hover { text-decoration: underline; }
 .lf-crumbs [aria-current] { color: var(--lf-ink); font-weight: 600; }
 .lf-pd-sheet { display: grid; gap: clamp(22px, 4vw, 56px); }

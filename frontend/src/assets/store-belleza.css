@@ -78,7 +78,7 @@
 .be[data-var='signature'] .be-sec-title { font-style: normal; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .be-sec-title em { font-style: normal; color: var(--sp-accent-text); }
 .be[data-var='calma'] .be-sec-title em { font-style: italic; }
-.be-sec-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--sp-accent-text); text-decoration: none; }
+.be-sec-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 14px; color: var(--sp-accent-text); text-decoration: none; }
 .be-sec-link:hover { text-decoration: underline; }
 
 /* Servicios con duración — el bloque clave del rubro */
@@ -154,7 +154,7 @@
    ===================================================================== */
 .be-pd { width: min(1100px, 100% - 36px); margin-inline: auto; padding: 20px 0 40px; display: grid; gap: 28px; }
 .be-crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-muted); flex-wrap: wrap; }
-.be-crumbs a { color: inherit; font-weight: 600; text-decoration: none; }
+.be-crumbs a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -11px 0;  color: inherit; font-weight: 600; text-decoration: none; }
 .be-crumbs a:hover { text-decoration: underline; }
 .be-crumbs [aria-current] { color: var(--be-ink); font-weight: 600; }
 .be-pd-sheet { display: grid; gap: clamp(22px, 4vw, 52px); }

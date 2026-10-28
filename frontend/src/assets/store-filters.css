@@ -296,14 +296,14 @@
   color: var(--cf-bg, #fff);
   font-size: .72rem;
 }
-.cf-count-line { margin: 0; font-size: .86rem; color: var(--sp-muted, #666); white-space: nowrap }
+.cf-count-line { margin: 0; font-size: .86rem; color: var(--sp-ink); white-space: nowrap }
 .cf-search {
   flex: 1 1 180px;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 42px;
+  height: 44px;
   padding: 0 12px;
   border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
   border-radius: 999px;
@@ -314,6 +314,7 @@
 .cf-search input {
   flex: 1 1 auto;
   min-width: 0;
+  height: 42px;
   border: 0;
   outline: 0;
   background: none;
@@ -334,7 +335,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 42px;
+  height: 44px;
   padding: 0 12px;
   border: 1px solid var(--cf-border, var(--sp-line, rgba(0,0,0,.15)));
   border-radius: 999px;
@@ -345,12 +346,15 @@
 .cf-sort-label { font-size: .82rem; color: var(--sp-muted, #666) }
 .cf-sort select {
   appearance: none;
+  min-height: 44px;
+  margin: 0 -12px 0 0;
+  padding-left: 6px;
   border: 0;
   outline: 0;
   background: none;
   color: inherit;
   font: inherit;
-  font-size: .88rem;
+  font-size: 16px;
   padding-right: 16px;
   cursor: pointer;
 }

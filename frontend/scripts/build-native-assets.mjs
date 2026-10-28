@@ -11,12 +11,14 @@ const BRAND = '#4f46e5'
 const GRAD = `<defs><linearGradient id="dv-g" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#4338ca"/></linearGradient></defs>`
 const D_GLYPH = `<path d="M12 10h8.5c5.2 0 9 3.8 9 10s-3.8 10-9 10H12V10Z" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><path d="M12 20h8" stroke="#c7d2fe" stroke-width="3" stroke-linecap="round"/>`
 
-// Adaptive icon: el glyph queda dentro de la zona segura (66% central).
-const foreground = `<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg"><g transform="translate(312 312) scale(10)">${D_GLYPH}</g></svg>`
+// Adaptive icon: el glyph queda dentro de la zona segura (66% central ≈676px
+// de los 1024) — 560px le da presencia sin riesgo de recorte por la máscara.
+const foreground = `<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg"><g transform="translate(232 232) scale(14)">${D_GLYPH}</g></svg>`
 const background = `<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg"><rect width="1024" height="1024" fill="${BRAND}"/></svg>`
 
-// Legacy icon (pre-API26): cuadrado full-bleed con gradiente + D.
-const icon = `<svg width="1024" height="1024" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">${GRAD}<rect width="40" height="40" fill="url(#dv-g)"/><g transform="translate(0 -1)">${D_GLYPH}</g></svg>`
+// Legacy icon (pre-API26): cuadrado full-bleed con gradiente + D agrandada
+// ~22% centrada para que no se pierda al redondear el launcher.
+const icon = `<svg width="1024" height="1024" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">${GRAD}<rect width="40" height="40" fill="url(#dv-g)"/><g transform="translate(20 20) scale(1.22) translate(-20 -20)">${D_GLYPH}</g></svg>`
 
 // Splash 2732² (fuente de @capacitor/assets): marca centrada ~530px.
 const splash = (bg) => `<svg width="2732" height="2732" viewBox="0 0 2732 2732" xmlns="http://www.w3.org/2000/svg">${GRAD}<rect width="2732" height="2732" fill="${bg}"/><g transform="translate(1100 1100) scale(13.3)"><rect width="40" height="40" rx="11" fill="url(#dv-g)"/>${D_GLYPH}</g></svg>`

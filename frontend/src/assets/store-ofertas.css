@@ -83,7 +83,7 @@
 .of-sec-title { font-family: var(--of-display); font-weight: 400; font-size: clamp(26px, 4vw, 44px); line-height: 1; text-transform: uppercase; letter-spacing: -.01em; }
 .of[data-var='shop'] .of-sec-title { font-weight: 800; text-transform: none; letter-spacing: -.02em; font-size: clamp(24px, 3.4vw, 36px); }
 .of-sec-title em { font-style: normal; color: var(--sp-accent-text); }
-.of-sec-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; color: var(--sp-accent-text); text-decoration: none; }
+.of-sec-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 14px; color: var(--sp-accent-text); text-decoration: none; }
 .of-sec-link:hover { text-decoration: underline; }
 
 /* Rail de tickets (promo) */
@@ -168,7 +168,7 @@
    ===================================================================== */
 .of-pd { width: min(1160px, 100% - 36px); margin-inline: auto; padding: 20px 0 40px; display: grid; gap: 30px; }
 .of-crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-muted); flex-wrap: wrap; }
-.of-crumbs a { color: inherit; font-weight: 600; text-decoration: none; }
+.of-crumbs a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -11px 0;  color: inherit; font-weight: 600; text-decoration: none; }
 .of-crumbs a:hover { text-decoration: underline; }
 .of-crumbs [aria-current] { color: var(--of-ink); font-weight: 600; }
 .of-pd-sheet { display: grid; gap: clamp(22px, 4vw, 52px); }

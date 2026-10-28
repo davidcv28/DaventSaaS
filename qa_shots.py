@@ -118,7 +118,16 @@ def shot(page, path):
 
 os.makedirs(f'qa/{OUT}', exist_ok=True)
 with sync_playwright() as pw:
-    browser = pw.chromium.launch()
+    browser = None
+    def fresh_browser():
+        #El headless shell de Windows crashea esporádicamente en capturas
+        #full-page grandes (0xe0000008). Se relanza por plantilla para que un
+        #crash no aborte la matriz entera.
+        global browser
+        if browser:
+            try: browser.close()
+            except Exception: pass
+        browser = pw.chromium.launch()
     for tpl in (ONLY or TEMPLATES):
         # Orden: cortar el server viejo → update en DB → server fresco (cache
         # vacío) → esperar a que la API sirva la plantilla nueva.
@@ -128,6 +137,7 @@ with sync_playwright() as pw:
         if not wait_template(tpl):
             print(f'WARN {tpl}: el server no levantó con la plantilla, salto', flush=True)
             continue
+        fresh_browser()
         for w in WIDTHS:
             # Contexto aislado por captura: la API manda max_age=30 y un
             # contexto compartido serviría el payload del diseño anterior.
@@ -159,9 +169,11 @@ with sync_playwright() as pw:
                 page.wait_for_timeout(700)
                 shot(page, f'qa/{OUT}/{tpl}-{w}.png')
             except Exception as e:
-                print(f'FAIL {tpl} {w}: {e}')
+                print(f'FAIL {tpl} {w}: {str(e)[:120]}')
+                fresh_browser()
             finally:
-                ctx.close()
+                try: ctx.close()
+                except Exception: pass
         for w in MATRIX_W:
             for url, tag in [(HOME, 'home'), (SVC, 'svc')]:
                 ctx = browser.new_context(viewport={'width': w, 'height': 900}, reduced_motion='reduce')
@@ -171,11 +183,15 @@ with sync_playwright() as pw:
                     page.wait_for_timeout(700)
                     shot(page, f'qa/{OUT}/{tpl}-{w}-{tag}.png')
                 except Exception as e:
-                    print(f'FAIL {tpl} {w} {tag}: {e}')
+                    print(f'FAIL {tpl} {w} {tag}: {str(e)[:120]}')
+                    fresh_browser()
                 finally:
-                    ctx.close()
+                    try: ctx.close()
+                    except Exception: pass
         print(f'done {tpl}', flush=True)
-    browser.close()
+    if browser:
+        try: browser.close()
+        except Exception: pass
 # El último server queda vivo para seguir trabajando (el hijo no muere con el
 # script en Windows). Si se cortó por WARN, levantar uno limpio igual.
 if server is None:

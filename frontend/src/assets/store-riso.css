@@ -237,6 +237,7 @@
 /* Chips */
 .rs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .rs-chip {
+  min-height: 44px;
   padding: 9px 16px; border-radius: 999px; border: 2px solid var(--rs-ink); background: var(--rs-card); color: var(--rs-ink);
   cursor: pointer; font: 600 14px/1.2 var(--rs-body); box-shadow: 3px 3px 0 var(--rs-ink);
   transition: transform .35s var(--rs-spring), background-color .2s, box-shadow .35s var(--rs-spring);
