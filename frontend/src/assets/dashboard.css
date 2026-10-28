@@ -699,6 +699,12 @@
   .tabbar > button.locked { opacity: .65; }
 }
 
+@media (max-width: 480px) {
+  /* styles.css baja el padding lateral de .main a 14px en <=480: el margen
+     negativo de la topbar (-16px) lo supera y desborda 4px el viewport. */
+  .app--tabs .topbar { margin-left: -14px; margin-right: -14px; }
+}
+
 /* Sheet "Más": el menú completo sube desde abajo con el look del rail. */
 .sheet-scrim { position: fixed; inset: 0; z-index: 78; background: rgba(8, 10, 24, .55); animation: gs-fade .18s ease both; }
 .more-sheet {

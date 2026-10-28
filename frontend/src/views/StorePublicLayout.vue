@@ -13,6 +13,8 @@ import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts } from '../templates/index.js'
+import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
+import { studioPreviewVars, studioPreviewAttrs, applyFocusRing } from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
 // Las hojas de las landing alternativas también definen el cromado
 // (topbar/pie) y la ficha de producto de su diseño: se cargan acá para que
@@ -54,6 +56,35 @@ function onLayoutMessage(e) {
   if (e.origin !== window.location.origin || e.data?.type !== 'davent:layout') return
   layoutOverride.value = e.data.layout || null
 }
+// Modo Studio (?studio=1, iframe de la shell): consume el protocolo del
+// contrato — studio:update aplica theme/layout/template/modo reactivo sin
+// guardar nada; studio:focus dibuja el anillo; studio:ready le avisa al
+// host para que reenvíe el estado vigente (handshake).
+const studioMode = computed(() => route.query.studio === '1')
+const studioTheme = ref(null)      // siteTheme del borrador
+const studioTemplate = ref(null)   // template del borrador
+const studioViewMode = ref(null)   // claro/oscuro del visor (msg.mode)
+function onStudioMessage(e) {
+  if (!studioMode.value || e.origin !== window.location.origin || !isStudioMessage(e.data)) return
+  const d = e.data
+  if (d.type === STUDIO_MSG.UPDATE) {
+    if (d.theme) studioTheme.value = d.theme
+    if (d.layout) layoutOverride.value = d.layout
+    if (d.template) studioTemplate.value = d.template
+    if (d.mode === 'light' || d.mode === 'dark') studioViewMode.value = d.mode
+  } else if (d.type === STUDIO_MSG.FOCUS) {
+    applyFocusRing(document, d.target)
+  }
+}
+// Variables del tema Studio sobre la hoja actual: --st-* del contrato +
+// equivalentes --store-*/--sp-* (studioPreviewVars traduce). En oscuro el
+// tema propio de la página manda (solo viajan acento/fuente + --st-*).
+const studioVars = computed(() => (
+  studioMode.value && studioTheme.value ? studioPreviewVars(studioTheme.value, pageTheme.value) : {}
+))
+const studioAttrs = computed(() => (
+  studioMode.value && studioTheme.value ? studioPreviewAttrs(studioTheme.value) : {}
+))
 const themeVars = computed(() => storeThemeVars(custom.value))
 // Diseño avanzado (Plan premium): define si la web muestra el carrusel de
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
@@ -62,7 +93,10 @@ const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advance
 // marca el nivel del plan (Básico: Clásico/Perspectiva; Estándar suma
 // Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
 // plan o plantilla retirada — se fuerza 'classic'.
-const pageTemplate = computed(() => resolveStoreTemplate(custom.value.template, store.value?.allowed_templates))
+const pageTemplate = computed(() => resolveStoreTemplate(
+  (studioMode.value && studioTemplate.value) || custom.value.template,
+  store.value?.allowed_templates
+))
 // Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
 const isShop = computed(() => pageTemplate.value === 'shop')
@@ -76,7 +110,7 @@ watch(pageTemplate, (tpl) => {
 // Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
 // visitante puede alternarlo con el botón del nav (solo para esta visita).
 const visitorTheme = ref(null) // null = tema de la tienda
-const pageTheme = computed(() => visitorTheme.value || custom.value.theme)
+const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || visitorTheme.value || custom.value.theme)
 const showThemeToggle = computed(() => status.value === 'success' && !hasDesignAdvanced.value)
 function togglePageTheme() {
   visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
@@ -384,6 +418,10 @@ onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onMenuKey)
   window.addEventListener('message', onLayoutMessage)
+  window.addEventListener('message', onStudioMessage)
+  if (studioMode.value && window.parent !== window) {
+    window.parent.postMessage(studioReady(), window.location.origin)
+  }
   onScroll()
 })
 
@@ -391,13 +429,14 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('keydown', onMenuKey)
   window.removeEventListener('message', onLayoutMessage)
+  window.removeEventListener('message', onStudioMessage)
   clearSeo?.()
   applyFavicon(null)
 })
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="themeVars">
+  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="[themeVars, studioVars]" v-bind="studioAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">

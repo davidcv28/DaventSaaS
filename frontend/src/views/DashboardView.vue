@@ -70,8 +70,8 @@ import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
 import LayoutEditor from '../components/LayoutEditor.vue'
-import DesignLookTab from '../components/design/DesignLookTab.vue'
 import DesignPreview from '../components/design/DesignPreview.vue'
+import StudioShell from '../components/studio/StudioShell.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -94,7 +94,7 @@ const section = computed({
     // beneficio (también los `section = 'x'` internos pasan por acá).
     if (navLocks.value?.[id]) { openLocked(id); return }
     const next = validIds.value.has(id) ? id : 'overview'
-    if (sectionInner.value === 'design' && next !== 'design' && designDirty.value) {
+    if (sectionInner.value === 'design' && next !== 'design' && designDirtyAll.value) {
       leaveGuard.target = next
       leaveGuard.open = true
       return
@@ -1270,7 +1270,7 @@ const designBusy = ref(false)
 const designTab = ref('content')
 const designTabs = [
   { id: 'content', label: 'Mis datos', icon: 'pencil' },
-  { id: 'look', label: 'Logo y colores', icon: 'palette' },
+  { id: 'look', label: 'Studio', icon: 'sparkles' },
   { id: 'images', label: 'Fotos', icon: 'images' },
   { id: 'sections', label: 'Qué mostrar', icon: 'layout-grid' }
 ]
@@ -1614,11 +1614,26 @@ const designDirty = computed(() => {
     return designFieldValue(designForm[k]) !== designFieldValue(base[k])
   })
 })
+// Studio de diseño (pestaña "Studio"): su siteTheme viaja por site_theme en
+// el save (el backend lo limpia/gatea por plan). El dirty del tema se une al
+// de los campos para el savebar, el leave-guard y el beforeunload.
+const studioRef = ref(null)
+const studioDirty = ref(false)
+const studioTheme = ref(null)
+const studioSavedTheme = ref(null)
+const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
+const studioPreviewSrc = computed(() => (store.store?.slug ? `${env.appUrl}/${store.store.slug}?studio=1` : ''))
+function onStudioNav(target) {
+  if (target === 'tools') { section.value = 'tools'; toolsTab.value = 'studio' }
+  else if (target === 'blocks' || target === 'plans') section.value = target
+  else if (target === 'close') designTab.value = 'content'
+}
 function discardDesign() {
   const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
   DESIGN_FIELDS.forEach((k) => { designForm[k] = base[k] })
   Object.keys(designTouched).forEach((k) => { delete designTouched[k] })
   ensureStoreFont(designForm.name_font)
+  studioRef.value?.discardDraft()
 }
 const lookRing = ref(null)
 const previewSheet = ref(false)
@@ -1633,7 +1648,7 @@ watch(previewSheet, (on) => { if (on) nextTick(measureSheet) })
 const leaveGuard = reactive({ open: false, target: null, route: null })
 watch(() => leaveGuard.open, (on) => { if (on) nextTick(() => leaveStay.value?.focus()) })
 function onBeforeUnload(e) {
-  if (designDirty.value) { e.preventDefault(); e.returnValue = '' }
+  if (designDirtyAll.value) { e.preventDefault(); e.returnValue = '' }
 }
 function confirmLeave(discard) {
   const { target, route: to } = leaveGuard
@@ -1646,7 +1661,7 @@ function confirmLeave(discard) {
   else if (target) sectionInner.value = target
 }
 onBeforeRouteLeave((to) => {
-  if (!designDirty.value) return true
+  if (!designDirtyAll.value) return true
   leaveGuard.route = to
   leaveGuard.open = true
   return false
@@ -1699,12 +1714,20 @@ async function saveDesign() {
   // La plantilla viaja siempre: el backend la descarta del payload si
   // quedó fuera del nivel del plan (allowed_templates_of).
   payload.template = designForm.template
+  // El tema del Studio viaja como site_theme: el backend lo sanea y gatea
+  // por plan (clean_site_theme descarta en silencio lo que el plan no
+  // cubre). Solo se envía si el Studio llegó a montarse.
+  if (studioTheme.value) payload.site_theme = studioTheme.value
   // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
   if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
   const okDesign = await store.saveCustomization(payload)
   acceptServerDesign = false
   designBusy.value = false
-  if (okDesign) pushToast('Diseño guardado ✓')
+  if (okDesign) {
+    studioSavedTheme.value = studioTheme.value
+    studioRef.value?.markSaved()
+    pushToast('Diseño guardado ✓')
+  }
 }
 
 // Páginas de la web (site_templates): multi-selección de catálogo cerrado
@@ -4042,13 +4065,34 @@ async function changePassword() {
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
       <template v-if="canCustomize">
-        <div class="dsg-layout">
-          <div class="dsg-main">
+        <div class="dsg-wrap">
           <nav class="dsg-tabs" role="tablist" aria-label="Opciones de diseño">
             <button v-for="t in designTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
               <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
             </button>
           </nav>
+        <StudioShell
+          v-if="designTab === 'look'"
+          ref="studioRef"
+          :form="designForm"
+          :customization="store.customization || {}"
+          :benefits="plan?.benefits || {}"
+          :shop-name="designShopName"
+          :public-url="publicUrl"
+          :preview-url="studioPreviewSrc"
+          :site-templates="designSiteTemplates"
+          :busy="designBusy"
+          :dirty="designDirty"
+          :initial-theme="studioTheme"
+          :saved-theme="studioSavedTheme"
+          @update:dirty="studioDirty = $event"
+          @update:theme="studioTheme = $event"
+          @save="saveDesign"
+          @discard="discardDesign"
+          @navigate="onStudioNav"
+        />
+        <div v-else class="dsg-layout">
+          <div class="dsg-main">
           <div v-show="designTab === 'content'" class="card dsg-card">
             <h3><AppIcon name="pencil" :size="18" /> Contenido</h3>
             <section class="form-group">
@@ -4208,14 +4252,6 @@ async function changePassword() {
               </div>
             </div>
           </div>
-          <DesignLookTab
-            v-show="designTab === 'look'"
-            :form="designForm"
-            :benefits="plan?.benefits || {}"
-            :shop-name="designShopName"
-            @go-plans="section = 'plans'"
-            @ring="lookRing = $event"
-          />
           <div ref="dsgBar" class="dsg-savebar" :class="{ dirty: designDirty }">
             <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
               <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
@@ -4245,9 +4281,10 @@ async function changePassword() {
           :carousel="carouselImages"
           :slide="previewSlide"
           :name-font="designNameFont"
-          :ring="designTab === 'look' ? lookRing : null"
+          :ring="lookRing"
           :sheet-bottom="previewBottom"
         />
+        </div>
         </div>
       </template>
       <div v-else class="empty">

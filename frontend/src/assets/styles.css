@@ -1526,7 +1526,8 @@ body { transition: background-color .2s ease, color .2s ease; }
 
 /* Diseño web: pestañas a la izquierda + vista previa fija a la derecha. */
 /* Sin animación de entrada: un transform (aun en reposo) vuelve contenedor de los position:fixed (hoja de vista previa). */
-.sec-on > .dsg-layout { animation: none; }
+.sec-on > .dsg-layout, .sec-on > .dsg-wrap { animation: none; }
+.dsg-wrap { display: grid; gap: 14px; min-width: 0; }
 .dsg-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); gap: 18px; align-items: start; }
 .dsg-main { min-width: 0; display: grid; gap: 14px; }
 .dsg-tabs { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow-x: auto; scrollbar-width: thin; }

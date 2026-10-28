@@ -1,0 +1,573 @@
+<script setup>
+// StudioShell — contenedor "pro" del diseño: riel de herramientas | panel
+// de ajustes | lienzo con la web pública real en vivo (?studio=1 +
+// postMessage del contrato, sin recargar ni guardar).
+//
+// Dos capas de borrador:
+//  - `form` (designForm del Dashboard): campos que persisten hoy — el
+//    Studio los edita embebido (DesignLookTab en "Estilos") y el dirty/
+//    leave-guard/save existentes los cubren.
+//  - `theme` (siteTheme del contrato): viaja por studio:update a la vista
+//    previa y por `site_theme` en el payload del save (el backend lo limpia
+//    y gatea por plan con clean_site_theme).
+// Historial: 60 pasos sobre {campos de diseño + theme}, con coalescing.
+// Responsive: 3 columnas en escritorio; panel colapsable en tablet; en
+// móvil el lienzo va a pantalla completa, el panel es un bottom sheet
+// arrastrable de 3 alturas y el riel queda fijo abajo sin tapar contenido.
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import AppIcon from '../AppIcon.vue'
+import AppButton from '../AppButton.vue'
+import StudioCanvas from './StudioCanvas.vue'
+import StudioPanel from './StudioPanel.vue'
+import {
+  STUDIO_TOOLS, seedStudioTheme, formThemePatch, mergeTheme, clone, toolForTarget
+} from './studioModel.js'
+import {
+  installPreviewBridge, applyFocusRing, syncFontLink
+} from './previewBridge.js'
+import { useStudioHistory } from './useStudioHistory.js'
+import {
+  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage
+} from '../../studio/contract.js'
+import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont } from '../../api/stores.api.js'
+
+const props = defineProps({
+  form: { type: Object, required: true },
+  customization: { type: Object, default: () => ({}) },
+  benefits: { type: Object, default: () => ({}) },
+  shopName: { type: String, default: '' },
+  publicUrl: { type: String, default: '' },
+  previewUrl: { type: String, default: '' },
+  siteTemplates: { type: Array, default: () => [] },
+  busy: { type: Boolean, default: false },
+  dirty: { type: Boolean, default: false }, // dirty de los campos persistibles (designDirty del padre)
+  initialTheme: { type: Object, default: null }, // último borrador emitido: el draft sobrevive al cambio de pestaña
+  savedTheme: { type: Object, default: null }    // último tema guardado (punto de guardado estable entre montajes)
+})
+const emit = defineEmits(['save', 'discard', 'navigate', 'update:dirty', 'update:theme'])
+
+// ---------------------------------------------------------------------------
+// Borrador siteTheme
+// ---------------------------------------------------------------------------
+// Punto de guardado: lo que devuelve el servidor (semilla + site_theme
+// persistido — hoy el serializer puede no devolverlo todavía) o, tras un
+// save OK, la copia optimista (savedOverride) hasta que el servidor empiece
+// a reflejar site_theme.
+const seed = computed(() => mergeTheme(
+  seedStudioTheme(props.customization || {}),
+  props.customization?.site_theme || {}
+))
+const savedOverride = ref(null)
+const base = computed(() => savedOverride.value || props.savedTheme || resolveSiteTheme(seed.value))
+const draft = reactive({ theme: props.initialTheme ? clone(props.initialTheme) : clone(base.value) })
+const themeDirty = computed(() => JSON.stringify(draft.theme) !== JSON.stringify(base.value))
+
+// El servidor empezó a devolver site_theme (o cambió): resembrar completo.
+watch(() => JSON.stringify(props.customization?.site_theme || {}), () => {
+  savedOverride.value = null
+  draft.theme = resolveSiteTheme(seed.value)
+})
+// Igual cuando el padre marca un nuevo punto de guardado estable.
+watch(() => props.savedTheme, (t) => { if (t) savedOverride.value = null })
+// Cambios guardados de la semilla (acento/fuente): se reinyectan al draft
+// sin pisar el resto de las secciones (radios, sombras, botones...).
+watch(() => [props.customization?.accent, props.customization?.accent_custom, props.customization?.name_font], () => {
+  const s = resolveSiteTheme(seed.value)
+  ;['primary', 'secondary', 'accent'].forEach((k) => { draft.theme.palette[k] = s.palette[k] })
+  draft.theme.typography.heading = s.typography.heading
+  draft.theme.typography.body = s.typography.body
+})
+// Los campos de diseño ya persistibles (acento, fuente del nombre) se
+// editan en Estilos y se reflejan acá: el tema del borrador los sigue.
+watch(() => [props.form.accent, props.form.accent_custom, props.form.name_font], () => {
+  const p = formThemePatch(props.form)
+  Object.assign(draft.theme.palette, p.palette)
+  Object.assign(draft.theme.typography, p.typography)
+})
+
+// ---------------------------------------------------------------------------
+// Historial (60 pasos, coalescing) — snapshots de campos de diseño + tema.
+// ---------------------------------------------------------------------------
+const LOOK_FIELDS = [
+  'display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights',
+  'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme',
+  'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent',
+  'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x',
+  'cover_focus_y', 'template', 'show_location'
+]
+function snapshot() {
+  const f = {}
+  LOOK_FIELDS.forEach((k) => { f[k] = clone(props.form[k]) })
+  return { f, t: clone(draft.theme) }
+}
+function applySnapshot(snap) {
+  LOOK_FIELDS.forEach((k) => { props.form[k] = clone(snap.f[k]) })
+  draft.theme = clone(snap.t)
+}
+const history = useStudioHistory({ max: 60 })
+const { canUndo, canRedo } = history
+history.reset(snapshot())
+watch(() => JSON.stringify(snapshot()), () => history.observe(snapshot()))
+function undo() { const s = history.undo(); if (s) applySnapshot(s) }
+function redo() { const s = history.redo(); if (s) applySnapshot(s) }
+const anyDirty = computed(() => themeDirty.value || props.dirty)
+
+// Dirty combinado del Studio (tema) + tema vigente para el payload del padre.
+watch(themeDirty, (v) => emit('update:dirty', v), { immediate: true })
+watch(() => JSON.stringify(draft.theme), () => emit('update:theme', clone(draft.theme)), { immediate: true })
+
+function discard() {
+  emit('discard')                 // el padre revierte los campos de `form`
+  draft.theme = clone(base.value)
+  savedOverride.value = null
+  nextTick(() => history.reset(snapshot()))
+}
+function markSaved() {
+  savedOverride.value = clone(draft.theme)
+  history.reset(snapshot())
+}
+function discardDraft() { draft.theme = clone(base.value); history.reset(snapshot()) }
+
+// ---------------------------------------------------------------------------
+// Vista previa en vivo (postMessage del contrato, debounce 60 ms)
+// ---------------------------------------------------------------------------
+const canvasRef = ref(null)
+const device = ref('desktop')
+const rotated = ref(false)
+const zoom = ref(100)
+const viewerTheme = ref(props.customization?.theme === 'dark' ? 'dark' : 'light')
+const comparing = ref(false)
+const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))
+const liveTemplate = computed(() => resolveStoreTemplate(props.form.template, allowedTemplates.value))
+const canFlyers = computed(() => Boolean(props.benefits?.has_flyers))
+const frameDoc = () => canvasRef.value?.iframeEl?.contentDocument || null
+
+let postTimer = null
+function buildUpdate() {
+  const msg = studioUpdate({
+    theme: comparing.value ? base.value : draft.theme,
+    // clone(): el layout de la store es un proxy reactivo — postMessage no
+    // puede structured-clonar proxies (DataCloneError).
+    layout: clone(props.customization?.layout_config || {}),
+    template: liveTemplate.value,
+    device: device.value
+  })
+  msg.mode = viewerTheme.value // aditivo al contrato: claro/oscuro del visor
+  return msg
+}
+function postNow() {
+  const win = canvasRef.value?.iframeEl?.contentWindow
+  if (!win) return
+  win.postMessage(buildUpdate(), window.location.origin)
+}
+function queueUpdate() {
+  clearTimeout(postTimer)
+  postTimer = setTimeout(postNow, 60)
+}
+watch(
+  () => JSON.stringify([draft.theme, comparing.value, device.value, viewerTheme.value, liveTemplate.value, props.customization?.layout_config]),
+  queueUpdate
+)
+
+let cleanupBridge = null
+function onFrameLoad(iframe) {
+  cleanupBridge?.()
+  cleanupBridge = installPreviewBridge(iframe, { onPick })
+  postNow()
+  syncFontLink(frameDoc(), props.form.name_font || draft.theme.typography.heading)
+}
+watch(() => props.form.name_font, (f) => { ensureStoreFont(f); syncFontLink(frameDoc(), f) })
+watch(() => draft.theme.typography.heading, (f) => syncFontLink(frameDoc(), f))
+
+// Handshake del iframe: al montar (o tras recargar) pide el estado vigente.
+function onMessage(e) {
+  if (e.source !== canvasRef.value?.iframeEl?.contentWindow) return
+  if (!isStudioMessage(e.data)) return
+  if (e.data.type === STUDIO_MSG.READY) postNow()
+}
+onMounted(() => window.addEventListener('message', onMessage))
+onBeforeUnmount(() => {
+  window.removeEventListener('message', onMessage)
+  cleanupBridge?.()
+  clearTimeout(postTimer)
+  history.dispose()
+})
+
+// Click en la preview -> herramienta + control del panel (foco + flash).
+const tool = ref('estilos')
+const panelBodyEl = ref(null)
+const toolDef = computed(() => STUDIO_TOOLS.find((t) => t.id === tool.value) || STUDIO_TOOLS[0])
+function onPick(target) {
+  tool.value = toolForTarget(target)
+  if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
+  panelOpen.value = true
+  nextTick(() => {
+    const css = target?.startsWith('blk:') || target?.startsWith('sec:') ? 'blk' : target
+    const field = panelBodyEl.value?.querySelector(`[data-focus="${css}"]`)
+    if (!field) return
+    field.classList.add('sts-flash')
+    field.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    field.querySelector('input, select, button, [tabindex]')?.focus({ preventScroll: true })
+    setTimeout(() => field.classList.remove('sts-flash'), 1400)
+  })
+}
+
+// Al editar un control con data-focus -> anillo animado en el elemento.
+let lastRing = 0
+function ringTarget(target) {
+  const now = Date.now()
+  if (now - lastRing < 350) return
+  lastRing = now
+  applyFocusRing(frameDoc(), target)
+}
+function onPanelEvent(e) {
+  const field = e.target?.closest?.('[data-focus]')
+  if (field) ringTarget(field.dataset.focus)
+}
+
+// ---------------------------------------------------------------------------
+// Layout responsive del propio Studio
+// ---------------------------------------------------------------------------
+const isMobile = ref(false)
+const panelOpen = ref(true)
+const sheetSize = ref('mid')   // min | mid | max
+const fullscreen = ref(false)
+let mq = null
+function onMq() {
+  isMobile.value = mq.matches
+  if (!isMobile.value) sheetDrag.value = null
+}
+onMounted(() => {
+  mq = window.matchMedia('(max-width: 768px)')
+  onMq()
+  mq.addEventListener('change', onMq)
+})
+onBeforeUnmount(() => mq?.removeEventListener('change', onMq))
+
+// Bottom sheet arrastrable: alturas fijas (mínima=header, media, alta).
+const SHEET_PX = { min: 64, mid: 0.45, max: 0.8 }
+const sheetPx = computed(() => {
+  const vh = window.innerHeight || 800
+  const h = sheetSize.value === 'min' ? SHEET_PX.min : Math.round(vh * SHEET_PX[sheetSize.value])
+  return sheetDragPx.value ?? h
+})
+const sheetDragPx = ref(null)
+const sheetDrag = ref(null)
+function sheetDown(e) {
+  if (!isMobile.value || e.target.closest('button')) return
+  sheetDrag.value = { y0: e.clientY, h0: sheetPx.value }
+  e.currentTarget.setPointerCapture?.(e.pointerId)
+}
+function sheetMove(e) {
+  if (!sheetDrag.value) return
+  const vh = window.innerHeight || 800
+  const h = sheetDrag.value.h0 - (e.clientY - sheetDrag.value.y0)
+  sheetDragPx.value = Math.max(SHEET_PX.min, Math.min(Math.round(vh * SHEET_PX.max), h))
+}
+function sheetUp() {
+  if (!sheetDrag.value) return
+  const vh = window.innerHeight || 800
+  const stops = [['min', SHEET_PX.min], ['mid', vh * SHEET_PX.mid], ['max', vh * SHEET_PX.max]]
+  const h = sheetDragPx.value ?? sheetDrag.value.h0
+  sheetSize.value = stops.sort((a, b) => Math.abs(a[1] - h) - Math.abs(b[1] - h))[0][0]
+  sheetDrag.value = null
+  sheetDragPx.value = null
+}
+function pickTool(id) {
+  tool.value = id
+  panelOpen.value = true
+  if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
+}
+
+// ---------------------------------------------------------------------------
+// Teclado: Ctrl+Z / Ctrl+Shift+Z (capture — también anula el undo interno de
+// los paneles embebidos para que el historial sea único) y Esc de fullscreen.
+// ---------------------------------------------------------------------------
+function onKey(e) {
+  if (e.key === 'Escape' && fullscreen.value) { fullscreen.value = false; return }
+  if (!(e.ctrlKey || e.metaKey) || e.altKey) return
+  const k = e.key.toLowerCase()
+  if (k !== 'z' && k !== 'y') return
+  e.preventDefault()
+  e.stopPropagation()
+  if (k === 'y' || e.shiftKey) redo()
+  else undo()
+}
+onMounted(() => window.addEventListener('keydown', onKey, true))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey, true))
+
+// Comparar antes/después: mantener presionado envía el tema guardado.
+function compareStart() { comparing.value = true }
+function compareEnd() { comparing.value = false }
+
+function toggleFullscreen() { fullscreen.value = !fullscreen.value }
+const rootEl = ref(null)
+
+defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
+</script>
+
+<template>
+  <div
+    ref="rootEl"
+    class="sts"
+    :class="{ 'is-full': fullscreen, 'panel-closed': !panelOpen, 'is-mobile': isMobile }"
+    :style="isMobile ? { '--sheet-h': `${sheetPx}px` } : null"
+  >
+    <!-- ===== Riel de herramientas ===== -->
+    <aside class="sts-rail" aria-label="Herramientas del Studio">
+      <button
+        type="button" class="sts-tool sts-back" title="Salir del Studio"
+        aria-label="Salir del Studio" @click="emit('navigate', 'close')"
+      >
+        <AppIcon name="arrow-left" :size="19" />
+        <span class="sts-tool-lb">Volver</span>
+      </button>
+      <div class="sts-rail-list" role="tablist" aria-orientation="vertical" aria-label="Herramientas de diseño">
+        <button
+          v-for="t in STUDIO_TOOLS" :key="t.id" type="button" role="tab"
+          class="sts-tool" :class="{ active: tool === t.id }"
+          :aria-selected="tool === t.id" :title="t.desc"
+          @click="pickTool(t.id)"
+        >
+          <AppIcon :name="t.icon" :size="19" />
+          <span class="sts-tool-lb">{{ t.label }}</span>
+        </button>
+      </div>
+      <button
+        type="button" class="sts-tool sts-collapse" :aria-pressed="!panelOpen"
+        :title="panelOpen ? 'Ocultar el panel' : 'Mostrar el panel'"
+        @click="panelOpen = !panelOpen"
+      >
+        <AppIcon :name="panelOpen ? 'chevron-left' : 'chevron-right'" :size="18" />
+        <span class="sts-tool-lb">{{ panelOpen ? 'Ocultar' : 'Panel' }}</span>
+      </button>
+    </aside>
+
+    <!-- ===== Panel de ajustes / bottom sheet móvil ===== -->
+    <section class="sts-panel" :aria-label="`Ajustes de ${toolDef.label}`">
+      <header
+        class="sts-panel-head"
+        @pointerdown="sheetDown" @pointermove="sheetMove" @pointerup="sheetUp" @pointercancel="sheetUp"
+      >
+        <span class="sts-grip" aria-hidden="true"></span>
+        <div class="sts-panel-title">
+          <h2>{{ toolDef.label }}</h2>
+          <p>{{ toolDef.desc }}</p>
+        </div>
+        <div class="sts-sheet-stops" role="group" aria-label="Altura del panel">
+          <button
+            v-for="s in [['min','Mínimo'],['mid','Medio'],['max','Alto']]" :key="s[0]" type="button"
+            class="sts-stop" :class="{ active: sheetSize === s[0] }" :aria-pressed="sheetSize === s[0]"
+            :title="`Panel ${s[1].toLowerCase()}`" @click.stop="sheetSize = s[0]"
+          ><span class="sr-only">{{ s[1] }}</span></button>
+        </div>
+        <button type="button" class="sts-panel-x" title="Ocultar el panel" aria-label="Ocultar el panel" @click="panelOpen = false"><AppIcon name="chevron-left" :size="17" /></button>
+      </header>
+      <div
+        ref="panelBodyEl" class="sts-panel-body" role="tabpanel"
+        @focusin="onPanelEvent" @input="onPanelEvent" @change="onPanelEvent" @click="onPanelEvent"
+      >
+        <StudioPanel
+          :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
+          :site-templates="siteTemplates" :layout="customization?.layout_config || null"
+          :can-flyers="canFlyers" :shop-name="shopName"
+          @navigate="emit('navigate', $event)" @ring="ringTarget"
+        />
+      </div>
+    </section>
+
+    <!-- ===== Lienzo ===== -->
+    <section class="sts-canvas" aria-label="Vista previa en vivo">
+      <StudioCanvas
+        ref="canvasRef"
+        v-model:device="device" v-model:rotated="rotated" v-model:zoom="zoom" v-model:theme="viewerTheme"
+        :src="previewUrl" :open-url="publicUrl" :fullscreen="fullscreen" :comparing="comparing"
+        @load="onFrameLoad" @fullscreen="toggleFullscreen"
+      />
+    </section>
+
+    <!-- ===== Barra de guardado ===== -->
+    <footer class="sts-savebar">
+      <p class="sts-state" :class="{ dirty: anyDirty }" role="status">
+        <span v-if="anyDirty" class="sts-dot" aria-hidden="true"></span>
+        <AppIcon v-else name="circle-check" :size="15" aria-hidden="true" />
+        <span>{{ anyDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
+      </p>
+      <div class="sts-hist">
+        <button type="button" class="sts-opt" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" @click="undo"><AppIcon name="undo" :size="16" /></button>
+        <button type="button" class="sts-opt" :disabled="!canRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" @click="redo"><AppIcon name="redo" :size="16" /></button>
+        <button
+          type="button" class="sts-opt sts-cmp" :disabled="!themeDirty" :aria-pressed="comparing"
+          title="Mantené presionado para ver la versión guardada" aria-label="Comparar con la versión guardada"
+          @pointerdown="compareStart" @pointerup="compareEnd" @pointerleave="compareEnd" @pointercancel="compareEnd"
+          @keydown.space.prevent="compareStart" @keyup.space="compareEnd" @blur="compareEnd"
+        ><AppIcon name="eye" :size="16" /><span class="sts-opt-lb">Comparar</span></button>
+      </div>
+      <div class="sts-acts">
+        <button type="button" class="btn ghost btn-auto" :disabled="busy" @click="discard"><AppIcon name="undo" :size="15" /> Descartar</button>
+        <AppButton :loading="busy" type="button" @click="emit('save')">Guardar</AppButton>
+      </div>
+    </footer>
+  </div>
+</template>
+
+<style scoped>
+/* ===== Grid 3 zonas + savebar ===== */
+.sts {
+  --rail-w: 68px; --panel-w: 320px;
+  display: grid;
+  grid-template-columns: var(--rail-w) var(--panel-w) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: 'rail panel canvas' 'save save save';
+  height: calc(100dvh - 150px); min-height: 520px;
+  border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  background: var(--card);
+}
+.sts.is-full { position: fixed; inset: 0; z-index: 50; height: auto; min-height: 0; border-radius: 0; border: 0; }
+.sts.panel-closed { grid-template-columns: var(--rail-w) 0 minmax(0, 1fr); }
+.sts.panel-closed .sts-panel { overflow: hidden; border-right: 0; }
+
+/* ===== Riel ===== */
+.sts-rail {
+  grid-area: rail; display: flex; flex-direction: column; justify-content: space-between;
+  border-right: 1px solid var(--line); background: var(--surface); padding: 8px 6px;
+}
+.sts-rail-list { display: flex; flex-direction: column; gap: 2px; }
+.sts-tool {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-height: 52px; padding: 7px 2px 5px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink-2); font: inherit; font-size: 10.5px;
+  font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
+}
+.sts-tool:hover { color: var(--ink); background: var(--line-soft); }
+.sts-tool.active { background: var(--brand-soft); color: var(--brand-ink); }
+.sts-tool:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
+.sts-tool-lb { line-height: 1; text-align: center; }
+.sts-collapse { margin-top: 8px; color: var(--muted); }
+.sts-back { display: none; color: var(--muted); }
+
+/* ===== Panel ===== */
+.sts-panel {
+  grid-area: panel; display: flex; flex-direction: column; min-height: 0; min-width: 0;
+  border-right: 1px solid var(--line); background: var(--card); transition: margin .2s ease;
+}
+.sts-panel-head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--line); flex: none;
+}
+.sts-grip { display: none; }
+.sts-panel-title { min-width: 0; flex: 1; }
+.sts-panel-title h2 { margin: 0; font-size: 15px; font-weight: 700; }
+.sts-panel-title p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.sts-panel-x {
+  display: none; flex: none; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border: 0; border-radius: 8px; background: transparent;
+  color: var(--muted); cursor: pointer;
+}
+.sts-panel-x:hover { background: var(--line-soft); color: var(--ink); }
+.sts-sheet-stops { display: none; }
+.sts-panel-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; overscroll-behavior: contain; }
+.sts-flash { outline: 2px solid var(--brand-500); outline-offset: 2px; border-radius: 10px; transition: outline-color .4s; }
+
+/* ===== Lienzo ===== */
+.sts-canvas { grid-area: canvas; min-width: 0; min-height: 0; display: flex; }
+.sts-canvas > .stcv { flex: 1; min-width: 0; }
+
+/* ===== Savebar ===== */
+.sts-savebar {
+  grid-area: save; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line); background: var(--card);
+}
+.sts-state { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: 12.5px; font-weight: 600; color: var(--ok); }
+.sts-state.dirty { color: var(--warn, #b45309); }
+.sts-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: sts-pulse 1.6s ease-in-out infinite; }
+@keyframes sts-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.sts-hist { display: inline-flex; align-items: center; gap: 2px; }
+.sts-opt {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-width: 44px; height: 36px; padding: 0 10px; border: 1px solid transparent;
+  border-radius: 9px; background: transparent; color: var(--ink-2); font: inherit;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
+}
+.sts-opt:hover:not(:disabled) { background: var(--line-soft); color: var(--ink); }
+.sts-opt:disabled { opacity: .4; cursor: default; }
+.sts-opt[aria-pressed='true'] { background: var(--brand-soft); color: var(--brand-ink); }
+.sts-opt:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.sts-cmp { user-select: none; -webkit-user-select: none; touch-action: none; }
+.sts-acts { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+
+/* ===== Tablet: panel colapsable ===== */
+@media (max-width: 1100px) {
+  .sts { --panel-w: 300px; }
+  .sts-panel-x { display: inline-flex; }
+}
+@media (max-width: 900px) {
+  .sts { --panel-w: 280px; }
+}
+
+/* ===== Móvil: lienzo fullscreen + sheet + rail fijo ===== */
+@media (max-width: 768px) {
+  /* El Studio toma toda la pantalla (overlay): con cabecera + tabs arriba,
+     una altura calc(100dvh - offset) dejaba rail/sheet/savebar anclados
+     fuera del fold. z-80: por encima del tabbar (70), debajo de
+     SupportBot (90) y chat-win (96). */
+  .sts, .sts.is-full {
+    --rail-h: calc(62px + env(safe-area-inset-bottom, 0px));
+    position: fixed; inset: 0; z-index: 80;
+    display: block; height: auto; min-height: 0; border: 0; border-radius: 0;
+  }
+  /* El lienzo se reserva solo el espacio de rail + sheet mínimo: al expandir
+     la hoja el usuario acepta que tape la vista (la vuelve a achicar). */
+  .sts-canvas { position: absolute; inset: 0; padding-bottom: calc(var(--rail-h) + 130px); }
+  .sts-rail {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; height: var(--rail-h);
+    flex-direction: row; align-items: stretch; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    border-right: 0; border-top: 1px solid var(--line); background: var(--card);
+    overflow-x: auto; gap: 4px;
+  }
+  .sts-rail-list { flex-direction: row; gap: 4px; flex: 1; }
+  .sts-tool { flex: 1 0 auto; min-width: 60px; min-height: 50px; flex-direction: column; }
+  .sts-collapse { display: none; }
+  .sts-back { display: flex; }
+  .sts-savebar {
+    position: absolute; left: 0; right: 0; z-index: 31;
+    bottom: var(--rail-h);
+    padding: 6px 10px; gap: 8px; border-top: 0;
+    box-shadow: 0 -1px 0 var(--line);
+  }
+  .sts-state span:last-child, .sts-opt-lb { display: none; }
+  .sts-panel {
+    position: absolute; left: 0; right: 0; z-index: 32;
+    bottom: calc(var(--rail-h) + 56px);
+    height: var(--sheet-h); border-right: 0; border-top: 1px solid var(--line);
+    border-radius: 16px 16px 0 0; box-shadow: 0 -8px 28px rgba(15, 23, 42, .14);
+    background: var(--card); overflow: hidden;
+  }
+  .sts.panel-closed .sts-panel { height: 0; border-top: 0; }
+  .sts-panel-head {
+    padding: 10px 14px 10px; cursor: grab; touch-action: none;
+    align-items: flex-start;
+  }
+  .sts-panel-head:active { cursor: grabbing; }
+  .sts-grip { display: block; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
+  .sts-panel-title { padding-top: 4px; }
+  .sts-panel-title h2 { font-size: 14px; }
+  .sts-panel-title p { display: none; }
+  .sts-sheet-stops { display: inline-flex; gap: 6px; padding-top: 10px; }
+  .sts-stop { width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); cursor: pointer; position: relative; }
+  .sts-stop::after { content: ''; position: absolute; left: 4px; right: 4px; bottom: 4px; border-radius: 2px; background: var(--muted); opacity: .5; }
+  .sts-stop:nth-child(1)::after { height: 4px; }
+  .sts-stop:nth-child(2)::after { height: 9px; }
+  .sts-stop:nth-child(3)::after { height: 14px; }
+  .sts-stop.active { border-color: var(--brand-500); }
+  .sts-stop.active::after { background: var(--brand-500); opacity: 1; }
+  .sts-panel-x { display: none; }
+  .sts-panel-body { padding: 12px 14px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sts-dot { animation: none; }
+  .sts-tool, .sts-opt, .sts-panel { transition: none; }
+}
+</style>
