@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import QRCode from 'qrcode'
-import { storesApi, publicStoreUrl, storeThemeVars, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
+import { storesApi, publicStoreUrl, CUSTOMIZATION_DEFAULTS, ensureStoreFont } from '../api/stores.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { extractApiError } from '../api/http.js'
@@ -10,7 +10,8 @@ import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import FlyerCanvas from '../components/FlyerCanvas.vue'
 import { catalogApi } from '../api/catalog.api.js'
-import { loadFlyerDraft, imposition, sizeById, layoutById, flyerProduct } from '../utils/flyer.js'
+import { servicesApi } from '../api/services.api.js'
+import { loadFlyerDraft, imposition, sizeById, layoutById, flyerProduct, flyerService, flyerLegacyService, resolveFlyerItems, flyerVars, flyerFontSlug } from '../utils/flyer.js'
 
 // Panfletito A6 de la tienda, mismo diseño que el folleto promocional de
 // DAVENT: banda de marca arriba, beneficios, destacados y pie con QR.
@@ -31,6 +32,7 @@ const sheetVars = computed(() => imp.value && ({
 const customLabel = computed(() => {
   if (!imp.value) return ''
   const s = sizeById(draft.value.size).label
+  if (imp.value.digital) return `Folleto a medida ${s} · formato digital, sale ajustado en A4`
   return imp.value.count === 1
     ? `Folleto a medida ${s} · sale 1 por hoja, a color`
     : `Folleto a medida ${s} · salen ${imp.value.count} por hoja A4${imp.value.landscape ? ' apaisada' : ''}, a color`
@@ -43,8 +45,15 @@ const error = ref('')
 const qrDataUrl = ref('')
 
 const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
-// Color de la web (accent del Diseño web) -> --store-accent/-ink: tiñe banda, pie y detalles.
-const themeVars = computed(() => storeThemeVars(custom.value))
+// Color de la web: site_theme del Studio si existe, si no el accent del
+// Diseño web -> --store-accent/-ink: tiñe banda, pie y detalles.
+const themeVars = computed(() => flyerVars(custom.value))
+// Relleno automático del modo "landing" (titular + beneficios cargados).
+const suggest = computed(() => {
+  const bullets = (custom.value.benefits || []).map((b) => String(b?.title || '').trim()).filter(Boolean).slice(0, 4)
+  const svcTitles = (custom.value.services || []).map((s) => String(s?.title || '').trim()).filter(Boolean)
+  return { title: String(custom.value.headline || '').trim(), bullets: bullets.length ? bullets : svcTitles.slice(0, 4) }
+})
 const business = computed(() => auth.user?.profile?.business_name || '')
 const shopName = computed(() => custom.value.display_name || business.value || 'Mi tienda')
 const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
@@ -95,15 +104,23 @@ onMounted(async () => {
     if (isCustom) {
       draft.value = loadFlyerDraft(store.value.slug, custom.value.whatsapp || auth.user?.profile?.phone || '')
       const d = draft.value
-      if (layoutById(d.layout).kind === 'catalogo' && d.productIds.length) {
-        const rows = await catalogApi.listProducts().catch(() => [])
-        chosenProducts.value = d.productIds.map((id) => rows.find((p) => p.id === id)).filter(Boolean).map(flyerProduct)
+      const layout = layoutById(d.layout)
+      if (layout.products) {
+        const [prods, svcs] = await Promise.all([
+          catalogApi.listProducts().catch(() => []),
+          servicesApi.listServices().catch(() => [])
+        ])
+        const prodItems = prods.filter((p) => p.is_active !== false).map(flyerProduct)
+        const svcItems = svcs.filter((s) => s.is_active !== false).map(flyerService)
+        const pool = svcItems.length ? svcItems : (custom.value.services || []).map((row, i) => flyerLegacyService(row, i))
+        chosenProducts.value = resolveFlyerItems(d, layout, { products: prodItems, services: pool })
       }
       const o = imposition(d.size, d.sheet)
       pageStyle = document.createElement('style')
       pageStyle.textContent = `@page { size: ${o.pageW}mm ${o.pageH}mm; margin: 0 }`
       document.head.appendChild(pageStyle)
     }
+    ensureStoreFont(flyerFontSlug(custom.value))
     qrDataUrl.value = qr
     products.value = (cat?.products || []).filter((p) => p.image).slice(0, 3)
     status.value = 'ready'
@@ -219,7 +236,7 @@ function closeTab() {
     <div v-else-if="isCustom && draft" class="cf-sheet" :style="sheetVars">
       <FlyerCanvas
         v-for="n in imp.count" :key="n" class="cf-card" :aria-hidden="n > 1 || undefined"
-        :design="draft" :products="chosenProducts" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl"
+        :design="draft" :items="chosenProducts" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl" :suggest="suggest"
       />
     </div>
 

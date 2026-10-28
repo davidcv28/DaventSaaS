@@ -23,10 +23,10 @@ const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
 const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))
 
 const steps = [
-  { id: 'identity', icon: 'image', title: 'Identidad', sub: 'Tu logo', rec: 'Subí un logo cuadrado', ring: 'logo' },
-  { id: 'colors', icon: 'palette', title: 'Colores', sub: 'Tema y color de acento', rec: 'Elegí un color de acento', ring: 'accent' },
-  { id: 'type', icon: 'type', title: 'Tipografía', sub: 'Fuente y tamaño del nombre', rec: 'Elegí una tipografía', ring: 'font', premium: true },
-  { id: 'style', icon: 'layout-grid', title: 'Portada y estilo', sub: 'Imagen de portada y diseño', rec: 'Sumá una portada luminosa', ring: 'cover' }
+  { id: 'identity', icon: 'image', title: 'Identidad', ring: 'logo' },
+  { id: 'colors', icon: 'palette', title: 'Colores', ring: 'accent' },
+  { id: 'type', icon: 'type', title: 'Tipografía', ring: 'font', premium: true },
+  { id: 'style', icon: 'layout-grid', title: 'Portada y estilo', ring: 'cover' }
 ]
 
 const currentLogo = computed(() => store.customization.logo || '')
@@ -47,11 +47,6 @@ function stepRing(id) { return steps.find((s) => s.id === id)?.ring || null }
 function toggle(id) {
   open.value = open.value === id ? null : id
   setRing(open.value ? stepRing(open.value) : null)
-}
-function goStep(id) {
-  open.value = id
-  setRing(stepRing(id))
-  document.getElementById(`dl-h-${id}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
 }
 function onHeadKey(e, i) {
   const last = steps.length - 1
@@ -284,6 +279,19 @@ function pickFont(key) {
 const fontSample = computed(() => ({ fontFamily: storeFontFamily(props.form.name_font) }))
 const sampleName = computed(() => props.shopName || 'Tu negocio')
 
+// Resumen del valor actual en cada encabezado del acordeón ("Acento · ■ #…"):
+// se ve qué hay sin abrir el paso — clave del progressive disclosure.
+const logoScaleName = computed(() => LOGO_SCALE_OPTS.find((o) => o.id === props.form.logo_scale)?.name || 'Mediano')
+const fontLabel = computed(() => STORE_FONTS[props.form.name_font]?.label || props.form.name_font)
+const tplLabel = computed(() => STORE_TEMPLATES[props.form.template]?.label || props.form.template)
+const themeLabel = computed(() => STORE_THEMES[props.form.theme]?.label || 'Claro')
+const stepSum = computed(() => ({
+  identity: currentLogo.value ? `Logo subido · ${logoScaleName.value}` : 'Sin logo todavía',
+  colors: `${accentMeta.value.hex} · ${themeLabel.value}`,
+  type: `${fontLabel.value} · ${props.form.name_font_size}px`,
+  style: `${tplLabel.value} · ${currentCover.value ? 'con portada' : 'sin portada'}`
+}))
+
 const storeTemplates = STORE_TEMPLATES
 const templateFamilies = STORE_TEMPLATE_FAMILIES
 const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
@@ -442,8 +450,6 @@ onBeforeUnmount(dropLocalLogo)
 
 <template>
   <div class="card dsg-card dl-root" @keydown="onRootKey">
-    <h3><AppIcon name="palette" :size="18" /> Logo y colores</h3>
-
     <div class="dl-progress">
       <div class="dl-progress-head">
         <strong><AppIcon name="badge-check" :size="16" aria-hidden="true" /> Identidad visual</strong>
@@ -457,16 +463,6 @@ onBeforeUnmount(dropLocalLogo)
       <div class="dl-bar" role="progressbar" aria-label="Identidad visual completada" aria-valuemin="0" aria-valuemax="4" :aria-valuenow="doneCount">
         <span :style="{ transform: `scaleX(${doneCount / 4})` }"></span>
       </div>
-      <ul class="dl-checks">
-        <li v-for="s in steps" :key="s.id">
-          <button type="button" class="dl-check" :class="{ done: done[s.id] }" @click="goStep(s.id)">
-            <span class="dl-check-ico" aria-hidden="true"><AppIcon v-if="done[s.id]" name="check" :size="12" :stroke="3" /></span>
-            <span class="dl-check-txt">{{ s.rec }}</span>
-            <span v-if="!advanced && (s.id === 'colors' || s.id === 'type')" class="dl-check-lock"><AppIcon name="lock" :size="11" :stroke="2" aria-hidden="true" /> Premium</span>
-            <span class="sr-only">{{ done[s.id] ? '(completo)' : '(pendiente)' }}</span>
-          </button>
-        </li>
-      </ul>
     </div>
 
     <div class="dl-steps">
@@ -484,8 +480,8 @@ onBeforeUnmount(dropLocalLogo)
           >
             <span class="dl-step-ico" aria-hidden="true"><AppIcon :name="s.icon" :size="18" /></span>
             <span class="dl-step-txt">
-              <strong><span class="dl-step-n">{{ i + 1 }}</span>{{ s.title }}</strong>
-              <small>{{ s.sub }}</small>
+              <strong>{{ s.title }}</strong>
+              <small class="dl-sum"><i v-if="s.id === 'colors'" class="dl-dot" :style="{ background: accentMeta.hex }" aria-hidden="true"></i>{{ stepSum[s.id] }}</small>
             </span>
             <span v-if="s.premium && !advanced" class="lock-badge dl-step-lock"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span>
             <span class="dl-step-state" :class="{ done: done[s.id] }">
@@ -787,15 +783,8 @@ onBeforeUnmount(dropLocalLogo)
 .dl-progress-count { flex: none; font-size: 13px; font-weight: 800; color: var(--brand-ink); font-variant-numeric: tabular-nums; }
 .dl-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .dl-bar span { display: block; height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--brand-500), var(--accent)); transform-origin: 0 50%; transition: transform .22s ease; }
-.dl-checks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-.dl-check { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; min-width: 0; padding: 6px 10px; border: 1px solid transparent; border-radius: 10px; background: transparent; font: inherit; font-size: 13px; font-weight: 600; text-align: left; color: var(--ink-2); cursor: pointer; }
-.dl-check:hover { background: var(--surface); }
-.dl-check-ico { flex: none; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong, var(--line)); color: #fff; }
-.dl-check.done .dl-check-ico { border-color: var(--ok); background: var(--ok); }
-.dl-check.done .dl-check-txt { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent); }
-.dl-check-txt { min-width: 0; flex: 1; overflow-wrap: anywhere; line-height: 1.3; }
-.dl-check-lock { flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-ink); }
-@container (max-width: 440px) { .dl-checks { grid-template-columns: minmax(0, 1fr); } }
+.dl-sum { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.dl-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(9, 12, 24, .15); }
 
 .dl-steps { display: grid; gap: 10px; min-width: 0; }
 .dl-step { border: 1px solid var(--line); border-radius: 14px; background: var(--card); min-width: 0; }
@@ -803,13 +792,12 @@ onBeforeUnmount(dropLocalLogo)
 .dl-step-h { margin: 0; font-size: inherit; }
 .dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; min-width: 0; padding: 10px 14px; border: 0; border-radius: 14px; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
 .dl-step-btn:hover { background: var(--surface); }
-.dl-step-btn:focus-visible, .dl-check:focus-visible, .dl-filter:focus-visible, .dl-font:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.dl-step-btn:focus-visible, .dl-filter:focus-visible, .dl-font:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .dl-step-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-soft); color: var(--brand-600); }
 .dl-step.done .dl-step-ico { background: var(--ok-bg); color: var(--ok-ink); }
 .dl-step-txt { display: grid; gap: 2px; flex: 1; min-width: 0; }
 .dl-step-txt strong { display: flex; align-items: center; gap: 8px; font-size: 14.5px; line-height: 1.25; min-width: 0; }
 .dl-step-txt small { color: var(--muted); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
-.dl-step-n { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--ink); color: var(--card); font-size: 11px; font-weight: 800; }
 .dl-step-lock { flex: none; margin-left: 0; }
 .dl-step-state { flex: none; display: grid; place-items: center; width: 22px; height: 22px; color: var(--ok); }
 .dl-step-pending { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong, var(--line)); }
