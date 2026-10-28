@@ -152,9 +152,15 @@ async function onNativeGoogleTap() {
     }
   } catch (err) {
     // El usuario puede cerrar el picker de cuentas — no es un error.
-    const msg = String(err?.message || err || '').toLowerCase()
-    if (!msg.includes('cancel') && !msg.includes('12501')) {
-      emit('error', 'No pudimos iniciar sesión con Google. Intentá de nuevo.')
+    // Cualquier otra falla (OAuth client faltante en Google Cloud, sin
+    // cuenta Google en el dispositivo, Play Services viejo) se muestra con
+    // el detalle crudo — un "canceled" de Credential Manager también cubre
+    // errores de configuración, así que solo callamos el gesto del usuario.
+    const msg = String(err?.message || err || '')
+    console.error('[SocialLogin] Google sign-in falló:', err?.code, msg)
+    const userGesture = /user.?cancel|canceled by user|12501/i.test(msg)
+    if (!userGesture) {
+      emit('error', `No pudimos iniciar sesión con Google. ${msg || 'Intentá de nuevo.'}`)
     }
   } finally {
     busy.value = false
