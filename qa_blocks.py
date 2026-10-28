@@ -183,7 +183,11 @@ with sync_playwright() as pw:
     print('save tras Ctrl+Shift+Z:', save_txt())
 
     # --- restablecer + superficies ---
-    page.locator('button:has-text("Restablecer")').click()
+    page.evaluate('''() => {
+      const b = [...document.querySelectorAll('button')].find(x => x.innerText.includes('Restablecer'))
+      b?.scrollIntoView({ block: 'center' })
+      b?.click()
+    }''')
     page.wait_for_timeout(1400)
     print('save tras reset:', save_txt())
 

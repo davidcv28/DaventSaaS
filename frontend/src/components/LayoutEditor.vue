@@ -443,6 +443,10 @@ const saveLabel = computed(() => ({
   idle: 'Todo guardado', dirty: 'Cambios sin guardar…', saving: 'Guardando…',
   saved: 'Guardado ✓', error: 'Error al guardar'
 }[saveState.value]))
+const saveIcon = computed(() => ({
+  idle: 'circle-check', dirty: 'clock', saving: 'loader',
+  saved: 'circle-check', error: 'triangle-alert'
+}[saveState.value]))
 
 // Vista previa real: la página pública dentro de un iframe con ancho
 // desktop/mobile. Usa el alias same-origin <origen>/<slug> (no el link
@@ -457,6 +461,13 @@ const storeSlug = computed(() => store.store?.slug || '')
 const previewSrc = computed(() => (storeSlug.value ? `${env.appUrl}/${storeSlug.value}${PREVIEW_PATHS[surface.value]}` : ''))
 const canonicalSrc = computed(() => (props.publicUrl ? props.publicUrl + PREVIEW_PATHS[surface.value] : ''))
 const surfacePublished = computed(() => props.siteTemplates.includes(surface.value))
+// En pantallas chicas la vista previa pasa a ser una hoja que se abre
+// desde un botón flotante — la lista ocupa todo el ancho.
+const previewOpen = ref(false)
+const SURFACE_ICONS = { landing: 'store', catalog: 'layout-grid', services: 'wrench' }
+function enabledCount(s) {
+  return (draft.value[s] || []).filter((b) => b.enabled !== false).length
+}
 
 function armPreviewTimeout() {
   clearTimeout(previewTimer)
@@ -501,7 +512,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="rootEl" class="blk-layout">
+  <div ref="rootEl" class="blk-layout" :class="{ 'pv-open': previewOpen }">
     <p class="sr-only" role="status" aria-live="polite">{{ announce }}</p>
     <div class="blk-main">
       <nav class="dsg-tabs" role="tablist" aria-label="Superficie a editar">
@@ -515,8 +526,9 @@ onUnmounted(() => {
           :aria-selected="surface === s"
           @click="surface = s"
         >
-          <AppIcon :name="{ landing: 'store', catalog: 'layout-grid', services: 'wrench' }[s]" :size="15" />
+          <AppIcon :name="SURFACE_ICONS[s]" :size="15" />
           {{ SURFACE_LABELS[s] }}
+          <span class="blk-tab-count" :title="`${enabledCount(s)} bloques activos`">{{ enabledCount(s) }}</span>
           <small v-if="!siteTemplates.includes(s)" class="blk-off-tag">sin publicar</small>
         </button>
       </nav>
@@ -566,11 +578,12 @@ onUnmounted(() => {
                 @pointercancel="onGripUp"
                 @keydown="onRowKey($event, b, k)"
               ><AppIcon name="grip-vertical" :size="15" /></button>
+              <span class="blk-ico" aria-hidden="true"><AppIcon :name="specOf(b).icon || 'layout-grid'" :size="16" /></span>
               <span class="blk-name">
                 <strong>{{ specOf(b).label || b.id }}</strong>
                 <span v-if="isLocked(b)" class="blk-tag"><AppIcon name="lock" :size="10" /> Fijo</span>
                 <span v-else-if="isPremiumLocked(b)" class="blk-tag premium"><AppIcon name="crown" :size="10" /> Premium</span>
-                <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes">Sin contenido</span>
+                <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes"><AppIcon name="info" :size="10" /> Sin contenido</span>
                 <small v-if="specOf(b).desc || (specOf(b).edit && blockEmpty(b))" class="blk-desc">
                   {{ specOf(b).desc }}
                   <button v-if="specOf(b).edit && !blockEmpty(b)" type="button" class="blk-link" @click="$emit('navigate', specOf(b).edit)">Lo cargás en {{ srcLabel(b) }}</button>
@@ -622,10 +635,11 @@ onUnmounted(() => {
             @click="onRowClick($event, b)"
           >
             <div class="blk-row-top">
+              <span class="blk-ico dim" aria-hidden="true"><AppIcon :name="specOf(b).icon || 'layout-grid'" :size="16" /></span>
               <span class="blk-name">
                 <strong>{{ specOf(b).label || b.id }}</strong>
                 <span v-if="isPremiumLocked(b)" class="blk-tag premium"><AppIcon name="crown" :size="10" /> Premium</span>
-                <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes">Sin contenido</span>
+                <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes"><AppIcon name="info" :size="10" /> Sin contenido</span>
                 <small v-if="specOf(b).desc || (specOf(b).edit && blockEmpty(b))" class="blk-desc">
                   {{ specOf(b).desc }}
                   <button v-if="specOf(b).edit && blockEmpty(b) && !isPremiumLocked(b)" type="button" class="blk-cta" @click.stop="$emit('navigate', specOf(b).edit)"><AppIcon name="arrow-right" :size="11" /> Cargar contenido</button>
@@ -642,15 +656,17 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <aside class="card blk-preview">
+    <aside class="card blk-preview" :class="{ open: previewOpen }">
       <div class="blk-card-head">
         <h3><AppIcon name="eye" :size="17" /> Vista previa</h3>
         <div class="blk-actions">
-          <button type="button" class="blk-dev" :class="{ active: device === 'desktop' }" title="Escritorio" aria-label="Vista escritorio" @click="device = 'desktop'"><AppIcon name="monitor" :size="15" /></button>
-          <button type="button" class="blk-dev" :class="{ active: device === 'mobile' }" title="Celular" aria-label="Vista celular" @click="device = 'mobile'"><AppIcon name="smartphone" :size="15" /></button>
+          <button type="button" class="blk-dev" :class="{ active: device === 'desktop' }" title="Escritorio" :aria-pressed="device === 'desktop'" aria-label="Vista escritorio" @click="device = 'desktop'"><AppIcon name="monitor" :size="15" /></button>
+          <button type="button" class="blk-dev" :class="{ active: device === 'tablet' }" title="Tablet" :aria-pressed="device === 'tablet'" aria-label="Vista tablet" @click="device = 'tablet'"><AppIcon name="tablet" :size="15" /></button>
+          <button type="button" class="blk-dev" :class="{ active: device === 'mobile' }" title="Celular" :aria-pressed="device === 'mobile'" aria-label="Vista celular" @click="device = 'mobile'"><AppIcon name="smartphone" :size="15" /></button>
+          <button type="button" class="blk-dev blk-sheet-close" aria-label="Cerrar vista previa" @click="previewOpen = false"><AppIcon name="x" :size="15" /></button>
         </div>
       </div>
-      <p class="blk-save" :data-state="saveState"><span class="blk-dot" aria-hidden="true"></span>{{ saveLabel }}
+      <p class="blk-save" :data-state="saveState"><AppIcon :name="saveIcon" :size="14" class="blk-save-icon" :class="{ spin: saveState === 'saving' }" aria-hidden="true" />{{ saveLabel }}
         <button v-if="saveState === 'error'" type="button" class="blk-link" @click="retrySave">Reintentar</button>
       </p>
       <div class="blk-frame" :data-device="device" :data-state="previewState">
@@ -673,5 +689,8 @@ onUnmounted(() => {
       </div>
       <a v-if="publicUrl && surfacePublished" class="btn ghost btn-auto blk-open" :href="canonicalSrc" target="_blank" rel="noopener"><AppIcon name="external-link" :size="14" /> Abrir en otra pestaña</a>
     </aside>
+
+    <button type="button" class="blk-fab" @click="previewOpen = true"><AppIcon name="eye" :size="16" /> Vista previa</button>
+    <div v-if="previewOpen" class="blk-scrim" aria-hidden="true" @click="previewOpen = false"></div>
   </div>
 </template>
