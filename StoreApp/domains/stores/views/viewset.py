@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import json
 import logging
@@ -13,7 +14,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
-from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot
+from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot, StudioVersion
 from StoreApp.domains.stores.serializers.serializers import (
     StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer,
     StoreCarouselImageSerializer, StoreGalleryImageSerializer, StoreContactSerializer,
@@ -54,6 +55,12 @@ LOCATION_FIELDS         =   ('show_location',)
 #Las opiniones de producto (valoraciones + comentarios) son premium
 #(has_product_comments): sin el flag ambos toggles se descartan del PATCH.
 REVIEW_FIELDS           =   ('show_reviews', 'show_comments')
+#El tema del Studio exige algún beneficio de diseño (has_design_plus da el
+#subconjunto básico radius/density; has_design_advanced, el tema completo):
+#sin ninguno el campo entero se descarta del PATCH como los campos premium
+#y lo guardado queda intacto; el filtro fino por sección corre en el
+#serializer vía site_theme.clean_site_theme.
+SITE_THEME_FIELDS       =   ('site_theme', 'site_theme_draft')
 #Ordenamientos admitidos por el catálogo público (whitelist cerrada: el
 #param ?sort= jamás llega crudo al order_by). Sin sort válido queda el
 #ordering del Meta de Product (name, id). Los precios ordenan/filtran por
@@ -722,6 +729,8 @@ class StoreViewSet(StoreBaseViewSet):
             discard.extend(LOCATION_FIELDS)
         if not profile_has_benefit(store.user, 'has_product_comments'):
             discard.extend(REVIEW_FIELDS)
+        if not profile_has_benefit(store.user, 'has_design_plus') and not profile_has_benefit(store.user, 'has_design_advanced'):
+            discard.extend(SITE_THEME_FIELDS)
         if discard:
             data        =   request.data.copy()
             for field in discard:
@@ -741,6 +750,120 @@ class StoreViewSet(StoreBaseViewSet):
                 'Exito'         : 'El diseño de tu web se actualizó correctamente',
                 'customization' : serializer.data,
                 'storage'       : storage_payload(store, store.user),
+            },
+            status = status.HTTP_200_OK,
+        )
+    #=========================================
+    # STUDIO: PUBLISH / DISCARD / VERSIONS / RESTORE (borrador vs publicado)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'customization/publish')
+    def customization_publish(self, request):
+        #El borrador pasa a ser lo publicado y queda el snapshot en el
+        #historial (últimas StudioVersion.MAX_PER_STORE por tienda).
+        store               =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        customization, _    =   StoreCustomization.objects.get_or_create(store = store)
+        note                =   str(request.data.get('note') or '').strip()[:140]
+        customization.layout_config =   copy.deepcopy(customization.layout_config_draft) or {}
+        customization.site_theme    =   copy.deepcopy(customization.site_theme_draft) or {}
+        customization.save(update_fields = ['layout_config', 'site_theme', 'updated_at'])
+        StudioVersion.objects.create(
+            store       =   store,
+            snapshot    =   {
+                'template'      :   customization.template,
+                'layout_config' :   customization.layout_config,
+                'site_theme'    :   customization.site_theme,
+            },
+            note        =   note,
+        )
+        stale               =   list(StudioVersion.objects.filter(store = store).values_list('pk', flat = True)[StudioVersion.MAX_PER_STORE:])
+        if stale:
+            StudioVersion.objects.filter(pk__in = stale).delete()
+        return Response(
+            {
+                'Exito'         : 'Publicaste los cambios de tu web',
+                'customization' :   StoreCustomizationSerializer(customization).data,
+            },
+            status = status.HTTP_200_OK,
+        )
+
+    @action(detail = False, methods = ['post'], url_path = 'customization/discard')
+    def customization_discard(self, request):
+        #Vuelve el borrador a lo publicado: lo descartado no llega a la web
+        #ni queda en el draft del Studio.
+        store               =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        customization, _    =   StoreCustomization.objects.get_or_create(store = store)
+        customization.layout_config_draft   =   copy.deepcopy(customization.layout_config) or {}
+        customization.site_theme_draft      =   copy.deepcopy(customization.site_theme) or {}
+        customization.save(update_fields = ['layout_config_draft', 'site_theme_draft', 'updated_at'])
+        return Response(
+            {
+                'Exito'         : 'Descartaste los cambios sin publicar',
+                'customization' :   StoreCustomizationSerializer(customization).data,
+            },
+            status = status.HTTP_200_OK,
+        )
+
+    @action(detail = False, methods = ['get'], url_path = 'customization/versions')
+    def customization_versions(self, request):
+        #Historial del Studio: últimas MAX_PER_STORE publicaciones (read —
+        #mismo scope que GET customization, solo la tienda del dueño).
+        store               =   get_object_or_404(Store, user__user = request.user)
+        versions            =   StudioVersion.objects.filter(store = store)[:StudioVersion.MAX_PER_STORE]
+        return Response(
+            [
+                {'id': version.pk, 'note': version.note, 'created_at': version.created_at, 'snapshot': version.snapshot}
+                for version in versions
+            ],
+            status = status.HTTP_200_OK,
+        )
+
+    @action(detail = False, methods = ['post'], url_path = r'customization/restore/(?P<version_id>\d+)')
+    def customization_restore(self, request, version_id = None):
+        #Restaura un snapshot: pasa a ser lo publicado y el borrador (la
+        #versión ya era una publicación; lo que no trae el snapshot queda).
+        store               =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        customization, _    =   StoreCustomization.objects.get_or_create(store = store)
+        #El scope por tienda aísla el historial: una versión ajena da 404.
+        version             =   get_object_or_404(StudioVersion, pk = version_id, store = store)
+        snapshot            =   version.snapshot if isinstance(version.snapshot, dict) else {}
+        fields              =   []
+        layout              =   snapshot.get('layout_config')
+        if isinstance(layout, dict):
+            customization.layout_config         =   copy.deepcopy(layout)
+            customization.layout_config_draft   =   copy.deepcopy(layout)
+            fields                             +=   ['layout_config', 'layout_config_draft']
+        theme               =   snapshot.get('site_theme')
+        if isinstance(theme, dict):
+            customization.site_theme            =   copy.deepcopy(theme)
+            customization.site_theme_draft      =   copy.deepcopy(theme)
+            fields                             +=   ['site_theme', 'site_theme_draft']
+        template            =   snapshot.get('template')
+        #La plantilla se restaura solo si sigue en la whitelist del plan
+        #(una baja de plan no re-habilita una plantilla premium).
+        if template in allowed_templates_of(store.user):
+            customization.template              =   template
+            fields.append('template')
+        if fields:
+            customization.save(update_fields = fields + ['updated_at'])
+        return Response(
+            {
+                'Exito'         : 'Restauraste esa versión de tu web',
+                'customization' :   StoreCustomizationSerializer(customization).data,
             },
             status = status.HTTP_200_OK,
         )

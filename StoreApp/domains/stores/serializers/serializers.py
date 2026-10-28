@@ -6,6 +6,7 @@ from StoreApp.domains.stores.models import Store, StoreCustomization, StoreCarou
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.services        import profile_has_benefit, allowed_templates_of, storage_payload
 from StoreApp.domains.stores.layout_blocks   import clean_layout_config
+from StoreApp.domains.stores.site_theme      import clean_site_theme, filter_site_theme, merge_theme
 from StoreApp.domains.services.services      import (
     DEFAULT_SITE_TEMPLATES, normalize_site_templates, site_mode_of,
     validate_site_templates as validate_site_templates_plan, effective_site_templates,
@@ -111,6 +112,10 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     cta_label                   =   serializers.CharField(**CustomizationFields['cta_label'])
     section_order               =   serializers.JSONField(**CustomizationFields['section_order'])
     layout_config               =   serializers.JSONField(**CustomizationFields['layout_config'])
+    layout_config_draft         =   serializers.JSONField(**CustomizationFields['layout_config_draft'])
+    site_theme                  =   serializers.JSONField(**CustomizationFields['site_theme'])
+    site_theme_draft            =   serializers.JSONField(**CustomizationFields['site_theme_draft'])
+    has_unpublished             =   serializers.SerializerMethodField()
     announcements               =   serializers.JSONField(**CustomizationFields['announcements'])
     video_url                   =   serializers.CharField(**CustomizationFields['video_url'])
     video_title                 =   serializers.CharField(**CustomizationFields['video_title'])
@@ -144,6 +149,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'testimonials', 'testimonials_title', 'show_testimonials',
             'faqs', 'faqs_title', 'show_faq', 'hours', 'show_hours',
             'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order', 'layout_config',
+            'layout_config_draft', 'site_theme', 'site_theme_draft', 'has_unpublished',
             'announcements', 'show_announcements', 'video_url', 'video_title', 'show_video',
             'catalog_note', 'footer_text',
             'benefits', 'show_benefits', 'timeline', 'show_timeline', 'team', 'show_team',
@@ -319,6 +325,40 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         has_advanced            =   profile_has_benefit(profile, 'has_design_advanced') if profile is not None else False
         return clean_layout_config(value, has_advanced)
 
+    def validate_layout_config_draft(self, value):
+        #El borrador del editor de bloques corre la misma whitelist que el
+        #publicado: solo cambia la columna destino (la web no lo lee).
+        return self.validate_layout_config(value)
+
+    def get_has_unpublished(self, customization):
+        #El borrador difiere del publicado = hay cambios del Studio sin publicar.
+        return (
+            (customization.layout_config_draft or {}) != (customization.layout_config or {})
+            or (customization.site_theme_draft or {}) != (customization.site_theme or {})
+        )
+
+    def _clean_theme(self, value, field):
+        #Tema visual del Studio: clean_site_theme aplica la whitelist del
+        #contrato (secciones/claves/enums cerrados, hex, rangos, tamaño y
+        #fondos solo con imágenes propias) y descarta en silencio lo que el
+        #plan no cubre (como `accent`). El resultado se mergea sobre la
+        #columna destino para que los valores premium guardados sobrevivan
+        #una baja de plan y los PATCH parciales no pisen secciones ajenas.
+        store                   =   getattr(self.instance, 'store', None) if self.instance is not None else None
+        profile                 =   getattr(store, 'user', None)
+        has_advanced            =   profile_has_benefit(profile, 'has_design_advanced') if profile is not None else False
+        has_plus                =   has_advanced or (profile_has_benefit(profile, 'has_design_plus') if profile is not None else False)
+        cleaned                 =   clean_site_theme(value, has_plus = has_plus, has_advanced = has_advanced, store = store)
+        return merge_theme(getattr(self.instance, field, None), cleaned)
+
+    def validate_site_theme(self, value):
+        #Publica de una: además de guardar el publicado, validate() copia el
+        #resultado al borrador (salvo que venga site_theme_draft explícito).
+        return self._clean_theme(value, 'site_theme')
+
+    def validate_site_theme_draft(self, value):
+        return self._clean_theme(value, 'site_theme_draft')
+
     def validate_announcements(self, value):
         clean                   =   []
         for item in self._rows(value, StoreCustomization.ANNOUNCEMENTS_MAX, 'Debe ser una lista de anuncios.'):
@@ -365,6 +405,13 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         templates               =   attrs.get('site_templates')
         if templates is not None:
             attrs['show_catalog']   =   'catalog' in templates
+        #Guardar un publicado también alinea su borrador (el editor de hoy
+        #guarda y deja la web al día en el mismo paso); un *_draft explícito
+        #en el payload manda sobre esta copia.
+        for name in ('layout_config', 'site_theme'):
+            draft                   =   f'{name}_draft'
+            if name in attrs and draft not in attrs:
+                attrs[draft]        =   attrs[name]
         return attrs
 
     def to_representation(self, customization):
@@ -410,8 +457,11 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
 # contacto — el formulario existe justamente para no exponerlo a scrapers)
 #=========================================
 class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
+    #La web pública ve solo lo PUBLICADO: los borradores del Studio y su
+    #estado de sincronía quedan para el dueño (Studio/panel).
     class Meta(StoreCustomizationSerializer.Meta):
-        fields              =   [f for f in StoreCustomizationSerializer.Meta.fields if f != 'contact_email']
+        fields              =   [f for f in StoreCustomizationSerializer.Meta.fields
+                                 if f not in ('contact_email', 'layout_config_draft', 'site_theme_draft', 'has_unpublished')]
     def to_representation(self, customization):
         data                =   super().to_representation(customization)
         #Las opiniones (valoraciones y comentarios) son premium
@@ -426,6 +476,14 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
         if not profile_has_benefit(customization.store.user, 'has_design_advanced'):
             data.update(accent_custom = '', logo_scale = 'm', logo_mode = 'logo_name', mono_style = 'accent',
                         cover_overlay = 0, cover_focus_x = 50, cover_focus_y = 50)
+        #El tema del Studio viaja EFECTIVO según el plan: con has_design_plus
+        #solo el subconjunto básico (radius/density); sin beneficios de
+        #diseño, {} — una tienda sin site_theme se ve idéntica a hoy.
+        data['site_theme']      =   filter_site_theme(
+            customization.site_theme,
+            has_plus        =   profile_has_benefit(customization.store.user, 'has_design_plus'),
+            has_advanced    =   profile_has_benefit(customization.store.user, 'has_design_advanced'),
+        )
         #site_templates viaja EFECTIVO al público: lo guardado intersectado
         #con el plan vigente y recortado al cupo (la página Servicios sale
         #sola al bajar de Estándar; al subir reaparece con sus ítems).

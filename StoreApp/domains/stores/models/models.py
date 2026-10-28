@@ -353,6 +353,14 @@ class StoreCustomization(models.Model):
     #de bloques que soporta cada plantilla viven en el frontend
     #(src/templates/<id>/index.js).
     layout_config               =   models.JSONField(default = dict, blank = True, verbose_name = 'Bloques de cada página de la web')
+    #Tema visual del Studio (paleta, containers, tipografía, botones, fondo,
+    #motion, mobile) — espejo de studio/contract.js (SITE_THEME_DEFAULTS).
+    site_theme                  =   models.JSONField(default = dict, blank = True, verbose_name = 'Tema visual del sitio')
+    #Borradores del Studio: el editor escribe los campos *_draft y la web
+    #pública lee solo los publicados. publish copia draft→publicado,
+    #discard copia publicado→draft.
+    layout_config_draft         =   models.JSONField(default = dict, blank = True, verbose_name = 'Bloques (borrador)')
+    site_theme_draft            =   models.JSONField(default = dict, blank = True, verbose_name = 'Tema visual (borrador)')
     #Cinta de anuncios bajo la portada y sección Video: bloques extra de
     #marketing que el dueño configura desde "Mi empresa".
     announcements               =   models.JSONField(default = list, blank = True, verbose_name = 'Cinta de anuncios')
@@ -443,6 +451,31 @@ class StoreGalleryImage(models.Model):
         ]
     def __str__(self):
         return f'gallery:{self.store.slug}#{self.position}'
+#=========================================
+# STUDIO VERSION MODEL
+#=========================================
+class StudioVersion(models.Model):
+    """
+    Snapshot de cada publicación del Studio (template + layout + tema) — el
+    historial detrás de "restaurar versión". Se conservan solo las últimas
+    MAX_PER_STORE por tienda (se podan en cada publish). No alimenta el
+    payload público: el restore escribe sobre customization.
+    """
+    MAX_PER_STORE               =   10
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'studio_versions', db_index = False)
+    snapshot                    =   models.JSONField(default = dict, verbose_name = 'Estado publicado')
+    note                        =   models.CharField(max_length = 140, blank = True, verbose_name = 'Nota de la versión')
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Versión del Studio'
+        verbose_name_plural     =   'Versiones del Studio'
+        ordering                =   ['-created_at', '-id']
+        indexes                 =   [
+            models.Index(fields = ['store'], name = 'idx_studio_version_store'),
+        ]
+    def __str__(self):
+        return f'studio:{self.store.slug}#{self.pk}'
 #=========================================
 # STORE CHATBOT MODEL
 #=========================================

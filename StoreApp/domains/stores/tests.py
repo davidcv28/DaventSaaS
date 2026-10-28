@@ -20,6 +20,7 @@ from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.stores.models import (
     Store, StoreCarouselImage, StoreCustomization, StoreDailyVisit, StoreGalleryImage,
+    StudioVersion,
 )
 from StoreApp.domains.stores.services import contact as contact_service
 from StoreApp.domains.stores.services import storage
@@ -1359,6 +1360,7 @@ class IdentityFieldsTests(TestCase):
     def test_public_ignores_values_after_downgrade(self):
         client      =   self._client(has_design_advanced = True)
         self._patch(client, {'accent_custom': '#1a7f5a', 'cover_overlay': 40})
+        profile     =   Store.objects.get(slug = 'tienda-duenio').user
         self.assertEqual(APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']['accent_custom'], '#1a7f5a')
         PlanBenefit.objects.filter(benefit__code = 'has_design_advanced').delete()
         cache.clear()
@@ -1388,3 +1390,468 @@ class IdentityFieldsTests(TestCase):
         self._client(has_design_advanced = True)
         response    =   APIClient().patch(f'{STORES_URL}customization/', {'accent_custom': '#112233'}, format = 'json')
         self.assertIn(response.status_code, (401, 403))
+
+
+class SiteThemeTests(TestCase):
+    """
+    Tema visual del Studio (`site_theme`): el backend aplica el contrato
+    cerrado de la Fase 0 (secciones/claves/enums, hex, rangos, 4 KB,
+    fondos solo con imágenes propias), descarta por plan como `accent`
+    (subset plus: radius/density de containers) y la web pública expone
+    el tema EFECTIVO del plan vigente.
+    """
+
+    def setUp(self):
+        # plan_benefits_of keyea por PK y SQLite las reutiliza tras el
+        # rollback: sin limpiar, el plan de un test se filtra al siguiente.
+        cache.clear()
+
+    def _client(self, username = 'duenio', **benefits):
+        user, profile   =   _make_named_user(username)
+        _grant(profile, has_customization = True, has_public_link = True, **benefits)
+        Store.objects.create(user = profile, slug = f'tienda-{username}')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client
+
+    def _patch(self, client, payload):
+        return client.patch(f'{STORES_URL}customization/', payload, format = 'json')
+
+    def _public_theme(self, slug):
+        return APIClient().get(f'{STORES_URL}public/{slug}/').data['customization']['site_theme']
+
+    def test_full_theme_saved_normalized_with_advanced(self):
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {
+            'palette': {'primary': '#FFF', 'danger': 'ff0000'},
+            'containers': {'radius': 'pill', 'shadow': 'deep', 'border': 'bold', 'density': 'compact', 'surface': 'glass'},
+            'typography': {'heading': 'oswald', 'body': 'Georgia, serif', 'scale': 'editorial', 'weightHeading': 700, 'letterSpacing': '-0.02em'},
+            'buttons': {'shape': 'square', 'style': 'outline', 'size': 'lg'},
+            'background': {'type': 'gradient', 'value': 'linear-gradient(135deg, #fff 0%, #000 100%)', 'overlay': 'soft'},
+            'motion': {'reveal': 'stagger', 'hover': 'glow', 'intensity': 'bold'},
+            'mobile': {'nav': 'drawer', 'gridCols': 2, 'cardStyle': 'overlay', 'stickyCta': True, 'heroHeight': 'tall'},
+        }})
+        self.assertEqual(response.status_code, 200)
+        theme       =   response.data['customization']['site_theme']
+        self.assertEqual(theme['palette'], {'primary': '#ffffff', 'danger': '#ff0000'})
+        self.assertEqual(theme['containers'], {'radius': 'pill', 'shadow': 'deep', 'border': 'bold', 'density': 'compact', 'surface': 'glass'})
+        self.assertEqual(theme['typography']['weightHeading'], 700)
+        self.assertEqual(theme['buttons'], {'shape': 'square', 'style': 'outline', 'size': 'lg'})
+        self.assertEqual(theme['background']['type'], 'gradient')
+        self.assertEqual(theme['mobile'], {'nav': 'drawer', 'gridCols': 2, 'cardStyle': 'overlay', 'stickyCta': True, 'heroHeight': 'tall'})
+
+    def test_store_without_theme_looks_identical(self):
+        #Una tienda sin site_theme se ve idéntica a hoy: {} guardado y
+        #{} en el payload público (el frontend resuelve los defaults).
+        client      =   self._client(has_design_advanced = True)
+        self.assertEqual(client.get(f'{STORES_URL}customization/').data['site_theme'], {})
+        self.assertEqual(self._public_theme('tienda-duenio'), {})
+
+    def test_invalid_hex_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for bad in ('rojo', '#12345', '#1234567', '#gggggg', 'rgb(1,2,3)', 'javascript:alert(1)'):
+            response    =   self._patch(client, {'site_theme': {'palette': {'primary': bad}}})
+            self.assertEqual(response.status_code, 400, bad)
+            self.assertIn('site_theme', response.data)
+
+    def test_invalid_choices_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for section, key, bad in (
+            ('containers', 'radius', 'enorme'),
+            ('containers', 'shadow', 'infinita'),
+            ('containers', 'border', 'gruesa'),
+            ('containers', 'density', 'apretada'),
+            ('containers', 'surface', 'espejo'),
+            ('typography', 'scale', 'gigante'),
+            ('buttons', 'shape', 'hexagonal'),
+            ('buttons', 'style', 'neon'),
+            ('buttons', 'size', 'xxl'),
+            ('background', 'type', 'video'),
+            ('background', 'overlay', 'fuerte'),
+            ('motion', 'reveal', 'zoom'),
+            ('motion', 'hover', 'spin'),
+            ('motion', 'intensity', 'brutal'),
+            ('mobile', 'nav', 'lateral'),
+            ('mobile', 'cardStyle', 'gigante'),
+            ('mobile', 'heroHeight', 'inmensa'),
+        ):
+            response    =   self._patch(client, {'site_theme': {section: {key: bad}}})
+            self.assertEqual(response.status_code, 400, (section, key, bad))
+
+    def test_unknown_keys_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for payload in (
+            {'paleta': {'primary': '#112233'}},
+            {'custom_css': 'body{color:red}'},
+            {'containers': {'inventada': 'x'}},
+            {'palette': {'primario': '#112233'}},
+        ):
+            response    =   self._patch(client, {'site_theme': payload})
+            self.assertEqual(response.status_code, 400, payload)
+
+    def test_not_a_dict_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for bad in ('texto', [1, 2], 42):
+            response    =   self._patch(client, {'site_theme': bad})
+            self.assertEqual(response.status_code, 400, bad)
+
+    def test_oversized_theme_rejected(self):
+        #Los bytes se cuentan sobre el JSON crudo (4 KB): un valor gigante
+        #no pasa aunque la clave sea válida.
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {
+            'containers': {'radius': 'pill'},
+            'palette': {'primary': '#112233', 'text': '#' + 'f' * 5000},
+        }})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('grande', str(response.data['site_theme']))
+
+    def test_ranges_and_types(self):
+        client      =   self._client(has_design_advanced = True)
+        for payload in (
+            {'typography': {'weightHeading': 99}},
+            {'typography': {'weightHeading': 901}},
+            {'typography': {'weightHeading': 'ocho'}},
+            {'typography': {'weightHeading': True}},
+            {'mobile': {'gridCols': 3}},
+            {'mobile': {'gridCols': '2'}},
+            {'mobile': {'gridCols': True}},
+            {'mobile': {'stickyCta': 'si'}},
+            {'mobile': {'stickyCta': 1}},
+            {'typography': {'letterSpacing': 'ancho'}},
+            {'typography': {'heading': 'Inter; color: red'}},
+            {'typography': {'heading': '" onmouseover="alert(1)'}},
+            {'typography': {'body': 'url(https://evil.com/a.css)'}},
+        ):
+            response    =   self._patch(client, {'site_theme': payload})
+            self.assertEqual(response.status_code, 400, payload)
+
+    def test_font_stack_and_tracking_accepted(self):
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {'typography': {
+            'heading': 'Playfair Display, serif', 'body': 'inter', 'letterSpacing': '-0.05em',
+        }}})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['site_theme']['typography']['heading'], 'Playfair Display, serif')
+
+    def test_background_value_safe_css_only(self):
+        client      =   self._client(has_design_advanced = True)
+        #URLs ajenas, javascript:, HTML y CSS libre: rechazados siempre.
+        for bad in (
+            'https://evil.com/fondo.png',
+            'javascript:alert(1)',
+            'url(https://evil.com/a.png)',
+            'url(/media/x.png)',
+            'body { background: red }',
+            '"><script>alert(1)</script>',
+            'expression(alert(1))',
+        ):
+            response    =   self._patch(client, {'site_theme': {'background': {'type': 'image', 'value': bad}}})
+            self.assertEqual(response.status_code, 400, bad)
+        #Degradado propio del catálogo: aceptado.
+        response    =   self._patch(client, {'site_theme': {
+            'background': {'type': 'mesh', 'value': 'radial-gradient(circle at 20% 30%, #fff 0%, #000 100%)'},
+        }})
+        self.assertEqual(response.status_code, 200)
+
+    def test_background_accepts_own_image_url(self):
+        #Solo las imágenes PROPIAS de la tienda (logo, portada, carrusel,
+        #galería) valen como fondo image — las de otro store también 400.
+        client      =   self._client(has_design_advanced = True)
+        store       =   Store.objects.get(slug = 'tienda-duenio')
+        StoreGalleryImage.objects.create(store = store, image_key = 'stores/1/gallery/fondo.webp')
+        ajena       =   StoreGalleryImage.objects.create(store = Store.objects.create(user = _make_named_user('ajeno')[1], slug = 'tienda-ajena'), image_key = 'stores/2/gallery/fondo.webp')
+        with patch.object(storage, 'object_url', side_effect = lambda key: f'https://cdn.test/{key}'):
+            response    =   self._patch(client, {'site_theme': {
+                'background': {'type': 'image', 'value': 'https://cdn.test/stores/1/gallery/fondo.webp'},
+            }})
+            self.assertEqual(response.status_code, 200, response.data)
+            self.assertEqual(response.data['customization']['site_theme']['background']['value'], 'https://cdn.test/stores/1/gallery/fondo.webp')
+            response    =   self._patch(client, {'site_theme': {
+                'background': {'type': 'image', 'value': f'https://cdn.test/{ajena.image_key}'},
+            }})
+            self.assertEqual(response.status_code, 400)
+
+    def test_theme_discarded_without_design_benefits(self):
+        #Sin has_design_plus ni has_design_advanced el campo entero se
+        #descarta del PATCH (como `accent`): ni siquiera se valida.
+        client      =   self._client()
+        for payload in ('basura', {'palette': {'primary': '#112233'}}, {'hack': {'<': 'script'}}):
+            response    =   self._patch(client, {'site_theme': payload})
+            self.assertEqual(response.status_code, 200, payload)
+            self.assertEqual(response.data['customization']['site_theme'], {})
+
+    def test_plus_keeps_only_basic_subset(self):
+        #has_design_plus (Estándar): solo radius/density de containers; el
+        #resto del tema se descarta en silencio como los campos premium.
+        client      =   self._client(has_design_plus = True)
+        response    =   self._patch(client, {'site_theme': {
+            'palette': {'primary': '#112233'},
+            'containers': {'radius': 'pill', 'shadow': 'deep', 'density': 'compact'},
+            'buttons': {'shape': 'square'},
+            'mobile': {'nav': 'drawer'},
+        }})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data['customization']['site_theme'],
+            {'containers': {'radius': 'pill', 'density': 'compact'}},
+        )
+
+    def test_plus_still_validates_the_subset(self):
+        #La clave admitida se valida igual (radius 'enorme' -> 400); una
+        #clave gated con valor inválido se descarta antes de validar (200).
+        client      =   self._client(has_design_plus = True)
+        response    =   self._patch(client, {'site_theme': {'containers': {'radius': 'enorme'}}})
+        self.assertEqual(response.status_code, 400)
+        response    =   self._patch(client, {'site_theme': {'containers': {'shadow': 'no-existe'}, 'palette': 'basura'}})
+        self.assertEqual(response.status_code, 200)
+
+    def test_saved_premium_values_survive_downgrade(self):
+        #Baja a Estándar: lo guardado premium se conserva (como accent) y
+        #el PATCH de la básica mergea sin pisarlo — reaparece al volver.
+        client      =   self._client(has_design_plus = True, has_design_advanced = True)
+        self._patch(client, {'site_theme': {'palette': {'primary': '#112233'}, 'containers': {'radius': 'pill'}}})
+        PlanBenefit.objects.filter(benefit__code = 'has_design_advanced').delete()
+        cache.clear()
+        response    =   self._patch(client, {'site_theme': {'containers': {'radius': 'sm', 'density': 'compact'}}})
+        theme       =   response.data['customization']['site_theme']
+        self.assertEqual(theme['palette'], {'primary': '#112233'})
+        self.assertEqual(theme['containers'], {'radius': 'sm', 'density': 'compact'})
+
+    def test_public_exposes_effective_theme_by_plan(self):
+        client      =   self._client(has_design_plus = True, has_design_advanced = True)
+        self._patch(client, {'site_theme': {
+            'palette': {'primary': '#112233'},
+            'containers': {'radius': 'pill', 'shadow': 'deep', 'density': 'compact'},
+        }})
+        self.assertEqual(self._public_theme('tienda-duenio'), {
+            'palette': {'primary': '#112233'},
+            'containers': {'radius': 'pill', 'shadow': 'deep', 'density': 'compact'},
+        })
+        #Baja a Estándar: la web solo ve el subconjunto plus guardado.
+        PlanBenefit.objects.filter(benefit__code = 'has_design_advanced').delete()
+        cache.clear()
+        self.assertEqual(self._public_theme('tienda-duenio'), {'containers': {'radius': 'pill', 'density': 'compact'}})
+        #Sin beneficios de diseño: {} — el look vuelve a los defaults.
+        PlanBenefit.objects.filter(benefit__code = 'has_design_plus').delete()
+        cache.clear()
+        self.assertEqual(self._public_theme('tienda-duenio'), {})
+
+    def test_client_cannot_edit_another_theme(self):
+        owner       =   self._client('duenio', has_design_advanced = True)
+        other       =   self._client('intruso', has_design_advanced = True)
+        self._patch(owner, {'site_theme': {'palette': {'primary': '#112233'}}})
+        self._patch(other, {'site_theme': {'palette': {'primary': '#aabbcc'}, 'containers': {'radius': 'none'}}})
+        mine        =   StoreCustomization.objects.get(store__slug = 'tienda-duenio')
+        theirs      =   StoreCustomization.objects.get(store__slug = 'tienda-intruso')
+        self.assertEqual(mine.site_theme, {'palette': {'primary': '#112233'}})
+        self.assertEqual(theirs.site_theme['palette'], {'primary': '#aabbcc'})
+
+    def test_anonymous_cannot_patch_theme(self):
+        self._client(has_design_advanced = True)
+        response    =   APIClient().patch(f'{STORES_URL}customization/', {'site_theme': {}}, format = 'json')
+        self.assertIn(response.status_code, (401, 403))
+
+
+class StudioDraftPublishTests(TestCase):
+    """
+    Flujo borrador/publicado del Studio: los campos *_draft editan sin
+    tocar la web (el draft es invisible en el payload público), publish
+    aplica el draft y guarda la versión (últimas 10), discard vuelve al
+    publicado y restore recupera un snapshot — todo con has_customization
+    y aislado por tienda.
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def _client(self, username = 'duenio', **benefits):
+        user, profile   =   _make_named_user(username)
+        _grant(profile, has_customization = True, has_public_link = True, **benefits)
+        Store.objects.create(user = profile, slug = f'tienda-{username}')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client
+
+    def _patch(self, client, payload):
+        return client.patch(f'{STORES_URL}customization/', payload, format = 'json')
+
+    def _custom(self, slug = 'tienda-duenio'):
+        return StoreCustomization.objects.get(store__slug = slug)
+
+    def test_patch_theme_publishes_and_syncs_draft(self):
+        #Guardar el publicado también alinea el borrador: el editor actual
+        #deja la web al día en el mismo paso (has_unpublished queda False).
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {'palette': {'primary': '#112233'}}})
+        custom      =   response.data['customization']
+        self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(custom['site_theme_draft'], custom['site_theme'])
+        self.assertFalse(custom['has_unpublished'])
+
+    def test_draft_theme_not_visible_in_public(self):
+        #El draft se guarda aparte: la web pública lee solo lo publicado
+        #y nunca expone los campos *_draft ni el estado de sincronía.
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme_draft': {'palette': {'primary': '#112233'}}})
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['site_theme'], {})
+        self.assertEqual(custom['site_theme_draft'], {'palette': {'primary': '#112233'}})
+        self.assertTrue(custom['has_unpublished'])
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']
+        self.assertEqual(public['site_theme'], {})
+        self.assertNotIn('site_theme_draft', public)
+        self.assertNotIn('layout_config_draft', public)
+        self.assertNotIn('has_unpublished', public)
+
+    def test_draft_layout_not_visible_in_public(self):
+        client      =   self._client()
+        response    =   self._patch(client, {'layout_config_draft': {
+            'landing': {'blocks': [{'id': 'hero', 'enabled': False, 'order': 0}]},
+        }})
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['layout_config'], {})
+        self.assertEqual(custom['layout_config_draft']['landing']['blocks'][0]['enabled'], False)
+        self.assertTrue(custom['has_unpublished'])
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']
+        self.assertEqual(public['layout_config'], {})
+
+    def test_draft_layout_keeps_premium_gate(self):
+        #El borrador corre la misma whitelist que el publicado: el bloque
+        #premium se descarta sin has_design_advanced aunque sea draft.
+        client      =   self._client()
+        response    =   self._patch(client, {'layout_config_draft': {
+            'catalog': {'blocks': [{'id': 'banner'}, {'id': 'filters'}]},
+        }})
+        blocks      =   response.data['customization']['layout_config_draft']['catalog']['blocks']
+        self.assertEqual([b['id'] for b in blocks], ['filters'])
+
+    def test_publish_applies_draft_and_creates_version(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {
+            'site_theme_draft'      :   {'palette': {'primary': '#112233'}},
+            'layout_config_draft'   :   {'landing': {'blocks': [{'id': 'hero', 'enabled': True, 'order': 0}]}},
+        })
+        response    =   client.post(f'{STORES_URL}customization/publish/', {'note': 'primer look'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(custom['layout_config']['landing']['blocks'][0]['id'], 'hero')
+        self.assertFalse(custom['has_unpublished'])
+        version     =   StudioVersion.objects.get()
+        self.assertEqual(version.note, 'primer look')
+        self.assertEqual(version.snapshot['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(version.snapshot['template'], custom['template'])
+        #La web pública ya muestra lo publicado.
+        public      =   APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']
+        self.assertEqual(public['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(public['layout_config']['landing']['blocks'][0]['id'], 'hero')
+
+    def test_discard_reverts_draft_to_published(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'site_theme': {'palette': {'primary': '#112233'}}})
+        self._patch(client, {'site_theme_draft': {'palette': {'primary': '#aabbcc'}, 'buttons': {'shape': 'square'}}})
+        response    =   client.post(f'{STORES_URL}customization/discard/')
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(custom['site_theme_draft'], custom['site_theme'])
+        self.assertFalse(custom['has_unpublished'])
+        #Nada quedó publicado de más ni en la web.
+        self.assertEqual(self._custom().site_theme, {'palette': {'primary': '#112233'}})
+
+    def test_versions_listed_for_owner(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'site_theme_draft': {'palette': {'primary': '#112233'}}})
+        client.post(f'{STORES_URL}customization/publish/', {'note': 'v1'}, format = 'json')
+        versions    =   client.get(f'{STORES_URL}customization/versions/').data
+        self.assertEqual(len(versions), 1)
+        self.assertEqual(versions[0]['note'], 'v1')
+        self.assertEqual(versions[0]['snapshot']['site_theme'], {'palette': {'primary': '#112233'}})
+
+    def test_versions_keep_last_ten(self):
+        client      =   self._client(has_design_advanced = True)
+        for index in range(12):
+            client.post(f'{STORES_URL}customization/publish/', {'note': f'v{index}'}, format = 'json')
+        self.assertEqual(StudioVersion.objects.count(), StudioVersion.MAX_PER_STORE)
+        versions    =   client.get(f'{STORES_URL}customization/versions/').data
+        self.assertEqual(len(versions), 10)
+        #Quedan las 10 más nuevas (v11 primero, v2 último): v0/v1 se podaron.
+        self.assertEqual(versions[0]['note'], 'v11')
+        self.assertEqual(versions[-1]['note'], 'v2')
+
+    def test_restore_applies_snapshot(self):
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'site_theme_draft': {'palette': {'primary': '#112233'}}})
+        client.post(f'{STORES_URL}customization/publish/', {'note': 'look azul'}, format = 'json')
+        version     =   StudioVersion.objects.get()
+        self._patch(client, {'site_theme': {'palette': {'primary': '#aabbcc'}, 'mobile': {'nav': 'drawer'}}})
+        response    =   client.post(f'{STORES_URL}customization/restore/{version.pk}/')
+        self.assertEqual(response.status_code, 200)
+        custom      =   response.data['customization']
+        self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertEqual(custom['site_theme_draft'], custom['site_theme'])
+        self.assertFalse(custom['has_unpublished'])
+        #La web vuelve a mostrar la versión restaurada.
+        self.assertEqual(APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']['site_theme'], {'palette': {'primary': '#112233'}})
+
+    def test_restore_skips_template_outside_plan(self):
+        #Una baja de plan no re-habilita plantillas premium al restaurar:
+        #solo se aplica si sigue en la whitelist del plan vigente.
+        client      =   self._client()
+        store       =   Store.objects.get(slug = 'tienda-duenio')
+        version     =   StudioVersion.objects.create(
+            store       =   store,
+            snapshot    =   {'template': 'shop', 'site_theme': {'palette': {'primary': '#112233'}}},
+        )
+        response    =   client.post(f'{STORES_URL}customization/restore/{version.pk}/')
+        custom      =   response.data['customization']
+        self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
+        self.assertNotEqual(custom['template'], 'shop')
+
+    def test_restore_is_isolated_between_stores(self):
+        #El restore va por (tienda del dueño, id): una versión ajena da
+        #404 — nadie puede restaurar ni conocer el historial de otro.
+        owner       =   self._client('duenio', has_design_advanced = True)
+        other       =   self._client('intruso', has_design_advanced = True)
+        self._patch(owner, {'site_theme_draft': {'palette': {'primary': '#112233'}}})
+        owner.post(f'{STORES_URL}customization/publish/')
+        version     =   StudioVersion.objects.get()
+        response    =   other.post(f'{STORES_URL}customization/restore/{version.pk}/')
+        self.assertEqual(response.status_code, 404)
+        theirs      =   self._custom('tienda-intruso')
+        self.assertEqual(theirs.site_theme, {})
+        self.assertEqual(theirs.site_theme_draft, {})
+
+    def test_versions_list_is_isolated_between_stores(self):
+        owner       =   self._client('duenio', has_design_advanced = True)
+        other       =   self._client('intruso', has_design_advanced = True)
+        self._patch(owner, {'site_theme_draft': {'palette': {'primary': '#112233'}}})
+        owner.post(f'{STORES_URL}customization/publish/')
+        self.assertEqual(other.get(f'{STORES_URL}customization/versions/').data, [])
+
+    def test_studio_endpoints_require_customization_benefit(self):
+        user, profile   =   _make_named_user('duenio')
+        _grant(profile, has_public_link = True)
+        Store.objects.create(user = profile, slug = 'tienda-duenio')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        version         =   StudioVersion.objects.create(store = Store.objects.get(slug = 'tienda-duenio'), snapshot = {})
+        for method, url in (
+            ('post', f'{STORES_URL}customization/publish/'),
+            ('post', f'{STORES_URL}customization/discard/'),
+            ('post', f'{STORES_URL}customization/restore/{version.pk}/'),
+        ):
+            self.assertEqual(getattr(client, method)(url).status_code, 403, url)
+
+    def test_studio_endpoints_require_auth(self):
+        self._client(has_design_advanced = True)
+        for method, url in (
+            ('post', f'{STORES_URL}customization/publish/'),
+            ('post', f'{STORES_URL}customization/discard/'),
+            ('get', f'{STORES_URL}customization/versions/'),
+            ('post', f'{STORES_URL}customization/restore/1/'),
+        ):
+            self.assertIn(getattr(APIClient(), method)(url).status_code, (401, 403), url)

@@ -253,6 +253,18 @@ CustomizationFields           =   {
         'label'             :   'Bloques de cada página de la web',
         'required'          :   False,
     },
+    'layout_config_draft'   :   {
+        'label'             :   'Bloques de cada página de la web (borrador)',
+        'required'          :   False,
+    },
+    'site_theme'            :   {
+        'label'             :   'Tema visual del sitio',
+        'required'          :   False,
+    },
+    'site_theme_draft'      :   {
+        'label'             :   'Tema visual del sitio (borrador)',
+        'required'          :   False,
+    },
     'benefits'              :   {
         'label'             :   'Garantías y beneficios',
         'required'          :   False,
