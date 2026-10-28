@@ -34,6 +34,9 @@ R2_PUBLIC_URL para que el link de descarga sea estable.
 _APK_CONTENT_TYPE   =   'application/vnd.android.package-archive'
 _LATEST_KEY         =   'apk/davent-latest.apk'
 _NAME_RE            =   re.compile(r'davent-(?P<name>.+)-(?P<code>\d+)\.apk$')
+# Nombre con el que el navegador guarda el archivo al bajarlo (la URL de la
+# key no cambia). 'attachment' además fuerza descarga en vez de abrirlo.
+_DOWNLOAD_NAME      =   'attachment; filename="DaventApp.apk"'
 
 
 class Command(BaseCommand):
@@ -58,18 +61,20 @@ class Command(BaseCommand):
         #cada publicación: cache corto para que el update checker y la página de
         #descarga vean la nueva a los pocos minutos.
         client.put_object(
-            Bucket          =   _bucket(),
-            Key             =   versioned,
-            Body            =   body,
-            ContentType     =   _APK_CONTENT_TYPE,
-            CacheControl    =   'public, max-age=31536000, immutable',
+            Bucket              =   _bucket(),
+            Key                 =   versioned,
+            Body                =   body,
+            ContentType         =   _APK_CONTENT_TYPE,
+            ContentDisposition  =   _DOWNLOAD_NAME,
+            CacheControl        =   'public, max-age=31536000, immutable',
         )
         client.put_object(
-            Bucket          =   _bucket(),
-            Key             =   _LATEST_KEY,
-            Body            =   body,
-            ContentType     =   _APK_CONTENT_TYPE,
-            CacheControl    =   'public, max-age=300',
+            Bucket              =   _bucket(),
+            Key                 =   _LATEST_KEY,
+            Body                =   body,
+            ContentType         =   _APK_CONTENT_TYPE,
+            ContentDisposition  =   _DOWNLOAD_NAME,
+            CacheControl        =   'public, max-age=300',
         )
         size_mb     =   len(body) / (1024 * 1024)
         self.stdout.write(self.style.SUCCESS(f'APK {version_name} (code {version_code}, {size_mb:.1f} MB) publicada:'))
