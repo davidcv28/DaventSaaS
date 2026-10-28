@@ -150,6 +150,16 @@ const isPremiumLocked = (b) => Boolean(specOf(b).premium && !props.premium)
 const canUndo = computed(() => undoStack.value.length > 0)
 const canRedo = computed(() => redoStack.value.length > 0)
 
+// La lista se muestra en dos grupos — activos (ordenables por drag con
+// el asa o Alt+flechas) y disponibles (apagados). El draft es una sola
+// lista por superficie: los apagados conservan su posición relativa y
+// al reactivarse van al final (igual que "agregar").
+const activeItems = computed(() => blocks.value.filter((b) => b.enabled))
+const availableItems = computed(() => blocks.value.filter((b) => !b.enabled))
+const selectedId = ref('')
+const announce = ref('')
+function say(msg) { announce.value = msg }
+
 function pushHistory() {
   undoStack.value.push(JSON.stringify(draft.value))
   if (undoStack.value.length > 60) undoStack.value.shift()
@@ -163,30 +173,63 @@ function undo() {
   if (!canUndo.value) return
   redoStack.value.push(JSON.stringify(draft.value))
   applySnapshot(undoStack.value.pop())
+  say('Cambio deshecho.')
 }
 function redo() {
   if (!canRedo.value) return
   undoStack.value.push(JSON.stringify(draft.value))
   applySnapshot(redoStack.value.pop())
+  say('Cambio rehecho.')
 }
 
-function moveBlock(i, dir) {
-  const j = i + dir
+// Reordena solo dentro de los activos: los apagados conservan su
+// posición relativa en el draft (el renderer público solo usa los
+// habilitados, así que el orden visible es el que importa).
+function reorderActive(from, to) {
   const list = draft.value[surface.value]
-  if (j < 0 || j >= list.length) return
+  const ids = list.filter((b) => b.enabled).map((b) => b.id)
+  const [moved] = ids.splice(from, 1)
+  ids.splice(to, 0, moved)
   pushHistory()
-  ;[list[i], list[j]] = [list[j], list[i]]
-  list.forEach((b, idx) => { b.order = idx })
+  const byId = new Map(list.map((b) => [b.id, b]))
+  let k = 0
+  draft.value[surface.value] = list.map((b) => (b.enabled ? byId.get(ids[k++]) : b))
+  draft.value[surface.value].forEach((b, i) => { b.order = i })
+  selectedId.value = moved
+  say(`"${specOf({ id: moved }).label}" movido a la posición ${to + 1}.`)
   scheduleSave()
 }
-function toggleBlock(b) {
-  if (isLocked(b) || isPremiumLocked(b)) return
+function moveActiveDelta(k, dir) {
+  const to = k + dir
+  if (to < 0 || to >= activeItems.value.length) return
+  reorderActive(k, to)
+}
+function addBlock(b) {
+  if (isLocked(b) || isPremiumLocked(b) || b.enabled) return
   pushHistory()
-  b.enabled = !b.enabled
-  if (b.enabled && blockEmpty(b)) {
+  const list = draft.value[surface.value]
+  const i = list.indexOf(b)
+  if (i !== -1) list.splice(i, 1)
+  b.enabled = true
+  list.push(b)
+  list.forEach((x, idx) => { x.order = idx })
+  selectedId.value = b.id
+  say(`"${specOf(b).label}" agregado al final de la página.`)
+  if (blockEmpty(b)) {
     emit('notify', `"${specOf(b).label}" se activó pero no tiene contenido: va a aparecer recién cuando cargues esos datos.`)
   }
   scheduleSave()
+}
+function removeBlock(b) {
+  if (isLocked(b) || isPremiumLocked(b) || !b.enabled) return
+  pushHistory()
+  b.enabled = false
+  say(`"${specOf(b).label}" pasó a disponibles.`)
+  scheduleSave()
+}
+function toggleBlock(b) {
+  if (b.enabled) removeBlock(b)
+  else addBlock(b)
 }
 function setVariant(b, v) {
   const variants = specOf(b).variants || {}
@@ -210,7 +253,99 @@ function resetSurface() {
     id: b.id, enabled: true, order: i, variant: '', title: ''
   }))
   emit('notify', `"${SURFACE_LABELS[surface.value]}" volvió al orden original de la plantilla.`)
+  say('Se restableció el orden de la plantilla.')
   scheduleSave()
+}
+
+// Drag & drop con Pointer Events desde el asa (.blk-grip): funciona con
+// mouse y táctil (touch-action:none en el asa). Mientras dura el gesto
+// la fila sigue al puntero y la fila de destino queda marcada; al soltar
+// se hace un único commit (una entrada de historial + un guardado).
+const rootEl = ref(null)
+const listEl = ref(null)
+const iframeEl = ref(null)
+const drag = ref(null) // {id, from, over, startY, deltaY, up, down, mids}
+
+function onGripDown(e, b, k) {
+  if ((e.button !== 0 && e.pointerType === 'mouse') || activeItems.value.length < 2) return
+  const rows = [...listEl.value.querySelectorAll(':scope > .blk-row')]
+  const mine = e.currentTarget.closest('.blk-row').getBoundingClientRect()
+  const rects = rows.map((r) => r.getBoundingClientRect())
+  drag.value = {
+    id: b.id,
+    from: k,
+    over: k,
+    startY: e.clientY,
+    deltaY: 0,
+    up: (rects[0]?.top ?? mine.top) - mine.top,
+    down: (rects[rects.length - 1]?.bottom ?? mine.bottom) - mine.bottom,
+    mids: rects.map((r) => r.top + r.height / 2)
+  }
+  e.currentTarget.setPointerCapture(e.pointerId)
+  selectedId.value = b.id
+  // Sin preventDefault: el botón tiene que recibir el foco para que
+  // Alt+flechas funcione tras el click; la selección de texto durante el
+  // drag se evita con user-select:none en el asa.
+}
+function onGripMove(e) {
+  const d = drag.value
+  if (!d) return
+  d.deltaY = Math.min(Math.max(e.clientY - d.startY, d.up), d.down)
+  const over = d.mids.findIndex((m) => e.clientY < m)
+  d.over = over === -1 ? d.mids.length - 1 : over
+}
+function onGripUp(e) {
+  const d = drag.value
+  if (!d) return
+  try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* captura ya liberada */ }
+  drag.value = null
+  if (d.over !== d.from) reorderActive(d.from, d.over)
+}
+function onRowKey(e, b, k) {
+  if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return
+  e.preventDefault()
+  moveActiveDelta(k, e.key === 'ArrowUp' ? -1 : 1)
+}
+
+// Click en una fila (fuera de controles): la selecciona y lleva la vista
+// previa al bloque — y al revés: clic dentro del iframe selecciona la fila.
+function onRowClick(e, b) {
+  if (e.target.closest('button, input, select, label, a')) return
+  selectBlock(b)
+}
+function selectBlock(b, scrollPreview = true) {
+  selectedId.value = b.id
+  if (!scrollPreview || !b.enabled) return
+  const doc = iframeEl.value?.contentDocument
+  const mark = doc?.querySelector(`[data-blk="${b.id}"]`)
+  // Los marcadores del BlockRenderer son display:contents (sin caja):
+  // scroll/resaltado van al primer elemento real del bloque.
+  const el = mark?.firstElementChild || mark
+  if (!el?.scrollIntoView) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  el.animate?.([
+    { boxShadow: '0 0 0 4px rgba(99,91,255,.8)' },
+    { boxShadow: '0 0 0 4px rgba(99,91,255,0)' }
+  ], { duration: 1100 })
+}
+function onPreviewClick(ev) {
+  const hit = ev.target?.closest?.('[data-blk]')
+  const id = hit?.getAttribute('data-blk')
+  if (!id || !blocks.value.some((b) => b.id === id)) return
+  selectedId.value = id
+  document.querySelector(`.blk-row[data-bid="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
+// Ctrl+Z / Ctrl+Shift+Z (o Ctrl+Y) para deshacer/rehacer. Solo con la
+// sección visible y sin estar escribiendo en un campo (el navegador
+// deshace el texto del input en ese caso).
+function onGlobalKey(e) {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey) return
+  if (!rootEl.value || rootEl.value.offsetParent === null) return
+  if (e.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
+  const k = e.key.toLowerCase()
+  if (k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo() }
+  else if (k === 'y') { e.preventDefault(); redo() }
 }
 
 // Serializa el draft a layout_config. Los bloques guardados que la
@@ -329,9 +464,12 @@ function armPreviewTimeout() {
     if (previewState.value === 'loading') previewState.value = 'failed'
   }, 12000)
 }
-function onPreviewLoad() {
+function onPreviewLoad(e) {
   clearTimeout(previewTimer)
   previewState.value = 'ready'
+  // Clic dentro de la vista previa → selecciona la fila del editor (el
+  // clic sigue su curso: la preview sigue siendo navegable).
+  e.target.contentDocument?.addEventListener('click', onPreviewClick, true)
 }
 watch(previewSrc, () => {
   previewState.value = previewSrc.value ? 'loading' : 'failed'
@@ -348,6 +486,7 @@ onMounted(() => {
   previewState.value = previewSrc.value ? 'loading' : 'failed'
   armPreviewTimeout()
   window.addEventListener('pagehide', onPageHide)
+  window.addEventListener('keydown', onGlobalKey)
   document.addEventListener('visibilitychange', onVisibility)
 })
 onUnmounted(() => {
@@ -356,12 +495,14 @@ onUnmounted(() => {
   clearTimeout(savedTimer)
   clearTimeout(previewTimer)
   window.removeEventListener('pagehide', onPageHide)
+  window.removeEventListener('keydown', onGlobalKey)
   document.removeEventListener('visibilitychange', onVisibility)
 })
 </script>
 
 <template>
-  <div class="blk-layout">
+  <div ref="rootEl" class="blk-layout">
+    <p class="sr-only" role="status" aria-live="polite">{{ announce }}</p>
     <div class="blk-main">
       <nav class="dsg-tabs" role="tablist" aria-label="Superficie a editar">
         <button
@@ -396,36 +537,53 @@ onUnmounted(() => {
             <button type="button" class="btn ghost btn-auto btn-sm" @click="resetSurface"><AppIcon name="refresh" :size="14" /> Restablecer</button>
           </div>
         </div>
-        <p class="blk-hint">Cada fila es una sección de la página, en el mismo orden en que aparece en tu web. Lo que apagás se oculta sin borrar nada; lo marcado «Sin contenido» aparece recién cuando cargás esos datos.</p>
+        <p class="blk-hint">Cada tarjeta es una sección de la página, en el mismo orden en que aparece en tu web. Arrastrá del asa para reordenar (con el foco en el asa, Alt+↑↓ también mueve). Lo que apagás pasa a «Disponibles» sin borrar nada; lo marcado «Sin contenido» aparece recién cuando cargás esos datos.</p>
 
-        <ul class="blk-list">
+        <div class="blk-group-head">
+          <h4>Bloques activos <span class="blk-count">{{ activeItems.length }}</span></h4>
+          <small>En el orden en que salen en tu web</small>
+        </div>
+        <p v-if="!activeItems.length" class="blk-empty">Sin bloques activos: agregalos desde «Disponibles».</p>
+        <ul v-else ref="listEl" class="blk-list" aria-label="Bloques activos, en orden de la página">
           <li
-            v-for="(b, i) in blocks"
+            v-for="(b, k) in activeItems"
             :key="b.id"
+            :data-bid="b.id"
             class="blk-row"
-            :class="{ off: !b.enabled, locked: isLocked(b) || isPremiumLocked(b) }"
+            :class="{ sel: selectedId === b.id, locked: isLocked(b) || isPremiumLocked(b), dragging: drag?.id === b.id, 'drop-to': drag && drag.id !== b.id && drag.over === k }"
+            :style="drag?.id === b.id ? { transform: `translateY(${drag.deltaY}px)` } : null"
+            @click="onRowClick($event, b)"
           >
             <div class="blk-row-top">
-              <span class="blk-move" aria-hidden="false">
-                <button type="button" class="blk-mv" :disabled="i === 0" :aria-label="`Subir ${specOf(b).label}`" @click="moveBlock(i, -1)"><AppIcon name="chevron-up" :size="13" /></button>
-                <button type="button" class="blk-mv" :disabled="i === blocks.length - 1" :aria-label="`Bajar ${specOf(b).label}`" @click="moveBlock(i, 1)"><AppIcon name="chevron-down" :size="13" /></button>
-              </span>
+              <button
+                type="button"
+                class="blk-grip"
+                :aria-label="`Reordenar ${specOf(b).label}: arrastrá o usá Alt+flecha arriba/abajo`"
+                title="Arrastrá para reordenar (Alt+↑↓ con el foco acá)"
+                @pointerdown="onGripDown($event, b, k)"
+                @pointermove="onGripMove"
+                @pointerup="onGripUp"
+                @pointercancel="onGripUp"
+                @keydown="onRowKey($event, b, k)"
+              ><AppIcon name="grip-vertical" :size="15" /></button>
               <span class="blk-name">
                 <strong>{{ specOf(b).label || b.id }}</strong>
                 <span v-if="isLocked(b)" class="blk-tag"><AppIcon name="lock" :size="10" /> Fijo</span>
                 <span v-else-if="isPremiumLocked(b)" class="blk-tag premium"><AppIcon name="crown" :size="10" /> Premium</span>
                 <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes">Sin contenido</span>
-                <small v-if="specOf(b).desc" class="blk-desc">
+                <small v-if="specOf(b).desc || (specOf(b).edit && blockEmpty(b))" class="blk-desc">
                   {{ specOf(b).desc }}
-                  <button v-if="specOf(b).edit" type="button" class="blk-link" @click="$emit('navigate', specOf(b).edit)">Lo cargás en {{ srcLabel(b) }}</button>
+                  <button v-if="specOf(b).edit && !blockEmpty(b)" type="button" class="blk-link" @click="$emit('navigate', specOf(b).edit)">Lo cargás en {{ srcLabel(b) }}</button>
+                  <button v-if="specOf(b).edit && blockEmpty(b)" type="button" class="blk-cta" @click.stop="$emit('navigate', specOf(b).edit)"><AppIcon name="arrow-right" :size="11" /> Cargar contenido</button>
                 </small>
               </span>
+              <button v-if="!isLocked(b) && !isPremiumLocked(b)" type="button" class="blk-quit" :aria-label="`Quitar ${specOf(b).label}`" title="Quitar de la página" @click="removeBlock(b)"><AppIcon name="minus" :size="14" /></button>
               <label class="blk-toggle" :class="{ disabled: isLocked(b) || isPremiumLocked(b) }" :title="isLocked(b) ? 'Este bloque es parte de la página y no se puede apagar' : isPremiumLocked(b) ? 'Disponible con diseño avanzado (plan Premium)' : ''">
                 <input type="checkbox" :checked="b.enabled" :disabled="isLocked(b) || isPremiumLocked(b)" @change="toggleBlock(b)" />
                 <span class="blk-track" aria-hidden="true"></span>
               </label>
             </div>
-            <div v-if="b.enabled && (specOf(b).variants || specOf(b).props)" class="blk-row-sub">
+            <div v-if="specOf(b).variants || specOf(b).props" class="blk-row-sub">
               <label v-if="specOf(b).variants" class="blk-sub">
                 <span>Vista</span>
                 <select class="blk-select" :value="b.variant || Object.keys(specOf(b).variants)[0]" @change="setVariant(b, $event.target.value)">
@@ -444,6 +602,39 @@ onUnmounted(() => {
                   @focus="onTitleFocus"
                   @blur="onTitleBlur"
                 />
+              </label>
+            </div>
+          </li>
+        </ul>
+
+        <div class="blk-group-head">
+          <h4>Bloques disponibles <span class="blk-count">{{ availableItems.length }}</span></h4>
+          <small>Apagados: no salen en tu web hasta que los agregues</small>
+        </div>
+        <p v-if="!availableItems.length" class="blk-empty">Ya está todo en la página.</p>
+        <ul v-else class="blk-list avail">
+          <li
+            v-for="b in availableItems"
+            :key="b.id"
+            :data-bid="b.id"
+            class="blk-row avail"
+            :class="{ sel: selectedId === b.id, locked: isPremiumLocked(b) }"
+            @click="onRowClick($event, b)"
+          >
+            <div class="blk-row-top">
+              <span class="blk-name">
+                <strong>{{ specOf(b).label || b.id }}</strong>
+                <span v-if="isPremiumLocked(b)" class="blk-tag premium"><AppIcon name="crown" :size="10" /> Premium</span>
+                <span v-else-if="blockEmpty(b)" class="blk-tag empty" title="No tiene contenido cargado: en tu web no se muestra hasta que lo completes">Sin contenido</span>
+                <small v-if="specOf(b).desc || (specOf(b).edit && blockEmpty(b))" class="blk-desc">
+                  {{ specOf(b).desc }}
+                  <button v-if="specOf(b).edit && blockEmpty(b) && !isPremiumLocked(b)" type="button" class="blk-cta" @click.stop="$emit('navigate', specOf(b).edit)"><AppIcon name="arrow-right" :size="11" /> Cargar contenido</button>
+                </small>
+              </span>
+              <button v-if="!isPremiumLocked(b)" type="button" class="btn ghost btn-auto btn-sm blk-add" @click="addBlock(b)"><AppIcon name="plus" :size="12" /> Agregar</button>
+              <label class="blk-toggle" :class="{ disabled: isPremiumLocked(b) }" :title="isPremiumLocked(b) ? 'Disponible con diseño avanzado (plan Premium)' : ''">
+                <input type="checkbox" :checked="b.enabled" :disabled="isPremiumLocked(b)" @change="addBlock(b)" />
+                <span class="blk-track" aria-hidden="true"></span>
               </label>
             </div>
           </li>
@@ -467,7 +658,7 @@ onUnmounted(() => {
           <div v-show="previewState === 'loading'" class="blk-frame-skel" aria-hidden="true">
             <span class="blk-skel-bar"></span><span class="blk-skel-bar mid"></span><span class="blk-skel-bar short"></span>
           </div>
-          <iframe :key="previewKey" :src="previewSrc" title="Vista previa de tu web" loading="lazy" @load="onPreviewLoad"></iframe>
+          <iframe ref="iframeEl" :key="previewKey" :src="previewSrc" title="Vista previa de tu web" loading="lazy" @load="onPreviewLoad"></iframe>
           <div v-if="previewState === 'failed'" class="blk-frame-fail" role="status">
             <AppIcon name="triangle-alert" :size="18" />
             <p>La vista previa no respondió. Podés abrirla en otra pestaña o recargarla.</p>

@@ -23,7 +23,7 @@ const component = computed(() => surfaceComponent(ctx?.pageTemplate?.value, 'cat
 
 <template>
   <div class="cv-outer">
-    <p v-if="catalogNote && on('note')" class="cv-note" role="note"><AppIcon name="megaphone" :size="15" />{{ catalogNote }}</p>
+    <p v-if="catalogNote && on('note')" data-blk="note" class="cv-note" role="note"><AppIcon name="megaphone" :size="15" />{{ catalogNote }}</p>
     <component :is="component" />
   </div>
 </template>

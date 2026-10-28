@@ -26,5 +26,9 @@ const blocks = computed(() =>
 </script>
 
 <template>
-  <component v-for="b in blocks" :key="b.id" :is="components[b.id]" :block="b" />
+  <!-- data-blk marca cada bloque para el editor (scroll-sync); el wrapper
+       con display:contents no toca el layout de la página. -->
+  <div v-for="b in blocks" :key="b.id" :data-blk="b.id" style="display: contents">
+    <component :is="components[b.id]" :block="b" />
+  </div>
 </template>
