@@ -1454,8 +1454,11 @@ html { scroll-behavior: smooth; }
 
 @media (max-width: 960px) {
   .spd-top { grid-template-columns: minmax(0, 1fr); }
-  .spd-gallery { min-height: 0; aspect-ratio: 4 / 3; padding: 24px; border-right: 0; border-bottom: 1px solid var(--sp-line); }
-  .spd-gallery img { max-height: 420px; }
+  /* Marco de alto fijo en flex: % resuelve contra la caja y la imagen
+     queda contenida y centrada; con grid+aspect-ratio la fila implícita
+     crecía con la foto y sangraba sobre el panel de compra. */
+  .spd-gallery { display: flex; align-items: center; justify-content: center; min-height: 0; height: clamp(240px, 68vw, 400px); padding: 24px; border-right: 0; border-bottom: 1px solid var(--sp-line); overflow: hidden; }
+  .spd-gallery img { max-width: 100%; max-height: 100%; }
   .spd-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 640px) {
@@ -3621,6 +3624,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='lookbook'] .sp-drawer.open { transform: none; }
   .store-page[data-store-template='lookbook'] .spd-top { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-store-template='lookbook'] .spd-gallery { border-right: 0; border-bottom: 1px solid var(--sp-line); min-height: 0; padding: 24px; }
+  .store-page[data-store-template='lookbook'] .spd-gallery img { max-height: 100%; }
   .store-page[data-store-template='lookbook'] .spd-buy { padding: 26px 0; }
 }
 @media (max-width: 900px) {
@@ -4450,6 +4454,9 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='shop'] .sp-shop-sub { font-size: 13.5px; }
   .sp-shop-side { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .sp-shop-promo { padding: 16px 18px; border-radius: 14px; }
+  /* La foto lateral pasa a una banda a todo lo ancho debajo del copy: a
+     ~390px el panel del 42% apretaba el texto de la promo. */
+  .sp-shop-promo.has-img { grid-template-columns: minmax(0, 1fr); }
   .sp-shop-promo strong { font-size: 16px; }
   .sp-shop-promo-media { min-height: 88px; }
   /* Departamentos: carrusel táctil compacto. */

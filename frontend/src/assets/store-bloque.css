@@ -467,7 +467,8 @@
 .store-page[data-store-template='bloque'] .spd-rel-name { font-weight: 650; color: var(--bq-ink); }
 .store-page[data-store-template='bloque'] .spd-rel-price { font-family: var(--bq-mono); font-weight: 700; }
 @media (max-width: 1024px) {
-  .store-page[data-store-template='bloque'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--bq-rule); }
+  .store-page[data-store-template='bloque'] .spd-top { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-store-template='bloque'] .spd-gallery { border-right: 0; border-bottom: 2px solid var(--bq-rule); padding: 20px; }
 }
 
 /* ===== Bloques extra: cinta de anuncios y sección Video ===== */

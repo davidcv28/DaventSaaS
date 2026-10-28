@@ -274,7 +274,7 @@ a.sp2-strip-item:hover { background: var(--store-accent-soft); }
 .store-page[data-store-template='duo'] .spd-rel:hover { transform: translateY(-4px); border-color: var(--store-accent); }
 .store-page[data-store-template='duo'] .spd-rel .tpc-media { border-radius: 14px; }
 @media (max-width: 960px) {
-  .store-page[data-store-template='duo'] .spd-top { padding: 14px; gap: 18px; }
+  .store-page[data-store-template='duo'] .spd-top { grid-template-columns: minmax(0, 1fr); padding: 14px; gap: 18px; }
   .store-page[data-store-template='duo'] .spd-gallery { aspect-ratio: 4 / 3; }
   .store-page[data-store-template='duo'] .spd-buy { padding: 6px 8px 10px; }
   .store-page[data-store-template='duo'] .spd-sec { margin: 0 14px 14px; padding: 20px 18px; }

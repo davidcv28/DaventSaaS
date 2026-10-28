@@ -1629,7 +1629,11 @@ const studioSavedTheme = ref(null)
 // update:layout). null = sin ensayo -> saveDesign manda lo de siempre.
 const studioExtras = ref(null)
 const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
-const studioPreviewSrc = computed(() => (store.store?.slug ? `${env.appUrl}/${store.store.slug}?studio=1` : ''))
+// Relativo a propósito: el iframe hereda el origen actual y queda
+// same-origin siempre. Con env.appUrl (localhost fijo en dev) el puente
+// postMessage moría en silencio si el panel se abría por 127.0.0.1, la IP
+// LAN o un alias distinto — la preview solo cambiaba al recargar.
+const studioPreviewSrc = computed(() => (store.store?.slug ? `/${store.store.slug}?studio=1` : ''))
 function onStudioNav(target) {
   if (target === 'tools') { section.value = 'tools'; toolsTab.value = 'studio' }
   else if (target === 'blocks' || target === 'plans') section.value = target

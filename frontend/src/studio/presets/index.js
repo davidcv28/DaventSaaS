@@ -1,7 +1,6 @@
 // API pública del sistema de presets del Studio.
 // catalog.js: datos (presets, builder de layout, rubros, lock, filtros).
-// PresetGallery.vue: la galería del panel "Estilos".
-// PresetThumb.vue: miniatura web real renderizada con los datos de la tienda.
+// PresetGallery.vue: el selector de estilos del panel "Estilos".
 export {
   STUDIO_PRESETS,
   RUBRO_LABELS,

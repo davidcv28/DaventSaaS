@@ -47,6 +47,7 @@ const appUrl = env.appUrl
 // layout_config del draft por postMessage same-origin y la página lo
 // aplica reactivo, sin recargar el iframe.
 const layoutOverride = ref(null)
+let removeStudioGuard = null
 const custom = computed(() => ({
   ...CUSTOMIZATION_DEFAULTS,
   ...(store.value?.customization || {}),
@@ -64,8 +65,14 @@ const studioMode = computed(() => route.query.studio === '1')
 const studioTheme = ref(null)      // siteTheme del borrador
 const studioTemplate = ref(null)   // template del borrador
 const studioViewMode = ref(null)   // claro/oscuro del visor (msg.mode)
+// En un iframe el referrer es el document del host: se acepta como origen
+// válido además del propio (el update llega del Studio que lo embebe).
+const parentOrigin = window.parent !== window && document.referrer
+  ? new URL(document.referrer).origin
+  : window.location.origin
 function onStudioMessage(e) {
-  if (!studioMode.value || e.origin !== window.location.origin || !isStudioMessage(e.data)) return
+  if (!studioMode.value || !isStudioMessage(e.data)) return
+  if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
   const d = e.data
   if (d.type === STUDIO_MSG.UPDATE) {
     if (d.theme) studioTheme.value = d.theme
@@ -425,8 +432,16 @@ onMounted(async () => {
   window.addEventListener('keydown', onMenuKey)
   window.addEventListener('message', onLayoutMessage)
   window.addEventListener('message', onStudioMessage)
-  if (studioMode.value && window.parent !== window) {
-    window.parent.postMessage(studioReady(), window.location.origin)
+  if (studioMode.value) {
+    // El modo Studio debe sobrevivir a la navegación interna del preview
+    // (nav, catálogo, ficha): sin el query, onStudioMessage se apaga en
+    // silencio y la vista previa queda "congelada" hasta recargar.
+    removeStudioGuard = router.beforeEach((to) => (
+      to.query.studio === '1' ? true : { path: to.path, query: { ...to.query, studio: '1' }, hash: to.hash }
+    ))
+    if (window.parent !== window) {
+      window.parent.postMessage(studioReady(), parentOrigin)
+    }
   }
   onScroll()
 })
@@ -436,6 +451,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onMenuKey)
   window.removeEventListener('message', onLayoutMessage)
   window.removeEventListener('message', onStudioMessage)
+  removeStudioGuard?.()
   clearSeo?.()
   applyFavicon(null)
 })

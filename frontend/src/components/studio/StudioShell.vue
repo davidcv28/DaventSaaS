@@ -228,9 +228,13 @@ function buildUpdate() {
   return msg
 }
 function postNow() {
-  const win = canvasRef.value?.iframeEl?.contentWindow
+  const el = canvasRef.value?.iframeEl
+  const win = el?.contentWindow
   if (!win) return
-  win.postMessage(buildUpdate(), window.location.origin)
+  // El targetOrigin sale del src real del iframe: si la URL fuera absoluta
+  // y de otro origen, postear al origin del host descarta el mensaje mudo.
+  const origin = el?.src ? new URL(el.src, window.location.href).origin : window.location.origin
+  win.postMessage(buildUpdate(), origin)
 }
 function queueUpdate() {
   clearTimeout(postTimer)
