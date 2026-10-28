@@ -34,7 +34,7 @@ const files = {
 
 await mkdir(OUT, { recursive: true })
 for (const [name, svg] of Object.entries(files)) {
-  const buf = await sharp(Buffer.from(svg), { density: 384 }).png().toBuffer()
+  const buf = await sharp(Buffer.from(svg)).png().toBuffer()
   await writeFile(join(OUT, name), buf)
   console.log('assets/' + name, buf.length, 'bytes')
 }
