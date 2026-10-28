@@ -1,5 +1,5 @@
 """QA FASE presets #2: guardado real (PATCH), locks por plan, anchos."""
-import sys, json
+import sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 from playwright.sync_api import sync_playwright
 

@@ -1421,7 +1421,6 @@ class IdentityFieldsTests(TestCase):
     def test_public_ignores_values_after_downgrade(self):
         client      =   self._client(has_design_advanced = True)
         self._patch(client, {'accent_custom': '#1a7f5a', 'cover_overlay': 40})
-        profile     =   Store.objects.get(slug = 'tienda-duenio').user
         self.assertEqual(APIClient().get(f'{STORES_URL}public/tienda-duenio/').data['customization']['accent_custom'], '#1a7f5a')
         PlanBenefit.objects.filter(benefit__code = 'has_design_advanced').delete()
         cache.clear()

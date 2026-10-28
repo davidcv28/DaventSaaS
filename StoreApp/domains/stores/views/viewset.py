@@ -197,7 +197,7 @@ def _params_fingerprint(request):
     #la key lleva params canonizados (orden de parámetros y de valores no
     #cambia la respuesta — ?a=1&b=2 y ?b=2&a=1 comparten entrada).
     canonical =   sorted((k, tuple(sorted(v))) for k, v in request.query_params.lists())
-    return hashlib.md5(repr(canonical).encode()).hexdigest()
+    return hashlib.md5(repr(canonical).encode(), usedforsecurity=False).hexdigest()
 
 def _apply_order(queryset, order):
     """

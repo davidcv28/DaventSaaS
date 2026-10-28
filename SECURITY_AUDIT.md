@@ -723,3 +723,92 @@ depender del motor: el test tiene que pasar igual en SQLite.
 **Verificación ejecutada:** `manage.py test` → **369 tests OK, 0 fallos**
 (antes: 10 fallos + 1 error, idénticos en `HEAD`), `manage.py check --deploy`
 exit 0, `ruff check` limpio, `docker compose config -q` OK.
+
+## 16. Pasada de parches + auditoría de pipeline — 2026-10-28
+
+Pasada de mantenimiento: traer las dependencias al último parche con
+advisories públicas, verificar que la cadena `lint -> test -> security ->
+build -> deploy` esté realmente verde (no solo escrita) y re-ejecutar la
+auditoría con las herramientas que corren en CI.
+
+**Ejecutado:** `manage.py test` → **498 tests OK** · `manage.py check --deploy`
+→ 0 issues (solo warnings env-driven del `.env` de dev) · `ruff 0.17.3` →
+limpio · `bandit 1.9.4 -ll` → **0 hallazgos** · `pip-audit 2.10.1 -r
+requirements.txt` → **0 CVEs** · `npm audit --omit=dev` → **0 vulnerabilities**.
+
+### 16.1 Parches de dependencias aplicados
+
+| Paquete | Antes | Ahora | Motivo |
+|---------|-------|-------|--------|
+| **Django** | 5.2.17 | **5.2.18** | Release de seguridad 2026-10-06: **CVE-2026-84429** (DoS cuadrático en `parse_header_parameters`, alcanzable sin autenticar vía `Accept`/`Content-Type` — **aplica**: DRF negocia contenido en cada request), **CVE-2026-87975** (abuso de privilegios en formsets con PK editable — **no aplica**: todo el schema usa `BigAutoField` y no hay inlines de admin), **CVE-2026-87890** (SSRF en spatial lookups — **no aplica**: sin GIS), **CVE-2026-77050** (DoS en `get_supported_language_variant`, severidad baja) + fix de la mitigación insuficiente de 5.2.17 (CVE-2026-15830, bypass del límite de profundidad de geometrías) |
+| **djangorestframework** | 3.18.2 | **3.18.3** | Revert de un cambio de API introducido por error en 3.18.2. Los fixes de seguridad (GHSA-33wh-fxxf-88vv content negotiation, GHSA-3547-9m27-7rxg charsets no-text, GHSA-xw6w-gcfp-cf8m `TokenProxy`) ya estaban en 3.18.2 |
+| **PyJWT** | 2.15.0 | **2.15.1** | Patch del validador de claims (lo usa simplejwt en cada request autenticado) |
+| **psycopg2-binary** | 2.9.12 | **2.9.13** | Patch del driver |
+
+**Diferidos a propósito** (publicados hace <7 días, sin advisory: no se adopta
+un release sin ventana de maduración): `boto3` 1.43.120 (2026-10-27),
+`onnxruntime` 1.31.1 (2026-10-26). Django **5.2.19** figura en la doc como
+release del 2026-11-03 pero **no está publicado en PyPI** todavía: 5.2.18 es
+el último parche instalable hoy.
+
+### 16.2 Superficie de dependencias reducida
+
+`cloudinary`, `coreapi`, `openapi-codec`, `coreschema` e `itypes` estaban
+pinneados en `requirements.txt` sin ningún import en el código (Cloudinary se
+abandonó por R2; el schema lo genera `drf-spectacular`). Se eliminaron: menos
+paquetes que auditar en cada build y ninguna credencial huérfana que alguien
+pueda reactivar por error. `inflection`/`uritemplate` se conservan (los exige
+`drf-spectacular`).
+
+### 16.3 Pipeline — estaba en rojo, no solo "mal configurada"
+
+| Sev. | Hallazgo | Evidencia | Remediación |
+|------|----------|-----------|-------------|
+| **P0** | `gitleaks/gitleaks-action@v2` corre sobre **Node 20**, retirado de los runners de GitHub el **2026-09-16**: el paso no arranca, el job `security` falla y con él `build` (`needs: [lint, test, security]`) y `deploy` → **ningún push llega al VPS** | `action.yml` de v2: `using: node20`; release v3 documenta el corte de Node 20 | `@v3` (mismos inputs/salidas, runtime node24) |
+| **P0** | `bandit -ll` **fallaba** con el pin actual (1.8.3): 8 hallazgos ≥ media (1 HIGH B324 + 7 MEDIUM B608). Mismo resultado con 1.9.4 | `bandit -r ... -ll` → `High: 1, Medium: 7` | Ver 16.4: `usedforsecurity=False` en el MD5 de cache + `# nosec B608` justificado en los 7 SQL de `_meta` (valores parametrizados). Ahora `High: 0, Medium: 0` |
+| **P1** | `concurrency` del workflow con `cancel-in-progress: true` **cancela el run entero** — incluido el job `deploy` a mitad de camino. El `concurrency` a nivel de job (fix de §15) serializa deploys pero no protege de la cancelación del workflow padre | `gh` run cancelado entre `compose pull` y `up -d` = migraciones nuevas con contenedores viejos | `cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}`: los PRs siguen cancelando, `main` nunca |
+| **P2** | Herramientas de CI pinneadas viejas (`ruff 0.8.6`, `bandit 1.8.3`, `pip-audit 2.9.0`) — el SAST corría con reglas de hace ~1 año | — | `ruff 0.17.3`, `bandit 1.9.4`, `pip-audit 2.10.1` (verificados localmente antes de subir el pin) |
+| **P2** | `appleboy/scp-action@v0.1.7` (acción **docker**, sin mantenimiento) y `ssh-action@v1.2.0` | — | `scp-action@v1.0.0` (composite; mismos inputs `host/port/username/key/fingerprint/source/target/overwrite`) y `ssh-action@v1.2.5` |
+| **P2** | `ruff 0.17.3` destapó 6 errores que el pin viejo dejaba pasar: `F841` en `stores/tests.py` y `F401` en 4 scripts `qa_*.py` | `ruff check` → 6 errors | Imports muertos eliminados; `ruff check` limpio |
+
+### 16.4 Fixes de código
+
+- **B324 (HIGH) — `hashlib.md5` sin `usedforsecurity=False`**
+  (`StoreApp/domains/stores/views/viewset.py:200`). El MD5 no es
+  criptográfico: firma la querystring canónica como key del cache del catálogo
+  público. Se declara la intención explícita (Python ≥3.9) en vez de bajar la
+  severidad en CI: si mañana alguien usa MD5 para algo de seguridad, bandit
+  vuelve a marcarlo.
+- **B608 (MEDIUM ×7) — SQL con f-string** en
+  `users/management/commands/rotate_encrypted_fields.py`,
+  `users/migrations/0010_encrypt_pii_fields.py` y un helper de `users/tests.py`.
+  Falso positivo estructural: la tabla y las columnas salen de
+  `UserProfile._meta` (constantes del modelo) y **todos los valores** viajan
+  como parámetros (`%s`). Se anotó `# nosec B608` con el motivo en cada sitio
+  en vez de silenciar la regla para todo el repo (un `-s B608` global taparía
+  una inyección real futura).
+
+### 16.5 Verificado como correcto (sin cambio)
+
+- Cadena de gates: `build` exige `lint + test + security`; `deploy` exige
+  `build + security`, corre en `environment: production`, serializado, con
+  host key pineada, preflight fail-closed de secretos, `up -d --wait` y
+  `curl /healthz/` externo. El `test` lleva los dummies de CI
+  (`MP_WEBHOOK_SECRET`, `SECRETS_MASTER_KEYS`, `SECRETS_HASH_KEY`, `ADMIN_URL`)
+  que evitan que `payments.E001`/`users.E002-E003` tumben el job.
+- Endurecimiento de contenedores de §15 sigue en pie: nginx-unprivileged
+  (uid 101, 8080/8443) con `read_only` + tmpfs, `cap_drop: [ALL]`,
+  `no-new-privileges`, Redis con `maxmemory 256mb`/`volatile-lru` bajo cgroup
+  384M, `.dockerignore` excluyendo `docker/certbot/`, `*.pem`, `*.key`.
+- `keepalive.yml` (ping a Render) sin secretos ni permisos elevados.
+
+### 16.6 Residuales honestos
+
+- **El pipeline verde no se puede confirmar desde el repo**: los jobs se
+  verificaron ejecutando localmente cada herramienta con el pin nuevo, pero la
+  prueba real es el primer push a `main` (Actions → CI/CD).
+- **Secretos de despliegue** (checklist §15.2) siguen siendo el riesgo #1
+  residual: no son verificables desde el código.
+- `SECURITY_SIMULATION_REPORT.md` (§5, recomendación 3) todavía describe la
+  verificación por SMS de Firebase, retirada en §13: documento histórico, no
+  se reescribe.

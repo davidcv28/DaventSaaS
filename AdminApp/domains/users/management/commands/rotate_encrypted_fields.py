@@ -37,7 +37,7 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             while True:
                 cursor.execute(
-                    f'SELECT {columns} FROM {table} WHERE {id_col} > %s ORDER BY {id_col} LIMIT %s',
+                    f'SELECT {columns} FROM {table} WHERE {id_col} > %s ORDER BY {id_col} LIMIT %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                     [last_id, batch],
                 )
                 rows    =   cursor.fetchall()
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                     if updates:
                         rotated    +=   1
                         cursor.execute(
-                            f'UPDATE {table} SET {", ".join(updates)} WHERE {id_col} = %s',
+                            f'UPDATE {table} SET {", ".join(updates)} WHERE {id_col} = %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                             params + [record['id']],
                         )
         self.stdout.write(self.style.SUCCESS(

@@ -694,7 +694,7 @@ class EncryptedProfileFieldsTests(TestCase):
     def _raw(self, profile, *columns):
         with connection.cursor() as cursor:
             cursor.execute(
-                f'SELECT {", ".join(columns)} FROM users_userprofile WHERE id = %s',
+                f'SELECT {", ".join(columns)} FROM users_userprofile WHERE id = %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                 [profile.pk],
             )
             return dict(zip(columns, cursor.fetchone()))

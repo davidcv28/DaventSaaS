@@ -5,7 +5,7 @@ OJO: la app tiene que abrirse en localhost (env.appUrl = localhost) para que
 el iframe de la preview sea same-origin.
 Uso: venv/Scripts/python.exe qa_studio_shell.py
 """
-import os, sys, json
+import os, sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 from playwright.sync_api import sync_playwright
 

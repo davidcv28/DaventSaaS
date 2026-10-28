@@ -7,7 +7,7 @@ controles/hints/tooltips.
 
 Uso: venv/Scripts/python.exe qa_studio_panels.py [--locked] [--width=390]
 """
-import sys, json, pathlib
+import sys, pathlib
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 from playwright.sync_api import sync_playwright
 

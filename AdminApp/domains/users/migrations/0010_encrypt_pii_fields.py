@@ -43,7 +43,7 @@ def encrypt_existing(apps, schema_editor):
     with schema_editor.connection.cursor() as cursor:
         while True:
             cursor.execute(
-                f'SELECT {columns} FROM {table} WHERE {id_col} > %s ORDER BY {id_col} LIMIT %s',
+                f'SELECT {columns} FROM {table} WHERE {id_col} > %s ORDER BY {id_col} LIMIT %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                 [last_id, BATCH_SIZE],
             )
             rows    =   cursor.fetchall()
@@ -65,7 +65,7 @@ def encrypt_existing(apps, schema_editor):
                 updates        +=   ['document_hash = %s', 'phone_hash = %s']
                 params         +=   [doc_hash, phone_hash]
                 cursor.execute(
-                    f'UPDATE {table} SET {", ".join(updates)} WHERE {id_col} = %s',
+                    f'UPDATE {table} SET {", ".join(updates)} WHERE {id_col} = %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                     params + [record['id']],
                 )
 
@@ -84,7 +84,7 @@ def decrypt_back(apps, schema_editor):
     with schema_editor.connection.cursor() as cursor:
         while True:
             cursor.execute(
-                f'SELECT {columns} FROM {table} WHERE {id_col} > %s ORDER BY {id_col} LIMIT %s',
+                f'SELECT {columns} FROM {table} WHERE {id_col} > %s ORDER BY {id_col} LIMIT %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                 [last_id, BATCH_SIZE],
             )
             rows    =   cursor.fetchall()
@@ -101,7 +101,7 @@ def decrypt_back(apps, schema_editor):
                         params.append(vault.decrypt_secret(raw, purposes[name]).decode('utf-8'))
                 if updates:
                     cursor.execute(
-                        f'UPDATE {table} SET {", ".join(updates)} WHERE {id_col} = %s',
+                        f'UPDATE {table} SET {", ".join(updates)} WHERE {id_col} = %s',  # nosec B608: tabla/columnas salen de _meta y los valores van parametrizados
                         params + [record['id']],
                     )
 

@@ -1,5 +1,5 @@
 """QA flyer generator: seed + screenshots multi-formato. Uso: qa_flyer.py [seed|shots|all]"""
-import sys, json, pathlib, io, time
+import sys, json, pathlib, io
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import requests
 from PIL import Image, ImageDraw
