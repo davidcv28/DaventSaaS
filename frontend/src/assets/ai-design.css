@@ -604,6 +604,23 @@
 .aidv-screen .dsg-preview-head, .aidv-screen .dp-toolbar { display: none; }
 .aidv-screen .dp-stage { height: 100%; max-height: none; min-height: 0; overflow: auto; border-radius: 0; }
 .aidv-screen .dp-frame { width: 100% !important; max-width: 100% !important; }
+
+/* Landing real embebida (mismo camino que el lienzo del Studio). */
+.aidv-area { position: relative; }
+.aidv-frame { display: block; width: 100%; height: 100%; border: 0; background: var(--card); }
+.aidv-loading {
+  position: absolute; inset: 0; z-index: 2;
+  display: grid; place-content: center; justify-items: center; gap: 8px;
+  padding: 24px; background: var(--sunk); color: var(--muted); font-size: 12.5px;
+}
+.aidv-loading p { margin: 6px 0 0; }
+.aidv-skel {
+  width: min(420px, 60vw); height: 10px; border-radius: 6px;
+  background: var(--line); animation: aidv-pulse 1.4s ease-in-out infinite;
+}
+.aidv-skel.mid { width: min(320px, 46vw); }
+.aidv-skel.short { width: min(200px, 30vw); }
+@keyframes aidv-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 .aidv-size { margin: 0 0 0 auto; color: var(--muted); font-size: 11.5px; font-variant-numeric: var(--num); }
 
 @keyframes aid-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -631,5 +648,6 @@
   .aiir-progress span { transition: none; }
   .aid-skel::after { animation: none; display: none; }
   .aid-modal { animation: none; }
+  .aidv-skel { animation: none; }
   .aid-head { background: var(--card); }
 }

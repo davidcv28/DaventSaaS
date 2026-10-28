@@ -525,6 +525,7 @@ function closePreview() {
       :show-map="answers.must_have.includes('map')"
       :name-font="previewNameFont"
       :night-mode="previewProposal.night_mode"
+      :public-url="publicUrl"
       @close="closePreview"
     />
   </div>
