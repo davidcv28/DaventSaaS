@@ -54,7 +54,8 @@ const custom = computed(() => ({
   ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
 }))
 function onLayoutMessage(e) {
-  if (e.origin !== window.location.origin || e.data?.type !== 'davent:layout') return
+  if (e.data?.type !== 'davent:layout') return
+  if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
   layoutOverride.value = e.data.layout || null
 }
 // Modo Studio (?studio=1, iframe de la shell): consume el protocolo del

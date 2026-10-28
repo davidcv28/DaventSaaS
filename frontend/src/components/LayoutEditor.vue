@@ -476,7 +476,10 @@ const saveIcon = computed(() => ({
 // red) pasa a failed y se muestra el fallback con salida a pestaña nueva.
 const PREVIEW_PATHS = { landing: '', catalog: '/catalogo', services: '/servicios' }
 const storeSlug = computed(() => store.store?.slug || '')
-const previewSrc = computed(() => (storeSlug.value ? `${env.appUrl}/${storeSlug.value}${PREVIEW_PATHS[surface.value]}` : ''))
+// Relativo a propósito (ver StudioShell): con env.appUrl absoluto el iframe
+// quedaba cross-origin si el panel se abrió por otro alias (127.0.0.1, IP
+// LAN) y el postMessage moría mudo — la preview solo cambiaba al recargar.
+const previewSrc = computed(() => (storeSlug.value ? `/${storeSlug.value}${PREVIEW_PATHS[surface.value]}` : ''))
 const canonicalSrc = computed(() => (props.publicUrl ? props.publicUrl + PREVIEW_PATHS[surface.value] : ''))
 const surfacePublished = computed(() => props.siteTemplates.includes(surface.value))
 // En pantallas chicas la vista previa pasa a ser una hoja que se abre
@@ -497,10 +500,10 @@ let mql = null
 // aplica el layout_config del draft reactivo): cero recargas del iframe,
 // sin parpadeo ni requests abortados en cada guardado.
 function pushLayoutToPreview() {
-  iframeEl.value?.contentWindow?.postMessage(
-    { type: 'davent:layout', layout: serialize() },
-    window.location.origin
-  )
+  const el = iframeEl.value
+  if (!el?.contentWindow) return
+  const origin = el.src ? new URL(el.src, window.location.href).origin : window.location.origin
+  el.contentWindow.postMessage({ type: 'davent:layout', layout: serialize() }, origin)
 }
 function schedulePreviewPush() {
   clearTimeout(previewPushTimer)
