@@ -907,7 +907,7 @@ Si algo falla, pegar acá la salida del paso rojo:
 
 | Comando | Resultado |
 |---------|-----------|
-| `manage.py test` (suite completa) | **509 tests, OK** (238 s) |
+| `manage.py test` (suite completa) | **515 tests, OK** (243 s) |
 | `manage.py test AdminApp.domains.users.test_headers` | 3 OK — CSP + `nosniff` + `X-Frame-Options` + `Referrer-Policy` en HTML de Django; JSON sin CSP; CSP previa no se pisa |
 | `manage.py test AdminApp.domains.chat.tests.ChatAttachmentTests` | 7 OK — incluye >4 MB, `content_type` mentiroso y PNG truncado con firma válida |
 | `ruff check .` | limpio |
