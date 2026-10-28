@@ -484,6 +484,13 @@ onBeforeUnmount(() => {
 
 // Click en la preview -> herramienta + control del panel (foco + flash).
 const tool = ref('estilos')
+// Sin el beneficio premium el Studio solo abre "Estilos": el resto de las
+// herramientas queda fuera del riel (el gating de datos lo hace el backend).
+const estilosOnly = computed(() => (
+  Object.keys(props.benefits || {}).length > 0 && !props.benefits?.has_design_advanced
+))
+const tools = computed(() => (estilosOnly.value ? STUDIO_TOOLS.filter((t) => t.id === 'estilos') : STUDIO_TOOLS))
+watch(estilosOnly, (only) => { if (only && tool.value !== 'estilos') tool.value = 'estilos' })
 const panelBodyEl = ref(null)
 const toolDef = computed(() => STUDIO_TOOLS.find((t) => t.id === tool.value) || STUDIO_TOOLS[0])
 function onPick(target) {
@@ -563,6 +570,7 @@ function sheetUp() {
   sheetDragPx.value = null
 }
 function pickTool(id) {
+  if (!tools.value.some((t) => t.id === id)) return
   tool.value = id
   panelOpen.value = true
   if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
@@ -759,7 +767,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
       </button>
       <div class="sts-rail-list" role="tablist" aria-orientation="vertical" aria-label="Herramientas de diseño">
         <button
-          v-for="t in STUDIO_TOOLS" :key="t.id" type="button" role="tab"
+          v-for="t in tools" :key="t.id" type="button" role="tab"
           class="sts-tool" :class="{ active: tool === t.id }"
           :aria-selected="tool === t.id" :title="t.desc"
           @click="pickTool(t.id)"

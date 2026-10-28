@@ -455,6 +455,46 @@ const PRESETS = [
       catalog: { on: ['note', 'filters', 'sort', 'grid'] },
       services: { on: ['hero', 'picker', 'steps', 'form', 'faq'] }
     }
+  },
+  {
+    id: 'denim-urbano', name: 'Denim urbano', style: 'Denim urbano',
+    desc: 'Jeans, calle y tipografía condensada: ropa de todos los días.',
+    tier: 'base', template: 'duo', pageTheme: 'light',
+    rubros: ['moda', 'lifestyle'],
+    theme: theme({
+      accent: '#1e3a5f',
+      pal: { bg: '#f2f4f7', surface: '#ffffff', text: '#101828', muted: '#5d6b7f', border: '#d7dde6' },
+      containers: { radius: 'sm', shadow: 'soft', border: 'thin', density: 'compact', surface: 'elevated' },
+      heading: 'oswald', body: 'work-sans', scale: 'compact', weight: 600, tracking: '0.01em',
+      buttons: { shape: 'rounded', style: 'solid', size: 'md' },
+      motion: { reveal: 'rise', hover: 'lift', intensity: 'subtle' },
+      mobile: { gridCols: 2, cardStyle: 'compact', heroHeight: 'compact' }
+    }),
+    layout: {
+      landing: { on: ['hero', 'announcements', 'highlights', 'featured', 'stats', 'offers', 'gallery', 'faq', 'cta', 'contact'], var: { announcements: 'static', stats: 'cards' } },
+      catalog: { on: ['filters', 'sort', 'grid', 'promo'] },
+      services: { on: ['hero', 'picker', 'steps', 'form', 'faq'] }
+    }
+  },
+  {
+    id: 'atelier-moda', name: 'Atelier de moda', style: 'Atelier editorial',
+    desc: 'Editorial de pasarela: serif fina, aire y fotos grandes.',
+    tier: 'plus', template: 'vitrina', pageTheme: 'light',
+    rubros: ['moda', 'belleza', 'lifestyle'],
+    theme: theme({
+      accent: '#8c1d3f',
+      pal: { bg: '#faf7f5', surface: '#ffffff', text: '#1c1714', muted: '#7c7069', border: '#e7dfd9' },
+      containers: { radius: 'none', shadow: 'none', border: 'thin', density: 'spacious', surface: 'flat' },
+      heading: 'fraunces', body: 'figtree', scale: 'editorial', weight: 500, tracking: '0.01em',
+      buttons: { shape: 'square', style: 'outline', size: 'md' },
+      motion: { reveal: 'fade', hover: 'lift', intensity: 'subtle' },
+      mobile: { cardStyle: 'standard', heroHeight: 'tall' }
+    }),
+    layout: {
+      landing: { on: ['hero', 'highlights', 'featured', 'about', 'gallery', 'testimonials', 'faq', 'contact'], var: { hero: 'compact' } },
+      catalog: { on: ['note', 'filters', 'sort', 'grid'] },
+      services: { on: ['hero', 'picker', 'steps', 'form', 'faq'] }
+    }
   }
 ]
 
@@ -515,8 +555,8 @@ export const STUDIO_PRESETS = PRESETS.map((raw) => {
 // Subconjunto curado que lista el select del panel "Estilos" (2 base, 2 plus,
 // 2 advanced). El catálogo completo sigue disponible para guardar/aplicar.
 export const PRESET_PICKER_IDS = [
-  'neo-brutalista', 'corporativo',
-  'bento', 'pastel-suave',
+  'neo-brutalista', 'corporativo', 'denim-urbano',
+  'bento', 'pastel-suave', 'atelier-moda',
   'editorial-minima', 'lujo-serif'
 ]
 

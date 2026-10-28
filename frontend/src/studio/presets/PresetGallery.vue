@@ -58,7 +58,7 @@ const pickerItems = computed(() => PRESET_PICKER_IDS
   .map((id) => api.presets.find((p) => p.id === id))
   .filter(Boolean))
 function optionLabel(p, forceUse = false) {
-  return `${p.name} — ${tplLabel(p)}`
+  return `${p.name} — ${tplLabel(p)} · ${TIER_LABEL[p.tier] || TIER_LABEL.base}`
     + (recommended.value.has(p.id) ? ' · tu rubro' : '')
     + (forceUse || isCurrent(p) ? ' · en uso' : '')
     + (lockOf(p) ? ' · requiere plan superior' : '')
