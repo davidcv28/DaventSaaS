@@ -1,8 +1,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useStoreCatalog } from '../../composables/useStoreCatalog.js'
-import { formatARS } from '../../api/billing.api.js'
-import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import CatalogFeedback from './CatalogFeedback.vue'
 import CatalogMore from './CatalogMore.vue'
@@ -11,12 +9,12 @@ import CatalogFilters from './CatalogFilters.vue'
 import CatalogToolbar from './CatalogToolbar.vue'
 import StTag from '../../components/store/StTag.vue'
 import TplProductCard from '../../components/store/TplProductCard.vue'
-import BentoGrid from '../../components/store/BentoGrid.vue'
 import '../../assets/store-circuit.css'
 
-// Circuit/Lab (Tecnología): el catálogo como datasheet. circuit = bento
-// rígido con specs (mismo lenguaje que el inserto nocturno de la portada);
-// lab = "inventario medido": filas numeradas con spec inline y precio mono.
+// Circuit/Lab (Tecnología): el catálogo como datasheet. circuit = grilla
+// rígida uniforme con specs (mismo lenguaje que el inserto nocturno de la
+// portada); lab = "inventario medido": filas numeradas con spec inline y
+// precio mono.
 const {
   custom, shopName, pageTemplate, homeTo, catalog, catalogStatus, loadCatalog,
   visibleProducts, hasMoreProducts, showMore, clearFilters, hasFilters, total,
@@ -25,8 +23,6 @@ const {
 
 const variant = computed(() => (pageTemplate.value === 'lab' ? 'lab' : 'circuit'))
 
-const isOffer = (x) => productOffer(x) != null
-const isFeatured = (x) => isNewProduct(x)
 const specsOf = (x) => {
   const schema = catalog.value.categories.find((c) => c.id === x?.category)?.feature_schema || []
   const order = new Map(schema.map((n, i) => [n.toLowerCase(), i]))
@@ -72,9 +68,10 @@ const specsOf = (x) => {
           </li>
         </ul>
 
-        <!-- circuit: bento rígido con specs -->
-        <BentoGrid v-else-if="catalog.products.length" class="cv-ci-grid" :class="{ loading: catalogStatus === 'loading' }" :items="visibleProducts" :is-offer="isOffer" :is-featured="isFeatured" v-slot="{ item }">
+        <!-- circuit: grilla rígida uniforme con specs -->
+        <div v-else-if="catalog.products.length" class="cv-ci-grid" :class="{ loading: catalogStatus === 'loading' }">
           <TplProductCard
+            v-for="item in visibleProducts" :key="item.id"
             class="ci-cell" :p="item" :stars="!!item.rating_count"
             stars-icon="hexagon" :stars-size="11" seal-shape="corner" :go="false"
             :ph-size="28" @open="openProduct">
@@ -82,7 +79,7 @@ const specsOf = (x) => {
               <span class="ci-cell-specs"><StTag v-for="s in specsOf(item)" :key="s" kind="spec" :label="s" /></span>
             </template>
           </TplProductCard>
-        </BentoGrid>
+        </div>
 
         <CatalogMore v-if="hasMoreProducts && catalogStatus !== 'error'" :label="shownLabel" :pct="shownPct" @more="showMore" />
       </div>
@@ -96,9 +93,10 @@ const specsOf = (x) => {
 .cv-ci-title { margin: 6px 0 0; font-family: 'Space Grotesk', sans-serif; font-size: clamp(38px, 8vw, 80px); line-height: .96; letter-spacing: -.03em; }
 .cv-ci-count { font-family: 'JetBrains Mono', monospace; font-size: .4em; color: var(--store-accent-ink); margin-left: 10px; vertical-align: super; }
 .cv-ci-sub { margin: 8px 0 0; color: var(--sp-muted); font-size: 14px; }
-.cv-ci-grid { margin-top: 18px; position: relative; }
+.cv-ci-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; position: relative; }
 .cv-ci-grid.loading { opacity: .55; pointer-events: none; }
 .cv-ci-grid .ci-cell { cursor: pointer; }
+@media (min-width: 768px) { .cv-ci-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .cv-ci[data-var='lab'] .cv-ci-title { font-family: 'Manrope', sans-serif; letter-spacing: -.02em; }
 .cv-ci .ci-lab-rows.loading { opacity: .55; pointer-events: none; }
 </style>

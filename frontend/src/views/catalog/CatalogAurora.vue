@@ -13,9 +13,9 @@ import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Aurora (observatorio de luz): el catálogo se lee como la mesa del
 // observatorio — cabecera con lecturas finas, la constelación de
-// categorías como chips de vidrio y las piezas en placas con etiqueta
-// esmerilada sobre la imagen. La primera pieza brilla a lo ancho como
-// estrella polar. Los filtros van en la sidebar/sheet unificada.
+// categorías como chips de vidrio y las piezas en placas uniformes con
+// etiqueta esmerilada sobre la imagen. Los filtros van en la
+// sidebar/sheet unificada.
 const {
   custom, shopName, homeTo, catalog, catalogStatus, loadCatalog, activeCategories,
   visibleProducts, hasMoreProducts, showMore, pickCategory, clearCategories, clearFilters, hasFilters,
@@ -59,7 +59,7 @@ const {
     <div v-if="catalog.products.length" class="cv-au-grid" :class="{ loading: catalogStatus === 'loading' }">
       <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 60"
-        class="cv-au-card" :class="{ polar: i === 0 }" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+        class="cv-au-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
         :stars="custom.show_reviews" stars-icon="sparkles" :stars-size="11" seal-shape=""
         quick="Ver pieza" :go="false" :ph-size="26" @open="openProduct" />
     </div>

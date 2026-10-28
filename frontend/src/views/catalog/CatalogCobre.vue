@@ -12,8 +12,9 @@ import CatalogToolbar from './CatalogToolbar.vue'
 import TplProductCard from '../../components/store/TplProductCard.vue'
 
 // Cobre: retail de indumentaria — placa de acento con titular condensado,
-// barra de colección fija con las categorías como pestañas, y una grilla de
-// tiles 4:5 donde la primera pieza se muestra como destacada a doble tamaño.
+// barra de colección fija con las categorías como pestañas, y una grilla
+// uniforme de tiles 4:5. Es la plantilla base: todas las demás parten de
+// este sistema de elementos con su propio arreglo estratégico.
 const {
   custom, shopName, homeTo, year, catalog, catalogStatus, loadCatalog, activeCategories,
   visibleProducts, hasMoreProducts, showMore, pickCategory, clearCategories, clearFilters, hasFilters, total,
@@ -59,7 +60,7 @@ const {
     <div v-if="catalog.products.length" class="cv-cb-grid" :class="{ loading: catalogStatus === 'loading' }">
       <TplProductCard
         v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 4) * 60"
-        class="cv-cb-tile" :class="{ feat: i === 0 && total > 4 }" :p="p"
+        class="cv-cb-tile" :p="p"
         :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
         :stars="custom.show_reviews" stars-icon="gem" seal-shape="" offer-new
         new-label="Nuevo" quick="Ver producto" :go="false" :ph-size="30"

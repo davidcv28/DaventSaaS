@@ -21,7 +21,6 @@ const {
   shownLabel, shownPct, brandNameOf, categoryNameOf, openProduct
 } = useStoreCatalog({ pageSize: 12 })
 
-const cellClass = (i) => ['big', '', '', 'big inv'][i % 4]
 const corteOf = (p) => {
   const rows = Object.entries(p?.features || {})
   const hit = rows.find(([k]) => /corte|fit|silueta/i.test(k))
@@ -53,8 +52,8 @@ const corteOf = (p) => {
 
         <div v-if="catalog.products.length" class="cv-at-grid" :class="{ loading: catalogStatus === 'loading' }">
           <TplProductCard
-            v-for="(prod, i) in visibleProducts" :key="prod.id"
-            class="at-card" :class="[cellClass(i), { enter: catalogStatus === 'loading' }]"
+            v-for="prod in visibleProducts" :key="prod.id"
+            class="at-card" :class="{ enter: catalogStatus === 'loading' }"
             :p="prod" :cat="categoryNameOf(prod) || brandNameOf(prod) || 'Colección'"
             :stars="!!prod.rating_count" stars-icon="scissors" seal-shape="corner"
             ph-icon="scissors" :ph-size="30" :go="false" @open="openProduct">
@@ -88,7 +87,6 @@ const corteOf = (p) => {
 .at-card-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--sp-muted); }
 @media (min-width: 768px) {
   .cv-at-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-  .cv-at-grid .at-card.big { grid-column: span 2; }
   .cv-at-grid .at-card:nth-child(4n + 2) { translate: 0 40px; }
   .cv-at-grid { padding-bottom: 64px; }
 }
