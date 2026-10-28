@@ -1,5 +1,16 @@
 # SaaS DAVENT — Reglas para agentes
 
+## Economía de tokens (obligatorio, aplica a todo agente en cada prompt)
+- **Lectura dirigida**: primero ubicar con `code_search`/`grep`/`find_file_by_name` (archivo + líneas), después `read` con `offset`/`limit`. Nunca leer un archivo completo si alcanza un rango. Prohibido releer `AGENTS.md`, `ARCHITECTURE.md`, `SECURITY_AUDIT.md` o logs enteros "para contexto".
+- **Sin volcados a la salida**: nada de `cat` de archivos grandes, diffs completos ni logs enteros. Usar `git diff --stat` / `--name-only`, y filtrar (`| tail -n 40`, `2>&1 | grep -iE "error|fail"`).
+- **Caché de contexto**: si ya leíste un archivo en la sesión, no lo vuelvas a leer; editá con lo que tenés. No reimprimir el archivo después de editarlo.
+- **Llamadas en paralelo**: agrupar en un mismo turno las lecturas/búsquedas independientes (un batch en vez de N turnos).
+- **Sin subagentes ni exploración redundante** salvo pedido explícito del usuario: un subagente cuesta su transcripción + su resumen.
+- **Respuestas cortas**: no repetir código ya escrito ni resumir lo que el diff ya muestra; sin planes largos ni explicaciones paso a paso. Lo mínimo para que el usuario decida.
+- **Ediciones quirúrgicas**: `edit` con `old_string` mínimo y `replace_all` cuando aplique; evitar `write` de archivos completos.
+- **Verificación barata**: correr solo el test/lint del área tocada (no la suite/build completa si no hace falta) y truncar la salida.
+- Si la tarea necesita mucho contexto, pedir al usuario el archivo/función exacta antes de explorar a ciegas.
+
 ## Proyecto
 - Repo git: `main` en `origin` → https://github.com/davidcv28/DaventSaaS.git (privado). Auth por Git Credential Manager (Windows).
 - **Commits obligatorios**: al terminar cada cambio aplicado (feature, fix, doc), hacer `git commit` + `git push` a `main` en el mismo paso — nunca dejar trabajo sin commitear. Mensaje corto en inglés estilo conventional (`feat:`, `fix:`, `docs:`, `chore:`). Jamás commitear `.env`, `venv/`, `node_modules/` ni `dist/` (ya cubiertos por `.gitignore`).
