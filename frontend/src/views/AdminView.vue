@@ -451,10 +451,15 @@ function onChatVisible() {
     beatChat()
   }
 }
+// Sesión expirada (refresh 401): cortar bandeja/polling/heartbeat — si no,
+// cada 45s se reintentaba el heartbeat con un access muerto (401 en consola).
+function onChatSessionExpired() { stopChat() }
+
 onMounted(() => {
   startChat()
   document.addEventListener('visibilitychange', onChatVisible)
   document.addEventListener('keydown', onChatKey)
+  window.addEventListener('davent:session-expired', onChatSessionExpired)
 })
 
 onUnmounted(() => {
@@ -462,6 +467,7 @@ onUnmounted(() => {
   resetChatFiles()
   document.removeEventListener('visibilitychange', onChatVisible)
   document.removeEventListener('keydown', onChatKey)
+  window.removeEventListener('davent:session-expired', onChatSessionExpired)
 })
 
 onMounted(async () => {

@@ -24,6 +24,9 @@ let accessToken = null
 // (request en vuelo): bloquea cualquier intento de refresh que "reviviría"
 // la sesión. Se libera al setear un access nuevo (login).
 let sessionEnded = false
+// El aviso de sesión expirada se emite UNA sola vez: con varias requests en
+// vuelo cada 401 disparaba su propio evento y la redirección a /login.
+let expiredNotified = false
 // Generación de la sesión: sube con cada access nuevo (login) y con el
 // logout. Un refresh que salió en la generación anterior se descarta al
 // aterrizar — evita que el token de la cuenta vieja pise el de la nueva.
@@ -31,7 +34,7 @@ let sessionEpoch = 0
 
 export const tokenStorage = {
   getAccess: () => accessToken,
-  set: (access) => { if (access) { accessToken = access; sessionEnded = false; sessionEpoch++ } },
+  set: (access) => { if (access) { accessToken = access; sessionEnded = false; expiredNotified = false; sessionEpoch++ } },
   clear: () => { accessToken = null }
 }
 
@@ -39,6 +42,19 @@ function csrfToken() {
   const m = document.cookie.match(/(?:^|;\s*)davent_csrf=([^;]+)/)
   return m ? decodeURIComponent(m[1]) : ''
 }
+
+// Hints de sesión legibles por JS (el refresh httpOnly no se puede tocar).
+// Al morir la sesión hay que borrarlos: si sobrevive el CSRF, hasSessionCookie()
+// sigue true y cada carga reintenta un refresh que ya sabemos que da 401.
+const SESSION_HINT_COOKIES = ['davent_csrf', 'davent_remember']
+function clearSessionHints() {
+  for (const name of SESSION_HINT_COOKIES) {
+    for (const path of ['/', '/api/token/']) {
+      document.cookie = `${name}=; Max-Age=0; path=${path}`
+    }
+  }
+}
+
 
 // La cookie CSRF se setea junto al refresh httpOnly: su presencia es el hint
 // de que existe una sesión recuperable (la propia cookie refresh es ilegible).
@@ -52,6 +68,16 @@ export const http = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
   withCredentials: true, // la cookie de sesión viaja en refresh/logout
+  headers: { 'Content-Type': 'application/json' }
+})
+
+// Cliente de lecturas públicas (web de tienda, catálogo, captcha, contacto,
+// reseñas): sin interceptor de sesión ni cookies. Un access vencido en
+// memoria no debe viajar acá — el backend ya no autentica estas acciones,
+// pero el header sobra y arrastraba 401 cuando el token estaba rancio.
+export const publicHttp = axios.create({
+  baseURL: env.apiBaseUrl,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -109,7 +135,14 @@ async function tryRefresh() {
       .catch((err) => {
         // SESSION_ENDED = refresh descartado por época (logout o login nuevo):
         // no tocar el storage — clear() borraría el access de la sesión nueva.
-        if (err?.message !== 'SESSION_ENDED') tokenStorage.clear()
+        if (err?.message !== 'SESSION_ENDED') {
+          tokenStorage.clear()
+          // 401 del refresh = cookie httpOnly inválida, expirada, rotada por
+          // otra pestaña o blacklisteada (cambio de clave). Los hints se
+          // borran para cortar el ciclo: hasSessionCookie() pasa a false y no
+          // se reintenta el refresh en cada carga ni en otras pestañas.
+          if (err?.response?.status === 401) clearSessionHints()
+        }
         throw err
       })
       .finally(() => {
@@ -150,6 +183,7 @@ export async function logoutSession() {
     // Sesión ya inválida/expirada en server: igual se limpia local.
   }
   tokenStorage.clear()
+  clearSessionHints()
 }
 
 http.interceptors.response.use(
@@ -174,7 +208,8 @@ http.interceptors.response.use(
         // Refresh fallido -> sesión expirada. El store redirige a /login?expired=1.
         // SESSION_ENDED no se reporta: el usuario está saliendo o ya entró otra
         // cuenta — el evento haría location.assign y pisaría esa navegación.
-        if (e?.message !== 'SESSION_ENDED') {
+        if (e?.message !== 'SESSION_ENDED' && !expiredNotified) {
+          expiredNotified = true
           window.dispatchEvent(new CustomEvent('davent:session-expired'))
         }
         return Promise.reject(error)

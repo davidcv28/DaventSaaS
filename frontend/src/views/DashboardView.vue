@@ -2684,12 +2684,20 @@ function onChatVisible() {
   }
 }
 
-onMounted(() => document.addEventListener('visibilitychange', onChatVisible))
+// Sesión expirada (refresh 401): cortar polling y heartbeat — si no, cada
+// 45s se reintentaba el heartbeat contra un access muerto (401 en consola).
+function onChatSessionExpired() { stopChat() }
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', onChatVisible)
+  window.addEventListener('davent:session-expired', onChatSessionExpired)
+})
 
 onUnmounted(() => {
   stopCheckoutWatch()
   stopChat()
   closeChat()
+  window.removeEventListener('davent:session-expired', onChatSessionExpired)
   clearInterval(previewTimer)
   window.removeEventListener('storage', onPaymentBroadcast)
   document.removeEventListener('visibilitychange', onChatVisible)
