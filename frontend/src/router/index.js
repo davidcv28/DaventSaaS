@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { Capacitor } from '@capacitor/core'
 import { env, storeHostSlug } from '../config/env.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useStoreStore } from '../stores/store.store.js'
@@ -237,6 +238,9 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+  // En la APK la landing no aplica (es marketing de la web): la raíz va
+  // directo al login, que ya resuelve sesión/onboarding según corresponda.
+  if (Capacitor.isNativePlatform() && to.path === '/') return { name: 'login' }
   // En un subdominio de tienda solo existe la web pública: cualquier ruta de
   // plataforma (login, panel, legales) se resuelve en el dominio principal.
   if (storeHostSlug && !['store-public', 'store-catalog', 'store-services', 'store-product', 'store-alt'].includes(to.name)) {
