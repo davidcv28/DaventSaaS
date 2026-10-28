@@ -58,8 +58,8 @@ function backgroundStack(t, all) {
 // `explicit` (Set/array de 'seccion.clave') limita el mapeo a lo que el
 // tema fija de verdad: sin clave no se emite la variable y el CSS cae a su
 // fallback (tienda sin tema o plantilla con su propio look).
-// pageTheme='dark' omite el mapeo de colores/fondo: la página oscura propia
-// manda y el tema solo aporta acento/fuente/forma.
+// Los roles de color se aplican igual en claro y en oscuro; pageTheme se
+// conserva por compatibilidad de la firma.
 export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   const t = resolveSiteTheme(theme)
   const keys = explicit ? (explicit instanceof Set ? explicit : new Set(explicit)) : null
@@ -69,17 +69,6 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   const all = themeToCssVars(t, fontFamilyOf)
   const vars = pickThemeVars(all, keys)
   const p = t.palette
-  const dark = pageTheme === 'dark'
-
-  // En oscuro la paleta propia de la página manda: se descartan los colores
-  // de superficie/texto del tema (también los --st-* que consumen servicios
-  // y las landings alternas). Acento, marca y forma sí viajan.
-  if (dark) {
-    for (const name of ['--st-bg', '--st-surface', '--st-text', '--st-muted', '--st-border',
-      '--st-success', '--st-danger', '--st-primary-soft', '--st-bg-layer', '--st-bg-overlay']) {
-      delete vars[name]
-    }
-  }
 
   if (on('palette.accent') || on('palette.primary')) {
     const accent = on('palette.accent') ? p.accent : p.primary
@@ -94,25 +83,23 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   if (on('typography.heading')) vars['--sp-display'] = fontFamilyOf(t.typography.heading)
   if (on('typography.body')) vars['--sp-body'] = fontFamilyOf(t.typography.body)
 
-  if (!dark) {
-    if (on('palette.bg')) vars['--sp-bg'] = p.bg
-    if (on('palette.surface')) {
-      vars['--sp-card'] = p.surface
-      vars['--sp-card-solid'] = p.surface
-      vars['--sp-surface'] = p.surface
-    }
-    if (on('palette.text') || on('palette.muted')) {
-      if (on('palette.text')) vars['--sp-ink'] = p.text
-      vars['--sp-ink-2'] = mixHex(p.text, p.muted, 0.45)
-    }
-    if (on('palette.muted')) vars['--sp-muted'] = p.muted
-    if (on('palette.border')) vars['--sp-line'] = p.border
-    if (on('palette.accent') || on('palette.primary')) vars['--sp-soft'] = mixHex(p.accent, '#ffffff', 0.8)
-    if (on('palette.accent') || on('palette.primary')) vars['--sp-accent-text'] = vars['--store-accent-ink']
-    if (on('background.type') || on('background.value') || on('background.overlay') || on('palette.bg')) {
-      vars['--sp-bg'] = backgroundStack(t, all)
-    }
+  // La paleta se aplica en claro y en oscuro, pero SOLO para los roles que
+  // el tema fija: un rol ausente conserva la paleta propia de la hoja.
+  if (on('palette.surface')) {
+    vars['--sp-card'] = p.surface
+    vars['--sp-card-solid'] = p.surface
+    vars['--sp-surface'] = p.surface
   }
+  if (on('palette.text') || on('palette.muted')) {
+    if (on('palette.text')) vars['--sp-ink'] = p.text
+    vars['--sp-ink-2'] = mixHex(p.text, p.muted, 0.45)
+  }
+  if (on('palette.muted')) vars['--sp-muted'] = p.muted
+  if (on('palette.border')) vars['--sp-line'] = p.border
+  if (on('palette.accent') || on('palette.primary')) vars['--sp-soft'] = mixHex(p.accent, '#ffffff', 0.8)
+  if (on('palette.accent') || on('palette.primary')) vars['--sp-accent-text'] = vars['--store-accent-ink']
+  const bgStackOn = on('background.type') || on('background.value') || on('background.overlay')
+  if (bgStackOn || on('palette.bg')) vars['--sp-bg'] = backgroundStack(t, all)
 
   if (on('containers.radius')) vars['--sp-radius'] = all['--st-radius']
   if (on('containers.shadow')) {

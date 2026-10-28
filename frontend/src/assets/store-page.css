@@ -10815,6 +10815,35 @@ html { scroll-behavior: smooth; }
 .store-page[data-st-scale] :is(.sp-hero-title:not(.is-name), .sp-hal-title:not(.is-name)) { font-size: var(--st-h1-size, clamp(30px, 4.8vw, 50px)); }
 .store-page[data-st-scale] :is(.sp-section-title, .sp-h2, .sp-block-title) { font-size: var(--st-h2-size, 22px); }
 
+/* ---------- Paleta: texto, secundarios, superficies y bordes ----------
+   Gateado por [data-st-palette] (existe si el tema fija algún rol de color):
+   los roles fijados pisan; los ausentes caen al color propio de la hoja. */
+.store-page[data-st-palette] { color: var(--st-text, inherit); }
+.store-page[data-st-palette] :is(
+  .sp-hero-sub, .sp-hero-meta, .sp-foot-brand span, .sp-foot-copy,
+  .tpc-eyebrow, .sp-card p) {
+  color: var(--st-muted, currentColor);
+}
+.store-page[data-st-palette] :is(.sp-section-title, .tpc-name, .sp-foot-brand strong) {
+  color: var(--st-text, currentColor);
+}
+/* Títulos con color directo en las pieles alternas (nunca sobre las bandas
+   de acento: ahí manda --st-on-primary). */
+.store-page[data-st-palette] :is(
+  .sp-cat-title, .sp-contact-title, .spd-sec-title,
+  .sp-shop-dept-name, .sp-service-title, .sp-showcase-title,
+  .sp-shop-featured-title, .sp-video-title, .sp-toolbar-title,
+  .sp-shop-title, .sp-block-title, .sp-brands-title) {
+  color: var(--st-text, currentColor);
+}
+.store-page[data-st-palette] .tpc-price { color: var(--st-accent, currentColor); }
+.store-page[data-st-palette] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-drawer, .sp-filters) {
+  background-color: var(--st-surface, revert);
+  border-color: var(--st-border, currentColor);
+}
+
 /* ---------- Botones ---------- */
 .store-page[data-st-btn-size] .sp-btn:not(.sm) {
   min-height: var(--st-btn-h, 44px);
@@ -11022,8 +11051,84 @@ html { scroll-behavior: smooth; }
    tipo de fondo elegido, la pila del tema (velo + capa + color) gana en
    claro. En oscuro la regla oscura de la plantilla queda después y manda. */
 .store-page[data-st-bgtype][data-store-template] { background: var(--sp-bg); }
+/* Rol Fondo sin tipo de fondo: solo pinta el color de página (no mata los
+   patrones/degradados propios de la plantilla). */
+.store-page[data-st-bgrole][data-store-template] { background-color: var(--st-bg); }
 
 /* ---------- Paleta extendida: estados ---------- */
 .store-page[data-st-themed] .sp-form-error { color: var(--st-danger, #dc2626); }
 .store-page[data-st-themed] .sp-open.is-open { color: var(--st-success, #86efac); }
 .store-page[data-st-themed] .sp-open.is-closed { color: var(--st-danger, #fca5a5); }
+
+/* ---------- Tokens privados de las plantillas ----------
+   Cada familia mapea SOLO los tokens de tinta/superficie/filete que la
+   plantilla usa de verdad, con el valor claro de siempre como fallback:
+   si el tema no fija ese rol, el token conserva el look actual. Las pieles
+   siempre oscuras (signature, aurora, terminal) usan sus valores nocturnos. */
+.store-page[data-st-themed][data-store-template='lookbook'] {
+  --lb-ink: var(--st-text, #1a1613);
+  --lb-dim: var(--st-muted, #6f665b);
+  --lb-rule: var(--st-border, rgba(26, 22, 19, .18));
+  --lb-paper: var(--st-bg, #f4f0e7);
+}
+.store-page[data-st-themed][data-store-template='minimal'] {
+  --mn-ink: var(--st-text, #111111);
+  --mn-muted: var(--st-muted, #5e5e5a);
+  --mn-line: var(--st-border, #e3e2dd);
+  --mn-surface: var(--st-surface, #ffffff);
+}
+.store-page[data-st-themed][data-store-template='boutique'] {
+  --bt-ink: var(--st-text, #1c1917);
+  --bt-muted: var(--st-muted, #75695e);
+  --bt-line: var(--st-border, #e0dacd);
+  --bt-surface: var(--st-surface, #ffffff);
+}
+.store-page[data-st-themed][data-store-template='cobre'] {
+  --cb-ink: var(--st-text, #101318);
+  --cb-muted: var(--st-muted, #454a52);
+  --cb-line-dk: var(--st-border, #3a3f47);
+  --cb-tile: var(--st-surface, #d8d6cf);
+}
+/* En oscuro los roles no fijados conservan la paleta nocturna de la piel. */
+.store-page[data-st-themed][data-store-template='lookbook'][data-store-theme='dark'] {
+  --lb-ink: var(--st-text, #f2ebdf);
+  --lb-dim: var(--st-muted, #a99d8d);
+  --lb-rule: var(--st-border, rgba(242, 235, 223, .18));
+  --lb-paper: var(--st-bg, #14110e);
+}
+.store-page[data-st-themed][data-store-template='minimal'][data-store-theme='dark'] {
+  --mn-ink: var(--st-text, #f4f3ef);
+  --mn-muted: var(--st-muted, #a9a8a2);
+  --mn-line: var(--st-border, #2e2e2b);
+  --mn-surface: var(--st-surface, #181817);
+}
+.store-page[data-st-themed][data-store-template='boutique'][data-store-theme='dark'] {
+  --bt-ink: var(--st-text, #f2ede3);
+  --bt-muted: var(--st-muted, #a89e90);
+  --bt-line: var(--st-border, #37302a);
+  --bt-surface: var(--st-surface, #1b1816);
+}
+.store-page[data-st-themed][data-store-template='cobre'][data-store-theme='dark'] {
+  --cb-ink: var(--st-text, #eceee9);
+  --cb-muted: var(--st-muted, #a9aeb6);
+  --cb-line-dk: var(--st-border, #3a3f47);
+  --cb-tile: var(--st-surface, #22262b);
+}
+.store-page[data-st-themed][data-store-template='signature'] {
+  --sg-ink: var(--st-text, #f2ecdc);
+  --sg-muted: var(--st-muted, #9c917e);
+  --sg-line: var(--st-border, rgba(242, 236, 220, .18));
+  --sg-panel: var(--st-surface, #1e1a14);
+}
+.store-page[data-st-themed][data-store-template='aurora'] {
+  --au-ink: var(--st-text, #eef2fc);
+  --au-muted: var(--st-muted, #93a0c0);
+  --au-line: var(--st-border, rgba(238, 242, 252, .13));
+  --au-panel: var(--st-surface, #101728);
+}
+.store-page[data-st-themed][data-store-template='terminal'] {
+  --tm-fg: var(--st-text, #e9f3ec);
+  --tm-dim: var(--st-muted, #7c837f);
+  --tm-line: var(--st-border, rgba(233, 243, 236, .28));
+  --tm-bg: var(--st-bg, #070a08);
+}

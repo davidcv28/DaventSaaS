@@ -483,11 +483,18 @@
 /* ---------- Studio: tema del sitio sobre la risografía ----------
    El papel, la tinta y la tarjeta siguen al tema; las tintas planas fijas
    (rosa/amarillo/menta) son parte del diseño y no se tocan. */
-.store-page[data-store-template='riso'][data-st-themed]:not([data-store-theme='dark']) {
+.store-page[data-store-template='riso'][data-st-themed] {
   --rs-paper: var(--st-bg, #fff5e6);
   --rs-ink: var(--st-text, #1e1a33);
   --rs-mute: var(--st-muted, #6e6883);
   --rs-card: var(--st-surface, #fffdf8);
+}
+/* En oscuro los roles no fijados conservan la paleta nocturna de la piel. */
+.store-page[data-store-template='riso'][data-st-themed][data-store-theme='dark'] {
+  --rs-paper: var(--st-bg, #161426);
+  --rs-ink: var(--st-text, #fff5e6);
+  --rs-mute: var(--st-muted, #a29cb8);
+  --rs-card: var(--st-surface, #1f1c33);
 }
 .store-page[data-store-template='riso'][data-st-themed] {
   --rs-display: var(--st-font-heading, 'Bricolage Grotesque', 'Arial Black', Arial, sans-serif);

@@ -439,7 +439,7 @@
 .tr-grid, .cv-tr-cards { grid-auto-rows: 1fr; }
 /* ---------- Studio: tema del sitio sobre la editorial cálida ----------
    Papel, tinta, tarjeta y serif de titulares siguen al tema. */
-.store-page[data-store-template='terra'][data-st-themed]:not([data-store-theme='dark']) {
+.store-page[data-store-template='terra'][data-st-themed] {
   --tr-paper: var(--st-bg, #f7f1e6);
   --tr-paper-2: color-mix(in srgb, var(--st-bg, #f7f1e6) 88%, var(--st-text, #241d18));
   --tr-ink: var(--st-text, #241d18);
@@ -447,6 +447,16 @@
   --tr-mute: var(--st-muted, #7d6c5c);
   --tr-card: var(--st-surface, #fffaf2);
   --tr-soft: color-mix(in srgb, var(--st-bg, #f7f1e6) 80%, var(--st-text, #241d18));
+}
+/* En oscuro los roles no fijados conservan la paleta nocturna de la piel. */
+.store-page[data-store-template='terra'][data-st-themed][data-store-theme='dark'] {
+  --tr-paper: var(--st-bg, #16110e);
+  --tr-paper-2: color-mix(in srgb, var(--st-bg, #16110e) 88%, var(--st-text, #f3e9dc));
+  --tr-ink: var(--st-text, #f3e9dc);
+  --tr-ink-2: color-mix(in srgb, var(--st-text, #f3e9dc) 82%, var(--st-bg, #16110e));
+  --tr-mute: var(--st-muted, #a3927f);
+  --tr-card: var(--st-surface, #211a15);
+  --tr-soft: color-mix(in srgb, var(--st-bg, #16110e) 80%, var(--st-text, #f3e9dc));
 }
 .store-page[data-store-template='terra'][data-st-themed] {
   --tr-serif: var(--st-font-heading, 'Fraunces', Georgia, 'Times New Roman', serif);

@@ -457,6 +457,8 @@ export function themeDataAttrs(theme, explicit = null) {
     'data-st-btn-size': on('buttons.size') ? '' : null,
     'data-st-btn-style': on('buttons.style') ? t.buttons.style : null,
     'data-st-bgtype': on('background.type') ? t.background.type : null,
+    'data-st-palette': on('palette.text') || on('palette.muted') || on('palette.surface') || on('palette.border') || on('palette.bg') || on('palette.accent') || on('palette.primary') ? '' : null,
+    'data-st-bgrole': on('palette.bg') ? '' : null,
     'data-st-reveal': on('motion.reveal') ? t.motion.reveal : null,
     'data-st-hover': on('motion.hover') ? t.motion.hover : null,
     'data-st-nav': on('mobile.nav') ? t.mobile.nav : null,

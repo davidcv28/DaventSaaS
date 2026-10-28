@@ -489,11 +489,18 @@
 .cv-bq-cards { grid-auto-rows: 1fr; }
 /* ---------- Studio: tema del sitio sobre la piel suiza ----------
    Los tokens propios --bq-* heredan del contrato cuando el tema los fija. */
-.store-page[data-store-template='bloque'][data-st-themed]:not([data-store-theme='dark']) {
+.store-page[data-store-template='bloque'][data-st-themed] {
   --bq-paper: var(--st-bg, #f1f1ec);
   --bq-ink: var(--st-text, #0b0b0b);
   --bq-mute: var(--st-muted, #6b6b66);
   --bq-line: var(--st-border, rgba(11, 11, 11, .14));
+}
+/* En oscuro los roles no fijados conservan la paleta nocturna de la piel. */
+.store-page[data-store-template='bloque'][data-st-themed][data-store-theme='dark'] {
+  --bq-paper: var(--st-bg, #101010);
+  --bq-ink: var(--st-text, #edede6);
+  --bq-mute: var(--st-muted, #8f8f86);
+  --bq-line: var(--st-border, rgba(237, 237, 230, .16));
 }
 .store-page[data-store-template='bloque'][data-st-themed] {
   --bq-display: var(--st-font-heading, 'Archivo', 'Helvetica Neue', Arial, sans-serif);
