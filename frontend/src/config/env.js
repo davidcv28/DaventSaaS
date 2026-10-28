@@ -17,7 +17,7 @@ export const env = {
   // URL estable de descarga de la APK (distribución web directa). El server
   // publica la vigente vía GET /api/config/ (bloque 'app') — este valor es el
   // fallback cuando todavía no hay metadata o el endpoint no responde.
-  appApkUrl: import.meta.env.VITE_APP_APK_URL || 'https://davent.com/apk/davent-latest.apk'
+  appApkUrl: import.meta.env.VITE_APP_APK_URL || 'https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/apk/davent-latest.apk'
 }
 
 // Subdominios de infraestructura: nunca son una tienda (además el backend los

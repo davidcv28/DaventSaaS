@@ -71,7 +71,7 @@ Contexto: SPA Vue 3 + Vite en frontend/ (router en src/router/index.js, rutas
 públicas existentes: /acerca-de, /terminos, /denuncias con LegalLayout).
 Landing pública en LandingView. La APK se descarga desde una URL estable en R2
 (la define Prompt 2 — usar una constante env VITE_APP_APK_URL con fallback a
-https://davent.com/apk/davent-latest.apk).
+la URL pública de R2 `.../apk/davent-latest.apk`).
 
 Hacer:
 1. Ruta pública /descargar (guest y logueados): hero con propuesta de valor,
