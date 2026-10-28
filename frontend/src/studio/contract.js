@@ -42,11 +42,13 @@ export const STUDIO_TIERS = ['base', 'plus', 'advanced']
 export const STUDIO_STYLE_MODES = ['light', 'dark']
 export const STYLE_FONT_KEYS = ['heading', 'body', 'muted', 'link']
 export const STYLE_CONTAINER_KEYS = ['bg', 'surface', 'border', 'onSurface']
-// Variantes de color de un estilo (mismo hue, distinta intensidad del acento).
-export const STYLE_VARIANTS = [
+// Paletas de color seleccionables: pintan contenedores y fuentes. El acento
+// elegido más abajo se fusiona como color de enlace/primario.
+export const STYLE_PALETTES = [
   { id: 'original', label: 'Original' },
-  { id: 'soft', label: 'Suave' },
-  { id: 'deep', label: 'Intensa' }
+  { id: 'warm', label: 'Cálida' },
+  { id: 'cool', label: 'Fría' },
+  { id: 'contrast', label: 'Contraste' }
 ]
 
 export const STUDIO_ENUMS = {
@@ -262,8 +264,8 @@ export function resolveSiteTheme(partial = {}) {
   }
   if (p.style && typeof p.style === 'object' && typeof p.style.id === 'string' && p.style.id.trim()) {
     resolved.style = { id: p.style.id.trim().slice(0, 60) }
-    const variant = STYLE_VARIANTS.find((v) => v.id === p.style.variant)
-    if (variant && variant.id !== 'original') resolved.style.variant = variant.id
+    const paletteDef = STYLE_PALETTES.find((x) => x.id === p.style.palette)
+    if (paletteDef && paletteDef.id !== 'original') resolved.style.palette = paletteDef.id
   }
   return resolved
 }
@@ -340,22 +342,34 @@ function paletteMode(palette) {
   return luminance(normalizeHex(palette?.bg) || '#ffffff') < 0.5 ? 'dark' : 'light'
 }
 
-function mixHex(a, b, t) {
-  const [ar, ag, ab] = hexToRgb(a)
-  const [br, bg, bb] = hexToRgb(b)
-  return rgbToHex([ar + (br - ar) * t, ag + (bg - ag) * t, ab + (bb - ab) * t])
+// Contenedores/fuentes de cada paleta por modo. El acento NO vive acá: se
+// toma del color elegido en Ajustes rápidos (se fusiona al derivar el set).
+const STYLE_PALETTE_TINTS = {
+  warm: {
+    light: { bg: '#f7f2ea', surface: '#fffdf9', border: '#e3d9cb', text: '#1f1a14', muted: '#6b5f50' },
+    dark: { bg: '#14100c', surface: '#1c1712', border: '#3a3027', text: '#f7f2ea', muted: '#bfae98' }
+  },
+  cool: {
+    light: { bg: '#eef3f9', surface: '#ffffff', border: '#d9e3ee', text: '#0f172a', muted: '#5b6678' },
+    dark: { bg: '#0b1220', surface: '#111a2c', border: '#243049', text: '#e6ecf7', muted: '#94a3b8' }
+  },
+  contrast: {
+    light: { bg: '#ffffff', surface: '#ffffff', border: '#111827', text: '#000000', muted: '#374151' },
+    dark: { bg: '#000000', surface: '#0a0a0a', border: '#e5e7eb', text: '#ffffff', muted: '#d1d5db' }
+  }
 }
 
-// Variante de color del estilo: cambia solo el acento (primary/accent) para
-// no romper la identidad del preset; el resto del set se deriva igual.
-export function styleVariantPalette(palette = SITE_THEME_DEFAULTS.palette, variant = 'original') {
-  const p = { ...(palette || {}) }
-  const accent = normalizeHex(p.accent) || SITE_THEME_DEFAULTS.palette.accent
-  const surface = normalizeHex(p.surface) || '#ffffff'
-  if (variant === 'soft') p.accent = p.primary = mixHex(accent, surface, 0.35)
-  else if (variant === 'deep') p.accent = p.primary = mixHex(accent, '#000000', 0.28)
-  else p.accent = p.primary = accent
-  return p
+// Set de un modo para una paleta elegida (original = la del estilo). El
+// acento opcional pisa el del preset y se garantiza AA por fixContrast.
+export function stylePaletteColors(palette, paletteId = 'original', mode = 'light', accent = null) {
+  const target = mode === 'dark' ? 'dark' : 'light'
+  const p = palette && typeof palette === 'object' ? palette : SITE_THEME_DEFAULTS.palette
+  const tint = STYLE_PALETTE_TINTS[paletteId]?.[target]
+  const accentHex = normalizeHex(accent)
+  const base = tint
+    ? { ...STYLE_NEUTRAL[target], ...tint, accent: accentHex || p.accent }
+    : { ...p, ...(accentHex ? { accent: accentHex } : {}) }
+  return styleColorsFromPalette(base, target)
 }
 
 function legibleOn(fg, bg, surface) {
@@ -389,10 +403,10 @@ export function styleColorsFromPalette(palette = SITE_THEME_DEFAULTS.palette, mo
   }
 }
 
-export function styleColorsBlock(palette = SITE_THEME_DEFAULTS.palette) {
+export function styleColorsBlock(palette = SITE_THEME_DEFAULTS.palette, paletteId = 'original', accent = null) {
   return {
-    light: styleColorsFromPalette(palette, 'light'),
-    dark: styleColorsFromPalette(palette, 'dark')
+    light: stylePaletteColors(palette, paletteId, 'light', accent),
+    dark: stylePaletteColors(palette, paletteId, 'dark', accent)
   }
 }
 

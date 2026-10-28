@@ -31,7 +31,7 @@ import {
 import { useStudioHistory } from './useStudioHistory.js'
 import {
   resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys, normalizeHex,
-  styleColorsBlock, styleVariantPalette
+  styleColorsBlock, fixContrast
 } from '../../studio/contract.js'
 import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
@@ -188,7 +188,19 @@ watch(() => [props.customization?.accent, props.customization?.accent_custom, pr
 let suppressFormTheme = false
 watch(() => [props.form.accent, props.form.accent_custom], () => {
   if (suppressFormTheme) return
-  Object.assign(draft.theme.palette, formThemePatch(props.form).palette)
+  const patch = formThemePatch(props.form)
+  Object.assign(draft.theme.palette, patch.palette)
+  // El acento elegido en Ajustes rápidos se fusiona con la paleta del
+  // estilo: pinta enlaces/primario sin tocar contenedores ni fuentes.
+  const block = draft.theme.styleColors
+  if (!block) return
+  for (const mode of ['light', 'dark']) {
+    const set = block[mode]
+    if (!set?.containers) continue
+    let link = fixContrast(patch.palette.accent, set.containers.bg, 4.5)
+    link = fixContrast(link, set.containers.surface, 4.5)
+    set.fonts.link = link
+  }
 })
 watch(() => props.form.name_font, (f, prev) => {
   if (suppressFormTheme || !f) return
@@ -418,26 +430,24 @@ watch(() => [draft.theme.typography.heading, draft.theme.typography.body], ([h, 
 // El `trial` guarda el snapshot previo al primer ensayo de la sesión:
 // "Deshacer" vuelve exactamente ahí, "Quedarla" solo cierra el modo prueba.
 // ---------------------------------------------------------------------------
-const trial = ref(null) // {id, variant, snap}
+const trial = ref(null) // {id, palette, snap}
 const tryingId = computed(() => trial.value?.id || null)
-const tryingVariant = computed(() => trial.value?.variant || 'original')
+const tryingPalette = computed(() => trial.value?.palette || 'original')
 
-async function applyPreset(p, part = 'all', variant = 'original') {
+async function applyPreset(p, part = 'all') {
   const t = resolveSiteTheme(p.theme)
   const all = part === 'all'
-  // La variante solo mueve el acento; el resto del set se deriva del palette.
-  const palette = all ? styleVariantPalette(t.palette, variant) : t.palette
   // (1) Los campos persistibles se escriben primero y en el mismo gesto:
   // el watcher form->theme corre en el siguiente flush, así si el preset
   // se aplica DESPUÉS de nextTick su versión de palette/typography gana.
   if (all) {
     if (props.benefits?.has_design_advanced) {
-      props.form.accent_custom = palette.accent
+      props.form.accent_custom = t.palette.accent
     } else {
       // Sin diseño avanzado el acento libre no viaja: se mapea al slug
       // más cercano del catálogo base. accent_custom queda intacto (un
       // valor guardado en otra época de plan se conserva, no se pisa).
-      const slug = nearestAccent(hexToRgb(palette.accent), STORE_ACCENTS)
+      const slug = nearestAccent(hexToRgb(t.palette.accent), STORE_ACCENTS)
       if (slug) props.form.accent = slug
     }
     props.form.name_font = t.typography.body
@@ -451,17 +461,17 @@ async function applyPreset(p, part = 'all', variant = 'original') {
     draft.layout = clone(layoutForTemplate(p, draft.template || liveTemplate.value))
   }
   await nextTick()
-  if (all || part === 'palette') draft.theme.palette = clone(palette)
+  if (all || part === 'palette') draft.theme.palette = clone(t.palette)
   if (all || part === 'typography') draft.theme.typography = clone(t.typography)
   if (all) {
     ;['containers', 'buttons', 'background', 'motion', 'mobile'].forEach((k) => {
       draft.theme[k] = clone(t[k])
     })
-    // Juego de colores del estilo (fuentes + contenedores) en ambos modos,
-    // ya con la variante elegida, y el id/variante del preset: es lo único
-    // que el plan Básico persiste.
-    draft.theme.styleColors = clone(styleColorsBlock(palette))
-    draft.theme.style = { id: p.id, ...(variant !== 'original' ? { variant } : {}) }
+    // Juego de colores del estilo (fuentes + contenedores) en ambos modos
+    // con su paleta original, y el id del preset: es lo único que el plan
+    // Básico persiste.
+    draft.theme.styleColors = clone(styleColorsBlock(t.palette))
+    draft.theme.style = { id: p.id }
     viewerTheme.value = p.pageTheme || 'light'
   }
   if (all || part === 'typography') {
@@ -472,15 +482,24 @@ async function applyPreset(p, part = 'all', variant = 'original') {
   }
 }
 
-function tryPreset(p) {
-  if (!trial.value) trial.value = { id: p.id, variant: 'original', snap: snapshot() }
-  else trial.value = { ...trial.value, id: p.id, variant: 'original' }
-  applyPreset(p, 'all', 'original')
+// Paleta de color del estilo activo: pinta contenedores/fuentes y fusiona el
+// acento elegido en Ajustes rápidos (no lo pisa).
+function applyPalette(p, paletteId = 'original') {
+  const t = resolveSiteTheme(p.theme)
+  const accent = formThemePatch(props.form).palette.accent
+  draft.theme.styleColors = clone(styleColorsBlock(t.palette, paletteId, accent))
+  draft.theme.style = { id: p.id, ...(paletteId !== 'original' ? { palette: paletteId } : {}) }
 }
-function tryVariant(p, variant) {
-  if (!trial.value) trial.value = { id: p.id, variant, snap: snapshot() }
-  else trial.value = { ...trial.value, id: p.id, variant }
-  applyPreset(p, 'all', variant)
+
+function tryPreset(p) {
+  if (!trial.value) trial.value = { id: p.id, palette: 'original', snap: snapshot() }
+  else trial.value = { ...trial.value, id: p.id, palette: 'original' }
+  applyPreset(p, 'all')
+}
+function tryPalette(p, paletteId) {
+  if (!trial.value) trial.value = { id: p.id, palette: paletteId, snap: snapshot() }
+  else trial.value = { ...trial.value, id: p.id, palette: paletteId }
+  applyPalette(p, paletteId)
 }
 function revertTrial() {
   if (!trial.value) return
@@ -497,10 +516,10 @@ async function applyAndSave(p) {
 provide('studioPresets', {
   presets: STUDIO_PRESETS,
   tryingId,
-  tryingVariant,
+  tryingPalette,
   lockOf: (p) => presetLock(p, props.benefits),
   tryIt: tryPreset,
-  tryVariant,
+  tryPalette,
   apply: applyPreset,
   applyAndSave,
   revertTrial,

@@ -132,7 +132,11 @@ onMounted(() => {
           <p>Probá en vivo; nada se guarda hasta Guardar.</p>
         </div>
       </header>
-      <PresetGallery :benefits="benefits" :mode="form.theme === 'dark' ? 'dark' : 'light'" />
+      <PresetGallery
+        :benefits="benefits"
+        :mode="form.theme === 'dark' ? 'dark' : 'light'"
+        :accent="accentMeta.hex"
+      />
     </section>
 
     <!-- ============ Nivel 2 · Ajustes rápidos ============ -->

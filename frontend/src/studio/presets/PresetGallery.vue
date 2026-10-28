@@ -8,14 +8,16 @@
 import { computed, inject, onMounted } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import { detectRubro, presetLock, PRESET_PICKER_IDS } from './catalog.js'
-import { STYLE_VARIANTS, resolveStyleColors, styleVariantPalette } from '../contract.js'
+import { STYLE_PALETTES, stylePaletteColors } from '../contract.js'
 import { STORE_TEMPLATES } from '../../api/stores.api.js'
 import { useStoreStore } from '../../stores/store.store.js'
 import { useCatalogStore } from '../../stores/catalog.store.js'
 
 const props = defineProps({
   benefits: { type: Object, default: () => {} },
-  mode: { type: String, default: 'light' }
+  mode: { type: String, default: 'light' },
+  // Acento vigente (Ajustes rápidos): se fusiona con la paleta elegida.
+  accent: { type: String, default: '' }
 })
 
 const api = inject('studioPresets')
@@ -79,17 +81,21 @@ const items = computed(() => [...pickerItems.value, ...extraItems.value])
 const SWATCH_LABELS = { bg: 'Fondo', surface: 'Superficie', border: 'Borde', onSurface: 'Texto' }
 const SWATCH_SHORT = { bg: 'Fondo', surface: 'Sup.', border: 'Borde', onSurface: 'Texto' }
 
-// Variante de color del estilo (original / suave / intensa). En prueba manda
-// el ensayo; en uso, la variante guardada; si no, la original.
-function variantOf(p) {
-  if (isTrying(p)) return api.tryingVariant.value || 'original'
+// Paleta de color del estilo (original / cálida / fría / contraste). En
+// prueba manda el ensayo; en uso, la paleta guardada; si no, la original.
+function paletteOf(p) {
+  if (isTrying(p)) return api.tryingPalette.value || 'original'
   const stored = custom.value.site_theme_draft?.style || custom.value.site_theme?.style
-  if (isCurrent(p) && stored?.id === p.id) return stored.variant || 'original'
+  if (isCurrent(p) && stored?.id === p.id) return stored.palette || 'original'
   return 'original'
 }
+// El acento de Ajustes rápidos solo aplica al estilo en uso/prueba; un tile
+// inactivo muestra el acento propio del preset.
+function accentFor(p) {
+  return isTrying(p) || isCurrent(p) ? (props.accent || '') : ''
+}
 function colorsOf(p) {
-  const palette = styleVariantPalette(p.theme.palette, variantOf(p))
-  return resolveStyleColors({ palette }, props.mode)
+  return stylePaletteColors(p.theme.palette, paletteOf(p), props.mode, accentFor(p) || null)
 }
 function swatchesOf(p) {
   const sc = colorsOf(p)
@@ -100,8 +106,12 @@ function swatchesOf(p) {
     color: sc.containers[key]
   }))
 }
-function variantAccent(p, variant) {
-  return styleVariantPalette(p.theme.palette, variant).accent
+function paletteSwatches(p, paletteId) {
+  const sc = stylePaletteColors(p.theme.palette, paletteId, props.mode, accentFor(p) || null)
+  return [sc.containers.bg, sc.containers.surface, sc.containers.border, sc.fonts.heading]
+}
+function onPalette(p, paletteId) {
+  api.tryPalette(p, paletteId)
 }
 function stateOf(p) {
   if (isTrying(p)) return 'probando'
@@ -121,7 +131,6 @@ function titleOf(p) {
 
 const trialPreset = computed(() => (api.tryingId.value ? api.presets.find((p) => p.id === api.tryingId.value) : null))
 const onPick = (p) => api.tryIt(p)
-const onVariant = (p, variant) => api.tryVariant(p, variant)
 const onRevert = () => api.revertTrial()
 </script>
 
@@ -149,18 +158,21 @@ const onRevert = () => api.revertTrial()
           </span>
         </button>
         <div
-          v-if="isTrying(p) || isCurrent(p)" class="psg-vars" role="group"
-          :aria-label="`Variante de color de ${p.name}`"
+          v-if="isTrying(p) || isCurrent(p)" class="psg-pals" role="group"
+          :aria-label="`Paleta de color de ${p.name}`"
         >
-          <span class="psg-vars-lb">Color</span>
+          <span class="psg-pals-lb">Paleta</span>
           <button
-            v-for="v in STYLE_VARIANTS" :key="v.id" type="button"
-            class="psg-var" :class="{ active: variantOf(p) === v.id }"
-            :style="{ '--v': variantAccent(p, v.id) }"
-            :aria-pressed="variantOf(p) === v.id"
-            :aria-label="`${p.name}, variante ${v.label}`" :title="v.label"
-            @click="onVariant(p, v.id)"
-          />
+            v-for="pal in STYLE_PALETTES" :key="pal.id" type="button"
+            class="psg-pal" :class="{ active: paletteOf(p) === pal.id }"
+            :aria-pressed="paletteOf(p) === pal.id"
+            :aria-label="`${p.name}, paleta ${pal.label}`" :title="pal.label"
+            @click="onPalette(p, pal.id)"
+          >
+            <span class="psg-pal-sw" aria-hidden="true">
+              <i v-for="(c, i) in paletteSwatches(p, pal.id)" :key="i" :style="{ background: c }" />
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -216,15 +228,17 @@ const onRevert = () => api.revertTrial()
   white-space: nowrap; overflow: hidden;
 }
 
-/* ===== Variantes de color del estilo activo ===== */
-.psg-vars { display: flex; align-items: center; gap: 4px; padding: 0 1px; }
-.psg-vars-lb { font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
-.psg-var {
-  width: 24px; height: 24px; padding: 0; border-radius: 50%;
-  border: 1px solid var(--line); background: var(--v); cursor: pointer;
+/* ===== Paletas de color del estilo activo ===== */
+.psg-pals { display: flex; align-items: center; gap: 3px; padding: 0 1px; }
+.psg-pals-lb { font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+.psg-pal {
+  width: 24px; height: 24px; padding: 3px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--surface); cursor: pointer;
 }
-.psg-var.active { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--brand-500); }
-.psg-var:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.psg-pal-sw { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1px; width: 100%; height: 100%; }
+.psg-pal-sw i { display: block; border-radius: 1px; }
+.psg-pal.active { border-color: var(--brand-500); box-shadow: 0 0 0 1px var(--brand-500); }
+.psg-pal:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
 /* ===== Probando: barra de una línea ===== */
 .psg-bar {
