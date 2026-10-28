@@ -117,7 +117,15 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   }
   if (on('palette.muted')) vars['--sp-muted'] = p.muted
   if (on('palette.border')) vars['--sp-line'] = p.border
-  if (on('palette.accent') || on('palette.primary')) vars['--sp-soft'] = mixHex(p.accent, '#ffffff', 0.8)
+  if (on('palette.accent') || on('palette.primary')) {
+    // El velo suave se mezcla contra la superficie del modo vigente: en
+    // oscuro, mezclar contra blanco dejaba contenedores (p. ej. la misión)
+    // casi blancos con el texto claro encima.
+    const softBase = pageTheme === 'dark'
+      ? (p.surface || p.bg || '#0b1220')
+      : '#ffffff'
+    vars['--sp-soft'] = mixHex(p.accent, softBase, 0.8)
+  }
   if (on('palette.accent') || on('palette.primary')) vars['--sp-accent-text'] = vars['--store-accent-ink']
   const bgStackOn = on('background.type') || on('background.value') || on('background.overlay')
   if (bgStackOn || on('palette.bg')) vars['--sp-bg'] = backgroundStack(t, all)
