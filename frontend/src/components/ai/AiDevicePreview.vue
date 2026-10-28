@@ -26,13 +26,16 @@ const DEVICES = [
   { id: 'desktop', label: 'Escritorio', icon: 'monitor', w: 1440, h: 900 }
 ]
 
-const device = ref('mobile')
+// Arranca en escritorio: es el tamaño donde el diseño se ve completo y el
+// panel ancho no queda vacío. Móvil/tablet quedan a un click.
+const device = ref('desktop')
 const dark = ref(props.nightMode?.default === 'dark')
 const panel = ref(null)
 const area = ref(null)
 const scale = ref(0.5)
 const current = computed(() => DEVICES.find((d) => d.id === device.value) || DEVICES[0])
 const canToggleNight = computed(() => Boolean(props.nightMode?.enabled))
+const scalePct = computed(() => Math.round(scale.value * 100))
 
 const previewForm = computed(() => (canToggleNight.value
   ? { ...props.form, theme: dark.value ? 'dark' : 'light' }
@@ -54,12 +57,23 @@ let ro = null
 let previousFocus = null
 let prevOverflow = ''
 
+// El marco del dispositivo (::after) crece hacia afuera: se descuenta del
+// área disponible (padding del stage + bezel) para que el equipo entre
+// completo y lo más grande posible sin recortarse.
+const PAD = 24
+const CHROME = { mobile: 22, tablet: 26, desktop: 14 }
+
 function measure() {
   raf = 0
   const el = area.value
   if (!el) return
   const rect = el.getBoundingClientRect()
-  const s = Math.min((rect.width - 36) / current.value.w, (rect.height - 36) / current.value.h, 1)
+  const chrome = CHROME[current.value.id] || 20
+  const s = Math.min(
+    (rect.width - PAD * 2 - chrome * 2) / current.value.w,
+    (rect.height - PAD * 2 - chrome * 2) / current.value.h,
+    1
+  )
   scale.value = Math.max(0.12, Math.round(s * 1000) / 1000)
 }
 function schedule() {
@@ -160,6 +174,7 @@ onBeforeUnmount(() => {
           <AppIcon :name="dark ? 'moon' : 'sun'" :size="16" />
           {{ dark ? 'Modo oscuro' : 'Modo claro' }}
         </button>
+        <p class="aidv-size">{{ current.w }} × {{ current.h }} px · {{ scalePct }}%</p>
       </div>
 
       <div ref="area" class="aidv-area">
@@ -180,11 +195,6 @@ onBeforeUnmount(() => {
             />
           </div>
         </div>
-      </div>
-
-      <p class="aidv-size">{{ current.w }} × {{ current.h }}</p>
-      <div class="aidv-foot">
-        <button class="btn ghost btn-auto" type="button" @click="emit('close')">Cerrar</button>
       </div>
     </div>
   </div>
