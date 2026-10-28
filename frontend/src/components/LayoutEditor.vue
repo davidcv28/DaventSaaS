@@ -3,10 +3,11 @@
 // desactiva y reordena bloques del catálogo cerrado TEMPLATE_BLOCKS por
 // superficie (Inicio / Catálogo / Servicios) — nunca HTML/CSS libre.
 // El draft se serializa a `layout_config` y viaja por el PATCH normal de
-// customization con debounce; ante error se restaura el último guardado
-// (rollback optimista). Los ids que la plantilla actual no soporta se
-// preservan verbatim en el payload, así cambiar de plantilla no pierde
-// la configuración de bloques equivalentes.
+// customization con debounce adaptativo; ante error el draft se conserva
+// (nunca rollback destructivo) y el usuario puede reintentar. Los ids
+// que la plantilla actual no soporta se preservan verbatim en el
+// payload, así cambiar de plantilla no pierde la configuración de
+// bloques equivalentes.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStoreStore } from '../stores/store.store.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
@@ -44,10 +45,13 @@ const saveState = ref('idle') // idle | dirty | saving | saved | error
 const device = ref('desktop')
 const previewKey = ref(0)
 const previewState = ref('loading') // loading | ready | failed
-let savedSnap = ''
+let dirtyTick = 0
+let lastSaveMs = 600
 let saveTimer = null
 let savedTimer = null
 let previewTimer = null
+let previewPushTimer = null
+let lazyTimer = null
 let saving = false
 let resave = false
 let titleSnapDone = false
@@ -117,7 +121,6 @@ function buildDraft() {
     }))
   }
   draft.value = next
-  savedSnap = JSON.stringify(next)
   undoStack.value = []
   redoStack.value = []
   saveState.value = 'idle'
@@ -160,24 +163,31 @@ const selectedId = ref('')
 const announce = ref('')
 function say(msg) { announce.value = msg }
 
+// Historial por superficie y acotado: cada entrada clona solo la lista
+// activa (los bloques son planos: {id, enabled, order, variant, title}),
+// nunca el draft completo ni JSON.
+const HISTORY_MAX = 40
+const snapBlocks = (list) => list.map((b) => ({ ...b }))
+const snapCurrent = () => ({ s: surface.value, blocks: snapBlocks(draft.value[surface.value]) })
 function pushHistory() {
-  undoStack.value.push(JSON.stringify(draft.value))
-  if (undoStack.value.length > 60) undoStack.value.shift()
+  undoStack.value.push(snapCurrent())
+  if (undoStack.value.length > HISTORY_MAX) undoStack.value.shift()
   redoStack.value = []
 }
 function applySnapshot(snap) {
-  draft.value = JSON.parse(snap)
+  draft.value[snap.s] = snapBlocks(snap.blocks)
+  if (snap.s !== surface.value) surface.value = snap.s
   scheduleSave()
 }
 function undo() {
   if (!canUndo.value) return
-  redoStack.value.push(JSON.stringify(draft.value))
+  redoStack.value.push(snapCurrent())
   applySnapshot(undoStack.value.pop())
   say('Cambio deshecho.')
 }
 function redo() {
   if (!canRedo.value) return
-  undoStack.value.push(JSON.stringify(draft.value))
+  undoStack.value.push(snapCurrent())
   applySnapshot(redoStack.value.pop())
   say('Cambio rehecho.')
 }
@@ -322,11 +332,14 @@ function selectBlock(b, scrollPreview = true) {
   // scroll/resaltado van al primer elemento real del bloque.
   const el = mark?.firstElementChild || mark
   if (!el?.scrollIntoView) return
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  el.animate?.([
-    { boxShadow: '0 0 0 4px rgba(99,91,255,.8)' },
-    { boxShadow: '0 0 0 4px rgba(99,91,255,0)' }
-  ], { duration: 1100 })
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' })
+  if (!calm) {
+    el.animate?.([
+      { boxShadow: '0 0 0 4px rgba(99,91,255,.8)' },
+      { boxShadow: '0 0 0 4px rgba(99,91,255,0)' }
+    ], { duration: 1100 })
+  }
 }
 function onPreviewClick(ev) {
   const hit = ev.target?.closest?.('[data-blk]')
@@ -376,27 +389,32 @@ function serialize() {
   return out
 }
 
-function scheduleSave(delay = 900) {
+// Debounce adaptativo: 500ms base + la mitad de la latencia del PATCH
+// anterior (tope 1.8s). En redes lentas agrupa más cambios por request
+// en vez de encolar guardados en cadena.
+function scheduleSave(delay) {
   if (saveState.value !== 'error') saveState.value = 'dirty'
+  dirtyTick++
   clearTimeout(saveTimer)
-  saveTimer = setTimeout(save, delay)
+  saveTimer = setTimeout(save, delay ?? Math.min(1800, 500 + lastSaveMs / 2))
+  schedulePreviewPush()
 }
 // Cola de un solo guardado en vuelo: los cambios que llegan mientras un
-// PATCH está en el aire quedan marcados (resave) y se re-guardan al
-// aterrizar — nunca se descartan. En error NO hay rollback destructivo:
-// el draft local se conserva y el usuario puede corregir o reintentar.
+// PATCH está en el aire quedan marcados (resave + dirtyTick) y se
+// re-guardan al aterrizar — nunca se descartan. En error NO hay
+// rollback destructivo: el draft local se conserva y el usuario puede
+// corregir o reintentar.
 async function save() {
   if (saving) { resave = true; return }
   saving = true
   saveState.value = 'saving'
-  const snap = JSON.stringify(draft.value)
+  const tick = dirtyTick
+  const t0 = performance.now()
   const ok = await store.saveCustomization({ layout_config: serialize() })
+  lastSaveMs = performance.now() - t0
   saving = false
-  if (ok) {
-    savedSnap = snap
-    previewKey.value++
-  }
-  if (resave || (ok && JSON.stringify(draft.value) !== snap)) {
+  if (ok) pushLayoutToPreview()
+  if (resave || (ok && dirtyTick !== tick)) {
     resave = false
     saveState.value = 'dirty'
     scheduleSave(350)
@@ -468,6 +486,26 @@ const SURFACE_ICONS = { landing: 'store', catalog: 'layout-grid', services: 'wre
 function enabledCount(s) {
   return (draft.value[s] || []).filter((b) => b.enabled !== false).length
 }
+// En pantallas chicas el iframe no se monta hasta abrir la hoja: la
+// página pública pesa y competiría con la lista por red y CPU.
+const isNarrow = ref(false)
+const previewVisible = computed(() => !isNarrow.value || previewOpen.value)
+function onMedia(e) { isNarrow.value = e.matches }
+let mql = null
+
+// La vista previa se actualiza por postMessage (el StorePublicLayout
+// aplica el layout_config del draft reactivo): cero recargas del iframe,
+// sin parpadeo ni requests abortados en cada guardado.
+function pushLayoutToPreview() {
+  iframeEl.value?.contentWindow?.postMessage(
+    { type: 'davent:layout', layout: serialize() },
+    window.location.origin
+  )
+}
+function schedulePreviewPush() {
+  clearTimeout(previewPushTimer)
+  previewPushTimer = setTimeout(pushLayoutToPreview, 500)
+}
 
 function armPreviewTimeout() {
   clearTimeout(previewTimer)
@@ -481,6 +519,9 @@ function onPreviewLoad(e) {
   // Clic dentro de la vista previa → selecciona la fila del editor (el
   // clic sigue su curso: la preview sigue siendo navegable).
   e.target.contentDocument?.addEventListener('click', onPreviewClick, true)
+  // Un remount (reintento, cambio de superficie/plantilla) arranca con el
+  // layout guardado: se le empuja el draft vigente apenas carga.
+  pushLayoutToPreview()
 }
 watch(previewSrc, () => {
   previewState.value = previewSrc.value ? 'loading' : 'failed'
@@ -490,12 +531,21 @@ watch(previewKey, () => {
   previewState.value = 'loading'
   armPreviewTimeout()
 })
+watch(previewVisible, (v) => {
+  if (!v) return
+  previewState.value = 'loading'
+  armPreviewTimeout()
+})
 
 onMounted(() => {
-  // Para los avisos "sin contenido" de bloques ligados al catálogo.
-  if (!catalog.products.length) catalog.loadAll()
+  // Catálogo diferido: alimenta los avisos "sin contenido" pero no
+  // compite con el primer paint del editor.
+  lazyTimer = setTimeout(() => { if (!catalog.products.length) catalog.loadAll() }, 800)
   previewState.value = previewSrc.value ? 'loading' : 'failed'
   armPreviewTimeout()
+  mql = window.matchMedia('(max-width: 1100px)')
+  isNarrow.value = mql.matches
+  mql.addEventListener('change', onMedia)
   window.addEventListener('pagehide', onPageHide)
   window.addEventListener('keydown', onGlobalKey)
   document.addEventListener('visibilitychange', onVisibility)
@@ -505,6 +555,9 @@ onUnmounted(() => {
   clearTimeout(saveTimer)
   clearTimeout(savedTimer)
   clearTimeout(previewTimer)
+  clearTimeout(previewPushTimer)
+  clearTimeout(lazyTimer)
+  mql?.removeEventListener('change', onMedia)
   window.removeEventListener('pagehide', onPageHide)
   window.removeEventListener('keydown', onGlobalKey)
   document.removeEventListener('visibilitychange', onVisibility)
@@ -674,7 +727,7 @@ onUnmounted(() => {
           <div v-show="previewState === 'loading'" class="blk-frame-skel" aria-hidden="true">
             <span class="blk-skel-bar"></span><span class="blk-skel-bar mid"></span><span class="blk-skel-bar short"></span>
           </div>
-          <iframe ref="iframeEl" :key="previewKey" :src="previewSrc" title="Vista previa de tu web" loading="lazy" @load="onPreviewLoad"></iframe>
+          <iframe v-if="previewVisible" ref="iframeEl" :key="previewKey" :src="previewSrc" title="Vista previa de tu web" loading="lazy" @load="onPreviewLoad"></iframe>
           <div v-if="previewState === 'failed'" class="blk-frame-fail" role="status">
             <AppIcon name="triangle-alert" :size="18" />
             <p>La vista previa no respondió. Podés abrirla en otra pestaña o recargarla.</p>

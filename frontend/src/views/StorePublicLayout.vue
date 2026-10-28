@@ -41,7 +41,19 @@ const errorMsg = ref('')
 const slug = computed(() => normalizeSlug(route.params.slug || storeHostSlug || ''))
 const appUrl = env.appUrl
 
-const custom = computed(() => ({ ...CUSTOMIZATION_DEFAULTS, ...(store.value?.customization || {}) }))
+// Vista previa en vivo del editor de bloques: el panel empuja el
+// layout_config del draft por postMessage same-origin y la página lo
+// aplica reactivo, sin recargar el iframe.
+const layoutOverride = ref(null)
+const custom = computed(() => ({
+  ...CUSTOMIZATION_DEFAULTS,
+  ...(store.value?.customization || {}),
+  ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
+}))
+function onLayoutMessage(e) {
+  if (e.origin !== window.location.origin || e.data?.type !== 'davent:layout') return
+  layoutOverride.value = e.data.layout || null
+}
 const themeVars = computed(() => storeThemeVars(custom.value))
 // Diseño avanzado (Plan premium): define si la web muestra el carrusel de
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
@@ -371,12 +383,14 @@ onMounted(async () => {
   }
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onMenuKey)
+  window.addEventListener('message', onLayoutMessage)
   onScroll()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('keydown', onMenuKey)
+  window.removeEventListener('message', onLayoutMessage)
   clearSeo?.()
   applyFavicon(null)
 })
