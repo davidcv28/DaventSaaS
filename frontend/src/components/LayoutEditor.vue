@@ -241,7 +241,9 @@ const saveLabel = computed(() => ({
 }[saveState.value]))
 
 // Vista previa real: la URL pública de cada superficie en un iframe con
-// ancho desktop/mobile. Se recarga (previewKey) tras cada guardado.
+// ancho desktop/mobile. Se recarga (previewKey) tras cada guardado. La CSP
+// del SPA autoriza el iframe same-site (frame-src/frame-ancestors con apex
+// + *.<dominio>) — un host ajeno seguiría bloqueado por frame-ancestors.
 const PREVIEW_PATHS = { landing: '', catalog: '/catalogo', services: '/servicios' }
 const previewSrc = computed(() => (props.publicUrl ? props.publicUrl + PREVIEW_PATHS[surface.value] : ''))
 const surfacePublished = computed(() => props.siteTemplates.includes(surface.value))

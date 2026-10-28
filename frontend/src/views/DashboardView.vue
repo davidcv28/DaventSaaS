@@ -612,8 +612,9 @@ const activityFeed = computed(() => {
   return items.slice(0, 4)
 })
 
-// Vista previa viva de la web (mock con los datos reales: el SPA sale con
-// frame-ancestors 'none', así que un iframe real está bloqueado por CSP).
+// Vista previa viva de la web (mock con los datos reales: más liviana que un
+// iframe de la página entera — la CSP ya permite embeberla same-site y el
+// editor de Bloques lo hace; acá basta el resumen).
 const ovPreviewVars = computed(() => storeThemeVars(store.customization))
 const ovShopName = computed(() => store.customization?.display_name || business.value || 'Tu negocio')
 const ovCatalogOn = computed(() => store.customization?.show_catalog !== false)

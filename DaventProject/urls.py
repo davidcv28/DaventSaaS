@@ -14,11 +14,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from decouple import config
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import FileResponse, Http404, JsonResponse
 from django.urls import path, include, re_path
+from urllib.parse import urlparse
 
 
 def healthz(request):
@@ -98,6 +100,20 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 
 
+# Orígenes same-site autorizados a incrustar la SPA y a ser incrustados por
+# ella (la vista previa del editor de bloques iframea la web pública del
+# cliente desde el dashboard): 'self' cubre el alias de path
+# (<dominio>/<slug> — modo Render/dev); el apex y el wildcard del dominio
+# propio cubren el modo subdominio (panel en https://<dominio> embebiendo
+# https://<slug>.<dominio>). PLATFORM_DOMAIN llega por .env en el VPS; de
+# respaldo se deriva del host de FRONTEND_URL. Sitios ajenos siguen fuera:
+# el clickjacking externo queda igual de bloqueado que con 'none'.
+_FRAME_DOMAIN = (config('PLATFORM_DOMAIN', default='') or '').strip().lower() or (
+    urlparse(config('FRONTEND_URL', default='')).hostname or '')
+_FRAME_SOURCES = "'self'" + (
+    f" https://{_FRAME_DOMAIN} https://*.{_FRAME_DOMAIN}" if _FRAME_DOMAIN else '')
+
+
 def spa(request):
     # Catch-all del frontend empaquetado: los assets del build (fingerprint)
     # los sirve whitenoise vía STATICFILES_DIRS; cualquier ruta de la SPA
@@ -117,6 +133,10 @@ def spa(request):
     # botón, connect del exchange y su stylesheet); el frame cubre también el
     # iframe del botón de Google. Sin ellos ese login quedaba roto únicamente
     # en el deploy empaquetado (en dev la CSP no aplica porque la SPA la sirve Vite).
+    # frame-src/frame-ancestors same-site (_FRAME_SOURCES): sin ellos la vista
+    # previa del editor de bloques moría con ERR_BLOCKED_BY_CSP al iframear la
+    # web pública (frame-src sin 'self' ni siquiera iniciaba la carga y
+    # frame-ancestors 'none' la vetaba del lado de la página hija).
     # COOP: el default de SecurityMiddleware es 'same-origin', que aísla el
     # popup de Google (window.opener = null) y el login social quedaba en
     # blanco tras el consent — el popup no puede postMessagear la credencial.
@@ -129,9 +149,13 @@ def spa(request):
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
         "connect-src 'self' https://accounts.google.com; "
-        "frame-src https://maps.google.com https://www.google.com https://accounts.google.com; "
-        "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        f"frame-src {_FRAME_SOURCES} https://maps.google.com https://www.google.com https://accounts.google.com; "
+        f"object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors {_FRAME_SOURCES}"
     )
+    # Paridad con nginx (XFO SAMEORIGIN para la SPA): la CSP moderna manda,
+    # pero sin esto XFrameOptionsMiddleware pondría DENY y un browser que
+    # honre XFO por sobre CSP seguiría bloqueando la vista previa.
+    resp['X-Frame-Options'] = 'SAMEORIGIN'
     return resp
 
 

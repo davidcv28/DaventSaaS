@@ -69,8 +69,12 @@ server {
     # de tienda desde R2/dominio público variable (img-src https:); mapa
     # embebido de Google en "Contáctanos" (frame-src); 'unsafe-inline' en
     # style es inevitable: Vue escribe atributos style.
+    # frame-src/frame-ancestors same-site (apex + *.dominio): el panel puede
+    # iframear las webs públicas de tienda (vista previa del editor de
+    # bloques) tanto por alias de path como por subdominio <slug>.<dominio>;
+    # sitios ajenos siguen bloqueados (anti-clickjacking).
     # Misma whitelist que la CSP del SPA empaquetado en DaventProject/urls.py.
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://accounts.google.com; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://accounts.google.com; frame-src 'self' https://${PLATFORM_DOMAIN} https://*.${PLATFORM_DOMAIN} https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self' https://${PLATFORM_DOMAIN} https://*.${PLATFORM_DOMAIN}; form-action 'self'" always;
     # COOP: el botón de Google abre un popup que necesita postMessage de
     # vuelta — 'same-origin' lo aísla y el login quedaba en blanco.
     add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
