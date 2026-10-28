@@ -8,6 +8,7 @@
     "dev": "vite --port 5173",
     "build": "vite build",
     "release:apk": "node scripts/release-apk.mjs",
+    "verify:studio": "node scripts/verify-studio-contract.mjs",
     "preview": "vite preview --port 5173",
     "lint": "echo \"(sin eslint configurado — ver FRONTEND_RULES.md)\""
   },
