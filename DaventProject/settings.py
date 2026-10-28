@@ -98,6 +98,10 @@ REST_FRAMEWORK = {
         'chat': '5000/hour',
         #Envío de mensajes del chat: mucho más estricto que la lectura.
         'chat_send': '120/hour',
+        #Diseño automático (motor propio, por usuario): cada generación
+        #recorre catálogo/galería y arma 2-3 propuestas — 20/h alcanza para
+        #probar variantes sin que sirva para martillar el endpoint.
+        'ai_design': '20/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a
         #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
         'content_report': '5/hour',

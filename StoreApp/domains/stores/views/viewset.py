@@ -14,7 +14,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot, StudioVersion
 from StoreApp.domains.stores.serializers.serializers import (
     StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer,
@@ -35,6 +35,9 @@ from StoreApp.domains.stores.services                import (
     record_store_visit, visit_stats_of,
 )
 from StoreApp.domains.stores.public_cache            import public_cache_stamp
+from StoreApp.domains.stores.services.ai_design      import (
+    AiDesignError, apply as apply_ai_design, generate as generate_ai_design,
+)
 from .viewset_base   import StoreBaseViewSet
 from .viewset_config import StoreConfigs
 from DaventProject.throttling import PublicReadThrottle
@@ -243,6 +246,14 @@ class StoreContactThrottle(AnonRateThrottle):
 #=========================================
 class StoreReviewThrottle(AnonRateThrottle):
     scope   =   'store_review'
+#=========================================
+# AI DESIGN THROTTLE (motor de diseño, rate en settings)
+#=========================================
+class AiDesignThrottle(UserRateThrottle):
+    #Por usuario: generar es barato (motor local) pero armar 3 propuestas
+    #recorre catálogo y galería — el scope acota el abuso sin molestar al
+    #dueño que prueba variantes.
+    scope   =   'ai_design'
 #=========================================
 # STORE VIEWSET
 #=========================================
@@ -798,6 +809,55 @@ class StoreViewSet(StoreBaseViewSet):
                 'Exito'         : 'El diseño de tu web se actualizó correctamente',
                 'customization' : serializer.data,
                 'storage'       : storage_payload(store, store.user),
+            },
+            status = status.HTTP_200_OK,
+        )
+    #=========================================
+    # AI DESIGN: PROPUESTAS / APLICAR AL BORRADOR (motor propio, sin IA paga)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'ai-design', throttle_classes = [AiDesignThrottle])
+    def ai_design(self, request):
+        #Entrevista corta + datos reales -> 2-3 propuestas de web completa.
+        #Mismos gates que el editor: sin personalización no hay diseño que
+        #aplicar, y el motor es un beneficio de plan aparte.
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_design'):
+            return Response(
+                {'detail': 'El diseño automático está disponible en tu plan actual.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        return Response(generate_ai_design(store, request.data), status = status.HTTP_200_OK)
+
+    @action(detail = False, methods = ['post'], url_path = 'ai-design/apply', throttle_classes = [AiDesignThrottle])
+    def ai_design_apply(self, request):
+        #El cliente manda semilla + id: el backend RECALCULA la propuesta con
+        #el mismo motor (nunca aplica un layout enviado por el navegador).
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_design'):
+            return Response(
+                {'detail': 'El diseño automático está disponible en tu plan actual.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        try:
+            apply_ai_design(store, request.data.get('seed'), request.data.get('proposal_id'))
+        except AiDesignError as error:
+            return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        customization   =   StoreCustomization.objects.get_or_create(store = store)[0]
+        return Response(
+            {
+                'Exito'         : 'Aplicamos el diseño a tu borrador. Revisalo y publicalo cuando te guste.',
+                'customization' :   StoreCustomizationSerializer(customization).data,
+                'storage'       :   storage_payload(store, store.user),
             },
             status = status.HTTP_200_OK,
         )

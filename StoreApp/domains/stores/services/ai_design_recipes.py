@@ -1,0 +1,508 @@
+#=========================================
+# RECETAS DEL MOTOR DE DISEÑO (datos, sin lógica)
+#=========================================
+#Tabla de conocimiento del motor: qué plantilla y qué look le sientan a
+#cada rubro, en qué orden conviene contar la historia según el objetivo
+#del dueño, qué variante de bloque rinde mejor y qué bloques necesitan
+#datos reales para no quedar vacíos.
+#Es solo datos: ai_design.py los interpreta, ai_design_copy.py los usa
+#para el texto. Nada de acá llega al cliente sin pasar por
+#clean_layout_config y por la whitelist de plantillas del plan.
+
+ENGINE_VERSION              =   'ai-design/1'
+
+TONES                       =   ('calido', 'serio', 'moderno', 'audaz')
+DEFAULT_TONE                =   'moderno'
+
+GOALS                       =   ('vender_online', 'mostrar_servicios', 'conseguir_consultas', 'dar_confianza', 'mostrar_trabajos')
+DEFAULT_GOAL                =   'mostrar_servicios'
+
+#=========================================
+# LOOKS (site_theme parcial, enums del Studio)
+#=========================================
+#Cada look es un presupuesto de piel: paleta + contenedores + tipografía +
+#botones + fondo + movimiento. Los enums son los de STUDIO_ENUMS y los
+#colores son hex de 6 dígitos — el frontend sanea igual, pero acá ya salen
+#válidos para que el borrador se vea tal cual la propuesta.
+LOOKS                       =   {
+    'retail': {
+        'palette':      {'primary': '#c2410c', 'secondary': '#9a3412', 'accent': '#ea580c', 'bg': '#fdf6f0', 'surface': '#ffffff', 'text': '#1c1917', 'muted': '#78716c', 'border': '#e7ded4'},
+        'containers':   {'radius': 'lg', 'shadow': 'soft', 'border': 'thin', 'density': 'comfortable', 'surface': 'elevated'},
+        'typography':   {'heading': 'figtree', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 800, 'letterSpacing': '-0.01em'},
+        'buttons':      {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'rise', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+    'gourmet': {
+        'palette':      {'primary': '#7c2d12', 'secondary': '#9a3412', 'accent': '#b45309', 'bg': '#faf5ec', 'surface': '#fffdf8', 'text': '#241c14', 'muted': '#7c6f5f', 'border': '#e4d7c3'},
+        'containers':   {'radius': 'md', 'shadow': 'soft', 'border': 'thin', 'density': 'spacious', 'surface': 'flat'},
+        'typography':   {'heading': 'bricolage-grotesque', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 700, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'pill', 'style': 'solid', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+    'atelier': {
+        'palette':      {'primary': '#111827', 'secondary': '#374151', 'accent': '#b91c1c', 'bg': '#f7f6f3', 'surface': '#ffffff', 'text': '#111111', 'muted': '#6b7280', 'border': '#dedbd4'},
+        'containers':   {'radius': 'none', 'shadow': 'none', 'border': 'thin', 'density': 'spacious', 'surface': 'outlined'},
+        'typography':   {'heading': 'manrope', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 700, 'letterSpacing': '-0.03em'},
+        'buttons':      {'shape': 'square', 'style': 'outline', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'rise', 'hover': 'none', 'intensity': 'subtle'},
+    },
+    'sobrio': {
+        'palette':      {'primary': '#1e3a8a', 'secondary': '#1e40af', 'accent': '#2563eb', 'bg': '#f4f6fb', 'surface': '#ffffff', 'text': '#0f172a', 'muted': '#5b6678', 'border': '#d5dbe8'},
+        'containers':   {'radius': 'md', 'shadow': 'soft', 'border': 'thin', 'density': 'comfortable', 'surface': 'elevated'},
+        'typography':   {'heading': 'inter', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 700, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+    'clinico': {
+        'palette':      {'primary': '#0f766e', 'secondary': '#115e59', 'accent': '#0d9488', 'bg': '#f2faf8', 'surface': '#ffffff', 'text': '#0f172a', 'muted': '#5b6678', 'border': '#cfe6e1'},
+        'containers':   {'radius': 'xl', 'shadow': 'soft', 'border': 'none', 'density': 'comfortable', 'surface': 'flat'},
+        'typography':   {'heading': 'figtree', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 600, 'letterSpacing': '-0.01em'},
+        'buttons':      {'shape': 'pill', 'style': 'solid', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+    'belleza': {
+        'palette':      {'primary': '#9d174d', 'secondary': '#831843', 'accent': '#db2777', 'bg': '#fdf3f7', 'surface': '#ffffff', 'text': '#1f1720', 'muted': '#7a6a74', 'border': '#f0d9e4'},
+        'containers':   {'radius': 'xl', 'shadow': 'medium', 'border': 'none', 'density': 'spacious', 'surface': 'elevated'},
+        'typography':   {'heading': 'manrope', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 700, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'pill', 'style': 'gradient', 'size': 'md'},
+        'background':   {'type': 'gradient', 'overlay': 'none'},
+        'motion':       {'reveal': 'rise', 'hover': 'glow', 'intensity': 'medium'},
+    },
+    'obra': {
+        'palette':      {'primary': '#334155', 'secondary': '#1f2937', 'accent': '#f59e0b', 'bg': '#f5f6f7', 'surface': '#ffffff', 'text': '#111827', 'muted': '#64748b', 'border': '#d7dbe0'},
+        'containers':   {'radius': 'sm', 'shadow': 'medium', 'border': 'bold', 'density': 'comfortable', 'surface': 'outlined'},
+        'typography':   {'heading': 'archivo', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 800, 'letterSpacing': '-0.01em'},
+        'buttons':      {'shape': 'rounded', 'style': 'solid', 'size': 'lg'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'rise', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+    'tech': {
+        'palette':      {'primary': '#4f46e5', 'secondary': '#4338ca', 'accent': '#6366f1', 'bg': '#0b1120', 'surface': '#141b2d', 'text': '#e6ebf5', 'muted': '#9aa6bd', 'border': '#26314a'},
+        'containers':   {'radius': 'lg', 'shadow': 'deep', 'border': 'thin', 'density': 'comfortable', 'surface': 'glass'},
+        'typography':   {'heading': 'inter', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 800, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'rounded', 'style': 'gradient', 'size': 'md'},
+        'background':   {'type': 'mesh', 'overlay': 'soft'},
+        'motion':       {'reveal': 'stagger', 'hover': 'glow', 'intensity': 'medium'},
+    },
+    'aula': {
+        'palette':      {'primary': '#1d4ed8', 'secondary': '#1e40af', 'accent': '#f59e0b', 'bg': '#f6f8fd', 'surface': '#ffffff', 'text': '#0f172a', 'muted': '#5b6678', 'border': '#d9e1f2'},
+        'containers':   {'radius': 'lg', 'shadow': 'soft', 'border': 'thin', 'density': 'comfortable', 'surface': 'elevated'},
+        'typography':   {'heading': 'figtree', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 700, 'letterSpacing': '-0.01em'},
+        'buttons':      {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+    'viaje': {
+        'palette':      {'primary': '#0369a1', 'secondary': '#075985', 'accent': '#f97316', 'bg': '#f2f8fb', 'surface': '#ffffff', 'text': '#0f172a', 'muted': '#5b6678', 'border': '#d3e3ec'},
+        'containers':   {'radius': 'xl', 'shadow': 'medium', 'border': 'none', 'density': 'spacious', 'surface': 'elevated'},
+        'typography':   {'heading': 'bricolage-grotesque', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 700, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'pill', 'style': 'solid', 'size': 'lg'},
+        'background':   {'type': 'image', 'overlay': 'soft'},
+        'motion':       {'reveal': 'rise', 'hover': 'lift', 'intensity': 'medium'},
+    },
+    'patitas': {
+        'palette':      {'primary': '#0d9488', 'secondary': '#0f766e', 'accent': '#f59e0b', 'bg': '#f5fbf9', 'surface': '#ffffff', 'text': '#0f172a', 'muted': '#5b6678', 'border': '#d3e8e3'},
+        'containers':   {'radius': 'pill', 'shadow': 'soft', 'border': 'none', 'density': 'comfortable', 'surface': 'flat'},
+        'typography':   {'heading': 'figtree', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 800, 'letterSpacing': '0em'},
+        'buttons':      {'shape': 'pill', 'style': 'solid', 'size': 'lg'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'stagger', 'hover': 'lift', 'intensity': 'medium'},
+    },
+    'galeria': {
+        'palette':      {'primary': '#1f2937', 'secondary': '#111827', 'accent': '#b45309', 'bg': '#faf9f7', 'surface': '#ffffff', 'text': '#111111', 'muted': '#6b7280', 'border': '#e3ded6'},
+        'containers':   {'radius': 'sm', 'shadow': 'none', 'border': 'thin', 'density': 'spacious', 'surface': 'flat'},
+        'typography':   {'heading': 'bricolage-grotesque', 'body': 'inter', 'scale': 'editorial', 'weightHeading': 600, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'square', 'style': 'outline', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'},
+    },
+    'neutro': {
+        'palette':      {'primary': '#4f46e5', 'secondary': '#4338ca', 'accent': '#4f46e5', 'bg': '#eaeef8', 'surface': '#ffffff', 'text': '#0f172a', 'muted': '#5b6678', 'border': '#aeb3dc'},
+        'containers':   {'radius': 'lg', 'shadow': 'soft', 'border': 'thin', 'density': 'comfortable', 'surface': 'elevated'},
+        'typography':   {'heading': 'inter', 'body': 'inter', 'scale': 'balanced', 'weightHeading': 800, 'letterSpacing': '-0.02em'},
+        'buttons':      {'shape': 'pill', 'style': 'solid', 'size': 'md'},
+        'background':   {'type': 'solid', 'overlay': 'none'},
+        'motion':       {'reveal': 'rise', 'hover': 'lift', 'intensity': 'subtle'},
+    },
+}
+
+#Acentos alternativos por look: la semilla elige uno para que dos
+#propuestas del mismo rubro no salgan con el mismo color exacto.
+ACCENTS                     =   {
+    'retail':   ('#c2410c', '#0f766e', '#1d4ed8'),
+    'gourmet':  ('#7c2d12', '#166534', '#1f2937'),
+    'atelier':  ('#b91c1c', '#111827', '#7c3aed'),
+    'sobrio':   ('#1e3a8a', '#0f766e', '#334155'),
+    'clinico':  ('#0f766e', '#0369a1', '#4f46e5'),
+    'belleza':  ('#9d174d', '#7c3aed', '#b45309'),
+    'obra':     ('#f59e0b', '#1d4ed8', '#b91c1c'),
+    'tech':     ('#4f46e5', '#0ea5e9', '#8b5cf6'),
+    'aula':     ('#1d4ed8', '#0f766e', '#b45309'),
+    'viaje':    ('#0369a1', '#c2410c', '#0f766e'),
+    'patitas':  ('#0d9488', '#f59e0b', '#4f46e5'),
+    'galeria':  ('#b45309', '#1f2937', '#7c3aed'),
+    'neutro':   ('#4f46e5', '#0f766e', '#b45309'),
+}
+
+#El tono no cambia la paleta (esa la manda el rubro): cambia la energía —
+#curvas, densidad del aire y cuánto se mueve la página.
+TONE_TWEAKS                 =   {
+    'calido':   {'containers': {'radius': 'xl', 'shadow': 'medium', 'density': 'spacious'}, 'motion': {'reveal': 'rise', 'hover': 'lift', 'intensity': 'subtle'}, 'buttons': {'shape': 'pill', 'style': 'solid'}},
+    'serio':    {'containers': {'radius': 'sm', 'shadow': 'soft', 'density': 'comfortable', 'surface': 'outlined'}, 'motion': {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'}, 'buttons': {'shape': 'rounded', 'style': 'solid'}},
+    'moderno':  {'containers': {'radius': 'lg', 'shadow': 'soft', 'density': 'comfortable'}, 'motion': {'reveal': 'rise', 'hover': 'lift', 'intensity': 'medium'}, 'buttons': {'shape': 'rounded', 'style': 'solid'}},
+    'audaz':    {'containers': {'radius': 'none', 'shadow': 'deep', 'density': 'compact', 'surface': 'flat'}, 'motion': {'reveal': 'stagger', 'hover': 'glow', 'intensity': 'bold'}, 'buttons': {'shape': 'square', 'style': 'gradient', 'size': 'lg'}},
+}
+
+#Afinidad plantilla ↔ tono: ajusta el puntaje, nunca decide solo.
+TEMPLATE_TONE_AFFINITY      =   {
+    'classic':  {'serio': 3, 'moderno': 1, 'calido': 1, 'audaz': 0},
+    'duo':      {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 0},
+    'calma':    {'calido': 3, 'serio': 1, 'moderno': 1, 'audaz': 0},
+    'vitrina':  {'moderno': 3, 'audaz': 2, 'calido': 1, 'serio': 1},
+    'cobre':    {'calido': 3, 'audaz': 2, 'moderno': 1, 'serio': 0},
+    'minimal':  {'serio': 3, 'moderno': 2, 'calido': 0, 'audaz': 1},
+}
+
+TEMPLATE_LABELS             =   {
+    'classic': 'Clásico', 'duo': 'Dúo', 'calma': 'Calma',
+    'vitrina': 'Vitrina', 'cobre': 'Cobre', 'minimal': 'Minimal',
+}
+
+#Afinidad plantilla ↔ objetivo: suma al puntaje la plantilla que mejor
+#cuenta esa historia (vitrina para vender, cobre/minimal para mostrar obra).
+TEMPLATE_GOAL_AFFINITY      =   {
+    'vender_online':        ('vitrina', 'duo'),
+    'mostrar_servicios':    ('duo', 'vitrina'),
+    'conseguir_consultas':  ('calma', 'classic'),
+    'dar_confianza':        ('classic', 'calma'),
+    'mostrar_trabajos':     ('cobre', 'minimal'),
+}
+
+#=========================================
+# RUBROS
+#=========================================
+#`templates` va de más a menos afinidad (el motor puntúa igual, pero el
+#orden desempata). `priority` es el orden de historia típico del rubro
+#antes de aplicar la receta del objetivo.
+RUBROS                      =   {
+    'comercio': {
+        'label': 'Comercio / tienda',
+        'look': 'retail',
+        'templates': ('vitrina', 'duo', 'cobre', 'classic'),
+        'goals': ('vender_online', 'mostrar_trabajos', 'dar_confianza'),
+        'priority': {
+            'landing':  ('hero', 'highlights', 'categories', 'featured', 'offers', 'benefits', 'brands', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('split', 'full', 'centered'), 'featured': ('grid', 'cols3', 'lead', 'quick'), 'categories': ('row', 'rail'), 'offers': ('grid', 'quick'), 'gallery': ('grid', 'masonry'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'cols'), 'cta': ('band', 'card'), 'contact': ('card', 'map')},
+    },
+    'gastronomia': {
+        'label': 'Gastronomía',
+        'look': 'gourmet',
+        'templates': ('calma', 'cobre', 'minimal', 'duo'),
+        'goals': ('mostrar_servicios', 'conseguir_consultas', 'dar_confianza'),
+        'priority': {
+            'landing':  ('hero', 'highlights', 'about', 'services', 'gallery', 'featured', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('editorial', 'cinema', 'split'), 'featured': ('cols2', 'lead', 'grid'), 'gallery': ('masonry', 'grid'), 'testimonials': ('carousel', 'cards'), 'faq': ('list', 'accordion'), 'cta': ('band', 'card'), 'contact': ('map', 'card')},
+    },
+    'indumentaria': {
+        'label': 'Indumentaria',
+        'look': 'atelier',
+        'templates': ('cobre', 'vitrina', 'minimal', 'duo'),
+        'goals': ('vender_online', 'mostrar_trabajos', 'dar_confianza'),
+        'priority': {
+            'landing':  ('hero', 'categories', 'featured', 'offers', 'gallery', 'about', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('full', 'cinema', 'split'), 'featured': ('masonry', 'cols3', 'grid', 'lead'), 'categories': ('rail', 'row'), 'gallery': ('masonry', 'rail'), 'testimonials': ('carousel', 'cards'), 'faq': ('accordion', 'cols'), 'cta': ('band', 'card'), 'contact': ('card', 'map')},
+    },
+    'servicios_profesionales': {
+        'label': 'Servicios profesionales',
+        'look': 'sobrio',
+        'templates': ('minimal', 'classic', 'calma', 'duo'),
+        'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
+        'priority': {
+            'landing':  ('hero', 'services', 'benefits', 'about', 'stats', 'testimonials', 'faq', 'steps', 'cta', 'contact'),
+            'catalog':  ('note', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('centered', 'split', 'compact'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'cols'), 'cta': ('band', 'card'), 'contact': ('card', 'map')},
+    },
+    'salud': {
+        'label': 'Salud',
+        'look': 'clinico',
+        'templates': ('calma', 'minimal', 'classic', 'duo'),
+        'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
+        'priority': {
+            'landing':  ('hero', 'services', 'benefits', 'team', 'about', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('centered', 'compact', 'split'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'list'), 'cta': ('card', 'band'), 'contact': ('map', 'card')},
+    },
+    'belleza': {
+        'label': 'Belleza y estética',
+        'look': 'belleza',
+        'templates': ('calma', 'cobre', 'vitrina', 'minimal'),
+        'goals': ('conseguir_consultas', 'mostrar_servicios', 'mostrar_trabajos'),
+        'priority': {
+            'landing':  ('hero', 'services', 'gallery', 'benefits', 'testimonials', 'team', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('cinema', 'editorial', 'split'), 'gallery': ('masonry', 'grid'), 'testimonials': ('carousel', 'cards'), 'faq': ('accordion', 'cols'), 'cta': ('band', 'card'), 'contact': ('map', 'card')},
+    },
+    'construccion': {
+        'label': 'Construcción y oficios',
+        'look': 'obra',
+        'templates': ('classic', 'duo', 'minimal', 'vitrina'),
+        'goals': ('mostrar_trabajos', 'conseguir_consultas', 'dar_confianza'),
+        'priority': {
+            'landing':  ('hero', 'services', 'gallery', 'stats', 'about', 'benefits', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('full', 'split', 'compact'), 'gallery': ('grid', 'masonry'), 'testimonials': ('cards', 'carousel'), 'faq': ('list', 'accordion'), 'cta': ('band', 'card'), 'contact': ('map', 'card')},
+    },
+    'tecnologia': {
+        'label': 'Tecnología',
+        'look': 'tech',
+        'templates': ('minimal', 'duo', 'vitrina', 'classic'),
+        'goals': ('vender_online', 'mostrar_servicios', 'conseguir_consultas'),
+        'priority': {
+            'landing':  ('hero', 'services', 'featured', 'benefits', 'stats', 'compare', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('split', 'cinema', 'centered'), 'featured': ('cols3', 'grid', 'quick'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'cols'), 'cta': ('band', 'card'), 'contact': ('card', 'map')},
+    },
+    'educacion': {
+        'label': 'Educación',
+        'look': 'aula',
+        'templates': ('calma', 'classic', 'duo', 'minimal'),
+        'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
+        'priority': {
+            'landing':  ('hero', 'services', 'steps', 'benefits', 'stats', 'testimonials', 'team', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('centered', 'split', 'compact'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'cols'), 'cta': ('card', 'band'), 'contact': ('card', 'map')},
+    },
+    'turismo': {
+        'label': 'Turismo y experiencias',
+        'look': 'viaje',
+        'templates': ('cobre', 'vitrina', 'calma', 'duo'),
+        'goals': ('mostrar_trabajos', 'conseguir_consultas', 'vender_online'),
+        'priority': {
+            'landing':  ('hero', 'gallery', 'services', 'about', 'stats', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('cinema', 'full', 'editorial'), 'gallery': ('masonry', 'rail'), 'testimonials': ('carousel', 'cards'), 'faq': ('accordion', 'list'), 'cta': ('band', 'card'), 'contact': ('map', 'card')},
+    },
+    'mascotas': {
+        'label': 'Mascotas',
+        'look': 'patitas',
+        'templates': ('duo', 'calma', 'vitrina', 'classic'),
+        'goals': ('mostrar_servicios', 'vender_online', 'conseguir_consultas'),
+        'priority': {
+            'landing':  ('hero', 'services', 'featured', 'benefits', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('split', 'centered', 'full'), 'featured': ('cols3', 'grid', 'quick'), 'gallery': ('grid', 'masonry'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'cols'), 'cta': ('card', 'band'), 'contact': ('card', 'map')},
+    },
+    'arte': {
+        'label': 'Arte y artesanías',
+        'look': 'galeria',
+        'templates': ('cobre', 'minimal', 'vitrina', 'duo'),
+        'goals': ('mostrar_trabajos', 'dar_confianza', 'vender_online'),
+        'priority': {
+            'landing':  ('hero', 'gallery', 'about', 'featured', 'timeline', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('editorial', 'cinema', 'full'), 'gallery': ('masonry', 'grid'), 'featured': ('masonry', 'cols2', 'grid'), 'testimonials': ('carousel', 'cards'), 'faq': ('list', 'accordion'), 'cta': ('band', 'card'), 'contact': ('card', 'map')},
+    },
+    'otro': {
+        'label': 'Otro rubro',
+        'look': 'neutro',
+        'templates': ('classic', 'duo', 'calma', 'minimal', 'vitrina', 'cobre'),
+        'goals': ('mostrar_servicios', 'dar_confianza', 'conseguir_consultas'),
+        'priority': {
+            'landing':  ('hero', 'about', 'services', 'featured', 'benefits', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('split', 'centered', 'full'), 'featured': ('grid', 'cols3'), 'gallery': ('grid', 'masonry'), 'testimonials': ('cards', 'carousel'), 'faq': ('accordion', 'cols'), 'cta': ('card', 'band'), 'contact': ('card', 'map')},
+    },
+}
+
+#Pistas de rubro por palabra: el dueño puede no responder la entrevista y
+#el motor deduce el rubro de lo que ya cargó (nombre, categorías, servicios).
+RUBRO_HINTS                 =   {
+    'comercio': ('tienda', 'almacen', 'kiosco', 'mercado', 'bazar', 'distribuidora', 'mayorista'),
+    'gastronomia': ('resto', 'restaurant', 'cafe', 'bar', 'panaderia', 'pizzeria', 'heladeria', 'cocina', 'food', 'delivery'),
+    'indumentaria': ('ropa', 'moda', 'indumentaria', 'calzado', 'zapatilla', 'boutique', 'taller textil'),
+    'servicios_profesionales': ('estudio', 'consultora', 'abogad', 'contador', 'asesor', 'consultor', 'legal'),
+    'salud': ('clinica', 'consultorio', 'salud', 'odontolog', 'kinesio', 'nutricion', 'psicolog', 'farmacia'),
+    'belleza': ('peluqueria', 'estetica', 'belleza', 'manicur', 'barber', 'spa', 'maquillaje'),
+    'construccion': ('construccion', 'obra', 'albanil', 'plomer', 'electric', 'pintur', 'carpinter', 'herrer'),
+    'tecnologia': ('software', 'tecnologia', 'sistemas', 'digital', 'app', 'informatica', 'web'),
+    'educacion': ('escuela', 'instituto', 'academia', 'curso', 'clases', 'educacion', 'profesor'),
+    'turismo': ('turismo', 'viaje', 'hotel', 'cabaña', 'hostel', 'excursion', 'agencia de viajes'),
+    'mascotas': ('veterinaria', 'mascota', 'pet', 'gato', 'perro', 'peluqueria canina'),
+    'arte': ('arte', 'artesan', 'galeria', 'taller', 'ilustra', 'fotograf', 'ceramica'),
+}
+
+#=========================================
+# RECETAS POR OBJETIVO
+#=========================================
+#`order` es el orden canónico de la portada para ese objetivo; `off`
+#apaga lo que distrae de la meta (no se borra: queda desactivado en el
+#borrador y el dueño lo reactiva). `hero_variant` fija la variante de la
+#portada, y `labels` son los nombres de las propuestas (≤32).
+GOAL_RECIPES                =   {
+    'vender_online': {
+        'label': 'Vender online',
+        'hero_variant': 'split',
+        'order': ('hero', 'highlights', 'categories', 'featured', 'offers', 'countdown', 'benefits', 'brands', 'testimonials', 'faq', 'cta', 'contact'),
+        'off': ('video', 'timeline', 'team', 'compare', 'steps'),
+        'labels': ('Catálogo protagonista', 'Vitrina de ofertas', 'Compra guiada'),
+        'why': 'Pusimos el catálogo arriba y el cierre de compra a la vista: menos scroll hasta el producto.',
+    },
+    'mostrar_servicios': {
+        'label': 'Mostrar servicios',
+        'hero_variant': 'centered',
+        'order': ('hero', 'services', 'benefits', 'steps', 'gallery', 'stats', 'testimonials', 'faq', 'cta', 'contact'),
+        'off': ('countdown', 'brands', 'compare'),
+        'labels': ('Servicios al frente', 'Proceso claro', 'Oficio y detalle'),
+        'why': 'Los servicios y los pasos quedan antes que la prueba social: se entiende qué hacés sin buscar.',
+    },
+    'conseguir_consultas': {
+        'label': 'Conseguir consultas',
+        'hero_variant': 'compact',
+        'order': ('hero', 'services', 'benefits', 'testimonials', 'faq', 'about', 'cta', 'contact'),
+        'off': ('countdown', 'brands', 'featured', 'offers', 'compare'),
+        'labels': ('Consultas primero', 'Respuesta rápida', 'Confianza y cierre'),
+        'why': 'Cada bloque empuja al contacto: la duda se responde antes del botón y el cierre queda al final.',
+    },
+    'dar_confianza': {
+        'label': 'Dar confianza',
+        'hero_variant': 'editorial',
+        'order': ('hero', 'about', 'stats', 'timeline', 'team', 'testimonials', 'benefits', 'faq', 'cta', 'contact'),
+        'off': ('countdown', 'compare'),
+        'labels': ('Confianza primero', 'Historia del negocio', 'Gente detrás'),
+        'why': 'Abrimos con la historia, las cifras y el equipo: la trayectoria es el argumento de venta.',
+    },
+    'mostrar_trabajos': {
+        'label': 'Mostrar trabajos',
+        'hero_variant': 'full',
+        'order': ('hero', 'gallery', 'featured', 'services', 'testimonials', 'about', 'faq', 'cta', 'contact'),
+        'off': ('countdown', 'compare', 'brands'),
+        'labels': ('Trabajos primero', 'Galería amplia', 'Antes y después'),
+        'why': 'La galería va justo debajo de la portada: el trabajo se muestra antes de explicarlo.',
+    },
+}
+
+#=========================================
+# BLOQUES QUE EXIGEN DATOS REALES
+#=========================================
+#Cada id apunta a un hecho del negocio (ai_design._facts). Sin el hecho el
+#bloque queda enabled=False: preferimos una web corta y verdadera a una
+#sección vacía. `None` = siempre presente (hero, cta, contact, grid...).
+BLOCK_GATES                 =   {
+    'landing': {
+        'hero':             None,
+        'announcements':    'announcements',
+        'highlights':       'highlights',
+        'categories':       'categories',
+        'featured':         'products',
+        'about':            'about',
+        'services':         'services',
+        'stats':            'stats',
+        'benefits':         'benefits',
+        'offers':           'offers',
+        'brands':           'brands',
+        'countdown':        'countdown',
+        'timeline':         'timeline',
+        'team':             'team',
+        'gallery':          'gallery',
+        'testimonials':     'testimonials',
+        'faq':              'faqs',
+        'video':            'video',
+        'steps':            'steps',
+        'compare':          'compare',
+        'cta':              None,
+        'contact':          'contact',
+    },
+    'catalog': {
+        'note':             'catalog_note',
+        'banner':           'carousel',
+        'promo':            'offers',
+        'filters':          'catalog_dense',
+        'sort':             'catalog_dense',
+        'grid':             None,
+    },
+    'services': {
+        'hero':             None,
+        'band':             'services',
+        'picker':           None,
+        'steps':            'steps',
+        'form':             'service_form',
+        'faq':              'faqs',
+    },
+}
+
+#Bloques que, si tienen datos, no deberían quedar fuera aunque la receta
+#del objetivo no los mencione (el motor los agrega al final del grupo).
+BLOCK_FALLBACKS             =   {
+    'landing': ('about', 'gallery', 'testimonials', 'faq', 'benefits', 'stats'),
+    'catalog': (),
+    'services': ('steps', 'faq'),
+}
+
+#=========================================
+# REGLAS DE JERARQUÍA (ordenadas)
+#=========================================
+#Documentación viva del criterio de armado: el motor las aplica en este
+#orden y cada una tiene su reflejo en ai_design._build_layout. Si una
+#regla cambia, cambia acá primero — el contrato con el frontend no.
+HIERARCHY_RULES             =   (
+    ('hero_first',      'La portada abre siempre; la variante la fija el objetivo.'),
+    ('locked_blocks',   'Los bloques locked (grilla del catálogo, selector de servicios) están siempre.'),
+    ('categories_two',  'Departamentos solo con 2+ categorías: una sola no es navegación.'),
+    ('gated_data',      'Cada bloque con datos propios se apaga si el dato falta (no se muestra vacío).'),
+    ('offers_real',     'Ofertas y cuenta regresiva solo con descuentos vigentes.'),
+    ('social_before_cta', 'Testimonios y marcas quedan antes del cierre: la prueba social precede al pedido.'),
+    ('contact_last',    'El contacto cierra la portada, después del llamado a la acción.'),
+    ('premium_flag',    'Los bloques premium se omiten sin has_design_advanced.'),
+)
+
+#Títulos de sección para props.title del borrador (se rellenan solo si el
+#bloque no tiene título propio). Se indexan por rubro y caen al genérico.
+BLOCK_TITLES                =   {
+    'comercio':     {'featured': 'Los más pedidos', 'categories': 'Categorías', 'offers': 'Ofertas', 'benefits': 'Por qué elegirnos', 'testimonials': 'Clientes', 'gallery': 'Nuestro local'},
+    'gastronomia':  {'services': 'Nuestra carta', 'gallery': 'El lugar', 'featured': 'Para probar', 'testimonials': 'Opiniones', 'about': 'Nuestra cocina'},
+    'indumentaria': {'featured': 'Nueva colección', 'categories': 'Colecciones', 'gallery': 'Lookbook', 'offers': 'Ofertas', 'about': 'La marca'},
+    'servicios_profesionales': {'services': 'Qué hacemos', 'benefits': 'Cómo trabajamos', 'faq': 'Consultas frecuentes', 'testimonials': 'Clientes', 'stats': 'Trayectoria'},
+    'salud':        {'services': 'Especialidades', 'team': 'Profesionales', 'benefits': 'Cómo te cuidamos', 'faq': 'Preguntas frecuentes'},
+    'belleza':      {'services': 'Servicios', 'gallery': 'Nuestros trabajos', 'team': 'El equipo', 'testimonials': 'Clientas', 'faq': 'Antes de tu turno'},
+    'construccion': {'services': 'Qué construimos', 'gallery': 'Obras realizadas', 'stats': 'Años de oficio', 'benefits': 'Cómo trabajamos', 'faq': 'Preguntas frecuentes'},
+    'tecnologia':   {'services': 'Soluciones', 'benefits': 'Por qué elegirnos', 'compare': 'Comparativa', 'faq': 'Preguntas frecuentes', 'stats': 'Resultados'},
+    'educacion':    {'services': 'Cursos', 'steps': 'Cómo inscribirse', 'team': 'Docentes', 'faq': 'Preguntas frecuentes', 'testimonials': 'Alumnos'},
+    'turismo':      {'gallery': 'Experiencias', 'services': 'Qué ofrecemos', 'about': 'Quiénes somos', 'faq': 'Antes de viajar', 'testimonials': 'Viajeros'},
+    'mascotas':     {'services': 'Servicios', 'featured': 'Productos', 'gallery': 'Nuestros pacientes', 'benefits': 'Cuidado de verdad', 'faq': 'Preguntas frecuentes'},
+    'arte':         {'gallery': 'Obras', 'about': 'El taller', 'featured': 'Piezas disponibles', 'timeline': 'Trayectoria', 'testimonials': 'Coleccionistas'},
+    'otro':         {'services': 'Qué ofrecemos', 'benefits': 'Por qué elegirnos', 'gallery': 'Galería', 'testimonials': 'Opiniones', 'faq': 'Preguntas frecuentes'},
+}

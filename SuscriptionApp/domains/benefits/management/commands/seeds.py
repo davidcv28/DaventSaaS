@@ -30,6 +30,7 @@ dict_benefits = {
     'has_support_chat'  :   {'label': 'Chat directo con el equipo de soporte',  'kind': 'flag'},
     'has_services_site' :   {'label': 'Página de servicios con pedidos por WhatsApp', 'kind': 'flag'},
     'max_site_templates':   {'label': 'Páginas de la web (portada, servicios, catálogo)', 'kind': 'limit'},
+    'has_ai_design'     :   {'label': 'Diseño web automático con IA propia', 'kind': 'flag'},
 }
 
 dict_plan_benefits = {
@@ -58,6 +59,7 @@ dict_plan_benefits = {
             'has_support_chat'  :   True,
             'has_services_site' :   True,
             'max_site_templates':   None,
+            'has_ai_design'     :   True,
         },
         'presentation'  :   {
             'slug'          :   'prueba',
@@ -95,6 +97,7 @@ dict_plan_benefits = {
             'has_support_chat'  :   False,
             'has_services_site' :   False,
             'max_site_templates':   2,
+            'has_ai_design'     :   False,
         },
         'presentation'  :   {
             'slug'          :   'basico',
@@ -135,6 +138,7 @@ dict_plan_benefits = {
             'has_support_chat'  :   False,
             'has_services_site' :   True,
             'max_site_templates':   2,
+            'has_ai_design'     :   True,
         },
         'presentation'  :   {
             'slug'          :   'estandar',
@@ -177,6 +181,7 @@ dict_plan_benefits = {
             'has_support_chat'  :   True,
             'has_services_site' :   True,
             'max_site_templates':   None,
+            'has_ai_design'     :   True,
         },
         'presentation'  :   {
             'slug'          :   'premium',
