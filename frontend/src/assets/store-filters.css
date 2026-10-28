@@ -522,6 +522,16 @@ html.cf-lock body { overflow: hidden; overscroll-behavior: none }
 .store-page[data-store-template='bloque'] .cv-bq { --cf-bg: var(--bq-paper); --cf-fg: var(--bq-ink); --cf-muted: var(--bq-mute); --cf-border: var(--bq-line); --cf-accent: var(--bq-ink); --cf-radius: 0; --cf-font: var(--bq-mono); }
 .store-page[data-store-template='riso'] .cv-rs { --cf-bg: var(--rs-card); --cf-fg: var(--rs-ink); --cf-muted: var(--rs-mute); --cf-border: color-mix(in srgb, var(--rs-ink) 25%, transparent); --cf-accent: var(--rs-pink); --cf-radius: 14px; --cf-font: var(--rs-body); }
 .store-page[data-store-template='terra'] .cv-tr { --cf-bg: var(--tr-card); --cf-fg: var(--tr-ink); --cf-muted: var(--tr-mute); --cf-border: var(--tr-line); --cf-accent: var(--tr-acc); --cf-radius: 18px; --cf-font: var(--tr-sans); }
+.store-page[data-store-template='atelier'] .cv-at { --cf-bg: var(--sp-card-solid); --cf-fg: var(--at-ink); --cf-muted: var(--sp-muted); --cf-border: var(--at-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--at-radius); }
+.store-page[data-store-template='calma'] .cv-be { --cf-bg: var(--be-card); --cf-fg: var(--be-ink); --cf-muted: var(--sp-muted); --cf-border: var(--be-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--be-radius); --cf-font: var(--be-body); }
+.store-page[data-store-template='arena'] .cv-gm { --cf-bg: var(--gm-card); --cf-fg: var(--gm-ink); --cf-muted: var(--sp-muted); --cf-border: var(--gm-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--gm-radius); --cf-font: var(--gm-body); }
+.store-page[data-store-template='vitrina'] .cv-lf { --cf-bg: var(--lf-card); --cf-fg: var(--lf-ink); --cf-muted: var(--sp-muted); --cf-border: var(--lf-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--lf-radius); --cf-font: var(--lf-body); }
+.store-page[data-store-template='mercado'] .cv-mc { --cf-bg: var(--sp-card-solid); --cf-fg: var(--mc-ink); --cf-muted: var(--sp-muted); --cf-border: var(--mc-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--mc-radius); }
+.store-page[data-store-template='carta'] .cv-ca { --cf-bg: var(--sp-card-solid); --cf-fg: var(--mc-ink); --cf-muted: var(--sp-muted); --cf-border: var(--mc-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--mc-radius); }
+.store-page[data-store-template='circuit'] .cv-ci,
+.store-page[data-store-template='lab'] .cv-ci { --cf-bg: var(--sp-card-solid); --cf-fg: var(--ci-ink); --cf-muted: var(--sp-muted); --cf-border: var(--ci-line); --cf-accent: var(--store-accent-ink); --cf-radius: var(--ci-radius); }
+.store-page[data-store-template='studio'] .cv-sd,
+.store-page[data-store-template='proceso'] .cv-sd { --cf-bg: var(--sd-card); --cf-fg: var(--sd-ink); --cf-muted: var(--sd-muted); --cf-border: var(--sd-line); --cf-accent: var(--sd-acc); --cf-radius: var(--sp-radius); }
 
 /* ---------- breakpoints ---------- */
 @media (max-width: 1023px) {

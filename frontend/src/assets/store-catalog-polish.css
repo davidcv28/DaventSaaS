@@ -108,3 +108,20 @@
 
 /* Perspectiva: la tilde del titular no pisa la línea del kicker */
 .cv-pe-kicker { margin-bottom: 20px; }
+
+/* --- Móvil: todas las grillas de producto a 2 columnas parejas ---
+   Cada plantilla traía su propio corte (Terra caía a 1 columna, otras
+   quedaban con auto-fill). Acá se unifican a dos columnas centradas, con
+   la tarjeta compacta ya definida arriba: ninguna huérfana estirada ni
+   scroll horizontal en 320/360/390. Las variantes del bloque grid
+   (list/masonry/lead/quick) y las plantillas no-grilla (carta, terminal,
+   dúo, studio) conservan su composición. */
+@media (max-width: 768px) {
+  .cv :is(.cv-pe-grid, .cv-st-grid, .cv-pr-grid, .cv-cb-grid, .cv-mn-grid, .cv-bt-grid, .cv-sg-grid, .cv-au-grid, .cv-at-grid, .cv-be-grid, .cv-gm-grid, .cv-lf-grid, .cv-mc-grid, .cv-of-grid, .cv-ci-grid, .cv-tr-cards, .cv-bq-cards, .cv-rs-cards) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: center;
+  }
+  .cv :is(.cv-cb-grid, .cv-mn-grid, .cv-bt-grid, .cv-sg-grid, .cv-au-grid, .cv-at-grid, .cv-be-grid, .cv-gm-grid, .cv-lf-grid, .cv-mc-grid, .cv-of-grid, .cv-ci-grid, .cv-tr-cards, .cv-bq-cards, .cv-rs-cards) {
+    gap: 12px 10px;
+  }
+}

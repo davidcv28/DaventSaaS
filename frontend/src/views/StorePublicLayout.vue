@@ -222,7 +222,7 @@ const botConfig = computed(() => (status.value === 'success' ? store.value?.chat
 // Estado compartido con la vista del catálogo: buscador del header, burger y
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
 // searchOpen: buscador colapsado del header en móvil (botón lupa).
-const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false, searchOpen: false })
+const ui = reactive({ search: '', menuOpen: false, hasCatalogNav: false, searchOpen: false, moreOpen: false })
 
 // Menú hamburguesa = SOLO navegación de la tienda: los filtros del catálogo
 // viven en CatalogFilters (sidebar desktop / bottom sheet móvil), no en el
@@ -240,12 +240,64 @@ const navMenuLinks = computed(() => {
 // El burger se muestra cuando hay navegación que esconder — Tienda Pro usa
 // su propia fila .sp-shop-nav (visible también en móvil).
 const hasNavMenu = computed(() => status.value === 'success' && !isShop.value && navMenuLinks.value.length > 0)
+
+// Tema mobile.nav: 'bottom' monta la tab bar (4 destinos + "Más") en lugar
+// del burger; 'top' y 'drawer' conservan el header + drawer lateral.
+const mobileNav = computed(() => pageAttrs.value['data-st-nav'] || 'top')
+// Prioridad de destinos en la tab bar: Inicio → Catálogo → Servicios → Contacto.
+const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Servicios', 'Contacto']
+const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Servicios: 'wrench', Contacto: 'message-circle' }
+const tabLinks = computed(() => {
+  const byLabel = new Map(navMenuLinks.value.map((l) => [l.label, l]))
+  return TAB_PRIORITY.filter((label) => byLabel.has(label)).slice(0, 4)
+    .map((label) => ({ ...byLabel.get(label), icon: TAB_ICONS[label] }))
+})
+const moreLinks = computed(() => navMenuLinks.value.filter((l) => !tabLinks.value.some((t) => t.label === l.label)))
+const showTabbar = computed(() => status.value === 'success' && mobileNav.value === 'bottom' && tabLinks.value.length > 0)
+function isTabActive(label) {
+  return (label === 'Inicio' && shopCurrent.value === 'home')
+    || (label === 'Catálogo' && shopCurrent.value === 'catalog')
+    || (label === 'Servicios' && shopCurrent.value === 'services')
+    || (label === 'Contacto' && shopCurrent.value === 'contacto')
+}
+
+const moreBtn = ref(null)
+const moreSheet = ref(null)
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+function onMoreKey(e) {
+  if (e.key === 'Escape') {
+    e.stopPropagation()
+    ui.moreOpen = false
+    return
+  }
+  if (e.key !== 'Tab' || !moreSheet.value) return
+  const items = moreSheet.value.querySelectorAll(FOCUSABLE)
+  if (!items.length) return
+  const first = items[0]
+  const last = items[items.length - 1]
+  if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault() }
+  else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault() }
+}
+// Sheet "Más": mismo contrato que el del dashboard (scroll bloqueado, foco
+// al cerrar, foco atrapado y Esc) sobre la paleta de la tienda.
+watch(() => ui.moreOpen, async (open) => {
+  document.documentElement.classList.toggle('sp-lock', open || ui.menuOpen)
+  if (open) {
+    document.addEventListener('keydown', onMoreKey, true)
+    await nextTick()
+    moreSheet.value?.querySelector('.sp-more-close')?.focus()
+  } else {
+    document.removeEventListener('keydown', onMoreKey, true)
+    if (moreSheet.value?.contains(document.activeElement)) moreBtn.value?.focus()
+  }
+})
+
 const onMenuKey = (e) => { if (e.key === 'Escape') ui.menuOpen = false }
-watch(() => route.fullPath, () => { ui.menuOpen = false; ui.searchOpen = false })
+watch(() => route.fullPath, () => { ui.menuOpen = false; ui.searchOpen = false; ui.moreOpen = false })
 // Drawer de navegación: mientras está abierto bloquea el scroll del body,
 // lleva el foco al botón de cerrar y lo devuelve al burger al cerrarse.
 watch(() => ui.menuOpen, async (open) => {
-  document.documentElement.classList.toggle('sp-lock', open)
+  document.documentElement.classList.toggle('sp-lock', open || ui.moreOpen)
   if (open) {
     await nextTick()
     menuDrawer.value?.querySelector('.sp-drawer-close')?.focus()
@@ -253,7 +305,10 @@ watch(() => ui.menuOpen, async (open) => {
     menuBtn.value?.focus()
   }
 })
-onBeforeUnmount(() => document.documentElement.classList.remove('sp-lock'))
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove('sp-lock')
+  document.removeEventListener('keydown', onMoreKey, true)
+})
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isServices = computed(() => route.name === 'store-services')
 const isProduct = computed(() => route.name === 'store-product')
@@ -615,6 +670,71 @@ onBeforeUnmount(() => {
         ><span>{{ l.label }}</span><AppIcon name="chevron-right" :size="15" aria-hidden="true" /></RouterLink>
       </div>
     </nav>
+
+    <!-- Tab bar móvil (tema mobile.nav = 'bottom'): 4 destinos + "Más",
+         calcada del .tabbar del dashboard y por encima del dock de CTA. -->
+    <nav v-if="showTabbar" class="sp-tabbar" aria-label="Secciones principales">
+      <RouterLink
+        v-for="t in tabLinks" :key="t.label" :to="t.to" class="sp-tab"
+        :class="{ active: isTabActive(t.label) }"
+        :aria-current="isTabActive(t.label) ? 'page' : undefined"
+      >
+        <AppIcon :name="t.icon" :size="20" />
+        <span>{{ t.label }}</span>
+      </RouterLink>
+      <button
+        ref="moreBtn" type="button" class="sp-tab"
+        :class="{ active: ui.moreOpen }"
+        :aria-expanded="ui.moreOpen" aria-controls="sp-more-sheet"
+        @click="ui.moreOpen = !ui.moreOpen"
+      >
+        <AppIcon name="menu" :size="20" />
+        <span>Más</span>
+      </button>
+    </nav>
+
+    <!-- Sheet "Más": el resto del menú, contacto y tema -->
+    <template v-if="showTabbar">
+      <div v-if="ui.moreOpen" class="sp-more-scrim" aria-hidden="true" @click="ui.moreOpen = false"></div>
+      <div
+        id="sp-more-sheet" ref="moreSheet" class="sp-more-sheet" :class="{ open: ui.moreOpen }"
+        role="dialog" aria-modal="true" aria-label="Todas las secciones"
+      >
+        <div class="sp-more-head">
+          <span class="sp-more-grab" aria-hidden="true"></span>
+          <div class="sp-more-brand">
+            <img v-if="custom.logo" class="sp-logo sm" :src="custom.logo" :alt="`Logo de ${shopName}`" />
+            <span v-else class="sp-mono sm" aria-hidden="true">{{ initial }}</span>
+            <strong :style="nameFont">{{ shopName }}</strong>
+          </div>
+          <button type="button" class="sp-more-close" aria-label="Cerrar menú" @click="ui.moreOpen = false">
+            <AppIcon name="x" :size="18" />
+          </button>
+        </div>
+        <nav class="sp-more-nav" aria-label="Todas las secciones">
+          <RouterLink
+            v-for="l in moreLinks" :key="l.label" :to="l.to" class="sp-more-link"
+            @click="ui.moreOpen = false"
+          >
+            <span>{{ l.label }}</span>
+            <AppIcon name="chevron-right" :size="16" aria-hidden="true" />
+          </RouterLink>
+          <p v-if="!moreLinks.length" class="sp-more-empty">No hay más secciones publicadas.</p>
+        </nav>
+        <div class="sp-more-foot">
+          <a v-if="whatsappUrl" class="sp-more-link is-wa" :href="whatsappUrl" target="_blank" rel="noopener">
+            <AppIcon name="whatsapp" :size="17" aria-hidden="true" /><span>WhatsApp</span>
+          </a>
+          <RouterLink v-if="showCatalog && !isCatalog" class="sp-more-link" :to="catalogTo" @click="ui.moreOpen = false">
+            <AppIcon name="search" :size="17" aria-hidden="true" /><span>Buscar productos</span>
+          </RouterLink>
+          <button v-if="showThemeToggle" type="button" class="sp-more-link" @click="ui.moreOpen = false; togglePageTheme()">
+            <AppIcon :name="pageTheme === 'dark' ? 'sun' : 'moon'" :size="17" aria-hidden="true" />
+            <span>{{ pageTheme === 'dark' ? 'Modo claro' : 'Modo oscuro' }}</span>
+          </button>
+        </div>
+      </div>
+    </template>
 
     <span id="sp-main" ref="mainAnchor" tabindex="-1" class="sp-main-anchor"></span>
 

@@ -16,6 +16,7 @@
   --sp-radius: 16px;
   --sp-card-solid: #fff;
   --sp-top-h: 64px;
+  --sp-tabbar-h: 64px;
   /* Escala 2026: espacio, tipografía, radios y sombras en tokens */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
   --fs-hero: clamp(32px, 7vw, 64px); --fs-h2: clamp(24px, 3.4vw, 40px); --fs-body: clamp(15px, 1.05vw, 16px);
@@ -11028,22 +11029,75 @@ html { scroll-behavior: smooth; }
   }
   .store-page[data-st-card='overlay'] :is(.tpc-name, .tpc-eyebrow, .tpc-price, .tpc-save, .tpc-price s) { color: #fff; }
 
-  .store-page[data-st-nav='bottom'] { padding-bottom: calc(var(--sp-top-h, 64px) + env(safe-area-inset-bottom)); }
-  .store-page[data-st-nav='bottom'] .sp-top {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 44;
-    border-bottom: 0;
-    border-top: 1px solid rgba(0, 0, 0, .18);
-    box-shadow: 0 -10px 30px -16px rgba(2, 6, 23, .35);
-  }
-  .store-page[data-st-nav='bottom'] .sp-dock { bottom: calc(var(--sp-top-h, 64px) + env(safe-area-inset-bottom)); }
+  /* mobile.nav = 'bottom': el header queda arriba (marca + lupa + CTA) y la
+     navegación baja a la tab bar fija — el patrón del dashboard, no el header
+     entero abajo. */
+  .store-page[data-st-nav='bottom'] { padding-bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
+  .store-page[data-st-nav='bottom'] .sp-burger { display: none; }
+  .store-page[data-st-nav='bottom'] .sp-dock { bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
+  .store-page[data-st-nav='bottom'] .sp-bot { bottom: calc(var(--sp-tabbar-h) + 16px + env(safe-area-inset-bottom)); }
+  .store-page[data-st-nav='bottom'].has-dock .sp-bot { bottom: calc(var(--sp-tabbar-h) + 76px + env(safe-area-inset-bottom)); }
+  .store-page[data-st-nav='bottom'].has-dock .sp-foot { padding-bottom: calc(var(--sp-tabbar-h) + 96px + env(safe-area-inset-bottom)); }
   .store-page[data-st-nav='drawer'] .sp-top-links { display: none; }
 
   .store-page[data-st-sticky-cta='true'] .sp-dock { display: flex; }
+}
+
+/* ---------- Tab bar inferior + sheet "Más" (mobile.nav = 'bottom') ----------
+   Mismo patrón que .tabbar/.more-sheet del dashboard, con la paleta --sp-*
+   de la tienda: 4 destinos + "Más" al alcance del pulgar. */
+.sp-tabbar, .sp-more-scrim, .sp-more-sheet { display: none; }
+@media (max-width: 768px) {
+  .sp-tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    display: flex; align-items: stretch; justify-content: space-around;
+    background: color-mix(in srgb, var(--sp-card-solid) 88%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    border-top: 1px solid var(--sp-line);
+    padding: 6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+  }
+  .sp-tab {
+    position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 52px; padding: 0 4px; border: 0; border-radius: 12px; background: none; color: var(--sp-muted);
+    font: inherit; font-size: 10.5px; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer;
+    touch-action: manipulation; transition: color .18s, background-color .18s;
+  }
+  .sp-tab .icon { transition: transform .22s var(--sp-ease), color .18s; }
+  .sp-tab.active { color: var(--store-accent); }
+  .sp-tab.active .icon { transform: translateY(-1px); }
+  .sp-tab.active::before { content: ''; position: absolute; top: 2px; left: 50%; width: 18px; height: 3px; border-radius: 3px; background: var(--store-accent); transform: translateX(-50%); }
+  .sp-tab:active { background: var(--sp-soft); }
+
+  .sp-more-scrim { display: block; position: fixed; inset: 0; z-index: 46; background: rgba(8, 10, 24, .55); animation: sp-more-fade .18s ease both; }
+  .sp-more-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 47;
+    display: flex; flex-direction: column; max-height: min(78dvh, 640px);
+    background: var(--sp-card-solid); color: var(--sp-ink);
+    border-radius: 20px 20px 0 0; border-top: 1px solid var(--sp-line);
+    box-shadow: 0 -18px 50px -18px rgba(8, 10, 24, .45);
+    transform: translateY(102%); visibility: hidden;
+    transition: transform .28s var(--sp-ease), visibility .28s;
+  }
+  .sp-more-sheet.open { transform: none; visibility: visible; }
+  .sp-more-head { position: relative; display: grid; gap: 6px; padding: 10px 16px 8px; border-bottom: 1px solid var(--sp-line); }
+  .sp-more-grab { justify-self: center; width: 38px; height: 4px; border-radius: 4px; background: var(--sp-line); }
+  .sp-more-brand { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 44px; }
+  .sp-more-brand strong { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sp-more-close { position: absolute; top: 14px; right: 12px; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--sp-soft); color: var(--sp-ink); cursor: pointer; }
+  .sp-more-nav { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 12px; display: grid; gap: 2px; align-content: start; }
+  .sp-more-link { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 12px; border: 0; border-radius: 10px; background: none; color: var(--sp-ink); font: inherit; font-size: 15px; font-weight: 500; text-align: left; text-decoration: none; cursor: pointer; }
+  .sp-more-link:hover, .sp-more-link:active { background: var(--sp-soft); }
+  .sp-more-link > span { flex: 1; min-width: 0; }
+  .sp-more-link > .icon:last-child { color: var(--sp-muted); opacity: .6; }
+  .sp-more-empty { margin: 12px; font-size: 13.5px; color: var(--sp-muted); }
+  .sp-more-foot { border-top: 1px solid var(--sp-line); padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); display: grid; gap: 2px; }
+  .sp-more-foot .sp-more-link.is-wa { color: #0d7a3f; font-weight: 700; }
+  .store-page[data-store-theme='dark'] .sp-more-foot .sp-more-link.is-wa { color: #34d399; }
+}
+@keyframes sp-more-fade { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  .sp-more-sheet, .sp-more-scrim { animation: none; transition: none; }
+  .sp-tab, .sp-tab .icon { transition: none; }
 }
 
 /* ---------- Barra, pie y dock ----------
