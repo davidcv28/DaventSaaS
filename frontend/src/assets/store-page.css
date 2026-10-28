@@ -1523,46 +1523,43 @@ html { scroll-behavior: smooth; }
 
 /* ---------- Portada de fondo en los diseños editoriales ----------
    Lookbook, Cobre, Minimal, Boutique, Tienda Pro, Signature y Aurora
-   también llevan la portada como fondo de la banda. El velo se tiñe con
-   el propio "papel" de cada diseño (o con su noche, en Signature/Aurora)
-   para que la tinta del sistema conserve contraste y la foto quede como
-   textura de fondo visible en los bordes. */
-.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-cover::after {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-bg) 54%, transparent) 0%,
-    color-mix(in srgb, var(--sp-bg) 38%, transparent) 44%,
-    color-mix(in srgb, var(--sp-bg) 52%, transparent) 100%);
-}
-/* El velo de lectura bajo el contenido también va en papel, no en negro:
-   la tinta oscura de estos diseños seguiría aplastada por la sombra. La
-   suma de ambos velos deja la foto visible en los bordes y la tinta
-   legible sobre la zona del copy. */
-.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-inner::before {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-bg) 60%, transparent),
-    color-mix(in srgb, var(--sp-bg) 48%, transparent) 45%,
-    color-mix(in srgb, var(--sp-bg) 62%, transparent));
-}
-.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-title,
-.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-sub {
-  text-shadow: 0 1px 16px color-mix(in srgb, var(--sp-bg) 85%, transparent);
-}
-/* Tienda Pro usa la superficie sólida de tarjeta como "papel" (la var
-   --sp-bg oscuro es un degradado y no mezcla en color-mix). */
-.store-page[data-store-template='shop'] .sp-hero-cover::after {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-card-solid) 60%, transparent) 0%,
-    color-mix(in srgb, var(--sp-card-solid) 44%, transparent) 44%,
-    color-mix(in srgb, var(--sp-card-solid) 58%, transparent) 100%);
-}
-.store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-inner::before {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-card-solid) 56%, transparent),
-    color-mix(in srgb, var(--sp-card-solid) 44%, transparent) 45%,
-    color-mix(in srgb, var(--sp-card-solid) 60%, transparent));
-}
-.store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-title,
-.store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-sub { text-shadow: 0 1px 16px color-mix(in srgb, var(--sp-card-solid) 85%, transparent); }
+   también llevan la portada como fondo de la banda. Como en Perspectiva,
+   el papel cede a la foto: el velo del acento oscurece y los textos del
+   hero pasan a tinta clara, conservando las marcas tipográficas de cada
+   diseño (subrayados, filetes, kickers). Las placas/marcos de papel se
+   quedan como collage editorial encima de la foto. */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover { background: var(--store-accent-ink); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-title { color: #fff; }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-sub { color: rgba(255, 255, 255, .85); }
+/* Marcas de la última palabra: acento sobre el velo oscuro (el filete o
+   la cursiva propios del diseño se conservan). */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-lb-mark, .sp-cb-mark, .sp-mn-mark, .sp-bt-mark) { color: var(--store-accent); }
+.store-page[data-store-template='lookbook'] .sp-hero-band.has-cover .sp-lb-mark { color: #fff; }
+/* Kickers y datelines en tinta clara con el acento del negocio. */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-cb-kicker, .sp-mn-kicker, .sp-bt-kicker, .sp-lb-dateline) { color: rgba(255, 255, 255, .78); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover :is(.sp-cb-kicker, .sp-mn-kicker, .sp-bt-kicker, .sp-lb-dateline) :is(svg, .icon) { color: var(--store-accent); }
+.store-page[data-store-template='lookbook'] .sp-hero-band.has-cover .sp-lb-dateline span:first-child { color: var(--store-accent); }
+.store-page[data-store-template='lookbook'] .sp-hero-band.has-cover .sp-lb-dateline i { background: rgba(255, 255, 255, .3); }
+.store-page[data-store-template='cobre'] .sp-hero-band.has-cover .sp-cb-kicker,
+.store-page[data-store-template='minimal'] .sp-hero-band.has-cover .sp-mn-kicker,
+.store-page[data-store-template='boutique'] .sp-hero-band.has-cover .sp-bt-kicker { color: var(--store-accent); }
+/* CTAs: el sólido de cada diseño pasa a placa clara; los fantasmas y los
+   enlaces subrayados se iluminan; el compartir vuelve al vidrio. */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-ctas .sp-btn { color: #fff; border-color: rgba(255, 255, 255, .75); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-ctas .sp-btn.sp-hero-btn { background: #fff; border-color: transparent; color: var(--store-accent-ink); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-ctas .sp-btn.sp-hero-ghost { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .5); color: #fff; }
+.store-page[data-store-template='lookbook'] .sp-hero-band.has-cover .sp-hero-ctas .sp-btn { background: transparent; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .75); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero .sp-icon-btn { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .4); color: #fff; }
+/* Meta en tinta clara; los separadores de filete pasan a blanco suave. */
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-meta { color: rgba(255, 255, 255, .78); border-top-color: rgba(255, 255, 255, .3); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-meta li { border-right-color: rgba(255, 255, 255, .3); }
+.store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-meta .icon { color: var(--store-accent); }
+/* Decor de tinta propio del diseño se aclara para leerlo sobre la foto. */
+.store-page[data-store-template='minimal'] .sp-hero-band.has-cover .sp-mn-circle { border-color: rgba(255, 255, 255, .18); }
+.store-page[data-store-template='minimal'] .sp-hero-band.has-cover :is(.sp-mn-plus::before, .sp-mn-plus::after) { background: rgba(255, 255, 255, .5); }
+.store-page[data-store-template='minimal'] .sp-hero-band.has-cover .sp-mn-index { color: rgba(255, 255, 255, .6); }
+.store-page[data-store-template='boutique'] .sp-hero-band.has-cover .sp-bt-ghost { color: rgba(255, 255, 255, .07); }
+.store-page[data-store-template='cobre'] .sp-hero-band.has-cover :is(.sp-cb-stitch, .sp-cb-tape) { opacity: .3; filter: invert(1); }
 /* Minimal/Boutique: el strip de anuncio queda por encima de la foto. */
 .store-page:is([data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-mn-announce { position: relative; z-index: 1; }
 /* Signature y Aurora ya son bandas de noche con tinta clara: el velo va
@@ -1579,9 +1576,8 @@ html { scroll-behavior: smooth; }
     color-mix(in srgb, var(--au-sky) 42%, transparent) 50%,
     color-mix(in srgb, var(--au-deep) 58%, transparent) 100%);
 }
-/* Aurora con portada: el cielo panorámico interno deja de duplicar la
-   foto — el media-panel pasa a mostrar el carrusel/producto sobre el
-   mismo fondo, así que se achica para que la portada respire detrás. */
+/* Aurora con portada: el cielo panorámico interno baja un poco su brillo
+   para que la placa de vidrio no compita con el fondo. */
 .store-page[data-store-template='aurora'] .sp-hero-band.has-cover .sp-au-media img { filter: brightness(.82) saturate(1.02); }
 /* El texto del hero oscuro no lleva el halo claro de los diseños papel. */
 .store-page:is([data-store-template='signature'], [data-store-template='aurora']) .sp-hero-band.has-cover .sp-hero-title,
