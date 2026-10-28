@@ -31,7 +31,7 @@ import {
 import { useStudioHistory } from './useStudioHistory.js'
 import {
   resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys, normalizeHex,
-  styleColorsBlock
+  styleColorsBlock, styleVariantPalette
 } from '../../studio/contract.js'
 import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
@@ -418,23 +418,26 @@ watch(() => [draft.theme.typography.heading, draft.theme.typography.body], ([h, 
 // El `trial` guarda el snapshot previo al primer ensayo de la sesión:
 // "Deshacer" vuelve exactamente ahí, "Quedarla" solo cierra el modo prueba.
 // ---------------------------------------------------------------------------
-const trial = ref(null) // {id, snap}
+const trial = ref(null) // {id, variant, snap}
 const tryingId = computed(() => trial.value?.id || null)
+const tryingVariant = computed(() => trial.value?.variant || 'original')
 
-async function applyPreset(p, part = 'all') {
+async function applyPreset(p, part = 'all', variant = 'original') {
   const t = resolveSiteTheme(p.theme)
   const all = part === 'all'
+  // La variante solo mueve el acento; el resto del set se deriva del palette.
+  const palette = all ? styleVariantPalette(t.palette, variant) : t.palette
   // (1) Los campos persistibles se escriben primero y en el mismo gesto:
   // el watcher form->theme corre en el siguiente flush, así si el preset
   // se aplica DESPUÉS de nextTick su versión de palette/typography gana.
   if (all) {
     if (props.benefits?.has_design_advanced) {
-      props.form.accent_custom = t.palette.accent
+      props.form.accent_custom = palette.accent
     } else {
       // Sin diseño avanzado el acento libre no viaja: se mapea al slug
       // más cercano del catálogo base. accent_custom queda intacto (un
       // valor guardado en otra época de plan se conserva, no se pisa).
-      const slug = nearestAccent(hexToRgb(t.palette.accent), STORE_ACCENTS)
+      const slug = nearestAccent(hexToRgb(palette.accent), STORE_ACCENTS)
       if (slug) props.form.accent = slug
     }
     props.form.name_font = t.typography.body
@@ -448,16 +451,17 @@ async function applyPreset(p, part = 'all') {
     draft.layout = clone(layoutForTemplate(p, draft.template || liveTemplate.value))
   }
   await nextTick()
-  if (all || part === 'palette') draft.theme.palette = clone(t.palette)
+  if (all || part === 'palette') draft.theme.palette = clone(palette)
   if (all || part === 'typography') draft.theme.typography = clone(t.typography)
   if (all) {
     ;['containers', 'buttons', 'background', 'motion', 'mobile'].forEach((k) => {
       draft.theme[k] = clone(t[k])
     })
-    // Juego de colores del estilo (fuentes + contenedores) en ambos modos
-    // y el id del preset: es lo único que el plan Básico persiste.
-    draft.theme.styleColors = clone(t.styleColors || styleColorsBlock(t.palette))
-    draft.theme.style = { id: p.id }
+    // Juego de colores del estilo (fuentes + contenedores) en ambos modos,
+    // ya con la variante elegida, y el id/variante del preset: es lo único
+    // que el plan Básico persiste.
+    draft.theme.styleColors = clone(styleColorsBlock(palette))
+    draft.theme.style = { id: p.id, ...(variant !== 'original' ? { variant } : {}) }
     viewerTheme.value = p.pageTheme || 'light'
   }
   if (all || part === 'typography') {
@@ -469,9 +473,14 @@ async function applyPreset(p, part = 'all') {
 }
 
 function tryPreset(p) {
-  if (!trial.value) trial.value = { id: p.id, snap: snapshot() }
-  else trial.value = { ...trial.value, id: p.id }
-  applyPreset(p, 'all')
+  if (!trial.value) trial.value = { id: p.id, variant: 'original', snap: snapshot() }
+  else trial.value = { ...trial.value, id: p.id, variant: 'original' }
+  applyPreset(p, 'all', 'original')
+}
+function tryVariant(p, variant) {
+  if (!trial.value) trial.value = { id: p.id, variant, snap: snapshot() }
+  else trial.value = { ...trial.value, id: p.id, variant }
+  applyPreset(p, 'all', variant)
 }
 function revertTrial() {
   if (!trial.value) return
@@ -488,8 +497,10 @@ async function applyAndSave(p) {
 provide('studioPresets', {
   presets: STUDIO_PRESETS,
   tryingId,
+  tryingVariant,
   lockOf: (p) => presetLock(p, props.benefits),
   tryIt: tryPreset,
+  tryVariant,
   apply: applyPreset,
   applyAndSave,
   revertTrial,

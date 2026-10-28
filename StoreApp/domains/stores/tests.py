@@ -1534,6 +1534,7 @@ class SiteThemeTests(TestCase):
             ('mobile', 'nav', 'lateral'),
             ('mobile', 'cardStyle', 'gigante'),
             ('mobile', 'heroHeight', 'inmensa'),
+            ('style', 'variant', 'neon'),
         ):
             response    =   self._patch(client, {'site_theme': {section: {key: bad}}})
             self.assertEqual(response.status_code, 400, (section, key, bad))
@@ -1651,7 +1652,7 @@ class SiteThemeTests(TestCase):
         #juego de colores; paleta/tipografía/fondo/movimiento se descartan.
         client      =   self._client()
         response    =   self._patch(client, {'site_theme': {
-            'style'         :   {'id': 'corporativo'},
+            'style'         :   {'id': 'corporativo', 'variant': 'deep'},
             'styleColors'   :   self._style_colors(),
             'palette'       :   {'primary': '#112233'},
             'typography'    :   {'heading': 'oswald'},
@@ -1661,7 +1662,7 @@ class SiteThemeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         theme       =   response.data['customization']['site_theme']
         self.assertEqual(set(theme), {'style', 'styleColors'})
-        self.assertEqual(theme['style'], {'id': 'corporativo'})
+        self.assertEqual(theme['style'], {'id': 'corporativo', 'variant': 'deep'})
         self.assertEqual(theme['styleColors']['light']['containers']['surface'], '#ffffff')
 
     def test_basic_style_id_above_plan_is_dropped(self):

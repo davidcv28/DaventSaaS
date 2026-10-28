@@ -42,6 +42,12 @@ export const STUDIO_TIERS = ['base', 'plus', 'advanced']
 export const STUDIO_STYLE_MODES = ['light', 'dark']
 export const STYLE_FONT_KEYS = ['heading', 'body', 'muted', 'link']
 export const STYLE_CONTAINER_KEYS = ['bg', 'surface', 'border', 'onSurface']
+// Variantes de color de un estilo (mismo hue, distinta intensidad del acento).
+export const STYLE_VARIANTS = [
+  { id: 'original', label: 'Original' },
+  { id: 'soft', label: 'Suave' },
+  { id: 'deep', label: 'Intensa' }
+]
 
 export const STUDIO_ENUMS = {
   radius:     ['none', 'sm', 'md', 'lg', 'xl', 'pill'],
@@ -256,6 +262,8 @@ export function resolveSiteTheme(partial = {}) {
   }
   if (p.style && typeof p.style === 'object' && typeof p.style.id === 'string' && p.style.id.trim()) {
     resolved.style = { id: p.style.id.trim().slice(0, 60) }
+    const variant = STYLE_VARIANTS.find((v) => v.id === p.style.variant)
+    if (variant && variant.id !== 'original') resolved.style.variant = variant.id
   }
   return resolved
 }
@@ -330,6 +338,24 @@ const STYLE_NEUTRAL = {
 
 function paletteMode(palette) {
   return luminance(normalizeHex(palette?.bg) || '#ffffff') < 0.5 ? 'dark' : 'light'
+}
+
+function mixHex(a, b, t) {
+  const [ar, ag, ab] = hexToRgb(a)
+  const [br, bg, bb] = hexToRgb(b)
+  return rgbToHex([ar + (br - ar) * t, ag + (bg - ag) * t, ab + (bb - ab) * t])
+}
+
+// Variante de color del estilo: cambia solo el acento (primary/accent) para
+// no romper la identidad del preset; el resto del set se deriva igual.
+export function styleVariantPalette(palette = SITE_THEME_DEFAULTS.palette, variant = 'original') {
+  const p = { ...(palette || {}) }
+  const accent = normalizeHex(p.accent) || SITE_THEME_DEFAULTS.palette.accent
+  const surface = normalizeHex(p.surface) || '#ffffff'
+  if (variant === 'soft') p.accent = p.primary = mixHex(accent, surface, 0.35)
+  else if (variant === 'deep') p.accent = p.primary = mixHex(accent, '#000000', 0.28)
+  else p.accent = p.primary = accent
+  return p
 }
 
 function legibleOn(fg, bg, surface) {

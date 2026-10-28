@@ -80,6 +80,7 @@ _STYLE_PRESET_TEMPLATES =   {
     'lujo-serif'        :   'cobre',
 }
 _STYLE_MODES            =   ('light', 'dark')
+_STYLE_VARIANTS         =   ('original', 'soft', 'deep')
 _STYLE_FONT_KEYS        =   ('heading', 'body', 'muted', 'link')
 _STYLE_CONTAINER_KEYS   =   ('bg', 'surface', 'border', 'onSurface')
 
@@ -124,6 +125,7 @@ _SECTION_SPECS  =   {
     },
     'style'         :   {
         'id'        :   ('enum', _STYLE_IDS),
+        'variant'   :   ('enum', _STYLE_VARIANTS),
     },
     'styleColors'   :   {mode: ('styleSet',) for mode in _STYLE_MODES},
 }
@@ -138,6 +140,7 @@ SITE_THEME_PLUS_KEYS    =   frozenset({
 #fondo, movimiento ni paleta libres.
 SITE_THEME_STYLE_KEYS   =   frozenset({
     ('style', 'id'),
+    ('style', 'variant'),
     ('styleColors', 'light'),
     ('styleColors', 'dark'),
 })
@@ -350,6 +353,7 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
             allowed_tpls    =   ()
         if not template or template not in allowed_tpls:
             style.pop('id', None)
+            style.pop('variant', None)
         if not style:
             clean.pop('style', None)
     return clean

@@ -8,7 +8,7 @@
 import { computed, inject, onMounted } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import { detectRubro, presetLock, PRESET_PICKER_IDS } from './catalog.js'
-import { resolveStyleColors } from '../contract.js'
+import { STYLE_VARIANTS, resolveStyleColors, styleVariantPalette } from '../contract.js'
 import { STORE_TEMPLATES } from '../../api/stores.api.js'
 import { useStoreStore } from '../../stores/store.store.js'
 import { useCatalogStore } from '../../stores/catalog.store.js'
@@ -52,8 +52,14 @@ const recommended = computed(() => {
 const TIER_LABEL = { base: 'Básico', plus: 'Estándar', advanced: 'Premium' }
 const lockOf = (p) => presetLock(p, props.benefits)
 const tplLabel = (p) => STORE_TEMPLATES[p.template]?.label || p.template
-// "En uso": la plantilla guardada coincide y no hay prueba en vivo.
-const isCurrent = (p) => !api.tryingId.value && custom.value.template === p.template
+// "En uso": el estilo guardado coincide y no hay prueba en vivo. El id del
+// style manda; sin él (filas viejas) cae a la plantilla guardada.
+const isCurrent = (p) => {
+  if (api.tryingId.value) return false
+  const stored = custom.value.site_theme_draft?.style || custom.value.site_theme?.style
+  if (stored?.id) return stored.id === p.id
+  return custom.value.template === p.template
+}
 const isTrying = (p) => api.tryingId.value === p.id
 
 const pickerItems = computed(() => PRESET_PICKER_IDS
@@ -70,9 +76,32 @@ const extraItems = computed(() => {
 const items = computed(() => [...pickerItems.value, ...extraItems.value])
 
 // Mini muestra del set vigente: fondo, superficie, borde y color de fuente.
-function chipsOf(p) {
-  const sc = resolveStyleColors(p.theme, props.mode)
-  return [sc.containers.bg, sc.containers.surface, sc.containers.border, sc.fonts.heading]
+const SWATCH_LABELS = { bg: 'Fondo', surface: 'Superficie', border: 'Borde', onSurface: 'Texto' }
+const SWATCH_SHORT = { bg: 'Fondo', surface: 'Sup.', border: 'Borde', onSurface: 'Texto' }
+
+// Variante de color del estilo (original / suave / intensa). En prueba manda
+// el ensayo; en uso, la variante guardada; si no, la original.
+function variantOf(p) {
+  if (isTrying(p)) return api.tryingVariant.value || 'original'
+  const stored = custom.value.site_theme_draft?.style || custom.value.site_theme?.style
+  if (isCurrent(p) && stored?.id === p.id) return stored.variant || 'original'
+  return 'original'
+}
+function colorsOf(p) {
+  const palette = styleVariantPalette(p.theme.palette, variantOf(p))
+  return resolveStyleColors({ palette }, props.mode)
+}
+function swatchesOf(p) {
+  const sc = colorsOf(p)
+  return ['bg', 'surface', 'border', 'onSurface'].map((key) => ({
+    key,
+    role: SWATCH_LABELS[key],
+    short: SWATCH_SHORT[key],
+    color: sc.containers[key]
+  }))
+}
+function variantAccent(p, variant) {
+  return styleVariantPalette(p.theme.palette, variant).accent
 }
 function stateOf(p) {
   if (isTrying(p)) return 'probando'
@@ -92,28 +121,48 @@ function titleOf(p) {
 
 const trialPreset = computed(() => (api.tryingId.value ? api.presets.find((p) => p.id === api.tryingId.value) : null))
 const onPick = (p) => api.tryIt(p)
+const onVariant = (p, variant) => api.tryVariant(p, variant)
 const onRevert = () => api.revertTrial()
 </script>
 
 <template>
   <div class="psg">
     <div class="psg-grid" role="group" aria-label="Estilos prediseñados">
-      <button
-        v-for="p in items" :key="p.id" type="button"
-        class="psg-tile" :class="{ 'is-current': isCurrent(p), 'is-trying': isTrying(p), 'is-locked': lockOf(p) }"
-        :aria-pressed="isTrying(p) || isCurrent(p)" :aria-label="ariaOf(p)" :title="titleOf(p)"
-        @click="onPick(p)"
-      >
-        <span class="psg-tile-head">
-          <span class="psg-tile-name">{{ p.name }}</span>
-          <span v-if="isTrying(p)" class="psg-tag">probando</span>
-          <span v-else-if="isCurrent(p)" class="psg-tag">en uso</span>
-          <AppIcon v-if="lockOf(p)" class="psg-tile-lock" name="lock" :size="11" aria-hidden="true" />
-        </span>
-        <span class="psg-chips" aria-hidden="true">
-          <span v-for="(c, i) in chipsOf(p)" :key="i" class="psg-chip" :style="{ background: c }" />
-        </span>
-      </button>
+      <div v-for="p in items" :key="p.id" class="psg-cell">
+        <button
+          type="button"
+          class="psg-tile" :class="{ 'is-current': isCurrent(p), 'is-trying': isTrying(p), 'is-locked': lockOf(p) }"
+          :aria-pressed="isTrying(p) || isCurrent(p)" :aria-label="ariaOf(p)" :title="titleOf(p)"
+          @click="onPick(p)"
+        >
+          <span class="psg-tile-head">
+            <span class="psg-tile-name">{{ p.name }}</span>
+            <span v-if="isTrying(p)" class="psg-tag">probando</span>
+            <span v-else-if="isCurrent(p)" class="psg-tag">en uso</span>
+            <AppIcon v-if="lockOf(p)" class="psg-tile-lock" name="lock" :size="11" aria-hidden="true" />
+          </span>
+          <span class="psg-swatches">
+            <span v-for="s in swatchesOf(p)" :key="s.key" class="psg-swatch">
+              <span class="psg-swatch-c" :style="{ background: s.color }" :title="s.role" aria-hidden="true" />
+              <span class="psg-swatch-l">{{ s.short }}</span>
+            </span>
+          </span>
+        </button>
+        <div
+          v-if="isTrying(p) || isCurrent(p)" class="psg-vars" role="group"
+          :aria-label="`Variante de color de ${p.name}`"
+        >
+          <span class="psg-vars-lb">Color</span>
+          <button
+            v-for="v in STYLE_VARIANTS" :key="v.id" type="button"
+            class="psg-var" :class="{ active: variantOf(p) === v.id }"
+            :style="{ '--v': variantAccent(p, v.id) }"
+            :aria-pressed="variantOf(p) === v.id"
+            :aria-label="`${p.name}, variante ${v.label}`" :title="v.label"
+            @click="onVariant(p, v.id)"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- ===== Probando: una sola línea de acciones ===== -->
@@ -133,6 +182,7 @@ const onRevert = () => api.revertTrial()
 
 /* ===== Grilla de tiles ===== */
 .psg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.psg-cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .psg-tile {
   display: flex; flex-direction: column; gap: 4px; min-height: 46px;
   padding: 6px 7px; border: 1px solid var(--line); border-radius: 9px;
@@ -155,11 +205,26 @@ const onRevert = () => api.revertTrial()
   flex: none; font-size: 9px; font-weight: 800; text-transform: uppercase;
   letter-spacing: .02em; color: var(--brand-ink);
 }
-.psg-chips { display: flex; gap: 3px; }
-.psg-chip {
-  width: 15px; height: 9px; border-radius: 3px;
+.psg-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+.psg-swatch { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.psg-swatch-c {
+  height: 11px; border-radius: 3px;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .14);
 }
+.psg-swatch-l {
+  font-size: 8px; line-height: 1; color: var(--muted); text-align: center;
+  white-space: nowrap; overflow: hidden;
+}
+
+/* ===== Variantes de color del estilo activo ===== */
+.psg-vars { display: flex; align-items: center; gap: 4px; padding: 0 1px; }
+.psg-vars-lb { font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+.psg-var {
+  width: 24px; height: 24px; padding: 0; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--v); cursor: pointer;
+}
+.psg-var.active { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--brand-500); }
+.psg-var:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
 /* ===== Probando: barra de una línea ===== */
 .psg-bar {
