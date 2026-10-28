@@ -4,6 +4,7 @@
 // studio/contract.js (charset seguro [A-Za-z0-9 #(),.%\-] para CSS).
 import { hslToHex, hexHsl } from '../../../utils/colorTools.js'
 import { contrastRatio, fixContrast, textOn, normalizeHex, hexToRgb } from '../../../studio/contract.js'
+import { CONTRAST_PAIRS, pairColors } from '../health.js'
 
 export { contrastRatio, fixContrast, textOn, normalizeHex, hexToRgb, hslToHex, hexHsl }
 
@@ -128,13 +129,14 @@ export function parseGradient(value) {
   return stops.length >= 2 ? { angle: Number(m[1]), stops } : null
 }
 
-// Medidores de contraste AA (texto 4.5:1, textos grandes/UI 3:1).
+// Medidores de contraste AA. Los pares y umbrales viven en health.js (una
+// sola fuente de verdad): el panel Colores y "Salud" nunca pueden decir
+// cosas distintas sobre la misma paleta.
+export { CONTRAST_PAIRS, palettePasses, repairPalette } from '../health.js'
+
 export function contrastChecks(p) {
-  return [
-    { key: 'text-surface', label: 'Texto sobre tarjeta', fg: p.text, bg: p.surface, min: 4.5, fix: 'text' },
-    { key: 'text-bg', label: 'Texto sobre el fondo', fg: p.text, bg: p.bg, min: 4.5, fix: 'text' },
-    { key: 'muted-bg', label: 'Texto secundario', fg: p.muted, bg: p.bg, min: 3, fix: 'muted' },
-    { key: 'accent-surface', label: 'Acento en tarjetas (botones y enlaces)', fg: p.accent, bg: p.surface, min: 4.5, fix: 'accent' },
-    { key: 'accent-bg', label: 'Acento sobre el fondo', fg: p.accent, bg: p.bg, min: 3, fix: 'accent' }
-  ]
+  return CONTRAST_PAIRS.map((pair) => {
+    const { fg, bg } = pairColors(pair, p)
+    return { key: pair.key, label: pair.label, min: pair.min, fg, bg, fix: pair.role || 'primary' }
+  })
 }

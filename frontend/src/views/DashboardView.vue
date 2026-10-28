@@ -1709,6 +1709,7 @@ function onStudioNav(target) {
   else if (['blocks', 'plans', 'company', 'catalogs', 'services'].includes(target)) section.value = target
   else if (['content', 'images', 'sections'].includes(target)) designTab.value = target
   else if (target === 'close') designTab.value = 'content'
+  else pushToast('Esa sección no está disponible desde el Studio')
 }
 function discardDesign() {
   const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }

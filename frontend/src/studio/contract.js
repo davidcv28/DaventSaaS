@@ -270,9 +270,13 @@ export function fixContrast(fg, bg, min = 4.5) {
   const b = normalizeHex(bg)
   if (!f || !b) return f || '#0f172a'
   if (contrastRatio(f, b) >= min) return f
-  const target = luminance(b) > 0.5 ? [0, 0, 0] : [255, 255, 255]
+  // El extremo con mejor contraste real (el cruce negro/blanco está en
+  // L≈0.179, no en 0.5: un gris medio contrasta más con negro que con blanco).
+  const target = contrastRatio('#000000', b) >= contrastRatio('#ffffff', b)
+    ? [0, 0, 0]
+    : [255, 255, 255]
   const rgb = hexToRgb(f)
-  for (let t = 0.04; t <= 1.0001; t += 0.04) {
+  for (let t = 0.02; t <= 1.0001; t += 0.02) {
     const hex = rgbToHex(rgb.map((c, i) => c + (target[i] - c) * t))
     if (contrastRatio(hex, b) >= min) return hex
   }

@@ -29,8 +29,22 @@ const scoreLabel = computed(() => {
   return 'Hay cosas que conviene corregir'
 })
 
+// El botón solo existe si el fix es aplicable AHORA sobre este borrador
+// (una paleta con cambios, un grupo del tema existente o el bloque real en
+// el layout resuelto): nada de botones que no puedan cambiar nada.
+function canApply(issue) {
+  const f = issue.fix
+  if (!f) return false
+  if (f.kind === 'nav') return true
+  if (f.kind === 'palette') return Boolean((f.values && Object.keys(f.values).length) || f.key)
+  if (f.kind === 'theme') return Boolean(props.theme?.[f.group] && f.key in props.theme[f.group])
+  if (f.kind === 'block') {
+    return Boolean(props.layout?.[f.surface]?.blocks?.some((b) => b && b.id === f.id))
+  }
+  return false
+}
 function run(issue) {
-  if (!issue.fix) return
+  if (!canApply(issue)) return
   if (issue.fix.kind === 'nav') emit('navigate', issue.fix.target)
   else emit('fix', issue.fix)
 }
@@ -67,7 +81,7 @@ function run(issue) {
         <div class="sth-item-t">
           <strong>{{ i.title }}</strong>
           <p>{{ i.detail }}</p>
-          <button v-if="i.fix" type="button" class="btn secondary btn-auto sth-fix" @click="run(i)">
+          <button v-if="canApply(i)" type="button" class="btn secondary btn-auto sth-fix" @click="run(i)">
             <AppIcon :name="i.fix.kind === 'nav' ? 'arrow-right' : 'sparkles'" :size="13" /> {{ i.fix.label }}
           </button>
         </div>

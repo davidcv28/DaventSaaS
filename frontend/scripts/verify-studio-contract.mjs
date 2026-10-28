@@ -9,6 +9,9 @@ import {
   resolveStudioPreset, presetToPatch,
   studioUpdate, studioFocus, studioReady, isStudioMessage
 } from '../src/studio/contract.js'
+import {
+  analyzeStudioHealth, repairPalette, palettePasses, CONTRAST_PAIRS, pairColors
+} from '../src/components/studio/health.js'
 
 let failures = 0
 function check(name, cond, extra = '') {
@@ -127,6 +130,121 @@ eq('device inválido -> desktop', studioUpdate({ device: 'watch' }).device, 'des
 eq('focus', studioFocus('contact'), { type: STUDIO_MSG.FOCUS, target: 'contact' })
 eq('ready', studioReady(), { type: STUDIO_MSG.READY })
 check('isStudioMessage', isStudioMessage(upd) && isStudioMessage(studioFocus('x')) && !isStudioMessage({ type: 'otro' }) && !isStudioMessage(null) && !isStudioMessage('studio:update'))
+
+console.log('— salud de la web (health.js) —')
+const CONTRAST_KEYS = CONTRAST_PAIRS.map((p) => p.key)
+const contrastIssues = (issues) => issues.filter((i) => i.id.startsWith('contrast-'))
+function healthOf(theme, extra = {}) {
+  return analyzeStudioHealth({ theme, form: {}, layout: null, ...extra })
+}
+function applyPaletteFix(palette, issues) {
+  const next = { ...palette }
+  for (const i of issues) {
+    if (i.fix?.kind === 'palette') Object.assign(next, i.fix.values)
+  }
+  return next
+}
+function ratiosOk(palette) {
+  return CONTRAST_PAIRS.every((pair) => {
+    const { fg, bg } = pairColors(pair, palette)
+    return contrastRatio(fg, bg) >= pair.min
+  })
+}
+function isHexPalette(palette) {
+  return Object.keys(SITE_THEME_DEFAULTS.palette).every((k) => normalizeHex(palette[k]) !== null)
+}
+
+// PRNG determinista (mulberry32) para reproducir las paletas aleatorias.
+function rng(seed) {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+const randHex = (r) => `#${[0, 0, 0].map(() => Math.floor(r() * 256).toString(16).padStart(2, '0')).join('')}`
+function randomPalette(r, dark) {
+  const base = {
+    primary: randHex(r),
+    secondary: randHex(r),
+    accent: randHex(r),
+    bg: dark ? '#0b1020' : '#f4f6fb',
+    surface: dark ? '#121a2b' : '#ffffff',
+    text: dark ? '#f1f5fb' : '#0f172a',
+    muted: randHex(r),
+    border: randHex(r),
+    success: '#059669',
+    danger: '#dc2626'
+  }
+  // Algunos roles llegan corruptos: el saneo del contrato los devuelve a un
+  // hex válido y la reparación no puede dejarlos fuera del catálogo.
+  if (r() < 0.35) base.bg = 'no-es-un-color'
+  if (r() < 0.25) base.surface = 'rgb(1,2,3)'
+  if (r() < 0.3) base.text = '#12'
+  return base
+}
+
+let randomFailures = 0
+let regressionFailures = 0
+for (let n = 0; n < 60; n += 1) {
+  const r = rng(1000 + n)
+  const palette = randomPalette(r, n % 2 === 1)
+  let cur = { ...palette }
+  for (let pass = 0; pass < 5; pass += 1) {
+    const issues = healthOf({ palette: cur }).filter((i) => i.fix?.kind === 'palette')
+    if (!issues.length) break
+    const before = cur
+    const fixed = applyPaletteFix(cur, issues)
+    // Ningún fix puede dejar un par que antes pasaba por debajo del umbral.
+    const merged = { ...SITE_THEME_DEFAULTS.palette, ...before, ...fixed }
+    if (!ratiosOk(merged)) regressionFailures += 1
+    if (JSON.stringify(fixed) === JSON.stringify(before)) { randomFailures += 1; break }
+    cur = fixed
+  }
+  const left = contrastIssues(healthOf({ palette: cur }))
+  if (left.length) randomFailures += 1
+  if (!isHexPalette({ ...SITE_THEME_DEFAULTS.palette, ...cur })) randomFailures += 1
+}
+check('60 paletas aleatorias convergen a 0 hallazgos de contraste', randomFailures === 0, `fallas: ${randomFailures}`)
+check('ningún arreglo deja pares por debajo del umbral', regressionFailures === 0, `fallas: ${regressionFailures}`)
+
+const fixedDark = repairPalette({ ...SITE_THEME_DEFAULTS.palette, bg: '#0b1020', surface: '#121a2b', text: '#111111', muted: '#222222' })
+check('paleta oscura repara texto y secundarios', ratiosOk(fixedDark))
+check('reparar dos veces es idempotente', JSON.stringify(repairPalette(fixedDark)) === JSON.stringify(fixedDark))
+const midPrimary = repairPalette({ ...SITE_THEME_DEFAULTS.palette, primary: '#808080', accent: '#808080' })
+check('gris medio como primario converge', ratiosOk(midPrimary))
+
+const noCatalog = analyzeStudioHealth({
+  theme: { ...SITE_THEME_DEFAULTS, palette: SITE_THEME_DEFAULTS.palette },
+  form: { site_templates: ['catalog', 'services'] },
+  layout: {
+    landing: { blocks: [{ id: 'featured', enabled: true }] },
+    catalog: { blocks: [{ id: 'grid', enabled: true }, { id: 'promo', enabled: true }] },
+    services: { blocks: [{ id: 'band', enabled: true }] }
+  },
+  catalogLoaded: false,
+  servicesLoaded: false,
+  products: [],
+  categories: [],
+  servicesCount: 0
+})
+check('catálogo/servicios sin cargar no reportan secciones vacías', !noCatalog.some((i) => i.id.startsWith('empty-')), JSON.stringify(noCatalog.map((i) => i.id)))
+
+const noLayout = analyzeStudioHealth({
+  theme: { ...SITE_THEME_DEFAULTS, palette: SITE_THEME_DEFAULTS.palette },
+  form: { site_templates: ['catalog', 'services'] },
+  layout: null,
+  catalogLoaded: true,
+  servicesLoaded: true,
+  products: [],
+  categories: [],
+  servicesCount: 0
+})
+check('sin layout no se ofrecen fixes de bloque', !noLayout.some((i) => i.fix?.kind === 'block'), JSON.stringify(noLayout.map((i) => i.fix?.kind || null)))
+check('todos los pares de contraste tienen clave única', new Set(CONTRAST_KEYS).size === CONTRAST_KEYS.length)
+check('palettePasses acepta la paleta default', palettePasses(SITE_THEME_DEFAULTS.palette))
 
 console.log('')
 if (failures) { console.error(`${failures} chequeo(s) fallaron`); process.exit(1) }

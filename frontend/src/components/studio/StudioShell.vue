@@ -30,8 +30,9 @@ import {
 } from './previewBridge.js'
 import { useStudioHistory } from './useStudioHistory.js'
 import {
-  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys
+  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys, normalizeHex
 } from '../../studio/contract.js'
+import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
 import { STUDIO_PRESETS, presetLock, layoutForTemplate } from '../../studio/presets/index.js'
@@ -494,9 +495,9 @@ watch(estilosOnly, (only) => { if (only && tool.value !== 'estilos') tool.value 
 const panelBodyEl = ref(null)
 const toolDef = computed(() => STUDIO_TOOLS.find((t) => t.id === tool.value) || STUDIO_TOOLS[0])
 function onPick(target) {
-  tool.value = toolForTarget(target)
-  if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
-  panelOpen.value = true
+  // Un click en la preview puede apuntar a una herramienta fuera del plan:
+  // pickTool avisa y caemos a Estilos para que el panel nunca quede vacío.
+  if (!pickTool(toolForTarget(target))) pickTool('estilos')
   nextTick(() => {
     const css = target?.startsWith('blk:') || target?.startsWith('sec:') ? 'blk' : target
     const field = panelBodyEl.value?.querySelector(`[data-focus="${css}"]`)
@@ -570,10 +571,18 @@ function sheetUp() {
   sheetDragPx.value = null
 }
 function pickTool(id) {
-  if (!tools.value.some((t) => t.id === id)) return
+  const def = STUDIO_TOOLS.find((t) => t.id === id)
+  if (!def) return false
+  if (!tools.value.some((t) => t.id === id)) {
+    // Sin has_design_advanced el riel solo tiene Estilos: avisar en vez de
+    // tragarnos el click en silencio.
+    showToast(`${def.label} viene con un plan superior`)
+    return false
+  }
   tool.value = id
   panelOpen.value = true
   if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
+  return true
 }
 // El panel Móvil siempre edita mirando la vista móvil (requisito del panel:
 // la vista previa chica queda visible mientras se ajusta).
@@ -590,20 +599,71 @@ function onPanelNav(target) {
 // ---------------------------------------------------------------------------
 // "Salud de tu web": los arreglos con fix automático se aplican al borrador
 // (paleta/tema/bloque); los de contenido navegan a su sección.
+// El layout se resuelve con la MISMA caída que usa StudioPanel, y cada fix
+// devuelve si hubo un cambio real: sin cambio no hay toast de éxito.
 // ---------------------------------------------------------------------------
-function applyHealthFix(fix) {
-  if (!fix) return
-  if (fix.kind === 'palette') {
-    draft.theme.palette[fix.key] = fix.value
-  } else if (fix.kind === 'theme') {
-    (draft.theme[fix.group] ??= {})[fix.key] = fix.value
-  } else if (fix.kind === 'block') {
-    const b = draft.layout?.[fix.surface]?.blocks?.find((x) => x.id === fix.id)
-    if (b) b.enabled = false
-  } else {
+function resolvedLayout() {
+  return draft.layout || props.customization?.layout_config_draft || props.customization?.layout_config || null
+}
+// El acento/primario tocado por un fix de Salud se espeja al campo
+// persistido (como ColorsPanel.setRole): sin plan premium se mapea al slug
+// más cercano que siga cumpliendo el contraste.
+function syncHealthAccent(palette) {
+  const hex = normalizeHex(palette?.primary || palette?.accent)
+  if (!hex) return
+  if (props.benefits?.has_design_advanced) {
+    props.form.accent_custom = hex
     return
   }
-  showToast('Arreglo aplicado al borrador')
+  const passing = Object.entries(STORE_ACCENTS).filter(([, a]) =>
+    palettePasses({ ...palette, primary: a.hex, accent: a.hex })
+  )
+  if (!passing.length) return
+  const slug = nearestAccent(hexToRgb(hex), Object.fromEntries(passing))
+  if (!slug) return
+  props.form.accent = slug
+  props.form.accent_custom = ''
+}
+function applyHealthFix(fix) {
+  if (!fix) return false
+  if (fix.kind === 'palette') {
+    // Se recalcula sobre la paleta VIVA (no sobre el snapshot del análisis):
+    // si el usuario tocó un color entre el análisis y el click, el arreglo
+    // sigue convergiendo y nunca rompe un par que ya cumplía.
+    const values = fix.values
+      ? repairPalette(draft.theme.palette)
+      : (fix.key ? { [fix.key]: fix.value } : null)
+    if (!values) return false
+    let changed = false
+    for (const [key, value] of Object.entries(values)) {
+      const hex = normalizeHex(value)
+      if (!hex || draft.theme.palette[key] === hex) continue
+      draft.theme.palette[key] = hex
+      changed = true
+    }
+    if (!changed) { showToast('La paleta ya estaba corregida'); return false }
+    syncHealthAccent(draft.theme.palette)
+    showToast('Arreglo aplicado al borrador')
+    return true
+  }
+  if (fix.kind === 'theme') {
+    const group = draft.theme[fix.group]
+    if (!group || !(fix.key in group)) { showToast('Ese ajuste no existe en este tema'); return false }
+    if (group[fix.key] === fix.value) { showToast('Ese ajuste ya estaba aplicado'); return false }
+    group[fix.key] = fix.value
+    showToast('Arreglo aplicado al borrador')
+    return true
+  }
+  if (fix.kind === 'block') {
+    if (!draft.layout) draft.layout = clone(resolvedLayout())
+    const block = draft.layout?.[fix.surface]?.blocks?.find((x) => x && x.id === fix.id)
+    if (!block) { showToast('No encontramos esa sección en tu diseño'); return false }
+    if (block.enabled === false) { showToast('Esa sección ya estaba oculta'); return false }
+    block.enabled = false
+    showToast('Sección ocultada en el borrador')
+    return true
+  }
+  return false
 }
 
 // ---------------------------------------------------------------------------
@@ -646,7 +706,7 @@ const searchEntries = computed(() => [
   ...SEARCH_INDEX.map((e, i) => ({ id: `f-${i}`, icon: STUDIO_TOOLS.find((t) => t.id === e.tool)?.icon || 'sliders', ...e }))
 ])
 function onSearchPick(entry) {
-  pickTool(entry.tool)
+  if (!pickTool(entry.tool)) return
   if (!entry.focus) return
   nextTick(() => {
     const field = panelBodyEl.value?.querySelector(`[data-focus="${entry.focus}"]`)

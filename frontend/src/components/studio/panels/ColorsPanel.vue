@@ -14,7 +14,7 @@ import PanelLock from './PanelLock.vue'
 import { PALETTES } from '../../../utils/palettes.js'
 import { extractLogoColors, harmonicAccent, deriveAccent } from '../../../utils/colorTools.js'
 import {
-  HARMONIES, harmonyPalette, contrastChecks, contrastRatio, fixContrast,
+  HARMONIES, harmonyPalette, contrastChecks, contrastRatio, repairPalette,
   normalizeHex, hexToHsl, hslToHex, hexToRgb
 } from './panelShared.js'
 
@@ -230,14 +230,12 @@ const meters = computed(() => contrastChecks(pal.value).map((c) => ({
 const needsFix = computed(() => meters.value.some((m) => !m.ok))
 const fixMsg = ref('')
 async function fixAll() {
-  // Hasta 3 pasadas: corregir un rol puede mover el piso de otro (el acento
-  // se evalúa contra fondo y superficie).
-  for (let i = 0; i < 3; i += 1) {
-    const failing = contrastChecks(pal.value).filter((c) => contrastRatio(pal.value[c.fix], c.bg) < c.min)
-    if (!failing.length) break
-    for (const c of failing) pal.value[c.fix] = fixContrast(pal.value[c.fix], c.bg, c.min)
-  }
-  pal.value.primary = pal.value.accent
+  // Una sola reparación global (misma que usa Salud): mueve cada rol hasta
+  // cumplir TODOS sus pares, así corregir un par no rompe otro.
+  const repaired = repairPalette(pal.value)
+  const changed = Object.keys(repaired).some((k) => normalizeHex(pal.value[k]) !== repaired[k])
+  if (!changed) { fixMsg.value = 'La paleta ya cumple el contraste AA.'; return }
+  Object.assign(pal.value, repaired)
   if (advanced.value) props.form.accent_custom = pal.value.accent
   await nextTick()
   fixMsg.value = 'Ajustamos los colores que no llegaban al contraste AA.'

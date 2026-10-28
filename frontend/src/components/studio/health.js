@@ -4,7 +4,11 @@
 // (imágenes, productos, servicios) y devuelve findings con fix opcional.
 // Fixes: {kind:'palette'|'theme'|'block'|'nav'} — los aplica StudioShell
 // sobre el borrador (palette/theme/block) o navega a la sección dueña (nav).
-import { contrastRatio, fixContrast, textOn } from '../../studio/contract.js'
+import {
+  contrastRatio, textOn, normalizeHex, hexToRgb, rgbToHex,
+  SITE_THEME_DEFAULTS
+} from '../../studio/contract.js'
+import { hexHsl, hslToHex, luminance } from '../../utils/colorTools.js'
 
 const AA_NORMAL = 4.5
 const HEAVY_BYTES = 350 * 1024
@@ -66,26 +70,130 @@ function hasContact(c) {
 const issue = (id, sev, icon, title, detail, fix = null) => ({ id, sev, icon, title, detail, fix })
 const fmtKb = (bytes) => `${Math.round(bytes / 1024)} KB`
 
+// ---------------------------------------------------------------------------
+// Contraste: UNA sola fuente de verdad. El panel Colores y Salud consumen
+// esta tabla (panelShared.contrastChecks la reexporta) para que nunca digan
+// cosas distintas sobre la misma paleta.
+// `role` = rol del tema que hace de primer plano; `bgRole` = fondo.
+// ---------------------------------------------------------------------------
+export const CONTRAST_PAIRS = [
+  { key: 'text-surface',    role: 'text',    bgRole: 'surface', min: AA_NORMAL, label: 'Texto sobre tarjetas' },
+  { key: 'text-bg',         role: 'text',    bgRole: 'bg',      min: AA_NORMAL, label: 'Texto sobre el fondo' },
+  { key: 'muted-surface',   role: 'muted',   bgRole: 'surface', min: AA_NORMAL, label: 'Texto secundario sobre tarjetas' },
+  { key: 'muted-bg',        role: 'muted',   bgRole: 'bg',      min: AA_NORMAL, label: 'Texto secundario sobre el fondo' },
+  { key: 'primary-surface', role: 'primary', bgRole: 'surface', min: AA_NORMAL, label: 'Color principal sobre tarjetas' },
+  { key: 'primary-bg',      role: 'primary', bgRole: 'bg',      min: 3,          label: 'Color principal sobre el fondo' },
+  { key: 'on-primary',      role: null,      bgRole: 'primary', min: AA_NORMAL, label: 'Texto de los botones' }
+]
+
+// Colores efectivos de un par (on-primary deriva el texto con textOn).
+export function pairColors(pair, palette) {
+  const bg = palette?.[pair.bgRole]
+  const fg = pair.role ? palette?.[pair.role] : textOn(bg)
+  return { fg, bg }
+}
+
+const FG_ROLES = ['text', 'muted', 'primary']
+const SIDE_SPLIT = 0.1792 // luminancia donde negro y blanco empatan (≈4.58:1)
+
+function normPalette(palette) {
+  const out = { ...(palette || {}) }
+  for (const key of Object.keys(SITE_THEME_DEFAULTS.palette)) {
+    out[key] = normalizeHex(out[key]) || SITE_THEME_DEFAULTS.palette[key]
+  }
+  return out
+}
+
+function sideOf(hex) {
+  return luminance(hex) >= SIDE_SPLIT ? 'light' : 'dark'
+}
+
+function toneFor(hex, side) {
+  const [h, s] = hexHsl(hex)
+  return side === 'light'
+    ? hslToHex(h, Math.min(s, 0.35), 0.965)
+    : hslToHex(h, Math.min(s, 0.45), 0.09)
+}
+
+// Mueve un rol hacia el extremo (negro/blanco) que mejor cumple TODOS sus
+// pares a la vez: así corregir "muted" no rompe muted/bg al arreglar
+// muted/surface.
+function fixRole(role, palette) {
+  const pairs = CONTRAST_PAIRS.filter((p) => p.role === role)
+  const bgs = pairs.map((p) => palette[p.bgRole])
+  const mins = pairs.map((p) => p.min)
+  const fg = palette[role]
+  if (pairs.every((p, i) => contrastRatio(fg, bgs[i]) >= mins[i])) return fg
+  const worst = (hex) => Math.min(...bgs.map((bg, i) => contrastRatio(hex, bg) / mins[i]))
+  const black = [0, 0, 0]
+  const white = [255, 255, 255]
+  const target = worst('#000000') >= worst('#ffffff') ? black : white
+  const rgb = hexToRgb(fg)
+  for (let t = 0.02; t <= 1.0001; t += 0.02) {
+    const hex = rgbToHex(rgb.map((c, i) => c + (target[i] - c) * t))
+    if (bgs.every((bg, i) => contrastRatio(hex, bg) >= mins[i])) return hex
+  }
+  return rgbToHex(target)
+}
+
+// Paleta reparada: converge en ≤4 pasadas. Si fondo y superficie quedan en
+// lados opuestos del punto de cruce, alinea el fondo al lado de la
+// superficie (con el tono original) para que un único color de texto sirva
+// en ambos.
+export function repairPalette(palette) {
+  const p = normPalette(palette)
+  const side = sideOf(p.surface)
+  if (sideOf(p.bg) !== side) p.bg = toneFor(p.bg, side)
+  for (let pass = 0; pass < 4; pass += 1) {
+    let changed = false
+    for (const role of FG_ROLES) {
+      const next = fixRole(role, p)
+      if (next !== p[role]) { p[role] = next; changed = true }
+    }
+    if (!changed) break
+  }
+  // El acento y el primario son el mismo color de marca en todo el Studio
+  // (ColorsPanel.setRole los mantiene sincronizados).
+  p.accent = p.primary
+  return p
+}
+
+export function palettePasses(palette) {
+  const p = normPalette(palette)
+  return CONTRAST_PAIRS.every((pair) => {
+    const { fg, bg } = pairColors(pair, p)
+    return contrastRatio(fg, bg) >= pair.min
+  })
+}
+
+function palettePatch(before, after) {
+  const out = {}
+  for (const [key, value] of Object.entries(after)) {
+    if (normalizeHex(before?.[key]) !== value) out[key] = value
+  }
+  return out
+}
+
 // --- 1. Contraste AA ---------------------------------------------------
 function checkContrast(theme, out) {
-  const p = theme.palette
-  const pairs = [
-    ['text',  p.text,  'surface', p.surface, 'Texto sobre tarjetas'],
-    ['muted', p.muted, 'surface', p.surface, 'Texto secundario sobre tarjetas'],
-    ['muted', p.muted, 'bg',      p.bg,      'Texto secundario sobre el fondo'],
-    [null,    textOn(p.primary), null, p.primary, 'Texto de los botones'],
-    ['primary', p.primary, 'surface', p.surface, 'Color principal sobre tarjetas']
-  ]
-  pairs.forEach(([fgKey, fg, bgKey, bg, label], i) => {
+  const p = theme?.palette || {}
+  const repaired = repairPalette(p)
+  const values = palettePatch(p, repaired)
+  const invalid = Object.keys(SITE_THEME_DEFAULTS.palette).filter((k) => normalizeHex(p[k]) === null)
+  if (invalid.length) {
+    out.push(issue('palette-invalid', 'warn', 'palette', 'Hay colores inválidos en tu paleta',
+      `${invalid.length} color${invalid.length > 1 ? 'es no tienen' : ' no tiene'} un formato hexadecimal válido (#rrggbb).`,
+      Object.keys(values).length ? { kind: 'palette', values, label: 'Corregir colores' } : null))
+  }
+  CONTRAST_PAIRS.forEach((pair) => {
+    const { fg, bg } = pairColors(pair, p)
     const ratio = contrastRatio(fg, bg)
-    if (ratio >= AA_NORMAL) return
-    // fixContrast ajusta el primer color hasta cumplir AA contra el fondo.
-    const fixed = fixContrast(fg, bg)
-    const fix = fgKey
-      ? { kind: 'palette', key: fgKey, value: fixed, label: `Ajustar a ${fixed}` }
-      : { kind: 'palette', key: 'primary', value: fixContrast(bg, textOn(bg)), label: 'Ajustar el color principal' }
-    out.push(issue(`contrast-${i}`, 'warn', 'palette', `${label}: contraste bajo`,
-      `La relación es ${ratio.toFixed(1)}:1 y WCAG AA pide ${AA_NORMAL}:1. Se dificulta la lectura.`, fix))
+    if (ratio >= pair.min) return
+    const fix = Object.keys(values).length
+      ? { kind: 'palette', values, label: 'Corregir contraste' }
+      : null
+    out.push(issue(`contrast-${pair.key}`, 'warn', 'palette', `${pair.label}: contraste bajo`,
+      `La relación es ${ratio.toFixed(1)}:1 y WCAG AA pide ${pair.min}:1. Se dificulta la lectura.`, fix))
   })
 }
 
@@ -146,12 +254,12 @@ function checkCta(c, out) {
 
 // --- 6. Tamaños táctiles -------------------------------------------------
 function checkTouch(c, out) {
-  if (c.theme.buttons?.size === 'sm') {
+  if (c.theme?.buttons?.size === 'sm') {
     out.push(issue('touch-buttons', 'info', 'smartphone', 'Botones chicos para el dedo',
       'El tamaño S queda por debajo del área táctil recomendada (44px) en celulares.',
       { kind: 'theme', group: 'buttons', key: 'size', value: 'md', label: 'Pasar a tamaño M' }))
   }
-  if (c.form.whatsapp && c.theme.mobile?.stickyCta === false) {
+  if (c.form.whatsapp && c.theme?.mobile?.stickyCta === false) {
     out.push(issue('touch-sticky', 'info', 'smartphone', 'Botón de contacto escondido',
       'Tenés WhatsApp pero el botón fijo está apagado: en celular el contacto queda a un scroll de distancia.',
       { kind: 'theme', group: 'mobile', key: 'stickyCta', value: true, label: 'Activar botón fijo' }))
