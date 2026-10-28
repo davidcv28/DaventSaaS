@@ -812,3 +812,27 @@ pueda reactivar por error. `inflection`/`uritemplate` se conservan (los exige
 - `SECURITY_SIMULATION_REPORT.md` (§5, recomendación 3) todavía describe la
   verificación por SMS de Firebase, retirada en §13: documento histórico, no
   se reescribe.
+
+### 16.7 Dependencias diferidas — cuándo se pueden adoptar
+
+Regla de adopción: **7 días** desde la fecha de publicación en el índice
+(pip/npm) y sin advisory nuevo en ese lapso. No es una fecha de calendario
+rígida: si aparece un CVE que aplique, se adelanta.
+
+| Paquete | Publicado | Adoptable desde | Estado hoy (2026-10-28) |
+|---------|-----------|-----------------|--------------------------|
+| `boto3` 1.43.120 | 2026-10-27 | **2026-11-03** | Pin actual `1.43.116`; sin CVE que lo fuerce |
+| `onnxruntime` 1.31.1 | 2026-10-26 | **2026-11-02** | Pin actual `1.31.0`; solo lo usa `remove_background` |
+| Django **5.2.19** | doc dice 2026-11-03; **no está en PyPI** | **2026-11-10** (publicación + 7d) | `5.2.18` es el último instalable; `pip-audit` no marca nada |
+
+Cómo verificar antes de subir el pin (mismo comando que CI):
+
+```bash
+venv/Scripts/python.exe -m pip index versions Django        # ¿existe 5.2.19?
+venv/Scripts/python.exe -m pip install "Django==5.2.19" && venv/Scripts/python.exe manage.py test
+venv/Scripts/python.exe -m pip_audit -r requirements.txt
+```
+
+`boto3`/`onnxruntime` no los actualiza Dependabot a ciegas: el cooldown de
+`.github/dependabot.yml` (7 días) respeta la misma ventana.
+

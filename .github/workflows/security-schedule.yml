@@ -1,0 +1,53 @@
+# Escaneo de CVEs semanal — independiente de los pushes.
+#
+# El job `security` de ci-cd.yml corre solo cuando hay push/PR: una CVE
+# publicada un martes sobre una dependencia que no se tocó no aparecía
+# hasta el próximo commit. Este workflow corre los lunes, contra el código
+# de main, con las mismas herramientas y versiones pineadas.
+name: Security schedule
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-schedule
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: pip-audit + npm audit + Trivy (fs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: pip-audit — CVEs en dependencias Python
+        run: |
+          pip install pip-audit==2.10.1
+          pip-audit -r requirements.txt
+
+      - name: npm audit — CVEs en dependencias del SPA (prod)
+        # Sin setup-node: igual que ci-cd.yml, usa el Node preinstalado del
+        # runner (evita otra acción que mantener).
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Trivy — vulnerabilidades en dependencias/archivos
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"

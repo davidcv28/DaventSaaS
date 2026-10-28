@@ -1,0 +1,69 @@
+# Dependabot — actualizaciones de dependencias con ventana de maduración.
+#
+# `cooldown.default-days: 7` retrasa 7 días cualquier versión recién
+# publicada (las actualizaciones de seguridad de Dependabot no se bloquean:
+# cooldown aplica a version-updates, no a security-updates). Los parches
+# rutinarios se agrupan en un solo PR por ecosistema para no inundar.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      pip-patches:
+        applies-to: version-updates
+        update-types: ["patch"]
+
+  - package-ecosystem: npm
+    directory: "/frontend"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      npm-patches:
+        applies-to: version-updates
+        update-types: ["patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    groups:
+      actions-patches:
+        applies-to: version-updates
+        update-types: ["patch"]
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    groups:
+      docker-patches:
+        applies-to: version-updates
+        update-types: ["patch"]
+
+  - package-ecosystem: docker
+    directory: "/docker"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    groups:
+      docker-app-patches:
+        applies-to: version-updates
+        update-types: ["patch"]
