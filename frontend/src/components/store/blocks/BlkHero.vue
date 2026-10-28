@@ -45,8 +45,8 @@ const shopImgs = computed(() => (custom.value.carousel || []).map((i) => i.url))
 // diseños, así que solo vuelve a aparecer en una placa si no hay otra
 // imagen disponible.
 const auxImgs = computed(() => [...shopImgs.value, ...shopCatalog.value.products.map((p) => p.image)].filter(Boolean))
-const shopSlideImg = computed(() => auxImgs.value[0] || cover.value || '')
-const shopPromoImgs = computed(() => auxImgs.value.slice(1, 3))
+const shopSlideImg = computed(() => cover.value || auxImgs.value[0] || '')
+const shopPromoImgs = computed(() => auxImgs.value.slice(cover.value ? 0 : 1, cover.value ? 2 : 3))
 // Minimal: placa del hero — primera imagen del carrusel o, en su defecto,
 // el logo sobre el tile de la paleta.
 const mnArtImg = computed(() => auxImgs.value[0] || cover.value || '')

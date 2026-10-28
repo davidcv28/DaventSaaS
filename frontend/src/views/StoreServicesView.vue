@@ -15,14 +15,20 @@ import { buildServiceRequestMessage, servicePriceLabel } from '../api/services.a
 import { SERVICE_ICONS, serviceHue } from '../api/stores.api.js'
 import AppIcon from '../components/AppIcon.vue'
 import { useLayout } from '../composables/useLayout.js'
+import { resolveSiteTheme } from '../studio/contract.js'
 import '../assets/store-services.css'
 
 const ctx = inject('storePage')
 // Layout de la superficie 'services': el editor (Diseño web → Bloques)
 // apaga/ordena las regiones del catálogo cerrado. Las secciones extra
-// (garantías, trabajos, opiniones, zona) quedan ancladas antes del
-// formulario de pedido.
-const { on, pos } = useLayout('services')
+// (garantías, trabajos, opiniones, zona) todavía no están en el catálogo:
+// on() las deja pasar y quedan ancladas justo antes del bloque 'form'
+// (pos() da 999 -> se usa el orden de 'form'; cuando el catálogo las
+// registre toman su orden real sin tocar la vista).
+const { on, pos, st } = useLayout('services')
+const ord = (id) => { const p = pos(id); return p === 999 ? pos('form') : p }
+// Título de sección: el catálogo permite props.title como override.
+const blkTitle = (id, fallback) => st(id).props?.title || fallback
 const router = useRouter()
 const { custom, store, status, shopName, location, siteTemplates, showCatalog } = ctx
 
@@ -121,9 +127,60 @@ const bandItems = computed(() => {
   return names.length >= 2 ? [...names, ...names] : []
 })
 
+// ===== Variante de presentación del picker =====
+// El bloque 'picker' (locked) admite una variante en layout_config:
+// picker (tarjetas + presupuesto al costado, default), cards (tarjetas a
+// ancho completo), list (lista con precio), bento, tabs (por categoría),
+// timeline (riel de proceso) y packages (columnas comparativas). Las
+// variantes "wide" ponen la tarjeta de presupuesto debajo de la lista.
+const PICK_VARIANTS = new Set(['cards', 'list', 'bento', 'tabs', 'timeline', 'packages'])
+const pickVariant = computed(() => {
+  const v = st('picker').variant
+  return PICK_VARIANTS.has(v) ? v : 'picker'
+})
+const pickWide = computed(() => ['cards', 'bento', 'timeline', 'packages'].includes(pickVariant.value))
+// Los pasos de "cómo funciona" también admiten la variante 'rail' (timeline
+// vertical) además de la grilla de tarjetas default.
+const stepsRail = computed(() => st('steps').variant === 'rail')
+
+// Tabs por categoría: los ítems no tienen campo categoría — se agrupan por
+// su ícono declarado (SERVICE_ICONS ya es la etiqueta legible del panel).
+const svcTabs = computed(() => {
+  const map = new Map()
+  for (const it of items.value) {
+    const key = serviceIcon(it.icon)
+    if (!map.has(key)) map.set(key, { key, label: SERVICE_ICONS[key] || 'Otros', items: [] })
+    map.get(key).items.push(it)
+  }
+  return [...map.values()]
+})
+const tabKey = ref('all')
+const tabKeys = computed(() => ['all', ...svcTabs.value.map((t) => t.key)])
+const tabItems = computed(() => (tabKey.value === 'all' ? items.value : svcTabs.value.find((t) => t.key === tabKey.value)?.items || []))
+function onTabKey(e) {
+  const move = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]
+  const keys = tabKeys.value
+  if (!keys.length) return
+  if (e.key === 'Home') tabKey.value = keys[0]
+  else if (e.key === 'End') tabKey.value = keys[keys.length - 1]
+  else if (move) tabKey.value = keys[(keys.indexOf(tabKey.value) + move + keys.length) % keys.length]
+  else return
+  e.preventDefault()
+  nextTick(() => e.currentTarget.querySelector('[aria-selected="true"]')?.focus())
+}
+
 // ===== WhatsApp =====
 const whatsapp = computed(() => String(custom.value.whatsapp || '').replace(/\D/g, ''))
 const waBase = computed(() => (whatsapp.value ? `https://wa.me/${whatsapp.value}` : ''))
+// Botón flotante de WhatsApp (solo desktop: en móvil ya están el dock y la
+// barra de presupuesto). Posición y forma configurables vía
+// custom.service_wa_*; con chatbot el default es 'left' para no pisarlo.
+const botOn = computed(() => Boolean(store.value?.chatbot))
+const waFloat = computed(() => Boolean(waBase.value) && custom.value.service_wa_float !== false)
+const waPos = computed(() => (
+  ['left', 'right'].includes(custom.value.service_wa_pos) ? custom.value.service_wa_pos : (botOn.value ? 'left' : 'right')
+))
+const waShape = computed(() => (['pill', 'square'].includes(custom.value.service_wa_shape) ? custom.value.service_wa_shape : 'circle'))
 
 // ===== Formulario de pedido =====
 const form = ref({ name: '', phone: '', address: '', day: '', slot: '' })
@@ -225,7 +282,13 @@ function observeTargets() {
   })
   ;['sv-pedido', 'sv-quote'].forEach((id) => { const el = document.getElementById(id); if (el) formIO.observe(el) })
 }
-const showBar = computed(() => chosenItems.value.length > 0 && !formInView.value && !quoteInView.value)
+// Barra CTA fija en móvil: con selección muestra el presupuesto (abre la
+// hoja); sin selección solo persiste si el tema Studio activa
+// mobile.stickyCta — el main ya reserva el espacio, no tapa contenido.
+const stickyCta = computed(() => resolveSiteTheme(custom.value.site_theme).mobile?.stickyCta === true)
+const showBar = computed(() => (chosenItems.value.length > 0
+  ? !formInView.value && !quoteInView.value
+  : stickyCta.value && items.value.length > 0 && !formInView.value))
 watch(items, () => nextTick(observeTargets), { immediate: false })
 onMounted(() => nextTick(observeTargets))
 onBeforeUnmount(() => formIO?.disconnect())
@@ -309,7 +372,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         <section id="sv-servicios" aria-labelledby="sv-svc-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Servicios</span>
-            <h2 id="sv-svc-title">Elegí lo que necesitás y mirá el total.</h2>
+            <h2 id="sv-svc-title">{{ blkTitle('picker', 'Elegí lo que necesitás y mirá el total.') }}</h2>
             <p>{{ priceNote }}</p>
           </div>
           <ol class="sv-flow" aria-label="Pasos del pedido">
@@ -323,7 +386,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             <p><strong>Todavía no hay servicios publicados.</strong></p>
             <p>Cuando el negocio cargue su lista, acá vas a poder armar tu presupuesto.</p>
           </div>
-          <div v-else class="sv-services">
+          <div v-else class="sv-services" :data-svv="pickVariant">
             <div class="sv-pick">
               <div class="sv-pick-bar">
                 <span class="sv-pick-count" aria-live="polite">
@@ -335,9 +398,88 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
                   <AppIcon name="x" :size="14" :stroke="2.4" /> Limpiar
                 </button>
               </div>
-              <div class="sv-list" role="group" aria-label="Servicios disponibles">
+
+              <!-- Variante 'tabs': categorías = ícono del servicio (APG con
+                   roving tabindex y flechas). -->
+              <div v-if="pickVariant === 'tabs' && svcTabs.length > 1" class="sv-tabs" role="tablist" aria-label="Categorías de servicios" @keydown="onTabKey">
                 <button
-                  v-for="(it, i) in items" :key="it.id" v-reveal type="button" class="sv-item"
+                  type="button" role="tab" class="sv-tab" id="sv-tab-all" aria-controls="sv-tabpanel"
+                  :aria-selected="tabKey === 'all'" :tabindex="tabKey === 'all' ? 0 : -1" @click="tabKey = 'all'"
+                >Todos <b>{{ items.length }}</b></button>
+                <button
+                  v-for="t in svcTabs" :key="t.key" type="button" role="tab" class="sv-tab" :id="`sv-tab-${t.key}`" aria-controls="sv-tabpanel"
+                  :aria-selected="tabKey === t.key" :tabindex="tabKey === t.key ? 0 : -1" @click="tabKey = t.key"
+                ><AppIcon :name="t.key" :size="15" /> {{ t.label }} <b>{{ t.items.length }}</b></button>
+              </div>
+
+              <!-- Variante 'list': filas con precio (formato carta/menú). -->
+              <div v-if="pickVariant === 'list'" class="sv-rows" role="group" aria-label="Servicios disponibles">
+                <button
+                  v-for="(it, i) in items" :key="it.id" v-reveal type="button" class="sv-row"
+                  :style="{ '--i': Math.min(i, 8), '--h': serviceHue(it.icon) }"
+                  :aria-pressed="chosen.has(it.id)" @click="toggle(it.id)"
+                >
+                  <span class="ico" aria-hidden="true"><AppIcon :name="serviceIcon(it.icon)" :size="19" /></span>
+                  <span class="txt">
+                    <strong>{{ it.name }}</strong>
+                    <small v-if="it.description">{{ it.description }}</small>
+                  </span>
+                  <span v-if="it.duration" class="dur"><AppIcon name="clock" :size="13" /> {{ it.duration }}</span>
+                  <span class="price">{{ servicePriceLabel(it) }}</span>
+                  <span class="act" aria-hidden="true"><AppIcon :name="chosen.has(it.id) ? 'check' : 'plus'" :size="14" :stroke="2.6" /></span>
+                </button>
+              </div>
+
+              <!-- Variante 'timeline': el servicio se cuenta como proceso. -->
+              <ol v-else-if="pickVariant === 'timeline'" class="sv-tl" aria-label="Servicios en orden de proceso">
+                <li v-for="(it, i) in items" :key="it.id" v-reveal class="sv-tl-item" :style="{ '--i': Math.min(i, 8), '--h': serviceHue(it.icon) }">
+                  <span class="num" aria-hidden="true">{{ i + 1 }}</span>
+                  <button type="button" class="sv-tl-btn" :aria-pressed="chosen.has(it.id)" @click="toggle(it.id)">
+                    <span class="top">
+                      <span class="ico" aria-hidden="true"><AppIcon :name="serviceIcon(it.icon)" :size="18" /></span>
+                      <h3>{{ it.name }}</h3>
+                      <span class="price">{{ servicePriceLabel(it) }}</span>
+                    </span>
+                    <small v-if="it.description">{{ it.description }}</small>
+                    <span class="meta">
+                      <span v-if="it.duration" class="dur"><AppIcon name="clock" :size="13" /> {{ it.duration }}</span>
+                      <span class="act" aria-hidden="true">
+                        <AppIcon :name="chosen.has(it.id) ? 'check' : 'plus'" :size="14" :stroke="2.6" />
+                        {{ chosen.has(it.id) ? 'En tu pedido' : 'Agregar' }}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              </ol>
+
+              <!-- Variante 'packages': columnas comparativas por servicio. -->
+              <div v-else-if="pickVariant === 'packages'" class="sv-pkgs" role="group" aria-label="Paquetes de servicios">
+                <button
+                  v-for="(it, i) in items" :key="it.id" v-reveal type="button" class="sv-pkg"
+                  :style="{ '--i': Math.min(i, 8), '--h': serviceHue(it.icon) }"
+                  :aria-pressed="chosen.has(it.id)" @click="toggle(it.id)"
+                >
+                  <span class="ico" aria-hidden="true"><AppIcon :name="serviceIcon(it.icon)" :size="26" /></span>
+                  <h3>{{ it.name }}</h3>
+                  <span class="price">{{ servicePriceLabel(it) }}</span>
+                  <small v-if="it.description">{{ it.description }}</small>
+                  <span v-if="it.duration" class="dur"><AppIcon name="clock" :size="13" /> {{ it.duration }}</span>
+                  <span class="act" aria-hidden="true">
+                    <AppIcon :name="chosen.has(it.id) ? 'check' : 'plus'" :size="15" :stroke="2.6" />
+                    {{ chosen.has(it.id) ? 'En tu pedido' : 'Agregar' }}
+                  </span>
+                </button>
+              </div>
+
+              <!-- Variantes de grilla de tarjetas: picker (default), cards
+                   (ancho completo), bento y el panel de tabs comparten la
+                   misma tarjeta; cambia la retícula. -->
+              <div
+                v-else class="sv-list" :role="pickVariant === 'tabs' ? 'tabpanel' : 'group'" aria-label="Servicios disponibles"
+                :id="pickVariant === 'tabs' ? 'sv-tabpanel' : undefined" :aria-labelledby="pickVariant === 'tabs' ? `sv-tab-${tabKey}` : undefined"
+              >
+                <button
+                  v-for="(it, i) in (pickVariant === 'tabs' ? tabItems : items)" :key="it.id" v-reveal type="button" class="sv-item"
                   :style="{ '--i': Math.min(i, 8), '--h': serviceHue(it.icon) }"
                   :aria-pressed="chosen.has(it.id)" @click="toggle(it.id)"
                 >
@@ -378,32 +520,28 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         </section>
       </div>
 
-      <!-- ===== Cómo funciona (bloque 'steps') ===== -->
+      <!-- ===== Cómo funciona (bloque 'steps'; variante 'rail' = timeline) ===== -->
       <div v-if="steps.length && on('steps')" data-blk="steps" class="sp-container" :style="{ order: pos('steps') }">
         <section id="sv-proceso" class="sv-flush" aria-labelledby="sv-proc-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Cómo funciona</span>
-            <h2 id="sv-proc-title">Simple, de punta a punta.</h2>
+            <h2 id="sv-proc-title">{{ blkTitle('steps', 'Simple, de punta a punta.') }}</h2>
           </div>
-          <div class="sv-steps">
+          <div class="sv-steps" :class="{ 'sv-steps--rail': stepsRail }">
             <div v-for="(s, i) in steps" :key="i" v-reveal class="sv-step" :style="stagger(i)">
               <span class="num"><AppIcon v-if="s.icon" :name="s.icon" :size="20" /><template v-else>{{ i + 1 }}</template><em>{{ i + 1 }}</em></span>
-              <h3>{{ s.title }}</h3>
-              <p>{{ s.text }}</p>
+              <div class="sv-step-txt"><h3>{{ s.title }}</h3><p>{{ s.text }}</p></div>
             </div>
           </div>
         </section>
       </div>
 
-      <!-- ===== Secciones de contenido (garantías, trabajos, opiniones,
-                 zona): no son bloques del catálogo — quedan ancladas
-                 justo antes del formulario de pedido ===== -->
-      <div class="sp-container" data-blk="form" :style="{ order: pos('form') }">
-        <!-- ===== Beneficios y garantías (custom.benefits) ===== -->
-        <section v-if="perks.length" id="sv-garantias" class="sv-flush" aria-labelledby="sv-perk-title">
+      <!-- ===== Garantías (bloque 'benefits', custom.benefits) ===== -->
+      <div v-if="perks.length && on('benefits')" data-blk="benefits" class="sp-container" :style="{ order: ord('benefits') }">
+        <section id="sv-garantias" class="sv-flush" aria-labelledby="sv-perk-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Garantías</span>
-            <h2 id="sv-perk-title">Tranquilidad de punta a punta.</h2>
+            <h2 id="sv-perk-title">{{ blkTitle('benefits', 'Tranquilidad de punta a punta.') }}</h2>
           </div>
           <ul class="sv-perks">
             <li v-for="(b, i) in perks" :key="i" v-reveal class="sv-perk">
@@ -413,12 +551,14 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </li>
           </ul>
         </section>
+      </div>
 
-        <!-- ===== Galería de trabajos (custom.gallery) ===== -->
-        <section v-if="works.length" id="sv-trabajos" class="sv-flush" aria-labelledby="sv-works-title">
+      <!-- ===== Galería de trabajos (bloque 'gallery', custom.gallery) ===== -->
+      <div v-if="works.length && on('gallery')" data-blk="gallery" class="sp-container" :style="{ order: ord('gallery') }">
+        <section id="sv-trabajos" class="sv-flush" aria-labelledby="sv-works-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Trabajos</span>
-            <h2 id="sv-works-title">Algunos trabajos recientes.</h2>
+            <h2 id="sv-works-title">{{ blkTitle('gallery', 'Algunos trabajos recientes.') }}</h2>
           </div>
           <div class="sv-works">
             <figure v-for="(img, i) in works" :key="img.id || i" v-reveal class="sv-work">
@@ -426,12 +566,14 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </figure>
           </div>
         </section>
+      </div>
 
-        <!-- ===== Testimonios (custom.testimonials) ===== -->
-        <section v-if="testis.length" id="sv-opiniones" class="sv-flush" aria-labelledby="sv-testi-title">
+      <!-- ===== Testimonios (bloque 'testimonials', custom.testimonials) ===== -->
+      <div v-if="testis.length && on('testimonials')" data-blk="testimonials" class="sp-container" :style="{ order: ord('testimonials') }">
+        <section id="sv-opiniones" class="sv-flush" aria-labelledby="sv-testi-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Clientes</span>
-            <h2 id="sv-testi-title">{{ testisTitle }}</h2>
+            <h2 id="sv-testi-title">{{ blkTitle('testimonials', testisTitle) }}</h2>
           </div>
           <div class="sv-testis">
             <figure v-for="(t, i) in testis" :key="i" v-reveal class="sv-testi">
@@ -441,12 +583,14 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
             </figure>
           </div>
         </section>
+      </div>
 
-        <!-- ===== Zona de cobertura y horarios ===== -->
-        <section v-if="showZone" id="sv-zona" class="sv-flush" aria-labelledby="sv-zone-title">
+      <!-- ===== Zona de cobertura y horarios (bloque 'zone') ===== -->
+      <div v-if="showZone && on('zone')" data-blk="zone" class="sp-container" :style="{ order: ord('zone') }">
+        <section id="sv-zona" class="sv-flush" aria-labelledby="sv-zone-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Cobertura</span>
-            <h2 id="sv-zone-title">Zona y horarios de atención.</h2>
+            <h2 id="sv-zone-title">{{ blkTitle('zone', 'Zona y horarios de atención.') }}</h2>
           </div>
           <div class="sv-zone">
             <div class="sv-zone-card">
@@ -471,7 +615,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
           <div class="sv-book">
             <div class="sv-book-info">
               <span class="sv-eyebrow">Hacer el pedido</span>
-              <h2 id="sv-book-title">Dejanos tus datos y coordinamos.</h2>
+              <h2 id="sv-book-title">{{ blkTitle('form', 'Dejanos tus datos y coordinamos.') }}</h2>
               <p class="sv-book-lead">El pedido sale por WhatsApp con tu selección. No pedimos tarjeta ni pago por adelantado.</p>
               <ul>
                 <li><span class="tick"><AppIcon name="lock" :size="14" /></span>Sin pago online ni datos de tarjeta</li>
@@ -541,7 +685,7 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         <section id="sv-preguntas" class="sv-flush" aria-labelledby="sv-faq-title">
           <div class="sv-head">
             <span class="sv-eyebrow">Preguntas</span>
-            <h2 id="sv-faq-title">Lo que más nos preguntan.</h2>
+            <h2 id="sv-faq-title">{{ blkTitle('faq', 'Lo que más nos preguntan.') }}</h2>
           </div>
           <div class="sv-faq">
             <details v-for="(f, i) in faqs" :key="i" :open="i === 0">
@@ -555,12 +699,19 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
 
     <Transition name="sv-bar">
       <div v-if="showBar" class="sv-bar" role="region" aria-label="Resumen del presupuesto">
-        <button type="button" class="sv-bar-main" aria-haspopup="dialog" :aria-expanded="sheetOpen" aria-controls="sv-sheet" @click="openSheet">
+        <button v-if="chosenItems.length" type="button" class="sv-bar-main" aria-haspopup="dialog" :aria-expanded="sheetOpen" aria-controls="sv-sheet" @click="openSheet">
           <span class="sv-bar-info">
             <b>{{ fmt(shownTotal) }}</b>
             <small>{{ chosenItems.length }} {{ chosenItems.length === 1 ? 'servicio' : 'servicios' }} · ver detalle</small>
           </span>
           <span class="sv-bar-cta" aria-hidden="true"><AppIcon name="chevron-up" :size="18" /></span>
+        </button>
+        <button v-else type="button" class="sv-bar-main" @click="scrollTo('sv-servicios')">
+          <span class="sv-bar-info">
+            <b>Pedí tu servicio</b>
+            <small>{{ items.length }} {{ items.length === 1 ? 'disponible' : 'disponibles' }} · confirmamos por WhatsApp</small>
+          </span>
+          <span class="sv-bar-cta" aria-hidden="true"><AppIcon name="arrow-right" :size="18" /></span>
         </button>
       </div>
     </Transition>
@@ -589,5 +740,12 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
         <button type="button" class="sv-btn" @click="closeSheet(); scrollTo('sv-pedido')">Pedir con este presupuesto <AppIcon name="arrow-right" :size="17" /></button>
       </div>
     </Transition>
+
+    <!-- Botón flotante de WhatsApp (desktop; posición y forma por
+         custom.service_wa_*). En móvil el contacto ya vive en el dock. -->
+    <a
+      v-if="waFloat" class="sv-wa" :class="`sv-wa--${waShape}`" :data-pos="waPos"
+      :href="waBase" target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp"
+    ><AppIcon name="whatsapp" :size="26" /><span v-if="waShape === 'pill'">Escribinos</span></a>
   </div>
 </template>

@@ -1529,16 +1529,18 @@ html { scroll-behavior: smooth; }
    textura de fondo visible en los bordes. */
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-cover::after {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-bg) 82%, transparent) 0%,
-    color-mix(in srgb, var(--sp-bg) 58%, transparent) 44%,
-    color-mix(in srgb, var(--sp-bg) 76%, transparent) 100%);
+    color-mix(in srgb, var(--sp-bg) 54%, transparent) 0%,
+    color-mix(in srgb, var(--sp-bg) 38%, transparent) 44%,
+    color-mix(in srgb, var(--sp-bg) 52%, transparent) 100%);
 }
 /* El velo de lectura bajo el contenido también va en papel, no en negro:
-   la tinta oscura de estos diseños seguiría aplastada por la sombra. */
+   la tinta oscura de estos diseños seguiría aplastada por la sombra. La
+   suma de ambos velos deja la foto visible en los bordes y la tinta
+   legible sobre la zona del copy. */
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-inner::before {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-bg) 58%, transparent),
-    color-mix(in srgb, var(--sp-bg) 38%, transparent) 45%,
+    color-mix(in srgb, var(--sp-bg) 60%, transparent),
+    color-mix(in srgb, var(--sp-bg) 48%, transparent) 45%,
     color-mix(in srgb, var(--sp-bg) 62%, transparent));
 }
 .store-page:is([data-store-template='lookbook'], [data-store-template='cobre'], [data-store-template='minimal'], [data-store-template='boutique']) .sp-hero-band.has-cover .sp-hero-title,
@@ -1549,15 +1551,15 @@ html { scroll-behavior: smooth; }
    --sp-bg oscuro es un degradado y no mezcla en color-mix). */
 .store-page[data-store-template='shop'] .sp-hero-cover::after {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-card-solid) 82%, transparent) 0%,
-    color-mix(in srgb, var(--sp-card-solid) 58%, transparent) 44%,
-    color-mix(in srgb, var(--sp-card-solid) 76%, transparent) 100%);
+    color-mix(in srgb, var(--sp-card-solid) 60%, transparent) 0%,
+    color-mix(in srgb, var(--sp-card-solid) 44%, transparent) 44%,
+    color-mix(in srgb, var(--sp-card-solid) 58%, transparent) 100%);
 }
 .store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-inner::before {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sp-card-solid) 58%, transparent),
-    color-mix(in srgb, var(--sp-card-solid) 38%, transparent) 45%,
-    color-mix(in srgb, var(--sp-card-solid) 62%, transparent));
+    color-mix(in srgb, var(--sp-card-solid) 56%, transparent),
+    color-mix(in srgb, var(--sp-card-solid) 44%, transparent) 45%,
+    color-mix(in srgb, var(--sp-card-solid) 60%, transparent));
 }
 .store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-title,
 .store-page[data-store-template='shop'] .sp-hero-band.has-cover .sp-hero-sub { text-shadow: 0 1px 16px color-mix(in srgb, var(--sp-card-solid) 85%, transparent); }
@@ -1567,15 +1569,15 @@ html { scroll-behavior: smooth; }
    con su propio oscuro y conserva el halo negro compartido del copy. */
 .store-page[data-store-template='signature'] .sp-hero-cover::after {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--sg-night) 74%, transparent) 0%,
-    color-mix(in srgb, var(--sg-night) 56%, transparent) 48%,
-    color-mix(in srgb, var(--sg-night) 72%, transparent) 100%);
+    color-mix(in srgb, var(--sg-night) 66%, transparent) 0%,
+    color-mix(in srgb, var(--sg-night) 48%, transparent) 48%,
+    color-mix(in srgb, var(--sg-night) 62%, transparent) 100%);
 }
 .store-page[data-store-template='aurora'] .sp-hero-cover::after {
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--au-deep) 68%, transparent) 0%,
-    color-mix(in srgb, var(--au-sky) 50%, transparent) 50%,
-    color-mix(in srgb, var(--au-deep) 66%, transparent) 100%);
+    color-mix(in srgb, var(--au-deep) 60%, transparent) 0%,
+    color-mix(in srgb, var(--au-sky) 42%, transparent) 50%,
+    color-mix(in srgb, var(--au-deep) 58%, transparent) 100%);
 }
 /* Aurora con portada: el cielo panorámico interno deja de duplicar la
    foto — el media-panel pasa a mostrar el carrusel/producto sobre el
@@ -7717,7 +7719,7 @@ html { scroll-behavior: smooth; }
      móvil): tres botones en fila se apretaban y el texto se partía. */
   .store-page[data-store-template='boutique'] .sp-hero-ctas { flex-direction: column; align-items: stretch; gap: 10px; }
   .store-page[data-store-template='boutique'] .sp-hero-ctas .sp-btn { justify-content: center; height: 50px; padding: 0 18px; font-size: 12px; }
-  .store-page[data-store-template='boutique'] .sp-hero .sp-icon-btn { width: 50px; height: 50px; align-self: flex-start; }
+  .store-page[data-store-template='boutique'] .sp-hero .sp-icon-btn { flex: none; width: 50px; height: 50px; align-self: flex-start; }
   .store-page[data-store-template='boutique'] .sp-bt-art { max-width: 300px; }
   .store-page[data-store-template='boutique'] .sp-bt-plate { max-height: 380px; }
   /* Dos tarjetas por fila dejan ~165px: baja la serif de nombres, precios
@@ -8752,7 +8754,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='signature'] .sp-hero-title { font-size: clamp(30px, 9.5vw, 44px); }
   .store-page[data-store-template='signature'] .sp-hero-ctas { flex-direction: column; align-items: stretch; gap: 10px; }
   .store-page[data-store-template='signature'] .sp-hero-ctas .sp-btn { justify-content: center; height: 50px; padding: 0 18px; font-size: 12px; }
-  .store-page[data-store-template='signature'] .sp-hero .sp-icon-btn { width: 50px; height: 50px; align-self: flex-start; }
+  .store-page[data-store-template='signature'] .sp-hero .sp-icon-btn { flex: none; width: 50px; height: 50px; align-self: flex-start; }
   .store-page[data-store-template='signature'] .sp-sg-art { max-width: 300px; }
   .store-page[data-store-template='signature'] .sp-sg-plate { max-height: 380px; }
   .store-page[data-store-template='signature'] .sp-card .tpc-name,
@@ -9836,7 +9838,7 @@ html { scroll-behavior: smooth; }
   .store-page[data-store-template='aurora'] .sp-au-card .sp-hero-title { font-size: clamp(26px, 8.5vw, 38px); }
   .store-page[data-store-template='aurora'] .sp-hero-ctas { flex-direction: column; align-items: stretch; gap: 10px; }
   .store-page[data-store-template='aurora'] .sp-hero-ctas .sp-btn { justify-content: center; height: 50px; }
-  .store-page[data-store-template='aurora'] .sp-hero .sp-icon-btn { align-self: center; width: 50px; height: 50px; }
+  .store-page[data-store-template='aurora'] .sp-hero .sp-icon-btn { flex: none; align-self: center; width: 50px; height: 50px; }
   .store-page[data-store-template='aurora'] .sp-card .tpc-body { padding: 11px 12px; }
   .store-page[data-store-template='aurora'] .sp-card .tpc-name { font-size: 13.5px; }
   .store-page[data-store-template='aurora'] .sp-card .tpc-foot .tpc-price { font-size: 12.5px; }

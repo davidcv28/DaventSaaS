@@ -9,36 +9,38 @@
    ============================================================ */
 
 .sv-page {
-  /* Paleta derivada del tema/plantilla de la tienda */
-  --sv-bg: var(--sp-bg, #fff4e8);
-  --sv-fg: var(--sp-ink, #2b1b17);
-  --sv-mute: var(--sp-muted, #6e5a52);
-  --sv-card: var(--sp-card-solid, var(--sp-card, #fff));
-  --sv-soft: var(--sp-soft, #fbe7d2);
-  --sv-line: var(--sp-line, #e7cdb7);
-  --sv-acc: var(--sp-accent-text, var(--store-accent-ink, #e4572e));
-  --sv-pop: var(--store-accent, #f6c744);
-  --sv-on-acc: #fff;
+  /* Paleta derivada del tema/plantilla de la tienda. Los tokens leen
+     primero --st-* (tema Studio aplicado sobre .store-page); sin site_theme
+     caen a los --sp-*/--store-* de siempre y la web queda idéntica. */
+  --sv-bg: var(--st-bg, var(--sp-bg, #fff4e8));
+  --sv-fg: var(--st-text, var(--sp-ink, #2b1b17));
+  --sv-mute: var(--st-muted, var(--sp-muted, #6e5a52));
+  --sv-card: var(--st-surface, var(--sp-card-solid, var(--sp-card, #fff)));
+  --sv-soft: var(--st-primary-soft, var(--sp-soft, #fbe7d2));
+  --sv-line: var(--st-border, var(--sp-line, #e7cdb7));
+  --sv-acc: var(--st-primary, var(--sp-accent-text, var(--store-accent-ink, #e4572e)));
+  --sv-pop: var(--st-accent, var(--store-accent, #f6c744));
+  --sv-on-acc: var(--st-on-primary, #fff);
   --sv-on-pop: #fff;
   --sv-on-ink: var(--sv-card);            /* tinta sobre superficie invertida (quote) */
-  --sv-ok: #2e9d6b;
+  --sv-ok: var(--st-success, #2e9d6b);
   --sv-on-ok: #fff;
   --sv-mark: color-mix(in srgb, var(--sv-pop) 32%, transparent);
   --sv-input-bg: var(--sv-bg);
   --sv-band-bg: var(--sv-acc);
   --sv-band-fg: var(--sv-on-acc);
-  --sv-focus: var(--sv-pop);
+  --sv-focus: var(--st-accent, var(--sv-pop));
   /* Forma y movimiento por plantilla */
   --sv-r-pill: 999px;
-  --sv-r-stage: 40px;
-  --sv-r-lg: 30px;
-  --sv-r-md: 22px;
-  --sv-r-sm: 14px;
-  --sv-btn-radius: var(--sv-r-pill);
-  --sv-bw: 2px;
-  --sv-sh-pop: 14px 14px 0 var(--sv-pop);
-  --sv-sh-panel: 12px 12px 0 var(--sv-acc);
-  --sv-sh-form: 10px 10px 0 var(--sv-fg);
+  --sv-r-stage: var(--st-radius, 40px);
+  --sv-r-lg: var(--st-radius, 30px);
+  --sv-r-md: var(--st-radius, 22px);
+  --sv-r-sm: var(--st-radius, 14px);
+  --sv-btn-radius: var(--st-btn-radius, var(--sv-r-pill));
+  --sv-bw: var(--st-border-w, 2px);
+  --sv-sh-pop: var(--st-shadow, 14px 14px 0 var(--sv-pop));
+  --sv-sh-panel: var(--st-shadow, 12px 12px 0 var(--sv-acc));
+  --sv-sh-form: var(--st-shadow, 10px 10px 0 var(--sv-fg));
   --sv-btn-bg: var(--store-accent-ink, var(--sv-acc));
   --sv-btn-fg: #fff;
   --sv-btn-bg-h: var(--sv-btn-bg);
@@ -53,22 +55,23 @@
   --sv-item-move: translateY(-4px) rotate(-.6deg);
   --sv-band-tilt: rotate(-1.2deg) scale(1.02);
   --sv-head-case: none;
-  --sv-head-ls: -.02em;
+  --sv-head-ls: var(--st-tracking, -.02em);
   --sv-btn-case: none;
   --sv-btn-ls: 0;
   --sv-spring: cubic-bezier(.34, 1.5, .64, 1);
   --sv-ease: cubic-bezier(.22, .61, .36, 1);
-  --sv-display: var(--sp-display, var(--store-font, system-ui)), 'Arial Rounded MT Bold', sans-serif;
-  --sv-body: var(--sp-body, var(--store-font, system-ui)), sans-serif;
+  --sv-display: var(--st-font-heading, var(--sp-display, var(--store-font, system-ui))), 'Arial Rounded MT Bold', sans-serif;
+  --sv-body: var(--st-font-body, var(--sp-body, var(--store-font, system-ui))), sans-serif;
   /* Escala 2026: espacio, tipografía, radios y sombras en tokens */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
-  --fs-hero: clamp(32px, 7vw, 64px); --fs-h2: clamp(28px, 4vw, 48px); --fs-body: clamp(15px, 1.05vw, 17px);
+  --fs-hero: var(--st-h1-size, clamp(32px, 7vw, 64px)); --fs-h2: var(--st-h2-size, clamp(28px, 4vw, 48px)); --fs-body: var(--st-text-size, clamp(15px, 1.05vw, 17px));
   --r-sm: var(--sv-r-sm); --r-md: var(--sv-r-md); --r-lg: var(--sv-r-lg);
   --shadow-1: 0 1px 2px rgb(15 23 42 / .08), 0 1px 1px rgb(15 23 42 / .04);
-  --shadow-2: 0 1px 3px rgb(15 23 42 / .08), 0 12px 32px -14px rgb(15 23 42 / .3);
-  background: var(--sv-bg);
+  --shadow-2: var(--st-shadow, 0 1px 3px rgb(15 23 42 / .08), 0 12px 32px -14px rgb(15 23 42 / .3));
+  background: var(--st-bg-layer, none), var(--sv-bg);
   color: var(--sv-fg);
   font-family: var(--sv-body);
+  line-height: var(--st-leading, normal);
 }
 
 .store-page[data-store-theme='dark'] .sv-page {
@@ -82,10 +85,10 @@
 
 .sv-page h1, .sv-page h2, .sv-page h3, .sv-page p { margin: 0; }
 .sv-page h1, .sv-page h2 {
-  font-family: var(--sv-display); text-wrap: balance; line-height: 1.05;
+  font-family: var(--sv-display); font-weight: var(--st-weight-heading, 700); text-wrap: balance; line-height: 1.05;
   letter-spacing: var(--sv-head-ls); text-transform: var(--sv-head-case);
 }
-.sv-page section { padding-block: clamp(48px, 8vw, 96px); }
+.sv-page section { padding-block: var(--st-section-gap, clamp(48px, 8vw, 96px)); }
 .sv-page section.sv-flush { padding-top: 0; }
 /* Cada bloque del layout vive en su propio .sp-container hijo de
    #sv-main: el flex permite reordenarlos con `order` desde el editor. */
@@ -100,9 +103,9 @@
 
 .sv-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; text-decoration: none;
-  padding: 15px 24px; border-radius: var(--sv-btn-radius); border: var(--sv-btn-bd);
+  padding: 15px var(--st-btn-px, 24px); min-height: var(--st-btn-h, 0); border-radius: var(--sv-btn-radius); border: var(--sv-btn-bd);
   background: var(--sv-btn-bg); color: var(--sv-btn-fg);
-  font-weight: var(--sv-btn-weight, 700); font-size: 16px; font-family: var(--sv-body);
+  font-weight: var(--sv-btn-weight, 700); font-size: var(--st-btn-fs, 16px); font-family: var(--sv-body);
   text-transform: var(--sv-btn-case); letter-spacing: var(--sv-btn-ls);
   transition: transform .35s var(--sv-spring), box-shadow .35s var(--sv-spring), background-color .2s, color .2s, border-color .2s, filter .2s;
   box-shadow: var(--sv-btn-sh);
@@ -190,7 +193,7 @@
 .sv-pick-clear:hover { color: var(--sv-fg); border-color: var(--sv-fg); transform: translateY(-1px); }
 .sv-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr)); gap: 16px; }
 .sv-item {
-  position: relative; display: grid; gap: 10px; padding: 22px; border-radius: var(--sv-r-md); background: var(--sv-card);
+  position: relative; display: grid; gap: 10px; padding: var(--st-card-pad, 22px); border-radius: var(--sv-r-md); background: var(--sv-card);
   border: var(--sv-bw) solid var(--sv-line); cursor: pointer;
   transition: transform .4s var(--sv-spring), border-color .25s, background-color .25s, box-shadow .3s;
   text-align: left; font: inherit; color: inherit; width: 100%;
@@ -226,7 +229,7 @@
 
 .sv-quote {
   position: sticky; top: 92px; background: var(--sv-fg); color: var(--sv-on-ink);
-  border-radius: var(--sv-r-lg); padding: clamp(24px, 3.5vw, 36px); display: grid; gap: 16px;
+  border-radius: var(--sv-r-lg); padding: var(--st-card-pad, clamp(24px, 3.5vw, 36px)); display: grid; gap: 16px;
   box-shadow: var(--sv-sh-panel);
 }
 @media (max-width: 1023px) { .sv-quote { position: static; } }
@@ -245,7 +248,8 @@
 
 /* ---------- Pasos "cómo funciona" ---------- */
 .sv-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); grid-auto-rows: 1fr; gap: 20px; }
-.sv-step { background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); padding: 26px; display: grid; gap: 12px; align-content: start; }
+.sv-step { background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); padding: var(--st-card-pad, 26px); display: grid; gap: 12px; align-content: start; }
+.sv-step-txt { display: grid; gap: 12px; min-width: 0; }
 .sv-step .num { width: 44px; height: 44px; border-radius: var(--sv-r-sm); background: var(--sv-soft); display: grid; place-items: center; font-family: var(--sv-display); font-weight: 800; color: var(--sv-acc); font-size: 17px; }
 .sv-step h3 { font-size: 19px; font-weight: 700; }
 .sv-step p { color: var(--sv-mute); }
@@ -259,7 +263,7 @@
 .sv-book-info .tick { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--sv-ok); color: var(--sv-on-ok); display: grid; place-items: center; font-weight: 800; font-size: 14px; }
 .sv-form {
   background: var(--sv-card); border: var(--sv-form-bw, var(--sv-bw)) solid var(--sv-form-bd, var(--sv-fg));
-  border-radius: var(--sv-r-lg); padding: clamp(22px, 3.5vw, 36px); display: grid; gap: 18px;
+  border-radius: var(--sv-r-lg); padding: var(--st-card-pad, clamp(22px, 3.5vw, 36px)); display: grid; gap: 18px;
   box-shadow: var(--sv-sh-form);
 }
 .sv-field { display: grid; gap: 6px; border: 0; padding: 0; margin: 0; }
@@ -1459,9 +1463,9 @@
 .sv-bar { display: none; }
 @media (max-width: 1023px) {
   .sv-bar {
+    display: block;
     position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 42;
   }
-  .store-page.has-dock .sv-bar { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .sv-bar-main {
     display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
     padding: 10px 12px 10px 18px; min-height: 56px; border: 0; border-radius: var(--sv-r-lg); cursor: pointer;
@@ -1680,9 +1684,13 @@
    Base 360px, escala por min-width (480 / 768 / 1024 / 1280).
    ============================================================ */
 
-/* Main deja aire para la barra fija + dock (la hoja ya es modal). */
+/* Main deja aire para la barra fija + dock (la hoja ya es modal).
+   El dock solo existe <=720px: fuera de ese rango la barra va al fondo. */
 @media (max-width: 1023px) {
   #sv-main { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 720px) {
+  .store-page.has-dock .sv-bar { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .store-page.has-dock #sv-main { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
 }
 
@@ -1819,7 +1827,7 @@
    cobertura — misma shell de card que .sv-step, datos reales del
    customization (se auto-ocultan sin ítems) ===== */
 .sv-perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); grid-auto-rows: 1fr; gap: 14px; margin: 0; padding: 0; list-style: none; }
-.sv-perk { display: grid; gap: 10px; align-content: start; padding: 22px; background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); min-width: 0; }
+.sv-perk { display: grid; gap: 10px; align-content: start; padding: var(--st-card-pad, 22px); background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); min-width: 0; }
 .sv-perk-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--sv-r-sm); background: var(--sv-soft); color: var(--sv-acc); }
 .sv-perk strong { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
 .sv-perk span:last-child { color: var(--sv-mute); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
@@ -1831,7 +1839,7 @@
 @media (hover: hover) { .sv-work:hover img { transform: scale(1.05); } }
 
 .sv-testis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); grid-auto-rows: 1fr; gap: 14px; }
-.sv-testi { margin: 0; display: grid; gap: 12px; align-content: start; padding: 24px; background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); min-width: 0; }
+.sv-testi { margin: 0; display: grid; gap: 12px; align-content: start; padding: var(--st-card-pad, 24px); background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); min-width: 0; }
 .sv-testi-quote { color: var(--sv-acc); }
 .sv-testi blockquote { margin: 0; font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
 .sv-testi figcaption { display: grid; gap: 2px; margin-top: auto; }
@@ -1839,8 +1847,8 @@
 .sv-testi figcaption span { font-size: 12.5px; color: var(--sv-mute); }
 
 .sv-zone { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
-.sv-zone-card { display: grid; gap: 10px; padding: 24px; background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); color: var(--sv-acc); min-width: 0; }
-.sv-zone-card strong { font-size: 18px; color: var(--sv-ink); overflow-wrap: anywhere; }
+.sv-zone-card { display: grid; gap: 10px; padding: var(--st-card-pad, 24px); background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); color: var(--sv-acc); min-width: 0; }
+.sv-zone-card strong { font-size: 18px; color: var(--sv-fg); overflow-wrap: anywhere; }
 .sv-zone-card span { font-size: 14px; color: var(--sv-mute); line-height: 1.5; }
 .sv-zone-hours { margin: 0; padding: 18px 22px; list-style: none; display: grid; gap: 10px; background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg); }
 .sv-zone-hours li { display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
@@ -1848,3 +1856,219 @@
 .sv-zone-hours li span { color: var(--sv-mute); }
 .sv-zone-hours li strong { margin-left: auto; font-weight: 700; text-align: right; }
 @media (max-width: 640px) { .sv-zone { grid-template-columns: 1fr; } }
+
+/* ================================================================
+   VARIANTES DE PRESENTACIÓN DEL PICKER (data-svv en .sv-services)
+   La variante llega por layout_config.services.picker.variant; el
+   default 'picker' es la grilla de tarjetas + presupuesto al costado
+   de siempre. Todas comparten la selección, el presupuesto y la
+   barra móvil — solo cambia la retícula de la lista.
+   ================================================================ */
+
+/* Variantes a ancho completo: la tarjeta de presupuesto baja debajo. */
+.sv-services[data-svv='cards'], .sv-services[data-svv='bento'],
+.sv-services[data-svv='timeline'], .sv-services[data-svv='packages'] { grid-template-columns: minmax(0, 1fr); }
+.sv-services[data-svv='cards'] .sv-quote, .sv-services[data-svv='bento'] .sv-quote,
+.sv-services[data-svv='timeline'] .sv-quote, .sv-services[data-svv='packages'] .sv-quote {
+  position: static; width: 100%; max-width: 560px; margin-inline: auto;
+}
+
+/* 'cards': tarjetas uniformes a todo lo ancho. */
+@media (min-width: 1024px) {
+  .sv-services[data-svv='cards'] .sv-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+}
+
+/* 'list': filas con precio — carta/menú. La fila entera es el botón. */
+.sv-rows { display: grid; gap: 10px; }
+.sv-row {
+  display: flex; align-items: center; gap: 14px; min-width: 0; min-height: 56px;
+  padding: 12px 16px; border-radius: var(--sv-r-md); background: var(--sv-card);
+  border: var(--sv-bw) solid var(--sv-line); cursor: pointer; text-align: left;
+  font: inherit; color: inherit; width: 100%;
+  transition: border-color .25s, background-color .25s, box-shadow .3s;
+}
+.sv-row .ico {
+  flex: none; width: 44px; height: 44px; border-radius: var(--sv-r-sm); display: grid; place-items: center; line-height: 0;
+  color: #fff; background: linear-gradient(135deg, hsl(var(--h, 250) 74% 56%), hsl(calc(var(--h, 250) + 28) 72% 42%));
+}
+.sv-row .txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.sv-row .txt strong { font-size: 16px; overflow-wrap: break-word; }
+.sv-row .txt small { color: var(--sv-mute); font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sv-row .dur { flex: none; display: inline-flex; align-items: center; gap: 5px; color: var(--sv-mute); font-size: 12.5px; font-weight: 600; }
+.sv-row .price { flex: none; font-family: var(--sv-display); font-weight: 700; font-size: 17px; color: var(--sv-acc); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sv-row .act {
+  flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--sv-mute); border: 2px dashed var(--sv-line);
+  transition: background-color .25s, color .25s, border-color .25s, transform .35s var(--sv-spring);
+}
+.sv-row:hover { border-color: color-mix(in srgb, var(--sv-acc) 55%, var(--sv-line)); }
+.sv-row:hover .act { border-style: solid; border-color: var(--sv-acc); color: var(--sv-acc); }
+.sv-row[aria-pressed='true'] { border-color: var(--sv-acc); background: color-mix(in oklab, var(--sv-pop) 8%, var(--sv-card)); }
+.sv-row[aria-pressed='true'] .act { background: var(--sv-ok); border-color: var(--sv-ok); color: var(--sv-on-ok); transform: scale(1.06); }
+@media (max-width: 560px) {
+  .sv-row { gap: 10px; padding: 10px 12px; }
+  .sv-row .ico { width: 38px; height: 38px; }
+  .sv-row .dur { display: none; }
+}
+
+/* 'bento': retícula asimétrica — el primer servicio hace de destacado. */
+.sv-services[data-svv='bento'] .sv-list { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.sv-services[data-svv='bento'] .sv-item { grid-column: span 2; }
+.sv-services[data-svv='bento'] .sv-item:nth-child(-n+2) { grid-column: span 3; }
+.sv-services[data-svv='bento'] .sv-item:first-child { grid-row: span 2; }
+@media (max-width: 768px) {
+  .sv-services[data-svv='bento'] .sv-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sv-services[data-svv='bento'] .sv-item, .sv-services[data-svv='bento'] .sv-item:nth-child(-n+2) { grid-column: auto; }
+  .sv-services[data-svv='bento'] .sv-item:first-child { grid-row: auto; grid-column: span 2; }
+}
+@media (max-width: 480px) {
+  .sv-services[data-svv='bento'] .sv-list { grid-template-columns: minmax(0, 1fr); }
+  .sv-services[data-svv='bento'] .sv-item:first-child { grid-column: auto; }
+}
+
+/* 'tabs': categorías por ícono del servicio (roving tabindex en la vista). */
+.sv-tabs {
+  display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain;
+  padding: 2px 2px 8px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+}
+.sv-tab {
+  flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  padding: 10px 16px; border-radius: var(--sv-r-pill); border: var(--sv-bw) solid var(--sv-line);
+  background: var(--sv-card); color: var(--sv-mute); font: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: background-color .2s, color .2s, border-color .2s, transform .3s var(--sv-spring);
+}
+.sv-tab:hover { color: var(--sv-fg); border-color: var(--sv-fg); transform: translateY(-1px); }
+.sv-tab .icon { color: var(--sv-acc); }
+.sv-tab b { font-size: 12px; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 99px; background: var(--sv-soft); color: var(--sv-fg); }
+.sv-tab[aria-selected='true'] { background: var(--sv-fg); color: var(--sv-on-ink); border-color: var(--sv-fg); }
+.sv-tab[aria-selected='true'] .icon { color: var(--sv-pop); }
+.sv-tab[aria-selected='true'] b { background: color-mix(in oklab, currentColor 18%, transparent); color: inherit; }
+#sv-tabpanel { display: grid; }
+
+/* 'timeline': los servicios como estaciones de un proceso. */
+.sv-tl { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; max-width: 720px; }
+.sv-tl-item { position: relative; padding-left: 62px; min-width: 0; }
+.sv-tl-item::before {
+  content: ''; position: absolute; left: 21px; top: 46px; bottom: -22px; width: 2px;
+  background: repeating-linear-gradient(180deg, var(--sv-line) 0 6px, transparent 6px 12px);
+}
+.sv-tl-item:last-child::before { display: none; }
+.sv-tl-item > .num {
+  position: absolute; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--sv-display); font-weight: 800; font-size: 15px;
+  background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); color: var(--sv-acc); z-index: 1;
+}
+.sv-tl-item:has(.sv-tl-btn[aria-pressed='true']) > .num { background: var(--sv-acc); border-color: var(--sv-acc); color: var(--sv-on-acc); }
+.sv-tl-btn {
+  display: grid; gap: 8px; width: 100%; min-height: 56px; padding: 16px 20px;
+  background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-md);
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  transition: border-color .25s, background-color .25s, transform .35s var(--sv-spring), box-shadow .3s;
+}
+.sv-tl-btn:hover { border-color: color-mix(in srgb, var(--sv-acc) 55%, var(--sv-line)); transform: var(--sv-item-move); }
+.sv-tl-btn[aria-pressed='true'] { border-color: var(--sv-acc); background: color-mix(in oklab, var(--sv-pop) 8%, var(--sv-card)); }
+.sv-tl-btn .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.sv-tl-btn .ico {
+  flex: none; width: 38px; height: 38px; border-radius: var(--sv-r-sm); display: grid; place-items: center; line-height: 0;
+  color: #fff; background: linear-gradient(135deg, hsl(var(--h, 250) 74% 56%), hsl(calc(var(--h, 250) + 28) 72% 42%));
+}
+.sv-tl-btn h3 { flex: 1; min-width: 0; font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+.sv-tl-btn .price { flex: none; font-family: var(--sv-display); font-weight: 700; font-size: 17px; color: var(--sv-acc); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sv-tl-btn small { color: var(--sv-mute); font-size: 14px; overflow-wrap: anywhere; }
+.sv-tl-btn .meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.sv-tl-btn .dur { display: inline-flex; align-items: center; gap: 6px; color: var(--sv-mute); font-size: 13px; font-weight: 600; }
+.sv-tl-btn .act {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; min-height: 34px; border-radius: var(--sv-r-pill);
+  font-size: 13px; font-weight: 700; color: var(--sv-acc);
+  border: 1.5px dashed color-mix(in srgb, var(--sv-acc) 45%, var(--sv-line));
+  transition: background-color .25s, color .25s, border-color .25s;
+}
+.sv-tl-btn[aria-pressed='true'] .act { background: var(--sv-ok); border: 1.5px solid var(--sv-ok); color: var(--sv-on-ok); }
+@media (max-width: 560px) {
+  .sv-tl-item { padding-left: 52px; }
+  .sv-tl-item > .num { width: 38px; height: 38px; font-size: 13px; }
+  .sv-tl-item::before { left: 18px; }
+}
+
+/* 'packages': columnas comparativas — cada servicio es un paquete. */
+.sv-pkgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 14px; }
+.sv-pkg {
+  position: relative; display: grid; gap: 12px; align-content: start; justify-items: center; text-align: center;
+  padding: 28px 22px; background: var(--sv-card); border: var(--sv-bw) solid var(--sv-line); border-radius: var(--sv-r-lg);
+  font: inherit; color: inherit; cursor: pointer; min-width: 0;
+  transition: border-color .25s, background-color .25s, transform .4s var(--sv-spring), box-shadow .3s;
+}
+.sv-pkg:hover { border-color: color-mix(in srgb, var(--sv-acc) 55%, var(--sv-line)); transform: var(--sv-item-move); }
+.sv-pkg .ico {
+  width: 56px; height: 56px; border-radius: var(--sv-r-md); display: grid; place-items: center; line-height: 0;
+  color: #fff; background: linear-gradient(135deg, hsl(var(--h, 250) 74% 56%), hsl(calc(var(--h, 250) + 28) 72% 42%));
+  box-shadow: 0 10px 22px -10px hsl(var(--h, 250) 80% 45% / .55), inset 0 1.5px 0 rgba(255, 255, 255, .28);
+}
+.sv-pkg h3 { font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
+.sv-pkg .price { font-family: var(--sv-display); font-weight: 800; font-size: clamp(24px, 2.6vw, 32px); color: var(--sv-acc); font-variant-numeric: tabular-nums; line-height: 1; }
+.sv-pkg small { color: var(--sv-mute); font-size: 14px; overflow-wrap: anywhere; }
+.sv-pkg .dur { display: inline-flex; align-items: center; gap: 6px; color: var(--sv-mute); font-size: 13px; font-weight: 600; }
+.sv-pkg .act {
+  margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  padding: 11px 18px; border-radius: var(--sv-btn-radius); font-size: 14px; font-weight: 700;
+  color: var(--sv-acc); border: 1.5px dashed color-mix(in srgb, var(--sv-acc) 45%, var(--sv-line));
+  background: color-mix(in srgb, var(--sv-acc) 6%, transparent);
+  transition: background-color .25s, color .25s, border-color .25s;
+}
+.sv-pkg:hover .act { border-style: solid; border-color: var(--sv-acc); }
+.sv-pkg[aria-pressed='true'] { border-color: var(--sv-acc); background: color-mix(in oklab, var(--sv-pop) 8%, var(--sv-card)); box-shadow: var(--sv-sh-pop); }
+.sv-pkg[aria-pressed='true'] .act { background: var(--sv-ok); border: 1.5px solid var(--sv-ok); color: var(--sv-on-ok); }
+
+/* Bloque 'steps' variante 'rail': el "cómo funciona" como línea de tiempo. */
+.sv-steps--rail { grid-template-columns: minmax(0, 1fr); max-width: 720px; gap: 26px; }
+.sv-steps--rail .sv-step { grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px 18px; }
+.sv-steps--rail .sv-step:not(:last-child)::after {
+  top: auto; left: 51px; bottom: -26px; width: 2px; height: 26px;
+  background: var(--sv-line);
+}
+@media (max-width: 560px) { .sv-steps--rail .sv-step:not(:last-child)::after { left: 45px; } }
+
+/* ============ Botón flotante de WhatsApp (solo desktop) ============
+   En móvil el contacto ya vive en el dock (z-43) y la barra (z-42);
+   acá queda por debajo de dock/bot y de los chats (90/96). */
+.sv-wa { display: none; }
+@media (min-width: 1024px) {
+  .sv-wa {
+    position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 41;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-width: 56px; height: 56px; padding: 0; border-radius: 50%;
+    background: var(--sv-wa-bg, #0d7a3f); color: #fff; text-decoration: none;
+    box-shadow: 0 14px 34px -12px rgb(13 122 63 / .6), 0 4px 14px rgb(2 6 23 / .28);
+    transition: transform .25s var(--sv-ease), box-shadow .25s;
+  }
+  .sv-wa:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -12px rgb(13 122 63 / .65), 0 6px 18px rgb(2 6 23 / .3); }
+  .sv-wa[data-pos='left'] { left: 18px; }
+  .sv-wa[data-pos='right'] { right: 18px; }
+  .sv-wa--square { border-radius: var(--sv-r-md); }
+  .sv-wa--pill { border-radius: var(--sv-r-pill); padding: 0 22px; font-family: var(--sv-body); font-weight: 700; font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sv-tl-btn:hover, .sv-pkg:hover, .sv-row:hover, .sv-tab:hover, .sv-wa:hover { transform: none; }
+}
+
+/* ============ Tema Studio: variantes discretas (data-st-*) ============
+   Solo aplican cuando el contenedor las lleva (vista previa del Studio o
+   un sitio con site_theme aplicado); sin los atributos nada cambia. */
+.store-page[data-st-reveal='none'] .sv-rv { opacity: 1; translate: none; animation: none; }
+.store-page[data-st-reveal='fade'] .sv-rv.sv-in { animation-name: sv-fade-in; }
+@keyframes sv-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.store-page[data-st-hover='none'] .sv-item:hover, .store-page[data-st-hover='none'] .sv-step:hover,
+.store-page[data-st-hover='none'] .sv-tl-btn:hover, .store-page[data-st-hover='none'] .sv-pkg:hover,
+.store-page[data-st-hover='none'] .sv-tab:hover { transform: none; }
+.store-page[data-st-hover='glow'] .sv-item:hover, .store-page[data-st-hover='glow'] .sv-pkg:hover {
+  transform: none; box-shadow: 0 0 0 1px var(--sv-acc), 0 14px 34px -14px color-mix(in srgb, var(--sv-acc) 55%, transparent);
+}
+.store-page[data-st-btn-style='outline'] .sv-btn { background: transparent; color: var(--sv-acc); box-shadow: inset 0 0 0 2px var(--sv-acc); }
+.store-page[data-st-btn-style='ghost'] .sv-btn { background: color-mix(in srgb, var(--sv-acc) 12%, transparent); color: var(--sv-acc); box-shadow: none; }
+.store-page[data-st-surface='flat'] .sv-page :is(.sv-item, .sv-row, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-zone-hours, .sv-tab, .sv-tl-btn, .sv-faq details) { border-color: transparent; }
+.store-page[data-st-surface='bordered'] .sv-page :is(.sv-item, .sv-row, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-zone-hours, .sv-tab, .sv-tl-btn, .sv-faq details) { border-color: var(--sv-line); }
+.store-page[data-st-surface='elevated'] .sv-page :is(.sv-item, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card) { box-shadow: var(--st-shadow, var(--shadow-2)); }
+@media (max-width: 479px) {
+  .sv-list { grid-template-columns: repeat(var(--st-grid-cols, 1), minmax(0, 1fr)); }
+}
