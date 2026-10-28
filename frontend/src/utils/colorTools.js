@@ -66,7 +66,6 @@ function loadImage(src, cors) {
     img.src = src
   })
 }
-
 export function quantizeColors(data, max = 5) {
   const buckets = new Map()
   for (let i = 0; i < data.length; i += 4) {
@@ -96,7 +95,12 @@ export function quantizeColors(data, max = 5) {
   return picked.map((c) => rgbToHex(c.rgb))
 }
 
-export async function extractLogoColors(src, { cors = true, max = 5 } = {}) {
+export async function extractLogoColors(src, { cors = false, max = 5 } = {}) {
+  // Los logos guardados viven en Cloudflare R2 (pub-*.r2.dev). Ese bucket no
+  // expone Access-Control-Allow-Origin: pedir la imagen con crossOrigin
+  // 'anonymous' la bloquea por CORS (ERR_FAILED + ruido en consola) y el
+  // canvas queda tainted igual. Sin crossOrigin la imagen carga y solo falla
+  // el getImageData — se degrada a [] (paleta por defecto) sin error de red.
   const img = await loadImage(src, cors)
   const scale = Math.min(1, SAMPLE_SIZE / Math.max(img.naturalWidth, img.naturalHeight, 1))
   const w = Math.max(1, Math.round(img.naturalWidth * scale))
@@ -106,7 +110,15 @@ export async function extractLogoColors(src, { cors = true, max = 5 } = {}) {
   canvas.height = h
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   ctx.drawImage(img, 0, 0, w, h)
-  return quantizeColors(ctx.getImageData(0, 0, w, h).data, max)
+  let data
+  try {
+    data = ctx.getImageData(0, 0, w, h).data
+  } catch {
+    // Canvas tainted (imagen remota sin CORS en el bucket): no hay forma de
+    // leer píxeles. Devolver [] deja que la UI use la paleta por defecto.
+    return []
+  }
+  return quantizeColors(data, max)
 }
 
 const PAGE_BG = { light: '#f4f6fb', dark: '#0d1220' }

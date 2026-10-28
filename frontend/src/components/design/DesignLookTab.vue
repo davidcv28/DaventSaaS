@@ -176,7 +176,7 @@ async function analyzeLogo() {
   colorBusy.value = true
   colorMsg.value = ''
   try {
-    logoColors.value = await extractLogoColors(src, { cors: src !== localLogoUrl })
+    logoColors.value = await extractLogoColors(src)
     if (!logoColors.value.length) colorMsg.value = 'Tu logo no tiene colores para leer. Elegí un acento a mano.'
   } catch {
     analyzedSrc = ''
