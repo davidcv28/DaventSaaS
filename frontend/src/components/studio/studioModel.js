@@ -8,11 +8,13 @@ import { effectiveAccent } from '../../api/stores.api.js'
 // #panel-<id> del StudioShell.
 export const STUDIO_TOOLS = [
   { id: 'estilos',      icon: 'sparkles',     label: 'Estilos',      desc: 'Identidad, colores, fuente y diseño base de tu página.' },
-  { id: 'colores',      icon: 'palette',      label: 'Colores',      desc: 'Paleta del tema: acento, fondos, texto y estados.' },
-  { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuente, escala y peso de los textos.' },
-  { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad y estilo de las tarjetas.' },
+  { id: 'colores',      icon: 'palette',      label: 'Colores',      desc: 'Paleta por rol, armonías, logo y contraste accesible.' },
+  { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuentes, pares recomendados, escala y peso.' },
+  { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad, superficie y botones.' },
+  { id: 'fondo',        icon: 'image',        label: 'Fondo',        desc: 'Color, degradado, malla, patrón o imagen de fondo.' },
   { id: 'distribucion', icon: 'list-ordered', label: 'Distribución', desc: 'Qué bloques lleva cada página y en qué orden.' },
   { id: 'movil',        icon: 'smartphone',   label: 'Móvil',        desc: 'Navegación, grilla y portada en pantallas chicas.' },
+  { id: 'movimiento',   icon: 'zap',          label: 'Movimiento',   desc: 'Revelado al bajar, reacción al mouse e intensidad.' },
   { id: 'folletos',     icon: 'printer',      label: 'Folletos',     desc: 'Piezas imprimibles con tu identidad (QR y ofertas).' },
   { id: 'avanzado',     icon: 'sliders',      label: 'Avanzado',     desc: 'Tema claro/oscuro y ajustes finos del diseño.' }
 ]
@@ -96,6 +98,6 @@ export function toolForTarget(target) {
     'chrome.nav': 'movil',
     buttons: 'colores',
     media: 'estilos',
-    page: 'estilos'
+    page: 'fondo'
   }[target] || 'estilos'
 }

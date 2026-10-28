@@ -15,6 +15,9 @@
     body { margin: 0; background: #e7eaf3; }
     .qa-panel { max-width: 322px; margin: 0 auto; padding: 14px; min-height: 100dvh; background: #fff; box-shadow: 0 0 0 1px rgba(15, 23, 42, .06); }
     @media (max-width: 768px) { .qa-panel { max-width: none; padding: 12px 14px 18px; } }
+    /* Réplica de los overrides scoped que StudioPanel aplica con .stp-look :deep() */
+    .stp-look .dl-hbtn { display: none; }
+    .stp-look .dsg-card { border: 0; box-shadow: none; padding: 0; border-radius: 0; background: transparent; }
   </style>
 </head>
 <body>
@@ -62,7 +65,7 @@
       if (part === 'all') { form.theme = p.pageTheme || 'light'; form.template = p.template }
     }
     const app = createApp({
-      render: () => h('div', { class: 'qa-panel' }, [
+      render: () => h('div', { class: 'qa-panel stp-look' }, [
         h(EstilosPanel, {
           form, benefits: { has_customization: true, has_design_plus: true, has_design_advanced: advanced },
           shopName: 'Tienda Demo',

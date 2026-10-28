@@ -114,9 +114,11 @@ watch(() => [props.form.accent, props.form.accent_custom], () => {
   if (suppressFormTheme) return
   Object.assign(draft.theme.palette, formThemePatch(props.form).palette)
 })
-watch(() => props.form.name_font, (f) => {
+watch(() => props.form.name_font, (f, prev) => {
   if (suppressFormTheme || !f) return
-  draft.theme.typography.heading = f
+  // El título sigue a la fuente principal solo mientras no se haya elegido
+  // uno distinto en Tipografía (los pares título/cuerpo no se desarman).
+  if (draft.theme.typography.heading === prev) draft.theme.typography.heading = f
   draft.theme.typography.body = f
 })
 
@@ -434,6 +436,17 @@ function pickTool(id) {
   panelOpen.value = true
   if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
 }
+// El panel Móvil siempre edita mirando la vista móvil (requisito del panel:
+// la vista previa chica queda visible mientras se ajusta).
+watch(tool, (t) => { if (t === 'movil') device.value = 'mobile' })
+
+// 'navigate' con un id de herramienta = saltar dentro del Studio (los CTAs
+// de los locks apuntan a paneles p.ej. Avanzado); el resto sube al Dashboard.
+const TOOL_IDS = new Set(STUDIO_TOOLS.map((t) => t.id))
+function onPanelNav(target) {
+  if (TOOL_IDS.has(target)) pickTool(target)
+  else emit('navigate', target)
+}
 
 // ---------------------------------------------------------------------------
 // Teclado: Ctrl+Z / Ctrl+Shift+Z (capture — también anula el undo interno de
@@ -527,7 +540,9 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
           :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
           :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config || null"
           :can-flyers="canFlyers" :shop-name="shopName"
-          @navigate="emit('navigate', $event)" @ring="ringTarget"
+          :customization="customization" :viewer="viewerTheme"
+          @navigate="onPanelNav" @ring="ringTarget"
+          @set-viewer="(v) => { if (v === 'light' || v === 'dark') viewerTheme = v }"
         />
       </div>
     </section>
@@ -588,7 +603,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
   grid-area: rail; display: flex; flex-direction: column; justify-content: space-between;
   border-right: 1px solid var(--line); background: var(--surface); padding: 8px 6px;
 }
-.sts-rail-list { display: flex; flex-direction: column; gap: 2px; }
+.sts-rail-list { display: flex; flex-direction: column; gap: 2px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .sts-tool {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   min-height: 52px; padding: 7px 2px 5px; border: 0; border-radius: 10px;
@@ -598,7 +613,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 .sts-tool:hover { color: var(--ink); background: var(--line-soft); }
 .sts-tool.active { background: var(--brand-soft); color: var(--brand-ink); }
 .sts-tool:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
-.sts-tool-lb { line-height: 1; text-align: center; }
+.sts-tool-lb { line-height: 1.05; text-align: center; hyphens: auto; overflow-wrap: break-word; max-width: 100%; }
 .sts-collapse { margin-top: 8px; color: var(--muted); }
 .sts-back { display: none; color: var(--muted); }
 
@@ -682,7 +697,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
     border-right: 0; border-top: 1px solid var(--line); background: var(--card);
     overflow-x: auto; gap: 4px;
   }
-  .sts-rail-list { flex-direction: row; gap: 4px; flex: 1; }
+  .sts-rail-list { flex-direction: row; gap: 4px; flex: 1; overflow-y: visible; }
   .sts-tool { flex: 1 0 auto; min-width: 60px; min-height: 50px; flex-direction: column; }
   .sts-collapse { display: none; }
   .sts-back { display: flex; }
@@ -710,14 +725,16 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
   .sts-panel-title { padding-top: 4px; }
   .sts-panel-title h2 { font-size: 14px; }
   .sts-panel-title p { display: none; }
+  .sts-savebar .sts-opt { height: 44px; }
   .sts-sheet-stops { display: inline-flex; gap: 6px; padding-top: 10px; }
-  .sts-stop { width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); cursor: pointer; position: relative; }
-  .sts-stop::after { content: ''; position: absolute; left: 4px; right: 4px; bottom: 4px; border-radius: 2px; background: var(--muted); opacity: .5; }
+  .sts-stop { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; position: relative; }
+  .sts-stop::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); width: 18px; bottom: 8px; border-radius: 2px; background: var(--muted); opacity: .5; }
   .sts-stop:nth-child(1)::after { height: 4px; }
   .sts-stop:nth-child(2)::after { height: 9px; }
   .sts-stop:nth-child(3)::after { height: 14px; }
   .sts-stop.active { border-color: var(--brand-500); }
   .sts-stop.active::after { background: var(--brand-500); opacity: 1; }
+  .sts-stop:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
   .sts-panel-x { display: none; }
   .sts-panel-body { padding: 12px 14px 18px; }
 }
