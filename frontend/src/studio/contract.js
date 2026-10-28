@@ -349,21 +349,120 @@ export function themeToCssVars(theme, resolveFont) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Claves realmente presentes en un site_theme parcial ('seccion.clave').
+// La web publicada guarda solo lo que el usuario eligió (el merge con los
+// defaults corre al render); con esto el consumo CSS sabe qué campos puede
+// pisar: una clave ausente deja el fallback de la hoja intacto, así una
+// tienda sin tema —o con un tema parcial— conserva el look de su plantilla.
+// ---------------------------------------------------------------------------
+const THEME_SECTION_KEYS = {
+  palette: Object.keys(SITE_THEME_DEFAULTS.palette),
+  containers: Object.keys(SITE_THEME_DEFAULTS.containers),
+  typography: Object.keys(SITE_THEME_DEFAULTS.typography),
+  buttons: Object.keys(SITE_THEME_DEFAULTS.buttons),
+  background: Object.keys(SITE_THEME_DEFAULTS.background),
+  motion: Object.keys(SITE_THEME_DEFAULTS.motion),
+  mobile: Object.keys(SITE_THEME_DEFAULTS.mobile)
+}
+
+export function themeExplicitKeys(partial) {
+  const out = new Set()
+  if (!partial || typeof partial !== 'object') return out
+  for (const [section, keys] of Object.entries(THEME_SECTION_KEYS)) {
+    const content = partial[section]
+    if (!content || typeof content !== 'object') continue
+    for (const key of keys) {
+      if (content[key] !== undefined && content[key] !== null) out.add(`${section}.${key}`)
+    }
+  }
+  return out
+}
+
+// Variable CSS del contrato -> campo(s) que la justifican. themeToCssVars
+// emite siempre el set completo; quien pinta con un tema parcial (la web
+// publicada) filtra con esto para no pisar tokens de la plantilla.
+export const STUDIO_VAR_KEYS = {
+  '--st-primary': ['palette.primary'],
+  '--st-primary-soft': ['palette.primary'],
+  '--st-on-primary': ['palette.primary'],
+  '--st-secondary': ['palette.secondary'],
+  '--st-on-secondary': ['palette.secondary'],
+  '--st-accent': ['palette.accent'],
+  '--st-bg': ['palette.bg'],
+  '--st-surface': ['palette.surface'],
+  '--st-text': ['palette.text'],
+  '--st-muted': ['palette.muted'],
+  '--st-border': ['palette.border'],
+  '--st-success': ['palette.success'],
+  '--st-danger': ['palette.danger'],
+  '--st-radius': ['containers.radius'],
+  '--st-shadow': ['containers.shadow'],
+  '--st-border-w': ['containers.border'],
+  '--st-card-pad': ['containers.density'],
+  '--st-section-gap': ['containers.density'],
+  '--st-font-heading': ['typography.heading'],
+  '--st-font-body': ['typography.body'],
+  '--st-h1-size': ['typography.scale'],
+  '--st-h2-size': ['typography.scale'],
+  '--st-text-size': ['typography.scale'],
+  '--st-leading': ['typography.scale'],
+  '--st-weight-heading': ['typography.weightHeading'],
+  '--st-tracking': ['typography.letterSpacing'],
+  '--st-btn-radius': ['buttons.shape'],
+  '--st-btn-h': ['buttons.size'],
+  '--st-btn-px': ['buttons.size'],
+  '--st-btn-fs': ['buttons.size'],
+  '--st-bg-layer': ['background.type', 'background.value'],
+  '--st-bg-overlay': ['background.overlay'],
+  '--st-motion-dur': ['motion.intensity'],
+  '--st-grid-cols': ['mobile.gridCols']
+}
+
+// Filtra el set completo de themeToCssVars a las variables cuyo campo está
+// presente. `explicit` null = set completo (contrato / presets / preview
+// sin seguimiento, comportamiento histórico).
+export function pickThemeVars(vars, explicit = null) {
+  if (!explicit) return { ...vars }
+  const keys = explicit instanceof Set ? explicit : new Set(explicit)
+  const out = {}
+  for (const [name, fields] of Object.entries(STUDIO_VAR_KEYS)) {
+    if (fields.some((f) => keys.has(f)) && vars[name] !== undefined) out[name] = vars[name]
+  }
+  return out
+}
+
 // Variantes discretas (no son valores CSS): van como atributos data-st-* en
 // el contenedor para que el CSS seleccione por [data-st-btn-style='ghost'].
-export function themeDataAttrs(theme) {
+// Con `explicit`, solo viaja la variante de un campo elegido: sin el
+// atributo el CSS no toca el look de la plantilla.
+export function themeDataAttrs(theme, explicit = null) {
   const t = resolveSiteTheme(theme)
+  const keys = explicit ? (explicit instanceof Set ? explicit : new Set(explicit)) : null
+  const on = (key) => !keys || keys.has(key)
   return {
-    'data-st-surface': t.containers.surface,
-    'data-st-density': t.containers.density,
-    'data-st-btn-style': t.buttons.style,
-    'data-st-bgtype': t.background.type,
-    'data-st-reveal': t.motion.reveal,
-    'data-st-hover': t.motion.hover,
-    'data-st-nav': t.mobile.nav,
-    'data-st-card': t.mobile.cardStyle,
-    'data-st-hero': t.mobile.heroHeight,
-    'data-st-sticky-cta': t.mobile.stickyCta ? 'true' : null
+    'data-st-surface': on('containers.surface') ? t.containers.surface : null,
+    'data-st-density': on('containers.density') ? t.containers.density : null,
+    'data-st-radius': on('containers.radius') ? t.containers.radius : null,
+    'data-st-border': on('containers.border') ? t.containers.border : null,
+    'data-st-shadow': on('containers.shadow') ? t.containers.shadow : null,
+    'data-st-grid': on('mobile.gridCols') ? String(t.mobile.gridCols) : null,
+    'data-st-brand': on('palette.primary') || on('palette.accent') ? '' : null,
+    'data-st-font-heading': on('typography.heading') ? '' : null,
+    'data-st-font-body': on('typography.body') ? '' : null,
+    'data-st-scale': on('typography.scale') ? '' : null,
+    'data-st-weight': on('typography.weightHeading') ? '' : null,
+    'data-st-tracking': on('typography.letterSpacing') ? '' : null,
+    'data-st-btn-shape': on('buttons.shape') ? '' : null,
+    'data-st-btn-size': on('buttons.size') ? '' : null,
+    'data-st-btn-style': on('buttons.style') ? t.buttons.style : null,
+    'data-st-bgtype': on('background.type') ? t.background.type : null,
+    'data-st-reveal': on('motion.reveal') ? t.motion.reveal : null,
+    'data-st-hover': on('motion.hover') ? t.motion.hover : null,
+    'data-st-nav': on('mobile.nav') ? t.mobile.nav : null,
+    'data-st-card': on('mobile.cardStyle') ? t.mobile.cardStyle : null,
+    'data-st-hero': on('mobile.heroHeight') ? t.mobile.heroHeight : null,
+    'data-st-sticky-cta': on('mobile.stickyCta') && t.mobile.stickyCta ? 'true' : null
   }
 }
 

@@ -487,3 +487,25 @@
 .bq-card.tpc .tpc-body { padding: 12px 14px 0; }
 .bq-cards { grid-auto-rows: 1fr; }
 .cv-bq-cards { grid-auto-rows: 1fr; }
+/* ---------- Studio: tema del sitio sobre la piel suiza ----------
+   Los tokens propios --bq-* heredan del contrato cuando el tema los fija. */
+.store-page[data-store-template='bloque'][data-st-themed]:not([data-store-theme='dark']) {
+  --bq-paper: var(--st-bg, #f1f1ec);
+  --bq-ink: var(--st-text, #0b0b0b);
+  --bq-mute: var(--st-muted, #6b6b66);
+  --bq-line: var(--st-border, rgba(11, 11, 11, .14));
+}
+.store-page[data-store-template='bloque'][data-st-themed] {
+  --bq-display: var(--st-font-heading, 'Archivo', 'Helvetica Neue', Arial, sans-serif);
+  --bq-cobalt: var(--store-accent-ink);
+}
+.store-page[data-store-template='bloque'][data-st-themed] .bq-btn {
+  border-radius: var(--st-btn-radius, 0);
+  min-height: var(--st-btn-h, 46px);
+  padding-inline: var(--st-btn-px, 22px);
+  font-size: var(--st-btn-fs, 14px);
+}
+
+.store-page[data-store-template='bloque'][data-st-btn-style='outline'] .bq-btn { background: transparent; color: var(--bq-ink); box-shadow: inset 0 0 0 2px currentColor; }
+.store-page[data-store-template='bloque'][data-st-btn-style='ghost'] .bq-btn { background: color-mix(in srgb, var(--bq-cobalt) 12%, transparent); color: var(--bq-ink); box-shadow: none; }
+.store-page[data-store-template='bloque'][data-st-btn-style='gradient'] .bq-btn { background: linear-gradient(120deg, var(--st-primary, var(--bq-cobalt)), var(--st-secondary, var(--bq-ink))); color: var(--st-on-primary, #fff); box-shadow: none; }

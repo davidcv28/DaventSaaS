@@ -14,7 +14,10 @@ import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts } from '../templates/index.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
-import { studioPreviewVars, studioPreviewAttrs, applyFocusRing } from '../components/studio/previewBridge.js'
+import {
+  studioPreviewVars, studioPreviewAttrs, applyFocusRing,
+  storeSiteThemeVars, storeSiteThemeAttrs
+} from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
 // Las hojas de las landing alternativas también definen el cromado
 // (topbar/pie) y la ficha de producto de su diseño: se cargan acá para que
@@ -48,9 +51,14 @@ const appUrl = env.appUrl
 // aplica reactivo, sin recargar el iframe.
 const layoutOverride = ref(null)
 let removeStudioGuard = null
+// Identidad/cromo del borrador que el Studio empuja en modo edición
+// (tamaño del nombre, portada, logo, copy de secciones): lo que se ve en el
+// lienzo es exactamente lo que va a quedar guardado, sin recargar.
+const studioCustom = ref(null)
 const custom = computed(() => ({
   ...CUSTOMIZATION_DEFAULTS,
   ...(store.value?.customization || {}),
+  ...(studioCustom.value || {}),
   ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
 }))
 function onLayoutMessage(e) {
@@ -68,6 +76,7 @@ const studioMode = computed(() => route.query.studio === '1')
 const previewToken = computed(() => String(route.query.preview || ''))
 const previewMode = computed(() => Boolean(previewToken.value && store.value?.preview))
 const studioTheme = ref(null)      // siteTheme del borrador
+const studioExplicit = ref(null)   // campos que el borrador toca de verdad
 const studioTemplate = ref(null)   // template del borrador
 const studioViewMode = ref(null)   // claro/oscuro del visor (msg.mode)
 // En un iframe el referrer es el document del host: se acepta como origen
@@ -81,9 +90,11 @@ function onStudioMessage(e) {
   const d = e.data
   if (d.type === STUDIO_MSG.UPDATE) {
     if (d.theme) studioTheme.value = d.theme
+    studioExplicit.value = Array.isArray(d.explicit) ? new Set(d.explicit) : null
     if (d.layout) layoutOverride.value = d.layout
     if (d.template) studioTemplate.value = d.template
     if (d.mode === 'light' || d.mode === 'dark') studioViewMode.value = d.mode
+    if (d.custom && typeof d.custom === 'object') studioCustom.value = d.custom
   } else if (d.type === STUDIO_MSG.FOCUS) {
     applyFocusRing(document, d.target)
   }
@@ -92,12 +103,33 @@ function onStudioMessage(e) {
 // equivalentes --store-*/--sp-* (studioPreviewVars traduce). En oscuro el
 // tema propio de la página manda (solo viajan acento/fuente + --st-*).
 const studioVars = computed(() => (
-  studioMode.value && studioTheme.value ? studioPreviewVars(studioTheme.value, pageTheme.value) : {}
+  studioMode.value && studioTheme.value
+    ? studioPreviewVars(studioTheme.value, pageTheme.value, studioExplicit.value)
+    : {}
 ))
 const studioAttrs = computed(() => (
-  studioMode.value && studioTheme.value ? studioPreviewAttrs(studioTheme.value) : {}
+  studioMode.value && studioTheme.value ? studioPreviewAttrs(studioTheme.value, studioExplicit.value) : {}
 ))
 const themeVars = computed(() => storeThemeVars(custom.value))
+// Tema guardado (site_theme): se emite SIEMPRE, no solo en modo Studio, para
+// que lo que se ve en el canvas sea exactamente lo que ve el visitante.
+// Es parcial: cada variable sale solo si el tema fija ese campo, y sin
+// site_theme el objeto queda vacío (la web se ve idéntica a hoy).
+// En modo Studio manda el borrador (studioVars/studioAttrs): lo publicado no
+// se mezcla para que un campo que el borrador no fija no se cuele en el
+// lienzo y preview/publicada queden idénticas.
+const publishedThemeVars = computed(() => (
+  studioMode.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
+))
+const publishedThemeAttrs = computed(() => (studioMode.value ? {} : storeSiteThemeAttrs(custom.value)))
+// Fuentes del tema guardado (título/cuerpo) on-demand: puede elegir una
+// familia distinta de la del nombre. Un stack CSS no es slug y no hace nada.
+watch(
+  () => [custom.value.site_theme?.typography?.heading, custom.value.site_theme?.typography?.body],
+  ([heading, body]) => { if (heading) ensureStoreFont(heading); if (body) ensureStoreFont(body) },
+  { immediate: true }
+)
+const pageAttrs = computed(() => ({ ...publishedThemeAttrs.value, ...studioAttrs.value }))
 // Diseño avanzado (Plan premium): define si la web muestra el carrusel de
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
 const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
@@ -468,7 +500,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="[themeVars, studioVars]" v-bind="studioAttrs">
+  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->

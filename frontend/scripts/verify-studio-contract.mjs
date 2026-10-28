@@ -4,7 +4,7 @@
 
 import {
   SITE_THEME_DEFAULTS, STUDIO_ENUMS, STUDIO_MSG, STUDIO_SURFACES,
-  resolveSiteTheme, themeToCssVars, themeDataAttrs,
+  resolveSiteTheme, themeToCssVars, themeDataAttrs, themeExplicitKeys, pickThemeVars,
   contrastRatio, fixContrast, textOn, normalizeHex,
   resolveStudioPreset, presetToPatch,
   studioUpdate, studioFocus, studioReady, isStudioMessage
@@ -70,6 +70,23 @@ const attrs = themeDataAttrs({ containers: { surface: 'glass' }, buttons: { styl
 eq('variantes a data-st-*', { 'data-st-surface': attrs['data-st-surface'], 'data-st-btn-style': attrs['data-st-btn-style'], 'data-st-reveal': attrs['data-st-reveal'] }, { 'data-st-surface': 'glass', 'data-st-btn-style': 'gradient', 'data-st-reveal': 'stagger' })
 eq('stickyCta true -> "true"', attrs['data-st-sticky-cta'], 'true')
 eq('stickyCta false -> null (omitir)', themeDataAttrs({})['data-st-sticky-cta'], null)
+
+console.log('— tema parcial: claves explícitas —')
+const partial = { containers: { radius: 'xl' }, palette: { accent: '#ff0000' }, mobile: { stickyCta: false } }
+const keys = themeExplicitKeys(partial)
+eq('detecta solo lo presente', [...keys].sort(), ['containers.radius', 'mobile.stickyCta', 'palette.accent'])
+check('ignora secciones vacías', themeExplicitKeys({ containers: {} }).size === 0)
+check('null no cuenta como elegido', !themeExplicitKeys({ background: { value: null } }).has('background.value'))
+const full = themeToCssVars(partial)
+const only = pickThemeVars(full, keys)
+eq('filtra vars a los campos elegidos', Object.keys(only).sort(), ['--st-accent', '--st-radius'])
+eq('radius explícito llega', only['--st-radius'], '24px')
+eq('sin explícitas = set completo', Object.keys(pickThemeVars(full)).length, Object.keys(full).length)
+const attrsOnly = themeDataAttrs(partial, keys)
+eq('atributo de campo elegido', attrsOnly['data-st-radius'], 'xl')
+eq('atributo de campo ausente se omite', attrsOnly['data-st-surface'], null)
+eq('stickyCta false no emite atributo', attrsOnly['data-st-sticky-cta'], null)
+check('sin tema no hay atributos', Object.values(themeDataAttrs({}, new Set())).every((v) => v === null))
 
 console.log('— studioPreset —')
 const preset = resolveStudioPreset({

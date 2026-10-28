@@ -188,12 +188,6 @@ const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
       </div>
       <small class="stp-hint2">El archivo importado se valida contra el esquema del tema antes de aplicarlo al borrador.</small>
     </div>
-    <div class="stp-card stp-soon">
-      <span class="stp-card-ico"><AppIcon name="sliders" :size="22" /></span>
-      <strong>Personalización total</strong>
-      <p>CSS propio y tokens por plantilla llegan con una fase futura del tema del Studio.</p>
-      <span class="lock-badge">Próximamente</span>
-    </div>
   </div>
 </template>
 

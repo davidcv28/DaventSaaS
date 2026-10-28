@@ -2,7 +2,7 @@
    Ficha compartida para las variantes 'riso' y 'terra' (portada y
    catálogo conservan sus vistas dedicadas). El rubro decide por datos
    físicos: medidas, materiales, cuidados y envío — la spec table manda.
-   Cada variante hereda su paleta del layout (--rs-*/--tr-* ya están
+   Cada variante hereda su paleta del layout (--rs-* y --tr-* ya están
    definidas bajo .store-page[data-store-template]): la ficha solo
    mapea familia → variante. */
 

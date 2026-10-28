@@ -292,3 +292,12 @@ a.sp2-strip-item:hover { background: var(--store-accent-soft); }
 .sp2-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-radius: var(--sp-radius); --tpc-pad: 14px 16px 16px; }
 .sp2-card.tpc .tpc-foot { margin-top: auto; }
 .sp2-card .tpc-flags { inset: 10px 10px auto; }
+/* ---------- Studio: tema del sitio sobre la portada alternativa ----------
+   Consume --st-* con fallback al look actual: sin tema no cambia nada. */
+.store-page[data-st-themed] .sp2-title {
+  font-family: var(--st-font-heading, var(--sp-display, var(--store-font, inherit)));
+  font-weight: var(--st-weight-heading, 800);
+  letter-spacing: var(--st-tracking, -.02em);
+  font-size: var(--st-h2-size, clamp(22px, 2.6vw, 30px));
+}
+.store-page[data-st-themed] :is(.sp2-eyebrow, .sp2-viewall) { color: var(--st-accent, var(--sp-accent-text)); }

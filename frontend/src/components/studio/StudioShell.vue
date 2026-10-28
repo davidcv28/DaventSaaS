@@ -30,7 +30,7 @@ import {
 } from './previewBridge.js'
 import { useStudioHistory } from './useStudioHistory.js'
 import {
-  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage
+  resolveSiteTheme, studioUpdate, STUDIO_MSG, isStudioMessage, themeExplicitKeys
 } from '../../studio/contract.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
@@ -74,7 +74,12 @@ const seed = computed(() => mergeTheme(
   props.customization?.site_theme_draft || props.customization?.site_theme || {}
 ))
 const savedOverride = ref(null)
-const base = computed(() => savedOverride.value || props.savedTheme || resolveSiteTheme(seed.value))
+// savedTheme viaja parcial (solo lo que el usuario fijó): se resuelve contra
+// los defaults para comparar y restaurar con el esquema completo.
+const base = computed(() => (
+  savedOverride.value
+  || (props.savedTheme ? resolveSiteTheme(props.savedTheme) : resolveSiteTheme(seed.value))
+))
 // draft.layout = layout_config de ensayo (contrato); draft.template =
 // plantilla en prueba (puede ser de un nivel superior al plan — la preview
 // la muestra igual; el backend gatea al guardar). null = lo guardado.
@@ -82,11 +87,52 @@ const savedLayout = ref(clone(
   props.customization?.layout_config_draft || props.customization?.layout_config || null
 ))
 const draft = reactive({
-  theme: props.initialTheme ? clone(props.initialTheme) : clone(base.value),
+  // initialTheme puede venir parcial (es el emit del mount anterior): se
+  // mergea sobre la semilla guardada y se resuelve, así los paneles y el
+  // historial trabajan siempre con el esquema completo.
+  theme: resolveSiteTheme(mergeTheme(seed.value, props.initialTheme || {})),
   // El ensayo emitido antes del remount (initialExtras) tiene prioridad
   // sobre el guardado: el usuario no pierde un "Probar" al cambiar de tab.
   layout: clone(props.initialExtras?.layout_config ?? savedLayout.value),
   template: props.initialExtras?.template || null
+})
+// ---------------------------------------------------------------------------
+// Campos que el borrador toca DE VERDAD ('seccion.clave'). La vista previa
+// solo pisa los tokens de esos campos; el resto conserva el look de la
+// plantilla (una tienda sin tema se ve igual que hoy, y un tema parcial no
+// aplasta los radios/fuentes propios de riso, bloque, terra…).
+// Semilla: lo guardado + los campos que ya persiste el form (acento/fuente)
+// + todo lo que difiera de los defaults del contrato.
+// ---------------------------------------------------------------------------
+const explicit = ref(new Set())
+let lastThemeJson = '{}'
+function seedExplicit() {
+  const stored = props.customization?.site_theme_draft || props.customization?.site_theme || {}
+  const set = themeExplicitKeys(stored)
+  ;['palette.primary', 'palette.secondary', 'palette.accent', 'typography.heading', 'typography.body']
+    .forEach((k) => set.add(k))
+  const defaults = resolveSiteTheme({})
+  for (const section of Object.keys(draft.theme || {})) {
+    for (const key of Object.keys(defaults[section] || {})) {
+      if (JSON.stringify(draft.theme[section]?.[key]) !== JSON.stringify(defaults[section][key])) {
+        set.add(`${section}.${key}`)
+      }
+    }
+  }
+  explicit.value = set
+  lastThemeJson = JSON.stringify(draft.theme)
+}
+seedExplicit()
+watch(() => JSON.stringify(draft.theme), () => {
+  const prev = lastThemeJson ? JSON.parse(lastThemeJson) : {}
+  for (const section of Object.keys(draft.theme || {})) {
+    for (const key of Object.keys(draft.theme[section] || {})) {
+      if (JSON.stringify(prev?.[section]?.[key]) !== JSON.stringify(draft.theme[section]?.[key])) {
+        explicit.value.add(`${section}.${key}`)
+      }
+    }
+  }
+  lastThemeJson = JSON.stringify(draft.theme)
 })
 const themeDirty = computed(() => JSON.stringify(draft.theme) !== JSON.stringify(base.value))
 const layoutDirty = computed(() =>
@@ -98,6 +144,7 @@ const layoutDirty = computed(() =>
 watch(() => JSON.stringify(props.customization?.site_theme_draft || {}), () => {
   savedOverride.value = null
   draft.theme = resolveSiteTheme(seed.value)
+  seedExplicit()
 })
 // Igual cuando el padre marca un nuevo punto de guardado estable.
 watch(() => props.savedTheme, (t) => { if (t) savedOverride.value = null })
@@ -158,6 +205,10 @@ function applySnapshot(snap) {
   draft.theme = clone(snap.t)
   draft.layout = clone(snap.l === undefined ? savedLayout.value : snap.l)
   draft.template = snap.pt === undefined ? null : snap.pt
+  // El historial restaura el esquema completo: recalcular qué campos fija el
+  // borrador para que la preview vuelva a pisar exactamente lo mismo que la
+  // web publicada (los cambios deshechos dejan de viajar).
+  seedExplicit()
   // El modo del visor sigue al tema restaurado (un preset oscuro no deja
   // la página pintada de noche después de Deshacer).
   viewerTheme.value = props.form.theme === 'dark' ? 'dark' : 'light'
@@ -174,7 +225,22 @@ const anyDirty = computed(() => themeDirty.value || layoutDirty.value || props.d
 // vigentes para el payload del padre (saveDesign arma site_theme y, con
 // ensayo, layout_config + template).
 watch(() => themeDirty.value || layoutDirty.value, (v) => emit('update:dirty', v), { immediate: true })
-watch(() => JSON.stringify(draft.theme), () => emit('update:theme', clone(draft.theme)), { immediate: true })
+// Al padre viaja el tema PARCIAL (solo los campos que el usuario fijó): el
+// backend mergea sobre lo guardado y la web publicada aplica exactamente los
+// mismos tokens que el lienzo. Mandar el tema resuelto completo convertiría
+// los defaults en decisiones y aplastaría el look propio de cada plantilla.
+function pruneTheme(theme, keys) {
+  const out = {}
+  for (const [section, content] of Object.entries(theme || {})) {
+    const kept = {}
+    for (const [key, value] of Object.entries(content || {})) {
+      if (keys.has(`${section}.${key}`)) kept[key] = value
+    }
+    if (Object.keys(kept).length) out[section] = kept
+  }
+  return out
+}
+watch(() => JSON.stringify(draft.theme), () => emit('update:theme', pruneTheme(draft.theme, explicit.value)), { immediate: true })
 // Solo se emite layout_config cuando el ensayo difiere de lo guardado:
 // reenviar el layout intacto en un save de diseño cualquiera expone los
 // bloques que LayoutEditor preserva verbatim a la poda del backend.
@@ -194,6 +260,7 @@ function resetDraftToBase() {
   draft.template = null
   trial.value = null
   viewerTheme.value = props.form.theme === 'dark' ? 'dark' : 'light'
+  seedExplicit()
   nextTick(() => { suppressFormTheme = false })
 }
 function discard() {
@@ -222,6 +289,12 @@ const device = ref('desktop')
 const rotated = ref(false)
 const zoom = ref(100)
 const viewerTheme = ref(props.customization?.theme === 'dark' ? 'dark' : 'light')
+// El lienzo sigue al tema de la página cuando se cambia desde cualquier
+// control (Estilos, Colores, Personalización avanzada). El modo del visor
+// del panel Colores no toca form.theme, así que no se pisa solo.
+watch(() => props.form.theme, (t) => {
+  if (t === 'light' || t === 'dark') viewerTheme.value = t
+})
 const comparing = ref(false)
 const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))
 // Plantilla vigente del borrador: el ensayo guardado en template_draft si
@@ -231,6 +304,32 @@ const liveTemplate = computed(() => resolveStoreTemplate(
 ))
 const canFlyers = computed(() => Boolean(props.benefits?.has_flyers))
 const frameDoc = () => canvasRef.value?.iframeEl?.contentDocument || null
+
+// Campos del form que la web pública pinta en el cromo/identidad. Viajan
+// en el update (aditivo al contrato) para que el lienzo muestre al instante
+// lo que hasta ahora solo aparecía al guardar: tamaño del nombre, portada,
+// velo/punto focal, logo, modo del logo y copy de las secciones.
+const PREVIEW_FORM_KEYS = [
+  'display_name', 'name_font', 'name_font_size', 'headline', 'description',
+  'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
+  'show_about', 'theme', 'accent', 'accent_custom', 'logo_scale', 'logo_mode',
+  'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y', 'template',
+  'whatsapp', 'instagram', 'tiktok', 'facebook', 'contact_email', 'footer_text',
+  'catalog_note', 'show_location', 'show_gallery', 'show_catalog', 'show_contact',
+  'show_services', 'services_title', 'show_stats', 'show_testimonials',
+  'show_faq', 'show_hours', 'show_cta', 'cta_title', 'cta_text', 'cta_label',
+  'show_announcements', 'show_video', 'video_url', 'video_title',
+  'show_benefits', 'show_timeline', 'show_team', 'show_offers', 'show_brands',
+  'show_countdown', 'show_highlights', 'site_templates'
+]
+const previewCustom = computed(() => {
+  const out = {}
+  for (const key of PREVIEW_FORM_KEYS) out[key] = props.form[key]
+  // Logo/portada viven en la customization (subida aparte del form).
+  out.logo = props.customization?.logo || null
+  out.cover = props.customization?.cover || null
+  return out
+})
 
 let postTimer = null
 function buildUpdate() {
@@ -245,6 +344,11 @@ function buildUpdate() {
     device: device.value
   })
   msg.mode = viewerTheme.value // aditivo al contrato: claro/oscuro del visor
+  // Aditivo al contrato: campos que el borrador fija. La preview solo pisa
+  // esos tokens (fidelidad exacta con la web publicada, que guarda el parcial).
+  msg.explicit = [...explicit.value]
+  // Aditivo al contrato: identidad/cromo del form para la vista previa.
+  msg.custom = clone(previewCustom.value)
   return msg
 }
 function postNow() {
@@ -261,7 +365,10 @@ function queueUpdate() {
   postTimer = setTimeout(postNow, 60)
 }
 watch(
-  () => JSON.stringify([draft.theme, draft.layout, draft.template, comparing.value, device.value, viewerTheme.value, liveTemplate.value]),
+  () => JSON.stringify([
+    draft.theme, draft.layout, draft.template, comparing.value, device.value,
+    viewerTheme.value, liveTemplate.value, previewCustom.value
+  ]),
   queueUpdate
 )
 

@@ -10191,7 +10191,7 @@ html { scroll-behavior: smooth; }
    atelier, circuit, lab, mercado, carta, studio, proceso, arena, calma y
    vitrina montan los bloques compartidos (base cobre) con la paleta --sp-*
    estándar + el acento de la tienda; su piel propia vive en sus vistas de
-   catálogo/ficha (.cv-*/.<fam>-) y en el arreglo estratégico de bloques.
+   catálogo/ficha (.cv-* y .<fam>-) y en el arreglo estratégico de bloques.
    Acá solo se les aplica la fuente de titulares que declara su def
    (`fonts` en templates/<id>/index.js) para que la landing conserve el
    carácter de cada plantilla. El cuerpo sigue con la fuente del dueño
@@ -10779,3 +10779,251 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   :is(.sp-du-plate, .sp-cm-plate, .sp-vt-plate) { transition: none; transform: none !important; }
 }
+
+/* =====================================================================
+   CAPA DEL TEMA DEL STUDIO (site_theme) — consumo de --st-* en la web
+   ---------------------------------------------------------------------
+   REGLA: todo consumo lleva fallback al look actual. El layout público
+   emite --st-* SOLO para los campos que el tema guardado fija (tema
+   parcial) y las variantes discretas entran por [data-st-*], que también
+   solo existen para esos campos. Sin tema, o con un tema que no toca un
+   campo, la regla cae al valor de siempre y la plantilla conserva su piel.
+   Solo variables y atributos: cero JS por nodo y cero reflows por control.
+   La página oscura propia manda: el layout no mapea colores en oscuro, así
+   que estas reglas reciben los fallbacks claros/oscuros de la hoja.
+   ===================================================================== */
+
+/* ---------- Tipografía ----------
+   Cada regla se activa solo con el atributo del campo que la justifica:
+   así una plantilla conserva su escala/peso cuando el tema no los fija. */
+.store-page[data-st-scale] {
+  font-size: var(--st-text-size, 15px);
+  line-height: var(--st-leading, 1.5);
+}
+.store-page[data-st-font-body] { font-family: var(--st-font-body, var(--store-font, Inter, system-ui, sans-serif)); }
+.store-page[data-st-font-heading] :is(h1, h2, h3, .sp-hero-title, .sp-hal-title, .sp-section-title) {
+  font-family: var(--st-font-heading, var(--sp-display, var(--store-font, inherit)));
+}
+.store-page[data-st-weight] :is(h1, .sp-hero-title:not(.is-name), .sp-hal-title:not(.is-name)) {
+  font-weight: var(--st-weight-heading, 800);
+}
+.store-page[data-st-weight] :is(.sp-section-title, .sp-h2, .sp-block-title) { font-weight: var(--st-weight-heading, 700); }
+.store-page[data-st-tracking] :is(h1, .sp-hero-title:not(.is-name), .sp-hal-title:not(.is-name)) {
+  letter-spacing: var(--st-tracking, -.03em);
+}
+.store-page[data-st-tracking] :is(.sp-section-title, .sp-h2, .sp-block-title) { letter-spacing: var(--st-tracking, -.02em); }
+.store-page[data-st-scale] :is(.sp-hero-title:not(.is-name), .sp-hal-title:not(.is-name)) { font-size: var(--st-h1-size, clamp(30px, 4.8vw, 50px)); }
+.store-page[data-st-scale] :is(.sp-section-title, .sp-h2, .sp-block-title) { font-size: var(--st-h2-size, 22px); }
+
+/* ---------- Botones ---------- */
+.store-page[data-st-btn-size] .sp-btn:not(.sm) {
+  min-height: var(--st-btn-h, 44px);
+  padding-inline: var(--st-btn-px, 20px);
+  font-size: var(--st-btn-fs, 14px);
+}
+.store-page[data-st-btn-size] :is(.sp-hero-ctas .sp-btn, .sp-hal-ctas .sp-hal-btn) {
+  height: auto;
+  min-height: var(--st-btn-h, 46px);
+  padding-inline: var(--st-btn-px, 24px);
+  font-size: var(--st-btn-fs, 14.5px);
+}
+.store-page[data-st-btn-size] .sp-top-cta { height: auto; min-height: var(--st-btn-h, 44px); }
+.store-page[data-st-btn-size] .sp-dock-btn { min-height: var(--st-btn-h, 46px); }
+.store-page[data-st-btn-shape] :is(
+  .sp-btn, .sp-top-cta, .sp-dock-btn, .sp-icon-btn, .sp-hal-btn,
+  .sp-hal-search, .sp-hal-search-btn) {
+  border-radius: var(--st-btn-radius, 99px);
+}
+.store-page[data-st-btn-shape] .sp-icon-btn { border-radius: var(--st-btn-radius, 50%); }
+/* Relleno sólido: rol Primario del tema (fallback = accent-ink de siempre). */
+.store-page[data-st-brand] :is(
+  .sp-btn:not(.ghost):not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa),
+  .sp-dock-btn:not(.is-wa)) {
+  background: var(--sp-btn-bg, var(--store-accent-ink));
+  color: var(--st-on-primary, #fff);
+}
+
+/* Estilo del botón (sólido = el de siempre; los demás son variantes). */
+.store-page[data-st-btn-style='outline'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go) {
+  background: transparent;
+  color: var(--sp-accent-text, var(--store-accent-ink));
+  border-color: currentColor;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.store-page[data-st-btn-style='ghost'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go) {
+  background: color-mix(in srgb, var(--store-accent) 12%, transparent);
+  color: var(--sp-accent-text, var(--store-accent-ink));
+  border-color: transparent;
+  box-shadow: none;
+}
+.store-page[data-st-btn-style='gradient'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa),
+  .tpc-go) {
+  background: linear-gradient(120deg, var(--st-primary, var(--store-accent)), var(--st-secondary, var(--store-accent-ink)));
+  color: var(--st-on-primary, #fff);
+  border-color: transparent;
+}
+
+/* ---------- Contenedores: radio, borde, sombra, densidad ---------- */
+.store-page[data-st-radius] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters, .sp-map-frame, .sp-empty,
+  .sp-price, .sp-sort, .sp-search, .sp-gallery-item, .sp-contact-photo,
+  .sp-about-photo, .sp-showcase-frame, .sp-stats-grid, .sp-cta-inner,
+  .sp-hal-media, .sp-hal-search, .sp-hal-search-btn, .sp-hal-btn,
+  .sp-rail-btn, .sp-shop-dept, .sp-dock-btn, .sp-top-cta) {
+  border-radius: var(--st-radius, var(--sp-radius));
+}
+.store-page[data-st-border] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters, .sp-map-frame, .sp-gallery-item,
+  .sp-contact-photo, .sp-about-photo, .sp-showcase-frame, .sp-hal-media,
+  .sp-rail-btn, .sp-shop-dept) {
+  border-width: var(--st-border-w, 1px);
+  border-style: solid;
+}
+.store-page[data-st-shadow] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters, .sp-map-frame, .sp-gallery-item,
+  .sp-contact-photo, .sp-about-photo, .sp-showcase-frame, .sp-hal-media,
+  .sp-hal-search, .sp-stats-grid, .sp-cta-inner) {
+  box-shadow: var(--st-shadow, var(--sp-shadow-sm));
+}
+.store-page[data-st-density] :is(
+  .sp-grid, .sv-list, .bq-cards, .cv-bq-cards, .rs-cards, .cv-rs-cards,
+  .tr-grid, .cv-tr-cards, .sp2-showcase-grid, .sp2-testimonials-grid) {
+  gap: var(--st-section-gap, 28px);
+}
+.store-page[data-st-density] :is(
+  .tpc-body, .sp-service, .sp-testimonial, .sp-about-card, .sp-form,
+  .sp-faq-item, .sp-hal-copy) {
+  padding: var(--st-card-pad, 18px 20px);
+}
+.store-page[data-st-density] :is(.sp-section, .sp-block) { padding-block: var(--st-section-gap, 28px); }
+
+/* Superficie (material de las tarjetas). */
+.store-page[data-st-surface='flat'] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters) { box-shadow: none; }
+.store-page[data-st-surface='glass'] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters) {
+  background: color-mix(in srgb, var(--sp-card) 64%, transparent);
+  backdrop-filter: saturate(150%) blur(12px);
+  -webkit-backdrop-filter: saturate(150%) blur(12px);
+}
+.store-page[data-st-surface='elevated'] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters) {
+  box-shadow: var(--st-shadow, var(--sp-shadow-md));
+}
+.store-page[data-st-surface='outlined'] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters) {
+  box-shadow: none;
+  border: var(--st-border-w, 1px) solid var(--sp-line);
+  background: transparent;
+}
+
+/* ---------- Movimiento ---------- */
+.store-page[data-st-themed] .sp-rv { transition-duration: var(--st-motion-dur, .3s) !important; }
+.store-page[data-st-reveal='none'] .sp-rv {
+  opacity: 1 !important;
+  translate: none !important;
+  scale: none !important;
+  transition: none !important;
+}
+.store-page[data-st-reveal='fade'] .sp-rv { translate: none; }
+.store-page[data-st-reveal='stagger'] .sp-grid > :nth-child(2) { --rv-d: 70ms; }
+.store-page[data-st-reveal='stagger'] .sp-grid > :nth-child(3) { --rv-d: 140ms; }
+.store-page[data-st-reveal='stagger'] .sp-grid > :nth-child(4) { --rv-d: 210ms; }
+.store-page[data-st-reveal='stagger'] .sp-grid > :nth-child(5) { --rv-d: 280ms; }
+.store-page[data-st-reveal='stagger'] .sp-grid > :nth-child(6) { --rv-d: 350ms; }
+.store-page[data-st-reveal='stagger'] .sp-page-root > section:nth-child(2) { --rv-d: 70ms; }
+.store-page[data-st-reveal='stagger'] .sp-page-root > section:nth-child(3) { --rv-d: 140ms; }
+.store-page[data-st-reveal='stagger'] .sp-page-root > section:nth-child(4) { --rv-d: 210ms; }
+.store-page[data-st-reveal='stagger'] .sp-page-root > section:nth-child(5) { --rv-d: 280ms; }
+.store-page[data-st-reveal='stagger'] .sp-page-root > section:nth-child(6) { --rv-d: 350ms; }
+.store-page[data-st-hover='none'] :is(.sp-card, .tpc, .sp-service, .sp-gallery-item):hover {
+  transform: none;
+  box-shadow: var(--tpc-shadow, var(--sp-shadow-sm));
+}
+.store-page[data-st-hover='glow'] :is(.sp-card, .tpc, .sp-service):hover {
+  transform: none;
+  box-shadow: 0 0 0 1px var(--store-accent), 0 16px 36px -16px color-mix(in srgb, var(--store-accent) 55%, transparent);
+  border-color: color-mix(in srgb, var(--store-accent) 55%, var(--sp-line));
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-st-reveal] .sp-rv,
+  .store-page[data-st-hover] :is(.sp-card, .tpc, .sp-service, .sp-gallery-item) {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ---------- Móvil: grilla, tarjetas, portada, navegación y CTA ---------- */
+@media (max-width: 768px) {
+  .store-page[data-st-grid='2'] .sp-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .store-page[data-st-hero='tall'] :is(.sp-hero-band, .sp-hero) { min-height: 68vh; }
+  .store-page[data-st-hero='tall'] :is(.sp-hero-inner, .sp-hal-grid) { padding-block: 88px 76px; }
+  .store-page[data-st-hero='compact'] :is(.sp-hero-inner, .sp-hal-grid) { padding-block: 40px 34px; }
+  .store-page[data-st-hero='tall'] :is(.rs-hero, .tr-hero, .bq-hero, .sp2-hero) { padding-block: 80px 64px; }
+  .store-page[data-st-hero='compact'] :is(.rs-hero, .tr-hero, .bq-hero, .sp2-hero) { padding-block: 32px 28px; }
+
+  .store-page[data-st-card='compact'] .tpc { flex-direction: row; align-items: stretch; }
+  .store-page[data-st-card='compact'] .tpc-media { width: 42%; aspect-ratio: 1 / 1; }
+  .store-page[data-st-card='compact'] .tpc-body { flex: 1; min-width: 0; }
+  .store-page[data-st-card='compact'] .tpc-foot { padding-top: 6px; }
+
+  .store-page[data-st-card='overlay'] .tpc { position: relative; }
+  .store-page[data-st-card='overlay'] .tpc-media { aspect-ratio: 4 / 5; }
+  .store-page[data-st-card='overlay'] .tpc-body {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    background: linear-gradient(transparent, rgba(2, 6, 23, .78));
+    color: #fff;
+  }
+  .store-page[data-st-card='overlay'] :is(.tpc-name, .tpc-eyebrow, .tpc-price, .tpc-save, .tpc-price s) { color: #fff; }
+
+  .store-page[data-st-nav='bottom'] { padding-bottom: calc(var(--sp-top-h, 64px) + env(safe-area-inset-bottom)); }
+  .store-page[data-st-nav='bottom'] .sp-top {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 44;
+    border-bottom: 0;
+    border-top: 1px solid rgba(0, 0, 0, .18);
+    box-shadow: 0 -10px 30px -16px rgba(2, 6, 23, .35);
+  }
+  .store-page[data-st-nav='bottom'] .sp-dock { bottom: calc(var(--sp-top-h, 64px) + env(safe-area-inset-bottom)); }
+  .store-page[data-st-nav='drawer'] .sp-top-links { display: none; }
+
+  .store-page[data-st-sticky-cta='true'] .sp-dock { display: flex; }
+}
+
+/* ---------- Barra, pie y dock ----------
+   No se repintan acá: el puente ya mapea --store-accent* y --sp-* con el
+   tema, así cada plantilla conserva su cromo (perspective claro, bloque
+   papel, shop masthead…) y el acento/la superficie del tema lo atraviesan. */
+
+/* ---------- Fondo del tema sobre cualquier plantilla ----------
+   Las pieles alternas pintan background-* directo en .store-page; con el
+   tipo de fondo elegido, la pila del tema (velo + capa + color) gana en
+   claro. En oscuro la regla oscura de la plantilla queda después y manda. */
+.store-page[data-st-bgtype][data-store-template] { background: var(--sp-bg); }
+
+/* ---------- Paleta extendida: estados ---------- */
+.store-page[data-st-themed] .sp-form-error { color: var(--st-danger, #dc2626); }
+.store-page[data-st-themed] .sp-open.is-open { color: var(--st-success, #86efac); }
+.store-page[data-st-themed] .sp-open.is-closed { color: var(--st-danger, #fca5a5); }

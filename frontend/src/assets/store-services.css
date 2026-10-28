@@ -11,7 +11,7 @@
 .sv-page {
   /* Paleta derivada del tema/plantilla de la tienda. Los tokens leen
      primero --st-* (tema Studio aplicado sobre .store-page); sin site_theme
-     caen a los --sp-*/--store-* de siempre y la web queda idéntica. */
+     caen a los --sp-* y --store-* de siempre y la web queda idéntica. */
   --sv-bg: var(--st-bg, var(--sp-bg, #fff4e8));
   --sv-fg: var(--st-text, var(--sp-ink, #2b1b17));
   --sv-mute: var(--st-muted, var(--sp-muted, #6e5a52));
@@ -2066,9 +2066,21 @@
 }
 .store-page[data-st-btn-style='outline'] .sv-btn { background: transparent; color: var(--sv-acc); box-shadow: inset 0 0 0 2px var(--sv-acc); }
 .store-page[data-st-btn-style='ghost'] .sv-btn { background: color-mix(in srgb, var(--sv-acc) 12%, transparent); color: var(--sv-acc); box-shadow: none; }
+.store-page[data-st-btn-style='gradient'] .sv-btn { background: linear-gradient(120deg, var(--st-primary, var(--sv-acc)), var(--st-secondary, var(--sv-pop))); color: var(--st-on-primary, #fff); box-shadow: none; }
+.store-page[data-st-btn-style='gradient'] .sv-btn:hover { background: linear-gradient(120deg, var(--st-primary, var(--sv-acc)), var(--st-secondary, var(--sv-pop))); color: var(--st-on-primary, #fff); filter: brightness(1.06); }
 .store-page[data-st-surface='flat'] .sv-page :is(.sv-item, .sv-row, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-zone-hours, .sv-tab, .sv-tl-btn, .sv-faq details) { border-color: transparent; }
-.store-page[data-st-surface='bordered'] .sv-page :is(.sv-item, .sv-row, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-zone-hours, .sv-tab, .sv-tl-btn, .sv-faq details) { border-color: var(--sv-line); }
+.store-page[data-st-surface='outlined'] .sv-page :is(.sv-item, .sv-row, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-zone-hours, .sv-tab, .sv-tl-btn, .sv-faq details) { border-color: var(--sv-line); box-shadow: none; }
+.store-page[data-st-surface='glass'] .sv-page :is(.sv-item, .sv-row, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-tab) { background: color-mix(in srgb, var(--sv-card) 66%, transparent); backdrop-filter: saturate(150%) blur(10px); -webkit-backdrop-filter: saturate(150%) blur(10px); }
 .store-page[data-st-surface='elevated'] .sv-page :is(.sv-item, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card) { box-shadow: var(--st-shadow, var(--shadow-2)); }
+.store-page[data-st-density] .sv-page :is(.sv-item, .sv-pkg, .sv-step, .sv-perk, .sv-testi, .sv-zone-card, .sv-zone-hours, .sv-faq details) {
+  padding: var(--st-card-pad, 18px 20px);
+}
+.store-page[data-st-density] .sv-page :is(.sv-list, .sv-pkgs, .sv-steps) { gap: var(--st-section-gap, 24px); }
+.store-page[data-st-hero='tall'] .sv-hero { padding-block: clamp(56px, 9vw, 96px) clamp(46px, 7vw, 76px); }
+@media (max-width: 768px) {
+  .store-page[data-st-grid='2'] .sv-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 479px) {
   .sv-list { grid-template-columns: repeat(var(--st-grid-cols, 1), minmax(0, 1fr)); }
 }
+.store-page[data-st-themed] .sv-rv { animation-duration: var(--st-motion-dur, .6s); }

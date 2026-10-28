@@ -437,3 +437,28 @@
 .tr-card.tpc { --tpc-bg: transparent; --tpc-border: none; --tpc-shadow: none; --tpc-radius: 0; --tpc-pad: 0; gap: 14px; }
 .tr-card.tpc .tpc-body { gap: 4px; }
 .tr-grid, .cv-tr-cards { grid-auto-rows: 1fr; }
+/* ---------- Studio: tema del sitio sobre la editorial cálida ----------
+   Papel, tinta, tarjeta y serif de titulares siguen al tema. */
+.store-page[data-store-template='terra'][data-st-themed]:not([data-store-theme='dark']) {
+  --tr-paper: var(--st-bg, #f7f1e6);
+  --tr-paper-2: color-mix(in srgb, var(--st-bg, #f7f1e6) 88%, var(--st-text, #241d18));
+  --tr-ink: var(--st-text, #241d18);
+  --tr-ink-2: color-mix(in srgb, var(--st-text, #241d18) 82%, var(--st-bg, #f7f1e6));
+  --tr-mute: var(--st-muted, #7d6c5c);
+  --tr-card: var(--st-surface, #fffaf2);
+  --tr-soft: color-mix(in srgb, var(--st-bg, #f7f1e6) 80%, var(--st-text, #241d18));
+}
+.store-page[data-store-template='terra'][data-st-themed] {
+  --tr-serif: var(--st-font-heading, 'Fraunces', Georgia, 'Times New Roman', serif);
+  --tr-sans: var(--st-font-body, var(--store-font, 'Inter', system-ui, sans-serif));
+}
+.store-page[data-store-template='terra'][data-st-themed] .tr-btn {
+  border-radius: var(--st-btn-radius, 999px);
+  min-height: var(--st-btn-h, 46px);
+  padding-inline: var(--st-btn-px, 22px);
+  font-size: var(--st-btn-fs, 14px);
+}
+
+.store-page[data-store-template='terra'][data-st-btn-style='outline'] .tr-btn { background: transparent; color: var(--tr-ink); box-shadow: inset 0 0 0 2px currentColor; }
+.store-page[data-store-template='terra'][data-st-btn-style='ghost'] .tr-btn { background: color-mix(in srgb, var(--tr-acc) 12%, transparent); color: var(--tr-ink); box-shadow: none; }
+.store-page[data-store-template='terra'][data-st-btn-style='gradient'] .tr-btn { background: linear-gradient(120deg, var(--st-primary, var(--tr-acc)), var(--st-secondary, var(--tr-pop))); color: var(--st-on-primary, #fff); box-shadow: none; }

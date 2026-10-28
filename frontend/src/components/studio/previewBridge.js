@@ -7,8 +7,11 @@
 //    del lado HOST (operan sobre el document del iframe): hover y click
 //    para elegir elementos, anillo animado al editar un control, tema
 //    claro/oscuro del visor y carga de la fuente elegida.
-import { themeToCssVars, themeDataAttrs, resolveSiteTheme, hexToRgb, rgbToHex, textOn } from '../../studio/contract.js'
-import { STORE_FONTS, ensureStoreFont } from '../../api/stores.api.js'
+import {
+  themeToCssVars, themeDataAttrs, themeExplicitKeys, pickThemeVars,
+  resolveSiteTheme, hexToRgb, rgbToHex, textOn
+} from '../../studio/contract.js'
+import { STORE_FONTS, ensureStoreFont, effectiveAccent } from '../../api/stores.api.js'
 import { pickTargetFor } from './studioModel.js'
 
 function mixHex(a, b, t) {
@@ -24,42 +27,147 @@ function fontFamilyOf(value) {
   return STORE_FONTS[v]?.family || v
 }
 
-// theme resuelto -> {vars} para :style de .store-page. pageTheme='dark'
-// omite el mapeo --sp-* (la hoja ya pinta su propia paleta oscura y el
-// inline ganaría): en oscuro solo viajan acento/fuente + --st-*.
-export function studioPreviewVars(theme, pageTheme = 'light') {
-  const t = resolveSiteTheme(theme)
-  const vars = { ...themeToCssVars(t) }
+// Fondo compuesto del tema: velo + capa (imagen/degradado/malla/patrón) +
+// color base. Viaja entero por --sp-bg (la hoja hace `background: var(--sp-bg)`),
+// así una imagen propia no necesita url() suelto y el overlay siempre queda
+// encima de la capa elegida.
+function backgroundStack(t, all) {
+  const bg = t.background
   const p = t.palette
-  vars['--store-accent'] = p.accent
-  vars['--store-accent-ink'] = mixHex(p.accent, '#000000', 0.3)
-  vars['--store-accent-soft'] = mixHex(p.accent, '#ffffff', 0.88)
-  vars['--store-font'] = fontFamilyOf(t.typography.body)
-  vars['--sp-btn-radius'] = vars['--st-btn-radius']
-  if (pageTheme !== 'dark') {
-    vars['--sp-bg'] = t.background.type === 'solid' ? p.bg : (t.background.value || p.bg)
-    vars['--sp-card'] = p.surface
-    vars['--sp-card-solid'] = p.surface
-    vars['--sp-surface'] = p.surface
-    vars['--sp-ink'] = p.text
-    vars['--sp-ink-2'] = mixHex(p.text, p.muted, 0.45)
-    vars['--sp-muted'] = p.muted
-    vars['--sp-line'] = p.border
-    vars['--sp-soft'] = mixHex(p.accent, '#ffffff', 0.8)
-    vars['--sp-accent-text'] = vars['--store-accent-ink']
-    vars['--sp-radius'] = vars['--st-radius']
-    vars['--sp-shadow-sm'] = vars['--st-shadow']
-    vars['--sp-shadow-md'] = vars['--st-shadow']
-    if (t.background.type !== 'solid' && t.background.value) {
-      vars['--sp-bg'] = t.background.value
+  const layers = []
+  const overlay = all['--st-bg-overlay']
+  if (overlay && overlay !== 'transparent') layers.push(`linear-gradient(${overlay}, ${overlay})`)
+  if (bg.type === 'image' && bg.value) {
+    layers.push(`url("${bg.value.replace(/"/g, '%22')}") center / cover no-repeat`)
+    layers.push(p.bg)
+  } else if (bg.type !== 'solid' && bg.value) {
+    layers.push(bg.value)
+  } else {
+    layers.push(p.bg)
+  }
+  return layers.join(', ')
+}
+
+// theme resuelto -> {vars} para :style de .store-page.
+//  - `--st-*`: el contrato completo (o solo los campos de `explicit`).
+//  - `--store-accent*`/`--store-font`: espejo de los campos que ya persiste
+//    la web (acento/fuente) para que la hoja clásica y las plantillas lo
+//    consuman sin cambios.
+//  - `--sp-*`: tokens de la hoja pública derivados del contrato (colores,
+//    radios, sombras, tipografía, botones, grilla).
+// `explicit` (Set/array de 'seccion.clave') limita el mapeo a lo que el
+// tema fija de verdad: sin clave no se emite la variable y el CSS cae a su
+// fallback (tienda sin tema o plantilla con su propio look).
+// pageTheme='dark' omite el mapeo de colores/fondo: la página oscura propia
+// manda y el tema solo aporta acento/fuente/forma.
+export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
+  const t = resolveSiteTheme(theme)
+  const keys = explicit ? (explicit instanceof Set ? explicit : new Set(explicit)) : null
+  const on = (key) => !keys || keys.has(key)
+  // Con resolvedor: --st-font-* sale como familia real (no el slug del
+  // catálogo), así el CSS puede consumirlo directo sin perder la fuente.
+  const all = themeToCssVars(t, fontFamilyOf)
+  const vars = pickThemeVars(all, keys)
+  const p = t.palette
+  const dark = pageTheme === 'dark'
+
+  // En oscuro la paleta propia de la página manda: se descartan los colores
+  // de superficie/texto del tema (también los --st-* que consumen servicios
+  // y las landings alternas). Acento, marca y forma sí viajan.
+  if (dark) {
+    for (const name of ['--st-bg', '--st-surface', '--st-text', '--st-muted', '--st-border',
+      '--st-success', '--st-danger', '--st-primary-soft', '--st-bg-layer', '--st-bg-overlay']) {
+      delete vars[name]
     }
   }
+
+  if (on('palette.accent') || on('palette.primary')) {
+    const accent = on('palette.accent') ? p.accent : p.primary
+    vars['--store-accent'] = accent
+    vars['--store-accent-ink'] = mixHex(accent, '#000000', 0.3)
+    vars['--store-accent-soft'] = mixHex(accent, '#ffffff', 0.88)
+  }
+  // El rol "Primario" manda en botones sólidos (el acento queda para
+  // enlaces y detalles): si el tema lo fija, pisa el accent-ink de siempre.
+  if (on('palette.primary')) vars['--sp-btn-bg'] = p.primary
+  if (on('typography.body')) vars['--store-font'] = fontFamilyOf(t.typography.body)
+  if (on('typography.heading')) vars['--sp-display'] = fontFamilyOf(t.typography.heading)
+  if (on('typography.body')) vars['--sp-body'] = fontFamilyOf(t.typography.body)
+
+  if (!dark) {
+    if (on('palette.bg')) vars['--sp-bg'] = p.bg
+    if (on('palette.surface')) {
+      vars['--sp-card'] = p.surface
+      vars['--sp-card-solid'] = p.surface
+      vars['--sp-surface'] = p.surface
+    }
+    if (on('palette.text') || on('palette.muted')) {
+      if (on('palette.text')) vars['--sp-ink'] = p.text
+      vars['--sp-ink-2'] = mixHex(p.text, p.muted, 0.45)
+    }
+    if (on('palette.muted')) vars['--sp-muted'] = p.muted
+    if (on('palette.border')) vars['--sp-line'] = p.border
+    if (on('palette.accent') || on('palette.primary')) vars['--sp-soft'] = mixHex(p.accent, '#ffffff', 0.8)
+    if (on('palette.accent') || on('palette.primary')) vars['--sp-accent-text'] = vars['--store-accent-ink']
+    if (on('background.type') || on('background.value') || on('background.overlay') || on('palette.bg')) {
+      vars['--sp-bg'] = backgroundStack(t, all)
+    }
+  }
+
+  if (on('containers.radius')) vars['--sp-radius'] = all['--st-radius']
+  if (on('containers.shadow')) {
+    vars['--sp-shadow-sm'] = all['--st-shadow']
+    vars['--sp-shadow-md'] = all['--st-shadow']
+  }
+  if (on('containers.density')) {
+    vars['--sp-card-pad'] = all['--st-card-pad']
+    vars['--sp-section-gap'] = all['--st-section-gap']
+  }
+  if (on('buttons.shape')) vars['--sp-btn-radius'] = all['--st-btn-radius']
+  if (on('buttons.size')) {
+    vars['--sp-btn-h'] = all['--st-btn-h']
+    vars['--sp-btn-px'] = all['--st-btn-px']
+    vars['--sp-btn-fs'] = all['--st-btn-fs']
+  }
+  if (on('typography.scale')) {
+    vars['--sp-h1-size'] = all['--st-h1-size']
+    vars['--sp-h2-size'] = all['--st-h2-size']
+    vars['--sp-text-size'] = all['--st-text-size']
+    vars['--sp-leading'] = all['--st-leading']
+  }
+  if (on('mobile.gridCols')) vars['--sp-grid-cols'] = all['--st-grid-cols']
+  if (on('motion.intensity')) vars['--sp-motion-dur'] = all['--st-motion-dur']
   return vars
 }
 
 // Atributos data-st-* del contrato (variantes discretas) para .store-page.
-export function studioPreviewAttrs(theme) {
-  return themeDataAttrs(theme)
+export function studioPreviewAttrs(theme, explicit = null) {
+  return { ...themeDataAttrs(theme, explicit), 'data-st-themed': '' }
+}
+
+// ---------------------------------------------------------------------------
+// Web publicada: las mismas variables, SIEMPRE (no solo en modo Studio).
+// `site_theme` es parcial; se siembra con el acento/fuente que ya persiste
+// la tienda para que un tema sin paleta no pise el look actual. Sin tema
+// guardado devuelve {} — la página queda exactamente como hoy.
+// ---------------------------------------------------------------------------
+export function storeSiteThemeVars(customization, pageTheme = 'light') {
+  const theme = customization?.site_theme
+  if (!theme || typeof theme !== 'object' || !Object.keys(theme).length) return {}
+  const accent = effectiveAccent(customization || {})
+  const nameFont = customization?.name_font || 'inter'
+  const merged = {
+    ...theme,
+    palette: { primary: accent.hex, secondary: accent.ink, accent: accent.hex, ...(theme.palette || {}) },
+    typography: { heading: nameFont, body: nameFont, ...(theme.typography || {}) }
+  }
+  return studioPreviewVars(merged, pageTheme, themeExplicitKeys(theme))
+}
+
+export function storeSiteThemeAttrs(customization) {
+  const theme = customization?.site_theme
+  if (!theme || typeof theme !== 'object' || !Object.keys(theme).length) return {}
+  return studioPreviewAttrs(theme, themeExplicitKeys(theme))
 }
 
 // ---------------------------------------------------------------------------
@@ -98,9 +206,9 @@ const BRIDGE_CSS = `
 @keyframes st-ring { 0% { outline-color: var(--store-accent, #6366f1); } 70% { outline-color: var(--store-accent, #6366f1); } 100% { outline-color: transparent; } }
 @media (prefers-reduced-motion: reduce) { .store-page .st-ring { animation: none; } }
 /* Pistas del tema Studio sobre el look actual: radio de botones del
-   contrato (shape -> --st-btn-radius -> --sp-btn-radius). El resto de
-   --st-* queda listo para la fase que rewire la hoja pública. */
-.store-page .sp-btn { border-radius: var(--sp-btn-radius, 99px); }
+   contrato. La hoja pública ya consume --st-* con fallback; esto mantiene
+   el anillo/hover del editor fiel aun si la hoja cambia. */
+.store-page .sp-btn { border-radius: var(--sp-btn-radius, var(--st-btn-radius, 99px)); }
 .store-page .sp-icon-btn { border-radius: var(--sp-btn-radius, 50%); }
 `
 
