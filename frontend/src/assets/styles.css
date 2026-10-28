@@ -1537,10 +1537,9 @@ body { transition: background-color .2s ease, color .2s ease; }
    pantallas < ~400px y el borde derecho quedaba recortado. */
 .dsg-card { margin-bottom: 0; min-width: 0; }
 .dsg-preview { position: sticky; top: 16px; margin-bottom: 0; min-width: 0; }
-.dsg-preview .design-preview { max-height: 60vh; overflow-y: auto; }
+.dsg-preview .design-preview { margin-bottom: 0; }
 @media (max-width: 1100px) {
   .dsg-layout { grid-template-columns: 1fr; }
-  .dsg-preview { position: static; }
 }
 .svc-stat-ico svg, .svc-ico svg, .svc-block-ico svg { display: block; margin: 0; flex: none; }
 
@@ -1599,10 +1598,20 @@ body { transition: background-color .2s ease, color .2s ease; }
 @keyframes blk-pulse { 50% { opacity: .35; } }
 .blk-dev { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 28px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink-2); cursor: pointer; }
 .blk-dev.active { color: #fff; background: var(--brand-500); border-color: var(--brand-500); }
-.blk-frame { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px; }
+.blk-frame { position: relative; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px; }
 .blk-frame iframe { display: block; width: 100%; height: 480px; border: 0; border-radius: 8px; background: #fff; }
 .blk-frame[data-device='mobile'] iframe { width: 390px; max-width: 100%; margin: 0 auto; }
 .blk-frame-empty { display: grid; place-items: center; gap: 8px; height: 200px; color: var(--ink-3); text-align: center; font-size: 13px; }
+/* Skeleton de la vista previa mientras carga el iframe; el fallback se
+   muestra si el load no llega (CSP/DNS/red) con salida a pestaña nueva. */
+.blk-frame-skel { position: absolute; inset: 10px; z-index: 1; display: grid; align-content: start; gap: 12px; padding: 16px; border-radius: 8px; background: var(--card); }
+.blk-skel-bar { height: 22px; border-radius: 6px; background: linear-gradient(90deg, var(--line) 25%, var(--surface) 50%, var(--line) 75%); background-size: 200% 100%; animation: blk-skel 1.2s infinite; }
+.blk-skel-bar.mid { width: 70%; }
+.blk-skel-bar.short { width: 40%; }
+@keyframes blk-skel { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .blk-skel-bar { animation: none; } }
+.blk-frame-fail { position: absolute; inset: 10px; z-index: 1; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; border-radius: 8px; background: var(--card); color: var(--ink-2); text-align: center; font-size: 13px; }
+.blk-frame-fail p { margin: 0; max-width: 32ch; color: var(--ink-3); }
 .blk-open { margin-top: 10px; }
 @media (max-width: 1100px) {
   .blk-layout { grid-template-columns: 1fr; }

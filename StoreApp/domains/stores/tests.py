@@ -1227,6 +1227,29 @@ class LayoutConfigTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['customization']['layout_config'], {})
 
+    def test_invalid_config_returns_readable_message(self):
+        #El editor de bloques muestra el 400 tal cual llega — tiene que ser
+        #un mensaje entendible en español, no un dump del serializer.
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/', {'layout_config': 'texto'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('objeto', str(response.data['layout_config']))
+
+    def test_oversized_config_rejected(self):
+        #Los bytes se cuentan sobre el payload crudo (antes de sanear):
+        #un prop gigante pasa el tope aunque el saneo lo truncaría a 80.
+        client      =   self._client()
+        response    =   client.patch(
+            f'{STORES_URL}customization/',
+            {'layout_config': {'landing': {'blocks': [
+                {'id': 'about', 'enabled': True, 'props': {'title': 'x' * 9000}},
+            ]}}},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('grande', str(response.data['layout_config']))
+
     def test_layout_survives_template_switch(self):
         #La config es por superficie, no por plantilla: cambiar de diseño
         #conserva los bloques guardados (el renderer usa los que la

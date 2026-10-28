@@ -12,6 +12,8 @@ import { useStoreStore } from '../stores/store.store.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
 import { LAYOUT_SURFACES, SURFACE_LABELS, TEMPLATE_BLOCKS, blockSpec } from '../templates/blocks.js'
 import { resolveLayout, defaultLayout } from '../templates/index.js'
+import { env } from '../config/env.js'
+import { tokenStorage } from '../api/http.js'
 import AppIcon from './AppIcon.vue'
 
 const props = defineProps({
@@ -41,9 +43,13 @@ const redoStack = ref([])
 const saveState = ref('idle') // idle | dirty | saving | saved | error
 const device = ref('desktop')
 const previewKey = ref(0)
+const previewState = ref('loading') // loading | ready | failed
 let savedSnap = ''
 let saveTimer = null
 let savedTimer = null
+let previewTimer = null
+let saving = false
+let resave = false
 let titleSnapDone = false
 
 // Bloques que dependen de contenido del negocio: el aviso "sin contenido"
@@ -118,10 +124,24 @@ function buildDraft() {
 }
 buildDraft()
 
-// Cambio de plantilla: se reconstruye el draft con los bloques que la
-// nueva plantilla soporta (los equivalentes conservan su estado guardado);
-// el draft anterior queda en el historial por si fue un error.
-watch(() => props.template, () => { buildDraft() })
+// Cambio de plantilla: primero se pide guardar lo pendiente (el PATCH
+// sale con la config vieja, que conserva los ids que la plantilla nueva
+// no soporta verbatim) y después se reconstruye el draft — los bloques
+// equivalentes conservan su estado guardado y los no soportados quedan
+// en la config para un eventual regreso (se avisa por toast).
+watch(() => props.template, (tpl, prev) => {
+  if (tpl === prev) return
+  flushPending()
+  const dropped = LAYOUT_SURFACES.reduce((n, s) =>
+    n + (draft.value[s] || []).filter((b) => !defaultLayout(tpl, s).some((d) => d.id === b.id)).length, 0)
+  buildDraft()
+  previewKey.value++
+  if (dropped) {
+    emit('notify', dropped === 1
+      ? 'Un bloque no forma parte de esta plantilla: su estado queda guardado por si volvés.'
+      : `${dropped} bloques no forman parte de esta plantilla: su estado queda guardado por si volvés.`)
+  }
+})
 
 const blocks = computed(() => draft.value[surface.value] || [])
 const specOf = (b) => blockSpec(surface.value, b.id) || {}
@@ -221,47 +241,123 @@ function serialize() {
   return out
 }
 
-function scheduleSave() {
-  saveState.value = 'dirty'
+function scheduleSave(delay = 900) {
+  if (saveState.value !== 'error') saveState.value = 'dirty'
   clearTimeout(saveTimer)
-  saveTimer = setTimeout(save, 900)
+  saveTimer = setTimeout(save, delay)
 }
+// Cola de un solo guardado en vuelo: los cambios que llegan mientras un
+// PATCH está en el aire quedan marcados (resave) y se re-guardan al
+// aterrizar — nunca se descartan. En error NO hay rollback destructivo:
+// el draft local se conserva y el usuario puede corregir o reintentar.
 async function save() {
-  if (saveState.value === 'saving') return
+  if (saving) { resave = true; return }
+  saving = true
   saveState.value = 'saving'
   const snap = JSON.stringify(draft.value)
   const ok = await store.saveCustomization({ layout_config: serialize() })
+  saving = false
   if (ok) {
     savedSnap = snap
-    saveState.value = 'saved'
     previewKey.value++
+  }
+  if (resave || (ok && JSON.stringify(draft.value) !== snap)) {
+    resave = false
+    saveState.value = 'dirty'
+    scheduleSave(350)
+  } else if (ok) {
+    saveState.value = 'saved'
     clearTimeout(savedTimer)
     savedTimer = setTimeout(() => { if (saveState.value === 'saved') saveState.value = 'idle' }, 2600)
   } else {
-    // Rollback: el último estado válido vuelve al draft.
-    draft.value = JSON.parse(savedSnap)
     saveState.value = 'error'
-    emit('notify', store.lastError || 'No se pudo guardar el orden de bloques. Se restauró lo último guardado.')
+    emit('notify', store.lastError || 'No se pudo guardar el orden de bloques. Tus cambios siguen acá: probá Reintentar.')
   }
+}
+// Descarga el debounce pendiente (cambio de plantilla/superficie,
+// desmontaje): el PATCH sigue aunque el componente muera después.
+function flushPending() {
+  clearTimeout(saveTimer)
+  saveTimer = null
+  if (saveState.value === 'dirty' && !saving) void save()
+}
+// Cierre de pestaña/recarga: un PATCH con keepalive viaja aunque el tab
+// muera; si ya había un save en vuelo manda el mismo payload (idempotente).
+function onPageHide() {
+  if (!['dirty', 'saving'].includes(saveState.value) && !resave) return
+  const token = tokenStorage.getAccess()
+  if (!token) return
+  try {
+    fetch(`${env.apiBaseUrl.replace(/\/$/, '')}/stores/customization/`, {
+      method: 'PATCH',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ layout_config: serialize() })
+    })
+  } catch { /* el cierre no espera respuesta */ }
+}
+function onVisibility() {
+  if (document.visibilityState === 'hidden') flushPending()
+}
+function retrySave() {
+  resave = false
+  saveState.value = 'dirty'
+  save()
 }
 const saveLabel = computed(() => ({
   idle: 'Todo guardado', dirty: 'Cambios sin guardar…', saving: 'Guardando…',
   saved: 'Guardado ✓', error: 'Error al guardar'
 }[saveState.value]))
 
-// Vista previa real: la URL pública de cada superficie en un iframe con
-// ancho desktop/mobile. Se recarga (previewKey) tras cada guardado. La CSP
-// del SPA autoriza el iframe same-site (frame-src/frame-ancestors con apex
-// + *.<dominio>) — un host ajeno seguiría bloqueado por frame-ancestors.
+// Vista previa real: la página pública dentro de un iframe con ancho
+// desktop/mobile. Usa el alias same-origin <origen>/<slug> (no el link
+// canónico de subdominio): la CSP (frame-src/frame-ancestors 'self') lo
+// autoriza siempre — en dev evita depender de que *.<dominio> resuelva —
+// y permite al editor hablar con la página (scroll al bloque, clic de
+// vuelta). "Abrir en otra pestaña" sigue usando el link canónico.
+// previewState: loading -> ready; si el load no llega en ~12s (CSP, DNS,
+// red) pasa a failed y se muestra el fallback con salida a pestaña nueva.
 const PREVIEW_PATHS = { landing: '', catalog: '/catalogo', services: '/servicios' }
-const previewSrc = computed(() => (props.publicUrl ? props.publicUrl + PREVIEW_PATHS[surface.value] : ''))
+const storeSlug = computed(() => store.store?.slug || '')
+const previewSrc = computed(() => (storeSlug.value ? `${env.appUrl}/${storeSlug.value}${PREVIEW_PATHS[surface.value]}` : ''))
+const canonicalSrc = computed(() => (props.publicUrl ? props.publicUrl + PREVIEW_PATHS[surface.value] : ''))
 const surfacePublished = computed(() => props.siteTemplates.includes(surface.value))
+
+function armPreviewTimeout() {
+  clearTimeout(previewTimer)
+  previewTimer = setTimeout(() => {
+    if (previewState.value === 'loading') previewState.value = 'failed'
+  }, 12000)
+}
+function onPreviewLoad() {
+  clearTimeout(previewTimer)
+  previewState.value = 'ready'
+}
+watch(previewSrc, () => {
+  previewState.value = previewSrc.value ? 'loading' : 'failed'
+  armPreviewTimeout()
+})
+watch(previewKey, () => {
+  previewState.value = 'loading'
+  armPreviewTimeout()
+})
 
 onMounted(() => {
   // Para los avisos "sin contenido" de bloques ligados al catálogo.
   if (!catalog.products.length) catalog.loadAll()
+  previewState.value = previewSrc.value ? 'loading' : 'failed'
+  armPreviewTimeout()
+  window.addEventListener('pagehide', onPageHide)
+  document.addEventListener('visibilitychange', onVisibility)
 })
-onUnmounted(() => { clearTimeout(saveTimer); clearTimeout(savedTimer) })
+onUnmounted(() => {
+  flushPending()
+  clearTimeout(saveTimer)
+  clearTimeout(savedTimer)
+  clearTimeout(previewTimer)
+  window.removeEventListener('pagehide', onPageHide)
+  document.removeEventListener('visibilitychange', onVisibility)
+})
 </script>
 
 <template>
@@ -363,15 +459,28 @@ onUnmounted(() => { clearTimeout(saveTimer); clearTimeout(savedTimer) })
           <button type="button" class="blk-dev" :class="{ active: device === 'mobile' }" title="Celular" aria-label="Vista celular" @click="device = 'mobile'"><AppIcon name="smartphone" :size="15" /></button>
         </div>
       </div>
-      <p class="blk-save" :data-state="saveState"><span class="blk-dot" aria-hidden="true"></span>{{ saveLabel }}</p>
-      <div class="blk-frame" :data-device="device">
-        <iframe v-if="previewSrc && surfacePublished" :key="previewKey" :src="previewSrc" title="Vista previa de tu web" loading="lazy"></iframe>
+      <p class="blk-save" :data-state="saveState"><span class="blk-dot" aria-hidden="true"></span>{{ saveLabel }}
+        <button v-if="saveState === 'error'" type="button" class="blk-link" @click="retrySave">Reintentar</button>
+      </p>
+      <div class="blk-frame" :data-device="device" :data-state="previewState">
+        <template v-if="previewSrc && surfacePublished">
+          <div v-show="previewState === 'loading'" class="blk-frame-skel" aria-hidden="true">
+            <span class="blk-skel-bar"></span><span class="blk-skel-bar mid"></span><span class="blk-skel-bar short"></span>
+          </div>
+          <iframe :key="previewKey" :src="previewSrc" title="Vista previa de tu web" loading="lazy" @load="onPreviewLoad"></iframe>
+          <div v-if="previewState === 'failed'" class="blk-frame-fail" role="status">
+            <AppIcon name="triangle-alert" :size="18" />
+            <p>La vista previa no respondió. Podés abrirla en otra pestaña o recargarla.</p>
+            <button type="button" class="blk-link" @click="previewKey++">Recargar vista previa</button>
+          </div>
+        </template>
         <div v-else class="blk-frame-empty">
           <AppIcon :name="surfacePublished ? 'lock' : 'eye-off'" :size="24" />
           <p>{{ surfacePublished ? 'Vista previa no disponible.' : 'Esta página no está publicada en tu web todavía.' }}</p>
+          <a v-if="canonicalSrc" class="blk-link" :href="canonicalSrc" target="_blank" rel="noopener">Abrir en otra pestaña</a>
         </div>
       </div>
-      <a v-if="publicUrl && surfacePublished" class="btn ghost btn-auto blk-open" :href="previewSrc" target="_blank" rel="noopener"><AppIcon name="external-link" :size="14" /> Abrir en otra pestaña</a>
+      <a v-if="publicUrl && surfacePublished" class="btn ghost btn-auto blk-open" :href="canonicalSrc" target="_blank" rel="noopener"><AppIcon name="external-link" :size="14" /> Abrir en otra pestaña</a>
     </aside>
   </div>
 </template>
