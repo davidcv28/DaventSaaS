@@ -65,20 +65,34 @@ _INTENSITY      =   ('subtle', 'medium', 'bold')
 _NAV            =   ('top', 'bottom', 'drawer')
 _CARD_STYLE     =   ('standard', 'compact', 'overlay')
 _HERO_HEIGHT    =   ('compact', 'tall')
-#Estilos del selector (mismos 8 del PRESET_PICKER_IDS del catálogo). El id
-#solo se guarda si la plantilla del preset entra en el nivel del plan.
-_STYLE_IDS      =   ('neo-brutalista', 'corporativo', 'denim-urbano', 'bento',
-                     'pastel-suave', 'atelier-moda', 'editorial-minima', 'lujo-serif')
+#Estilos del selector: el catálogo cerrado completo de STUDIO_PRESETS
+#(frontend/src/studio/presets/catalog.js). El id solo se guarda si la
+#plantilla del preset entra en el nivel del plan.
 _STYLE_PRESET_TEMPLATES =   {
-    'neo-brutalista'    :   'duo',
-    'corporativo'       :   'classic',
-    'denim-urbano'      :   'duo',
-    'bento'             :   'vitrina',
-    'pastel-suave'      :   'calma',
-    'atelier-moda'      :   'vitrina',
     'editorial-minima'  :   'minimal',
+    'vidrio-nocturno'   :   'cobre',
+    'bento'             :   'vitrina',
+    'neo-brutalista'    :   'duo',
     'lujo-serif'        :   'cobre',
+    'pastel-suave'      :   'calma',
+    'neon-tech'         :   'vitrina',
+    'terracota'         :   'minimal',
+    'monocromo'         :   'minimal',
+    'retail-vibrante'   :   'cobre',
+    'aurora-degradada'  :   'duo',
+    'papel-riso'        :   'duo',
+    'corporativo'       :   'classic',
+    'gourmet-calido'    :   'minimal',
+    'belleza-rosa'      :   'vitrina',
+    'kids-ludico'       :   'duo',
+    'urbano-sticker'    :   'vitrina',
+    'consola-retro'     :   'minimal',
+    'denim-urbano'      :   'duo',
+    'atelier-moda'      :   'vitrina',
+    'suizo-editorial'   :   'classic',
+    'cobalto-nocturno'  :   'vitrina',
 }
+_STYLE_IDS      =   tuple(_STYLE_PRESET_TEMPLATES)
 _STYLE_MODES            =   ('light', 'dark')
 _STYLE_PALETTES         =   ('original', 'warm', 'cool', 'contrast')
 _STYLE_FONT_KEYS        =   ('heading', 'body', 'muted', 'link')

@@ -1756,7 +1756,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', measureSheet)
 })
 
-async function saveDesign(asDraft = false) {
+async function saveDesign(asDraft = false, quiet = false) {
   Object.keys(designForm).forEach((k) => { designTouched[k] = true })
   if (Object.keys(designErrors.value).some((k) => !COMPANY_FIELDS.includes(k))) return
   designBusy.value = true
@@ -1825,8 +1825,18 @@ async function saveDesign(asDraft = false) {
   if (okDesign) {
     studioSavedTheme.value = studioTheme.value
     studioRef.value?.markSaved()
-    pushToast(asDraft ? 'Borrador guardado ✓' : 'Diseño guardado ✓')
+    if (!quiet) pushToast(asDraft ? 'Borrador guardado ✓' : 'Diseño guardado ✓')
   }
+  return okDesign
+}
+
+// "Guardar" del Studio guarda el borrador y lo publica en el mismo gesto:
+// el cambio queda visible en la web sin pasar por "Publicar".
+async function saveStudioDesign() {
+  const ok = await saveDesign(true, true)
+  if (!ok) return
+  await nextTick()
+  await publishStudio('')
 }
 
 // Páginas de la web (site_templates): multi-selección de catálogo cerrado
@@ -4203,7 +4213,7 @@ async function changePassword() {
           :action-busy="studioActionBusy"
           :share-url="studioShare?.url || ''"
           :share-expires="studioShare?.expiresAt || ''"
-          @save="saveDesign(true)"
+          @save="saveStudioDesign"
           @discard="discardDesign"
           @navigate="onStudioNav"
           @publish="publishStudio"

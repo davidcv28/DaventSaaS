@@ -1020,7 +1020,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
           :disabled="actionBusy === 'publish'" title="Llevar el borrador guardado a tu web"
           @click="emit('publish', '')"
         ><AppIcon name="rocket" :size="15" /> Publicar</button>
-        <AppButton :loading="busy" type="button" title="Guardar borrador (Ctrl+S)" @click="emit('save')">Guardar borrador</AppButton>
+        <AppButton :loading="busy" type="button" title="Guardar y publicar (Ctrl+S)" @click="emit('save')">Guardar y publicar</AppButton>
       </div>
     </footer>
 
