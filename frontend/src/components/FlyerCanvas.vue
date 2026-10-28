@@ -422,15 +422,15 @@ const priceOf = (p) => priceText(p) || ''
       </div>
 
       <div v-else class="fc-bn">
-        <div class="fc-bn-brand">
-          <img v-if="showLogo && logo" class="fc-bn-logo" :src="logo" alt="" />
-          <span v-else-if="showLogo" class="fc-bn-mono">{{ initial }}</span>
-          <div class="fc-bn-bt">
-            <strong>{{ shopName }}</strong>
-            <span>{{ shortUrl }}</span>
-          </div>
-        </div>
         <div class="fc-bn-mid">
+          <div v-if="showLogo" class="fc-bn-brand">
+            <img v-if="logo" class="fc-bn-logo" :src="logo" alt="" />
+            <span v-else class="fc-bn-mono">{{ initial }}</span>
+            <div class="fc-bn-bt">
+              <strong>{{ shopName }}</strong>
+              <span>{{ shortUrl }}</span>
+            </div>
+          </div>
           <span v-if="badge" class="fc-bn-badge">{{ badge }}</span>
           <h2 class="fc-title">{{ title }}</h2>
           <p v-if="subtitle" class="fc-sub">{{ subtitle }}</p>
@@ -935,26 +935,27 @@ const priceOf = (p) => priceText(p) || ''
 
 /* BANNER (horizontal, portada de WhatsApp/web) */
 .fc-banner { background: linear-gradient(120deg, var(--store-accent-ink, #4338ca), var(--store-accent, #6366f1) 78%); color: #fff; }
-.fc-bn { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto auto; align-items: center; gap: 5cqw; padding: 4cqw 5cqw; overflow: hidden; }
-.fc-bn-brand { display: flex; align-items: center; gap: 3cqw; min-width: 0; max-width: 42cqw; overflow: hidden; }
+.fc-bn { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 18cqw); align-items: center; gap: 3cqw; padding: 3cqw 4cqw; overflow: hidden; }
+.fc-bn-brand { display: flex; align-items: center; gap: 2.2cqw; min-width: 0; overflow: hidden; }
 .fc-bn-bt span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; }
-.fc-bn-logo, .fc-bn-mono { flex: none; width: 15cqw; height: 15cqw; border-radius: 4cqw; background: #fff; box-shadow: 0 1cqw 3cqw rgba(15, 23, 42, .3); }
+.fc-bn-logo, .fc-bn-mono { flex: none; width: 8cqw; height: 8cqw; border-radius: 2.2cqw; background: #fff; box-shadow: 0 1cqw 3cqw rgba(15, 23, 42, .3); }
 .fc-bn-logo { object-fit: cover; display: block; }
-.fc-bn-mono { display: grid; place-items: center; font-size: 8cqw; font-weight: 900; color: var(--store-accent-ink, #4338ca); }
-.fc-bn-bt { display: grid; gap: 1cqw; min-width: 0; }
-.fc-bn-bt strong { font-size: 6cqw; font-weight: 900; line-height: 1.05; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
-.fc-bn-bt span { font-size: 3.4cqw; font-weight: 700; opacity: .85; overflow-wrap: anywhere; }
-.fc-bn-mid { min-width: 0; display: grid; gap: 1.6cqw; align-content: center; }
-.fc-bn-badge { justify-self: start; padding: .8cqw 3cqw; border-radius: 99px; background: #fde047; color: #1c1917; font-size: 3.2cqw; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-.fc-bn .fc-title { font-size: 8.6cqw; line-height: .95; text-transform: uppercase; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
-.fc-bn .fc-sub { font-size: 3.6cqw; color: rgba(255, 255, 255, .9); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
-.fc-bn-items { display: flex; gap: 2.4cqw; }
-.fc-bn-item { position: relative; width: 15cqw; aspect-ratio: 1; border-radius: 3cqw; overflow: hidden; background: rgba(255, 255, 255, .16); border: .4cqw solid rgba(255, 255, 255, .5); }
+.fc-bn-mono { display: grid; place-items: center; font-size: 4.6cqw; font-weight: 900; color: var(--store-accent-ink, #4338ca); }
+.fc-bn-bt { display: grid; gap: .5cqw; min-width: 0; overflow: hidden; }
+.fc-bn-bt strong { font-size: 3.6cqw; font-weight: 900; line-height: 1.05; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fc-bn-bt span { font-size: 2.4cqw; font-weight: 700; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-bn-mid { min-width: 0; display: grid; gap: 1.1cqw; align-content: center; overflow: hidden; }
+.fc-bn-badge { justify-self: start; padding: .7cqw 2.4cqw; border-radius: 99px; background: #fde047; color: #1c1917; font-size: 2.4cqw; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.fc-bn .fc-title { font-size: 6cqw; line-height: .95; text-transform: uppercase; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.fc-bn .fc-sub { font-size: 2.9cqw; color: rgba(255, 255, 255, .9); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; }
+.fc-bn-items { display: flex; gap: 1.6cqw; }
+.fc-bn-item { position: relative; width: 10.5cqw; aspect-ratio: 1; border-radius: 2.2cqw; overflow: hidden; background: rgba(255, 255, 255, .16); border: .4cqw solid rgba(255, 255, 255, .5); }
 .fc-bn-item > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fc-bn-item b { position: absolute; left: 0; right: 0; bottom: 0; padding: 4cqw 1.6cqw 1.4cqw; background: linear-gradient(transparent, rgba(0, 0, 0, .8)); font-size: 3.4cqw; font-weight: 900; text-align: center; }
-.fc-bn-cta { display: grid; justify-items: center; gap: 2cqw; }
-.fc-bn-cta .fc-qr img { width: 15cqw; height: 15cqw; }
-.fc-bn-cta .fc-foot-text { justify-items: center; text-align: center; }
-.fc-bn-cta .fc-cta { font-size: 2.6cqw; }
-.fc-bn-cta .fc-contact { font-size: 3cqw; }
+.fc-bn-item b { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.8cqw .5cqw 1cqw; background: linear-gradient(transparent, rgba(0, 0, 0, .8)); font-size: 2.2cqw; font-weight: 900; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.fc-bn-cta { display: grid; justify-items: center; gap: 1.2cqw; min-width: 0; overflow: hidden; }
+.fc-bn-cta .fc-qr { border-radius: 1.8cqw; padding: 1.1cqw; }
+.fc-bn-cta .fc-qr img { width: 10cqw; height: 10cqw; }
+.fc-bn-cta .fc-foot-text { justify-items: center; text-align: center; max-width: 100%; }
+.fc-bn-cta .fc-cta { font-size: 2.1cqw; }
+.fc-bn-cta .fc-contact { font-size: 2.2cqw; max-width: 100%; }
 </style>
