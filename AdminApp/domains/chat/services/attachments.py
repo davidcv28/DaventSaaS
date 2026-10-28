@@ -17,6 +17,10 @@ from django.core.files.storage import default_storage
 
 from StoreApp.domains.stores.services import imaging, storage
 
+#La URL del adjunto es firmada y de vida corta: aunque se filtre el link,
+#deja de servir en una hora. Nunca usa la URL pública del bucket.
+CHAT_IMAGE_TTL_SECONDS  =   60 * 60
+
 def upload_chat_image(thread, upload):
     """
     Valida, normaliza y sube el adjunto. Devuelve la key a persistir en
@@ -44,7 +48,7 @@ def chat_image_url(request, message):
     """
     if not message.image_key:
         return ''
-    url         =   storage.object_url(message.image_key)
+    url         =   storage.object_url(message.image_key, private = True, expires = CHAT_IMAGE_TTL_SECONDS)
     if url:
         return url
     media       =   f'/{settings.MEDIA_URL}{message.image_key}'

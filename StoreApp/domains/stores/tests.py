@@ -2049,3 +2049,20 @@ class StudioDraftPublishTests(TestCase):
 
     def test_share_requires_auth(self):
         self.assertIn(APIClient().post(f'{STORES_URL}customization/share/').status_code, (401, 403))
+
+
+class ObjectUrlPrivacyTests(TestCase):
+    """Los adjuntos privados (chat) nunca salen por la URL pública del bucket:
+    siempre firma de lectura con vigencia acotada."""
+
+    def test_private_forces_presigned_even_with_public_base(self):
+        from StoreApp.domains.stores.services import storage
+        client          =   Mock()
+        client.generate_presigned_url.return_value = 'https://r2.test/signed'
+        with patch.object(storage, 'storage_configured', return_value = True), \
+             patch.object(storage, '_public_base', return_value = 'https://cdn.test'), \
+             patch.object(storage, '_client', return_value = client):
+            self.assertEqual(storage.object_url('chat/1/x.webp', private = True, expires = 3600), 'https://r2.test/signed')
+            client.generate_presigned_url.assert_called_once()
+            self.assertEqual(client.generate_presigned_url.call_args.kwargs['ExpiresIn'], 3600)
+            self.assertEqual(storage.object_url('store/x.webp'), 'https://cdn.test/store/x.webp')

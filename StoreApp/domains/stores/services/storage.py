@@ -73,22 +73,26 @@ def _client():
 #=========================================
 # OBJECT URL (delivery pública)
 #=========================================
-def object_url(key):
+def object_url(key, private = False, expires = None):
     """
     URL servible del objeto. Si el bucket tiene URL pública configurada
     (R2_PUBLIC_URL) la usa; si no, devuelve una URL firmada de lectura
     (válida PRESIGNED_TTL_SECONDS). Devuelve None sin key o sin config.
+
+    ``private=True`` ignora la URL pública y fuerza la firmada: para objetos
+    que no son contenido público de tienda (adjuntos del chat de soporte).
+    ``expires`` acota la vigencia de la firma (segundos).
     """
     if not key or not storage_configured():
         return None
-    base        =   _public_base()
+    base        =   None if private else _public_base()
     if base:
         return f'{base}/{key}'
     try:
         return _client().generate_presigned_url(
             'get_object',
             Params      =   {'Bucket': _bucket(), 'Key': key},
-            ExpiresIn   =   PRESIGNED_TTL_SECONDS,
+            ExpiresIn   =   expires or PRESIGNED_TTL_SECONDS,
         )
     except Exception:
         return None

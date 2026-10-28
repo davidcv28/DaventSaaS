@@ -9,7 +9,7 @@ import hashlib
 import hmac
 import os
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -1021,3 +1021,42 @@ class PaymentLiveModeTests(TestCase):
         payment.refresh_from_db()
         self.assertEqual(payment.live_mode, True)
         self.assertEqual(payment.mp_status_detail, 'accredited')
+
+
+class AuditOrphanPaymentsTests(TestCase):
+    """El comando lista cobros approved sin fila local — y no escribe nada."""
+
+    def _run(self, results, **kwargs):
+        from io import StringIO
+        from django.core.management import call_command
+        sdk     =   Mock()
+        sdk.payment.return_value.search.return_value = {'status': 200, 'response': {'results': results}}
+        out     =   StringIO()
+        with patch('AdminApp.domains.payments.services.services.sdk', sdk):
+            call_command('audit_orphan_payments', stdout = out, **kwargs)
+        return out.getvalue()
+
+    def test_lists_only_unregistered_and_never_writes(self):
+        profile, suscription = _suscription_for('huerfano')
+        Payment.objects.create(
+            user = profile, suscription = suscription, amount = 1000,
+            status = Payment.Status.APPROVED, external_reference = '5001',
+        )
+        before  =   Payment.objects.count()
+        results =   [
+            {'id': 5001, 'external_reference': str(suscription.id), 'transaction_amount': 1000, 'currency_id': 'ARS', 'live_mode': True},
+            {'id': 5002, 'external_reference': str(suscription.id), 'transaction_amount': 1000, 'currency_id': 'ARS', 'live_mode': True},
+            {'id': 5003, 'external_reference': '999999', 'transaction_amount': 700, 'currency_id': 'ARS', 'live_mode': True},
+        ]
+        out     =   self._run(results)
+        self.assertIn('huérfanos: 2', out)
+        self.assertIn('MP #5002', out)
+        self.assertIn('MP #5003', out)
+        self.assertNotIn('MP #5001', out)
+        self.assertEqual(Payment.objects.count(), before)
+
+    def test_test_mode_payments_skipped_by_default(self):
+        _, suscription =   _suscription_for('sandbox')
+        results        =   [{'id': 6001, 'external_reference': str(suscription.id), 'transaction_amount': 1000, 'live_mode': False}]
+        self.assertIn('huérfanos: 0', self._run(results))
+        self.assertIn('huérfanos: 1', self._run(results, include_test = True))
