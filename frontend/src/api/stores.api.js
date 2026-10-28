@@ -649,57 +649,34 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES)
-// por nivel de plan — `tier` marca qué beneficio lo habilita:
+// — 6 habilitados, 2 por nivel de plan. `tier` marca qué beneficio lo
+// habilita:
 //   'base'     -> todo plan con has_customization (Básico)
 //   'plus'     -> has_design_plus (Estándar y Premium)
 //   'advanced' -> has_design_advanced (Premium)
 // El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
 // 'classic' si el guardado deja de estar permitido (baja de plan o una
-// plantilla retirada del catálogo).
+// plantilla retirada del catálogo). Los 20 diseños retirados salieron de
+// este catálogo y de TEMPLATE_CHOICES (las tiendas que los tenían se
+// remapearon al más cercano del mismo nivel, mig. 0049); sus defs siguen
+// en TEMPLATE_DEFS solo como red de seguridad de render.
 export const STORE_TEMPLATES = {
-  classic:     { label: 'Clásico',     tier: 'base',     desc: 'Diseño moderno y ordenado, pensado para catálogos: portada centrada y tarjetas de destacados.' },
-  perspective: { label: 'Perspectiva', tier: 'base',     desc: 'Profundidad espacial: piso isométrico con punto de fuga, planos flotantes en capas y títulos Oswald con relieve.' },
-  duo:         { label: 'Dúo',         tier: 'base',     desc: 'Portada a dos columnas: imagen a un lado, presentación al otro, cifras debajo del hero y productos en carril horizontal.' },
-  bloque:      { label: 'Bloque',      tier: 'base',     desc: 'Grid suizo de bordes duros: papel y tinta con reglas visibles, titulares XXL en mayúsculas, metadata en mono y tu acento a bloque.' },
-  riso:        { label: 'Riso',        tier: 'base',     desc: 'Risografía: papel crema con trama de puntos, tintas planas rosa, azul, amarillo y menta que se solapan, sombras desplazadas, formas redondas y tu acento como azul.' },
-  street:      { label: 'Urbano',      tier: 'plus',     desc: 'Espíritu streetwear: titulares XXL condensados, pegatina giratoria, código de barras, cinta de colección y relieve duro.' },
-  promo:       { label: 'Publicidad',  tier: 'plus',     desc: 'Campaña de liquidación: afiche con el mejor descuento real, sello de %, precio tachado y pedido directo por WhatsApp.' },
-  terminal:    { label: 'Terminal',    tier: 'advanced', desc: 'Estética de consola: pantalla de fósforo con tu acento, barra de ventana, prompt >, cursor que parpadea y comandos entre corchetes.' },
-  lookbook:    { label: 'Lookbook',    tier: 'advanced', desc: 'Editorial de moda: papel cálido, titulares serif de revista, pliegos de imagen numerados y catálogo como índice de colección.' },
-  shop:        { label: 'Tienda Pro',  tier: 'advanced', desc: 'Venta por volumen: góndola densa con datos del local, ofertas con ahorro en pesos y grilla de precio dominante.' },
-  cobre:       { label: 'Cobre',       tier: 'advanced', desc: 'Retail de indumentaria: piedra y tinta, titulares condensados XXL en mayúsculas, placas de acento, tira de beneficios y grilla de colección.' },
-  minimal:     { label: 'Minimal',     tier: 'advanced', desc: 'Catálogo editorial esencial: papel claro y tinta, barra de anuncio, hero tipográfico, tarjetas 3:4 sin cromo y cierre en bloque de tinta.' },
-  boutique:    { label: 'Boutique',    tier: 'advanced', desc: 'Catálogo de indumentaria: barra de anuncio, hero de campaña con placa de prenda, departamentos con miniatura, tarjetas 3:4 y navegación de colección.' },
-  signature:   { label: 'Signature',   tier: 'advanced', desc: 'Casa de autor: noche de espresso, marfil y tu acento, titulares Cinzel grabados, marcos de doble filete, sello de monograma y firma manuscrita.' },
-  aurora:      { label: 'Aurora',      tier: 'advanced', desc: 'Observatorio de luz: noche profunda con cortinas de acento, raíl de datos fino, cielo panorámico con el mensaje en placa de vidrio esmerilado, departamentos como constelación y catálogo con barra de cristal fija.' },
-  terra:       { label: 'Terra',       tier: 'advanced', desc: 'Editorial cálido y artesanal: papel crudo, titulares serif Fraunces, imágenes en arco, reglas finas, numeración de sección y el acento de tu marca como sello. Portada, catálogo y servicios con la misma identidad.' },
-  atelier:     { label: 'Atelier',     tier: 'plus',     desc: 'Indumentaria editorial: titular XXL que atraviesa la foto, pestañas tipográficas, grilla de revista con ritmo, hotspots del look y ficha con guía de talles.' },
-  circuit:     { label: 'Circuit',     tier: 'plus',     desc: 'Tecnología en ficha técnica: producto flotante con halo, callouts conectados al hardware, bento de specs, precios en mono y comparador.' },
-  lab:         { label: 'Lab',         tier: 'advanced', desc: 'Tecnología en claro: el mismo esqueleto técnico de Circuit sobre papel blanco, foco en el producto y specs limpias.' },
-  mercado:     { label: 'Mercado',     tier: 'plus',     desc: 'Comestibles con apetito: foto en arco, sello giratorio, categorías en círculos, pedido directo por WhatsApp con el "+" de cada card.' },
-  carta:       { label: 'Carta',       tier: 'advanced', desc: 'Comestibles como menú de restaurante: lista con precios alineados, ítems del día y pedido por WhatsApp.' },
-  studio:      { label: 'Studio',      tier: 'plus',     desc: 'Servicios que dan confianza: reseñas flotando sobre el hero, lista de servicios con precio, método en pasos, FAQ y contacto directo.' },
-  proceso:     { label: 'Proceso',     tier: 'advanced', desc: 'Servicios como storytelling de método: el proceso es la portada — pasos numerados con progreso, trabajos y testimonios.' },
-  arena:       { label: 'Arena',       tier: 'plus',     desc: 'Tablero esports: HUD con datos del local, titulares Orbitron, esquinas cortadas, specs en mono y drops de ofertas; para hardware, periféricos y merch dev.' },
-  calma:       { label: 'Calma',       tier: 'plus',     desc: 'Bienestar sereno: aire y luz suave, Lora itálica, radios amplios, carta de servicios con duración y precio, resultados en galería y botón "Reservar turno" por WhatsApp.' },
-  vitrina:     { label: 'Vitrina',     tier: 'plus',     desc: 'Vidriera de boutique: composición asimétrica de ventana con piezas numeradas, Playfair itálica, índice de colección, tarjetas 3:4 imagen-dominante y "completá el look".' }
+  classic: { label: 'Clásico',   tier: 'base',     desc: 'Catálogo neutro y ordenado: portada centrada, destacados y contacto directo.' },
+  duo:     { label: 'Dúo',       tier: 'base',     desc: 'Editorial de contraste: portada partida, imagen dominante y ritmo a dos columnas.' },
+  calma:   { label: 'Calma',     tier: 'plus',     desc: 'Bienestar sereno: aire y luz suave, Lora itálica, radios amplios y reserva directa.' },
+  vitrina: { label: 'Vitrina',   tier: 'plus',     desc: 'Vidriera de boutique: portada dramática, Playfair itálica, marcos finos y tarjetas 3:4.' },
+  cobre:   { label: 'Cobre',     tier: 'advanced', desc: 'Retail de autor: piedra y tinta, titulares condensados XXL, placas de acento y grilla de colección.' },
+  minimal: { label: 'Minimal',   tier: 'advanced', desc: 'Esencial: una tipografía, mucho aire, hero tipográfico y foco absoluto en el producto.' },
 }
 
-// Familias de diseño por categoría: agrupan las variantes para el selector
-// del dashboard (las keys de cada familia son TEMPLATE_CHOICES reales).
-// 'general' junta el catálogo clásico completo — los base (classic…bloque)
-// y las editoriales premium (lookbook…aurora) que no tienen familia temática.
+// Familias de diseño para el selector del dashboard: una por nivel de
+// plan, cada una con el par habilitado del tier (las keys de cada familia
+// son TEMPLATE_CHOICES reales). Se muestran como select en cascada
+// (categoría → estilo) y los beneficios habilitan por familia.
 export const STORE_TEMPLATE_FAMILIES = [
-  { key: 'ofertas',   label: 'Ofertas',      caption: 'Campaña y góndola',   templates: ['promo', 'shop'] },
-  { key: 'gamer',     label: 'Gamer',        caption: 'Arena y consola',     templates: ['arena', 'terminal'] },
-  { key: 'general',   label: 'Generalista',  caption: 'Catálogo completo',   templates: ['classic', 'perspective', 'duo', 'bloque', 'lookbook', 'cobre', 'minimal', 'boutique', 'aurora'] },
-  { key: 'belleza',   label: 'Belleza',      caption: 'Calma y ceremonial',  templates: ['calma', 'signature'] },
-  { key: 'hogar',     label: 'Hogar',        caption: 'Riso y terra',        templates: ['riso', 'terra'] },
-  { key: 'lifestyle', label: 'Lifestyle',    caption: 'Vitrina y pliego',    templates: ['vitrina', 'lookbook'] },
-  { key: 'moda',      label: 'Indumentaria', caption: 'Atelier y urbano',    templates: ['atelier', 'street'] },
-  { key: 'tech',      label: 'Tecnología',   caption: 'Ficha técnica',       templates: ['circuit', 'lab'] },
-  { key: 'food',      label: 'Comestibles',  caption: 'Mercado y carta',     templates: ['mercado', 'carta'] },
-  { key: 'services',  label: 'Servicios',    caption: 'Estudio y proceso',   templates: ['studio', 'proceso'] }
+  { key: 'general',   label: 'Generalista', caption: 'Clásico y dúo',      templates: ['classic', 'duo'] },
+  { key: 'editorial', label: 'Editorial',   caption: 'Calma y vitrina',    templates: ['calma', 'vitrina'] },
+  { key: 'autor',     label: 'De autor',    caption: 'Cobre y minimal',    templates: ['cobre', 'minimal'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 

@@ -31,10 +31,7 @@ MOBILE = {320, 360, 390, 768}
 # Matriz plantilla × superficie: home/servicios se capturan en un ancho
 # móvil y uno desktop por plantilla (el catálogo cubre WIDTHS completos).
 MATRIX_W = [390, 1440]
-TEMPLATES = ['classic', 'perspective', 'duo', 'bloque', 'riso', 'terra', 'street', 'atelier',
-             'circuit', 'lab', 'mercado', 'carta', 'studio', 'proceso', 'promo', 'shop', 'arena',
-             'terminal', 'calma', 'signature', 'vitrina', 'lookbook', 'cobre', 'minimal',
-             'boutique', 'aurora']
+TEMPLATES = ['classic', 'duo', 'calma', 'vitrina', 'cobre', 'minimal']
 
 from StoreApp.domains.stores.models import Store
 

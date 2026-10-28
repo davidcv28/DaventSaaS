@@ -27,10 +27,7 @@ PY = os.path.join(ROOT, 'venv', 'Scripts', 'python.exe')
 BASE = 'http://localhost:5173/bench-store'
 API = 'http://127.0.0.1:8000/api/stores/public/bench-store/'
 ONLY = sys.argv[1:] or None
-TEMPLATES = ['classic', 'perspective', 'duo', 'bloque', 'riso', 'terra', 'street', 'atelier',
-             'circuit', 'lab', 'mercado', 'carta', 'studio', 'proceso', 'promo', 'shop', 'arena',
-             'terminal', 'calma', 'signature', 'vitrina', 'lookbook', 'cobre', 'minimal',
-             'boutique', 'aurora']
+TEMPLATES = ['classic', 'duo', 'calma', 'vitrina', 'cobre', 'minimal']
 PAGES = [('home', ''), ('cat', '/catalogo'), ('svc', '/servicios')]
 
 from StoreApp.domains.stores.models import Store

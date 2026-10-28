@@ -7,6 +7,12 @@
 //               es el layout por defecto (catálogo cerrado en blocks.js,
 //               espejo de TEMPLATE_BLOCKS del backend).
 //
+// Este registro es el SUPERSET de render: el catálogo seleccionable son
+// 6 diseños (2 por nivel — STORE_TEMPLATES / TEMPLATE_CHOICES) y los 20
+// retirados quedan acá como red de seguridad — una tienda con un diseño
+// viejo que no se remapeó (o un draft corrupto) sigue renderizando su
+// piel en vez de caer al fallback 'classic'.
+//
 // resolveLayout() mezcla el layout por defecto con
 // customization.layout_config: los bloques guardados mandan en orden y
 // estado, los que falten entran al final en su posición canónica y los

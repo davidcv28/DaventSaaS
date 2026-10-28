@@ -113,47 +113,43 @@ class StoreCustomization(models.Model):
         ('figtree',              'Figtree'),
     ]
     TEMPLATE_CLASSIC            =   'classic'
-    #Diseños de la web pública (catálogo cerrado) por nivel de plan:
-    #base para todo plan con has_customization, TEMPLATE_PLUS suman las
-    #plantillas de campaña con has_design_plus (Estándar) y
-    #TEMPLATE_ADVANCED quedan para has_design_advanced (Premium). El
-    #viewset descarta del payload un diseño fuera del nivel del plan y
-    #la web fuerza 'classic' si el guardado deja de estar permitido.
-    TEMPLATE_BASE               =   ('classic', 'perspective', 'duo', 'bloque', 'riso')
-    #Familias por categoría: la variante base de cada una va con
-    #has_design_plus (Estándar) y la variante extra solo con
-    #has_design_advanced (Premium). 'street' (Urbano) ya era plus — es la
-    #variante cruda de Indumentaria y queda en su nivel para no regresionar.
-    TEMPLATE_PLUS               =   ('street', 'promo', 'atelier', 'circuit', 'mercado', 'studio', 'arena', 'calma', 'vitrina')
-    TEMPLATE_ADVANCED           =   ('terminal', 'lookbook', 'shop', 'cobre', 'minimal', 'boutique', 'signature', 'aurora', 'terra', 'lab', 'carta', 'proceso')
+    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 6
+    #habilitados, 2 por nivel: base para todo plan con has_customization,
+    #TEMPLATE_PLUS con has_design_plus (Estándar) y TEMPLATE_ADVANCED con
+    #has_design_advanced (Premium). El viewset descarta del payload un
+    #diseño fuera del nivel del plan y la web fuerza 'classic' si el
+    #guardado deja de estar permitido. Los 20 diseños retirados salieron
+    #del catálogo en la mig. 0049 (las tiendas que los tenían se remapean
+    #al más cercano del mismo nivel); su piel sigue registrada en el
+    #frontend (TEMPLATE_DEFS) como red de seguridad de render.
+    TEMPLATE_BASE               =   ('classic', 'duo')
+    TEMPLATE_PLUS               =   ('calma', 'vitrina')
+    TEMPLATE_ADVANCED           =   ('cobre', 'minimal')
     TEMPLATE_CHOICES            =   [
         (TEMPLATE_CLASSIC,   'Clásico'),
-        ('perspective',      'Perspectiva'),
         ('duo',              'Dúo'),
-        ('bloque',           'Bloque'),
-        ('riso',             'Riso'),
-        ('promo',            'Publicidad'),
-        ('street',           'Urbano'),
-        ('terminal',         'Terminal'),
-        ('lookbook',         'Lookbook'),
-        ('shop',             'Tienda Pro'),
-        ('cobre',            'Cobre'),
-        ('minimal',          'Minimal'),
-        ('boutique',         'Boutique'),
-        ('signature',        'Signature'),
-        ('aurora',           'Aurora'),
-        ('terra',            'Terra'),
-        ('atelier',          'Atelier'),
-        ('circuit',          'Circuit'),
-        ('lab',              'Lab'),
-        ('mercado',          'Mercado'),
-        ('carta',            'Carta'),
-        ('studio',           'Studio'),
-        ('proceso',          'Proceso'),
-        ('arena',            'Arena'),
         ('calma',            'Calma'),
         ('vitrina',          'Vitrina'),
+        ('cobre',            'Cobre'),
+        ('minimal',          'Minimal'),
     ]
+    #Mapa de retirada -> habilitada más cercana del mismo nivel (mig.
+    #0049): cada una preserva algo de la identidad elegida — las base
+    #eran todas diseños con personalidad y van a 'duo' (portada a dos
+    #columnas, más carácter que el catálogo neutro); en Estándar las de
+    #aire editorial/comercial van a 'vitrina' y las de cercanía/servicios
+    #a 'calma'; en Premium las dramáticas/de indumentaria a 'cobre' y las
+    #tipográficas/editoriales a 'minimal'.
+    TEMPLATE_RETIRED_MAP        =   {
+        'perspective': 'duo', 'bloque': 'duo', 'riso': 'duo',
+        'street': 'vitrina', 'promo': 'vitrina', 'atelier': 'vitrina',
+        'circuit': 'vitrina', 'arena': 'vitrina',
+        'mercado': 'calma', 'studio': 'calma',
+        'lookbook': 'cobre', 'shop': 'cobre', 'boutique': 'cobre',
+        'signature': 'cobre', 'aurora': 'cobre',
+        'terminal': 'minimal', 'terra': 'minimal', 'lab': 'minimal',
+        'carta': 'minimal', 'proceso': 'minimal',
+    }
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
     NAME_SIZE_DEFAULT           =   32

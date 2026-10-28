@@ -85,7 +85,7 @@ function theme(t) {
 
 // ---------------------------------------------------------------------------
 // Los 18 looks. `style` = dirección visual (filtro "Estilo"); `rubros` =
-// familias de STORE_TEMPLATE_FAMILIES donde se recomienda; `pageTheme` =
+// categorías de RUBRO_LABELS donde se recomienda; `pageTheme` =
 // modo claro/oscuro que pide (se aplica a la página y al visor).
 // ---------------------------------------------------------------------------
 const PRESETS = [
@@ -112,7 +112,7 @@ const PRESETS = [
   {
     id: 'vidrio-nocturno', name: 'Vidrio nocturno', style: 'Glass oscuro',
     desc: 'Noche profunda con placas de vidrio esmerilado.',
-    tier: 'advanced', template: 'aurora', pageTheme: 'dark',
+    tier: 'advanced', template: 'cobre', pageTheme: 'dark',
     rubros: ['tech', 'gamer', 'general'],
     theme: theme({
       accent: '#38bdf8',
@@ -133,7 +133,7 @@ const PRESETS = [
   {
     id: 'bento', name: 'Bento', style: 'Bento',
     desc: 'Tarjetas redondas que ordenan todo en módulos.',
-    tier: 'plus', template: 'circuit', pageTheme: 'light',
+    tier: 'plus', template: 'vitrina', pageTheme: 'light',
     rubros: ['tech', 'general'],
     theme: theme({
       accent: '#0ea5e9',
@@ -153,7 +153,7 @@ const PRESETS = [
   {
     id: 'neo-brutalista', name: 'Neo-brutal', style: 'Neo-brutalista',
     desc: 'Bordes duros, tinta plana y tipografía que grita.',
-    tier: 'base', template: 'bloque', pageTheme: 'light',
+    tier: 'base', template: 'duo', pageTheme: 'light',
     rubros: ['moda', 'gamer', 'lifestyle'],
     theme: theme({
       accent: '#e11d48',
@@ -173,7 +173,7 @@ const PRESETS = [
   {
     id: 'lujo-serif', name: 'Lujo serif', style: 'Luxury serif',
     desc: 'Noche de espresso, dorado y grabados de autor.',
-    tier: 'advanced', template: 'signature', pageTheme: 'dark',
+    tier: 'advanced', template: 'cobre', pageTheme: 'dark',
     rubros: ['belleza', 'lifestyle', 'food'],
     theme: theme({
       accent: '#c9a24b',
@@ -213,7 +213,7 @@ const PRESETS = [
   {
     id: 'neon-tech', name: 'Neón tech', style: 'Neón tech',
     desc: 'Verde fósforo sobre negro: energía de arena.',
-    tier: 'plus', template: 'arena', pageTheme: 'dark',
+    tier: 'plus', template: 'vitrina', pageTheme: 'dark',
     rubros: ['gamer', 'tech'],
     theme: theme({
       accent: '#00e67a',
@@ -234,7 +234,7 @@ const PRESETS = [
   {
     id: 'terracota', name: 'Terracota', style: 'Terracota artesanal',
     desc: 'Barro, papel crudo y serif cálida de taller.',
-    tier: 'advanced', template: 'terra', pageTheme: 'light',
+    tier: 'advanced', template: 'minimal', pageTheme: 'light',
     rubros: ['hogar', 'food', 'general'],
     theme: theme({
       accent: '#b7512e',
@@ -254,7 +254,7 @@ const PRESETS = [
   {
     id: 'monocromo', name: 'Monocromo', style: 'Monocromo fotográfico',
     desc: 'Blanco y negro puro: la foto hace todo el trabajo.',
-    tier: 'advanced', template: 'lookbook', pageTheme: 'light',
+    tier: 'advanced', template: 'minimal', pageTheme: 'light',
     rubros: ['moda', 'lifestyle', 'general'],
     theme: theme({
       accent: '#18181b',
@@ -274,7 +274,7 @@ const PRESETS = [
   {
     id: 'retail-vibrante', name: 'Retail vibrante', style: 'Retail vibrante',
     desc: 'Góndola cargada: oferta primero, compra rápida.',
-    tier: 'advanced', template: 'shop', pageTheme: 'light',
+    tier: 'advanced', template: 'cobre', pageTheme: 'light',
     rubros: ['ofertas', 'general'],
     theme: theme({
       accent: '#dc2626',
@@ -315,7 +315,7 @@ const PRESETS = [
   {
     id: 'papel-riso', name: 'Papel riso', style: 'Papel/Riso',
     desc: 'Risografía: crema punteado y tintas que se solapan.',
-    tier: 'base', template: 'riso', pageTheme: 'light',
+    tier: 'base', template: 'duo', pageTheme: 'light',
     rubros: ['hogar', 'food', 'general'],
     theme: theme({
       accent: '#3550f5',
@@ -356,7 +356,7 @@ const PRESETS = [
   {
     id: 'gourmet-calido', name: 'Gourmet cálido', style: 'Gourmet cálido',
     desc: 'Menú de autor: madera, crema y apetito.',
-    tier: 'advanced', template: 'carta', pageTheme: 'light',
+    tier: 'advanced', template: 'minimal', pageTheme: 'light',
     rubros: ['food'],
     theme: theme({
       accent: '#9a3412',
@@ -418,7 +418,7 @@ const PRESETS = [
   {
     id: 'urbano-sticker', name: 'Urbano sticker', style: 'Urbano sticker',
     desc: 'Streetwear: titulares XXL y amarillo señal.',
-    tier: 'plus', template: 'street', pageTheme: 'light',
+    tier: 'plus', template: 'vitrina', pageTheme: 'light',
     rubros: ['moda', 'gamer'],
     theme: theme({
       accent: '#eab308',
@@ -438,7 +438,7 @@ const PRESETS = [
   {
     id: 'consola-retro', name: 'Consola retro', style: 'Consola retro',
     desc: 'Fósforo verde y scanlines: terminal viva.',
-    tier: 'advanced', template: 'terminal', pageTheme: 'dark',
+    tier: 'advanced', template: 'minimal', pageTheme: 'dark',
     rubros: ['gamer', 'tech'],
     theme: theme({
       accent: '#4ade80',
@@ -459,8 +459,9 @@ const PRESETS = [
 ]
 
 // ---------------------------------------------------------------------------
-// Familias de rubro (mismas keys que STORE_TEMPLATE_FAMILIES) + detección
-// por palabras del nombre/rubro del negocio y las categorías del catálogo.
+// Taxonomía de rubros de la tienda (filtro de la galería — es propia, no
+// son las familias de diseño) + detección por palabras del nombre del
+// negocio y las categorías del catálogo.
 // ---------------------------------------------------------------------------
 export const RUBRO_LABELS = {
   ofertas: 'Ofertas', gamer: 'Gamer', general: 'Generalista', belleza: 'Belleza',
