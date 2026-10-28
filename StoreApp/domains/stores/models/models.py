@@ -187,6 +187,9 @@ class StoreCustomization(models.Model):
     contact_email               =   models.EmailField(blank = True, verbose_name = 'Email de contacto público')
     show_contact                =   models.BooleanField(default = True, verbose_name = 'Mostrar sección de contacto')
     theme                       =   models.CharField(max_length = 10, choices = THEME_CHOICES, default = THEME_LIGHT, verbose_name = 'Tema')
+    #Modo noche: con theme_toggle=True la web pública muestra un interruptor
+    #claro/oscuro y arranca en `theme` (que sigue siendo el default).
+    theme_toggle                =   models.BooleanField(default = False, verbose_name = 'Modo noche en la web')
     template                    =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_CLASSIC, verbose_name = 'Diseño de la web')
     accent                      =   models.CharField(max_length = 10, choices = ACCENT_CHOICES, default = ACCENT_INDIGO, verbose_name = 'Color de acento')
     #Identidad visual Premium (has_design_advanced; el viewset descarta estos

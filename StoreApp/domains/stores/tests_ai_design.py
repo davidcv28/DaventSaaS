@@ -19,8 +19,9 @@ from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Product
-from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS
-from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage
+from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS, clean_layout_config
+from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage, StudioVersion
+from StoreApp.domains.stores.site_theme import clean_site_theme
 from StoreApp.domains.stores.services import allowed_templates_of
 from StoreApp.domains.stores.services import storage
 from StoreApp.domains.stores.services.ai_design import generate as generate_ai_design
@@ -113,7 +114,7 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/2')
+        self.assertEqual(first.json()['engine'], 'ai-design/3')
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -225,7 +226,7 @@ class AiDesignApplyTests(AiDesignBase):
     def _generate(self, client, payload = None):
         return client.post(AI_URL, payload or {'rubro': 'comercio', 'goals': ['vender_online']}, format = 'json').json()
 
-    def test_apply_writes_only_draft(self):
+    def test_apply_publishes_in_one_step(self):
         store, customization  =   self._store(products = 5)
         client                =   self._client(store)
         data                  =   self._generate(client)
@@ -241,19 +242,22 @@ class AiDesignApplyTests(AiDesignBase):
             template      = published['template'],
             about_text    = 'Texto propio del dueño',
         )
+        versions_before =   StudioVersion.objects.filter(store = store).count()
         response    =   client.post(APPLY_URL, {'seed': data['seed'], 'proposal_id': proposal['id']}, format = 'json')
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['published'])
         customization.refresh_from_db()
-        self.assertEqual(customization.layout_config, published['layout_config'])
-        self.assertEqual(customization.site_theme, published['site_theme'])
-        self.assertEqual(customization.template, published['template'])
-        self.assertEqual(customization.about_text, 'Texto propio del dueño')
+        #Publica en el mismo paso: lo publicado ya tiene el layout nuevo.
+        self.assertEqual(customization.layout_config, customization.layout_config_draft)
+        self.assertEqual(customization.site_theme, customization.site_theme_draft)
+        self.assertEqual(customization.template, proposal['template'])
         self.assertEqual(customization.template_draft, proposal['template'])
-        self.assertTrue(customization.layout_config_draft)
+        self.assertEqual(customization.about_text, 'Texto propio del dueño')
         self.assertEqual(
-            [block['id'] for block in customization.layout_config_draft['landing']['blocks']],
+            [block['id'] for block in customization.layout_config['landing']['blocks']],
             [block['id'] for block in proposal['layout_config']['landing']['blocks']],
         )
+        self.assertEqual(StudioVersion.objects.filter(store = store).count(), versions_before + 1)
 
     def test_apply_fills_only_empty_copy(self):
         store, customization  =   self._store(products = 3)
@@ -298,7 +302,7 @@ class AiDesignV2Tests(AiDesignBase):
     def test_ai_templates_used_when_plan_allows(self):
         store, _    =   self._store()
         _, data     =   self._generate(store)
-        self.assertEqual(data['engine'], 'ai-design/2')
+        self.assertEqual(data['engine'], 'ai-design/3')
         templates   =   [proposal['template'] for proposal in data['proposals']]
         self.assertTrue(any(template in ('ai_lumen', 'ai_pulse') for template in templates))
 
@@ -493,3 +497,130 @@ class AiDesignImageTests(AiDesignBase):
         ]
         self.assertEqual(codes[0], 200)
         self.assertEqual(codes[-1], 429)
+
+
+class AiDesignV3Tests(AiDesignBase):
+    """Ronda 3: elementos solo-IA, color de marca, modo noche, portada con
+    logo, overrides por contenedor y publicación en el mismo apply."""
+
+    def _generate(self, store, payload = None):
+        data    =   {'rubro': 'belleza', 'tone': 'moderno', 'goals': ['dar_confianza']}
+        data.update(payload or {})
+        response    =   self._client(store).post(AI_URL, data, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        return response.json()
+
+    def test_ai_only_blocks_need_ai_design(self):
+        with_ai, _  =   self._store(username = 'con-ai')
+        payload     =   {'goals': ['dar_confianza', 'mostrar_servicios'], 'must_have': ['contact', 'faq', 'offers']}
+        proposals   =   self._generate(with_ai, payload)['proposals']
+        ids_ai      =   {
+            block['id']
+            for proposal in proposals
+            for block in proposal['layout_config']['landing']['blocks']
+        }
+        self.assertTrue(ids_ai & {'aiquote', 'aicheck', 'aigrid', 'aistrip', 'aiband'})
+        #Sin has_ai_design el saneador descarta los bloques ai_only.
+        layout  =   {'landing': {'blocks': [{'id': 'aiquote', 'props': {'text': 'Hola'}}]}}
+        self.assertEqual(clean_layout_config(layout, True), {})
+        self.assertTrue(clean_layout_config(layout, True, True))
+
+    def test_typed_props_are_sanitized(self):
+        layout  =   {'landing': {'blocks': [{
+            'id'        :   'aigrid',
+            'variant'   :   'grid3',
+            'props'     :   {
+                'title' :   'X' * 120,
+                'items' :   [{'icon': 'no-existe', 'title': 'T' * 60, 'text': 't' * 200}]
+                            + [{'title': f'Item {index}'} for index in range(8)],
+            },
+        }]}}
+        clean   =   clean_layout_config(layout, True, True)['landing']['blocks'][0]['props']
+        self.assertEqual(len(clean['title']), 80)
+        self.assertEqual(len(clean['items']), 6)
+        self.assertNotIn('icon', clean['items'][0])
+        self.assertEqual(len(clean['items'][0]['title']), 40)
+        self.assertEqual(len(clean['items'][0]['text']), 90)
+
+    def test_site_theme_blocks_are_closed_catalog(self):
+        clean   =   clean_site_theme(
+            {'blocks': {'hero': {'radius': 'xl', 'align': 'center', 'accent': '#AABBCC'}, 'inventado': {'radius': 'xl'}}},
+            has_advanced = True,
+        )
+        self.assertEqual(clean, {'blocks': {'hero': {'radius': 'xl', 'align': 'center', 'accent': '#aabbcc'}}})
+        from rest_framework import serializers
+        with self.assertRaises(serializers.ValidationError):
+            clean_site_theme({'blocks': {'hero': {'align': 'diagonal'}}}, has_advanced = True)
+        with self.assertRaises(serializers.ValidationError):
+            clean_site_theme({'blocks': {'hero': {'accent': 'rojo'}}}, has_advanced = True)
+        with self.assertRaises(serializers.ValidationError):
+            clean_site_theme({'blocks': {'hero': {'inventado': 'x'}}}, has_advanced = True)
+        with self.assertRaises(serializers.ValidationError):
+            clean_site_theme({'blocks': {f'hero{i}': {'radius': 'xl'} for i in range(13)}}, has_advanced = True)
+        self.assertEqual(clean_site_theme({'blocks': {'hero': {'radius': 'xl'}}}, has_plus = True), {})
+
+    def test_brand_color_sets_accent_with_aa(self):
+        store, _    =   self._store()
+        data        =   self._generate(store, {'brand_color': '#1d4ed8'})
+        from StoreApp.domains.stores.services.ai_design import _contrast_ratio, _palette_from_brand
+        for proposal in data['proposals']:
+            self.assertEqual(proposal['theme_choice']['source'], 'user')
+            accent  =   proposal['theme_choice']['accent']
+            self.assertEqual(proposal['site_theme']['palette']['accent'], accent)
+            self.assertGreaterEqual(_contrast_ratio(accent, proposal['site_theme']['palette']['bg']), 4.5)
+        palette =   _palette_from_brand('#1d4ed8', {'primary': '#000000', 'secondary': '#000000', 'accent': '#000000',
+                                                    'bg': '#fdf6f0', 'surface': '#ffffff', 'text': '#1c1917',
+                                                    'muted': '#78716c', 'border': '#e7ded4'})
+        self.assertEqual(palette['accent'], '#1d4ed8')
+
+    def test_invalid_brand_color_is_ignored(self):
+        store, _    =   self._store()
+        data        =   self._generate(store, {'brand_color': 'no-es-un-color'})
+        for proposal in data['proposals']:
+            self.assertEqual(proposal['theme_choice']['source'], 'ai')
+
+    def test_night_mode_sets_theme_and_toggle(self):
+        store, customization    =   self._store()
+        data                    =   self._generate(store, {'night_mode': {'enabled': True, 'default': 'dark'}})
+        for proposal in data['proposals']:
+            self.assertEqual(proposal['night_mode'], {'enabled': True, 'default': 'dark'})
+            self.assertEqual(proposal['theme'], 'dark')
+            self.assertTrue(proposal['theme_toggle'])
+        response    =   self._client(store).post(
+            APPLY_URL,
+            {'seed': data['seed'], 'proposal_id': data['proposals'][0]['id']},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 200)
+        customization.refresh_from_db()
+        self.assertEqual(customization.theme, 'dark')
+        self.assertTrue(customization.theme_toggle)
+
+    def test_cover_logo_uses_logo_hero_and_solid_background(self):
+        store, customization    =   self._store()
+        customization.logo_key  =   'stores/1/logo.webp'
+        customization.save(update_fields = ['logo_key'])
+        data                    =   self._generate(store, {'cover_choice': 'logo'})
+        for proposal in data['proposals']:
+            self.assertEqual(proposal['cover']['mode'], 'logo')
+            hero    =   next(block for block in proposal['layout_config']['landing']['blocks'] if block['id'] == 'hero')
+            self.assertEqual(hero['variant'], 'logo')
+            self.assertNotEqual(proposal['site_theme']['background']['type'], 'image')
+
+    def test_apply_publishes_ai_layout(self):
+        store, customization    =   self._store()
+        data                    =   self._generate(store, {'goals': ['dar_confianza', 'mostrar_servicios']})
+        proposal                =   data['proposals'][0]
+        response                =   self._client(store).post(
+            APPLY_URL,
+            {'seed': data['seed'], 'proposal_id': proposal['id']},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['published'])
+        customization.refresh_from_db()
+        self.assertEqual(
+            [block['id'] for block in customization.layout_config['landing']['blocks']],
+            [block['id'] for block in proposal['layout_config']['landing']['blocks']],
+        )
+        self.assertTrue(StudioVersion.objects.filter(store = store).exists())

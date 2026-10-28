@@ -30,5 +30,11 @@ export const SP_LANDING_BLOCKS = {
   faq:           defineAsyncComponent(() => import('./BlkFaq.vue')),
   video:         defineAsyncComponent(() => import('./BlkVideo.vue')),
   cta:           defineAsyncComponent(() => import('./BlkCta.vue')),
-  contact:       defineAsyncComponent(() => import('./BlkContact.vue'))
+  contact:       defineAsyncComponent(() => import('./BlkContact.vue')),
+  // Bloques solo-IA (el motor los propone con has_ai_design).
+  aiquote:       defineAsyncComponent(() => import('./BlkAiQuote.vue')),
+  aistrip:       defineAsyncComponent(() => import('./BlkAiStrip.vue')),
+  aicheck:       defineAsyncComponent(() => import('./BlkAiCheck.vue')),
+  aigrid:        defineAsyncComponent(() => import('./BlkAiGrid.vue')),
+  aiband:        defineAsyncComponent(() => import('./BlkAiBand.vue'))
 }

@@ -865,7 +865,8 @@ class StoreViewSet(StoreBaseViewSet):
         customization   =   StoreCustomization.objects.get_or_create(store = store)[0]
         return Response(
             {
-                'Exito'         : 'Aplicamos el diseño a tu borrador. Revisalo y publicalo cuando te guste.',
+                'Exito'         : 'Tu web ya está publicada',
+                'published'     : True,
                 'customization' :   StoreCustomizationSerializer(customization).data,
                 'storage'       :   storage_payload(store, store.user),
             },

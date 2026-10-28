@@ -325,7 +325,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         store                   =   getattr(self.instance, 'store', None) if self.instance is not None else None
         profile                 =   getattr(store, 'user', None)
         has_advanced            =   profile_has_benefit(profile, 'has_design_advanced') if profile is not None else False
-        return clean_layout_config(value, has_advanced)
+        has_ai                  =   profile_has_benefit(profile, 'has_ai_design') if profile is not None else False
+        return clean_layout_config(value, has_advanced, has_ai)
 
     def validate_layout_config_draft(self, value):
         #El borrador del editor de bloques corre la misma whitelist que el

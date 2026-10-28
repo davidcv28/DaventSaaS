@@ -11,7 +11,7 @@ defaults para el render: una tienda sin site_theme se ve idéntica a hoy).
 
 Reglas:
 - Secciones permitidas: palette, containers, typography, buttons,
-  background, motion, mobile — cualquier otra clave de primer nivel o de
+  background, motion, mobile, blocks — cualquier otra clave de primer nivel o de
   sección se rechaza (nada de HTML/CSS libre).
 - palette: hex #RGB/#RRGGBB, se normaliza a #rrggbb minúsculas.
 - enums: coincidencia exacta del catálogo; numéricos con rango;
@@ -39,10 +39,11 @@ guardado, así los valores premium almacenados sobreviven una baja de plan
 (reaparecen al volver).
 
 """
-SITE_THEME_MAX_BYTES    =   4096
+SITE_THEME_MAX_BYTES    =   6144    #+2 KB por la sección `blocks` (12 bloques x 7 claves)
 _BG_VALUE_MAX           =   600
 _FONT_MAX               =   120
 _TRACKING_MAX           =   16
+_SITE_THEME_MAX_BLOCKS  =   12
 
 #=========================================
 # CATÁLOGO CERRADO (espejo de STUDIO_ENUMS del contrato)
@@ -65,6 +66,20 @@ _INTENSITY      =   ('subtle', 'medium', 'bold')
 _NAV            =   ('top', 'bottom', 'drawer')
 _CARD_STYLE     =   ('standard', 'compact', 'overlay')
 _HERO_HEIGHT    =   ('compact', 'tall')
+_BLOCK_ALIGN    =   ('left', 'center', 'right')
+#Sección `blocks`: overrides de estilo por contenedor (id de bloque de la
+#superficie landing). Las claves de bloque se validan contra
+#TEMPLATE_BLOCKS['landing']; lo desconocido se descarta en silencio.
+_BLOCK_STYLE_KEYS       =   ('radius', 'shadow', 'border', 'density', 'surface', 'align', 'accent')
+_BLOCK_STYLE_SPEC       =   {
+    'radius'    :   ('enum', _RADIUS),
+    'shadow'    :   ('enum', _SHADOW),
+    'border'    :   ('enum', _BORDER),
+    'density'   :   ('enum', _DENSITY),
+    'surface'   :   ('enum', _SURFACE),
+    'align'     :   ('enum', _BLOCK_ALIGN),
+    'accent'    :   ('hex',),
+}
 #Estilos del selector: el catálogo cerrado completo de STUDIO_PRESETS
 #(frontend/src/studio/presets/catalog.js). El id solo se guarda si la
 #plantilla del preset entra en el nivel del plan.
@@ -142,6 +157,7 @@ _SECTION_SPECS  =   {
         'palette'   :   ('enum', _STYLE_PALETTES),
     },
     'styleColors'   :   {mode: ('styleSet',) for mode in _STYLE_MODES},
+    'blocks'        :   {},
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
 #resto de las secciones/claves exige has_design_advanced (Premium).
@@ -293,6 +309,42 @@ def _store_image_urls(store):
 #=========================================
 # CLEAN / FILTER / MERGE
 #=========================================
+def _clean_block_styles(content):
+    """
+    Sección `blocks`: {block_id: {radius|shadow|border|density|surface|
+    align|accent}}. Máximo 12 bloques; los ids fuera del catálogo de
+    landing se descartan en silencio; una clave o un valor inválido dentro
+    de un bloque válido se rechaza (400), igual que el resto del tema.
+    """
+    if not isinstance(content, dict):
+        raise serializers.ValidationError('La sección "blocks" debe ser un objeto {bloque: estilos}.')
+    if len(content) > _SITE_THEME_MAX_BLOCKS:
+        raise serializers.ValidationError(f'Podés personalizar hasta {_SITE_THEME_MAX_BLOCKS} bloques.')
+    from .layout_blocks import TEMPLATE_BLOCKS
+    known   =   TEMPLATE_BLOCKS['landing']
+    out     =   {}
+    for block_id, styles in content.items():
+        if block_id not in known:
+            continue
+        if not isinstance(styles, dict):
+            raise serializers.ValidationError(f'Los estilos de "{block_id}" deben ser un objeto.')
+        unknown =   [key for key in styles if key not in _BLOCK_STYLE_KEYS]
+        if unknown:
+            raise serializers.ValidationError(f'Estilo desconocido en "{block_id}": "{unknown[0]}".')
+        clean   =   {}
+        for key, raw in styles.items():
+            kind    =   _BLOCK_STYLE_SPEC[key][0]
+            if kind == 'hex':
+                color   =   _norm_hex(raw)
+                if color is None:
+                    raise serializers.ValidationError(f'"{block_id}.{key}": ingresá un color válido (hex #RRGGBB).')
+                clean[key]  =   color
+            else:
+                clean[key]  =   _v_enum(raw, _BLOCK_STYLE_SPEC[key][1], f'{block_id}.{key}')
+        if clean:
+            out[block_id]   =   clean
+    return out
+
 def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style = False, store = None):
     """
     Valida y sanea el site_theme recibido según el contrato del Studio.
@@ -313,6 +365,15 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
         raise serializers.ValidationError(f'Sección desconocida: "{unknown[0]}".')
     clean       =   {}
     for section, content in value.items():
+        if section == 'blocks':
+            #Overrides por contenedor: toda la sección exige Premium (no
+            #está en SITE_THEME_PLUS_KEYS); sin el flag se descarta entera.
+            if not has_advanced:
+                continue
+            blocks  =   _clean_block_styles(content)
+            if blocks:
+                clean['blocks'] =   blocks
+            continue
         spec    =   _SECTION_SPECS[section]
         if has_advanced:
             allowed =   set(spec)

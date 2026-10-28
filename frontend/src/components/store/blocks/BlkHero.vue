@@ -18,6 +18,9 @@ const props = defineProps({ block: { type: Object, default: null } })
 // 'full'/'compact' siguen con la composición clásica por plantilla.
 const ALT = ['centered', 'split', 'cinema', 'editorial', 'search', 'slides']
 const isAlt = computed(() => ALT.includes(props.block?.variant))
+// Portada 'logo': sin foto de fondo, el logo (o monograma) es la pieza
+// central. Funciona igual en claro y oscuro (no usa overlay de imagen).
+const isLogo = computed(() => props.block?.variant === 'logo')
 
 const ctx = inject('storePage')
 const { slug, custom, shopName, nameFont, initial, location, pageTemplate, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
@@ -200,7 +203,26 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- ===== Presentación (portada de la empresa) ===== -->
-  <BlkHeroAlt v-if="isAlt" :block="block" />
+  <section v-if="isLogo" class="sp-hero-logo">
+    <div class="sp-container sp-hero-logo-inner">
+      <div class="sp-hero-logo-mark" :class="{ 'has-logo': custom.logo }" aria-hidden="true">
+        <img v-if="custom.logo" :src="custom.logo" alt="" fetchpriority="high" />
+        <span v-else class="sp-hero-logo-mono" :style="nameFont">{{ initial }}</span>
+      </div>
+      <p v-reveal class="sp-hero-logo-eyebrow">{{ heroBadge }}</p>
+      <h1 v-reveal="120" class="sp-hero-logo-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">{{ heroTitle }}</h1>
+      <p v-if="custom.description" v-reveal="200" class="sp-hero-logo-sub">{{ custom.description }}</p>
+      <div v-reveal="280" class="sp-hero-logo-ctas">
+        <RouterLink v-if="showCatalog" class="sp-btn sp-hero-btn" :to="catalogTo">Ver catálogo <AppIcon name="arrow-right" :size="16" class="sp-arrow" /></RouterLink>
+        <RouterLink v-if="servicesPage" class="sp-btn" :class="showCatalog ? 'sp-hero-ghost' : 'sp-hero-btn'" :to="servicesTo">Servicios <AppIcon name="wrench" :size="16" /></RouterLink>
+        <a v-if="showContact" class="sp-btn sp-hero-ghost" href="#contacto"><AppIcon name="message-circle" :size="16" /> Contáctanos</a>
+      </div>
+      <ul v-if="heroMeta.length" v-reveal="360" class="sp-hero-logo-meta">
+        <li v-for="m in heroMeta" :key="m.key" :class="m.state ? `sp-open is-${m.state}` : null"><span v-if="m.state" class="sp-live-dot" aria-hidden="true"></span><AppIcon v-else :name="m.icon" :size="14" /> {{ m.text }}</li>
+      </ul>
+    </div>
+  </section>
+  <BlkHeroAlt v-else-if="isAlt" :block="block" />
   <section v-else ref="heroEl" class="sp-hero" :class="{ 'is-compact': block?.variant === 'compact' }">
     <div class="sp-hero-band" :class="{ 'has-cover': cover }">
       <!-- Minimal y Boutique: barra de anuncio (strip editorial del diseño) -->

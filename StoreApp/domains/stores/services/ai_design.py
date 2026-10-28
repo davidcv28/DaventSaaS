@@ -18,6 +18,7 @@ import copy
 import hashlib
 import json
 import random
+import re
 import unicodedata
 from uuid import uuid4
 
@@ -27,8 +28,8 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
 
-from StoreApp.domains.stores.layout_blocks  import TEMPLATE_BLOCKS, clean_layout_config
-from StoreApp.domains.stores.models         import Store, StoreCustomization, StoreGalleryImage
+from StoreApp.domains.stores.layout_blocks  import TEMPLATE_BLOCKS, AI_ICONS, clean_layout_config
+from StoreApp.domains.stores.models         import Store, StoreCustomization, StoreGalleryImage, StudioVersion
 from StoreApp.domains.stores.site_theme     import clean_site_theme
 
 from . import ai_design_copy
@@ -140,6 +141,8 @@ def _facts(store, customization):
         'service_form'  :   bool(customization.service_days or customization.service_slots),
         'compare'       :   stats['products'] >= 4,
         'contact'       :   bool(customization.whatsapp or customization.contact_email or customization.show_location),
+        'logo'          :   bool(customization.logo_key),
+        'cover'         :   bool(customization.cover_key),
     }
     return facts, stats
 
@@ -178,6 +181,72 @@ def _guess_goals(customization, stats):
     return ['dar_confianza', 'conseguir_consultas']
 
 
+#=========================================
+# COLOR DE MARCA (paleta derivada con contraste AA)
+#=========================================
+_HEX6_RE    =   re.compile(r'^#?[0-9a-fA-F]{6}$')
+_HEX3_RE    =   re.compile(r'^#?[0-9a-fA-F]{3}$')
+
+def _norm_hex(raw):
+    if not isinstance(raw, str):
+        return None
+    value   =   raw.strip()
+    if _HEX6_RE.match(value):
+        return '#' + value.lstrip('#').lower()
+    if _HEX3_RE.match(value):
+        return '#' + ''.join(c * 2 for c in value.lstrip('#').lower())
+    return None
+
+def _hex_rgb(value):
+    h   =   value.lstrip('#')
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+def _rgb_hex(rgb):
+    return '#%02x%02x%02x' % tuple(max(0, min(255, int(round(channel)))) for channel in rgb)
+
+def _luminance(value):
+    def channel(raw):
+        s   =   raw / 255
+        return s / 12.92 if s <= 0.03928 else ((s + 0.055) / 1.055) ** 2.4
+    r, g, b =   _hex_rgb(value)
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+def _contrast_ratio(a, b):
+    la, lb  =   _luminance(a), _luminance(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+def _mix(a, b, ratio):
+    """ratio 0 => a, ratio 1 => b."""
+    ra, rb  =   _hex_rgb(a), _hex_rgb(b)
+    return _rgb_hex(tuple(x + (y - x) * ratio for x, y in zip(ra, rb)))
+
+def _ensure_contrast(color, base, target = 4.5):
+    #Contraste AA garantizado: si el color no alcanza sobre la base, se
+    #oscurece (base clara) o se aclara (base oscura) hasta llegar.
+    if _contrast_ratio(color, base) >= target:
+        return color
+    toward  =   '#000000' if _luminance(base) > 0.4 else '#ffffff'
+    for step in range(1, 21):
+        candidate   =   _mix(color, toward, step / 20)
+        if _contrast_ratio(candidate, base) >= target:
+            return candidate
+    return toward
+
+def _palette_from_brand(accent, palette):
+    """
+    Paleta derivada del color de marca elegido por el dueño:
+    accent = el color (ajustado a AA sobre el fondo), primary = variante
+    oscura, secondary = tinta del look, muted/border = mezclas con el fondo.
+    """
+    bg          =   palette['bg']
+    accent      =   _ensure_contrast(accent, bg)
+    primary     =   _ensure_contrast(_mix(accent, '#000000', 0.25), bg)
+    secondary   =   palette['text']
+    muted       =   _ensure_contrast(_mix(accent, bg, 0.55), bg)
+    border      =   _mix(accent, bg, 0.75)
+    return {**palette, 'accent': accent, 'primary': primary, 'secondary': secondary, 'muted': muted, 'border': border}
+
+
 def _answers(store, customization, payload, stats):
     """Normaliza la entrevista: lo que no vino (o no es válido) se deduce."""
     payload     =   payload if isinstance(payload, dict) else {}
@@ -191,12 +260,28 @@ def _answers(store, customization, payload, stats):
     if not goals:
         goals   =   _guess_goals(customization, stats)
     must_have   =   [block for block in (payload.get('must_have') or []) if block in TEMPLATE_BLOCKS['landing']]
+    #Color de marca: un valor inválido se ignora (la IA elige), nunca 400.
+    brand_color =   _norm_hex(payload.get('brand_color')) or ''
+    night_raw   =   payload.get('night_mode') if isinstance(payload.get('night_mode'), dict) else {}
+    night_default = night_raw.get('default')
+    cover_choice  =   payload.get('cover_choice')
+    if cover_choice not in ('foto', 'logo', 'auto'):
+        cover_choice    =   'auto'
+    use_icons   =   payload.get('use_icons')
     return {
-        'rubro'     :   rubro,
-        'tone'      :   tone,
-        'goals'     :   goals,
-        'must_have' :   must_have,
-        'audience'  :   str(payload.get('audience') or '').strip()[:120],
+        'rubro'         :   rubro,
+        'tone'          :   tone,
+        'goals'         :   goals,
+        'must_have'     :   must_have,
+        'audience'      :   str(payload.get('audience') or '').strip()[:120],
+        'brand_color'   :   brand_color,
+        'night_mode'    :   {
+            'enabled'   :   night_raw.get('enabled') is True,
+            'default'   :   night_default if night_default in ('light', 'dark') else '',
+        },
+        'cover_choice'  :   cover_choice,
+        #None = lo deduce el motor (rubro visual => con íconos).
+        'use_icons'     :   use_icons if isinstance(use_icons, bool) else None,
     }
 
 
@@ -409,6 +494,114 @@ def _layout(store, facts, answers, rng, shift, pattern = None):
 
 
 #=========================================
+# ELEMENTOS SOLO-IA (bloques nuevos según la entrevista)
+#=========================================
+_ELEMENT_ICONS  =   ('sparkles', 'star', 'heart', 'shield-check', 'clock', 'award')
+
+
+def _element_props(block_id, customization, facts, use_icons):
+    """Contenido real para los bloques nuevos (nunca inventa datos)."""
+    if block_id == 'aiquote':
+        row =   next((item for item in (customization.testimonials or []) if isinstance(item, dict) and str(item.get('text') or '').strip()), None)
+        if row is None:
+            return {}
+        return {
+            'text'      :   str(row.get('text')).strip()[:160],
+            'author'    :   str(row.get('name') or row.get('author') or '').strip()[:40],
+        }
+    if block_id == 'aigrid':
+        items   =   []
+        for index, row in enumerate((customization.services or [])[:6]):
+            if not isinstance(row, dict):
+                continue
+            title   =   str(row.get('title') or row.get('name') or '').strip()[:40]
+            text    =   str(row.get('text') or row.get('desc') or '').strip()[:90]
+            if not (title or text):
+                continue
+            item    =   {'title': title} if title else {}
+            if use_icons:
+                icon        =   str(row.get('icon') or '')
+                item['icon'] =   icon if icon in AI_ICONS else _ELEMENT_ICONS[index % len(_ELEMENT_ICONS)]
+            if text:
+                item['text']    =   text
+            items.append(item)
+        return {'title': 'Lo que hacemos', 'items': items} if items else {}
+    if block_id == 'aicheck':
+        items   =   []
+        for row in (customization.benefits or [])[:6]:
+            if not isinstance(row, dict):
+                continue
+            text    =   str(row.get('text') or row.get('title') or row.get('name') or '').strip()[:90]
+            if text:
+                items.append({'text': text})
+        return {'title': 'Lo que nos diferencia', 'items': items} if items else {}
+    if block_id == 'aiband' and facts.get('offers'):
+        return {'title': 'Ofertas vigentes', 'text': 'Aprovechá los precios de esta semana.', 'label': 'Ver ofertas'}
+    if block_id == 'aistrip':
+        items   =   []
+        if customization.whatsapp:
+            items.append({'icon': 'phone', 'label': 'Escribinos por WhatsApp'})
+        if customization.show_location:
+            items.append({'icon': 'map-pin', 'label': 'Estamos cerca'})
+        if customization.service_days or customization.service_slots:
+            items.append({'icon': 'clock', 'label': 'Con turno previo'})
+        return {'items': items} if len(items) >= 2 else {}
+    return {}
+
+
+def _add_elements(layout, customization, facts, answers, use_icons, has_ai):
+    """
+    Reglas de elementos (documentadas en ai_design_recipes.AI_ELEMENT_ORDER):
+    dar_confianza => aiquote; must_have precios/garantías => aicheck;
+    mostrar_servicios => aigrid; vender_online con ofertas => aiband; 2+
+    datos de contacto en must_have => aistrip. Máximo 3, nunca duplica ids
+    ni pisa un bloque existente. Sin íconos (use_icons=False) no se suman
+    aigrid/aistrip.
+    """
+    if not has_ai:
+        return layout
+    goal    =   answers['goals'][0]
+    must    =   set(answers['must_have'])
+    picked  =   []
+    if goal == 'dar_confianza':
+        picked.append('aiquote')
+    if must & {'offers', 'benefits'}:
+        picked.append('aicheck')
+    if goal == 'mostrar_servicios':
+        picked.append('aigrid')
+    if goal == 'vender_online' and facts.get('offers'):
+        picked.append('aiband')
+    if len(must & {'contact', 'faq', 'stats'}) >= 2:
+        picked.append('aistrip')
+    if not use_icons:
+        picked  =   [block_id for block_id in picked if block_id not in ('aigrid', 'aistrip')]
+    picked  =   [block_id for block_id in R.AI_ELEMENT_ORDER if block_id in picked][:R.AI_ELEMENT_MAX]
+    landing =   layout['landing']['blocks']
+    for block_id in picked:
+        if block_id in {block['id'] for block in landing}:
+            continue
+        block   =   {'id': block_id, 'enabled': True, 'variant': TEMPLATE_BLOCKS['landing'][block_id]['variants'][0]}
+        props   =   _element_props(block_id, customization, facts, use_icons)
+        if props:
+            block['props']  =   props
+        anchor  =   R.AI_ELEMENT_ANCHORS.get(block_id)
+        ids     =   [item['id'] for item in landing]
+        if anchor in ids:
+            index   =   ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
+        else:
+            index   =   len(landing)
+            for tail in ('cta', 'contact'):
+                if tail in ids:
+                    index   =   min(index, ids.index(tail))
+        landing.insert(index, block)
+    landing =   _enforce_hierarchy(landing)
+    for index, block in enumerate(landing):
+        block['order']  =   index
+    layout['landing']['blocks'] =   landing
+    return layout
+
+
+#=========================================
 # LOOK (site_theme parcial)
 #=========================================
 def _theme(answers, rng, shift, template = None):
@@ -419,11 +612,68 @@ def _theme(answers, rng, shift, template = None):
     #El tono ajusta energía (curvas, aire, movimiento), no la identidad.
     for section, values in R.TONE_TWEAKS[answers['tone']].items():
         theme.setdefault(section, {}).update(values)
-    accents =   R.ACCENTS.get(look_id) or (theme['palette']['accent'],)
-    accent  =   accents[(shift + rng.randrange(len(accents))) % len(accents)]
-    theme['palette']['accent']  =   accent
-    theme['palette']['primary'] =   accent
-    return theme
+    if answers.get('brand_color'):
+        #El color del dueño manda: la paleta se deriva de él y la propuesta
+        #lo declara como elección del usuario.
+        theme['palette']    =   _palette_from_brand(answers['brand_color'], theme['palette'])
+        choice              =   {'source': 'user', 'accent': theme['palette']['accent']}
+    else:
+        accents =   R.ACCENTS.get(look_id) or (theme['palette']['accent'],)
+        accent  =   accents[(shift + rng.randrange(len(accents))) % len(accents)]
+        theme['palette']['accent']  =   accent
+        theme['palette']['primary'] =   accent
+        choice              =   {'source': 'ai', 'accent': accent}
+    return theme, choice
+
+
+def _resolve_night(answers, theme, template):
+    """
+    Modo noche: con enabled=True la web arranca en el default elegido y
+    muestra el interruptor (theme_toggle=True); sin la respuesta el
+    interruptor queda apagado y `theme` sigue el look (oscuro si el fondo
+    de la paleta es oscuro). Devuelve (night_mode, theme, theme_toggle).
+    """
+    look_default    =   'dark' if _luminance(theme['palette']['bg']) < 0.4 else 'light'
+    raw             =   answers.get('night_mode') or {}
+    default         =   raw.get('default') or look_default
+    if raw.get('enabled'):
+        return {'enabled': True, 'default': default}, default, True
+    return {'enabled': False, 'default': default}, look_default, False
+
+
+def _cover_for(answers, facts):
+    """Logo o foto de portada: el pedido explícito manda; en 'auto' el
+    logo reemplaza a la portada solo si no hay foto cargada."""
+    has_logo    =   bool(facts.get('logo'))
+    choice      =   answers.get('cover_choice')
+    if choice == 'logo' and has_logo:
+        return {'mode': 'logo', 'reason': 'Tu logo ya es tu mejor portada: la web abre con la marca, sin foto.'}
+    if choice == 'auto' and has_logo and not facts.get('cover'):
+        return {'mode': 'logo', 'reason': 'No hay foto de portada y sí logo: la marca abre la web.'}
+    return {'mode': 'photo', 'reason': 'La portada va con foto para mostrar el local o el trabajo.'}
+
+
+def _block_styles(template, theme, layout):
+    """
+    Overrides "pro" por contenedor del diseño de IA: solo bloques que están
+    en el layout y solo claves del catálogo. `accent` se resuelve con la
+    paleta final (las recetas lo dejan en None).
+    """
+    styles  =   R.AI_BLOCK_STYLES.get(template) or {}
+    present =   {block['id'] for block in layout['landing']['blocks'] if block.get('enabled')}
+    out     =   {}
+    for block_id, values in styles.items():
+        if block_id not in present:
+            continue
+        clean   =   {}
+        for key, value in values.items():
+            if value is None and key == 'accent':
+                value   =   theme['palette']['accent']
+            if value is not None:
+                clean[key]  =   value
+        if clean:
+            out[block_id]   =   clean
+    return out
 
 
 #=========================================
@@ -509,12 +759,18 @@ def _proposal_count(allowed, facts):
     return 2
 
 
-def _build(store, customization, answers, seed, has_advanced, allowed, facts, stats):
+def _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai = False):
     templates       =   _score_templates(facts, stats, answers, allowed)
     if not templates:
         templates   =   [StoreCustomization.TEMPLATE_CLASSIC]
     rng             =   random.Random(seed)
     count           =   _proposal_count(allowed, facts)
+    use_icons       =   answers.get('use_icons')
+    if use_icons is None:
+        #Sin respuesta, el rubro decide: las webs de vidriera llevan íconos.
+        use_icons   =   answers['rubro'] in R.VISUAL_RUBROS
+    has_plus        =   profile_has_benefit(store.user, 'has_design_plus')
+    has_style       =   profile_has_benefit(store.user, 'has_customization')
     #Con los ai_* habilitados, al menos una propuesta los usa: si el puntaje
     #no los dejó arriba, la segunda propuesta pasa a ser la mejor de IA
     #(siempre dentro de la whitelist del plan).
@@ -531,19 +787,47 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         pattern     =   _pattern_for(template, answers, shift)
         for attempt in range(4):
             layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
+            layout  =   _add_elements(layout, customization, facts, answers, use_icons, has_ai)
             signature = (template, tuple(block['id'] for block in layout['landing']['blocks']))
             if signature not in signatures:
                 break
         signatures.add(signature)
-        theme   =   _theme(answers, rng, shift + attempt, template)
+        cover   =   _cover_for(answers, facts)
+        if cover['mode'] == 'logo':
+            for block in layout['landing']['blocks']:
+                if block['id'] == 'hero':
+                    block['variant']    =   'logo'
+        theme, choice   =   _theme(answers, rng, shift + attempt, template)
+        if cover['mode'] == 'logo':
+            #Con el logo de portada el fondo nunca apunta a una imagen: el
+            #hero se resuelve con color sólido.
+            background  =   dict(theme.get('background') or {})
+            background['type']  =   'solid'
+            background.pop('value', None)
+            theme['background'] =   background
+        block_styles    =   _block_styles(template, theme, layout)
+        if block_styles:
+            theme['blocks'] =   block_styles
+        night, theme_mode, theme_toggle =   _resolve_night(answers, theme, template)
         text    =   ai_design_copy.build(store, customization, answers['rubro'], answers['tone'], facts, stats, rng)
         proposals.append({
             'id'            :   f'p{index + 1}',
             'label'         :   (pattern['label'] if pattern else R.GOAL_RECIPES[answers['goals'][0]]['labels'][index % 3])[:32],
             'why'           :   _why(answers, template, index, pattern),
             'template'      :   template,
-            'site_theme'    :   theme,
-            'layout_config' :   clean_layout_config(layout, has_advanced),
+            'site_theme'    :   clean_site_theme(
+                theme,
+                has_plus        =   has_plus,
+                has_advanced    =   has_advanced,
+                has_style       =   has_style,
+                store           =   store,
+            ),
+            'layout_config' :   clean_layout_config(layout, has_advanced, has_ai),
+            'theme_choice'  :   choice,
+            'night_mode'    :   night,
+            'cover'         :   cover,
+            'theme'         :   theme_mode,
+            'theme_toggle'  :   theme_toggle,
             'copy'          :   text,
             'notes'         :   _notes(facts, stats, answers, template, has_advanced),
             'copy_draft'    :   ai_design_copy.draft_business_fields(store, customization, answers['rubro'], answers['tone'], facts, stats, rng),
@@ -572,15 +856,16 @@ def _prepare(store, payload):
     answers         =   _answers(store, customization, payload, stats)
     allowed         =   allowed_templates_of(store.user)
     has_advanced    =   profile_has_benefit(store.user, 'has_design_advanced')
-    return customization, answers, allowed, has_advanced
+    has_ai          =   profile_has_benefit(store.user, 'has_ai_design')
+    return customization, answers, allowed, has_advanced, has_ai
 
 
 def generate(store, payload):
     """2-3 propuestas de web completa para la entrevista del dueño."""
-    customization, answers, allowed, has_advanced =   _prepare(store, payload)
+    customization, answers, allowed, has_advanced, has_ai =   _prepare(store, payload)
     facts, stats =   _facts(store, customization)
     seed    =   _base_seed(store, answers) + _request_seed(payload)
-    result  =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats)
+    result  =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai)
     #Guardamos las respuestas con la semilla: apply recalcula con el MISMO
     #motor y las mismas respuestas (nunca confía en un layout del cliente).
     cache.set(_cache_key(store, seed), answers, CACHE_TTL)
@@ -677,41 +962,62 @@ def _apply_draft(customization, draft):
     return written
 
 
+def _publish(customization, store):
+    """
+    Publica el borrador en el mismo paso (misma lógica que
+    customization/publish del Studio): snapshot en StudioVersion y
+    poda del historial a MAX_PER_STORE.
+    """
+    customization.layout_config    =   copy.deepcopy(customization.layout_config_draft) or {}
+    customization.site_theme       =   copy.deepcopy(customization.site_theme_draft) or {}
+    if customization.template_draft in allowed_templates_of(store.user):
+        customization.template     =   customization.template_draft
+    customization.template_draft   =   customization.template
+    customization.save(update_fields = ['layout_config', 'site_theme', 'template', 'template_draft', 'updated_at'])
+    StudioVersion.objects.create(
+        store       =   store,
+        snapshot    =   {
+            'template'      :   customization.template,
+            'layout_config' :   customization.layout_config,
+            'site_theme'    :   customization.site_theme,
+        },
+        note        =   'Diseño con IA',
+    )
+    stale   =   list(StudioVersion.objects.filter(store = store).values_list('pk', flat = True)[StudioVersion.MAX_PER_STORE:])
+    if stale:
+        StudioVersion.objects.filter(pk__in = stale).delete()
+
+
 def apply(store, seed, proposal_id, autofill = False):
     """
-    Recalcula la propuesta con el mismo motor y la escribe en el BORRADOR.
-    Solo toca layout_config_draft, site_theme_draft, template_draft y los
-    campos de copy que estén VACÍOS — nunca lo publicado ni los datos de
-    negocio que ya cargó el dueño. Con autofill=True suma el copy_draft a
-    los datos de negocio vacíos (about, misión, FAQs, servicios, pasos,
-    anuncios), también sin pisar nada.
+    Recalcula la propuesta con el mismo motor, la escribe en el BORRADOR
+    (layout_config_draft, site_theme_draft, template_draft, theme,
+    theme_toggle) y PUBLICA en el mismo paso. El copy solo rellena campos
+    VACÍOS — nunca pisa datos de negocio que ya cargó el dueño. Con
+    autofill=True suma el copy_draft a los campos vacíos (about, misión,
+    FAQs, servicios, pasos, anuncios), también sin pisar nada.
     """
     try:
         seed    =   int(seed)
     except (TypeError, ValueError):
         raise AiDesignError('Falta la semilla de la propuesta: generá las propuestas de nuevo.')
-    customization, answers, allowed, has_advanced =   _prepare(store, cache.get(_cache_key(store, seed)) or {})
+    customization, answers, allowed, has_advanced, has_ai =   _prepare(store, cache.get(_cache_key(store, seed)) or {})
     facts, stats =   _facts(store, customization)
-    built       =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats)
+    built       =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai)
     proposal    =   next((item for item in built['proposals'] if item['id'] == proposal_id), None)
     if proposal is None:
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
 
     layout      =   _apply_titles(copy.deepcopy(proposal['layout_config']), answers['rubro'])
-    theme       =   clean_site_theme(
-        proposal['site_theme'],
-        has_plus        =   profile_has_benefit(store.user, 'has_design_plus'),
-        has_advanced    =   has_advanced,
-        has_style       =   profile_has_benefit(store.user, 'has_customization'),
-        store           =   store,
-    )
     #La plantilla del borrador nunca sale de la whitelist del plan.
     template    =   proposal['template'] if proposal['template'] in allowed else customization.template
 
-    updated     =   ['layout_config_draft', 'site_theme_draft', 'template_draft', 'updated_at']
-    customization.layout_config_draft   =   clean_layout_config(layout, has_advanced)
-    customization.site_theme_draft      =   theme
+    updated     =   ['layout_config_draft', 'site_theme_draft', 'template_draft', 'theme', 'theme_toggle', 'updated_at']
+    customization.layout_config_draft   =   clean_layout_config(layout, has_advanced, has_ai)
+    customization.site_theme_draft      =   copy.deepcopy(proposal['site_theme'])
     customization.template_draft        =   template
+    customization.theme                 =   proposal.get('theme') or customization.theme
+    customization.theme_toggle          =   bool(proposal.get('theme_toggle'))
     for field, value in proposal['copy'].items():
         #El copy solo rellena lo vacío: lo que el dueño ya escribió manda.
         if value and not getattr(customization, field):
@@ -720,6 +1026,8 @@ def apply(store, seed, proposal_id, autofill = False):
     if autofill:
         updated.extend(_apply_draft(customization, proposal.get('copy_draft') or {}))
     customization.save(update_fields = list(dict.fromkeys(updated)))
+    _publish(customization, store)
+    return customization
 
 
 #=========================================

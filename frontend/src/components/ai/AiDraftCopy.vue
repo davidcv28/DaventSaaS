@@ -26,7 +26,7 @@ const hasAny = computed(() => Boolean(about.value || mission.value || faqs.value
       </div>
       <label class="aidc-toggle">
         <input type="checkbox" :checked="modelValue" @change="emit('update:modelValue', $event.target.checked)" />
-        <span>Usar estos textos</span>
+        <span>Usar los textos sugeridos</span>
       </label>
     </div>
 

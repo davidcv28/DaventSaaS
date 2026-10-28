@@ -11,6 +11,8 @@
 //   del PATCH sin el beneficio; el editor lo muestra bloqueado).
 // locked: bloque estructural — el editor no permite apagarlo (la grilla
 //   del catálogo, el selector de servicios).
+// aiOnly: bloque que solo propone el motor de IA (has_ai_design); el
+//   editor lo oculta sin el beneficio y el backend lo descarta.
 // variants: catálogo cerrado por bloque; la primera es la default.
 // variantTiers: nivel de plan que pide una variante por los datos que
 //   consume ('plus' | 'advanced') — anotación del contrato; el backend
@@ -36,7 +38,7 @@ const TITLE = { title: 80 }
 // bloque se arma solo (portada, grilla, filtros…).
 export const TEMPLATE_BLOCKS = {
   landing: {
-    hero:         { icon: 'panel-top', label: 'Portada',              variants: { full: 'Completa', compact: 'Compacta', centered: 'Centrada', split: 'Imagen y texto', cinema: 'Video a pantalla completa', editorial: 'Editorial', search: 'Con buscador', slides: 'Carrusel de fotos' }, variantTiers: { cinema: 'plus', slides: 'advanced' }, desc: 'El encabezado de tu web: nombre, logo, titular y botones de acceso.', edit: 'design' },
+    hero:         { icon: 'panel-top', label: 'Portada',              variants: { full: 'Completa', compact: 'Compacta', centered: 'Centrada', split: 'Imagen y texto', cinema: 'Video a pantalla completa', editorial: 'Editorial', search: 'Con buscador', slides: 'Carrusel de fotos', logo: 'Logo' }, variantTiers: { cinema: 'plus', slides: 'advanced' }, desc: 'El encabezado de tu web: nombre, logo, titular y botones de acceso.', edit: 'design' },
     announcements:{ icon: 'megaphone', label: 'Cinta de anuncios',    variants: { marquee: 'Marquesina', static: 'Fija' }, desc: 'Una franja con avisos que corre bajo la portada.', edit: 'company' },
     highlights:   { icon: 'tag', label: 'Etiquetas destacadas', desc: 'Etiquetas con tu WhatsApp y tus horarios, pegadas a la portada.', edit: 'design' },
     categories:   { icon: 'layout-grid', label: 'Departamentos',        variants: { row: 'En fila', rail: 'Carrusel' }, props: TITLE, desc: 'Las categorías de tu catálogo con foto y conteo de productos.', edit: 'catalogs' },
@@ -57,6 +59,15 @@ export const TEMPLATE_BLOCKS = {
     steps:        { icon: 'list-ordered', label: 'Cómo funciona',        props: TITLE, desc: 'Los pasos para comprar o encargar.' },
     compare:      { icon: 'columns-2', label: 'Comparativa',          desc: 'Una tabla para comparar opciones lado a lado.' },
     cta:          { icon: 'zap', label: 'Llamado a la acción',  variants: { card: 'Tarjeta', band: 'Banda' }, props: { title: 120 }, desc: 'La banda final con tu mensaje y el botón a WhatsApp.', edit: 'company' },
+    // Bloques SOLO-IA (surface landing): los propone el motor "Diseñar con
+    // IA" y el backend los descarta sin has_ai_design. aiOnly = el editor
+    // los muestra solo con ese beneficio; el render público no los filtra
+    // (sin props no pintan nada).
+    aiquote:      { icon: 'quote', label: 'Frase destacada',      variants: { centered: 'Centrada', split: 'Con línea de acento' }, props: { text: 160, author: 40 }, aiOnly: true, desc: 'Una frase del negocio o de un cliente, en grande.' },
+    aistrip:      { icon: 'sparkles', label: 'Banda de sellos',    variants: { band: 'Banda', cards: 'Tarjetas' }, props: { items: { icon: 32, label: 40 }, max: 4 }, aiOnly: true, desc: 'Una franja con 2 a 4 sellos: envíos, garantía, atención.' },
+    aicheck:      { icon: 'check-circle', label: 'Checklist',     variants: { cards: 'Tarjetas', list: 'Lista' }, props: { title: 80, items: { text: 90 }, max: 6 }, aiOnly: true, desc: 'Una lista de puntos a favor con tilde de acento.' },
+    aigrid:       { icon: 'layout-grid', label: 'Grilla de íconos', variants: { grid2: '2 columnas', grid3: '3 columnas', grid4: '4 columnas' }, props: { title: 80, items: { icon: 32, title: 40, text: 90 }, max: 6 }, aiOnly: true, desc: 'Una grilla de íconos con título y texto corto.' },
+    aiband:       { icon: 'megaphone', label: 'Banda intermedia',  variants: { band: 'Banda', card: 'Tarjeta' }, props: { title: 80, text: 160, label: 40 }, aiOnly: true, desc: 'Una banda de acento con un botón, entre dos secciones.' },
     contact:      { icon: 'mail', label: 'Contacto',             variants: { card: 'Tarjeta', map: 'Mapa y horarios' }, props: TITLE, desc: 'El formulario que te llega al email, con mapa y redes.', edit: 'design' }
   },
   catalog: {

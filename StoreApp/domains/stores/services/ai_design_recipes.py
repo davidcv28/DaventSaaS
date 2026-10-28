@@ -9,7 +9,7 @@
 #para el texto. Nada de acá llega al cliente sin pasar por
 #clean_layout_config y por la whitelist de plantillas del plan.
 
-ENGINE_VERSION              =   'ai-design/2'
+ENGINE_VERSION              =   'ai-design/3'
 
 TONES                       =   ('calido', 'serio', 'moderno', 'audaz')
 DEFAULT_TONE                =   'moderno'
@@ -218,6 +218,44 @@ TEMPLATE_GOAL_AFFINITY      =   {
 #  ai_pulse -> editorial cinético, tipografía XL y grilla desplazada.
 AI_TEMPLATES                =   ('ai_lumen', 'ai_pulse')
 AI_LOOKS                    =   {'ai_lumen': 'lumen', 'ai_pulse': 'pulse'}
+
+#Overrides de estilo por contenedor (site_theme.blocks) que acompañan a
+#cada diseño de IA: solo claves del catálogo de site_theme (radius, shadow,
+#border, density, surface, align, accent). El motor filtra además a los
+#bloques que realmente están en el layout y resuelve `accent` con la
+#paleta final (por eso el valor de acá es None).
+AI_BLOCK_STYLES             =   {
+    'ai_lumen': {
+        'hero':     {'radius': 'xl', 'surface': 'glass', 'align': 'center', 'density': 'spacious'},
+        'stats':    {'surface': 'glass'},
+        'aigrid':   {'surface': 'outlined'},
+        'aiquote':  {'align': 'center'},
+        'aiband':   {'surface': 'glass', 'accent': None},
+    },
+    'ai_pulse': {
+        'hero':     {'radius': 'none', 'align': 'left', 'density': 'compact'},
+        'aigrid':   {'surface': 'flat', 'align': 'left'},
+        'aicheck':  {'surface': 'outlined'},
+        'aiband':   {'accent': None, 'border': 'bold'},
+    },
+}
+
+#Bloques que suman los elementos solo-IA según la entrevista (reglas del
+#motor v3): cada uno aporta como máximo 1 bloque y el total no pasa de 3.
+#  aiquote <- objetivo dar_confianza (cita/testimonio destacado)
+#  aicheck <- must_have 'offers' (precios) o 'benefits' (garantías)
+#  aigrid  <- objetivo mostrar_servicios
+#  aiband  <- vender_online con ofertas reales
+#  aistrip <- 2+ datos de contacto en must_have (contact/faq/stats)
+AI_ELEMENT_ORDER            =   ('aiquote', 'aicheck', 'aigrid', 'aiband', 'aistrip')
+AI_ELEMENT_ANCHORS          =   {
+    'aiquote':  'testimonials',
+    'aicheck':  'benefits',
+    'aigrid':   'services',
+    'aiband':   'offers',
+    'aistrip':  'hero',
+}
+AI_ELEMENT_MAX              =   3
 
 #Rubros donde la web ES la vidriera: la libertad visual de los ai_* suma.
 VISUAL_RUBROS               =   frozenset({'belleza', 'arte', 'turismo', 'gastronomia', 'indumentaria', 'construccion', 'mascotas'})

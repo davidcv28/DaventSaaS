@@ -18,8 +18,12 @@
 #`variants`: catálogo cerrado de variantes del bloque; una variante
 #desconocida se descarta y el bloque queda en su variante default (la
 #primera declarada).
-#`props`: campos de texto propios del bloque (hoy solo 'title', override
-#del título de la sección); se sanitizan a texto plano acotado.
+#`props`: campos propios del bloque. Un entero es un texto plano con ese
+#tope; una tupla ('icon_list'|'text_list'|'icon_cards', max) es una lista
+#tipada de items (también texto plano, iconos de AI_ICONS). Todo se
+#sanitiza y se recorta: nunca HTML ni CSS libre.
+#`ai_only`: bloque exclusivo de "Diseñar con IA" — se descarta sin el
+#beneficio has_ai_design (mismo patrón fail-closed que `premium`).
 
 import json
 import re
@@ -32,12 +36,26 @@ LAYOUT_MAX_BYTES            =   8192
 LAYOUT_MAX_BLOCKS           =   24
 LAYOUT_MAX_PROPS            =   4
 LAYOUT_PROP_MAX             =   80
+LAYOUT_ITEM_TITLE_MAX       =   40
+LAYOUT_ITEM_TEXT_MAX        =   90
+LAYOUT_ITEM_LABEL_MAX       =   40
+
+#Catálogo cerrado de iconos de los bloques solo-IA (Lucide, ISC — el
+#frontend los bundlea local). Un icono fuera de la lista se descarta.
+AI_ICONS                    =   frozenset({
+    'coffee', 'scissors', 'heart', 'star', 'truck', 'clock', 'map-pin', 'phone',
+    'message-circle', 'mail', 'package', 'tag', 'percent', 'credit-card', 'gift',
+    'users', 'building-2', 'home', 'wrench', 'hammer', 'monitor', 'smartphone',
+    'camera', 'images', 'music', 'book-open', 'graduation-cap', 'paw-print',
+    'dumbbell', 'leaf', 'flower', 'sun', 'moon', 'sparkles', 'shield-check',
+    'check-circle', 'award', 'badge-check', 'calendar', 'quote',
+})
 
 _TITLE_PROPS                =   {'title': LAYOUT_PROP_MAX}
 
 TEMPLATE_BLOCKS             =   {
     'landing': {
-        'hero':            {'label': 'Portada',                'variants': ('full', 'compact', 'centered', 'split', 'cinema', 'editorial', 'search', 'slides')},
+        'hero':            {'label': 'Portada',                'variants': ('full', 'compact', 'centered', 'split', 'cinema', 'editorial', 'search', 'slides', 'logo')},
         'announcements':   {'label': 'Cinta de anuncios',      'variants': ('marquee', 'static')},
         'highlights':      {'label': 'Etiquetas destacadas'},
         'categories':      {'label': 'Departamentos',          'variants': ('row', 'rail'), 'props': _TITLE_PROPS},
@@ -59,6 +77,13 @@ TEMPLATE_BLOCKS             =   {
         'compare':         {'label': 'Comparativa'},
         'cta':             {'label': 'Llamado a la acción',    'variants': ('card', 'band'), 'props': {'title': 120}},
         'contact':         {'label': 'Contacto',               'variants': ('card', 'map'), 'props': _TITLE_PROPS},
+        #Bloques exclusivos de "Diseñar con IA" (has_ai_design): suman
+        #elementos de contenido que el editor manual no ofrece.
+        'aiquote':         {'label': 'Cita destacada',         'variants': ('centered', 'split'), 'props': {'text': 160, 'author': 40}, 'ai_only': True},
+        'aistrip':         {'label': 'Datos rápidos',          'variants': ('band', 'cards'), 'props': {'items': ('icon_list', 4)}, 'ai_only': True},
+        'aicheck':         {'label': 'Lista de verificación',  'variants': ('cards', 'list'), 'props': {'title': LAYOUT_PROP_MAX, 'items': ('text_list', 6)}, 'ai_only': True},
+        'aigrid':          {'label': 'Grilla de servicios',    'variants': ('grid2', 'grid3', 'grid4'), 'props': {'title': LAYOUT_PROP_MAX, 'items': ('icon_cards', 6)}, 'ai_only': True},
+        'aiband':          {'label': 'Banda destacada',        'variants': ('band', 'card'), 'props': {'title': LAYOUT_PROP_MAX, 'text': 160, 'label': 40}, 'ai_only': True},
     },
     'catalog': {
         'note':            {'label': 'Aviso del catálogo'},
@@ -85,6 +110,65 @@ def _clean_text(raw, max_len):
     text                    =   strip_tags(str(raw or ''))
     return _WS_RUN.sub(' ', text).strip()[:max_len]
 
+def _clean_icon(raw):
+    icon                    =   str(raw or '').strip().lower()
+    return icon if icon in AI_ICONS else None
+
+def _clean_icon_list(raw, max_items):
+    #aistrip: [{icon?, label}] — el item sin label no aporta nada y se va.
+    if not isinstance(raw, list):
+        return None
+    items                   =   []
+    for entry in raw[:max_items]:
+        if not isinstance(entry, dict):
+            continue
+        label               =   _clean_text(entry.get('label'), LAYOUT_ITEM_LABEL_MAX)
+        if not label:
+            continue
+        icon                =   _clean_icon(entry.get('icon'))
+        items.append({'label': label, **({'icon': icon} if icon else {})})
+    return items or None
+
+def _clean_text_list(raw, max_items):
+    #aicheck: [{text}] — solo texto plano, sin iconos.
+    if not isinstance(raw, list):
+        return None
+    items                   =   []
+    for entry in raw[:max_items]:
+        if not isinstance(entry, dict):
+            continue
+        text                =   _clean_text(entry.get('text'), LAYOUT_ITEM_TEXT_MAX)
+        if text:
+            items.append({'text': text})
+    return items or None
+
+def _clean_icon_cards(raw, max_items):
+    #aigrid: [{icon?, title, text?}] — título o texto, icono opcional.
+    if not isinstance(raw, list):
+        return None
+    items                   =   []
+    for entry in raw[:max_items]:
+        if not isinstance(entry, dict):
+            continue
+        title               =   _clean_text(entry.get('title'), LAYOUT_ITEM_TITLE_MAX)
+        text                =   _clean_text(entry.get('text'), LAYOUT_ITEM_TEXT_MAX)
+        if not (title or text):
+            continue
+        item                =   {'title': title} if title else {}
+        icon                =   _clean_icon(entry.get('icon'))
+        if icon:
+            item['icon']    =   icon
+        if text:
+            item['text']    =   text
+        items.append(item)
+    return items or None
+
+_LIST_CLEANERS              =   {
+    'icon_list'     :   _clean_icon_list,
+    'text_list'     :   _clean_text_list,
+    'icon_cards'    :   _clean_icon_cards,
+}
+
 def _clean_props(raw, allowed):
     if not isinstance(raw, dict):
         return None
@@ -92,7 +176,13 @@ def _clean_props(raw, allowed):
     for key, value in raw.items():
         if key not in allowed or len(clean) >= LAYOUT_MAX_PROPS:
             continue
-        text                =   _clean_text(value, allowed[key])
+        spec                =   allowed[key]
+        if isinstance(spec, tuple):
+            items           =   _LIST_CLEANERS[spec[0]](value, spec[1])
+            if items:
+                clean[key]  =   items
+            continue
+        text                =   _clean_text(value, spec)
         if text:
             clean[key]      =   text
     return clean or None
@@ -107,7 +197,7 @@ def _order_key(pair):
         return (1, 0, idx)
     return (0, order, idx)
 
-def _clean_blocks(raw_blocks, surface, has_advanced):
+def _clean_blocks(raw_blocks, surface, has_advanced, has_ai = False):
     if not isinstance(raw_blocks, list):
         return []
     indexed                 =   [(i, item) for i, item in enumerate(raw_blocks[:LAYOUT_MAX_BLOCKS]) if isinstance(item, dict)]
@@ -117,10 +207,13 @@ def _clean_blocks(raw_blocks, surface, has_advanced):
         block_id            =   str(item.get('id') or '').strip()
         spec                =   TEMPLATE_BLOCKS[surface].get(block_id)
         #IDs desconocidos y repetidos se descartan; premium sin el
-        #beneficio también (fail-closed al plan vigente).
+        #beneficio también (fail-closed al plan vigente), igual que los
+        #bloques solo-IA sin has_ai_design.
         if spec is None or block_id in seen:
             continue
         if spec.get('premium') and not has_advanced:
+            continue
+        if spec.get('ai_only') and not has_ai:
             continue
         seen.add(block_id)
         block               =   {'id': block_id, 'enabled': bool(item.get('enabled', True)) or spec.get('locked', False), 'order': len(clean)}
@@ -136,7 +229,7 @@ def _clean_blocks(raw_blocks, surface, has_advanced):
         clean.append(block)
     return clean
 
-def clean_layout_config(value, has_design_advanced):
+def clean_layout_config(value, has_design_advanced, has_ai_design = False):
     """
     Normaliza `layout_config` contra TEMPLATE_BLOCKS.
     Devuelve {surface: {'blocks': [...]}} solo con superficies válidas;
@@ -157,7 +250,7 @@ def clean_layout_config(value, has_design_advanced):
             continue
         if not isinstance(raw, dict):
             continue
-        blocks              =   _clean_blocks(raw.get('blocks'), surface, has_design_advanced)
+        blocks              =   _clean_blocks(raw.get('blocks'), surface, has_design_advanced, has_ai_design)
         if blocks:
             clean[surface]  =   {'blocks': blocks}
     return clean

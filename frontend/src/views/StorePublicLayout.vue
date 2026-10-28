@@ -159,13 +159,35 @@ const isShop = computed(() => pageTemplate.value === 'shop')
 watch(pageTemplate, (tpl) => {
   if (tpl === 'terra') import('../assets/store-terra.css')
 }, { immediate: true })
-// Tema efectivo: el elegido por el dueño; en tiendas sin diseño avanzado el
-// visitante puede alternarlo con el botón del nav (solo para esta visita).
-const visitorTheme = ref(null) // null = tema de la tienda
-const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || visitorTheme.value || custom.value.theme)
-const showThemeToggle = computed(() => status.value === 'success' && !hasDesignAdvanced.value)
+// Tema efectivo: el elegido por el dueño; con customization.theme_toggle
+// el visitante puede alternarlo y su elección queda en localStorage
+// (clave por tienda). El valor se lee en setup — antes del primer paint —
+// así la página no arranca en claro y salta a oscuro.
+const prefersDark = typeof window !== 'undefined' && window.matchMedia
+  ? window.matchMedia('(prefers-color-scheme: dark)').matches
+  : false
+function readVisitorTheme() {
+  try {
+    const saved = localStorage.getItem(`davent:store-theme:${slug.value}`)
+    return saved === 'light' || saved === 'dark' ? saved : null
+  } catch { return null }
+}
+// Si el negocio no fijó default, se respeta prefers-color-scheme.
+const storeThemeDefault = computed(() => {
+  const t = custom.value.theme
+  if (t === 'light' || t === 'dark') return t
+  return prefersDark ? 'dark' : 'light'
+})
+const visitorTheme = ref(readVisitorTheme()) // null = tema de la tienda
+const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || visitorTheme.value || storeThemeDefault.value)
+// Interruptor de noche: lo habilita el negocio (theme_toggle). Payloads
+// viejos sin el campo conservan la regla anterior (sin diseño avanzado el
+// visitante ya podía alternarlo).
+const showThemeToggle = computed(() => status.value === 'success'
+  && (custom.value.theme_toggle ?? !hasDesignAdvanced.value))
 function togglePageTheme() {
   visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
+  try { localStorage.setItem(`davent:store-theme:${slug.value}`, visitorTheme.value) } catch { /* modo privado */ }
 }
 const shopName = computed(() => custom.value.display_name || store.value?.business_name || 'Tienda')
 const nameFont = computed(() => ({ fontFamily: storeFontFamily(custom.value.name_font) }))
@@ -551,7 +573,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->

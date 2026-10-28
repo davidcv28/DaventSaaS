@@ -1,14 +1,17 @@
 <script setup>
-import { ref, reactive, computed, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, nextTick, watch, onBeforeUnmount } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import AiSelect from '../../components/ai/AiSelect.vue'
 import AiStep from '../../components/ai/AiStep.vue'
 import AiProposalCard from '../../components/ai/AiProposalCard.vue'
-import DesignPreview from '../../components/design/DesignPreview.vue'
+import AiColorField from '../../components/ai/AiColorField.vue'
+import AiNightModeField from '../../components/ai/AiNightModeField.vue'
+import AiCoverField from '../../components/ai/AiCoverField.vue'
+import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import {
   storesApi, CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  resolveStoreTemplate, allowedTemplatesFor, STORE_TEMPLATES
+  resolveStoreTemplate, allowedTemplatesFor, STORE_TEMPLATES, publicStoreUrl
 } from '../../api/stores.api.js'
 import { http } from '../../api/http.js'
 import '../../assets/ai-design.css'
@@ -61,9 +64,12 @@ const MUST_HAVE = [
   { id: 'faqs', label: 'Preguntas frecuentes', icon: 'circle-help', desc: 'Las dudas que te preguntan siempre' }
 ]
 
-const STEP_TITLES = ['A qué te dedicás', 'Qué querés lograr', 'Cómo se siente', 'Qué no puede faltar', 'Tus propuestas']
+const STEP_TITLES = ['A qué te dedicás', 'Qué querés lograr', 'Cómo se siente', 'Tu marca', 'Qué no puede faltar', 'Tus propuestas']
 
-const EMPTY = () => ({ rubro: '', goals: [], tone: '', audience: '', must_have: [] })
+const EMPTY = () => ({
+  rubro: '', goals: [], tone: '', audience: '', must_have: [],
+  brand_color: '', night_mode: { enabled: false, default: 'light' }, cover_choice: 'auto', use_icons: true
+})
 const answers = reactive(EMPTY())
 
 const stepIndex = ref(1)
@@ -73,11 +79,9 @@ const seed = ref(null)
 const missing = ref([])
 const errorMsg = ref('')
 const actionError = ref('')
-const applied = ref(null) // { id, label }
-const result = ref(null) // apply | publish | discard
+const published = ref(null) // { id, label }
+const browsing = ref(false) // el usuario pidió "Cambiar el estilo"
 const busy = ref('')
-const note = ref('')
-const noteOpen = ref(false)
 const previewProposal = ref(null)
 const resultsRef = ref(null)
 const hydrated = ref(false)
@@ -86,7 +90,6 @@ let requestSeq = 0
 let timer = null
 onBeforeUnmount(() => {
   clearTimeout(timer)
-  document.removeEventListener('keydown', onKey)
 })
 
 const benefits = computed(() => props.plan?.benefits || {})
@@ -98,8 +101,13 @@ const initial = computed(() => (shopName.value || 'T').slice(0, 1).toUpperCase()
 const logo = computed(() => store.customization.logo || '')
 const cover = computed(() => store.customization.cover || '')
 const storeId = computed(() => store.store?.id || '')
+const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
-const progressStep = computed(() => (phase.value === 'results' ? 5 : stepIndex.value))
+const progressStep = computed(() => (phase.value === 'results' ? 6 : stepIndex.value))
+const showPublished = computed(() => Boolean(published.value) && !browsing.value)
+const visibleProposals = computed(() => (showPublished.value
+  ? proposals.value.filter((p) => p.id === published.value.id)
+  : proposals.value))
 
 const autofillDefault = computed(() => {
   const c = store.customization || {}
@@ -110,11 +118,16 @@ const autofillDefault = computed(() => {
 const liveMessage = computed(() => {
   if (phase.value === 'loading') return 'Armando tus propuestas…'
   if (phase.value === 'error') return 'No pudimos armar las propuestas.'
-  if (phase.value === 'results') return `${proposals.value.length} propuestas listas.`
-  return `Paso ${stepIndex.value} de 5: ${STEP_TITLES[stepIndex.value - 1]}`
+  if (phase.value === 'results') {
+    return showPublished.value ? 'Tu web ya está publicada.' : `${proposals.value.length} propuestas listas.`
+  }
+  return `Paso ${stepIndex.value} de 6: ${STEP_TITLES[stepIndex.value - 1]}`
 })
 
-const hasAnswers = computed(() => Boolean(answers.rubro || answers.goals.length || answers.tone || answers.audience || answers.must_have.length))
+const hasAnswers = computed(() => Boolean(
+  answers.rubro || answers.goals.length || answers.tone || answers.audience || answers.must_have.length ||
+  answers.brand_color || answers.night_mode.enabled || answers.cover_choice !== 'auto' || !answers.use_icons
+))
 
 const MISSING_ACTIONS = {
   catalog: 'catalogs',
@@ -147,6 +160,13 @@ function hydrate() {
     answers.tone = typeof saved.tone === 'string' ? saved.tone : base.tone
     answers.audience = typeof saved.audience === 'string' ? saved.audience : base.audience
     answers.must_have = Array.isArray(saved.must_have) ? saved.must_have.filter((m) => MUST_HAVE.some((o) => o.id === m)) : []
+    answers.brand_color = /^#[0-9a-f]{6}$/i.test(saved.brand_color || '') ? saved.brand_color.toLowerCase() : ''
+    const nm = saved.night_mode
+    answers.night_mode = (nm && typeof nm === 'object')
+      ? { enabled: Boolean(nm.enabled), default: nm.default === 'dark' ? 'dark' : 'light' }
+      : { enabled: false, default: 'light' }
+    answers.cover_choice = ['foto', 'logo', 'auto'].includes(saved.cover_choice) ? saved.cover_choice : 'auto'
+    answers.use_icons = saved.use_icons !== false
   } catch { /* storage bloqueado o dato viejo */ }
   hydrated.value = true
 }
@@ -162,8 +182,18 @@ watch(answers, persist, { deep: true })
 watch(storageKey, () => { if (storeId.value && !hydrated.value) hydrate() }, { immediate: true })
 
 // ---------- Preview ----------
+const HEX_RE = /^#[0-9a-f]{6}$/i
 function proposalForm(p) {
-  return { ...CUSTOMIZATION_DEFAULTS, ...(store.customization || {}), ...(p.site_theme || {}), ...(p.copy || {}) }
+  const form = { ...CUSTOMIZATION_DEFAULTS, ...(store.customization || {}), ...(p.site_theme || {}), ...(p.copy || {}) }
+  const accent = String(p.theme_choice?.accent || '')
+  if (HEX_RE.test(accent)) form.accent_custom = accent.toLowerCase()
+  const nm = p.night_mode
+  if (nm?.enabled && (nm.default === 'dark' || nm.default === 'light')) form.theme = nm.default
+  if (p.cover?.mode === 'logo') form.cover = ''
+  return form
+}
+function proposalCover(p) {
+  return p?.cover?.mode === 'logo' ? '' : cover.value
 }
 function proposalVars(p) {
   return storeThemeVars(proposalForm(p))
@@ -178,6 +208,7 @@ const previewForm = computed(() => (previewProposal.value ? proposalForm(preview
 const previewVars = computed(() => (previewProposal.value ? proposalVars(previewProposal.value) : {}))
 const previewTemplate = computed(() => (previewProposal.value ? proposalTemplate(previewProposal.value) : 'classic'))
 const previewNameFont = computed(() => (previewProposal.value ? proposalNameFont(previewProposal.value) : {}))
+const previewCover = computed(() => (previewProposal.value ? proposalCover(previewProposal.value) : cover.value))
 function templateLabel(key) {
   return STORE_TEMPLATES[key]?.label || key
 }
@@ -190,6 +221,13 @@ function payload(extra = {}) {
   if (answers.tone) p.tone = answers.tone
   if (answers.audience) p.audience = answers.audience
   if (answers.must_have.length) p.must_have = [...answers.must_have]
+  p.brand_color = answers.brand_color || ''
+  p.night_mode = {
+    enabled: Boolean(answers.night_mode.enabled),
+    default: answers.night_mode.enabled && answers.night_mode.default === 'dark' ? 'dark' : 'light'
+  }
+  p.cover_choice = answers.cover_choice || 'auto'
+  p.use_icons = answers.use_icons !== false
   return { ...p, ...extra }
 }
 
@@ -199,8 +237,8 @@ async function generate(extra = {}, useAnswers = true) {
   phase.value = 'loading'
   errorMsg.value = ''
   actionError.value = ''
-  result.value = null
-  applied.value = null
+  published.value = null
+  browsing.value = false
   proposals.value = []
   previewProposal.value = null
   clearTimeout(timer)
@@ -231,7 +269,7 @@ async function generate(extra = {}, useAnswers = true) {
 }
 
 function next() {
-  if (stepIndex.value < 4) stepIndex.value += 1
+  if (stepIndex.value < 5) stepIndex.value += 1
   else generate()
 }
 function back() {
@@ -249,8 +287,7 @@ function redoWithPhotos() {
 function backToQuestions() {
   phase.value = 'ask'
   stepIndex.value = 1
-  result.value = null
-  applied.value = null
+  browsing.value = false
   previewProposal.value = null
 }
 
@@ -262,8 +299,8 @@ function startOver() {
   proposals.value = []
   missing.value = []
   seed.value = null
-  applied.value = null
-  result.value = null
+  published.value = null
+  browsing.value = false
   actionError.value = ''
   errorMsg.value = ''
   previewProposal.value = null
@@ -271,8 +308,8 @@ function startOver() {
   stepIndex.value = 1
 }
 
-// TODO(A): mover a stores.api.js (aiDesignApply con autofill) cuando ese
-// archivo lo tome su dueño. El contrato v2 suma `autofill` al apply.
+// El contrato v3 aplica y publica en un solo request: ya no hay publish/discard
+// desde esta sección (siguen existiendo para el Studio).
 async function apply({ proposal, autofill }) {
   if (!seed.value || busy.value) return
   busy.value = `apply:${proposal.id}`
@@ -284,60 +321,22 @@ async function apply({ proposal, autofill }) {
       autofill: Boolean(autofill)
     })
     await store.refreshCustomization()
-    applied.value = { id: proposal.id, label: proposal.label }
-    result.value = 'apply'
-    note.value = ''
-    noteOpen.value = false
-    emit('applied', { action: 'apply' })
+    published.value = { id: proposal.id, label: proposal.label }
+    browsing.value = false
+    emit('applied', { action: 'publish' })
   } catch (e) {
-    actionError.value = e?.response?.data?.detail || 'No pudimos aplicarlo. Probá de nuevo.'
+    actionError.value = e?.response?.data?.detail || 'No pudimos establecer el estilo. Probá de nuevo.'
   } finally {
     busy.value = ''
   }
 }
 
-async function publish() {
-  if (busy.value) return
-  busy.value = 'publish'
-  actionError.value = ''
-  const ok = await store.publishCustomization(note.value.trim())
-  busy.value = ''
-  if (!ok) {
-    actionError.value = store.lastError || 'No pudimos publicar. Probá de nuevo.'
-    return
-  }
-  result.value = 'publish'
-  noteOpen.value = false
-  note.value = ''
-  emit('applied', { action: 'publish' })
-}
-
-async function discard() {
-  if (busy.value) return
-  busy.value = 'discard'
-  actionError.value = ''
-  const ok = await store.discardCustomization()
-  busy.value = ''
-  if (!ok) {
-    actionError.value = store.lastError || 'No pudimos descartar. Probá de nuevo.'
-    return
-  }
-  applied.value = null
-  result.value = 'discard'
-  emit('applied', { action: 'discard' })
-}
-
 function openPreview(p) {
   previewProposal.value = p
-  nextTick(() => document.querySelector('.aid-modal-box')?.focus())
 }
 function closePreview() {
   previewProposal.value = null
 }
-function onKey(e) {
-  if (e.key === 'Escape' && previewProposal.value) closePreview()
-}
-onMounted(() => document.addEventListener('keydown', onKey))
 </script>
 
 <template>
@@ -346,7 +345,8 @@ onMounted(() => document.addEventListener('keydown', onKey))
       <div class="aid-head-text">
         <span class="aid-badge-new">Nuevo</span>
         <h1><AppIcon name="sparkles" :size="20" /> Diseñar con IA</h1>
-        <p>Contanos cuatro cosas de tu negocio y te armamos la web lista. Después la ajustás a tu gusto.</p>
+        <p>Contanos cinco cosas de tu negocio y te armamos la web lista. Después la ajustás a tu gusto.</p>
+        <span v-if="showPublished" class="aid-pub-chip"><AppIcon name="circle-check" :size="13" /> Publicada</span>
       </div>
       <button v-if="phase !== 'ask' || hasAnswers" class="btn ghost btn-auto" type="button" @click="startOver">
         <AppIcon name="refresh" :size="16" /> Empezar de nuevo
@@ -364,7 +364,7 @@ onMounted(() => document.addEventListener('keydown', onKey))
       <p class="aid-live" aria-live="polite">{{ liveMessage }}</p>
 
       <div class="aid-progress" role="group" aria-label="Progreso">
-        <span v-for="n in 5" :key="n" class="aid-progress-dot" :class="{ on: progressStep >= n, now: progressStep === n }">
+        <span v-for="n in 6" :key="n" class="aid-progress-dot" :class="{ on: progressStep >= n, now: progressStep === n }">
           <span class="sr-only">Paso {{ n }}: {{ STEP_TITLES[n - 1] }}</span>
         </span>
       </div>
@@ -386,7 +386,28 @@ onMounted(() => document.addEventListener('keydown', onKey))
           </div>
         </AiStep>
 
-        <AiStep v-else :number="4" title="¿Qué no puede faltar?" subtitle="Marcá lo que sí o sí tiene que estar en tu web.">
+        <AiStep v-else-if="stepIndex === 4" :number="4" title="Tu marca" subtitle="El color, el modo noche y la portada. Todo se puede cambiar después.">
+          <div class="aid-fields">
+            <div class="aid-field">
+              <AiColorField v-model="answers.brand_color" />
+            </div>
+            <div class="aid-field">
+              <AiNightModeField v-model="answers.night_mode" />
+            </div>
+            <div class="aid-field">
+              <AiCoverField v-model="answers.cover_choice" :has-logo="Boolean(logo)" />
+            </div>
+            <label class="aid-switch">
+              <input v-model="answers.use_icons" type="checkbox" />
+              <span class="aid-switch-text">
+                <strong>Usar íconos en las secciones</strong>
+                <small>Ayudan a que se entienda rápido qué ofrecés.</small>
+              </span>
+            </label>
+          </div>
+        </AiStep>
+
+        <AiStep v-else :number="5" title="¿Qué no puede faltar?" subtitle="Marcá lo que sí o sí tiene que estar en tu web.">
           <AiSelect v-model="answers.must_have" :options="MUST_HAVE" multiple label="Lo que no puede faltar" placeholder="Elegí lo importante" />
         </AiStep>
 
@@ -395,8 +416,8 @@ onMounted(() => document.addEventListener('keydown', onKey))
             <AppIcon name="chevron-left" :size="16" /> Atrás
           </button>
           <button class="btn btn-auto aid-primary" type="button" @click="next">
-            <AppIcon :name="stepIndex === 4 ? 'sparkles' : 'chevron-right'" :size="16" />
-            {{ stepIndex === 4 ? 'Armar mis propuestas' : 'Siguiente' }}
+            <AppIcon :name="stepIndex === 5 ? 'sparkles' : 'chevron-right'" :size="16" />
+            {{ stepIndex === 5 ? 'Armar mis propuestas' : 'Siguiente' }}
           </button>
           <button class="btn ghost btn-auto" type="button" @click="decideForMe">Prefiero que decidas vos</button>
         </div>
@@ -417,36 +438,6 @@ onMounted(() => document.addEventListener('keydown', onKey))
 
       <!-- RESULTADOS -->
       <div v-else-if="phase === 'results'" ref="resultsRef" class="aid-results">
-        <div v-if="result" class="cta-banner aid-banner" role="status">
-          <div class="aid-banner-text">
-            <strong>{{ result === 'publish' ? 'Tu web ya está publicada' : result === 'discard' ? 'Borrador descartado' : 'Aplicado al borrador' }}</strong>
-            <span v-if="result === 'apply'">{{ applied?.label }} quedó en el borrador. Revisala y publicala cuando quieras.</span>
-            <span v-else-if="result === 'publish'">Los cambios ya se ven en tu página.</span>
-            <span v-else>Tu web volvió a como estaba publicada.</span>
-          </div>
-          <div class="aid-banner-actions">
-            <template v-if="result === 'apply'">
-              <button v-if="!noteOpen" class="btn light btn-auto" type="button" @click="noteOpen = true">Publicar</button>
-              <template v-else>
-                <input
-                  v-model="note"
-                  class="aid-input aid-note"
-                  maxlength="120"
-                  placeholder="Nota opcional de la versión"
-                  aria-label="Nota de la versión"
-                />
-                <button class="btn light btn-auto" type="button" :disabled="busy === 'publish'" @click="publish">
-                  {{ busy === 'publish' ? 'Publicando…' : 'Confirmar' }}
-                </button>
-              </template>
-              <button class="btn light btn-auto" type="button" :disabled="busy === 'discard'" @click="discard">
-                {{ busy === 'discard' ? 'Descartando…' : 'Descartar' }}
-              </button>
-            </template>
-            <button class="btn light btn-auto" type="button" @click="emit('navigate', 'design')">Ajustar a mano</button>
-          </div>
-        </div>
-
         <p v-if="actionError" class="aid-error" role="alert">{{ actionError }}</p>
 
         <div v-if="missing.length" class="aid-missing">
@@ -467,7 +458,7 @@ onMounted(() => document.addEventListener('keydown', onKey))
 
         <div class="aid-grid">
           <AiProposalCard
-            v-for="p in proposals"
+            v-for="p in visibleProposals"
             :key="p.id"
             :proposal="p"
             :form="proposalForm(p)"
@@ -477,20 +468,22 @@ onMounted(() => document.addEventListener('keydown', onKey))
             :shop-name="shopName"
             :initial="initial"
             :logo="logo"
-            :cover="cover"
+            :cover="proposalCover(p)"
             :advanced="hasDesignAdvanced"
             :show-map="answers.must_have.includes('map')"
             :name-font="proposalNameFont(p)"
             :busy="busy"
-            :applied="applied?.id === p.id"
+            :published="published?.id === p.id && showPublished"
+            :public-url="publicUrl"
             :autofill-default="autofillDefault"
             @preview="openPreview(p)"
             @apply="apply"
+            @change-style="browsing = true"
             @refresh-images="redoWithPhotos"
           />
         </div>
 
-        <div class="aid-actions">
+        <div v-if="!showPublished" class="aid-actions">
           <button class="btn btn-auto" type="button" @click="another">
             <AppIcon name="refresh" :size="16" /> Otra propuesta
           </button>
@@ -515,51 +508,21 @@ onMounted(() => document.addEventListener('keydown', onKey))
     </template>
 
     <!-- Vista previa en grande -->
-    <div
+    <AiDevicePreview
       v-if="previewProposal"
-      class="aid-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="aid-modal-title"
-      @click.self="closePreview"
-    >
-      <div class="aid-modal-box" tabindex="-1">
-        <header class="aid-modal-head">
-          <div>
-            <h2 id="aid-modal-title">{{ previewProposal.label }}</h2>
-            <p>{{ previewProposal.why }}</p>
-          </div>
-          <button class="icon-btn" type="button" aria-label="Cerrar vista previa" @click="closePreview">
-            <AppIcon name="x" :size="18" />
-          </button>
-        </header>
-        <div class="aid-modal-body">
-          <DesignPreview
-            :form="previewForm"
-            :vars="previewVars"
-            :template="previewTemplate"
-            :shop-name="shopName"
-            :initial="initial"
-            :logo="logo"
-            :cover="cover"
-            :advanced="hasDesignAdvanced"
-            :catalog-on="true"
-            :show-map="answers.must_have.includes('map')"
-            :name-font="previewNameFont"
-          />
-        </div>
-        <footer class="aid-modal-foot">
-          <button class="btn ghost btn-auto" type="button" @click="closePreview">Cerrar</button>
-          <button
-            class="btn btn-auto"
-            type="button"
-            :disabled="Boolean(busy)"
-            @click="apply({ proposal: previewProposal, autofill: autofillDefault }); closePreview()"
-          >
-            Aplicar al borrador
-          </button>
-        </footer>
-      </div>
-    </div>
+      :proposal="previewProposal"
+      :form="previewForm"
+      :vars="previewVars"
+      :template="previewTemplate"
+      :shop-name="shopName"
+      :initial="initial"
+      :logo="logo"
+      :cover="previewCover"
+      :advanced="hasDesignAdvanced"
+      :show-map="answers.must_have.includes('map')"
+      :name-font="previewNameFont"
+      :night-mode="previewProposal.night_mode"
+      @close="closePreview"
+    />
   </div>
 </template>
