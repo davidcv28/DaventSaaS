@@ -12,7 +12,7 @@ export default {
     product: productViews.gamer
   },
   blocks: {
-    landing: ['hero', 'offers', 'featured', 'categories', 'brands', 'timeline', 'faq', 'testimonials', 'cta'],
+    landing: ['hero', 'highlights', 'announcements', 'about', 'services', 'stats', 'benefits', 'offers', 'featured', 'categories', 'brands', 'countdown', 'gallery', 'timeline', 'team', 'faq', 'testimonials', 'video', 'cta', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

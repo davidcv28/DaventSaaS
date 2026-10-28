@@ -12,7 +12,7 @@ export default {
     product: productViews.mercado
   },
   blocks: {
-    landing: ['hero', 'offers', 'timeline', 'contact'],
+    landing: ['hero', 'highlights', 'featured', 'announcements', 'about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

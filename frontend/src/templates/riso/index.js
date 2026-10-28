@@ -12,7 +12,7 @@ export default {
     product: productViews.hogar
   },
   blocks: {
-    landing: ['hero', 'highlights', 'announcements', 'stats', 'offers', 'about', 'services', 'testimonials', 'gallery', 'faq', 'video', 'cta', 'contact'],
+    landing: ['hero', 'highlights', 'featured', 'announcements', 'stats', 'benefits', 'offers', 'about', 'services', 'brands', 'countdown', 'testimonials', 'gallery', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

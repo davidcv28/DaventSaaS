@@ -12,7 +12,7 @@ export default {
     product: productViews.belleza
   },
   blocks: {
-    landing: ['hero', 'stats', 'services', 'gallery', 'offers', 'contact', 'testimonials', 'cta'],
+    landing: ['hero', 'highlights', 'featured', 'announcements', 'about', 'stats', 'services', 'benefits', 'brands', 'countdown', 'gallery', 'offers', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

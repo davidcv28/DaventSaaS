@@ -12,7 +12,7 @@ export default {
     product: productViews.circuit
   },
   blocks: {
-    landing: ['hero', 'featured', 'benefits', 'contact'],
+    landing: ['hero', 'highlights', 'featured', 'announcements', 'about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }

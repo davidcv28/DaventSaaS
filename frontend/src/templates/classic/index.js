@@ -13,7 +13,7 @@ export default {
     product: productViews.classic
   },
   blocks: {
-    landing: ['hero', 'highlights', 'announcements', 'about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'],
+    landing: ['hero', 'highlights', 'featured', 'announcements', 'about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'],
     catalog: ['note', 'banner', ...CATALOG_BLOCKS],
     services: SERVICES_BLOCKS
   }

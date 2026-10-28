@@ -12,7 +12,7 @@ export default {
     product: productViews.ofertas
   },
   blocks: {
-    landing: ['hero', 'offers', 'categories', 'timeline', 'testimonials', 'cta'],
+    landing: ['hero', 'highlights', 'featured', 'announcements', 'about', 'services', 'stats', 'benefits', 'offers', 'categories', 'brands', 'countdown', 'gallery', 'timeline', 'testimonials', 'team', 'faq', 'video', 'cta', 'contact'],
     catalog: CATALOG_BLOCKS,
     services: SERVICES_BLOCKS
   }
