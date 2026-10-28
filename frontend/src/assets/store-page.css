@@ -11081,18 +11081,21 @@ html { scroll-behavior: smooth; }
   --mn-muted: var(--st-muted, #5e5e5a);
   --mn-line: var(--st-border, #e3e2dd);
   --mn-surface: var(--st-surface, #ffffff);
+  --mn-paper: var(--st-bg, #fafaf8);
 }
 .store-page[data-st-themed][data-store-template='boutique'] {
   --bt-ink: var(--st-text, #1c1917);
   --bt-muted: var(--st-muted, #75695e);
   --bt-line: var(--st-border, #e0dacd);
   --bt-surface: var(--st-surface, #ffffff);
+  --bt-paper: var(--st-bg, #f6f4ee);
 }
 .store-page[data-st-themed][data-store-template='cobre'] {
   --cb-ink: var(--st-text, #101318);
   --cb-muted: var(--st-muted, #454a52);
   --cb-line-dk: var(--st-border, #3a3f47);
   --cb-tile: var(--st-surface, #d8d6cf);
+  --cb-stone: var(--st-bg, #e9e8e4);
 }
 /* En oscuro los roles no fijados conservan la paleta nocturna de la piel. */
 .store-page[data-st-themed][data-store-template='lookbook'][data-store-theme='dark'] {
@@ -11106,18 +11109,21 @@ html { scroll-behavior: smooth; }
   --mn-muted: var(--st-muted, #a9a8a2);
   --mn-line: var(--st-border, #2e2e2b);
   --mn-surface: var(--st-surface, #181817);
+  --mn-paper: var(--st-bg, #0f0f0e);
 }
 .store-page[data-st-themed][data-store-template='boutique'][data-store-theme='dark'] {
   --bt-ink: var(--st-text, #f2ede3);
   --bt-muted: var(--st-muted, #a89e90);
   --bt-line: var(--st-border, #37302a);
   --bt-surface: var(--st-surface, #1b1816);
+  --bt-paper: var(--st-bg, #131110);
 }
 .store-page[data-st-themed][data-store-template='cobre'][data-store-theme='dark'] {
   --cb-ink: var(--st-text, #eceee9);
   --cb-muted: var(--st-muted, #a9aeb6);
   --cb-line-dk: var(--st-border, #3a3f47);
   --cb-tile: var(--st-surface, #22262b);
+  --cb-stone: var(--st-bg, #141619);
 }
 .store-page[data-st-themed][data-store-template='signature'] {
   --sg-ink: var(--st-text, #f2ecdc);

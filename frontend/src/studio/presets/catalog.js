@@ -77,7 +77,9 @@ function theme(t) {
       letterSpacing: t.tracking || '-0.02em'
     },
     buttons: t.buttons || {},
-    background: t.background || {},
+    // Fondo estándar del look: sólido con el color de página de la paleta
+    // (los presets que quieren malla/patrón/degradado lo pisan).
+    background: t.background || { type: 'solid', value: null, overlay: 'none' },
     motion: t.motion || {},
     mobile: t.mobile || {}
   }

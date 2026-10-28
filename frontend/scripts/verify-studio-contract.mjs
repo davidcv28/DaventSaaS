@@ -12,7 +12,7 @@ import {
 import {
   analyzeStudioHealth, repairPalette, palettePasses, CONTRAST_PAIRS, pairColors
 } from '../src/components/studio/health.js'
-import { bandPalette } from '../src/utils/colorTools.js'
+import { bandPalette, adaptPalette } from '../src/utils/colorTools.js'
 
 let failures = 0
 function check(name, cond, extra = '') {
@@ -256,6 +256,17 @@ for (const accent of ['#eab308', '#38bdf8', '#4ade80', '#00e67a', '#e11d48', '#4
   check(`marca de acento ${accent} legible sobre el velo`, contrastRatio(band.mark, '#0d1220') >= 3,
     `${band.mark}`)
 }
+
+console.log('— cambio de modo claro/oscuro —')
+const lightPal = { ...SITE_THEME_DEFAULTS.palette, bg: '#fafaf9', surface: '#ffffff', text: '#0f172a', muted: '#5b6678' }
+const darkPal = adaptPalette(lightPal, 'dark')
+check('paleta clara -> oscura cambia fondo y texto', darkPal && darkPal.bg !== lightPal.bg && darkPal.text !== lightPal.text)
+check('paleta oscura mantiene AA texto/superficie', darkPal && contrastRatio(darkPal.text, darkPal.surface) >= 4.5)
+check('paleta oscura mantiene AA acento/superficie', darkPal && contrastRatio(darkPal.primary, darkPal.surface) >= 4.5)
+check('paleta ya oscura no se reescribe', adaptPalette(darkPal, 'dark') === null)
+const backLight = adaptPalette(darkPal, 'light')
+check('paleta oscura -> clara recupera fondo claro', backLight && contrastRatio(backLight.text, backLight.surface) >= 4.5 && contrastRatio(backLight.primary, backLight.surface) >= 4.5)
+check('paleta ya clara no se reescribe', adaptPalette(backLight, 'light') === null)
 
 console.log('')
 if (failures) { console.error(`${failures} chequeo(s) fallaron`); process.exit(1) }

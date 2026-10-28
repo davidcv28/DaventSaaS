@@ -201,7 +201,59 @@ export function bandPalette(accentHex) {
   }
 }
 
-export function fixAccent(hex, theme = 'light') {  const bg = PAGE_BG[theme] || PAGE_BG.light
+// Oscurece `hex` (mismo tono) hasta cumplir `min` contra un fondo claro.
+function onLight(hex, bg = '#ffffff', min = 4.5) {
+  if (contrastRatio(hex, bg) >= min) return hex
+  const [h, s, l0] = hexHsl(hex)
+  for (let l = Math.min(l0, 0.98); l >= 0; l -= 0.02) {
+    const c = hslToHex(h, s, l)
+    if (contrastRatio(c, bg) >= min) return c
+  }
+  return '#000000'
+}
+
+// Paleta coherente para el modo pedido. Devuelve null si la paleta ya está
+// en ese modo. Al cambiar claro/oscuro el Studio reescribe la paleta (no la
+// deja clara con fondo blanco sobre una página nocturna).
+export function adaptPalette(palette, mode) {
+  const p = palette || {}
+  const hex = (v, f) => (isHex(v) ? v.toLowerCase() : f)
+  const surface = hex(p.surface, '#ffffff')
+  const isDark = luminance(surface) < 0.5
+  if ((mode === 'dark') === isDark) return null
+  const bg = hex(p.bg, '#f4f6fb')
+  const accent = hex(p.accent || p.primary, '#4f46e5')
+  const [h, s] = hexHsl(bg)
+  if (mode === 'dark') {
+    const surfaceDark = hslToHex(h, Math.min(s, 0.4), 0.11)
+    const accentDark = onDark(accent, surfaceDark, 4.5)
+    return {
+      bg: hslToHex(h, Math.min(s, 0.45), 0.07),
+      surface: surfaceDark,
+      text: '#f1f5fb',
+      muted: hslToHex(h, Math.min(s, 0.2), 0.68),
+      border: hslToHex(h, Math.min(s, 0.3), 0.22),
+      primary: accentDark,
+      accent: accentDark,
+      secondary: deriveAccent(accentDark).ink
+    }
+  }
+  const surfaceLight = '#ffffff'
+  const accentLight = onLight(accent, surfaceLight, 4.5)
+  return {
+    bg: hslToHex(h, Math.min(s * 0.4, 0.35), 0.965),
+    surface: surfaceLight,
+    text: '#0f172a',
+    muted: '#5b6678',
+    border: hslToHex(h, Math.min(s, 0.3), 0.88),
+    primary: accentLight,
+    accent: accentLight,
+    secondary: deriveAccent(accentLight).ink
+  }
+}
+
+export function fixAccent(hex, theme = 'light') {
+  const bg = PAGE_BG[theme] || PAGE_BG.light
   const [h, s, l0] = hexHsl(hex)
   const dir = theme === 'dark' ? 1 : -1
   let l = l0

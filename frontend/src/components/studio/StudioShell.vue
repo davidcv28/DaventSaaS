@@ -34,7 +34,7 @@ import {
 } from '../../studio/contract.js'
 import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
-import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
+import { nearestAccent, hexToRgb, adaptPalette } from '../../utils/colorTools.js'
 import { STUDIO_PRESETS, presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 
 const props = defineProps({
@@ -294,7 +294,15 @@ const viewerTheme = ref(props.customization?.theme === 'dark' ? 'dark' : 'light'
 // control (Estilos, Colores, Personalización avanzada). El modo del visor
 // del panel Colores no toca form.theme, así que no se pisa solo.
 watch(() => props.form.theme, (t) => {
-  if (t === 'light' || t === 'dark') viewerTheme.value = t
+  if (t !== 'light' && t !== 'dark') return
+  viewerTheme.value = t
+  // Cambiar claro/oscuro reescribe la paleta al modo pedido: sin esto un
+  // preset claro con la página en oscuro dejaba el fondo blanco.
+  const hasPalette = ['palette.bg', 'palette.surface', 'palette.text']
+    .some((k) => explicit.value.has(k))
+  if (!hasPalette) return
+  const next = adaptPalette(draft.theme.palette, t)
+  if (next) Object.assign(draft.theme.palette, next)
 })
 const comparing = ref(false)
 const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))

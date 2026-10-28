@@ -12,7 +12,7 @@ import {
   resolveSiteTheme, hexToRgb, rgbToHex, textOn
 } from '../../studio/contract.js'
 import { STORE_FONTS, ensureStoreFont, effectiveAccent } from '../../api/stores.api.js'
-import { deriveAccent, bandPalette } from '../../utils/colorTools.js'
+import { deriveAccent, bandPalette, adaptPalette } from '../../utils/colorTools.js'
 import { pickTargetFor } from './studioModel.js'
 
 function mixHex(a, b, t) {
@@ -65,6 +65,13 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   const t = resolveSiteTheme(theme)
   const keys = explicit ? (explicit instanceof Set ? explicit : new Set(explicit)) : null
   const on = (key) => !keys || keys.has(key)
+  // Paleta fijada por el tema + modo de página opuesto (p. ej. un preset
+  // claro guardado con la página en oscuro): se adapta al modo para que el
+  // fondo no quede blanco sobre una página nocturna.
+  if (['palette.bg', 'palette.surface', 'palette.text', 'palette.muted'].some(on)) {
+    const adapted = adaptPalette(t.palette, pageTheme)
+    if (adapted) t.palette = { ...t.palette, ...adapted }
+  }
   // Con resolvedor: --st-font-* sale como familia real (no el slug del
   // catálogo), así el CSS puede consumirlo directo sin perder la fuente.
   const all = themeToCssVars(t, fontFamilyOf)
