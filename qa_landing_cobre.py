@@ -1,6 +1,7 @@
-"""QA de la migración landing=cobre: para cada plantilla verifica en
-/bench-store (home) que data-store-template='cobre', data-store-tpl=<tpl>,
-el hero cobre se monta y no hay overflow horizontal a los anchos de Regla 0.
+"""QA de la migración landing=sistema Cobre: para cada plantilla verifica en
+/bench-store (home) que data-store-template=<tpl> (piel propia), que la
+landing monta el sistema de bloques compartido (.sp-* + hero propio) y que
+no hay overflow horizontal a los anchos de Regla 0.
 Uso: venv/Scripts/python.exe qa_landing_cobre.py [templates...]
 """
 import os, sys, time, json, threading, subprocess, urllib.request
@@ -94,7 +95,7 @@ CHECK = """(tpl) => {
   return {
     design: root?.getAttribute('data-store-template'),
     ident: root?.getAttribute('data-store-tpl'),
-    hero: !!document.querySelector('.sp-hero, .sp-cb-hero'),
+    hero: !!document.querySelector('.sp-hero, .sp-cb-hero, .sp-hero-band'),
     blocks: document.querySelectorAll('.sp-page-root > *').length,
     scrollW: document.documentElement.scrollWidth, vw,
     wide: wide.slice(0, 8)
@@ -113,7 +114,7 @@ with sync_playwright() as pw:
         page.goto(FRONT, wait_until='networkidle', timeout=30000)
         page.wait_for_timeout(900)
         r0 = page.evaluate(CHECK)
-        ok0 = r0['design'] == 'cobre' and r0['ident'] == tpl and r0['hero']
+        ok0 = r0['design'] == tpl and r0['hero'] and r0['blocks'] > 0
         print(f"{tpl:12} attr={r0['design']}/{r0['ident']} hero={'si' if r0['hero'] else 'NO'} blocks={r0['blocks']} {'OK' if ok0 else 'FAIL'}", flush=True)
         if not ok0: bad += 1
         for w, name in [(320, '320'), (360, '360'), (390, '390'), (430, '430'), (768, '768')]:

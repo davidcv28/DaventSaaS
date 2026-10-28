@@ -507,21 +507,21 @@ html.cf-lock body { overflow: hidden; overscroll-behavior: none }
    sigan pasando AA sobre paneles oscuros. Va antes: los acentos propios
    de cada plantilla (--tm-acc, --rs-pink...) la pisan igual. */
 .store-page[data-store-theme='dark'] { --cf-accent: var(--store-accent); }
-.store-page[data-store-tpl='perspective'] .cv-pe { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 10px; }
-.store-page[data-store-tpl='duo'] .cv-du { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 14px; }
-.store-page[data-store-tpl='street'] .cv-st { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-ink); --cf-accent: var(--store-accent-ink); --cf-radius: 8px; --cf-font: var(--sp-body); }
-.store-page[data-store-tpl='promo'] .cv-of { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 18px; }
-.store-page[data-store-tpl='terminal'] .cv-tm { --cf-bg: var(--tm-bg); --cf-fg: var(--tm-fg); --cf-muted: var(--tm-dim); --cf-border: var(--tm-line); --cf-accent: var(--tm-acc); --cf-radius: 6px; --cf-font: var(--sp-mono); }
-.store-page[data-store-tpl='lookbook'] .cv-lb { --cf-bg: var(--lb-paper); --cf-fg: var(--lb-ink); --cf-muted: var(--lb-dim); --cf-border: var(--lb-rule); --cf-accent: var(--store-accent-ink); --cf-radius: 4px; }
-.store-page[data-store-tpl='shop'] .cv-of { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 12px; }
-.store-page[data-store-tpl='cobre'] .cv-cb { --cf-bg: var(--cb-tile); --cf-fg: var(--cb-ink); --cf-muted: var(--cb-muted); --cf-border: var(--cb-line-dk); --cf-accent: var(--store-accent-ink); --cf-radius: 0; }
-.store-page[data-store-tpl='minimal'] .cv-mn { --cf-bg: var(--mn-paper); --cf-fg: var(--mn-ink); --cf-muted: var(--mn-muted); --cf-border: var(--mn-line); --cf-accent: var(--mn-ink); --cf-radius: 2px; }
-.store-page[data-store-tpl='boutique'] .cv-bt { --cf-bg: var(--bt-surface); --cf-fg: var(--bt-ink); --cf-muted: var(--bt-muted); --cf-border: var(--bt-line); --cf-accent: var(--bt-ink); --cf-radius: 0; }
-.store-page[data-store-tpl='signature'] .cv-sg { --cf-bg: var(--sg-panel); --cf-fg: var(--sg-ink); --cf-muted: var(--sg-muted); --cf-border: var(--sg-line); --cf-accent: var(--store-accent); --cf-radius: var(--sp-radius); }
-.store-page[data-store-tpl='aurora'] .cv-au { --cf-bg: var(--au-panel); --cf-fg: var(--au-ink); --cf-muted: var(--au-muted); --cf-border: var(--au-line); --cf-accent: var(--store-accent); --cf-radius: 18px; }
-.store-page[data-store-tpl='bloque'] .cv-bq { --cf-bg: var(--bq-paper); --cf-fg: var(--bq-ink); --cf-muted: var(--bq-mute); --cf-border: var(--bq-line); --cf-accent: var(--bq-ink); --cf-radius: 0; --cf-font: var(--bq-mono); }
-.store-page[data-store-tpl='riso'] .cv-rs { --cf-bg: var(--rs-card); --cf-fg: var(--rs-ink); --cf-muted: var(--rs-mute); --cf-border: color-mix(in srgb, var(--rs-ink) 25%, transparent); --cf-accent: var(--rs-pink); --cf-radius: 14px; --cf-font: var(--rs-body); }
-.store-page[data-store-tpl='terra'] .cv-tr { --cf-bg: var(--tr-card); --cf-fg: var(--tr-ink); --cf-muted: var(--tr-mute); --cf-border: var(--tr-line); --cf-accent: var(--tr-acc); --cf-radius: 18px; --cf-font: var(--tr-sans); }
+.store-page[data-store-template='perspective'] .cv-pe { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 10px; }
+.store-page[data-store-template='duo'] .cv-du { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 14px; }
+.store-page[data-store-template='street'] .cv-st { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-ink); --cf-accent: var(--store-accent-ink); --cf-radius: 8px; --cf-font: var(--sp-body); }
+.store-page[data-store-template='promo'] .cv-of { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 18px; }
+.store-page[data-store-template='terminal'] .cv-tm { --cf-bg: var(--tm-bg); --cf-fg: var(--tm-fg); --cf-muted: var(--tm-dim); --cf-border: var(--tm-line); --cf-accent: var(--tm-acc); --cf-radius: 6px; --cf-font: var(--sp-mono); }
+.store-page[data-store-template='lookbook'] .cv-lb { --cf-bg: var(--lb-paper); --cf-fg: var(--lb-ink); --cf-muted: var(--lb-dim); --cf-border: var(--lb-rule); --cf-accent: var(--store-accent-ink); --cf-radius: 4px; }
+.store-page[data-store-template='shop'] .cv-of { --cf-bg: var(--sp-card-solid); --cf-fg: var(--sp-ink); --cf-muted: var(--sp-muted); --cf-border: var(--sp-line); --cf-accent: var(--store-accent-ink); --cf-radius: 12px; }
+.store-page[data-store-template='cobre'] .cv-cb { --cf-bg: var(--cb-tile); --cf-fg: var(--cb-ink); --cf-muted: var(--cb-muted); --cf-border: var(--cb-line-dk); --cf-accent: var(--store-accent-ink); --cf-radius: 0; }
+.store-page[data-store-template='minimal'] .cv-mn { --cf-bg: var(--mn-paper); --cf-fg: var(--mn-ink); --cf-muted: var(--mn-muted); --cf-border: var(--mn-line); --cf-accent: var(--mn-ink); --cf-radius: 2px; }
+.store-page[data-store-template='boutique'] .cv-bt { --cf-bg: var(--bt-surface); --cf-fg: var(--bt-ink); --cf-muted: var(--bt-muted); --cf-border: var(--bt-line); --cf-accent: var(--bt-ink); --cf-radius: 0; }
+.store-page[data-store-template='signature'] .cv-sg { --cf-bg: var(--sg-panel); --cf-fg: var(--sg-ink); --cf-muted: var(--sg-muted); --cf-border: var(--sg-line); --cf-accent: var(--store-accent); --cf-radius: var(--sp-radius); }
+.store-page[data-store-template='aurora'] .cv-au { --cf-bg: var(--au-panel); --cf-fg: var(--au-ink); --cf-muted: var(--au-muted); --cf-border: var(--au-line); --cf-accent: var(--store-accent); --cf-radius: 18px; }
+.store-page[data-store-template='bloque'] .cv-bq { --cf-bg: var(--bq-paper); --cf-fg: var(--bq-ink); --cf-muted: var(--bq-mute); --cf-border: var(--bq-line); --cf-accent: var(--bq-ink); --cf-radius: 0; --cf-font: var(--bq-mono); }
+.store-page[data-store-template='riso'] .cv-rs { --cf-bg: var(--rs-card); --cf-fg: var(--rs-ink); --cf-muted: var(--rs-mute); --cf-border: color-mix(in srgb, var(--rs-ink) 25%, transparent); --cf-accent: var(--rs-pink); --cf-radius: 14px; --cf-font: var(--rs-body); }
+.store-page[data-store-template='terra'] .cv-tr { --cf-bg: var(--tr-card); --cf-fg: var(--tr-ink); --cf-muted: var(--tr-mute); --cf-border: var(--tr-line); --cf-accent: var(--tr-acc); --cf-radius: 18px; --cf-font: var(--tr-sans); }
 
 /* ---------- breakpoints ---------- */
 @media (max-width: 1023px) {
