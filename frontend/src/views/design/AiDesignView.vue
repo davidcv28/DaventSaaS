@@ -389,13 +389,16 @@ function closePreview() {
         <AiStep v-else-if="stepIndex === 4" :number="4" title="Tu marca" subtitle="El color, el modo noche y la portada. Todo se puede cambiar después.">
           <div class="aid-fields">
             <div class="aid-field">
+              <p class="aid-field-title">¿Querés elegir el color de tu marca?</p>
               <AiColorField v-model="answers.brand_color" />
             </div>
             <div class="aid-field">
-              <AiNightModeField v-model="answers.night_mode" />
+              <p class="aid-field-title">¿Usamos una foto de portada?</p>
+              <AiCoverField v-model="answers.cover_choice" :has-logo="Boolean(logo)" />
             </div>
             <div class="aid-field">
-              <AiCoverField v-model="answers.cover_choice" :has-logo="Boolean(logo)" />
+              <p class="aid-field-title">¿Querés modo noche?</p>
+              <AiNightModeField v-model="answers.night_mode" :accent="answers.brand_color || '#7c3aed'" />
             </div>
             <label class="aid-switch">
               <input v-model="answers.use_icons" type="checkbox" />

@@ -20,23 +20,23 @@ function desc(o) {
 </script>
 
 <template>
-  <div class="aid-field">
-    <div class="aidopt-grid three" role="group" aria-label="Portada de tu web">
+  <div class="aicv">
+    <div class="aicv-grid" role="group" aria-label="Portada de tu web">
       <button
         v-for="o in OPTIONS"
         :key="o.id"
         type="button"
-        class="aidopt"
+        class="aicv-card"
         :class="{ on: current() === o.id }"
         :aria-pressed="current() === o.id"
         @click="emit('update:modelValue', o.id)"
       >
-        <span class="aidopt-icon"><AppIcon :name="o.icon" :size="18" /></span>
-        <span class="aidopt-text">
+        <span class="aicv-card-icon"><AppIcon :name="o.icon" :size="18" /></span>
+        <span class="aicv-card-text">
           <strong>{{ o.label }}</strong>
           <small>{{ desc(o) }}</small>
         </span>
-        <span class="aidopt-mark" aria-hidden="true"><AppIcon v-if="current() === o.id" name="check" :size="14" /></span>
+        <span class="aicv-mark" aria-hidden="true"><AppIcon v-if="current() === o.id" name="check" :size="14" /></span>
       </button>
     </div>
   </div>

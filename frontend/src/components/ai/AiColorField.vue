@@ -2,6 +2,12 @@
 import { ref, computed, watch } from 'vue'
 import AppIcon from '../AppIcon.vue'
 
+// Color de marca: una decisión, tres estados visuales.
+//  1) segmento "IA / yo elijo" (2 opciones, no 2 tarjetas enormes),
+//  2) muestras circulares + "Otro" (sin nombres técnicos a la vista),
+//  3) preview claro/oscuro con el color aplicado a botón y acentos.
+// El código hex queda plegado: es un dato de quien ya lo sabe, no una
+// pregunta para el dueño del negocio.
 const props = defineProps({
   modelValue: { type: String, default: '' }
 })
@@ -67,66 +73,96 @@ const inkLabel = computed(() => (ink.value === '#ffffff' ? 'blanco' : 'negro'))
 </script>
 
 <template>
-  <div class="aidc-field">
-    <div class="aidopt-grid two" role="group" aria-label="Color de tu marca">
+  <div class="aicf">
+    <div class="aicf-seg" role="group" aria-label="Quién elige el color">
       <button
         type="button"
-        class="aidopt"
+        class="aicf-seg-btn"
         :class="{ on: mode === 'ai' }"
         :aria-pressed="mode === 'ai'"
         @click="setMode('ai')"
       >
-        <span class="aidopt-icon"><AppIcon name="sparkles" :size="18" /></span>
-        <span class="aidopt-text">
-          <strong>Que lo elija la IA</strong>
-          <small>Buscamos el color que mejor le queda a tu negocio.</small>
-        </span>
-        <span class="aidopt-mark" aria-hidden="true"><AppIcon v-if="mode === 'ai'" name="check" :size="14" /></span>
+        <AppIcon name="sparkles" :size="16" aria-hidden="true" />
+        Que lo elija la IA
       </button>
-
       <button
         type="button"
-        class="aidopt"
+        class="aicf-seg-btn"
         :class="{ on: mode === 'user' }"
         :aria-pressed="mode === 'user'"
         @click="setMode('user')"
       >
-        <span class="aidopt-icon"><AppIcon name="palette" :size="18" /></span>
-        <span class="aidopt-text">
-          <strong>Elijo mi color</strong>
-          <small>Lo usamos en botones y detalles de tu web.</small>
-        </span>
-        <span class="aidopt-mark" aria-hidden="true"><AppIcon v-if="mode === 'user'" name="check" :size="14" /></span>
+        <AppIcon name="palette" :size="16" aria-hidden="true" />
+        Elijo mi color
       </button>
     </div>
 
-    <div v-if="mode === 'user'" class="aidc-picker">
-      <div class="aidc-swatches" role="group" aria-label="Colores sugeridos">
+    <p class="aicf-note">
+      <template v-if="mode === 'ai'">
+        Buscamos el color que mejor le queda a tu rubro y lo usamos en botones, títulos y detalles.
+      </template>
+      <template v-else>
+        El mismo color en botones, títulos y detalles de tu web.
+      </template>
+    </p>
+
+    <div v-if="mode === 'user'" class="aicf-picker">
+      <div class="aicf-swatches" role="group" aria-label="Colores sugeridos">
         <button
           v-for="p in PRESETS"
           :key="p.hex"
           type="button"
-          class="aidc-swatch"
+          class="aicf-swatch"
           :class="{ on: color === p.hex }"
-          :style="{ '--sw': p.hex, color: p.ink }"
+          :style="{ '--swatch': p.hex }"
           :aria-pressed="color === p.hex"
           :aria-label="p.name"
+          :title="p.name"
           @click="setColor(p.hex)"
         >
-          <span class="aidc-swatch-name">{{ p.name }}</span>
+          <span class="aicf-swatch-dot" aria-hidden="true">
+            <AppIcon v-if="color === p.hex" name="check" :size="14" :style="{ color: p.ink }" />
+          </span>
+          <span class="aicf-swatch-name">{{ p.name }}</span>
         </button>
+
+        <label class="aicf-swatch aicf-swatch-custom" :style="{ '--swatch': color }">
+          <span class="aicf-swatch-dot aicf-swatch-plus" aria-hidden="true">
+            <AppIcon name="plus" :size="15" />
+          </span>
+          <span class="aicf-swatch-name">Otro</span>
+          <span class="sr-only">Elegir otro color</span>
+          <input class="aicf-color-input" type="color" :value="color" @input="setColor($event.target.value)" />
+        </label>
       </div>
 
-      <div class="aidc-custom">
-        <label class="aidc-color-wrap" :style="{ '--sw': color }">
-          <span class="sr-only">Elegir otro color</span>
-          <input class="aidc-color" type="color" :value="color" @input="setColor($event.target.value)" />
-          <span class="aidc-color-face" aria-hidden="true"></span>
-        </label>
-        <label class="aidc-hex-wrap">
-          <span>Código del color</span>
+      <div class="aicf-preview" :style="{ '--swatch': color, '--swatch-ink': ink }">
+        <span class="aicf-preview-label">Así se va a ver</span>
+        <div class="aicf-preview-duo">
+          <div class="aicf-mini is-light" aria-hidden="true">
+            <span class="aicf-mini-bar"></span>
+            <span class="aicf-mini-title"></span>
+            <span class="aicf-mini-line"></span>
+            <span class="aicf-mini-btn">Ver catálogo</span>
+          </div>
+          <div class="aicf-mini is-dark" aria-hidden="true">
+            <span class="aicf-mini-bar"></span>
+            <span class="aicf-mini-title"></span>
+            <span class="aicf-mini-line"></span>
+            <span class="aicf-mini-btn">Ver catálogo</span>
+          </div>
+        </div>
+        <p class="aicf-preview-note">
+          Sobre este color el texto va en {{ inkLabel }}. Ajustamos el contraste para que siempre se lea bien.
+        </p>
+      </div>
+
+      <details class="aicf-more">
+        <summary>Tengo el código exacto de mi marca</summary>
+        <label class="aicf-hex-wrap">
+          <span class="aicf-hex-label">Código (por ejemplo #1a7f5a)</span>
           <input
-            class="aidc-hex"
+            class="aid-input aicf-hex"
             type="text"
             maxlength="7"
             spellcheck="false"
@@ -136,19 +172,7 @@ const inkLabel = computed(() => (ink.value === '#ffffff' ? 'blanco' : 'negro'))
             @blur="onHexBlur"
           />
         </label>
-      </div>
-
-      <div class="aidc-preview" :style="{ '--sw': color, '--sw-ink': ink }">
-        <span class="aidc-preview-label">Así se va a ver</span>
-        <div class="aidc-preview-row">
-          <span class="aidc-preview-card">
-            <strong>Tu negocio</strong>
-            <small>Tu rubro, en una línea</small>
-          </span>
-          <span class="aidc-preview-btn">Ver catálogo</span>
-        </div>
-        <span class="aidc-preview-contrast">Sobre este color conviene el texto {{ inkLabel }}.</span>
-      </div>
+      </details>
     </div>
   </div>
 </template>
