@@ -919,3 +919,47 @@ class GenericErrorResponseTests(TestCase):
         self.assertNotIn('RuntimeError', body)
         self.assertNotIn('Traceback', body)
         self.assertIn('Error interno', body)
+
+
+class ProductionTransportChecksTests(TestCase):
+    """`check --deploy` falla si en producción se apagan las cabeceras de
+    transporte (un .env mal copiado no puede degradar HTTPS en silencio)."""
+
+    def _run(self, **overrides):
+        from DaventProject.checks import check_production_transport_security
+        with override_settings(DEBUG = False, **overrides):
+            return check_production_transport_security(None)
+
+    def test_production_values_pass(self):
+        #Los defaults dependen de DEBUG al importar settings: acá se pasan
+        #explícitos los valores que produce un .env de producción.
+        self.assertEqual(self._run(
+            SECURE_SSL_REDIRECT        = True,
+            SESSION_COOKIE_SECURE      = True,
+            CSRF_COOKIE_SECURE         = True,
+            SECURE_HSTS_SECONDS        = 31536000,
+            SECURE_PROXY_SSL_HEADER    = ('HTTP_X_FORWARDED_PROTO', 'https'),
+        ), [])
+
+    def test_ssl_redirect_off_is_error(self):
+        ids = [e.id for e in self._run(SECURE_SSL_REDIRECT = False)]
+        self.assertIn('project.E001', ids)
+
+    def test_secure_cookies_off_are_errors(self):
+        ids = [e.id for e in self._run(SESSION_COOKIE_SECURE = False, CSRF_COOKIE_SECURE = False)]
+        self.assertIn('project.E002', ids)
+        self.assertIn('project.E003', ids)
+
+    def test_hsts_off_is_error(self):
+        ids = [e.id for e in self._run(SECURE_HSTS_SECONDS = 0)]
+        self.assertIn('project.E004', ids)
+
+    def test_missing_proxy_header_is_error(self):
+        ids = [e.id for e in self._run(SECURE_PROXY_SSL_HEADER = None)]
+        self.assertIn('project.E005', ids)
+
+    def test_debug_skips_checks(self):
+        from DaventProject.checks import check_production_transport_security
+        with override_settings(DEBUG = True, SECURE_SSL_REDIRECT = False):
+            self.assertEqual(check_production_transport_security(None), [])
+
