@@ -6605,21 +6605,12 @@ html { scroll-behavior: smooth; }
    (44+) y la dock (43) — decorativo, pointer-events off. */
 .sp-preview-badge { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 42; padding: 8px 16px; border-radius: 999px; background: color-mix(in srgb, var(--sp-ink, #0f172a) 88%, transparent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .02em; pointer-events: none; box-shadow: 0 8px 22px -10px rgba(2, 6, 23, .5); white-space: nowrap; max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 720px) {
-  .store-page.has-dock .sp-preview-badge { bottom: calc(84px + env(safe-area-inset-bottom)); }
-}
-
-/* Barra fija de contacto (solo móvil) */
-.sp-dock { display: none; }
-@media (max-width: 720px) {
-  .sp-dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 43; display: flex; gap: 10px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--sp-card-solid) 92%, transparent); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-top: 1px solid var(--sp-line); box-shadow: 0 -10px 30px -16px rgba(2, 6, 23, .35); }
-  .sp-dock-btn { flex: 1; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; font-weight: 700; font-size: 15px; text-decoration: none; color: #fff; background: var(--store-accent-ink); transition: transform .15s; }
-  .sp-dock-btn:active { transform: scale(.97); }
-  .sp-dock-btn.is-wa { background: #0d7a3f; }
-  .sp-dock-btn.is-wa + .sp-dock-btn { background: var(--sp-card); color: var(--sp-ink); border: 1.5px solid var(--store-accent-ink); }
-  .store-page.has-dock .sp-foot { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-  .store-page.has-dock .sp-bot { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .sp-boot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sp-boot-hero { padding: 48px 20px 44px; }
+}
+/* El aviso de vista previa no queda tapado por la tab bar. */
+@media (max-width: 768px) {
+  .store-page[data-st-tabbar] .sp-preview-badge { bottom: calc(var(--sp-tabbar-h) + 18px + env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .sp-open.is-open .sp-live-dot::after { animation: none; }
@@ -10111,12 +10102,9 @@ html { scroll-behavior: smooth; }
 }
 
 /* Cuando la barra de presupuesto (.sv-bar) está visible, el StoreBot
-   sube por encima de ella (y del dock si también está). */
+   sube por encima de ella. */
 @media (max-width: 1023px) {
   .store-page:has(.sv-bar) .sp-bot { bottom: calc(96px + env(safe-area-inset-bottom)); }
-}
-@media (max-width: 720px) {
-  .store-page.has-dock:has(.sv-bar) .sp-bot { bottom: calc(160px + env(safe-area-inset-bottom)); }
 }
 
 /* TplProductCard: riel "te puede interesar" */
@@ -11034,13 +11022,8 @@ html { scroll-behavior: smooth; }
      el patrón del dashboard, no el header entero abajo. */
   .store-page[data-st-tabbar] { padding-bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
   .store-page[data-st-tabbar] .sp-burger { display: none; }
-  .store-page[data-st-tabbar] .sp-dock { bottom: calc(var(--sp-tabbar-h) + env(safe-area-inset-bottom)); }
   .store-page[data-st-tabbar] .sp-bot { bottom: calc(var(--sp-tabbar-h) + 16px + env(safe-area-inset-bottom)); }
-  .store-page[data-st-tabbar].has-dock .sp-bot { bottom: calc(var(--sp-tabbar-h) + 76px + env(safe-area-inset-bottom)); }
-  .store-page[data-st-tabbar].has-dock .sp-foot { padding-bottom: calc(var(--sp-tabbar-h) + 96px + env(safe-area-inset-bottom)); }
   .store-page[data-st-nav='drawer'] .sp-top-links { display: none; }
-
-  .store-page[data-st-sticky-cta='true'] .sp-dock { display: flex; }
 }
 
 /* ---------- Tab bar inferior + sheet "Más" (mobile.nav = 'bottom') ----------

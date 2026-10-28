@@ -431,13 +431,6 @@ const socials = computed(() => [
 ].filter((s) => s.url))
 const footAddress = computed(() => store.value?.location_address || '')
 const hasFootContact = computed(() => Boolean(whatsappUrl.value || footAddress.value || socials.value.length))
-// Barra fija móvil: WhatsApp + accesos cruzados a las otras páginas de la
-// web (Inicio solo si hay portada, Catálogo y Servicios). No aparece en la
-// ficha de producto (ya tiene su propio CTA a WhatsApp).
-const dockCatalog = computed(() => showCatalog.value && !isCatalog.value && !isProduct.value)
-const dockServices = computed(() => showServices.value && !isServices.value && !isProduct.value)
-const dockHome = computed(() => !landingOff.value && !isHome.value && !isProduct.value)
-const showDock = computed(() => status.value === 'success' && !isProduct.value && Boolean(whatsappUrl.value || dockCatalog.value || dockServices.value || dockHome.value))
 
 // SEO y previews: Open Graph / Twitter / theme-color + JSON-LD (Store o
 // LocalBusiness) con nombre, dirección, horarios y redes.
@@ -558,7 +551,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome, 'has-dock': showDock }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->
@@ -805,14 +798,6 @@ onBeforeUnmount(() => {
         <p v-if="custom.footer_text" class="sp-foot-note">{{ custom.footer_text }}</p>
       </div>
     </footer>
-
-    <!-- Barra fija de contacto (solo móvil): el CTA principal siempre a mano -->
-    <nav v-if="showDock" class="sp-dock" aria-label="Acciones rápidas">
-      <a v-if="whatsappUrl" class="sp-dock-btn is-wa" :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="18" /> WhatsApp</a>
-      <RouterLink v-if="dockServices" class="sp-dock-btn" :to="servicesTo"><AppIcon name="wrench" :size="18" /> Servicios</RouterLink>
-      <RouterLink v-if="dockCatalog" class="sp-dock-btn" :to="catalogTo"><AppIcon name="package" :size="18" /> Catálogo</RouterLink>
-      <RouterLink v-if="dockHome" class="sp-dock-btn" :to="homeTo"><AppIcon name="store" :size="18" /> Inicio</RouterLink>
-    </nav>
 
     <!-- Chatbot del negocio (has_chatbot): burbuja robot abajo a la derecha -->
     <StoreBot
