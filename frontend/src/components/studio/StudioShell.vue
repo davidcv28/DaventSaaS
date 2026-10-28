@@ -35,7 +35,7 @@ import {
 } from '../../studio/contract.js'
 import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
-import { nearestAccent, hexToRgb, adaptPalette } from '../../utils/colorTools.js'
+import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils/colorTools.js'
 import { STUDIO_PRESETS, presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 import PanelLock from './panels/PanelLock.vue'
 
@@ -437,18 +437,28 @@ const tryingPalette = computed(() => trial.value?.palette || 'original')
 async function applyPreset(p, part = 'all') {
   const t = resolveSiteTheme(p.theme)
   const all = part === 'all'
+  const advanced = Boolean(props.benefits?.has_design_advanced)
   // (1) Los campos persistibles se escriben primero y en el mismo gesto:
   // el watcher form->theme corre en el siguiente flush, así si el preset
   // se aplica DESPUÉS de nextTick su versión de palette/typography gana.
   if (all) {
-    if (props.benefits?.has_design_advanced) {
-      props.form.accent_custom = t.palette.accent
+    let accent = t.palette.accent
+    if (advanced) {
+      props.form.accent_custom = accent
     } else {
       // Sin diseño avanzado el acento libre no viaja: se mapea al slug
       // más cercano del catálogo base. accent_custom queda intacto (un
-      // valor guardado en otra época de plan se conserva, no se pisa).
-      const slug = nearestAccent(hexToRgb(t.palette.accent), STORE_ACCENTS)
+      // valor guardado en otra época de plan se conserva, no se pisa) y
+      // sigue mandando: es el que la web publicada va a pintar.
+      const slug = nearestAccent(hexToRgb(accent), STORE_ACCENTS)
       if (slug) props.form.accent = slug
+      accent = formThemePatch(props.form).palette.accent
+    }
+    // La vista previa se pinta con el acento que de verdad se persiste: el
+    // slug cuando el plan no lleva acento libre (si no, el ensayo se vería
+    // con un color que el Guardar descarta).
+    if (accent !== t.palette.accent) {
+      t.palette = { ...t.palette, primary: accent, accent, secondary: deriveAccent(accent).ink }
     }
     props.form.name_font = t.typography.body
     props.form.theme = p.pageTheme || 'light'
@@ -517,6 +527,11 @@ provide('studioPresets', {
   presets: STUDIO_PRESETS,
   tryingId,
   tryingPalette,
+  // Estilo y paleta que ya están en el borrador (también después de
+  // "Quedarla"): el selector del panel sigue mostrando lo elegido aunque
+  // todavía no se haya guardado.
+  draftStyleId: computed(() => draft.theme.style?.id || ''),
+  draftPalette: computed(() => draft.theme.style?.palette || 'original'),
   lockOf: (p) => presetLock(p, props.benefits),
   tryIt: tryPreset,
   tryPalette,

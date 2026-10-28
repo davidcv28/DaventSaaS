@@ -1,6 +1,6 @@
 <script setup>
 // Panel "Estilos" — un solo camino: elegir el look mirando.
-//   · Elegí el estilo de tu web  -> galería visual (protagonista)
+//   · Elegí el estilo de tu web  -> select por tier + vista previa
 //   · Ajustá el estilo elegido   -> modo, color de botones, letra y logo
 //   · Más ajustes de diseño      -> DesignLookTab completo, plegado
 // Sin lógica de datos propia: escribe los mismos campos de `form` que
@@ -123,7 +123,7 @@ onMounted(() => {
     <section class="est-pick" aria-labelledby="est-h">
       <header class="est-head">
         <h3 id="est-h">Elegí el estilo de tu web</h3>
-        <p>Tocá uno y mirá la vista previa.</p>
+        <p>Elegí uno y mirá la vista previa.</p>
       </header>
       <PresetGallery
         :benefits="benefits"

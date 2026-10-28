@@ -29,18 +29,21 @@ export function buildLayout(templateId, spec = {}) {
     const byId = new Map(base.map((b) => [b.id, b]))
     const ordered = []
     const seen = new Set()
-    for (const id of Array.isArray(s.on) ? s.on : base.map((b) => b.id)) {
+    // ids pedidos por el preset (aunque la plantilla no los soporte)
+    const on = Array.isArray(s.on) ? s.on : null
+    const listed = new Set(on || [])
+    for (const id of on || base.map((b) => b.id)) {
       const b = byId.get(id)
       if (b && !seen.has(id)) { seen.add(id); ordered.push(b) }
     }
-    for (const b of base) if (!seen.has(b.id)) ordered.push(b)
+    // el resto, en el orden canónico de la plantilla (sin repetir ids)
+    for (const b of base) if (!seen.has(b.id)) { seen.add(b.id); ordered.push(b) }
     const off = new Set(s.off || [])
     const variants = s.var || {}
-    const listed = Array.isArray(s.on)
     out[surface] = {
       blocks: ordered.map((b, i) => {
         const meta = blockSpec(surface, b.id)
-        const enabled = meta?.locked ? true : (listed ? seen.has(b.id) : true) && !off.has(b.id)
+        const enabled = meta?.locked ? true : (on ? listed.has(b.id) : true) && !off.has(b.id)
         const block = { id: b.id, enabled, order: i }
         const v = variants[b.id]
         if (v && meta?.variants?.[v]) block.variant = v
@@ -292,7 +295,7 @@ const PRESETS = [
       mobile: { nav: 'bottom', gridCols: 2, cardStyle: 'compact', stickyCta: true, heroHeight: 'compact' }
     }),
     layout: {
-      landing: { on: ['hero', 'announcements', 'highlights', 'offers', 'featured', 'categories', 'countdown', 'benefits', 'brands', 'gallery', 'faq', 'cta', 'contact'], var: { announcements: 'marquee' } },
+      landing: { on: ['hero', 'announcements', 'highlights', 'offers', 'featured', 'about', 'countdown', 'benefits', 'brands', 'gallery', 'faq', 'cta', 'contact'], var: { announcements: 'marquee' } },
       catalog: { on: ['promo', 'filters', 'sort', 'grid'] },
       services: { on: ['hero', 'band', 'picker', 'steps', 'form', 'faq'] }
     }
@@ -501,6 +504,47 @@ const PRESETS = [
       catalog: { on: ['note', 'filters', 'sort', 'grid'] },
       services: { on: ['hero', 'picker', 'steps', 'form', 'faq'] }
     }
+  },
+  {
+    id: 'suizo-editorial', name: 'Suizo tipográfico', style: 'Suizo tipográfico',
+    desc: 'Retícula suiza, tinta negra y un rojo que señala.',
+    tier: 'base', template: 'classic', pageTheme: 'light',
+    rubros: ['services', 'tech', 'general'],
+    theme: theme({
+      accent: '#e11d48',
+      pal: { bg: '#ffffff', surface: '#ffffff', text: '#0b0b0b', muted: '#5b5b5b', border: '#d9d9d9' },
+      containers: { radius: 'none', shadow: 'none', border: 'thin', density: 'compact', surface: 'flat' },
+      heading: 'archivo', body: 'inter', scale: 'editorial', weight: 700, tracking: '-0.02em',
+      buttons: { shape: 'square', style: 'solid', size: 'sm' },
+      motion: { reveal: 'fade', hover: 'none', intensity: 'subtle' },
+      mobile: { cardStyle: 'compact', heroHeight: 'compact' }
+    }),
+    layout: {
+      landing: { on: ['hero', 'highlights', 'about', 'services', 'stats', 'featured', 'gallery', 'faq', 'contact'], var: { stats: 'band' } },
+      catalog: { on: ['note', 'filters', 'sort', 'grid'] },
+      services: { on: ['hero', 'band', 'picker', 'steps', 'form', 'faq'] }
+    }
+  },
+  {
+    id: 'cobalto-nocturno', name: 'Cobalto nocturno', style: 'Cobalto profundo',
+    desc: 'Azul profundo, filo luminoso y datos en primer plano.',
+    tier: 'plus', template: 'vitrina', pageTheme: 'dark',
+    rubros: ['tech', 'services', 'general'],
+    theme: theme({
+      accent: '#3b82f6',
+      pal: { bg: '#050a18', surface: '#0a1327', text: '#e8eefc', muted: '#8296b8', border: '#152441' },
+      containers: { radius: 'lg', shadow: 'medium', border: 'thin', density: 'comfortable', surface: 'elevated' },
+      heading: 'sora', body: 'manrope', scale: 'balanced', weight: 700, tracking: '-0.01em',
+      buttons: { shape: 'rounded', style: 'gradient', size: 'md' },
+      background: { type: 'mesh', value: 'radial-gradient(60% 45% at 15% 0%, rgba(59,130,246,.30), transparent 70%), radial-gradient(50% 40% at 88% 8%, rgba(14,165,233,.20), transparent 72%), #050a18' },
+      motion: { reveal: 'rise', hover: 'glow', intensity: 'medium' },
+      mobile: { nav: 'bottom', cardStyle: 'overlay', stickyHero: false, heroHeight: 'tall' }
+    }),
+    layout: {
+      landing: { on: ['hero', 'stats', 'featured', 'benefits', 'offers', 'gallery', 'testimonials', 'faq', 'cta', 'contact'], var: { stats: 'cards' } },
+      catalog: { on: ['promo', 'filters', 'sort', 'grid'] },
+      services: { on: ['hero', 'band', 'picker', 'steps', 'form', 'faq'] }
+    }
   }
 ]
 
@@ -558,14 +602,6 @@ export const STUDIO_PRESETS = PRESETS.map((raw) => {
   }
 })
 
-// Subconjunto curado que lista el select del panel "Estilos" (2 base, 2 plus,
-// 2 advanced). El catálogo completo sigue disponible para guardar/aplicar.
-export const PRESET_PICKER_IDS = [
-  'neo-brutalista', 'corporativo', 'denim-urbano',
-  'bento', 'pastel-suave', 'atelier-moda',
-  'editorial-minima', 'lujo-serif'
-]
-
 export function presetById(id) {
   return STUDIO_PRESETS.find((p) => p.id === id) || null
 }
@@ -578,12 +614,15 @@ export function layoutForTemplate(preset, templateId) {
 
 // null = persiste completo; 'plan' = la plantilla está por encima del nivel;
 // 'theme' = la plantilla alcanza pero el tema completo pide Premium (con
-// Plus solo viajan radius/density de containers y nada del resto).
+// Plus solo viajan radius/density de containers y nada del resto). Un preset
+// de plantilla Base ya se guarda con el plan Básico (style.id + styleColors):
+// no pide diseño avanzado.
 const TIER_BENEFIT = { base: null, plus: 'has_design_plus', advanced: 'has_design_advanced' }
 export function presetLock(preset, benefits = {}) {
-  const need = TIER_BENEFIT[STORE_TEMPLATES[preset?.template]?.tier || 'base']
+  const tier = STORE_TEMPLATES[preset?.template]?.tier || 'base'
+  const need = TIER_BENEFIT[tier]
   if (need && !benefits[need]) return 'plan'
-  if (!benefits.has_design_advanced) return 'theme'
+  if (tier !== 'base' && !benefits.has_design_advanced) return 'theme'
   return null
 }
 
