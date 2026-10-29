@@ -16,7 +16,7 @@ const props = defineProps({
   proposal: { type: Object, required: true },
   form: { type: Object, default: () => ({}) },
   vars: { type: Object, default: () => ({}) },
-  template: { type: String, default: 'classic' },
+  template: { type: String, default: 'raiz' },
   shopName: { type: String, default: '' },
   initial: { type: String, default: 'T' },
   logo: { type: String, default: '' },

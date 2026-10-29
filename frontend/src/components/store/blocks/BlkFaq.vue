@@ -8,8 +8,7 @@ import { vReveal } from '../../../directives/reveal.js'
 const props = defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
-const { custom, pageTemplate, showContact } = ctx
-const tpl = pageTemplate
+const { custom } = ctx
 
 const faqs = computed(() => (Array.isArray(custom.value.faqs) ? custom.value.faqs : []))
 const show = computed(() => custom.value.show_faq !== false && faqs.value.length > 0)
@@ -25,10 +24,6 @@ const faqVariant = computed(() => props.block?.variant || 'accordion')
       <div class="sp-faq-intro">
         <p v-if="faqEyebrow" class="sp-eyebrow">{{ faqEyebrow }}</p>
         <h2 id="sp-faq-title" v-reveal class="sp-section-title">{{ faqsTitle }}</h2>
-        <p v-if="tpl === 'shop'" class="sp-faq-note">
-          ¿No encontrás lo que buscás?
-          <a v-if="showContact" href="#contacto">Escribinos</a><template v-else>Consultanos por WhatsApp.</template>
-        </p>
       </div>
       <div v-if="faqVariant === 'list'" class="sp-faq-list">
         <div v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item is-open">

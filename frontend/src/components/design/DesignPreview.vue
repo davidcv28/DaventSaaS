@@ -5,7 +5,7 @@ import AppIcon from '../AppIcon.vue'
 const props = defineProps({
   form: { type: Object, required: true },
   vars: { type: Object, default: () => ({}) },
-  template: { type: String, default: 'classic' },
+  template: { type: String, default: 'raiz' },
   shopName: { type: String, default: '' },
   initial: { type: String, default: 'T' },
   logo: { type: String, default: '' },

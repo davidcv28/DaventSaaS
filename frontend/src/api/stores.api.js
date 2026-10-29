@@ -18,7 +18,7 @@ import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
 //                                                   sin has_design_advanced la web no muestra portada y expone
 //                                                   un toggle claro/oscuro al visitante en el nav;
 //                                                   allowed_templates es la whitelist de plantillas del plan
-//                                                   (la web fuerza 'classic' si el guardado no está permitido);
+//                                                   (la web fuerza 'raiz' si el guardado no está permitido);
 //                                                   location_address es null sin has_location_map (Estándar+)
 //                                                   o si el dueño apagó el mapa (customization.show_location);
 //                                                   service_items = servicios activos [{id,name,description,

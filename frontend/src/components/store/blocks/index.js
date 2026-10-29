@@ -1,10 +1,8 @@
-// Componentes de bloque de la superficie `landing` de la familia
-// StorePublicView (classic, perspective, promo, street, terminal,
-// lookbook, cobre, minimal, boutique, signature, aurora y shop). El mapa
-// id -> componente async lo consume BlockRenderer: los ids son los del
-// catálogo cerrado (templates/blocks.js) y cada bloque recibe :block con
-// {id, enabled, order, variant?, props?} para aplicar su variante y el
-// override de título (props.title).
+// Componentes de bloque de la superficie `landing` de la web pública
+// (raiz, trama y circuito). El mapa id -> componente async lo consume
+// BlockRenderer: los ids son los del catálogo cerrado (templates/blocks.js)
+// y cada bloque recibe :block con {id, enabled, order, variant?, props?}
+// para aplicar su variante y el override de título (props.title).
 //
 // Los ids sin componente aquí (p.ej. 'steps', 'compare') no se montan aunque
 // la plantilla los declare — el renderer los filtra solo.

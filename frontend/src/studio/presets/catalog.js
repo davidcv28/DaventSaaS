@@ -101,7 +101,7 @@ const PRESETS = [
   {
     id: 'editorial-minima', name: 'Editorial mínima', style: 'Minimal editorial',
     desc: 'Papel, tinta y aire: la foto y la palabra mandan.',
-    tier: 'advanced', template: 'minimal', pageTheme: 'light',
+    tier: 'advanced', template: 'raiz', pageTheme: 'light',
     rubros: ['moda', 'lifestyle', 'services', 'general'],
     theme: theme({
       accent: '#1c1917',
@@ -121,7 +121,7 @@ const PRESETS = [
   {
     id: 'vidrio-nocturno', name: 'Vidrio nocturno', style: 'Glass oscuro',
     desc: 'Noche profunda con placas de vidrio esmerilado.',
-    tier: 'advanced', template: 'cobre', pageTheme: 'dark',
+    tier: 'advanced', template: 'trama', pageTheme: 'dark',
     rubros: ['tech', 'gamer', 'general'],
     theme: theme({
       accent: '#38bdf8',
@@ -142,7 +142,7 @@ const PRESETS = [
   {
     id: 'bento', name: 'Bento', style: 'Bento',
     desc: 'Tarjetas redondas que ordenan todo en módulos.',
-    tier: 'plus', template: 'vitrina', pageTheme: 'light',
+    tier: 'plus', template: 'trama', pageTheme: 'light',
     rubros: ['tech', 'general'],
     theme: theme({
       accent: '#0ea5e9',
@@ -162,7 +162,7 @@ const PRESETS = [
   {
     id: 'neo-brutalista', name: 'Neo-brutal', style: 'Neo-brutalista',
     desc: 'Bordes duros, tinta plana y tipografía que grita.',
-    tier: 'base', template: 'duo', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['moda', 'gamer', 'lifestyle'],
     theme: theme({
       accent: '#e11d48',
@@ -182,7 +182,7 @@ const PRESETS = [
   {
     id: 'lujo-serif', name: 'Lujo serif', style: 'Luxury serif',
     desc: 'Noche de espresso, dorado y grabados de autor.',
-    tier: 'advanced', template: 'cobre', pageTheme: 'dark',
+    tier: 'advanced', template: 'trama', pageTheme: 'dark',
     rubros: ['belleza', 'lifestyle', 'food'],
     theme: theme({
       accent: '#c9a24b',
@@ -202,7 +202,7 @@ const PRESETS = [
   {
     id: 'pastel-suave', name: 'Pastel suave', style: 'Soft pastel',
     desc: 'Lavanda, rosa y aire: calma que vende.',
-    tier: 'plus', template: 'calma', pageTheme: 'light',
+    tier: 'plus', template: 'raiz', pageTheme: 'light',
     rubros: ['belleza', 'hogar', 'services'],
     theme: theme({
       accent: '#d16ba5',
@@ -222,7 +222,7 @@ const PRESETS = [
   {
     id: 'neon-tech', name: 'Neón tech', style: 'Neón tech',
     desc: 'Verde fósforo sobre negro: energía de arena.',
-    tier: 'plus', template: 'vitrina', pageTheme: 'dark',
+    tier: 'plus', template: 'trama', pageTheme: 'dark',
     rubros: ['gamer', 'tech'],
     theme: theme({
       accent: '#00e67a',
@@ -243,7 +243,7 @@ const PRESETS = [
   {
     id: 'terracota', name: 'Terracota', style: 'Terracota artesanal',
     desc: 'Barro, papel crudo y serif cálida de taller.',
-    tier: 'advanced', template: 'minimal', pageTheme: 'light',
+    tier: 'advanced', template: 'raiz', pageTheme: 'light',
     rubros: ['hogar', 'food', 'general'],
     theme: theme({
       accent: '#b7512e',
@@ -263,7 +263,7 @@ const PRESETS = [
   {
     id: 'monocromo', name: 'Monocromo', style: 'Monocromo fotográfico',
     desc: 'Blanco y negro puro: la foto hace todo el trabajo.',
-    tier: 'advanced', template: 'minimal', pageTheme: 'light',
+    tier: 'advanced', template: 'raiz', pageTheme: 'light',
     rubros: ['moda', 'lifestyle', 'general'],
     theme: theme({
       accent: '#18181b',
@@ -283,7 +283,7 @@ const PRESETS = [
   {
     id: 'retail-vibrante', name: 'Retail vibrante', style: 'Retail vibrante',
     desc: 'Góndola cargada: oferta primero, compra rápida.',
-    tier: 'advanced', template: 'cobre', pageTheme: 'light',
+    tier: 'advanced', template: 'trama', pageTheme: 'light',
     rubros: ['ofertas', 'general'],
     theme: theme({
       accent: '#dc2626',
@@ -303,7 +303,7 @@ const PRESETS = [
   {
     id: 'aurora-degradada', name: 'Aurora', style: 'Gradiente aurora',
     desc: 'Cortinas de color suave sobre papel claro.',
-    tier: 'base', template: 'duo', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['tech', 'general', 'belleza'],
     theme: theme({
       accent: '#7c3aed',
@@ -324,7 +324,7 @@ const PRESETS = [
   {
     id: 'papel-riso', name: 'Papel riso', style: 'Papel/Riso',
     desc: 'Risografía: crema punteado y tintas que se solapan.',
-    tier: 'base', template: 'duo', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['hogar', 'food', 'general'],
     theme: theme({
       accent: '#3550f5',
@@ -345,7 +345,7 @@ const PRESETS = [
   {
     id: 'corporativo', name: 'Corporativo sobrio', style: 'Corporativo sobrio',
     desc: 'Azul institucional, orden y confianza.',
-    tier: 'base', template: 'classic', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['services', 'general', 'ofertas'],
     theme: theme({
       accent: '#1e40af',
@@ -365,7 +365,7 @@ const PRESETS = [
   {
     id: 'gourmet-calido', name: 'Gourmet cálido', style: 'Gourmet cálido',
     desc: 'Menú de autor: madera, crema y apetito.',
-    tier: 'advanced', template: 'minimal', pageTheme: 'light',
+    tier: 'advanced', template: 'raiz', pageTheme: 'light',
     rubros: ['food'],
     theme: theme({
       accent: '#9a3412',
@@ -385,7 +385,7 @@ const PRESETS = [
   {
     id: 'belleza-rosa', name: 'Belleza rosa', style: 'Beauty rosado',
     desc: 'Vidriera rosa empolvada con serif de revista.',
-    tier: 'plus', template: 'vitrina', pageTheme: 'light',
+    tier: 'plus', template: 'trama', pageTheme: 'light',
     rubros: ['belleza', 'moda', 'lifestyle'],
     theme: theme({
       accent: '#db2777',
@@ -406,7 +406,7 @@ const PRESETS = [
   {
     id: 'kids-ludico', name: 'Kids lúdico', style: 'Kids lúdico',
     desc: 'Colores redondos y alegres para chicos y grandes.',
-    tier: 'base', template: 'duo', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['general', 'ofertas'],
     theme: theme({
       accent: '#7c3aed',
@@ -427,7 +427,7 @@ const PRESETS = [
   {
     id: 'urbano-sticker', name: 'Urbano sticker', style: 'Urbano sticker',
     desc: 'Streetwear: titulares XXL y amarillo señal.',
-    tier: 'plus', template: 'vitrina', pageTheme: 'light',
+    tier: 'plus', template: 'trama', pageTheme: 'light',
     rubros: ['moda', 'gamer'],
     theme: theme({
       accent: '#eab308',
@@ -447,7 +447,7 @@ const PRESETS = [
   {
     id: 'consola-retro', name: 'Consola retro', style: 'Consola retro',
     desc: 'Fósforo verde y scanlines: terminal viva.',
-    tier: 'advanced', template: 'minimal', pageTheme: 'dark',
+    tier: 'advanced', template: 'raiz', pageTheme: 'dark',
     rubros: ['gamer', 'tech'],
     theme: theme({
       accent: '#4ade80',
@@ -468,7 +468,7 @@ const PRESETS = [
   {
     id: 'denim-urbano', name: 'Denim urbano', style: 'Denim urbano',
     desc: 'Jeans, calle y tipografía condensada: ropa de todos los días.',
-    tier: 'base', template: 'duo', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['moda', 'lifestyle'],
     theme: theme({
       accent: '#1e3a5f',
@@ -488,7 +488,7 @@ const PRESETS = [
   {
     id: 'atelier-moda', name: 'Atelier de moda', style: 'Atelier editorial',
     desc: 'Editorial de pasarela: serif fina, aire y fotos grandes.',
-    tier: 'plus', template: 'vitrina', pageTheme: 'light',
+    tier: 'plus', template: 'trama', pageTheme: 'light',
     rubros: ['moda', 'belleza', 'lifestyle'],
     theme: theme({
       accent: '#8c1d3f',
@@ -508,7 +508,7 @@ const PRESETS = [
   {
     id: 'suizo-editorial', name: 'Suizo tipográfico', style: 'Suizo tipográfico',
     desc: 'Retícula suiza, tinta negra y un rojo que señala.',
-    tier: 'base', template: 'classic', pageTheme: 'light',
+    tier: 'base', template: 'raiz', pageTheme: 'light',
     rubros: ['services', 'tech', 'general'],
     theme: theme({
       accent: '#e11d48',
@@ -528,7 +528,7 @@ const PRESETS = [
   {
     id: 'cobalto-nocturno', name: 'Cobalto nocturno', style: 'Cobalto profundo',
     desc: 'Azul profundo, filo luminoso y datos en primer plano.',
-    tier: 'plus', template: 'vitrina', pageTheme: 'dark',
+    tier: 'plus', template: 'trama', pageTheme: 'dark',
     rubros: ['tech', 'services', 'general'],
     theme: theme({
       accent: '#3b82f6',

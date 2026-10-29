@@ -195,7 +195,7 @@ export function bandPalette(accentHex) {
     base1: safe,
     base2: mixHex(safe, '#000000', 0.28),
     // Acento para texto sobre el velo oscuro de una portada (Ãºltima palabra
-    // del nombre en Cobre/Minimal/Boutique): se aclara hasta 3:1 (texto
+    // del nombre en los diseños retirados): se aclara hasta 3:1 (texto
     // grande) si el acento es oscuro.
     mark: onDark(safe)
   }

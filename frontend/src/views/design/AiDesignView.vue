@@ -244,7 +244,7 @@ function proposalNameFont(p) {
 }
 const previewForm = computed(() => (previewProposal.value ? proposalForm(previewProposal.value) : {}))
 const previewVars = computed(() => (previewProposal.value ? proposalVars(previewProposal.value) : {}))
-const previewTemplate = computed(() => (previewProposal.value ? proposalTemplate(previewProposal.value) : 'classic'))
+const previewTemplate = computed(() => (previewProposal.value ? proposalTemplate(previewProposal.value) : 'raiz'))
 const previewNameFont = computed(() => (previewProposal.value ? proposalNameFont(previewProposal.value) : {}))
 const previewCover = computed(() => (previewProposal.value ? proposalCover(previewProposal.value) : cover.value))
 

@@ -1,8 +1,7 @@
 <script setup>
-// Bloque 'featured': vitrina de productos destacados en la portada (8 en
-// marketplace/Minimal/Boutique, 4 pliegos en Lookbook, Cobre y la
-// colección de autor, 6 en Signature/Aurora). Sin catálogo o sin
-// productos se auto-oculta. props.title pisa el título de la sección.
+// Bloque 'featured': vitrina de productos recientes de la portada (4 en
+// Raíz). Sin catálogo o sin productos se auto-oculta. props.title pisa el
+// título de la sección.
 import { computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
@@ -14,8 +13,7 @@ import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 const props = defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
-const { slug, custom, pageTemplate, showCatalog } = ctx
-const tpl = pageTemplate
+const { slug, custom, showCatalog } = ctx
 const router = useRouter()
 const { featured: shopCatalog } = useFeaturedCatalog()
 
@@ -23,7 +21,7 @@ const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug
 const catTo = (id) => ({ ...catalogTo.value, query: { category: id } })
 const variant = computed(() => props.block?.variant || 'grid')
 const isCats = computed(() => variant.value === 'cats')
-const shopProducts = computed(() => shopCatalog.value.products.slice(0, tpl.value === 'lookbook' || tpl.value === 'cobre' ? 4 : tpl.value === 'signature' || tpl.value === 'aurora' ? 6 : 8))
+const shopProducts = computed(() => shopCatalog.value.products.slice(0, 4))
 // Variante 'cats': carruseles por categoría — hasta 4 grupos con
 // productos, 8 tarjetas por riel con scroll horizontal.
 const catGroups = computed(() => shopCatalog.value.categories
@@ -37,22 +35,9 @@ const shopCatOf = (p) => shopCatalog.value.categories.find((c) => c.id === p.cat
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
 const openProduct = (p) => router.push(productTo(p))
 
-const eyebrow = computed(() => (tpl.value === 'lookbook' ? 'Selección de la edición'
-  : tpl.value === 'signature' ? 'Curaduría de autor'
-    : tpl.value === 'aurora' ? 'Cielo despejado'
-      : tpl.value === 'cobre' || tpl.value === 'minimal' || tpl.value === 'boutique' ? 'Nueva temporada'
-        : 'Recién llegados'))
-const title = computed(() => props.block?.props?.title?.trim() || (tpl.value === 'lookbook' ? 'Pliegos destacados'
-  : tpl.value === 'signature' ? 'La vitrina'
-    : tpl.value === 'aurora' ? 'El observatorio'
-      : tpl.value === 'cobre' || tpl.value === 'boutique' ? 'La colección'
-        : tpl.value === 'minimal' ? 'Selección'
-          : 'Productos destacados'))
-const viewAll = computed(() => (tpl.value === 'lookbook' ? 'Ver índice completo'
-  : tpl.value === 'cobre' ? 'Ver todo'
-    : tpl.value === 'signature' ? 'Ver el catálogo completo'
-      : tpl.value === 'boutique' ? 'Ver toda la colección'
-        : 'Ver todo el catálogo'))
+const eyebrow = 'Recién llegados'
+const title = computed(() => props.block?.props?.title?.trim() || 'Productos destacados')
+const viewAll = 'Ver todo el catálogo'
 </script>
 
 <template>
