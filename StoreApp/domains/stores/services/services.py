@@ -76,27 +76,20 @@ def profile_has_benefit(profile, code):
 #=========================================
 def allowed_templates_of(profile):
     """
-    Diseños de la web disponibles según el plan: TEMPLATE_BASE va con
-    cualquier has_customization, has_design_plus suma Urbano/Publicidad
-    y has_design_advanced el resto. Sin acceso solo 'classic' — la web
-    pública lo usa como whitelist para forzar el fallback si el dueño
-    baja de plan o guardó un diseño ya retirado.
+    Diseños de la web disponibles según el plan: TEMPLATE_BASE ('raiz') va
+    con cualquier has_customization, has_design_plus suma 'trama' y
+    has_design_advanced suma 'circuito'. Sin acceso solo 'raiz' — la web
+    pública lo usa como whitelist para forzar el fallback si el dueño baja
+    de plan. El motor de IA ya no suma patrones propios: propone los 3.
     """
     benefits        =   plan_benefits_of(profile)
     if not benefits.get('has_customization'):
-        return (StoreCustomization.TEMPLATE_CLASSIC,)
+        return (StoreCustomization.TEMPLATE_RAIZ,)
     allowed         =   list(StoreCustomization.TEMPLATE_BASE)
     if benefits.get('has_design_plus'):
         allowed         +=  StoreCustomization.TEMPLATE_PLUS
     if benefits.get('has_design_advanced'):
         allowed         +=  StoreCustomization.TEMPLATE_ADVANCED
-    #Patrones del motor de IA: exclusivos de has_ai_design, después de los
-    #avanzados. Sin ese beneficio nunca aparecen (ni se ofrecen a mano).
-    #v4: el motor también puede elegir entre los 20 diseños retirados del
-    #selector (solo para la IA, nunca para el panel).
-    if benefits.get('has_ai_design'):
-        allowed         +=  StoreCustomization.TEMPLATE_AI
-        allowed         +=  tuple(StoreCustomization.TEMPLATE_RETIRED_MAP)
     return tuple(allowed)
 #=========================================
 # RECORD STORE VISIT (+1 por visitante/día, sin guardar IPs)

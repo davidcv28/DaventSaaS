@@ -16,10 +16,10 @@ from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services import ai_design_skins as SKIN
 from StoreApp.domains.stores.services import ai_design_typography as TYPE
 
-PLAN_BASIC      =   ('classic', 'duo')
-PLAN_PLUS       =   ('classic', 'duo', 'calma', 'vitrina')
-PLAN_ADVANCED   =   ('classic', 'duo', 'calma', 'vitrina', 'cobre', 'minimal', 'perspective', 'street')
-PLAN_AI         =   PLAN_ADVANCED + tuple(R.AI_TEMPLATES)
+PLAN_BASIC      =   ('raiz',)
+PLAN_PLUS       =   ('raiz', 'trama')
+PLAN_ADVANCED   =   ('raiz', 'trama', 'circuito')
+PLAN_AI         =   PLAN_ADVANCED
 
 FACT_KEYS       =   ('products', 'images', 'categories', 'brands', 'gallery', 'carousel',
                      'offers', 'countdown', 'catalog_dense', 'catalog_note', 'announcements',
@@ -269,15 +269,16 @@ class StyleCandidatesPositiveTests(unittest.TestCase):
         for candidate in self.candidates:
             self.assertEqual(candidate['source'], R.style_source_of(candidate['template']))
 
-    def test_with_the_ai_flag_ai_templates_compete(self):
-        candidates = A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_AI, 0)
-        templates = A.seen_templates(candidates)
-        self.assertTrue(templates & set(R.AI_TEMPLATES), templates)
+    def test_the_three_designs_compete(self):
+        #Sin patrones exclusivos de IA: el motor compite solo con los 3
+        #diseños del catálogo (uno por rubro).
+        candidates  =   A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, 0)
+        templates   =   A.seen_templates(candidates)
+        self.assertEqual(templates, set(PLAN_ADVANCED))
 
-    def test_without_the_ai_flag_legacy_templates_compete(self):
-        candidates = A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, 0)
-        templates = A.seen_templates(candidates)
-        self.assertTrue(templates & set(R.LEGACY_TEMPLATES), templates)
+    def test_plan_basic_never_competes_with_plus_or_advanced(self):
+        candidates  =   A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_BASIC, 0)
+        self.assertEqual(A.seen_templates(candidates), set(PLAN_BASIC))
 
     def test_signature_matrix_opens_the_ranking(self):
         #La matriz del rubro es el piso de diversidad: sus plantillas (las que
@@ -376,14 +377,18 @@ class StyleCandidatesEdgeTests(unittest.TestCase):
         self.assertTrue(candidates)
 
     def test_data_signals_reward_photos_for_photo_templates(self):
-        photo_stats = dict(stats_empty(), images = 10, gallery = 5)
-        candidates  = A._style_candidates(facts_empty(), photo_stats, answers(), PLAN_BASIC, 0)
-        self.assertEqual(A._data_signal('duo', photo_stats, facts_empty()), 0)
+        photo_stats =   dict(stats_empty(), images = 10, gallery = 5)
+        candidates  =   A._style_candidates(facts_empty(), photo_stats, answers(), PLAN_BASIC, 0)
+        #Con fotos y sin texto/catálogo el diseño visual (trama/circuito)
+        #puntúa; la tienda vacía premia el generalista (raiz).
+        self.assertGreater(A._data_signal('trama', photo_stats, facts_empty()), 0)
+        self.assertEqual(A._data_signal('raiz', stats_empty(), facts_empty()), 2)
         self.assertTrue(candidates)
 
     def test_catalog_signal_only_fires_with_a_big_catalog(self):
-        self.assertEqual(A._data_signal('duo', dict(stats_empty(), products = 5), facts_empty()), 0)
-        self.assertEqual(A._data_signal('classic', dict(stats_empty(), products = 0), facts_empty()), 2)
+        self.assertEqual(A._data_signal('raiz', dict(stats_empty(), products = 5), facts_empty()), 0)
+        self.assertEqual(A._data_signal('raiz', dict(stats_empty(), products = 12), facts_empty()), 3)
+        self.assertEqual(A._data_signal('raiz', dict(stats_empty(), products = 0), facts_empty()), 2)
 
     def test_requested_style_never_overrides_the_plan(self):
         #Estilo pedido cuya plantilla no está en el plan: no se impone.
@@ -538,7 +543,7 @@ class CandidatesToSelectionTests(unittest.TestCase):
     def test_plan_basico_gets_two_proposals_inside_the_plan(self):
         for seed in range(6):
             candidates = A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_BASIC, seed)
-            chosen = A._select_styles(candidates, 2)
+            chosen = A._select_styles(candidates, 2, allow_repeat_template = True)
             self.assertEqual(len(chosen), 2, seed)
             for item in chosen:
                 self.assertIn(item['template'], PLAN_BASIC)

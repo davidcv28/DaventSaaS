@@ -9,7 +9,7 @@
 #para el texto. Nada de acá llega al cliente sin pasar por
 #clean_layout_config y por la whitelist de plantillas del plan.
 
-ENGINE_VERSION              =   'ai-design/6'
+ENGINE_VERSION              =   'ai-design/7'
 
 TONES                       =   ('calido', 'serio', 'moderno', 'audaz')
 DEFAULT_TONE                =   'moderno'
@@ -245,25 +245,18 @@ TEMPLATE_GOAL_AFFINITY      =   {
 #lenguajes distintos, no dos variantes del mismo:
 #  ai_lumen -> oscuro cinematográfico, vidrio y luz (fotos grandes, aire).
 #  ai_pulse -> editorial cinético, tipografía XL y grilla desplazada.
-AI_TEMPLATES                =   ('ai_lumen', 'ai_pulse')
-AI_LOOKS                    =   {'ai_lumen': 'lumen', 'ai_pulse': 'pulse'}
-#Los 20 diseños retirados del selector (mig. 0049) vuelven SOLO para el
-#motor: el dueño no los elige a mano, la IA sí los propone. Orden = el de
-#TEMPLATE_RETIRED_MAP del modelo (fuente única del catálogo).
-LEGACY_TEMPLATES            =   (
-    'perspective', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit',
-    'arena', 'mercado', 'studio', 'lookbook', 'shop', 'boutique', 'signature',
-    'aurora', 'terminal', 'terra', 'lab', 'carta', 'proceso',
-)
-#Fuentes de estilo del motor v4 (viaja en la propuesta como style_source).
-STYLE_SOURCES               =   ('plan', 'ai', 'legacy')
+#Rediseño de plantillas (fase 1): el motor ya no tiene diseños exclusivos ni
+#retirados. Propone SOLO los 3 diseños por rubro del catálogo (ver el bloque
+#de normalización al final del archivo: las tablas de abajo conservan su
+#historia y se remapean por afinidad al importar).
+AI_TEMPLATES                =   ()
+AI_LOOKS                    =   {}
+LEGACY_TEMPLATES            =   ()
+#Fuentes de estilo del motor: ahora todas las propuestas son del catálogo.
+STYLE_SOURCES               =   ('plan',)
 
 
 def style_source_of(template):
-    if template in AI_TEMPLATES:
-        return 'ai'
-    if template in LEGACY_TEMPLATES:
-        return 'legacy'
     return 'plan'
 
 
@@ -792,3 +785,64 @@ BLOCK_TITLES                =   {
     'arte':         {'gallery': 'Obras', 'about': 'El taller', 'featured': 'Piezas disponibles', 'timeline': 'Trayectoria', 'testimonials': 'Coleccionistas'},
     'otro':         {'services': 'Qué ofrecemos', 'benefits': 'Por qué elegirnos', 'gallery': 'Galería', 'testimonials': 'Opiniones', 'faq': 'Preguntas frecuentes'},
 }
+
+#=========================================
+# NORMALIZACIÓN AL CATÁLOGO DE 3 DISEÑOS
+#=========================================
+#Las tablas de arriba conservan la historia del motor (matrices por rubro,
+#afinidades de tono/objetivo, etc.) escritas con los ids viejos. Acá se
+#remapean por afinidad de rubro al importar, así el motor propone SOLO
+#'raiz' / 'trama' / 'circuito' sin reescribir cada receta a mano.
+#Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única).
+PUBLIC_TEMPLATES            =   ('raiz', 'trama', 'circuito')
+PUBLIC_TEMPLATE_MAP         =   {
+    'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
+    'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
+    'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz', 'shop': 'raiz',
+    'atelier': 'trama', 'lookbook': 'trama', 'boutique': 'trama',
+    'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
+    'street': 'trama', 'riso': 'trama', 'promo': 'trama', 'aurora': 'trama',
+    'perspective': 'circuito', 'circuit': 'circuito', 'terminal': 'circuito',
+    'lab': 'circuito', 'ai_lumen': 'circuito', 'ai_pulse': 'trama',
+}
+
+
+def public_template(template):
+    """Id del catálogo nuevo para un id (viejo o actual)."""
+    return PUBLIC_TEMPLATE_MAP.get(template, template)
+
+
+#Recetas por rubro: se remapean los templates y se conserva el orden de
+#afinidad (deduplicado). Si el remapeo deja menos de 3, se completan los
+#que falten para que el motor siempre tenga los 3 disponibles.
+for _recipe in RUBROS.values():
+    _mapped = []
+    for _tpl in _recipe.get('templates', ()):
+        _new = public_template(_tpl)
+        if _new in PUBLIC_TEMPLATES and _new not in _mapped:
+            _mapped.append(_new)
+    for _tpl in PUBLIC_TEMPLATES:
+        if _tpl not in _mapped:
+            _mapped.append(_tpl)
+    _recipe['templates'] = tuple(_mapped)
+
+#Matriz "firma" por rubro: misma remapeada (la piel y el par se conservan).
+for _rubro, _styles in RUBRO_STYLES.items():
+    RUBRO_STYLES[_rubro] = tuple({**style, 'template': public_template(style['template'])} for style in _styles)
+
+#Afinidades y etiquetas del catálogo nuevo (el motor las puntúa).
+TEMPLATE_TONE_AFFINITY.update({
+    'raiz':     {'serio': 2, 'moderno': 2, 'calido': 2, 'audaz': 1},
+    'trama':    {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 1},
+    'circuito': {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
+})
+TEMPLATE_LABELS.update({'raiz': 'Raíz', 'trama': 'Trama', 'circuito': 'Circuito'})
+TEMPLATE_GOAL_AFFINITY.update({
+    #Cada objetivo tiene UN diseño que mejor cuenta esa historia (el resto
+    #compite por tono/piel): así cambiar el objetivo mueve el puntaje.
+    'vender_online':        ('trama',),
+    'mostrar_servicios':    ('raiz',),
+    'conseguir_consultas':  ('raiz',),
+    'dar_confianza':        ('raiz', 'circuito'),
+    'mostrar_trabajos':     ('trama', 'circuito'),
+})

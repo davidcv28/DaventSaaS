@@ -118,72 +118,42 @@ class StoreCustomization(models.Model):
         ('outfit',               'Outfit'),
         ('plus-jakarta-sans',    'Plus Jakarta Sans'),
     ]
-    TEMPLATE_CLASSIC            =   'classic'
-    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 6
-    #habilitados, 2 por nivel: base para todo plan con has_customization,
-    #TEMPLATE_PLUS con has_design_plus (Estándar) y TEMPLATE_ADVANCED con
-    #has_design_advanced (Premium). El viewset descarta del payload un
-    #diseño fuera del nivel del plan y la web fuerza 'classic' si el
-    #guardado deja de estar permitido. Los 20 diseños retirados salieron
-    #del catálogo en la mig. 0049 (las tiendas que los tenían se remapean
-    #al más cercano del mismo nivel); su piel sigue registrada en el
-    #frontend (TEMPLATE_DEFS) como red de seguridad de render.
-    TEMPLATE_BASE               =   ('classic', 'duo')
-    TEMPLATE_PLUS               =   ('calma', 'vitrina')
-    TEMPLATE_ADVANCED           =   ('cobre', 'minimal')
-    #Patrones exclusivos del motor "Diseñar con IA" (has_ai_design): NO son
-    #elegibles a mano — no aparecen en el selector del panel (Plantillas ni
-    #Studio) ni en STORE_TEMPLATES del frontend. Solo el motor los propone
-    #y allowed_templates_of los habilita para la web pública.
-    TEMPLATE_AI                 =   ('ai_lumen', 'ai_pulse')
+    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 3
+    #diseños, uno por nivel, organizados por RUBRO (no por "estilo de
+    #autor"): el base va con cualquier has_customization, TEMPLATE_PLUS con
+    #has_design_plus (Estándar) y TEMPLATE_ADVANCED con has_design_advanced
+    #(Premium). El viewset descarta del payload un diseño fuera del nivel
+    #del plan y la web fuerza 'raiz' (fallback global) si el guardado deja
+    #de estar permitido. Toda la identidad visual vive en el CSS del diseño
+    #(store-raiz.css / store-trama.css / store-circuito.css).
+    TEMPLATE_RAIZ               =   'raiz'
+    TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
+    TEMPLATE_BASE               =   ('raiz',)
+    TEMPLATE_PLUS               =   ('trama',)
+    TEMPLATE_ADVANCED           =   ('circuito',)
+    #El motor "Diseñar con IA" ya no tiene patrones exclusivos: propone
+    #solo los 3 diseños del catálogo (ver ai_design_recipes).
+    TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
-        (TEMPLATE_CLASSIC,   'Clásico'),
-        ('duo',              'Dúo'),
-        ('calma',            'Calma'),
-        ('vitrina',          'Vitrina'),
-        ('cobre',            'Cobre'),
-        ('minimal',          'Minimal'),
-        ('ai_lumen',         'Lumen (IA)'),
-        ('ai_pulse',         'Pulse (IA)'),
-        #Retirados del selector (mig. 0049): vuelven al catálogo del modelo
-        #solo para el motor "Diseñar con IA" (v4). El panel NO los ofrece.
-        ('perspective',      'Perspectiva'),
-        ('bloque',           'Bloque'),
-        ('riso',             'Riso'),
-        ('street',           'Calle'),
-        ('promo',            'Promo'),
-        ('atelier',          'Atelier'),
-        ('circuit',          'Circuito'),
-        ('arena',            'Arena'),
-        ('mercado',          'Mercado'),
-        ('studio',           'Estudio'),
-        ('lookbook',         'Lookbook'),
-        ('shop',             'Shop'),
-        ('boutique',         'Boutique'),
-        ('signature',        'Signature'),
-        ('aurora',           'Aurora'),
-        ('terminal',         'Terminal'),
-        ('terra',            'Terra'),
-        ('lab',              'Lab'),
-        ('carta',            'Carta'),
-        ('proceso',          'Proceso'),
+        ('raiz',      'Raíz'),
+        ('trama',     'Trama'),
+        ('circuito',  'Circuito'),
     ]
-    #Mapa de retirada -> habilitada más cercana del mismo nivel (mig.
-    #0049): cada una preserva algo de la identidad elegida — las base
-    #eran todas diseños con personalidad y van a 'duo' (portada a dos
-    #columnas, más carácter que el catálogo neutro); en Estándar las de
-    #aire editorial/comercial van a 'vitrina' y las de cercanía/servicios
-    #a 'calma'; en Premium las dramáticas/de indumentaria a 'cobre' y las
-    #tipográficas/editoriales a 'minimal'.
+    #Mapa de retirada -> diseño nuevo por afinidad de rubro (mig. 0053):
+    #claros/neutros -> 'raiz', editoriales/moda -> 'trama', oscuros/
+    #técnicos -> 'circuito'. Ninguna tienda existente pierde su web.
     TEMPLATE_RETIRED_MAP        =   {
-        'perspective': 'duo', 'bloque': 'duo', 'riso': 'duo',
-        'street': 'vitrina', 'promo': 'vitrina', 'atelier': 'vitrina',
-        'circuit': 'vitrina', 'arena': 'vitrina',
-        'mercado': 'calma', 'studio': 'calma',
-        'lookbook': 'cobre', 'shop': 'cobre', 'boutique': 'cobre',
-        'signature': 'cobre', 'aurora': 'cobre',
-        'terminal': 'minimal', 'terra': 'minimal', 'lab': 'minimal',
-        'carta': 'minimal', 'proceso': 'minimal',
+        'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
+        'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz',
+        'proceso': 'raiz', 'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz',
+        'shop': 'raiz',
+        'atelier': 'trama', 'lookbook': 'trama', 'boutique': 'trama',
+        'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
+        'street': 'trama', 'riso': 'trama', 'promo': 'trama',
+        'aurora': 'trama',
+        'perspective': 'circuito', 'circuit': 'circuito',
+        'terminal': 'circuito', 'lab': 'circuito',
+        'ai_lumen': 'circuito', 'ai_pulse': 'trama',
     }
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
@@ -218,7 +188,7 @@ class StoreCustomization(models.Model):
     #Modo noche: con theme_toggle=True la web pública muestra un interruptor
     #claro/oscuro y arranca en `theme` (que sigue siendo el default).
     theme_toggle                =   models.BooleanField(default = False, verbose_name = 'Modo noche en la web')
-    template                    =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_CLASSIC, verbose_name = 'Diseño de la web')
+    template                    =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_DEFAULT, verbose_name = 'Diseño de la web')
     accent                      =   models.CharField(max_length = 10, choices = ACCENT_CHOICES, default = ACCENT_INDIGO, verbose_name = 'Color de acento')
     #Identidad visual Premium (has_design_advanced; el viewset descarta estos
     #campos sin el flag y la web pública los ignora si el plan bajó). Todos
@@ -395,7 +365,7 @@ class StoreCustomization(models.Model):
     #discard copia publicado→draft.
     layout_config_draft         =   models.JSONField(default = dict, blank = True, verbose_name = 'Bloques (borrador)')
     site_theme_draft            =   models.JSONField(default = dict, blank = True, verbose_name = 'Tema visual (borrador)')
-    template_draft              =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_CLASSIC, verbose_name = 'Diseño de la web (borrador)')
+    template_draft              =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_DEFAULT, verbose_name = 'Diseño de la web (borrador)')
     #Cinta de anuncios bajo la portada y sección Video: bloques extra de
     #marketing que el dueño configura desde "Mi empresa".
     announcements               =   models.JSONField(default = list, blank = True, verbose_name = 'Cinta de anuncios')

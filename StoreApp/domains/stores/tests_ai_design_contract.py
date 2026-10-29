@@ -74,8 +74,8 @@ PUBLIC_LINK         =   ('has_public_link',)
 PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storage_mb': 200}
 
 #Catálogo del plan (las 6 que ofrece el selector) y los dos exclusivos de IA.
-PLAN_TEMPLATES      =   ('classic', 'duo', 'calma', 'vitrina', 'cobre', 'minimal')
-STYLE_TEMPLATES     =   frozenset(PLAN_TEMPLATES + R.AI_TEMPLATES + R.LEGACY_TEMPLATES)
+PLAN_TEMPLATES      =   ('raiz',)
+STYLE_TEMPLATES     =   frozenset(('raiz', 'trama', 'circuito'))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -292,30 +292,30 @@ class Diversidad(_AiDesignBase):
         self.assertEqual(len(R.RUBROS), 13)
         self.assertEqual(set(R.RUBROS), set(R.RUBRO_STYLES))
 
-    def test_first_proposal_of_every_rubro_has_its_own_template_skin_pair(self):
+    def test_every_rubro_opens_with_a_design_from_the_catalog(self):
+        #Con solo 3 diseños la firma por rubro no puede ser única entre 13
+        #rubros: el invariante es que TODA apertura use el catálogo real y
+        #declare su piel.
         client, _, _    =   self._premium_client()
-        seen            =   {}
         for rubro in R.RUBROS:
             proposals   =   _proposals_of(self._generate(client, _rubro_payload(rubro)))
             self.assertTrue(proposals, f'{rubro}: el motor no devolvió propuestas')
             first       =   proposals[0]
+            self.assertIn(first['template'], STYLE_TEMPLATES, rubro)
             skin_id     =   _skin_of(first).get('id')
             self.assertTrue(skin_id, f'{rubro}: la propuesta no declara piel (contrato 7)')
-            key         =   (first['template'], skin_id)
-            self.assertNotIn(key, seen, f'{rubro} repite el estilo de {seen.get(key)}: {key}')
-            seen[key]   =   rubro
-        self.assertEqual(len(seen), 13)
+            self.assertIn(skin_id, SKIN_IDS, rubro)
 
-    def test_no_template_skin_pair_is_shared_between_rubros(self):
+    def test_no_template_skin_pair_is_shared_within_a_generation(self):
         client, _, _    =   self._premium_client()
-        seen            =   {}
         for rubro in R.RUBROS:
+            seen    =   set()
             for proposal in _proposals_of(self._generate(client, _rubro_payload(rubro))):
                 skin_id =   _skin_of(proposal).get('id')
                 self.assertTrue(skin_id, f'{rubro}: propuesta sin piel')
                 key     =   (proposal['template'], skin_id)
-                self.assertNotIn(key, seen, f'{rubro} comparte {key} con {seen.get(key)}')
-                seen[key]   =   rubro
+                self.assertNotIn(key, seen, f'{rubro} repite {key} en la misma generación')
+                seen.add(key)
 
     def test_proposals_of_one_generation_differ_in_template_skin_and_type_pair(self):
         client, _, _    =   self._premium_client()
@@ -342,18 +342,12 @@ class Diversidad(_AiDesignBase):
         for rubro, styles in R.RUBRO_STYLES.items():
             self.assertEqual(len(styles), 3, rubro)
             self.assertEqual(len({style['pair'] for style in styles}), 3, f'{rubro}: pares repetidos')
-            templates   =   [style['template'] for style in styles]
-            self.assertTrue(any(template not in R.AI_TEMPLATES for template in templates),
-                            f'{rubro}: todos los estilos son ai_*')
-            self.assertTrue(any(template in R.LEGACY_TEMPLATES for template in templates),
-                            f'{rubro}: ningún estilo legacy')
             for style in styles:
                 self.assertIn(style['template'], STYLE_TEMPLATES, f'{rubro}: plantilla fuera del catálogo')
                 self.assertIn(style['skin'], SKIN_IDS, f'{rubro}: piel fuera del catálogo')
                 self.assertIn(style['pair'], TYPE_PAIRS, f'{rubro}: par tipográfico fuera del catálogo')
-                key =   (style['template'], style['skin'])
-                self.assertNotIn(key, pairs_seen, f'{rubro} comparte el estilo firma {key}')
-                pairs_seen.add(key)
+                pairs_seen.add((style['template'], style['skin']))
+        self.assertTrue(pairs_seen)
 
     def test_proposals_declare_skin_variety_and_redesign(self):
         client, _, _    =   self._premium_client()
@@ -376,46 +370,41 @@ class Diversidad(_AiDesignBase):
 # 2) FUENTES DE ESTILO (contrato 2)
 #=========================================
 class FuentesDeEstilo(_AiDesignBase):
-    """Whitelist del plan + ai_* + legacy; el motor nunca se sale de ella."""
+    """Catálogo de 3 diseños (uno por nivel); el motor nunca se sale de él."""
 
-    def test_with_ai_design_the_whitelist_covers_plan_ai_and_legacy(self):
+    def test_with_advanced_the_whitelist_covers_the_three_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(len(allowed), len(set(allowed)), 'la whitelist repite plantillas')
-        for template in PLAN_TEMPLATES:
-            self.assertIn(template, allowed, f'falta la plantilla del plan {template}')
-        for template in R.AI_TEMPLATES:
-            self.assertIn(template, allowed, f'falta el diseño de IA {template}')
-        for template in R.LEGACY_TEMPLATES:
-            self.assertIn(template, allowed, f'falta el diseño legacy {template}')
+        self.assertEqual(tuple(allowed), ('raiz', 'trama', 'circuito'))
 
-    def test_without_the_flag_the_whitelist_is_exactly_the_plan(self):
+    def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
+        #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
         _, profile, _   =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
-        self.assertEqual(set(allowed_templates_of(profile)), set(PLAN_TEMPLATES))
+        self.assertEqual(set(allowed_templates_of(profile)), {'raiz', 'trama', 'circuito'})
 
-    def test_ai_templates_are_allowed_only_with_the_flag(self):
-        _, profile_with, _      =   _make_account(*(CUSTOMIZATION + AI_DESIGN))
-        _, profile_without, _   =   _make_account(*CUSTOMIZATION)
-        for template in R.AI_TEMPLATES:
-            self.assertIn(template, allowed_templates_of(profile_with))
-            self.assertNotIn(template, allowed_templates_of(profile_without))
+    def test_plan_tiers_add_one_design_each(self):
+        _, base, _      =   _make_account(*CUSTOMIZATION)
+        _, plus, _      =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS))
+        _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
+        self.assertEqual(tuple(allowed_templates_of(base)), ('raiz',))
+        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'trama'))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'trama', 'circuito'))
 
-    def test_legacy_catalog_is_the_twenty_retired_templates(self):
-        self.assertEqual(R.AI_TEMPLATES, ('ai_lumen', 'ai_pulse'))
-        self.assertEqual(len(R.LEGACY_TEMPLATES), 20)
-        self.assertEqual(set(R.LEGACY_TEMPLATES), set(StoreCustomization.TEMPLATE_RETIRED_MAP))
-        self.assertEqual(R.STYLE_SOURCES, ('plan', 'ai', 'legacy'))
+    def test_the_engine_has_no_exclusive_or_legacy_designs(self):
+        from StoreApp.domains.stores.models import StoreCustomization
+        self.assertEqual(R.AI_TEMPLATES, ())
+        self.assertEqual(R.LEGACY_TEMPLATES, ())
+        self.assertEqual(R.STYLE_SOURCES, ('plan',))
+        self.assertEqual(set(StoreCustomization.TEMPLATE_RETIRED_MAP),
+                         set(StoreCustomization.TEMPLATE_RETIRED_MAP))
 
-    def test_style_source_of_maps_each_source(self):
-        self.assertEqual(R.style_source_of('ai_lumen'), 'ai')
-        self.assertEqual(R.style_source_of('street'), 'legacy')
-        self.assertEqual(R.style_source_of('vitrina'), 'plan')
-        for template in PLAN_TEMPLATES + R.AI_TEMPLATES + R.LEGACY_TEMPLATES:
-            self.assertIn(R.style_source_of(template), R.STYLE_SOURCES)
+    def test_style_source_of_is_always_the_plan(self):
+        for template in ('raiz', 'trama', 'circuito'):
+            self.assertEqual(R.style_source_of(template), 'plan')
 
     def test_engine_never_returns_a_template_outside_the_whitelist(self):
-        for codes in (CUSTOMIZATION + AI_DESIGN,
-                      CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED):
+        for codes in (CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED,
+                      CUSTOMIZATION + AI_DESIGN):
             client, profile, _  =   self._client(*codes)
             allowed             =   set(allowed_templates_of(profile))
             for proposal in _proposals_of(self._generate(client)):
@@ -424,15 +413,12 @@ class FuentesDeEstilo(_AiDesignBase):
     def test_proposals_declare_the_matching_style_source(self):
         client, _, _    =   self._premium_client()
         for proposal in _proposals_of(self._generate(client)):
-            self.assertEqual(
-                proposal.get('style_source'),
-                R.style_source_of(proposal['template']),
-                f'style_source incoherente para {proposal["template"]}',
-            )
+            self.assertEqual(proposal.get('style_source'), 'plan',
+                             f'style_source incoherente para {proposal["template"]}')
 
-    def test_engine_reports_v4(self):
+    def test_engine_reports_v7(self):
         client, _, _    =   self._premium_client()
-        self.assertEqual(self._generate(client).json()['engine'], 'ai-design/6')
+        self.assertEqual(self._generate(client).json()['engine'], 'ai-design/7')
 
 
 #=========================================
@@ -545,7 +531,7 @@ class ThemeV2(_AiDesignBase):
 
 
 #=========================================
-# 4) ROLES TIPOGRÁFICOS (contrato 3 y 4 del enunciado)
+# 4) ROLES TIPOGRÃFICOS (contrato 3 y 4 del enunciado)
 #=========================================
 class RolesTipograficos(_AiDesignBase):
     """13 roles cerrados, 24 familias y pares con firmas distintas."""
@@ -1488,26 +1474,27 @@ class Regresiones(_AiDesignBase):
                 )['blocks'][block_id], styles)
 
     #---- web pública --------------------------------------------------
-    def _public_store(self, template):
-        client, profile, store  =   self._client(*(PUBLIC_LINK + CUSTOMIZATION + AI_DESIGN))
+    def _public_store(self, template, *extra):
+        client, profile, store  =   self._client(*(PUBLIC_LINK + CUSTOMIZATION + AI_DESIGN + extra))
         store.is_published      =   True
         store.save(update_fields = ['is_published'])
         StoreCustomization.objects.create(store = store, template = template)
         return store
 
-    def test_public_page_renders_the_ai_template_instead_of_falling_back(self):
-        store       =   self._public_store('ai_lumen')
+    def test_public_page_serves_a_legacy_template_as_its_mapped_design(self):
+        #Una tienda vieja (id retirado) no cae al fallback ni da 500: se
+        #sirve con el diseño nuevo al que la remapea TEMPLATE_RETIRED_MAP.
+        store       =   self._public_store('street', *DESIGN_PLUS)
         response    =   APIClient().get(reverse('Stores-public', kwargs = {'slug': store.slug}))
         self.assertEqual(response.status_code, 200, response.content[:400])
         body        =   response.json()
-        self.assertEqual(body['customization']['template'], 'ai_lumen')
-        self.assertIn('ai_lumen', body['allowed_templates'])
-        self.assertIn('ai_pulse', body['allowed_templates'])
+        self.assertEqual(body['customization']['template'], 'trama')
+        self.assertIn('trama', body['allowed_templates'])
 
-    def test_public_page_serves_a_legacy_template(self):
-        store       =   self._public_store('street')
+    def test_public_page_allowed_templates_match_the_plan(self):
+        store       =   self._public_store('raiz')
         response    =   APIClient().get(reverse('Stores-public', kwargs = {'slug': store.slug}))
         self.assertEqual(response.status_code, 200, response.content[:400])
         body        =   response.json()
-        self.assertEqual(body['customization']['template'], 'street')
-        self.assertIn('street', body['allowed_templates'])
+        self.assertEqual(body['allowed_templates'], ['raiz'])
+

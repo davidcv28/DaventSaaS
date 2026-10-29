@@ -427,6 +427,15 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         templates               =   normalize_site_templates(customization.site_templates) or list(DEFAULT_SITE_TEMPLATES)
         data['site_templates']  =   templates
         data['site_mode']       =   site_mode_of(templates)
+        #Lectura tolerante del diseño: una fila con un id retirado (restaurada
+        #de un backup viejo, o anterior a la mig. 0053) se sirve con el diseño
+        #nuevo al que la remapea TEMPLATE_RETIRED_MAP — nunca cae al fallback
+        #ni rompe el render.
+        retired                 =   StoreCustomization.TEMPLATE_RETIRED_MAP
+        for field in ('template', 'template_draft'):
+            value               =   data.get(field)
+            if value in retired:
+                data[field]     =   retired[value]
         return data
 
     def validate_accent_custom(self, value):

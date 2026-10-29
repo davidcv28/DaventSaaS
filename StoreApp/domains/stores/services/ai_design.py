@@ -460,11 +460,12 @@ _FALLBACK_FONT  =   'inter'
 #bonus ciego de "libertad": si ganan es porque la matriz del rubro, el
 #tono o las fotos los favorecen.
 _DATA_SIGNALS   =   {
-    #fotos/texto largo/catálogo amplio: qué estilos se defienden mejor
-    'photos'    :   ('cobre', 'minimal', 'ai_lumen', 'lookbook', 'atelier', 'arena', 'perspective', 'aurora', 'signature'),
-    'text'      :   ('minimal', 'calma', 'classic', 'ai_lumen', 'proceso', 'terra', 'carta', 'lab', 'studio'),
-    'catalog'   :   ('vitrina', 'duo', 'promo', 'shop', 'street', 'mercado', 'ai_pulse'),
-    'empty'     :   ('classic', 'calma', 'minimal', 'studio', 'boutique', 'carta'),
+    #fotos/texto largo/catálogo amplio: qué DISEÑOS se defienden mejor
+    #(catálogo nuevo por rubro: raiz generalista, trama editorial, circuito técnico)
+    'photos'    :   ('trama', 'circuito', 'raiz'),
+    'text'      :   ('raiz', 'trama'),
+    'catalog'   :   ('raiz', 'trama'),
+    'empty'     :   ('raiz',),
 }
 
 
@@ -611,21 +612,61 @@ def _style_candidates(facts, stats, answers, allowed, seed):
         available   =   [pair_id for pair_id in TYPE.TYPE_PAIRS if pair_id not in chosen_styles[style]]
         return available[index % len(available)] if available else None
 
+    #Orden de competición: receta del rubro primero, después el resto de la
+    #whitelist del plan.
+    order       =   list(R.RUBROS[answers['rubro']]['templates']) + list(R.AI_TEMPLATES) + list(R.LEGACY_TEMPLATES)
+    order      +=  [template for template in allowed if template not in order]
+    #0) ESTILOS PEDIDOS: con 3 diseños la cobertura de estilos ya no tiene una
+    #plantilla libre donde caer, así que el pedido entra ANTES de la matriz
+    #(base alta: solo pierde contra otra candidata del mismo estilo).
+    for style_index, style in enumerate([item for item in styles if item in requested]):
+        pool    =   _style_pool(style, answers['rubro'], tone)
+        free    =   [template for template in order if template in allowed_set and template not in seen_templates(candidates)]
+        if not pool or not free:
+            continue
+        add(free[style_index % len(free)], pool[seed % len(pool)],
+            pairs[(style_index + seed) % len(pairs)], 80, strict = True)
     #1) matriz "firma" del rubro: piso de diversidad (plan + legacy + ai).
     for index, signature in enumerate(R.RUBRO_STYLES.get(answers['rubro'], ())):
         add(signature['template'], signature['skin'], signature['pair'], 40 - index * 5)
     #2) el resto de las plantillas permitidas, con piel rotada.
-    order       =   list(R.RUBROS[answers['rubro']]['templates']) + list(R.AI_TEMPLATES) + list(R.LEGACY_TEMPLATES)
-    order      +=  [template for template in allowed if template not in order]
-    #Cada plantilla entra UNA vez al bloque general: la rotación de piel ya se
-    #encarga de que la familia cambie con la semilla.
+    #Cada plantilla entra UNA vez al bloque general. Con el catálogo de 3
+    #diseños la piel se elige con dos prioridades: (a) estilos PEDIDOS por el
+    #dueño primero — con pocas plantillas la cobertura de estilos ya no tiene
+    #una plantilla libre donde caer; (b) ningún estilo repetido, para que la
+    #generación ofrezca aires distintos aunque comparta plantilla.
+    requested_pool  =   [s for s in skins if SKIN.SKINS[s]['style'] in requested]
     for index, template in enumerate(order):
         if template in seen_templates(candidates):
             continue
+        used_skins      =   {item['skin'] for item in candidates}
+        used_styles     =   {style for style, style_pairs in chosen_styles.items() if style_pairs}
+        free            =   [s for s in skins if s not in used_skins and SKIN.SKINS[s]['style'] not in used_styles]
+        if not free:
+            free        =   [s for s in skins if s not in used_skins] or list(skins)
+        #Pedido explícito: la primera propuesta estrena un estilo pedido.
+        if index == 0 and requested_pool:
+            skin_id     =   requested_pool[seed % len(requested_pool)]
+        else:
+            premiere    =   [s for s in requested_pool if s in free]
+            pick        =   premiere + [s for s in free if s not in premiere]
+            skin_id     =   pick[(index * 3 + seed) % len(pick)]
         #La piel y el par por piel: la terna se siente elegida, no rotada.
-        skin_id =   skins[(index * 3 + seed) % len(skins)]
         pair    =   SKIN.SKIN_TYPE_PAIR.get(SKIN.SKINS[skin_id]['family']) or pairs[(index * 5 + seed) % len(pairs)]
         add(template, skin_id, pair, 8)
+    #2b) Plan de UN solo diseño (Básico: 'raiz'): la diversidad la sostiene
+    #el estilo/piel y la plantilla se repite. Se agregan variantes para que
+    #la generación no quede en una sola propuesta.
+    if len(allowed_set) == 1:
+        only_tpl    =   next(iter(allowed_set))
+        for extra in range(3):
+            used_skins  =   {item['skin'] for item in candidates}
+            used_styles =   {style for style, style_pairs in chosen_styles.items() if style_pairs}
+            free        =   [s for s in skins if s not in used_skins and SKIN.SKINS[s]['style'] not in used_styles]
+            if not free:
+                break
+            add(only_tpl, free[(extra * 5 + seed) % len(free)],
+                pairs[(extra * 3 + seed) % len(pairs)], 6, strict = True)
     #3) cobertura de ESTILOS: cada estilo con pieles entra a competir, así una
     #generación puede ofrecer "minimal" vs "editorial" vs "lujo" y no tres
     #variantes del mismo aire. Base baja: solo gana si el puntaje lo acompaña
@@ -689,20 +730,23 @@ def seen_templates(candidates):
     return {item['template'] for item in candidates}
 
 
-def _select_styles(candidates, count):
+def _select_styles(candidates, count, allow_repeat_template = False):
     """
     Diversidad OBLIGATORIA: dentro de una generación las propuestas
     difieren en ESTILO, plantilla, piel y par tipográfico (v5). Se elige en
     tres pases que van relajando en este orden: primero estilo (dos
     sugerencias no son el mismo aire contado dos veces), después piel y
     par, y al final solo la plantilla queda como condición — la plantilla
-    NUNCA se repite: dos propuestas con la misma plantilla no son dos.
+    NUNCA se repite salvo que el plan no ofrezca otra (`allow_repeat_template`,
+    p.ej. Básico con un solo diseño: ahí la diversidad la sostienen el
+    estilo y la piel).
     """
     chosen      =   []
     templates   =   set()
     skins       =   set()
     pairs       =   set()
     styles      =   set()
+    repeat_template =   bool(allow_repeat_template)
 
     def take(item):
         chosen.append(item)
@@ -718,21 +762,22 @@ def _select_styles(candidates, count):
     for item in candidates:
         if len(chosen) >= count:
             break
-        if item['template'] in templates or item['style'] in styles:
+        if (item['template'] in templates and not repeat_template) or item['style'] in styles:
             continue
         take(item)
     #2) Estricto: plantilla + piel + par nuevos (la calidad del resto).
     for item in candidates:
         if len(chosen) >= count:
             break
-        if item in chosen or item['template'] in templates or item['skin'] in skins or item['pair'] in pairs:
+        if item in chosen or (item['template'] in templates and not repeat_template) or item['skin'] in skins or item['pair'] in pairs:
             continue
         take(item)
-    #3) Relajado: solo exige plantilla nueva (la plantilla nunca se repite).
+    #3) Relajado: solo exige plantilla nueva (la plantilla nunca se repite
+    #salvo que el plan no ofrezca otra).
     for item in candidates:
         if len(chosen) >= count:
             break
-        if item in chosen or item['template'] in templates:
+        if item in chosen or (item['template'] in templates and not repeat_template):
             continue
         take(item)
     return chosen[:count]
@@ -1971,11 +2016,11 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
     """
     styles          =   _style_candidates(facts, stats, answers, allowed, seed)
     if not styles:
-        fallback    =   StoreCustomization.TEMPLATE_CLASSIC if StoreCustomization.TEMPLATE_CLASSIC in allowed else list(allowed)[0]
+        fallback    =   StoreCustomization.TEMPLATE_RAIZ if StoreCustomization.TEMPLATE_RAIZ in allowed else list(allowed)[0]
         styles      =   [{'template': fallback, 'skin': SKIN.SKIN_IDS[seed % len(SKIN.SKIN_IDS)],
                           'pair': 'grotesk-clean', 'source': R.style_source_of(fallback), 'score': 0}]
     count           =   _proposal_count(allowed, facts)
-    chosen          =   _select_styles(styles, count)
+    chosen          =   _select_styles(styles, count, allow_repeat_template = len(set(allowed)) < count)
     rng             =   random.Random(seed)
     use_icons       =   answers.get('use_icons')
     if use_icons is None:
