@@ -106,3 +106,28 @@ respetan también estas reglas:
    y `score {contrast, harmony, hierarchy, fit, total, issues}`; `score.contrast`
    debe ser 100 y el escenario de aceptación vive en `qa_ai_design_v6.py`.
 
+
+## v8 — estilos de negocio y portada generativa (6 diseños)
+
+El catálogo de diseños pasa a 6 (dos por nivel de plan) y la portada de todos se
+compone desde `layout_config`:
+
+| Diseño | tier | Rubro firma | Fuentes | Acento | Estilo (`style`) |
+|---|---|---|---|---|---|
+| `raiz` | base | general / retail | manrope + bricolage-grotesque | `#0F766E` | `catalog` |
+| `alimentos` | base | gastronomía / almacén | dm-sans + dm-serif-display | `#C8321D` | `craft` |
+| `trama` | plus | indumentaria / moda | archivo + anton | `#E4472B` | `editorial` |
+| `boutique` | plus | moda premium / deco | jost + cormorant-garamond | `#6B2D4F` | `luxury` |
+| `circuito` | advanced | tecnología / electrónica | space-grotesk + jetbrains-mono | `#22D3EE` | `tech` |
+| `seguridad` | advanced | seguridad / bomberos / industrial | barlow + barlow-condensed | `#C8200E` | `bold` |
+
+- **Selección por rubro**: `RUBROS.templates` ordena afinidad y `RUBRO_STYLES`
+  declara 3 ternas firma por rubro; los diseños nuevos entran en la matriz de su
+  rubro (gastronomía→alimentos, indumentaria/belleza/arte→trama+boutique,
+  construcción/seguridad→seguridad). Ver `docs/PLANTILLAS_GENERATIVAS.md` §5.
+- **Composición**: el motor emite `layout_config` por superficie (orden +
+  variante + props + extras `aiOnly`); los 6 diseños lo respetan en la portada.
+  Prueba de aceptación: un `apply` de la IA cambia el orden real de la web y los
+  bloques extra aparecen (o se ocultan sin datos), sin romper el default.
+- **Pieles**: el catálogo de 26 familias / 52 pieles y las 8 familias de estilo
+  no cambian; `DESIGN_SKIN_FREE` sigue ignorando `site_theme` en el render.

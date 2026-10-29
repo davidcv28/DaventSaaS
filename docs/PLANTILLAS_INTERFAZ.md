@@ -9,8 +9,11 @@
 | id | Nombre | Rubro | Nivel (`tier`) | Lo habilita | Acento por defecto |
 |---|---|---|---|---|---|
 | `raiz` | Raíz | general / retail / servicios | `base` | `has_customization` | `#0F766E` |
+| `alimentos` | Alimentos | gastronomía / almacén | `base` | `has_customization` | `#C8321D` |
 | `trama` | Trama | indumentaria / moda | `plus` | `has_design_plus` | `#E4472B` |
+| `boutique` | Boutique | moda premium / deco | `plus` | `has_design_plus` | `#6B2D4F` |
 | `circuito` | Circuito | tecnología / electrónica | `advanced` | `has_design_advanced` | `#22D3EE` |
+| `seguridad` | Seguridad | seguridad / bomberos / industrial | `advanced` | `has_design_advanced` | `#C8200E` |
 
 - **Fallback global: `raiz`.** Cualquier id desconocido o fuera del plan se
   resuelve a `raiz`.
@@ -49,7 +52,7 @@ Nada más se toca: el resto es compartido (`StorePublicLayout`, bloques de
 import { landingViews, catalogViews, productViews, servicesViews, CATALOG_BLOCKS, SERVICES_BLOCKS } from '../_shared.js'
 
 export default {
-  usesSectionOrder: false,      // los 3 diseños son composiciones FIJAS
+  usesSectionOrder: false,      // orden canónico propio (la vista lo monta con useLayout)
   fonts: ['manrope', 'bricolage-grotesque'],   // slugs de STORE_FONTS (carga on-demand)
   surfaces: {
     landing:  landingViews.<id>,   // () => import('...')
@@ -64,9 +67,11 @@ export default {
 - Para registrar un diseño nuevo: 1 carpeta en `templates/`, 1 carpeta en
   `views/store/`, 1 CSS, y sumar los 4 loaders en `templates/_shared.js` +
   la entrada en `TEMPLATE_DEFS`, `STORE_TEMPLATES` y el backend.
-- `blocks` es la whitelist para el Studio de bloques (`LayoutEditor`); el
-  render público de los 3 diseños **no** lee `layout_config`: la vista decide
-  el orden canónico.
+- `blocks` es la whitelist para el Studio de bloques (`LayoutEditor`) **y el
+  orden canónico por defecto** de la portada: el render público monta el layout
+  efectivo (`layout_config` ∪ default) con `useLayout('landing')`, así la IA
+  puede recomponer orden / on-off / variante / props por cliente. `contact`
+  queda siempre al final (`resolveLayout`).
 
 ### 2.2 Rutas (no cambian)
 
