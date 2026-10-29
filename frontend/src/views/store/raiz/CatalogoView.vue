@@ -217,7 +217,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
               v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 60"
               class="rz-cat-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
               :stars="custom.show_reviews" stars-icon="star" quick="Ver producto"
-              go-label="Ver" seal-shape=""
+              go-label="Ver" seal-shape="" @open="openProduct"
             >
               <template v-if="productDiscount(p)" #tags>
                 <p class="rz-cat-card-promo">{{ productDiscount(p).name }}<span v-if="offerEndsLabel(productDiscount(p))"> · {{ offerEndsLabel(productDiscount(p)) }}</span></p>
