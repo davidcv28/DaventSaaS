@@ -23,7 +23,7 @@ django.setup()
 
 from playwright.sync_api import sync_playwright
 
-from StoreApp.domains.stores.models import Store, StoreCustomization
+from StoreApp.domains.stores.models import StoreCustomization
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = os.path.join(ROOT, 'venv', 'Scripts', 'python.exe')

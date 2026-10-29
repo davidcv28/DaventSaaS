@@ -3,7 +3,7 @@ catálogo. Uso: venv/Scripts/python.exe qa_tabbar_catalog.py
 Levanta un runserver propio (el payload público se cachea en locmem) y maneja
 el tema mobile.nav por postMessage del Studio (?studio=1), sin tocar la DB.
 """
-import os, sys, time, json, subprocess, urllib.request
+import os, sys, time, subprocess, urllib.request
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'DaventProject.settings')
 import django
