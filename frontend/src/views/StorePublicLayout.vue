@@ -168,13 +168,17 @@ const isShop = computed(() => pageTemplate.value === 'shop')
 
 // Hojas propias de un diseño: tiñen también el chrome (barra, pie, dock) en
 // páginas que no montan la portada (servicios, ficha). Raíz va estática; las
-// otras dos se cargan on-demand y una sola vez.
+// otras dos se cargan on-demand y una sola vez. Al terminar la carga se
+// re-sincroniza el SEO para tomar el theme-color que declare la hoja.
 const TEMPLATE_CSS = {
   raiz: () => import('../assets/store-raiz.css'),
   trama: () => import('../assets/store-trama.css'),
   circuito: () => import('../assets/store-circuito.css')
 }
-watch(pageTemplate, (tpl) => { TEMPLATE_CSS[tpl]?.() }, { immediate: true })
+watch(pageTemplate, (tpl) => {
+  const loaded = TEMPLATE_CSS[tpl]?.()
+  if (loaded && typeof loaded.then === 'function') loaded.then(() => syncSeo()).catch(() => {})
+}, { immediate: true })
 // Skin v4 (site_theme.skin.family): piel de 18 familias en su propia hoja,
 // cargada por import dinámico para no engordar el bundle. Un skin sin
 // familia válida deja la tienda como está.
@@ -221,6 +225,9 @@ const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
 const location = computed(() => [store.value?.city_name, store.value?.province_name].filter(Boolean).join(', '))
 const year = new Date().getFullYear()
 const mainAnchor = ref(null)
+// Raíz del layout: se usa para leer el color de cromo del tema activo
+// (--rz-theme-color / --sp-theme-color) al sincronizar <meta theme-color>.
+const pageRoot = ref(null)
 const topSearchInput = ref(null)
 const menuBtn = ref(null)
 const menuDrawer = ref(null)
@@ -476,6 +483,20 @@ const socials = computed(() => [
 const footAddress = computed(() => store.value?.location_address || '')
 const hasFootContact = computed(() => Boolean(whatsappUrl.value || footAddress.value || socials.value.length))
 
+// Color de la barra del navegador (meta theme-color). La hoja del diseño
+// puede declarar el suyo (--rz-theme-color / --sp-theme-color) y así el
+// chrome del navegador sigue al tema claro/oscuro elegido; sin declaración,
+// se conserva el comportamiento anterior (tinta del acento).
+function resolvedThemeColor() {
+  const el = pageRoot.value
+  if (el) {
+    const cs = getComputedStyle(el)
+    const skin = cs.getPropertyValue('--rz-theme-color').trim() || cs.getPropertyValue('--sp-theme-color').trim()
+    if (/^#|^rgb/i.test(skin)) return skin
+  }
+  return themeVars.value['--store-accent-ink']
+}
+
 // SEO y previews: Open Graph / Twitter / theme-color + JSON-LD (Store o
 // LocalBusiness) con nombre, dirección, horarios y redes.
 let clearSeo = null
@@ -515,11 +536,13 @@ function syncSeo() {
     description,
     image,
     url,
-    themeColor: themeVars.value['--store-accent-ink'],
+    themeColor: resolvedThemeColor(),
     jsonLd: JSON.parse(JSON.stringify(jsonLd))
   })
 }
-watch([status, () => route.path, custom], syncSeo, { flush: 'post' })
+// pageTheme entra en las dependencias: al togglear claro/oscuro se re-emite
+// el theme-color con el cromo del tema nuevo (sin flash en la barra).
+watch([status, () => route.path, custom, pageTheme], syncSeo, { flush: 'post' })
 
 // Favicon de la pestaña: mientras se visita la web, el icono es el logo de la
 // tienda (sin logo queda el de DAVENT). Al salir se restaura el original.
@@ -595,7 +618,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->
@@ -802,8 +825,12 @@ onBeforeUnmount(() => {
       </Transition>
     </RouterView>
 
-    <!-- ===== Pie ===== -->
-    <footer class="sp-foot">
+    <!-- ===== Pie =====
+         No se pinta durante el estado de carga: el pie aparecía pegado al
+         skeleton y saltaba fuera del viewport al llegar el payload (CLS ~0.8
+         medido en las 3 plantillas). Con el contenido ya resuelto se monta
+         debajo, sin desplazar lo que el visitante está leyendo. -->
+    <footer v-if="status !== 'loading'" class="sp-foot">
       <div v-reveal class="sp-container">
         <div class="sp-foot-grid">
           <div class="sp-foot-brand">
