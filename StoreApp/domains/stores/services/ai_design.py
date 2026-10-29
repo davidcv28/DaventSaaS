@@ -564,6 +564,10 @@ def _style_candidates(facts, stats, answers, allowed, seed):
         skin    =   SKIN.SKINS.get(skin_id)
         if skin is None or pair not in TYPE.TYPE_PAIRS:
             return
+        #Coherencia de aire (§6.1-6): la piel manda. Un par de otro aire se
+        #rota al más cercano que la familia admite — nunca llega a la web
+        #una piel editorial con un cartel condensado.
+        pair    =   TYPE.resolve_pair(pair, skin['family'], seed)
         seen.add((template, skin_id))
         chosen_styles[skin['style']].add(pair)
         reusing.add(template)
@@ -791,16 +795,19 @@ def _order_for(surface, answers, pattern = None, rot = 0):
         #La apertura del objetivo no se rota: si el bloque que abre se va al
         #final, la web deja de contar lo que el objetivo pide. Rota el resto.
         opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
-        #La portada abre siempre: rotar también la mandaba al final.
+        #La portada y la apertura del objetivo no rotan: si el bloque que abre
+        #se va al final, la web deja de contar lo que el objetivo pide. Las
+        #fotos tampoco (las cierra _enforce_hierarchy). Rota el resto.
         anchor  =   {block for block in order if block in opening or block in R.IMAGE_BLOCKS} | {'hero'}
         middle  =   [block for block in order if block not in anchor]
         if middle:
             step    =   rot % len(middle)
             middle  =   middle[step:] + middle[:step]
-        #El orden relativo de los anclados (hero, apertura, fotos) se conserva:
-        #solo se intercala lo que rotó.
+        #El orden relativo de los anclados se conserva: lo que rotó toma los
+        #slots de los NO anclados (si un anclado se fuera al hueco, la
+        #apertura y las fotos quedaban igual pero rotadas al azar).
         slots   =   iter(middle)
-        order   =   [block if block in anchor else next(slots) for block in order]
+        order   =   [block if block in anchor else next(slots, block) for block in order]
     #Los bloques con datos que la receta no nombró entran al final del grupo:
     #mejor una sección útil de más que perder contenido real.
     for block in R.BLOCK_FALLBACKS[surface]:
@@ -862,9 +869,13 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
     #cambia de lugar de forma determinista (el orden ya viene rotado por
     #_order_for); la portada y el cierre los fija _enforce_hierarchy.
     if surface == 'landing' and shift > 0:
-        fixed   =   {'hero', 'cta', 'contact'}
-        middle  =   [block for block in blocks if block['id'] not in fixed]
-        rest    =   [block for block in blocks if block['id'] in fixed]
+        #La apertura del objetivo viaja con el hero: si el bloque que abre se
+        #manda al medio, la propuesta alternativa no cuenta lo que el dueño
+        #pidió (y _rotate_to_opening tendría que deshacer la rotación).
+        opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
+        fixed   =   {'hero'} | {block['id'] for block in blocks if block['id'] in opening}
+        middle  =   [block for block in blocks if block['id'] not in fixed and block['id'] not in ('cta', 'contact')]
+        rest    =   [block for block in blocks if block['id'] in fixed or block['id'] in ('cta', 'contact')]
         blocks  =   middle + rest
     #Lo que el dueño pidió explícitamente sube al frente (después del hero).
     must    =   [block for block in answers['must_have'] if block in {item['id'] for item in blocks}]
@@ -874,11 +885,14 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         rest    =   [item for item in blocks if item not in head + middle]
         blocks  =   head + middle + rest
     if surface == 'landing':
-        #Apertura antes que respiración: la regla del objetivo manda (B.2-2)
-        #y el ritmo alternado solo reacomoda lo que sigue (B.2-1).
+        #Apertura, ritmo y jerarquía se reafirman en ese orden: mover la
+        #apertura después del ritmo puede volver a pegar dos fotos, así que
+        #el laminado corre una última vez antes de fijar el cierre.
         blocks  =   _enforce_hierarchy(blocks)
         blocks  =   _rotate_to_opening(blocks, answers)
-        blocks  =   _alternate_rhythm(blocks)
+        blocks  =   _alternate_rhythm(blocks, answers)
+        blocks  =   _rotate_to_opening(blocks, answers)
+        blocks  =   _alternate_rhythm(blocks, answers)
         blocks  =   _enforce_hierarchy(blocks)
     for index, block in enumerate(blocks):
         block['order']  =   index
@@ -890,82 +904,121 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
 _PINNED_BLOCKS  =   frozenset({'cta', 'contact'})
 
 
-def _alternate_rhythm(blocks):
+def _alternate_rhythm(blocks, answers = None):
     """
     Ritmo alternado (B.2-1): dos bloques de foto grande seguidos no se
-    leen. Laminado determinista: una foto, un bloque de texto/datos, la otra
-    foto (el texto que seguía se corre una posición). Nunca cambia el set de
-    bloques, solo el orden.
+    leen. Laminado determinista: se busca un bloque de texto/datos REAL
+    (nunca prueba social, cierre ni contacto) y se inlinea entre las dos
+    fotos; si no hay texto después del par, la segunda foto baja detrás del
+    texto anterior. Nunca cambia el set de bloques, solo el orden.
     """
-    #Foto, texto, foto: el bloque de texto/datos que sigue al par de fotos se
-    #inline entre las dos (la primera foto puede quedar pegada a la portada,
-    #que no es una sección). Nunca se toca un bloque de texto que fija la
-    #jerarquía (`cta`): el cierre no cambia de lugar.
     out     =   list(blocks)
     index   =   0
     while index < len(out) - 1:
-        if out[index]['id'] in R.IMAGE_BLOCKS and out[index + 1]['id'] in R.IMAGE_BLOCKS:
-            #Si delante del par solo queda prueba social y cierre, no hay
-            #texto para intercalar: la foto de más se adelanta y se suma al
-            #bloque de fotos anterior (así el cierre nunca se mueve).
-            closer  =   next(
-                (position for position, block in enumerate(out)
-                 if position > index and (block['id'] in R.SOCIAL_BLOCKS or block['id'] in _PINNED_BLOCKS)),
-                None,
-            )
-            if closer is not None:
-                home    =   next(
-                    (position for position in range(index - 1, -1, -1) if out[position]['id'] not in R.IMAGE_BLOCKS),
-                    None,
-                )
-                if home is not None:
-                    out.insert(home + 1, out.pop(index + 1))
-                    index   +=  1
-                    continue
-                out.append(out.pop(index + 1))
-                index   +=  1
-                continue
-            moved   =   False
-            for position in range(index + 2, len(out)):
-                if out[position]['id'] not in R.IMAGE_BLOCKS:
-                    out.insert(index + 1, out.pop(position))
-                    moved   =   True
-                    break
-            if moved:
+        if not (_rhythm_image(out[index]) and _rhythm_image(out[index + 1])):
+            index   +=  1
+            continue
+        #Primero se intenta el texto que sigue al par (foto, texto, foto).
+        donor   =   next(
+            (position for position in range(index + 2, len(out)) if _rhythm_text(out[position])),
+            None,
+        )
+        if donor is not None:
+            out.insert(index + 1, out.pop(donor))
+            index   +=  2
+            continue
+        #Sin texto detrás, el texto anterior entra entre las dos fotos
+        #(foto, texto, foto). No alcanza con bajar la segunda foto: quedaría
+        #pegada a la primera igual, solo invertida.
+        donor   =   next(
+            (position for position in range(index - 1, -1, -1) if _rhythm_text(out[position])),
+            None,
+        )
+        if donor is not None:
+            previous    =   out[donor - 1] if donor > 0 else None
+            following   =   out[donor + 1] if donor + 1 < len(out) else None
+            #Mover el texto no puede dejar otro par de fotos en su hueco.
+            if not (
+                previous and following
+                and _rhythm_image(previous) and _rhythm_image(following)
+            ):
+                text    =   out.pop(donor)
+                out.insert(index, text)
                 index   +=  2
                 continue
-            break
+        #No hay ningún texto real con el que separar (caso sintético): no se
+        #inventa una sección ni se usa la prueba social/cierre como relleno.
         index   +=  1
     return out
 
 
-def _separate_trailing_images(blocks):
-    """Si el grupo quedó cerrado con fotos pegadas (tres foto-grande juntas),
-    la foto de más se sube antes del bloque de texto anterior: el cierre
-    (cta/contacto) nunca se mueve y la pantalla deja de leer dos veces lo
-    mismo."""
-    out     =   list(blocks)
-    for index in range(len(out) - 1, 0, -1):
-        if out[index]['id'] in R.IMAGE_BLOCKS and out[index - 1]['id'] in R.IMAGE_BLOCKS:
-            for position in range(index - 2, -1, -1):
-                if out[position]['id'] not in R.IMAGE_BLOCKS:
-                    #Se sube la foto que está ANTES del texto protector: así
-                    #queda foto y el texto sigue separando.
-                    out.insert(position, out.pop(index - 1))
-                    break
-            else:
-                continue
-            break
-    return out
+def _photos(start, body):
+    """Cuántas fotos grande consecutivas abren `body` desde `start`."""
+    count   =   0
+    while start + count < len(body) and body[start + count]['id'] in R.IMAGE_BLOCKS:
+        count   +=  1
+    return count
+
+
+def _opening_block_ids():
+    """Ids que alguna receta del objetivo puede abrir (la apertura se decide
+    después; acá solo se reconoce el grupo)."""
+    ids =   set()
+    for recipe in R.GOAL_RECIPES.values():
+        ids |=  set(recipe.get('opening') or ())
+    return ids
+
+
+def _rhythm_image(block):
+    """Foto grande realmente visible: un bloque apagado no ocupa la página."""
+    return block.get('enabled', True) and block['id'] in R.IMAGE_BLOCKS
+
+
+def _rhythm_text(block):
+    """Un bloque que puede ir EN MEDIO de dos fotos: una sección real y
+    visible, nunca la prueba social ni el cierre (esos los fija la jerarquía
+    al final)."""
+    return (
+        block.get('enabled', True)
+        and block['id'] not in R.IMAGE_BLOCKS
+        and block['id'] not in R.SOCIAL_BLOCKS
+        and block['id'] not in _PINNED_BLOCKS
+        and block['id'] != 'hero'
+    )
+
+
+def _bend_portada(head, body, donor):
+    """
+    Portada / apertura / foto: el hero abre, la foto de la portada sigue y la
+    primera APERTURA del objetivo entra detrás (con el texto real que la separa
+    de la foto siguiente). La apertura nunca queda como primera sección: la
+    portada no lo es.
+    """
+    opening =   [block for block in body[1:] if block['id'] in _opening_block_ids() and block.get('enabled')]
+    if not opening or opening[0] is body[donor]:
+        return None
+    order   =   [body[0]] + opening[:1] + [body[donor]]
+    used    =   {id(block) for block in order}
+    return head + order + [block for block in body if id(block) not in used]
+
+
+def _photo_texts(body):
+    """Textos reales disponibles DESPUÉS de la foto de portada."""
+    return [pos for pos in range(1, len(body)) if _rhythm_text(body[pos])]
 
 
 def _rotate_to_opening(blocks, answers):
     """
     Apertura según objetivo (B.2-2): la primera sección CON CONTENIDO real
-    después del hero tiene que salir del grupo `opening` de GOAL_RECIPES. El
-    bloque elegido sube a esa posición y el resto conserva su orden relativo.
+    después del hero sale del grupo `opening` de GOAL_RECIPES. El bloque
+    elegido sube a esa posición y el resto conserva su orden relativo.
     Si el grupo no tiene ningún bloque con datos, no se toca nada (nunca se
     inventa contenido para cumplir la regla).
+
+    Portada desdoblada: la portada no es una sección. Si la primera sección
+    es una foto, la portada (hero y su foto) cede su texto y la apertura del
+    objetivo entra detrás (hero / foto / apertura / foto); sin texto que la
+    separe, el ritmo resuelve la tira y el objetivo abre donde se pueda.
     """
     opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
     head    =   [block for block in blocks if block['id'] == 'hero']
@@ -982,6 +1035,15 @@ def _rotate_to_opening(blocks, answers):
     picked  =   [block for block in body if block['id'] in opening and block.get('enabled')]
     if not picked:
         return blocks
+    #Portada desdoblada: la portada no es una sección. Con una foto abriendo
+    #(y otra pegada atrás), la apertura del objetivo entra detrás de la foto
+    #de portada y el primer texto real la separa de la foto siguiente.
+    if first['id'] in R.IMAGE_BLOCKS and _photos(0, body):
+        texts   =   _photo_texts(body)
+        if texts:
+            bent    =   _bend_portada(head, body, texts[0])
+            if bent is not None:
+                return bent
     #El grupo de apertura sube completo (si son dos, van juntos en su orden);
     #lo que estaba primero no se borra: baja y conserva su lugar relativo.
     rest    =   [block for block in body if block not in picked]
@@ -993,12 +1055,20 @@ def _enforce_hierarchy(blocks):
     Reglas de jerarquía de ai_design_recipes.HIERARCHY_RULES que no salen
     solas del orden: hero primero, prueba social antes del CTA y contacto
     al cierre.
+
+    El hero no es una sección: la(s) foto(s) grande(s) que lo siguen son la
+    PORTADA y viajan con él (si un bloque de texto se metiera entre las dos,
+    la foto llegaba al ritmo pegada a otra foto y sin separador posible).
     """
     by_id   =   {block['id']: block for block in blocks}
     head    =   [by_id.pop('hero')] if 'hero' in by_id else []
+    while head and len(head) < len(blocks) and blocks[len(head)]['id'] in R.IMAGE_BLOCKS:
+        head.append(by_id.pop(blocks[len(head)]['id']))
     tail    =   [by_id.pop('contact')] if 'contact' in by_id else []
     cta     =   [by_id.pop('cta')] if 'cta' in by_id else []
-    social  =   [by_id.pop(block_id) for block_id in ('testimonials', 'brands') if block_id in by_id]
+    #El orden relativo de la prueba social se conserva (no se fuerzan marcas
+    #delante de testimonios: la receta puede pedalos al revés).
+    social  =   [by_id.pop(block['id']) for block in blocks if block['id'] in R.SOCIAL_BLOCKS and block['id'] in by_id]
     middle  =   [block for block in blocks if block['id'] in by_id]
     return head + middle + social + cta + tail
 
@@ -1352,7 +1422,10 @@ def _theme(skin, pair, answers, rng, shift, template = None, store = None):
         'body'          :   pair_data['body'],
         'scale'         :   skin['typography'].get('scale', 'balanced'),
         'weightHeading' :   roles['h1']['weight'],
-        'letterSpacing' :   '-0.02em',
+        #El tracking publicado es el del rol h1 (em): un display en
+        #mayúsculas pide tracking positivo y un serif grande negativo; un
+        #valor fijo le pone -0.02em a Cinzel y la publica apretada.
+        'letterSpacing' :   TYPE.tracking_css(roles['h1']['tracking']),
         'roles'         :   roles,
     }
     if answers.get('brand_color'):

@@ -625,10 +625,15 @@ RUBRO_HINTS                 =   {
 #apaga lo que distrae de la meta (no se borra: queda desactivado en el
 #borrador y el dueño lo reactiva). `hero_variant` fija la variante de la
 #portada, y `labels` son los nombres de las propuestas (≤32).
+#v6: `opening` es el grupo de bloques que enmarca la portada según el
+#objetivo; el motor exige que la primera sección con contenido real después
+#del hero salga de ese grupo (ai_design._rotate_to_opening).
 GOAL_RECIPES                =   {
     'vender_online': {
         'label': 'Vender online',
         'hero_variant': 'split',
+        'hero_variants': ('search', 'split'),
+        'opening': ('categories', 'offers'),
         'order': ('hero', 'highlights', 'categories', 'featured', 'offers', 'countdown', 'benefits', 'brands', 'testimonials', 'faq', 'cta', 'contact'),
         'off': ('video', 'timeline', 'team', 'compare', 'steps'),
         'labels': ('Catálogo protagonista', 'Vitrina de ofertas', 'Compra guiada'),
@@ -637,6 +642,8 @@ GOAL_RECIPES                =   {
     'mostrar_servicios': {
         'label': 'Mostrar servicios',
         'hero_variant': 'centered',
+        'hero_variants': ('centered', 'split'),
+        'opening': ('services',),
         'order': ('hero', 'services', 'benefits', 'steps', 'gallery', 'stats', 'testimonials', 'faq', 'cta', 'contact'),
         'off': ('countdown', 'brands', 'compare'),
         'labels': ('Servicios al frente', 'Proceso claro', 'Oficio y detalle'),
@@ -644,7 +651,9 @@ GOAL_RECIPES                =   {
     },
     'conseguir_consultas': {
         'label': 'Conseguir consultas',
-        'hero_variant': 'compact',
+        'hero_variant': 'split',
+        'hero_variants': ('split', 'centered'),
+        'opening': ('services',),
         'order': ('hero', 'services', 'benefits', 'testimonials', 'faq', 'about', 'cta', 'contact'),
         'off': ('countdown', 'brands', 'featured', 'offers', 'compare'),
         'labels': ('Consultas primero', 'Respuesta rápida', 'Confianza y cierre'),
@@ -652,7 +661,9 @@ GOAL_RECIPES                =   {
     },
     'dar_confianza': {
         'label': 'Dar confianza',
-        'hero_variant': 'editorial',
+        'hero_variant': 'centered',
+        'hero_variants': ('centered', 'editorial'),
+        'opening': ('stats', 'about'),
         'order': ('hero', 'about', 'stats', 'timeline', 'team', 'testimonials', 'benefits', 'faq', 'cta', 'contact'),
         'off': ('countdown', 'compare'),
         'labels': ('Confianza primero', 'Historia del negocio', 'Gente detrás'),
@@ -660,12 +671,31 @@ GOAL_RECIPES                =   {
     },
     'mostrar_trabajos': {
         'label': 'Mostrar trabajos',
-        'hero_variant': 'full',
+        'hero_variant': 'cinema',
+        'hero_variants': ('cinema', 'editorial'),
+        'opening': ('gallery',),
         'order': ('hero', 'gallery', 'featured', 'services', 'testimonials', 'about', 'faq', 'cta', 'contact'),
         'off': ('countdown', 'compare', 'brands'),
         'labels': ('Trabajos primero', 'Galería amplia', 'Antes y después'),
         'why': 'La galería va justo debajo de la portada: el trabajo se muestra antes de explicarlo.',
     },
+}
+
+#Prueba social: _enforce_hierarchy la agrupa antes del cierre, así que el
+#ritmo alternado no la usa como separador entre fotos.
+SOCIAL_BLOCKS               =   frozenset({'testimonials', 'brands'})
+
+#Bloques de "foto grande": el ritmo alternado nunca los pone seguidos (entre
+#dos de ellos va un bloque de texto o de datos).
+IMAGE_BLOCKS                =   frozenset({'featured', 'gallery', 'aimosaic'})
+
+#Densidad por tono (B.2-5): bloques que el tono apaga cuando pide aire. Se
+#excluyen los 'locking' (portada, cierre, contacto) y los ai_* (los suma D).
+TONE_DENSITY                =   {
+    'serio':    ('countdown', 'timeline', 'team', 'video', 'compare', 'steps'),
+    'audaz':    (),
+    'moderno':  (),
+    'calido':   ('compare',),
 }
 
 #=========================================
@@ -737,8 +767,11 @@ HIERARCHY_RULES             =   (
     ('categories_two',  'Departamentos solo con 2+ categorías: una sola no es navegación.'),
     ('gated_data',      'Cada bloque con datos propios se apaga si el dato falta (no se muestra vacío).'),
     ('offers_real',     'Ofertas y cuenta regresiva solo con descuentos vigentes.'),
+    ('opening_goal',    'La primera sección con contenido después del hero sale del grupo del objetivo (v6).'),
+    ('alternating_rhythm', 'Dos bloques de foto grande (vitrina, galería, mosaico) nunca van seguidos (v6).'),
     ('social_before_cta', 'Testimonios y marcas quedan antes del cierre: la prueba social precede al pedido.'),
     ('contact_last',    'El contacto cierra la portada, después del llamado a la acción.'),
+    ('distinct_signature', 'Dos propuestas de una misma generación nunca comparten firma de layout (v6).'),
     ('premium_flag',    'Los bloques premium se omiten sin has_design_advanced.'),
 )
 
