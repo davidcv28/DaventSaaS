@@ -767,7 +767,7 @@ function closeOnboarding() {
 // Índice de la búsqueda: herramientas + campos clave con su data-focus (el
 // pick enfoca el control exacto como un click en la vista previa).
 const SEARCH_INDEX = [
-  { tool: 'estilos',      focus: 'hero',       label: 'Presets de diseño',            hint: 'Estilos', kw: 'preset estilo combinado look plantilla tema' },
+  { tool: 'estilos',      focus: 'hero',       label: 'Estilo de tu web',             hint: 'Estilos', kw: 'estilo diseño plantilla raiz trama circuito look' },
   { tool: 'colores',      focus: 'page',       label: 'Paleta y colores',             hint: 'Colores', kw: 'color paleta acento primario fondo texto' },
   { tool: 'colores',      focus: 'buttons',    label: 'Contraste accesible',          hint: 'Colores', kw: 'contraste aa legibilidad accesible' },
   { tool: 'tipografia',   focus: 'typo',       label: 'Fuentes y tipografía',         hint: 'Tipografía', kw: 'fuente letra tipografia texto peso escala' },

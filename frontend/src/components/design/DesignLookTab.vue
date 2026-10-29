@@ -23,10 +23,10 @@ const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
 const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))
 
 const steps = [
+  { id: 'style', icon: 'layout-grid', title: 'Estilo y portada', ring: 'cover' },
   { id: 'identity', icon: 'image', title: 'Identidad', ring: 'logo' },
   { id: 'colors', icon: 'palette', title: 'Colores', ring: 'accent' },
-  { id: 'type', icon: 'type', title: 'Tipografía', ring: 'font', premium: true },
-  { id: 'style', icon: 'layout-grid', title: 'Portada y estilo', ring: 'cover' }
+  { id: 'type', icon: 'type', title: 'Tipografía', ring: 'font', premium: true }
 ]
 
 const currentLogo = computed(() => store.customization.logo || '')
@@ -40,7 +40,7 @@ const done = computed(() => ({
 }))
 const doneCount = computed(() => steps.filter((s) => done.value[s.id]).length)
 
-const open = ref('identity')
+const open = ref('style')
 const headRefs = {}
 function setRing(key) { emit('ring', key) }
 function stepRing(id) { return steps.find((s) => s.id === id)?.ring || null }
@@ -292,35 +292,20 @@ const stepSum = computed(() => ({
   style: `${tplLabel.value} · ${currentCover.value ? 'con portada' : 'sin portada'}`
 }))
 
+// Los 3 únicos estilos del catálogo: una familia por diseño (Raíz, Trama y
+// Circuito). Cada tarjeta es la miniatura real del estilo y se elige con un
+// click: nada de selects de categoría + estilo que duplicaban el camino.
 const storeTemplates = STORE_TEMPLATES
 const templateFamilies = STORE_TEMPLATE_FAMILIES
 const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
-const familyTier = (f) => (f.templates.some((k) => STORE_TEMPLATES[k]?.tier !== 'advanced') ? 'Desde Estándar' : 'Premium')
-const selectedFamilyKey = ref('general')
-const selectedFamily = computed(() => templateFamilies.find((f) => f.key === selectedFamilyKey.value) || templateFamilies[0])
-const selectedFamilyAllowed = computed(() => selectedFamily.value.templates.filter((k) => allowedTemplates.value.includes(k)))
-watch(() => props.form.template, (key) => {
-  if (selectedFamily.value.templates.includes(key)) return
-  const f = templateFamilies.find((f) => f.templates.includes(key))
-  if (f) selectedFamilyKey.value = f.key
-}, { immediate: true })
-function onFamilyPick() {
-  const first = selectedFamilyAllowed.value[0]
-  if (first) props.form.template = first
-}
-function stepTemplate(dir) {
-  const list = selectedFamilyAllowed.value
-  if (list.length < 2) return
-  const i = list.indexOf(props.form.template)
-  props.form.template = list[(i + dir + list.length) % list.length]
-}
-function templatePlanLabel(key) {
+const templateTierLabel = (key) => {
   const tier = STORE_TEMPLATES[key]?.tier
-  return tier === 'plus' ? 'Estándar' : tier === 'advanced' ? 'Premium' : ''
+  return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Incluido'
 }
-function templateTierLabel(key) {
-  const tier = STORE_TEMPLATES[key]?.tier
-  return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Todos los planes'
+function pickTemplate(key) {
+  if (!key) return
+  if (!allowedTemplates.value.includes(key)) { emit('go-plans'); return }
+  props.form.template = key
 }
 
 const cropView = ref('desktop')
@@ -452,7 +437,7 @@ onBeforeUnmount(dropLocalLogo)
   <div class="card dsg-card dl-root" @keydown="onRootKey">
     <div class="dl-progress">
       <div class="dl-progress-head">
-        <strong><AppIcon name="badge-check" :size="16" aria-hidden="true" /> Identidad visual</strong>
+        <strong><AppIcon name="badge-check" :size="16" aria-hidden="true" /> Tu diseño</strong>
         <span class="dl-history">
           <button type="button" class="dl-hbtn" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer el último cambio" @click="undo"><AppIcon name="undo" :size="17" aria-hidden="true" /></button>
           <button type="button" class="dl-hbtn" :disabled="!canRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer el cambio" @click="redo"><AppIcon name="redo" :size="17" aria-hidden="true" /></button>
@@ -732,35 +717,28 @@ onBeforeUnmount(dropLocalLogo)
             </div>
 
             <div class="field" @focusin="setRing('cover')">
-              <label for="design-family"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Diseño de tu web</label>
-              <div class="tpl-selects">
-                <div class="tpl-field">
-                  <label for="design-family" class="tpl-label">Categoría</label>
-                  <select id="design-family" v-model="selectedFamilyKey" class="select" @change="onFamilyPick">
-                    <option v-for="f in templateFamilies" :key="f.key" :value="f.key" :disabled="!familyAllowed(f)">{{ f.label }}<template v-if="!familyAllowed(f)"> · {{ familyTier(f) }}</template></option>
-                  </select>
-                </div>
-                <div class="tpl-field">
-                  <label for="design-template" class="tpl-label">Estilo</label>
-                  <select id="design-template" v-model="form.template" class="select">
-                    <option v-for="key in selectedFamily.templates" :key="key" :value="key" :disabled="!allowedTemplates.includes(key)">{{ storeTemplates[key]?.label }}<template v-if="!allowedTemplates.includes(key)"> · {{ templatePlanLabel(key) }}</template></option>
-                  </select>
-                </div>
+              <label id="design-style-label"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Estilo de tu web</label>
+              <p class="dl-style-note">Sólo hay tres estilos. Elegí el que mejor le quede a tu negocio: cambia la estructura de la portada sin perder contenido.</p>
+              <div class="dl-styles" role="group" aria-labelledby="design-style-label">
+                <button
+                  v-for="f in templateFamilies" :key="f.key" type="button"
+                  class="dl-style" :class="{ active: form.template === f.templates[0], locked: !familyAllowed(f) }"
+                  :aria-pressed="form.template === f.templates[0]"
+                  :title="`${storeTemplates[f.templates[0]]?.label} · ${f.caption}${familyAllowed(f) ? '' : ' · requiere un plan superior'}`"
+                  @click="pickTemplate(f.templates[0])"
+                >
+                  <span class="tpl-thumb dl-style-thumb" :data-tpl="f.templates[0]" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
+                  <span class="dl-style-tx">
+                    <strong>{{ storeTemplates[f.templates[0]]?.label }}</strong>
+                    <small>{{ f.label }}</small>
+                    <span class="pick-tier" :class="storeTemplates[f.templates[0]]?.tier">{{ templateTierLabel(f.templates[0]) }}</span>
+                  </span>
+                  <span class="dl-style-state" aria-hidden="true">
+                    <AppIcon v-if="form.template === f.templates[0]" name="check" :size="13" :stroke="3" />
+                    <AppIcon v-else-if="!familyAllowed(f)" name="lock" :size="13" :stroke="2" />
+                  </span>
+                </button>
               </div>
-              <div class="pick-preview" aria-live="polite">
-                <span class="tpl-thumb pick-preview-thumb" :data-tpl="form.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
-                <div class="pick-preview-info">
-                  <span class="pick-preview-eyebrow">Diseño elegido</span>
-                  <strong>{{ storeTemplates[form.template]?.label }}</strong>
-                  <small>{{ storeTemplates[form.template]?.desc }}</small>
-                  <span class="pick-tier" :class="storeTemplates[form.template]?.tier">{{ templateTierLabel(form.template) }}</span>
-                </div>
-                <div class="pick-nav">
-                  <button type="button" class="icon-btn" aria-label="Diseño anterior" :disabled="selectedFamilyAllowed.length < 2" @click="stepTemplate(-1)"><AppIcon name="chevron-left" :size="15" /></button>
-                  <button type="button" class="icon-btn" aria-label="Diseño siguiente" :disabled="selectedFamilyAllowed.length < 2" @click="stepTemplate(1)"><AppIcon name="chevron-right" :size="15" /></button>
-                </div>
-              </div>
-              <p class="hint">Cambia la estructura de tu portada sin perder contenido. Los bloqueados se habilitan con otro plan.</p>
             </div>
             <div v-if="!advanced" class="dl-lock">
               <AppIcon name="lock" :size="16" aria-hidden="true" />
@@ -787,8 +765,13 @@ onBeforeUnmount(dropLocalLogo)
 .dl-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(9, 12, 24, .15); }
 
 .dl-steps { display: grid; gap: 10px; min-width: 0; }
-.dl-step { border: 1px solid var(--line); border-radius: 14px; background: var(--card); min-width: 0; }
-.dl-step.open { border-color: color-mix(in srgb, var(--brand-500) 45%, var(--line)); box-shadow: var(--shadow-sm); }
+.dl-step { position: relative; border: 1px solid var(--line); border-radius: 14px; background: var(--card); min-width: 0; transition: border-color .15s, background .15s; }
+.dl-step.open { border-color: color-mix(in srgb, var(--brand-500) 45%, var(--line)); box-shadow: var(--shadow-sm); background: var(--card); }
+.dl-step.open::before {
+  content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--brand-500);
+}
+@media (hover: hover) { .dl-step:not(.open):hover { border-color: var(--line-strong, var(--line)); } }
 .dl-step-h { margin: 0; font-size: inherit; }
 .dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; min-width: 0; padding: 10px 14px; border: 0; border-radius: 14px; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
 .dl-step-btn:hover { background: var(--surface); }
@@ -814,6 +797,39 @@ onBeforeUnmount(dropLocalLogo)
 }
 
 .dl-ell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== Los 3 estilos del catálogo (tarjetas con miniatura real) ===== */
+.dl-style-note { margin: 4px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); overflow-wrap: anywhere; }
+.dl-styles { display: grid; gap: 8px; margin-top: 10px; min-width: 0; }
+.dl-style {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0;
+  padding: 8px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--card); color: var(--ink); font: inherit; text-align: left;
+  cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.dl-style:hover { border-color: var(--line-strong, var(--line)); }
+.dl-style:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.dl-style.active { border-color: var(--brand-500); background: var(--brand-soft); box-shadow: inset 0 0 0 1px var(--brand-500); }
+.dl-style.locked .dl-style-thumb { opacity: .6; }
+.dl-style-thumb { flex: none; width: 78px; border-radius: 8px; }
+.dl-style-tx { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.dl-style-tx strong { font-size: 13.5px; line-height: 1.2; color: var(--ink); }
+.dl-style-tx small { font-size: 11.5px; line-height: 1.3; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-style-tx .pick-tier { justify-self: start; margin-top: 3px; padding: 1px 7px; font-size: 10px; }
+.dl-style-state {
+  flex: none; display: grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 50%; color: var(--muted);
+}
+.dl-style.active .dl-style-state { background: var(--brand-600); color: #fff; }
+@container (min-width: 420px) {
+  .dl-styles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dl-style { flex-direction: column; align-items: stretch; gap: 8px; }
+  .dl-style-thumb { width: 100%; }
+  .dl-style-state { position: absolute; top: 8px; right: 8px; }
+  .dl-style { position: relative; }
+  .dl-style-tx .pick-tier { justify-self: start; }
+}
+
 .dl-logo-box .logo-actions { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .dl-logo-box { min-width: 0; }
 .dl-swatches { gap: 8px; }

@@ -7,7 +7,7 @@ import { effectiveAccent } from '../../api/stores.api.js'
 // en StudioPanel.vue; cualquier fase puede reemplazarlo con el slot
 // #panel-<id> del StudioShell.
 export const STUDIO_TOOLS = [
-  { id: 'estilos',      icon: 'sparkles',     label: 'Estilos',      desc: 'Identidad, colores, fuente y diseño base de tu página.' },
+  { id: 'estilos',      icon: 'sparkles',     label: 'Estilos',      desc: 'Tu web en 4 pasos: estilo, identidad, colores y letra.' },
   { id: 'colores',      icon: 'palette',      label: 'Colores',      desc: 'Paleta por rol, armonías, logo y contraste accesible.' },
   { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuentes, pares recomendados, escala y peso.' },
   { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad, superficie y botones.' },
