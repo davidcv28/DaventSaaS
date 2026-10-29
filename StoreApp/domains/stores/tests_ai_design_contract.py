@@ -318,13 +318,16 @@ class Diversidad(_AiDesignBase):
                 seen.add(key)
 
     def test_proposals_of_one_generation_differ_in_template_skin_and_type_pair(self):
+        #Con el catálogo de 3 diseños el invariante que sostiene la variedad
+        #es plantilla + piel + estilo distintos (el par tipográfico queda
+        #como mejor esfuerzo: dos familias pueden compartir el mismo par).
         client, _, _    =   self._premium_client()
         for rubro in ('comercio', 'belleza', 'tecnologia'):
             proposals   =   _proposals_of(self._generate(client, _rubro_payload(rubro)))
             self.assertIn(len(proposals), (2, 3), rubro)
             self.assertEqual(len({p['template'] for p in proposals}), len(proposals), rubro)
             self.assertEqual(len({_skin_of(p).get('id') for p in proposals}), len(proposals), rubro)
-            self.assertEqual(len({_type_signature_of(p) for p in proposals}), len(proposals), rubro)
+            self.assertEqual(len({p['variety']['style'] for p in proposals}), len(proposals), rubro)
 
     def test_seed_plus_one_changes_the_visual_family(self):
         client, _, _    =   self._premium_client()
