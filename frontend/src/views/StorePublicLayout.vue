@@ -115,10 +115,17 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // En modo Studio manda el borrador (studioVars/studioAttrs): lo publicado no
 // se mezcla para que un campo que el borrador no fija no se cuele en el
 // lienzo y preview/publicada queden idénticas.
+// Rediseño por rubro (fase 1): los 3 diseños del catálogo NO consumen skins
+// del Studio — su paleta y tipografía las fija su propia hoja
+// (store-raiz/trama/circuito.css). El site_theme guardado de una tienda
+// vieja se sigue respetando en el payload, pero no pinta estas webs: así el
+// diseño se ve como la referencia y no mezclado con una piel anterior.
+const DESIGN_SKIN_FREE = ['raiz', 'trama', 'circuito']
+const consumesSiteTheme = computed(() => !DESIGN_SKIN_FREE.includes(pageTemplate.value))
 const publishedThemeVars = computed(() => (
-  studioMode.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
+  studioMode.value || !consumesSiteTheme.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
 ))
-const publishedThemeAttrs = computed(() => (studioMode.value ? {} : storeSiteThemeAttrs(custom.value, pageTheme.value)))
+const publishedThemeAttrs = computed(() => (studioMode.value || !consumesSiteTheme.value ? {} : storeSiteThemeAttrs(custom.value, pageTheme.value)))
 // Fuentes del tema guardado (título/cuerpo) on-demand: puede elegir una
 // familia distinta de la del nombre. Un stack CSS no es slug y no hace nada.
 watch(
@@ -176,7 +183,7 @@ const effectiveSkin = computed(() => {
   return skinOf(theme)
 })
 watch(effectiveSkin, (family) => {
-  if (SKIN_FAMILIES.includes(family)) import(`../assets/skin-${family}.css`)
+  if (consumesSiteTheme.value && SKIN_FAMILIES.includes(family)) import(`../assets/skin-${family}.css`)
 }, { immediate: true })
 // Tema efectivo: el elegido por el dueño; con customization.theme_toggle
 // el visitante puede alternarlo y su elección queda en localStorage

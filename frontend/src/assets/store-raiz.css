@@ -84,6 +84,11 @@
 }
 
 /* --- Barra superior: clara, con CTA oscuro --- */
+/* El layout base esconde la barra en la portada (`is-home`) porque las
+   landings viejas traían su propio hero. Raíz es una web de páginas: la
+   barra se ve siempre, también en el inicio. */
+.store-page[data-template='raiz'].is-home { --sp-top-h: 64px; }
+.store-page[data-template='raiz'].is-home .sp-top { display: block; }
 .store-page[data-template='raiz'] .sp-top {
   background: var(--rz-surface);
   color: var(--rz-ink);
@@ -326,6 +331,17 @@
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */
+/* Guarda de overflow: ninguna banda decorativa puede abrir scroll horizontal
+   en 360/390. `clip` no rompe el sticky de la barra (hidden sí). */
+.store-page[data-template='raiz'] { overflow-x: clip; }
+
+@media (max-width: 1024px) {
+  .store-page[data-template='raiz'] .sp-shop-featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .store-page[data-template='raiz'] .sp-shop-depts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* < 1100 px el catálogo pasa a una columna y los filtros a un panel
+   desplegable (drawer full-screen en la referencia; acá, panel inline). */
 @media (max-width: 1100px) {
   .rz-cat-body { grid-template-columns: minmax(0, 1fr); }
   .rz-filters-toggle { display: inline-flex; position: sticky; top: calc(var(--sp-top-h, 64px) + 8px); z-index: 6; align-items: center; gap: 8px; justify-self: start; min-height: 42px; padding: 0 16px; margin-bottom: 12px; border-radius: 999px; border: 1px solid var(--rz-line); background: var(--rz-surface); color: var(--rz-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: var(--sp-shadow-sm); }
@@ -337,16 +353,39 @@
 }
 
 @media (max-width: 860px) {
-  .store-page[data-template='raiz'] .sp-hal-grid { grid-template-columns: minmax(0, 1fr); }
-  .rz-cat-hero-row { flex-direction: column; align-items: flex-start; }
-  .rz-cat-counters { flex-wrap: wrap; }
+  .store-page[data-template='raiz'] .sp-hal.is-split .sp-hal-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .store-page[data-template='raiz'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .store-page[data-template='raiz'] .sp-shop-depts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='raiz'] .sp-services-grid,
+  .store-page[data-template='raiz'] .sp-benefits-grid,
+  .store-page[data-template='raiz'] .sp-testimonials-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='raiz'] .rz-cat-hero-row { flex-direction: column; align-items: flex-start; }
+  .store-page[data-template='raiz'] .rz-cat-counters { flex-wrap: wrap; }
 }
 
 @media (max-width: 640px) {
-  :root { --rz-section: 48px; }
   .store-page[data-template='raiz'] { --rz-gutter: 20px; --rz-section: 48px; }
+  /* Contenedores flex del layout base: en móvil envuelven en vez de empujar
+     el ancho de la página (causa de scroll horizontal). */
+  .store-page[data-template='raiz'] :is(.sp-top-inner, .sp-hal-grid, .sp-hero-inner, .sp-hal-copy,
+    .sp-shop-featured-head, .sp-shop-featured-copy, .sp-section-head, .sp-head, .sp-cat-head,
+    .sp-cta-inner, .sp-about-grid, .sp-contact-grid, .sp-foot-grid, .sp-foot-bottom) { flex-wrap: wrap; min-width: 0; }
+  .store-page[data-template='raiz'] :is(.sp-hal-ctas, .sp-hero-ctas, .sp-hal-meta, .sp-hero-meta,
+    .sp-highlights, .sp-brands, .rz-results-head, .rz-promos) { flex-wrap: wrap; }
+  .store-page[data-template='raiz'] .sp-hal-media { display: none; }
+  .store-page[data-template='raiz'] .sp-hal-title { font-size: clamp(32px, 9.4vw, 44px); }
+  .store-page[data-template='raiz'] .sp-hal-sub { font-size: 15.5px; }
+  .store-page[data-template='raiz'] .sp-hal-ctas { gap: 10px; }
+  .store-page[data-template='raiz'] .sp-hal-btn { flex: 1 1 auto; }
+  .store-page[data-template='raiz'] .sp-ann { font-size: 11.5px; }
+  .store-page[data-template='raiz'] .sp-services-grid,
+  .store-page[data-template='raiz'] .sp-benefits-grid,
+  .store-page[data-template='raiz'] .sp-testimonials-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='raiz'] .sp-benefits .sp-container { padding-block: 28px; }
+  .store-page[data-template='raiz'] .sp-cta .sp-container { padding: 28px 20px; }
   .rz-grid { grid-template-columns: minmax(0, 1fr); }
   .rz-cat-counters li { min-width: 84px; }
+  .rz-cat-main { padding-block: 20px 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
