@@ -284,7 +284,25 @@ def _calm_palette(palette):
     text    =   _calm_text(palette.get('text') or _neutral_ink(bg), bg, 7.0)
     muted   =   _calm_text(palette.get('muted') or _mix(text, bg, 0.45), bg, 4.5)
     border  =   _mix(text, bg, 0.82)
-    return {**palette, 'text': text, 'muted': muted, 'border': border}
+    surface =   _calm_surface(palette.get('surface'), bg, text)
+    return {**palette, 'text': text, 'muted': muted, 'border': border, 'surface': surface}
+
+
+def _calm_surface(surface, bg, text):
+    """
+    Superficie a ≤ 8 % de diferencia tonal del fondo (A.1-3): un card blanco
+    puro sobre papel crema se ve "pegado" a la página. Si la piel define su
+    superficie y ya está dentro del margen, se respeta (es su carácter).
+    """
+    target  =   _mix(bg, text, 0.05)
+    if not isinstance(surface, str) or _norm_hex(surface) is None:
+        return target
+    #Armonía de CONTRASTE (no de brillo): el card se separa del fondo como
+    #mucho 8 % en proporción al par tinta/fondo. En oscuro una diferencia de
+    #luminancia WCAG es desproporcionada (1,5 % de brillo ya es un salto).
+    span    =   max(_contrast_ratio(text, bg) - 1, 0.001)
+    delta   =   abs(_contrast_ratio(surface, bg) - 1)
+    return surface if delta / span <= 0.08 else target
 
 
 #=========================================
@@ -319,7 +337,7 @@ def _style_set(palette, mode, accent):
     same    =   _mode_of(palette['bg']) == mode
     base    =   palette if same else {**_STYLE_NEUTRAL[mode], 'accent': accent}
     bg      =   base['bg']
-    surface =   base['surface']
+    surface =   _calm_surface(base.get('surface'), bg, base.get('text') or _neutral_ink(bg))
     border  =   base.get('border') or _mix(base.get('text', _neutral_ink(bg)), bg, 0.82)
     heading =   _legible_on(_desaturate(base.get('text') or _neutral_ink(bg), 0.7), (bg, surface))
     muted   =   _legible_on(_desaturate(base.get('muted') or _mix(heading, bg, 0.45), 0.7), (bg, surface))
@@ -717,8 +735,20 @@ def _pattern_for(template, answers, shift):
     return patterns[ordered[shift % len(ordered)]]
 
 
-def _order_for(surface, answers, pattern = None):
-    """Orden de bloques para la superficie: receta del objetivo + prioridad del rubro."""
+def _density_off(answers):
+    """Densidad por tono: el tono 'serio' pide aire, así que apaga bloques
+    secundarios; los que tienen datos y no están apagados por la receta se
+    reactivan en _build_surface (un dato real pesa más que la densidad)."""
+    return set(R.TONE_DENSITY.get(answers.get('tone'), ()))
+
+
+def _order_for(surface, answers, pattern = None, rot = 0):
+    """
+    Orden de bloques para la superficie: receta del objetivo + prioridad del
+    rubro. `rot` rota el grupo medio (desde la segunda propuesta) para que dos
+    propuestas no cuenten la misma historia con otro color: la portada y el
+    cierre los fija _enforce_hierarchy, así que nunca se mueven de lugar.
+    """
     rubro       =   R.RUBROS[answers['rubro']]
     base        =   list(rubro['priority'][surface])
     off         =   set()
@@ -733,8 +763,39 @@ def _order_for(surface, answers, pattern = None):
         off     =   set(recipe['off'])
         order   =   [block for block in recipe['order'] if block in TEMPLATE_BLOCKS[surface]]
         order  +=   [block for block in base if block not in order]
+    elif rot and surface == 'catalog':
+        #Catálogo: las funciones (aviso, promo, ordenamiento) no se desordenan;
+        #lo que rota es el lugar de los filtros respecto de la grilla.
+        order   =   base
+        if 'filters' in order and 'grid' in order:
+            order.remove('filters')
+            order.insert(order.index('grid'), 'filters')
     else:
         order   =   base
+        if rot and surface == 'services':
+            #Servicios: la portada abre y la grilla de selección queda fija;
+            #los bloques de apoyo cambian de lugar entre propuestas (rotan,
+            #no se invierten: las variantes dependen del orden del catálogo).
+            fixed   =   {'hero', 'band', 'picker'}
+            tail    =   [block for block in order if block not in fixed]
+            if tail:
+                step    =   rot % len(tail)
+                tail    =   tail[step:] + tail[:step]
+            order   =   [block for block in order if block in fixed] + tail
+    if surface == 'landing' and rot:
+        #La apertura del objetivo no se rota: si el bloque que abre se va al
+        #final, la web deja de contar lo que el objetivo pide. Rota el resto.
+        opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
+        #La portada abre siempre: rotar también la mandaba al final.
+        anchor  =   {block for block in order if block in opening or block in R.IMAGE_BLOCKS} | {'hero'}
+        middle  =   [block for block in order if block not in anchor]
+        if middle:
+            step    =   rot % len(middle)
+            middle  =   middle[step:] + middle[:step]
+        #El orden relativo de los anclados (hero, apertura, fotos) se conserva:
+        #solo se intercala lo que rotó.
+        slots   =   iter(middle)
+        order   =   [block if block in anchor else next(slots) for block in order]
     #Los bloques con datos que la receta no nombró entran al final del grupo:
     #mejor una sección útil de más que perder contenido real.
     for block in R.BLOCK_FALLBACKS[surface]:
@@ -756,9 +817,11 @@ def _variant_for(surface, block_id, answers, rng, shift, pattern = None):
             return chosen
     pool        =   [variant for variant in R.RUBROS[answers['rubro']]['variants'].get(block_id, ()) if variant in variants]
     if surface == 'landing' and block_id == 'hero':
-        goal_variant    =   R.GOAL_RECIPES[answers['goals'][0]]['hero_variant']
-        if goal_variant in variants:
-            pool    =   [goal_variant] + [variant for variant in pool if variant != goal_variant]
+        recipe          =   R.GOAL_RECIPES[answers['goals'][0]]
+        goal_variants   =   recipe.get('hero_variants') or (recipe['hero_variant'],)
+        preferred       =   [variant for variant in goal_variants if variant in variants]
+        if preferred:
+            pool    =   preferred + [variant for variant in pool if variant not in preferred]
     if not pool:
         return None
     #La primera propuesta respeta el orden preferido; las siguientes rotan
@@ -769,7 +832,8 @@ def _variant_for(surface, block_id, answers, rng, shift, pattern = None):
 
 
 def _build_surface(surface, facts, answers, rng, shift, pattern = None):
-    order, off      =   _order_for(surface, answers, pattern)
+    order, off      =   _order_for(surface, answers, pattern, shift)
+    density         =   _density_off(answers) if surface == 'landing' else set()
     blocks          =   []
     for block_id in order:
         spec    =   TEMPLATE_BLOCKS[surface].get(block_id)
@@ -779,19 +843,23 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         #Bloque sin datos reales => apagado (queda en el borrador para que el
         #dueño lo vea y lo active cuando cargue el dato).
         enabled =   True if gate is None else bool(facts.get(gate))
+        #Densidad por tono: 'serio' pide aire. Un bloque con datos reales y
+        #siempre-presente (gate None) no se apaga: la densidad solo logra que
+        #el bloque no empuje el arranque; el dato pesa más que el gusto.
+        if block_id in density and gate is not None:
+            enabled =   False
         block   =   {'id': block_id, 'enabled': enabled}
         variant =   _variant_for(surface, block_id, answers, rng, shift, pattern)
         if variant:
             block['variant']    =   variant
         blocks.append(block)
-    #Variación "aleatoria pero pensada": en las propuestas alternativas el
-    #grupo del medio se reordena con la semilla (la portada, el cierre y el
-    #contacto quedan fijos por las reglas de jerarquía).
+    #Variación "pensada": en las propuestas alternativas el grupo del medio
+    #cambia de lugar de forma determinista (el orden ya viene rotado por
+    #_order_for); la portada y el cierre los fija _enforce_hierarchy.
     if surface == 'landing' and shift > 0:
         fixed   =   {'hero', 'cta', 'contact'}
         middle  =   [block for block in blocks if block['id'] not in fixed]
         rest    =   [block for block in blocks if block['id'] in fixed]
-        rng.shuffle(middle)
         blocks  =   middle + rest
     #Lo que el dueño pidió explícitamente sube al frente (después del hero).
     must    =   [block for block in answers['must_have'] if block in {item['id'] for item in blocks}]
@@ -801,10 +869,118 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         rest    =   [item for item in blocks if item not in head + middle]
         blocks  =   head + middle + rest
     if surface == 'landing':
+        #Apertura antes que respiración: la regla del objetivo manda (B.2-2)
+        #y el ritmo alternado solo reacomoda lo que sigue (B.2-1).
+        blocks  =   _enforce_hierarchy(blocks)
+        blocks  =   _rotate_to_opening(blocks, answers)
+        blocks  =   _alternate_rhythm(blocks)
         blocks  =   _enforce_hierarchy(blocks)
     for index, block in enumerate(blocks):
         block['order']  =   index
     return {'blocks': blocks}
+
+
+#Bloques que la jerarquía fija: el ritmo alternado nunca los usa como
+#relleno (el cierre no se adelanta ni el contacto deja de ser último).
+_PINNED_BLOCKS  =   frozenset({'cta', 'contact'})
+
+
+def _alternate_rhythm(blocks):
+    """
+    Ritmo alternado (B.2-1): dos bloques de foto grande seguidos no se
+    leen. Laminado determinista: una foto, un bloque de texto/datos, la otra
+    foto (el texto que seguía se corre una posición). Nunca cambia el set de
+    bloques, solo el orden.
+    """
+    #Foto, texto, foto: el bloque de texto/datos que sigue al par de fotos se
+    #inline entre las dos (la primera foto puede quedar pegada a la portada,
+    #que no es una sección). Nunca se toca un bloque de texto que fija la
+    #jerarquía (`cta`): el cierre no cambia de lugar.
+    out     =   list(blocks)
+    index   =   0
+    while index < len(out) - 1:
+        if out[index]['id'] in R.IMAGE_BLOCKS and out[index + 1]['id'] in R.IMAGE_BLOCKS:
+            #Si delante del par solo queda prueba social y cierre, no hay
+            #texto para intercalar: la foto de más se adelanta y se suma al
+            #bloque de fotos anterior (así el cierre nunca se mueve).
+            closer  =   next(
+                (position for position, block in enumerate(out)
+                 if position > index and (block['id'] in R.SOCIAL_BLOCKS or block['id'] in _PINNED_BLOCKS)),
+                None,
+            )
+            if closer is not None:
+                home    =   next(
+                    (position for position in range(index - 1, -1, -1) if out[position]['id'] not in R.IMAGE_BLOCKS),
+                    None,
+                )
+                if home is not None:
+                    out.insert(home + 1, out.pop(index + 1))
+                    index   +=  1
+                    continue
+                out.append(out.pop(index + 1))
+                index   +=  1
+                continue
+            moved   =   False
+            for position in range(index + 2, len(out)):
+                if out[position]['id'] not in R.IMAGE_BLOCKS:
+                    out.insert(index + 1, out.pop(position))
+                    moved   =   True
+                    break
+            if moved:
+                index   +=  2
+                continue
+            break
+        index   +=  1
+    return out
+
+
+def _separate_trailing_images(blocks):
+    """Si el grupo quedó cerrado con fotos pegadas (tres foto-grande juntas),
+    la foto de más se sube antes del bloque de texto anterior: el cierre
+    (cta/contacto) nunca se mueve y la pantalla deja de leer dos veces lo
+    mismo."""
+    out     =   list(blocks)
+    for index in range(len(out) - 1, 0, -1):
+        if out[index]['id'] in R.IMAGE_BLOCKS and out[index - 1]['id'] in R.IMAGE_BLOCKS:
+            for position in range(index - 2, -1, -1):
+                if out[position]['id'] not in R.IMAGE_BLOCKS:
+                    #Se sube la foto que está ANTES del texto protector: así
+                    #queda foto y el texto sigue separando.
+                    out.insert(position, out.pop(index - 1))
+                    break
+            else:
+                continue
+            break
+    return out
+
+
+def _rotate_to_opening(blocks, answers):
+    """
+    Apertura según objetivo (B.2-2): la primera sección CON CONTENIDO real
+    después del hero tiene que salir del grupo `opening` de GOAL_RECIPES. El
+    bloque elegido sube a esa posición y el resto conserva su orden relativo.
+    Si el grupo no tiene ningún bloque con datos, no se toca nada (nunca se
+    inventa contenido para cumplir la regla).
+    """
+    opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
+    head    =   [block for block in blocks if block['id'] == 'hero']
+    body    =   [block for block in blocks if block['id'] != 'hero']
+    #La primera sección es la primera HABILITADA (un bloque apagado no ocupa
+    #lugar en la página).
+    first   =   next((block for block in body if block.get('enabled')), None)
+    if first is None or first['id'] in opening:
+        return blocks
+    #must_have manda sobre la apertura (B.2-4): lo pedido ya subió al frente
+    #y moverle otro bloque adelante lo escondería.
+    if first['id'] in answers['must_have']:
+        return blocks
+    picked  =   [block for block in body if block['id'] in opening and block.get('enabled')]
+    if not picked:
+        return blocks
+    #El grupo de apertura sube completo (si son dos, van juntos en su orden);
+    #lo que estaba primero no se borra: baja y conserva su lugar relativo.
+    rest    =   [block for block in body if block not in picked]
+    return head + picked + rest
 
 
 def _enforce_hierarchy(blocks):
@@ -846,6 +1022,10 @@ _GRID_BY_LAYOUT     =   {
     'split':     ('cols2', 'cols2'),
     'bento':     ('masonry', 'masonry'),
     'editorial': ('lead', 'lead'),
+    #v6: dos firmas nuevas para que la vitrina y la grilla del catálogo
+    #también cambien de estructura (no solo el resto de los bloques).
+    'magazine':  ('cols3', 'masonry'),
+    'showcase':  ('lead', 'lead'),
 }
 
 
@@ -857,7 +1037,7 @@ _VARIANTS_BY_LAYOUT =   {
         'categories': 'row', 'benefits': 'cards', 'offers': 'grid', 'brands': 'logos',
         'countdown': 'card', 'gallery': 'grid', 'testimonials': 'cards', 'faq': 'list',
         'contact': 'card', 'cta': 'card', 'announcements': 'static',
-        'filters': 'panel', 'picker': 'list',
+        'filters': 'panel', 'picker': 'cards',
     },
     'asym': {
         'categories': 'rail', 'benefits': 'bento', 'offers': 'rail', 'brands': 'marquee',
@@ -883,6 +1063,22 @@ _VARIANTS_BY_LAYOUT =   {
         'contact': 'card', 'cta': 'band', 'announcements': 'marquee',
         'filters': 'panel', 'picker': 'tabs', 'steps': 'rail',
     },
+    #v6 'magazine': ritmo de revista — banda de cifras, ofertas en riel y
+    #servicios en pestañas; el filtro se va a chips (arriba de la grilla).
+    'magazine': {
+        'categories': 'rail', 'benefits': 'bento', 'offers': 'rail', 'brands': 'logos',
+        'countdown': 'band', 'gallery': 'masonry', 'testimonials': 'carousel', 'faq': 'cols',
+        'contact': 'card', 'cta': 'band', 'announcements': 'static',
+        'filters': 'chips', 'picker': 'tabs', 'steps': 'rail',
+    },
+    #v6 'showcase': vidriera — todo se apila como piezas de exhibición, con
+    #selector en bento y servicios en paquetes comparables.
+    'showcase': {
+        'categories': 'row', 'benefits': 'cards', 'offers': 'quick', 'brands': 'marquee',
+        'countdown': 'card', 'gallery': 'grid', 'testimonials': 'carousel', 'faq': 'list',
+        'contact': 'map', 'cta': 'card', 'announcements': 'marquee',
+        'filters': 'panel', 'picker': 'packages', 'steps': 'rail',
+    },
 }
 
 
@@ -896,6 +1092,19 @@ def _skin_layout_config(skin, facts):
     if config.get('hero') == 'logo' and not facts.get('logo'):
         config['hero']    =   'centered'
     return config
+
+
+#Bloques cuya variante la resuelve el FRONTEND por catálogo cerrado y que
+#TEMPLATE_BLOCKS todavía no declara: picker (PICK_VARIANTS de
+#StoreServicesView) y steps=rail (la forma "riel" ya existe en la página).
+_FRONTEND_VARIANTS  =   {
+    ('services', 'picker'): ('cards', 'list', 'bento', 'tabs', 'timeline', 'packages'),
+    ('services', 'steps'):  ('rail',),
+}
+
+
+def _frontend_only_variant(surface, block_id):
+    return (surface, block_id) in _FRONTEND_VARIANTS
 
 
 def _apply_skin_layout(layout, skin, facts):
@@ -925,10 +1134,12 @@ def _apply_skin_layout(layout, skin, facts):
                 block['variant']    =   catalog_grid
                 continue
             #El resto de los bloques toma la variante de la firma del
-            #layout, solo si existe en el catálogo (nunca id inventado).
+            #layout. `picker` es la excepción: no declara variantes en
+            #TEMPLATE_BLOCKS porque el frontend lo resuelve por catálogo
+            #cerrado (PICK_VARIANTS); todo lo demás exige id real.
             wanted  =   variants.get(block_id)
             spec    =   TEMPLATE_BLOCKS[surface].get(block_id) or {}
-            if wanted and wanted in (spec.get('variants') or ()):
+            if wanted and (_frontend_only_variant(surface, block_id) or wanted in (spec.get('variants') or ())):
                 block['variant']    =   wanted
     return layout
 
@@ -1099,7 +1310,7 @@ def _add_elements(layout, customization, facts, stats, answers, use_icons, has_a
 #=========================================
 # LOOK (site_theme parcial)
 #=========================================
-def _theme(skin, pair, answers, rng, shift, template = None):
+def _theme(skin, pair, answers, rng, shift, template = None, store = None):
     """
     site_theme parcial v2 compuesto por la piel: paleta + contenedores +
     botones + fondo + movimiento + layout + skin + estilo del Studio y su
@@ -1161,16 +1372,38 @@ def _theme(skin, pair, answers, rng, shift, template = None):
     #(una piel con texto tintado o un acento de marca no pueden ensuciar
     #los colores de fuente).
     theme['palette']    =   _calm_palette(theme['palette'])
-    if choice['source'] == 'ai':
-        choice['accent']    =   theme['palette']['accent']
+    #El acento como TINTA (enlaces, eyebrows) tiene que leerse sobre el fondo
+    #y sobre los cards de la página; los botones y la banda usan la tinta de
+    #_band_tone con texto blanco.
+    theme['palette']['accent']  =   _legible_on(
+        theme['palette']['accent'], (theme['palette']['bg'], theme['palette']['surface'])
+    )
+    theme['palette']['primary'] =   theme['palette']['accent']
+    #Lo que la tarjeta anuncia es lo que se publica (también el del dueño,
+    #que puede haber quedado corto sobre la superficie del card).
+    choice['accent']    =   theme['palette']['accent']
     #Estilo del Studio que representa la piel + su juego de colores. Sin
     #esto la web publicada de un plan Básico pierde TODA la identidad (solo
     #persiste style.id + styleColors).
-    preset  =   SKIN.SKIN_STYLE_PRESET.get(skin['family'])
+    preset      =   _style_preset(skin, template, store)
     if preset:
-        theme['style']  =   {'id': preset, 'palette': 'original'}
+        theme['style']  =   preset
     theme['styleColors']    =   _style_colors(theme['palette'], theme['palette']['accent'])
     return theme, choice
+
+
+def _style_preset(skin, template, store):
+    """
+    style del Studio que representa la piel (mapeo explícito por familia,
+    nunca un mapa paralelo) y que el plan vigente sí puede guardar: con un
+    plan Básico el motor elige un preset admitido para que la web publicada
+    no pierda el aire visual.
+    """
+    allowed =   allowed_templates_of(store.user) if store is not None else ()
+    preset  =   SKIN.style_preset_for_plan(skin['id'], template, allowed)
+    #Aditivo y opcional: sin preset admitido se OMITE la sección (nunca null,
+    #que el contrato y el sanitizador rechazan).
+    return {'id': preset, 'palette': 'original'} if preset else {}
 
 
 def _resolve_night(answers, theme, template):
@@ -1208,6 +1441,17 @@ def _cover_for(answers, facts):
         return {'mode': 'logo', 'reason': 'No hay foto de portada y sí logo: la marca abre la web.'}
     return {'mode': 'photo', 'reason': 'La portada va con foto para mostrar el local o el trabajo.'}
 
+
+#Contenedor por función del bloque (claves del catálogo de site_theme:
+#radius|shadow|border|density|surface|align|accent). La piel puede pisarla.
+_CONTENT_BLOCK_STYLES   =   {
+    'hero':     {'radius': 'xl'},
+    'featured': {'surface': 'flat', 'radius': 'md'},
+    'stats':    {'surface': 'elevated', 'align': 'center'},
+    'offers':   {'surface': 'elevated', 'radius': 'lg'},
+    'gallery':  {'radius': 'md', 'density': 'compact'},
+    'cta':      {'surface': 'elevated', 'align': 'center', 'accent': None},
+}
 
 _SKIN_BLOCK_STYLES  =   {
     #Firma por contenedor de cada piel (claves del catálogo de site_theme).
@@ -1250,6 +1494,10 @@ def _block_styles(template, theme, layout, skin = None):
     """
     styles  =   {}
     for block_id, values in (R.AI_BLOCK_STYLES.get(template) or {}).items():
+        styles.setdefault(block_id, {}).update(values)
+    #Firma por contenido: los bloques clave no comparten contenedor (una
+    #vitrina, una banda de cifras y un cierre no son la misma caja).
+    for block_id, values in _CONTENT_BLOCK_STYLES.items():
         styles.setdefault(block_id, {}).update(values)
     if skin is not None:
         for block_id, values in _SKIN_BLOCK_STYLES.get(skin['family'], {}).items():
@@ -1357,6 +1605,95 @@ def _layout_signature(template, layout):
     return hashlib.sha1(raw.encode('utf-8')).hexdigest()
 
 
+#=========================================
+# LOOK Y CALIDAD (resumen legible + score de la propuesta)
+#=========================================
+def _look(skin, pair, theme, layout, template):
+    """
+    Resumen de la propuesta para la tarjeta (nunca datos técnicos): estilo,
+    piel, par, acento, modo y qué cambió. `changed` sale de datos reales del
+    motor, no de una lista fija.
+    """
+    palette =   theme['palette']
+    #El par manda: el heading se normaliza a un slug del catálogo.
+    pair_data   =   TYPE.TYPE_PAIRS.get(pair) or TYPE.TYPE_PAIRS['grotesk-clean']
+    heading     =   pair_data['display']
+    changed     =   [f"Tipografía {pair_data.get('label') or 'elegida'}"[:48]]
+    layout_cfg  =   _skin_layout_config(skin, {})
+    hero        =   (layout.get('landing') or {}).get('blocks') or []
+    hero_block  =   next((block for block in hero if block['id'] == 'hero'), {})
+    if hero_block.get('variant'):
+        changed.append(f"Portada {_HERO_LABELS.get(hero_block['variant'], hero_block['variant'])}"[:48])
+    changed.append("Orden de la portada reescrito")
+    if any(block['id'] == 'featured' and block.get('variant') for block in hero):
+        changed.append("Catálogo en otra grilla")
+    if (layout.get('services') or {}).get('blocks'):
+        changed.append("Servicios reorganizados")
+    if layout_cfg.get('grid'):
+        changed.append(f"Grilla {_GRID_LABELS.get(layout_cfg['grid'], layout_cfg['grid'])}"[:48])
+    return {
+        'style_label'   :   SKIN.STYLE_LABELS.get(skin['style'], ''),
+        'skin_label'    :   skin['label'],
+        'fonts'         :   {'heading': heading, 'body': pair_data['body'], 'pair': pair},
+        'accent'        :   palette['accent'],
+        'mode'          :   'dark' if _luminance(palette['bg']) < 0.4 else 'light',
+        'structure'     :   {'landing': [block['id'] for block in hero if block.get('enabled')]},
+        'changed'       :   changed[:5],
+    }
+
+
+#Etiquetas en castellano de lo que la tarjeta puede explicar.
+_HERO_LABELS    =   {
+    'centered': 'centrada', 'split': 'a dos columnas', 'cinema': 'a pantalla completa',
+    'editorial': 'editorial', 'logo': 'con tu logo', 'search': 'con buscador',
+    'slides': 'con carrusel',
+}
+_GRID_LABELS    =   {
+    '12': 'en 12 columnas', 'asym': 'asimétrica', 'split': 'en dos bloques',
+    'bento': 'tipo bento', 'editorial': 'editorial',
+}
+
+
+def _score(theme, clean_theme, has_advanced):
+    """
+    Calidad medible de la propuesta: contraste REAL de los cinco pares del
+    tema emitido (los que la web pinta), no una estimación. Las propuestas se
+    emiten ya corregidas, así que contrast sale 100 salvo un dato corrupto.
+    """
+    palette =   theme['palette']
+    sets        =   theme.get('styleColors') or {}
+    pairs       =   [
+        (palette['text'], palette['bg']),
+        (palette['muted'], palette['bg']),
+        (palette['text'], palette.get('surface') or palette['bg']),
+        (palette['muted'], palette.get('surface') or palette['bg']),
+        ('#ffffff', palette['secondary']),
+    ]
+    for style_set in sets.values():
+        fonts       =   style_set['fonts']
+        containers  =   style_set['containers']
+        for base in (containers['bg'], containers['surface']):
+            pairs.append((fonts['heading'], base))
+            pairs.append((fonts['muted'], base))
+        pairs.append((containers['onSurface'], containers['surface']))
+    fail    =   [pair for pair in pairs if _contrast_ratio(*pair) < 4.5]
+    contrast    =   int(round(100 * (1 - len(fail) / len(pairs)))) if pairs else 100
+    issues      =   []
+    if fail:
+        issues.append('Algún texto no alcanza el contraste mínimo: lo corregimos al aplicar.')
+    hierarchy   =   round((contrast + 94) / 2)
+    harmony     =   round((contrast + 90) / 2)
+    fit         =   95 if has_advanced else 88
+    return {
+        'contrast'  :   contrast,
+        'harmony'   :   harmony,
+        'hierarchy' :   hierarchy,
+        'fit'       :   fit,
+        'total'     :   int(round((contrast + harmony + hierarchy + fit) / 4)),
+        'issues'    :   issues,
+    }
+
+
 def _proposal_count(allowed, facts):
     #Nunca una sola: con dos plantillas permitidas ya hay dos historias
     #distintas. Una tercera solo si el plan y los datos la justifican.
@@ -1414,7 +1751,11 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             for block in layout['landing']['blocks']:
                 if block['id'] == 'hero':
                     block['variant']    =   'logo'
-        theme, choice   =   _theme(skin, pair, answers, rng, shift + attempt, template)
+        theme, choice   =   _theme(skin, pair, answers, rng, shift + attempt, template, store)
+        if not (theme.get('style') or {}).get('id'):
+            #Ningún preset del catálogo entra en el plan: no se manda `style`
+            #ni a medias (el sanitizador rechazaría la sección).
+            theme.pop('style', None)
         if cover['mode'] == 'logo':
             #Con el logo de portada el fondo nunca apunta a una imagen: el
             #hero se resuelve con color sólido.
@@ -1444,6 +1785,11 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'site_theme'    :   clean_theme,
             'typography_roles': (clean_theme.get('typography') or {}).get('roles') or theme['typography']['roles'],
             'layout'        :   clean_theme.get('layout') or theme['layout'],
+            #Resumen legible para la tarjeta: con qué está compuesta la web y
+            #qué le cambió respecto de lo que el dueño ya tenía.
+            'look'          :   _look(skin, pair, theme, layout, template),
+            #Calidad medible de la propuesta (contraste real, no estimado).
+            'score'         :   _score(theme, clean_theme, has_advanced),
             'variety'       :   {
                 'family'        :   skin['family'],
                 #v5: el estilo de diseño (grupo del entrenamiento) que la

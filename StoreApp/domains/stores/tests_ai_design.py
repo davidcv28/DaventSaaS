@@ -306,6 +306,107 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         self.assertEqual(data.status_code, 200)
         self.assertEqual(data.json()['proposals'][0]['variety']['style'], 'luxury')
 
+    def test_five_contrast_pairs_pass_aa_across_the_whole_catalog(self):
+        """A.3: los 5 pares × 2 modos × 52 pieles × 8 estilos.
+
+        El motor no emite la paleta cruda de la piel: la pasa por `_theme`
+        (acento del catálogo de la piel, tinta de banda, neutros calmados y
+        `styleColors`). Se verifica lo que de verdad llega a la web.
+        """
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {
+            'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+            'goals': ['vender_online'], 'must_have': [],
+        }
+        checked     =   0
+        seen_styles =   set()
+        for skin_id, skin in SKINS.items():
+            seen_styles.add(skin['style'])
+            for index, accent in enumerate(skin['accents']):
+                theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), index)
+                palette     =   theme['palette']
+                surface     =   palette.get('surface') or palette['bg']
+                pairs       =   {
+                    'text/bg'           :   (palette['text'], palette['bg']),
+                    'muted/bg'          :   (palette['muted'], palette['bg']),
+                    'text/surface'      :   (palette['text'], surface),
+                    'muted/surface'     :   (palette['muted'], surface),
+                    'white/band'        :   ('#ffffff', palette['secondary']),
+                    'accent/bg'         :   (palette['accent'], palette['bg']),
+                    'accent/surface'    :   (palette['accent'], surface),
+                }
+                for label, (fg, bg) in pairs.items():
+                    self.assertGreaterEqual(
+                        _aa(fg, bg), 4.5, f'{skin_id} {accent} {label}: {fg} sobre {bg}'
+                    )
+                for mode, style_set in theme['styleColors'].items():
+                    containers  =   style_set['containers']
+                    fonts       =   style_set['fonts']
+                    self.assertGreaterEqual(_aa(fonts['heading'], containers['bg']), 4.5, f'{skin_id} {mode} heading/bg')
+                    self.assertGreaterEqual(_aa(fonts['heading'], containers['surface']), 4.5, f'{skin_id} {mode} heading/surface')
+                    self.assertGreaterEqual(_aa(fonts['muted'], containers['bg']), 4.5, f'{skin_id} {mode} muted/bg')
+                    self.assertGreaterEqual(_aa(fonts['muted'], containers['surface']), 4.5, f'{skin_id} {mode} muted/surface')
+                    self.assertGreaterEqual(_aa(fonts['link'], containers['bg']), 4.5, f'{skin_id} {mode} link/bg')
+                    self.assertGreaterEqual(_aa(containers['onSurface'], containers['surface']), 4.5, f'{skin_id} {mode} onSurface')
+                checked += 1
+        self.assertEqual(checked, len(SKIN_IDS) * 3)
+        self.assertEqual(len(seen_styles), 8)
+
+    def test_surface_stays_within_eight_percent_of_the_background(self):
+        """A.1-3: un card blanco puro sobre papel crema se ve \"pegado\".
+
+        El motor compone el tema con la superficie calmada; la paleta cruda
+        de la piel es el presupuesto de origen, no lo que se publica.
+        """
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+                     'goals': ['vender_online'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), 0)
+            palette     =   theme['palette']
+            span        =   max(_aa(palette['text'], palette['bg']) - 1, 0.001)
+            delta       =   abs(_aa(palette['surface'], palette['bg']) - 1) / span
+            self.assertLessEqual(delta, 0.08, f'{skin_id}: superficie a >8 % del fondo')
+
+    def test_emitted_themes_survive_the_sanitizer_for_every_skin(self):
+        """El motor emite sets que ya pasan: `_v_style_set` no puede dar 400."""
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'serio', 'brand_color': None, 'night_mode': None,
+                     'goals': ['dar_confianza'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            theme, _    =   A._theme(skin, 'serif-editorial', answers, _random.Random(1), 0)
+            #Sin tienda no hay plan: la sección `style` se OMITE (nunca null).
+            self.assertNotIn('style', theme, skin_id)
+            clean       =   clean_site_theme(theme, has_advanced = True)
+            self.assertEqual(clean['styleColors'], theme['styleColors'], skin_id)
+            self.assertEqual(clean['palette']['surface'], theme['palette']['surface'], skin_id)
+
+    def test_style_preset_is_always_a_known_preset_the_plan_can_carry(self):
+        """A.4: style.id sale del mapeo explícito y su plantilla entra en el plan."""
+        from StoreApp.domains.stores.services.ai_design_skins import STYLE_PRESET_TEMPLATES
+        store, _    =   self._store(products = 3)
+        allowed     =   set(allowed_templates_of(store.user))
+        for proposal in generate_ai_design(store, {})['proposals']:
+            style   =   proposal['site_theme']['style']
+            self.assertEqual(style['id'], SKIN.SKIN_STYLE_PRESET[proposal['skin']['family']])
+            self.assertIn(STYLE_PRESET_TEMPLATES[style['id']], allowed, proposal['skin']['family'])
+
+    def test_proposals_are_scored_and_explain_what_changed(self):
+        store, _    =   self._store(products = 6)
+        for proposal in self._proposals(store):
+            score   =   proposal['score']
+            self.assertEqual(set(score), {'contrast', 'harmony', 'hierarchy', 'fit', 'total', 'issues'})
+            self.assertEqual(score['contrast'], 100, proposal['id'])
+            self.assertTrue(score['total'] >= 80)
+            look    =   proposal['look']
+            self.assertGreaterEqual(len(look['changed']), 3)
+            self.assertEqual(look['accent'], proposal['site_theme']['palette']['accent'])
+            self.assertIn(look['mode'], ('light', 'dark'))
+            self.assertEqual(look['structure']['landing'][0], 'hero')
+
     def test_basic_plan_never_gets_skin_outside_level(self):
         #La piel sobrevive al plan Básico, pero la plantilla sigue siendo de
         #su nivel: la piel es un presupuesto visual, no una plantilla.
