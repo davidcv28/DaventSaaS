@@ -1,4 +1,4 @@
-# Entrenamiento de estilos — "Diseñar con IA" (motor v5)
+# Entrenamiento de estilos — "Diseñar con IA" (motor v6)
 
 Este documento es el **prompt canónico** que define los estilos del motor de
 diseño automático y el registro de cómo se implementaron. Si cambia el
@@ -69,3 +69,31 @@ tones[], plantillas compatibles, blocks.landing recomendado, catalog
 - `test_requested_styles_are_prioritized_but_never_imposed`: pedido respetado,
   inventado ignorado. Verificado a 1200 combinaciones rubro × seed: 0 fallos.
 - `test_template_outside_plan_never_returned`: la whitelist del plan manda.
+
+## v6 — lo que se suma al entrenamiento (sin tocar las 8 familias)
+
+El catálogo de pieles y estilos no cambia: v6 **usa mejor** lo que ya existe y
+agrega tres contratos de calidad al payload. Al entrenar un estilo nuevo, se
+respetan también estas reglas:
+
+1. **Color publicado.** `_theme` emite `style {id, palette}` (preset del Studio
+   que representa la familia, `SKIN_STYLE_PRESET`, validado contra el plan),
+   `styleColors {light, dark}` con `fonts`/`containers` AA 4.5 sobre `bg` y
+   `surface`, y `typography.roles`. El acento se emite como tinta legible
+   (`_legible_on`) y `palette.secondary` es la tinta de la banda (`_band_tone`).
+2. **Composición.** `_order_for` aplica el ritmo alternado foto/texto
+   (`IMAGE_BLOCKS` nunca dos seguidos), la apertura del objetivo
+   (`GOAL_RECIPES.opening`) y el cierre fijo (prueba social antes de `cta`,
+   `contact` último). La firma `(plantilla, ids, variantes)` no se repite entre
+   propuestas; `SKIN_LAYOUT_ALT` da la segunda composición por familia.
+3. **Tipografía.** `TYPE_PAIRS` (display + cuerpo) rotan dentro del aire de la
+   piel (`SKIN_TYPE_PAIR`); `roles_for` fija escala, pesos reales y tracking por
+   rol, y `styleColors.fonts` coincide con el modo publicado.
+4. **Extras.** Solo los 8 bloques `aiOnly` de `TEMPLATE_BLOCKS.landing` +
+   re-variantes de bloques existentes. `extras {offered, applied, skipped}` con
+   `needs` en es-AR; `apply()` acepta `extras`/`skip_extras` y prende/apaga los
+   bloques del borrador sin borrarlos. Sin `has_ai_design` no se ofrece nada.
+5. **Calidad medible.** Cada propuesta trae `look {changed}` (≥3 cambios reales)
+   y `score {contrast, harmony, hierarchy, fit, total, issues}`; `score.contrast`
+   debe ser 100 y el escenario de aceptación vive en `qa_ai_design_v6.py`.
+

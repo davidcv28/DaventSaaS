@@ -121,7 +121,7 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/5')
+        self.assertEqual(first.json()['engine'], 'ai-design/6')
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -573,7 +573,7 @@ class AiDesignV2Tests(AiDesignBase):
     def test_ai_templates_used_when_plan_allows(self):
         store, _    =   self._store()
         _, data     =   self._generate(store)
-        self.assertEqual(data['engine'], 'ai-design/5')
+        self.assertEqual(data['engine'], 'ai-design/6')
         #La matriz del rubro mezcla plan + legacy + ai: cualquier par de
         #propuestas trae al menos un estilo exclusivo (ai o legacy).
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
@@ -942,7 +942,7 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_engine_reports_v4(self):
         store, _    =   self._store()
-        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/5')
+        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/6')
 
     def test_each_rubro_gets_its_own_signature_style(self):
         store, _    =   self._store()

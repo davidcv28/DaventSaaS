@@ -7,7 +7,7 @@ Endpoints:
   POST /api/stores/ai-design/image/    -> fotos del pedido (WebP en galería)
   PATCH /api/stores/customization/     -> site_theme (v2: roles/layout/skin + blocks)
 
-Contrato v4 (engine 'ai-design/5'):
+Contrato v4 (engine 'ai-design/6'):
   1) diversidad: 13 rubros con tuplas (template, skin) propias; dentro de una
      generación las 2-3 propuestas difieren en template, skin y par tipográfico;
      seed+1 cambia la familia visual;
@@ -432,7 +432,7 @@ class FuentesDeEstilo(_AiDesignBase):
 
     def test_engine_reports_v4(self):
         client, _, _    =   self._premium_client()
-        self.assertEqual(self._generate(client).json()['engine'], 'ai-design/5')
+        self.assertEqual(self._generate(client).json()['engine'], 'ai-design/6')
 
 
 #=========================================

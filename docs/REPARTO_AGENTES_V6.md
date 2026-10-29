@@ -202,3 +202,27 @@ No toques ENGINE_VERSION.
 Entregá: implementación + tests de fase + PR de 5 líneas con evidencia.
 Si el contrato §2 no alcanza, detenete y escalate a K con (campo, tipo, default, consumidor).
 ```
+
+---
+
+## 7. Estado de integración (K)
+
+Integrado en la rama `feat/ai-design-v6-e` en el orden A → C → B → D → E y
+mergeado a `main` en un único commit de integración:
+
+| Fase | Commit | Evidencia |
+|---|---|---|
+| A — color | `f35b7b9` | `AiDesignSkinAndContrastTests` (5 pares × 2 modos × 52 pieles) |
+| C — tipografía | `63e1656`, `7bb365b` | `tests_ai_design_typography.py` (pares, escala, roles) |
+| B — composición | `63bda55`, `4f37b8a` | `tests_ai_design_composition.py` (ritmo, recetas, firmas) |
+| D — extras | `039118a` | `_add_elements`/`apply` + `AiProposalCard` |
+| E — publicación | `675bc4a` | `storeSiteThemeAttrs` siempre + `--sp-on-band*` |
+
+- `ENGINE_VERSION='ai-design/6'` se sube **solo** en el commit de integración.
+- Suite del motor: 325 tests en verde (`manage.py test` con los 5 módulos `tests_ai_design*`).
+- Escenario §9.4: `venv/Scripts/python.exe qa_ai_design_v6.py` (3 rubros, propuestas
+  distintas, extras válidos, `score.contrast == 100`, tema publicado con AA).
+- QA visual (`qa_a11y.py`, `qa_overflow.py`, capturas antes/después) queda como
+  verificación manual con los servidores de dev levantados; los scripts ya están
+  parametrizados por plantilla.
+
