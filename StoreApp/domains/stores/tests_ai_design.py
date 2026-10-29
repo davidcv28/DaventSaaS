@@ -30,6 +30,7 @@ from StoreApp.domains.stores.services.ai_design_typography import (
     TYPE_CASES, TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING,
 )
 from StoreApp.domains.stores.services import storage
+from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services.ai_design import generate as generate_ai_design
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
@@ -120,7 +121,7 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/5')
+        self.assertEqual(first.json()['engine'], 'ai-design/6')
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -306,6 +307,156 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         self.assertEqual(data.status_code, 200)
         self.assertEqual(data.json()['proposals'][0]['variety']['style'], 'luxury')
 
+    def test_five_contrast_pairs_pass_aa_across_the_whole_catalog(self):
+        """A.3: los 5 pares × 2 modos × 52 pieles × 8 estilos.
+
+        El motor no emite la paleta cruda de la piel: la pasa por `_theme`
+        (acento del catálogo de la piel, tinta de banda, neutros calmados y
+        `styleColors`). Se verifica lo que de verdad llega a la web.
+        """
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {
+            'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+            'goals': ['vender_online'], 'must_have': [],
+        }
+        checked     =   0
+        seen_styles =   set()
+        for skin_id, skin in SKINS.items():
+            seen_styles.add(skin['style'])
+            for index, accent in enumerate(skin['accents']):
+                theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), index)
+                palette     =   theme['palette']
+                surface     =   palette.get('surface') or palette['bg']
+                pairs       =   {
+                    'text/bg'           :   (palette['text'], palette['bg']),
+                    'muted/bg'          :   (palette['muted'], palette['bg']),
+                    'text/surface'      :   (palette['text'], surface),
+                    'muted/surface'     :   (palette['muted'], surface),
+                    'white/band'        :   ('#ffffff', palette['secondary']),
+                    'accent/bg'         :   (palette['accent'], palette['bg']),
+                    'accent/surface'    :   (palette['accent'], surface),
+                }
+                for label, (fg, bg) in pairs.items():
+                    self.assertGreaterEqual(
+                        _aa(fg, bg), 4.5, f'{skin_id} {accent} {label}: {fg} sobre {bg}'
+                    )
+                for mode, style_set in theme['styleColors'].items():
+                    containers  =   style_set['containers']
+                    fonts       =   style_set['fonts']
+                    self.assertGreaterEqual(_aa(fonts['heading'], containers['bg']), 4.5, f'{skin_id} {mode} heading/bg')
+                    self.assertGreaterEqual(_aa(fonts['heading'], containers['surface']), 4.5, f'{skin_id} {mode} heading/surface')
+                    self.assertGreaterEqual(_aa(fonts['muted'], containers['bg']), 4.5, f'{skin_id} {mode} muted/bg')
+                    self.assertGreaterEqual(_aa(fonts['muted'], containers['surface']), 4.5, f'{skin_id} {mode} muted/surface')
+                    self.assertGreaterEqual(_aa(fonts['link'], containers['bg']), 4.5, f'{skin_id} {mode} link/bg')
+                    self.assertGreaterEqual(_aa(containers['onSurface'], containers['surface']), 4.5, f'{skin_id} {mode} onSurface')
+                checked += 1
+        self.assertEqual(checked, len(SKIN_IDS) * 3)
+        self.assertEqual(len(seen_styles), 8)
+
+    def test_surface_stays_within_eight_percent_of_the_background(self):
+        """A.1-3: un card blanco puro sobre papel crema se ve \"pegado\".
+
+        El motor compone el tema con la superficie calmada; la paleta cruda
+        de la piel es el presupuesto de origen, no lo que se publica.
+        """
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+                     'goals': ['vender_online'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), 0)
+            palette     =   theme['palette']
+            span        =   max(_aa(palette['text'], palette['bg']) - 1, 0.001)
+            delta       =   abs(_aa(palette['surface'], palette['bg']) - 1) / span
+            self.assertLessEqual(delta, 0.08, f'{skin_id}: superficie a >8 % del fondo')
+
+    def test_brand_color_palette_passes_aa_on_bg_and_surface(self):
+        """A.3/A.4: el acento del dueño no puede degradar los neutros.
+
+        Los pares de la paleta se verifican también sobre los cards: un muted
+        que solo se midió contra el fondo puede quedar al borde sobre la
+        superficie (era el caso de `brutal-concrete` con marca clara).
+        """
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+                     'goals': ['vender_online'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            for brand in ('#facc15', '#a7f3d0', '#ffffff', '#000000', '#ff4d00'):
+                answers['brand_color']  =   brand
+                theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), 0)
+                palette     =   theme['palette']
+                surface     =   palette['surface']
+                pairs       =   {
+                    'text/bg'       :   (palette['text'], palette['bg']),
+                    'muted/bg'      :   (palette['muted'], palette['bg']),
+                    'text/surface'  :   (palette['text'], surface),
+                    'muted/surface' :   (palette['muted'], surface),
+                    'accent/bg'     :   (palette['accent'], palette['bg']),
+                    'accent/surface':   (palette['accent'], surface),
+                    'white/band'    :   ('#ffffff', palette['secondary']),
+                }
+                for label, (fg, bg) in pairs.items():
+                    self.assertGreaterEqual(
+                        _aa(fg, bg), 4.5, f'{skin_id} {brand} {label}: {fg} sobre {bg}'
+                    )
+
+    def test_dark_set_is_not_the_light_one_inverted(self):
+        """A.1-5: en oscuro el fondo baja de 0.1 y la superficie se despega
+        hacia arriba (≥ 1.08×), no se hunde en el fondo."""
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+                     'goals': ['vender_online'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), 0)
+            dark        =   theme['styleColors']['dark']['containers']
+            bg_lum      =   A._luminance(dark['bg'])
+            surface_lum =   A._luminance(dark['surface'])
+            self.assertLess(bg_lum, 0.1, f'{skin_id}: el modo oscuro no es oscuro')
+            self.assertGreaterEqual(
+                surface_lum, bg_lum * 1.08,
+                f'{skin_id}: la superficie oscura se hunde en el fondo',
+            )
+
+    def test_emitted_themes_survive_the_sanitizer_for_every_skin(self):
+        """El motor emite sets que ya pasan: `_v_style_set` no puede dar 400."""
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'serio', 'brand_color': None, 'night_mode': None,
+                     'goals': ['dar_confianza'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            theme, _    =   A._theme(skin, 'serif-editorial', answers, _random.Random(1), 0)
+            #Sin tienda no hay plan: la sección `style` se OMITE (nunca null).
+            self.assertNotIn('style', theme, skin_id)
+            clean       =   clean_site_theme(theme, has_advanced = True)
+            self.assertEqual(clean['styleColors'], theme['styleColors'], skin_id)
+            self.assertEqual(clean['palette']['surface'], theme['palette']['surface'], skin_id)
+
+    def test_style_preset_is_always_a_known_preset_the_plan_can_carry(self):
+        """A.4: style.id sale del mapeo explícito y su plantilla entra en el plan."""
+        from StoreApp.domains.stores.services.ai_design_skins import STYLE_PRESET_TEMPLATES
+        store, _    =   self._store(products = 3)
+        allowed     =   set(allowed_templates_of(store.user))
+        for proposal in generate_ai_design(store, {})['proposals']:
+            style   =   proposal['site_theme']['style']
+            self.assertEqual(style['id'], SKIN.SKIN_STYLE_PRESET[proposal['skin']['family']])
+            self.assertIn(STYLE_PRESET_TEMPLATES[style['id']], allowed, proposal['skin']['family'])
+
+    def test_proposals_are_scored_and_explain_what_changed(self):
+        store, _    =   self._store(products = 6)
+        for proposal in self._proposals(store):
+            score   =   proposal['score']
+            self.assertEqual(set(score), {'contrast', 'harmony', 'hierarchy', 'fit', 'total', 'issues'})
+            self.assertEqual(score['contrast'], 100, proposal['id'])
+            self.assertTrue(score['total'] >= 80)
+            look    =   proposal['look']
+            self.assertGreaterEqual(len(look['changed']), 3)
+            self.assertEqual(look['accent'], proposal['site_theme']['palette']['accent'])
+            self.assertIn(look['mode'], ('light', 'dark'))
+            self.assertEqual(look['structure']['landing'][0], 'hero')
+
     def test_basic_plan_never_gets_skin_outside_level(self):
         #La piel sobrevive al plan Básico, pero la plantilla sigue siendo de
         #su nivel: la piel es un presupuesto visual, no una plantilla.
@@ -422,7 +573,7 @@ class AiDesignV2Tests(AiDesignBase):
     def test_ai_templates_used_when_plan_allows(self):
         store, _    =   self._store()
         _, data     =   self._generate(store)
-        self.assertEqual(data['engine'], 'ai-design/5')
+        self.assertEqual(data['engine'], 'ai-design/6')
         #La matriz del rubro mezcla plan + legacy + ai: cualquier par de
         #propuestas trae al menos un estilo exclusivo (ai o legacy).
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
@@ -791,7 +942,7 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_engine_reports_v4(self):
         store, _    =   self._store()
-        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/5')
+        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/6')
 
     def test_each_rubro_gets_its_own_signature_style(self):
         store, _    =   self._store()
@@ -987,20 +1138,25 @@ class AiDesignV4Tests(AiDesignBase):
                                                'must_have': ['contact', 'faq']})
         for proposal in data['proposals']:
             for block in proposal['layout_config']['landing']['blocks']:
-                if block['id'] not in ('aiprocess', 'aipricing', 'aimosaic'):
+                if block['id'] not in ('aiprocess', 'aipricing', 'aimosaic') or not block.get('enabled'):
                     continue
+                self.assertIn(block['id'], proposal['offered_blocks'], block)
                 spec    =   TEMPLATE_BLOCKS['landing'][block['id']]
                 self.assertTrue(spec['ai_only'])
                 if block.get('variant'):
                     self.assertIn(block['variant'], spec['variants'])
-                for key in (block.get('props') or {}):
+                for key in (proposal['offered_blocks'][block['id']].get('props') or {}):
                     self.assertIn(key, spec['props'])
+                #v6: el contenido REAL del extra lo arma el motor y viaja en
+                #`offered_blocks` (apply lo prende sin props del cliente).
+                props   =   proposal['offered_blocks'][block['id']].get('props')
+                self.assertTrue(props, block)
                 if block['id'] == 'aiprocess':
-                    self.assertLessEqual(len(block['props']['items']), 5)
-                    self.assertLessEqual(len(block['props']['items'][0]['text']), 160)
+                    self.assertLessEqual(len(props['items']), 5)
+                    self.assertLessEqual(len(props['items'][0]['text']), 160)
                 if block['id'] == 'aipricing':
-                    self.assertLessEqual(len(block['props']['items']), 4)
-                    self.assertGreaterEqual(len(block['props']['items']), 2)
+                    self.assertLessEqual(len(props['items']), 4)
+                    self.assertGreaterEqual(len(props['items']), 2)
 
     def test_generated_icons_are_accepted(self):
         layout  =   {'landing': {'blocks': [{'id': 'aigrid', 'props': {
@@ -1011,3 +1167,174 @@ class AiDesignV4Tests(AiDesignBase):
         self.assertEqual(items[0]['icon'], 'gen:llave-inglesa')
         self.assertNotIn('icon', items[1])
         self.assertNotIn('icon', items[2])
+
+
+class AiDesignExtrasTests(AiDesignBase):
+    """Fase D (v6): la IA ofrece elementos extra y el dueño acepta o rechaza."""
+
+    def _store_with_material(self, **kwargs):
+        store, customization    =   self._material(products = 4, **kwargs)
+        customization.services  =   [{'icon': 'package', 'title': f'Servicio {index}', 'text': 'Detalle'} for index in range(3)]
+        customization.service_steps =   [{'title': f'Paso {index + 1}', 'text': 'Cómo lo hacemos'} for index in range(3)]
+        customization.benefits  =   [{'text': f'Beneficio {index}'} for index in range(3)]
+        customization.testimonials =   [{'name': 'Ana', 'detail': 'Clienta', 'text': 'Muy buena atención'}]
+        customization.whatsapp  =   '1122334455'
+        customization.save()
+        for index in range(5):
+            StoreGalleryImage.objects.create(store = store, image_key = f'e{index}', position = index)
+        return store, customization
+
+    def _material(self, products = 0, **kwargs):
+        return self._store(products = products, **kwargs)
+
+    def _generate(self, store, payload = None):
+        data    =   {'rubro': 'comercio', 'tone': 'moderno', 'goals': ['vender_online', 'mostrar_servicios']}
+        data.update(payload or {})
+        response    =   self._client(store).post(AI_URL, data, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        return response.json()
+
+    def _ai_blocks(self, proposal):
+        return {block['id']: block for block in proposal['layout_config']['landing']['blocks'] if block['id'] in R.AI_ELEMENT_ORDER}
+
+    def test_every_proposal_ships_the_extras_section(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store)
+        for proposal in data['proposals']:
+            extras  =   proposal['extras']
+            self.assertEqual(set(extras), {'offered', 'applied', 'skipped'})
+            self.assertLessEqual(len(extras['applied']), R.AI_ELEMENT_MAX)
+            self.assertTrue(extras['offered'], proposal['label'])
+            #Contrato §2.2: `offered` son los extras con su bloque y `applied`
+            #son ids de bloque REALES de TEMPLATE_BLOCKS (todos ai_only).
+            for item in proposal['extras_items']:
+                self.assertIn(item['kind'], R.AI_ELEMENT_ORDER)
+                self.assertEqual(item['block_id'], item['kind'])
+                self.assertTrue(item['label'] and item['why'] and item['needs'])
+                self.assertEqual(item['block']['id'], item['kind'])
+                self.assertTrue(TEMPLATE_BLOCKS['landing'][item['block']['id']]['ai_only'])
+            self.assertEqual(set(extras['applied']), {item['kind'] for item in proposal['extras_items'] if item['block']['enabled']})
+            self.assertEqual(set(proposal['offered_blocks']), {item['kind'] for item in proposal['extras_items']})
+            self.assertIn('score', proposal)
+
+    def test_accept_extras_false_offers_but_does_not_apply(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store, {'accept_extras': False})
+        for proposal in data['proposals']:
+            self.assertTrue(proposal['extras']['offered'], proposal['extras'])
+            self.assertEqual(proposal['extras']['applied'], [])
+            #Ninguno se prende: la tarjeta los ofrece para sumarlos a mano.
+            for item in proposal['extras_items']:
+                self.assertFalse(item['block']['enabled'], item['kind'])
+            #Un extra no aplicado nunca viaja prendido en el layout.
+            for block in self._ai_blocks(proposal).values():
+                self.assertFalse(block['enabled'], block['id'])
+
+    def test_accept_extras_absent_keeps_applying(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store)
+        self.assertTrue(any(proposal['extras']['applied'] for proposal in data['proposals']))
+
+    def test_extras_input_wins_priority_and_is_capped(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store, {'extras': ['aimosaic', 'aipricing', 'no-existe', 'aiquote',
+                                                     'aistrip', 'aigrid', 'aiband']})
+        for proposal in data['proposals']:
+            applied =   proposal['extras']['applied']
+            self.assertLessEqual(len(applied), R.AI_ELEMENT_MAX)
+            self.assertEqual(applied[:2], ['aimosaic', 'aipricing'], applied)
+
+    def test_extras_require_ai_flag(self):
+        store, _    =   self._store_with_material(ai = False)
+        data    =   generate_ai_design(store, {'rubro': 'comercio', 'goals': ['vender_online']})
+        for proposal in data['proposals']:
+            self.assertEqual(proposal['extras']['offered'], [])
+            self.assertEqual(proposal['extras']['applied'], [])
+            self.assertTrue(proposal['extras']['skipped'])
+            self.assertEqual(self._ai_blocks(proposal), {})
+
+    def test_extras_offered_items_follow_the_contract(self):
+        #Contrato §2.2: `extras.offered` son OBJETOS con su bloque ai_only,
+        #el "para qué" y qué datos reales usa (lo que pinta la tarjeta).
+        store, _    =   self._store_with_material()
+        data        =   self._generate(store)
+        for proposal in data['proposals']:
+            self.assertTrue(proposal['extras']['offered'], proposal['label'])
+            for item in proposal['extras']['offered']:
+                self.assertEqual(item['id'], f'extra-{item["kind"][2:]}')
+                self.assertIn(item['kind'], R.AI_ELEMENT_ORDER)
+                self.assertTrue(item['label'] and item['why'] and item['needs'])
+                self.assertTrue(TEMPLATE_BLOCKS['landing'][item['block']['id']]['ai_only'])
+                self.assertEqual(item['block']['id'], item['kind'])
+
+    def test_extras_respect_data_gates(self):
+        #Sin pasos ni galería no se ofrecen aiprocess ni aimosaic (nunca
+        #inventan precios, pasos ni fotos).
+        store, _    =   self._store(products = 0)
+        data        =   self._generate(store, {'goals': ['vender_online']})
+        for proposal in data['proposals']:
+            kinds   =   {item['kind'] for item in proposal['extras']['offered']}
+            self.assertNotIn('aiprocess', kinds)
+            self.assertNotIn('aimosaic', kinds)
+            self.assertNotIn('aipricing', kinds)
+
+
+
+    def test_apply_with_rejected_extra_disables_block(self):
+        store, customization    =   self._store_with_material()
+        data                    =   self._generate(store)
+        proposal                =   next(item for item in data['proposals'] if item['extras']['applied'])
+        applied                 =   proposal['extras']['applied']
+        dropped                 =   applied[0]
+        kept                    =   applied[1:]
+        offered                 =   [item['kind'] for item in proposal['extras_items']]
+        response                =   self._client(store).post(APPLY_URL, {
+            'seed'          :   data['seed'],
+            'proposal_id'   :   proposal['id'],
+            'extras'        :   {'offered': offered, 'applied': kept},
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        customization.refresh_from_db()
+        landing =   {block['id']: block for block in customization.layout_config['landing']['blocks']}
+        #El rechazado sigue en el layout (para prenderlo después) pero apagado.
+        self.assertIn(dropped, landing)
+        self.assertFalse(landing[dropped]['enabled'])
+        for kind in kept:
+            self.assertTrue(landing[kind]['enabled'])
+
+    def test_apply_with_skip_extras_turns_them_all_off(self):
+        store, customization    =   self._store_with_material()
+        data                    =   self._generate(store)
+        proposal                =   next(item for item in data['proposals'] if item['extras']['applied'])
+        response                =   self._client(store).post(APPLY_URL, {
+            'seed': data['seed'], 'proposal_id': proposal['id'], 'skip_extras': True,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        customization.refresh_from_db()
+        landing =   {block['id']: block for block in customization.layout_config['landing']['blocks']}
+        #Apagados, pero presentes en el borrador para prenderlos después.
+        self.assertFalse({k for k, v in landing.items() if v.get('enabled')} & set(R.AI_ELEMENT_ORDER))
+
+    def test_apply_can_turn_on_an_offered_extra(self):
+        store, customization    =   self._store_with_material()
+        data                    =   self._generate(store, {'accept_extras': False})
+        proposal                =   data['proposals'][0]
+        offered                 =   [item['kind'] for item in proposal['extras_items']]
+        self.assertTrue(offered)
+        chosen                  =   offered[0]
+        response                =   self._client(store).post(APPLY_URL, {
+            'seed': data['seed'], 'proposal_id': proposal['id'],
+            'extras': {'offered': offered, 'applied': [chosen]},
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        customization.refresh_from_db()
+        stored  =   {block['id']: block for block in customization.layout_config_draft['landing']['blocks']}
+        self.assertIn(chosen, stored)
+        self.assertTrue(stored[chosen]['enabled'])
+        #El contenido sale del motor (nunca props enviadas por el cliente).
+        self.assertEqual(stored[chosen].get('props'), proposal['offered_blocks'][chosen].get('props'))
+        #Elegir un extra no apaga el resto de la portada.
+        enabled =   {block['id'] for block in customization.layout_config_draft['landing']['blocks'] if block['enabled']}
+        self.assertIn('hero', enabled)
+        if chosen != 'aipricing':
+            self.assertFalse(stored['aipricing']['enabled'])

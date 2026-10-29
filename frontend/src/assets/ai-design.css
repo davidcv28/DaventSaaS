@@ -500,6 +500,71 @@
 .aidp-published-actions .btn { flex: 1 1 140px; min-height: 44px; }
 
 .aidp-notes { display: grid; gap: 4px; margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+
+/* Qué cambió (v6): el rediseño real que hizo el motor, para que la tarjeta no
+   se quede en "de qué color es". */
+.aidp-changed {
+  display: grid; gap: 6px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--sunk);
+}
+.aidp-changed strong { font-size: 12.5px; color: var(--ink); }
+.aidp-changed ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.aidp-changed li { display: flex; align-items: flex-start; gap: 6px; color: var(--ink-2); font-size: 12.5px; line-height: 1.45; }
+.aidp-changed li .icon { flex: none; margin-top: 2px; color: var(--aid-accent); }
+
+/* Calidad: tres barras que crecen + etiqueta en castellano (nunca el número
+   crudo del score). Los issues del motor van como nota al pie. */
+.aidp-score { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.aidp-score-bars { display: inline-flex; align-items: flex-end; gap: 3px; }
+.aidp-score-bar { width: 6px; border-radius: 2px; background: var(--line); }
+.aidp-score-bar:nth-child(1) { height: 8px; }
+.aidp-score-bar:nth-child(2) { height: 13px; }
+.aidp-score-bar:nth-child(3) { height: 18px; }
+.aidp-score-bar.on { background: var(--aid-accent); }
+.aidp-score-text { font-size: 12.5px; color: var(--ink-2); }
+.aidp-score-text strong { color: var(--ink); }
+.aidp-score-issue { flex: 1 1 100%; color: var(--muted); font-size: 11.5px; line-height: 1.45; }
+.aidp-chip-style { background: var(--card); }
+
+/* Extras v6 — la IA propone, el dueño acepta: chips con Quitar/Sumar y el
+   contador "N de 4" (AI_ELEMENT_MAX del motor). */
+.aidp-extras {
+  display: grid; gap: 8px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--sunk);
+}
+.aidp-extras-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.aidp-extras-head strong { font-size: 12.5px; color: var(--ink); }
+.aidp-extras-count {
+  flex: none; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card);
+  color: var(--muted); font-size: 11px; font-weight: 700;
+}
+.aidp-extras-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.aidp-extra {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px dashed var(--line); background: var(--card);
+}
+.aidp-extra.on { border-style: solid; border-color: var(--aid-accent-line); background: var(--aid-accent-soft); }
+.aidp-extra-main { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.aidp-extra-label { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.aidp-extra-label .icon { flex: none; color: var(--aid-accent); }
+.aidp-extra-why, .aidp-extra-needs { font-size: 11.5px; line-height: 1.35; color: var(--muted); }
+.aidp-extra-needs { font-style: italic; }
+.aidp-extra-btn {
+  flex: none; min-height: 32px; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+  font-size: 11.5px; font-weight: 700; cursor: pointer;
+}
+.aidp-extra-btn.add { border-color: var(--aid-accent-line); color: var(--aid-accent); }
+.aidp-extra-btn:disabled { opacity: .45; cursor: not-allowed; }
+.aidp-extra-btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidp-extra-tag { flex: none; font-size: 11px; font-weight: 700; color: var(--aid-accent); }
+.aid-extras-ask { margin-top: 14px; }
+@media (max-width: 420px) {
+  .aidp-extra { flex-wrap: wrap; }
+  .aidp-extra-btn { margin-left: auto; }
+}
 .aidp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
 .aidp-actions .btn { flex: 1 1 140px; min-height: 44px; }
 .aidp-applied { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--aid-accent); font-size: 12px; font-weight: 600; }

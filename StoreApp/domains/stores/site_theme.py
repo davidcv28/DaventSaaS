@@ -91,11 +91,26 @@ from .services.ai_design_typography import (    # noqa: E402
     TYPE_LEADING        as _TYPE_LEADING,
     TYPE_CASES          as _TYPE_CASE,
 )
-from .services.ai_design_skins import (         # noqa: E402
-    SKIN_IDS            as _SKIN_IDS,
-    SKIN_FAMILY_SET     as _SKIN_FAMILIES,
-    SKIN_FAMILY_OF      as _SKIN_FAMILY_OF,
-)
+#El catálogo de pieles se resuelve por función; `ai_design_skins` es la
+#fuente única de ids, familias y presets del Studio.
+def _skin_ids():
+    from .services.ai_design_skins import SKIN_IDS
+    return SKIN_IDS
+
+
+def _skin_families():
+    from .services.ai_design_skins import SKIN_FAMILY_SET
+    return SKIN_FAMILY_SET
+
+
+def _skin_family_of():
+    from .services.ai_design_skins import SKIN_FAMILY_OF
+    return SKIN_FAMILY_OF
+
+
+def _style_preset_templates():
+    from .services.ai_design_skins import STYLE_PRESET_TEMPLATES
+    return STYLE_PRESET_TEMPLATES
 #Sección `blocks`: overrides de estilo por contenedor (id de bloque de la
 #superficie landing). Las claves de bloque se validan contra
 #TEMPLATE_BLOCKS['landing']; lo desconocido se descarta en silencio.
@@ -112,31 +127,10 @@ _BLOCK_STYLE_SPEC       =   {
 #Estilos del selector: el catálogo cerrado completo de STUDIO_PRESETS
 #(frontend/src/studio/presets/catalog.js). El id solo se guarda si la
 #plantilla del preset entra en el nivel del plan.
-_STYLE_PRESET_TEMPLATES =   {
-    'editorial-minima'  :   'minimal',
-    'vidrio-nocturno'   :   'cobre',
-    'bento'             :   'vitrina',
-    'neo-brutalista'    :   'duo',
-    'lujo-serif'        :   'cobre',
-    'pastel-suave'      :   'calma',
-    'neon-tech'         :   'vitrina',
-    'terracota'         :   'minimal',
-    'monocromo'         :   'minimal',
-    'retail-vibrante'   :   'cobre',
-    'aurora-degradada'  :   'duo',
-    'papel-riso'        :   'duo',
-    'corporativo'       :   'classic',
-    'gourmet-calido'    :   'minimal',
-    'belleza-rosa'      :   'vitrina',
-    'kids-ludico'       :   'duo',
-    'urbano-sticker'    :   'vitrina',
-    'consola-retro'     :   'minimal',
-    'denim-urbano'      :   'duo',
-    'atelier-moda'      :   'vitrina',
-    'suizo-editorial'   :   'classic',
-    'cobalto-nocturno'  :   'vitrina',
-}
-_STYLE_IDS      =   tuple(_STYLE_PRESET_TEMPLATES)
+#La tabla vive en el catálogo de pieles (fuente única compartida con el
+#motor de IA): los ids válidos se derivan de ahí, nunca de una copia que
+#pueda quedar desactualizada cuando se suma un preset.
+_STYLE_IDS      =   tuple(_style_preset_templates())
 _STYLE_MODES            =   ('light', 'dark')
 _STYLE_PALETTES         =   ('original', 'warm', 'cool', 'contrast')
 _STYLE_FONT_KEYS        =   ('heading', 'body', 'muted', 'link')
@@ -200,7 +194,7 @@ _SECTION_SPECS  =   {
     },
     'skin'          :   {
         'id'            :   ('skin',),
-        'family'        :   ('enum', tuple(sorted(_SKIN_FAMILIES))),
+        'family'        :   ('enum', tuple(sorted(_skin_families()))),
     },
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
@@ -330,7 +324,10 @@ def _v_style_set(raw, mode):
         out['containers'][key]  =   color
     bases   =   [out['containers'][key] for key in ('surface', 'bg') if key in out['containers']]
     for key, color in out['fonts'].items():
-        for base in bases:
+        #`link` es el acento: vive en enlaces sobre el fondo de la página
+        #(no sobre los cards). Contrahacerlo oscurecería la marca.
+        checked  =   [out['containers']['bg']] if key == 'link' and 'bg' in out['containers'] else bases
+        for base in checked:
             if _contrast_ratio(color, base) < 4.5:
                 raise serializers.ValidationError(
                     f'El color de fuente "{key}" no alcanza contraste AA sobre el contenedor.'
@@ -387,9 +384,9 @@ def _clean_skin(raw):
     if not isinstance(raw, dict):
         return None
     skin_id =   raw.get('id')
-    if not isinstance(skin_id, str) or skin_id not in _SKIN_IDS:
+    if not isinstance(skin_id, str) or skin_id not in _skin_ids():
         return None
-    family  =   _SKIN_FAMILY_OF.get(skin_id)
+    family  =   _skin_family_of().get(skin_id)
     return {'id': skin_id, 'family': family}
 
 
@@ -528,7 +525,7 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
         #sin id válido, la sección entera se descarta.
         if section == 'skin':
             if out.get('id'):
-                out['family']   =   _SKIN_FAMILY_OF[out['id']]
+                out['family']   =   _skin_family_of()[out['id']]
             else:
                 out.clear()
         if out:
@@ -537,7 +534,7 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
     #(Básico: classic/duo; Estándar suma calma/vitrina; Premium, todo).
     style   =   clean.get('style')
     if style and 'id' in style:
-        template    =   _STYLE_PRESET_TEMPLATES.get(style['id'])
+        template    =   _style_preset_templates().get(style['id'])
         try:
             from .services.services import allowed_templates_of
             allowed_tpls    =   allowed_templates_of(store.user) if store is not None else ()

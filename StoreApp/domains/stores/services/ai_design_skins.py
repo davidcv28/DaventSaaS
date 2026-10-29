@@ -646,6 +646,33 @@ SKIN_STYLE_PRESET   =   {
     'cinematic':    'vidrio-nocturno',
     'mono':         'monocromo',
 }
+#Plantilla de cada preset del Studio: fuente ÚNICA (la consumen
+#site_theme._style_preset_templates y el motor). El style.id solo se guarda
+#si su plantilla entra en el nivel del plan vigente.
+STYLE_PRESET_TEMPLATES  =   {
+    'editorial-minima'  :   'minimal',
+    'vidrio-nocturno'   :   'cobre',
+    'bento'             :   'vitrina',
+    'neo-brutalista'    :   'duo',
+    'lujo-serif'        :   'cobre',
+    'pastel-suave'      :   'calma',
+    'neon-tech'         :   'vitrina',
+    'terracota'         :   'minimal',
+    'monocromo'         :   'minimal',
+    'retail-vibrante'   :   'cobre',
+    'aurora-degradada'  :   'duo',
+    'papel-riso'        :   'duo',
+    'corporativo'       :   'classic',
+    'gourmet-calido'    :   'minimal',
+    'belleza-rosa'      :   'vitrina',
+    'kids-ludico'       :   'duo',
+    'urbano-sticker'    :   'vitrina',
+    'consola-retro'     :   'minimal',
+    'denim-urbano'      :   'duo',
+    'atelier-moda'      :   'vitrina',
+    'suizo-editorial'   :   'classic',
+    'cobalto-nocturno'  :   'vitrina',
+}
 #Par tipográfico por familia (ids de ai_design_typography.TYPE_PAIRS). Es el
 #par con el que arranca el motor para esa piel; la elección final la cierra
 #el par de la propuesta (nunca uno incompatible con el estilo).
@@ -727,6 +754,26 @@ def style_preset_of(skin_id):
     """Preset del Studio que representa la piel (style.id del site_theme)."""
     skin = SKINS.get(skin_id)
     return SKIN_STYLE_PRESET.get(skin['family']) if skin else None
+
+
+def style_preset_for_plan(skin_id, template, allowed):
+    """
+    Preset del Studio que representa la piel — SIEMPRE dentro del nivel del
+    plan. Un plan Básico solo persiste style.id + styleColors, así que si el
+    preset de la familia usa una plantilla de otro nivel el motor elige uno
+    admitido (el de la propia plantilla si existe) y la web no pierde el aire.
+    """
+    allowed     =   tuple(allowed or ())
+    preset      =   style_preset_of(skin_id)
+    if preset and STYLE_PRESET_TEMPLATES.get(preset) in allowed:
+        return preset
+    for candidate, candidate_tpl in STYLE_PRESET_TEMPLATES.items():
+        if candidate_tpl in allowed and candidate_tpl == template:
+            return candidate
+    for candidate, candidate_tpl in STYLE_PRESET_TEMPLATES.items():
+        if candidate_tpl in allowed:
+            return candidate
+    return None
 
 
 def type_pair_of(skin_id):

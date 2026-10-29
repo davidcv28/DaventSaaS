@@ -283,8 +283,31 @@ def _calm_palette(palette):
     bg      =   palette['bg']
     text    =   _calm_text(palette.get('text') or _neutral_ink(bg), bg, 7.0)
     muted   =   _calm_text(palette.get('muted') or _mix(text, bg, 0.45), bg, 4.5)
+    surface =   _calm_surface(palette.get('surface'), bg, text)
+    #La superficie es parte del par de lectura: el brief A.3 exige AA sobre
+    #bg Y surface. Ajustar solo contra el fondo dejaba casos al borde (un
+    #muted #727272 sobre un card #f5f5f5 caía a 4.41).
+    text    =   _legible_on(text, (bg, surface), 7.0)
+    muted   =   _legible_on(muted, (bg, surface), 4.5)
     border  =   _mix(text, bg, 0.82)
-    return {**palette, 'text': text, 'muted': muted, 'border': border}
+    return {**palette, 'text': text, 'muted': muted, 'border': border, 'surface': surface}
+
+
+def _calm_surface(surface, bg, text):
+    """
+    Superficie a ≤ 8 % de diferencia tonal del fondo (A.1-3): un card blanco
+    puro sobre papel crema se ve "pegado" a la página. Si la piel define su
+    superficie y ya está dentro del margen, se respeta (es su carácter).
+    """
+    target  =   _mix(bg, text, 0.05)
+    if not isinstance(surface, str) or _norm_hex(surface) is None:
+        return target
+    #Armonía de CONTRASTE (no de brillo): el card se separa del fondo como
+    #mucho 8 % en proporción al par tinta/fondo. En oscuro una diferencia de
+    #luminancia WCAG es desproporcionada (1,5 % de brillo ya es un salto).
+    span    =   max(_contrast_ratio(text, bg) - 1, 0.001)
+    delta   =   abs(_contrast_ratio(surface, bg) - 1)
+    return surface if delta / span <= 0.08 else target
 
 
 #=========================================
@@ -319,7 +342,7 @@ def _style_set(palette, mode, accent):
     same    =   _mode_of(palette['bg']) == mode
     base    =   palette if same else {**_STYLE_NEUTRAL[mode], 'accent': accent}
     bg      =   base['bg']
-    surface =   base['surface']
+    surface =   _calm_surface(base.get('surface'), bg, base.get('text') or _neutral_ink(bg))
     border  =   base.get('border') or _mix(base.get('text', _neutral_ink(bg)), bg, 0.82)
     heading =   _legible_on(_desaturate(base.get('text') or _neutral_ink(bg), 0.7), (bg, surface))
     muted   =   _legible_on(_desaturate(base.get('muted') or _mix(heading, bg, 0.45), 0.7), (bg, surface))
@@ -375,6 +398,17 @@ def _answers(store, customization, payload, stats):
     if cover_choice not in ('foto', 'logo', 'auto'):
         cover_choice    =   'auto'
     use_icons   =   payload.get('use_icons')
+    #v6 — extras: `accept_extras` ausente = True (comportamiento v5, no rompe
+    #clientes viejos), `extras` son ids que el dueño ya eligió (ganan la
+    #prioridad, nunca pasan de AI_ELEMENT_MAX y tienen que existir en el
+    #catálogo cerrado de AI_ELEMENT_ORDER) y `content_hint` es texto libre
+    #que el copy puede usar (nunca se mete crudo en HTML).
+    accept_extras   =   payload.get('accept_extras')
+    accept_extras   =   accept_extras if isinstance(accept_extras, bool) else True
+    extras          =   []
+    for extra in (payload.get('extras') or []):
+        if extra in R.AI_ELEMENT_ORDER and extra not in extras:
+            extras.append(extra)
     return {
         'rubro'         :   rubro,
         'tone'          :   tone,
@@ -390,6 +424,9 @@ def _answers(store, customization, payload, stats):
         'cover_choice'  :   cover_choice,
         #None = lo deduce el motor (rubro visual => con íconos).
         'use_icons'     :   use_icons if isinstance(use_icons, bool) else None,
+        'accept_extras' :   accept_extras,
+        'extras'        :   extras[:R.AI_ELEMENT_MAX],
+        'content_hint'  :   str(payload.get('content_hint') or '').strip()[:160],
     }
 
 
@@ -541,6 +578,10 @@ def _style_candidates(facts, stats, answers, allowed, seed):
         skin    =   SKIN.SKINS.get(skin_id)
         if skin is None or pair not in TYPE.TYPE_PAIRS:
             return
+        #Coherencia de aire (§6.1-6): la piel manda. Un par de otro aire se
+        #rota al más cercano que la familia admite — nunca llega a la web
+        #una piel editorial con un cartel condensado.
+        pair    =   TYPE.resolve_pair(pair, skin['family'], seed)
         seen.add((template, skin_id))
         chosen_styles[skin['style']].add(pair)
         reusing.add(template)
@@ -717,8 +758,20 @@ def _pattern_for(template, answers, shift):
     return patterns[ordered[shift % len(ordered)]]
 
 
-def _order_for(surface, answers, pattern = None):
-    """Orden de bloques para la superficie: receta del objetivo + prioridad del rubro."""
+def _density_off(answers):
+    """Densidad por tono: el tono 'serio' pide aire, así que apaga bloques
+    secundarios; los que tienen datos y no están apagados por la receta se
+    reactivan en _build_surface (un dato real pesa más que la densidad)."""
+    return set(R.TONE_DENSITY.get(answers.get('tone'), ()))
+
+
+def _order_for(surface, answers, pattern = None, rot = 0):
+    """
+    Orden de bloques para la superficie: receta del objetivo + prioridad del
+    rubro. `rot` rota el grupo medio (desde la segunda propuesta) para que dos
+    propuestas no cuenten la misma historia con otro color: la portada y el
+    cierre los fija _enforce_hierarchy, así que nunca se mueven de lugar.
+    """
     rubro       =   R.RUBROS[answers['rubro']]
     base        =   list(rubro['priority'][surface])
     off         =   set()
@@ -733,8 +786,42 @@ def _order_for(surface, answers, pattern = None):
         off     =   set(recipe['off'])
         order   =   [block for block in recipe['order'] if block in TEMPLATE_BLOCKS[surface]]
         order  +=   [block for block in base if block not in order]
+    elif rot and surface == 'catalog':
+        #Catálogo: las funciones (aviso, promo, ordenamiento) no se desordenan;
+        #lo que rota es el lugar de los filtros respecto de la grilla.
+        order   =   base
+        if 'filters' in order and 'grid' in order:
+            order.remove('filters')
+            order.insert(order.index('grid'), 'filters')
     else:
         order   =   base
+        if rot and surface == 'services':
+            #Servicios: la portada abre y la grilla de selección queda fija;
+            #los bloques de apoyo cambian de lugar entre propuestas (rotan,
+            #no se invierten: las variantes dependen del orden del catálogo).
+            fixed   =   {'hero', 'band', 'picker'}
+            tail    =   [block for block in order if block not in fixed]
+            if tail:
+                step    =   rot % len(tail)
+                tail    =   tail[step:] + tail[:step]
+            order   =   [block for block in order if block in fixed] + tail
+    if surface == 'landing' and rot:
+        #La apertura del objetivo no se rota: si el bloque que abre se va al
+        #final, la web deja de contar lo que el objetivo pide. Rota el resto.
+        opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
+        #La portada y la apertura del objetivo no rotan: si el bloque que abre
+        #se va al final, la web deja de contar lo que el objetivo pide. Las
+        #fotos tampoco (las cierra _enforce_hierarchy). Rota el resto.
+        anchor  =   {block for block in order if block in opening or block in R.IMAGE_BLOCKS} | {'hero'}
+        middle  =   [block for block in order if block not in anchor]
+        if middle:
+            step    =   rot % len(middle)
+            middle  =   middle[step:] + middle[:step]
+        #El orden relativo de los anclados se conserva: lo que rotó toma los
+        #slots de los NO anclados (si un anclado se fuera al hueco, la
+        #apertura y las fotos quedaban igual pero rotadas al azar).
+        slots   =   iter(middle)
+        order   =   [block if block in anchor else next(slots, block) for block in order]
     #Los bloques con datos que la receta no nombró entran al final del grupo:
     #mejor una sección útil de más que perder contenido real.
     for block in R.BLOCK_FALLBACKS[surface]:
@@ -756,9 +843,11 @@ def _variant_for(surface, block_id, answers, rng, shift, pattern = None):
             return chosen
     pool        =   [variant for variant in R.RUBROS[answers['rubro']]['variants'].get(block_id, ()) if variant in variants]
     if surface == 'landing' and block_id == 'hero':
-        goal_variant    =   R.GOAL_RECIPES[answers['goals'][0]]['hero_variant']
-        if goal_variant in variants:
-            pool    =   [goal_variant] + [variant for variant in pool if variant != goal_variant]
+        recipe          =   R.GOAL_RECIPES[answers['goals'][0]]
+        goal_variants   =   recipe.get('hero_variants') or (recipe['hero_variant'],)
+        preferred       =   [variant for variant in goal_variants if variant in variants]
+        if preferred:
+            pool    =   preferred + [variant for variant in pool if variant not in preferred]
     if not pool:
         return None
     #La primera propuesta respeta el orden preferido; las siguientes rotan
@@ -769,7 +858,8 @@ def _variant_for(surface, block_id, answers, rng, shift, pattern = None):
 
 
 def _build_surface(surface, facts, answers, rng, shift, pattern = None):
-    order, off      =   _order_for(surface, answers, pattern)
+    order, off      =   _order_for(surface, answers, pattern, shift)
+    density         =   _density_off(answers) if surface == 'landing' else set()
     blocks          =   []
     for block_id in order:
         spec    =   TEMPLATE_BLOCKS[surface].get(block_id)
@@ -779,19 +869,27 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         #Bloque sin datos reales => apagado (queda en el borrador para que el
         #dueño lo vea y lo active cuando cargue el dato).
         enabled =   True if gate is None else bool(facts.get(gate))
+        #Densidad por tono: 'serio' pide aire. Un bloque con datos reales y
+        #siempre-presente (gate None) no se apaga: la densidad solo logra que
+        #el bloque no empuje el arranque; el dato pesa más que el gusto.
+        if block_id in density and gate is not None:
+            enabled =   False
         block   =   {'id': block_id, 'enabled': enabled}
         variant =   _variant_for(surface, block_id, answers, rng, shift, pattern)
         if variant:
             block['variant']    =   variant
         blocks.append(block)
-    #Variación "aleatoria pero pensada": en las propuestas alternativas el
-    #grupo del medio se reordena con la semilla (la portada, el cierre y el
-    #contacto quedan fijos por las reglas de jerarquía).
+    #Variación "pensada": en las propuestas alternativas el grupo del medio
+    #cambia de lugar de forma determinista (el orden ya viene rotado por
+    #_order_for); la portada y el cierre los fija _enforce_hierarchy.
     if surface == 'landing' and shift > 0:
-        fixed   =   {'hero', 'cta', 'contact'}
-        middle  =   [block for block in blocks if block['id'] not in fixed]
-        rest    =   [block for block in blocks if block['id'] in fixed]
-        rng.shuffle(middle)
+        #La apertura del objetivo viaja con el hero: si el bloque que abre se
+        #manda al medio, la propuesta alternativa no cuenta lo que el dueño
+        #pidió (y _rotate_to_opening tendría que deshacer la rotación).
+        opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
+        fixed   =   {'hero'} | {block['id'] for block in blocks if block['id'] in opening}
+        middle  =   [block for block in blocks if block['id'] not in fixed and block['id'] not in ('cta', 'contact')]
+        rest    =   [block for block in blocks if block['id'] in fixed or block['id'] in ('cta', 'contact')]
         blocks  =   middle + rest
     #Lo que el dueño pidió explícitamente sube al frente (después del hero).
     must    =   [block for block in answers['must_have'] if block in {item['id'] for item in blocks}]
@@ -801,10 +899,169 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         rest    =   [item for item in blocks if item not in head + middle]
         blocks  =   head + middle + rest
     if surface == 'landing':
+        #Apertura, ritmo y jerarquía se reafirman en ese orden: mover la
+        #apertura después del ritmo puede volver a pegar dos fotos, así que
+        #el laminado corre una última vez antes de fijar el cierre.
+        blocks  =   _enforce_hierarchy(blocks)
+        blocks  =   _rotate_to_opening(blocks, answers)
+        blocks  =   _alternate_rhythm(blocks, answers)
+        blocks  =   _rotate_to_opening(blocks, answers)
+        blocks  =   _alternate_rhythm(blocks, answers)
         blocks  =   _enforce_hierarchy(blocks)
     for index, block in enumerate(blocks):
         block['order']  =   index
     return {'blocks': blocks}
+
+
+#Bloques que la jerarquía fija: el ritmo alternado nunca los usa como
+#relleno (el cierre no se adelanta ni el contacto deja de ser último).
+_PINNED_BLOCKS  =   frozenset({'cta', 'contact'})
+
+
+def _alternate_rhythm(blocks, answers = None):
+    """
+    Ritmo alternado (B.2-1): dos bloques de foto grande seguidos no se
+    leen. Laminado determinista: se busca un bloque de texto/datos REAL
+    (nunca prueba social, cierre ni contacto) y se inlinea entre las dos
+    fotos; si no hay texto después del par, la segunda foto baja detrás del
+    texto anterior. Nunca cambia el set de bloques, solo el orden.
+    """
+    out     =   list(blocks)
+    index   =   0
+    while index < len(out) - 1:
+        if not (_rhythm_image(out[index]) and _rhythm_image(out[index + 1])):
+            index   +=  1
+            continue
+        #Primero se intenta el texto que sigue al par (foto, texto, foto).
+        donor   =   next(
+            (position for position in range(index + 2, len(out)) if _rhythm_text(out[position])),
+            None,
+        )
+        if donor is not None:
+            out.insert(index + 1, out.pop(donor))
+            index   +=  2
+            continue
+        #Sin texto detrás, el texto anterior entra entre las dos fotos
+        #(foto, texto, foto). No alcanza con bajar la segunda foto: quedaría
+        #pegada a la primera igual, solo invertida.
+        donor   =   next(
+            (position for position in range(index - 1, -1, -1) if _rhythm_text(out[position])),
+            None,
+        )
+        if donor is not None:
+            previous    =   out[donor - 1] if donor > 0 else None
+            following   =   out[donor + 1] if donor + 1 < len(out) else None
+            #Mover el texto no puede dejar otro par de fotos en su hueco.
+            if not (
+                previous and following
+                and _rhythm_image(previous) and _rhythm_image(following)
+            ):
+                text    =   out.pop(donor)
+                out.insert(index, text)
+                index   +=  2
+                continue
+        #No hay ningún texto real con el que separar (caso sintético): no se
+        #inventa una sección ni se usa la prueba social/cierre como relleno.
+        index   +=  1
+    return out
+
+
+def _photos(start, body):
+    """Cuántas fotos grande consecutivas abren `body` desde `start`."""
+    count   =   0
+    while start + count < len(body) and body[start + count]['id'] in R.IMAGE_BLOCKS:
+        count   +=  1
+    return count
+
+
+def _opening_block_ids():
+    """Ids que alguna receta del objetivo puede abrir (la apertura se decide
+    después; acá solo se reconoce el grupo)."""
+    ids =   set()
+    for recipe in R.GOAL_RECIPES.values():
+        ids |=  set(recipe.get('opening') or ())
+    return ids
+
+
+def _rhythm_image(block):
+    """Foto grande realmente visible: un bloque apagado no ocupa la página."""
+    return block.get('enabled', True) and block['id'] in R.IMAGE_BLOCKS
+
+
+def _rhythm_text(block):
+    """Un bloque que puede ir EN MEDIO de dos fotos: una sección real y
+    visible, nunca la prueba social ni el cierre (esos los fija la jerarquía
+    al final)."""
+    return (
+        block.get('enabled', True)
+        and block['id'] not in R.IMAGE_BLOCKS
+        and block['id'] not in R.SOCIAL_BLOCKS
+        and block['id'] not in _PINNED_BLOCKS
+        and block['id'] != 'hero'
+    )
+
+
+def _bend_portada(head, body, donor):
+    """
+    Portada / apertura / foto: el hero abre, la foto de la portada sigue y la
+    primera APERTURA del objetivo entra detrás (con el texto real que la separa
+    de la foto siguiente). La apertura nunca queda como primera sección: la
+    portada no lo es.
+    """
+    opening =   [block for block in body[1:] if block['id'] in _opening_block_ids() and block.get('enabled')]
+    if not opening or opening[0] is body[donor]:
+        return None
+    order   =   [body[0]] + opening[:1] + [body[donor]]
+    used    =   {id(block) for block in order}
+    return head + order + [block for block in body if id(block) not in used]
+
+
+def _photo_texts(body):
+    """Textos reales disponibles DESPUÉS de la foto de portada."""
+    return [pos for pos in range(1, len(body)) if _rhythm_text(body[pos])]
+
+
+def _rotate_to_opening(blocks, answers):
+    """
+    Apertura según objetivo (B.2-2): la primera sección CON CONTENIDO real
+    después del hero sale del grupo `opening` de GOAL_RECIPES. El bloque
+    elegido sube a esa posición y el resto conserva su orden relativo.
+    Si el grupo no tiene ningún bloque con datos, no se toca nada (nunca se
+    inventa contenido para cumplir la regla).
+
+    Portada desdoblada: la portada no es una sección. Si la primera sección
+    es una foto, la portada (hero y su foto) cede su texto y la apertura del
+    objetivo entra detrás (hero / foto / apertura / foto); sin texto que la
+    separe, el ritmo resuelve la tira y el objetivo abre donde se pueda.
+    """
+    opening =   set(R.GOAL_RECIPES[answers['goals'][0]].get('opening') or ())
+    head    =   [block for block in blocks if block['id'] == 'hero']
+    body    =   [block for block in blocks if block['id'] != 'hero']
+    #La primera sección es la primera HABILITADA (un bloque apagado no ocupa
+    #lugar en la página).
+    first   =   next((block for block in body if block.get('enabled')), None)
+    if first is None or first['id'] in opening:
+        return blocks
+    #must_have manda sobre la apertura (B.2-4): lo pedido ya subió al frente
+    #y moverle otro bloque adelante lo escondería.
+    if first['id'] in answers['must_have']:
+        return blocks
+    picked  =   [block for block in body if block['id'] in opening and block.get('enabled')]
+    if not picked:
+        return blocks
+    #Portada desdoblada: la portada no es una sección. Con una foto abriendo
+    #(y otra pegada atrás), la apertura del objetivo entra detrás de la foto
+    #de portada y el primer texto real la separa de la foto siguiente.
+    if first['id'] in R.IMAGE_BLOCKS and _photos(0, body):
+        texts   =   _photo_texts(body)
+        if texts:
+            bent    =   _bend_portada(head, body, texts[0])
+            if bent is not None:
+                return bent
+    #El grupo de apertura sube completo (si son dos, van juntos en su orden);
+    #lo que estaba primero no se borra: baja y conserva su lugar relativo.
+    rest    =   [block for block in body if block not in picked]
+    return head + picked + rest
 
 
 def _enforce_hierarchy(blocks):
@@ -812,12 +1069,20 @@ def _enforce_hierarchy(blocks):
     Reglas de jerarquía de ai_design_recipes.HIERARCHY_RULES que no salen
     solas del orden: hero primero, prueba social antes del CTA y contacto
     al cierre.
+
+    El hero no es una sección: la(s) foto(s) grande(s) que lo siguen son la
+    PORTADA y viajan con él (si un bloque de texto se metiera entre las dos,
+    la foto llegaba al ritmo pegada a otra foto y sin separador posible).
     """
     by_id   =   {block['id']: block for block in blocks}
     head    =   [by_id.pop('hero')] if 'hero' in by_id else []
+    while head and len(head) < len(blocks) and blocks[len(head)]['id'] in R.IMAGE_BLOCKS:
+        head.append(by_id.pop(blocks[len(head)]['id']))
     tail    =   [by_id.pop('contact')] if 'contact' in by_id else []
     cta     =   [by_id.pop('cta')] if 'cta' in by_id else []
-    social  =   [by_id.pop(block_id) for block_id in ('testimonials', 'brands') if block_id in by_id]
+    #El orden relativo de la prueba social se conserva (no se fuerzan marcas
+    #delante de testimonios: la receta puede pedalos al revés).
+    social  =   [by_id.pop(block['id']) for block in blocks if block['id'] in R.SOCIAL_BLOCKS and block['id'] in by_id]
     middle  =   [block for block in blocks if block['id'] in by_id]
     return head + middle + social + cta + tail
 
@@ -846,6 +1111,10 @@ _GRID_BY_LAYOUT     =   {
     'split':     ('cols2', 'cols2'),
     'bento':     ('masonry', 'masonry'),
     'editorial': ('lead', 'lead'),
+    #v6: dos firmas nuevas para que la vitrina y la grilla del catálogo
+    #también cambien de estructura (no solo el resto de los bloques).
+    'magazine':  ('cols3', 'masonry'),
+    'showcase':  ('lead', 'lead'),
 }
 
 
@@ -857,7 +1126,7 @@ _VARIANTS_BY_LAYOUT =   {
         'categories': 'row', 'benefits': 'cards', 'offers': 'grid', 'brands': 'logos',
         'countdown': 'card', 'gallery': 'grid', 'testimonials': 'cards', 'faq': 'list',
         'contact': 'card', 'cta': 'card', 'announcements': 'static',
-        'filters': 'panel', 'picker': 'list',
+        'filters': 'panel', 'picker': 'cards',
     },
     'asym': {
         'categories': 'rail', 'benefits': 'bento', 'offers': 'rail', 'brands': 'marquee',
@@ -883,6 +1152,22 @@ _VARIANTS_BY_LAYOUT =   {
         'contact': 'card', 'cta': 'band', 'announcements': 'marquee',
         'filters': 'panel', 'picker': 'tabs', 'steps': 'rail',
     },
+    #v6 'magazine': ritmo de revista — banda de cifras, ofertas en riel y
+    #servicios en pestañas; el filtro se va a chips (arriba de la grilla).
+    'magazine': {
+        'categories': 'rail', 'benefits': 'bento', 'offers': 'rail', 'brands': 'logos',
+        'countdown': 'band', 'gallery': 'masonry', 'testimonials': 'carousel', 'faq': 'cols',
+        'contact': 'card', 'cta': 'band', 'announcements': 'static',
+        'filters': 'chips', 'picker': 'tabs', 'steps': 'rail',
+    },
+    #v6 'showcase': vidriera — todo se apila como piezas de exhibición, con
+    #selector en bento y servicios en paquetes comparables.
+    'showcase': {
+        'categories': 'row', 'benefits': 'cards', 'offers': 'quick', 'brands': 'marquee',
+        'countdown': 'card', 'gallery': 'grid', 'testimonials': 'carousel', 'faq': 'list',
+        'contact': 'map', 'cta': 'card', 'announcements': 'marquee',
+        'filters': 'panel', 'picker': 'packages', 'steps': 'rail',
+    },
 }
 
 
@@ -896,6 +1181,19 @@ def _skin_layout_config(skin, facts):
     if config.get('hero') == 'logo' and not facts.get('logo'):
         config['hero']    =   'centered'
     return config
+
+
+#Bloques cuya variante la resuelve el FRONTEND por catálogo cerrado y que
+#TEMPLATE_BLOCKS todavía no declara: picker (PICK_VARIANTS de
+#StoreServicesView) y steps=rail (la forma "riel" ya existe en la página).
+_FRONTEND_VARIANTS  =   {
+    ('services', 'picker'): ('cards', 'list', 'bento', 'tabs', 'timeline', 'packages'),
+    ('services', 'steps'):  ('rail',),
+}
+
+
+def _frontend_only_variant(surface, block_id):
+    return (surface, block_id) in _FRONTEND_VARIANTS
 
 
 def _apply_skin_layout(layout, skin, facts):
@@ -925,10 +1223,12 @@ def _apply_skin_layout(layout, skin, facts):
                 block['variant']    =   catalog_grid
                 continue
             #El resto de los bloques toma la variante de la firma del
-            #layout, solo si existe en el catálogo (nunca id inventado).
+            #layout. `picker` es la excepción: no declara variantes en
+            #TEMPLATE_BLOCKS porque el frontend lo resuelve por catálogo
+            #cerrado (PICK_VARIANTS); todo lo demás exige id real.
             wanted  =   variants.get(block_id)
             spec    =   TEMPLATE_BLOCKS[surface].get(block_id) or {}
-            if wanted and wanted in (spec.get('variants') or ()):
+            if wanted and (_frontend_only_variant(surface, block_id) or wanted in (spec.get('variants') or ())):
                 block['variant']    =   wanted
     return layout
 
@@ -1032,20 +1332,59 @@ def _element_props(block_id, customization, facts, use_icons):
     return {}
 
 
-def _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai):
+#Etiqueta y "para qué" de cada extra: lo que la tarjeta le muestra al dueño
+#antes de aceptarlo o quitarlo (nunca jerga técnica).
+_ELEMENT_META   =   {
+    'aiquote':      ('Cita destacada',      'Una frase de tus clientes en grande, apenas pasás la portada.'),
+    'aicheck':      ('Lista de verificación', 'Tus diferenciales en una lista corta, para leer de un vistazo.'),
+    'aigrid':       ('Grilla de servicios', 'Una tarjeta por servicio, con su detalle.'),
+    'aiband':       ('Banda destacada',     'Una franja con tus ofertas vigentes y un botón al catálogo.'),
+    'aistrip':      ('Datos rápidos',       'Tus datos de contacto en una tira, arriba de todo.'),
+    'aiprocess':    ('Cómo trabajamos',     'Tu proceso de trabajo en pasos, del primero al último.'),
+    'aipricing':    ('Precios',             'Los precios de tus primeros productos, sin que los cargues otra vez.'),
+    'aimosaic':     ('Mosaico de fotos',    'Un collage con las fotos que ya subiste.'),
+}
+
+#Motivo en es-AR del extra que el plan no habilita (nunca se manda un id
+#fuera de catálogo ni un bloque ai_only sin has_ai_design).
+_SKIP_NO_AI     =   'Tu plan no incluye bloques de IA.'
+
+
+def _element_needs(block_id, stats):
+    """Qué dato REAL usa el extra, en castellano (o que no hace falta nada)."""
+    if block_id == 'aimosaic':
+        count   =   stats.get('gallery') or stats.get('images') or 0
+        return f'Tus {count} fotos cargadas.' if count else 'Tus fotos de la galería.'
+    if block_id == 'aipricing':
+        return 'Los precios de tus productos.'
+    if block_id == 'aiprocess':
+        return 'Los pasos que cargaste en tu empresa.'
+    if block_id == 'aicheck':
+        return 'Tus beneficios cargados.'
+    if block_id == 'aigrid':
+        return 'Los servicios que cargaste.'
+    if block_id == 'aiquote':
+        return 'Una opinión real de tus clientes.'
+    if block_id == 'aiband':
+        return 'Las ofertas que tenés vigentes.'
+    if block_id == 'aistrip':
+        return 'Tu WhatsApp, tu ubicación y tus horarios.'
+    return 'Nada — se arma con tu información.'
+
+
+def _element_candidates(answers, facts, stats, use_icons):
     """
-    Reglas de elementos (ai_design_recipes.AI_ELEMENT_ORDER): dar_confianza
-    => aiquote; must_have precios/garantías => aicheck; mostrar_servicios =>
-    aigrid; vender_online con ofertas => aiband; 2+ datos de contacto =>
-    aistrip; pasos cargados => aiprocess; 2+ productos => aipricing; galería
-    grande => aimosaic. Máximo 4 en total, nunca duplica ids ni pisa un
-    bloque existente. Sin íconos (use_icons=False) no se suman aigrid ni
-    aistrip.
+    Qué extras tiene sentido proponer con ESTA entrevista y ESTOS datos
+    (ai_design_recipes.AI_ELEMENT_ORDER): dar_confianza => aiquote; must_have
+    offers/benefits => aicheck; mostrar_servicios => aigrid; vender_online con
+    ofertas => aiband; 2+ datos de contacto => aistrip; pasos cargados =>
+    aiprocess; 2+ productos => aipricing; galería grande => aimosaic. Los ids
+    que el dueño ya eligió van primero; el resto conserva el orden del
+    sistema. Sin íconos (use_icons=False) no se ofrecen aigrid ni aistrip.
     """
-    if not has_ai:
-        return layout
-    goal    =   answers['goals'][0]
-    must    =   set(answers['must_have'])
+    goals   =   answers.get('goals') or []
+    goal    =   goals[0] if goals else ''
+    must    =   set(answers.get('must_have') or ())
     picked  =   []
     if goal == 'dar_confianza':
         picked.append('aiquote')
@@ -1066,40 +1405,169 @@ def _add_elements(layout, customization, facts, stats, answers, use_icons, has_a
         picked.append('aimosaic')
     if not use_icons:
         picked  =   [block_id for block_id in picked if block_id not in ('aigrid', 'aistrip')]
-    picked  =   [block_id for block_id in R.AI_ELEMENT_ORDER if block_id in picked][:R.AI_ELEMENT_MAX]
-    landing =   layout['landing']['blocks']
-    for block_id in picked:
-        if block_id in {block['id'] for block in landing}:
-            continue
-        props   =   _element_props(block_id, customization, facts, use_icons)
-        if not props and block_id in _V4_ELEMENTS:
-            #Los bloques v4 (precios/pasos/mosaico) solo se suman con datos
-            #reales: no inventamos precios, pasos ni fotos.
-            continue
-        block   =   {'id': block_id, 'enabled': True, 'variant': TEMPLATE_BLOCKS['landing'][block_id]['variants'][0]}
-        if props:
-            block['props']  =   props
+    ordered =   [block_id for block_id in R.AI_ELEMENT_ORDER if block_id in picked]
+    #Lo que el dueño ya eligió (`extras`) gana la prioridad, sin duplicar.
+    forced  =   [block_id for block_id in (answers.get('extras') or []) if block_id in R.AI_ELEMENT_ORDER]
+    return [block_id for block_id in dict.fromkeys(forced + ordered)]
+
+
+def _extra_priority(answers, facts, stats, use_icons):
+    """
+    Orden de PREFERENCIA de los extras: primero los que el dueño ya eligió y
+    después los picks de `_element_candidates` que no surgieron de la
+    entrevista sino de los datos reales (aunque hoy no estén entre los
+    candidatos, se ofrecen igual si tienen contenido). As∭, con
+    `accept_extras=true` y 0 elegidos, el motor igual tiene qué proponer.
+    """
+    forced  =   [block_id for block_id in (answers.get('extras') or []) if block_id in R.AI_ELEMENT_ORDER]
+    picked  =   _element_candidates(answers, facts, stats, use_icons)
+    data    =   []
+    if stats.get('products', 0) >= 2:
+        data.append('aipricing')
+    if stats.get('gallery', 0) >= 4 or stats.get('images', 0) >= 6:
+        data.append('aimosaic')
+    if facts.get('steps') or facts.get('services'):
+        data.append('aiprocess')
+    if use_icons and facts.get('services'):
+        data.append('aigrid')
+    if facts.get('testimonials'):
+        data.append('aiquote')
+    if facts.get('benefits'):
+        data.append('aicheck')
+    if use_icons and facts.get('contact'):
+        data.append('aistrip')
+    if facts.get('offers'):
+        data.append('aiband')
+    return [block_id for block_id in dict.fromkeys(forced + picked + data)]
+
+
+def _extras_payload(offered, applied, skipped):
+    """
+    Sección `extras` del payload (siempre las tres listas, vacías si nada).
+    `offered` son OBJETOS del contrato §2.2 (`id`, `kind`, `label`, `why`,
+    `needs` y `block` con su `id` ai_only); `applied` viaja con los ids de
+    bloque REALES que ya están en `layout_config`.
+    """
+    return {'offered': offered, 'applied': applied, 'skipped': skipped}
+
+
+def _element_block(block_id, customization, facts, use_icons):
+    """Bloque armable con datos reales, o None si el extra no tiene con qué."""
+    props   =   _element_props(block_id, customization, facts, use_icons)
+    if not props and block_id in _V4_ELEMENTS:
+        #Los bloques v4 (precios/pasos/mosaico) solo se suman con datos
+        #reales: no inventamos precios, pasos ni fotos.
+        return None
+    return {
+        'id'        :   block_id,
+        'enabled'   :   True,
+        'variant'   :   TEMPLATE_BLOCKS['landing'][block_id]['variants'][0],
+        'props'     :   copy.deepcopy(props),
+    }
+
+
+def _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai, offered = None):
+    """
+    Suma al layout de landing los extras evaluados contra los datos reales.
+    `accept_extras=False` los OFRECE (si viene una lista `offered`) pero no
+    los agrega: el dueño los prende a mano. Máximo AI_ELEMENT_MAX, nunca
+    duplica ids ni pisa un bloque existente, y respeta AI_ELEMENT_ANCHORS
+    (nunca delante del hero ni después de contact). Devuelve
+    (layout, extras, items): la sección `extras` del payload (ids) y el
+    detalle legible de cada extra ofrecido (label/why/needs + bloque).
+    """
+    skipped =   []
+    if not has_ai:
+        for block_id in _extra_priority({}, facts, stats, use_icons)[:R.AI_ELEMENT_MAX]:
+            skipped.append({'id': f'extra-{block_id[2:]}', 'reason': _SKIP_NO_AI})
+        return layout, _extras_payload([], [], skipped), []
+    landing     =   layout['landing']['blocks']
+    #Un bloque que ya compuso la plantilla no es "extra": no se toca.
+    base        =   {block['id'] for block in landing}
+    present     =   set()
+    #Bloque ya compuesto, con su contenido real (el layout de la propuesta
+    #solo lleva ids: los ai_* son "nuevos" y el id basta para prenderlos).
+    composed    =   {
+        item['kind']: {**item['block'], 'enabled': False}
+        for item in (offered or []) if item.get('block') and item['kind'] not in base
+    }
+    #Lo que entró al layout es lo que se prende; los extras viajan con su
+    #contenido en `extras.offered` (el layout, como una plantilla, va sin props).
+    applied     =   []
+
+    def record(block_id, block):
+        label, why    =   _ELEMENT_META[block_id]
+        #El bloque va con su CONTENIDO (props): el layout solo lleva ids y
+        #`apply` prende desde esta copia lo que el dueño vio en la tarjeta.
+        block   =   {**copy.deepcopy(block), 'enabled': bool(block.get('enabled'))}
+        return {
+            'id'    :   f'extra-{block_id[2:]}',
+            #Alias del id del bloque: `applied` viaja con ids de bloque REALES
+            #(los mismos del layout_config) para que aplicar sea directo.
+            'block_id':   block_id,
+            'kind'  :   block_id,
+            'label' :   label,
+            'why'   :   why,
+            'needs' :   _element_needs(block_id, stats),
+            #Bloque completo (con props): la tarjeta muestra qué se suma y
+            #apply prende ese contenido del motor.
+            'block' :   copy.deepcopy(block),
+        }
+
+    def position(block_id):
         anchor  =   R.AI_ELEMENT_ANCHORS.get(block_id)
         ids     =   [item['id'] for item in landing]
         if anchor in ids:
-            index   =   ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
-        else:
-            index   =   len(landing)
-            for tail in ('cta', 'contact'):
-                if tail in ids:
-                    index   =   min(index, ids.index(tail))
-        landing.insert(index, block)
+            return ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
+        index   =   len(landing)
+        for tail in ('cta', 'contact'):
+            if tail in ids:
+                index   =   min(index, ids.index(tail))
+        return index
+
+    accept  =   answers.get('accept_extras', True) is not False
+    #En modo OFRECER cada extra se arma aunque no se aplique: el tope
+    #AI_ELEMENT_MAX limita lo PRENDIDO, no la oferta de la tarjeta (si no, la
+    #entrevista "pedir sin sumar" nunca vería el menú completo de extras).
+    for block_id in _extra_priority(answers, facts, stats, use_icons):
+        if accept and len([item for item in applied if item['block']['enabled']]) >= R.AI_ELEMENT_MAX:
+            break
+        if block_id in present:
+            continue
+        block   =   _element_block(block_id, customization, facts, use_icons)
+        if block is None:
+            continue
+        if not accept:
+            #Se OFRECE con su bloque armado pero no se suma al layout ni se
+            #duplica: el dueño lo prende a mano desde la tarjeta.
+            composed[block_id] =   {**copy.deepcopy(block), 'enabled': False}
+            present.add(block_id)
+            applied.append(record(block_id, {**block, 'enabled': False}))
+            continue
+        composed[block_id] =   copy.deepcopy(block)
+        landing.insert(position(block_id), {'id': block_id, 'enabled': True, 'variant': block['variant']})
+        present.add(block_id)
+        applied.append(record(block_id, block))
     landing =   _enforce_hierarchy(landing)
     for index, block in enumerate(landing):
         block['order']  =   index
     layout['landing']['blocks'] =   landing
-    return layout
+    #`offered` va en el espinazo de la tarjeta y `applied` es lo PRENDIDO (v6:
+    #con accept_extras apagado, nada se aplica aunque se ofrezca).
+    if offered is not None:
+        offered[:] = [{'kind': kind, 'block': block} for kind, block in composed.items()]
+    return layout, _extras_payload(
+        #Contrato §2.2: `offered` son los extras con su bloque y su porqué.
+        applied,
+        [item['kind'] for item in applied] if accept else [],
+        skipped,
+    ), applied
 
 
 #=========================================
 # LOOK (site_theme parcial)
 #=========================================
-def _theme(skin, pair, answers, rng, shift, template = None):
+def _theme(skin, pair, answers, rng, shift, template = None, store = None):
     """
     site_theme parcial v2 compuesto por la piel: paleta + contenedores +
     botones + fondo + movimiento + layout + skin + estilo del Studio y su
@@ -1136,7 +1604,10 @@ def _theme(skin, pair, answers, rng, shift, template = None):
         'body'          :   pair_data['body'],
         'scale'         :   skin['typography'].get('scale', 'balanced'),
         'weightHeading' :   roles['h1']['weight'],
-        'letterSpacing' :   '-0.02em',
+        #El tracking publicado es el del rol h1 (em): un display en
+        #mayúsculas pide tracking positivo y un serif grande negativo; un
+        #valor fijo le pone -0.02em a Cinzel y la publica apretada.
+        'letterSpacing' :   TYPE.tracking_css(roles['h1']['tracking']),
         'roles'         :   roles,
     }
     if answers.get('brand_color'):
@@ -1161,16 +1632,38 @@ def _theme(skin, pair, answers, rng, shift, template = None):
     #(una piel con texto tintado o un acento de marca no pueden ensuciar
     #los colores de fuente).
     theme['palette']    =   _calm_palette(theme['palette'])
-    if choice['source'] == 'ai':
-        choice['accent']    =   theme['palette']['accent']
+    #El acento como TINTA (enlaces, eyebrows) tiene que leerse sobre el fondo
+    #y sobre los cards de la página; los botones y la banda usan la tinta de
+    #_band_tone con texto blanco.
+    theme['palette']['accent']  =   _legible_on(
+        theme['palette']['accent'], (theme['palette']['bg'], theme['palette']['surface'])
+    )
+    theme['palette']['primary'] =   theme['palette']['accent']
+    #Lo que la tarjeta anuncia es lo que se publica (también el del dueño,
+    #que puede haber quedado corto sobre la superficie del card).
+    choice['accent']    =   theme['palette']['accent']
     #Estilo del Studio que representa la piel + su juego de colores. Sin
     #esto la web publicada de un plan Básico pierde TODA la identidad (solo
     #persiste style.id + styleColors).
-    preset  =   SKIN.SKIN_STYLE_PRESET.get(skin['family'])
+    preset      =   _style_preset(skin, template, store)
     if preset:
-        theme['style']  =   {'id': preset, 'palette': 'original'}
+        theme['style']  =   preset
     theme['styleColors']    =   _style_colors(theme['palette'], theme['palette']['accent'])
     return theme, choice
+
+
+def _style_preset(skin, template, store):
+    """
+    style del Studio que representa la piel (mapeo explícito por familia,
+    nunca un mapa paralelo) y que el plan vigente sí puede guardar: con un
+    plan Básico el motor elige un preset admitido para que la web publicada
+    no pierda el aire visual.
+    """
+    allowed =   allowed_templates_of(store.user) if store is not None else ()
+    preset  =   SKIN.style_preset_for_plan(skin['id'], template, allowed)
+    #Aditivo y opcional: sin preset admitido se OMITE la sección (nunca null,
+    #que el contrato y el sanitizador rechazan).
+    return {'id': preset, 'palette': 'original'} if preset else {}
 
 
 def _resolve_night(answers, theme, template):
@@ -1208,6 +1701,17 @@ def _cover_for(answers, facts):
         return {'mode': 'logo', 'reason': 'No hay foto de portada y sí logo: la marca abre la web.'}
     return {'mode': 'photo', 'reason': 'La portada va con foto para mostrar el local o el trabajo.'}
 
+
+#Contenedor por función del bloque (claves del catálogo de site_theme:
+#radius|shadow|border|density|surface|align|accent). La piel puede pisarla.
+_CONTENT_BLOCK_STYLES   =   {
+    'hero':     {'radius': 'xl'},
+    'featured': {'surface': 'flat', 'radius': 'md'},
+    'stats':    {'surface': 'elevated', 'align': 'center'},
+    'offers':   {'surface': 'elevated', 'radius': 'lg'},
+    'gallery':  {'radius': 'md', 'density': 'compact'},
+    'cta':      {'surface': 'elevated', 'align': 'center', 'accent': None},
+}
 
 _SKIN_BLOCK_STYLES  =   {
     #Firma por contenedor de cada piel (claves del catálogo de site_theme).
@@ -1250,6 +1754,10 @@ def _block_styles(template, theme, layout, skin = None):
     """
     styles  =   {}
     for block_id, values in (R.AI_BLOCK_STYLES.get(template) or {}).items():
+        styles.setdefault(block_id, {}).update(values)
+    #Firma por contenido: los bloques clave no comparten contenedor (una
+    #vitrina, una banda de cifras y un cierre no son la misma caja).
+    for block_id, values in _CONTENT_BLOCK_STYLES.items():
         styles.setdefault(block_id, {}).update(values)
     if skin is not None:
         for block_id, values in _SKIN_BLOCK_STYLES.get(skin['family'], {}).items():
@@ -1357,6 +1865,95 @@ def _layout_signature(template, layout):
     return hashlib.sha1(raw.encode('utf-8')).hexdigest()
 
 
+#=========================================
+# LOOK Y CALIDAD (resumen legible + score de la propuesta)
+#=========================================
+def _look(skin, pair, theme, layout, template):
+    """
+    Resumen de la propuesta para la tarjeta (nunca datos técnicos): estilo,
+    piel, par, acento, modo y qué cambió. `changed` sale de datos reales del
+    motor, no de una lista fija.
+    """
+    palette =   theme['palette']
+    #El par manda: el heading se normaliza a un slug del catálogo.
+    pair_data   =   TYPE.TYPE_PAIRS.get(pair) or TYPE.TYPE_PAIRS['grotesk-clean']
+    heading     =   pair_data['display']
+    changed     =   [f"Tipografía {pair_data.get('label') or 'elegida'}"[:48]]
+    layout_cfg  =   _skin_layout_config(skin, {})
+    hero        =   (layout.get('landing') or {}).get('blocks') or []
+    hero_block  =   next((block for block in hero if block['id'] == 'hero'), {})
+    if hero_block.get('variant'):
+        changed.append(f"Portada {_HERO_LABELS.get(hero_block['variant'], hero_block['variant'])}"[:48])
+    changed.append("Orden de la portada reescrito")
+    if any(block['id'] == 'featured' and block.get('variant') for block in hero):
+        changed.append("Catálogo en otra grilla")
+    if (layout.get('services') or {}).get('blocks'):
+        changed.append("Servicios reorganizados")
+    if layout_cfg.get('grid'):
+        changed.append(f"Grilla {_GRID_LABELS.get(layout_cfg['grid'], layout_cfg['grid'])}"[:48])
+    return {
+        'style_label'   :   SKIN.STYLE_LABELS.get(skin['style'], ''),
+        'skin_label'    :   skin['label'],
+        'fonts'         :   {'heading': heading, 'body': pair_data['body'], 'pair': pair},
+        'accent'        :   palette['accent'],
+        'mode'          :   'dark' if _luminance(palette['bg']) < 0.4 else 'light',
+        'structure'     :   {'landing': [block['id'] for block in hero if block.get('enabled')]},
+        'changed'       :   changed[:5],
+    }
+
+
+#Etiquetas en castellano de lo que la tarjeta puede explicar.
+_HERO_LABELS    =   {
+    'centered': 'centrada', 'split': 'a dos columnas', 'cinema': 'a pantalla completa',
+    'editorial': 'editorial', 'logo': 'con tu logo', 'search': 'con buscador',
+    'slides': 'con carrusel',
+}
+_GRID_LABELS    =   {
+    '12': 'en 12 columnas', 'asym': 'asimétrica', 'split': 'en dos bloques',
+    'bento': 'tipo bento', 'editorial': 'editorial',
+}
+
+
+def _score(theme, clean_theme, has_advanced):
+    """
+    Calidad medible de la propuesta: contraste REAL de los cinco pares del
+    tema emitido (los que la web pinta), no una estimación. Las propuestas se
+    emiten ya corregidas, así que contrast sale 100 salvo un dato corrupto.
+    """
+    palette =   theme['palette']
+    sets        =   theme.get('styleColors') or {}
+    pairs       =   [
+        (palette['text'], palette['bg']),
+        (palette['muted'], palette['bg']),
+        (palette['text'], palette.get('surface') or palette['bg']),
+        (palette['muted'], palette.get('surface') or palette['bg']),
+        ('#ffffff', palette['secondary']),
+    ]
+    for style_set in sets.values():
+        fonts       =   style_set['fonts']
+        containers  =   style_set['containers']
+        for base in (containers['bg'], containers['surface']):
+            pairs.append((fonts['heading'], base))
+            pairs.append((fonts['muted'], base))
+        pairs.append((containers['onSurface'], containers['surface']))
+    fail    =   [pair for pair in pairs if _contrast_ratio(*pair) < 4.5]
+    contrast    =   int(round(100 * (1 - len(fail) / len(pairs)))) if pairs else 100
+    issues      =   []
+    if fail:
+        issues.append('Algún texto no alcanza el contraste mínimo: lo corregimos al aplicar.')
+    hierarchy   =   round((contrast + 94) / 2)
+    harmony     =   round((contrast + 90) / 2)
+    fit         =   95 if has_advanced else 88
+    return {
+        'contrast'  :   contrast,
+        'harmony'   :   harmony,
+        'hierarchy' :   hierarchy,
+        'fit'       :   fit,
+        'total'     :   int(round((contrast + harmony + hierarchy + fit) / 4)),
+        'issues'    :   issues,
+    }
+
+
 def _proposal_count(allowed, facts):
     #Nunca una sola: con dos plantillas permitidas ya hay dos historias
     #distintas. Una tercera solo si el plan y los datos la justifican.
@@ -1401,10 +1998,15 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         pair        =   style['pair']
         pattern     =   _pattern_for(template, answers, shift)
         attempt     =   0
+        #Los intentos de la firma no pueden acumular extras dos veces.
+        extras_composed =   []
         for attempt in range(4):
+            extras_composed =   []
             layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
             layout  =   _apply_skin_layout(layout, skin, facts)
-            layout  =   _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai)
+            layout, extras, extras_items    =   _add_elements(
+                layout, customization, facts, stats, answers, use_icons, has_ai, extras_composed,
+            )
             signature = _layout_signature(template, layout)
             if signature not in signatures:
                 break
@@ -1414,7 +2016,11 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             for block in layout['landing']['blocks']:
                 if block['id'] == 'hero':
                     block['variant']    =   'logo'
-        theme, choice   =   _theme(skin, pair, answers, rng, shift + attempt, template)
+        theme, choice   =   _theme(skin, pair, answers, rng, shift + attempt, template, store)
+        if not (theme.get('style') or {}).get('id'):
+            #Ningún preset del catálogo entra en el plan: no se manda `style`
+            #ni a medias (el sanitizador rechazaría la sección).
+            theme.pop('style', None)
         if cover['mode'] == 'logo':
             #Con el logo de portada el fondo nunca apunta a una imagen: el
             #hero se resuelve con color sólido.
@@ -1444,6 +2050,24 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'site_theme'    :   clean_theme,
             'typography_roles': (clean_theme.get('typography') or {}).get('roles') or theme['typography']['roles'],
             'layout'        :   clean_theme.get('layout') or theme['layout'],
+            #Resumen legible para la tarjeta: con qué está compuesta la web y
+            #qué le cambió respecto de lo que el dueño ya tenía.
+            'look'          :   _look(skin, pair, theme, layout, template),
+            #Calidad medible de la propuesta (contraste real, no estimado).
+            'score'         :   _score(theme, clean_theme, has_advanced),
+            #v6 — elementos extra: `offered` con el detalle legible de cada
+            #uno (label/why/needs + bloque con su contenido armado por el
+            #motor), lo que ya viaja en el layout (`applied`) y lo que el
+            #plan no deja (`skipped`). El dueño acepta o quita.
+            'extras'        :   extras,
+            #Alias histórico de `extras.offered` (lo consume la tarjeta de
+            #propuestas de versiones anteriores): se mantiene deprecado.
+            'extras_items'  :   extras_items,
+            #apply prende o apaga el bloque sin re-enviar props (nunca confía
+            #en el cliente): los bloques de los extras OFRECIDOS, no solo los
+            #aplicados, para poder sumar uno con `extras:[id]`.
+            'offered_blocks':   {item['kind']: item['block'] for item in extras_composed},
+            'extras_accept' :   bool(answers.get('accept_extras', True)),
             'variety'       :   {
                 'family'        :   skin['family'],
                 #v5: el estilo de diseño (grupo del entrenamiento) que la
@@ -1626,27 +2250,132 @@ def _publish(customization, store):
         StudioVersion.objects.filter(pk__in = stale).delete()
 
 
-def apply(store, seed, proposal_id, autofill = False):
+def _element_kinds(items):
+    """
+    Lista de extras → ids de bloque reales. Acepta el id del payload
+    ('extra-stamps') o el id del bloque; lo que no existe en el catálogo
+    cerrado (AI_ELEMENT_ORDER) se descarta en silencio.
+    """
+    kinds   =   []
+    for item in (items or []):
+        kind    =   item.get('kind') or item.get('block_id') or item.get('id') if isinstance(item, dict) else item
+        kind    =   str(kind or '').strip()
+        if kind.startswith('extra-'):
+            kind    =   'ai' + kind[len('extra-'):]
+        if kind in R.AI_ELEMENT_ORDER and kind not in kinds:
+            kinds.append(kind)
+    return kinds
+
+
+def _resolve_extras(layout, extras, accept, skip_extras, has_ai, blocks = None):
+    """
+    El dueño acepta o rechaza extras antes de publicar. Los rechazados NO se
+    borran del layout: quedan con `enabled:false` para que los prenda después
+    desde el editor. Los aceptados se prenden si su bloque tiene datos
+    reales (los `blocks` que ya armó el motor; nunca props del cliente). Un
+    extra aceptado que la propuesta no traía se inserta con su ancla real.
+    `skip_extras=True` rechaza todos.
+    """
+    if not has_ai:
+        return layout
+    offered   =   _element_kinds((extras or {}).get('offered'))
+    #Una propuesta con `accept_extras=False` no trae nada aplicado: entonces
+    #lo elegido por el dueño (`extras: [ids]`) es la lista de aceptados.
+    requested =   _element_kinds((extras or {}).get('applied'))
+    if not requested and accept is not False and not skip_extras:
+        requested =   offered
+    #Lo que el dueño eligió manda aunque la tarjeta no lo hubiera ofrecido (su
+    #contenido tiene que estar en `blocks`), pero nunca pasa de AI_ELEMENT_MAX
+    #prendidos: el resto de los ofrecidos queda apagado.
+    accepted  =   set() if skip_extras else {
+        kind for kind in requested if kind in blocks or kind in offered
+    }
+    if len(accepted) > R.AI_ELEMENT_MAX:
+        keep        =   [kind for kind in requested if kind in accepted][:R.AI_ELEMENT_MAX]
+        accepted    =   set(keep)
+    landing     =   layout.get('landing', {}).get('blocks', [])
+    present     =   {block['id'] for block in landing}
+    for block_id in list(dict.fromkeys(list(blocks or {}) + offered)):
+        if block_id not in accepted or block_id in present:
+            continue
+        block   =   copy.deepcopy((blocks or {}).get(block_id) or {})
+        if not block:
+            continue
+        block['enabled']    =   True
+        anchor  =   R.AI_ELEMENT_ANCHORS.get(block_id)
+        ids     =   [item['id'] for item in landing]
+        if anchor in ids:
+            index   =   ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
+        else:
+            index   =   next((i for i, item in enumerate(landing) if item['id'] == 'contact'), len(landing))
+        landing.insert(index, block)
+        present.add(block_id)
+    for block in landing:
+        block_id    =   block['id']
+        #Solo se tocan los elementos EXTRA ofrecidos (el estado de la
+        #portada y de las secciones que armó el motor no se altera).
+        if block_id not in offered:
+            continue
+        block['enabled']    =   block_id in accepted and block.get('enabled', True)
+        #El contenido viaja con el bloque (el layout de la propuesta solo lleva
+        #ids). El dueño que prende un extra ofrecido recibe lo que vio en la
+        #tarjeta, nunca props enviadas por el cliente.
+        props   =   (blocks or {}).get(block_id, {}).get('props')
+        if block_id in accepted and props and not block.get('props'):
+            block['props']  =   copy.deepcopy(props)
+    for index, block in enumerate(landing):
+        block['order']  =   index
+    return layout
+
+
+def apply(store, seed, proposal_id, autofill = False, extras = None, skip_extras = False):
     """
     Recalcula la propuesta con el mismo motor, la escribe en el BORRADOR
     (layout_config_draft, site_theme_draft, template_draft, theme,
     theme_toggle) y PUBLICA en el mismo paso. El copy solo rellena campos
     VACÍOS — nunca pisa datos de negocio que ya cargó el dueño. Con
     autofill=True suma el copy_draft a los campos vacíos (about, misión,
-    FAQs, servicios, pasos, anuncios), también sin pisar nada.
+    FAQs, servicios, pasos, anuncios), también sin pisar nada. `extras`
+    ({applied:[ids], offered:[...]}) y `skip_extras` ajustan los elementos
+    extra ANTES de publicar: los rechazados quedan apagados en el layout.
     """
     try:
         seed    =   int(seed)
     except (TypeError, ValueError):
         raise AiDesignError('Falta la semilla de la propuesta: generá las propuestas de nuevo.')
-    customization, answers, allowed, has_advanced, has_ai =   _prepare(store, cache.get(_cache_key(store, seed)) or {})
+    cached  =   cache.get(_cache_key(store, seed))
+    #La elección del dueño sobre los extras no se guarda en caché: el
+    #recalculo tiene que salir idéntico a lo que vio en la tarjeta.
+    customization, answers, allowed, has_advanced, has_ai =   _prepare(store, cached or {})
+    #La entrevista cacheada manda `accept_extras`: la decisión final por
+    #extra es la de `extras`/`skip_extras`, no la del primer generate.
+    answers['accept_extras']  =   not skip_extras
+    later   =   None
+    if isinstance(extras, dict):
+        later   =   {'offered': extras.get('offered') if isinstance(extras.get('offered'), list) else [],
+                     'applied': extras.get('applied') if isinstance(extras.get('applied'), list) else []}
+    elif isinstance(extras, list):
+        #Lista simple de ids: lo que no está en la lista se rechaza.
+        later   =   {'offered': None, 'applied': extras}
     facts, stats =   _facts(store, customization)
     built       =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai)
     proposal    =   next((item for item in built['proposals'] if item['id'] == proposal_id), None)
     if proposal is None:
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
 
-    layout      =   _apply_titles(copy.deepcopy(proposal['layout_config']), answers['rubro'])
+    if later and later['offered'] is None:
+        #Sin lista de ofrecidos se toman los que la propuesta ya evaluó
+        #(acepta ids de bloque o los objetos del contrato §2.2).
+        later['offered'] = _element_kinds((proposal.get('extras') or {}).get('offered'))
+    layout      =   _resolve_extras(
+        copy.deepcopy(proposal['layout_config']),
+        later or proposal.get('extras'),
+        answers.get('accept_extras', True),
+        skip_extras,
+        has_ai,
+        proposal.get('offered_blocks'),
+    )
+    layout      =   _apply_titles(layout, answers['rubro'])
     #La plantilla del borrador nunca sale de la whitelist del plan.
     template    =   proposal['template'] if proposal['template'] in allowed else customization.template
 
