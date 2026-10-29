@@ -161,6 +161,7 @@ AUDIT = r"""() => {
 CONTRAST = r"""() => {
   // Contraste de texto principal: sample de párrafos/headers visibles.
   const lum = (c) => {
+    if (!/^rgba?\(/.test(c)) return null
     const m = c.match(/[\d.]+/g); if (!m || m.length < 3) return null
     const [r, g, b] = m.slice(0, 3).map(v => +v / 255)
     const f = (x) => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
@@ -174,17 +175,34 @@ CONTRAST = r"""() => {
       // se salta el elemento en vez de falsificar el ratio.
       if (cs.backgroundImage && cs.backgroundImage !== 'none') return null
       const bg = cs.backgroundColor
-      if (bg && bg !== 'rgba(0, 0, 0, 0)' && !bg.endsWith(', 0)')) return bg
+      const parts = bg && bg.match(/[\d.]+/g)
+      const alpha = parts && parts.length > 3 ? +parts[3] : 1
+      // Un fondo translúcido no es el fondo real: se compone con el de arriba.
+      if (bg && bg !== 'rgba(0, 0, 0, 0)' && alpha >= 0.9) return bg
       p = p.parentElement
     }
     return 'rgb(255, 255, 255)'
   }
+  // Solo lo que el visitante ve en el viewport: descarta drawers fuera de
+  // pantalla (transform), menús con aria-hidden/inert y cadenas opacity 0.
+  const inView = (el) => {
+    const r = el.getBoundingClientRect()
+    if (r.width < 1 || r.height < 1) return false
+    if (r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) return false
+    if (el.closest('[aria-hidden="true"], [inert]')) return false
+    let p = el
+    while (p) {
+      const cs = getComputedStyle(p)
+      if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) return false
+      p = p.parentElement
+    }
+    return true
+  }
   const out = []
   for (const el of document.querySelectorAll('p, h1, h2, h3, li, span, a')) {
     if (out.length >= 12) break
-    const r = el.getBoundingClientRect()
     const cs = getComputedStyle(el)
-    if (!r.width || !r.height || !el.innerText?.trim() || el.innerText.length > 200) continue
+    if (!inView(el) || !el.innerText?.trim() || el.innerText.length > 200) continue
     const bgC = bgOf(el)
     if (bgC == null) continue
     const fg = lum(cs.color), bg = lum(bgC)

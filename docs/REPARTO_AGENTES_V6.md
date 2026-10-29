@@ -230,7 +230,11 @@ mergeado a `main` en un único commit de integración:
 - El escenario visual destapó y dejó corregido un defecto real de publicación: los
   bloques default del template que la config no traía (`services`) se agregaban
   **después de Contacto**; `resolveLayout` ahora mueve `contact` al final.
-- `qa_a11y.py` / `qa_overflow.py` siguen disponibles para la barrida por las 6
-  plantillas activas (requieren los servidores de dev y `bench-store` cargado).
+- `qa_a11y.py` (sampler corregido: fondos translúcidos y drawers fuera de viewport)
+  sobre las 6 plantillas activas × home/catálogo/servicios a 390 px: **0 fallas de
+  contraste** y foco visible OK en las 18 páginas. Único hallazgo: un checkbox nativo
+  de 13×13 px en `/servicios` (target <44 px) — pre-existente, no introducido por v6.
+- `qa_overflow.py` sobre las 6 plantillas activas: **sin scroll horizontal** en
+  320/360/390/430 (y landscape), 24/24 combinaciones OK.
 
 
