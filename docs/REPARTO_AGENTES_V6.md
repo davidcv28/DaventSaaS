@@ -236,5 +236,11 @@ mergeado a `main` en un único commit de integración:
   de 13×13 px en `/servicios` (target <44 px) — pre-existente, no introducido por v6.
 - `qa_overflow.py` sobre las 6 plantillas activas: **sin scroll horizontal** en
   320/360/390/430 (y landscape), 24/24 combinaciones OK.
+- Portada en paletas oscuras: `.sp-hal` tomaba `--st-on-primary` (`textOn(primary)`,
+  tinta negra en paletas oscuras) como color de texto y `--st-primary/secondary`
+  como degradé → títulos negros sobre banda gris. Ahora usa `--sp-on-band` y
+  `--sp-band-base1/base2`; verificado en `qa-v6-gastronomia` (blanco sobre `#71747c`,
+  ratio 4.68) y `qa-v6-servicios-profesionales` (4.72).
+
 
 
