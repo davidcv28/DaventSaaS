@@ -249,7 +249,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# Mensajes de error/validación de Django, DRF y SimpleJWT salen en español.
+# No hay LocaleMiddleware (API pura): el idioma activo es siempre este.
+LANGUAGE_CODE = 'es-ar'
 
 TIME_ZONE = 'UTC'
 

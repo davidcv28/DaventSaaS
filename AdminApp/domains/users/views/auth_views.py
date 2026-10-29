@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -145,11 +146,20 @@ def _require_csrf(request):
         raise PermissionDenied('CSRF token inválido o ausente')
 
 
+class SpanishTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Credenciales inválidas: mensaje propio en español (el de SimpleJWT
+    traducido es ambiguo y depende del catálogo del paquete)."""
+    default_error_messages = {
+        'no_active_account': 'Usuario o contraseña incorrectos.',
+    }
+
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Login JWT: devuelve {access} en el body y setea el refresh como cookie
     httpOnly + la cookie CSRF de doble-submit. Controla fuerza bruta por IP.
     """
+    serializer_class = SpanishTokenObtainPairSerializer
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
