@@ -215,6 +215,14 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
     vars['--sp-band-base1'] = band.base1
     vars['--sp-band-base2'] = band.base2
     vars['--sp-band-mark'] = band.mark
+    // Tinta de la banda (hero, cifras, CTA, barra superior): un solo token
+    // para todo el texto que va arriba del acento. Antes cada regla de
+    // store-page.css escribía #fff a mano y la piel no podía corregirlo; sin
+    // tema el token cae al mismo blanco de siempre (regresión cero).
+    const onBand = textOn(band.base1)
+    vars['--sp-on-band'] = onBand
+    vars['--sp-on-band-2'] = `color-mix(in srgb, ${onBand} 88%, transparent)`
+    vars['--sp-on-band-muted'] = `color-mix(in srgb, ${onBand} 78%, transparent)`
   }
   // El rol "Primario" manda en botones sólidos (el acento queda para
   // enlaces y detalles): si el tema lo fija, pisa el accent-ink de siempre.
