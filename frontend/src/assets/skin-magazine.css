@@ -1,0 +1,52 @@
+/* Skin 'magazine' — tapa de revista: titular XL, filetes finos, kickers en
+   versalitas y aire de pliego. La tipografía es la protagonista.
+   Solo tiendas con data-st-skin='magazine'. */
+.store-page[data-st-skin='magazine'] {
+  --sp-radius: 2px;
+  --sp-bg: #fbf9f6;
+  --sp-card: #ffffff;
+  --sp-card-solid: #ffffff;
+  --sp-surface: #f3efe8;
+  --sp-line: color-mix(in srgb, var(--sp-ink) 22%, transparent);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+}
+.store-page[data-st-skin='magazine'][data-store-theme='dark'] {
+  --sp-bg: #100f0d;
+  --sp-card: #191713;
+  --sp-card-solid: #191713;
+  --sp-surface: #14120f;
+  --sp-line: color-mix(in srgb, #f5efe2 22%, transparent);
+}
+.store-page[data-st-skin='magazine'] :is(.sp-card, .sp-service, .sp-testimonial) {
+  border-radius: 0;
+  box-shadow: none;
+  border-color: var(--sp-line);
+}
+.store-page[data-st-skin='magazine'] .sp-hero-title {
+  font-family: var(--sp-display);
+  font-weight: 900;
+  letter-spacing: -.045em;
+  line-height: .92;
+  text-wrap: balance;
+}
+.store-page[data-st-skin='magazine'] .sp-section-title {
+  font-family: var(--sp-display);
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+.store-page[data-st-skin='magazine'] .sp-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: .24em;
+  font-size: .72rem;
+  font-weight: 700;
+}
+.store-page[data-st-skin='magazine'] .sp-section-title::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin-top: 12px;
+  background: var(--store-accent, var(--sp-accent));
+}
+.store-page[data-st-skin='magazine'] .sp-btn { border-radius: 0; }

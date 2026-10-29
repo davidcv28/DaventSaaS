@@ -1,5 +1,5 @@
 #=========================================
-# SKINS — catálogo cerrado de 18 familias composibles (motor v4)
+# SKINS — catálogo cerrado de 26 familias composibles (motor v5)
 #=========================================
 #Datos puros (sin Django). Una piel NO es una plantilla: es un presupuesto
 #visual que el motor compone con el rubro y el tono. Cada familia declara
@@ -20,14 +20,45 @@
 #  gutter   sm|md|lg
 #  measure  narrow|normal|wide
 #  radiusScale none|sm|md|lg|xl
+#
+#ESTILO (v5): además de rubro y tono, cada familia declara `style` — la
+#familia de estilos del entrenamiento de diseño (STYLE_FAMILIES). Es lo que
+#ordena la selección: la semilla rota DENTRO del estilo afín (minimal con
+#minimal) en vez de caer en cualquier piel del catálogo, y así dos
+#propuestas del mismo estilo no salen con el mismo look.
 
 SKIN_FAMILIES   =   (
     'glass', 'editorial', 'brutal', 'soft', 'tech', 'warm', 'luxury',
     'kinetic', 'paper', 'neon', 'minimal', 'organic', 'retro', 'corporate',
     'playful', 'mono', 'gradient', 'cinematic',
+    #v5: familias que cubren los estilos de diseño (ver STYLE_FAMILIES).
+    'swiss', 'magazine', 'pop', 'aurora', 'craft', 'nostalgia', 'prestige', 'showcase',
 )
 
 SKIN_FAMILY_SET =   frozenset(SKIN_FAMILIES)
+
+#=========================================
+# ESTILOS DE DISEÑO (entrenamiento de "Diseñar con IA")
+#=========================================
+#8 familias con sus estilos. Un estilo NO es una piel: es el criterio con el
+#que el motor agrupa y ordena pieles (y en el que rota la semilla). Todas
+#las pieles del catálogo — viejas y nuevas — declaran el suyo, así ningún
+#estilo queda sin presupuesto visual y `catalog` cruza a todas las pieles
+#que resuelven bien una vitrina.
+STYLE_FAMILIES  =   (
+    'minimal', 'editorial', 'bold', 'tech', 'craft', 'retro', 'luxury', 'catalog',
+)
+
+STYLE_LABELS    =   {
+    'minimal':      'Minimalistas y limpios',
+    'editorial':    'Editoriales y de revista',
+    'bold':         'Atrevidos y expresivos',
+    'tech':         'Modernos y tecnológicos',
+    'craft':        'Cálidos y artesanales',
+    'retro':        'Retro y nostálgicos',
+    'luxury':       'Lujo y premium',
+    'catalog':      'Ideales para catálogos',
+}
 
 
 def _p(primary, secondary, accent, bg, surface, text, muted, border):
@@ -87,6 +118,7 @@ _FAMILIES   =   {
         'layout': {'density': 'spacious', 'grid': 'editorial', 'hero': 'editorial', 'gutter': 'lg', 'measure': 'narrow', 'radiusScale': 'none'},
         'rubros': ('arte', 'indumentaria', 'gastronomia', 'otro', 'comercio'),
         'tones': ('serio', 'calido'),
+        'style': 'editorial',
         'accents': ('#b45309', '#7c3aed', '#1f2937'),
     },
     'brutal': {
@@ -121,6 +153,7 @@ _FAMILIES   =   {
         'layout': {'density': 'spacious', 'grid': 'split', 'hero': 'centered', 'gutter': 'lg', 'measure': 'normal', 'radiusScale': 'xl'},
         'rubros': ('salud', 'belleza', 'mascotas', 'educacion'),
         'tones': ('calido', 'moderno'),
+        'style': 'minimal',
         'accents': ('#f472b6', '#fb7185', '#a78bfa'),
     },
     'tech': {
@@ -172,6 +205,7 @@ _FAMILIES   =   {
         'layout': {'density': 'spacious', 'grid': 'editorial', 'hero': 'cinema', 'gutter': 'lg', 'measure': 'narrow', 'radiusScale': 'none'},
         'rubros': ('belleza', 'indumentaria', 'gastronomia', 'arte'),
         'tones': ('serio', 'calido'),
+        'style': 'luxury',
         'accents': ('#b8912f', '#c8a24a', '#7c2d12'),
     },
     'kinetic': {
@@ -189,6 +223,7 @@ _FAMILIES   =   {
         'layout': {'density': 'compact', 'grid': 'bento', 'hero': 'cinema', 'gutter': 'sm', 'measure': 'wide', 'radiusScale': 'sm'},
         'rubros': ('tecnologia', 'comercio', 'turismo', 'educacion'),
         'tones': ('audaz', 'moderno'),
+        'style': 'tech',
         'accents': ('#2563eb', '#e11d48', '#7c3aed'),
     },
     'paper': {
@@ -206,6 +241,7 @@ _FAMILIES   =   {
         'layout': {'density': 'comfortable', 'grid': 'editorial', 'hero': 'editorial', 'gutter': 'md', 'measure': 'narrow', 'radiusScale': 'sm'},
         'rubros': ('educacion', 'gastronomia', 'arte', 'otro'),
         'tones': ('calido', 'serio'),
+        'style': 'craft',
         'accents': ('#a16207', '#0f766e', '#7c2d12'),
     },
     'neon': {
@@ -223,6 +259,7 @@ _FAMILIES   =   {
         'layout': {'density': 'compact', 'grid': 'bento', 'hero': 'cinema', 'gutter': 'sm', 'measure': 'normal', 'radiusScale': 'lg'},
         'rubros': ('comercio', 'tecnologia', 'arte', 'indumentaria'),
         'tones': ('audaz', 'moderno'),
+        'style': 'retro',
         'accents': ('#c026d3', '#a3e635', '#22d3ee'),
     },
     'minimal': {
@@ -240,6 +277,7 @@ _FAMILIES   =   {
         'layout': {'density': 'spacious', 'grid': '12', 'hero': 'centered', 'gutter': 'lg', 'measure': 'narrow', 'radiusScale': 'sm'},
         'rubros': ('servicios_profesionales', 'tecnologia', 'arte', 'salud'),
         'tones': ('serio', 'moderno'),
+        'style': 'minimal',
         'accents': ('#4b5563', '#111827', '#0f766e'),
     },
     'organic': {
@@ -257,6 +295,7 @@ _FAMILIES   =   {
         'layout': {'density': 'comfortable', 'grid': 'split', 'hero': 'split', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'xl'},
         'rubros': ('salud', 'gastronomia', 'mascotas', 'turismo'),
         'tones': ('calido', 'serio'),
+        'style': 'craft',
         'accents': ('#84cc16', '#0d9488', '#a16207'),
     },
     'retro': {
@@ -274,6 +313,7 @@ _FAMILIES   =   {
         'layout': {'density': 'comfortable', 'grid': 'bento', 'hero': 'centered', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'md'},
         'rubros': ('gastronomia', 'comercio', 'arte', 'mascotas'),
         'tones': ('calido', 'audaz'),
+        'style': 'retro',
         'accents': ('#f59e0b', '#c2410c', '#0f766e'),
     },
     'corporate': {
@@ -291,6 +331,7 @@ _FAMILIES   =   {
         'layout': {'density': 'comfortable', 'grid': '12', 'hero': 'split', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'md'},
         'rubros': ('servicios_profesionales', 'tecnologia', 'educacion', 'salud'),
         'tones': ('serio', 'moderno'),
+        'style': 'catalog',
         'accents': ('#3b82f6', '#1e40af', '#0f766e'),
     },
     'playful': {
@@ -308,6 +349,7 @@ _FAMILIES   =   {
         'layout': {'density': 'comfortable', 'grid': 'bento', 'hero': 'centered', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'xl'},
         'rubros': ('mascotas', 'educacion', 'comercio', 'gastronomia'),
         'tones': ('calido', 'audaz'),
+        'style': 'bold',
         'accents': ('#f59e0b', '#db2777', '#22c55e'),
     },
     'mono': {
@@ -325,6 +367,7 @@ _FAMILIES   =   {
         'layout': {'density': 'compact', 'grid': '12', 'hero': 'split', 'gutter': 'sm', 'measure': 'normal', 'radiusScale': 'none'},
         'rubros': ('tecnologia', 'arte', 'servicios_profesionales', 'indumentaria'),
         'tones': ('serio', 'audaz'),
+        'style': 'minimal',
         'accents': ('#525252', '#0a0a0a', '#404040'),
     },
     'gradient': {
@@ -342,6 +385,7 @@ _FAMILIES   =   {
         'layout': {'density': 'comfortable', 'grid': 'asym', 'hero': 'cinema', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'xl'},
         'rubros': ('belleza', 'tecnologia', 'indumentaria', 'turismo'),
         'tones': ('moderno', 'audaz'),
+        'style': 'tech',
         'accents': ('#ec4899', '#8b5cf6', '#22d3ee'),
     },
     'cinematic': {
@@ -359,7 +403,171 @@ _FAMILIES   =   {
         'layout': {'density': 'spacious', 'grid': 'editorial', 'hero': 'cinema', 'gutter': 'lg', 'measure': 'wide', 'radiusScale': 'sm'},
         'rubros': ('turismo', 'gastronomia', 'arte', 'belleza'),
         'tones': ('serio', 'calido'),
+        'style': 'luxury',
         'accents': ('#f59e0b', '#e11d48', '#0ea5e9'),
+    },
+    #=====================================
+    # v5 — ESTILOS DEL ENTRENAMIENTO
+    #=====================================
+    #Minimalismo suizo (International Style) + Swiss Grid: grilla estricta,
+    #sans geométrica, negro sobre blanco y un acento funcional.
+    'swiss': {
+        'label': 'Suizo',
+        'style': 'minimal',
+        'variants': (
+            {'name': 'grid', 'label': 'Suizo grilla'},
+            {'name': 'ink', 'label': 'Suizo negro', 'palette': _p('#ffffff', '#e5e7eb', '#f5f5f5', '#0a0a0a', '#141414', '#fafafa', '#b4b4b4', '#2e2e2e')},
+        ),
+        'palette': _p('#111111', '#3f3f46', '#dc2626', '#ffffff', '#ffffff', '#0a0a0a', '#565660', '#e4e4e7'),
+        'containers': {'radius': 'none', 'shadow': 'none', 'border': 'thin', 'density': 'compact', 'surface': 'outlined'},
+        'buttons': {'shape': 'square', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'},
+        'typography': {'pair': 'geometric', 'scale': 'balanced'},
+        'layout': {'density': 'compact', 'grid': '12', 'hero': 'split', 'gutter': 'lg', 'measure': 'narrow', 'radiusScale': 'none'},
+        'rubros': ('servicios_profesionales', 'tecnologia', 'construccion', 'educacion'),
+        'tones': ('serio', 'moderno'),
+        'accents': ('#dc2626', '#111111', '#1d4ed8'),
+    },
+    #Magazine Layout + Tipografía protagonista (Type-Driven): la tapa del
+    #negocio, titular XL y datos en bloques.
+    'magazine': {
+        'label': 'Revista',
+        'style': 'editorial',
+        'variants': (
+            {'name': 'cover', 'label': 'Revista tapa'},
+            {'name': 'type', 'label': 'Revista tipográfica', 'palette': _p('#111111', '#2b2b2b', '#c2410c', '#ffffff', '#ffffff', '#0a0a0a', '#57534e', '#e7e5e4')},
+        ),
+        'palette': _p('#1c1917', '#44403c', '#b45309', '#fbf9f6', '#ffffff', '#141414', '#5c5a55', '#e5e0d8'),
+        'containers': {'radius': 'none', 'shadow': 'none', 'border': 'thin', 'density': 'comfortable', 'surface': 'flat'},
+        'buttons': {'shape': 'square', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'},
+        'typography': {'pair': 'display-heavy', 'scale': 'editorial'},
+        'layout': {'density': 'comfortable', 'grid': 'editorial', 'hero': 'editorial', 'gutter': 'lg', 'measure': 'wide', 'radiusScale': 'none'},
+        'rubros': ('arte', 'indumentaria', 'gastronomia', 'comercio'),
+        'tones': ('audaz', 'moderno'),
+        'accents': ('#b45309', '#111111', '#7c3aed'),
+    },
+    #Neobrutalismo + Bold Pop + Cartel: bloques planos, borde grueso y un
+    #acento que no se puede ignorar.
+    'pop': {
+        'label': 'Pop',
+        'style': 'bold',
+        'variants': (
+            {'name': 'candy', 'label': 'Pop caramelo'},
+            {'name': 'poster', 'label': 'Pop afiche', 'palette': _p('#111111', '#000000', '#fb7185', '#fff7ed', '#ffffff', '#111111', '#4b5563', '#111111')},
+        ),
+        'palette': _p('#111111', '#000000', '#facc15', '#fef9c3', '#ffffff', '#111111', '#525252', '#111111'),
+        'containers': {'radius': 'none', 'shadow': 'deep', 'border': 'bold', 'density': 'compact', 'surface': 'flat'},
+        'buttons': {'shape': 'square', 'style': 'solid', 'size': 'lg'},
+        'background': {'type': 'pattern', 'overlay': 'none'},
+        'motion': {'reveal': 'stagger', 'hover': 'lift', 'intensity': 'bold'},
+        'typography': {'pair': 'display-heavy', 'scale': 'editorial'},
+        'layout': {'density': 'compact', 'grid': '12', 'hero': 'cinema', 'gutter': 'md', 'measure': 'wide', 'radiusScale': 'none'},
+        'rubros': ('comercio', 'indumentaria', 'gastronomia', 'educacion'),
+        'tones': ('audaz',),
+        'accents': ('#facc15', '#fb7185', '#3b82f6'),
+    },
+    #Futurismo SaaS + Dark Mode Tech + Gradientes Aurora: limpio, oscuro y
+    #técnico, con vidrio y luz en vez de ruido.
+    'aurora': {
+        'label': 'Aurora',
+        'style': 'tech',
+        'variants': (
+            {'name': 'dawn', 'label': 'Aurora amanecer'},
+            {'name': 'night', 'label': 'Aurora nocturna', 'palette': _p('#22d3ee', '#38bdf8', '#a78bfa', '#070b16', '#101828', '#f2f7ff', '#a3b1c9', '#1f2a3f')},
+        ),
+        'palette': _p('#4f46e5', '#4338ca', '#6366f1', '#f5f6ff', '#ffffff', '#0b1020', '#59637a', '#dfe3f5'),
+        'containers': {'radius': 'xl', 'shadow': 'deep', 'border': 'thin', 'density': 'comfortable', 'surface': 'glass'},
+        'buttons': {'shape': 'pill', 'style': 'gradient', 'size': 'md'},
+        'background': {'type': 'mesh', 'overlay': 'soft'},
+        'motion': {'reveal': 'rise', 'hover': 'glow', 'intensity': 'medium'},
+        'typography': {'pair': 'grotesk-clean', 'scale': 'balanced'},
+        'layout': {'density': 'comfortable', 'grid': 'split', 'hero': 'centered', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'xl'},
+        'rubros': ('tecnologia', 'servicios_profesionales', 'turismo', 'otro'),
+        'tones': ('moderno', 'serio'),
+        'accents': ('#6366f1', '#22d3ee', '#a78bfa'),
+    },
+    #Hecho a mano + Tierra y Papel (Kraft): cartón, sellos y tinta; el
+    #paquete artesanal del oficio.
+    'craft': {
+        'label': 'Artesanal',
+        'style': 'craft',
+        'variants': (
+            {'name': 'clay', 'label': 'Artesanal arcilla'},
+            {'name': 'kraft', 'label': 'Artesanal kraft', 'palette': _p('#44403c', '#292524', '#a16207', '#f2ebdf', '#fbf7ee', '#1c1917', '#5f594f', '#ddd2bf')},
+        ),
+        'palette': _p('#8a4b28', '#6f3a1d', '#b45309', '#fbf6ef', '#fffdf8', '#241d16', '#7a6a58', '#e9dcc9'),
+        'containers': {'radius': 'lg', 'shadow': 'none', 'border': 'thin', 'density': 'comfortable', 'surface': 'outlined'},
+        'buttons': {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'pattern', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+        'typography': {'pair': 'serif-book', 'scale': 'balanced'},
+        'layout': {'density': 'comfortable', 'grid': 'split', 'hero': 'split', 'gutter': 'lg', 'measure': 'normal', 'radiusScale': 'lg'},
+        'rubros': ('gastronomia', 'mascotas', 'belleza', 'comercio'),
+        'tones': ('calido',),
+        'accents': ('#b45309', '#8a4b28', '#0f766e'),
+    },
+    #Retro años 70 + Art Déco + Y2K: mostaza, cromo y geometría de época.
+    #Dos variantes para que el estilo sirva a una pizzería y a un estudio.
+    'nostalgia': {
+        'label': 'Nostalgia',
+        'style': 'retro',
+        'variants': (
+            {'name': 'sunset', 'label': 'Nostalgia atardecer'},
+            {'name': 'chrome', 'label': 'Nostalgia cromada', 'palette': _p('#0f766e', '#115e59', '#c0c8d4', '#0d1117', '#161c24', '#f1f5f9', '#a5b0c1', '#2b3441')},
+        ),
+        'palette': _p('#9a3412', '#7c2d12', '#d97706', '#fdf3e3', '#fffaf0', '#271c10', '#74624e', '#ebdcc2'),
+        'containers': {'radius': 'md', 'shadow': 'soft', 'border': 'thin', 'density': 'comfortable', 'surface': 'flat'},
+        'buttons': {'shape': 'pill', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'gradient', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'},
+        'typography': {'pair': 'retro-display', 'scale': 'editorial'},
+        'layout': {'density': 'comfortable', 'grid': 'asym', 'hero': 'centered', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'md'},
+        'rubros': ('gastronomia', 'comercio', 'arte', 'mascotas'),
+        'tones': ('calido', 'audaz'),
+        'accents': ('#d97706', '#9a3412', '#0f766e'),
+    },
+    #Monocromo Premium + Boutique Elegante + Galería de arte: aire extremo,
+    #serif y ningún adorno de más.
+    'prestige': {
+        'label': 'Prestigio',
+        'style': 'luxury',
+        'variants': (
+            {'name': 'ivory', 'label': 'Prestigio marfil'},
+            {'name': 'charcoal', 'label': 'Prestigio grafito', 'palette': _p('#e5e2da', '#cfcbc1', '#b8912f', '#0d0d0d', '#161616', '#f7f5f0', '#b0aaa0', '#2c2c2c')},
+        ),
+        'palette': _p('#141414', '#2f2f2f', '#a8842f', '#faf8f4', '#ffffff', '#111111', '#6b675f', '#e5e0d5'),
+        'containers': {'radius': 'none', 'shadow': 'none', 'border': 'thin', 'density': 'spacious', 'surface': 'flat'},
+        'buttons': {'shape': 'square', 'style': 'outline', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'},
+        'typography': {'pair': 'serif-luxe', 'scale': 'editorial'},
+        'layout': {'density': 'spacious', 'grid': 'editorial', 'hero': 'cinema', 'gutter': 'lg', 'measure': 'narrow', 'radiusScale': 'none'},
+        'rubros': ('arte', 'belleza', 'indumentaria', 'servicios_profesionales'),
+        'tones': ('serio', 'calido'),
+        'accents': ('#a8842f', '#141414', '#7c2d12'),
+    },
+    #Showroom visual + Colección por temporadas: la imagen manda y la
+    #cardiografía del catálogo se lee sola.
+    'showcase': {
+        'label': 'Showroom',
+        'style': 'catalog',
+        'variants': (
+            {'name': 'room', 'label': 'Showroom claro'},
+            {'name': 'gallery', 'label': 'Showroom galería', 'palette': _p('#1f2937', '#111827', '#78716c', '#fbfbfa', '#ffffff', '#0f172a', '#5f6672', '#e6e8ea')},
+        ),
+        'palette': _p('#334155', '#1e293b', '#0f766e', '#f8fafc', '#ffffff', '#0f172a', '#5b6678', '#e2e8f0'),
+        'containers': {'radius': 'sm', 'shadow': 'soft', 'border': 'thin', 'density': 'comfortable', 'surface': 'elevated'},
+        'buttons': {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+        'typography': {'pair': 'modern-sans', 'scale': 'balanced'},
+        'layout': {'density': 'comfortable', 'grid': 'bento', 'hero': 'cinema', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'sm'},
+        'rubros': ('comercio', 'indumentaria', 'tecnologia', 'arte'),
+        'tones': ('moderno', 'serio'),
+        'accents': ('#0f766e', '#334155', '#1d4ed8'),
     },
 }
 
@@ -389,6 +597,9 @@ def _build_skins():
                 'rubros'        :   tuple(data['rubros']),
                 'tones'         :   tuple(data['tones']),
                 'accents'       :   tuple(data['accents']),
+                #Estilo del entrenamiento de diseño: lo consume el motor, no
+                #viaja en site_theme (ahí `skin` es {id, family}).
+                'style'         :   data.get('style') or 'catalog',
             }
     return out
 

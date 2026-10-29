@@ -53,7 +53,7 @@ from StoreApp.domains.stores.services import allowed_templates_of
 from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services.ai_design import _contrast_ratio
 from StoreApp.domains.stores.services.ai_design_skins import (
-    SKIN_FAMILIES, SKIN_FAMILY_OF, SKIN_IDS, SKINS,
+    SKIN_FAMILIES, SKIN_FAMILY_OF, SKIN_IDS, SKINS, STYLE_FAMILIES,
 )
 from StoreApp.domains.stores.services.ai_design_typography import (
     FONT_FAMILIES, FONT_KINDS, FONT_SLUGS, TYPE_CASES, TYPE_LEADING,
@@ -86,11 +86,13 @@ AI_ONLY_BLOCKS      =   frozenset({
 NEW_AI_BLOCKS       =   ('aipricing', 'aiprocess', 'aimosaic')
 AI_BLOCK_STYLE_KEYS =   frozenset({'radius', 'shadow', 'border', 'density', 'surface', 'align', 'accent'})
 
-#Skin: catálogo cerrado de 18 familias (contrato 2 del enunciado).
+#Skin: catálogo cerrado de 26 familias (18 del contrato 2 del enunciado +
+#las 8 de los estilos de diseño de la v5).
 CONTRACT_SKIN_FAMILIES = (
     'glass', 'editorial', 'brutal', 'soft', 'tech', 'warm', 'luxury', 'kinetic',
     'paper', 'neon', 'minimal', 'organic', 'retro', 'corporate', 'playful',
     'mono', 'gradient', 'cinematic',
+    'swiss', 'magazine', 'pop', 'aurora', 'craft', 'nostalgia', 'prestige', 'showcase',
 )
 #Los 13 roles tipográficos del contrato v2.
 CONTRACT_ROLES      =   (
@@ -627,13 +629,26 @@ class RolesTipograficos(_AiDesignBase):
 # 5) LAYOUT Y SKINS (contrato 2 y 9 del enunciado)
 #=========================================
 class Layout(_AiDesignBase):
-    """18 familias de piel, 36 pieles, layout válido y contraste AA."""
+    """26 familias de piel, 52 pieles, layout válido y contraste AA."""
 
-    def test_the_skin_catalog_has_the_eighteen_families(self):
+    def test_the_skin_catalog_has_the_contract_families(self):
         self.assertEqual(tuple(SKIN_FAMILIES), CONTRACT_SKIN_FAMILIES)
-        self.assertEqual(len(SKIN_FAMILIES), 18)
-        self.assertEqual(len(SKIN_IDS), 36)
+        #v5: 18 del contrato original + las 8 de los estilos de diseño.
+        self.assertEqual(len(SKIN_FAMILIES), 26)
+        self.assertEqual(len(SKIN_IDS), 52)
         self.assertEqual(set(SKIN_FAMILY_OF), set(SKIN_IDS))
+
+    def test_every_style_of_the_training_has_skins(self):
+        """Los 8 estilos del entrenamiento (STYLE_FAMILIES) tienen pieles y
+        toda piel declara un estilo del catálogo."""
+        self.assertEqual(len(STYLE_FAMILIES), 8)
+        for skin_id, skin in SKINS.items():
+            self.assertIn(skin['style'], STYLE_FAMILIES, skin_id)
+        for style in STYLE_FAMILIES:
+            self.assertTrue(
+                any(skin['style'] == style for skin in SKINS.values()),
+                f'{style}: sin pieles',
+            )
 
     def test_every_skin_id_is_family_variant(self):
         for skin_id, skin in SKINS.items():

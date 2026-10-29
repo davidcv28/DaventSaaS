@@ -300,6 +300,12 @@ def _answers(store, customization, payload, stats):
     if not goals:
         goals   =   _guess_goals(customization, stats)
     must_have   =   [block for block in (payload.get('must_have') or []) if block in TEMPLATE_BLOCKS['landing']]
+    #Estilos pedidos (opcional): se priorizan, nunca se imponen — si el plan
+    #no permite la plantilla del estilo, el motor cae al siguiente.
+    styles      =   []
+    for style in (payload.get('styles') or []):
+        if style in SKIN.STYLE_FAMILIES and style not in styles:
+            styles.append(style)
     #Color de marca: un valor inválido se ignora (la IA elige), nunca 400.
     brand_color =   _norm_hex(payload.get('brand_color')) or ''
     night_raw   =   payload.get('night_mode') if isinstance(payload.get('night_mode'), dict) else {}
@@ -313,6 +319,7 @@ def _answers(store, customization, payload, stats):
         'tone'          :   tone,
         'goals'         :   goals,
         'must_have'     :   must_have,
+        'styles'        :   styles[:3],
         'audience'      :   str(payload.get('audience') or '').strip()[:120],
         'brand_color'   :   brand_color,
         'night_mode'    :   {
@@ -345,6 +352,10 @@ def _request_seed(payload):
 #=========================================
 # ELECCIÓN DE ESTILO (plantilla + piel + par tipográfico)
 #=========================================
+#Un par tipográfico con un font fuera del catálogo (un stack) no puede
+#viajar en typography.heading: se cae a Inter, que sí es un slug válido.
+_FALLBACK_FONT  =   'inter'
+
 #El motor v4 no puntúa plantillas sueltas: puntúa ESTILOS, la terna
 #(plantilla, piel, par tipográfico). Las plantillas compiten por afinidad
 #con rubro/tono/objetivo y por señales de datos — los ai_* ya NO tienen un
@@ -390,6 +401,51 @@ def _skin_pool(answers, seed):
     return pool[offset:] + pool[:offset]
 
 
+#=========================================
+# ESTILOS DE DISEÑO (motor v5)
+#=========================================
+#Cada piel declara un `style` (STYLE_FAMILIES). La selección ordena las
+#pieles afines por estilo y hace rotar la semilla DENTRO del estilo: la
+#propuesta base de un rubro cae en un estilo distinto con seed+1, y las
+#propuestas de una misma generación salen de estilos diferentes.
+def _style_pool(style, rubro, tone):
+    """Pieles de un estilo: match total, después rubro, después tono."""
+    skins   =   [skin for skin in SKIN.SKIN_IDS if SKIN.SKINS[skin]['style'] == style]
+    both    =   [skin for skin in skins if rubro in SKIN.SKINS[skin]['rubros'] and tone in SKIN.SKINS[skin]['tones']]
+    rest    =   [skin for skin in skins if skin not in both]
+    return both + rest
+
+
+def _style_order(answers, seed):
+    """
+    Estilos ordenados: primero los afines al rubro y al tono, después el
+    resto del entrenamiento, rotados por la semilla. Siempre devuelve los 8:
+    ningún estilo queda inalcanzable.
+    """
+    rubro   =   answers['rubro']
+    tone    =   answers['tone']
+    scores  =   {}
+    for style in (answers.get('styles') or []):
+        if style in SKIN.STYLE_FAMILIES:
+            scores[style]   =   scores.get(style, 0) + 12
+    for style in SKIN.STYLE_FAMILIES:
+        skins   =   [SKIN.SKINS[skin] for skin in SKIN.SKIN_IDS if SKIN.SKINS[skin]['style'] == style]
+        if any(rubro in skin['rubros'] for skin in skins):
+            scores[style]   =   scores.get(style, 0) + 6
+        if any(tone in skin['tones'] for skin in skins):
+            scores[style]   =   scores.get(style, 0) + 3
+    ordered =   sorted(SKIN.STYLE_FAMILIES, key = lambda style: (-scores.get(style, 0), SKIN.STYLE_FAMILIES.index(style)))
+    offset  =   seed % len(ordered)
+    #La semilla rota SOLO el bloque de estilos sin afinidad: el estilo del
+    #rubro no se pierde por regenerar, pero "otra propuesta" cambia de estilo.
+    head    =   ordered[:2]
+    tail    =   ordered[2:]
+    if tail:
+        cut     =   offset % len(tail)
+        tail    =   tail[cut:] + tail[:cut]
+    return head + tail
+
+
 def _style_candidates(facts, stats, answers, allowed, seed):
     """
     Candidatos de estilo ordenados de mejor a peor. Primero la matriz
@@ -403,17 +459,35 @@ def _style_candidates(facts, stats, answers, allowed, seed):
     density     =   sum(1 for key in ('products', 'images', 'gallery', 'testimonials', 'stats', 'team', 'timeline', 'benefits', 'faqs') if facts.get(key))
     skins       =   _skin_pool(answers, seed)
     pairs       =   list(TYPE.TYPE_PAIRS)
+    styles      =   _style_order(answers, seed)
+    #Estilos que el dueño pidió: se priorizan en el puntaje (nunca se imponen).
+    requested   =   set(answers.get('styles') or ())
+    chosen_styles = {style: set() for style in styles}
     seen        =   set()
+    #Plantillas ya tomadas por los bloques 1 y 2: la cobertura de estilos
+    #puede reusarlas (la diversidad la resuelve `_select_styles`).
+    reusing     =   set()
     candidates  =   []
 
-    def add(template, skin_id, pair, base):
-        if template not in allowed_set or (template, skin_id) in seen:
+    def add(template, skin_id, pair, base, strict = False):
+        """`strict` (cobertura de estilos) permite reusar una plantilla con
+        otra piel: la diversidad de plantilla se aplica en `_select_styles`,
+        que descarta las repetidas si hay de sobra."""
+        if template not in allowed_set:
+            return
+        if (template, skin_id) in seen or (not strict and template in reusing):
             return
         skin    =   SKIN.SKINS.get(skin_id)
         if skin is None or pair not in TYPE.TYPE_PAIRS:
             return
         seen.add((template, skin_id))
+        chosen_styles[skin['style']].add(pair)
+        reusing.add(template)
         score   =   base
+        #Estilo pedido: se prioriza de verdad (nunca por encima de una
+        #candidata imposible, porque `allowed` filtra antes). +70 lo pone por
+        #delante de cualquier afinidad perdida del rubro sin inventar peso.
+        score   +=  70 if skin['style'] in requested else 0
         score   +=  R.TEMPLATE_TONE_AFFINITY.get(template, {}).get(tone, 0) * 2
         score   +=  4 if template in R.TEMPLATE_GOAL_AFFINITY.get(goal, ()) else 0
         score   +=  3 if tone in skin['tones'] else 0
@@ -424,9 +498,16 @@ def _style_candidates(facts, stats, answers, allowed, seed):
             'template'  :   template,
             'skin'      :   skin_id,
             'pair'      :   pair,
+            'style'     :   skin['style'],
             'source'    :   R.style_source_of(template),
             'score'     :   score,
         })
+
+    def alt_pair(style, index):
+        """Par tipográfico alternativo DENTRO del estilo: si esa piel no
+        admite el de la matriz, se busca el del puerto."""
+        available   =   [pair_id for pair_id in TYPE.TYPE_PAIRS if pair_id not in chosen_styles[style]]
+        return available[index % len(available)] if available else None
 
     #1) matriz "firma" del rubro: piso de diversidad (plan + legacy + ai).
     for index, signature in enumerate(R.RUBRO_STYLES.get(answers['rubro'], ())):
@@ -434,16 +515,66 @@ def _style_candidates(facts, stats, answers, allowed, seed):
     #2) el resto de las plantillas permitidas, con piel rotada.
     order       =   list(R.RUBROS[answers['rubro']]['templates']) + list(R.AI_TEMPLATES) + list(R.LEGACY_TEMPLATES)
     order      +=  [template for template in allowed if template not in order]
+    #Cada plantilla entra UNA vez al bloque general: la rotación de piel ya se
+    #encarga de que la familia cambie con la semilla.
     for index, template in enumerate(order):
         if template in seen_templates(candidates):
             continue
         add(template, skins[(index * 3 + seed) % len(skins)], pairs[(index * 5 + seed) % len(pairs)], 8)
+    #3) cobertura de ESTILOS: cada estilo con pieles entra a competir, así una
+    #generación puede ofrecer "minimal" vs "editorial" vs "lujo" y no tres
+    #variantes del mismo aire. Base baja: solo gana si el puntaje lo acompaña
+    #(los estilos PEDIDOS por el dueño arrancan con la base de la matriz).
+    covered_templates   =   set()
+    for style_index, style in enumerate(styles):
+        pool    =   _style_pool(style, answers['rubro'], tone)
+        if not pool:
+            continue
+        #Cada estilo de la cobertura estrena plantilla propia: si dos estilos
+        #cayeran sobre la misma, `_select_styles` (que exige plantilla nueva)
+        #no podría mostrar dos estilos distintos en una generación.
+        used    =   False
+        for template_index, template in enumerate(order):
+            if template in covered_templates or template in reusing:
+                continue
+            pair    =   pairs[(style_index * 3 + template_index) % len(pairs)]
+            before  =   len(candidates)
+            base    =   40 if style in requested else 6
+            add(template, pool[(template_index + style_index + seed) % len(pool)], pair, base, strict = True)
+            if len(candidates) > before:
+                covered_templates.add(template)
+                used = True
+                break
+        if not used and pool:
+            #Ninguna plantilla libre para ese estilo: se clona la mejor
+            #candidata del estilo (o la primera) con OTRA plantilla del plan
+            #que todavía no compita. La plantilla importa: `_select_styles`
+            #nunca elige dos propuestas con la misma.
+            taken   =   seen_templates(candidates)
+            free    =   [template for template in order if template in allowed_set and template not in taken]
+            if not free:
+                continue
+            first   =   min((item for item in candidates if item['style'] == style),
+                            key = lambda item: item['score'], default = None)
+            if first is None:
+                first   =   candidates[0] if candidates else None
+            if first is None:
+                continue
+            candidates.append({**first,
+                               'template': free[(style_index + seed) % len(free)],
+                               'skin': pool[style_index % len(pool)],
+                               'style': style,
+                               'score': 34 if style in requested else 5})
     #Los mejores compiten; entre los tres estilos "firma" del rubro la
     #semilla decide el orden (así "otra propuesta" cambia de familia
     #visual, no de variante).
     candidates.sort(key = lambda item: (-item['score'], item['template'], item['skin']))
+    #La rotación de la semilla juega SOLO entre los estilos "firma" del
+    #rubro: los estilos que el dueño pidió quedan clavados al frente (si no,
+    #"otra propuesta" se los comía y el pedido no se notaba).
     head    =   min(3, len(candidates))
-    if head > 1:
+    locked  =   [index for index, item in enumerate(candidates[:head]) if item['style'] in requested]
+    if head > 1 and not locked:
         rotate      =   seed % head
         candidates  =   candidates[rotate:head] + candidates[:rotate] + candidates[head:]
     return candidates
@@ -456,39 +587,49 @@ def seen_templates(candidates):
 def _select_styles(candidates, count):
     """
     Diversidad OBLIGATORIA: dentro de una generación las propuestas
-    difieren en plantilla, piel y par tipográfico. Si el catálogo no
-    alcanza se relaja primero el par y después la piel (la plantilla nunca:
-    dos propuestas con la misma plantilla no son dos propuestas).
+    difieren en ESTILO, plantilla, piel y par tipográfico (v5). Se elige en
+    tres pases que van relajando en este orden: primero estilo (dos
+    sugerencias no son el mismo aire contado dos veces), después piel y
+    par, y al final solo la plantilla queda como condición — la plantilla
+    NUNCA se repite: dos propuestas con la misma plantilla no son dos.
     """
     chosen      =   []
     templates   =   set()
     skins       =   set()
     pairs       =   set()
-    for item in candidates:
-        if len(chosen) >= count:
-            break
-        if item['template'] in templates or item['skin'] in skins or item['pair'] in pairs:
-            continue
+    styles      =   set()
+
+    def take(item):
         chosen.append(item)
         templates.add(item['template'])
         skins.add(item['skin'])
         pairs.add(item['pair'])
+        styles.add(item['style'])
+
+    #1) ESTILO primero: la generación cubre estilos distintos (con 2
+    #propuestas = 2 estilos) aunque eso implique relajar piel o par. Es el
+    #invariante más visible del v5: dos sugerencias no pueden ser el mismo
+    #aire visual contado dos veces.
+    for item in candidates:
+        if len(chosen) >= count:
+            break
+        if item['template'] in templates or item['style'] in styles:
+            continue
+        take(item)
+    #2) Estricto: plantilla + piel + par nuevos (la calidad del resto).
+    for item in candidates:
+        if len(chosen) >= count:
+            break
+        if item in chosen or item['template'] in templates or item['skin'] in skins or item['pair'] in pairs:
+            continue
+        take(item)
+    #3) Relajado: solo exige plantilla nueva (la plantilla nunca se repite).
     for item in candidates:
         if len(chosen) >= count:
             break
         if item in chosen or item['template'] in templates:
             continue
-        chosen.append(item)
-        templates.add(item['template'])
-        skins.add(item['skin'])
-        pairs.add(item['pair'])
-    for item in candidates:
-        if len(chosen) >= count:
-            break
-        if item in chosen or item['template'] in templates:
-            continue
-        chosen.append(item)
-        templates.add(item['template'])
+        take(item)
     return chosen[:count]
 
 
@@ -627,6 +768,10 @@ def _layout(store, facts, answers, rng, shift, pattern = None):
 #El layout de la piel se traduce a variantes REALES del catálogo (nunca
 #CSS): es lo que hace que "rediseñar" cambie la estructura, no solo el
 #color. Los ids de variante existen en TEMPLATE_BLOCKS.
+#Familias cuya segunda variante es la versión nocturna (claro ↔ oscuro):
+#abren con el default oscuro y el interruptor de tema encendido.
+_TWO_FACE_FAMILIES  =   frozenset({'aurora', 'prestige'})
+_NIGHT_FAMILIES     =   frozenset({'glass', 'tech', 'neon', 'gradient', 'cinematic', 'aurora', 'prestige'})
 _HERO_BY_LAYOUT     =   {
     'centered': 'centered', 'split': 'split', 'cinema': 'cinema',
     'editorial': 'editorial', 'logo': 'logo',
@@ -855,8 +1000,11 @@ def _theme(skin, pair, answers, rng, shift, template = None):
     #pesos/tamaños. Nunca dos familias distintas para roles de cuerpo.
     roles       =   TYPE.roles_for(pair, answers['tone'], skin['family'])
     pair_data   =   TYPE.TYPE_PAIRS.get(pair) or TYPE.TYPE_PAIRS['grotesk-clean']
+    #El heading es un slug del catálogo STORE_FONTS (una familia con coma es
+    #un stack CSS: site_theme lo descarta y la tienda pierde la tipografía).
+    heading     =   pair_data['display'] if pair_data['display'] in TYPE.FONT_SLUGS else _FALLBACK_FONT
     theme['typography'] =   {
-        'heading'       :   pair_data['display'],
+        'heading'       :   heading,
         'body'          :   pair_data['body'],
         'scale'         :   skin['typography'].get('scale', 'balanced'),
         'weightHeading' :   roles['h1']['weight'],
@@ -893,12 +1041,21 @@ def _resolve_night(answers, theme, template):
     interruptor queda apagado y `theme` sigue el look (oscuro si el fondo
     de la paleta es oscuro). Devuelve (night_mode, theme, theme_toggle).
     """
-    look_default    =   'dark' if _luminance(theme['palette']['bg']) < 0.4 else 'light'
+    family          =   (theme.get('skin') or {}).get('family')
+    #Las pieles de nocturno (v5: aurora/prestige) y las oscuras de siempre
+    #abren con el interruptor arriba: la variante oscura queda a un clic.
+    look_default    =   'dark' if (_luminance(theme['palette']['bg']) < 0.4 or family in _NIGHT_FAMILIES) else 'light'
     raw             =   answers.get('night_mode') or {}
     default         =   raw.get('default') or look_default
-    if raw.get('enabled'):
+    if raw.get('enabled') or _needs_night_toggle(family):
         return {'enabled': True, 'default': default}, default, True
     return {'enabled': False, 'default': default}, look_default, False
+
+
+def _needs_night_toggle(family):
+    """Piel con dos caras (clara/oscura): sin interruptor la segunda sería
+    inalcanzable. Solo las familias nuevas lo fuerzan."""
+    return family in _TWO_FACE_FAMILIES
 
 
 def _cover_for(answers, facts):
@@ -933,6 +1090,16 @@ _SKIN_BLOCK_STYLES  =   {
     'gradient':     {'hero': {'surface': 'glass'}},
     'cinematic':    {'hero': {'align': 'center'}},
     'warm':         {'hero': {'radius': 'lg'}},
+    #v5: la firma de cada estilo nuevo en el hero (claves del catálogo de
+    #layout_blocks; una clave que no exista se descarta igual).
+    'swiss':        {'hero': {'radius': 'none', 'border': 'thin', 'align': 'left'}},
+    'magazine':     {'hero': {'align': 'left'}, 'aiquote': {'align': 'center'}},
+    'pop':          {'hero': {'radius': 'none', 'border': 'bold'}, 'cta': {'radius': 'none', 'border': 'bold'}},
+    'craft':        {'hero': {'radius': 'lg', 'surface': 'outlined'}},
+    'nostalgia':    {'hero': {'radius': 'md', 'border': 'thin'}},
+    'prestige':     {'hero': {'density': 'spacious', 'align': 'center'}, 'cta': {'border': 'thin'}},
+    'showcase':     {'hero': {'density': 'compact', 'align': 'center'}, 'gallery': {'density': 'compact'}},
+    'aurora':       {'hero': {'surface': 'glass'}, 'stats': {'surface': 'glass'}, 'aiband': {'accent': None}},
 }
 
 
@@ -1124,6 +1291,10 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'layout'        :   clean_theme.get('layout') or theme['layout'],
             'variety'       :   {
                 'family'        :   skin['family'],
+                #v5: el estilo de diseño (grupo del entrenamiento) que la
+                #propuesta representa; la UI lo muestra como etiqueta.
+                'style'         :   skin['style'],
+                'style_label'   :   SKIN.STYLE_LABELS.get(skin['style'], ''),
                 'differs_by'    :   ['template', 'skin', 'type-pair'],
             },
             'redesign'      :   {

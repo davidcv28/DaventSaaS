@@ -23,7 +23,7 @@ from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS, clean_layout_
 from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage, StudioVersion
 from StoreApp.domains.stores.site_theme import clean_site_theme
 from StoreApp.domains.stores.services import allowed_templates_of
-from StoreApp.domains.stores.services.ai_design_skins import SKINS, SKIN_IDS
+from StoreApp.domains.stores.services.ai_design_skins import SKINS, SKIN_IDS, STYLE_FAMILIES
 from StoreApp.domains.stores.services.ai_design_typography import (
     BODY_ROLES, FONT_SLUGS, TYPOGRAPHY_ROLES,
     TYPE_CASES, TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING,
@@ -750,11 +750,35 @@ class AiDesignV4Tests(AiDesignBase):
             self.assertGreaterEqual(_contrast(palette['muted'], palette['bg']), 4.5, skin_id)
 
     def test_skin_catalog_is_closed_and_composed(self):
-        self.assertEqual(len({skin['family'] for skin in SKINS.values()}), 18)
+        #26 familias desde la v5: las 18 del contrato + las 8 de los estilos.
+        self.assertEqual(len({skin['family'] for skin in SKINS.values()}), 26)
+        self.assertEqual(len({skin['style'] for skin in SKINS.values()}), 8, 'los 8 estilos deben tener pieles')
         for skin_id, skin in SKINS.items():
             self.assertTrue(skin_id.startswith(f"{skin['family']}-"), skin_id)
             self.assertIn(skin['layout']['grid'], ('12', 'asym', 'split', 'bento', 'editorial'))
             self.assertIn(skin['layout']['hero'], ('centered', 'split', 'cinema', 'logo', 'editorial'))
+
+    def test_proposals_declare_their_design_style(self):
+        """v5: cada propuesta declara el estilo del entrenamiento y la
+        generación ofrece estilos distintos (no tres variantes del mismo)."""
+        store, _        =   self._store(products = 8)
+        for rubro in ('comercio', 'belleza', 'tecnologia'):
+            proposals   =   self._generate(store, {'rubro': rubro})['proposals']
+            styles      =   [proposal['variety'].get('style') for proposal in proposals]
+            self.assertEqual(len(styles), len(set(styles)), f'{rubro}: estilos repetidos {styles}')
+            for proposal, style in zip(proposals, styles):
+                self.assertIn(style, STYLE_FAMILIES)
+                self.assertEqual(style, SKINS[proposal['skin']['id']]['style'])
+                self.assertTrue(proposal['variety'].get('style_label'))
+
+    def test_requested_styles_are_prioritized_but_never_imposed(self):
+        store, _        =   self._store(products = 8)
+        proposals       =   self._generate(store, {'rubro': 'comercio', 'styles': ['luxury']})['proposals']
+        styles          =   [proposal['variety']['style'] for proposal in proposals]
+        self.assertIn('luxury', styles)
+        #Un plan/plantilla que no permite un estilo nunca rompe la respuesta.
+        unknown =   self._generate(store, {'rubro': 'comercio', 'styles': ['inventado']})['proposals']
+        self.assertTrue(all(proposal['variety']['style'] in STYLE_FAMILIES for proposal in unknown))
 
     def test_site_theme_v2_accepts_roles_layout_and_skin(self):
         clean   =   clean_site_theme({

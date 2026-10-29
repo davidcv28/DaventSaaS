@@ -1557,12 +1557,12 @@ class SiteThemeTests(TestCase):
             self.assertEqual(response.status_code, 400, bad)
 
     def test_oversized_theme_rejected(self):
-        #Los bytes se cuentan sobre el JSON crudo (4 KB): un valor gigante
-        #no pasa aunque la clave sea válida.
+        #Los bytes se cuentan sobre el JSON crudo (SITE_THEME_MAX_BYTES, 12 KB
+        #desde la v2/v4): un valor gigante no pasa aunque la clave sea válida.
         client      =   self._client(has_design_advanced = True)
         response    =   self._patch(client, {'site_theme': {
             'containers': {'radius': 'pill'},
-            'palette': {'primary': '#112233', 'text': '#' + 'f' * 5000},
+            'palette': {'primary': '#112233', 'text': '#' + 'f' * 20000},
         }})
         self.assertEqual(response.status_code, 400)
         self.assertIn('grande', str(response.data['site_theme']))
