@@ -91,8 +91,8 @@ from .services.ai_design_typography import (    # noqa: E402
     TYPE_LEADING        as _TYPE_LEADING,
     TYPE_CASES          as _TYPE_CASE,
 )
-#El catálogo de pieles se resuelve por función: `ai_design` importa este
-#módulo, así que un import de módulo acá cerraría el ciclo.
+#El catálogo de pieles se resuelve por función; `ai_design_skins` es la
+#fuente única de ids, familias y presets del Studio.
 def _skin_ids():
     from .services.ai_design_skins import SKIN_IDS
     return SKIN_IDS
@@ -128,14 +128,9 @@ _BLOCK_STYLE_SPEC       =   {
 #(frontend/src/studio/presets/catalog.js). El id solo se guarda si la
 #plantilla del preset entra en el nivel del plan.
 #La tabla vive en el catálogo de pieles (fuente única compartida con el
-#motor de IA); acá solo se resuelve por función para no cerrar el ciclo.
-_STYLE_IDS      =   (
-    'editorial-minima', 'vidrio-nocturno', 'bento', 'neo-brutalista', 'lujo-serif',
-    'pastel-suave', 'neon-tech', 'terracota', 'monocromo', 'retail-vibrante',
-    'aurora-degradada', 'papel-riso', 'corporativo', 'gourmet-calido', 'belleza-rosa',
-    'kids-ludico', 'urbano-sticker', 'consola-retro', 'denim-urbano', 'atelier-moda',
-    'suizo-editorial', 'cobalto-nocturno',
-)
+#motor de IA): los ids válidos se derivan de ahí, nunca de una copia que
+#pueda quedar desactualizada cuando se suma un preset.
+_STYLE_IDS      =   tuple(_style_preset_templates())
 _STYLE_MODES            =   ('light', 'dark')
 _STYLE_PALETTES         =   ('original', 'warm', 'cool', 'contrast')
 _STYLE_FONT_KEYS        =   ('heading', 'body', 'muted', 'link')

@@ -283,8 +283,13 @@ def _calm_palette(palette):
     bg      =   palette['bg']
     text    =   _calm_text(palette.get('text') or _neutral_ink(bg), bg, 7.0)
     muted   =   _calm_text(palette.get('muted') or _mix(text, bg, 0.45), bg, 4.5)
-    border  =   _mix(text, bg, 0.82)
     surface =   _calm_surface(palette.get('surface'), bg, text)
+    #La superficie es parte del par de lectura: el brief A.3 exige AA sobre
+    #bg Y surface. Ajustar solo contra el fondo dejaba casos al borde (un
+    #muted #727272 sobre un card #f5f5f5 caía a 4.41).
+    text    =   _legible_on(text, (bg, surface), 7.0)
+    muted   =   _legible_on(muted, (bg, surface), 4.5)
+    border  =   _mix(text, bg, 0.82)
     return {**palette, 'text': text, 'muted': muted, 'border': border, 'surface': surface}
 
 

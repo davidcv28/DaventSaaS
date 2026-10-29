@@ -370,6 +370,55 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
             delta       =   abs(_aa(palette['surface'], palette['bg']) - 1) / span
             self.assertLessEqual(delta, 0.08, f'{skin_id}: superficie a >8 % del fondo')
 
+    def test_brand_color_palette_passes_aa_on_bg_and_surface(self):
+        """A.3/A.4: el acento del dueño no puede degradar los neutros.
+
+        Los pares de la paleta se verifican también sobre los cards: un muted
+        que solo se midió contra el fondo puede quedar al borde sobre la
+        superficie (era el caso de `brutal-concrete` con marca clara).
+        """
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+                     'goals': ['vender_online'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            for brand in ('#facc15', '#a7f3d0', '#ffffff', '#000000', '#ff4d00'):
+                answers['brand_color']  =   brand
+                theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), 0)
+                palette     =   theme['palette']
+                surface     =   palette['surface']
+                pairs       =   {
+                    'text/bg'       :   (palette['text'], palette['bg']),
+                    'muted/bg'      :   (palette['muted'], palette['bg']),
+                    'text/surface'  :   (palette['text'], surface),
+                    'muted/surface' :   (palette['muted'], surface),
+                    'accent/bg'     :   (palette['accent'], palette['bg']),
+                    'accent/surface':   (palette['accent'], surface),
+                    'white/band'    :   ('#ffffff', palette['secondary']),
+                }
+                for label, (fg, bg) in pairs.items():
+                    self.assertGreaterEqual(
+                        _aa(fg, bg), 4.5, f'{skin_id} {brand} {label}: {fg} sobre {bg}'
+                    )
+
+    def test_dark_set_is_not_the_light_one_inverted(self):
+        """A.1-5: en oscuro el fondo baja de 0.1 y la superficie se despega
+        hacia arriba (≥ 1.08×), no se hunde en el fondo."""
+        import random as _random
+        from StoreApp.domains.stores.services import ai_design as A
+        answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
+                     'goals': ['vender_online'], 'must_have': []}
+        for skin_id, skin in SKINS.items():
+            theme, _    =   A._theme(skin, 'grotesk-clean', answers, _random.Random(0), 0)
+            dark        =   theme['styleColors']['dark']['containers']
+            bg_lum      =   A._luminance(dark['bg'])
+            surface_lum =   A._luminance(dark['surface'])
+            self.assertLess(bg_lum, 0.1, f'{skin_id}: el modo oscuro no es oscuro')
+            self.assertGreaterEqual(
+                surface_lum, bg_lum * 1.08,
+                f'{skin_id}: la superficie oscura se hunde en el fondo',
+            )
+
     def test_emitted_themes_survive_the_sanitizer_for_every_skin(self):
         """El motor emite sets que ya pasan: `_v_style_set` no puede dar 400."""
         import random as _random
