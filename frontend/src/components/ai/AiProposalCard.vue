@@ -4,13 +4,13 @@ import AppIcon from '../AppIcon.vue'
 import AiLiveThumb from './AiLiveThumb.vue'
 import AiImageRequest from './AiImageRequest.vue'
 import AiDraftCopy from './AiDraftCopy.vue'
+import { storeFontFamily, ensureStoreFont } from '../../api/stores.api.js'
 
 const props = defineProps({
   proposal: { type: Object, required: true },
   form: { type: Object, default: () => ({}) },
   vars: { type: Object, default: () => ({}) },
   template: { type: String, default: 'classic' },
-  templateLabel: { type: String, default: '' },
   shopName: { type: String, default: '' },
   initial: { type: String, default: 'T' },
   logo: { type: String, default: '' },
@@ -42,6 +42,94 @@ const nightText = computed(() => {
     ? 'Con modo noche, arranca en oscuro'
     : 'Con modo noche, arranca en claro'
 })
+
+// ---- Firma visual: familia del estilo + tipografía real por rol ----
+// Nada de nombres técnicos: el backend manda la etiqueta humana del estilo y
+// acá traducimos la familia a un nombre en castellano. El punto de color es
+// el de la familia, no el acento: así dos propuestas se distinguen de un
+// vistazo aunque compartan paleta.
+const FAMILY_LABELS = {
+  glass: 'Cristal', editorial: 'Editorial', brutal: 'Brutal', tech: 'Tecnología',
+  warm: 'Cálida', luxury: 'Lujo', kinetic: 'Cinética', paper: 'Papel', neon: 'Neón',
+  minimal: 'Minimal', organic: 'Orgánica', retro: 'Retro', corporate: 'Corporativa',
+  playful: 'Lúdica', mono: 'Monocromo', gradient: 'Degradé', cinematic: 'Cinemática'
+}
+const FAMILY_COLORS = {
+  glass: '#38bdf8', editorial: '#334155', brutal: '#111827', tech: '#0ea5e9',
+  warm: '#f97316', luxury: '#a16207', kinetic: '#ec4899', paper: '#c9b892', neon: '#84cc16',
+  minimal: '#64748b', organic: '#16a34a', retro: '#e11d48', corporate: '#1d4ed8',
+  playful: '#f59e0b', mono: '#475569', gradient: '#8b5cf6', cinematic: '#0f766e'
+}
+// Tamaño relativo de cada rol (los tokens son xs..display; acá se achican
+// para que los tres "Aa" entren en una tira sin dominar la tarjeta).
+const ROLE_SIZE = { xs: 10, sm: 11, md: 12, lg: 14, xl: 16, '2xl': 19, '3xl': 21, display: 24 }
+const ROLE_TRACKING = { tighter: '-.03em', tight: '-.015em', normal: '0', wide: '.03em', wider: '.07em' }
+const ROLE_LEADING = { tight: 1.05, snug: 1.15, normal: 1.3, relaxed: 1.45 }
+const ROLE_SAMPLES = [
+  { role: 'display', label: 'Título' },
+  { role: 'body', label: 'Texto' },
+  { role: 'price', label: 'Precio' }
+]
+
+// El contrato v4 manda `skin` arriba; si viene solo dentro del tema se lee
+// de ahí (así la tarjeta no depende de un único lugar).
+const skin = computed(() => {
+  const direct = props.proposal.skin
+  if (direct && typeof direct === 'object' && Object.keys(direct).length) return direct
+  const themed = props.proposal.site_theme?.skin
+  return themed && typeof themed === 'object' ? themed : {}
+})
+const family = computed(() => skin.value.family || props.proposal.variety?.family || '')
+const familyLabel = computed(() => FAMILY_LABELS[family.value] || '')
+const skinLabel = computed(() => String(skin.value.label || '').trim())
+const skinDot = computed(() => {
+  const accent = props.proposal.theme_choice?.accent
+  return FAMILY_COLORS[family.value] || (/^#[0-9a-f]{6}$/i.test(String(accent || '')) ? accent : 'var(--aid-accent)')
+})
+const roles = computed(() => {
+  const direct = props.proposal.typography_roles
+  if (direct && typeof direct === 'object' && Object.keys(direct).length) return direct
+  return props.proposal.site_theme?.typography?.roles || {}
+})
+
+function fontStack(slug) {
+  const s = String(slug || '').trim()
+  if (!s) return ''
+  if (s.includes(',') || s.includes("'") || s.includes('"')) return s
+  return storeFontFamily(s)
+}
+function roleStyle(role) {
+  const def = roles.value?.[role] || {}
+  const fallbackFont = role === 'display'
+    ? props.proposal.site_theme?.typography?.heading
+    : props.proposal.site_theme?.typography?.body
+  return {
+    fontFamily: fontStack(def.font || fallbackFont),
+    fontSize: `${ROLE_SIZE[def.size] || (role === 'display' ? 24 : 12)}px`,
+    fontWeight: String(def.weight || (role === 'display' ? 700 : 500)),
+    letterSpacing: ROLE_TRACKING[def.tracking] || '0',
+    lineHeight: String(ROLE_LEADING[def.leading] || 1.2),
+    textTransform: def.case === 'upper' ? 'uppercase' : 'none'
+  }
+}
+const roleSamples = computed(() => ROLE_SAMPLES.map((r) => ({ ...r, style: roleStyle(r.role) })))
+const roleText = computed(() => {
+  const names = ROLE_SAMPLES.map((r) => {
+    const def = roles.value?.[r.role] || {}
+    const label = def.font ? (storeFontFamily(def.font) || '').split(',')[0].replace(/['"]/g, '') : ''
+    return label ? `${label} para ${r.label.toLowerCase()}` : ''
+  }).filter(Boolean)
+  return names.length ? `Tipografía: ${names.join(', ')}.` : ''
+})
+const hasSignature = computed(() => Boolean(skinLabel.value || familyLabel.value || roleText.value))
+
+// Las fuentes de la tira se piden a Google Fonts la primera vez (una sola
+// vez por familia, en todo el panel).
+watch(
+  () => ROLE_SAMPLES.map((r) => roles.value?.[r.role]?.font || '').join('|'),
+  (key) => key.split('|').filter(Boolean).forEach((slug) => ensureStoreFont(slug)),
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -54,8 +142,24 @@ const nightText = computed(() => {
       <span v-if="published" class="aidp-badge published">
         <AppIcon name="circle-check" :size="12" /> Publicada
       </span>
-      <span v-else-if="templateLabel" class="aidp-badge">{{ templateLabel }}</span>
     </header>
+
+    <div v-if="hasSignature" class="aidp-sig">
+      <div class="aidp-sig-chips">
+        <span v-if="skinLabel" class="aidp-chip aidp-chip-skin">
+          <span class="aidp-dot" :style="{ background: skinDot }" aria-hidden="true"></span>
+          {{ skinLabel }}
+        </span>
+        <span v-if="familyLabel" class="aidp-chip aidp-chip-family">{{ familyLabel }}</span>
+      </div>
+      <div v-if="roleText" class="aidp-type" aria-hidden="true">
+        <span v-for="s in roleSamples" :key="s.role" class="aidp-type-item">
+          <span class="aidp-type-aa" :style="s.style">Aa</span>
+          <span class="aidp-type-label">{{ s.label }}</span>
+        </span>
+      </div>
+      <span v-if="roleText" class="sr-only">{{ roleText }}</span>
+    </div>
 
     <div class="aidp-media">
       <div class="aid-mini">

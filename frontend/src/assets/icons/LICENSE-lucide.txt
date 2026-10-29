@@ -1,9 +1,14 @@
 Lucide Icons
 ============
 
-The SVG files in this directory are unmodified copies of icons from the
-Lucide icon set, bundled locally (no CDN) so the AI design blocks can use them.
+The SVG files in this directory are copies of icons from the Lucide icon set,
+bundled locally (no CDN) so the AI design blocks can use them.
 
+Icons:      assets/icons/lucide/*.svg — 132 glyphs, the AI_ICONS contract
+            (from `coffee` … `terminal`, ver frontend/src/utils/aiIcons.js)
+Source:     lucide-static v1.63.0 (unpkg.com/lucide-static/icons)
+Note:       `parking.svg` = lucide `square-parking`, `tree.svg` = lucide
+            `tree-pine` (aliased to the contract names); path data unchanged.
 Repository: https://github.com/lucide-icons/lucide
 License:    ISC (reproduced in full below)
 

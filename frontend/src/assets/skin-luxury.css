@@ -1,0 +1,31 @@
+/* Skin 'luxury' — superficie profunda, filo dorado y serif espaciado.
+   Solo tiendas con data-st-skin='luxury'. */
+.store-page[data-st-skin='luxury'] {
+  --sp-radius: 2px;
+  --sp-card: #14100c;
+  --sp-card-solid: #14100c;
+  --sp-surface: #1b1611;
+  --sp-line: color-mix(in srgb, #c9a227 32%, #3a3226);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: 0 24px 60px -34px rgba(0, 0, 0, .55);
+}
+.store-page[data-st-skin='luxury'][data-store-theme='light'] {
+  --sp-card: #fffdf8;
+  --sp-card-solid: #fffdf8;
+  --sp-surface: #f6f1e6;
+  --sp-line: color-mix(in srgb, #c9a227 38%, #ddd2ba);
+}
+.store-page[data-st-skin='luxury'] .sp-card,
+.store-page[data-st-skin='luxury'] .sp-aigrid-card,
+.store-page[data-st-skin='luxury'] .sp-aipricing-card,
+.store-page[data-st-skin='luxury'] .sp-aiprocess-step {
+  border-radius: 2px;
+  border-color: var(--sp-line);
+  box-shadow: var(--sp-shadow-md);
+}
+.store-page[data-st-skin='luxury'] .sp-hero-title,
+.store-page[data-st-skin='luxury'] .sp-section-title { font-family: var(--sp-display); font-weight: 400; letter-spacing: .01em; }
+.store-page[data-st-skin='luxury'] .sp-eyebrow,
+.store-page[data-st-skin='luxury'] .sp-foot-heading { letter-spacing: .28em; color: color-mix(in srgb, #c9a227 72%, var(--sp-ink)); }
+.store-page[data-st-skin='luxury'] .sp-btn { border-radius: 2px; border: 1px solid color-mix(in srgb, #c9a227 55%, transparent); letter-spacing: .1em; text-transform: uppercase; font-size: 12px; }
+.store-page[data-st-skin='luxury'] .sp-section-title::after { width: 46px; height: 1px; background: color-mix(in srgb, #c9a227 80%, transparent); }

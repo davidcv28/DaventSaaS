@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import { PROCEDURAL_SLUG_RE, proceduralIconBody } from '../utils/proceduralIcon.js'
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -170,8 +171,14 @@ const LUCIDE = Object.fromEntries(
 )
 
 const isLucide = computed(() => props.name.startsWith('lucide:'))
-const isBrand = computed(() => !isLucide.value && props.name in BRAND_ICONS)
+// Glifo procedural determinístico (contrato `gen:<slug>` del diseño con IA).
+const isGen = computed(() => {
+  const raw = props.name.toLowerCase()
+  return raw.startsWith('gen:') && PROCEDURAL_SLUG_RE.test(raw.slice(4))
+})
+const isBrand = computed(() => !isLucide.value && !isGen.value && props.name in BRAND_ICONS)
 const html = computed(() => {
+  if (isGen.value) return proceduralIconBody(props.name.toLowerCase().slice('gen:'.length))
   if (isLucide.value) {
     const key = props.name.slice('lucide:'.length)
     return LUCIDE[key] || LUCIDE.sparkles || ICONS.sparkles || ''

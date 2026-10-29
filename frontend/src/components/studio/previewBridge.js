@@ -49,6 +49,117 @@ function backgroundStack(t, all) {
   return layers.join(', ')
 }
 
+// ---------------------------------------------------------------------------
+// Contrato v4: typography.roles + layout + skin.
+// resolveSiteTheme() sanea solo los campos v1/v2/v3, así que roles/layout/skin
+// se leen del theme PARCIAL (el que llega del backend) y se traducen acá.
+// Todo sale por variables CSS y atributos data-st-*: la hoja pública consume
+// tokens, nunca CSS arbitrario.
+// ---------------------------------------------------------------------------
+export const ROLE_KEYS = [
+  'display', 'h1', 'h2', 'h3', 'body', 'lead', 'eyebrow', 'label',
+  'quote', 'price', 'nav', 'button', 'footer'
+]
+
+export const SKIN_FAMILIES = [
+  'glass', 'editorial', 'brutal', 'soft', 'tech', 'warm', 'luxury', 'kinetic',
+  'paper', 'neon', 'minimal', 'organic', 'retro', 'corporate', 'playful',
+  'mono', 'gradient', 'cinematic'
+]
+
+const ROLE_SIZES = {
+  xs: '0.75rem', sm: '0.875rem', md: '1rem', lg: '1.25rem',
+  xl: '1.5rem', '2xl': '2rem', '3xl': '2.75rem',
+  display: 'clamp(2.5rem, 6vw, 4.5rem)'
+}
+const ROLE_TRACKING = { tighter: '-0.03em', tight: '-0.015em', normal: '0', wide: '0.04em', wider: '0.09em' }
+const ROLE_LEADING = { tight: '1.08', snug: '1.25', normal: '1.55', relaxed: '1.75' }
+const ROLE_CASE = { none: 'none', upper: 'uppercase' }
+
+// roles -> --st-f-<rol>-{family,size,weight,tracking,leading,case}
+// Devuelve además la lista de roles realmente definidos: la hoja pública
+// gatea cada regla con [data-st-roles~='<rol>'], así un rol ausente deja
+// intacto el look de la plantilla (tienda vieja = idéntica a hoy).
+export function roleVars(theme) {
+  const roles = theme?.typography?.roles
+  const vars = {}
+  const defined = []
+  if (!roles || typeof roles !== 'object') return { vars, roles: defined }
+  for (const key of ROLE_KEYS) {
+    const r = roles[key]
+    if (!r || typeof r !== 'object') continue
+    const family = r.font ? fontFamilyOf(r.font) : ''
+    const size = ROLE_SIZES[r.size]
+    const weight = Number(r.weight)
+    const tracking = ROLE_TRACKING[r.tracking]
+    const leading = ROLE_LEADING[r.leading]
+    const textCase = ROLE_CASE[r.case]
+    if (!family && !size && !Number.isFinite(weight) && !tracking && !leading && !textCase) continue
+    defined.push(key)
+    if (family) vars[`--st-f-${key}-family`] = family
+    if (size) vars[`--st-f-${key}-size`] = size
+    if (Number.isFinite(weight) && weight >= 300 && weight <= 900) {
+      vars[`--st-f-${key}-weight`] = String(Math.round(weight / 100) * 100)
+    }
+    if (tracking) vars[`--st-f-${key}-tracking`] = tracking
+    if (leading) vars[`--st-f-${key}-leading`] = leading
+    if (textCase) vars[`--st-f-${key}-case`] = textCase
+  }
+  return { vars, roles: defined }
+}
+
+const LAYOUT_DENSITY = { compact: '1', comfortable: '1.35', spacious: '1.8' }
+const LAYOUT_GUTTER = {
+  sm: 'clamp(12px, 3vw, 20px)',
+  md: 'clamp(16px, 5vw, 40px)',
+  lg: 'clamp(24px, 7vw, 64px)'
+}
+const LAYOUT_MEASURE = { narrow: '52ch', normal: '66ch', wide: '80ch' }
+const LAYOUT_RADIUS = { none: '0px', sm: '8px', md: '16px', lg: '24px', xl: '34px' }
+const LAYOUT_GRID = ['12', 'asym', 'split', 'bento', 'editorial']
+const LAYOUT_HERO = ['centered', 'split', 'cinema', 'logo', 'editorial']
+
+// layout -> --st-l-* (tokens) + data-st-l-* (variantes discretas).
+export function layoutVars(theme) {
+  const lay = theme?.layout
+  const vars = {}
+  const attrs = {}
+  if (!lay || typeof lay !== 'object') return { vars, attrs }
+  if (LAYOUT_DENSITY[lay.density]) {
+    vars['--st-l-density'] = LAYOUT_DENSITY[lay.density]
+    attrs['data-st-l-density'] = lay.density
+  }
+  if (LAYOUT_GUTTER[lay.gutter]) {
+    vars['--st-l-gutter'] = LAYOUT_GUTTER[lay.gutter]
+    attrs['data-st-l-gutter'] = lay.gutter
+  }
+  if (LAYOUT_MEASURE[lay.measure]) {
+    vars['--st-l-measure'] = LAYOUT_MEASURE[lay.measure]
+    attrs['data-st-l-measure'] = lay.measure
+  }
+  if (LAYOUT_RADIUS[lay.radiusScale]) {
+    vars['--st-l-radius'] = LAYOUT_RADIUS[lay.radiusScale]
+    attrs['data-st-l-radius'] = lay.radiusScale
+  }
+  if (LAYOUT_GRID.includes(lay.grid)) {
+    vars['--st-l-grid'] = lay.grid
+    attrs['data-st-l-grid'] = lay.grid
+  }
+  if (LAYOUT_HERO.includes(lay.hero)) {
+    vars['--st-l-hero'] = lay.hero
+    attrs['data-st-l-hero'] = lay.hero
+  }
+  return { vars, attrs }
+}
+
+// skin del contrato: {id, family}. La familia manda (hoja skin-<family>.css).
+export function skinOf(theme) {
+  const skin = theme?.skin
+  if (!skin || typeof skin !== 'object') return ''
+  const family = String(skin.family || skin.id || '').trim().toLowerCase()
+  return SKIN_FAMILIES.includes(family) ? family : ''
+}
+
 // theme resuelto -> {vars} para :style de .store-page.
 //  - `--st-*`: el contrato completo (o solo los campos de `explicit`).
 //  - `--store-accent*`/`--store-font`: espejo de los campos que ya persiste
@@ -77,6 +188,10 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
   const all = themeToCssVars(t, fontFamilyOf, pageTheme)
   const vars = pickThemeVars(all, keys)
   const p = t.palette
+  // v4: roles tipográficos + layout. Salen siempre que el tema parcial los
+  // defina (themeExplicitKeys no conoce estas secciones; el gate es la
+  // presencia del dato). Sin roles/layout el objeto no cambia.
+  Object.assign(vars, roleVars(theme).vars, layoutVars(theme).vars)
 
   if (on('palette.accent') || on('palette.primary')) {
     const accent = on('palette.accent') ? p.accent : p.primary
@@ -174,7 +289,15 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
 
 // Atributos data-st-* del contrato (variantes discretas) para .store-page.
 export function studioPreviewAttrs(theme, explicit = null, mode = 'light') {
-  return { ...themeDataAttrs(theme, explicit, mode), 'data-st-themed': '' }
+  const attrs = { ...themeDataAttrs(theme, explicit, mode), 'data-st-themed': '' }
+  // v4: roles definidos (lista separada por espacios), layout y skin. La
+  // hoja pública gatea cada regla con estos atributos: sin ellos, nada cambia.
+  const roles = roleVars(theme).roles
+  if (roles.length) attrs['data-st-roles'] = roles.join(' ')
+  Object.assign(attrs, layoutVars(theme).attrs)
+  const skin = skinOf(theme)
+  if (skin) attrs['data-st-skin'] = skin
+  return attrs
 }
 
 // ---------------------------------------------------------------------------

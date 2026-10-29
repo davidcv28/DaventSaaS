@@ -79,6 +79,30 @@
 /* ---- Campos del paso "Tu marca" ---- */
 .aid-field { display: grid; gap: 8px; min-width: 0; }
 .aid-field-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); }
+.aid-optional {
+  margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: var(--sunk); border: 1px solid var(--line);
+  color: var(--muted); font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+}
+
+/* "¿Qué te importa más?" — chips de matiz (opcional, hasta dos). */
+.aid-hints-note { margin: -2px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.aid-hints { display: flex; flex-wrap: wrap; gap: 6px; }
+.aid-hint-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 6px 12px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); color: var(--ink-2);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+.aid-hint-chip .icon { color: var(--muted); flex: none; }
+.aid-hint-chip:hover { border-color: var(--aid-accent-line); color: var(--ink); }
+.aid-hint-chip.on {
+  background: var(--aid-accent-soft); border-color: var(--aid-accent-line); color: var(--ink);
+}
+.aid-hint-chip.on .icon { color: var(--aid-accent); }
+.aid-hint-chip:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 
 .aid-switch {
   display: flex; align-items: center; gap: 10px;
@@ -480,6 +504,49 @@
 .aidp-actions .btn { flex: 1 1 140px; min-height: 44px; }
 .aidp-applied { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--aid-accent); font-size: 12px; font-weight: 600; }
 
+/* Firma visual de la propuesta: familia del estilo + tipografía por rol.
+   Es lo que hace que tres propuestas se lean distintas sin abrir el modal. */
+.aidp-sig {
+  display: grid; gap: 8px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--sunk);
+}
+.aidp-sig-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.aidp-chip-skin { background: var(--card); }
+.aidp-chip-family {
+  background: var(--aid-accent-soft); border-color: var(--aid-accent-line);
+  color: var(--aid-accent); letter-spacing: .01em;
+}
+.aidp-type {
+  display: flex; align-items: flex-end; gap: 14px; min-width: 0;
+  padding-top: 6px; border-top: 1px solid var(--line);
+}
+.aidp-type-item {
+  display: grid; gap: 2px; justify-items: start; min-width: 0;
+  color: var(--ink); line-height: 1;
+}
+.aidp-type-aa { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; }
+.aidp-type-label {
+  color: var(--muted); font-size: 9.5px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; font-family: inherit;
+}
+
+/* Aviso de variedad y nota de "seguís con lo publicado". */
+.aid-variety {
+  display: inline-flex; align-items: center; gap: 7px; margin: 0;
+  color: var(--ink-2); font-size: 13px; font-weight: 600;
+}
+.aid-variety .icon { color: var(--aid-accent); flex: none; }
+.aid-keep-note {
+  display: inline-flex; align-items: center; gap: 7px; margin: 0;
+  padding: 8px 12px; border-radius: 999px;
+  border: 1px solid rgba(22, 163, 74, .3); background: rgba(22, 163, 74, .1);
+  color: var(--ink-2); font-size: 12.5px;
+}
+.aid-keep-note strong { color: var(--ink); }
+.aid-keep-note .icon { color: #16a34a; flex: none; }
+[data-theme='dark'] .aid-keep-note { border-color: rgba(134, 239, 172, .3); background: rgba(22, 163, 74, .16); }
+
+
 /* ---- Pedido de fotos (AiImageRequest) ---- */
 .aiir {
   display: grid; gap: 10px; padding: 14px; min-width: 0;
@@ -649,6 +716,8 @@
   .aid-published-actions, .aid-actions { width: 100%; }
   .aid-published-actions .btn, .aid-actions .btn, .aidp-actions .btn, .aidp-published-actions .btn { flex: 1 1 100%; }
   .ais-list { max-height: 52vh; }
+  .aidp-type { gap: 10px; }
+  .aid-hint-chip { flex: 1 1 calc(50% - 6px); justify-content: center; }
   .aid-modal { padding: 0; }
   .aidv-box { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; padding: 10px; }
   .aidv-device::after { display: none; }
@@ -660,7 +729,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ais-trigger, .ais-caret, .ais-opt, .aid-progress-dot, .aidp, .aiir-drop,
-  .aicf-card, .aicv-card, .aicf-swatch, .ainm-start-opt, .aidv-seg-btn, .aidp-media-hint { transition: none; }
+  .aicf-card, .aicv-card, .aicf-swatch, .ainm-start-opt, .aidv-seg-btn, .aidp-media-hint,
+  .aid-hint-chip { transition: none; }
   .aiir-progress span { transition: none; }
   .aid-skel::after { animation: none; display: none; }
   .aid-modal { animation: none; }

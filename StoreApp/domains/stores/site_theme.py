@@ -11,8 +11,14 @@ defaults para el render: una tienda sin site_theme se ve idéntica a hoy).
 
 Reglas:
 - Secciones permitidas: palette, containers, typography, buttons,
-  background, motion, mobile, blocks — cualquier otra clave de primer nivel o de
-  sección se rechaza (nada de HTML/CSS libre).
+  background, motion, mobile, blocks, layout, skin — cualquier otra clave de
+  primer nivel o de sección se rechaza (nada de HTML/CSS libre).
+- v2 del tema (motor "Diseñar con IA" 4): typography.roles (13 roles
+  cerrados con font/size/weight/tracking/leading/case), layout (density,
+  grid, hero, gutter, measure, radiusScale) y skin {id, family} del
+  catálogo de 18 familias. `skin` fuera del catálogo se DESCARTA en
+  silencio (igual que los bloques desconocidos); un rol/enum/peso
+  inválido es 400.
 - palette: hex #RGB/#RRGGBB, se normaliza a #rrggbb minúsculas.
 - enums: coincidencia exacta del catálogo; numéricos con rango;
   booleans estrictos.
@@ -39,7 +45,8 @@ guardado, así los valores premium almacenados sobreviven una baja de plan
 (reaparecen al volver).
 
 """
-SITE_THEME_MAX_BYTES    =   6144    #+2 KB por la sección `blocks` (12 bloques x 7 claves)
+SITE_THEME_MAX_BYTES    =   12288   #+2 KB por `blocks` (12 bloques) y +6 KB por la v2:
+                                    #typography.roles (13 roles x 6 claves), layout (6 claves) y skin
 _BG_VALUE_MAX           =   600
 _FONT_MAX               =   120
 _TRACKING_MAX           =   16
@@ -67,6 +74,28 @@ _NAV            =   ('top', 'bottom', 'drawer')
 _CARD_STYLE     =   ('standard', 'compact', 'overlay')
 _HERO_HEIGHT    =   ('compact', 'tall')
 _BLOCK_ALIGN    =   ('left', 'center', 'right')
+#v2 del tema: layout cerrado (mismas claves/enums que el contrato del
+#frontend) y catálogo de pieles. `_DENSITY` se comparte con containers.
+_GRID           =   ('12', 'asym', 'split', 'bento', 'editorial')
+_HERO_LAYOUT    =   ('centered', 'split', 'cinema', 'logo', 'editorial')
+_GUTTER         =   ('sm', 'md', 'lg')
+_MEASURE        =   ('narrow', 'normal', 'wide')
+_RADIUS_SCALE   =   ('none', 'sm', 'md', 'lg', 'xl')
+#Espejo de ai_design_typography (catálogo cerrado de 13 roles y 24
+#familias). Se importa acá para validar `typography.roles` y `skin`.
+from .services.ai_design_typography import (    # noqa: E402
+    FONT_SLUGS          as _TYPE_FONT_SLUGS,
+    TYPOGRAPHY_ROLES    as _TYPE_ROLES,
+    TYPE_SIZES          as _TYPE_SIZE,
+    TYPE_TRACKING       as _TYPE_TRACKING,
+    TYPE_LEADING        as _TYPE_LEADING,
+    TYPE_CASES          as _TYPE_CASE,
+)
+from .services.ai_design_skins import (         # noqa: E402
+    SKIN_IDS            as _SKIN_IDS,
+    SKIN_FAMILY_SET     as _SKIN_FAMILIES,
+    SKIN_FAMILY_OF      as _SKIN_FAMILY_OF,
+)
 #Sección `blocks`: overrides de estilo por contenedor (id de bloque de la
 #superficie landing). Las claves de bloque se validan contra
 #TEMPLATE_BLOCKS['landing']; lo desconocido se descarta en silencio.
@@ -129,6 +158,8 @@ _SECTION_SPECS  =   {
         'scale'         :   ('enum', _TYPE_SCALE),
         'weightHeading' :   ('int', 100, 900),
         'letterSpacing' :   ('tracking',),
+        #v2: presupuesto tipográfico por rol (13 roles cerrados).
+        'roles'         :   ('roles',),
     },
     'buttons'       :   {
         'shape'     :   ('enum', _BTN_SHAPE),
@@ -158,6 +189,19 @@ _SECTION_SPECS  =   {
     },
     'styleColors'   :   {mode: ('styleSet',) for mode in _STYLE_MODES},
     'blocks'        :   {},
+    #v2: layout propio de la web (no solo paleta/radio) y piel del catálogo.
+    'layout'        :   {
+        'density'       :   ('enum', _DENSITY),
+        'grid'          :   ('enum', _GRID),
+        'hero'          :   ('enum', _HERO_LAYOUT),
+        'gutter'        :   ('enum', _GUTTER),
+        'measure'       :   ('enum', _MEASURE),
+        'radiusScale'   :   ('enum', _RADIUS_SCALE),
+    },
+    'skin'          :   {
+        'id'            :   ('skin',),
+        'family'        :   ('enum', tuple(sorted(_SKIN_FAMILIES))),
+    },
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
 #resto de las secciones/claves exige has_design_advanced (Premium).
@@ -293,6 +337,58 @@ def _v_style_set(raw, mode):
             raise serializers.ValidationError('El texto sobre superficie no alcanza contraste AA.')
     return out
 
+def _v_roles(raw):
+    """
+    typography.roles: los 13 roles cerrados, cada uno con {font, size,
+    weight, tracking, leading, case}. Todo fuera del catálogo es 400 (la
+    tipografía no se descarta en silencio: un rol inválido rompería la
+    escala completa).
+    """
+    if not isinstance(raw, dict):
+        raise serializers.ValidationError('"roles" debe ser un objeto {rol: valores}.')
+    unknown =   [role for role in raw if role not in _TYPE_ROLES]
+    if unknown:
+        raise serializers.ValidationError(f'Rol tipográfico desconocido: "{unknown[0]}".')
+    out     =   {}
+    for role, value in raw.items():
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(f'Los valores de "{role}" deben ser un objeto.')
+        extra   =   [key for key in value if key not in ('font', 'size', 'weight', 'tracking', 'leading', 'case')]
+        if extra:
+            raise serializers.ValidationError(f'Clave desconocida en "{role}": "{extra[0]}".')
+        font    =   value.get('font')
+        if not isinstance(font, str) or font not in _TYPE_FONT_SLUGS:
+            raise serializers.ValidationError(f'"{role}.font": elegí una fuente del catálogo.')
+        weight  =   value.get('weight')
+        if isinstance(weight, bool) or not isinstance(weight, int) or weight % 100 or not 300 <= weight <= 900:
+            raise serializers.ValidationError(f'"{role}.weight" debe ser 300, 400, 500, 600, 700, 800 o 900.')
+        out[role]   =   {
+            'font'      :   font,
+            'size'      :   _v_enum(value.get('size'), _TYPE_SIZE, f'{role}.size'),
+            'weight'    :   weight,
+            'tracking'  :   _v_enum(value.get('tracking'), _TYPE_TRACKING, f'{role}.tracking'),
+            'leading'   :   _v_enum(value.get('leading'), _TYPE_LEADING, f'{role}.leading'),
+            'case'      :   _v_enum(value.get('case'), _TYPE_CASE, f'{role}.case'),
+        }
+    return out
+
+
+def _clean_skin(raw):
+    """
+    skin: {id, family} del catálogo. Un id fuera del catálogo se DESCARTA
+    en silencio (None) — igual que un bloque desconocido: la web sigue
+    viéndose bien con el resto del tema. La family se corrige desde el id
+    cuando no coincide.
+    """
+    if not isinstance(raw, dict):
+        return None
+    skin_id =   raw.get('id')
+    if not isinstance(skin_id, str) or skin_id not in _SKIN_IDS:
+        return None
+    family  =   _SKIN_FAMILY_OF.get(skin_id)
+    return {'id': skin_id, 'family': family}
+
+
 def _store_image_urls(store):
     """URLs servibles de las imágenes propias de la tienda (logo, portada,
     carrusel, galería/decoración) — único origen válido de un fondo image."""
@@ -414,6 +510,20 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
                 out[key]    =   _clean_bg_value(raw, store)
             elif kind == 'styleSet':
                 out[key]    =   _v_style_set(raw, key)
+            elif kind == 'roles':
+                out[key]    =   _v_roles(raw)
+            elif kind == 'skin':
+                cleaned     =   _clean_skin({'id': raw})
+                if cleaned is None:
+                    continue    #piel fuera del catálogo: descarte silencioso
+                out[key]    =   cleaned['id']
+        #La family de la piel nunca se guarda suelta: se deriva del id y,
+        #sin id válido, la sección entera se descarta.
+        if section == 'skin':
+            if out.get('id'):
+                out['family']   =   _SKIN_FAMILY_OF[out['id']]
+            else:
+                out.clear()
         if out:
             clean[section]  =   out
     #El id del estilo solo viaja si su plantilla entra en el nivel del plan

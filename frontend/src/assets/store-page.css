@@ -11721,3 +11721,297 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .blk-wrap, .sp-aiband-inner { transition: none; }
 }
+
+/* ===========================================================================
+   CONTRATO v4 — roles tipográficos, layout y bloques nuevos.
+   previewBridge traduce site_theme.typography.roles a variables
+   --st-f-<rol>-{family,size,weight,tracking,leading,case}, site_theme.layout
+   a --st-l-* y site_theme.skin a data-st-skin (hojas skin-<familia>.css).
+   Cada regla se gatea por el atributo del rol/layout: un dato ausente deja
+   el look de la plantilla exactamente como está hoy (tienda vieja = igual).
+   =========================================================================== */
+
+/* --- Roles: cada selector real, no cada componente ---------------------- */
+.store-page[data-st-roles~='display'] .sp-hero-title.is-name {
+  font-family: var(--st-f-display-family, var(--sp-display));
+  font-size: var(--st-f-display-size, clamp(28px, 6vw, var(--store-name-size, 48px)));
+  font-weight: var(--st-f-display-weight, 800);
+  letter-spacing: var(--st-f-display-tracking, -.03em);
+  line-height: var(--st-f-display-leading, 1.1);
+  text-transform: var(--st-f-display-case, none);
+}
+.store-page[data-st-roles~='h1'] .sp-hero-title:not(.is-name) {
+  font-family: var(--st-f-h1-family, var(--sp-display));
+  font-size: var(--st-f-h1-size, clamp(30px, 4.8vw, 50px));
+  font-weight: var(--st-f-h1-weight, 800);
+  letter-spacing: var(--st-f-h1-tracking, -.03em);
+  line-height: var(--st-f-h1-leading, 1.12);
+  text-transform: var(--st-f-h1-case, none);
+}
+.store-page[data-st-roles~='h2'] .sp-section-title,
+.store-page[data-st-roles~='h2'] .spd-sec-title,
+.store-page[data-st-roles~='h2'] .sp-aipricing-title,
+.store-page[data-st-roles~='h2'] .sp-aiprocess-title,
+.store-page[data-st-roles~='h2'] .sp-aimosaic-title {
+  font-family: var(--st-f-h2-family, var(--sp-display));
+  font-size: var(--st-f-h2-size, 22px);
+  font-weight: var(--st-f-h2-weight, 700);
+  letter-spacing: var(--st-f-h2-tracking, -.02em);
+  line-height: var(--st-f-h2-leading, 1.25);
+  text-transform: var(--st-f-h2-case, none);
+}
+.store-page[data-st-roles~='h3'] .sp-card .tpc-name,
+.store-page[data-st-roles~='h3'] .sp-aigrid-name,
+.store-page[data-st-roles~='h3'] .sp-aiprocess-step-title,
+.store-page[data-st-roles~='h3'] .sp-aipricing-name {
+  font-family: var(--st-f-h3-family, var(--sp-body));
+  font-size: var(--st-f-h3-size, 15px);
+  font-weight: var(--st-f-h3-weight, 700);
+  letter-spacing: var(--st-f-h3-tracking, -.01em);
+  line-height: var(--st-f-h3-leading, 1.35);
+  text-transform: var(--st-f-h3-case, none);
+}
+.store-page[data-st-roles~='body'] {
+  font-family: var(--st-f-body-family, var(--store-font, Inter, system-ui, sans-serif));
+  font-size: var(--st-f-body-size, 15px);
+  font-weight: var(--st-f-body-weight, 400);
+  letter-spacing: var(--st-f-body-tracking, normal);
+  line-height: var(--st-f-body-leading, 1.5);
+  text-transform: var(--st-f-body-case, none);
+}
+.store-page[data-st-roles~='lead'] .sp-hero-sub,
+.store-page[data-st-roles~='lead'] .sp-about-text,
+.store-page[data-st-roles~='lead'] .sp-cat-sub,
+.store-page[data-st-roles~='lead'] .sp-aiprocess-text {
+  font-family: var(--st-f-lead-family, var(--sp-body));
+  font-size: var(--st-f-lead-size, 15.5px);
+  font-weight: var(--st-f-lead-weight, 400);
+  letter-spacing: var(--st-f-lead-tracking, normal);
+  line-height: var(--st-f-lead-leading, 1.75);
+  text-transform: var(--st-f-lead-case, none);
+}
+.store-page[data-st-roles~='eyebrow'] .sp-eyebrow {
+  font-family: var(--st-f-eyebrow-family, var(--sp-body));
+  font-size: var(--st-f-eyebrow-size, 12px);
+  font-weight: var(--st-f-eyebrow-weight, 700);
+  letter-spacing: var(--st-f-eyebrow-tracking, .12em);
+  line-height: var(--st-f-eyebrow-leading, 1.3);
+  text-transform: var(--st-f-eyebrow-case, uppercase);
+}
+.store-page[data-st-roles~='label'] .sp-foot-heading,
+.store-page[data-st-roles~='label'] .sp-about-mission-label,
+.store-page[data-st-roles~='label'] .sp-aipricing-colhead {
+  font-family: var(--st-f-label-family, var(--sp-body));
+  font-size: var(--st-f-label-size, 11px);
+  font-weight: var(--st-f-label-weight, 700);
+  letter-spacing: var(--st-f-label-tracking, .08em);
+  line-height: var(--st-f-label-leading, 1.3);
+  text-transform: var(--st-f-label-case, uppercase);
+}
+.store-page[data-st-roles~='quote'] .sp-aiquote-text,
+.store-page[data-st-roles~='quote'] blockquote,
+.store-page[data-st-roles~='quote'] .sp-testi-text {
+  font-family: var(--st-f-quote-family, var(--sp-display));
+  font-size: var(--st-f-quote-size, clamp(22px, 3.4vw, 38px));
+  font-weight: var(--st-f-quote-weight, 700);
+  letter-spacing: var(--st-f-quote-tracking, -.02em);
+  line-height: var(--st-f-quote-leading, 1.25);
+  text-transform: var(--st-f-quote-case, none);
+}
+.store-page[data-st-roles~='price'] .sp-card .tpc-price,
+.store-page[data-st-roles~='price'] .sp-aipricing-amount {
+  font-family: var(--st-f-price-family, var(--sp-body));
+  font-size: var(--st-f-price-size, 18px);
+  font-weight: var(--st-f-price-weight, 750);
+  letter-spacing: var(--st-f-price-tracking, -.02em);
+  line-height: var(--st-f-price-leading, 1.2);
+  text-transform: var(--st-f-price-case, none);
+}
+.store-page[data-st-roles~='nav'] .sp-top-links a,
+.store-page[data-st-roles~='nav'] .sp-nav-item,
+.store-page[data-st-roles~='nav'] .sp-foot-col a,
+.store-page[data-st-roles~='nav'] .sp-dock-item {
+  font-family: var(--st-f-nav-family, var(--sp-body));
+  font-size: var(--st-f-nav-size, 13.5px);
+  font-weight: var(--st-f-nav-weight, 600);
+  letter-spacing: var(--st-f-nav-tracking, normal);
+  line-height: var(--st-f-nav-leading, 1.3);
+  text-transform: var(--st-f-nav-case, none);
+}
+.store-page[data-st-roles~='button'] .sp-btn {
+  font-family: var(--st-f-button-family, var(--sp-body));
+  font-size: var(--st-f-button-size, var(--sp-btn-fs, 14px));
+  font-weight: var(--st-f-button-weight, 600);
+  letter-spacing: var(--st-f-button-tracking, normal);
+  line-height: var(--st-f-button-leading, 1.2);
+  text-transform: var(--st-f-button-case, none);
+}
+.store-page[data-st-roles~='footer'] .sp-foot,
+.store-page[data-st-roles~='footer'] .sp-foot-copy {
+  font-family: var(--st-f-footer-family, var(--sp-body));
+  font-size: var(--st-f-footer-size, 14px);
+  font-weight: var(--st-f-footer-weight, 400);
+  letter-spacing: var(--st-f-footer-tracking, normal);
+  line-height: var(--st-f-footer-leading, 1.6);
+  text-transform: var(--st-f-footer-case, none);
+}
+
+/* --- Layout: density / gutter / measure / radius / grid / hero ---------- */
+.store-page[data-st-l-gutter] .sp-container {
+  padding-inline: max(var(--st-l-gutter, clamp(16px, 5vw, 40px)), env(safe-area-inset-left))
+                 max(var(--st-l-gutter, clamp(16px, 5vw, 40px)), env(safe-area-inset-right));
+}
+.store-page[data-st-l-density] .sp-aigrid,
+.store-page[data-st-l-density] .sp-aicheck,
+.store-page[data-st-l-density] .sp-aiquote,
+.store-page[data-st-l-density] .sp-aiband,
+.store-page[data-st-l-density] .sp-aipricing,
+.store-page[data-st-l-density] .sp-aiprocess,
+.store-page[data-st-l-density] .sp-aimosaic {
+  padding-top: calc(64px * var(--st-l-density, 1));
+}
+.store-page[data-st-l-density] .spd-sec { padding-block: calc(28px * var(--st-l-density, 1)); }
+.store-page[data-st-l-density] .sp-card,
+.store-page[data-st-l-density] .sp-aigrid-card,
+.store-page[data-st-l-density] .sp-aipricing-card,
+.store-page[data-st-l-density] .sp-aiprocess-step {
+  padding: calc(18px * var(--st-l-density, 1));
+}
+.store-page[data-st-l-measure] .sp-hero-sub,
+.store-page[data-st-l-measure] .sp-about-text,
+.store-page[data-st-l-measure] .sp-aiquote-text,
+.store-page[data-st-l-measure] .sp-aiprocess-text,
+.store-page[data-st-l-measure] .sp-aimosaic-caption,
+.store-page[data-st-l-measure] .sp-aipricing-note {
+  max-width: var(--st-l-measure, 66ch);
+}
+.store-page[data-st-l-measure='narrow'] .sp-aiquote.is-centered .sp-aiquote-body,
+.store-page[data-st-l-measure='normal'] .sp-aiquote.is-centered .sp-aiquote-body {
+  max-width: var(--st-l-measure, 46ch);
+}
+.store-page[data-st-l-radius] .sp-btn,
+.store-page[data-st-l-radius] .sp-card,
+.store-page[data-st-l-radius] .sp-aigrid-card,
+.store-page[data-st-l-radius] .sp-aicheck.is-cards .sp-aicheck-item,
+.store-page[data-st-l-radius] .sp-aipricing-card,
+.store-page[data-st-l-radius] .sp-aiprocess-step,
+.store-page[data-st-l-radius] .sp-aimosaic-tile {
+  border-radius: var(--st-l-radius, 16px);
+}
+/* Grilla de bloques: 12 | asym | split | bento | editorial. Siempre colapsa
+   a una columna por debajo de 640px (probado a 360px). */
+.store-page[data-st-l-grid] .sp-aigrid-list,
+.store-page[data-st-l-grid] .sp-aiprocess-list,
+.store-page[data-st-l-grid] .sp-aipricing-list,
+.store-page[data-st-l-grid] .sp-aimosaic-list { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) {
+  .store-page[data-st-l-grid='12'] .sp-aigrid-list,
+  .store-page[data-st-l-grid='12'] .sp-aiprocess-list,
+  .store-page[data-st-l-grid='12'] .sp-aimosaic-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+  .store-page[data-st-l-grid='asym'] .sp-aigrid-list,
+  .store-page[data-st-l-grid='asym'] .sp-aimosaic-list {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  }
+  .store-page[data-st-l-grid='split'] .sp-aigrid-list,
+  .store-page[data-st-l-grid='split'] .sp-aiprocess-list,
+  .store-page[data-st-l-grid='split'] .sp-aimosaic-list,
+  .store-page[data-st-l-grid='split'] .sp-aipricing-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .store-page[data-st-l-grid='bento'] .sp-aigrid-list,
+  .store-page[data-st-l-grid='bento'] .sp-aimosaic-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, auto);
+  }
+  .store-page[data-st-l-grid='bento'] .sp-aigrid-list > :first-child,
+  .store-page[data-st-l-grid='bento'] .sp-aimosaic-list > :first-child { grid-column: span 2; }
+  .store-page[data-st-l-grid='editorial'] .sp-aigrid-list,
+  .store-page[data-st-l-grid='editorial'] .sp-aiprocess-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .store-page[data-st-l-grid='editorial'] .sp-aigrid-card,
+  .store-page[data-st-l-grid='editorial'] .sp-aiprocess-step {
+    border: 0;
+    border-top: 1px solid var(--sp-line);
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding-inline: 0;
+  }
+}
+/* Hero: centered (base) | split | cinema | logo | editorial. */
+.store-page[data-st-l-hero='split'] .sp-hero-inner { justify-items: start; text-align: left; }
+.store-page[data-st-l-hero='split'] .sp-hero-sub { margin-inline: 0; }
+.store-page[data-st-l-hero='cinema'] .sp-hero-inner { padding-block: clamp(88px, 14vw, 160px); }
+.store-page[data-st-l-hero='cinema'] .sp-hero-title { max-width: 26ch; }
+.store-page[data-st-l-hero='logo'] .sp-hero-title { letter-spacing: -.04em; }
+.store-page[data-st-l-hero='editorial'] .sp-hero-inner { justify-items: start; text-align: left; }
+.store-page[data-st-l-hero='editorial'] .sp-hero-title {
+  padding-left: clamp(14px, 2.4vw, 24px);
+  border-left: 3px solid color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+@media (max-width: 639px) {
+  .store-page[data-st-l-hero] .sp-hero-inner { padding-block: 48px 44px; }
+  .store-page[data-st-l-hero] .sp-hero-title { max-width: 100%; }
+}
+
+/* --- Bloque 'aipricing' (solo IA): cards | table ------------------------ */
+.sp-aipricing { padding: 64px 0 0; }
+.sp-aipricing-list { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 20px 0 0; padding: 0; }
+.sp-aipricing-card { display: grid; gap: 8px; align-content: start; padding: 18px; border-radius: var(--r-md, 16px); border: 1px solid var(--sp-line); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow-wrap: anywhere; }
+.sp-aipricing-name { margin: 0; font-size: 15px; font-weight: 700; color: var(--sp-ink); }
+.sp-aipricing-amount { font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--sp-ink); }
+.sp-aipricing-note { margin: 0; font-size: 13px; line-height: 1.6; color: var(--sp-muted); }
+.sp-aipricing-feats { list-style: none; display: grid; gap: 6px; margin: 6px 0 0; padding: 0; }
+.sp-aipricing-feats li { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--sp-ink-2); }
+.sp-aipricing-feats svg { flex: none; margin-top: 2px; color: var(--sp-accent-text); }
+@media (min-width: 640px) { .sp-aipricing-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); } }
+/* Variante tabla: filas alineadas, sin tarjetas. */
+.sp-aipricing.is-table .sp-aipricing-list { gap: 0; border-top: 1px solid var(--sp-line); }
+.sp-aipricing.is-table .sp-aipricing-card { grid-template-columns: minmax(0, 1.2fr) minmax(0, .6fr) minmax(0, 1.4fr); align-items: center; gap: 12px 18px; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0; background: transparent; box-shadow: none; padding: 14px 0; }
+.sp-aipricing.is-table .sp-aipricing-feats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; }
+@media (max-width: 639px) {
+  .sp-aipricing.is-table .sp-aipricing-card { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* --- Bloque 'aiprocess' (solo IA): steps | rail ------------------------- */
+.sp-aiprocess { padding: 64px 0 0; }
+.sp-aiprocess-list { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 20px 0 0; padding: 0; counter-reset: aip; }
+.sp-aiprocess-step { display: grid; gap: 6px; align-content: start; padding: 18px; border-radius: var(--r-md, 16px); border: 1px solid var(--sp-line); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow-wrap: anywhere; }
+.sp-aiprocess-num { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: color-mix(in srgb, var(--blk-accent, var(--store-accent)) 18%, transparent); color: var(--sp-accent-text); font-size: 13px; font-weight: 800; }
+.sp-aiprocess-step-title { margin: 0; font-size: 15px; font-weight: 700; color: var(--sp-ink); }
+.sp-aiprocess-text { margin: 0; font-size: 14px; line-height: 1.6; color: var(--sp-muted); }
+@media (min-width: 640px) { .sp-aiprocess-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); } }
+/* Variante rail: línea continua con los pasos colgando. */
+.sp-aiprocess.is-rail .sp-aiprocess-list { position: relative; gap: 18px; padding-left: 34px; }
+.sp-aiprocess.is-rail .sp-aiprocess-list::before { content: ''; position: absolute; left: 14px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; background: color-mix(in srgb, var(--blk-accent, var(--store-accent)) 30%, var(--sp-line)); }
+.sp-aiprocess.is-rail .sp-aiprocess-step { position: relative; border: 0; background: transparent; box-shadow: none; padding: 0; }
+.sp-aiprocess.is-rail .sp-aiprocess-num { position: absolute; left: -34px; top: 0; }
+@media (min-width: 640px) { .sp-aiprocess.is-rail .sp-aiprocess-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* --- Bloque 'aimosaic' (solo IA): mosaic | rail ------------------------- */
+.sp-aimosaic { padding: 64px 0 0; }
+.sp-aimosaic-list { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 20px 0 0; padding: 0; }
+.sp-aimosaic-tile { position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: var(--r-md, 16px); background: var(--sp-soft); border: 1px solid var(--sp-line); }
+.sp-aimosaic-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-aimosaic-tile:nth-child(4n + 1) { aspect-ratio: 1 / 1; }
+.sp-aimosaic-caption { margin: 14px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--sp-muted); }
+@media (min-width: 640px) {
+  .sp-aimosaic-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sp-aimosaic-list > :first-child { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
+}
+/* Variante rail: una sola fila con scroll horizontal suave (nunca rompe
+   el layout de la página). */
+.sp-aimosaic.is-rail .sp-aimosaic-list { grid-auto-flow: column; grid-auto-columns: minmax(200px, 68%); grid-template-columns: none; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+.sp-aimosaic.is-rail .sp-aimosaic-tile { aspect-ratio: 4 / 3; scroll-snap-align: start; }
+.sp-aimosaic.is-rail .sp-aimosaic-list > :first-child { grid-column: auto; grid-row: auto; }
+@media (max-width: 639px) {
+  .sp-aimosaic.is-rail .sp-aimosaic-list { grid-auto-columns: minmax(180px, 84%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-aipricing, .sp-aiprocess, .sp-aimosaic { scroll-behavior: auto; }
+}

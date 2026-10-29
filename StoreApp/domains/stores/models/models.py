@@ -111,6 +111,12 @@ class StoreCustomization(models.Model):
         ('archivo',              'Archivo'),
         ('bricolage-grotesque',  'Bricolage Grotesque'),
         ('figtree',              'Figtree'),
+        #Familias del motor v4 (ai_design_typography, catálogo de 24).
+        ('cormorant-garamond',   'Cormorant Garamond'),
+        ('dm-serif-display',     'DM Serif Display'),
+        ('libre-baskerville',    'Libre Baskerville'),
+        ('outfit',               'Outfit'),
+        ('plus-jakarta-sans',    'Plus Jakarta Sans'),
     ]
     TEMPLATE_CLASSIC            =   'classic'
     #Diseños de la web pública (catálogo cerrado) por nivel de plan — 6
@@ -139,6 +145,28 @@ class StoreCustomization(models.Model):
         ('minimal',          'Minimal'),
         ('ai_lumen',         'Lumen (IA)'),
         ('ai_pulse',         'Pulse (IA)'),
+        #Retirados del selector (mig. 0049): vuelven al catálogo del modelo
+        #solo para el motor "Diseñar con IA" (v4). El panel NO los ofrece.
+        ('perspective',      'Perspectiva'),
+        ('bloque',           'Bloque'),
+        ('riso',             'Riso'),
+        ('street',           'Calle'),
+        ('promo',            'Promo'),
+        ('atelier',          'Atelier'),
+        ('circuit',          'Circuito'),
+        ('arena',            'Arena'),
+        ('mercado',          'Mercado'),
+        ('studio',           'Estudio'),
+        ('lookbook',         'Lookbook'),
+        ('shop',             'Shop'),
+        ('boutique',         'Boutique'),
+        ('signature',        'Signature'),
+        ('aurora',           'Aurora'),
+        ('terminal',         'Terminal'),
+        ('terra',            'Terra'),
+        ('lab',              'Lab'),
+        ('carta',            'Carta'),
+        ('proceso',          'Proceso'),
     ]
     #Mapa de retirada -> habilitada más cercana del mismo nivel (mig.
     #0049): cada una preserva algo de la identidad elegida — las base

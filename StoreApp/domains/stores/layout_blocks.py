@@ -39,17 +39,44 @@ LAYOUT_PROP_MAX             =   80
 LAYOUT_ITEM_TITLE_MAX       =   40
 LAYOUT_ITEM_TEXT_MAX        =   90
 LAYOUT_ITEM_LABEL_MAX       =   40
+#Bloques v4: precios (aipricing), pasos (aiprocess) y mosaico (aimosaic).
+LAYOUT_PRICE_MAX            =   20
+LAYOUT_PRICE_NOTE_MAX       =   80
+LAYOUT_PRICE_ITEM_MAX       =   60
+LAYOUT_PROCESS_TITLE_MAX    =   60
+LAYOUT_PROCESS_TEXT_MAX     =   160
+LAYOUT_CAPTION_MAX          =   120
 
-#Catálogo cerrado de iconos de los bloques solo-IA (Lucide, ISC — el
-#frontend los bundlea local). Un icono fuera de la lista se descarta.
+#Catálogo cerrado de iconos de los bloques solo-IA (Lucide, ISC). La lista
+#está CONGELADA contra lo que bundlea el frontend (frontend/src/assets/
+#icons/lucide): un nombre que no exista ahí se descarta. Además se aceptan
+#los GENERADOS ("gen:<slug>": el frontend dibuja un glifo geométrico
+#determinístico desde el hash del slug cuando el concepto no existe).
 AI_ICONS                    =   frozenset({
-    'coffee', 'scissors', 'heart', 'star', 'truck', 'clock', 'map-pin', 'phone',
-    'message-circle', 'mail', 'package', 'tag', 'percent', 'credit-card', 'gift',
-    'users', 'building-2', 'home', 'wrench', 'hammer', 'monitor', 'smartphone',
-    'camera', 'images', 'music', 'book-open', 'graduation-cap', 'paw-print',
-    'dumbbell', 'leaf', 'flower', 'sun', 'moon', 'sparkles', 'shield-check',
-    'check-circle', 'award', 'badge-check', 'calendar', 'quote',
+    'activity', 'anchor', 'apple', 'archive', 'award', 'baby',
+    'badge-check', 'beer', 'bike', 'bone', 'book-open', 'box',
+    'briefcase', 'brush', 'building-2', 'bus', 'cake', 'calculator',
+    'calendar', 'camera', 'car', 'carrot', 'cat', 'chart-line',
+    'check-circle', 'chef-hat', 'clock', 'code', 'coffee', 'compass',
+    'cpu', 'credit-card', 'cup-soda', 'database', 'dog', 'droplet',
+    'dumbbell', 'factory', 'file-text', 'film', 'filter', 'flag',
+    'flame', 'flower', 'folder', 'fuel', 'gamepad', 'gift',
+    'globe', 'graduation-cap', 'grid', 'hammer', 'handshake', 'headphones',
+    'heart', 'home', 'hotel', 'id-card', 'images', 'key',
+    'laptop', 'layers', 'leaf', 'lock', 'mail', 'map-pin',
+    'medal', 'message-circle', 'mic', 'monitor', 'moon', 'mountain',
+    'music', 'package', 'palette', 'parking', 'paw-print', 'pen-tool',
+    'percent', 'phone', 'pill', 'pizza', 'plane', 'printer',
+    'puzzle', 'qr-code', 'quote', 'radio', 'receipt', 'route',
+    'ruler', 'scan-line', 'scissors', 'search', 'server', 'settings',
+    'shield-check', 'shirt', 'shopping-bag', 'shopping-cart', 'sliders', 'smartphone',
+    'snowflake', 'sparkles', 'speaker', 'star', 'stethoscope', 'store',
+    'sun', 'sun-medium', 'syringe', 'tag', 'target', 'terminal',
+    'thermometer', 'ticket', 'train', 'tree', 'trending-up', 'trophy',
+    'truck', 'tv', 'users', 'utensils', 'video', 'wallet',
+    'warehouse', 'wifi', 'wind', 'wine', 'wrench', 'zap',
 })
+AI_GENERATED_ICON_RE        =   re.compile(r'^gen:[a-z0-9-]{1,24}$')
 
 _TITLE_PROPS                =   {'title': LAYOUT_PROP_MAX}
 
@@ -84,6 +111,9 @@ TEMPLATE_BLOCKS             =   {
         'aicheck':         {'label': 'Lista de verificación',  'variants': ('cards', 'list'), 'props': {'title': LAYOUT_PROP_MAX, 'items': ('text_list', 6)}, 'ai_only': True},
         'aigrid':          {'label': 'Grilla de servicios',    'variants': ('grid2', 'grid3', 'grid4'), 'props': {'title': LAYOUT_PROP_MAX, 'items': ('icon_cards', 6)}, 'ai_only': True},
         'aiband':          {'label': 'Banda destacada',        'variants': ('band', 'card'), 'props': {'title': LAYOUT_PROP_MAX, 'text': 160, 'label': 40}, 'ai_only': True},
+        'aipricing':       {'label': 'Precios y planes',       'variants': ('cards', 'table'), 'props': {'title': LAYOUT_PROP_MAX, 'items': ('pricing_list', 4)}, 'ai_only': True},
+        'aiprocess':       {'label': 'Cómo trabajamos',        'variants': ('steps', 'rail'), 'props': {'title': LAYOUT_PROP_MAX, 'items': ('process_list', 5)}, 'ai_only': True},
+        'aimosaic':        {'label': 'Mosaico de fotos',       'variants': ('mosaic', 'rail'), 'props': {'title': LAYOUT_PROP_MAX, 'caption': LAYOUT_CAPTION_MAX}, 'ai_only': True},
     },
     'catalog': {
         'note':            {'label': 'Aviso del catálogo'},
@@ -111,8 +141,11 @@ def _clean_text(raw, max_len):
     return _WS_RUN.sub(' ', text).strip()[:max_len]
 
 def _clean_icon(raw):
+    #Icono del catálogo o generado ("gen:<slug>"); lo demás se descarta.
     icon                    =   str(raw or '').strip().lower()
-    return icon if icon in AI_ICONS else None
+    if icon in AI_ICONS or AI_GENERATED_ICON_RE.match(icon):
+        return icon
+    return None
 
 def _clean_icon_list(raw, max_items):
     #aistrip: [{icon?, label}] — el item sin label no aporta nada y se va.
@@ -163,10 +196,56 @@ def _clean_icon_cards(raw, max_items):
         items.append(item)
     return items or None
 
+def _clean_price_list(raw, max_items):
+    #aipricing: [{name, price, note?, items?[text]}] — 2 a 4 filas con
+    #nombre y precio; sin precio la fila no aporta y se va.
+    if not isinstance(raw, list):
+        return None
+    items                   =   []
+    for entry in raw[:max_items]:
+        if not isinstance(entry, dict):
+            continue
+        name                =   _clean_text(entry.get('name'), LAYOUT_ITEM_TITLE_MAX)
+        price               =   _clean_text(entry.get('price'), LAYOUT_PRICE_MAX)
+        if not (name and price):
+            continue
+        item                =   {'name': name, 'price': price}
+        note                =   _clean_text(entry.get('note'), LAYOUT_PRICE_NOTE_MAX)
+        if note:
+            item['note']    =   note
+        features            =   []
+        for feature in (entry.get('items') or [])[:5] if isinstance(entry.get('items'), list) else []:
+            text            =   _clean_text(feature, LAYOUT_PRICE_ITEM_MAX)
+            if text:
+                features.append(text)
+        if features:
+            item['items']   =   features
+        items.append(item)
+    return items if len(items) >= 2 else None
+
+
+def _clean_process_list(raw, max_items):
+    #aiprocess: [{title, text?}] — 3 a 5 pasos con título.
+    if not isinstance(raw, list):
+        return None
+    items                   =   []
+    for entry in raw[:max_items]:
+        if not isinstance(entry, dict):
+            continue
+        title               =   _clean_text(entry.get('title'), LAYOUT_PROCESS_TITLE_MAX)
+        if not title:
+            continue
+        text                =   _clean_text(entry.get('text'), LAYOUT_PROCESS_TEXT_MAX)
+        items.append({'title': title, **({'text': text} if text else {})})
+    return items if len(items) >= 3 else None
+
+
 _LIST_CLEANERS              =   {
     'icon_list'     :   _clean_icon_list,
     'text_list'     :   _clean_text_list,
     'icon_cards'    :   _clean_icon_cards,
+    'pricing_list'  :   _clean_price_list,
+    'process_list'  :   _clean_process_list,
 }
 
 def _clean_props(raw, allowed):

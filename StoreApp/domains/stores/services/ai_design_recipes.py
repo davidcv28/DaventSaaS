@@ -9,7 +9,7 @@
 #para el texto. Nada de acá llega al cliente sin pasar por
 #clean_layout_config y por la whitelist de plantillas del plan.
 
-ENGINE_VERSION              =   'ai-design/3'
+ENGINE_VERSION              =   'ai-design/4'
 
 TONES                       =   ('calido', 'serio', 'moderno', 'audaz')
 DEFAULT_TONE                =   'moderno'
@@ -190,22 +190,51 @@ TEMPLATE_TONE_AFFINITY      =   {
     'minimal':  {'serio': 3, 'moderno': 2, 'calido': 0, 'audaz': 1},
     'ai_lumen': {'moderno': 3, 'audaz': 2, 'serio': 1, 'calido': 0},
     'ai_pulse': {'audaz': 3, 'moderno': 3, 'calido': 1, 'serio': 0},
+    #Retirados (solo IA): cada uno conserva el carácter de su época.
+    'perspective': {'moderno': 2, 'audaz': 2, 'serio': 1, 'calido': 0},
+    'bloque':      {'audaz': 3, 'moderno': 2, 'serio': 0, 'calido': 0},
+    'riso':        {'calido': 3, 'audaz': 2, 'moderno': 1, 'serio': 0},
+    'street':      {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 0},
+    'promo':       {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 0},
+    'atelier':     {'serio': 3, 'calido': 2, 'moderno': 1, 'audaz': 1},
+    'circuit':     {'moderno': 3, 'audaz': 2, 'serio': 1, 'calido': 0},
+    'arena':       {'audaz': 3, 'moderno': 2, 'serio': 1, 'calido': 0},
+    'mercado':     {'calido': 3, 'moderno': 2, 'audaz': 1, 'serio': 0},
+    'studio':      {'serio': 3, 'moderno': 2, 'calido': 1, 'audaz': 0},
+    'lookbook':    {'serio': 3, 'calido': 2, 'moderno': 2, 'audaz': 1},
+    'shop':        {'moderno': 3, 'calido': 2, 'audaz': 1, 'serio': 1},
+    'boutique':    {'calido': 3, 'serio': 2, 'moderno': 1, 'audaz': 0},
+    'signature':   {'serio': 3, 'calido': 2, 'moderno': 1, 'audaz': 1},
+    'aurora':      {'moderno': 3, 'audaz': 3, 'calido': 1, 'serio': 0},
+    'terminal':    {'audaz': 3, 'moderno': 3, 'serio': 1, 'calido': 0},
+    'terra':       {'calido': 3, 'serio': 2, 'moderno': 1, 'audaz': 0},
+    'lab':         {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
+    'carta':       {'calido': 3, 'serio': 2, 'moderno': 1, 'audaz': 0},
+    'proceso':     {'serio': 3, 'moderno': 2, 'calido': 1, 'audaz': 0},
 }
 
 TEMPLATE_LABELS             =   {
     'classic': 'Clásico', 'duo': 'Dúo', 'calma': 'Calma',
     'vitrina': 'Vitrina', 'cobre': 'Cobre', 'minimal': 'Minimal',
     'ai_lumen': 'Lumen', 'ai_pulse': 'Pulse',
+    #Los 20 retirados del selector: la IA sí los usa (v4).
+    'perspective': 'Perspectiva', 'bloque': 'Bloque', 'riso': 'Riso',
+    'street': 'Calle', 'promo': 'Promo', 'atelier': 'Atelier',
+    'circuit': 'Circuito', 'arena': 'Arena', 'mercado': 'Mercado',
+    'studio': 'Estudio', 'lookbook': 'Lookbook', 'shop': 'Shop',
+    'boutique': 'Boutique', 'signature': 'Signature', 'aurora': 'Aurora',
+    'terminal': 'Terminal', 'terra': 'Terra', 'lab': 'Lab',
+    'carta': 'Carta', 'proceso': 'Proceso',
 }
 
 #Afinidad plantilla ↔ objetivo: suma al puntaje la plantilla que mejor
 #cuenta esa historia (vitrina para vender, cobre/minimal para mostrar obra).
 TEMPLATE_GOAL_AFFINITY      =   {
-    'vender_online':        ('vitrina', 'duo', 'ai_pulse'),
-    'mostrar_servicios':    ('duo', 'vitrina', 'ai_lumen'),
-    'conseguir_consultas':  ('calma', 'classic', 'ai_lumen'),
-    'dar_confianza':        ('classic', 'calma', 'ai_lumen'),
-    'mostrar_trabajos':     ('cobre', 'minimal', 'ai_lumen', 'ai_pulse'),
+    'vender_online':        ('vitrina', 'duo', 'ai_pulse', 'promo', 'shop', 'street'),
+    'mostrar_servicios':    ('duo', 'vitrina', 'ai_lumen', 'lab', 'proceso', 'studio'),
+    'conseguir_consultas':  ('calma', 'classic', 'ai_lumen', 'carta', 'boutique'),
+    'dar_confianza':        ('classic', 'calma', 'ai_lumen', 'signature', 'atelier', 'terra'),
+    'mostrar_trabajos':     ('cobre', 'minimal', 'ai_lumen', 'ai_pulse', 'lookbook', 'arena', 'perspective'),
 }
 
 #=========================================
@@ -218,6 +247,101 @@ TEMPLATE_GOAL_AFFINITY      =   {
 #  ai_pulse -> editorial cinético, tipografía XL y grilla desplazada.
 AI_TEMPLATES                =   ('ai_lumen', 'ai_pulse')
 AI_LOOKS                    =   {'ai_lumen': 'lumen', 'ai_pulse': 'pulse'}
+#Los 20 diseños retirados del selector (mig. 0049) vuelven SOLO para el
+#motor: el dueño no los elige a mano, la IA sí los propone. Orden = el de
+#TEMPLATE_RETIRED_MAP del modelo (fuente única del catálogo).
+LEGACY_TEMPLATES            =   (
+    'perspective', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit',
+    'arena', 'mercado', 'studio', 'lookbook', 'shop', 'boutique', 'signature',
+    'aurora', 'terminal', 'terra', 'lab', 'carta', 'proceso',
+)
+#Fuentes de estilo del motor v4 (viaja en la propuesta como style_source).
+STYLE_SOURCES               =   ('plan', 'ai', 'legacy')
+
+
+def style_source_of(template):
+    if template in AI_TEMPLATES:
+        return 'ai'
+    if template in LEGACY_TEMPLATES:
+        return 'legacy'
+    return 'plan'
+
+
+#Matriz de estilos "firma" por rubro (v4): 3 combinaciones por rubro
+#(plantilla + piel + par tipográfico). Garantías:
+#- cada rubro trae al menos un estilo que NO es ai_* (plan o legacy) y al
+#  menos uno legacy;
+#- ninguna tupla (plantilla, piel) se repite entre rubros distintos;
+#- dentro del rubro los 3 pares tipográficos son distintos.
+#El puntaje del motor reordena estos estilos por tono/objetivo/datos: la
+#matriz es el piso de diversidad, no una elección fija.
+RUBRO_STYLES                =   {
+    'comercio': (
+        {'template': 'vitrina',  'skin': 'editorial-ink',   'pair': 'grotesk-clean'},
+        {'template': 'promo',    'skin': 'neon-pulse',      'pair': 'condensed-bold'},
+        {'template': 'ai_pulse', 'skin': 'kinetic-flash',   'pair': 'display-heavy'},
+    ),
+    'gastronomia': (
+        {'template': 'calma',    'skin': 'warm-clay',       'pair': 'warm-serif'},
+        {'template': 'carta',    'skin': 'paper-kraft',     'pair': 'serif-book'},
+        {'template': 'ai_lumen', 'skin': 'cinematic-amber', 'pair': 'serif-editorial'},
+    ),
+    'indumentaria': (
+        {'template': 'cobre',    'skin': 'editorial-paper', 'pair': 'editorial-display'},
+        {'template': 'lookbook', 'skin': 'luxury-noir',     'pair': 'serif-luxe'},
+        {'template': 'ai_pulse', 'skin': 'mono-black',      'pair': 'mono-tech'},
+    ),
+    'servicios_profesionales': (
+        {'template': 'minimal',   'skin': 'corporate-blue', 'pair': 'classic-serif'},
+        {'template': 'signature', 'skin': 'minimal-slate',  'pair': 'humanist'},
+        {'template': 'ai_lumen',  'skin': 'glass-frost',    'pair': 'grotesk-clean'},
+    ),
+    'salud': (
+        {'template': 'calma',    'skin': 'soft-blush',      'pair': 'soft-round'},
+        {'template': 'studio',   'skin': 'minimal-chalk',   'pair': 'humanist'},
+        {'template': 'ai_lumen', 'skin': 'organic-sage',    'pair': 'serif-book'},
+    ),
+    'belleza': (
+        {'template': 'cobre',    'skin': 'luxury-gilt',     'pair': 'serif-luxe'},
+        {'template': 'boutique', 'skin': 'soft-dusk',       'pair': 'soft-round'},
+        {'template': 'ai_lumen', 'skin': 'gradient-aurora', 'pair': 'editorial-display'},
+    ),
+    'construccion': (
+        {'template': 'classic',  'skin': 'brutal-concrete', 'pair': 'brutal'},
+        {'template': 'arena',    'skin': 'tech-void',       'pair': 'technical'},
+        {'template': 'ai_pulse', 'skin': 'mono-grey',       'pair': 'bold-sans'},
+    ),
+    'tecnologia': (
+        {'template': 'minimal',  'skin': 'tech-neon',       'pair': 'technical'},
+        {'template': 'circuit',  'skin': 'glass-noir',      'pair': 'mono-tech'},
+        {'template': 'ai_lumen', 'skin': 'gradient-plum',   'pair': 'display-heavy'},
+    ),
+    'educacion': (
+        {'template': 'duo',      'skin': 'playful-candy',   'pair': 'friendly'},
+        {'template': 'proceso',  'skin': 'paper-ink',       'pair': 'serif-book'},
+        {'template': 'ai_lumen', 'skin': 'corporate-steel', 'pair': 'humanist'},
+    ),
+    'turismo': (
+        {'template': 'calma',    'skin': 'organic-moss',    'pair': 'warm-serif'},
+        {'template': 'terra',    'skin': 'cinematic-amber', 'pair': 'editorial-display'},
+        {'template': 'ai_pulse', 'skin': 'gradient-plum',   'pair': 'grotesk-clean'},
+    ),
+    'mascotas': (
+        {'template': 'duo',      'skin': 'playful-pop',     'pair': 'friendly'},
+        {'template': 'mercado',  'skin': 'warm-ember',      'pair': 'soft-round'},
+        {'template': 'ai_lumen', 'skin': 'soft-blush',      'pair': 'retro-display'},
+    ),
+    'arte': (
+        {'template': 'minimal',  'skin': 'mono-black',      'pair': 'mono-tech'},
+        {'template': 'riso',     'skin': 'retro-sun',       'pair': 'retro-display'},
+        {'template': 'ai_pulse', 'skin': 'brutal-acid',     'pair': 'brutal'},
+    ),
+    'otro': (
+        {'template': 'classic',     'skin': 'corporate-steel', 'pair': 'classic-serif'},
+        {'template': 'perspective', 'skin': 'editorial-ink',   'pair': 'modern-sans'},
+        {'template': 'ai_pulse',    'skin': 'neon-night',      'pair': 'geometric'},
+    ),
+}
 
 #Overrides de estilo por contenedor (site_theme.blocks) que acompañan a
 #cada diseño de IA: solo claves del catálogo de site_theme (radius, shadow,
@@ -247,15 +371,19 @@ AI_BLOCK_STYLES             =   {
 #  aigrid  <- objetivo mostrar_servicios
 #  aiband  <- vender_online con ofertas reales
 #  aistrip <- 2+ datos de contacto en must_have (contact/faq/stats)
-AI_ELEMENT_ORDER            =   ('aiquote', 'aicheck', 'aigrid', 'aiband', 'aistrip')
+AI_ELEMENT_ORDER            =   ('aiquote', 'aicheck', 'aigrid', 'aiband', 'aistrip',
+                                'aiprocess', 'aipricing', 'aimosaic')
 AI_ELEMENT_ANCHORS          =   {
     'aiquote':  'testimonials',
     'aicheck':  'benefits',
     'aigrid':   'services',
     'aiband':   'offers',
     'aistrip':  'hero',
+    'aiprocess': 'steps',
+    'aipricing': 'featured',
+    'aimosaic': 'gallery',
 }
-AI_ELEMENT_MAX              =   3
+AI_ELEMENT_MAX              =   4
 
 #Rubros donde la web ES la vidriera: la libertad visual de los ai_* suma.
 VISUAL_RUBROS               =   frozenset({'belleza', 'arte', 'turismo', 'gastronomia', 'indumentaria', 'construccion', 'mascotas'})

@@ -34,6 +34,8 @@ from StoreApp.domains.stores.site_theme     import clean_site_theme
 
 from . import ai_design_copy
 from . import ai_design_recipes as R
+from . import ai_design_skins as SKIN
+from . import ai_design_typography as TYPE
 from . import imaging, storage
 from .services import allowed_templates_of, profile_has_benefit
 
@@ -303,62 +305,153 @@ def _request_seed(payload):
 
 
 #=========================================
-# PUNTAJE DE PLANTILLAS
+# ELECCIÓN DE ESTILO (plantilla + piel + par tipográfico)
 #=========================================
-def _score_templates(facts, stats, answers, allowed):
+#El motor v4 no puntúa plantillas sueltas: puntúa ESTILOS, la terna
+#(plantilla, piel, par tipográfico). Las plantillas compiten por afinidad
+#con rubro/tono/objetivo y por señales de datos — los ai_* ya NO tienen un
+#bonus ciego de "libertad": si ganan es porque la matriz del rubro, el
+#tono o las fotos los favorecen.
+_DATA_SIGNALS   =   {
+    #fotos/texto largo/catálogo amplio: qué estilos se defienden mejor
+    'photos'    :   ('cobre', 'minimal', 'ai_lumen', 'lookbook', 'atelier', 'arena', 'perspective', 'aurora', 'signature'),
+    'text'      :   ('minimal', 'calma', 'classic', 'ai_lumen', 'proceso', 'terra', 'carta', 'lab', 'studio'),
+    'catalog'   :   ('vitrina', 'duo', 'promo', 'shop', 'street', 'mercado', 'ai_pulse'),
+    'empty'     :   ('classic', 'calma', 'minimal', 'studio', 'boutique', 'carta'),
+}
+
+
+def _data_signal(template, stats, facts):
+    """Señales de datos reales: una plantilla audaz sin materia queda vacía."""
+    score   =   0
+    if (stats['gallery'] >= 3 or stats['images'] >= 6) and template in _DATA_SIGNALS['photos']:
+        score   +=  3
+    if stats['text_chars'] >= 240 and template in _DATA_SIGNALS['text']:
+        score   +=  2
+    if stats['products'] >= 12 and template in _DATA_SIGNALS['catalog']:
+        score   +=  3
+    if stats['products'] == 0 and template in _DATA_SIGNALS['empty']:
+        score   +=  2
+    return score
+
+
+def _skin_pool(answers, seed):
     """
-    Puntúa las plantillas del plan: afinidad rubro (orden de la receta) y
-    tono, objetivo, densidad de datos y volumen de catálogo/imágenes. Los
-    dos diseños exclusivos de IA (solo presentes en `allowed` con
-    has_ai_design) suman señales de "libertad": fotos propias, textos
-    largos, rubro visual y objetivos de mostrar trabajos/confianza.
-    Devuelve las permitidas ordenadas de mejor a peor (empate: orden del rubro).
+    Pieles ordenadas por afinidad al rubro y al tono, rotadas por la
+    semilla: regenerar con seed+1 cambia de familia visual, no solo de
+    variantes. Nunca deja de ser el catálogo cerrado.
     """
-    rubro_order =   list(R.RUBROS[answers['rubro']]['templates'])
-    #Los ai_* no viven en las recetas por rubro: se suman al final del pool
-    #y la whitelist del plan decide si existen (nunca se hardcodea acá).
-    for template in R.AI_TEMPLATES:
-        if template not in rubro_order:
-            rubro_order.append(template)
+    rubro   =   answers['rubro']
+    tone    =   answers['tone']
+    both    =   [skin for skin in SKIN.SKIN_IDS if rubro in SKIN.SKINS[skin]['rubros'] and tone in SKIN.SKINS[skin]['tones']]
+    by_rubro =  [skin for skin in SKIN.SKIN_IDS if rubro in SKIN.SKINS[skin]['rubros'] and skin not in both]
+    by_tone  =  [skin for skin in SKIN.SKIN_IDS if tone in SKIN.SKINS[skin]['tones'] and skin not in both and skin not in by_rubro]
+    rest     =  [skin for skin in SKIN.SKIN_IDS if skin not in both + by_rubro + by_tone]
+    pool     =  both + by_rubro + by_tone + rest
+    offset   =  seed % max(1, len(pool))
+    return pool[offset:] + pool[:offset]
+
+
+def _style_candidates(facts, stats, answers, allowed, seed):
+    """
+    Candidatos de estilo ordenados de mejor a peor. Primero la matriz
+    "firma" del rubro (3 combinaciones, con piso de diversidad), después
+    las plantillas permitidas que la matriz no nombró (con piel afín
+    rotada por la semilla).
+    """
+    allowed_set =   set(allowed)
+    tone        =   answers['tone']
     goal        =   answers['goals'][0]
-    goal_boost  =   R.TEMPLATE_GOAL_AFFINITY.get(goal, ())
     density     =   sum(1 for key in ('products', 'images', 'gallery', 'testimonials', 'stats', 'team', 'timeline', 'benefits', 'faqs') if facts.get(key))
-    #Señales de libertad visual: cuanta más materia real hay, mejor se
-    #defiende una plantilla audaz sin quedar vacía.
-    freedom     =   0
-    if stats['gallery'] >= 3 or stats['images'] >= 6:
-        freedom += 2
-    if stats['text_chars'] >= 240:
-        freedom += 1
-    if answers['rubro'] in R.VISUAL_RUBROS:
-        freedom += 2
-    if goal in ('mostrar_trabajos', 'dar_confianza'):
-        freedom += 2
-    if answers['tone'] in ('moderno', 'audaz'):
-        freedom += 1
-    scored      =   []
-    for index, template in enumerate(rubro_order):
-        if template not in allowed:
-            continue
-        score   =   (len(rubro_order) - index) * 3
-        score   +=  R.TEMPLATE_TONE_AFFINITY.get(template, {}).get(answers['tone'], 0)
-        score   +=  3 if template in goal_boost else 0
+    skins       =   _skin_pool(answers, seed)
+    pairs       =   list(TYPE.TYPE_PAIRS)
+    seen        =   set()
+    candidates  =   []
+
+    def add(template, skin_id, pair, base):
+        if template not in allowed_set or (template, skin_id) in seen:
+            return
+        skin    =   SKIN.SKINS.get(skin_id)
+        if skin is None or pair not in TYPE.TYPE_PAIRS:
+            return
+        seen.add((template, skin_id))
+        score   =   base
+        score   +=  R.TEMPLATE_TONE_AFFINITY.get(template, {}).get(tone, 0) * 2
+        score   +=  4 if template in R.TEMPLATE_GOAL_AFFINITY.get(goal, ()) else 0
+        score   +=  3 if tone in skin['tones'] else 0
+        score   +=  2 if answers['rubro'] in skin['rubros'] else 0
         score   +=  min(density, 6)
-        if template in R.AI_TEMPLATES:
-            score   +=  min(freedom, 5)
-        #Catálogo grande pide grilla densa; web de vidriera (sin productos)
-        #respira mejor con una plantilla editorial.
-        if stats['products'] >= 12 and template in ('vitrina', 'duo'):
-            score   +=  2
-        if stats['products'] == 0 and template in ('calma', 'classic'):
-            score   +=  2
-        if stats['images'] >= 6 and template in ('cobre', 'minimal'):
-            score   +=  1
-        scored.append((score, -index, template))
-    scored.sort(reverse = True)
-    #El plan Básico tiene una sola plantilla: la lista nunca queda vacía
-    #(allowed_templates_of siempre devuelve al menos 'classic').
-    return [template for _, _, template in scored]
+        score   +=  _data_signal(template, stats, facts)
+        candidates.append({
+            'template'  :   template,
+            'skin'      :   skin_id,
+            'pair'      :   pair,
+            'source'    :   R.style_source_of(template),
+            'score'     :   score,
+        })
+
+    #1) matriz "firma" del rubro: piso de diversidad (plan + legacy + ai).
+    for index, signature in enumerate(R.RUBRO_STYLES.get(answers['rubro'], ())):
+        add(signature['template'], signature['skin'], signature['pair'], 40 - index * 5)
+    #2) el resto de las plantillas permitidas, con piel rotada.
+    order       =   list(R.RUBROS[answers['rubro']]['templates']) + list(R.AI_TEMPLATES) + list(R.LEGACY_TEMPLATES)
+    order      +=  [template for template in allowed if template not in order]
+    for index, template in enumerate(order):
+        if template in seen_templates(candidates):
+            continue
+        add(template, skins[(index * 3 + seed) % len(skins)], pairs[(index * 5 + seed) % len(pairs)], 8)
+    #Los mejores compiten; entre los tres estilos "firma" del rubro la
+    #semilla decide el orden (así "otra propuesta" cambia de familia
+    #visual, no de variante).
+    candidates.sort(key = lambda item: (-item['score'], item['template'], item['skin']))
+    head    =   min(3, len(candidates))
+    if head > 1:
+        rotate      =   seed % head
+        candidates  =   candidates[rotate:head] + candidates[:rotate] + candidates[head:]
+    return candidates
+
+
+def seen_templates(candidates):
+    return {item['template'] for item in candidates}
+
+
+def _select_styles(candidates, count):
+    """
+    Diversidad OBLIGATORIA: dentro de una generación las propuestas
+    difieren en plantilla, piel y par tipográfico. Si el catálogo no
+    alcanza se relaja primero el par y después la piel (la plantilla nunca:
+    dos propuestas con la misma plantilla no son dos propuestas).
+    """
+    chosen      =   []
+    templates   =   set()
+    skins       =   set()
+    pairs       =   set()
+    for item in candidates:
+        if len(chosen) >= count:
+            break
+        if item['template'] in templates or item['skin'] in skins or item['pair'] in pairs:
+            continue
+        chosen.append(item)
+        templates.add(item['template'])
+        skins.add(item['skin'])
+        pairs.add(item['pair'])
+    for item in candidates:
+        if len(chosen) >= count:
+            break
+        if item in chosen or item['template'] in templates:
+            continue
+        chosen.append(item)
+        templates.add(item['template'])
+        skins.add(item['skin'])
+        pairs.add(item['pair'])
+    for item in candidates:
+        if len(chosen) >= count:
+            break
+        if item in chosen or item['template'] in templates:
+            continue
+        chosen.append(item)
+        templates.add(item['template'])
+    return chosen[:count]
 
 
 #=========================================
@@ -493,10 +586,72 @@ def _layout(store, facts, answers, rng, shift, pattern = None):
     return layout
 
 
+#El layout de la piel se traduce a variantes REALES del catálogo (nunca
+#CSS): es lo que hace que "rediseñar" cambie la estructura, no solo el
+#color. Los ids de variante existen en TEMPLATE_BLOCKS.
+_HERO_BY_LAYOUT     =   {
+    'centered': 'centered', 'split': 'split', 'cinema': 'cinema',
+    'editorial': 'editorial', 'logo': 'logo',
+}
+_GRID_BY_LAYOUT     =   {
+    '12':        ('grid', 'auto'),
+    'asym':      ('cols3', 'cols3'),
+    'split':     ('cols2', 'cols2'),
+    'bento':     ('masonry', 'masonry'),
+    'editorial': ('lead', 'lead'),
+}
+
+
+def _apply_skin_layout(layout, skin, facts):
+    """
+    Rediseño completo: la portada, la vitrina y la grilla del catálogo
+    toman la variante que pide el layout de la piel. Con logo de portada
+    el hero 'logo' solo se usa si hay logo real.
+    """
+    config      =   skin['layout']
+    hero        =   _HERO_BY_LAYOUT.get(config.get('hero'))
+    if hero == 'logo' and not facts.get('logo'):
+        hero    =   'full'
+    featured, catalog_grid  =   _GRID_BY_LAYOUT.get(config.get('grid'), ('grid', 'auto'))
+    for surface, section in layout.items():
+        for block in section.get('blocks', []):
+            if surface == 'landing' and block['id'] == 'hero' and hero:
+                block['variant']    =   hero
+            elif surface == 'landing' and block['id'] == 'featured':
+                block['variant']    =   featured
+            elif surface == 'catalog' and block['id'] == 'grid':
+                block['variant']    =   catalog_grid
+    return layout
+
+
 #=========================================
 # ELEMENTOS SOLO-IA (bloques nuevos según la entrevista)
 #=========================================
 _ELEMENT_ICONS  =   ('sparkles', 'star', 'heart', 'shield-check', 'clock', 'award')
+#Bloques v4: se suman SOLO con datos reales (sin props no hay bloque).
+_V4_ELEMENTS    =   ('aiprocess', 'aipricing', 'aimosaic')
+
+
+def _money(value):
+    """Precio corto en formato es-AR ($1.500). Sin valor, cadena vacía."""
+    try:
+        return '$' + f'{int(round(float(value))):,}'.replace(',', '.')
+    except (TypeError, ValueError):
+        return ''
+
+
+def _pricing_items(customization):
+    """2-4 filas de precio con datos REALES del catálogo (nunca inventa)."""
+    from StoreApp.domains.catalog.models import Product
+    rows    =   Product.objects.filter(store = customization.store, is_active = True)[:4]
+    items   =   []
+    for product in rows:
+        price   =   product.offer_price if product.offer_price is not None else product.price
+        money   =   _money(price)
+        name    =   str(product.name or '').strip()[:40]
+        if name and money:
+            items.append({'name': name, 'price': money})
+    return items
 
 
 def _element_props(block_id, customization, facts, use_icons):
@@ -537,6 +692,25 @@ def _element_props(block_id, customization, facts, use_icons):
         return {'title': 'Lo que nos diferencia', 'items': items} if items else {}
     if block_id == 'aiband' and facts.get('offers'):
         return {'title': 'Ofertas vigentes', 'text': 'Aprovechá los precios de esta semana.', 'label': 'Ver ofertas'}
+    if block_id == 'aiprocess':
+        items   =   []
+        for row in (customization.service_steps or [])[:5]:
+            if not isinstance(row, dict):
+                continue
+            title   =   str(row.get('title') or row.get('name') or '').strip()[:60]
+            text    =   str(row.get('text') or row.get('desc') or '').strip()[:160]
+            if title:
+                items.append({'title': title, **({'text': text} if text else {})})
+        return {'title': 'Cómo trabajamos', 'items': items} if len(items) >= 3 else {}
+    if block_id == 'aipricing':
+        items   =   _pricing_items(customization)
+        return {'title': 'Precios', 'items': items} if len(items) >= 2 else {}
+    if block_id == 'aimosaic':
+        title   =   str(customization.headline or customization.display_name or '').strip()[:80]
+        caption =   str(customization.about_text or customization.description or '').strip()[:120]
+        if not (title or caption):
+            return {}
+        return {**({'title': title} if title else {}), **({'caption': caption} if caption else {})}
     if block_id == 'aistrip':
         items   =   []
         if customization.whatsapp:
@@ -549,14 +723,15 @@ def _element_props(block_id, customization, facts, use_icons):
     return {}
 
 
-def _add_elements(layout, customization, facts, answers, use_icons, has_ai):
+def _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai):
     """
-    Reglas de elementos (documentadas en ai_design_recipes.AI_ELEMENT_ORDER):
-    dar_confianza => aiquote; must_have precios/garantías => aicheck;
-    mostrar_servicios => aigrid; vender_online con ofertas => aiband; 2+
-    datos de contacto en must_have => aistrip. Máximo 3, nunca duplica ids
-    ni pisa un bloque existente. Sin íconos (use_icons=False) no se suman
-    aigrid/aistrip.
+    Reglas de elementos (ai_design_recipes.AI_ELEMENT_ORDER): dar_confianza
+    => aiquote; must_have precios/garantías => aicheck; mostrar_servicios =>
+    aigrid; vender_online con ofertas => aiband; 2+ datos de contacto =>
+    aistrip; pasos cargados => aiprocess; 2+ productos => aipricing; galería
+    grande => aimosaic. Máximo 4 en total, nunca duplica ids ni pisa un
+    bloque existente. Sin íconos (use_icons=False) no se suman aigrid ni
+    aistrip.
     """
     if not has_ai:
         return layout
@@ -573,6 +748,13 @@ def _add_elements(layout, customization, facts, answers, use_icons, has_ai):
         picked.append('aiband')
     if len(must & {'contact', 'faq', 'stats'}) >= 2:
         picked.append('aistrip')
+    #v4: rediseño de contenido, no solo de piel.
+    if facts.get('steps') and goal in ('mostrar_servicios', 'conseguir_consultas'):
+        picked.append('aiprocess')
+    if stats.get('products', 0) >= 2 and goal in ('vender_online', 'mostrar_servicios'):
+        picked.append('aipricing')
+    if stats.get('gallery', 0) >= 4 or stats.get('images', 0) >= 6:
+        picked.append('aimosaic')
     if not use_icons:
         picked  =   [block_id for block_id in picked if block_id not in ('aigrid', 'aistrip')]
     picked  =   [block_id for block_id in R.AI_ELEMENT_ORDER if block_id in picked][:R.AI_ELEMENT_MAX]
@@ -580,8 +762,12 @@ def _add_elements(layout, customization, facts, answers, use_icons, has_ai):
     for block_id in picked:
         if block_id in {block['id'] for block in landing}:
             continue
-        block   =   {'id': block_id, 'enabled': True, 'variant': TEMPLATE_BLOCKS['landing'][block_id]['variants'][0]}
         props   =   _element_props(block_id, customization, facts, use_icons)
+        if not props and block_id in _V4_ELEMENTS:
+            #Los bloques v4 (precios/pasos/mosaico) solo se suman con datos
+            #reales: no inventamos precios, pasos ni fotos.
+            continue
+        block   =   {'id': block_id, 'enabled': True, 'variant': TEMPLATE_BLOCKS['landing'][block_id]['variants'][0]}
         if props:
             block['props']  =   props
         anchor  =   R.AI_ELEMENT_ANCHORS.get(block_id)
@@ -604,22 +790,52 @@ def _add_elements(layout, customization, facts, answers, use_icons, has_ai):
 #=========================================
 # LOOK (site_theme parcial)
 #=========================================
-def _theme(answers, rng, shift, template = None):
-    #Los diseños exclusivos de IA traen su propio look (vidrio/luz vs.
-    #tipografía XL); el resto usa el look del rubro.
-    look_id =   R.AI_LOOKS.get(template) or R.RUBROS[answers['rubro']]['look']
-    theme   =   copy.deepcopy(R.LOOKS[look_id])
-    #El tono ajusta energía (curvas, aire, movimiento), no la identidad.
+def _theme(skin, pair, answers, rng, shift, template = None):
+    """
+    site_theme parcial v2 compuesto por la piel: paleta + contenedores +
+    botones + fondo + movimiento + layout + skin, con la tipografía
+    expandida a los 13 roles del par elegido. El tono ajusta energía
+    (curvas, aire, movimiento), no la identidad.
+    """
+    theme   =   {
+        'palette'       :   copy.deepcopy(skin['palette']),
+        'containers'    :   copy.deepcopy(skin['containers']),
+        'buttons'       :   copy.deepcopy(skin['buttons']),
+        'background'    :   copy.deepcopy(skin['background']),
+        'motion'        :   copy.deepcopy(skin['motion']),
+        'layout'        :   copy.deepcopy(skin['layout']),
+        'skin'          :   {'id': skin['id'], 'family': skin['family']},
+    }
     for section, values in R.TONE_TWEAKS[answers['tone']].items():
         theme.setdefault(section, {}).update(values)
+    #El layout responde al tono sin salirse de los enums del contrato.
+    if answers['tone'] == 'audaz':
+        theme['layout']['density']  =   'compact'
+    elif answers['tone'] == 'calido':
+        theme['layout']['gutter']   =   'lg'
+    #Tipografía por rol: el par fija las familias, la piel y el tono los
+    #pesos/tamaños. Nunca dos familias distintas para roles de cuerpo.
+    roles       =   TYPE.roles_for(pair, answers['tone'], skin['family'])
+    pair_data   =   TYPE.TYPE_PAIRS.get(pair) or TYPE.TYPE_PAIRS['grotesk-clean']
+    theme['typography'] =   {
+        'heading'       :   pair_data['display'],
+        'body'          :   pair_data['body'],
+        'scale'         :   skin['typography'].get('scale', 'balanced'),
+        'weightHeading' :   roles['h1']['weight'],
+        'letterSpacing' :   '-0.02em',
+        'roles'         :   roles,
+    }
     if answers.get('brand_color'):
         #El color del dueño manda: la paleta se deriva de él y la propuesta
         #lo declara como elección del usuario.
         theme['palette']    =   _palette_from_brand(answers['brand_color'], theme['palette'])
         choice              =   {'source': 'user', 'accent': theme['palette']['accent']}
     else:
-        accents =   R.ACCENTS.get(look_id) or (theme['palette']['accent'],)
+        accents =   skin['accents'] or (theme['palette']['accent'],)
         accent  =   accents[(shift + rng.randrange(len(accents))) % len(accents)]
+        #AA no negociable: el acento es el color de marca de los botones y
+        #tiene que leerse sobre el fondo de la página (piel × rubro).
+        accent  =   _ensure_contrast(accent, theme['palette']['bg'], 4.5)
         theme['palette']['accent']  =   accent
         theme['palette']['primary'] =   accent
         choice              =   {'source': 'ai', 'accent': accent}
@@ -653,13 +869,41 @@ def _cover_for(answers, facts):
     return {'mode': 'photo', 'reason': 'La portada va con foto para mostrar el local o el trabajo.'}
 
 
-def _block_styles(template, theme, layout):
+_SKIN_BLOCK_STYLES  =   {
+    #Firma por contenedor de cada piel (claves del catálogo de site_theme).
+    'brutal':       {'hero': {'radius': 'none', 'border': 'bold'}, 'cta': {'radius': 'none', 'border': 'bold'}},
+    'editorial':    {'hero': {'align': 'left'}, 'aiquote': {'align': 'center'}},
+    'luxury':       {'hero': {'density': 'spacious'}, 'cta': {'border': 'thin'}},
+    'glass':        {'hero': {'surface': 'glass'}, 'stats': {'surface': 'glass'}},
+    'kinetic':      {'hero': {'density': 'compact'}, 'aiband': {'accent': None}},
+    'minimal':      {'hero': {'surface': 'flat'}},
+    'mono':         {'hero': {'radius': 'none'}},
+    'neon':         {'hero': {'surface': 'glass'}, 'aiband': {'accent': None}},
+    'corporate':    {'hero': {'surface': 'elevated'}},
+    'soft':         {'hero': {'radius': 'xl'}},
+    'organic':      {'hero': {'radius': 'xl'}},
+    'retro':        {'hero': {'border': 'bold'}},
+    'paper':        {'hero': {'surface': 'flat'}},
+    'tech':         {'hero': {'surface': 'outlined'}},
+    'playful':      {'hero': {'radius': 'xl'}},
+    'gradient':     {'hero': {'surface': 'glass'}},
+    'cinematic':    {'hero': {'align': 'center'}},
+    'warm':         {'hero': {'radius': 'lg'}},
+}
+
+
+def _block_styles(template, theme, layout, skin = None):
     """
-    Overrides "pro" por contenedor del diseño de IA: solo bloques que están
-    en el layout y solo claves del catálogo. `accent` se resuelve con la
-    paleta final (las recetas lo dejan en None).
+    Overrides "pro" por contenedor: la firma de la plantilla (ai_*) y la de
+    la piel, solo bloques que están en el layout y solo claves del
+    catálogo. `accent` se resuelve con la paleta final.
     """
-    styles  =   R.AI_BLOCK_STYLES.get(template) or {}
+    styles  =   {}
+    for block_id, values in (R.AI_BLOCK_STYLES.get(template) or {}).items():
+        styles.setdefault(block_id, {}).update(values)
+    if skin is not None:
+        for block_id, values in _SKIN_BLOCK_STYLES.get(skin['family'], {}).items():
+            styles.setdefault(block_id, {}).update(values)
     present =   {block['id'] for block in layout['landing']['blocks'] if block.get('enabled')}
     out     =   {}
     for block_id, values in styles.items():
@@ -760,34 +1004,41 @@ def _proposal_count(allowed, facts):
 
 
 def _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai = False):
-    templates       =   _score_templates(facts, stats, answers, allowed)
-    if not templates:
-        templates   =   [StoreCustomization.TEMPLATE_CLASSIC]
-    rng             =   random.Random(seed)
+    """
+    2-3 propuestas de web completa. Cada una es una TERNA de estilo
+    (plantilla + piel + par tipográfico) con diversidad garantizada, un
+    layout de landing/catálogo/servicios rediseñado por la piel y el
+    site_theme v2 (roles tipográficos incluidos).
+    """
+    styles          =   _style_candidates(facts, stats, answers, allowed, seed)
+    if not styles:
+        fallback    =   StoreCustomization.TEMPLATE_CLASSIC if StoreCustomization.TEMPLATE_CLASSIC in allowed else list(allowed)[0]
+        styles      =   [{'template': fallback, 'skin': SKIN.SKIN_IDS[seed % len(SKIN.SKIN_IDS)],
+                          'pair': 'grotesk-clean', 'source': R.style_source_of(fallback), 'score': 0}]
     count           =   _proposal_count(allowed, facts)
+    chosen          =   _select_styles(styles, count)
+    rng             =   random.Random(seed)
     use_icons       =   answers.get('use_icons')
     if use_icons is None:
         #Sin respuesta, el rubro decide: las webs de vidriera llevan íconos.
         use_icons   =   answers['rubro'] in R.VISUAL_RUBROS
     has_plus        =   profile_has_benefit(store.user, 'has_design_plus')
     has_style       =   profile_has_benefit(store.user, 'has_customization')
-    #Con los ai_* habilitados, al menos una propuesta los usa: si el puntaje
-    #no los dejó arriba, la segunda propuesta pasa a ser la mejor de IA
-    #(siempre dentro de la whitelist del plan).
-    ai_allowed      =   [template for template in templates if template in R.AI_TEMPLATES]
-    if ai_allowed and count >= 2 and not any(template in R.AI_TEMPLATES for template in templates[:count]):
-        templates[1]    =   ai_allowed[0]
     proposals       =   []
     signatures      =   set()
-    for index in range(count):
-        #La propuesta 0 va con la mejor plantilla; las demás rotan para que
-        #nunca haya dos iguales (misma plantilla => otro orden/variantes).
+    for index, style in enumerate(chosen):
+        #La propuesta 0 va con el mejor estilo; las demás ya vienen con
+        #plantilla/piel/par distintos (diversidad obligatoria).
         shift       =   0 if index == 0 else index
-        template    =   templates[index % len(templates)]
+        template    =   style['template']
+        skin        =   SKIN.SKINS[style['skin']]
+        pair        =   style['pair']
         pattern     =   _pattern_for(template, answers, shift)
+        attempt     =   0
         for attempt in range(4):
             layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
-            layout  =   _add_elements(layout, customization, facts, answers, use_icons, has_ai)
+            layout  =   _apply_skin_layout(layout, skin, facts)
+            layout  =   _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai)
             signature = (template, tuple(block['id'] for block in layout['landing']['blocks']))
             if signature not in signatures:
                 break
@@ -797,7 +1048,7 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             for block in layout['landing']['blocks']:
                 if block['id'] == 'hero':
                     block['variant']    =   'logo'
-        theme, choice   =   _theme(answers, rng, shift + attempt, template)
+        theme, choice   =   _theme(skin, pair, answers, rng, shift + attempt, template)
         if cover['mode'] == 'logo':
             #Con el logo de portada el fondo nunca apunta a una imagen: el
             #hero se resuelve con color sólido.
@@ -805,23 +1056,36 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             background['type']  =   'solid'
             background.pop('value', None)
             theme['background'] =   background
-        block_styles    =   _block_styles(template, theme, layout)
+        block_styles    =   _block_styles(template, theme, layout, skin)
         if block_styles:
             theme['blocks'] =   block_styles
         night, theme_mode, theme_toggle =   _resolve_night(answers, theme, template)
         text    =   ai_design_copy.build(store, customization, answers['rubro'], answers['tone'], facts, stats, rng)
+        clean_theme     =   clean_site_theme(
+            theme,
+            has_plus        =   has_plus,
+            has_advanced    =   has_advanced,
+            has_style       =   has_style,
+            store           =   store,
+        )
         proposals.append({
             'id'            :   f'p{index + 1}',
             'label'         :   (pattern['label'] if pattern else R.GOAL_RECIPES[answers['goals'][0]]['labels'][index % 3])[:32],
             'why'           :   _why(answers, template, index, pattern),
             'template'      :   template,
-            'site_theme'    :   clean_site_theme(
-                theme,
-                has_plus        =   has_plus,
-                has_advanced    =   has_advanced,
-                has_style       =   has_style,
-                store           =   store,
-            ),
+            'style_source'  :   style['source'],
+            'skin'          :   {'id': skin['id'], 'family': skin['family'], 'label': skin['label']},
+            'site_theme'    :   clean_theme,
+            'typography_roles': (clean_theme.get('typography') or {}).get('roles') or theme['typography']['roles'],
+            'layout'        :   clean_theme.get('layout') or theme['layout'],
+            'variety'       :   {
+                'family'        :   skin['family'],
+                'differs_by'    :   ['template', 'skin', 'type-pair'],
+            },
+            'redesign'      :   {
+                'surfaces'      :   ['landing', 'catalog', 'services'],
+                'changed'       :   bool(clean_theme.get('layout') or clean_theme.get('skin')),
+            },
             'layout_config' :   clean_layout_config(layout, has_advanced, has_ai),
             'theme_choice'  :   choice,
             'night_mode'    :   night,

@@ -68,6 +68,9 @@ export const TEMPLATE_BLOCKS = {
     aicheck:      { icon: 'check-circle', label: 'Checklist',     variants: { cards: 'Tarjetas', list: 'Lista' }, props: { title: 80, items: { text: 90 }, max: 6 }, aiOnly: true, desc: 'Una lista de puntos a favor con tilde de acento.' },
     aigrid:       { icon: 'layout-grid', label: 'Grilla de íconos', variants: { grid2: '2 columnas', grid3: '3 columnas', grid4: '4 columnas' }, props: { title: 80, items: { icon: 32, title: 40, text: 90 }, max: 6 }, aiOnly: true, desc: 'Una grilla de íconos con título y texto corto.' },
     aiband:       { icon: 'megaphone', label: 'Banda intermedia',  variants: { band: 'Banda', card: 'Tarjeta' }, props: { title: 80, text: 160, label: 40 }, aiOnly: true, desc: 'Una banda de acento con un botón, entre dos secciones.' },
+    aipricing:    { icon: 'receipt', label: 'Planes y precios', variants: { cards: 'Tarjetas', table: 'Tabla' }, props: { title: 80, items: { name: 40, price: 20, note: 80, items: { text: 60 } }, min: 2, max: 4 }, aiOnly: true, desc: 'De 2 a 4 planes con precio y beneficios.' },
+    aiprocess:    { icon: 'list-ordered', label: 'Proceso paso a paso', variants: { steps: 'Pasos', rail: 'Línea de tiempo' }, props: { title: 80, items: { title: 60, text: 160 }, min: 3, max: 5 }, aiOnly: true, desc: 'De 3 a 5 pasos de cómo trabajás o comprás.' },
+    aimosaic:     { icon: 'images', label: 'Mosaico de fotos', variants: { mosaic: 'Mosaico', rail: 'Carrusel' }, props: { title: 80, caption: 120 }, aiOnly: true, desc: 'Un mosaico con las fotos de tu galería.' },
     contact:      { icon: 'mail', label: 'Contacto',             variants: { card: 'Tarjeta', map: 'Mapa y horarios' }, props: TITLE, desc: 'El formulario que te llega al email, con mapa y redes.', edit: 'design' }
   },
   catalog: {

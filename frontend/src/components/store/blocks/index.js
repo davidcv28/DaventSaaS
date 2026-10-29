@@ -36,5 +36,8 @@ export const SP_LANDING_BLOCKS = {
   aistrip:       defineAsyncComponent(() => import('./BlkAiStrip.vue')),
   aicheck:       defineAsyncComponent(() => import('./BlkAiCheck.vue')),
   aigrid:        defineAsyncComponent(() => import('./BlkAiGrid.vue')),
-  aiband:        defineAsyncComponent(() => import('./BlkAiBand.vue'))
+  aiband:        defineAsyncComponent(() => import('./BlkAiBand.vue')),
+  aipricing:     defineAsyncComponent(() => import('./BlkAiPricing.vue')),
+  aiprocess:     defineAsyncComponent(() => import('./BlkAiProcess.vue')),
+  aimosaic:      defineAsyncComponent(() => import('./BlkAiMosaic.vue'))
 }

@@ -23,6 +23,11 @@ from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS, clean_layout_
 from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage, StudioVersion
 from StoreApp.domains.stores.site_theme import clean_site_theme
 from StoreApp.domains.stores.services import allowed_templates_of
+from StoreApp.domains.stores.services.ai_design_skins import SKINS, SKIN_IDS
+from StoreApp.domains.stores.services.ai_design_typography import (
+    BODY_ROLES, FONT_SLUGS, TYPOGRAPHY_ROLES,
+    TYPE_CASES, TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING,
+)
 from StoreApp.domains.stores.services import storage
 from StoreApp.domains.stores.services.ai_design import generate as generate_ai_design
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
@@ -114,7 +119,7 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/3')
+        self.assertEqual(first.json()['engine'], 'ai-design/4')
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -302,9 +307,12 @@ class AiDesignV2Tests(AiDesignBase):
     def test_ai_templates_used_when_plan_allows(self):
         store, _    =   self._store()
         _, data     =   self._generate(store)
-        self.assertEqual(data['engine'], 'ai-design/3')
-        templates   =   [proposal['template'] for proposal in data['proposals']]
-        self.assertTrue(any(template in ('ai_lumen', 'ai_pulse') for template in templates))
+        self.assertEqual(data['engine'], 'ai-design/4')
+        #La matriz del rubro mezcla plan + legacy + ai: cualquier par de
+        #propuestas trae al menos un estilo exclusivo (ai o legacy).
+        sources     =   {proposal['style_source'] for proposal in data['proposals']}
+        self.assertTrue(sources & {'ai', 'legacy'}, sources)
+        self.assertIn('ai_lumen', allowed_templates_of(store.user))
 
     def test_ai_templates_never_outside_plan(self):
         #Sin has_ai_design los ai_* no están en la whitelist del plan y el
@@ -319,12 +327,22 @@ class AiDesignV2Tests(AiDesignBase):
             self.assertNotIn(proposal['template'], ('ai_lumen', 'ai_pulse'))
 
     def test_ai_proposal_uses_bold_blocks_and_look(self):
-        store, _    =   self._store()
+        store, customization    =   self._store(products = 8)
+        customization.about_text =   'Somos una marca con historia. ' * 12
+        customization.services   =   [{'title': f'Servicio {index}', 'text': 'Detalle'} for index in range(3)]
+        customization.save()
+        for index in range(3):
+            StoreGalleryImage.objects.create(store = store, image_key = f'gg{index}', position = index)
         _, data     =   self._generate(store)
-        proposal    =   next(item for item in data['proposals'] if item['template'] in ('ai_lumen', 'ai_pulse'))
+        #v4: la generación trae al menos un estilo de IA cuando hay materia.
+        proposal    =   next(item for item in data['proposals'] if item['style_source'] == 'ai')
         landing     =   {block['id']: block for block in proposal['layout_config']['landing']['blocks']}
         self.assertIn(landing['hero'].get('variant'), ('cinema', 'editorial', 'full'))
-        self.assertEqual(proposal['site_theme']['containers']['surface'], 'glass' if proposal['template'] == 'ai_lumen' else 'flat')
+        #Los contenedores los dicta la PIEL elegida, no la plantilla.
+        self.assertEqual(
+            proposal['site_theme']['containers']['surface'],
+            SKINS[proposal['skin']['id']]['containers']['surface'],
+        )
         self.assertTrue(proposal['why'])
 
     def test_copy_draft_respects_model_limits(self):
@@ -624,3 +642,226 @@ class AiDesignV3Tests(AiDesignBase):
             [block['id'] for block in proposal['layout_config']['landing']['blocks']],
         )
         self.assertTrue(StudioVersion.objects.filter(store = store).exists())
+
+#=========================================
+# RONDA 4 — VARIEDAD REAL: PLANTILLAS RETIRADAS, 18 PIELES Y TIPOGRAFÍA POR ROL
+#=========================================
+def _contrast(a, b):
+    """WCAG 2.1 (misma fórmula que site_theme._contrast_ratio)."""
+    def channel(value):
+        s = value / 255
+        return s / 12.92 if s <= 0.03928 else ((s + 0.055) / 1.055) ** 2.4
+    def lum(hex_value):
+        h = hex_value.lstrip('#')
+        r, g, b = (int(h[index:index + 2], 16) for index in (0, 2, 4))
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+    la, lb = lum(a), lum(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+
+class AiDesignV4Tests(AiDesignBase):
+    """Motor v4: terna (plantilla, piel, par tipográfico) con diversidad
+    obligatoria, site_theme v2 (roles + layout + skin) y rediseño completo."""
+
+    RUBROS  =   ('comercio', 'gastronomia', 'indumentaria', 'servicios_profesionales',
+                 'salud', 'belleza', 'construccion', 'tecnologia', 'educacion',
+                 'turismo', 'mascotas', 'arte', 'otro')
+
+    def _generate(self, store, payload = None):
+        data        =   {'tone': 'moderno', 'goals': ['vender_online']}
+        data.update(payload or {})
+        response    =   self._client(store).post(AI_URL, data, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:400])
+        return response.json()
+
+    def test_engine_reports_v4(self):
+        store, _    =   self._store()
+        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/4')
+
+    def test_each_rubro_gets_its_own_signature_style(self):
+        store, _    =   self._store()
+        pairs       =   []
+        for rubro in self.RUBROS:
+            proposal    =   self._generate(store, {'rubro': rubro})['proposals'][0]
+            pairs.append((proposal['template'], proposal['skin']['id']))
+        self.assertEqual(len(pairs), len(set(pairs)), pairs)
+
+    def test_proposals_differ_in_template_skin_and_type_pair(self):
+        store, _    =   self._store(products = 8)
+        proposals   =   self._generate(store, {'rubro': 'comercio'})['proposals']
+        self.assertIn(len(proposals), (2, 3))
+        self.assertEqual(len({proposal['template'] for proposal in proposals}), len(proposals))
+        self.assertEqual(len({proposal['skin']['id'] for proposal in proposals}), len(proposals))
+        pairs       =   {
+            (proposal['typography_roles']['display']['font'], proposal['typography_roles']['body']['font'])
+            for proposal in proposals
+        }
+        self.assertEqual(len(pairs), len(proposals))
+        for proposal in proposals:
+            self.assertEqual(proposal['variety']['differs_by'], ['template', 'skin', 'type-pair'])
+
+    def test_legacy_and_ai_templates_reach_the_proposals(self):
+        store, _    =   self._store()
+        sources     =   set()
+        for rubro in self.RUBROS:
+            for proposal in self._generate(store, {'rubro': rubro})['proposals']:
+                sources.add(proposal['style_source'])
+        self.assertIn('ai', sources)
+        self.assertIn('legacy', sources)
+        self.assertIn('plan', sources)
+
+    def test_legacy_and_ai_templates_never_without_the_flag(self):
+        store, _    =   self._store(ai = False)
+        self.assertEqual(self._client(store).post(AI_URL, {'rubro': 'comercio'}, format = 'json').status_code, 403)
+        allowed     =   allowed_templates_of(store.user)
+        self.assertNotIn('perspective', allowed)
+        self.assertNotIn('ai_lumen', allowed)
+
+    def test_allowed_templates_grow_with_the_flag(self):
+        store, _    =   self._store()
+        allowed     =   allowed_templates_of(store.user)
+        for template in ('ai_lumen', 'ai_pulse', 'perspective', 'carta', 'proceso'):
+            self.assertIn(template, allowed)
+
+    def test_typography_roles_cover_the_thirteen_roles(self):
+        store, _    =   self._store()
+        proposal    =   self._generate(store, {'rubro': 'belleza'})['proposals'][0]
+        roles       =   proposal['typography_roles']
+        self.assertEqual(set(roles), set(TYPOGRAPHY_ROLES))
+        for role, values in roles.items():
+            self.assertIn(values['font'], FONT_SLUGS)
+            self.assertIn(values['size'], TYPE_SIZES)
+            self.assertIn(values['tracking'], TYPE_TRACKING)
+            self.assertIn(values['leading'], TYPE_LEADING)
+            self.assertIn(values['case'], TYPE_CASES)
+            self.assertIn(values['weight'], (300, 400, 500, 600, 700, 800, 900))
+        #Cuerpo legible y precios con peso alto: reglas del contrato.
+        self.assertLessEqual(roles['body']['weight'], 500)
+        self.assertEqual(roles['price']['weight'], 700)
+        self.assertEqual(roles['eyebrow']['case'], 'upper')
+        self.assertEqual(roles['eyebrow']['tracking'], 'wider')
+        #Nunca dos familias de cuerpo distintas.
+        self.assertEqual(len({roles[role]['font'] for role in BODY_ROLES}), 1)
+
+    def test_skin_palettes_pass_aa(self):
+        for skin_id, skin in SKINS.items():
+            palette =   skin['palette']
+            self.assertGreaterEqual(_contrast(palette['text'], palette['bg']), 4.5, skin_id)
+            self.assertGreaterEqual(_contrast(palette['muted'], palette['bg']), 4.5, skin_id)
+
+    def test_skin_catalog_is_closed_and_composed(self):
+        self.assertEqual(len({skin['family'] for skin in SKINS.values()}), 18)
+        for skin_id, skin in SKINS.items():
+            self.assertTrue(skin_id.startswith(f"{skin['family']}-"), skin_id)
+            self.assertIn(skin['layout']['grid'], ('12', 'asym', 'split', 'bento', 'editorial'))
+            self.assertIn(skin['layout']['hero'], ('centered', 'split', 'cinema', 'logo', 'editorial'))
+
+    def test_site_theme_v2_accepts_roles_layout_and_skin(self):
+        clean   =   clean_site_theme({
+            'typography': {'roles': {'body': {'font': 'inter', 'size': 'md', 'weight': 400,
+                                              'tracking': 'normal', 'leading': 'relaxed', 'case': 'none'}}},
+            'layout': {'density': 'compact', 'grid': 'bento', 'hero': 'cinema',
+                       'gutter': 'sm', 'measure': 'wide', 'radiusScale': 'lg'},
+            'skin': {'id': 'editorial-ink', 'family': 'glass'},
+        }, has_advanced = True)
+        self.assertEqual(clean['typography']['roles']['body']['font'], 'inter')
+        self.assertEqual(clean['layout']['grid'], 'bento')
+        self.assertEqual(clean['skin'], {'id': 'editorial-ink', 'family': 'editorial'})
+
+    def test_site_theme_v2_rejects_invalid_roles(self):
+        base    =   {'font': 'inter', 'size': 'md', 'weight': 400, 'tracking': 'normal',
+                     'leading': 'normal', 'case': 'none'}
+        for role, patch in (
+            ('inventado', {}),
+            ('body', {'font': 'comic-sans'}),
+            ('body', {'size': 'gigante'}),
+            ('body', {'weight': 450}),
+            ('body', {'weight': 1000}),
+            ('body', {'tracking': 'wideee'}),
+            ('body', {'leading': 'apretado'}),
+            ('body', {'case': 'capitalize'}),
+            ('body', {'inventado': 1}),
+        ):
+            with self.assertRaises(Exception, msg = f'{role} {patch}'):
+                clean_site_theme({'typography': {'roles': {role: {**base, **patch}}}}, has_advanced = True)
+
+    def test_site_theme_v2_rejects_invalid_layout(self):
+        for layout in ({'grid': 'masonry'}, {'hero': 'video'}, {'density': 'tight'},
+                       {'gutter': 'xl'}, {'measure': 'huge'}, {'radiusScale': 'pill'}):
+            with self.assertRaises(Exception, msg = layout):
+                clean_site_theme({'layout': layout}, has_advanced = True)
+
+    def test_site_theme_v2_discards_unknown_skin(self):
+        self.assertEqual(clean_site_theme({'skin': {'id': 'inventada-1', 'family': 'glass'}}, has_advanced = True), {})
+        self.assertEqual(clean_site_theme({'skin': {'family': 'glass'}}, has_advanced = True), {})
+
+    def test_site_theme_v2_is_gated_by_the_plan(self):
+        payload =   {'layout': {'grid': 'bento'}, 'skin': {'id': 'editorial-ink'},
+                     'typography': {'roles': {'body': {'font': 'inter', 'size': 'md', 'weight': 400,
+                                                       'tracking': 'normal', 'leading': 'normal', 'case': 'none'}}}}
+        self.assertEqual(clean_site_theme(payload, has_plus = True), {})
+        self.assertEqual(clean_site_theme(payload, has_style = True), {})
+
+    def test_redesign_covers_landing_catalog_and_services(self):
+        store, _    =   self._store(products = 6)
+        for proposal in self._generate(store, {'rubro': 'tecnologia'})['proposals']:
+            self.assertEqual(proposal['redesign']['surfaces'], ['landing', 'catalog', 'services'])
+            self.assertTrue(proposal['redesign']['changed'])
+            self.assertEqual(set(proposal['layout_config']), {'landing', 'catalog', 'services'})
+            self.assertIn('skin', proposal['site_theme'])
+            self.assertIn('layout', proposal['site_theme'])
+
+    def test_apply_publishes_theme_v2_and_new_blocks(self):
+        store, customization    =   self._store(products = 3)
+        customization.service_steps =   [
+            {'title': f'Paso {index}', 'text': f'Explicación {index}'} for index in range(3)
+        ]
+        customization.save(update_fields = ['service_steps'])
+        for index in range(4):
+            StoreGalleryImage.objects.create(store = store, image_key = f'g{index}', position = index)
+        data        =   self._generate(store, {'rubro': 'comercio', 'goals': ['vender_online'],
+                                               'must_have': ['contact', 'faq']})
+        proposal    =   data['proposals'][0]
+        response    =   self._client(store).post(
+            APPLY_URL, {'seed': data['seed'], 'proposal_id': proposal['id']}, format = 'json',
+        )
+        self.assertEqual(response.status_code, 200, response.content[:400])
+        customization.refresh_from_db()
+        self.assertIn(customization.site_theme['skin']['id'], SKIN_IDS)
+        self.assertIn('roles', customization.site_theme['typography'])
+        self.assertIn('layout', customization.site_theme)
+        landing     =   [block['id'] for block in customization.layout_config['landing']['blocks']]
+        self.assertTrue({'aiprocess', 'aipricing', 'aimosaic'} & set(landing), landing)
+
+    def test_new_blocks_respect_their_props(self):
+        store, customization    =   self._store(products = 3)
+        customization.service_steps =   [{'title': f'Paso {index}', 'text': 'x' * 300} for index in range(6)]
+        customization.save(update_fields = ['service_steps'])
+        data        =   self._generate(store, {'rubro': 'comercio', 'goals': ['vender_online'],
+                                               'must_have': ['contact', 'faq']})
+        for proposal in data['proposals']:
+            for block in proposal['layout_config']['landing']['blocks']:
+                if block['id'] not in ('aiprocess', 'aipricing', 'aimosaic'):
+                    continue
+                spec    =   TEMPLATE_BLOCKS['landing'][block['id']]
+                self.assertTrue(spec['ai_only'])
+                if block.get('variant'):
+                    self.assertIn(block['variant'], spec['variants'])
+                for key in (block.get('props') or {}):
+                    self.assertIn(key, spec['props'])
+                if block['id'] == 'aiprocess':
+                    self.assertLessEqual(len(block['props']['items']), 5)
+                    self.assertLessEqual(len(block['props']['items'][0]['text']), 160)
+                if block['id'] == 'aipricing':
+                    self.assertLessEqual(len(block['props']['items']), 4)
+                    self.assertGreaterEqual(len(block['props']['items']), 2)
+
+    def test_generated_icons_are_accepted(self):
+        layout  =   {'landing': {'blocks': [{'id': 'aigrid', 'props': {
+            'items': [{'icon': 'gen:llave-inglesa', 'title': 'A'}, {'icon': 'gen:Mal Slug', 'title': 'B'},
+                      {'icon': 'nope', 'title': 'C'}],
+        }}]}}
+        items   =   clean_layout_config(layout, True, True)['landing']['blocks'][0]['props']['items']
+        self.assertEqual(items[0]['icon'], 'gen:llave-inglesa')
+        self.assertNotIn('icon', items[1])
+        self.assertNotIn('icon', items[2])

@@ -16,7 +16,7 @@ import { templateFonts } from '../templates/index.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import {
   studioPreviewVars, studioPreviewAttrs, applyFocusRing,
-  storeSiteThemeVars, storeSiteThemeAttrs
+  storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES
 } from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
 // Las hojas de las landing alternativas también definen el cromado
@@ -131,6 +131,17 @@ watch(
   ([heading, body]) => { if (heading) ensureStoreFont(heading); if (body) ensureStoreFont(body) },
   { immediate: true }
 )
+// v4: cada rol puede pedir su propia familia del catálogo (24 familias).
+watch(
+  () => {
+    const roles = custom.value.site_theme?.typography?.roles
+    return roles && typeof roles === 'object'
+      ? Object.values(roles).map((r) => r?.font).filter(Boolean).join(',')
+      : ''
+  },
+  (fonts) => { if (fonts) fonts.split(',').forEach((f) => ensureStoreFont(f)) },
+  { immediate: true }
+)
 const pageAttrs = computed(() => ({ ...publishedThemeAttrs.value, ...studioAttrs.value }))
 // Diseño avanzado (Plan premium): define si la web muestra el carrusel de
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
@@ -153,11 +164,25 @@ const pageTemplate = computed(() => {
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
 const isShop = computed(() => pageTemplate.value === 'shop')
 
-// Terra: la hoja del diseño también tiñe el chrome (barra, pie, dock) en
-// páginas que no montan la portada (servicios, ficha). Se carga on-demand y
-// una sola vez; la portada y el catálogo ya la importan estáticamente.
-watch(pageTemplate, (tpl) => {
-  if (tpl === 'terra') import('../assets/store-terra.css')
+// Hojas propias de un diseño: tiñen también el chrome (barra, pie, dock) en
+// páginas que no montan la portada (servicios, ficha). Se cargan on-demand y
+// una sola vez. Las 20 plantillas retiradas que puede elegir el motor de IA
+// comparten el esqueleto de bloques: su piel vive en store-page.css por
+// [data-store-template] (una hoja aparte solo la tienen terra y las ai_*,
+// que ya la importan desde su Template Definition).
+const TEMPLATE_CSS = {
+  terra: () => import('../assets/store-terra.css')
+}
+watch(pageTemplate, (tpl) => { TEMPLATE_CSS[tpl]?.() }, { immediate: true })
+// Skin v4 (site_theme.skin.family): piel de 18 familias en su propia hoja,
+// cargada por import dinámico para no engordar el bundle. Un skin sin
+// familia válida deja la tienda como está.
+const effectiveSkin = computed(() => {
+  const theme = studioMode.value && studioTheme.value ? studioTheme.value : custom.value?.site_theme
+  return skinOf(theme)
+})
+watch(effectiveSkin, (family) => {
+  if (SKIN_FAMILIES.includes(family)) import(`../assets/skin-${family}.css`)
 }, { immediate: true })
 // Tema efectivo: el elegido por el dueño; con customization.theme_toggle
 // el visitante puede alternarlo y su elección queda en localStorage

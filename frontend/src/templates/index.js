@@ -13,6 +13,14 @@
 // viejo que no se remapeó (o un draft corrupto) sigue renderizando su
 // piel en vez de caer al fallback 'classic'.
 //
+// v4 (Diseñar con IA): los ids que el motor puede proponer son las 6 del
+// plan + ai_lumen/ai_pulse + las 20 legacy; TODOS están en TEMPLATE_DEFS,
+// así que defaultLayout/resolveLayout los resuelven sin caer a classic
+// (el fallback queda solo para un id inexistente). Los bloques nuevos
+// solo-IA (aipricing/aiprocess/aimosaic) no están en el layout canónico de
+// ninguna plantilla: llegan por layout_config y BlockRenderer los inserta
+// en su `order` (ver components/store/BlockRenderer.vue).
+//
 // resolveLayout() mezcla el layout por defecto con
 // customization.layout_config: los bloques guardados mandan en orden y
 // estado, los que falten entran al final en su posición canónica y los

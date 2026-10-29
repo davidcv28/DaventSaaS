@@ -11,7 +11,7 @@ import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import {
   storesApi, CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  resolveStoreTemplate, allowedTemplatesFor, STORE_TEMPLATES, publicStoreUrl
+  resolveStoreTemplate, allowedTemplatesFor, publicStoreUrl
 } from '../../api/stores.api.js'
 import { http } from '../../api/http.js'
 import '../../assets/ai-design.css'
@@ -55,6 +55,18 @@ const AUDIENCES = [
   { id: 'empresas', label: 'Empresas', icon: 'building-2', desc: 'Negocios que te contratan' },
   { id: 'ambas', label: 'Las dos', icon: 'users', desc: 'Personas y empresas' }
 ]
+// "¿Qué te importa más?": matiz fino sobre el estilo. El motor solo entiende
+// `tone`, así que cada matiz vota por uno de los cuatro estilos (y el
+// elegido a mano en el select siempre gana).
+const STYLE_HINTS = [
+  { id: 'elegancia', label: 'Elegancia', icon: 'gem', tone: 'serio' },
+  { id: 'energia', label: 'Energía', icon: 'flame', tone: 'audaz' },
+  { id: 'cercania', label: 'Cercanía', icon: 'heart', tone: 'calido' },
+  { id: 'tecnologia', label: 'Tecnología', icon: 'monitor', tone: 'moderno' },
+  { id: 'tradicion', label: 'Tradición', icon: 'award', tone: 'serio' },
+  { id: 'lujo', label: 'Lujo', icon: 'crown', tone: 'serio' }
+]
+const HINT_TONE_ORDER = ['audaz', 'calido', 'moderno', 'serio']
 const MUST_HAVE = [
   { id: 'whatsapp', label: 'Botón de WhatsApp', icon: 'whatsapp', desc: 'Para que te escriban al toque' },
   { id: 'hours', label: 'Horarios', icon: 'clock', desc: 'Cuándo estás abierto' },
@@ -67,7 +79,7 @@ const MUST_HAVE = [
 const STEP_TITLES = ['A qué te dedicás', 'Qué querés lograr', 'Cómo se siente', 'Tu marca', 'Qué no puede faltar', 'Tus propuestas']
 
 const EMPTY = () => ({
-  rubro: '', goals: [], tone: '', audience: '', must_have: [],
+  rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [],
   brand_color: '', night_mode: { enabled: false, default: 'light' }, cover_choice: 'auto', use_icons: true
 })
 const answers = reactive(EMPTY())
@@ -80,6 +92,7 @@ const missing = ref([])
 const errorMsg = ref('')
 const actionError = ref('')
 const published = ref(null) // { id, label }
+const publishedSnapshot = ref(null) // propuesta publicada, para no perderla al ver otro estilo
 const browsing = ref(false) // el usuario pidió "Cambiar el estilo"
 const busy = ref('')
 const previewProposal = ref(null)
@@ -105,9 +118,27 @@ const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
 const progressStep = computed(() => (phase.value === 'results' ? 6 : stepIndex.value))
 const showPublished = computed(() => Boolean(published.value) && !browsing.value)
-const visibleProposals = computed(() => (showPublished.value
-  ? proposals.value.filter((p) => p.id === published.value.id)
-  : proposals.value))
+const visibleProposals = computed(() => {
+  if (showPublished.value) return proposals.value.filter((p) => p.id === published.value.id)
+  // "Ver otro estilo": la publicada no desaparece, encabeza la lista nueva.
+  if (browsing.value && publishedSnapshot.value && !proposals.value.some((p) => p.id === published.value?.id)) {
+    return [publishedSnapshot.value, ...proposals.value]
+  }
+  return proposals.value
+})
+// Cuántas familias visuales distintas trajo esta tanda (para avisarlo).
+const distinctFamilies = computed(() => {
+  const set = new Set()
+  proposals.value.forEach((p) => {
+    const family = p.skin?.family || p.variety?.family
+    if (family) set.add(family)
+  })
+  return set.size
+})
+const varietyNotice = computed(() => {
+  if (showPublished.value || proposals.value.length < 2 || distinctFamilies.value < 2) return ''
+  return `${proposals.value.length} estilos distintos para tu rubro`
+})
 
 const autofillDefault = computed(() => {
   const c = store.customization || {}
@@ -125,8 +156,9 @@ const liveMessage = computed(() => {
 })
 
 const hasAnswers = computed(() => Boolean(
-  answers.rubro || answers.goals.length || answers.tone || answers.audience || answers.must_have.length ||
-  answers.brand_color || answers.night_mode.enabled || answers.cover_choice !== 'auto' || !answers.use_icons
+  answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length || answers.audience ||
+  answers.must_have.length || answers.brand_color || answers.night_mode.enabled ||
+  answers.cover_choice !== 'auto' || !answers.use_icons
 ))
 
 const MISSING_ACTIONS = {
@@ -158,6 +190,9 @@ function hydrate() {
     answers.rubro = typeof saved.rubro === 'string' ? saved.rubro : base.rubro
     answers.goals = Array.isArray(saved.goals) ? saved.goals.filter((g) => GOALS.some((o) => o.id === g)) : []
     answers.tone = typeof saved.tone === 'string' ? saved.tone : base.tone
+    answers.style_hint = Array.isArray(saved.style_hint)
+      ? saved.style_hint.filter((h) => STYLE_HINTS.some((o) => o.id === h)).slice(0, 2)
+      : []
     answers.audience = typeof saved.audience === 'string' ? saved.audience : base.audience
     answers.must_have = Array.isArray(saved.must_have) ? saved.must_have.filter((m) => MUST_HAVE.some((o) => o.id === m)) : []
     answers.brand_color = /^#[0-9a-f]{6}$/i.test(saved.brand_color || '') ? saved.brand_color.toLowerCase() : ''
@@ -209,16 +244,33 @@ const previewVars = computed(() => (previewProposal.value ? proposalVars(preview
 const previewTemplate = computed(() => (previewProposal.value ? proposalTemplate(previewProposal.value) : 'classic'))
 const previewNameFont = computed(() => (previewProposal.value ? proposalNameFont(previewProposal.value) : {}))
 const previewCover = computed(() => (previewProposal.value ? proposalCover(previewProposal.value) : cover.value))
-function templateLabel(key) {
-  return STORE_TEMPLATES[key]?.label || key
-}
 
 // ---------- Flujo ----------
+// El estilo elegido a mano manda; si no eligió, deciden los "me importa más".
+function resolvedTone() {
+  if (answers.tone) return answers.tone
+  const votes = {}
+  answers.style_hint.forEach((h) => {
+    const tone = STYLE_HINTS.find((o) => o.id === h)?.tone
+    if (tone) votes[tone] = (votes[tone] || 0) + 1
+  })
+  const keys = Object.keys(votes)
+  if (!keys.length) return ''
+  return keys.sort((a, b) => (votes[b] - votes[a]) || (HINT_TONE_ORDER.indexOf(a) - HINT_TONE_ORDER.indexOf(b)))[0]
+}
+function toggleHint(id) {
+  const i = answers.style_hint.indexOf(id)
+  if (i >= 0) { answers.style_hint.splice(i, 1); return }
+  if (answers.style_hint.length >= 2) answers.style_hint.shift()
+  answers.style_hint.push(id)
+}
+
 function payload(extra = {}) {
   const p = {}
   if (answers.rubro) p.rubro = answers.rubro
   if (answers.goals.length) p.goals = [...answers.goals]
-  if (answers.tone) p.tone = answers.tone
+  const tone = resolvedTone()
+  if (tone) p.tone = tone
   if (answers.audience) p.audience = answers.audience
   if (answers.must_have.length) p.must_have = [...answers.must_have]
   p.brand_color = answers.brand_color || ''
@@ -231,16 +283,24 @@ function payload(extra = {}) {
   return { ...p, ...extra }
 }
 
-async function generate(extra = {}, useAnswers = true) {
+async function generate(extra = {}, useAnswers = true, opts = {}) {
   if (phase.value === 'loading') return
+  // "Ver otro estilo" no borra lo publicado: la tarjeta elegida sigue
+  // arriba con su estado y solo se reemplaza si el usuario aplica otra.
+  const keep = Boolean(opts.keepPublished && published.value && publishedSnapshot.value)
   const seq = ++requestSeq
   phase.value = 'loading'
   errorMsg.value = ''
   actionError.value = ''
-  published.value = null
-  browsing.value = false
-  proposals.value = []
-  previewProposal.value = null
+  if (!keep) {
+    published.value = null
+    publishedSnapshot.value = null
+  }
+  browsing.value = keep
+  if (!keep) {
+    proposals.value = []
+    previewProposal.value = null
+  }
   clearTimeout(timer)
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { aidTimeout: true })), 15000)
@@ -278,8 +338,8 @@ function back() {
 function decideForMe() {
   generate({}, false)
 }
-function another() {
-  generate({ seed: (seed.value || 0) + 1 })
+function anotherStyle() {
+  generate({ seed: (seed.value || 0) + 1 }, true, { keepPublished: true })
 }
 function redoWithPhotos() {
   generate({ seed: seed.value })
@@ -300,6 +360,7 @@ function startOver() {
   missing.value = []
   seed.value = null
   published.value = null
+  publishedSnapshot.value = null
   browsing.value = false
   actionError.value = ''
   errorMsg.value = ''
@@ -322,6 +383,7 @@ async function apply({ proposal, autofill }) {
     })
     await store.refreshCustomization()
     published.value = { id: proposal.id, label: proposal.label }
+    publishedSnapshot.value = proposal
     browsing.value = false
     emit('applied', { action: 'publish' })
   } catch (e) {
@@ -383,6 +445,24 @@ function closePreview() {
           <div class="aid-fields">
             <AiSelect v-model="answers.tone" :options="TONES" label="Estilo" placeholder="Elegí un estilo" />
             <AiSelect v-model="answers.audience" :options="AUDIENCES" label="A quién le hablás" placeholder="¿A quién le hablás?" />
+            <div class="aid-field">
+              <p class="aid-field-title">¿Qué te importa más? <span class="aid-optional">Opcional</span></p>
+              <p class="aid-hints-note">Elegí hasta dos. Nos ayuda a que tu estilo no se parezca a otro.</p>
+              <div class="aid-hints" role="group" aria-label="¿Qué te importa más?">
+                <button
+                  v-for="h in STYLE_HINTS"
+                  :key="h.id"
+                  type="button"
+                  class="aid-hint-chip"
+                  :class="{ on: answers.style_hint.includes(h.id) }"
+                  :aria-pressed="answers.style_hint.includes(h.id)"
+                  @click="toggleHint(h.id)"
+                >
+                  <AppIcon :name="h.icon" :size="15" aria-hidden="true" />
+                  <span>{{ h.label }}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </AiStep>
 
@@ -459,6 +539,14 @@ function closePreview() {
           </ul>
         </div>
 
+        <p v-if="varietyNotice" class="aid-variety">
+          <AppIcon name="sparkles" :size="14" aria-hidden="true" /> {{ varietyNotice }}
+        </p>
+        <p v-if="browsing && published" class="aid-keep-note">
+          <AppIcon name="circle-check" :size="14" aria-hidden="true" />
+          Seguís con <strong>{{ published.label }}</strong> publicado hasta que elijas otro.
+        </p>
+
         <div class="aid-grid">
           <AiProposalCard
             v-for="p in visibleProposals"
@@ -467,7 +555,6 @@ function closePreview() {
             :form="proposalForm(p)"
             :vars="proposalVars(p)"
             :template="proposalTemplate(p)"
-            :template-label="templateLabel(p.template)"
             :shop-name="shopName"
             :initial="initial"
             :logo="logo"
@@ -476,19 +563,19 @@ function closePreview() {
             :show-map="answers.must_have.includes('map')"
             :name-font="proposalNameFont(p)"
             :busy="busy"
-            :published="published?.id === p.id && showPublished"
+            :published="published?.id === p.id"
             :public-url="publicUrl"
             :autofill-default="autofillDefault"
             @preview="openPreview(p)"
             @apply="apply"
-            @change-style="browsing = true"
+            @change-style="anotherStyle"
             @refresh-images="redoWithPhotos"
           />
         </div>
 
         <div v-if="!showPublished" class="aid-actions">
-          <button class="btn btn-auto" type="button" @click="another">
-            <AppIcon name="refresh" :size="16" /> Otra propuesta
+          <button class="btn btn-auto" type="button" @click="anotherStyle">
+            <AppIcon name="refresh" :size="16" /> Ver otro estilo
           </button>
           <button class="btn ghost btn-auto" type="button" @click="backToQuestions">
             <AppIcon name="chevron-left" :size="16" /> Volver a las preguntas
