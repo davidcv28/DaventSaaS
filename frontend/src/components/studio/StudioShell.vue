@@ -334,10 +334,13 @@ watch(() => props.form.theme, (t) => {
 })
 const comparing = ref(false)
 const allowedTemplates = computed(() => allowedTemplatesFor(props.benefits || {}))
-// Plantilla vigente del borrador: el ensayo guardado en template_draft si
-// existe (un "Probar" ya guardado sigue mostrándose), si no la publicada.
+// Plantilla vigente del borrador: manda el select de Estilos (`form.template`)
+// para que la preview siga al control en vivo; el ensayo (`draft.template`)
+// gana si existe y `template_draft` queda solo como respaldo de un borrador
+// viejo que el form todavía no refleja.
 const liveTemplate = computed(() => resolveStoreTemplate(
-  props.customization?.template_draft || props.form.template, allowedTemplates.value
+  draft.template || props.form.template || props.customization?.template_draft || props.customization?.template,
+  allowedTemplates.value
 ))
 const canFlyers = computed(() => Boolean(props.benefits?.has_flyers))
 const frameDoc = () => canvasRef.value?.iframeEl?.contentDocument || null

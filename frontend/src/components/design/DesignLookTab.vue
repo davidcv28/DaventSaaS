@@ -302,9 +302,21 @@ const templateTierLabel = (key) => {
   const tier = STORE_TEMPLATES[key]?.tier
   return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Incluido'
 }
-function pickTemplate(key) {
-  if (!key) return
-  if (!allowedTemplates.value.includes(key)) { emit('go-plans'); return }
+const currentFamily = computed(() => (
+  templateFamilies.find((f) => f.templates.includes(props.form.template)) || templateFamilies[0]
+))
+// Selectbox de estilos: escribir la plantilla del borrador alcanza para que
+// el shell la mande por `studio:update` y la vista previa cambie al instante.
+// El Guardar del Studio ya viaja con `template_draft` al publicar.
+function onStylePick(event) {
+  const key = event.target.value
+  if (!allowedTemplates.value.includes(key)) {
+    // Opción de otro plan: el <select> no puede quedar mostrando lo que no
+    // se aplicó, así que vuelve a la plantilla vigente.
+    event.target.value = props.form.template
+    emit('go-plans')
+    return
+  }
   props.form.template = key
 }
 
@@ -717,28 +729,22 @@ onBeforeUnmount(dropLocalLogo)
             </div>
 
             <div class="field" @focusin="setRing('cover')">
-              <label id="design-style-label"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Estilo de tu web</label>
-              <p class="dl-style-note">Sólo hay tres estilos. Elegí el que mejor le quede a tu negocio: cambia la estructura de la portada sin perder contenido.</p>
-              <div class="dl-styles" role="group" aria-labelledby="design-style-label">
-                <button
-                  v-for="f in templateFamilies" :key="f.key" type="button"
-                  class="dl-style" :class="{ active: form.template === f.templates[0], locked: !familyAllowed(f) }"
-                  :aria-pressed="form.template === f.templates[0]"
-                  :title="`${storeTemplates[f.templates[0]]?.label} · ${f.caption}${familyAllowed(f) ? '' : ' · requiere un plan superior'}`"
-                  @click="pickTemplate(f.templates[0])"
-                >
-                  <span class="tpl-thumb dl-style-thumb" :data-tpl="f.templates[0]" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
-                  <span class="dl-style-tx">
-                    <strong>{{ storeTemplates[f.templates[0]]?.label }}</strong>
-                    <small>{{ f.label }}</small>
-                    <span class="pick-tier" :class="storeTemplates[f.templates[0]]?.tier">{{ templateTierLabel(f.templates[0]) }}</span>
+              <label for="design-style"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Estilo de tu web</label>
+              <div class="dl-style-row">
+                <span class="tpl-thumb dl-style-prev" :data-tpl="form.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
+                <div class="dl-style-sel">
+                  <select id="design-style" class="select" :value="form.template" aria-describedby="design-style-help" @change="onStylePick">
+                    <option v-for="f in templateFamilies" :key="f.key" :value="f.templates[0]" :disabled="!familyAllowed(f)">
+                      {{ storeTemplates[f.templates[0]]?.label }}
+                    </option>
+                  </select>
+                  <span class="dl-style-meta">
+                    {{ currentFamily?.label }}
+                    <span class="pick-tier" :class="storeTemplates[form.template]?.tier">{{ templateTierLabel(form.template) }}</span>
                   </span>
-                  <span class="dl-style-state" aria-hidden="true">
-                    <AppIcon v-if="form.template === f.templates[0]" name="check" :size="13" :stroke="3" />
-                    <AppIcon v-else-if="!familyAllowed(f)" name="lock" :size="13" :stroke="2" />
-                  </span>
-                </button>
+                </div>
               </div>
+              <p id="design-style-help" class="hint">Sólo hay tres estilos. Cambia la estructura de tu portada sin perder contenido y se ve al instante en la vista previa.</p>
             </div>
             <div v-if="!advanced" class="dl-lock">
               <AppIcon name="lock" :size="16" aria-hidden="true" />
@@ -798,37 +804,13 @@ onBeforeUnmount(dropLocalLogo)
 
 .dl-ell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ===== Los 3 estilos del catálogo (tarjetas con miniatura real) ===== */
-.dl-style-note { margin: 4px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); overflow-wrap: anywhere; }
-.dl-styles { display: grid; gap: 8px; margin-top: 10px; min-width: 0; }
-.dl-style {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0;
-  padding: 8px; border: 1px solid var(--line); border-radius: 12px;
-  background: var(--card); color: var(--ink); font: inherit; text-align: left;
-  cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s;
-}
-.dl-style:hover { border-color: var(--line-strong, var(--line)); }
-.dl-style:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
-.dl-style.active { border-color: var(--brand-500); background: var(--brand-soft); box-shadow: inset 0 0 0 1px var(--brand-500); }
-.dl-style.locked .dl-style-thumb { opacity: .6; }
-.dl-style-thumb { flex: none; width: 78px; border-radius: 8px; }
-.dl-style-tx { display: grid; gap: 2px; flex: 1; min-width: 0; }
-.dl-style-tx strong { font-size: 13.5px; line-height: 1.2; color: var(--ink); }
-.dl-style-tx small { font-size: 11.5px; line-height: 1.3; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dl-style-tx .pick-tier { justify-self: start; margin-top: 3px; padding: 1px 7px; font-size: 10px; }
-.dl-style-state {
-  flex: none; display: grid; place-items: center; width: 24px; height: 24px;
-  border-radius: 50%; color: var(--muted);
-}
-.dl-style.active .dl-style-state { background: var(--brand-600); color: #fff; }
-@container (min-width: 420px) {
-  .dl-styles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .dl-style { flex-direction: column; align-items: stretch; gap: 8px; }
-  .dl-style-thumb { width: 100%; }
-  .dl-style-state { position: absolute; top: 8px; right: 8px; }
-  .dl-style { position: relative; }
-  .dl-style-tx .pick-tier { justify-self: start; }
-}
+/* ===== Selectbox de estilos (3 diseños del catálogo) ===== */
+.dl-style-row { display: flex; align-items: stretch; gap: 10px; margin-top: 8px; min-width: 0; }
+.dl-style-prev { flex: none; width: 92px; border-radius: 9px; }
+.dl-style-sel { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }
+.dl-style-sel .select { width: 100%; min-height: 44px; font-size: 16px; }
+.dl-style-sel .pick-tier { justify-self: start; align-self: flex-start; padding: 1px 8px; font-size: 10.5px; }
+.dl-style-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
 
 .dl-logo-box .logo-actions { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .dl-logo-box { min-width: 0; }
