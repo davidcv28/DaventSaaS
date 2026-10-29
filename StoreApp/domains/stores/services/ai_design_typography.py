@@ -143,9 +143,106 @@ TYPE_PAIRS      =   {
     'display-serif':        {'label': 'Serif display',         'display': 'dm-serif-display',     'body': 'outfit'},
 }
 
+#Orden del catálogo: la rotación por aire y la firma de diversidad lo usan
+#como índice estable (nunca `set`, que no es determinista entre procesos).
+_PAIR_ORDER     =   tuple(TYPE_PAIRS)
+
 #Pieles donde la cita puede usar la display (revista/lujo): el resto usa el
 #cuerpo, porque una cita en Archivo Black a 22px se ve como un cartel.
 QUOTE_DISPLAY_SKINS     =   frozenset({'editorial', 'luxury', 'cinematic', 'paper'})
+
+#=========================================
+# AIRE (VOZ) DEL PAR — coherencia con la piel
+#=========================================
+#Un par no es solo dos familias: es un AIRE tipográfico. La piel declara el
+#suyo (SKIN_TYPE_PAIR en ai_design_skins) y el par solo puede rotar dentro
+#de los aires que esa piel admite: una piel editorial (revista, papel,
+#lujo) nunca cae en un cartel condensado ni en una monoespaciada, y una
+#piel técnica nunca cae en un display de novela. Es el contrato §6.1-6.
+TYPE_VOICES     =   ('serif', 'clean', 'poster', 'mono')
+
+#Aire de cada par: manda el carácter del DISPLAY (el cuerpo es siempre una
+#sans legible, así que no discrimina).
+PAIR_VOICES     =   {
+    #serif — la voz de revista/libro: el titular tiene serif.
+    'serif-editorial':      'serif',
+    'serif-classic':        'serif',
+    'serif-book':           'serif',
+    'serif-luxe':           'serif',
+    'warm-serif':           'serif',
+    'classic-serif':        'serif',
+    'editorial-display':    'serif',
+    'display-serif':        'serif',
+    #clean — grotesca neutra o humanista: el aire "sin acento".
+    'grotesk-clean':        'clean',
+    'technical':            'clean',
+    'modern-sans':          'clean',
+    'humanist':             'clean',
+    'geometric':            'clean',
+    'luxe-sans':            'clean',
+    'friendly':             'clean',
+    'soft-round':           'clean',
+    'bold-sans':            'clean',
+    #poster — condensada/peso máximo: el aire de cartel.
+    'condensed-bold':       'poster',
+    'display-heavy':        'poster',
+    'brutal':               'poster',
+    'retro-display':        'poster',
+    'display-condensed':    'poster',
+    #mono — la voz técnica de la monoespaciada.
+    'display-mono':         'mono',
+    'mono-tech':            'mono',
+}
+
+_ALL_VOICES     =   frozenset(TYPE_VOICES)
+#Aires que admite cada familia de piel. Las familias editoriales excluyen
+#cartel y mono; `soft` (pastelería, mascotas) sí admite un cartel retro
+#—es el look de su matriz de rubro— y `retro` también. Las técnicas y las
+#de vidriera rotan libremente porque su piel ya fija la composición.
+SKIN_TYPE_VOICES    =   {
+    #editoriales: la revista no grita ni programa.
+    'editorial':    frozenset({'serif', 'clean'}),
+    'magazine':     frozenset({'serif', 'clean'}),
+    'paper':        frozenset({'serif', 'clean'}),
+    'nostalgia':    frozenset({'serif', 'clean'}),
+    'warm':         frozenset({'serif', 'clean'}),
+    'craft':        frozenset({'serif', 'clean'}),
+    'organic':      frozenset({'serif', 'clean'}),
+    'luxury':       frozenset({'serif', 'clean'}),
+    'prestige':     frozenset({'serif', 'clean'}),
+    'aurora':       frozenset({'serif', 'clean'}),
+    'cinematic':    frozenset({'serif', 'clean'}),
+    #cercanas: la marca tierna también acepta el cartel retro.
+    'soft':         frozenset({'serif', 'clean', 'poster'}),
+    'retro':        frozenset({'serif', 'clean', 'poster'}),
+    #técnica: mono o grotesca, nunca un display de novela.
+    'mono':         frozenset({'clean', 'mono'}),
+    #el resto (minimal, swiss, corporate, tech, glass, neon, gradient,
+    #kinetic, showcase, brutal, pop, playful) rota libre.
+    'minimal':      _ALL_VOICES,
+    'swiss':        _ALL_VOICES,
+    'corporate':    _ALL_VOICES,
+    'tech':         _ALL_VOICES,
+    'glass':        _ALL_VOICES,
+    'neon':         _ALL_VOICES,
+    'gradient':     _ALL_VOICES,
+    'kinetic':      _ALL_VOICES,
+    'showcase':     _ALL_VOICES,
+    'brutal':       _ALL_VOICES,
+    'pop':          _ALL_VOICES,
+    'playful':      _ALL_VOICES,
+}
+
+#Tracking por rol en el formato que guarda site_theme.typography.letterSpacing
+#(em). Es el espejo exacto de ROLE_TRACKING en previewBridge.js: lo que el
+#motor calcula es lo que el CSS publicado pinta.
+TRACKING_EM     =   {
+    'tighter':  '-0.03em',
+    'tight':    '-0.015em',
+    'normal':   '0',
+    'wide':     '0.04em',
+    'wider':    '0.09em',
+}
 #Presupuesto base por rol (antes del tono y de la piel).
 _BASE_ROLES     =   {
     'display':  {'size': 'display', 'weight': 700, 'tracking': 'tighter', 'leading': 'tight',  'case': 'none'},
@@ -271,3 +368,59 @@ def type_pair_signature(pair_name):
     """Firma del par (display, body) para comparar diversidad entre propuestas."""
     pair    =   TYPE_PAIRS.get(pair_name) or TYPE_PAIRS['grotesk-clean']
     return (pair['display'], pair['body'])
+
+
+#=========================================
+# AIRE: resolución del par contra la piel
+#=========================================
+def voice_of_pair(pair_name):
+    """Aire del par ('serif'|'clean'|'poster'|'mono'); None si no existe."""
+    return PAIR_VOICES.get(pair_name)
+
+
+def voices_for_family(family):
+    """Aires que la familia de piel admite (todas, si la familia es nueva)."""
+    return SKIN_TYPE_VOICES.get(family) or _ALL_VOICES
+
+
+def pair_is_consistent(pair_name, family):
+    """
+    ¿El par respeta el aire de la piel? Sin familia (o con una familia que
+    el catálogo no conoce) no se restringe nada: la validación es de
+    coherencia, no de existencia (eso ya lo hace `TYPE_PAIRS`).
+    """
+    voice = voice_of_pair(pair_name)
+    if voice is None or not family:
+        return False
+    return voice in voices_for_family(family)
+
+
+def compatible_pairs(family):
+    """
+    Pares que la piel admite, en el orden del catálogo. Es la lista donde
+    rota la semilla: nunca un par de otro aire.
+    """
+    return tuple(name for name in TYPE_PAIRS if pair_is_consistent(name, family))
+
+
+def resolve_pair(pair_name, family, offset = 0):
+    """
+    Par efectivo de una propuesta: si el pedido ya respeta el aire de la
+    piel se respeta; si no, rota DENTRO del aire de la piel de forma
+    determinista (offset = semilla). Nunca inventa un par fuera del
+    catálogo y nunca devuelve None (sin pares compatibles, deja el pedido).
+    """
+    if pair_name not in TYPE_PAIRS:
+        pair_name = 'grotesk-clean'
+    if pair_is_consistent(pair_name, family):
+        return pair_name
+    pool = compatible_pairs(family)
+    if not pool:
+        return pair_name
+    position = _PAIR_ORDER.index(pair_name)
+    return pool[(position + int(offset or 0)) % len(pool)]
+
+
+def tracking_css(tracking):
+    """Tracking de un rol en `em` (formato de site_theme.typography.letterSpacing)."""
+    return TRACKING_EM.get(tracking, '0')

@@ -7,17 +7,34 @@ Cubre §6.2 del brief:
   para las 52 pieles × 4 tonos.
 - test_typography_roles_travel_in_proposal: typography.roles viaja en la propuesta
   y styleColors.fonts coincide con el modo.
+
+Cubre además §6.1-5/§6.1-6 (aire tipográfico y tracking publicado):
+- la piel declara los aires que admite y su par canónico siempre entra;
+- la matriz "firma" de los rubros nunca viola ese aire;
+- `resolve_pair()` rota dentro del aire (editorial jamás cae en cartel/mono);
+- el `letterSpacing`/`weightHeading` publicados salen del rol h1, no de un fijo.
 """
+import random
 from django.test import TestCase
 
+from StoreApp.domains.stores.services.ai_design_recipes import RUBRO_STYLES
 from StoreApp.domains.stores.services.ai_design_typography import (
-    BODY_ROLES, FONT_SLUGS, TYPE_CASES, TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING,
-    TYPE_PAIRS, QUOTE_DISPLAY_SKINS, roles_for, type_pair_signature,
+    BODY_ROLES, FONT_SLUGS, PAIR_VOICES, SKIN_TYPE_VOICES, TRACKING_EM, TYPE_CASES,
+    TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING, TYPE_VOICES, TYPE_PAIRS,
+    QUOTE_DISPLAY_SKINS, compatible_pairs, pair_is_consistent, resolve_pair,
+    roles_for, tracking_css, type_pair_signature, voice_of_pair,
 )
-from StoreApp.domains.stores.services.ai_design_skins import SKINS, SKIN_IDS
+from StoreApp.domains.stores.services.ai_design_skins import (
+    SKIN_FAMILIES, SKIN_IDS, SKINS, type_pair_of,
+)
 
 #Los 4 tonos del contrato (claves de _TONE_ROLES).
 TONES = ('calido', 'serio', 'moderno', 'audaz')
+#Familias editoriales: la voz de revista nunca grita ni programa.
+EDITORIAL_FAMILIES = (
+    'editorial', 'magazine', 'paper', 'nostalgia', 'warm', 'craft', 'organic',
+    'luxury', 'prestige', 'aurora', 'cinematic',
+)
 
 
 class TypePairsAreDistinctAndValidTests(TestCase):
@@ -182,3 +199,152 @@ class TypographyRolesTravelInProposalTests(TestCase):
             expected   =   pair['display'] if family in QUOTE_DISPLAY_SKINS else pair['body']
             self.assertEqual(roles['quote']['font'], expected,
                              f'{skin_id}/{family}: quote usa {roles["quote"]["font"]}, esperaba {expected}')
+
+
+class TypeAirCoherenceTests(TestCase):
+    """§6.1-6: la piel manda el aire; el par solo rota dentro de ese aire."""
+
+    def test_every_pair_and_family_declares_a_known_air(self):
+        self.assertEqual(set(PAIR_VOICES), set(TYPE_PAIRS),
+                         'la tabla de aires no cubre exactamente el catálogo de pares')
+        for name, voice in PAIR_VOICES.items():
+            self.assertIn(voice, TYPE_VOICES, f'{name}: aire desconocido {voice}')
+        self.assertEqual(set(SKIN_TYPE_VOICES), set(SKIN_FAMILIES),
+                         'la tabla de aires no cubre exactamente las familias de piel')
+        for family, voices in SKIN_TYPE_VOICES.items():
+            self.assertTrue(voices, f'{family}: no admite ningún aire')
+            self.assertTrue(voices <= set(TYPE_VOICES), f'{family}: aire fuera del contrato')
+
+    def test_every_skin_starts_with_a_pair_of_its_own_air(self):
+        #SKIN_TYPE_PAIR (lo que usa el motor, `type_pair_of`) no puede sacar a
+        #la piel de su propio aire: la web arrancaría con una tipografía que
+        #su familia no admite.
+        for skin_id in SKIN_IDS:
+            family = SKINS[skin_id]['family']
+            pair = type_pair_of(skin_id)
+            self.assertIn(pair, TYPE_PAIRS, f'{skin_id}: par fuera del catálogo')
+            self.assertTrue(pair_is_consistent(pair, family),
+                            f'{skin_id}/{family}: {pair} ({voice_of_pair(pair)}) no es de su aire')
+
+    def test_rubro_signature_matrix_respects_the_skin_air(self):
+        #La matriz de cada rubro es contenido firmado: si un combo violara el
+        #aire, el motor lo estaría rotando en silencio (la tarjeta diría una
+        #cosa y la web publicaría otra).
+        for rubro, rows in RUBRO_STYLES.items():
+            for row in rows:
+                family = SKINS[row['skin']]['family']
+                self.assertTrue(
+                    pair_is_consistent(row['pair'], family),
+                    f'{rubro}: {row["skin"]} ({family}) con {row["pair"]} ({voice_of_pair(row["pair"])})',
+                )
+
+    def test_editorial_families_never_take_a_poster_or_mono_voice(self):
+        for family in EDITORIAL_FAMILIES:
+            for name in TYPE_PAIRS:
+                if voice_of_pair(name) in ('poster', 'mono'):
+                    self.assertFalse(pair_is_consistent(name, family),
+                                     f'{family}: admite {name} ({voice_of_pair(name)})')
+
+    def test_compatible_pairs_is_never_empty_and_stays_in_the_catalog(self):
+        for family in SKIN_FAMILIES:
+            pool = compatible_pairs(family)
+            self.assertTrue(pool, f'{family}: sin pares compatibles')
+            for name in pool:
+                self.assertIn(name, TYPE_PAIRS, family)
+                self.assertTrue(pair_is_consistent(name, family), f'{family}/{name}')
+
+
+class ResolvePairTests(TestCase):
+    """§6.1-6: el par se corrige al aire de la piel, de forma determinista."""
+
+    def test_resolve_pair_keeps_the_compatible_and_fixes_the_rest(self):
+        for skin_id in SKIN_IDS:
+            family = SKINS[skin_id]['family']
+            for name in TYPE_PAIRS:
+                effective = resolve_pair(name, family)
+                self.assertIn(effective, TYPE_PAIRS, f'{skin_id}/{family}/{name}')
+                self.assertTrue(pair_is_consistent(effective, family),
+                                f'{skin_id}/{family}: {name} -> {effective} fuera de aire')
+                if pair_is_consistent(name, family):
+                    self.assertEqual(effective, name,
+                                     f'{skin_id}/{family}: se pisó un par que ya era válido')
+
+    def test_resolve_pair_is_deterministic(self):
+        for family in SKIN_FAMILIES:
+            for offset in range(4):
+                self.assertEqual(resolve_pair('condensed-bold', family, offset),
+                                 resolve_pair('condensed-bold', family, offset))
+
+    def test_resolve_pair_rotates_inside_the_air(self):
+        #Un par de cartel en piel editorial no cae siempre en el mismo: la
+        #semilla reparte diversidad dentro del aire (si no, tres propuestas
+        #saldrían con la misma tipografía).
+        picks = {resolve_pair('condensed-bold', 'editorial', offset) for offset in range(6)}
+        self.assertGreater(len(picks), 1, 'la rotación por aire no diversifica')
+        for name in picks:
+            self.assertTrue(pair_is_consistent(name, 'editorial'))
+
+    def test_unknown_pair_falls_back_inside_the_air(self):
+        for family in SKIN_FAMILIES:
+            self.assertTrue(pair_is_consistent(resolve_pair('no-existe', family), family),
+                            f'{family}: el fallback se salió del aire')
+
+    def test_without_family_the_pair_is_not_restricted(self):
+        #Sin familia (llamadas de bajo nivel) no se restringe: la validación
+        #es de coherencia con la piel, no de existencia en el catálogo.
+        self.assertFalse(pair_is_consistent('condensed-bold', None))
+        self.assertEqual(resolve_pair('condensed-bold', None), 'condensed-bold')
+
+    def test_style_candidates_only_emit_pairs_of_the_skin_air(self):
+        #Fin a fin de la selección: es el punto exacto donde antes entraba un
+        #par al azar (`pairs[(index * 5 + seed) % len(pairs)]`).
+        from StoreApp.domains.stores.services import ai_design as A
+        from StoreApp.domains.stores.tests_ai_design_selection import (
+            PLAN_BASIC, PLAN_PLUS, answers, facts_empty, facts_full, stats_dense,
+            stats_empty,
+        )
+        plans = (PLAN_BASIC, PLAN_PLUS)
+        for rubro in RUBRO_STYLES:
+            for plan in plans:
+                for seed in range(2):
+                    for fact, stat in ((facts_full(), stats_dense()), (facts_empty(), stats_empty())):
+                        for candidate in A._style_candidates(fact, stat, answers(rubro), plan, seed):
+                            family = SKINS[candidate['skin']]['family']
+                            self.assertTrue(
+                                pair_is_consistent(candidate['pair'], family),
+                                f'{rubro}/{plan}/seed{seed}: {candidate["skin"]} ({family}) '
+                                f'con {candidate["pair"]} ({voice_of_pair(candidate["pair"])})',
+                            )
+
+
+class PublishedTrackingTests(TestCase):
+    """§6.1-5: el tracking que se publica sale del rol, no de un valor fijo."""
+
+    def test_tracking_em_covers_the_whole_enum(self):
+        for tracking in TYPE_TRACKING:
+            self.assertIn(tracking, TRACKING_EM, f'{tracking}: sin valor em para publicar')
+            self.assertRegex(TRACKING_EM[tracking], r'^-?\d+(\.\d+)?em$|^0$')
+            self.assertEqual(tracking_css(tracking), TRACKING_EM[tracking])
+        #Un tracking desconocido no rompe el CSS guardado.
+        self.assertEqual(tracking_css('inventado'), '0')
+
+    def test_theme_publishes_h1_tracking_and_weight(self):
+        from StoreApp.domains.stores.services import ai_design as A
+        answers = {
+            'tone': 'serio', 'brand_color': None, 'night_mode': None,
+            'goals': ['vender_online'], 'must_have': [],
+        }
+        for skin_id, skin in SKINS.items():
+            pair = skin['typography']['pair']
+            theme, _ = A._theme(skin, pair, answers, random.Random(0), 0)
+            roles = theme['typography']['roles']
+            self.assertEqual(theme['typography']['letterSpacing'],
+                             TRACKING_EM[roles['h1']['tracking']],
+                             f'{skin_id}: letterSpacing fuera del rol h1')
+            self.assertEqual(theme['typography']['weightHeading'], roles['h1']['weight'],
+                             f'{skin_id}: weightHeading fuera del rol h1')
+            #Lo publicado coincide con la firma del par (tarjeta = web).
+            self.assertEqual(theme['typography']['heading'],
+                             TYPE_PAIRS[pair]['display'], skin_id)
+            self.assertEqual(theme['typography']['body'],
+                             TYPE_PAIRS[pair]['body'], skin_id)
