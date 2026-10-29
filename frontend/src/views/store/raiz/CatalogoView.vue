@@ -4,7 +4,7 @@
 // grilla 3-up 4:5 y estados coherentes. Toda la lógica de filtros/orden/
 // búsqueda/paginado la resuelve useStoreCatalog (misma API que el resto de
 // la web): acá solo se pinta.
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, nextTick } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
@@ -28,8 +28,16 @@ const {
 
 // Panel de filtros plegable (móvil/tablet): conserva los mismos controles
 // nativos —checkbox, inputs de precio— para que el teclado y los lectores de
-// pantalla funcionen igual que en desktop.
+// pantalla funcionen igual que en desktop. Al cerrarlo (X, Esc o "Ver
+// resultados") el foco vuelve al botón que lo abrió; en desktop no hay nada
+// que cerrar y Esc no mueve el foco.
 const filtersOpen = ref(false)
+const filtersToggle = ref(null)
+function closeFilters() {
+  if (!filtersOpen.value) return
+  filtersOpen.value = false
+  nextTick(() => filtersToggle.value?.focus())
+}
 const promotions = computed(() => catalog.value.promotions || [])
 const priceBounds = computed(() => {
   const max = Number(catalog.value.price_max || 0)
@@ -87,10 +95,10 @@ const toggleFeature = (name, value) => pickFeature(name, value)
     </div>
 
     <main class="rz-cat-wrap rz-cat-main">
-      <div class="rz-cat-body">
+      <div class="rz-cat-body" @keydown.esc="closeFilters">
         <!-- Filtros: riel sticky de 280 con secciones hairline -->
         <button
-          type="button" class="rz-cat-filters-toggle" :aria-expanded="filtersOpen"
+          ref="filtersToggle" type="button" class="rz-cat-filters-toggle" :aria-expanded="filtersOpen"
           aria-controls="rz-cat-filters" @click="filtersOpen = !filtersOpen"
         >
           <AppIcon name="sliders" :size="16" aria-hidden="true" /> Filtros
@@ -99,13 +107,13 @@ const toggleFeature = (name, value) => pickFeature(name, value)
 
         <aside
           id="rz-cat-filters" class="rz-cat-rail" :class="{ 'is-open': filtersOpen }"
-          aria-label="Filtros del catálogo" @keydown.esc="filtersOpen = false"
+          aria-label="Filtros del catálogo"
         >
           <div class="rz-cat-rail-head">
             <p class="rz-eyebrow"><span class="rz-eyebrow-num">02</span> Filtrar</p>
             <div class="rz-cat-rail-actions">
               <button type="button" class="rz-cat-linkbtn" :disabled="!hasFilters" @click="clearFilters">Limpiar</button>
-              <button type="button" class="rz-cat-rail-close" aria-label="Cerrar filtros" @click="filtersOpen = false">
+              <button type="button" class="rz-cat-rail-close" aria-label="Cerrar filtros" @click="closeFilters">
                 <AppIcon name="x" :size="16" />
               </button>
             </div>
@@ -173,7 +181,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
             Los atributos (ej. Talle, Color) aparecen acá al elegir una categoría.
           </p>
 
-          <button type="button" class="rz-btn rz-cat-apply" @click="filtersOpen = false">Ver resultados</button>
+          <button type="button" class="rz-btn rz-cat-apply" @click="closeFilters">Ver resultados</button>
         </aside>
 
         <!-- Resultados -->
@@ -197,7 +205,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
             </li>
           </ul>
 
-          <div v-if="catalogStatus === 'loading' && !catalog.products.length" class="rz-cat-products" aria-busy="true">
+          <div v-if="(catalogStatus === 'loading' || catalogStatus === 'idle') && !catalog.products.length" class="rz-cat-products" aria-busy="true">
             <span v-for="n in 6" :key="n" class="rz-cat-skel" aria-hidden="true">
               <span class="rz-cat-skel-media"></span>
               <span class="rz-cat-skel-line"></span>
