@@ -785,7 +785,14 @@ export const STORE_FONTS = {
   'archivo':          { label: 'Archivo',          family: "'Archivo', 'Helvetica Neue', sans-serif", google: 'Archivo:wdth,wght@62..125,400..900' },
   'bricolage-grotesque': { label: 'Bricolage Grotesque', family: "'Bricolage Grotesque', 'Arial Black', sans-serif", google: 'Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800' },
   'orbitron':         { label: 'Orbitron',        family: "'Orbitron', 'Arial Black', sans-serif",    google: 'Orbitron:wght@500..900' },
-  'figtree':          { label: 'Figtree',          family: "'Figtree', system-ui, sans-serif",     google: 'Figtree:wght@400..700' }
+  'figtree':          { label: 'Figtree',          family: "'Figtree', system-ui, sans-serif",     google: 'Figtree:wght@400..700' },
+  // Familias del motor de IA (typography.roles): sin entrada acá la familia
+  // no se carga y el rol cae a Inter (el diseño se ve distinto al propuesto).
+  'cormorant-garamond': { label: 'Cormorant Garamond', family: "'Cormorant Garamond', Georgia, serif", google: 'Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400' },
+  'dm-serif-display': { label: 'DM Serif Display', family: "'DM Serif Display', Georgia, serif",   google: 'DM+Serif+Display' },
+  'libre-baskerville':{ label: 'Libre Baskerville', family: "'Libre Baskerville', Georgia, serif",  google: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400' },
+  'outfit':           { label: 'Outfit',           family: "'Outfit', system-ui, sans-serif",      google: 'Outfit:wght@300..900' },
+  'plus-jakarta-sans':{ label: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', system-ui, sans-serif", google: 'Plus+Jakarta+Sans:wght@300..800' }
 }
 
 export function storeFontFamily(nameFont) {

@@ -55,6 +55,46 @@ FONT_FAMILIES   =   {
 
 FONT_SLUGS      =   tuple(FONT_FAMILIES)
 
+#Rango de pesos REALES de cada familia (Google Fonts). Pedir un 900 a una
+#fuente de 400 hace que el navegador invente la negrita (faux bold): se ve
+#pesado y sucio. El motor recorta el peso al escalón más cercano que la
+#familia soporta de verdad.
+FONT_WEIGHTS    =   {
+    'inter':                (300, 900),
+    'manrope':              (300, 800),
+    'figtree':              (300, 700),
+    'dm-sans':              (300, 900),
+    'space-grotesk':        (300, 700),
+    'archivo':              (400, 900),
+    'sora':                 (300, 800),
+    'work-sans':            (300, 800),
+    'outfit':               (300, 900),
+    'plus-jakarta-sans':    (300, 800),
+    'nunito':               (300, 800),
+    'raleway':              (300, 800),
+    'playfair-display':     (400, 800),
+    'fraunces':             (300, 900),
+    'lora':                 (400, 700),
+    'cormorant-garamond':   (400, 700),
+    'dm-serif-display':     (400, 400),
+    'libre-baskerville':    (400, 700),
+    'cinzel':               (400, 800),
+    'oswald':               (300, 700),
+    'archivo-black':        (400, 400),
+    'bebas-neue':           (400, 400),
+    'space-mono':           (400, 700),
+    'jetbrains-mono':       (400, 800),
+}
+
+#Display que ya vienen en mayúsculas por diseño: no se les pide tracking
+#negativo (se ve apretado) ni un peso que no tienen.
+_DISPLAY_TRACKING   =   {
+    'bebas-neue':       'tight',
+    'archivo-black':    'tight',
+    'cinzel':           'wide',
+}
+
+
 #Roles cerrados de site_theme v2 (typography.roles).
 TYPOGRAPHY_ROLES    =   (
     'display', 'h1', 'h2', 'h3', 'body', 'lead', 'eyebrow',
@@ -73,24 +113,28 @@ TYPE_CASES      =   ('none', 'upper')
 #firmas (display, body) distintas — la diversidad de una generación se
 #valida comparando esa firma.
 TYPE_PAIRS      =   {
+    #Regla de oro: el CUERPO siempre es una sans legible (mono solo como
+    #acento en titulares) y el display nunca repite la familia del cuerpo.
+    #Un sitio entero en monoespaciada o dos pesos negros enfrentados se lee
+    #como maqueta, no como negocio.
     'grotesk-clean':        {'label': 'Grotesk limpio',        'display': 'space-grotesk',        'body': 'inter'},
     'condensed-bold':       {'label': 'Condensada enérgica',   'display': 'oswald',               'body': 'inter'},
     'display-heavy':        {'label': 'Peso máximo',           'display': 'archivo-black',        'body': 'manrope'},
     'serif-editorial':      {'label': 'Serif editorial',       'display': 'fraunces',             'body': 'inter'},
     'serif-classic':        {'label': 'Serif clásico',         'display': 'playfair-display',     'body': 'inter'},
     'serif-book':           {'label': 'Serif de libro',        'display': 'lora',                 'body': 'inter'},
-    'display-mono':         {'label': 'Mono total',            'display': 'space-mono',           'body': 'space-mono'},
+    'display-mono':         {'label': 'Mono en titulares',     'display': 'jetbrains-mono',       'body': 'inter'},
     'modern-sans':          {'label': 'Sans moderna',          'display': 'figtree',              'body': 'inter'},
     'geometric':            {'label': 'Geométrica',            'display': 'outfit',               'body': 'dm-sans'},
-    'soft-round':           {'label': 'Redondeada suave',      'display': 'nunito',               'body': 'nunito'},
+    'soft-round':           {'label': 'Redondeada suave',      'display': 'nunito',               'body': 'figtree'},
     'serif-luxe':           {'label': 'Serif de lujo',         'display': 'cinzel',               'body': 'raleway'},
-    'technical':            {'label': 'Técnica',               'display': 'space-grotesk',        'body': 'jetbrains-mono'},
+    'technical':            {'label': 'Técnica',               'display': 'space-grotesk',        'body': 'work-sans'},
     'brutal':               {'label': 'Brutal',                'display': 'archivo-black',        'body': 'work-sans'},
     'retro-display':        {'label': 'Retro',                 'display': 'bebas-neue',           'body': 'work-sans'},
     'warm-serif':           {'label': 'Serif cálida',          'display': 'cormorant-garamond',   'body': 'manrope'},
     'humanist':             {'label': 'Humanista',             'display': 'sora',                 'body': 'figtree'},
     'editorial-display':    {'label': 'Display editorial',     'display': 'dm-serif-display',     'body': 'dm-sans'},
-    'mono-tech':            {'label': 'Mono técnica',          'display': 'jetbrains-mono',       'body': 'space-mono'},
+    'mono-tech':            {'label': 'Mono de acento',        'display': 'space-mono',           'body': 'inter'},
     'friendly':             {'label': 'Cercana',               'display': 'figtree',              'body': 'nunito'},
     'luxe-sans':            {'label': 'Sans de lujo',          'display': 'manrope',              'body': 'plus-jakarta-sans'},
     'classic-serif':        {'label': 'Serif sobria',          'display': 'libre-baskerville',    'body': 'inter'},
@@ -99,6 +143,9 @@ TYPE_PAIRS      =   {
     'display-serif':        {'label': 'Serif display',         'display': 'dm-serif-display',     'body': 'outfit'},
 }
 
+#Pieles donde la cita puede usar la display (revista/lujo): el resto usa el
+#cuerpo, porque una cita en Archivo Black a 22px se ve como un cartel.
+QUOTE_DISPLAY_SKINS     =   frozenset({'editorial', 'luxury', 'cinematic', 'paper'})
 #Presupuesto base por rol (antes del tono y de la piel).
 _BASE_ROLES     =   {
     'display':  {'size': 'display', 'weight': 700, 'tracking': 'tighter', 'leading': 'tight',  'case': 'none'},
@@ -169,6 +216,16 @@ SKIN_ROLE_OVERRIDES     =   {
 }
 
 
+def _clamp_weight(font, weight):
+    """
+    Escalón de peso que la familia soporta de verdad (300..900, paso 100).
+    Una familia de un solo peso devuelve su único peso: nada de faux bold.
+    """
+    low, high   =   FONT_WEIGHTS.get(font, (400, 700))
+    snapped     =   int(round(int(weight) / 100.0)) * 100
+    return max(low, min(high, snapped))
+
+
 def pair_of(name):
     """Par tipográfico del catálogo (None si el nombre no existe)."""
     return TYPE_PAIRS.get(name)
@@ -186,12 +243,19 @@ def roles_for(pair_name, tone, skin_family = None):
         base    =   dict(_BASE_ROLES[role])
         base.update(_TONE_ROLES.get(tone, {}).get(role) or {})
         base.update((SKIN_ROLE_OVERRIDES.get(skin_family) or {}).get(role) or {})
-        font    =   pair['display'] if role in DISPLAY_ROLES else pair['body']
+        #La display solo manda en display/h1/h2 (y en la cita de las pieles
+        #de revista). h3, precio y navegación van con el cuerpo: una display
+        #pesada en un título chico se ve como un error, no como diseño.
+        display_role = role in ('display', 'h1', 'h2')
+        if role == 'quote' and skin_family in QUOTE_DISPLAY_SKINS:
+            display_role = True
+        font    =   pair['display'] if display_role else pair['body']
+        tracking    =   _DISPLAY_TRACKING.get(font, base['tracking']) if display_role else base['tracking']
         roles[role] =   {
             'font'      :   font,
             'size'      :   base['size'],
-            'weight'    :   base['weight'],
-            'tracking'  :   base['tracking'],
+            'weight'    :   _clamp_weight(font, base['weight']),
+            'tracking'  :   tracking,
             'leading'   :   base['leading'],
             'case'      :   base['case'],
         }

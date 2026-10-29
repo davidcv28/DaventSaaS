@@ -236,17 +236,55 @@ def _ensure_contrast(color, base, target = 4.5):
 
 def _palette_from_brand(accent, palette):
     """
-    Paleta derivada del color de marca elegido por el dueño:
-    accent = el color (ajustado a AA sobre el fondo), primary = variante
-    oscura, secondary = tinta del look, muted/border = mezclas con el fondo.
+    Paleta derivada del color de marca elegido por el dueño.
+    El color del dueño manda en ACENTO y botones; el TEXTO se queda neutro:
+    una tinta gris derivada del fondo, no del acento (mezclar el azul de
+    marca con el fondo producía grises verdosos/lilas que se leen mal).
     """
     bg          =   palette['bg']
     accent      =   _ensure_contrast(accent, bg)
     primary     =   _ensure_contrast(_mix(accent, '#000000', 0.25), bg)
-    secondary   =   palette['text']
-    muted       =   _ensure_contrast(_mix(accent, bg, 0.55), bg)
-    border      =   _mix(accent, bg, 0.75)
-    return {**palette, 'accent': accent, 'primary': primary, 'secondary': secondary, 'muted': muted, 'border': border}
+    text        =   _calm_text(palette.get('text') or _neutral_ink(bg), bg, 7.0)
+    muted       =   _calm_text(_mix(text, bg, 0.45), bg, 4.5)
+    border      =   _mix(text, bg, 0.82)
+    return {**palette, 'accent': accent, 'primary': primary, 'secondary': text,
+            'text': text, 'muted': muted, 'border': border}
+
+
+#=========================================
+# TINTA NEUTRA (colores de fuente legibles)
+#=========================================
+def _neutral_ink(bg):
+    """Tinta base según el fondo: casi negro sobre claro, casi blanco sobre oscuro."""
+    return '#12141a' if _luminance(bg) > 0.4 else '#f5f6f8'
+
+
+def _desaturate(value, amount):
+    """Acerca el color al gris de su misma luminancia (conserva el brillo)."""
+    r, g, b     =   _hex_rgb(value)
+    gray        =   0.2126 * r + 0.7152 * g + 0.0722 * b
+    return _rgb_hex(tuple(channel + (gray - channel) * amount for channel in (r, g, b)))
+
+
+def _calm_text(value, bg, target = 4.5):
+    """
+    Texto/muted legibles: se desatura (un gris con un dejo del tono, no un
+    color de marca) y se fuerza el contraste mínimo sobre el fondo.
+    """
+    return _ensure_contrast(_desaturate(value, 0.7), bg, target)
+
+
+def _calm_palette(palette):
+    """
+    Invariante de legibilidad de la paleta final (piel × acento × tono):
+    text/muted son tintas neutras con AA garantizado y border es un gris
+    tenue derivado de la tinta. El acento sigue libre para botones y detalles.
+    """
+    bg      =   palette['bg']
+    text    =   _calm_text(palette.get('text') or _neutral_ink(bg), bg, 7.0)
+    muted   =   _calm_text(palette.get('muted') or _mix(text, bg, 0.45), bg, 4.5)
+    border  =   _mix(text, bg, 0.82)
+    return {**palette, 'text': text, 'muted': muted, 'border': border}
 
 
 def _answers(store, customization, payload, stats):
@@ -839,6 +877,12 @@ def _theme(skin, pair, answers, rng, shift, template = None):
         theme['palette']['accent']  =   accent
         theme['palette']['primary'] =   accent
         choice              =   {'source': 'ai', 'accent': accent}
+    #Legibilidad no negociable: la tinta y el muted se normalizan siempre
+    #(una piel con texto tintado o un acento de marca no pueden ensuciar
+    #los colores de fuente).
+    theme['palette']    =   _calm_palette(theme['palette'])
+    if choice['source'] == 'ai':
+        choice['accent']    =   theme['palette']['accent']
     return theme, choice
 
 

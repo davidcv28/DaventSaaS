@@ -57,8 +57,8 @@ from StoreApp.domains.stores.services.ai_design_skins import (
 )
 from StoreApp.domains.stores.services.ai_design_typography import (
     FONT_FAMILIES, FONT_KINDS, FONT_SLUGS, TYPE_CASES, TYPE_LEADING,
-    TYPE_PAIRS, TYPE_SIZES, TYPE_TRACKING, TYPOGRAPHY_ROLES, roles_for,
-    type_pair_signature,
+    QUOTE_DISPLAY_SKINS, TYPE_PAIRS, TYPE_SIZES, TYPE_TRACKING,
+    TYPOGRAPHY_ROLES, roles_for, type_pair_signature,
 )
 from StoreApp.domains.stores.site_theme import SITE_THEME_MAX_BYTES, clean_site_theme
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
@@ -590,8 +590,15 @@ class RolesTipograficos(_AiDesignBase):
                     self.assertEqual(roles['price']['tracking'], 'normal', label)
                     self.assertEqual(roles['eyebrow']['case'], 'upper', label)
                     self.assertEqual(roles['eyebrow']['tracking'], 'wider', label)
-                    for role in ('display', 'h1', 'h2', 'h3', 'quote'):
+                    #Regla de profesionalidad (v4.1): la display manda solo en
+                    #display/h1/h2 y en la cita de las pieles de revista; h3 y
+                    #el resto de roles van con el cuerpo (una display pesada
+                    #en un título chico se lee como un error de maquetado).
+                    for role in ('display', 'h1', 'h2'):
                         self.assertEqual(roles[role]['font'], pair['display'], f'{label}.{role}')
+                    self.assertEqual(roles['h3']['font'], pair['body'], f'{label}.h3')
+                    quote_font = pair['display'] if family in QUOTE_DISPLAY_SKINS else pair['body']
+                    self.assertEqual(roles['quote']['font'], quote_font, f'{label}.quote')
                     for role in ('body', 'lead', 'eyebrow', 'label', 'price', 'nav', 'button', 'footer'):
                         self.assertEqual(roles[role]['font'], pair['body'], f'{label}.{role}')
 
