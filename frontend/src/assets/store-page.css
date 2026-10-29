@@ -12015,3 +12015,65 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .sp-aipricing, .sp-aiprocess, .sp-aimosaic { scroll-behavior: auto; }
 }
+
+/* ===========================================================================
+   Diseños retirados que el motor de IA puede proponer: identidad por tokens.
+   Antes solo cambiaban la fuente del titular (2 reglas) y se veían iguales a
+   Clásico; ahora cada uno tiene contenedores, bordes y botones propios.
+   Sin tocar --sp-bg/--sp-ink: el contraste y el modo noche siguen viniendo
+   del tema, así ningún diseño rompe la legibilidad.
+   =========================================================================== */
+.store-page[data-store-template='carta'] {
+  --sp-radius: 6px;
+  --sp-surface: color-mix(in srgb, var(--sp-ink) 5%, transparent);
+  --sp-line: color-mix(in srgb, var(--sp-ink) 16%, transparent);
+  --sp-shadow-sm: 0 1px 2px rgba(60, 45, 20, .10);
+  --sp-shadow-md: 0 14px 30px -22px rgba(60, 45, 20, .45);
+}
+.store-page[data-store-template='carta'] .sp-card,
+.store-page[data-store-template='carta'] .tpc { border-radius: 4px; }
+.store-page[data-store-template='carta'] .sp-btn { border-radius: 6px; }
+.store-page[data-store-template='carta'] .sp-hero-title,
+.store-page[data-store-template='carta'] .sp-section-title { letter-spacing: -.015em; }
+
+.store-page[data-store-template='lab'] {
+  --sp-radius: 2px;
+  --sp-surface: color-mix(in srgb, var(--sp-ink) 6%, transparent);
+  --sp-line: color-mix(in srgb, var(--sp-ink) 14%, transparent);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+}
+.store-page[data-store-template='lab'] .sp-card,
+.store-page[data-store-template='lab'] .tpc {
+  border-radius: 2px; box-shadow: none; border: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='lab'] .sp-btn { border-radius: 2px; letter-spacing: .02em; }
+.store-page[data-store-template='lab'] .sp-section-title { text-transform: uppercase; letter-spacing: .04em; }
+
+.store-page[data-store-template='proceso'] {
+  --sp-radius: 10px;
+  --sp-surface: color-mix(in srgb, var(--store-accent) 7%, transparent);
+  --sp-line: color-mix(in srgb, var(--sp-ink) 12%, transparent);
+  --sp-shadow-sm: 0 1px 3px rgba(9, 12, 24, .08);
+}
+.store-page[data-store-template='proceso'] .sp-card,
+.store-page[data-store-template='proceso'] .tpc { border-radius: 10px; }
+.store-page[data-store-template='proceso'] .sp-btn { border-radius: 999px; }
+.store-page[data-store-template='proceso'] .sp-section-title { letter-spacing: -.02em; }
+
+.store-page[data-store-template='arena'] {
+  --sp-radius: 14px;
+  --sp-surface: color-mix(in srgb, var(--store-accent) 10%, transparent);
+  --sp-line: color-mix(in srgb, var(--store-accent) 26%, transparent);
+  --sp-shadow-sm: 0 2px 10px -4px rgba(9, 12, 24, .25);
+  --sp-shadow-md: 0 20px 44px -26px rgba(9, 12, 24, .6);
+}
+.store-page[data-store-template='arena'] .sp-card,
+.store-page[data-store-template='arena'] .tpc {
+  border-radius: 14px; border: 1px solid var(--sp-line);
+}
+.store-page[data-store-template='arena'] .sp-btn {
+  border-radius: 12px; text-transform: uppercase; letter-spacing: .06em;
+}
+.store-page[data-store-template='arena'] .sp-hero-title,
+.store-page[data-store-template='arena'] .sp-section-title { text-transform: uppercase; letter-spacing: .01em; }

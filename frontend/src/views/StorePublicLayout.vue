@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES
+  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -156,7 +156,7 @@ const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advance
 // whitelist del plan como siempre.
 const pageTemplate = computed(() => {
   if (studioMode.value && studioTemplate.value) {
-    return resolveStoreTemplate(studioTemplate.value, Object.keys(STORE_TEMPLATES))
+    return resolveStoreTemplate(studioTemplate.value, [...Object.keys(STORE_TEMPLATES), ...AI_EXTRA_TEMPLATES])
   }
   return resolveStoreTemplate(custom.value.template, store.value?.allowed_templates)
 })

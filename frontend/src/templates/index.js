@@ -127,10 +127,16 @@ export function resolveLayout(id, surface, layoutConfig) {
   const savedById = new Map()
   for (const raw of saved) {
     if (!raw || typeof raw !== 'object') continue
-    const base0 = byId.get(raw.id)
-    if (!base0 || savedById.has(raw.id)) continue
-    savedById.set(raw.id, {
-      ...base0,
+    const blockId = String(raw.id || '')
+    //Un bloque del catálogo que la plantilla NO trae por defecto también
+    //entra: los solo-IA (aipricing, aiprocess, aimosaic, aiquote…) son
+    //secciones nuevas que agrega el motor, no un reordenamiento de las que
+    //ya existen. Antes se descartaban acá y la propuesta perdía el HTML
+    //nuevo: todas las webs terminaban con las mismas secciones.
+    const known = byId.get(blockId) || (blockSpec(surface, blockId) ? { id: blockId } : null)
+    if (!known || savedById.has(blockId)) continue
+    savedById.set(blockId, {
+      ...known,
       enabled: raw.enabled !== false,
       variant: typeof raw.variant === 'string' && raw.variant ? raw.variant : undefined,
       props: raw.props && typeof raw.props === 'object' ? raw.props : undefined

@@ -714,6 +714,19 @@ export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.tem
 // llegan desde una propuesta del motor o desde allowed_templates.
 export const AI_ONLY_TEMPLATES = ['ai_lumen', 'ai_pulse']
 
+// Los 20 diseños que salieron del selector en la mig. 0049 y que el motor
+// puede volver a proponer (has_ai_design). Están en TEMPLATE_DEFS y en
+// TEMPLATE_CHOICES: acá existen para que resolveStoreTemplate NO los
+// convierta a 'classic' — sin esta lista, toda propuesta con un diseño
+// retirado se renderizaba como Clásico y todas se veían iguales.
+export const AI_LEGACY_TEMPLATES = [
+  'perspective', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit',
+  'arena', 'mercado', 'studio', 'lookbook', 'shop', 'boutique', 'signature',
+  'aurora', 'terminal', 'terra', 'lab', 'carta', 'proceso'
+]
+// Todo diseño que el motor puede proponer sin ser una de las 6 del selector.
+export const AI_EXTRA_TEMPLATES = [...AI_ONLY_TEMPLATES, ...AI_LEGACY_TEMPLATES]
+
 // Plantillas elegibles según los beneficios del plan vigente (espejo de
 // allowed_templates_of del backend: mismo orden del catálogo). Sirve tanto
 // con el dict de benefits del plan como con la lista allowed_templates que
@@ -729,7 +742,7 @@ export function allowedTemplatesFor(benefits = {}) {
   // Espejo de allowed_templates_of: los patrones del motor de IA viajan en
   // la whitelist solo con has_ai_design. El selector no los lee de acá
   // (itera STORE_TEMPLATES), así que siguen invisibles para el panel.
-  if (benefits.has_ai_design) list.push(...AI_ONLY_TEMPLATES)
+  if (benefits.has_ai_design) list.push(...AI_EXTRA_TEMPLATES)
   return list
 }
 
@@ -738,7 +751,7 @@ export function allowedTemplatesFor(benefits = {}) {
 // exclusivos de IA son válidos aunque no estén en STORE_TEMPLATES.
 export function resolveStoreTemplate(value, allowed) {
   const list = Array.isArray(allowed) && allowed.length ? allowed : ['classic']
-  const known = Boolean(STORE_TEMPLATES[value]) || AI_ONLY_TEMPLATES.includes(value)
+  const known = Boolean(STORE_TEMPLATES[value]) || AI_EXTRA_TEMPLATES.includes(value)
   return known && list.includes(value) ? value : 'classic'
 }
 
