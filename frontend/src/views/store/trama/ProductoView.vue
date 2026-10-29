@@ -1,10 +1,12 @@
 <script setup>
-// STUB de la fundación: el diseño Ficha de producto todavía no tiene su implementación
-// propia (la construye el agente B1). Mientras tanto monta la vista de
-// Raíz para que la web nunca quede vacía. Reemplazar este archivo entero.
+// Ficha de producto de TRAMA. La estructura marketplace (galería + panel de
+// compra, CTA de WhatsApp, specs, relacionados y reseñas) es la MISMA que la
+// de Raíz y se reutiliza tal cual: la spec §7.3 pide re-skinear, no rehacer
+// la lógica. La piel llega por store-trama.css a través de `.tr-product`
+// (radios 0, Anton en titulares, botones rectangulares y borde negro).
 import RaizProducto from '../raiz/ProductoView.vue'
 </script>
 
 <template>
-  <RaizProducto />
+  <RaizProducto class="tr-product" />
 </template>
