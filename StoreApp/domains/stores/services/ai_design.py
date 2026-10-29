@@ -398,6 +398,17 @@ def _answers(store, customization, payload, stats):
     if cover_choice not in ('foto', 'logo', 'auto'):
         cover_choice    =   'auto'
     use_icons   =   payload.get('use_icons')
+    #v6 — extras: `accept_extras` ausente = True (comportamiento v5, no rompe
+    #clientes viejos), `extras` son ids que el dueño ya eligió (ganan la
+    #prioridad, nunca pasan de AI_ELEMENT_MAX y tienen que existir en el
+    #catálogo cerrado de AI_ELEMENT_ORDER) y `content_hint` es texto libre
+    #que el copy puede usar (nunca se mete crudo en HTML).
+    accept_extras   =   payload.get('accept_extras')
+    accept_extras   =   accept_extras if isinstance(accept_extras, bool) else True
+    extras          =   []
+    for extra in (payload.get('extras') or []):
+        if extra in R.AI_ELEMENT_ORDER and extra not in extras:
+            extras.append(extra)
     return {
         'rubro'         :   rubro,
         'tone'          :   tone,
@@ -413,6 +424,9 @@ def _answers(store, customization, payload, stats):
         'cover_choice'  :   cover_choice,
         #None = lo deduce el motor (rubro visual => con íconos).
         'use_icons'     :   use_icons if isinstance(use_icons, bool) else None,
+        'accept_extras' :   accept_extras,
+        'extras'        :   extras[:R.AI_ELEMENT_MAX],
+        'content_hint'  :   str(payload.get('content_hint') or '').strip()[:160],
     }
 
 
@@ -1318,20 +1332,59 @@ def _element_props(block_id, customization, facts, use_icons):
     return {}
 
 
-def _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai):
+#Etiqueta y "para qué" de cada extra: lo que la tarjeta le muestra al dueño
+#antes de aceptarlo o quitarlo (nunca jerga técnica).
+_ELEMENT_META   =   {
+    'aiquote':      ('Cita destacada',      'Una frase de tus clientes en grande, apenas pasás la portada.'),
+    'aicheck':      ('Lista de verificación', 'Tus diferenciales en una lista corta, para leer de un vistazo.'),
+    'aigrid':       ('Grilla de servicios', 'Una tarjeta por servicio, con su detalle.'),
+    'aiband':       ('Banda destacada',     'Una franja con tus ofertas vigentes y un botón al catálogo.'),
+    'aistrip':      ('Datos rápidos',       'Tus datos de contacto en una tira, arriba de todo.'),
+    'aiprocess':    ('Cómo trabajamos',     'Tu proceso de trabajo en pasos, del primero al último.'),
+    'aipricing':    ('Precios',             'Los precios de tus primeros productos, sin que los cargues otra vez.'),
+    'aimosaic':     ('Mosaico de fotos',    'Un collage con las fotos que ya subiste.'),
+}
+
+#Motivo en es-AR del extra que el plan no habilita (nunca se manda un id
+#fuera de catálogo ni un bloque ai_only sin has_ai_design).
+_SKIP_NO_AI     =   'Tu plan no incluye bloques de IA.'
+
+
+def _element_needs(block_id, stats):
+    """Qué dato REAL usa el extra, en castellano (o que no hace falta nada)."""
+    if block_id == 'aimosaic':
+        count   =   stats.get('gallery') or stats.get('images') or 0
+        return f'Tus {count} fotos cargadas.' if count else 'Tus fotos de la galería.'
+    if block_id == 'aipricing':
+        return 'Los precios de tus productos.'
+    if block_id == 'aiprocess':
+        return 'Los pasos que cargaste en tu empresa.'
+    if block_id == 'aicheck':
+        return 'Tus beneficios cargados.'
+    if block_id == 'aigrid':
+        return 'Los servicios que cargaste.'
+    if block_id == 'aiquote':
+        return 'Una opinión real de tus clientes.'
+    if block_id == 'aiband':
+        return 'Las ofertas que tenés vigentes.'
+    if block_id == 'aistrip':
+        return 'Tu WhatsApp, tu ubicación y tus horarios.'
+    return 'Nada — se arma con tu información.'
+
+
+def _element_candidates(answers, facts, stats, use_icons):
     """
-    Reglas de elementos (ai_design_recipes.AI_ELEMENT_ORDER): dar_confianza
-    => aiquote; must_have precios/garantías => aicheck; mostrar_servicios =>
-    aigrid; vender_online con ofertas => aiband; 2+ datos de contacto =>
-    aistrip; pasos cargados => aiprocess; 2+ productos => aipricing; galería
-    grande => aimosaic. Máximo 4 en total, nunca duplica ids ni pisa un
-    bloque existente. Sin íconos (use_icons=False) no se suman aigrid ni
-    aistrip.
+    Qué extras tiene sentido proponer con ESTA entrevista y ESTOS datos
+    (ai_design_recipes.AI_ELEMENT_ORDER): dar_confianza => aiquote; must_have
+    offers/benefits => aicheck; mostrar_servicios => aigrid; vender_online con
+    ofertas => aiband; 2+ datos de contacto => aistrip; pasos cargados =>
+    aiprocess; 2+ productos => aipricing; galería grande => aimosaic. Los ids
+    que el dueño ya eligió van primero; el resto conserva el orden del
+    sistema. Sin íconos (use_icons=False) no se ofrecen aigrid ni aistrip.
     """
-    if not has_ai:
-        return layout
-    goal    =   answers['goals'][0]
-    must    =   set(answers['must_have'])
+    goals   =   answers.get('goals') or []
+    goal    =   goals[0] if goals else ''
+    must    =   set(answers.get('must_have') or ())
     picked  =   []
     if goal == 'dar_confianza':
         picked.append('aiquote')
@@ -1352,34 +1405,163 @@ def _add_elements(layout, customization, facts, stats, answers, use_icons, has_a
         picked.append('aimosaic')
     if not use_icons:
         picked  =   [block_id for block_id in picked if block_id not in ('aigrid', 'aistrip')]
-    picked  =   [block_id for block_id in R.AI_ELEMENT_ORDER if block_id in picked][:R.AI_ELEMENT_MAX]
-    landing =   layout['landing']['blocks']
-    for block_id in picked:
-        if block_id in {block['id'] for block in landing}:
-            continue
-        props   =   _element_props(block_id, customization, facts, use_icons)
-        if not props and block_id in _V4_ELEMENTS:
-            #Los bloques v4 (precios/pasos/mosaico) solo se suman con datos
-            #reales: no inventamos precios, pasos ni fotos.
-            continue
-        block   =   {'id': block_id, 'enabled': True, 'variant': TEMPLATE_BLOCKS['landing'][block_id]['variants'][0]}
-        if props:
-            block['props']  =   props
+    ordered =   [block_id for block_id in R.AI_ELEMENT_ORDER if block_id in picked]
+    #Lo que el dueño ya eligió (`extras`) gana la prioridad, sin duplicar.
+    forced  =   [block_id for block_id in (answers.get('extras') or []) if block_id in R.AI_ELEMENT_ORDER]
+    return [block_id for block_id in dict.fromkeys(forced + ordered)]
+
+
+def _extra_priority(answers, facts, stats, use_icons):
+    """
+    Orden de PREFERENCIA de los extras: primero los que el dueño ya eligió y
+    después los picks de `_element_candidates` que no surgieron de la
+    entrevista sino de los datos reales (aunque hoy no estén entre los
+    candidatos, se ofrecen igual si tienen contenido). As∭, con
+    `accept_extras=true` y 0 elegidos, el motor igual tiene qué proponer.
+    """
+    forced  =   [block_id for block_id in (answers.get('extras') or []) if block_id in R.AI_ELEMENT_ORDER]
+    picked  =   _element_candidates(answers, facts, stats, use_icons)
+    data    =   []
+    if stats.get('products', 0) >= 2:
+        data.append('aipricing')
+    if stats.get('gallery', 0) >= 4 or stats.get('images', 0) >= 6:
+        data.append('aimosaic')
+    if facts.get('steps') or facts.get('services'):
+        data.append('aiprocess')
+    if use_icons and facts.get('services'):
+        data.append('aigrid')
+    if facts.get('testimonials'):
+        data.append('aiquote')
+    if facts.get('benefits'):
+        data.append('aicheck')
+    if use_icons and facts.get('contact'):
+        data.append('aistrip')
+    if facts.get('offers'):
+        data.append('aiband')
+    return [block_id for block_id in dict.fromkeys(forced + picked + data)]
+
+
+def _extras_payload(offered, applied, skipped):
+    """
+    Sección `extras` del payload (siempre las tres listas, vacías si nada).
+    `offered` son OBJETOS del contrato §2.2 (`id`, `kind`, `label`, `why`,
+    `needs` y `block` con su `id` ai_only); `applied` viaja con los ids de
+    bloque REALES que ya están en `layout_config`.
+    """
+    return {'offered': offered, 'applied': applied, 'skipped': skipped}
+
+
+def _element_block(block_id, customization, facts, use_icons):
+    """Bloque armable con datos reales, o None si el extra no tiene con qué."""
+    props   =   _element_props(block_id, customization, facts, use_icons)
+    if not props and block_id in _V4_ELEMENTS:
+        #Los bloques v4 (precios/pasos/mosaico) solo se suman con datos
+        #reales: no inventamos precios, pasos ni fotos.
+        return None
+    return {
+        'id'        :   block_id,
+        'enabled'   :   True,
+        'variant'   :   TEMPLATE_BLOCKS['landing'][block_id]['variants'][0],
+        'props'     :   copy.deepcopy(props),
+    }
+
+
+def _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai, offered = None):
+    """
+    Suma al layout de landing los extras evaluados contra los datos reales.
+    `accept_extras=False` los OFRECE (si viene una lista `offered`) pero no
+    los agrega: el dueño los prende a mano. Máximo AI_ELEMENT_MAX, nunca
+    duplica ids ni pisa un bloque existente, y respeta AI_ELEMENT_ANCHORS
+    (nunca delante del hero ni después de contact). Devuelve
+    (layout, extras, items): la sección `extras` del payload (ids) y el
+    detalle legible de cada extra ofrecido (label/why/needs + bloque).
+    """
+    skipped =   []
+    if not has_ai:
+        for block_id in _extra_priority({}, facts, stats, use_icons)[:R.AI_ELEMENT_MAX]:
+            skipped.append({'id': f'extra-{block_id[2:]}', 'reason': _SKIP_NO_AI})
+        return layout, _extras_payload([], [], skipped), []
+    landing     =   layout['landing']['blocks']
+    #Un bloque que ya compuso la plantilla no es "extra": no se toca.
+    base        =   {block['id'] for block in landing}
+    present     =   set()
+    #Bloque ya compuesto, con su contenido real (el layout de la propuesta
+    #solo lleva ids: los ai_* son "nuevos" y el id basta para prenderlos).
+    composed    =   {
+        item['kind']: {**item['block'], 'enabled': False}
+        for item in (offered or []) if item.get('block') and item['kind'] not in base
+    }
+    #Lo que entró al layout es lo que se prende; los extras viajan con su
+    #contenido en `extras.offered` (el layout, como una plantilla, va sin props).
+    applied     =   []
+
+    def record(block_id, block):
+        label, why    =   _ELEMENT_META[block_id]
+        #El bloque va con su CONTENIDO (props): el layout solo lleva ids y
+        #`apply` prende desde esta copia lo que el dueño vio en la tarjeta.
+        block   =   {**copy.deepcopy(block), 'enabled': bool(block.get('enabled'))}
+        return {
+            'id'    :   f'extra-{block_id[2:]}',
+            #Alias del id del bloque: `applied` viaja con ids de bloque REALES
+            #(los mismos del layout_config) para que aplicar sea directo.
+            'block_id':   block_id,
+            'kind'  :   block_id,
+            'label' :   label,
+            'why'   :   why,
+            'needs' :   _element_needs(block_id, stats),
+            #Bloque completo (con props): la tarjeta muestra qué se suma y
+            #apply prende ese contenido del motor.
+            'block' :   copy.deepcopy(block),
+        }
+
+    def position(block_id):
         anchor  =   R.AI_ELEMENT_ANCHORS.get(block_id)
         ids     =   [item['id'] for item in landing]
         if anchor in ids:
-            index   =   ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
-        else:
-            index   =   len(landing)
-            for tail in ('cta', 'contact'):
-                if tail in ids:
-                    index   =   min(index, ids.index(tail))
-        landing.insert(index, block)
+            return ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
+        index   =   len(landing)
+        for tail in ('cta', 'contact'):
+            if tail in ids:
+                index   =   min(index, ids.index(tail))
+        return index
+
+    accept  =   answers.get('accept_extras', True) is not False
+    #En modo OFRECER cada extra se arma aunque no se aplique: el tope
+    #AI_ELEMENT_MAX limita lo PRENDIDO, no la oferta de la tarjeta (si no, la
+    #entrevista "pedir sin sumar" nunca vería el menú completo de extras).
+    for block_id in _extra_priority(answers, facts, stats, use_icons):
+        if accept and len([item for item in applied if item['block']['enabled']]) >= R.AI_ELEMENT_MAX:
+            break
+        if block_id in present:
+            continue
+        block   =   _element_block(block_id, customization, facts, use_icons)
+        if block is None:
+            continue
+        if not accept:
+            #Se OFRECE con su bloque armado pero no se suma al layout ni se
+            #duplica: el dueño lo prende a mano desde la tarjeta.
+            composed[block_id] =   {**copy.deepcopy(block), 'enabled': False}
+            present.add(block_id)
+            applied.append(record(block_id, {**block, 'enabled': False}))
+            continue
+        composed[block_id] =   copy.deepcopy(block)
+        landing.insert(position(block_id), {'id': block_id, 'enabled': True, 'variant': block['variant']})
+        present.add(block_id)
+        applied.append(record(block_id, block))
     landing =   _enforce_hierarchy(landing)
     for index, block in enumerate(landing):
         block['order']  =   index
     layout['landing']['blocks'] =   landing
-    return layout
+    #`offered` va en el espinazo de la tarjeta y `applied` es lo PRENDIDO (v6:
+    #con accept_extras apagado, nada se aplica aunque se ofrezca).
+    if offered is not None:
+        offered[:] = [{'kind': kind, 'block': block} for kind, block in composed.items()]
+    return layout, _extras_payload(
+        #Contrato §2.2: `offered` son los extras con su bloque y su porqué.
+        applied,
+        [item['kind'] for item in applied] if accept else [],
+        skipped,
+    ), applied
 
 
 #=========================================
@@ -1816,10 +1998,15 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         pair        =   style['pair']
         pattern     =   _pattern_for(template, answers, shift)
         attempt     =   0
+        #Los intentos de la firma no pueden acumular extras dos veces.
+        extras_composed =   []
         for attempt in range(4):
+            extras_composed =   []
             layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
             layout  =   _apply_skin_layout(layout, skin, facts)
-            layout  =   _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai)
+            layout, extras, extras_items    =   _add_elements(
+                layout, customization, facts, stats, answers, use_icons, has_ai, extras_composed,
+            )
             signature = _layout_signature(template, layout)
             if signature not in signatures:
                 break
@@ -1868,6 +2055,19 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'look'          :   _look(skin, pair, theme, layout, template),
             #Calidad medible de la propuesta (contraste real, no estimado).
             'score'         :   _score(theme, clean_theme, has_advanced),
+            #v6 — elementos extra: `offered` con el detalle legible de cada
+            #uno (label/why/needs + bloque con su contenido armado por el
+            #motor), lo que ya viaja en el layout (`applied`) y lo que el
+            #plan no deja (`skipped`). El dueño acepta o quita.
+            'extras'        :   extras,
+            #Alias histórico de `extras.offered` (lo consume la tarjeta de
+            #propuestas de versiones anteriores): se mantiene deprecado.
+            'extras_items'  :   extras_items,
+            #apply prende o apaga el bloque sin re-enviar props (nunca confía
+            #en el cliente): los bloques de los extras OFRECIDOS, no solo los
+            #aplicados, para poder sumar uno con `extras:[id]`.
+            'offered_blocks':   {item['kind']: item['block'] for item in extras_composed},
+            'extras_accept' :   bool(answers.get('accept_extras', True)),
             'variety'       :   {
                 'family'        :   skin['family'],
                 #v5: el estilo de diseño (grupo del entrenamiento) que la
@@ -2050,27 +2250,132 @@ def _publish(customization, store):
         StudioVersion.objects.filter(pk__in = stale).delete()
 
 
-def apply(store, seed, proposal_id, autofill = False):
+def _element_kinds(items):
+    """
+    Lista de extras → ids de bloque reales. Acepta el id del payload
+    ('extra-stamps') o el id del bloque; lo que no existe en el catálogo
+    cerrado (AI_ELEMENT_ORDER) se descarta en silencio.
+    """
+    kinds   =   []
+    for item in (items or []):
+        kind    =   item.get('kind') or item.get('block_id') or item.get('id') if isinstance(item, dict) else item
+        kind    =   str(kind or '').strip()
+        if kind.startswith('extra-'):
+            kind    =   'ai' + kind[len('extra-'):]
+        if kind in R.AI_ELEMENT_ORDER and kind not in kinds:
+            kinds.append(kind)
+    return kinds
+
+
+def _resolve_extras(layout, extras, accept, skip_extras, has_ai, blocks = None):
+    """
+    El dueño acepta o rechaza extras antes de publicar. Los rechazados NO se
+    borran del layout: quedan con `enabled:false` para que los prenda después
+    desde el editor. Los aceptados se prenden si su bloque tiene datos
+    reales (los `blocks` que ya armó el motor; nunca props del cliente). Un
+    extra aceptado que la propuesta no traía se inserta con su ancla real.
+    `skip_extras=True` rechaza todos.
+    """
+    if not has_ai:
+        return layout
+    offered   =   _element_kinds((extras or {}).get('offered'))
+    #Una propuesta con `accept_extras=False` no trae nada aplicado: entonces
+    #lo elegido por el dueño (`extras: [ids]`) es la lista de aceptados.
+    requested =   _element_kinds((extras or {}).get('applied'))
+    if not requested and accept is not False and not skip_extras:
+        requested =   offered
+    #Lo que el dueño eligió manda aunque la tarjeta no lo hubiera ofrecido (su
+    #contenido tiene que estar en `blocks`), pero nunca pasa de AI_ELEMENT_MAX
+    #prendidos: el resto de los ofrecidos queda apagado.
+    accepted  =   set() if skip_extras else {
+        kind for kind in requested if kind in blocks or kind in offered
+    }
+    if len(accepted) > R.AI_ELEMENT_MAX:
+        keep        =   [kind for kind in requested if kind in accepted][:R.AI_ELEMENT_MAX]
+        accepted    =   set(keep)
+    landing     =   layout.get('landing', {}).get('blocks', [])
+    present     =   {block['id'] for block in landing}
+    for block_id in list(dict.fromkeys(list(blocks or {}) + offered)):
+        if block_id not in accepted or block_id in present:
+            continue
+        block   =   copy.deepcopy((blocks or {}).get(block_id) or {})
+        if not block:
+            continue
+        block['enabled']    =   True
+        anchor  =   R.AI_ELEMENT_ANCHORS.get(block_id)
+        ids     =   [item['id'] for item in landing]
+        if anchor in ids:
+            index   =   ids.index(anchor) if block_id == 'aiquote' else ids.index(anchor) + 1
+        else:
+            index   =   next((i for i, item in enumerate(landing) if item['id'] == 'contact'), len(landing))
+        landing.insert(index, block)
+        present.add(block_id)
+    for block in landing:
+        block_id    =   block['id']
+        #Solo se tocan los elementos EXTRA ofrecidos (el estado de la
+        #portada y de las secciones que armó el motor no se altera).
+        if block_id not in offered:
+            continue
+        block['enabled']    =   block_id in accepted and block.get('enabled', True)
+        #El contenido viaja con el bloque (el layout de la propuesta solo lleva
+        #ids). El dueño que prende un extra ofrecido recibe lo que vio en la
+        #tarjeta, nunca props enviadas por el cliente.
+        props   =   (blocks or {}).get(block_id, {}).get('props')
+        if block_id in accepted and props and not block.get('props'):
+            block['props']  =   copy.deepcopy(props)
+    for index, block in enumerate(landing):
+        block['order']  =   index
+    return layout
+
+
+def apply(store, seed, proposal_id, autofill = False, extras = None, skip_extras = False):
     """
     Recalcula la propuesta con el mismo motor, la escribe en el BORRADOR
     (layout_config_draft, site_theme_draft, template_draft, theme,
     theme_toggle) y PUBLICA en el mismo paso. El copy solo rellena campos
     VACÍOS — nunca pisa datos de negocio que ya cargó el dueño. Con
     autofill=True suma el copy_draft a los campos vacíos (about, misión,
-    FAQs, servicios, pasos, anuncios), también sin pisar nada.
+    FAQs, servicios, pasos, anuncios), también sin pisar nada. `extras`
+    ({applied:[ids], offered:[...]}) y `skip_extras` ajustan los elementos
+    extra ANTES de publicar: los rechazados quedan apagados en el layout.
     """
     try:
         seed    =   int(seed)
     except (TypeError, ValueError):
         raise AiDesignError('Falta la semilla de la propuesta: generá las propuestas de nuevo.')
-    customization, answers, allowed, has_advanced, has_ai =   _prepare(store, cache.get(_cache_key(store, seed)) or {})
+    cached  =   cache.get(_cache_key(store, seed))
+    #La elección del dueño sobre los extras no se guarda en caché: el
+    #recalculo tiene que salir idéntico a lo que vio en la tarjeta.
+    customization, answers, allowed, has_advanced, has_ai =   _prepare(store, cached or {})
+    #La entrevista cacheada manda `accept_extras`: la decisión final por
+    #extra es la de `extras`/`skip_extras`, no la del primer generate.
+    answers['accept_extras']  =   not skip_extras
+    later   =   None
+    if isinstance(extras, dict):
+        later   =   {'offered': extras.get('offered') if isinstance(extras.get('offered'), list) else [],
+                     'applied': extras.get('applied') if isinstance(extras.get('applied'), list) else []}
+    elif isinstance(extras, list):
+        #Lista simple de ids: lo que no está en la lista se rechaza.
+        later   =   {'offered': None, 'applied': extras}
     facts, stats =   _facts(store, customization)
     built       =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai)
     proposal    =   next((item for item in built['proposals'] if item['id'] == proposal_id), None)
     if proposal is None:
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
 
-    layout      =   _apply_titles(copy.deepcopy(proposal['layout_config']), answers['rubro'])
+    if later and later['offered'] is None:
+        #Sin lista de ofrecidos se toman los que la propuesta ya evaluó
+        #(acepta ids de bloque o los objetos del contrato §2.2).
+        later['offered'] = _element_kinds((proposal.get('extras') or {}).get('offered'))
+    layout      =   _resolve_extras(
+        copy.deepcopy(proposal['layout_config']),
+        later or proposal.get('extras'),
+        answers.get('accept_extras', True),
+        skip_extras,
+        has_ai,
+        proposal.get('offered_blocks'),
+    )
+    layout      =   _apply_titles(layout, answers['rubro'])
     #La plantilla del borrador nunca sale de la whitelist del plan.
     template    =   proposal['template'] if proposal['template'] in allowed else customization.template
 

@@ -231,8 +231,11 @@ export const storesApi = {
     return data
   },
 
-  async aiDesignApply({ seed, proposal_id }) {
-    const { data } = await http.post('/stores/ai-design/apply/', { seed, proposal_id })
+  async aiDesignApply({ seed, proposal_id, extras = null, skip_extras = false }) {
+    const payload = { seed, proposal_id }
+    if (extras) payload.extras = extras
+    if (skip_extras) payload.skip_extras = true
+    const { data } = await http.post('/stores/ai-design/apply/', payload)
     return data
   },
 

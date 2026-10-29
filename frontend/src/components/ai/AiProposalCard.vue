@@ -28,6 +28,49 @@ const emit = defineEmits(['preview', 'apply', 'change-style', 'refresh-images'])
 const autofill = ref(props.autofillDefault)
 watch(() => props.autofillDefault, (v) => { autofill.value = v })
 
+// ---- v6 Extras: la IA propone, el dueño acepta ----
+// `extras.offered` trae el detalle legible de cada bloque ai_only (label +
+// para qué + qué datos reales usa); `extras.applied` son los que ya viajan
+// prendidos en el layout. El tope es el del motor (AI_ELEMENT_MAX = 4): acá
+// se refleja para que el contador "N de 4" y el disabled sean locales.
+const EXTRA_MAX = 4
+const extraItems = computed(() => {
+  const list = props.proposal?.extras?.offered
+  return Array.isArray(list) ? list.filter((item) => item && item.kind) : []
+})
+const chosen = ref([])
+function resetExtras() {
+  chosen.value = extraItems.value
+    .filter((item) => item.block?.enabled)
+    .map((item) => item.kind)
+    .slice(0, EXTRA_MAX)
+}
+watch(() => props.proposal, resetExtras, { immediate: true })
+const chosenCount = computed(() => chosen.value.length)
+const canAdd = computed(() => chosen.value.length < EXTRA_MAX)
+function isChosen(kind) {
+  return chosen.value.includes(kind)
+}
+function addExtra(kind) {
+  if (!isChosen(kind) && canAdd.value) chosen.value = [...chosen.value, kind]
+}
+function removeExtra(kind) {
+  chosen.value = chosen.value.filter((k) => k !== kind)
+}
+// apply recibe la elección completa: los ofrecidos (para que un extra
+// rechazado quede apagado en el borrador y no desaparezca) y los elegidos.
+const extrasPayload = computed(() => ({
+  offered: extraItems.value.map((item) => item.kind),
+  applied: chosen.value
+}))
+function applyProposal() {
+  emit('apply', {
+    proposal: props.proposal,
+    autofill,
+    ...(extraItems.value.length ? { extras: extrasPayload.value } : {})
+  })
+}
+
 const requests = computed(() => (Array.isArray(props.proposal.image_requests) ? props.proposal.image_requests : []))
 const draft = computed(() => props.proposal.copy_draft || {})
 const applying = computed(() => props.busy === `apply:${props.proposal.id}`)
@@ -41,6 +84,31 @@ const redesignText = computed(() => {
   if (summary) return summary
   return redesign.value?.changed ? 'Portada, catálogo y servicios reorganizados' : ''
 })
+// ---- v6: `look` (resumen legible) y `score` (calidad medida) ----
+// `look.changed` es lo que el motor tocó de verdad (tipografía, portada,
+// orden, grilla, servicios): la tarjeta lo lista para que el dueño vea el
+// rediseño y no solo un punto de color. `score` va sin número frío: tres
+// barras + una etiqueta en castellano.
+const look = computed(() => (props.proposal.look && typeof props.proposal.look === 'object' ? props.proposal.look : null))
+const styleLabel = computed(() => String(look.value?.style_label || props.proposal.variety?.style_label || '').trim())
+const changed = computed(() => {
+  const list = look.value?.changed
+  if (!Array.isArray(list)) {
+    return redesign.value?.changed ? ['Portada, catálogo y servicios reorganizados'] : []
+  }
+  return list.filter((item) => typeof item === 'string' && item.trim()).slice(0, 5)
+})
+const score = computed(() => {
+  const raw = props.proposal.score
+  if (!raw || typeof raw !== 'object') return null
+  const total = Number(raw.total)
+  if (!Number.isFinite(total)) return null
+  const label = total >= 90 ? 'Excelente' : total >= 80 ? 'Muy bueno' : total >= 70 ? 'Bueno' : 'Aceptable'
+  const level = total >= 90 ? 3 : total >= 75 ? 2 : 1
+  const issues = Array.isArray(raw.issues) ? raw.issues.filter((i) => typeof i === 'string' && i.trim()).slice(0, 2) : []
+  return { total, label, level, issues }
+})
+
 const nightMode = computed(() => props.proposal.night_mode || null)
 const coverChoice = computed(() => props.proposal.cover || null)
 const themeSource = computed(() => (themeChoice.value?.source === 'user' ? 'elegido por vos' : 'elegido por la IA'))
@@ -159,6 +227,7 @@ watch(
           {{ skinLabel }}
         </span>
         <span v-if="familyLabel" class="aidp-chip aidp-chip-family">{{ familyLabel }}</span>
+        <span v-if="styleLabel" class="aidp-chip aidp-chip-style">{{ styleLabel }}</span>
       </div>
       <div v-if="roleText" class="aidp-type" aria-hidden="true">
         <span v-for="s in roleSamples" :key="s.role" class="aidp-type-item">
@@ -217,6 +286,70 @@ watch(
       <li v-for="(n, k) in notes" :key="k">{{ n }}</li>
     </ul>
 
+    <!-- Qué cambió: lo que el motor rediseñó de verdad, no una lista fija. -->
+    <section v-if="changed.length" class="aidp-changed" :aria-labelledby="`changed-${proposal.id}`">
+      <strong :id="`changed-${proposal.id}`">Qué cambió</strong>
+      <ul>
+        <li v-for="(item, k) in changed" :key="k">
+          <AppIcon name="check" :size="13" aria-hidden="true" /> {{ item }}
+        </li>
+      </ul>
+    </section>
+
+    <!-- Calidad: barras + etiqueta ("Se ve así de bien"), nunca un número frío. -->
+    <div v-if="score" class="aidp-score">
+      <span class="aidp-score-bars" aria-hidden="true">
+        <span v-for="n in 3" :key="n" :class="['aidp-score-bar', { on: n <= score.level }]"></span>
+      </span>
+      <span class="aidp-score-text">Se ve así de bien: <strong>{{ score.label }}</strong></span>
+      <small v-for="(issue, k) in score.issues" :key="`i${k}`" class="aidp-score-issue">{{ issue }}</small>
+    </div>
+
+    <!-- Extras: chips con Quitar (aplicados) / Sumar (ofrecidos) y "N de 4". -->
+    <section v-if="extraItems.length" class="aidp-extras" :aria-labelledby="`extras-${proposal.id}`">
+      <div class="aidp-extras-head">
+        <strong :id="`extras-${proposal.id}`">Elementos extra</strong>
+        <span class="aidp-extras-count" :aria-label="`${chosenCount} de ${EXTRA_MAX} elegidos`">
+          {{ chosenCount }} de {{ EXTRA_MAX }}
+        </span>
+      </div>
+      <ul class="aidp-extras-list">
+        <li
+          v-for="ex in extraItems"
+          :key="ex.kind"
+          class="aidp-extra"
+          :class="{ on: isChosen(ex.kind) }"
+        >
+          <span class="aidp-extra-main">
+            <span class="aidp-extra-label">
+              <AppIcon :name="isChosen(ex.kind) ? 'circle-check' : 'plus-circle'" :size="14" aria-hidden="true" />
+              {{ ex.label }}
+            </span>
+            <small class="aidp-extra-why">{{ ex.why }}</small>
+            <small v-if="ex.needs" class="aidp-extra-needs">{{ ex.needs }}</small>
+          </span>
+          <button
+            v-if="!published && isChosen(ex.kind)"
+            type="button"
+            class="aidp-extra-btn"
+            @click="removeExtra(ex.kind)"
+          >
+            Quitar
+          </button>
+          <button
+            v-else-if="!published"
+            type="button"
+            class="aidp-extra-btn add"
+            :disabled="!canAdd"
+            @click="addExtra(ex.kind)"
+          >
+            Sumar
+          </button>
+          <span v-else-if="isChosen(ex.kind)" class="aidp-extra-tag">Aplicado</span>
+        </li>
+      </ul>
+    </section>
+
     <AiImageRequest
       v-for="req in requests"
       :key="req.id"
@@ -244,7 +377,7 @@ watch(
       <button class="btn ghost btn-auto" type="button" @click="emit('preview')">
         <AppIcon name="eye" :size="16" /> Ver en grande
       </button>
-      <button class="btn btn-auto aid-primary" type="button" :disabled="Boolean(busy)" @click="emit('apply', { proposal, autofill })">
+      <button class="btn btn-auto aid-primary" type="button" :disabled="Boolean(busy)" @click="applyProposal">
         <AppIcon name="check" :size="16" /> {{ applying ? 'Publicando…' : 'Establecer este estilo' }}
       </button>
     </footer>

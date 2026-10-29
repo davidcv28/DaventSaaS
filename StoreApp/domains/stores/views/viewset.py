@@ -856,10 +856,20 @@ class StoreViewSet(StoreBaseViewSet):
                 {'detail': 'El diseño automático está disponible en tu plan actual.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
+        def _flag(value):
+            return value if isinstance(value, bool) else str(value or '').strip().lower() in ('1', 'true', 'yes', 'on')
         try:
-            autofill    =   request.data.get('autofill')
-            autofill    =   autofill if isinstance(autofill, bool) else str(autofill or '').strip().lower() in ('1', 'true', 'yes', 'on')
-            apply_ai_design(store, request.data.get('seed'), request.data.get('proposal_id'), autofill = autofill)
+            apply_ai_design(
+                store,
+                request.data.get('seed'),
+                request.data.get('proposal_id'),
+                autofill        =   _flag(request.data.get('autofill')),
+                #Extras: la elección del dueño (ids aceptados) o, sin lista,
+                #los que ya viajan en la propuesta. `skip_extras` rechaza
+                #todos y los deja apagados en el borrador.
+                extras          =   request.data.get('extras'),
+                skip_extras     =   _flag(request.data.get('skip_extras')),
+            )
         except AiDesignError as error:
             return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
         customization   =   StoreCustomization.objects.get_or_create(store = store)[0]

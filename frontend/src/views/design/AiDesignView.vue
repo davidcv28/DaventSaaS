@@ -80,7 +80,8 @@ const STEP_TITLES = ['A qué te dedicás', 'Qué querés lograr', 'Cómo se sien
 
 const EMPTY = () => ({
   rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [],
-  brand_color: '', night_mode: { enabled: false, default: 'light' }, cover_choice: 'auto', use_icons: true
+  brand_color: '', night_mode: { enabled: false, default: 'light' }, cover_choice: 'auto', use_icons: true,
+  accept_extras: true
 })
 const answers = reactive(EMPTY())
 
@@ -158,7 +159,7 @@ const liveMessage = computed(() => {
 const hasAnswers = computed(() => Boolean(
   answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length || answers.audience ||
   answers.must_have.length || answers.brand_color || answers.night_mode.enabled ||
-  answers.cover_choice !== 'auto' || !answers.use_icons
+  answers.cover_choice !== 'auto' || !answers.use_icons || answers.accept_extras === false
 ))
 
 const MISSING_ACTIONS = {
@@ -202,6 +203,8 @@ function hydrate() {
       : { enabled: false, default: 'light' }
     answers.cover_choice = ['foto', 'logo', 'auto'].includes(saved.cover_choice) ? saved.cover_choice : 'auto'
     answers.use_icons = saved.use_icons !== false
+    // v6: "¿sumar extras?" — ausente = sí (decisión del brief §2.3).
+    answers.accept_extras = saved.accept_extras !== false
   } catch { /* storage bloqueado o dato viejo */ }
   hydrated.value = true
 }
@@ -280,6 +283,8 @@ function payload(extra = {}) {
   }
   p.cover_choice = answers.cover_choice || 'auto'
   p.use_icons = answers.use_icons !== false
+  // v6 §2.3: ausente = true en el motor; acá siempre viaja explícito.
+  p.accept_extras = answers.accept_extras !== false
   return { ...p, ...extra }
 }
 
@@ -371,7 +376,7 @@ function startOver() {
 
 // El contrato v3 aplica y publica en un solo request: ya no hay publish/discard
 // desde esta sección (siguen existiendo para el Studio).
-async function apply({ proposal, autofill }) {
+async function apply({ proposal, autofill, extras }) {
   if (!seed.value || busy.value) return
   busy.value = `apply:${proposal.id}`
   actionError.value = ''
@@ -379,7 +384,11 @@ async function apply({ proposal, autofill }) {
     await http.post('/stores/ai-design/apply/', {
       seed: seed.value,
       proposal_id: proposal.id,
-      autofill: Boolean(autofill)
+      autofill: Boolean(autofill),
+      // Extras elegidos en la tarjeta: `offered` deja apagados los
+      // rechazados (sin borrarlos del borrador) y `applied` prende los
+      // aceptados. Sin extras, el backend usa los de la propuesta.
+      ...(extras ? { extras } : {})
     })
     await store.refreshCustomization()
     published.value = { id: proposal.id, label: proposal.label }
@@ -492,6 +501,17 @@ function closePreview() {
 
         <AiStep v-else :number="5" title="¿Qué no puede faltar?" subtitle="Marcá lo que sí o sí tiene que estar en tu web.">
           <AiSelect v-model="answers.must_have" :options="MUST_HAVE" multiple label="Lo que no puede faltar" placeholder="Elegí lo importante" />
+          <!-- v6: elementos extra que la IA puede sumar con datos reales. -->
+          <div class="aid-field aid-extras-ask">
+            <p class="aid-field-title">Elementos extra que puedo sumar</p>
+            <label class="aid-switch">
+              <input v-model="answers.accept_extras" type="checkbox" />
+              <span class="aid-switch-text">
+                <strong>Que la IA agregue estos elementos</strong>
+                <small>Bandas, mosaicos de fotos, precios y otros bloques armados con tus datos. Después los quitás o sumás uno por uno.</small>
+              </span>
+            </label>
+          </div>
         </AiStep>
 
         <div class="aid-actions">

@@ -30,6 +30,7 @@ from StoreApp.domains.stores.services.ai_design_typography import (
     TYPE_CASES, TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING,
 )
 from StoreApp.domains.stores.services import storage
+from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services.ai_design import generate as generate_ai_design
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
@@ -1137,20 +1138,25 @@ class AiDesignV4Tests(AiDesignBase):
                                                'must_have': ['contact', 'faq']})
         for proposal in data['proposals']:
             for block in proposal['layout_config']['landing']['blocks']:
-                if block['id'] not in ('aiprocess', 'aipricing', 'aimosaic'):
+                if block['id'] not in ('aiprocess', 'aipricing', 'aimosaic') or not block.get('enabled'):
                     continue
+                self.assertIn(block['id'], proposal['offered_blocks'], block)
                 spec    =   TEMPLATE_BLOCKS['landing'][block['id']]
                 self.assertTrue(spec['ai_only'])
                 if block.get('variant'):
                     self.assertIn(block['variant'], spec['variants'])
-                for key in (block.get('props') or {}):
+                for key in (proposal['offered_blocks'][block['id']].get('props') or {}):
                     self.assertIn(key, spec['props'])
+                #v6: el contenido REAL del extra lo arma el motor y viaja en
+                #`offered_blocks` (apply lo prende sin props del cliente).
+                props   =   proposal['offered_blocks'][block['id']].get('props')
+                self.assertTrue(props, block)
                 if block['id'] == 'aiprocess':
-                    self.assertLessEqual(len(block['props']['items']), 5)
-                    self.assertLessEqual(len(block['props']['items'][0]['text']), 160)
+                    self.assertLessEqual(len(props['items']), 5)
+                    self.assertLessEqual(len(props['items'][0]['text']), 160)
                 if block['id'] == 'aipricing':
-                    self.assertLessEqual(len(block['props']['items']), 4)
-                    self.assertGreaterEqual(len(block['props']['items']), 2)
+                    self.assertLessEqual(len(props['items']), 4)
+                    self.assertGreaterEqual(len(props['items']), 2)
 
     def test_generated_icons_are_accepted(self):
         layout  =   {'landing': {'blocks': [{'id': 'aigrid', 'props': {
@@ -1161,3 +1167,174 @@ class AiDesignV4Tests(AiDesignBase):
         self.assertEqual(items[0]['icon'], 'gen:llave-inglesa')
         self.assertNotIn('icon', items[1])
         self.assertNotIn('icon', items[2])
+
+
+class AiDesignExtrasTests(AiDesignBase):
+    """Fase D (v6): la IA ofrece elementos extra y el dueño acepta o rechaza."""
+
+    def _store_with_material(self, **kwargs):
+        store, customization    =   self._material(products = 4, **kwargs)
+        customization.services  =   [{'icon': 'package', 'title': f'Servicio {index}', 'text': 'Detalle'} for index in range(3)]
+        customization.service_steps =   [{'title': f'Paso {index + 1}', 'text': 'Cómo lo hacemos'} for index in range(3)]
+        customization.benefits  =   [{'text': f'Beneficio {index}'} for index in range(3)]
+        customization.testimonials =   [{'name': 'Ana', 'detail': 'Clienta', 'text': 'Muy buena atención'}]
+        customization.whatsapp  =   '1122334455'
+        customization.save()
+        for index in range(5):
+            StoreGalleryImage.objects.create(store = store, image_key = f'e{index}', position = index)
+        return store, customization
+
+    def _material(self, products = 0, **kwargs):
+        return self._store(products = products, **kwargs)
+
+    def _generate(self, store, payload = None):
+        data    =   {'rubro': 'comercio', 'tone': 'moderno', 'goals': ['vender_online', 'mostrar_servicios']}
+        data.update(payload or {})
+        response    =   self._client(store).post(AI_URL, data, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        return response.json()
+
+    def _ai_blocks(self, proposal):
+        return {block['id']: block for block in proposal['layout_config']['landing']['blocks'] if block['id'] in R.AI_ELEMENT_ORDER}
+
+    def test_every_proposal_ships_the_extras_section(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store)
+        for proposal in data['proposals']:
+            extras  =   proposal['extras']
+            self.assertEqual(set(extras), {'offered', 'applied', 'skipped'})
+            self.assertLessEqual(len(extras['applied']), R.AI_ELEMENT_MAX)
+            self.assertTrue(extras['offered'], proposal['label'])
+            #Contrato §2.2: `offered` son los extras con su bloque y `applied`
+            #son ids de bloque REALES de TEMPLATE_BLOCKS (todos ai_only).
+            for item in proposal['extras_items']:
+                self.assertIn(item['kind'], R.AI_ELEMENT_ORDER)
+                self.assertEqual(item['block_id'], item['kind'])
+                self.assertTrue(item['label'] and item['why'] and item['needs'])
+                self.assertEqual(item['block']['id'], item['kind'])
+                self.assertTrue(TEMPLATE_BLOCKS['landing'][item['block']['id']]['ai_only'])
+            self.assertEqual(set(extras['applied']), {item['kind'] for item in proposal['extras_items'] if item['block']['enabled']})
+            self.assertEqual(set(proposal['offered_blocks']), {item['kind'] for item in proposal['extras_items']})
+            self.assertIn('score', proposal)
+
+    def test_accept_extras_false_offers_but_does_not_apply(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store, {'accept_extras': False})
+        for proposal in data['proposals']:
+            self.assertTrue(proposal['extras']['offered'], proposal['extras'])
+            self.assertEqual(proposal['extras']['applied'], [])
+            #Ninguno se prende: la tarjeta los ofrece para sumarlos a mano.
+            for item in proposal['extras_items']:
+                self.assertFalse(item['block']['enabled'], item['kind'])
+            #Un extra no aplicado nunca viaja prendido en el layout.
+            for block in self._ai_blocks(proposal).values():
+                self.assertFalse(block['enabled'], block['id'])
+
+    def test_accept_extras_absent_keeps_applying(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store)
+        self.assertTrue(any(proposal['extras']['applied'] for proposal in data['proposals']))
+
+    def test_extras_input_wins_priority_and_is_capped(self):
+        store, _    =   self._store_with_material()
+        data    =   self._generate(store, {'extras': ['aimosaic', 'aipricing', 'no-existe', 'aiquote',
+                                                     'aistrip', 'aigrid', 'aiband']})
+        for proposal in data['proposals']:
+            applied =   proposal['extras']['applied']
+            self.assertLessEqual(len(applied), R.AI_ELEMENT_MAX)
+            self.assertEqual(applied[:2], ['aimosaic', 'aipricing'], applied)
+
+    def test_extras_require_ai_flag(self):
+        store, _    =   self._store_with_material(ai = False)
+        data    =   generate_ai_design(store, {'rubro': 'comercio', 'goals': ['vender_online']})
+        for proposal in data['proposals']:
+            self.assertEqual(proposal['extras']['offered'], [])
+            self.assertEqual(proposal['extras']['applied'], [])
+            self.assertTrue(proposal['extras']['skipped'])
+            self.assertEqual(self._ai_blocks(proposal), {})
+
+    def test_extras_offered_items_follow_the_contract(self):
+        #Contrato §2.2: `extras.offered` son OBJETOS con su bloque ai_only,
+        #el "para qué" y qué datos reales usa (lo que pinta la tarjeta).
+        store, _    =   self._store_with_material()
+        data        =   self._generate(store)
+        for proposal in data['proposals']:
+            self.assertTrue(proposal['extras']['offered'], proposal['label'])
+            for item in proposal['extras']['offered']:
+                self.assertEqual(item['id'], f'extra-{item["kind"][2:]}')
+                self.assertIn(item['kind'], R.AI_ELEMENT_ORDER)
+                self.assertTrue(item['label'] and item['why'] and item['needs'])
+                self.assertTrue(TEMPLATE_BLOCKS['landing'][item['block']['id']]['ai_only'])
+                self.assertEqual(item['block']['id'], item['kind'])
+
+    def test_extras_respect_data_gates(self):
+        #Sin pasos ni galería no se ofrecen aiprocess ni aimosaic (nunca
+        #inventan precios, pasos ni fotos).
+        store, _    =   self._store(products = 0)
+        data        =   self._generate(store, {'goals': ['vender_online']})
+        for proposal in data['proposals']:
+            kinds   =   {item['kind'] for item in proposal['extras']['offered']}
+            self.assertNotIn('aiprocess', kinds)
+            self.assertNotIn('aimosaic', kinds)
+            self.assertNotIn('aipricing', kinds)
+
+
+
+    def test_apply_with_rejected_extra_disables_block(self):
+        store, customization    =   self._store_with_material()
+        data                    =   self._generate(store)
+        proposal                =   next(item for item in data['proposals'] if item['extras']['applied'])
+        applied                 =   proposal['extras']['applied']
+        dropped                 =   applied[0]
+        kept                    =   applied[1:]
+        offered                 =   [item['kind'] for item in proposal['extras_items']]
+        response                =   self._client(store).post(APPLY_URL, {
+            'seed'          :   data['seed'],
+            'proposal_id'   :   proposal['id'],
+            'extras'        :   {'offered': offered, 'applied': kept},
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        customization.refresh_from_db()
+        landing =   {block['id']: block for block in customization.layout_config['landing']['blocks']}
+        #El rechazado sigue en el layout (para prenderlo después) pero apagado.
+        self.assertIn(dropped, landing)
+        self.assertFalse(landing[dropped]['enabled'])
+        for kind in kept:
+            self.assertTrue(landing[kind]['enabled'])
+
+    def test_apply_with_skip_extras_turns_them_all_off(self):
+        store, customization    =   self._store_with_material()
+        data                    =   self._generate(store)
+        proposal                =   next(item for item in data['proposals'] if item['extras']['applied'])
+        response                =   self._client(store).post(APPLY_URL, {
+            'seed': data['seed'], 'proposal_id': proposal['id'], 'skip_extras': True,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        customization.refresh_from_db()
+        landing =   {block['id']: block for block in customization.layout_config['landing']['blocks']}
+        #Apagados, pero presentes en el borrador para prenderlos después.
+        self.assertFalse({k for k, v in landing.items() if v.get('enabled')} & set(R.AI_ELEMENT_ORDER))
+
+    def test_apply_can_turn_on_an_offered_extra(self):
+        store, customization    =   self._store_with_material()
+        data                    =   self._generate(store, {'accept_extras': False})
+        proposal                =   data['proposals'][0]
+        offered                 =   [item['kind'] for item in proposal['extras_items']]
+        self.assertTrue(offered)
+        chosen                  =   offered[0]
+        response                =   self._client(store).post(APPLY_URL, {
+            'seed': data['seed'], 'proposal_id': proposal['id'],
+            'extras': {'offered': offered, 'applied': [chosen]},
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        customization.refresh_from_db()
+        stored  =   {block['id']: block for block in customization.layout_config_draft['landing']['blocks']}
+        self.assertIn(chosen, stored)
+        self.assertTrue(stored[chosen]['enabled'])
+        #El contenido sale del motor (nunca props enviadas por el cliente).
+        self.assertEqual(stored[chosen].get('props'), proposal['offered_blocks'][chosen].get('props'))
+        #Elegir un extra no apaga el resto de la portada.
+        enabled =   {block['id'] for block in customization.layout_config_draft['landing']['blocks'] if block['enabled']}
+        self.assertIn('hero', enabled)
+        if chosen != 'aipricing':
+            self.assertFalse(stored['aipricing']['enabled'])
