@@ -222,7 +222,15 @@ mergeado a `main` en un único commit de integración:
 - Suite del motor: 325 tests en verde (`manage.py test` con los 5 módulos `tests_ai_design*`).
 - Escenario §9.4: `venv/Scripts/python.exe qa_ai_design_v6.py` (3 rubros, propuestas
   distintas, extras válidos, `score.contrast == 100`, tema publicado con AA).
-- QA visual (`qa_a11y.py`, `qa_overflow.py`, capturas antes/después) queda como
-  verificación manual con los servidores de dev levantados; los scripts ya están
-  parametrizados por plantilla.
+- QA visual: `venv/Scripts/python.exe qa_v6_visual.py` (con `npm run dev` en :5173)
+  captura `qa_out/v6/{before,after}-home-{390,768,1280}.png` y audita home/catálogo/
+  servicios a 390/768/1280. Resultado de la última corrida: **0 contrastes <4.5**,
+  **0 issues a11y a 390**, piel `editorial-ink` publicada (`data-st-skin`), `--sp-ink`
+  `#111111`, acento `#b45309`, Space Grotesk/Inter aplicadas y Contacto último.
+- El escenario visual destapó y dejó corregido un defecto real de publicación: los
+  bloques default del template que la config no traía (`services`) se agregaban
+  **después de Contacto**; `resolveLayout` ahora mueve `contact` al final.
+- `qa_a11y.py` / `qa_overflow.py` siguen disponibles para la barrida por las 6
+  plantillas activas (requieren los servidores de dev y `bench-store` cargado).
+
 

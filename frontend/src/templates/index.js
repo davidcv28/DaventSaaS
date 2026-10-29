@@ -148,6 +148,11 @@ export function resolveLayout(id, surface, layoutConfig) {
     return (typeof saved[ia]?.order === 'number' ? saved[ia].order : ia) - (typeof saved[ib]?.order === 'number' ? saved[ib].order : ib)
   })
   const merged = [...orderedSaved, ...base.filter((b) => !savedById.has(b.id))]
+  //Contacto cierra SIEMPRE: los bloques del default que la config no traía
+  //(p.ej. services del template) entran al final del merge y lo dejaban
+  //detrás. Se mueve contact al último lugar antes de numerar.
+  const contactAt = merged.findIndex((b) => b.id === 'contact')
+  if (contactAt >= 0 && contactAt !== merged.length - 1) merged.push(...merged.splice(contactAt, 1))
   return merged.map((block, i) => {
     const spec = blockSpec(surface, block.id)
     return { ...block, order: i, enabled: spec?.locked ? true : block.enabled !== false }
