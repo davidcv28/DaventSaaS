@@ -1,6 +1,6 @@
 <script setup>
 // Página de catálogo de la web pública (/<slug>/catalogo). El diseño
-// configurado (pageTemplate) elige la composición completa: 'classic' es el
+// configurado (pageTemplate) elige la composición completa: 'raiz' es el
 // catálogo estándar y cada otro diseño trae su propia página (layout, filtros
 // y tarjetas propios) sobre el mismo estado (composables/useStoreCatalog).
 // Como StoreHomeView, solo consume el contexto `storePage` del layout.

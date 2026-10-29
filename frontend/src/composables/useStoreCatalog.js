@@ -9,7 +9,7 @@ import { productOffer } from '../api/catalog.api.js'
 // del header por `ui.search`), taxonomías multi-selección, facetas por
 // atributo (Talle, Color...), banderas oferta/novedades, rango de precios,
 // orden, tags de filtros activos y paginado por "ver más". Cada diseño
-// (Clásico, Perspectiva, Dúo, ...) solo pone su propia presentación encima
+// (Raíz, Trama, Circuito) solo pone su propia presentación encima
 // de este estado — el panel de atributos lo monta CatalogFacets, que llama
 // al mismo composable y recibe la instancia ya creada por la página.
 const SORTS = ['name', 'recent', 'price_asc', 'price_desc']

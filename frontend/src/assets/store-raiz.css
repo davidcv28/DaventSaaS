@@ -1,0 +1,356 @@
+/* ==========================================================================
+   DISEÑO RAÍZ — generalista / retail / servicios (nivel base)
+   Raíz de todo el CSS: [data-template="raiz"] (lo emite StorePublicLayout).
+   Paleta, tipografía, ritmo y formas de la referencia (§6.1 del prompt de
+   rediseño). El CSS de un diseño se carga solo cuando la tienda lo usa.
+   ========================================================================== */
+
+.store-page[data-template='raiz'] {
+  /* Paleta */
+  --rz-bg: #F5F6F3;
+  --rz-surface: #FFFFFF;
+  --rz-surface-2: #E9ECE6;
+  --rz-line: #DCE0DA;
+  --rz-ink: #17211C;
+  --rz-ink-2: #3C4842;
+  --rz-muted: #5B6660;
+  --rz-accent: var(--store-accent, #0F766E);
+  --rz-accent-soft: color-mix(in srgb, var(--rz-accent) 12%, #fff);
+  --rz-danger: #B42318;
+  --rz-ok: #86EFAC;
+  --rz-on-band: #FFFFFF;
+  /* Tipografía */
+  --rz-display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
+  --rz-body: 'Manrope', system-ui, sans-serif;
+  /* Ritmo y formas */
+  --rz-container: 1200px;
+  --rz-gutter: 32px;
+  --rz-section: 80px;
+  --rz-radius-card: 20px;
+  --rz-radius-media: 28px;
+  --rz-shadow: 0 1px 2px rgb(23 33 28 / .04), 0 12px 32px -20px rgb(23 33 28 / .22);
+
+  /* El layout base lee estas variables --sp-*: Raíz las reescribe para que
+     TODOS los bloques compartidos hereden la piel sin duplicar su CSS. */
+  --sp-bg: var(--rz-bg);
+  --sp-card: var(--rz-surface);
+  --sp-card-solid: var(--rz-surface);
+  --sp-surface: var(--rz-surface-2);
+  --sp-soft: var(--rz-accent-soft);
+  --sp-ink: var(--rz-ink);
+  --sp-ink-2: var(--rz-ink-2);
+  --sp-muted: var(--rz-muted);
+  --sp-line: var(--rz-line);
+  --sp-radius: var(--rz-radius-card);
+  --sp-accent-text: color-mix(in srgb, var(--rz-accent) 82%, #000);
+  --sp-shadow-sm: 0 1px 2px rgb(23 33 28 / .06);
+  --sp-shadow-md: var(--rz-shadow);
+
+  font-family: var(--rz-body);
+  background: var(--rz-bg);
+  color: var(--rz-ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.store-page[data-template='raiz'] h1,
+.store-page[data-template='raiz'] h2,
+.store-page[data-template='raiz'] h3,
+.store-page[data-template='raiz'] .sp-section-title,
+.store-page[data-template='raiz'] .sp-hero-title,
+.store-page[data-template='raiz'] .sp-hal-title {
+  font-family: var(--rz-display);
+  letter-spacing: -.02em;
+  color: inherit;
+}
+.store-page[data-template='raiz'] h1,
+.store-page[data-template='raiz'] .sp-hero-title,
+.store-page[data-template='raiz'] .sp-hal-title { font-weight: 700; line-height: 1.02; }
+.store-page[data-template='raiz'] h2,
+.store-page[data-template='raiz'] .sp-section-title { font-weight: 700; font-size: clamp(28px, 3.6vw, 38px); line-height: 1.08; }
+.store-page[data-template='raiz'] h3 { font-weight: 700; font-size: 20px; }
+
+/* Contenedor y ritmo */
+.store-page[data-template='raiz'] .sp-container { max-width: var(--rz-container); padding-inline: max(var(--rz-gutter), env(safe-area-inset-left)) max(var(--rz-gutter), env(safe-area-inset-right)); }
+.store-page[data-template='raiz'] .rz-container { width: 100%; max-width: var(--rz-container); margin-inline: auto; padding-inline: max(var(--rz-gutter), env(safe-area-inset-left)) max(var(--rz-gutter), env(safe-area-inset-right)); }
+
+/* Las secciones de la portada respiran 80px (48px en móvil): cada bloque
+   comparte la clase .sp-* de su sección y el override individual de abajo
+   fija su ritmo. */
+.rz-home { display: block; }
+.sr-only, .store-page[data-template='raiz'] .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --- Barra superior: clara, con CTA oscuro --- */
+.store-page[data-template='raiz'] .sp-top {
+  background: var(--rz-surface);
+  color: var(--rz-ink);
+  border-bottom: 1px solid var(--rz-line);
+  box-shadow: none;
+}
+.store-page[data-template='raiz'] .sp-top .sp-name { color: var(--rz-ink); }
+.store-page[data-template='raiz'] .sp-top .sp-brand { color: var(--rz-ink); }
+.store-page[data-template='raiz'] .sp-top .sp-mono { background: var(--rz-accent); color: #fff; }
+.store-page[data-template='raiz'] .sp-top-links a { color: var(--rz-ink-2); font-weight: 600; }
+.store-page[data-template='raiz'] .sp-top-links a:hover { background: var(--rz-surface-2); color: var(--rz-ink); }
+.store-page[data-template='raiz'] .sp-top-links a.router-link-exact-active { background: var(--rz-surface-2); color: var(--rz-ink); }
+.store-page[data-template='raiz'] .sp-top-cta {
+  background: var(--rz-ink);
+  color: #fff;
+  border-radius: 999px;
+  border: 0;
+  min-height: 42px;
+  padding-inline: 18px;
+  font-weight: 700;
+}
+.store-page[data-template='raiz'] .sp-top-cta:hover { background: #000; color: #fff; }
+.store-page[data-template='raiz'] .sp-top .sp-icon-btn { background: var(--rz-surface); border-color: var(--rz-line); color: var(--rz-ink-2); }
+.store-page[data-template='raiz'] .sp-top .sp-icon-btn:hover { border-color: var(--rz-accent); color: var(--rz-accent); }
+.store-page[data-template='raiz'] .sp-search { background: var(--rz-bg); border-color: var(--rz-line); border-radius: 999px; }
+.store-page[data-template='raiz'] .sp-progress { background: var(--rz-accent); }
+
+/* --- Cinta de anuncios: oscura --- */
+.store-page[data-template='raiz'] .sp-ann { background: var(--rz-ink); color: #fff; border: 0; }
+.store-page[data-template='raiz'] .sp-ann * { color: inherit; }
+
+/* --- Portada partida (hero 'split') --- */
+.store-page[data-template='raiz'] .sp-hal {
+  background: linear-gradient(135deg, var(--sp-band-base1, var(--rz-accent)), var(--sp-band-base2, color-mix(in srgb, var(--rz-accent) 74%, #06110d)));
+  color: var(--rz-on-band);
+}
+.store-page[data-template='raiz'] .sp-hal-grid { padding-block: clamp(48px, 6vw, 88px); gap: 48px; }
+.store-page[data-template='raiz'] .sp-hal-badge {
+  background: rgb(255 255 255 / .16);
+  border-color: rgb(255 255 255 / .34);
+  letter-spacing: .04em;
+  font-weight: 700;
+}
+.store-page[data-template='raiz'] .sp-hal-title { font-size: clamp(38px, 5vw, 60px); max-width: 24ch; }
+.store-page[data-template='raiz'] .sp-hal-sub { font-size: 17px; line-height: 1.55; color: rgb(255 255 255 / .92); max-width: 54ch; }
+.store-page[data-template='raiz'] .sp-hal-btn { min-height: 48px; padding-inline: 26px; border-radius: 999px; background: #fff; color: var(--sp-accent-text, #0b3b36); font-weight: 700; }
+.store-page[data-template='raiz'] .sp-hal-btn.is-ghost { background: transparent; border-color: rgb(255 255 255 / .64); color: #fff; }
+.store-page[data-template='raiz'] .sp-hal-btn.is-ghost:hover { background: rgb(255 255 255 / .16); }
+.store-page[data-template='raiz'] .sp-hal-media { border-radius: var(--rz-radius-media); border-color: rgb(255 255 255 / .22); background: rgb(255 255 255 / .1); box-shadow: none; }
+.store-page[data-template='raiz'] .sp-hal-iconbtn { width: 48px; height: 48px; border-color: rgb(255 255 255 / .34); background: rgb(255 255 255 / .12); }
+.store-page[data-template='raiz'] .sp-hal-meta { font-size: 13.5px; gap: 12px 26px; }
+
+/* --- Franja de garantías (highlights): blanca, debajo de la banda --- */
+.store-page[data-template='raiz'] .sp-highlights {
+  margin-top: 0;
+  padding-block: 20px;
+  background: var(--rz-surface);
+  border-bottom: 1px solid var(--rz-line);
+  gap: 24px;
+}
+.store-page[data-template='raiz'] .sp-highlights li,
+.store-page[data-template='raiz'] .sp-highlights > * { color: var(--rz-ink-2); font-size: 13.5px; }
+
+/* --- Títulos de sección con eyebrow --- */
+.store-page[data-template='raiz'] .sp-section-title { margin: 0 0 22px; }
+.store-page[data-template='raiz'] .sp-section-title::after { display: none; } /* Raíz no usa el subrayado de otras pieles */
+.store-page[data-template='raiz'] .sp-eyebrow { color: var(--rz-accent); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+
+/* --- Categorías / productos recientes --- */
+.store-page[data-template='raiz'] .sp-shop-depts { margin-top: 26px; gap: 24px; }
+.store-page[data-template='raiz'] .sp-shop-dept { border-radius: var(--rz-radius-card); border-color: var(--rz-line); background: var(--rz-surface); box-shadow: none; }
+.store-page[data-template='raiz'] .sp-shop-dept:hover { border-color: var(--rz-accent); box-shadow: var(--rz-shadow); }
+.store-page[data-template='raiz'] .sp-shop-featured { margin-top: 26px; }
+
+/* Tarjetas de producto (TplProductCard): radio 20 y borde fino */
+.store-page[data-template='raiz'] .tpc { border-radius: var(--rz-radius-card); border-color: var(--rz-line); background: var(--rz-surface); box-shadow: none; }
+.store-page[data-template='raiz'] .tpc:hover { border-color: var(--rz-line); box-shadow: var(--rz-shadow); translate: 0 -2px; }
+.store-page[data-template='raiz'] .tpc-media { border-radius: var(--rz-radius-card) var(--rz-radius-card) 0 0; }
+.store-page[data-template='raiz'] .tpc-name { font-family: var(--rz-body); font-weight: 600; }
+.store-page[data-template='raiz'] .tpc-price { color: var(--rz-ink); font-weight: 700; }
+.store-page[data-template='raiz'] .tpc-meta { letter-spacing: .04em; text-transform: uppercase; font-size: 11px; color: var(--rz-muted); }
+
+/* --- Sobre nosotros + cifras --- */
+.store-page[data-template='raiz'] .sp-about { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-about-card { background: var(--rz-surface-2); border-radius: var(--rz-radius-card); border-color: transparent; }
+.store-page[data-template='raiz'] .sp-about-list li { background: var(--rz-accent-soft); color: var(--sp-accent-text); }
+.store-page[data-template='raiz'] .sp-stats, .store-page[data-template='raiz'] .sp-stat { border-radius: var(--rz-radius-card); }
+.store-page[data-template='raiz'] .sp-stat { background: var(--rz-surface-2); border: 0; }
+.store-page[data-template='raiz'] .sp-stat strong, .store-page[data-template='raiz'] .sp-stat-value { color: var(--rz-accent); font-family: var(--rz-display); }
+
+/* --- Servicios / beneficios --- */
+.store-page[data-template='raiz'] .sp-services { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-services-grid { gap: 24px; }
+.store-page[data-template='raiz'] .sp-service-card,
+.store-page[data-template='raiz'] .sp-services-grid > * { border-radius: var(--rz-radius-card); border-color: var(--rz-line); background: var(--rz-surface); box-shadow: none; }
+.store-page[data-template='raiz'] .sp-service-icon { background: var(--rz-accent-soft); color: var(--sp-accent-text); border-radius: 12px; }
+
+/* Garantías: banda oscura (como en la referencia) */
+.store-page[data-template='raiz'] .sp-benefits { padding-top: 0; }
+.store-page[data-template='raiz'] .sp-benefits .sp-container { background: var(--rz-ink); color: #fff; border-radius: var(--rz-radius-media); padding-block: 40px; padding-inline: clamp(24px, 4vw, 48px); max-width: var(--rz-container); }
+.store-page[data-template='raiz'] .sp-benefits .sp-section-title,
+.store-page[data-template='raiz'] .sp-benefits h2,
+.store-page[data-template='raiz'] .sp-benefits h3 { color: #fff; }
+.store-page[data-template='raiz'] .sp-benefits p { color: rgb(255 255 255 / .78); }
+.store-page[data-template='raiz'] .sp-benefits-grid { gap: 28px; }
+.store-page[data-template='raiz'] .sp-benefit,
+.store-page[data-template='raiz'] .sp-benefits-grid > * { background: transparent; border: 0; padding: 0; }
+.store-page[data-template='raiz'] .sp-benefit-icon,
+.store-page[data-template='raiz'] .sp-benefits svg { color: var(--rz-ok); }
+
+/* --- Ofertas / cuenta regresiva / marcas --- */
+.store-page[data-template='raiz'] .sp-offers { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-countdown,
+.store-page[data-template='raiz'] .sp-count { border-radius: var(--rz-radius-card); background: var(--rz-surface-2); border: 0; }
+.store-page[data-template='raiz'] .sp-count-num,
+.store-page[data-template='raiz'] .sp-countdown strong { font-family: var(--rz-display); color: var(--rz-ink); }
+.store-page[data-template='raiz'] .sp-brands { padding-top: 56px; }
+.store-page[data-template='raiz'] .sp-brand-pill,
+.store-page[data-template='raiz'] .sp-brands li { border-radius: 14px; border-color: var(--rz-line); background: var(--rz-surface); color: var(--rz-ink-2); }
+
+/* --- Galería / testimonios / FAQ --- */
+.store-page[data-template='raiz'] .sp-showcase { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-showcase-grid img,
+.store-page[data-template='raiz'] .sp-gallery img { border-radius: var(--rz-radius-card); }
+.store-page[data-template='raiz'] .sp-testimonials { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-testimonial,
+.store-page[data-template='raiz'] .sp-testimonials-grid > * { background: var(--rz-surface-2); border: 0; border-radius: var(--rz-radius-card); }
+.store-page[data-template='raiz'] .sp-testimonial-avatar { background: var(--rz-accent); color: #fff; }
+.store-page[data-template='raiz'] .sp-faq { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-faq details,
+.store-page[data-template='raiz'] .sp-faq-item { background: var(--rz-surface); border: 1px solid var(--rz-line); border-radius: 16px; }
+.store-page[data-template='raiz'] .sp-faq-wrap { max-width: 860px; margin-inline: auto; }
+
+/* --- Banda CTA de acento --- */
+.store-page[data-template='raiz'] .sp-cta { padding-top: var(--rz-section); }
+.store-page[data-template='raiz'] .sp-cta .sp-container { background: linear-gradient(135deg, var(--sp-band-base1, var(--rz-accent)), var(--sp-band-base2, color-mix(in srgb, var(--rz-accent) 78%, #06110d))); color: #fff; border-radius: var(--rz-radius-media); padding: 40px clamp(24px, 4vw, 48px); }
+.store-page[data-template='raiz'] .sp-cta h2, .store-page[data-template='raiz'] .sp-cta h3, .store-page[data-template='raiz'] .sp-cta p { color: #fff; }
+.store-page[data-template='raiz'] .sp-cta .sp-btn { background: #fff; color: var(--sp-accent-text); }
+
+/* --- Contacto --- */
+.store-page[data-template='raiz'] .sp-contact { padding: var(--rz-section) 0; background: var(--rz-surface); border-top: 1px solid var(--rz-line); }
+.store-page[data-template='raiz'] .sp-contact-form,
+.store-page[data-template='raiz'] .sp-contact-card { background: var(--rz-surface-2); border-radius: var(--rz-radius-card); border: 0; }
+.store-page[data-template='raiz'] .sp-contact input,
+.store-page[data-template='raiz'] .sp-contact textarea { border-radius: 10px; border-color: var(--rz-line); background: var(--rz-surface); }
+
+/* --- Pie: oscuro --- */
+.store-page[data-template='raiz'] .sp-foot { background: var(--rz-ink); color: rgb(255 255 255 / .78); border: 0; }
+.store-page[data-template='raiz'] .sp-foot::before { display: none; }
+.store-page[data-template='raiz'] .sp-foot-brand strong { color: #fff; font-family: var(--rz-display); }
+.store-page[data-template='raiz'] .sp-foot-heading { color: #fff; }
+.store-page[data-template='raiz'] .sp-foot-col a, .store-page[data-template='raiz'] .sp-foot a { color: rgb(255 255 255 / .74); }
+.store-page[data-template='raiz'] .sp-foot-col a:hover, .store-page[data-template='raiz'] .sp-foot a:hover { color: #fff; }
+.store-page[data-template='raiz'] .sp-foot-copy, .store-page[data-template='raiz'] .sp-foot-note { color: rgb(255 255 255 / .6); }
+.store-page[data-template='raiz'] .sp-davent-badge { color: #fff; }
+
+/* --- Botones base --- */
+.store-page[data-template='raiz'] .sp-btn { border-radius: 999px; min-height: 44px; padding-inline: 20px; background: var(--sp-accent-text, var(--rz-accent)); color: #fff; font-family: var(--rz-body); font-weight: 600; }
+.store-page[data-template='raiz'] .sp-btn.ghost { background: var(--rz-surface); color: var(--rz-ink-2); border-color: var(--rz-line); }
+.store-page[data-template='raiz'] .sp-btn.ghost:hover { border-color: var(--rz-accent); color: var(--rz-accent); }
+.store-page[data-template='raiz'] :is(a, button, input, textarea, select, summary):focus-visible { outline: 2px solid var(--rz-accent); outline-offset: 2px; }
+
+/* ==========================================================================
+   CATÁLOGO
+   ========================================================================== */
+.rz-cat-hero {
+  background: linear-gradient(135deg, var(--sp-band-base1, var(--rz-accent)), var(--sp-band-base2, color-mix(in srgb, var(--rz-accent) 76%, #06110d)));
+  color: #fff;
+}
+.rz-crumbs { display: flex; align-items: center; gap: 8px; padding-top: 22px; font-size: 13px; color: rgb(255 255 255 / .82); }
+.rz-crumbs a { color: inherit; text-decoration: none; }
+.rz-crumbs a:hover { color: #fff; text-decoration: underline; }
+.rz-cat-hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 18px 0 34px; }
+.rz-cat-hero h1 { margin: 0 0 8px; font-size: clamp(36px, 5vw, 54px); color: #fff; }
+.rz-cat-sub { margin: 0; color: rgb(255 255 255 / .86); font-size: 16px; }
+.rz-cat-counters { display: flex; gap: 12px; list-style: none; margin: 0; padding: 0; }
+.rz-cat-counters li { display: grid; justify-items: center; gap: 2px; min-width: 98px; padding: 12px 16px; border-radius: 14px; background: rgb(255 255 255 / .14); border: 1px solid rgb(255 255 255 / .2); }
+.rz-cat-counters strong { font-family: var(--rz-display); font-size: 24px; line-height: 1; }
+.rz-cat-counters span { font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: rgb(255 255 255 / .82); }
+
+.rz-cat-note { margin: 0; padding: 12px 20px; background: var(--rz-surface); border-bottom: 1px solid var(--rz-line); text-align: center; font-size: 13.5px; color: var(--rz-ink-2); }
+
+.rz-cat-main { padding-block: 28px 64px; }
+.rz-promos { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 18px; margin-bottom: 24px; border-radius: 14px; background: var(--rz-accent-soft); }
+.rz-promos-label { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-accent-text); }
+.rz-promos ul { display: flex; gap: 8px; flex-wrap: wrap; list-style: none; margin: 0; padding: 0; }
+.rz-promos li { background: var(--rz-surface); border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600; color: var(--rz-ink); }
+
+.rz-cat-body { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
+.rz-filters-toggle { display: none; }
+.rz-filters { position: sticky; top: calc(var(--sp-top-h, 64px) + 16px); background: var(--rz-surface); border: 1px solid var(--rz-line); border-radius: var(--rz-radius-card); padding: 20px; }
+.rz-filters-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 16px; }
+.rz-linkbtn { background: none; border: 0; color: var(--rz-accent); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.rz-filter-group { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
+.rz-filter-group legend { padding: 0; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--rz-muted); }
+.rz-check { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; color: var(--rz-ink-2); cursor: pointer; }
+.rz-check input { width: 16px; height: 16px; accent-color: var(--rz-accent); }
+.rz-check em { margin-left: auto; font-style: normal; font-size: 12px; color: var(--rz-muted); }
+.rz-price { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rz-price input { width: 100%; min-height: 40px; padding: 0 10px; border: 1px solid var(--rz-line); border-radius: 10px; background: var(--rz-bg); color: var(--rz-ink); font: inherit; font-size: 14px; }
+.rz-filter-hint { margin: 8px 0 0; font-size: 12px; color: var(--rz-muted); }
+.rz-filters-apply { display: none; width: 100%; margin-top: 8px; }
+
+.rz-results-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.rz-results-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.rz-sort { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--rz-muted); }
+.rz-sort select { min-height: 40px; padding: 0 12px; border: 1px solid var(--rz-line); border-radius: 10px; background: var(--rz-surface); color: var(--rz-ink); font: inherit; font-size: 13.5px; }
+
+.rz-tags { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0 0 14px; padding: 0; }
+.rz-tags button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--rz-line); background: var(--rz-surface); color: var(--rz-ink-2); font: inherit; font-size: 12.5px; cursor: pointer; }
+.rz-tags button:hover { border-color: var(--rz-accent); color: var(--rz-accent); }
+
+.rz-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.rz-skel { display: block; aspect-ratio: 3 / 4; border-radius: var(--rz-radius-card); background: linear-gradient(100deg, var(--rz-surface-2), var(--rz-surface), var(--rz-surface-2)); background-size: 200% 100%; animation: rz-skel 1.4s linear infinite; }
+@keyframes rz-skel { to { background-position: -200% 0; } }
+.rz-card-promo { margin: 8px 0 0; font-size: 12px; font-weight: 700; color: var(--rz-danger); }
+.rz-empty { display: grid; justify-items: center; gap: 8px; padding: 56px 20px; text-align: center; color: var(--rz-muted); background: var(--rz-surface); border: 1px dashed var(--rz-line); border-radius: var(--rz-radius-card); }
+.rz-empty strong { color: var(--rz-ink); font-size: 16px; }
+.rz-empty p { margin: 0; max-width: 46ch; font-size: 14px; }
+.rz-more { display: grid; justify-items: center; gap: 10px; padding-top: 28px; color: var(--rz-muted); font-size: 13px; }
+.rz-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid transparent; background: var(--sp-accent-text, var(--rz-accent)); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.rz-btn:hover { filter: brightness(1.08); }
+.rz-btn.ghost { background: transparent; border-color: var(--rz-line); color: var(--rz-ink-2); }
+
+/* ==========================================================================
+   SERVICIOS (vista compartida sv-*): piel Raíz sin radios exagerados
+   ========================================================================== */
+.store-page[data-template='raiz'] .sv-page { background: transparent; font-family: var(--rz-body); }
+.store-page[data-template='raiz'] .sv-hero,
+.store-page[data-template='raiz'] .sv-band { border-radius: 0; }
+.store-page[data-template='raiz'] .sv-head h2,
+.store-page[data-template='raiz'] .sv-quote h2,
+.store-page[data-template='raiz'] .sv-book h2 { font-family: var(--rz-display); }
+.store-page[data-template='raiz'] .sv-btn { border-radius: 999px; background: var(--sp-accent-text, var(--rz-accent)); }
+.store-page[data-template='raiz'] .sv-btn--ghost { background: transparent; border-color: rgb(255 255 255 / .5); color: #fff; }
+.store-page[data-template='raiz'] .sv-item,
+.store-page[data-template='raiz'] .sv-quote { border-radius: var(--rz-radius-card); }
+.store-page[data-template='raiz'] .sv-eyebrow { color: var(--rz-accent); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1100px) {
+  .rz-cat-body { grid-template-columns: minmax(0, 1fr); }
+  .rz-filters-toggle { display: inline-flex; position: sticky; top: calc(var(--sp-top-h, 64px) + 8px); z-index: 6; align-items: center; gap: 8px; justify-self: start; min-height: 42px; padding: 0 16px; margin-bottom: 12px; border-radius: 999px; border: 1px solid var(--rz-line); background: var(--rz-surface); color: var(--rz-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: var(--sp-shadow-sm); }
+  .rz-filters-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--rz-accent); color: #fff; font-size: 11px; }
+  .rz-filters { display: none; position: static; }
+  .rz-filters.open { display: block; }
+  .rz-filters-apply { display: inline-flex; }
+  .rz-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 860px) {
+  .store-page[data-template='raiz'] .sp-hal-grid { grid-template-columns: minmax(0, 1fr); }
+  .rz-cat-hero-row { flex-direction: column; align-items: flex-start; }
+  .rz-cat-counters { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+  :root { --rz-section: 48px; }
+  .store-page[data-template='raiz'] { --rz-gutter: 20px; --rz-section: 48px; }
+  .rz-grid { grid-template-columns: minmax(0, 1fr); }
+  .rz-cat-counters li { min-width: 84px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='raiz'] *,
+  .store-page[data-template='raiz'] *::before,
+  .store-page[data-template='raiz'] *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

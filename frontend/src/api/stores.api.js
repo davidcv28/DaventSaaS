@@ -59,7 +59,7 @@ import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
 //                                        -> sin 'has_design_advanced' (premium) el backend descarta
 //                                           name_font, name_font_size y accent del payload; template
 //                                           se descarta si no está en el nivel del plan (Básico:
-//                                           Clásico/Perspectiva; Estándar suma Urbano/Publicidad;
+//                                           Raíz; Estándar suma Trama; Premium suma Circuito;
 //                                           Premium todo); sin 'has_location_map' (Estándar+)
 //                                           descarta show_location; sin 'has_product_comments'
 //                                           (premium) descarta show_comments
@@ -439,7 +439,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   cover_overlay: 0,
   cover_focus_x: 50,
   cover_focus_y: 50,
-  template: 'classic',
+  template: 'raiz',
   whatsapp: '',
   instagram: '',
   tiktok: '',
@@ -680,55 +680,51 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES)
-// — 6 habilitados, 2 por nivel de plan. `tier` marca qué beneficio lo
-// habilita:
+// — catálogo de 3, uno por nivel, organizado por RUBRO (no por "estilo de
+// autor"). `tier` marca qué beneficio lo habilita:
 //   'base'     -> todo plan con has_customization (Básico)
 //   'plus'     -> has_design_plus (Estándar y Premium)
 //   'advanced' -> has_design_advanced (Premium)
 // El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
-// 'classic' si el guardado deja de estar permitido (baja de plan o una
-// plantilla retirada del catálogo). Los 20 diseños retirados salieron de
-// este catálogo y de TEMPLATE_CHOICES (las tiendas que los tenían se
-// remapearon al más cercano del mismo nivel, mig. 0049); sus defs siguen
-// en TEMPLATE_DEFS solo como red de seguridad de render.
+// 'raiz' (fallback global) si el guardado deja de estar permitido (baja de
+// plan o una plantilla retirada). Todo diseño retirado se remapea por
+// afinidad de rubro al más cercano del catálogo (STORE_TEMPLATE_RETIRED_MAP).
 export const STORE_TEMPLATES = {
-  classic: { label: 'Clásico',   tier: 'base',     desc: 'Catálogo neutro y ordenado: portada centrada, destacados y contacto directo.' },
-  duo:     { label: 'Dúo',       tier: 'base',     desc: 'Editorial de contraste: portada partida, imagen dominante y ritmo a dos columnas.' },
-  calma:   { label: 'Calma',     tier: 'plus',     desc: 'Bienestar sereno: aire y luz suave, Lora itálica, radios amplios y reserva directa.' },
-  vitrina: { label: 'Vitrina',   tier: 'plus',     desc: 'Vidriera de boutique: portada dramática, Playfair itálica, marcos finos y tarjetas 3:4.' },
-  cobre:   { label: 'Cobre',     tier: 'advanced', desc: 'Retail de autor: piedra y tinta, titulares condensados XXL, placas de acento y grilla de colección.' },
-  minimal: { label: 'Minimal',   tier: 'advanced', desc: 'Esencial: una tipografía, mucho aire, hero tipográfico y foco absoluto en el producto.' },
+  raiz:     { label: 'Raíz',     rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
+  trama:    { label: 'Trama',    rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#E4472B', desc: 'Editorial de moda: blanco y tinta, titulares condensados, marquee de acento y lookbook.' },
+  circuito: { label: 'Circuito', rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
 }
 
-// Familias de diseño para el selector del dashboard: una por nivel de
-// plan, cada una con el par habilitado del tier (las keys de cada familia
-// son TEMPLATE_CHOICES reales). Se muestran como select en cascada
-// (categoría → estilo) y los beneficios habilitan por familia.
+// Familias de diseño para el selector del dashboard: una por RUBRO, con los
+// diseños de ese rubro (el sistema queda listo para sumar comida, bebida,
+// etc. sin tocar el render de estos 3).
 export const STORE_TEMPLATE_FAMILIES = [
-  { key: 'general',   label: 'Generalista', caption: 'Clásico y dúo',      templates: ['classic', 'duo'] },
-  { key: 'editorial', label: 'Editorial',   caption: 'Calma y vitrina',    templates: ['calma', 'vitrina'] },
-  { key: 'autor',     label: 'De autor',    caption: 'Cobre y minimal',    templates: ['cobre', 'minimal'] },
+  { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios', templates: ['raiz'] },
+  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',   templates: ['trama'] },
+  { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',  templates: ['circuito'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
-// Patrones EXCLUSIVOS del motor "Diseñar con IA" (has_ai_design): existen
-// en TEMPLATE_CHOICES y en TEMPLATE_DEFS, pero NO en STORE_TEMPLATES ni en
-// STORE_TEMPLATE_FAMILIES — el selector del panel nunca los ofrece. Solo
-// llegan desde una propuesta del motor o desde allowed_templates.
-export const AI_ONLY_TEMPLATES = ['ai_lumen', 'ai_pulse']
+// Mapa de retiro (espejo de StoreCustomization.TEMPLATE_RETIRED_MAP): una
+// tienda con un diseño viejo se sirve con el nuevo equivalente, nunca cae al
+// fallback ni rompe el render.
+export const STORE_TEMPLATE_RETIRED_MAP = {
+  classic: 'raiz', duo: 'raiz', minimal: 'raiz', calma: 'raiz',
+  mercado: 'raiz', studio: 'raiz', arena: 'raiz', proceso: 'raiz',
+  carta: 'raiz', terra: 'raiz', bloque: 'raiz', shop: 'raiz',
+  atelier: 'trama', lookbook: 'trama', boutique: 'trama', signature: 'trama',
+  cobre: 'trama', vitrina: 'trama', street: 'trama', riso: 'trama',
+  promo: 'trama', aurora: 'trama',
+  perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',
+  lab: 'circuito', ai_lumen: 'circuito', ai_pulse: 'trama',
+}
 
-// Los 20 diseños que salieron del selector en la mig. 0049 y que el motor
-// puede volver a proponer (has_ai_design). Están en TEMPLATE_DEFS y en
-// TEMPLATE_CHOICES: acá existen para que resolveStoreTemplate NO los
-// convierta a 'classic' — sin esta lista, toda propuesta con un diseño
-// retirado se renderizaba como Clásico y todas se veían iguales.
-export const AI_LEGACY_TEMPLATES = [
-  'perspective', 'bloque', 'riso', 'street', 'promo', 'atelier', 'circuit',
-  'arena', 'mercado', 'studio', 'lookbook', 'shop', 'boutique', 'signature',
-  'aurora', 'terminal', 'terra', 'lab', 'carta', 'proceso'
-]
-// Todo diseño que el motor puede proponer sin ser una de las 6 del selector.
-export const AI_EXTRA_TEMPLATES = [...AI_ONLY_TEMPLATES, ...AI_LEGACY_TEMPLATES]
+// Patrones exclusivos del motor "Diseñar con IA": ya no existen (el motor
+// propone los 3 diseños del catálogo). Se conservan vacíos por compatibilidad
+// con los consumidores que los importan.
+export const AI_ONLY_TEMPLATES = []
+export const AI_LEGACY_TEMPLATES = []
+export const AI_EXTRA_TEMPLATES = []
 
 // Plantillas elegibles según los beneficios del plan vigente (espejo de
 // allowed_templates_of del backend: mismo orden del catálogo). Sirve tanto
@@ -737,25 +733,21 @@ export const AI_EXTRA_TEMPLATES = [...AI_ONLY_TEMPLATES, ...AI_LEGACY_TEMPLATES]
 const TEMPLATE_TIER_BENEFIT = { base: null, plus: 'has_design_plus', advanced: 'has_design_advanced' }
 
 export function allowedTemplatesFor(benefits = {}) {
-  if (!benefits.has_customization) return ['classic']
-  const list = Object.keys(STORE_TEMPLATES).filter((key) => {
+  if (!benefits.has_customization) return ['raiz']
+  return Object.keys(STORE_TEMPLATES).filter((key) => {
     const need = TEMPLATE_TIER_BENEFIT[STORE_TEMPLATES[key].tier]
     return !need || Boolean(benefits[need])
   })
-  // Espejo de allowed_templates_of: los patrones del motor de IA viajan en
-  // la whitelist solo con has_ai_design. El selector no los lee de acá
-  // (itera STORE_TEMPLATES), así que siguen invisibles para el panel.
-  if (benefits.has_ai_design) list.push(...AI_EXTRA_TEMPLATES)
-  return list
 }
 
-// Normaliza un diseño guardado contra la whitelist: 'classic' si el valor
-// no existe en el catálogo o quedó fuera del nivel del plan. Los patrones
-// exclusivos de IA son válidos aunque no estén en STORE_TEMPLATES.
+// Normaliza un diseño guardado contra la whitelist: 'raiz' si el valor no
+// existe en el catálogo o quedó fuera del nivel del plan. Un id retirado se
+// remapea a su equivalente antes de validar.
 export function resolveStoreTemplate(value, allowed) {
-  const list = Array.isArray(allowed) && allowed.length ? allowed : ['classic']
-  const known = Boolean(STORE_TEMPLATES[value]) || AI_EXTRA_TEMPLATES.includes(value)
-  return known && list.includes(value) ? value : 'classic'
+  const list = Array.isArray(allowed) && allowed.length ? allowed : ['raiz']
+  const normalized = STORE_TEMPLATE_RETIRED_MAP[value] || value
+  const known = Boolean(STORE_TEMPLATES[normalized])
+  return known && list.includes(normalized) ? normalized : 'raiz'
 }
 
 // Fuentes del nombre junto al logo: catálogo cerrado de Google Fonts

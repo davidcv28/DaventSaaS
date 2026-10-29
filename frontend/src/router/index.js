@@ -21,7 +21,6 @@ const StoreClaimView = () => import('../views/StoreClaimView.vue')
 const CompletePhoneView = () => import('../views/CompletePhoneView.vue')
 const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StoreHomeView = () => import('../views/StoreHomeView.vue')
-const StorePublicAltView = () => import('../views/StorePublicAltView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreServicesView = () => import('../views/StoreServicesView.vue')
 const StoreProductView = () => import('../views/StoreProductView.vue')
@@ -52,15 +51,6 @@ const storeChildren = [
     name: 'store-services',
     component: StoreServicesView,
     meta: { title: 'Servicios' }
-  },
-  // Vista previa del diseño "Dúo" (misma info, otro orden de secciones):
-  // se entra desde "Vista previa Dúo" del panel (/<slug>/v2). Cuando la
-  // tienda lo elige como diseño, la misma composición es la portada real.
-  {
-    path: 'v2',
-    name: 'store-alt',
-    component: StorePublicAltView,
-    meta: { title: 'Vista previa' }
   },
   // Publicación de producto estilo marketplace (ficha completa).
   {
@@ -243,7 +233,7 @@ router.beforeEach(async (to) => {
   if (Capacitor.isNativePlatform() && to.path === '/') return { name: 'login' }
   // En un subdominio de tienda solo existe la web pública: cualquier ruta de
   // plataforma (login, panel, legales) se resuelve en el dominio principal.
-  if (storeHostSlug && !['store-public', 'store-catalog', 'store-services', 'store-product', 'store-alt'].includes(to.name)) {
+  if (storeHostSlug && !['store-public', 'store-catalog', 'store-services', 'store-product'].includes(to.name)) {
     window.location.assign(`${env.appUrl}${to.fullPath}`)
     return false
   }

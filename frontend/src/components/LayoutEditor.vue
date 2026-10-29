@@ -18,7 +18,7 @@ import { tokenStorage } from '../api/http.js'
 import AppIcon from './AppIcon.vue'
 
 const props = defineProps({
-  template: { type: String, default: 'classic' },
+  template: { type: String, default: 'raiz' },
   premium: { type: Boolean, default: false },
   publicUrl: { type: String, default: '' },
   siteTemplates: { type: Array, default: () => ['landing', 'catalog'] }

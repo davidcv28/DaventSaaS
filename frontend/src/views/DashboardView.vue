@@ -680,9 +680,9 @@ function openStore() {
   if (publicUrl.value) window.open(publicUrl.value, '_blank', 'noopener')
 }
 
-// Vista previa del diseño "Dúo" de la portada: /<slug>/v2 sobre el link
-// público (la misma composición que la portada real cuando se elige Dúo).
-const previewUrl = computed(() => (publicUrl.value ? `${publicUrl.value}/v2` : ''))
+// Vista previa del diseño activo: la URL pública real de la tienda (el
+// diseño elegido es el que se ve publicado).
+const previewUrl = computed(() => publicUrl.value || '')
 function openPreview() {
   if (previewUrl.value) window.open(previewUrl.value, '_blank', 'noopener')
 }
@@ -1297,7 +1297,7 @@ const designTemplate = computed(() => resolveStoreTemplate(designForm.template, 
 // queda en base y degradaría cualquier plantilla plus/advanced guardada
 // (dirty falso al montar y un save que pisa el template real).
 watch(allowedTemplates, (list) => {
-  if (plan.value?.benefits && !list.includes(designForm.template)) designForm.template = list[0] || 'classic'
+  if (plan.value?.benefits && !list.includes(designForm.template)) designForm.template = list[0] || 'raiz'
 })
 // Si cambia la fuente elegida, traerla en el momento (cubre una "Guardada"
 // fuera del picker, que el link colectivo no incluye).
@@ -1329,7 +1329,7 @@ watch(() => store.store, (s) => {
   // nivel (baja de plan o plantilla retirada del catálogo), vuelve al
   // primero permitido. Con beneficios aún sin resolver no se degrada:
   // la lista vendría en base y pisaría una plantilla superior guardada.
-  if (plan.value?.benefits && !allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'classic'
+  if (plan.value?.benefits && !allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'raiz'
 }, { immediate: true })
 
 const designErrors = computed(() => {
@@ -1820,7 +1820,7 @@ async function saveDesign(asDraft = false, quiet = false) {
   // al borrador (validate()) y pisaría un ensayo guardado en template_draft.
   if (asDraft) {
     const trialTemplate = studioExtras.value?.template
-    const formTemplateChanged = designForm.template !== (store.customization?.template || 'classic')
+    const formTemplateChanged = designForm.template !== (store.customization?.template || 'raiz')
     const nextTemplate = trialTemplate || (formTemplateChanged ? designForm.template : null)
     if (nextTemplate) payload.template_draft = nextTemplate
   } else {

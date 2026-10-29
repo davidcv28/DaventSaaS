@@ -19,15 +19,10 @@ import {
   storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES
 } from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
-// Las hojas de las landing alternativas también definen el cromado
-// (topbar/pie) y la ficha de producto de su diseño: se cargan acá para que
-// /catalogo y /producto/:id las tengan aunque el visitante no pase por el
-// home que las importa (acceso directo por URL al producto).
-import '../assets/store-page-v2.css'
-import '../assets/store-bloque.css'
-import '../assets/store-riso.css'
-// Contrato de geometría de la tarjeta de producto unificada (TplProductCard)
-// — lo usan todos los catálogos y los rieles de ofertas de las landings.
+// Hoja del diseño activo: se carga on-demand (una sola vez por diseño), así
+// el CSS de Raíz no viaja en el bundle de Trama/Circuito ni al revés. La
+// tarjeta de producto unificada (TplProductCard) conserva su contrato de
+// geometría compartido.
 import '../assets/store-tpl-card.css'
 
 // Layout de la web pública del cliente (sin auth): barra superior + pie +
@@ -147,9 +142,9 @@ const pageAttrs = computed(() => ({ ...publishedThemeAttrs.value, ...studioAttrs
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
 const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
 // Diseño de la web (template): la whitelist allowed_templates del payload
-// marca el nivel del plan (Básico: Clásico/Perspectiva; Estándar suma
+// marca el nivel del plan (Básico: Raíz; Estándar suma Trama; Premium suma Circuito).
 // Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
-// plan o plantilla retirada — se fuerza 'classic'.
+// plan o plantilla retirada — se fuerza 'raiz'.
 // En modo Studio la plantilla en ensayo se resuelve contra el catálogo
 // completo (los presets bloqueados también se pueden probar — el gate de
 // allowed_templates solo corre al guardar). Fuera del Studio manda la
@@ -165,13 +160,12 @@ const pageTemplate = computed(() => {
 const isShop = computed(() => pageTemplate.value === 'shop')
 
 // Hojas propias de un diseño: tiñen también el chrome (barra, pie, dock) en
-// páginas que no montan la portada (servicios, ficha). Se cargan on-demand y
-// una sola vez. Las 20 plantillas retiradas que puede elegir el motor de IA
-// comparten el esqueleto de bloques: su piel vive en store-page.css por
-// [data-store-template] (una hoja aparte solo la tienen terra y las ai_*,
-// que ya la importan desde su Template Definition).
+// páginas que no montan la portada (servicios, ficha). Raíz va estática; las
+// otras dos se cargan on-demand y una sola vez.
 const TEMPLATE_CSS = {
-  terra: () => import('../assets/store-terra.css')
+  raiz: () => import('../assets/store-raiz.css'),
+  trama: () => import('../assets/store-trama.css'),
+  circuito: () => import('../assets/store-circuito.css')
 }
 watch(pageTemplate, (tpl) => { TEMPLATE_CSS[tpl]?.() }, { immediate: true })
 // Skin v4 (site_theme.skin.family): piel de 18 familias en su propia hoja,
@@ -360,10 +354,7 @@ onBeforeUnmount(() => {
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isServices = computed(() => route.name === 'store-services')
 const isProduct = computed(() => route.name === 'store-product')
-// Opción 2 (/<slug>/v2): prototipo de portada alternativa — se comporta como
-// Inicio para el menú, el dock móvil y el redirect de la web sin portada.
-const isAlt = computed(() => route.name === 'store-alt')
-const isHome = computed(() => route.name === 'store-public' || isAlt.value)
+const isHome = computed(() => route.name === 'store-public')
 // Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
 // las anclas de la home (#nosotros, #galeria, #contacto) comparten el path y
 // quedarían todas marcadas a la vez.
@@ -380,9 +371,8 @@ const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${sl
 // Página de reemplazo cuando no hay portada: Servicios si está, si no el
 // catálogo (la web nunca queda sin destino — el backend siempre manda ≥1).
 const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : catalogTo.value))
-// Anclas de sección (#nosotros/#galeria/#contacto): en la vista previa de la
-// opción 2 se quedan dentro de la propia página; fuera de ella van al inicio.
-const anchorTo = (hash) => ({ path: isAlt.value ? route.path : homeTo.value.path, hash })
+// Anclas de sección (#nosotros/#galeria/#contacto): van al inicio.
+const anchorTo = (hash) => ({ path: homeTo.value.path, hash })
 watch([landingOff, isHome], ([off, home]) => { if (off && home) router.replace(homeFallbackTo.value) }, { immediate: true })
 
 // Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
@@ -466,7 +456,7 @@ watch([status, () => route.name], ([s, name]) => {
   if (s !== 'success') return
   document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
     : name === 'store-services' ? `${shopName.value} · Servicios`
-    : name === 'store-alt' ? `${shopName.value} · Vista previa` : shopName.value
+    : shopName.value
 }, { immediate: true })
 
 // Canales de contacto (pie y barra fija móvil).
@@ -598,7 +588,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div class="store-page" :class="{ 'is-home': isHome }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->

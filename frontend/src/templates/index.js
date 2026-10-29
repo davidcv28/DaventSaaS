@@ -1,92 +1,48 @@
-// Template Definitions: un solo registro por plantilla que consolida lo
-// que antes vivía disperso en tres dispatchers + la tabla de fuentes:
+// Template Definitions: un solo registro por diseño que consolida lo que
+// antes vivía disperso en tres dispatchers + la tabla de fuentes:
 //   - fonts:    fuentes on-demand del diseño (las carga el layout);
-//   - surfaces: landing / catalog / product (la página Servicios es la
-//               misma vista para todas las plantillas);
-//   - blocks:   whitelist de bloques por superficie cuyo orden declarativo
-//               es el layout por defecto (catálogo cerrado en blocks.js,
-//               espejo de TEMPLATE_BLOCKS del backend).
+//   - surfaces: landing / catalog / product (la página Servicios cuelga de
+//               la misma carpeta del diseño);
+//   - blocks:   whitelist de bloques por superficie. Los 3 diseños son
+//               composiciones FIJAS: el orden canónico lo pone la vista, no
+//               layout_config (que se sigue aceptando por compatibilidad).
 //
-// Este registro es el SUPERSET de render: el catálogo seleccionable son
-// 6 diseños (2 por nivel — STORE_TEMPLATES / TEMPLATE_CHOICES) y los 20
-// retirados quedan acá como red de seguridad — una tienda con un diseño
-// viejo que no se remapeó (o un draft corrupto) sigue renderizando su
-// piel en vez de caer al fallback 'classic'.
+// Catálogo cerrado de 3 diseños, uno por rubro y nivel de plan:
+//   raiz     (base)     generalista / retail / servicios
+//   trama    (plus)     indumentaria / moda
+//   circuito (advanced) tecnología / electrónica
+// El fallback global es 'raiz'. Todo id retirado se remapea con
+// STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
 //
-// v4 (Diseñar con IA): los ids que el motor puede proponer son las 6 del
-// plan + ai_lumen/ai_pulse + las 20 legacy; TODOS están en TEMPLATE_DEFS,
-// así que defaultLayout/resolveLayout los resuelven sin caer a classic
-// (el fallback queda solo para un id inexistente). Los bloques nuevos
-// solo-IA (aipricing/aiprocess/aimosaic) no están en el layout canónico de
-// ninguna plantilla: llegan por layout_config y BlockRenderer los inserta
-// en su `order` (ver components/store/BlockRenderer.vue).
-//
-// resolveLayout() mezcla el layout por defecto con
-// customization.layout_config: los bloques guardados mandan en orden y
-// estado, los que falten entran al final en su posición canónica y los
-// ids desconocidos/no soportados se descartan — así una config corrupta
-// nunca rompe la web pública. En la portada las secciones de marketing
-// van siempre en su orden fijo (SECTION_ORDER_KEYS).
+// resolveLayout() se conserva para el Studio de bloques (compatibilidad):
+// mezcla el layout por defecto con customization.layout_config, descarta ids
+// desconocidos y fuerza contacto al final — el render público de estos 3
+// diseños NO lo usa.
 
 import { defineAsyncComponent } from 'vue'
 import { blockSpec } from './blocks.js'
-import { SECTION_ORDER_KEYS } from '../api/stores.api.js'
+import { SECTION_ORDER_KEYS, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
 
-import classic     from './classic/index.js'
-import perspective from './perspective/index.js'
-import duo         from './duo/index.js'
-import bloque      from './bloque/index.js'
-import riso        from './riso/index.js'
-import terra       from './terra/index.js'
-import street      from './street/index.js'
-import atelier     from './atelier/index.js'
-import circuit     from './circuit/index.js'
-import lab         from './lab/index.js'
-import mercado     from './mercado/index.js'
-import carta       from './carta/index.js'
-import studio      from './studio/index.js'
-import proceso     from './proceso/index.js'
-import promo       from './promo/index.js'
-import shop        from './shop/index.js'
-import arena       from './arena/index.js'
-import terminal    from './terminal/index.js'
-import calma       from './calma/index.js'
-import signature   from './signature/index.js'
-import vitrina     from './vitrina/index.js'
-import lookbook    from './lookbook/index.js'
-import cobre       from './cobre/index.js'
-import minimal     from './minimal/index.js'
-import boutique    from './boutique/index.js'
-import aurora      from './aurora/index.js'
-// Patrones exclusivos del motor de IA (has_ai_design): no están en el
-// catálogo seleccionable, pero se registran acá para que la web pública
-// los renderice cuando el motor los propone.
-import ai_lumen    from './ai_lumen/index.js'
-import ai_pulse    from './ai_pulse/index.js'
+import raiz     from './raiz/index.js'
+import trama    from './trama/index.js'
+import circuito from './circuito/index.js'
 
-export const TEMPLATE_DEFS = {
-  classic, perspective, duo, bloque, riso, terra, street, atelier,
-  circuit, lab, mercado, carta, studio, proceso, promo, shop, arena,
-  terminal, calma, signature, vitrina, lookbook, cobre, minimal,
-  boutique, aurora, ai_lumen, ai_pulse
-}
+export const TEMPLATE_DEFS = { raiz, trama, circuito }
 
-// Sistema de bloques base 'cobre': todas las plantillas montan los mismos
-// elementos de landing (StorePublicView + Blk*) pero con su propia piel
-// (data-store-template = plantilla real → paleta, fuentes y variantes tpl)
-// y su propio arreglo estratégico de bloques (blocks.* por superficie).
+export const DEFAULT_TEMPLATE = 'raiz'
 
 export function templateDef(id) {
-  return TEMPLATE_DEFS[id] || TEMPLATE_DEFS.classic
+  return TEMPLATE_DEFS[id] || TEMPLATE_DEFS[DEFAULT_TEMPLATE]
 }
 
 // Componente async de una superficie (cacheado por plantilla+superficie:
 // crear defineAsyncComponent en cada render remontaría la vista).
 const _components = new Map()
 export function surfaceComponent(id, surface) {
-  const key = `${templateDef(id) === TEMPLATE_DEFS[id] ? id : 'classic'}:${surface}`
+  const known = TEMPLATE_DEFS[id] ? id : DEFAULT_TEMPLATE
+  const key = `${known}:${surface}`
   if (!_components.has(key)) {
-    const loader = templateDef(id).surfaces?.[surface]
+    const loader = templateDef(known).surfaces?.[surface]
     _components.set(key, loader ? defineAsyncComponent(loader) : null)
   }
   return _components.get(key)
@@ -96,13 +52,16 @@ export function templateFonts(id) {
   return templateDef(id).fonts || []
 }
 
-// Layout por defecto de una superficie: la lista declarativa de la
-// plantilla (= orden de autoría de la vista). Las plantillas servidas por
-// StorePublicView declaran además usesSectionOrder: ahí las secciones de
-// marketing van en el orden fijo de SECTION_ORDER_KEYS (hero y bandas
-// primero, contacto último).
+// Un id retirado (payload viejo, borrador corrupto) se remapea antes de
+// resolver: nunca queda una superficie vacía.
+export function templateOf(value) {
+  const normalized = STORE_TEMPLATE_RETIRED_MAP[value] || value
+  return TEMPLATE_DEFS[normalized] ? normalized : DEFAULT_TEMPLATE
+}
+
+// Layout por defecto de una superficie: la lista declarativa de la plantilla.
 export function defaultLayout(id, surface) {
-  const def = templateDef(id)
+  const def = templateDef(templateOf(id))
   let supported = def.blocks?.[surface] || []
   if (surface === 'landing' && def.usesSectionOrder) {
     const ordered = SECTION_ORDER_KEYS.filter((k) => supported.includes(k))
@@ -114,12 +73,7 @@ export function defaultLayout(id, surface) {
   return supported.map((blockId, i) => ({ id: blockId, enabled: true, order: i }))
 }
 
-// Layout efectivo: default ∪ config guardada.
-//  - ids soportados que llegan guardados conservan enabled/variant/props
-//    y se ordenan entre sí por su order guardado;
-//  - ids soportados que faltan en la config entran al final en orden
-//    canónico (p.ej. los bloques de una plantilla recién elegida);
-//  - los locked quedan siempre habilitados.
+// Layout efectivo (Studio): default ∪ config guardada.
 export function resolveLayout(id, surface, layoutConfig) {
   const base = defaultLayout(id, surface)
   const byId = new Map(base.map((b) => [b.id, b]))
@@ -128,11 +82,6 @@ export function resolveLayout(id, surface, layoutConfig) {
   for (const raw of saved) {
     if (!raw || typeof raw !== 'object') continue
     const blockId = String(raw.id || '')
-    //Un bloque del catálogo que la plantilla NO trae por defecto también
-    //entra: los solo-IA (aipricing, aiprocess, aimosaic, aiquote…) son
-    //secciones nuevas que agrega el motor, no un reordenamiento de las que
-    //ya existen. Antes se descartaban acá y la propuesta perdía el HTML
-    //nuevo: todas las webs terminaban con las mismas secciones.
     const known = byId.get(blockId) || (blockSpec(surface, blockId) ? { id: blockId } : null)
     if (!known || savedById.has(blockId)) continue
     savedById.set(blockId, {
@@ -148,9 +97,6 @@ export function resolveLayout(id, surface, layoutConfig) {
     return (typeof saved[ia]?.order === 'number' ? saved[ia].order : ia) - (typeof saved[ib]?.order === 'number' ? saved[ib].order : ib)
   })
   const merged = [...orderedSaved, ...base.filter((b) => !savedById.has(b.id))]
-  //Contacto cierra SIEMPRE: los bloques del default que la config no traía
-  //(p.ej. services del template) entran al final del merge y lo dejaban
-  //detrás. Se mueve contact al último lugar antes de numerar.
   const contactAt = merged.findIndex((b) => b.id === 'contact')
   if (contactAt >= 0 && contactAt !== merged.length - 1) merged.push(...merged.splice(contactAt, 1))
   return merged.map((block, i) => {
@@ -158,3 +104,8 @@ export function resolveLayout(id, surface, layoutConfig) {
     return { ...block, order: i, enabled: spec?.locked ? true : block.enabled !== false }
   })
 }
+
+// Etiquetas del catálogo para el panel (re-export cómodo).
+export const TEMPLATE_LABELS = Object.fromEntries(
+  Object.entries(STORE_TEMPLATES).map(([key, meta]) => [key, meta.label])
+)

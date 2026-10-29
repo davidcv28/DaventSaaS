@@ -71,7 +71,7 @@ export const STUDIO_ENUMS = {
   heroHeight: ['compact', 'tall']
 }
 
-// Defaults = look actual (tema claro, acento índigo, plantilla classic):
+// Defaults = look actual (tema claro, acento índigo, plantilla raiz):
 //   palette:   --store-accent/-ink/-soft + --sp-* del store-page.css
 //              (bg y border son las mezclas ya resueltas a hex)
 //   containers: --sp-radius 16px + --sp-shadow-sm + línea fina + card blanca
@@ -688,7 +688,7 @@ export function resolveStudioPreset(preset = {}) {
     category: pickCssText(p.category, 'general', 40),
     preview: pickCssText(p.preview, null, 600),
     tier: pickEnum(STUDIO_TIERS, p.tier, 'base'),
-    template: pickCssText(p.template, 'classic', 40),
+    template: pickCssText(p.template, 'raiz', 40),
     theme: resolveSiteTheme(p.theme || p.siteTheme || {}),
     layout
   }
@@ -726,7 +726,7 @@ export function studioUpdate({ theme, layout, template, device } = {}) {
     type: STUDIO_MSG.UPDATE,
     theme: resolveSiteTheme(theme),
     layout: layout && typeof layout === 'object' ? layout : {},
-    template: pickCssText(template, 'classic', 40),
+    template: pickCssText(template, 'raiz', 40),
     device: pickEnum(STUDIO_DEVICES, device, 'desktop')
   }
 }
