@@ -419,6 +419,36 @@ const topCta = computed(() => {
   return null
 })
 
+// Gate del pie: `status === 'success'` llega con el payload de la tienda, pero
+// la superficie de la ruta es un `defineAsyncComponent` que monta unas decenas
+// de ms después. Si el pie se pinta en ese hueco queda pegado al header y
+// salta al fondo al montar el contenido (CLS ~0.53 medido en las 3 plantillas).
+// Esperamos a que exista la raíz de la superficie (main / .sp-page-root) antes
+// de mostrarlo; si nunca aparece (chunk roto), un timeout lo libera igual.
+const contentReady = ref(false)
+let contentObserver = null
+let contentFallback = 0
+function watchContentMounted() {
+  contentObserver?.disconnect()
+  contentObserver = null
+  clearTimeout(contentFallback)
+  contentReady.value = false
+  if (status.value !== 'success') return
+  const root = document.querySelector('.store-page')
+  if (!root) return
+  const hasSurface = () => Boolean(root.querySelector('main, .sp-page-root'))
+  if (hasSurface()) { contentReady.value = true; return }
+  contentObserver = new MutationObserver(() => {
+    if (!hasSurface()) return
+    contentReady.value = true
+    contentObserver?.disconnect()
+    contentObserver = null
+  })
+  contentObserver.observe(root, { childList: true, subtree: true })
+  contentFallback = setTimeout(() => { contentReady.value = true }, 2500)
+}
+watch([status, () => route.fullPath], () => { nextTick(watchContentMounted) }, { immediate: true })
+
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
 const progress = ref(0)
@@ -612,6 +642,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('message', onLayoutMessage)
   window.removeEventListener('message', onStudioMessage)
   removeStudioGuard?.()
+  contentObserver?.disconnect()
+  clearTimeout(contentFallback)
   clearSeo?.()
   applyFavicon(null)
 })
@@ -830,7 +862,7 @@ onBeforeUnmount(() => {
          skeleton y saltaba fuera del viewport al llegar el payload (CLS ~0.8
          medido en las 3 plantillas). Con el contenido ya resuelto se monta
          debajo, sin desplazar lo que el visitante está leyendo. -->
-    <footer v-if="status !== 'loading'" class="sp-foot">
+    <footer v-if="status !== 'loading' && (contentReady || status === 'error')" class="sp-foot">
       <div v-reveal class="sp-container">
         <div class="sp-foot-grid">
           <div class="sp-foot-brand">
