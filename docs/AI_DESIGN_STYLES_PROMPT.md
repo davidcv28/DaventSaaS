@@ -1,5 +1,14 @@
 # Entrenamiento de estilos — "Diseñar con IA" (motor v6)
 
+> **Fase 1 del rediseño por rubro (motor `ai-design/7`)**: el catálogo público
+> quedó en 3 diseños (`raiz`, `trama`, `circuito`). El motor sigue proponiendo
+> template + acento + copy, pero **las pieles no pintan la web pública**:
+> `DESIGN_SKIN_FREE` en `StorePublicLayout` ignora `site_theme`/`layout_config`
+> para esos ids y cada diseño usa su hoja (`assets/store-<id>.css`). Las pieles
+> (`SKINS`, `_apply_skin_layout`, `skin-*.css`) quedan como datos del Studio
+> para la fase 2; no agregar pieles nuevas hasta redefinir ese contrato.
+
+
 Este documento es el **prompt canónico** que define los estilos del motor de
 diseño automático y el registro de cómo se implementaron. Si cambia el
 entrenamiento, se cambian acá y en `ai_design_skins.py` en el mismo commit.
