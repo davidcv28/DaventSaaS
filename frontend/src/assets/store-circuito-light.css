@@ -304,3 +304,11 @@
     }
   }
 }
+
+/* Mensaje de éxito del formulario de servicios: el verde lavado del tema
+   oscuro no se lee sobre claro. */
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-services-page .rz-sv-form-ok {
+  border-color: color-mix(in srgb, var(--ci-ok) 42%, var(--ci-line));
+  background: color-mix(in srgb, var(--ci-ok) 13%, #fff);
+  color: color-mix(in srgb, var(--ci-ok) 52%, #0d2418);
+}
