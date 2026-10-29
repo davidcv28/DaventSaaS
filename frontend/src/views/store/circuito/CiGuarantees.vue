@@ -1,5 +1,6 @@
 <script setup>
-// Franja de garantías del diseño CIRCUITO (4 ítems con ícono lineal).
+// Franja de garantías del diseño CIRCUITO: 4 módulos de un "sistema de
+// confianza" con numeración HUD (01–04), ícono en placa y traza conectora.
 // Fuente: `benefits` de "Mi empresa" (lo que el dueño realmente ofrece:
 // garantía, cuotas, envíos, soporte). Si todavía no cargó ninguno, cae a los
 // hechos reales de la tienda —mismo criterio que el resto de la web— para no
@@ -43,19 +44,30 @@ const items = computed(() => {
   return source.filter((i) => i.title).slice(0, 4)
 })
 const show = computed(() => items.value.length >= 2)
+const pad = (n) => String(n + 1).padStart(2, '0')
 </script>
 
 <template>
   <div v-if="show" class="ci-guar">
-    <div class="ci-container ci-guar-grid">
-      <component
-        :is="i.to ? 'RouterLink' : i.href ? 'a' : 'div'" v-for="(i, n) in items" :key="i.title"
-        v-reveal="n * 70" class="ci-guar-item" :to="i.to" :href="i.href"
-      >
-        <span class="ci-guar-icon" aria-hidden="true"><AppIcon :name="i.icon" :size="18" /></span>
-        <strong>{{ i.title }}</strong>
-        <span v-if="i.text" class="ci-guar-text">{{ i.text }}</span>
-      </component>
+    <div class="ci-container">
+      <p class="ci-guar-rail" aria-hidden="true">
+        <span class="ci-guar-rail-line"></span>
+        <span class="ci-guar-rail-label">// Sistema de confianza</span>
+        <span class="ci-guar-rail-count">{{ String(items.length).padStart(2, '0') }} módulos</span>
+        <span class="ci-guar-rail-line is-fill"></span>
+      </p>
+      <div class="ci-guar-grid">
+        <component
+          :is="i.to ? 'RouterLink' : i.href ? 'a' : 'div'" v-for="(i, n) in items" :key="i.title"
+          v-reveal="n * 70" class="ci-guar-item" :to="i.to" :href="i.href"
+        >
+          <span class="ci-guar-idx" aria-hidden="true">{{ pad(n) }}</span>
+          <span class="ci-guar-node" aria-hidden="true"></span>
+          <span class="ci-guar-icon" aria-hidden="true"><AppIcon :name="i.icon" :size="18" /></span>
+          <strong>{{ i.title }}</strong>
+          <span v-if="i.text" class="ci-guar-text">{{ i.text }}</span>
+        </component>
+      </div>
     </div>
   </div>
 </template>

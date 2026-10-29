@@ -1,10 +1,12 @@
 <script setup>
-// Portada del diseño CIRCUITO: hero partido con la identidad del negocio a la
-// izquierda y la tarjeta del producto destacado a la derecha (con badge -N%
-// y chips de especificaciones reales del producto). Es markup propio del
-// diseño porque la tarjeta de specs no existe en el hero compartido; reusa
-// las piezas comunes (AppIcon, vReveal, useFeaturedCatalog, helpers de
-// precio/oferta y el estado de horario) sin fetching nuevo.
+// Portada del diseño CIRCUITO: hero de "placa de circuito premium".
+// La identidad del negocio va a la izquierda sobre una retícula PCB con trazas
+// y nodos luminosos; a la derecha, la tarjeta del producto destacado montada
+// como un módulo de laboratorio (marco biselado, etiqueta mono, barrido de
+// escaneo y chips de especificaciones reales del producto).
+// Es markup propio del diseño porque la tarjeta de specs no existe en el hero
+// compartido; reusa las piezas comunes (AppIcon, vReveal, useFeaturedCatalog,
+// helpers de precio/oferta y el estado de horario) sin fetching nuevo.
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { openStatus } from '../../../utils/storeHours.js'
@@ -85,9 +87,31 @@ async function share() {
 
 <template>
   <section class="ci-hero" aria-labelledby="ci-hero-title">
+    <!-- Capa decorativa: retícula PCB, trazas, nodos y barrido de escaneo -->
+    <div class="ci-hero-bg" aria-hidden="true">
+      <span class="ci-hero-mesh"></span>
+      <span class="ci-hero-glow ci-hero-glow-a"></span>
+      <span class="ci-hero-glow ci-hero-glow-b"></span>
+      <span class="ci-hero-trace ci-hero-trace-a"></span>
+      <span class="ci-hero-trace ci-hero-trace-b"></span>
+      <span class="ci-hero-trace ci-hero-trace-c"></span>
+      <span class="ci-hero-trace ci-hero-trace-d"></span>
+      <span class="ci-node ci-node-a"></span>
+      <span class="ci-node ci-node-b"></span>
+      <span class="ci-node ci-node-c"></span>
+      <span class="ci-hero-scanline"></span>
+    </div>
+
     <div class="ci-container ci-hero-grid">
       <div class="ci-hero-copy">
+        <p class="ci-hero-rail">
+          <span class="ci-hero-status"><span class="ci-pip" aria-hidden="true"></span>Señal activa</span>
+          <span class="ci-hero-rail-sep" aria-hidden="true"></span>
+          <span class="ci-hero-rail-code" aria-hidden="true">PCB · PORTADA / CIRCUITO</span>
+        </p>
+
         <p v-reveal class="ci-hero-badge">{{ heroBadge }}</p>
+
         <h1 id="ci-hero-title" v-reveal="70" class="ci-hero-title" :class="{ 'is-name': heroTitleIsName }" :style="heroTitleIsName ? nameFont : null">
           <span>{{ titleParts.head }}</span><span v-if="titleParts.accent" class="ci-acc">{{ ' ' + titleParts.accent }}</span>
         </h1>
@@ -110,23 +134,54 @@ async function share() {
         </ul>
       </div>
 
-      <!-- Tarjeta del producto destacado -->
-      <component
-        :is="heroProduct ? 'RouterLink' : 'div'" v-reveal="120" class="ci-hero-card"
-        :to="heroProduct ? productTo(heroProduct) : null"
-        :aria-label="heroProduct ? `Ver ${heroProduct.name}` : null"
-      >
-        <span v-if="heroOffer != null" class="ci-hero-card-off">-{{ heroPct }}%</span>
-        <img v-if="heroImage" :src="heroImage" :alt="heroProduct ? heroProduct.name : ''" loading="eager" decoding="async" fetchpriority="high" />
-        <span v-else class="ci-hero-card-ph" aria-hidden="true">{{ initial }}</span>
-        <span v-if="heroProduct" class="ci-hero-card-body">
-          <strong class="ci-hero-card-name">{{ heroProduct.name }}</strong>
-          <span v-if="heroPrice" class="ci-hero-card-price">{{ heroPrice }}</span>
-        </span>
-        <ul v-if="heroChips.length" class="ci-hero-chips">
-          <li v-for="chip in heroChips" :key="chip">{{ chip }}</li>
-        </ul>
-      </component>
+      <!-- Tarjeta del producto destacado: módulo de laboratorio -->
+      <div v-reveal="120" class="ci-hero-stage">
+        <p class="ci-hero-stage-code" aria-hidden="true">
+          <span>// Módulo 01</span>
+          <span>{{ heroProduct ? 'Destacado' : 'Identidad' }}</span>
+        </p>
+        <component
+          :is="heroProduct ? 'RouterLink' : 'div'" class="ci-hero-card"
+          :to="heroProduct ? productTo(heroProduct) : null"
+          :aria-label="heroProduct ? `Ver ${heroProduct.name}` : null"
+        >
+          <span class="ci-hero-card-brackets" aria-hidden="true"></span>
+          <span class="ci-hero-card-top" aria-hidden="true">
+            <span class="ci-hero-card-toplabel">// {{ heroProduct ? 'Producto destacado' : 'Placa base' }}</span>
+            <span class="ci-hero-card-led"></span>
+          </span>
+
+          <span class="ci-hero-card-media">
+            <img v-if="heroImage" :src="heroImage" :alt="heroProduct ? heroProduct.name : ''" loading="eager" decoding="async" fetchpriority="high" />
+            <span v-else class="ci-hero-card-ph" aria-hidden="true">{{ initial }}</span>
+            <span class="ci-hero-card-scan" aria-hidden="true"></span>
+            <span v-if="heroOffer != null" class="ci-hero-card-off">-{{ heroPct }}%</span>
+          </span>
+
+          <span v-if="heroProduct" class="ci-hero-card-body">
+            <strong class="ci-hero-card-name">{{ heroProduct.name }}</strong>
+            <span class="ci-hero-card-foot">
+              <span v-if="heroPrice" class="ci-hero-card-price">{{ heroPrice }}</span>
+              <span class="ci-hero-card-go" aria-hidden="true"><AppIcon name="arrow-up-right" :size="15" /></span>
+            </span>
+          </span>
+          <span v-else class="ci-hero-card-body is-empty">
+            <strong class="ci-hero-card-name">{{ shopName }}</strong>
+            <span class="ci-hero-card-foot">
+              <span class="ci-hero-card-price">{{ heroBadge }}</span>
+              <span class="ci-hero-card-go" aria-hidden="true"><AppIcon name="zap" :size="15" /></span>
+            </span>
+          </span>
+
+          <ul v-if="heroChips.length" class="ci-hero-chips">
+            <li v-for="chip in heroChips" :key="chip">{{ chip }}</li>
+          </ul>
+        </component>
+        <p class="ci-hero-stage-foot" aria-hidden="true">
+          <span class="ci-hero-stage-dash"></span>
+          <span>{{ heroProduct ? 'Tocá para ver la ficha técnica' : 'Identidad de marca' }}</span>
+        </p>
+      </div>
     </div>
   </section>
 </template>

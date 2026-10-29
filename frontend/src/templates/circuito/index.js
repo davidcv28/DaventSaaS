@@ -1,10 +1,12 @@
 import { landingViews, catalogViews, productViews, servicesViews, CATALOG_BLOCKS, SERVICES_BLOCKS } from '../_shared.js'
 
 // Template Definition 'circuito' — tecnología / electrónica (nivel advanced).
-// Composición FIJA de 12 secciones (spec §7.1): la vista decide el orden y
-// `layout_config` se ignora (por eso usesSectionOrder: false). La lista de
-// `blocks` es la whitelist del Studio y el default que leen los bloques
-// compartidos (useLayout), no el orden real del render.
+// Portada GENERATIVA: `blocks.landing` es el orden canónico por defecto
+// (barra de acento, hero partido con tarjeta, franja de garantías, categorías
+// 6 en 3×2, destacados, banda de servicios, oferta + cuenta regresiva, marcas,
+// testimonios, FAQ y contacto) y a la vez la whitelist del Studio. Las
+// variantes no-default se fijan acá para conservar el render anterior
+// (anuncios 'static', contador 'band', marcas 'logos').
 export default {
   usesSectionOrder: false,
   fonts: ['space-grotesk', 'jetbrains-mono'],
@@ -16,8 +18,17 @@ export default {
   },
   blocks: {
     landing: [
-      'announcements', 'hero', 'highlights', 'categories', 'featured',
-      'services', 'countdown', 'brands', 'testimonials', 'faq', 'contact'
+      { id: 'announcements', variant: 'static' },
+      'hero',
+      'highlights',   // CiGuarantees (franja de 4 garantías)
+      'categories',
+      'featured',
+      'services',     // CiServicesBand (banda de servicios)
+      { id: 'countdown', variant: 'band' },
+      { id: 'brands', variant: 'logos' },
+      'testimonials',
+      'faq',
+      'contact'
     ],
     catalog: ['note', 'promo', ...CATALOG_BLOCKS],
     services: SERVICES_BLOCKS

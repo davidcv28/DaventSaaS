@@ -1,0 +1,158 @@
+/* ==========================================================================
+   RESPONSIVE transversal de CIRCUITO (se importa al final).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .ci-cat-body { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='circuito'] .ci-filters-toggle {
+    display: inline-flex;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 8px);
+    z-index: 6;
+    align-items: center;
+    gap: 8px;
+    justify-self: start;
+    min-height: 42px;
+    padding: 0 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--ci-line);
+    border-radius: var(--ci-radius);
+    background: var(--ci-surface);
+    color: var(--ci-ink);
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .store-page[data-template='circuito'] .ci-filters-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--ci-solid);
+    color: var(--ci-on-solid);
+    font-family: var(--ci-mono);
+    font-size: 10px;
+  }
+  .store-page[data-template='circuito'] .ci-filters { display: none; position: static; }
+  .store-page[data-template='circuito'] .ci-filters.open { display: block; }
+  .store-page[data-template='circuito'] .ci-filters-apply { display: inline-flex; }
+  .store-page[data-template='circuito'] .ci-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='circuito'] .ci-pd-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1024px) {
+  .store-page[data-template='circuito'] .sp-shop-featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .store-page[data-template='circuito'] .ci-services-grid { gap: 36px; }
+}
+
+@media (max-width: 900px) {
+  .ci-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .store-page[data-template='circuito'] .ci-hero::before { inset: 0 0 40% 0; }
+  .store-page[data-template='circuito'] .ci-hero-card { aspect-ratio: 16 / 10; }
+  .ci-guar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='circuito'] .ci-guar-item { border-left: 0; border-top: 1px solid var(--ci-line); }
+  .store-page[data-template='circuito'] .ci-guar-item:nth-child(-n+2) { border-top: 0; }
+  .store-page[data-template='circuito'] .ci-services-grid,
+  .ci-services-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .ci-pd-top { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .store-page[data-template='circuito'] .sp-cd-inner { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .store-page[data-template='circuito'] .sp-cd-clock { flex-wrap: wrap; }
+}
+
+@media (max-width: 860px) {
+  .store-page[data-template='circuito'] .sp-shop-depts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='circuito'] .sp-shop-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .store-page[data-template='circuito'] .sp-testimonials-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ci-cat-hero-row { flex-direction: column; align-items: flex-start; gap: 18px; }
+  .store-page[data-template='circuito'] .ci-cat-counters { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+  .store-page[data-template='circuito'] { --ci-gutter: 20px; --ci-section: 48px; }
+  .store-page[data-template='circuito'] :is(.sp-top-inner, .sp-hal-grid, .sp-shop-featured-head,
+    .sp-section-head, .sp-head, .sp-cat-head, .sp-cta-inner, .sp-about-grid, .sp-contact-grid,
+    .sp-foot-grid, .sp-foot-bottom) { flex-wrap: wrap; min-width: 0; }
+  .store-page[data-template='circuito'] :is(.ci-hero-ctas, .ci-hero-meta, .ci-cat-counters,
+    .sp-brands-logos, .sp-cd-clock, .ci-promos, .ci-tags, .ci-results-head) { flex-wrap: wrap; }
+  .store-page[data-template='circuito'] .ci-hero { padding-block: 32px 40px; }
+  .store-page[data-template='circuito'] .ci-hero-title { font-size: clamp(32px, 9.6vw, 46px); max-width: none; }
+  .store-page[data-template='circuito'] .ci-hero-sub { font-size: 15.5px; }
+  .store-page[data-template='circuito'] .ci-hero-card { aspect-ratio: 4 / 3; }
+  .store-page[data-template='circuito'] .ci-btn { flex: 1 1 auto; }
+  /* Acciones del hero: dos botones a lo ancho y, abajo, el link + compartir. */
+  .store-page[data-template='circuito'] .ci-hero-ctas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .store-page[data-template='circuito'] .ci-hero-ctas > .ci-btn { grid-column: 1 / -1; }
+  .store-page[data-template='circuito'] .ci-hero-ctas > .ci-hero-link { grid-column: 1; width: fit-content; }
+  .store-page[data-template='circuito'] .ci-hero-ctas > .ci-iconbtn { grid-column: 2; }
+  .store-page[data-template='circuito'] .ci-hero-ctas .ci-iconbtn { width: 46px; }
+  .store-page[data-template='circuito'] .sp-ann-item { font-size: 10.5px; padding-right: 22px; }
+  .store-page[data-template='circuito'] .sp-ann-item + .sp-ann-item::before { display: none; }
+  .ci-guar-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='circuito'] .ci-guar-item { border-top: 1px solid var(--ci-line); padding: 16px 18px; }
+  .store-page[data-template='circuito'] .ci-guar-item:first-child { border-top: 0; }
+  /* El layout base convierte las categorías en un carrusel táctil: Circuito
+     mantiene la grilla (6 en 3×2 / 2 / 1) también en móvil. */
+  .store-page[data-template='circuito'] .sp-shop-depts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin: 20px auto 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+  .store-page[data-template='circuito'] .sp-shop-dept { width: auto; padding: 16px 18px; }
+  .store-page[data-template='circuito'] .sp-shop-dept-thumb { width: 38px; height: 38px; }
+  .store-page[data-template='circuito'] .sp-shop-featured-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='circuito'] .sp-testimonials-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='circuito'] .ci-grid,
+  .store-page[data-template='circuito'] .ci-pd-rel-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='circuito'] .sp-cd-unit { min-width: 54px; }
+  .store-page[data-template='circuito'] .sp-cd-unit strong { font-size: 18px; }
+  .ci-cat-main { padding-block: 20px 48px; }
+  .store-page[data-template='circuito'] .ci-cat-counters li { min-width: 82px; }
+  .store-page[data-template='circuito'] .ci-sec-head { flex-wrap: wrap; align-items: flex-start; }
+  .store-page[data-template='circuito'] .ci-pd-buy { padding: 18px; }
+  .store-page[data-template='circuito'] .ci-pd-specs th { width: 42%; }
+}
+
+/* Barra fija de compra en móvil (ficha de producto) */
+@media (max-width: 900px) {
+  .store-page[data-template='circuito'] .ci-pd-stick {
+    position: fixed;
+    inset-inline: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--ci-line);
+    background: color-mix(in srgb, var(--ci-footer) 94%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .store-page[data-template='circuito'] .ci-pd-stick-info { display: grid; gap: 1px; min-width: 0; }
+  .store-page[data-template='circuito'] .ci-pd-stick-info s { font-family: var(--ci-mono); font-size: 10.5px; color: var(--ci-muted); }
+  .store-page[data-template='circuito'] .ci-pd-stick-info strong { font-family: var(--ci-display); font-size: 17px; color: var(--ci-ink); }
+  .store-page[data-template='circuito'] .ci-pd-stick-btn { flex: 1 1 auto; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='circuito'] *,
+  .store-page[data-template='circuito'] *::before,
+  .store-page[data-template='circuito'] *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+  .store-page[data-template='circuito'] .sp-ann-track { animation: none; }
+}

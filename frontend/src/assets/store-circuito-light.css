@@ -1,0 +1,306 @@
+/* ==========================================================================
+   CIRCUITO — TEMA CLARO del visitante (interruptor luna/sol).
+
+   La web de Circuito nació dark-only: la base fija los tokens --ci-* oscuros
+   y los parciales casi siempre consumen tokens, así que el tema claro se
+   resuelve reescribiendo tokens + los pocos colores oscuros hardcodeados y
+   las sombras/velos pensados para fondo negro.
+
+   Se importa al FINAL del agregador store-circuito.css: la raíz
+   `.store-page[data-store-theme='light'][data-template='circuito']` tiene más
+   especificidad que `.store-page[data-template='circuito']` (2 atributos vs 1),
+   así que gana sin !important. Todo está scopeado a template=circuito: ningún
+   otro diseño ni el preview del dashboard se ven afectados.
+
+   Capas:
+     1. Tokens --ci-* (fondo, superficies, tinta, acento AA, ok/danger).
+     2. Chrome (barra superior, toggle de tema, búsqueda, nav, tabbar, pie).
+     3. Inicio (hero, tarjeta destacada, chips, oferta, contacto).
+     4. Catálogo (paneles, filtros, resultados, vacío, skeletons).
+     5. Producto (panel de compra, specs, barra fija móvil).
+     6. Servicios (embudo compartido sv-*).
+     7. Interruptor luna/sol integrado (aplica a claro y oscuro).
+     8. Movimiento reducido.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS DEL TEMA CLARO
+   Contraste medido sobre --ci-bg (#F4F7FB) y --ci-surface (#FFF):
+   ink 17.9:1 · ink-2 10.4:1 · muted 5.6:1 · accent-text ≥ 5.6:1 (cualquiera
+   de los 8 acentos del catálogo al mezclarse 62% con tinta #071018).
+   -------------------------------------------------------------------------- */
+.store-page[data-store-theme='light'][data-template='circuito'] {
+  color-scheme: light;
+
+  --ci-bg: #F4F7FB;
+  --ci-surface: #FFFFFF;
+  --ci-surface-2: #EAF0F8;
+  --ci-line: #CFDBE8;
+  --ci-ink: #0B1220;
+  --ci-ink-2: #2B3A4D;
+  --ci-muted: #55677D;
+  --ci-footer: #E7EEF7;
+
+  /* El acento del dueño sigue mandando. En claro el texto de acento se
+     oscurece hacia la tinta (AA sobre blanco) y las superficies sólidas
+     (botones, banda de anuncios, badges) invierten a acento oscuro con tinta
+     clara: mismo contraste AA con cualquier acento del catálogo. */
+  --ci-accent-text: color-mix(in srgb, var(--ci-accent) 62%, #071018);
+  --ci-accent-soft: color-mix(in srgb, var(--ci-accent) 12%, transparent);
+  --ci-solid: var(--ci-accent-text);
+  --ci-on-solid: #F7FAFF;
+  --ci-danger: #B42318;
+  --ci-ok: #067647;
+
+  /* Meta theme-color del navegador móvil (StorePublicLayout la lee del CSS). */
+  --sp-theme-color: #F4F7FB;
+}
+
+/* --------------------------------------------------------------------------
+   2. CHROME
+   La base pinta la barra con color-mix(surface, #000) y una sombra negra;
+   en claro se resuelve como superficie limpia con línea fina.
+   -------------------------------------------------------------------------- */
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top {
+  background: var(--ci-surface);
+  border-bottom: 1px solid var(--ci-line);
+  color: var(--ci-ink);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top.scrolled {
+  box-shadow: 0 10px 30px -26px rgba(11, 18, 32, .38);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top .sp-mono {
+  background: var(--ci-ink);
+  color: var(--ci-surface);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top-cta {
+  background: var(--ci-solid);
+  color: var(--ci-on-solid);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top .sp-icon-btn,
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top .sp-burger {
+  background: var(--ci-surface-2);
+  border-color: var(--ci-line);
+  color: var(--ci-ink-2);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top .sp-icon-btn:hover,
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-top .sp-burger:hover {
+  border-color: color-mix(in srgb, var(--ci-accent) 60%, var(--ci-line));
+  color: var(--ci-accent-text);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-search {
+  background: var(--ci-bg);
+  border-color: var(--ci-line);
+  color: var(--ci-ink);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-shop-nav {
+  background: var(--ci-surface-2);
+  border-bottom-color: var(--ci-line);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-tabbar {
+  background: color-mix(in srgb, var(--ci-surface) 94%, transparent);
+  border-top-color: var(--ci-line);
+}
+
+/* Pie claro: superficie suave, tinta oscura y acento legible. */
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-foot {
+  background: var(--ci-footer);
+  color: var(--ci-ink-2);
+  border-top-color: var(--ci-line);
+}
+
+/* --------------------------------------------------------------------------
+   3. INICIO
+   -------------------------------------------------------------------------- */
+
+/* Retícula del hero: la línea clara ya se ve; el velo que difuminaba sobre
+   negro se suaviza para no lavar el texto. */
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-hero {
+  background:
+    radial-gradient(880px 420px at 88% -10%, color-mix(in srgb, var(--ci-accent) 10%, transparent), transparent 70%),
+    radial-gradient(620px 320px at 4% 0%, color-mix(in srgb, var(--ci-accent) 6%, transparent), transparent 72%),
+    var(--ci-bg);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-hero::before {
+  opacity: .9;
+}
+
+/* Tarjeta del producto destacado: sombra neutra, sin halo negro. */
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-hero-card {
+  box-shadow: 0 30px 60px -46px rgba(11, 18, 32, .45), 0 12px 28px -22px color-mix(in srgb, var(--ci-accent) 26%, transparent);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-hero-chips li {
+  border-color: var(--ci-line);
+  background: color-mix(in srgb, var(--ci-surface) 82%, transparent);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-hero-card-body {
+  background: linear-gradient(to top, color-mix(in srgb, var(--ci-bg) 94%, transparent), transparent);
+}
+
+/* Badge de tarjeta (Nuevo): en oscuro era tinta clara sobre tinta oscura
+   hardcodeada; en claro la tinta es oscura → texto claro sobre píldora tinta. */
+.store-page[data-store-theme='light'][data-template='circuito'] .tpc .tpc-flag {
+  background: var(--ci-ink);
+  color: var(--ci-surface);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .tpc .tpc-flag.offer {
+  background: var(--ci-solid);
+  color: var(--ci-on-solid);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .tpc .tpc-go:hover {
+  color: var(--ci-ink);
+}
+
+/* Banda de cuenta regresiva y de contacto: el tinte de acento ya no necesita
+   el velo oscuro, se recalibra para no ensuciar la superficie clara. */
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-cd-inner {
+  background:
+    radial-gradient(520px 220px at 8% 0%, color-mix(in srgb, var(--ci-accent) 10%, transparent), transparent 70%),
+    var(--ci-surface);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-cd-unit {
+  background: var(--ci-surface-2);
+}
+
+/* Formulario de contacto y placeholders sobre superficie blanca. */
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-form input,
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-form textarea {
+  background: var(--ci-bg);
+  color: var(--ci-ink);
+  border-color: var(--ci-line);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-form :is(input, textarea):focus {
+  border-color: var(--ci-accent);
+  outline-color: color-mix(in srgb, var(--ci-accent) 45%, transparent);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sp-form :is(input, textarea)::placeholder {
+  color: var(--ci-muted);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   4. CATÁLOGO
+   -------------------------------------------------------------------------- */
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-cat-hero {
+  background:
+    radial-gradient(680px 300px at 80% -40%, color-mix(in srgb, var(--ci-accent) 10%, transparent), transparent 70%),
+    var(--ci-surface-2);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-filters {
+  background: var(--ci-surface);
+  border-color: var(--ci-line);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-results-head {
+  border-color: var(--ci-line);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-skeleton {
+  background: linear-gradient(100deg, var(--ci-surface-2), var(--ci-surface), var(--ci-surface-2));
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-empty {
+  background: var(--ci-surface);
+  border-color: var(--ci-line);
+}
+
+/* --------------------------------------------------------------------------
+   5. PRODUCTO
+   -------------------------------------------------------------------------- */
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-pd-buy,
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-pd-seller {
+  background: var(--ci-surface);
+  border-color: var(--ci-line);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-pd-specs tr:nth-child(odd) {
+  background: var(--ci-surface);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .ci-pd-specs tr:nth-child(even) {
+  background: var(--ci-surface-2);
+}
+@media (max-width: 900px) {
+  .store-page[data-store-theme='light'][data-template='circuito'] .ci-pd-stick {
+    background: color-mix(in srgb, var(--ci-surface) 94%, transparent);
+    border-top-color: var(--ci-line);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. SERVICIOS (embudo sv-* compartido)
+   --sv-pop era el acento crudo con tinta oscura: en claro pasa a acento
+   oscuro con tinta clara, y el foco mantiene el acento crudo (outline).
+   -------------------------------------------------------------------------- */
+.store-page[data-store-theme='light'][data-template='circuito'] .sv-page {
+  --sv-pop: var(--ci-solid);
+  --sv-on-pop: var(--ci-on-solid);
+  --sv-input-bg: var(--ci-surface);
+  --sv-band-bg: var(--ci-surface-2);
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sv-page .sv-quote {
+  background: var(--ci-surface);
+  border-color: color-mix(in srgb, var(--ci-accent) 30%, var(--ci-line));
+}
+.store-page[data-store-theme='light'][data-template='circuito'] .sv-page .sv-item[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--ci-accent) 14%, var(--ci-surface));
+  color: var(--ci-ink);
+}
+
+/* --------------------------------------------------------------------------
+   7. INTERRUPTOR LUNA/SOL INTEGRADO (ambos temas)
+   El botón ya trae aria-pressed (true = página en oscuro). Se resuelve como
+   tecla técnica de Circuito: cuadrada, mono, con glow del acento al activarse.
+   -------------------------------------------------------------------------- */
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed] {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ci-radius);
+  border: 1px solid var(--ci-line);
+  background: var(--ci-surface-2);
+  color: var(--ci-ink-2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ci-surface) 35%, transparent);
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, rotate .18s ease;
+}
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed] .icon {
+  transition: rotate .18s ease, opacity .18s ease;
+}
+@media (hover: hover) {
+  .store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed]:hover {
+    border-color: color-mix(in srgb, var(--ci-accent) 65%, var(--ci-line));
+    background: color-mix(in srgb, var(--ci-accent) 10%, var(--ci-surface-2));
+    color: var(--ci-accent-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ci-accent) 14%, transparent);
+  }
+  .store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed]:hover .icon {
+    rotate: -12deg;
+  }
+}
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--ci-accent) 55%, var(--ci-line));
+  background: color-mix(in srgb, var(--ci-accent) 16%, var(--ci-surface-2));
+  color: var(--ci-accent-text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ci-accent) 22%, transparent), 0 6px 16px -12px var(--ci-accent);
+}
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed]:active {
+  translate: 0 1px;
+}
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed]:focus-visible {
+  outline: 2px solid var(--ci-accent);
+  outline-offset: 2px;
+}
+
+/* Ítem del sheet móvil (mismo toggle en pantallas chicas). */
+.store-page[data-template='circuito'] .sp-more-link .icon {
+  color: var(--ci-accent-text);
+}
+
+/* --------------------------------------------------------------------------
+   8. MOVIMIENTO REDUCIDO
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed],
+  .store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed] .icon {
+    transition: none;
+  }
+  @media (hover: hover) {
+    .store-page[data-template='circuito'] .sp-top .sp-icon-btn[aria-pressed]:hover .icon {
+      rotate: 0deg;
+    }
+  }
+}

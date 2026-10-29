@@ -8,6 +8,7 @@ import { installNativeShims } from './utils/native.js'
 import { checkAppUpdate } from './utils/appUpdate.js'
 import './assets/styles.css'
 import './assets/template-thumbs.css'
+import './assets/design-preview-templates.css'
 
 // Deploy con HTML viejo en caché: un chunk lazy pedido ya no existe en el
 // servidor y el import falla. Recargar una vez trae el index.html nuevo.

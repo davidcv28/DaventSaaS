@@ -1,9 +1,9 @@
 <script setup>
-// Ficha de producto del diseño CIRCUITO (/<slug>/producto/<id>): migas,
-// galería + panel de compra (precio, oferta, CTA de WhatsApp con el producto
-// citado, vendedor), chips de especificaciones, tabla de características
-// ordenada por el feature_schema de la categoría, descripción, reseñas y
-// relacionados. Los datos salen del catálogo público.
+// Ficha de producto del diseño CIRCUITO (/<slug>/producto/<id>) como ficha
+// técnica de laboratorio: galería con marco HUD, panel de compra premium
+// (sticky en desktop), tabla de especificaciones ordenada por el
+// feature_schema de la categoría, descripción, reseñas y relacionados.
+// Los datos salen del catálogo público; la lógica de negocio no vive acá.
 import { ref, computed, watch, inject, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
@@ -128,29 +128,48 @@ onMounted(() => {
       <template v-else-if="status === 'ready' && product">
         <article v-reveal class="ci-pd-sheet">
           <div class="ci-pd-top">
-            <!-- Galería -->
-            <div class="ci-pd-gallery">
-              <img v-if="product.image" :src="product.image" :alt="product.name" decoding="async" fetchpriority="high" />
-              <span v-else class="ci-pd-ph" aria-hidden="true"><AppIcon name="package" :size="56" /></span>
+            <!-- Galería con marco HUD -->
+            <div class="ci-pd-media-col">
+              <figure class="ci-pd-gallery">
+                <span class="ci-pd-tag" aria-hidden="true">IMG <span>// 01</span></span>
+                <img v-if="product.image" :src="product.image" :alt="product.name" decoding="async" fetchpriority="high">
+                <span v-else class="ci-pd-ph" aria-hidden="true"><AppIcon name="package" :size="56" /></span>
+                <figcaption class="sr-only">Fotografía del producto {{ product.name }}</figcaption>
+              </figure>
+              <ul class="ci-pd-meta" aria-label="Datos del producto">
+                <li>
+                  <span class="ci-pd-meta-k">ID</span>
+                  <strong class="ci-pd-meta-v">#{{ product.id }}</strong>
+                </li>
+                <li>
+                  <span class="ci-pd-meta-k">Categoría</span>
+                  <strong class="ci-pd-meta-v">{{ categoryName || 'General' }}</strong>
+                </li>
+                <li>
+                  <span class="ci-pd-meta-k">Estado</span>
+                  <strong class="ci-pd-meta-v is-ok">{{ isNewProduct(product) ? 'Nuevo' : 'Disponible' }}</strong>
+                </li>
+              </ul>
             </div>
 
-            <!-- Panel de compra -->
+            <!-- Panel de compra (sticky en desktop) -->
             <aside class="ci-pd-buy" aria-label="Información del producto">
               <div class="ci-pd-buy-head">
-                <p class="ci-pd-cond">{{ isNewProduct(product) ? 'Nuevo' : 'Disponible' }}</p>
+                <p class="ci-pd-cond"><span aria-hidden="true"></span>{{ isNewProduct(product) ? 'Nuevo' : 'Disponible' }}</p>
                 <button type="button" class="ci-iconbtn" :aria-label="copied ? 'Link copiado' : 'Compartir producto'" :title="copied ? 'Link copiado' : 'Compartir'" @click="share">
                   <AppIcon :name="copied ? 'check' : 'share-2'" :size="16" />
                 </button>
               </div>
-              <p v-if="categoryName || brandName" class="ci-pd-eyebrow">{{ [categoryName, brandName].filter(Boolean).join(' · ') }}</p>
+              <p v-if="categoryName || brandName" class="ci-pd-eyebrow"><span aria-hidden="true">//</span> {{ [categoryName, brandName].filter(Boolean).join(' · ') }}</p>
               <h1 class="ci-pd-name">{{ product.name }}</h1>
               <ProductStars v-if="custom.show_reviews && product.rating_count" class="ci-pd-stars" :avg="product.rating_avg" :count="product.rating_count" :icon="ratingIcon" :size="14" show-value />
 
-              <ul v-if="specChips.length" class="ci-pd-chips">
-                <li v-for="[k, v] in specChips" :key="k">{{ k }} {{ v }}</li>
+              <ul v-if="specChips.length" class="ci-pd-chips" aria-label="Especificaciones destacadas">
+                <li v-for="[k, v] in specChips" :key="k">{{ k }} <span>{{ v }}</span></li>
               </ul>
 
               <div class="ci-pd-pricebox">
+                <p class="ci-pd-price-label">Precio efectivo</p>
                 <s v-if="productOffer(product) != null" class="ci-pd-price-old">{{ formatARS(product.price) }}</s>
                 <div class="ci-pd-price-row">
                   <span class="ci-pd-price">{{ formatARS(effectivePrice(product)) }}</span>
@@ -198,11 +217,18 @@ onMounted(() => {
             </aside>
           </div>
 
-          <!-- Características -->
+          <!-- Especificaciones -->
           <section v-if="featureRows.length" class="ci-pd-sec" aria-labelledby="ci-specs-title">
-            <h2 id="ci-specs-title" class="ci-pd-sec-title">Especificaciones</h2>
+            <div class="ci-pd-sec-head">
+              <h2 id="ci-specs-title" class="ci-pd-sec-title">Especificaciones</h2>
+              <span class="ci-pd-sec-count">{{ featureRows.length }} {{ featureRows.length === 1 ? 'parámetro' : 'parámetros' }}</span>
+            </div>
             <div class="ci-pd-specs-wrap">
               <table class="ci-pd-specs">
+                <caption class="sr-only">Especificaciones técnicas de {{ product.name }}</caption>
+                <thead>
+                  <tr><th scope="col">Parámetro</th><th scope="col">Valor</th></tr>
+                </thead>
                 <tbody>
                   <tr v-for="[key, value] in featureRows" :key="key">
                     <th scope="row">{{ key }}</th>
@@ -215,7 +241,9 @@ onMounted(() => {
 
           <!-- Descripción -->
           <section v-if="product.description" class="ci-pd-sec" aria-labelledby="ci-desc-title">
-            <h2 id="ci-desc-title" class="ci-pd-sec-title">Descripción</h2>
+            <div class="ci-pd-sec-head">
+              <h2 id="ci-desc-title" class="ci-pd-sec-title">Descripción</h2>
+            </div>
             <p class="ci-pd-desc">{{ product.description }}</p>
           </section>
 
@@ -248,7 +276,9 @@ onMounted(() => {
 
         <!-- Relacionados -->
         <section v-if="related.length" v-reveal="80" class="ci-pd-related" aria-labelledby="ci-rel-title">
-          <h2 id="ci-rel-title" class="ci-pd-sec-title">También te puede interesar</h2>
+          <div class="ci-pd-sec-head">
+            <h2 id="ci-rel-title" class="ci-pd-sec-title">También te puede interesar</h2>
+          </div>
           <div class="ci-pd-rel-grid">
             <TplProductCard v-for="r in related" :key="r.id" class="ci-card" :p="r"
               seal-shape="" :ph-size="24" :go="false" @open="(r2) => router.push(productTo(r2))" />

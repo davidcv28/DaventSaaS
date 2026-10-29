@@ -19,6 +19,11 @@ import {
   storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES
 } from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
+// Base de layout de la página Servicios (.rz-sv-* + primitivas .rz-btn /
+// .rz-eyebrow / .rz-field), compartida por todos los diseños: la vista
+// funcional del embudo es única y su layout no puede vivir solo en la hoja de
+// Raíz. Scopeada a :not([data-template='raiz']): la piel de Raíz no cambia.
+import '../assets/store-services-base.css'
 // Hoja del diseño activo: se carga on-demand (una sola vez por diseño), así
 // el CSS de Raíz no viaja en el bundle de Trama/Circuito ni al revés. La
 // tarjeta de producto unificada (TplProductCard) conserva su contrato de
@@ -115,12 +120,13 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // En modo Studio manda el borrador (studioVars/studioAttrs): lo publicado no
 // se mezcla para que un campo que el borrador no fija no se cuele en el
 // lienzo y preview/publicada queden idénticas.
-// Rediseño por rubro (fase 1): los 3 diseños del catálogo NO consumen skins
+// Rediseño por rubro (fase 1): los 6 diseños del catálogo NO consumen skins
 // del Studio — su paleta y tipografía las fija su propia hoja
-// (store-raiz/trama/circuito.css). El site_theme guardado de una tienda
-// vieja se sigue respetando en el payload, pero no pinta estas webs: así el
-// diseño se ve como la referencia y no mezclado con una piel anterior.
-const DESIGN_SKIN_FREE = ['raiz', 'trama', 'circuito']
+// (store-raiz/trama/circuito/alimentos/boutique/seguridad.css). El site_theme
+// guardado de una tienda vieja se sigue respetando en el payload, pero no
+// pinta estas webs: así el diseño se ve como la referencia y no mezclado con
+// una piel anterior.
+const DESIGN_SKIN_FREE = ['raiz', 'trama', 'circuito', 'alimentos', 'boutique', 'seguridad']
 const consumesSiteTheme = computed(() => !DESIGN_SKIN_FREE.includes(pageTemplate.value))
 const publishedThemeVars = computed(() => (
   studioMode.value || !consumesSiteTheme.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
@@ -167,13 +173,16 @@ const pageTemplate = computed(() => {
 const isShop = computed(() => pageTemplate.value === 'shop')
 
 // Hojas propias de un diseño: tiñen también el chrome (barra, pie, dock) en
-// páginas que no montan la portada (servicios, ficha). Raíz va estática; las
-// otras dos se cargan on-demand y una sola vez. Al terminar la carga se
-// re-sincroniza el SEO para tomar el theme-color que declare la hoja.
+// páginas que no montan la portada (servicios, ficha). Todos se cargan
+// on-demand y una sola vez. Al terminar la carga se re-sincroniza el SEO para
+// tomar el theme-color que declare la hoja.
 const TEMPLATE_CSS = {
-  raiz: () => import('../assets/store-raiz.css'),
-  trama: () => import('../assets/store-trama.css'),
-  circuito: () => import('../assets/store-circuito.css')
+  raiz:      () => import('../assets/store-raiz.css'),
+  alimentos: () => import('../assets/store-alimentos.css'),
+  trama:     () => import('../assets/store-trama.css'),
+  boutique:  () => import('../assets/store-boutique.css'),
+  circuito:  () => import('../assets/store-circuito.css'),
+  seguridad: () => import('../assets/store-seguridad.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
@@ -213,8 +222,12 @@ const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || v
 // Interruptor de noche: lo habilita el negocio (theme_toggle). Payloads
 // viejos sin el campo conservan la regla anterior (sin diseño avanzado el
 // visitante ya podía alternarlo).
+// Los diseños avanzados (circuito/seguridad) son oscuros por defecto: ahí el
+// interruptor depende del switch "Modo noche" del panel (theme_toggle=true).
+// En los diseños base se mantiene visible siempre (comportamiento histórico);
+// con theme_toggle explícito en true también aparece en cualquier diseño.
 const showThemeToggle = computed(() => status.value === 'success'
-  && (custom.value.theme_toggle ?? !hasDesignAdvanced.value))
+  && (Boolean(custom.value.theme_toggle) || !hasDesignAdvanced.value))
 function togglePageTheme() {
   visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
   try { localStorage.setItem(`davent:store-theme:${slug.value}`, visitorTheme.value) } catch { /* modo privado */ }

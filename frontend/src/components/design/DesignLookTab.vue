@@ -292,9 +292,10 @@ const stepSum = computed(() => ({
   style: `${tplLabel.value} · ${currentCover.value ? 'con portada' : 'sin portada'}`
 }))
 
-// Los 3 únicos estilos del catálogo: una familia por diseño (Raíz, Trama y
-// Circuito). Cada tarjeta es la miniatura real del estilo y se elige con un
-// click: nada de selects de categoría + estilo que duplicaban el camino.
+// Los 6 estilos del catálogo: una familia por diseño (Raíz, Alimentos, Trama,
+// Boutique, Circuito y Seguridad). Cada opción del selector lleva su rubro y
+// la miniatura real del estilo se ve al lado; se elige al instante (el borrador
+// viaja por `studio:update`). `allowedTemplates` gatea los de otro plan.
 const storeTemplates = STORE_TEMPLATES
 const templateFamilies = STORE_TEMPLATE_FAMILIES
 const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
@@ -735,7 +736,7 @@ onBeforeUnmount(dropLocalLogo)
                 <div class="dl-style-sel">
                   <select id="design-style" class="select" :value="form.template" aria-describedby="design-style-help" @change="onStylePick">
                     <option v-for="f in templateFamilies" :key="f.key" :value="f.templates[0]" :disabled="!familyAllowed(f)">
-                      {{ storeTemplates[f.templates[0]]?.label }}
+                      {{ storeTemplates[f.templates[0]]?.label }} · {{ f.caption }}
                     </option>
                   </select>
                   <span class="dl-style-meta">
@@ -744,7 +745,7 @@ onBeforeUnmount(dropLocalLogo)
                   </span>
                 </div>
               </div>
-              <p id="design-style-help" class="hint">Sólo hay tres estilos. Cambia la estructura de tu portada sin perder contenido y se ve al instante en la vista previa.</p>
+              <p id="design-style-help" class="hint">Seis diseños, uno por rubro. Cambia la estructura de tu portada sin perder contenido y se ve al instante en la vista previa.</p>
             </div>
             <div v-if="!advanced" class="dl-lock">
               <AppIcon name="lock" :size="16" aria-hidden="true" />

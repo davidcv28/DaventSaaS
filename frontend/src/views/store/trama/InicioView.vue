@@ -1,11 +1,17 @@
 <script setup>
 // Inicio del diseño TRAMA (indumentaria / moda).
-// Composición FIJA de 12 secciones (spec §7.1): barra promo, hero partido,
-// marquee de acento, categorías, nueva temporada, lookbook, beneficios,
-// looks del mes, FAQ, banda CTA y contacto (el header/footer/barra móvil son
-// el chrome compartido, re-skineado desde store-trama.css). El orden lo pone
-// esta vista — layout_config se ignora — y cada pieza se auto-oculta sin
-// contenido para no dejar huecos en una tienda vacía.
+// Portada GENERATIVA: monta las secciones de useLayout('landing') en el orden
+// efectivo (layout canónico ∪ layout_config) respetando on/off, variante y
+// props de cada bloque; el default es EXACTAMENTE la composición editorial de
+// siempre (barra promo, hero partido, marquee de acento, categorías, nueva
+// temporada, lookbook, beneficios, looks del mes, FAQ, banda CTA y contacto).
+// Las piezas firma (Tr*) se montan con un wrapper que no les pasa `block`: su
+// composición ES la firma y no tienen variantes; los ids compartidos usan los
+// Blk* (que la piel de trama ya eskinaba). El chrome es el compartido,
+// re-skineado desde store-trama.css. Cada sección se auto-oculta sin datos.
+import { computed } from 'vue'
+import { useLayout } from '../../../composables/useLayout.js'
+import { firma, landingExtras } from '../../../templates/_shared.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
 import BlkGallery from '../../../components/store/blocks/BlkGallery.vue'
@@ -17,20 +23,28 @@ import TrMarquee from './TrMarquee.vue'
 import TrCategories from './TrCategories.vue'
 import TrFeatured from './TrFeatured.vue'
 import TrLookbook from './TrLookbook.vue'
+
+const MAP = {
+  ...landingExtras,
+  announcements: BlkAnnouncements,
+  hero: firma(TrHero),
+  highlights: firma(TrMarquee),
+  categories: firma(TrCategories),
+  featured: firma(TrFeatured),
+  about: firma(TrLookbook),
+  benefits: BlkBenefits,
+  gallery: BlkGallery,
+  faq: BlkFaq,
+  cta: BlkCta,
+  contact: BlkContact
+}
+
+const { blocks } = useLayout('landing')
+const visible = computed(() => blocks.value.filter((b) => b.enabled !== false && MAP[b.id]))
 </script>
 
 <template>
   <div class="sp-page-root tr-home">
-    <BlkAnnouncements :block="{ id: 'announcements', variant: 'static' }" />
-    <TrHero />
-    <TrMarquee />
-    <TrCategories />
-    <TrFeatured />
-    <TrLookbook />
-    <BlkBenefits :block="{ id: 'benefits', variant: 'cards' }" />
-    <BlkGallery :block="{ id: 'gallery', variant: 'grid', props: { title: 'Looks del mes' } }" />
-    <BlkFaq :block="{ id: 'faq', variant: 'accordion' }" />
-    <BlkCta :block="{ id: 'cta', variant: 'band' }" />
-    <BlkContact :block="{ id: 'contact', variant: 'card' }" />
+    <component v-for="b in visible" :key="b.id" :is="MAP[b.id]" :block="b" />
   </div>
 </template>

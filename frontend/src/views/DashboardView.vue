@@ -1306,7 +1306,7 @@ watch(() => designForm.name_font, (f) => ensureStoreFont(f))
 let lastServerDesign = null
 let acceptServerDesign = false
 // Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
-const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', ...Object.keys(IDENTITY_DEFAULTS)]
+const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', ...Object.keys(IDENTITY_DEFAULTS)]
 const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
@@ -1791,6 +1791,7 @@ async function saveDesign(asDraft = false, quiet = false) {
     contact_email: designForm.contact_email.trim(),
     show_contact: Boolean(designForm.show_contact),
     theme: designForm.theme,
+    theme_toggle: Boolean(designForm.theme_toggle),
     whatsapp: normalizeWhatsapp(designForm.whatsapp),
     instagram: normalizeInstagram(designForm.instagram),
     tiktok: normalizeTiktok(designForm.tiktok),
@@ -4341,6 +4342,17 @@ async function changePassword() {
                 </label>
               </div>
               <p class="hint">{{ siteTemplatesHint }} Se guarda al instante.</p>
+            </div>
+            <div class="field">
+              <label id="design-theme-toggle-label"><AppIcon name="moon" :size="14" class="label-icon" aria-hidden="true" />Modo noche en tu web</label>
+              <label class="check-item">
+                <input v-model="designForm.theme_toggle" type="checkbox" aria-labelledby="design-theme-toggle-label" />
+                <span class="check-text">
+                  <strong>Mostrar botón claro/oscuro al visitante</strong>
+                  <small>Un botón sol/luna en la barra superior para alternar el tema. Circuito y Seguridad son oscuros por defecto: con esto el visitante puede pasarlos a claro.</small>
+                </span>
+              </label>
+              <p class="hint">Se guarda con el diseño.</p>
             </div>
             <div v-if="designSiteTemplates.includes('landing')" class="field">
               <label id="design-sections-label">Secciones de tu web</label>

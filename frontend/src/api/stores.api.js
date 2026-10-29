@@ -431,6 +431,11 @@ export const CUSTOMIZATION_DEFAULTS = {
   contact_email: '',
   show_contact: true,
   theme: 'light',
+  // Interruptor sol/luna para el visitante en la web pública (lo enciende el
+  // dueño desde "Cómo se ve" → Qué mostrar). Los diseños avanzados
+  // (circuito/seguridad) son oscuros por defecto: sin esto el visitante no
+  // puede pasar a claro.
+  theme_toggle: false,
   accent: 'indigo',
   accent_custom: '',
   logo_scale: 'm',
@@ -680,28 +685,35 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES)
-// — catálogo de 3, uno por nivel, organizado por RUBRO (no por "estilo de
+// — catálogo de 6, dos por nivel, organizado por RUBRO (no por "estilo de
 // autor"). `tier` marca qué beneficio lo habilita:
-//   'base'     -> todo plan con has_customization (Básico)
-//   'plus'     -> has_design_plus (Estándar y Premium)
-//   'advanced' -> has_design_advanced (Premium)
+//   'base'     -> todo plan con has_customization (Básico): raiz, alimentos
+//   'plus'     -> has_design_plus (Estándar y Premium): trama, boutique
+//   'advanced' -> has_design_advanced (Premium): circuito, seguridad
 // El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
 // 'raiz' (fallback global) si el guardado deja de estar permitido (baja de
 // plan o una plantilla retirada). Todo diseño retirado se remapea por
 // afinidad de rubro al más cercano del catálogo (STORE_TEMPLATE_RETIRED_MAP).
+// El orden de las claves es el del catálogo (lo usan allowedTemplatesFor y
+// el selector del dashboard): mantiene base → plus → advanced.
 export const STORE_TEMPLATES = {
   raiz:     { label: 'Raíz',     rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
+  alimentos:{ label: 'Alimentos', rubro: 'alimentos',   tier: 'base',     defaultAccent: '#C8321D', desc: 'Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».' },
   trama:    { label: 'Trama',    rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#E4472B', desc: 'Editorial de moda: blanco y tinta, titulares condensados, marquee de acento y lookbook.' },
+  boutique: { label: 'Boutique', rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
   circuito: { label: 'Circuito', rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
+  seguridad:{ label: 'Seguridad',rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
 }
 
 // Familias de diseño para el selector del dashboard: una por RUBRO, con los
-// diseños de ese rubro (el sistema queda listo para sumar comida, bebida,
-// etc. sin tocar el render de estos 3).
+// diseños de ese rubro. El orden espeja el del catálogo (STORE_TEMPLATES).
 export const STORE_TEMPLATE_FAMILIES = [
-  { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios', templates: ['raiz'] },
-  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',   templates: ['trama'] },
-  { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',  templates: ['circuito'] },
+  { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
+  { key: 'alimentos',    label: 'Alimentos',    caption: 'Gastronomía y almacén',   templates: ['alimentos'] },
+  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',       templates: ['trama'] },
+  { key: 'boutique',     label: 'Boutique',     caption: 'Moda premium y deco',     templates: ['boutique'] },
+  { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',      templates: ['circuito'] },
+  { key: 'seguridad',    label: 'Seguridad',    caption: 'Seguridad y bomberos',    templates: ['seguridad'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
@@ -712,7 +724,7 @@ export const STORE_TEMPLATE_RETIRED_MAP = {
   classic: 'raiz', duo: 'raiz', minimal: 'raiz', calma: 'raiz',
   mercado: 'raiz', studio: 'raiz', arena: 'raiz', proceso: 'raiz',
   carta: 'raiz', terra: 'raiz', bloque: 'raiz', shop: 'raiz',
-  atelier: 'trama', lookbook: 'trama', boutique: 'trama', signature: 'trama',
+  atelier: 'trama', lookbook: 'trama', signature: 'trama',
   cobre: 'trama', vitrina: 'trama', street: 'trama', riso: 'trama',
   promo: 'trama', aurora: 'trama',
   perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',
@@ -800,7 +812,12 @@ export const STORE_FONTS = {
   'dm-serif-display': { label: 'DM Serif Display', family: "'DM Serif Display', Georgia, serif",   google: 'DM+Serif+Display' },
   'libre-baskerville':{ label: 'Libre Baskerville', family: "'Libre Baskerville', Georgia, serif",  google: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400' },
   'outfit':           { label: 'Outfit',           family: "'Outfit', system-ui, sans-serif",      google: 'Outfit:wght@300..900' },
-  'plus-jakarta-sans':{ label: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', system-ui, sans-serif", google: 'Plus+Jakarta+Sans:wght@300..800' }
+  'plus-jakarta-sans':{ label: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', system-ui, sans-serif", google: 'Plus+Jakarta+Sans:wght@300..800' },
+  // Fuentes propias de los diseños nuevos (boutique/alimentos/seguridad):
+  // el layout las carga con ensureStoreFont desde templateFonts(id).
+  'jost':             { label: 'Jost',             family: "'Jost', system-ui, sans-serif",        google: 'Jost:wght@400..700' },
+  'barlow':           { label: 'Barlow',           family: "'Barlow', system-ui, sans-serif",      google: 'Barlow:wght@400;500;600;700;800' },
+  'barlow-condensed': { label: 'Barlow Condensed', family: "'Barlow Condensed', 'Arial Narrow', sans-serif", google: 'Barlow+Condensed:wght@400;500;600;700;800' }
 }
 
 export function storeFontFamily(nameFont) {

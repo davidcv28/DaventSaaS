@@ -3,31 +3,39 @@
 //   - fonts:    fuentes on-demand del diseño (las carga el layout);
 //   - surfaces: landing / catalog / product (la página Servicios cuelga de
 //               la misma carpeta del diseño);
-//   - blocks:   whitelist de bloques por superficie. Los 3 diseños son
-//               composiciones FIJAS: el orden canónico lo pone la vista, no
-//               layout_config (que se sigue aceptando por compatibilidad).
+//   - blocks:   whitelist de bloques por superficie y, en landing, orden
+//               canónico por defecto de la portada (la vista lo monta de
+//               forma generativa con useLayout; ver abajo).
 //
-// Catálogo cerrado de 3 diseños, uno por rubro y nivel de plan:
-//   raiz     (base)     generalista / retail / servicios
-//   trama    (plus)     indumentaria / moda
-//   circuito (advanced) tecnología / electrónica
+// Catálogo cerrado de 6 diseños, dos por rubro y nivel de plan:
+//   raiz      (base)     generalista / retail / servicios
+//   alimentos (base)     gastronomía / almacén / panadería
+//   trama     (plus)     indumentaria / moda
+//   boutique  (plus)     moda premium / deco / joyería
+//   circuito  (advanced) tecnología / electrónica
+//   seguridad (advanced) seguridad / bomberos / industrial
 // El fallback global es 'raiz'. Todo id retirado se remapea con
 // STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
 //
-// resolveLayout() se conserva para el Studio de bloques (compatibilidad):
-// mezcla el layout por defecto con customization.layout_config, descarta ids
-// desconocidos y fuerza contacto al final — el render público de estos 3
-// diseños NO lo usa.
+// El render de la portada de TODOS los diseños es generativo: cada
+// InicioView monta sus secciones desde useLayout('landing') (layout por
+// defecto de la plantilla ∪ layout_config guardado), respetando orden,
+// on/off, variante y props de cada bloque. La lista `blocks.landing` de
+// cada Template Definition es el orden canónico por defecto y la
+// whitelist a la vez. resolveLayout() fuerza 'contact' al final.
 
 import { defineAsyncComponent } from 'vue'
 import { blockSpec } from './blocks.js'
 import { SECTION_ORDER_KEYS, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
 
-import raiz     from './raiz/index.js'
-import trama    from './trama/index.js'
+import raiz      from './raiz/index.js'
+import alimentos from './alimentos/index.js'
+import trama     from './trama/index.js'
+import boutique  from './boutique/index.js'
 import circuito from './circuito/index.js'
+import seguridad from './seguridad/index.js'
 
-export const TEMPLATE_DEFS = { raiz, trama, circuito }
+export const TEMPLATE_DEFS = { raiz, alimentos, trama, boutique, circuito, seguridad }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 
@@ -60,17 +68,27 @@ export function templateOf(value) {
 }
 
 // Layout por defecto de una superficie: la lista declarativa de la plantilla.
+// Cada entrada es el id del bloque o un objeto {id, variant?, props?} que fija
+// la composición firma del diseño (p.ej. la cinta de anuncios 'static' de
+// trama) — así el default es idéntico al render fijo anterior.
+function normalizeBlockEntry(raw) {
+  if (typeof raw === 'string') return { id: raw }
+  if (!raw || typeof raw !== 'object' || !raw.id) return null
+  return { ...raw, id: String(raw.id) }
+}
+
 export function defaultLayout(id, surface) {
   const def = templateDef(templateOf(id))
-  let supported = def.blocks?.[surface] || []
+  let entries = (def.blocks?.[surface] || []).map(normalizeBlockEntry).filter(Boolean)
   if (surface === 'landing' && def.usesSectionOrder) {
-    const ordered = SECTION_ORDER_KEYS.filter((k) => supported.includes(k))
-    const fixed = supported.filter((k) => !SECTION_ORDER_KEYS.includes(k))
-    const head = fixed.filter((k) => ['hero', 'categories', 'highlights', 'featured', 'announcements'].includes(k))
-    const tail = fixed.filter((k) => !head.includes(k) && k !== 'contact')
-    supported = [...head, ...ordered, ...tail, ...(supported.includes('contact') ? ['contact'] : [])]
+    const ordered = SECTION_ORDER_KEYS.filter((k) => entries.some((e) => e.id === k))
+    const fixed = entries.filter((e) => !SECTION_ORDER_KEYS.includes(e.id))
+    const head = fixed.filter((e) => ['hero', 'categories', 'highlights', 'featured', 'announcements'].includes(e.id))
+    const tail = fixed.filter((e) => !head.includes(e) && e.id !== 'contact')
+    const contact = entries.filter((e) => e.id === 'contact')
+    entries = [...head, ...ordered.map((k) => entries.find((e) => e.id === k)), ...tail, ...contact]
   }
-  return supported.map((blockId, i) => ({ id: blockId, enabled: true, order: i }))
+  return entries.map((entry, i) => ({ enabled: true, ...entry, order: i }))
 }
 
 // Layout efectivo (Studio): default ∪ config guardada.
@@ -87,8 +105,10 @@ export function resolveLayout(id, surface, layoutConfig) {
     savedById.set(blockId, {
       ...known,
       enabled: raw.enabled !== false,
-      variant: typeof raw.variant === 'string' && raw.variant ? raw.variant : undefined,
-      props: raw.props && typeof raw.props === 'object' ? raw.props : undefined
+      // Si la config no trae variante/props se conserva la firma del default
+      // (p.ej. la cinta 'static' de trama): la IA solo pisa lo que elige.
+      ...(typeof raw.variant === 'string' && raw.variant ? { variant: raw.variant } : {}),
+      ...(raw.props && typeof raw.props === 'object' ? { props: raw.props } : {})
     })
   }
   const orderedSaved = [...savedById.values()].sort((a, b) => {

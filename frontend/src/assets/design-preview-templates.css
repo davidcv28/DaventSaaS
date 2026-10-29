@@ -1,0 +1,360 @@
+/* ==========================================================================
+   VISTA PREVIA DEL DASHBOARD — LOOK REAL POR DISEÑO
+   `.design-preview[data-store-template='<id>']` (DesignPreview.vue emite el
+   template y el modo claro/oscuro en el frame).
+
+   Hoy sólo CIRCUITO: la preview genérica de styles.css (banda de acento +
+   hero centrado) no se parecía a la web real del diseño. Acá se reconstruye
+   con las clases dp-* existentes: barra técnica mono, hero partido con
+   retícula de circuito + glow del acento, badge HUD, Space Grotesk, botones
+   biselados y catálogo como panel técnico.
+
+   Todo va scopeado a `[data-store-template='circuito']`: los otros diseños
+   conservan su preview intacta. El acento sale de `--store-accent` (lo inyecta
+   `storeThemeVars()` en el frame), nunca de un color fijo.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Variantes de modo: claro (por defecto) y oscuro.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] {
+  --dpc-bg: #F2F6FB;
+  --dpc-surface: #FFFFFF;
+  --dpc-surface-2: #E8EFF8;
+  --dpc-line: #C9D7E7;
+  --dpc-ink: #0B1220;
+  --dpc-ink-2: #2C3B4E;
+  --dpc-muted: #52657C;
+  --dpc-accent: var(--store-accent, #4F46E5);
+  --dpc-accent-text: color-mix(in srgb, var(--dpc-accent) 62%, #071018);
+  --dpc-soft: color-mix(in srgb, var(--dpc-accent) 12%, transparent);
+  --dpc-solid: var(--dpc-accent-text);
+  --dpc-on-solid: #F7FAFF;
+  --dpc-nav: #FFFFFF;
+  --dpc-nav-ink: #0B1220;
+  --dpc-nav-muted: #52657C;
+  --dpc-nav-line: color-mix(in srgb, var(--dpc-accent) 32%, #C9D7E7);
+  --dpc-hero-1: #F7FAFE;
+  --dpc-hero-2: #E9F0F9;
+  --dpc-grid: color-mix(in srgb, var(--dpc-line) 78%, transparent);
+  --dpc-glow: color-mix(in srgb, var(--dpc-accent) 26%, transparent);
+  --dpc-hero-ink: var(--dpc-ink);
+  --dpc-hero-ink-2: var(--dpc-ink-2);
+  --dpc-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --dpc-display: 'Space Grotesk', system-ui, sans-serif;
+
+  border-color: var(--dpc-line);
+  background: var(--dpc-bg);
+  color: var(--dpc-ink);
+}
+
+.design-preview[data-store-template='circuito'][data-store-theme='dark'] {
+  --dpc-bg: #0A0E14;
+  --dpc-surface: #111823;
+  --dpc-surface-2: #0E141D;
+  --dpc-line: #1F2933;
+  --dpc-ink: #E6EDF3;
+  --dpc-ink-2: #B6C2CF;
+  --dpc-muted: #8FA1B3;
+  --dpc-accent-text: color-mix(in srgb, var(--dpc-accent) 72%, #FFFFFF);
+  --dpc-soft: color-mix(in srgb, var(--dpc-accent) 16%, transparent);
+  --dpc-solid: color-mix(in srgb, var(--dpc-accent) 72%, #FFFFFF);
+  --dpc-on-solid: #04141A;
+  --dpc-nav: #05090F;
+  --dpc-nav-ink: #E6EDF3;
+  --dpc-nav-muted: #93A5B7;
+  --dpc-nav-line: color-mix(in srgb, var(--dpc-accent) 28%, #1F2933);
+  --dpc-hero-1: #0A0E14;
+  --dpc-hero-2: #0D131C;
+  --dpc-grid: color-mix(in srgb, var(--dpc-line) 80%, transparent);
+  --dpc-glow: color-mix(in srgb, var(--dpc-accent) 34%, transparent);
+  --dpc-hero-ink: #E6EDF3;
+  --dpc-hero-ink-2: #B6C2CF;
+}
+
+/* --------------------------------------------------------------------------
+   BARRA SUPERIOR: técnica, mono, borde inferior de acento.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] .dp-nav {
+  background: var(--dpc-nav);
+  border-bottom: 1px solid var(--dpc-nav-line);
+  padding: 9px 12px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-brand {
+  gap: 7px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-mono {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--dpc-solid);
+  color: var(--dpc-on-solid);
+  font-family: var(--dpc-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.design-preview[data-store-template='circuito'] .dp-nav-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-name {
+  font-family: var(--dpc-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--dpc-nav-ink);
+}
+.design-preview[data-store-template='circuito'] .dp-nav-links {
+  gap: 1px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-item {
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-family: var(--dpc-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dpc-nav-muted);
+  transition: background-color .15s ease, color .15s ease;
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='circuito'] .dp-nav-item:hover {
+    background: var(--dpc-soft);
+    color: var(--dpc-accent-text);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   HERO: partido a la izquierda, retícula de circuito a la derecha, glow del
+   acento y un nodo luminoso. Los velos son pseudo-elementos para no pisar la
+   portada del dueño (.dp-hero.has-cover).
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] .dp-hero {
+  position: relative;
+  isolation: isolate;
+  justify-items: start;
+  text-align: left;
+  gap: 7px;
+  padding: 24px 16px 22px;
+  overflow: hidden;
+  color: var(--dpc-hero-ink);
+  background:
+    radial-gradient(240px 150px at 88% -18%, var(--dpc-glow), transparent 66%),
+    linear-gradient(180deg, var(--dpc-hero-1), var(--dpc-hero-2));
+}
+/* Retícula técnica: sólo en la mitad derecha, nunca bajo el texto. */
+.design-preview[data-store-template='circuito'] .dp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 50%;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--dpc-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--dpc-grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(78% 82% at 62% 34%, #000, transparent 76%);
+  mask-image: radial-gradient(78% 82% at 62% 34%, #000, transparent 76%);
+  pointer-events: none;
+}
+/* Traza + nodo del acento. */
+.design-preview[data-store-template='circuito'] .dp-hero::after {
+  content: '';
+  position: absolute;
+  top: 16%;
+  right: 7%;
+  z-index: 0;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--dpc-accent) 55%, transparent) 0%, transparent 68%);
+  opacity: .75;
+  pointer-events: none;
+}
+.design-preview[data-store-template='circuito'] .dp-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Portada del dueño: se respeta la imagen y se le suma la retícula/glow. */
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #05090F 62%, transparent), color-mix(in srgb, #05090F 82%, transparent)),
+    var(--dp-cover) center / cover no-repeat;
+  color: #F5F9FF;
+}
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-desc {
+  color: #F5F9FF;
+}
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-btn.ghost {
+  color: #F5F9FF;
+}
+
+.design-preview[data-store-template='circuito'] .dp-mono {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--dpc-accent) 45%, var(--dpc-line));
+  background: var(--dpc-surface-2);
+  color: var(--dpc-accent-text);
+  font-family: var(--dpc-display);
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dpc-accent) 10%, transparent);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.design-preview[data-store-template='circuito'] .dp-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--dpc-surface);
+}
+
+/* Badge HUD: píldora rectangular con corte biselado y LED del acento. */
+.design-preview[data-store-template='circuito'] .dp-badge {
+  position: relative;
+  padding: 3px 9px 3px 16px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--dpc-accent) 48%, transparent);
+  background: var(--dpc-soft);
+  color: var(--dpc-accent-text);
+  font-family: var(--dpc-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-badge {
+  background: color-mix(in srgb, #05090F 55%, transparent);
+}
+.design-preview[data-store-template='circuito'] .dp-badge::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.design-preview[data-store-template='circuito'] .dp-title {
+  font-family: var(--dpc-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1.04;
+  color: var(--dpc-hero-ink);
+  text-wrap: balance;
+}
+.design-preview[data-store-template='circuito'] .dp-title.is-name {
+  font-size: clamp(16px, calc(var(--store-name-size, 32px) * .56), 32px);
+}
+.design-preview[data-store-template='circuito'] .dp-desc {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--dpc-hero-ink-2);
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* CTAs biselados, mono, con halo del acento. */
+.design-preview[data-store-template='circuito'] .dp-cta {
+  justify-content: flex-start;
+  gap: 7px;
+  margin-top: 5px;
+}
+.design-preview[data-store-template='circuito'] .dp-btn {
+  padding: 7px 13px;
+  border-radius: 0;
+  background: var(--dpc-solid);
+  color: var(--dpc-on-solid);
+  font-family: var(--dpc-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dpc-accent) 40%, transparent);
+  transition: translate .15s ease, filter .15s ease;
+}
+.design-preview[data-store-template='circuito'] .dp-btn.ghost {
+  background: transparent;
+  color: var(--dpc-hero-ink);
+  box-shadow: inset 0 0 0 1px var(--dpc-line);
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='circuito'] .dp-btn:hover {
+    translate: 0 -1px;
+    filter: brightness(1.06);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   CATÁLOGO: panel técnico con cabecera mono y carrusel enmarcado.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] .dp-catalog {
+  margin: 0 12px 12px;
+  border: 1px solid var(--dpc-line);
+  border-radius: 5px;
+  background: var(--dpc-surface);
+  overflow: hidden;
+  box-shadow: 0 12px 26px -24px rgba(11, 18, 32, .5);
+}
+.design-preview[data-store-template='circuito'] .dp-section-label {
+  margin: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dpc-line);
+  background: var(--dpc-surface-2);
+  color: var(--dpc-accent-text);
+  font-family: var(--dpc-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+.design-preview[data-store-template='circuito'] .dp-section-label::before {
+  content: '// ';
+  opacity: .7;
+}
+.design-preview[data-store-template='circuito'] .dp-carousel {
+  height: 72px;
+  margin: 9px;
+  border: 1px solid var(--dpc-line);
+  border-radius: 3px;
+  background: var(--dpc-surface-2);
+  box-shadow: inset 0 0 0 3px var(--dpc-surface);
+}
+.design-preview[data-store-template='circuito'] .dp-map {
+  margin: 0 12px 12px;
+  border: 1px dashed color-mix(in srgb, var(--dpc-accent) 40%, var(--dpc-line));
+  border-radius: 4px;
+  background: var(--dpc-surface-2);
+  color: var(--dpc-muted);
+  font-family: var(--dpc-mono);
+  font-size: 9.5px;
+  letter-spacing: .04em;
+}
+.design-preview[data-store-template='circuito'] .dp-map .icon {
+  color: var(--dpc-accent-text);
+}
+
+/* --------------------------------------------------------------------------
+   MOVIMIENTO REDUCIDO
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .design-preview[data-store-template='circuito'] .dp-btn,
+  .design-preview[data-store-template='circuito'] .dp-nav-item {
+    transition: none;
+  }
+  @media (hover: hover) {
+    .design-preview[data-store-template='circuito'] .dp-btn:hover {
+      translate: 0 0;
+    }
+  }
+}
