@@ -117,37 +117,46 @@ class StoreCustomization(models.Model):
         ('libre-baskerville',    'Libre Baskerville'),
         ('outfit',               'Outfit'),
         ('plus-jakarta-sans',    'Plus Jakarta Sans'),
+        #Fuentes de los diseños nuevos (alimentos/boutique/seguridad).
+        ('jost',                 'Jost'),
+        ('barlow',               'Barlow'),
+        ('barlow-condensed',     'Barlow Condensed'),
     ]
-    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 3
-    #diseños, uno por nivel, organizados por RUBRO (no por "estilo de
-    #autor"): el base va con cualquier has_customization, TEMPLATE_PLUS con
-    #has_design_plus (Estándar) y TEMPLATE_ADVANCED con has_design_advanced
-    #(Premium). El viewset descarta del payload un diseño fuera del nivel
-    #del plan y la web fuerza 'raiz' (fallback global) si el guardado deja
-    #de estar permitido. Toda la identidad visual vive en el CSS del diseño
-    #(store-raiz.css / store-trama.css / store-circuito.css).
+    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 6
+    #diseños, dos por nivel, organizados por RUBRO (no por "estilo de
+    #autor"): los base van con cualquier has_customization, TEMPLATE_PLUS
+    #con has_design_plus (Estándar) y TEMPLATE_ADVANCED con
+    #has_design_advanced (Premium). El viewset descarta del payload un
+    #diseño fuera del nivel del plan y la web fuerza 'raiz' (fallback
+    #global) si el guardado deja de estar permitido. Toda la identidad
+    #visual vive en el CSS del diseño (store-<id>.css).
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
-    TEMPLATE_BASE               =   ('raiz',)
-    TEMPLATE_PLUS               =   ('trama',)
-    TEMPLATE_ADVANCED           =   ('circuito',)
-    #El motor "Diseñar con IA" ya no tiene patrones exclusivos: propone
-    #solo los 3 diseños del catálogo (ver ai_design_recipes).
+    TEMPLATE_BASE               =   ('raiz', 'alimentos')
+    TEMPLATE_PLUS               =   ('trama', 'boutique')
+    TEMPLATE_ADVANCED           =   ('circuito', 'seguridad')
+    #El motor "Diseñar con IA" no tiene patrones exclusivos: propone solo
+    #los 6 diseños del catálogo (ver ai_design_recipes).
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
         ('raiz',      'Raíz'),
+        ('alimentos', 'Alimentos'),
         ('trama',     'Trama'),
+        ('boutique',  'Boutique'),
         ('circuito',  'Circuito'),
+        ('seguridad', 'Seguridad'),
     ]
     #Mapa de retirada -> diseño nuevo por afinidad de rubro (mig. 0053):
     #claros/neutros -> 'raiz', editoriales/moda -> 'trama', oscuros/
     #técnicos -> 'circuito'. Ninguna tienda existente pierde su web.
+    #'boutique' queda FUERA del mapa: desde el rediseño es un diseño del
+    #catálogo (plus), no un id retirado.
     TEMPLATE_RETIRED_MAP        =   {
         'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
         'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz',
         'proceso': 'raiz', 'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz',
         'shop': 'raiz',
-        'atelier': 'trama', 'lookbook': 'trama', 'boutique': 'trama',
+        'atelier': 'trama', 'lookbook': 'trama',
         'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
         'street': 'trama', 'riso': 'trama', 'promo': 'trama',
         'aurora': 'trama',

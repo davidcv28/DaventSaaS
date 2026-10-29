@@ -113,6 +113,13 @@ RUBRO_COPY                  =   {
         'cta_label': 'Ver obras', 'cta_title': 'Conocé las piezas disponibles',
         'cta_text': 'Escribinos por la pieza que te gustó: coordinamos entrega y envío.',
     },
+    'seguridad': {
+        'what': 'equipos y servicios', 'place': 'nuestro local',
+        'headlines': ('{name}: seguridad que responde{place}', 'Protegé lo que te importa{place}', '{name}{place}'),
+        'service_line': 'Ofrecemos {what} de seguridad y prevención{services}.',
+        'cta_label': 'Pedir asesoramiento', 'cta_title': 'Consultanos por tu seguridad',
+        'cta_text': 'Escribinos y te asesoramos sobre extintores, recargas, EPP y certificaciones.',
+    },
     'otro': {
         'what': 'servicios', 'place': 'nuestro negocio',
         'headlines': ('{name}: lo que hacemos, bien hecho{place}', 'Conocé lo que ofrecemos{place}', '{name}{place}'),
@@ -272,6 +279,7 @@ DRAFT_MISSIONS              =   {
     'turismo':      'Queremos que disfrutes el viaje y no te ocupes de la logística: todo coordinado y explicado antes de salir.',
     'mascotas':     'Queremos que tu mascota esté bien y que vos te vayas tranquilo, con indicaciones claras.',
     'arte':         'Queremos que cada pieza llegue a alguien que la valore: trabajo de autor, hecho de a una.',
+    'seguridad':    'Queremos que estés cubierto: asesoramiento técnico, equipos certificados y respuesta cuando la necesitás.',
     'otro':         'Queremos que sepas qué esperar de nosotros: atención directa, trabajo cuidado y respuestas claras.',
 }
 
@@ -289,6 +297,7 @@ DRAFT_FIRST_FAQ             =   {
     'turismo':      ('¿Cómo reservo una experiencia?', 'Escribinos con las fechas y la cantidad de personas y te pasamos las opciones.'),
     'mascotas':     ('¿Cómo pido un turno?', 'Escribinos por el formulario o por WhatsApp y coordinamos la atención.'),
     'arte':         ('¿Cómo consulto por una pieza?', 'Escribinos por la obra que te gustó y coordinamos la entrega.'),
+    'seguridad':    ('¿Cómo pido un asesoramiento?', 'Contanos qué necesitás proteger por el formulario de la web y te asesoramos sin compromiso.'),
     'otro':         ('¿Cómo hago una consulta?', 'Escribinos por el formulario de contacto de la web y te respondemos a la brevedad.'),
 }
 

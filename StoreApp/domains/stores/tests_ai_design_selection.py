@@ -16,9 +16,9 @@ from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services import ai_design_skins as SKIN
 from StoreApp.domains.stores.services import ai_design_typography as TYPE
 
-PLAN_BASIC      =   ('raiz',)
-PLAN_PLUS       =   ('raiz', 'trama')
-PLAN_ADVANCED   =   ('raiz', 'trama', 'circuito')
+PLAN_BASIC      =   ('raiz', 'alimentos')
+PLAN_PLUS       =   ('raiz', 'alimentos', 'trama', 'boutique')
+PLAN_ADVANCED   =   ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad')
 PLAN_AI         =   PLAN_ADVANCED
 
 FACT_KEYS       =   ('products', 'images', 'categories', 'brands', 'gallery', 'carousel',
@@ -98,6 +98,41 @@ class CatalogoCerrado(unittest.TestCase):
 
     def test_type_pairs_catalog_is_not_empty(self):
         self.assertGreater(len(TYPE.TYPE_PAIRS), 0)
+
+    def test_public_catalog_is_the_six_designs(self):
+        self.assertEqual(
+            R.PUBLIC_TEMPLATES,
+            ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'),
+        )
+        self.assertEqual(len(R.PUBLIC_TEMPLATES), 6)
+        self.assertNotIn('boutique', R.PUBLIC_TEMPLATE_MAP)
+
+    def test_retired_ids_never_come_back_to_the_engine(self):
+        #Ningún id retirado puede reaparecer como template propuesto: la
+        #matriz y las recetas sólo hablan el catálogo público.
+        retired = set(R.PUBLIC_TEMPLATE_MAP)
+        for rubro in R.RUBROS:
+            for signature in R.RUBRO_STYLES[rubro]:
+                self.assertIn(signature['template'], R.PUBLIC_TEMPLATES, rubro)
+                self.assertNotIn(signature['template'], retired, rubro)
+        for rubro, recipe in R.RUBROS.items():
+            for template in recipe['templates']:
+                self.assertIn(template, R.PUBLIC_TEMPLATES, rubro)
+
+    def test_new_designs_are_the_signature_of_their_rubro(self):
+        #Cada diseño nuevo abre la matriz del rubro al que se lo asignó.
+        expected = {
+            'gastronomia': 'alimentos',
+            'indumentaria': 'boutique',
+            'belleza': 'boutique',
+            'arte': 'boutique',
+            'construccion': 'seguridad',
+            'seguridad': 'seguridad',
+        }
+        for rubro, template in expected.items():
+            templates = [signature['template'] for signature in R.RUBRO_STYLES[rubro]]
+            self.assertIn(template, templates, rubro)
+        self.assertEqual(R.RUBRO_STYLES['comercio'][0]['template'], 'raiz')
 
 
 #=========================================
@@ -269,9 +304,9 @@ class StyleCandidatesPositiveTests(unittest.TestCase):
         for candidate in self.candidates:
             self.assertEqual(candidate['source'], R.style_source_of(candidate['template']))
 
-    def test_the_three_designs_compete(self):
-        #Sin patrones exclusivos de IA: el motor compite solo con los 3
-        #diseños del catálogo (uno por rubro).
+    def test_the_six_designs_compete(self):
+        #Sin patrones exclusivos de IA: el motor compite solo con los 6
+        #diseños del catálogo público.
         candidates  =   A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, 0)
         templates   =   A.seen_templates(candidates)
         self.assertEqual(templates, set(PLAN_ADVANCED))

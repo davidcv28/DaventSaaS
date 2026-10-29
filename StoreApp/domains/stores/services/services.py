@@ -76,11 +76,13 @@ def profile_has_benefit(profile, code):
 #=========================================
 def allowed_templates_of(profile):
     """
-    Diseños de la web disponibles según el plan: TEMPLATE_BASE ('raiz') va
-    con cualquier has_customization, has_design_plus suma 'trama' y
-    has_design_advanced suma 'circuito'. Sin acceso solo 'raiz' — la web
-    pública lo usa como whitelist para forzar el fallback si el dueño baja
-    de plan. El motor de IA ya no suma patrones propios: propone los 3.
+    Diseños de la web disponibles según el plan: TEMPLATE_BASE
+    ('raiz','alimentos') va con cualquier has_customization,
+    has_design_plus suma TEMPLATE_PLUS ('trama','boutique') y
+    has_design_advanced suma TEMPLATE_ADVANCED ('circuito','seguridad').
+    Sin acceso solo 'raiz' — la web pública lo usa como whitelist para
+    forzar el fallback si el dueño baja de plan. El motor de IA no suma
+    patrones propios: propone los 6 del catálogo.
     """
     benefits        =   plan_benefits_of(profile)
     if not benefits.get('has_customization'):

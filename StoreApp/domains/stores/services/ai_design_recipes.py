@@ -238,17 +238,13 @@ TEMPLATE_GOAL_AFFINITY      =   {
 }
 
 #=========================================
-# DISEÑOS EXCLUSIVOS DE IA
+# DISEÑOS EXCLUSIVOS DE IA (retirados)
 #=========================================
-#Solo viajan en allowed_templates_of cuando el plan tiene has_ai_design
-#(el motor NO hardcodea la whitelist: consulta la del plan). Son dos
-#lenguajes distintos, no dos variantes del mismo:
-#  ai_lumen -> oscuro cinematográfico, vidrio y luz (fotos grandes, aire).
-#  ai_pulse -> editorial cinético, tipografía XL y grilla desplazada.
-#Rediseño de plantillas (fase 1): el motor ya no tiene diseños exclusivos ni
-#retirados. Propone SOLO los 3 diseños por rubro del catálogo (ver el bloque
-#de normalización al final del archivo: las tablas de abajo conservan su
-#historia y se remapean por afinidad al importar).
+#Rediseño generativo (fase 2): el motor ya no tiene diseños exclusivos ni
+#retirados. Propone SOLO los 6 diseños del catálogo público, dos por nivel
+#de plan (ver el bloque de normalización al final del archivo: las tablas
+#de arriba conservan su historia y se remapean por afinidad al importar).
+#El motor NO hardcodea la whitelist: consulta allowed_templates_of(plan).
 AI_TEMPLATES                =   ()
 AI_LOOKS                    =   {}
 LEGACY_TEMPLATES            =   ()
@@ -260,79 +256,85 @@ def style_source_of(template):
     return 'plan'
 
 
-#Matriz de estilos "firma" por rubro (v4): 3 combinaciones por rubro
-#(plantilla + piel + par tipográfico). Garantías:
-#- cada rubro trae al menos un estilo que NO es ai_* (plan o legacy) y al
-#  menos uno legacy;
-#- ninguna tupla (plantilla, piel) se repite entre rubros distintos;
-#- dentro del rubro los 3 pares tipográficos son distintos.
-#El puntaje del motor reordena estos estilos por tono/objetivo/datos: la
-#matriz es el piso de diversidad, no una elección fija.
+#Matriz de estilos "firma" por rubro (v5): 3 combinaciones por rubro
+#(plantilla + piel + par tipográfico) sobre el catálogo público de 6
+#diseños. Garantías:
+#- los 3 diseños nuevos (alimentos/boutique/seguridad) aparecen en la
+#  matriz de su rubro firma;
+#- dentro del rubro los 3 pares tipográficos son distintos y cada par es
+#  compatible con el aire de la piel (test de tipografía);
+#- el motor reordena estos estilos por tono/objetivo/datos: la matriz es
+#  el piso de diversidad, no una elección fija.
 RUBRO_STYLES                =   {
     'comercio': (
-        {'template': 'vitrina',  'skin': 'editorial-ink',   'pair': 'grotesk-clean'},
-        {'template': 'promo',    'skin': 'neon-pulse',      'pair': 'condensed-bold'},
-        {'template': 'ai_pulse', 'skin': 'kinetic-flash',   'pair': 'display-heavy'},
+        {'template': 'raiz',      'skin': 'editorial-ink',   'pair': 'grotesk-clean'},
+        {'template': 'alimentos', 'skin': 'warm-clay',       'pair': 'warm-serif'},
+        {'template': 'trama',     'skin': 'neon-pulse',      'pair': 'condensed-bold'},
     ),
     'gastronomia': (
-        {'template': 'calma',    'skin': 'warm-clay',       'pair': 'warm-serif'},
-        {'template': 'carta',    'skin': 'paper-kraft',     'pair': 'serif-book'},
-        {'template': 'ai_lumen', 'skin': 'cinematic-amber', 'pair': 'serif-editorial'},
+        {'template': 'alimentos', 'skin': 'craft-clay',      'pair': 'warm-serif'},
+        {'template': 'raiz',      'skin': 'warm-ember',      'pair': 'serif-book'},
+        {'template': 'trama',     'skin': 'editorial-paper', 'pair': 'editorial-display'},
     ),
     'indumentaria': (
-        {'template': 'cobre',    'skin': 'editorial-paper', 'pair': 'editorial-display'},
-        {'template': 'lookbook', 'skin': 'luxury-noir',     'pair': 'serif-luxe'},
-        {'template': 'ai_pulse', 'skin': 'mono-black',      'pair': 'mono-tech'},
+        {'template': 'trama',     'skin': 'editorial-ink',   'pair': 'editorial-display'},
+        {'template': 'boutique',  'skin': 'luxury-noir',     'pair': 'serif-luxe'},
+        {'template': 'raiz',      'skin': 'minimal-chalk',   'pair': 'modern-sans'},
     ),
     'servicios_profesionales': (
-        {'template': 'minimal',   'skin': 'corporate-blue', 'pair': 'classic-serif'},
-        {'template': 'signature', 'skin': 'minimal-slate',  'pair': 'humanist'},
-        {'template': 'ai_lumen',  'skin': 'glass-frost',    'pair': 'grotesk-clean'},
+        {'template': 'raiz',      'skin': 'corporate-blue',  'pair': 'classic-serif'},
+        {'template': 'circuito',  'skin': 'gradient-plum',   'pair': 'mono-tech'},
+        {'template': 'trama',     'skin': 'minimal-slate',   'pair': 'humanist'},
     ),
     'salud': (
-        {'template': 'calma',    'skin': 'soft-blush',      'pair': 'soft-round'},
-        {'template': 'studio',   'skin': 'minimal-chalk',   'pair': 'humanist'},
-        {'template': 'ai_lumen', 'skin': 'organic-sage',    'pair': 'serif-book'},
+        {'template': 'raiz',      'skin': 'soft-blush',      'pair': 'soft-round'},
+        {'template': 'trama',     'skin': 'organic-sage',    'pair': 'humanist'},
+        {'template': 'boutique',  'skin': 'prestige-ivory',  'pair': 'serif-book'},
     ),
     'belleza': (
-        {'template': 'cobre',    'skin': 'luxury-gilt',     'pair': 'serif-luxe'},
-        {'template': 'boutique', 'skin': 'soft-dusk',       'pair': 'soft-round'},
-        {'template': 'ai_lumen', 'skin': 'gradient-aurora', 'pair': 'editorial-display'},
+        {'template': 'boutique',  'skin': 'luxury-gilt',     'pair': 'serif-luxe'},
+        {'template': 'trama',     'skin': 'soft-dusk',       'pair': 'soft-round'},
+        {'template': 'raiz',      'skin': 'editorial-paper', 'pair': 'editorial-display'},
     ),
     'construccion': (
-        {'template': 'classic',  'skin': 'brutal-concrete', 'pair': 'brutal'},
-        {'template': 'arena',    'skin': 'tech-void',       'pair': 'technical'},
-        {'template': 'ai_pulse', 'skin': 'mono-grey',       'pair': 'bold-sans'},
+        {'template': 'seguridad', 'skin': 'brutal-concrete', 'pair': 'brutal'},
+        {'template': 'raiz',      'skin': 'mono-grey',       'pair': 'bold-sans'},
+        {'template': 'circuito',  'skin': 'kinetic-flash',   'pair': 'technical'},
     ),
     'tecnologia': (
-        {'template': 'minimal',  'skin': 'tech-neon',       'pair': 'technical'},
-        {'template': 'circuit',  'skin': 'glass-noir',      'pair': 'mono-tech'},
-        {'template': 'ai_lumen', 'skin': 'gradient-plum',   'pair': 'display-heavy'},
+        {'template': 'circuito',  'skin': 'tech-neon',       'pair': 'technical'},
+        {'template': 'raiz',      'skin': 'minimal-slate',   'pair': 'mono-tech'},
+        {'template': 'trama',     'skin': 'magazine-cover',  'pair': 'grotesk-clean'},
     ),
     'educacion': (
-        {'template': 'duo',      'skin': 'playful-candy',   'pair': 'friendly'},
-        {'template': 'proceso',  'skin': 'paper-ink',       'pair': 'serif-book'},
-        {'template': 'ai_lumen', 'skin': 'corporate-steel', 'pair': 'humanist'},
+        {'template': 'raiz',      'skin': 'playful-candy',   'pair': 'friendly'},
+        {'template': 'trama',     'skin': 'paper-ink',       'pair': 'serif-book'},
+        {'template': 'circuito',  'skin': 'corporate-steel', 'pair': 'humanist'},
     ),
     'turismo': (
-        {'template': 'calma',    'skin': 'organic-moss',    'pair': 'warm-serif'},
-        {'template': 'terra',    'skin': 'cinematic-amber', 'pair': 'editorial-display'},
-        {'template': 'ai_pulse', 'skin': 'gradient-plum',   'pair': 'grotesk-clean'},
+        {'template': 'raiz',      'skin': 'organic-moss',    'pair': 'warm-serif'},
+        {'template': 'trama',     'skin': 'cinematic-amber', 'pair': 'editorial-display'},
+        {'template': 'boutique',  'skin': 'showcase-gallery','pair': 'grotesk-clean'},
     ),
     'mascotas': (
-        {'template': 'duo',      'skin': 'playful-pop',     'pair': 'friendly'},
-        {'template': 'mercado',  'skin': 'warm-ember',      'pair': 'soft-round'},
-        {'template': 'ai_lumen', 'skin': 'soft-blush',      'pair': 'retro-display'},
+        {'template': 'raiz',      'skin': 'playful-pop',     'pair': 'friendly'},
+        {'template': 'alimentos', 'skin': 'warm-clay',       'pair': 'soft-round'},
+        {'template': 'trama',     'skin': 'soft-blush',      'pair': 'retro-display'},
     ),
     'arte': (
-        {'template': 'minimal',  'skin': 'mono-black',      'pair': 'mono-tech'},
-        {'template': 'riso',     'skin': 'retro-sun',       'pair': 'retro-display'},
-        {'template': 'ai_pulse', 'skin': 'brutal-acid',     'pair': 'brutal'},
+        {'template': 'boutique',  'skin': 'prestige-charcoal', 'pair': 'serif-luxe'},
+        {'template': 'trama',     'skin': 'mono-black',        'pair': 'mono-tech'},
+        {'template': 'raiz',      'skin': 'retro-sun',         'pair': 'retro-display'},
+    ),
+    'seguridad': (
+        {'template': 'seguridad', 'skin': 'pop-poster',      'pair': 'bold-sans'},
+        {'template': 'raiz',      'skin': 'brutal-acid',     'pair': 'condensed-bold'},
+        {'template': 'circuito',  'skin': 'mono-grey',       'pair': 'technical'},
     ),
     'otro': (
-        {'template': 'classic',     'skin': 'corporate-steel', 'pair': 'classic-serif'},
-        {'template': 'perspective', 'skin': 'editorial-ink',   'pair': 'modern-sans'},
-        {'template': 'ai_pulse',    'skin': 'neon-night',      'pair': 'geometric'},
+        {'template': 'raiz',      'skin': 'corporate-steel', 'pair': 'classic-serif'},
+        {'template': 'trama',     'skin': 'editorial-ink',   'pair': 'modern-sans'},
+        {'template': 'circuito',  'skin': 'neon-night',      'pair': 'geometric'},
     ),
 }
 
@@ -379,7 +381,7 @@ AI_ELEMENT_ANCHORS          =   {
 AI_ELEMENT_MAX              =   4
 
 #Rubros donde la web ES la vidriera: la libertad visual de los ai_* suma.
-VISUAL_RUBROS               =   frozenset({'belleza', 'arte', 'turismo', 'gastronomia', 'indumentaria', 'construccion', 'mascotas'})
+VISUAL_RUBROS               =   frozenset({'belleza', 'arte', 'turismo', 'gastronomia', 'indumentaria', 'construccion', 'mascotas', 'seguridad'})
 
 #Patrones "pro" de los diseños de IA: combinaciones de bloques/variantes
 #que las recetas por objetivo no se permiten (galería masonry + banda de
@@ -439,7 +441,7 @@ RUBROS                      =   {
     'comercio': {
         'label': 'Comercio / tienda',
         'look': 'retail',
-        'templates': ('vitrina', 'duo', 'cobre', 'classic'),
+        'templates': ('raiz', 'alimentos', 'trama'),
         'goals': ('vender_online', 'mostrar_trabajos', 'dar_confianza'),
         'priority': {
             'landing':  ('hero', 'highlights', 'categories', 'featured', 'offers', 'benefits', 'brands', 'testimonials', 'faq', 'cta', 'contact'),
@@ -451,7 +453,7 @@ RUBROS                      =   {
     'gastronomia': {
         'label': 'Gastronomía',
         'look': 'gourmet',
-        'templates': ('calma', 'cobre', 'minimal', 'duo'),
+        'templates': ('alimentos', 'raiz', 'trama'),
         'goals': ('mostrar_servicios', 'conseguir_consultas', 'dar_confianza'),
         'priority': {
             'landing':  ('hero', 'highlights', 'about', 'services', 'gallery', 'featured', 'testimonials', 'faq', 'cta', 'contact'),
@@ -463,7 +465,7 @@ RUBROS                      =   {
     'indumentaria': {
         'label': 'Indumentaria',
         'look': 'atelier',
-        'templates': ('cobre', 'vitrina', 'minimal', 'duo'),
+        'templates': ('trama', 'boutique', 'raiz'),
         'goals': ('vender_online', 'mostrar_trabajos', 'dar_confianza'),
         'priority': {
             'landing':  ('hero', 'categories', 'featured', 'offers', 'gallery', 'about', 'testimonials', 'faq', 'cta', 'contact'),
@@ -475,7 +477,7 @@ RUBROS                      =   {
     'servicios_profesionales': {
         'label': 'Servicios profesionales',
         'look': 'sobrio',
-        'templates': ('minimal', 'classic', 'calma', 'duo'),
+        'templates': ('raiz', 'circuito', 'trama'),
         'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
         'priority': {
             'landing':  ('hero', 'services', 'benefits', 'about', 'stats', 'testimonials', 'faq', 'steps', 'cta', 'contact'),
@@ -487,7 +489,7 @@ RUBROS                      =   {
     'salud': {
         'label': 'Salud',
         'look': 'clinico',
-        'templates': ('calma', 'minimal', 'classic', 'duo'),
+        'templates': ('raiz', 'trama', 'boutique'),
         'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
         'priority': {
             'landing':  ('hero', 'services', 'benefits', 'team', 'about', 'testimonials', 'faq', 'cta', 'contact'),
@@ -499,7 +501,7 @@ RUBROS                      =   {
     'belleza': {
         'label': 'Belleza y estética',
         'look': 'belleza',
-        'templates': ('calma', 'cobre', 'vitrina', 'minimal'),
+        'templates': ('boutique', 'trama', 'raiz'),
         'goals': ('conseguir_consultas', 'mostrar_servicios', 'mostrar_trabajos'),
         'priority': {
             'landing':  ('hero', 'services', 'gallery', 'benefits', 'testimonials', 'team', 'faq', 'cta', 'contact'),
@@ -511,7 +513,7 @@ RUBROS                      =   {
     'construccion': {
         'label': 'Construcción y oficios',
         'look': 'obra',
-        'templates': ('classic', 'duo', 'minimal', 'vitrina'),
+        'templates': ('seguridad', 'raiz', 'circuito'),
         'goals': ('mostrar_trabajos', 'conseguir_consultas', 'dar_confianza'),
         'priority': {
             'landing':  ('hero', 'services', 'gallery', 'stats', 'about', 'benefits', 'testimonials', 'faq', 'cta', 'contact'),
@@ -523,7 +525,7 @@ RUBROS                      =   {
     'tecnologia': {
         'label': 'Tecnología',
         'look': 'tech',
-        'templates': ('minimal', 'duo', 'vitrina', 'classic'),
+        'templates': ('circuito', 'raiz', 'trama'),
         'goals': ('vender_online', 'mostrar_servicios', 'conseguir_consultas'),
         'priority': {
             'landing':  ('hero', 'services', 'featured', 'benefits', 'stats', 'compare', 'testimonials', 'faq', 'cta', 'contact'),
@@ -535,7 +537,7 @@ RUBROS                      =   {
     'educacion': {
         'label': 'Educación',
         'look': 'aula',
-        'templates': ('calma', 'classic', 'duo', 'minimal'),
+        'templates': ('raiz', 'trama', 'circuito'),
         'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
         'priority': {
             'landing':  ('hero', 'services', 'steps', 'benefits', 'stats', 'testimonials', 'team', 'faq', 'cta', 'contact'),
@@ -547,7 +549,7 @@ RUBROS                      =   {
     'turismo': {
         'label': 'Turismo y experiencias',
         'look': 'viaje',
-        'templates': ('cobre', 'vitrina', 'calma', 'duo'),
+        'templates': ('raiz', 'trama', 'boutique'),
         'goals': ('mostrar_trabajos', 'conseguir_consultas', 'vender_online'),
         'priority': {
             'landing':  ('hero', 'gallery', 'services', 'about', 'stats', 'testimonials', 'faq', 'cta', 'contact'),
@@ -559,7 +561,7 @@ RUBROS                      =   {
     'mascotas': {
         'label': 'Mascotas',
         'look': 'patitas',
-        'templates': ('duo', 'calma', 'vitrina', 'classic'),
+        'templates': ('raiz', 'alimentos', 'trama'),
         'goals': ('mostrar_servicios', 'vender_online', 'conseguir_consultas'),
         'priority': {
             'landing':  ('hero', 'services', 'featured', 'benefits', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
@@ -571,7 +573,7 @@ RUBROS                      =   {
     'arte': {
         'label': 'Arte y artesanías',
         'look': 'galeria',
-        'templates': ('cobre', 'minimal', 'vitrina', 'duo'),
+        'templates': ('boutique', 'trama', 'raiz'),
         'goals': ('mostrar_trabajos', 'dar_confianza', 'vender_online'),
         'priority': {
             'landing':  ('hero', 'gallery', 'about', 'featured', 'timeline', 'testimonials', 'faq', 'cta', 'contact'),
@@ -580,10 +582,22 @@ RUBROS                      =   {
         },
         'variants': {'hero': ('editorial', 'cinema', 'full'), 'gallery': ('masonry', 'grid'), 'featured': ('masonry', 'cols2', 'grid'), 'testimonials': ('carousel', 'cards'), 'faq': ('list', 'accordion'), 'cta': ('band', 'card'), 'contact': ('card', 'map')},
     },
+    'seguridad': {
+        'label': 'Seguridad y bomberos',
+        'look': 'seguridad',
+        'templates': ('seguridad', 'raiz', 'circuito'),
+        'goals': ('dar_confianza', 'mostrar_servicios', 'conseguir_consultas'),
+        'priority': {
+            'landing':  ('hero', 'highlights', 'categories', 'featured', 'services', 'steps', 'stats', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
+            'catalog':  ('note', 'promo', 'filters', 'sort', 'grid'),
+            'services': ('hero', 'band', 'picker', 'steps', 'form', 'faq'),
+        },
+        'variants': {'hero': ('full', 'split', 'compact'), 'featured': ('grid', 'cols3', 'quick'), 'categories': ('row', 'rail'), 'gallery': ('grid', 'masonry'), 'testimonials': ('cards', 'carousel'), 'faq': ('list', 'accordion'), 'cta': ('band', 'card'), 'contact': ('map', 'card')},
+    },
     'otro': {
         'label': 'Otro rubro',
         'look': 'neutro',
-        'templates': ('classic', 'duo', 'calma', 'minimal', 'vitrina', 'cobre'),
+        'templates': ('raiz', 'trama', 'circuito'),
         'goals': ('mostrar_servicios', 'dar_confianza', 'conseguir_consultas'),
         'priority': {
             'landing':  ('hero', 'about', 'services', 'featured', 'benefits', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
@@ -609,6 +623,7 @@ RUBRO_HINTS                 =   {
     'turismo': ('turismo', 'viaje', 'hotel', 'cabaña', 'hostel', 'excursion', 'agencia de viajes'),
     'mascotas': ('veterinaria', 'mascota', 'pet', 'gato', 'perro', 'peluqueria canina'),
     'arte': ('arte', 'artesan', 'galeria', 'taller', 'ilustra', 'fotograf', 'ceramica'),
+    'seguridad': ('seguridad', 'bombero', 'extintor', 'matafuego', 'epp', 'vigilancia', 'industrial', 'recarga', 'certificado', 'monitoreo'),
 }
 
 #=========================================
@@ -783,27 +798,29 @@ BLOCK_TITLES                =   {
     'turismo':      {'gallery': 'Experiencias', 'services': 'Qué ofrecemos', 'about': 'Quiénes somos', 'faq': 'Antes de viajar', 'testimonials': 'Viajeros'},
     'mascotas':     {'services': 'Servicios', 'featured': 'Productos', 'gallery': 'Nuestros pacientes', 'benefits': 'Cuidado de verdad', 'faq': 'Preguntas frecuentes'},
     'arte':         {'gallery': 'Obras', 'about': 'El taller', 'featured': 'Piezas disponibles', 'timeline': 'Trayectoria', 'testimonials': 'Coleccionistas'},
+    'seguridad':    {'services': 'Nuestros servicios', 'steps': 'Cómo contratar', 'stats': 'Respaldo y experiencia', 'benefits': 'Por qué elegirnos', 'faq': 'Preguntas frecuentes'},
     'otro':         {'services': 'Qué ofrecemos', 'benefits': 'Por qué elegirnos', 'gallery': 'Galería', 'testimonials': 'Opiniones', 'faq': 'Preguntas frecuentes'},
 }
 
 #=========================================
-# NORMALIZACIÓN AL CATÁLOGO DE 3 DISEÑOS
+# NORMALIZACIÓN AL CATÁLOGO DE 6 DISEÑOS
 #=========================================
-#Las tablas de arriba conservan la historia del motor (matrices por rubro,
-#afinidades de tono/objetivo, etc.) escritas con los ids viejos. Acá se
-#remapean por afinidad de rubro al importar, así el motor propone SOLO
-#'raiz' / 'trama' / 'circuito' sin reescribir cada receta a mano.
+#Las tablas de arriba conservan la historia del motor (afinidades de
+#tono/objetivo, etc.) escritas con ids viejos. Acá se remapean por
+#afinidad a los 6 diseños del catálogo al importar, así el motor propone
+#SOLO ids públicos sin reescribir cada receta a mano.
 #Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única).
-PUBLIC_TEMPLATES            =   ('raiz', 'trama', 'circuito')
+PUBLIC_TEMPLATES            =   ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad')
 PUBLIC_TEMPLATE_MAP         =   {
     'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
     'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
     'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz', 'shop': 'raiz',
-    'atelier': 'trama', 'lookbook': 'trama', 'boutique': 'trama',
+    'atelier': 'trama', 'lookbook': 'trama',
     'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
     'street': 'trama', 'riso': 'trama', 'promo': 'trama', 'aurora': 'trama',
     'perspective': 'circuito', 'circuit': 'circuito', 'terminal': 'circuito',
     'lab': 'circuito', 'ai_lumen': 'circuito', 'ai_pulse': 'trama',
+    #'boutique' NO va acá: es un diseño del catálogo (plus) desde el rediseño.
 }
 
 
@@ -813,8 +830,8 @@ def public_template(template):
 
 
 #Recetas por rubro: se remapean los templates y se conserva el orden de
-#afinidad (deduplicado). Si el remapeo deja menos de 3, se completan los
-#que falten para que el motor siempre tenga los 3 disponibles.
+#afinidad (deduplicado). Si el remapeo deja menos de 6, se completan los
+#que falten para que el motor siempre tenga los 6 disponibles.
 for _recipe in RUBROS.values():
     _mapped = []
     for _tpl in _recipe.get('templates', ()):
@@ -832,17 +849,23 @@ for _rubro, _styles in RUBRO_STYLES.items():
 
 #Afinidades y etiquetas del catálogo nuevo (el motor las puntúa).
 TEMPLATE_TONE_AFFINITY.update({
-    'raiz':     {'serio': 2, 'moderno': 2, 'calido': 2, 'audaz': 1},
-    'trama':    {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 1},
-    'circuito': {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
+    'raiz':      {'serio': 2, 'moderno': 2, 'calido': 2, 'audaz': 1},
+    'alimentos': {'calido': 3, 'moderno': 2, 'audaz': 1, 'serio': 1},
+    'trama':     {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 1},
+    'boutique':  {'calido': 3, 'serio': 2, 'moderno': 1, 'audaz': 0},
+    'circuito':  {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
+    'seguridad': {'audaz': 3, 'serio': 3, 'moderno': 1, 'calido': 0},
 })
-TEMPLATE_LABELS.update({'raiz': 'Raíz', 'trama': 'Trama', 'circuito': 'Circuito'})
+TEMPLATE_LABELS.update({
+    'raiz': 'Raíz', 'alimentos': 'Alimentos', 'trama': 'Trama',
+    'boutique': 'Boutique', 'circuito': 'Circuito', 'seguridad': 'Seguridad',
+})
 TEMPLATE_GOAL_AFFINITY.update({
     #Cada objetivo tiene UN diseño que mejor cuenta esa historia (el resto
     #compite por tono/piel): así cambiar el objetivo mueve el puntaje.
-    'vender_online':        ('trama',),
-    'mostrar_servicios':    ('raiz',),
-    'conseguir_consultas':  ('raiz',),
-    'dar_confianza':        ('raiz', 'circuito'),
-    'mostrar_trabajos':     ('trama', 'circuito'),
+    'vender_online':        ('trama', 'alimentos'),
+    'mostrar_servicios':    ('raiz', 'seguridad'),
+    'conseguir_consultas':  ('raiz', 'seguridad'),
+    'dar_confianza':        ('raiz', 'circuito', 'seguridad'),
+    'mostrar_trabajos':     ('trama', 'boutique', 'circuito'),
 })

@@ -8,11 +8,11 @@ Endpoints:
   PATCH /api/stores/customization/     -> site_theme (v2: roles/layout/skin + blocks)
 
 Contrato v4 (engine 'ai-design/6'):
-  1) diversidad: 13 rubros con tuplas (template, skin) propias; dentro de una
+  1) diversidad: 14 rubros con tuplas (template, skin) propias; dentro de una
      generación las 2-3 propuestas difieren en template, skin y par tipográfico;
      seed+1 cambia la familia visual;
-  2) fuentes de estilo: con has_ai_design la whitelist suma ai_* y los 20
-     legacy; sin el flag, exactamente las del plan;
+  2) fuentes de estilo: el catálogo público de 6 diseños (2 por nivel); sin el
+     flag, exactamente las del plan;
   3) site_theme v2: typography.roles (13 roles), layout y skin del catálogo;
   4) bloques nuevos (aipricing/aiprocess/aimosaic) solo con has_ai_design y
      props tipadas saneadas (iconos AI_ICONS ∪ gen:<slug>);
@@ -73,9 +73,9 @@ PUBLIC_LINK         =   ('has_public_link',)
 #Cuotas típicas del plan premium (sin ellas, storage/gallery_limit = 0).
 PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storage_mb': 200}
 
-#Catálogo del plan (las 6 que ofrece el selector) y los dos exclusivos de IA.
-PLAN_TEMPLATES      =   ('raiz',)
-STYLE_TEMPLATES     =   frozenset(('raiz', 'trama', 'circuito'))
+#Catálogo del plan (los 6 diseños públicos del selector) y los exclusivos de IA.
+PLAN_TEMPLATES      =   ('raiz', 'alimentos')
+STYLE_TEMPLATES     =   frozenset(('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -286,16 +286,15 @@ class _AiDesignBase(TestCase):
 # 1) DIVERSIDAD (contrato 1 y 8)
 #=========================================
 class Diversidad(_AiDesignBase):
-    """13 rubros, 2-3 propuestas por generación, sin estilos repetidos."""
+    """14 rubros, 2-3 propuestas por generación, sin estilos repetidos."""
 
-    def test_the_catalog_has_thirteen_rubros(self):
-        self.assertEqual(len(R.RUBROS), 13)
+    def test_the_catalog_has_fourteen_rubros(self):
+        self.assertEqual(len(R.RUBROS), 14)
         self.assertEqual(set(R.RUBROS), set(R.RUBRO_STYLES))
 
     def test_every_rubro_opens_with_a_design_from_the_catalog(self):
-        #Con solo 3 diseños la firma por rubro no puede ser única entre 13
-        #rubros: el invariante es que TODA apertura use el catálogo real y
-        #declare su piel.
+        #La firma por rubro se reparte sobre los 6 diseños; el invariante es
+        #que TODA apertura use el catálogo real y declare su piel.
         client, _, _    =   self._premium_client()
         for rubro in R.RUBROS:
             proposals   =   _proposals_of(self._generate(client, _rubro_payload(rubro)))
@@ -318,9 +317,9 @@ class Diversidad(_AiDesignBase):
                 seen.add(key)
 
     def test_proposals_of_one_generation_differ_in_template_skin_and_type_pair(self):
-        #Con el catálogo de 3 diseños el invariante que sostiene la variedad
-        #es plantilla + piel + estilo distintos (el par tipográfico queda
-        #como mejor esfuerzo: dos familias pueden compartir el mismo par).
+        #El invariante que sostiene la variedad es plantilla + piel + estilo
+        #distintos (el par tipográfico queda como mejor esfuerzo: dos
+        #familias pueden compartir el mismo par).
         client, _, _    =   self._premium_client()
         for rubro in ('comercio', 'belleza', 'tecnologia'):
             proposals   =   _proposals_of(self._generate(client, _rubro_payload(rubro)))
@@ -373,25 +372,25 @@ class Diversidad(_AiDesignBase):
 # 2) FUENTES DE ESTILO (contrato 2)
 #=========================================
 class FuentesDeEstilo(_AiDesignBase):
-    """Catálogo de 3 diseños (uno por nivel); el motor nunca se sale de él."""
+    """Catálogo de 6 diseños (2 por nivel); el motor nunca se sale de él."""
 
-    def test_with_advanced_the_whitelist_covers_the_three_designs(self):
+    def test_with_advanced_the_whitelist_covers_the_six_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(tuple(allowed), ('raiz', 'trama', 'circuito'))
+        self.assertEqual(tuple(allowed), ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
 
     def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
         #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
         _, profile, _   =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
-        self.assertEqual(set(allowed_templates_of(profile)), {'raiz', 'trama', 'circuito'})
+        self.assertEqual(set(allowed_templates_of(profile)), STYLE_TEMPLATES)
 
-    def test_plan_tiers_add_one_design_each(self):
+    def test_plan_tiers_add_two_designs_each(self):
         _, base, _      =   _make_account(*CUSTOMIZATION)
         _, plus, _      =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS))
         _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
-        self.assertEqual(tuple(allowed_templates_of(base)), ('raiz',))
-        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'trama'))
-        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'trama', 'circuito'))
+        self.assertEqual(tuple(allowed_templates_of(base)), ('raiz', 'alimentos'))
+        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'alimentos', 'trama', 'boutique'))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
 
     def test_the_engine_has_no_exclusive_or_legacy_designs(self):
         from StoreApp.domains.stores.models import StoreCustomization
@@ -401,8 +400,19 @@ class FuentesDeEstilo(_AiDesignBase):
         self.assertEqual(set(StoreCustomization.TEMPLATE_RETIRED_MAP),
                          set(StoreCustomization.TEMPLATE_RETIRED_MAP))
 
+    def test_retired_designs_never_reappear(self):
+        #El catálogo público de 6 es la única salida del motor: ningún id
+        #retirado vuelve a choices ni a la whitelist (y 'boutique' ya no
+        #está retirado: es un diseño plus).
+        from StoreApp.domains.stores.models import StoreCustomization
+        retired =   set(StoreCustomization.TEMPLATE_RETIRED_MAP)
+        self.assertEqual({key for key, _ in StoreCustomization.TEMPLATE_CHOICES}, set(STYLE_TEMPLATES))
+        self.assertFalse(retired & set(STYLE_TEMPLATES))
+        self.assertNotIn('boutique', retired)
+        self.assertIn('boutique', STYLE_TEMPLATES)
+
     def test_style_source_of_is_always_the_plan(self):
-        for template in ('raiz', 'trama', 'circuito'):
+        for template in STYLE_TEMPLATES:
             self.assertEqual(R.style_source_of(template), 'plan')
 
     def test_engine_never_returns_a_template_outside_the_whitelist(self):
@@ -686,7 +696,7 @@ class Layout(_AiDesignBase):
     def test_generated_accent_has_aa_on_the_page_background_for_every_rubro(self):
         #Contrato 9: la combinación piel × layout no puede romper AA. El
         #acento es el color de marca de los botones: tiene que leerse sobre
-        #el fondo de la página en los 13 rubros, no solo en el default.
+        #el fondo de la página en los 14 rubros, no solo en el default.
         client, _, _    =   self._premium_client()
         for rubro in R.RUBROS:
             for proposal in _proposals_of(self._generate(client, _rubro_payload(rubro))):
@@ -1499,5 +1509,5 @@ class Regresiones(_AiDesignBase):
         response    =   APIClient().get(reverse('Stores-public', kwargs = {'slug': store.slug}))
         self.assertEqual(response.status_code, 200, response.content[:400])
         body        =   response.json()
-        self.assertEqual(body['allowed_templates'], ['raiz'])
+        self.assertEqual(body['allowed_templates'], ['raiz', 'alimentos'])
 

@@ -648,28 +648,30 @@ SKIN_STYLE_PRESET   =   {
 }
 #Plantilla de cada preset del Studio: fuente ÚNICA (la consumen
 #site_theme._style_preset_templates y el motor). El style.id solo se guarda
-#si su plantilla entra en el nivel del plan vigente.
+#si su plantilla entra en el nivel del plan vigente. Los presets de familia
+#se mapean al diseño del catálogo que les da su aire: luxury -> boutique,
+#craft -> alimentos, bold -> seguridad.
 STYLE_PRESET_TEMPLATES  =   {
     'editorial-minima'  :   'raiz',
     'vidrio-nocturno'   :   'circuito',
     'bento'             :   'trama',
-    'neo-brutalista'    :   'trama',
-    'lujo-serif'        :   'trama',
+    'neo-brutalista'    :   'seguridad',
+    'lujo-serif'        :   'boutique',
     'pastel-suave'      :   'raiz',
     'neon-tech'         :   'circuito',
-    'terracota'         :   'raiz',
+    'terracota'         :   'alimentos',
     'monocromo'         :   'raiz',
     'retail-vibrante'   :   'trama',
     'aurora-degradada'  :   'trama',
     'papel-riso'        :   'trama',
     'corporativo'       :   'raiz',
-    'gourmet-calido'    :   'raiz',
-    'belleza-rosa'      :   'trama',
+    'gourmet-calido'    :   'alimentos',
+    'belleza-rosa'      :   'boutique',
     'kids-ludico'       :   'trama',
-    'urbano-sticker'    :   'trama',
+    'urbano-sticker'    :   'seguridad',
     'consola-retro'     :   'circuito',
     'denim-urbano'      :   'trama',
-    'atelier-moda'      :   'trama',
+    'atelier-moda'      :   'boutique',
     'suizo-editorial'   :   'raiz',
     'cobalto-nocturno'  :   'circuito',
 }
