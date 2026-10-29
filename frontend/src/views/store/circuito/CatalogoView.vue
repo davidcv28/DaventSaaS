@@ -19,7 +19,7 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const c = useStoreCatalog({ pageSize: 12 })
 const {
   catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
-  featureFilters, onlyOffer, onlyNew, priceMin, priceMax, sort,
+  onlyOffer, onlyNew, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, pickFeature, isFeatureOn,
   toggleOffer, toggleNew, clearFilters, hasFilters, activeTags, facets,
   brandNameOf, categoryNameOf, openProduct, shownLabel
