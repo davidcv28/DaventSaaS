@@ -323,10 +323,23 @@ export function storeSiteThemeVars(customization, pageTheme = 'light') {
   return studioPreviewVars(merged, pageTheme, themeExplicitKeys(theme))
 }
 
+// Atributos del tema PUBLICADO (web real, no solo el iframe del Studio).
+// `skin`/`styleColors` no son claves de campo del contrato (viajan como
+// bloque entero), así que se agregan a mano: sin ellos la hoja no carga la
+// piel ni gatea las reglas `[data-st-*]` y la web vuelve al look base.
 export function storeSiteThemeAttrs(customization, pageTheme = 'light') {
   const theme = customization?.site_theme
   if (!theme || typeof theme !== 'object' || !Object.keys(theme).length) return {}
-  return studioPreviewAttrs(theme, themeExplicitKeys(theme), pageTheme)
+  const keys = themeExplicitKeys(theme)
+  if (theme.skin && typeof theme.skin === 'object') keys.add('skin')
+  if (theme.styleColors && typeof theme.styleColors === 'object') keys.add('styleColors')
+  if (theme.typography?.roles) keys.add('typography.roles')
+  if (theme.layout && typeof theme.layout === 'object') keys.add('layout')
+  const attrs = studioPreviewAttrs(theme, keys, pageTheme)
+  // El set de colores del estilo es de un modo concreto: la hoja usa
+  // data-st-style para saber qué juego está vigente.
+  if (theme.styleColors) attrs['data-st-style'] = pageTheme === 'dark' ? 'dark' : 'light'
+  return attrs
 }
 
 // ---------------------------------------------------------------------------

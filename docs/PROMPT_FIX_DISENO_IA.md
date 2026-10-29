@@ -5,6 +5,18 @@
 > opcionales para quien implemente. Al cerrar, actualizar `AGENTS.md` §"Diseñar con IA"
 > y este archivo en el mismo commit.
 
+## Estado (2026-10-29) — implementado, motor `ai-design/5`
+
+| # | Causa raíz | Resolución |
+|---|---|---|
+| 1 | `_theme` no emitía `styleColors`/`style` | `_theme` emite `style {id, palette}` (`SKIN.SKIN_STYLE_PRESET`, mapeo explícito familia→preset del Studio), `styleColors.light/dark` (`_style_set`, AA 4.5 sobre bg **y** surface) y `typography.roles` (ya viajaba). |
+| 2 | La piel no llegaba al CSS publicado | `('skin','id')`/`('skin','family')` entran a `SITE_THEME_STYLE_KEYS` → `clean_site_theme`/`filter_site_theme` la publican también en plan Básico; `StorePublicLayout` la lee siempre y hace el `import()` de `skin-<familia>.css`. |
+| 3 | Sin `data-st-*` en la publicación | `storeSiteThemeAttrs` agrega a mano `skin`/`styleColors`/`roles`/`layout` a las claves explícitas y fija `data-st-style` por modo; `pageAttrs` ya se aplicaba a `.store-page`. |
+| 4 | Texto ilegible en banda/hero | `palette.secondary` = tinta de la banda (`_band_tone`, blanco ≥4.5 sobre acento) y bloque "TEMA PUBLICADO" en `store-page.css` mapea `--st-style-*` → `--sp-ink/-ink-2/-muted/-accent-text/-card/-surface/-line` + `--sp-on-band*`. |
+| 5 | "Otra propuesta" repetía composición | `_VARIANTS_BY_LAYOUT` extiende la firma a 12 bloques de landing + catálogo (filters/picker/steps), `SKIN_LAYOUT_ALT` da una segunda composición por familia en las propuestas alternativas y `_layout_signature` (hash plantilla + orden/variantes de las 3 superficies) descarta candidatas repetidas. |
+
+Tests: `AiDesignSkinAndContrastTests` (10) en `tests_ai_design.py` — skin/style/styleColors con AA en 5 pares por modo, banda y botón con acento claro del dueño, plan Básico, apply→público y firmas de layout distintas. `manage.py test` completo: 778 OK. Pendiente verificación visual: `qa_a11y.py` / 3 tiendas de rubros distintos con la misma entrevista.
+
 ## Diagnóstico del bug (por qué el motor "arma las mismas plantillas")
 
 El motor v5 (`StoreApp/domains/stores/services/ai_design.py` + `ai_design_skins.py`) sí

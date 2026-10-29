@@ -23,6 +23,7 @@ from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS, clean_layout_
 from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage, StudioVersion
 from StoreApp.domains.stores.site_theme import clean_site_theme
 from StoreApp.domains.stores.services import allowed_templates_of
+from StoreApp.domains.stores.services import ai_design_skins as SKIN
 from StoreApp.domains.stores.services.ai_design_skins import SKINS, SKIN_IDS, STYLE_FAMILIES
 from StoreApp.domains.stores.services.ai_design_typography import (
     BODY_ROLES, FONT_SLUGS, TYPOGRAPHY_ROLES,
@@ -119,7 +120,7 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/4')
+        self.assertEqual(first.json()['engine'], 'ai-design/5')
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -199,6 +200,120 @@ class AiDesignGenerateTests(AiDesignBase):
         blocks      =   [block['id'] for block in data['proposals'][0]['layout_config']['landing']['blocks']]
         self.assertEqual(blocks[0], 'hero')
         self.assertEqual(blocks[-1], 'contact')
+
+
+def _aa(a, b):
+    """WCAG 2.1 (misma fórmula que site_theme._contrast_ratio)."""
+    def channel(value):
+        s   =   value / 255
+        return s / 12.92 if s <= 0.03928 else ((s + 0.055) / 1.055) ** 2.4
+    def lum(hex_value):
+        h   =   hex_value.lstrip('#')
+        return sum(
+            weight * channel(int(h[index:index + 2], 16))
+            for weight, index in ((0.2126, 0), (0.7152, 2), (0.0722, 4))
+        )
+    la, lb  =   lum(a), lum(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+
+class AiDesignSkinAndContrastTests(AiDesignBase):
+    """v6: el look que elige el motor llega a la web publicada y el texto se
+    lee (AA en los cinco pares, claro y oscuro)."""
+
+    def _proposals(self, store, payload = None):
+        return self._client(store).post(AI_URL, payload or {'rubro': 'gastronomia'}, format = 'json').json()['proposals']
+
+    def test_every_proposal_ships_style_skin_and_style_colors(self):
+        store, _    =   self._store(products = 6)
+        for proposal in self._proposals(store):
+            theme   =   proposal['site_theme']
+            self.assertIn('skin', theme)
+            self.assertIn(theme['skin']['id'], SKIN_IDS)
+            self.assertEqual(theme['style']['id'], SKIN.SKIN_STYLE_PRESET[proposal['skin']['family']])
+            self.assertTrue(theme['typography']['roles'])
+            self.assertEqual(set(theme['styleColors']), {'light', 'dark'})
+
+    def test_style_colors_pass_aa_in_both_modes(self):
+        store, _    =   self._store(products = 6)
+        for proposal in self._proposals(store):
+            for mode, style_set in proposal['site_theme']['styleColors'].items():
+                fonts       =   style_set['fonts']
+                containers  =   style_set['containers']
+                self.assertGreaterEqual(_aa(fonts['heading'], containers['bg']), 4.5, f'{mode} heading/bg')
+                self.assertGreaterEqual(_aa(fonts['muted'], containers['bg']), 4.5, f'{mode} muted/bg')
+                self.assertGreaterEqual(_aa(fonts['heading'], containers['surface']), 4.5, f'{mode} heading/surface')
+                self.assertGreaterEqual(_aa(fonts['muted'], containers['surface']), 4.5, f'{mode} muted/surface')
+                self.assertGreaterEqual(_aa(containers['onSurface'], containers['surface']), 4.5, f'{mode} onSurface')
+
+    def test_brand_accent_keeps_white_text_aa_on_band_and_buttons(self):
+        store, _    =   self._store(products = 3)
+        #Acento claro del dueño: la banda del hero y el botón sólido pintan
+        #texto blanco, así que la tinta tiene que corregirse.
+        for accent in ('#facc15', '#a7f3d0', '#ffffff'):
+            proposal    =   self._proposals(store, {'brand_color': accent})[0]
+            ink         =   proposal['site_theme']['palette']['secondary']
+            self.assertGreaterEqual(_aa('#ffffff', ink), 4.5, accent)
+
+    def test_basic_plan_still_gets_skin_and_style_colors(self):
+        store, _    =   self._store(advanced = False, ai = False, products = 3)
+        data        =   generate_ai_design(store, {})
+        for proposal in data['proposals']:
+            theme   =   proposal['site_theme']
+            self.assertIn(theme['skin']['id'], SKIN_IDS)
+            self.assertIn('styleColors', theme)
+            #El resto del tema sigue reservado al plan.
+            self.assertNotIn('background', theme)
+            self.assertNotIn('buttons', theme)
+
+    def test_apply_publishes_skin_and_style_colors(self):
+        store, _    =   self._store(products = 4)
+        client      =   self._client(store)
+        data        =   client.post(AI_URL, {'rubro': 'indumentaria'}, format = 'json').json()
+        proposal    =   data['proposals'][0]
+        response    =   client.post(APPLY_URL, {'seed': data['seed'], 'proposal_id': proposal['id']}, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content)
+        draft   =   StoreCustomization.objects.get(store = store)
+        for theme in (draft.site_theme, draft.site_theme_draft):
+            self.assertEqual(theme['skin']['id'], proposal['site_theme']['skin']['id'])
+            self.assertIn('styleColors', theme)
+            self.assertEqual(theme['style']['id'], proposal['site_theme']['style']['id'])
+        public  =   APIClient().get(f'{STORES_URL}public/{store.slug}/')
+        self.assertEqual(public.status_code, 200)
+        theme   =   public.json()['customization']['site_theme']
+        self.assertEqual(theme['skin']['id'], proposal['site_theme']['skin']['id'])
+        self.assertIn('styleColors', theme)
+
+    def test_proposals_differ_in_layout_not_only_color(self):
+        store, _    =   self._store(products = 8)
+        proposals   =   self._proposals(store, {'rubro': 'gastronomia', 'goals': ['vender_online']})
+        self.assertGreaterEqual(len(proposals), 2)
+        signatures  =   [
+            (proposal['template'], tuple(
+                (block['id'], block.get('variant'))
+                for surface in ('landing', 'catalog', 'services')
+                for block in proposal['layout_config'][surface]['blocks']
+            ))
+            for proposal in proposals
+        ]
+        self.assertEqual(len(signatures), len(set(signatures)))
+
+    def test_requested_style_wins_and_unknown_style_is_ignored(self):
+        store, _    =   self._store(products = 4)
+        data        =   self._client(store).post(
+            AI_URL, {'styles': ['luxury', 'no-existe']}, format = 'json'
+        )
+        self.assertEqual(data.status_code, 200)
+        self.assertEqual(data.json()['proposals'][0]['variety']['style'], 'luxury')
+
+    def test_basic_plan_never_gets_skin_outside_level(self):
+        #La piel sobrevive al plan Básico, pero la plantilla sigue siendo de
+        #su nivel: la piel es un presupuesto visual, no una plantilla.
+        store, _    =   self._store(advanced = False, ai = False)
+        allowed     =   set(allowed_templates_of(store.user))
+        for proposal in generate_ai_design(store, {})['proposals']:
+            self.assertIn(proposal['template'], allowed)
+            self.assertIn(proposal['site_theme']['skin']['id'], SKIN_IDS)
 
 
 class AiDesignGateTests(AiDesignBase):
@@ -307,7 +422,7 @@ class AiDesignV2Tests(AiDesignBase):
     def test_ai_templates_used_when_plan_allows(self):
         store, _    =   self._store()
         _, data     =   self._generate(store)
-        self.assertEqual(data['engine'], 'ai-design/4')
+        self.assertEqual(data['engine'], 'ai-design/5')
         #La matriz del rubro mezcla plan + legacy + ai: cualquier par de
         #propuestas trae al menos un estilo exclusivo (ai o legacy).
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
@@ -676,7 +791,7 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_engine_reports_v4(self):
         store, _    =   self._store()
-        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/4')
+        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/5')
 
     def test_each_rubro_gets_its_own_signature_style(self):
         store, _    =   self._store()
@@ -795,7 +910,7 @@ class AiDesignV4Tests(AiDesignBase):
     def test_site_theme_v2_rejects_invalid_roles(self):
         base    =   {'font': 'inter', 'size': 'md', 'weight': 400, 'tracking': 'normal',
                      'leading': 'normal', 'case': 'none'}
-        for role, patch in (
+        for role, override in (
             ('inventado', {}),
             ('body', {'font': 'comic-sans'}),
             ('body', {'size': 'gigante'}),
@@ -806,8 +921,8 @@ class AiDesignV4Tests(AiDesignBase):
             ('body', {'case': 'capitalize'}),
             ('body', {'inventado': 1}),
         ):
-            with self.assertRaises(Exception, msg = f'{role} {patch}'):
-                clean_site_theme({'typography': {'roles': {role: {**base, **patch}}}}, has_advanced = True)
+            with self.assertRaises(Exception, msg = f'{role} {override}'):
+                clean_site_theme({'typography': {'roles': {role: {**base, **override}}}}, has_advanced = True)
 
     def test_site_theme_v2_rejects_invalid_layout(self):
         for layout in ({'grid': 'masonry'}, {'hero': 'video'}, {'density': 'tight'},
@@ -823,8 +938,15 @@ class AiDesignV4Tests(AiDesignBase):
         payload =   {'layout': {'grid': 'bento'}, 'skin': {'id': 'editorial-ink'},
                      'typography': {'roles': {'body': {'font': 'inter', 'size': 'md', 'weight': 400,
                                                        'tracking': 'normal', 'leading': 'normal', 'case': 'none'}}}}
-        self.assertEqual(clean_site_theme(payload, has_plus = True), {})
-        self.assertEqual(clean_site_theme(payload, has_style = True), {})
+        plus    =   clean_site_theme(payload, has_plus = True)
+        self.assertNotIn('layout', plus)
+        self.assertNotIn('typography', plus)
+        #v6: la piel es presupuesto visual básico y viaja con el estilo (en
+        #todos los planes con diseño); el resto del tema sigue gateado.
+        skincare    =   {'skin': {'id': 'editorial-ink', 'family': 'editorial'}}
+        self.assertEqual(plus['skin'], skincare['skin'])
+        self.assertEqual(clean_site_theme(payload, has_style = True), skincare)
+        self.assertEqual(clean_site_theme(payload), {})
 
     def test_redesign_covers_landing_catalog_and_services(self):
         store, _    =   self._store(products = 6)

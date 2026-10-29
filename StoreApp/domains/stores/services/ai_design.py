@@ -287,6 +287,67 @@ def _calm_palette(palette):
     return {**palette, 'text': text, 'muted': muted, 'border': border}
 
 
+#=========================================
+# COLORES DE TEXTO DEL ESTILO (styleColors)
+#=========================================
+#El juego de colores por modo es lo que la web pública pinta de verdad
+#(--sp-ink/-ink-2/-muted/-card/-bg). Se emite SIEMPRE desde el motor y con
+#AA real, porque site_theme lo valida con la misma regla (400 si no pasa).
+_STYLE_NEUTRAL  =   {
+    'light':  {'bg': '#f4f6fb', 'surface': '#ffffff', 'border': '#e2e6f0', 'text': '#0f172a', 'muted': '#5b6678'},
+    'dark':   {'bg': '#0b1220', 'surface': '#111a2c', 'border': '#243049', 'text': '#f1f5f9', 'muted': '#94a3b8'},
+}
+
+
+def _mode_of(bg):
+    return 'dark' if _luminance(bg) < 0.5 else 'light'
+
+
+def _legible_on(color, bases, target = 4.5):
+    """AA contra TODAS las bases (bg y surface a la vez)."""
+    for base in bases:
+        color   =   _ensure_contrast(color, base, target)
+    return color
+
+
+def _style_set(palette, mode, accent):
+    """
+    Juego de colores de un modo: si la paleta es de ese modo se usa tal
+    cual (calmada); el modo opuesto usa la base neutra con el acento de la
+    marca. Todo texto queda con AA sobre bg y sobre surface.
+    """
+    same    =   _mode_of(palette['bg']) == mode
+    base    =   palette if same else {**_STYLE_NEUTRAL[mode], 'accent': accent}
+    bg      =   base['bg']
+    surface =   base['surface']
+    border  =   base.get('border') or _mix(base.get('text', _neutral_ink(bg)), bg, 0.82)
+    heading =   _legible_on(_desaturate(base.get('text') or _neutral_ink(bg), 0.7), (bg, surface))
+    muted   =   _legible_on(_desaturate(base.get('muted') or _mix(heading, bg, 0.45), 0.7), (bg, surface))
+    link    =   _legible_on(accent, (bg, surface))
+    return {
+        'fonts'     :   {'heading': heading, 'body': heading, 'muted': muted, 'link': link},
+        'containers':   {'bg': bg, 'surface': surface, 'border': border, 'onSurface': heading},
+    }
+
+
+def _style_colors(palette, accent):
+    """Sets claro y oscuro garantizados (light + dark)."""
+    return {mode: _style_set(palette, mode, accent) for mode in ('light', 'dark')}
+
+
+def _band_tone(accent):
+    """
+    La banda del hero pinta texto blanco sobre el acento (o su tinta). Si
+    ninguna de las dos sostiene AA, el motor devuelve la tinta corregida:
+    se usa como --store-accent-ink y el botón sólido también la hereda.
+    """
+    candidates  =   [accent, _mix(accent, '#000000', 0.35), '#1e1b4b']
+    for tint in candidates:
+        if _contrast_ratio('#ffffff', tint) >= 4.5:
+            return tint
+    return _ensure_contrast(accent, '#ffffff', 4.5)
+
+
 def _answers(store, customization, payload, stats):
     """Normaliza la entrevista: lo que no vino (o no es válido) se deduce."""
     payload     =   payload if isinstance(payload, dict) else {}
@@ -520,7 +581,10 @@ def _style_candidates(facts, stats, answers, allowed, seed):
     for index, template in enumerate(order):
         if template in seen_templates(candidates):
             continue
-        add(template, skins[(index * 3 + seed) % len(skins)], pairs[(index * 5 + seed) % len(pairs)], 8)
+        #La piel y el par por piel: la terna se siente elegida, no rotada.
+        skin_id =   skins[(index * 3 + seed) % len(skins)]
+        pair    =   SKIN.SKIN_TYPE_PAIR.get(SKIN.SKINS[skin_id]['family']) or pairs[(index * 5 + seed) % len(pairs)]
+        add(template, skin_id, pair, 8)
     #3) cobertura de ESTILOS: cada estilo con pieles entra a competir, así una
     #generación puede ofrecer "minimal" vs "editorial" vs "lujo" y no tres
     #variantes del mismo aire. Base baja: solo gana si el puntaje lo acompaña
@@ -785,25 +849,87 @@ _GRID_BY_LAYOUT     =   {
 }
 
 
+#Firma de variantes por layout para el RESTO de los bloques (ids de
+#variante reales de TEMPLATE_BLOCKS): dos pieles con layouts distintos no
+#comparten composición, no solo color.
+_VARIANTS_BY_LAYOUT =   {
+    '12': {
+        'categories': 'row', 'benefits': 'cards', 'offers': 'grid', 'brands': 'logos',
+        'countdown': 'card', 'gallery': 'grid', 'testimonials': 'cards', 'faq': 'list',
+        'contact': 'card', 'cta': 'card', 'announcements': 'static',
+        'filters': 'panel', 'picker': 'list',
+    },
+    'asym': {
+        'categories': 'rail', 'benefits': 'bento', 'offers': 'rail', 'brands': 'marquee',
+        'countdown': 'band', 'gallery': 'masonry', 'testimonials': 'masonry', 'faq': 'cols',
+        'contact': 'map', 'cta': 'band', 'announcements': 'marquee',
+        'filters': 'chips', 'picker': 'bento', 'steps': 'rail',
+    },
+    'split': {
+        'categories': 'row', 'benefits': 'bento', 'offers': 'quick', 'brands': 'logos',
+        'countdown': 'band', 'gallery': 'grid', 'testimonials': 'carousel', 'faq': 'cols',
+        'contact': 'card', 'cta': 'band', 'announcements': 'static',
+        'filters': 'panel', 'picker': 'cards',
+    },
+    'bento': {
+        'categories': 'rail', 'benefits': 'cards', 'offers': 'grid', 'brands': 'marquee',
+        'countdown': 'card', 'gallery': 'masonry', 'testimonials': 'cards', 'faq': 'list',
+        'contact': 'map', 'cta': 'card', 'announcements': 'marquee',
+        'filters': 'chips', 'picker': 'bento',
+    },
+    'editorial': {
+        'categories': 'row', 'benefits': 'cards', 'offers': 'quick', 'brands': 'logos',
+        'countdown': 'band', 'gallery': 'rail', 'testimonials': 'carousel', 'faq': 'accordion',
+        'contact': 'card', 'cta': 'band', 'announcements': 'marquee',
+        'filters': 'panel', 'picker': 'tabs', 'steps': 'rail',
+    },
+}
+
+
+def _skin_layout_config(skin, facts):
+    """Layout efectivo de la piel: el suyo y, en las propuestas alternativas,
+    la variante de familia (así dos propuestas no comparten composición).
+    """
+    config  =   dict(skin['layout'])
+    if skin.get('layout_alt'):
+        config.update(skin['layout_alt'])
+    if config.get('hero') == 'logo' and not facts.get('logo'):
+        config['hero']    =   'centered'
+    return config
+
+
 def _apply_skin_layout(layout, skin, facts):
     """
-    Rediseño completo: la portada, la vitrina y la grilla del catálogo
-    toman la variante que pide el layout de la piel. Con logo de portada
-    el hero 'logo' solo se usa si hay logo real.
+    Rediseño completo: la portada, la vitrina, la grilla del catálogo y la
+    firma del resto de los bloques (landing, catálogo y servicios) toman la
+    variante que pide el layout de la piel. Con logo de portada el hero
+    'logo' solo se usa si hay logo real.
     """
-    config      =   skin['layout']
+    config      =   _skin_layout_config(skin, facts)
     hero        =   _HERO_BY_LAYOUT.get(config.get('hero'))
     if hero == 'logo' and not facts.get('logo'):
-        hero    =   'full'
+        hero    =   None
     featured, catalog_grid  =   _GRID_BY_LAYOUT.get(config.get('grid'), ('grid', 'auto'))
+    variants    =   _VARIANTS_BY_LAYOUT.get(config.get('grid')) or {}
     for surface, section in layout.items():
         for block in section.get('blocks', []):
-            if surface == 'landing' and block['id'] == 'hero' and hero:
-                block['variant']    =   hero
-            elif surface == 'landing' and block['id'] == 'featured':
+            block_id    =   block['id']
+            if surface == 'landing' and block_id == 'hero':
+                if hero:
+                    block['variant']    =   hero
+                continue
+            if surface == 'landing' and block_id == 'featured':
                 block['variant']    =   featured
-            elif surface == 'catalog' and block['id'] == 'grid':
+                continue
+            if surface == 'catalog' and block_id == 'grid':
                 block['variant']    =   catalog_grid
+                continue
+            #El resto de los bloques toma la variante de la firma del
+            #layout, solo si existe en el catálogo (nunca id inventado).
+            wanted  =   variants.get(block_id)
+            spec    =   TEMPLATE_BLOCKS[surface].get(block_id) or {}
+            if wanted and wanted in (spec.get('variants') or ()):
+                block['variant']    =   wanted
     return layout
 
 
@@ -976,9 +1102,10 @@ def _add_elements(layout, customization, facts, stats, answers, use_icons, has_a
 def _theme(skin, pair, answers, rng, shift, template = None):
     """
     site_theme parcial v2 compuesto por la piel: paleta + contenedores +
-    botones + fondo + movimiento + layout + skin, con la tipografía
-    expandida a los 13 roles del par elegido. El tono ajusta energía
-    (curvas, aire, movimiento), no la identidad.
+    botones + fondo + movimiento + layout + skin + estilo del Studio y su
+    juego de colores (claro/oscuro), con la tipografía expandida a los 13
+    roles del par elegido. El tono ajusta energía (curvas, aire, movimiento),
+    no la identidad.
     """
     theme   =   {
         'palette'       :   copy.deepcopy(skin['palette']),
@@ -988,6 +1115,7 @@ def _theme(skin, pair, answers, rng, shift, template = None):
         'motion'        :   copy.deepcopy(skin['motion']),
         'layout'        :   copy.deepcopy(skin['layout']),
         'skin'          :   {'id': skin['id'], 'family': skin['family']},
+        'typography'    :   {'roles': {}},
     }
     for section, values in R.TONE_TWEAKS[answers['tone']].items():
         theme.setdefault(section, {}).update(values)
@@ -1025,12 +1153,23 @@ def _theme(skin, pair, answers, rng, shift, template = None):
         theme['palette']['accent']  =   accent
         theme['palette']['primary'] =   accent
         choice              =   {'source': 'ai', 'accent': accent}
+    #La banda del hero pinta texto blanco sobre la tinta del acento: si el
+    #acento del dueño es claro, la tinta se corrige (y con ella el botón).
+    ink     =   _band_tone(theme['palette']['accent'])
+    theme['palette']['secondary']   =   ink
     #Legibilidad no negociable: la tinta y el muted se normalizan siempre
     #(una piel con texto tintado o un acento de marca no pueden ensuciar
     #los colores de fuente).
     theme['palette']    =   _calm_palette(theme['palette'])
     if choice['source'] == 'ai':
         choice['accent']    =   theme['palette']['accent']
+    #Estilo del Studio que representa la piel + su juego de colores. Sin
+    #esto la web publicada de un plan Básico pierde TODA la identidad (solo
+    #persiste style.id + styleColors).
+    preset  =   SKIN.SKIN_STYLE_PRESET.get(skin['family'])
+    if preset:
+        theme['style']  =   {'id': preset, 'palette': 'original'}
+    theme['styleColors']    =   _style_colors(theme['palette'], theme['palette']['accent'])
     return theme, choice
 
 
@@ -1206,6 +1345,18 @@ def _image_requests(stats, layout):
 #=========================================
 # GENERACIÓN DE PROPUESTAS
 #=========================================
+def _layout_signature(template, layout):
+    """Hash estable de la composición: plantilla + orden/variantes por superficie."""
+    payload =   [template]
+    for surface in ('landing', 'catalog', 'services'):
+        payload.append([
+            [block['id'], block.get('variant'), bool(block.get('enabled'))]
+            for block in (layout.get(surface) or {}).get('blocks', [])
+        ])
+    raw =   json.dumps(payload, sort_keys = True, ensure_ascii = False)
+    return hashlib.sha1(raw.encode('utf-8')).hexdigest()
+
+
 def _proposal_count(allowed, facts):
     #Nunca una sola: con dos plantillas permitidas ya hay dos historias
     #distintas. Una tercera solo si el plan y los datos la justifican.
@@ -1236,13 +1387,17 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
     has_plus        =   profile_has_benefit(store.user, 'has_design_plus')
     has_style       =   profile_has_benefit(store.user, 'has_customization')
     proposals       =   []
+    #Firma (plantilla + orden + variantes de las 3 superficies): dos
+    #propuestas no pueden ser la misma web con otro color.
     signatures      =   set()
     for index, style in enumerate(chosen):
         #La propuesta 0 va con el mejor estilo; las demás ya vienen con
         #plantilla/piel/par distintos (diversidad obligatoria).
         shift       =   0 if index == 0 else index
         template    =   style['template']
-        skin        =   SKIN.SKINS[style['skin']]
+        #Las propuestas alternativas usan la variante de layout de la
+        #familia: el rediseño se ve en la composición, no solo en el color.
+        skin        =   {**SKIN.SKINS[style['skin']], 'layout_alt': SKIN.SKIN_LAYOUT_ALT.get(SKIN.SKINS[style['skin']]['family']) if shift else None}
         pair        =   style['pair']
         pattern     =   _pattern_for(template, answers, shift)
         attempt     =   0
@@ -1250,7 +1405,7 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
             layout  =   _apply_skin_layout(layout, skin, facts)
             layout  =   _add_elements(layout, customization, facts, stats, answers, use_icons, has_ai)
-            signature = (template, tuple(block['id'] for block in layout['landing']['blocks']))
+            signature = _layout_signature(template, layout)
             if signature not in signatures:
                 break
         signatures.add(signature)
@@ -1299,7 +1454,11 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             },
             'redesign'      :   {
                 'surfaces'      :   ['landing', 'catalog', 'services'],
-                'changed'       :   bool(clean_theme.get('layout') or clean_theme.get('skin')),
+                'changed'       :   True,
+                'summary'       :   'Portada, catálogo y servicios reorganizados',
+                'skin'          :   skin['label'],
+                'style'         :   SKIN.STYLE_LABELS.get(skin['style'], ''),
+                'layout'        :   _skin_layout_config(skin, facts),
             },
             'layout_config' :   clean_layout_config(layout, has_advanced, has_ai),
             'theme_choice'  :   choice,

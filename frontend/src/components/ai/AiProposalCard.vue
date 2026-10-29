@@ -33,6 +33,14 @@ const draft = computed(() => props.proposal.copy_draft || {})
 const applying = computed(() => props.busy === `apply:${props.proposal.id}`)
 const notes = computed(() => (Array.isArray(props.proposal.notes) ? props.proposal.notes.slice(0, 3) : []))
 const themeChoice = computed(() => props.proposal.theme_choice || null)
+// v6: qué rediseñó el motor (composición + piel). Se muestra como chip de
+// texto: la tarjeta tiene que decir qué cambió, no solo de qué color es.
+const redesign = computed(() => props.proposal.redesign || null)
+const redesignText = computed(() => {
+  const summary = String(redesign.value?.summary || '').trim()
+  if (summary) return summary
+  return redesign.value?.changed ? 'Portada, catálogo y servicios reorganizados' : ''
+})
 const nightMode = computed(() => props.proposal.night_mode || null)
 const coverChoice = computed(() => props.proposal.cover || null)
 const themeSource = computed(() => (themeChoice.value?.source === 'user' ? 'elegido por vos' : 'elegido por la IA'))
@@ -195,6 +203,9 @@ watch(
       </span>
       <span v-if="nightText" class="aidp-chip">
         <AppIcon name="moon" :size="13" aria-hidden="true" /> {{ nightText }}
+      </span>
+      <span v-if="redesignText" class="aidp-chip aidp-chip-redesign">
+        <AppIcon name="dashboard" :size="13" aria-hidden="true" /> {{ redesignText }}
       </span>
     </div>
 

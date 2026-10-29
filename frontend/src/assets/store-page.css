@@ -12077,3 +12077,50 @@ html { scroll-behavior: smooth; }
 }
 .store-page[data-store-template='arena'] .sp-hero-title,
 .store-page[data-store-template='arena'] .sp-section-title { text-transform: uppercase; letter-spacing: .01em; }
+
+/* ===========================================================================
+   TEMA PUBLICADO (v6) — el `site_theme` guardado pinta la web REAL, no solo
+   el iframe del Studio. StorePublicLayout emite `data-st-style` (modo del
+   juego de colores) y `data-st-themed` cuando el tema trae styleColors: en
+   ese caso los tokens de texto/contendor salen del juego del motor, que ya
+   viene con AA garantizado (el motor no confía en el fallback de la hoja).
+   El `--store-accent` del dueño NO se mezcla acá: manda el estilo.
+   Con el tema en claro el juego claro también manda aunque el visitante
+   haya puesto la página en oscuro (el set oscuro es para ese modo y también
+   pasa AA, así que es seguro en ambos).
+   =========================================================================== */
+.store-page[data-st-themed] {
+  --sp-ink: var(--st-style-font-heading, var(--sp-ink));
+  --sp-ink-2: var(--st-style-font-body, var(--sp-ink-2));
+  --sp-muted: var(--st-style-font-muted, var(--sp-muted));
+  --sp-accent-text: var(--st-style-font-link, var(--sp-accent-text));
+  --sp-card: var(--st-style-container-surface, var(--sp-card));
+  --sp-card-solid: var(--st-style-container-surface, var(--sp-card-solid));
+  --sp-surface: var(--st-style-container-surface, var(--sp-surface));
+  --sp-line: var(--st-style-container-border, var(--sp-line));
+}
+/* Bandas de acento (hero, cifras, CTA): texto blanco solo si la tinta del
+   acento lo sostiene; si no, el teme trae la tinta corregida por el motor. */
+.store-page[data-st-themed] {
+  --sp-on-band: #fff;
+  --sp-on-band-2: color-mix(in srgb, #fff 88%, transparent);
+  --sp-on-band-muted: color-mix(in srgb, #fff 78%, transparent);
+}
+.store-page[data-st-themed] :is(
+  .sp-hero-band, .sp-hero-band :is(h1, h2, p, li, span:not(.sp-btn *)),
+  .sp-stats, .sp-cta-inner) {
+  color: var(--sp-on-band);
+}
+.store-page[data-st-themed] .sp-hero-sub { color: var(--sp-on-band-2); }
+.store-page[data-st-themed] .sp-hero-meta { color: var(--sp-on-band-muted); }
+
+/* Piel publicada: la hoja skin-<familia>.css llega por import dinámico en
+   StorePublicLayout; sin `data-st-skin` sus reglas no aplican. La piel se
+   gatea también por `data-st-style` para que el juego de colores del estilo
+   no la devuelva a sus tintas propias. */
+.store-page[data-st-skin][data-st-style] :is(
+  .sp-eyebrow, .sp-hero-badge, .sp-hero-meta) {
+  color: var(--sp-on-band-muted, currentColor);
+}
+.store-page[data-st-skin][data-st-style] .sp-about-text { color: var(--sp-ink-2); }
+.store-page[data-st-skin][data-st-style] :is(.sp-foot, .sp-foot-note) { color: var(--sp-muted); }

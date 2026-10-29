@@ -9,7 +9,7 @@
 #para el texto. Nada de acá llega al cliente sin pasar por
 #clean_layout_config y por la whitelist de plantillas del plan.
 
-ENGINE_VERSION              =   'ai-design/4'
+ENGINE_VERSION              =   'ai-design/5'
 
 TONES                       =   ('calido', 'serio', 'moderno', 'audaz')
 DEFAULT_TONE                =   'moderno'

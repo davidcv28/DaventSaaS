@@ -611,6 +611,106 @@ SKIN_IDS    =   tuple(SKINS)
 SKIN_FAMILY_OF  =   {skin_id: skin['family'] for skin_id, skin in SKINS.items()}
 
 
+#=========================================
+# PUBLICACIÓN DEL LOOK (estilo del Studio + par tipográfico)
+#=========================================
+#site_theme.style.id es el id de un preset del Studio (frontend/src/studio/
+#presets/catalog.js). El motor NO inventa presets: cada familia apunta al
+#preset más cercano. Con eso una tienda Básica —que solo persiste style.id +
+#styleColors— recibe igual el aire visual que eligió el motor.
+SKIN_STYLE_PRESET   =   {
+    'minimal':      'editorial-minima',
+    'swiss':        'suizo-editorial',
+    'corporate':    'corporativo',
+    'tech':         'neon-tech',
+    'glass':        'vidrio-nocturno',
+    'neon':         'cobalto-nocturno',
+    'gradient':     'aurora-degradada',
+    'kinetic':      'retail-vibrante',
+    'showcase':     'bento',
+    'editorial':    'gourmet-calido',
+    'magazine':     'terracota',
+    'paper':        'papel-riso',
+    'nostalgia':    'consola-retro',
+    'retro':        'consola-retro',
+    'brutal':       'neo-brutalista',
+    'pop':          'urbano-sticker',
+    'playful':      'kids-ludico',
+    'warm':         'gourmet-calido',
+    'craft':        'terracota',
+    'organic':      'pastel-suave',
+    'soft':         'belleza-rosa',
+    'luxury':       'lujo-serif',
+    'prestige':     'lujo-serif',
+    'aurora':       'aurora-degradada',
+    'cinematic':    'vidrio-nocturno',
+    'mono':         'monocromo',
+}
+#Par tipográfico por familia (ids de ai_design_typography.TYPE_PAIRS). Es el
+#par con el que arranca el motor para esa piel; la elección final la cierra
+#el par de la propuesta (nunca uno incompatible con el estilo).
+SKIN_TYPE_PAIR  =   {
+    'minimal':      'grotesk-clean',
+    'swiss':        'grotesk-clean',
+    'corporate':    'grotesk-clean',
+    'tech':         'grotesk-clean',
+    'glass':        'grotesk-clean',
+    'neon':         'grotesk-clean',
+    'gradient':     'grotesk-clean',
+    'kinetic':      'grotesk-clean',
+    'showcase':     'grotesk-clean',
+    'editorial':    'serif-editorial',
+    'magazine':     'serif-editorial',
+    'paper':        'serif-editorial',
+    'nostalgia':    'serif-editorial',
+    'retro':        'serif-editorial',
+    'brutal':       'grotesk-clean',
+    'pop':          'grotesk-clean',
+    'playful':      'grotesk-clean',
+    'warm':         'serif-editorial',
+    'craft':        'serif-editorial',
+    'organic':      'serif-editorial',
+    'soft':         'serif-editorial',
+    'luxury':       'serif-editorial',
+    'prestige':     'serif-editorial',
+    'aurora':       'serif-editorial',
+    'cinematic':    'serif-editorial',
+    'mono':         'grotesk-clean',
+}
+#Variante de layout alternativa por piel: lo que hace que dos propuestas de
+#la misma familia no compartan composición. Solo valores que existen en el
+#contrato (site_theme.layout) y que el catálogo de variantes de bloque
+#reconoce.
+SKIN_LAYOUT_ALT =   {
+    'minimal':      {'hero': 'centered', 'grid': 'asym'},
+    'swiss':        {'hero': 'editorial', 'grid': 'bento'},
+    'corporate':    {'hero': 'split', 'grid': '12'},
+    'tech':         {'hero': 'cinema', 'grid': 'bento'},
+    'glass':        {'hero': 'split', 'grid': 'asym'},
+    'neon':         {'hero': 'cinema', 'grid': 'split'},
+    'gradient':     {'hero': 'cinema', 'grid': 'editorial'},
+    'kinetic':      {'hero': 'centered', 'grid': 'bento'},
+    'showcase':     {'hero': 'cinema', 'grid': 'editorial'},
+    'editorial':    {'hero': 'editorial', 'grid': '12'},
+    'magazine':     {'hero': 'split', 'grid': 'editorial'},
+    'paper':        {'hero': 'centered', 'grid': 'asym'},
+    'nostalgia':    {'hero': 'centered', 'grid': 'split'},
+    'retro':        {'hero': 'editorial', 'grid': '12'},
+    'brutal':       {'hero': 'centered', 'grid': 'split'},
+    'pop':          {'hero': 'split', 'grid': 'bento'},
+    'playful':      {'hero': 'split', 'grid': 'asym'},
+    'warm':         {'hero': 'split', 'grid': '12'},
+    'craft':        {'hero': 'editorial', 'grid': 'asym'},
+    'organic':      {'hero': 'centered', 'grid': 'bento'},
+    'soft':         {'hero': 'centered', 'grid': 'editorial'},
+    'luxury':       {'hero': 'cinema', 'grid': '12'},
+    'prestige':     {'hero': 'cinema', 'grid': 'asym'},
+    'aurora':       {'hero': 'cinema', 'grid': 'split'},
+    'cinematic':    {'hero': 'editorial', 'grid': 'bento'},
+    'mono':         {'hero': 'editorial', 'grid': '12'},
+}
+
+
 def skins_for(rubro = None, tone = None):
     """Pieles afines al rubro y/o al tono (sin filtro: el catálogo entero)."""
     return tuple(
@@ -621,3 +721,15 @@ def skins_for(rubro = None, tone = None):
 
 def skin_of(skin_id):
     return SKINS.get(skin_id)
+
+
+def style_preset_of(skin_id):
+    """Preset del Studio que representa la piel (style.id del site_theme)."""
+    skin = SKINS.get(skin_id)
+    return SKIN_STYLE_PRESET.get(skin['family']) if skin else None
+
+
+def type_pair_of(skin_id):
+    """Par tipográfico con el que la piel arranca (luego manda la propuesta)."""
+    skin = SKINS.get(skin_id)
+    return SKIN_TYPE_PAIR.get(skin['family']) if skin else None

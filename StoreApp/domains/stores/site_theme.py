@@ -217,6 +217,10 @@ SITE_THEME_STYLE_KEYS   =   frozenset({
     ('style', 'palette'),
     ('styleColors', 'light'),
     ('styleColors', 'dark'),
+    #v6: la piel elegida por el motor (o por el Studio) viaja hasta en
+    #Básico: una web diseñada no puede quedar con la piel base al publicar.
+    ('skin', 'id'),
+    ('skin', 'family'),
 })
 #=========================================
 # VALIDADORES DE VALOR
@@ -471,6 +475,9 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
                 clean['blocks'] =   blocks
             continue
         spec    =   _SECTION_SPECS[section]
+        #Los tres pisos del plan suman: Premium todo, Estándar = básico +
+        #Estándar (radius/density), Básico = estilo + colores + piel. Así
+        #subir de plan nunca pierde lo que el plan anterior ya guardaba.
         if has_advanced:
             allowed =   set(spec)
         elif has_plus:
@@ -574,6 +581,8 @@ def filter_site_theme(theme, *, has_plus = False, has_advanced = False, has_styl
         return {}
     if has_advanced:
         return dict(theme)
+    #La piel es presupuesto visual básico (el motor la elige con cualquier
+    #plan con diseño): sin flags de diseño no hay piel que publicar.
     if not has_plus and not has_style:
         return {}
     keep_set    =   SITE_THEME_PLUS_KEYS | SITE_THEME_STYLE_KEYS if has_plus else SITE_THEME_STYLE_KEYS
