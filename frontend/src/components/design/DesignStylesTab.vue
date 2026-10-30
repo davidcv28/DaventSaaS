@@ -3,22 +3,25 @@
 // Envuelve el selector de estilos real (EstilosPanel → DesignLookTab) con la
 // misma cáscara que usa el Studio en su panel "Estilos", así la sección y el
 // Studio comparten una sola implementación y los mismos eventos.
-import { ref } from 'vue'
+import { computed } from 'vue'
 import EstilosPanel from '../studio/panels/EstilosPanel.vue'
 import DesignPickers from './DesignPickers.vue'
 import DesignLivePreview from './DesignLivePreview.vue'
 import AppIcon from '../AppIcon.vue'
 
-defineProps({
+const props = defineProps({
   form: { type: Object, required: true },
   benefits: { type: Object, default: () => ({}) },
   shopName: { type: String, default: '' },
-  canStudio: { type: Boolean, default: false }
+  canStudio: { type: Boolean, default: false },
+  // Estado del panel de vista previa: lo controla el padre para que la
+  // savebar sticky también pueda abrirlo en mobile.
+  previewOpen: { type: Boolean, default: false }
 })
-const emit = defineEmits(['navigate', 'ring', 'open-studio'])
+const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen'])
+const previewOpen = computed(() => props.previewOpen)
 // En pantallas angostas la vista previa real (iframe de la web) arranca
 // cerrada: primero se elige, después se mira. En desktop queda fija al lado.
-const previewOpen = ref(false)
 </script>
 
 <template>
@@ -27,7 +30,7 @@ const previewOpen = ref(false)
       <div class="dstyles-main">
         <DesignPickers :form="form" :benefits="benefits" />
         <div class="dstyles-bar">
-          <button type="button" class="btn ghost btn-auto" :aria-expanded="previewOpen" @click="previewOpen = !previewOpen">
+          <button type="button" class="btn ghost btn-auto" :aria-expanded="previewOpen" @click="emit('update:previewOpen', !previewOpen)">
             <AppIcon name="eye" :size="16" /> {{ previewOpen ? 'Ocultar vista previa' : 'Ver mi web' }}
           </button>
         </div>

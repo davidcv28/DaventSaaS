@@ -1274,6 +1274,8 @@ async function saveBot() {
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [], layout_config: {}, site_theme: {} })
 const designTouched = reactive({})
 const designTab = ref('look')
+// Vista previa de la pestaña Diseño en mobile: la savebar sticky la abre.
+const lookPreview = ref(false)
 // Sub-secciones de "Diseño": las tres últimas se muestran con candado cuando
 // el plan no trae el beneficio (nunca se ocultan).
 const designTabs = [
@@ -4091,6 +4093,7 @@ async function changePassword() {
           </div>
         <template v-if="designTab === 'look'">
           <DesignStylesTab
+            v-model:preview-open="lookPreview"
             :form="designForm"
             :benefits="plan?.benefits || {}"
             :shop-name="designShopName"
@@ -4104,6 +4107,7 @@ async function changePassword() {
               <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
               <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
             </p>
+            <button type="button" class="btn ghost btn-auto dsg-preview-open" :aria-expanded="lookPreview" @click="lookPreview = !lookPreview"><AppIcon name="eye" :size="16" /> {{ lookPreview ? 'Ocultar' : 'Ver mi web' }}</button>
             <div class="dsg-actions">
               <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
               <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
