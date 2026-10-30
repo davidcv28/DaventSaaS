@@ -20,13 +20,6 @@ const device = ref('desktop')
 const frame = ref(null)
 const state = ref('loading')
 
-const IDENTITY_KEYS = [
-  'display_name', 'headline', 'description', 'theme', 'theme_toggle',
-  'accent', 'accent_custom', 'name_font', 'name_font_size',
-  'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay',
-  'cover_focus_x', 'cover_focus_y', 'show_catalog', 'site_templates'
-]
-
 const clone = (value) => JSON.parse(JSON.stringify(value ?? null))
 
 function buildUpdate() {
@@ -38,11 +31,15 @@ function buildUpdate() {
   })
   msg.mode = props.form.theme === 'dark' ? 'dark' : 'light'
   msg.explicit = [...themeExplicitKeys(theme)]
-  const custom = {}
-  for (const key of IDENTITY_KEYS) custom[key] = props.form[key]
+  // Todo el formulario viaja como custom: cualquier cambio de la sección
+  // Diseño (datos, fotos, qué mostrar, tipografía, colores) se refleja en
+  // la vista previa sin guardar ni recargar.
+  const custom = clone(props.form)
   custom.logo = store.customization?.logo || null
   custom.cover = store.customization?.cover || null
-  msg.custom = clone(custom)
+  custom.carousel = clone(store.customization?.carousel || [])
+  custom.gallery = clone(store.customization?.gallery || [])
+  msg.custom = custom
   return msg
 }
 
@@ -72,14 +69,12 @@ function onMessage(event) {
   if (event.data.type === STUDIO_MSG.READY) postNow()
 }
 
+// Deep watch: patrón, estilo, tema, layout, identidad, fotos y cualquier
+// otro campo del formulario empujan el estado a la vista previa.
 watch(
-  () => JSON.stringify([
-    props.form.template, props.form.layout_config, props.form.site_theme,
-    props.form.theme, props.form.accent, props.form.accent_custom,
-    props.form.name_font, props.form.name_font_size, props.form.logo_scale,
-    props.form.logo_mode, props.form.mono_style, props.form.cover_overlay
-  ]),
-  queueUpdate
+  () => [props.form, store.customization],
+  queueUpdate,
+  { deep: true }
 )
 watch(() => props.form.name_font, (font) => { if (font) ensureStoreFont(font) })
 
