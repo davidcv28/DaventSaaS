@@ -350,6 +350,170 @@
 /* --- Modal y drawer: entrada con intención -------------------------------- */
 .sp-drawer-head strong{ letter-spacing: -.01em; }
 
+/* ===========================================================================
+   COBERTURA POR PLANTILLA
+   La portada de cada diseño NO usa .sp-*: Raíz monta .rh-*, Trama .tr-*,
+   Boutique/Atelier .bq-*, Circuito .ci-*, Alimentos .al-*, Clásico .cl-*,
+   Seguridad .sg-*. Estas reglas llevan [data-template] para ganarle a la hoja
+   del diseño, que se importa después de esta y usa .store-page[data-template]
+   .clase (misma especificidad, orden posterior).
+   =========================================================================== */
+
+/* Entrada escalonada del bloque de copy del hero. */
+@media (prefers-reduced-motion: no-preference){
+  .store-page[data-template] :is(
+    .rh-hero-copy, .rh-hero-grid,
+    .tr-hero-copy, .bq-hero-copy, .bq-hero-grid,
+    .al-hero-copy, .al-hero-grid,
+    .cl-hero-copy, .cl-hero-inner,
+    .sg-hero-copy, .sg-hero-grid,
+    .at-hero-text, .at-hero-grid,
+    .ci-hero-grid
+  ) > *{
+    animation: mo-rise var(--mo-slow) var(--mo-ease-out) both;
+  }
+  .store-page[data-template] :is(
+    .rh-hero-copy, .rh-hero-grid, .tr-hero-copy, .bq-hero-copy, .bq-hero-grid,
+    .al-hero-copy, .al-hero-grid, .cl-hero-copy, .cl-hero-inner, .sg-hero-copy,
+    .sg-hero-grid, .at-hero-text, .at-hero-grid, .ci-hero-grid
+  ) > :nth-child(2){ animation-delay: .08s; }
+  .store-page[data-template] :is(
+    .rh-hero-copy, .rh-hero-grid, .tr-hero-copy, .bq-hero-copy, .bq-hero-grid,
+    .al-hero-copy, .al-hero-grid, .cl-hero-copy, .cl-hero-inner, .sg-hero-copy,
+    .sg-hero-grid, .at-hero-text, .at-hero-grid, .ci-hero-grid
+  ) > :nth-child(3){ animation-delay: .16s; }
+  .store-page[data-template] :is(
+    .rh-hero-copy, .rh-hero-grid, .tr-hero-copy, .bq-hero-copy, .bq-hero-grid,
+    .al-hero-copy, .al-hero-grid, .cl-hero-copy, .cl-hero-inner, .sg-hero-copy,
+    .sg-hero-grid, .at-hero-text, .at-hero-grid, .ci-hero-grid
+  ) > :nth-child(4){ animation-delay: .24s; }
+  .store-page[data-template] :is(
+    .rh-hero-copy, .rh-hero-grid, .tr-hero-copy, .bq-hero-copy, .bq-hero-grid,
+    .al-hero-copy, .al-hero-grid, .cl-hero-copy, .cl-hero-inner, .sg-hero-copy,
+    .sg-hero-grid, .at-hero-text, .at-hero-grid, .ci-hero-grid
+  ) > :nth-child(n+5){ animation-delay: .32s; }
+
+  /* Foto del hero: deriva lenta permanente (Ken Burns suave). */
+  .store-page[data-template] :is(
+    .rh-hero-media, .tr-hero-media, .bq-hero-media, .al-hero-media,
+    .cl-hero-media, .sg-hero-frame, .at-hero-art, .ci-hero-stage
+  ) img{
+    animation: mo-drift 26s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+
+/* Tarjetas de la portada y del catálogo: elevación + zoom de media. */
+.store-page[data-template] :is(
+  .rh-cat, .rh-offers-card, .rh-recent-card, .rh-benefit, .rh-testi-item,
+  .rh-gallery-item, .rh-service-row,
+  .tr-trust-item, .bq-product, .al-card, .cl-card, .sg-card, .sg-service,
+  .ci-guar-item, .ci-services-item, .ci-hero-card, .at-card, .at-tile, .tpc-card
+){
+  transition:
+    transform var(--mo-mid) var(--mo-ease-out),
+    box-shadow var(--mo-mid) var(--mo-ease-out),
+    border-color var(--mo-fast) var(--mo-ease);
+}
+.store-page[data-template] :is(
+  .rh-cat, .rh-offers-card, .rh-recent-card, .rh-benefit, .rh-testi-item,
+  .rh-gallery-item, .tr-trust-item, .bq-product, .al-card, .cl-card,
+  .sg-card, .sg-service, .ci-guar-item, .ci-services-item, .ci-hero-card,
+  .at-card, .at-tile, .tpc-card
+):hover{
+  transform: translateY(calc(var(--mo-lift) * -1));
+  box-shadow: 0 20px 46px -24px color-mix(in srgb, var(--store-accent-ink) 55%, transparent);
+}
+.store-page[data-template] :is(
+  .rh-cat-media img, .rh-gallery-item img, .al-card-media img, .sg-card img,
+  .at-card img, .at-tile img, .bq-product img, .cl-card img,
+  .ci-hero-card-media img, .tpc-media img
+){
+  transition: transform .8s var(--mo-ease-out);
+}
+.store-page[data-template] :is(
+  .rh-cat, .rh-gallery-item, .al-card, .sg-card, .at-card, .at-tile,
+  .bq-product, .cl-card, .ci-hero-card, .tpc-card
+):hover :is(img){ transform: scale(1.06); }
+
+/* Sellos, chips y badges: pulso vivo en ciclo. */
+.store-page[data-template] :is(
+  .rh-hero-seal, .tr-hero-badge, .tr-hero-chip, .al-hero-badge,
+  .ci-hero-badge, .sg-hero-seal, .cl-hero-chip, .cl-hero-dot,
+  .bq-hero-accent, .al-hero-accent, .sg-hero-accent
+){
+  animation: mo-breathe 4.5s var(--mo-ease) infinite;
+}
+
+/* Testigos de "abierto"/estado: parpadeo de instrumento. */
+.store-page[data-template] :is(.rh-open-dot, .ci-hero-card-led, .ci-services-console-led){
+  animation: mo-blink 1.8s steps(1, end) infinite;
+}
+
+/* Cuenta regresiva: el número respira y el bloque late. */
+.store-page[data-template] :is(.rh-cd-pct, .rh-cd-clock){
+  animation: mo-breathe 2.6s var(--mo-ease) infinite;
+}
+
+/* Iconos de beneficios y servicios: flotación continua. */
+.store-page[data-template] :is(.rh-benefit-icon, .rh-service-icon, .ci-services-ico){
+  animation: mo-float 6s var(--mo-ease) infinite;
+}
+
+/* Flechas y "ver más": micro-nudge en ciclo, se detiene al hover. */
+.store-page[data-template] :is(.rh-cat-arrow, .rh-service-arrow, .ci-sec-more, .sg-sec-more, .al-linkbtn){
+  animation: mo-tick 3.6s var(--mo-ease) infinite;
+  transform-origin: 50% 50%;
+}
+.store-page[data-template] :is(.rh-cat, .rh-service-row, .ci-services-item, .al-card):hover
+  :is(.rh-cat-arrow, .rh-service-arrow, .al-linkbtn){ animation-play-state: paused; }
+
+/* Piezas decorativas del hero: flotan, no se quedan quietas. */
+.store-page[data-template] :is(.tr-hero-garment, .at-hero-art, .rh-hero-block, .sg-hero-plate){
+  animation: mo-float 8s var(--mo-ease) infinite;
+}
+
+/* Bandas de acento y CTA: degradado que se desplaza. */
+.store-page[data-template] :is(.rh-cta-band, .rz-band--accent, .sg-hero-accent, .al-hero-accent){
+  background-size: 180% 180%;
+  animation: mo-drift 20s ease-in-out infinite alternate;
+}
+
+/* Bloques del diseño con IA: entrada al aparecer, sin tocar el layout. */
+@media (prefers-reduced-motion: no-preference){
+  .store-page[data-template] .blk-wrap{ animation: mo-rise var(--mo-slow) var(--mo-ease-out) both; }
+}
+
+/* --- Decoración ambiental (visible sin hover) ----------------------------- */
+/* CTA principal: halo que respira, no destello. */
+.store-page[data-template] :is(.rh-cta-btn, .al-btn--accent, .sg-btn--yellow, .ci-btn--primary),
+.store-page[data-template] :is(.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink)),
+.store-page .sp-btn:not(.ghost){
+  animation: mo-halo 5.5s var(--mo-ease) infinite;
+}
+/* Placeholder de imagen (tienda sin fotos): degradado que recorre. */
+.store-page :is(.tpc-ph, .rh-hero-ph, .al-hero-ph, .ci-hero-card-ph){
+  background-image: linear-gradient(115deg,
+    var(--sp-soft) 0%,
+    color-mix(in srgb, var(--store-accent) 14%, var(--sp-soft)) 42%,
+    var(--sp-soft) 70%);
+  background-size: 220% 220%;
+  animation: mo-drift 14s ease-in-out infinite alternate;
+}
+/* Hairline de la placa del hero: se enciende y apaga en ciclo. */
+.store-page[data-template] :is(.rh-hero-block-rule, .cl-hero-dot, .ci-hero-card-brackets){
+  animation: mo-breathe 5s var(--mo-ease) infinite;
+}
+/* Cifras y marquesina: el filete bajo los números se desplaza. */
+.store-page[data-template] :is(.rh-stats, .rh-stats-grid, .sg-stats-grid, .al-featured){
+  background-size: 180% 100%;
+  animation: mo-drift 26s ease-in-out infinite alternate;
+}
+@keyframes mo-halo{
+  0%, 100%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--store-accent) 0%, transparent); }
+  50%{ box-shadow: 0 12px 30px -14px color-mix(in srgb, var(--store-accent) 55%, transparent); }
+}
+
 /* --- Accesibilidad: nada de esto corre si el visitante lo apagó ----------- */
 @media (prefers-reduced-motion: reduce){
   .store-page *,
