@@ -5,9 +5,9 @@ from django.contrib.auth.models import User
 
 from AdminApp.domains.chat.models import ChatMessage, ChatThread
 from McpApp.domains.skills.services import (
-    anthropic_enabled,
-    ask_claude,
+    ask_llm,
     catalog_summary,
+    llm_enabled,
     search_design_styles,
 )
 
@@ -168,11 +168,11 @@ def _fallback_reply(thread, latest : str) -> str:
 # RESPUESTA
 #=========================================
 def design_reply(thread, latest : str = '') -> str:
-    if anthropic_enabled():
+    if llm_enabled():
         history =   _history(thread)
         context =   _business_context(thread.customer)
         system  =   _system_prompt() + (f'\nDatos ya cargados del negocio: {context}' if context else '')
-        text    =   ask_claude(system, history)
+        text    =   ask_llm(system, history)
         if text:
             return text
     return _fallback_reply(thread, latest)

@@ -375,6 +375,7 @@ class ChatAttachmentTests(TestCase):
         self.assertTrue(response.data['message']['image_url'])
 
 
+@override_settings(AI_PROVIDER = '', ANTHROPIC_API_KEY = '', GEMINI_API_KEY = '', GROQ_API_KEY = '', OPENROUTER_API_KEY = '')
 class ChatDesignBotTests(TestCase):
     """El chat de soporte ahora es un asistente de diseño que entrevista."""
 

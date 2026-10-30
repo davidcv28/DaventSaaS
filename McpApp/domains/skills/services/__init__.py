@@ -1,4 +1,5 @@
 from .anthropic import anthropic_enabled, ask_claude
+from .llm import ask_llm, llm_enabled
 from .mcp import SERVER_NAME, SERVER_VERSION, call_tool, tools_list
 from .services import (
     apply_style,
@@ -24,4 +25,6 @@ __all__ = [
     'apply_style',
     'anthropic_enabled',
     'ask_claude',
+    'ask_llm',
+    'llm_enabled',
 ]

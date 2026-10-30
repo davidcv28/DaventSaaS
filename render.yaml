@@ -138,6 +138,18 @@ services:
         sync: false
       - key: ANTHROPIC_MODEL
         value: claude-3-5-haiku-latest
+      - key: AI_PROVIDER
+        value: ""                        # vacío = auto (gemini > groq > openrouter > anthropic)
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: OPENROUTER_API_KEY
+        sync: false
 
       # ---- Emisor de comprobantes (fiscal) --------------------------------------
       - key: ISSUER_NAME

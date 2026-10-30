@@ -1,8 +1,14 @@
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from McpApp.domains.skills.models import DesignModelMcp
-from McpApp.domains.skills.services import call_tool, get_design_style, search_design_styles
+from McpApp.domains.skills.services import (
+    ask_llm,
+    call_tool,
+    get_design_style,
+    llm_enabled,
+    search_design_styles,
+)
 
 """
 Tests del dominio skills y del contrato MCP.
@@ -46,3 +52,41 @@ class DesignStyleTests(TestCase):
     def test_mcp_unknown_slug_raises(self):
         with self.assertRaises(ValueError):
             call_tool('get_design_style', {'slug': 'no-existe'})
+
+
+class LlmProviderTests(TestCase):
+    """Selección y fallback de proveedores LLM gratuitos."""
+
+    def _response(self, status, payload):
+        from unittest.mock import Mock
+        response            =   Mock()
+        response.status_code =  status
+        response.json.return_value = payload
+        response.text       =   ''
+        return response
+
+    @override_settings(AI_PROVIDER = 'gemini', GEMINI_API_KEY = 'g-key', GROQ_API_KEY = '', OPENROUTER_API_KEY = '', ANTHROPIC_API_KEY = '')
+    def test_gemini_parses_candidates(self):
+        from unittest.mock import patch
+        payload = {'candidates': [{'content': {'parts': [{'text': 'Hola, ¿qué vendés?'}]}}]}
+        with patch('McpApp.domains.skills.services.llm.requests.post', return_value = self._response(200, payload)) as post:
+            text = ask_llm('system', [{'role': 'user', 'content': 'hola'}])
+        self.assertEqual(text, 'Hola, ¿qué vendés?')
+        self.assertIn('generativelanguage.googleapis.com', post.call_args[0][0])
+
+    @override_settings(AI_PROVIDER = 'gemini', GEMINI_API_KEY = 'g-key', GROQ_API_KEY = 'q-key', OPENROUTER_API_KEY = '', ANTHROPIC_API_KEY = '')
+    def test_falls_back_to_groq_when_gemini_fails(self):
+        from unittest.mock import patch
+        groq_payload = {'choices': [{'message': {'content': 'Respuesta de Groq'}}]}
+        with patch('McpApp.domains.skills.services.llm.requests.post', side_effect = [
+            self._response(429, {'error': 'rate limit'}),
+            self._response(200, groq_payload),
+        ]) as post:
+            text = ask_llm('system', [{'role': 'user', 'content': 'hola'}])
+        self.assertEqual(text, 'Respuesta de Groq')
+        self.assertEqual(post.call_count, 2)
+
+    @override_settings(AI_PROVIDER = '', GEMINI_API_KEY = '', GROQ_API_KEY = '', OPENROUTER_API_KEY = '', ANTHROPIC_API_KEY = '')
+    def test_disabled_without_keys(self):
+        self.assertFalse(llm_enabled())
+        self.assertIsNone(ask_llm('system', [{'role': 'user', 'content': 'hola'}]))
