@@ -13,7 +13,7 @@
 // services, testimonials(cards), gallery(grid), faq, cta(band) y contact(card).
 // Cada bloque se auto-oculta sin datos y un id sin componente se descarta.
 import { computed, inject } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
 import { landingExtras } from '../../../templates/_shared.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkCta from '../../../components/store/blocks/BlkCta.vue'
@@ -76,8 +76,7 @@ function withDefaults(block) {
   return block
 }
 
-const { blocks } = useLayout('landing')
-const visible = computed(() => blocks.value
+const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing')
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map((b) => {
     const next = b.variant ? b : { ...b, variant: FIRMA[b.id] }

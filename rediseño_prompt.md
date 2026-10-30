@@ -100,21 +100,30 @@
   amarillo y quedaban a 3.5 y 4.02: ahora `--sp-on-band`), y (c) el chip
   `.sp-eyebrow`/`.sp-badge` de la piel `pop` (1.07 por la tinta de banda del
   tema publicado: recupera su par ink/bg).
-- [ ] Test de render (clase/tema y persistencia).
+- [x] Test de render (clase/tema y persistencia). **(TERMINADO)** —
+  `frontend/tests/store-theme.test.js` (6 tests) sobre `utils/storeTheme.js`
+  (`resolveStoreTheme`, `readVisitorTheme`, `persistVisitorTheme`), que ahora
+  usa `StorePublicLayout`.
 
 ### FASE 3 — Retiro del sistema de bloques
 
 - [x] `layout_config` deja de componer la web: se ignora en el render público
   (se sigue aceptando por compatibilidad, sin efecto). **(TERMINADO)** —
   `resolveLayout()` devuelve la composición canónica de la plantilla.
-- [ ] Cada `views/store/<diseño>/InicioView|CatalogoView|ServiciosView` compone sus
-  secciones fijas (sin `useLayout`, sin `blocks.js`). **PENDIENTE**: hoy `useLayout`
-  sigue leyendo `blocks.<superficie>` de la plantilla (composición fija, sin config).
+- [x] Cada `views/store/<diseño>/InicioView|CatalogoView|ServiciosView` compone sus
+  secciones fijas (sin `useLayout`, sin `blocks.js`). **(TERMINADO)** —
+  `templates/index.js` expone `templateBlocks(id, surface)` / `templateBlock(id,
+  surface, id)`; las 9 portadas, `StoreCatalogView`, `raiz/ServiciosView`,
+  `alimentos/AlHistory` y `BlkHighlights` leen la composición de la plantilla.
+  `composables/useLayout.js` eliminado. Tests: `tests/store-layout.test.js`.
 - [x] Retirar `TEMPLATE_BLOCKS`/`clean_layout_config` del camino crítico y el editor de
   bloques del Studio. **(TERMINADO en UI)** — se quitó la sección "Bloques" del panel,
   el panel Distribución del Studio y su entrada del buscador; el backend sigue
   aceptando `layout_config` sin aplicarlo.
-- [ ] Limpiar tests y referencias.
+- [x] Limpiar tests y referencias. **(TERMINADO)** — `resolveLayout` ya no acepta
+  config (delega en `templateBlocks`), `useLayout.js`, `LayoutEditor.vue` y
+  `DistribucionPanel.vue` eliminados (código muerto); `blocks.js` queda solo
+  como catálogo de ids/etiquetas del panel.
 
 ### FASE 4 — Rediseño de plantillas (landing, catálogo, servicios)
 
@@ -133,7 +142,9 @@
 - [x] Aplicación en el chrome (menú superior, barra móvil, botones de control).
   **(TERMINADO)** — `provide('storeIconSet')` + `AppIcon` pinta el path del set con alias
   semánticos (`x→close`, `moon→theme`, `package→catalog`…).
-- [ ] El usuario puede cambiar el set sin tocar el diseño; fallback al del diseño.
+- [x] El usuario puede cambiar el set sin tocar el diseño; fallback al del diseño.
+  **(TERMINADO)** — `storeIconSet` usa `custom.icon_style` y, si está vacío, el
+  `icon_style` del patrón base.
 
 ### FASE 6 — Studio
 
@@ -155,10 +166,10 @@
 
 ## 2.b Estado para el próximo agente
 
-**Hecho y verificado:** contrato de datos (Fase 1), modo noche universal (Fase 2
-parcial), catálogo + aplicación de iconos (Fase 5), retiro del sistema de bloques
-del render y del Studio (Fase 3, falta limpiar `useLayout`/`blocks.js` de las
-vistas), documentación vieja borrada (Fase 0).
+**Hecho y verificado:** contrato de datos (Fase 1), modo noche universal
+(Fase 2 completa), catálogo + aplicación de iconos (Fase 5 completa), retiro
+del sistema de bloques del render, del Studio y de las vistas (Fase 3
+completa), documentación vieja borrada (Fase 0).
 
 **Falta lo pesado:** Fase 4 (rediseñar landing/catálogo/servicios de cada diseño
 sobre `DesignPattern.html/css/js` con variables) y Fase 6 (rediseño profundo del
@@ -180,5 +191,10 @@ Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.p
   `qa_skin_dark.py` (bench-store, payload interceptado) → placas amarillas de
   `seguridad`, CTA/eyebrow sobre la banda y chip de `pop` corregidos; 0 fallas
   a 1360 y 390.
-- Próximo paso: Fase 3 (limpieza de `useLayout`/`blocks.js` en las vistas) y Fase 4
-  (render por `DesignPattern.html/css/js` con variables).
+- (2026-10-30) Fase 3 cerrada: `templateBlocks`/`templateBlock` reemplazan
+  `useLayout` en todas las vistas públicas; `useLayout.js`, `LayoutEditor.vue` y
+  `DistribucionPanel.vue` eliminados. Fase 2: test de tema/persistencia
+  (`utils/storeTheme.js`). Fase 5 cerrada (fallback de iconos verificado).
+  Vitest 25 tests OK, `verify:studio` OK, `vite build` OK con `TMP` local.
+- Próximo paso: Fase 4 (render por `DesignPattern.html/css/js` con variables y
+  rediseño de landing/catálogo/servicios por rubro) y Fase 6 (rediseño del Studio).

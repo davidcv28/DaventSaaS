@@ -15,7 +15,7 @@ import { storeHostSlug } from '../../../config/env.js'
 import { buildServiceRequestMessage, servicePriceLabel } from '../../../api/services.api.js'
 import { SERVICE_ICONS } from '../../../api/stores.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
 import { resolveSiteTheme } from '../../../studio/contract.js'
 import { vReveal } from '../../../directives/reveal.js'
 
@@ -25,7 +25,12 @@ const ctx = inject('storePage')
 // secciones con una sola retícula editorial: el orden se respeta y las
 // variantes de picker del Studio quedan fuera (composición fija, §3 del
 // prompt de corrección).
-const { on, pos, st } = useLayout('services')
+// Composición fija de la superficie 'services' que declara el diseño.
+const servicesLayout = computed(() => templateBlocks(ctx.pageTemplate.value, 'services'))
+const servicesById = computed(() => new Map(servicesLayout.value.map((b) => [b.id, b])))
+const on = (id) => servicesById.value.get(id)?.enabled !== false
+const pos = (id) => servicesById.value.get(id)?.order ?? 999
+const st = (id) => servicesById.value.get(id) || { id, enabled: true }
 const ord = (id) => { const p = pos(id); return p === 999 ? pos('form') : p }
 const blkTitle = (id, fallback) => st(id).props?.title || fallback
 const router = useRouter()

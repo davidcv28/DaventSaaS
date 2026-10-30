@@ -7,18 +7,18 @@
 import { computed } from 'vue'
 import AppIcon from '../../../components/AppIcon.vue'
 import { useStorePage } from '../../../composables/useStorePage.js'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlock } from '../../../templates/index.js'
 import { vReveal } from '../../../directives/reveal.js'
 
 const props = defineProps({ block: { type: Object, default: null } })
 
-const { custom, hasAbout, stats, aboutSpecialties } = useStorePage()
+const { custom, hasAbout, stats, aboutSpecialties, pageTemplate } = useStorePage()
 // El bloque `stats` se fusiona acá (la referencia pone las cifras al lado de
-// la historia): se respeta su on/off aunque no tenga componente propio.
-const { on } = useLayout('landing')
+// la historia): se respeta su estado en la composición del diseño.
+const statsBlock = templateBlock(pageTemplate.value, 'landing', 'stats')
 
 const title = computed(() => props.block?.props?.title?.trim() || custom.value.about_title?.trim() || 'Nuestra historia')
-const showStats = computed(() => on('stats') && stats.value.length > 0)
+const showStats = computed(() => statsBlock.enabled !== false && stats.value.length > 0)
 const show = computed(() => hasAbout.value || showStats.value)
 const specialtyList = computed(() => aboutSpecialties.value.slice(0, 8))
 </script>

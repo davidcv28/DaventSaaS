@@ -3,9 +3,8 @@
 //   - fonts:    fuentes on-demand del diseño (las carga el layout);
 //   - surfaces: landing / catalog / product (la página Servicios cuelga de
 //               la misma carpeta del diseño);
-//   - blocks:   whitelist de bloques por superficie y, en landing, orden
-//               canónico por defecto de la portada (la vista lo monta de
-//               forma generativa con useLayout; ver abajo).
+//   - blocks:   composición canónica por superficie (la vista monta esos
+//               bloques en ese orden; ver templateBlocks/resolveLayout).
 //
 // Catálogo cerrado de 8 diseños, dos por nivel de plan:
 //   raiz         (base)     generalista / retail / servicios
@@ -20,17 +19,13 @@
 // El fallback global es 'raiz'. Todo id retirado se remapea con
 // STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
 //
-// El render de la portada de TODOS los diseños es generativo: cada
-// InicioView monta sus secciones desde useLayout('landing') (layout_config
-// guardado ∪ patrón de diseño de la base), respetando orden, on/off,
-// variante y props de cada bloque. Las tres superficies (landing, catalog,
-// services) nacen VACÍAS: el front no declara secciones por defecto; la
-// composición la decide el patrón DesignPattern (StoreApp/domains/design) o
-// la config guardada de la tienda. La whitelist de ids sigue en
-// blocks.js. resolveLayout() fuerza 'contact' al final.
+// El sistema de bloques se retiró: cada plantilla declara su composición
+// única en `blocks.<superficie>` y esa es la que se monta, sin reordenar ni
+// apagar nada desde la config de la tienda. La whitelist de ids sigue en
+// blocks.js.
 
 import { defineAsyncComponent } from 'vue'
-import { blockSpec, LAYOUT_SURFACES } from './blocks.js'
+import { LAYOUT_SURFACES } from './blocks.js'
 import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
 
 import raiz         from './raiz/index.js'
@@ -75,9 +70,8 @@ export function templateOf(value) {
   return TEMPLATE_DEFS[normalized] ? normalized : DEFAULT_TEMPLATE
 }
 
-// Las tres superficies de la web nacen VACÍAS: ninguna plantilla declara
-// secciones por defecto. La composición sale del patrón DesignPattern de la
-// base (layout) o del layout_config guardado por la tienda.
+// Sin layout por defecto global: cada plantilla declara el suyo en
+// `blocks.<superficie>`.
 export function defaultLayout() {
   return []
 }
@@ -114,22 +108,25 @@ export function normalizeLayoutConfig(raw) {
   return out
 }
 
-// Layout efectivo (Studio): la composición es la del DISEÑO.
-// El sistema de bloques se retiró: `layout_config` ya no reordena, apaga ni
-// enciende secciones (se sigue aceptando y guardando por compatibilidad,
-// pero el render lo ignora). Cada plantilla declara su composición única en
-// `blocks.<superficie>` y esa es la que se monta.
-export function resolveLayout(id, surface, layoutConfig) {
+// Composición canónica de una superficie: la que declara el DISEÑO en
+// `blocks.<superficie>`. El sistema de bloques se retiró — `layout_config`
+// ya no reordena, apaga ni enciende secciones (se sigue aceptando y
+// guardando por compatibilidad, pero el render lo ignora).
+export function templateBlocks(id, surface) {
   const canonical = templateDef(id).blocks?.[surface] || []
   return canonical.map((entry, i) => {
     const base = typeof entry === 'string' ? { id: entry } : { ...entry }
-    const spec = blockSpec(surface, base.id)
-    return {
-      ...base,
-      order: i,
-      enabled: spec?.locked ? true : base.enabled !== false
-    }
+    return { ...base, order: i, enabled: base.enabled !== false }
   })
+}
+
+// Estado de un bloque puntual de la composición (variant/props/enabled).
+export function templateBlock(id, surface, blockId) {
+  return templateBlocks(id, surface).find((b) => b.id === blockId) || { id: blockId, enabled: true }
+}
+
+export function resolveLayout(id, surface) {
+  return templateBlocks(id, surface)
 }
 
 // Etiquetas del catálogo para el panel (re-export cómodo).

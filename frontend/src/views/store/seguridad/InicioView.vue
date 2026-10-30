@@ -6,8 +6,8 @@
 // con datos se auto-ocultan solos (categorías sin productos, servicios
 // apagados, stats sin números, aigrid sin ítems…). La piel vive en
 // assets/store-seguridad.css con raíz [data-template="seguridad"].
-import { computed } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { computed, inject } from 'vue'
+import { templateBlocks } from '../../../templates/index.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkHighlights from '../../../components/store/blocks/BlkHighlights.vue'
 import BlkAbout from '../../../components/store/blocks/BlkAbout.vue'
@@ -89,8 +89,8 @@ const FIRMA = {
   contact: 'card'
 }
 
-const { blocks } = useLayout('landing')
-const visible = computed(() => blocks.value
+const { pageTemplate } = inject('storePage')
+const visible = computed(() => templateBlocks(pageTemplate.value, 'landing')
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map((b) => (b.variant ? b : { ...b, variant: FIRMA[b.id] })))
 </script>

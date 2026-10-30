@@ -5,7 +5,8 @@
 // (chips de categorías + grilla de prendas); el resto de los bloques son los
 // compartidos, re-skineados desde store-atelier.css.
 import { computed, ref } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
+import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
 import BlkStats from '../../../components/store/blocks/BlkStats.vue'
@@ -35,7 +36,7 @@ import BqAbout from './BqAbout.vue'
 import BqQuote from './BqQuote.vue'
 import { useCardTitles } from './useCardTitles.js'
 
-const { blocks } = useLayout('landing')
+const { pageTemplate } = useStorePage()
 const pageEl = ref(null)
 useCardTitles(pageEl)
 
@@ -82,7 +83,7 @@ function withDefaults(block) {
   return block
 }
 
-const items = computed(() => blocks.value
+const items = computed(() => templateBlocks(pageTemplate.value, 'landing')
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>

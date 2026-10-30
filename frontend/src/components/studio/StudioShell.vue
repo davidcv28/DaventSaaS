@@ -288,7 +288,7 @@ function pruneTheme(theme, keys) {
 watch(() => JSON.stringify(draft.theme), () => emit('update:theme', pruneTheme(draft.theme, explicit.value)), { immediate: true })
 // Solo se emite layout_config cuando el ensayo difiere de lo guardado:
 // reenviar el layout intacto en un save de diseño cualquiera expone los
-// bloques que LayoutEditor preserva verbatim a la poda del backend.
+// bloques canónicos que el borrador preserva verbatim a la poda del backend.
 watch(() => JSON.stringify([draft.layout, draft.template]), () => emit('update:layout', {
   layout_config: JSON.stringify(draft.layout) !== JSON.stringify(savedLayout.value) ? clone(draft.layout) : null,
   template: draft.template

@@ -13,7 +13,7 @@ import { computed, defineComponent, h, inject } from 'vue'
 import { RouterLink } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
 import { firma, landingExtras } from '../../../templates/_shared.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
@@ -82,8 +82,8 @@ const MAP = {
   contact: BlkContact
 }
 
-const { blocks } = useLayout('landing')
-const visible = computed(() => blocks.value.filter((b) => b.enabled !== false && MAP[b.id]))
+const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing')
+  .filter((b) => b.enabled !== false && MAP[b.id]))
 </script>
 
 <template>

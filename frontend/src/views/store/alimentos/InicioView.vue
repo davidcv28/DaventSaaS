@@ -11,7 +11,8 @@
 // `stats` no tiene componente: el diseño fusiona las cifras dentro de
 // "Nuestra historia" (AlHistory), igual que la referencia visual.
 import { computed } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
+import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkHighlights from '../../../components/store/blocks/BlkHighlights.vue'
 import BlkCategories from '../../../components/store/blocks/BlkCategories.vue'
@@ -40,7 +41,7 @@ import AlFeatured from './AlFeatured.vue'
 import AlSteps from './AlSteps.vue'
 import AlHistory from './AlHistory.vue'
 
-const { blocks } = useLayout('landing')
+const { pageTemplate } = useStorePage()
 
 const MAP = {
   announcements: BlkAnnouncements,
@@ -80,7 +81,7 @@ const MAP = {
 // y en móvil se apilaba en varias líneas.
 const blockOf = (b) => (b.id === 'announcements' && !b.variant ? { ...b, variant: 'static' } : b)
 
-const visible = computed(() => blocks.value
+const visible = computed(() => templateBlocks(pageTemplate.value, 'landing')
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map((b) => ({ ...blockOf(b), comp: MAP[b.id] })))
 </script>

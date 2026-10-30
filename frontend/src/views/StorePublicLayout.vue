@@ -11,6 +11,7 @@ import BrandLogo from '../components/BrandLogo.vue'
 import StoreBot from '../components/StoreBot.vue'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
+import { readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts, normalizeLayoutConfig } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
@@ -245,20 +246,19 @@ watch(effectiveSkin, (family) => {
 const prefersDark = typeof window !== 'undefined' && window.matchMedia
   ? window.matchMedia('(prefers-color-scheme: dark)').matches
   : false
-function readVisitorTheme() {
-  try {
-    const saved = localStorage.getItem(`davent:store-theme:${slug.value}`)
-    return saved === 'light' || saved === 'dark' ? saved : null
-  } catch { return null }
+function readVisitorThemeForStore() {
+  return readVisitorTheme(typeof localStorage !== 'undefined' ? localStorage : null, slug.value)
 }
-// Si el negocio no fijó default, se respeta prefers-color-scheme.
-const storeThemeDefault = computed(() => {
-  const t = custom.value.theme
-  if (t === 'light' || t === 'dark') return t
-  return prefersDark ? 'dark' : 'light'
-})
-const visitorTheme = ref(readVisitorTheme()) // null = tema de la tienda
-const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || visitorTheme.value || storeThemeDefault.value)
+// Si el negocio no fijó default, se respeta prefers-color-scheme (lo resuelve
+// resolveStoreTheme junto con la elección del visitante y el preview).
+const visitorTheme = ref(readVisitorThemeForStore()) // null = tema de la tienda
+const pageTheme = computed(() => resolveStoreTheme({
+  studio: studioMode.value,
+  studioView: studioViewMode.value,
+  visitor: visitorTheme.value,
+  storeDefault: custom.value.theme,
+  prefersDark
+}))
 // Interruptor de noche: lo habilita el negocio (theme_toggle). Payloads
 // viejos sin el campo conservan la regla anterior (sin diseño avanzado el
 // visitante ya podía alternarlo).
@@ -272,7 +272,7 @@ const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || v
 const showThemeToggle = computed(() => status.value === 'success')
 function togglePageTheme() {
   visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
-  try { localStorage.setItem(`davent:store-theme:${slug.value}`, visitorTheme.value) } catch { /* modo privado */ }
+  persistVisitorTheme(typeof localStorage !== 'undefined' ? localStorage : null, slug.value, visitorTheme.value)
 }
 // Anti-flash del lienzo: el shell del producto (html/body) hereda el fondo del
 // panel. Mientras esta web está montada se pinta con el tema efectivo ANTES

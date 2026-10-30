@@ -10,7 +10,8 @@
 // equipo): mapeados a los Blk* compartidos para que la IA pueda recomponer la
 // portada de boutique de verdad, no solo reordenar las secciones firma.
 import { computed, ref } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
+import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkFeatured from '../../../components/store/blocks/BlkFeatured.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
@@ -46,7 +47,7 @@ import { useCardTitles } from './useCardTitles.js'
 // selectores son más específicos, así que no compite con la piel.
 import '../../../assets/store-boutique-motion.css'
 
-const { blocks } = useLayout('landing')
+const { pageTemplate } = useStorePage()
 const pageEl = ref(null)
 useCardTitles(pageEl)
 
@@ -96,7 +97,7 @@ function withDefaults(block) {
   return block
 }
 
-const items = computed(() => blocks.value
+const items = computed(() => templateBlocks(pageTemplate.value, 'landing')
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>

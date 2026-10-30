@@ -12,8 +12,8 @@
 // descarta (el diseño no lo soporta).
 // La piel del chrome/tokens vive en assets/store-raiz.css; la portada en
 // assets/store-raiz-home.css.
-import { computed } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { computed, inject } from 'vue'
+import { templateBlocks } from '../../../templates/index.js'
 import { landingExtras } from '../../../templates/_shared.js'
 import RhAnnouncements from '../../../components/store/blocks/raiz/RhAnnouncements.vue'
 import RhHero from '../../../components/store/blocks/raiz/RhHero.vue'
@@ -57,8 +57,9 @@ const MAP = {
   contact: RhContact
 }
 
-const { blocks } = useLayout('landing')
-const visible = computed(() => blocks.value.filter((b) => b.enabled !== false && MAP[b.id]))
+const { pageTemplate } = inject('storePage')
+const visible = computed(() => templateBlocks(pageTemplate.value, 'landing')
+  .filter((b) => b.enabled !== false && MAP[b.id]))
 </script>
 
 <template>

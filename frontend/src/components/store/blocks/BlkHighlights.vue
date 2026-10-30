@@ -10,15 +10,14 @@ import { storeHostSlug } from '../../../config/env.js'
 import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
 
 defineProps({ block: { type: Object, default: null } })
 
 const ctx = inject('storePage')
-const { slug, custom, location, showContact, showCatalog } = ctx
+const { slug, custom, location, showContact, showCatalog, pageTemplate } = ctx
 const servicesPage = ctx.showServices
 const { featured: shopCatalog } = useFeaturedCatalog()
-const { blocks } = useLayout('landing')
 
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const servicesTo = computed(() => ({ name: 'store-services', params: storeHostSlug ? {} : { slug: slug.value } }))
@@ -32,7 +31,7 @@ const shopDepts = computed(() => shopCatalog.value.categories
 // Los departamentos ocupan este slot solo si el bloque 'categories' está
 // habilitado en el layout efectivo Y tiene datos reales que mostrar.
 const deptsVisible = computed(() =>
-  blocks.value.some((b) => b.id === 'categories' && b.enabled !== false) && shopDepts.value.length > 0
+  templateBlocks(pageTemplate.value, 'landing').some((b) => b.id === 'categories' && b.enabled !== false) && shopDepts.value.length > 0
 )
 
 const highlights = computed(() => {

@@ -12,7 +12,7 @@
 // monta. Cada sección se auto-oculta sin datos y un id sin componente se
 // descarta (nunca deja un hueco).
 import { computed, inject } from 'vue'
-import { useLayout } from '../../../composables/useLayout.js'
+import { templateBlocks } from '../../../templates/index.js'
 import { landingExtras } from '../../../templates/_shared.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
@@ -75,8 +75,7 @@ function withDefaults(block) {
   return block
 }
 
-const { blocks } = useLayout('landing')
-const visible = computed(() => blocks.value
+const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing')
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>
