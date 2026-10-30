@@ -2769,7 +2769,7 @@ def prefill(store):
 #=========================================
 # REFINE: AJUSTAR LA PROPUESTA ELEGIDA SIN REHACER LA TANDA (contrato 2.4)
 #=========================================
-def refine(store, payload):
+def refine(store, payload, theme_overlay = None):
     """
     Cambia SOLO lo pedido (tipografía, aire, color, portada) sobre la
     propuesta elegida y devuelve la misma propuesta recalculada. La tanda
@@ -2812,6 +2812,9 @@ def refine(store, payload):
     proposal        =   next((item for item in result['proposals'] if item['id'] == proposal_id), None)
     if proposal is None:
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
+    #El wizard "Diseño asistido" deja acá el skill que eligió el MCP: el
+    #ajuste cambia tipografía/aire/color/portada, no la piel elegida.
+    proposal    =   apply_theme_overlay(proposal, theme_overlay)
     #`apply` recalcula con esta caché: el ajuste queda en lo que se publica.
     cache.set(_cache_key(store, seed), answers, CACHE_TTL)
     return {
@@ -3012,7 +3015,28 @@ def _resolve_extras(layout, extras, accept, skip_extras, has_ai, blocks = None):
     return layout
 
 
-def apply(store, seed, proposal_id, autofill = False, extras = None, skip_extras = False):
+def apply_theme_overlay(proposal, overlay):
+    """
+    Superpone el skill que eligió el MCP (`ai-design/mcp`) sobre una
+    propuesta recalculada por el motor. El overlay ya viene saneado por
+    `clean_site_theme`, así que reemplazar la piel no rompe el contrato del
+    Studio; sin overlay la propuesta queda exactamente como la armó el motor.
+    """
+    if not isinstance(overlay, dict):
+        return proposal
+    if overlay.get('site_theme'):
+        proposal['site_theme']      =   copy.deepcopy(overlay['site_theme'])
+    if overlay.get('theme'):
+        proposal['theme']           =   overlay['theme']
+        proposal['theme_toggle']    =   bool(overlay.get('theme_toggle'))
+    if overlay.get('accent'):
+        proposal['theme_choice']    =   {'accent': overlay['accent'], 'source': 'mcp'}
+    if overlay.get('mcp_style'):
+        proposal['mcp_style']       =   copy.deepcopy(overlay['mcp_style'])
+    return proposal
+
+
+def apply(store, seed, proposal_id, autofill = False, extras = None, skip_extras = False, theme_overlay = None):
     """
     Recalcula la propuesta con el mismo motor, la escribe en el BORRADOR
     (layout_config_draft, site_theme_draft, template_draft, theme,
@@ -3046,6 +3070,8 @@ def apply(store, seed, proposal_id, autofill = False, extras = None, skip_extras
     proposal    =   next((item for item in built['proposals'] if item['id'] == proposal_id), None)
     if proposal is None:
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
+    #La piel la eligió el MCP en el wizard: se republica tal cual se vio.
+    proposal    =   apply_theme_overlay(proposal, theme_overlay)
 
     if later and later['offered'] is None:
         #Sin lista de ofrecidos se toman los que la propuesta ya evaluó

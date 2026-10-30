@@ -80,7 +80,10 @@ from StoreApp.domains.stores.services.ai_design import (
     refine as refine_ai_design,
 )
 from StoreApp.domains.stores.services.ai_design_mcp import (
-    generate_from_message as generate_ai_design_mcp,
+    generate_from_prompt as generate_ai_design_mcp,
+)
+from StoreApp.domains.stores.services.ai_design_mcp import (
+    overlay_of as ai_design_mcp_overlay,
 )
 from StoreApp.domains.stores.services.ai_design_telemetry import (
     record_event as record_ai_design_event,
@@ -985,7 +988,13 @@ class StoreViewSet(StoreBaseViewSet):
                 status = status.HTTP_403_FORBIDDEN,
             )
         try:
-            data    =   refine_ai_design(store, request.data)
+            data    =   refine_ai_design(
+                store,
+                request.data,
+                theme_overlay = ai_design_mcp_overlay(
+                    store, request.data.get('seed'), request.data.get('proposal_id'),
+                ),
+            )
         except AiDesignError as error:
             return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
         return Response(data, status = status.HTTP_200_OK)
@@ -1018,6 +1027,10 @@ class StoreViewSet(StoreBaseViewSet):
                 #todos y los deja apagados en el borrador.
                 extras          =   request.data.get('extras'),
                 skip_extras     =   _flag(request.data.get('skip_extras')),
+                #Piel elegida por el MCP en el wizard "Diseño asistido".
+                theme_overlay   =   ai_design_mcp_overlay(
+                    store, request.data.get('seed'), request.data.get('proposal_id'),
+                ),
             )
         except AiDesignError as error:
             return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
@@ -1121,9 +1134,10 @@ class StoreViewSet(StoreBaseViewSet):
         try:
             data    =   generate_ai_design_mcp(
                 store,
-                request.data.get('message'),
+                request.data.get('prompt'),
                 request.data.get('history'),
                 seed    =   request.data.get('seed'),
+                message = request.data.get('message') or '',
             )
         except AiDesignError as error:
             return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)

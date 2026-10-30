@@ -1,18 +1,39 @@
+import copy
 import re
 import unicodedata
 
+from django.core.cache import cache
+from rest_framework import serializers
+
 from . import ai_design_recipes as R
-from .ai_design import AiDesignError, generate
+from .ai_design import (
+    CACHE_TTL,
+    AiDesignError,
+    _ensure_contrast,
+    _luminance,
+    _norm_hex,
+    apply_theme_overlay,
+    generate,
+)
 
 """
 Proxy del wizard "Diseño asistido" hacia el MCP de estilos.
 
-El frontend acumula las respuestas del wizard en UN mensaje legible
-("Rubro: … / Objetivo: … / Tono: …") y lo manda acá. El service traduce ese
-texto a las respuestas que entiende el motor de diseño existente y devuelve
-las propuestas con el mismo contrato que `ai-design/` (proposals + seed +
-missing), así el wizard, el ajuste fino y la publicación siguen usando el
-mismo motor y la misma caché de tanda.
+El frontend manda el pedido del cliente como ESTRUCTURA DE DATO (una clave
+por pregunta del wizard) y el MCP decide qué skill de diseño aplicar:
+
+  1. `prompt` -> respuestas del motor (`ai_design.generate`): rubro,
+     objetivos, tono, audiencia, imprescindibles y notas libres.
+  2. `select_styles` consulta el catálogo del MCP (`McpApp.domains.skills`:
+     `search_design_styles` / `list_design_styles`) con una query armada
+     desde el prompt y rankea por solapamiento de tags.
+  3. Cada propuesta del motor recibe un skill DISTINTO: sus `tokens_diseno`
+     se traducen a `site_theme` (paleta, contenedores y tipografía del
+     catálogo cerrado) y se pasan por `clean_site_theme`, así lo que se ve
+     en la tarjeta es lo que se publica.
+  4. El overlay queda en caché por (tienda, semilla): `apply` y `refine`
+     lo reaplican sobre el recálculo del motor, por eso publicar no pierde
+     el estilo elegido por el MCP.
 
 El token del MCP y cualquier credencial quedan del lado del servidor: el
 navegador nunca ve nada más que este endpoint.
@@ -20,10 +41,9 @@ navegador nunca ve nada más que este endpoint.
 
 MAX_MESSAGE     =   4000
 MAX_TURNS       =   20
+MAX_STYLES      =   6
 
-#Claves del mensaje -> campo del motor. Se comparan normalizadas (sin
-#acentos ni mayúsculas) y por prefijo, así "Objetivo:" y "Objetivos:" caen
-#en el mismo lado.
+#Claves del mensaje (texto libre, compatibilidad) -> campo del motor.
 _BLOCK_KEYS     =   {
     'rubro'             :   'rubro',
     'categoria'         :   'rubro',
@@ -84,17 +104,56 @@ _MUST_WORDS     =   (
     ('hours', ('horario', 'abierto', 'atencion')),
     ('map', ('mapa', 'direccion', 'ubicacion', 'llegar')),
     ('prices', ('precio', 'cuanto sale', 'tarifa', 'lista de precios')),
-    ('testimonials', ('opinion', 'testimonio', 'reseña', 'resena', 'clientes dicen')),
+    ('testimonials', ('opinion', 'testimonio', 'resena', 'clientes dicen')),
     ('faqs', ('pregunta', 'faq', 'duda')),
 )
 
+#Rubro del motor -> categorías del catálogo del MCP (DesignModelMcp.categoria).
+#La primera que tenga estilos gana; vacío = buscar sin filtro.
+_RUBRO_CATEGORIES   =   {
+    'comercio'                  :   ('general', 'moda'),
+    'gastronomia'               :   ('alimentos', 'cafeteria'),
+    'indumentaria'              :   ('moda',),
+    'servicios_profesionales'   :   ('servicios', 'general'),
+    'salud'                     :   ('salud',),
+    'belleza'                   :   ('joyeria', 'moda'),
+    'construccion'              :   ('servicios', 'automotriz'),
+    'tecnologia'                :   ('tecnologia',),
+    'educacion'                 :   ('general', 'infantil'),
+    'turismo'                   :   ('turismo',),
+    'mascotas'                  :   ('infantil', 'general'),
+    'arte'                      :   ('arte', 'fotografia'),
+    'seguridad'                 :   ('tecnologia', 'general'),
+    'otro'                      :   ('general',),
+}
+
+#Tono del motor -> palabras que empujan el ranking de estilos del MCP.
+_TONE_HINTS     =   {
+    'calido'    :   ('calido', 'artesanal', 'acogedor', 'suave', 'natural'),
+    'serio'     :   ('elegante', 'clasico', 'confianza', 'premium', 'limpio'),
+    'moderno'   :   ('moderno', 'limpio', 'minimal', 'producto', 'claro'),
+    'audaz'     :   ('bold', 'contraste', 'energia', 'urbano', 'colorido'),
+}
+
 _LINE           =   re.compile(r'^\s*([^:]{3,32}?)\s*:\s*(.+?)\s*$')
-_SPLIT          =   re.compile(r'\s*(?:,|;|/|\+|\by\b|\+)\s*', re.IGNORECASE)
+_SLUG_RE        =   re.compile(r'[^a-z0-9]+')
+
+#Radio del token (px) -> enum cerrado de `containers.radius`.
+_RADIUS_STEPS   =   ((0, 'none'), (6, 'sm'), (12, 'md'), (18, 'lg'), (999, 'xl'))
+#Nombres de fuente que NO están en el catálogo: se elige una del mismo aire.
+_SERIF_HINTS    =   ('serif', 'garamond', 'playfair', 'lora', 'fraunces', 'baskerville', 'cinzel', 'georgia', 'times')
+_DISPLAY_HINTS  =   ('black', 'anton', 'bebas', 'oswald', 'impact', 'archivo', 'barlow condensed', 'orbitron')
+_MONO_HINTS     =   ('mono', 'courier', 'vt323', 'press start')
+_SANS_HINTS     =   ('inter', 'manrope', 'figtree', 'jakarta', 'sora', 'work sans', 'outfit', 'nunito', 'raleway', 'poppins', 'karla', 'lato', 'roboto', 'barlow', 'archivo', 'quicksand', 'baloo', 'fredoka', 'space grotesk')
 
 
 def _fold(value):
     raw =   unicodedata.normalize('NFD', str(value or ''))
     return ''.join(ch for ch in raw if unicodedata.category(ch) != 'Mn').lower().strip()
+
+
+def _slugify(value):
+    return _SLUG_RE.sub('-', _fold(value)).strip('-')
 
 
 def _match(text, table):
@@ -126,13 +185,16 @@ def normalize_history(raw):
     return rows[-MAX_TURNS:]
 
 
+#=========================================
+# PROMPT -> RESPUESTAS DEL MOTOR
+#=========================================
 def parse_message(message):
     """
-    Traduce el mensaje acumulado del wizard a las respuestas del motor.
-    Tolerante a propósito: el dueño puede editar los bloques a mano y el
-    mensaje sigue entrando (nunca 400 por una coma).
+    Compatibilidad: traduce un mensaje de texto ("Rubro: … / Tono: …") a la
+    estructura del pedido. Tolerante a propósito: una coma de más nunca es
+    400.
     """
-    payload =   {}
+    prompt  =   {}
     notes   =   []
     for line in str(message or '').splitlines():
         match   =   _LINE.match(line)
@@ -146,60 +208,368 @@ def parse_message(message):
             notes.append(f'{match.group(1).strip()}: {value}')
             continue
         if key == 'rubro':
-            payload['rubro'] = _match(value, _RUBRO_WORDS) or payload.get('rubro', '')
+            prompt['rubro'] = _match(value, _RUBRO_WORDS) or prompt.get('rubro', '')
         elif key == 'tone':
-            payload['tone'] = _match(value, _TONE_WORDS) or payload.get('tone', '')
+            prompt['tone'] = _match(value, _TONE_WORDS) or prompt.get('tone', '')
         elif key == 'goals':
             goals = [goal for goal in _matches(value, _GOAL_WORDS) if goal in R.GOALS]
-            payload['goals'] = (goals or payload.get('goals') or [])[:2]
+            prompt['goals'] = (goals or prompt.get('goals') or [])[:2]
         elif key == 'must_have':
             must = [item for item in _matches(value, _MUST_WORDS) if item in R.MUST_HAVE_BLOCKS]
-            payload['must_have'] = (must or payload.get('must_have') or [])
+            prompt['must_have'] = (must or prompt.get('must_have') or [])
         elif key == 'audience':
-            payload['audience'] = value[:120]
+            prompt['audience'] = value[:120]
         elif key == 'content_hint':
-            payload['content_hint'] = value[:160]
-    if notes and 'content_hint' not in payload:
-        payload['content_hint'] = ' '.join(notes)[:160]
+            prompt['notes'] = value[:160]
+    if notes and 'notes' not in prompt:
+        prompt['notes'] = ' '.join(notes)[:160]
+    return prompt
+
+
+def normalize_prompt(prompt, fallback = None):
+    """
+    Sanea la estructura del pedido: ids canónicos del motor, textos cortos y
+    sin claves de más. Es la fuente única de verdad del wizard.
+    """
+    data    =   prompt if isinstance(prompt, dict) else {}
+    if not data and isinstance(fallback, dict):
+        data    =   fallback
+    rubro       =   str(data.get('rubro') or '').strip()
+    if rubro not in R.RUBROS:
+        rubro   =   _match(rubro, _RUBRO_WORDS) if rubro else ''
+    tone        =   str(data.get('tone') or '').strip()
+    if tone not in R.TONES:
+        tone    =   _match(tone, _TONE_WORDS) if tone else ''
+    goals       =   []
+    for goal in (data.get('goals') or []):
+        goal    =   str(goal or '').strip()
+        if goal not in R.GOALS:
+            goal    =   _match(goal, _GOAL_WORDS)
+        if goal and goal in R.GOALS and goal not in goals:
+            goals.append(goal)
+    must        =   []
+    for item in (data.get('must_have') or []):
+        item    =   str(item or '').strip()
+        if item not in R.MUST_HAVE_BLOCKS:
+            item    =   _match(item, _MUST_WORDS)
+        if item and item in R.MUST_HAVE_BLOCKS and item not in must:
+            must.append(item)
+    audience    =   str(data.get('audience') or '').strip()[:120]
+    notes       =   str(data.get('notes') or data.get('content_hint') or '').strip()[:160]
+    return {
+        'rubro'     :   rubro,
+        'goals'     :   goals[:2],
+        'tone'      :   tone,
+        'audience'  :   audience,
+        'must_have' :   must,
+        'notes'     :   notes,
+    }
+
+
+def _engine_payload(prompt):
+    #El motor ignora las claves vacías: cada respuesta que falta se deduce
+    #de los datos reales de la tienda.
+    payload =   {}
+    if prompt.get('rubro'):
+        payload['rubro']    =   prompt['rubro']
+    if prompt.get('goals'):
+        payload['goals']    =   list(prompt['goals'])
+    if prompt.get('tone'):
+        payload['tone']     =   prompt['tone']
+    if prompt.get('audience'):
+        payload['audience'] =   prompt['audience']
+    if prompt.get('must_have'):
+        payload['must_have'] =  list(prompt['must_have'])
+    if prompt.get('notes'):
+        payload['content_hint'] =   prompt['notes']
     return payload
 
 
-def generate_from_message(store, message, history = None, seed = None):
-    """Mensaje acumulado -> propuestas del motor (mismo contrato que `ai-design/`)."""
-    text    =   str(message or '').strip()
-    if not text:
+#=========================================
+# ELECCIÓN DEL SKILL (MCP)
+#=========================================
+def _style_query(prompt):
+    """Query para el MCP: rubro + tono + objetivos + imprescindibles."""
+    words   =   []
+    rubro   =   R.RUBROS.get(prompt.get('rubro') or '') or {}
+    if rubro.get('label'):
+        words.append(rubro['label'])
+    if prompt.get('tone'):
+        words.append(prompt['tone'])
+        words.extend(_TONE_HINTS.get(prompt['tone'], ()))
+    for goal in prompt.get('goals') or []:
+        label =   (R.GOAL_RECIPES.get(goal) or {}).get('label')
+        if label:
+            words.append(label)
+    words.extend(R.MUST_HAVE_LABELS.get(item, '') for item in prompt.get('must_have') or [])
+    if prompt.get('notes'):
+        words.append(prompt['notes'][:60])
+    return ' '.join(word for word in words if word).strip()
+
+
+def _score(style, terms):
+    haystack    =   ' '.join([style.slug, style.nombre, style.categoria, ' '.join(style.tags or [])]).lower()
+    strong      =   (style.slug + ' ' + style.nombre).lower()
+    return sum((3 if term in strong else 1) for term in terms if term and term in haystack)
+
+
+def select_styles(prompt, limit = MAX_STYLES):
+    """
+    Skills del MCP para este pedido. Cadena de respaldo: búsqueda por
+    categoría del rubro -> búsqueda libre -> catálogo por categoría ->
+    catálogo completo. Sin catálogo cargado devuelve [] y el wizard sigue
+    con el diseño del motor (nunca rompe por un catálogo vacío).
+    """
+    from McpApp.domains.skills.services.services import (
+        design_payload,
+        list_design_styles,
+        search_design_styles,
+    )
+
+    query   =   _style_query(prompt)
+    terms   =   [term for term in _fold(query).replace(',', ' ').split() if len(term) > 2]
+    rows    =   []
+    for categoria in (_RUBRO_CATEGORIES.get(prompt.get('rubro') or '', ()) or ('',)):
+        if categoria:
+            rows = search_design_styles(query = query, categoria = categoria, limit = limit * 3)
+            if rows:
+                break
+    if not rows and query:
+        rows    =   search_design_styles(query = query, limit = limit * 3)
+    if not rows:
+        for categoria in (_RUBRO_CATEGORIES.get(prompt.get('rubro') or '', ()) or ('',)):
+            if categoria:
+                rows = list_design_styles(categoria = categoria, limit = limit * 3)
+                if rows:
+                    break
+    if not rows:
+        rows    =   list_design_styles(limit = limit * 3)
+    #Ranking estable: afinidad de tags y, a igualdad, id (determinista).
+    rows.sort(key = lambda style: (-_score(style, terms), style.id))
+    return [design_payload(style, full = True) for style in rows[:limit]]
+
+
+#=========================================
+# TOKENS DEL SKILL -> site_theme
+#=========================================
+def _radius_bucket(raw):
+    try:
+        px  =   int(re.sub(r'[^0-9]', '', str(raw or '')) or 0)
+    except ValueError:
+        px  =   0
+    for limit, value in _RADIUS_STEPS:
+        if px <= limit:
+            return value
+    return 'xl'
+
+
+def _shadow_bucket(raw):
+    value   =   str(raw or '').strip().lower()
+    if not value or value == 'none':
+        return 'none'
+    #Sombra dura (offset sin desenfoque) = medium; el resto, soft.
+    if 'rgba' not in value and 'rgb(' not in value:
+        return 'medium'
+    return 'soft'
+
+
+def _font_slug(name, fallback):
+    from .ai_design_typography import FONT_SLUGS
+
+    slug    =   _slugify(name)
+    if slug in FONT_SLUGS:
+        return slug
+    low =   _fold(name)
+    if any(hint in low for hint in _MONO_HINTS):
+        return 'space-mono'
+    if any(hint in low for hint in _SERIF_HINTS):
+        return 'playfair-display'
+    if any(hint in low for hint in _DISPLAY_HINTS):
+        return 'archivo-black'
+    if any(hint in low for hint in _SANS_HINTS):
+        return fallback
+    return fallback
+
+
+def theme_from_tokens(tokens, base_theme):
+    """
+    Traduce `tokens_diseno` del MCP a las secciones cerradas de `site_theme`.
+    Lo que el catálogo no puede expresar (sombras con blur, fuentes que no
+    están en el catálogo) se resuelve al escalón más cercano.
+    """
+    tokens  =   tokens if isinstance(tokens, dict) else {}
+    theme   =   copy.deepcopy(base_theme or {})
+
+    palette =   dict(theme.get('palette') or {})
+    bg      =   _norm_hex(tokens.get('background')) or palette.get('bg') or '#ffffff'
+    text    =   _norm_hex(tokens.get('text'))
+    surface =   _norm_hex(tokens.get('surface'))
+    muted   =   _norm_hex(tokens.get('muted'))
+    border  =   _norm_hex(tokens.get('border'))
+    primary =   _norm_hex(tokens.get('primary'))
+    second  =   _norm_hex(tokens.get('secondary'))
+    palette['bg'] =   bg
+    if surface:
+        palette['surface'] = surface
+    if primary:
+        #El acento tiene que leerse sobre el fondo: el motor ya resuelve el
+        #contraste de la misma forma que sus propias paletas.
+        palette['accent']   =   _ensure_contrast(primary, bg, 3.0)
+        palette['primary']  =   palette['accent']
+    if second:
+        palette['secondary'] = _ensure_contrast(second, bg, 3.0)
+    if text:
+        palette['text'] =   _ensure_contrast(text, bg)
+    if muted:
+        palette['muted'] =  _ensure_contrast(muted, bg, 3.0)
+    if border:
+        palette['border'] = border
+    theme['palette'] =  palette
+
+    containers  =   dict(theme.get('containers') or {})
+    containers['radius']    =   _radius_bucket(tokens.get('radius'))
+    containers['shadow']    =   _shadow_bucket(tokens.get('shadow'))
+    theme['containers'] =   containers
+
+    typography  =   dict(theme.get('typography') or {})
+    typography['heading']   =   _font_slug(tokens.get('heading_font'), typography.get('heading') or 'space-grotesk')
+    typography['body']      =   _font_slug(tokens.get('font'), typography.get('body') or 'inter')
+    theme['typography'] =   typography
+    return theme
+
+
+def _theme_mode(theme):
+    bg  =   ((theme or {}).get('palette') or {}).get('bg') or '#ffffff'
+    return 'dark' if _luminance(bg) < 0.35 else 'light'
+
+
+def apply_overlay(proposal, overlay):
+    """Alias del overlay del motor (`apply_theme_overlay`)."""
+    return apply_theme_overlay(proposal, overlay)
+
+
+#=========================================
+# OVERLAY EN CACHÉ (lo reusan apply y refine)
+#=========================================
+def _overlay_key(store, seed):
+    return f'ai_design_mcp:{store.pk}:{int(seed)}'
+
+
+def save_overlays(store, seed, overlays):
+    cache.set(_overlay_key(store, seed), overlays, CACHE_TTL)
+
+
+def overlay_of(store, seed, proposal_id = None):
+    try:
+        seed    =   int(seed)
+    except (TypeError, ValueError):
+        return None
+    overlays    =   cache.get(_overlay_key(store, seed))
+    if not isinstance(overlays, dict):
+        return None
+    if proposal_id is None:
+        return overlays
+    return overlays.get(str(proposal_id))
+
+
+#=========================================
+# FLUJO
+#=========================================
+def _decorate(store, seed, result, styles, prompt):
+    """Asigna un skill distinto a cada propuesta y guarda el overlay."""
+    proposals   =   result.get('proposals') or []
+    overlays    =   {}
+    chosen      =   []
+    has_plus    =   _benefit(store, 'has_design_plus')
+    has_advanced =  _benefit(store, 'has_design_advanced')
+    has_style   =   _benefit(store, 'has_customization')
+    for index, proposal in enumerate(proposals):
+        if not styles:
+            break
+        style   =   styles[index % len(styles)]
+        tokens  =   style.get('tokens_diseno') or {}
+        if not tokens:
+            continue
+        theme   =   theme_from_tokens(tokens, proposal.get('site_theme') or {})
+        try:
+            from StoreApp.domains.stores.site_theme import clean_site_theme
+
+            theme   =   clean_site_theme(
+                theme,
+                has_plus        =   has_plus,
+                has_advanced    =   has_advanced,
+                has_style       =   has_style,
+                store           =   store,
+            )
+        except serializers.ValidationError:
+            #Un token fuera de contrato nunca tumba la propuesta: se queda
+            #el tema del motor.
+            continue
+        mcp_style   =   {
+            'slug'      :   style.get('slug'),
+            'nombre'    :   style.get('nombre'),
+            'categoria' :   style.get('categoria'),
+            'tags'      :   list(style.get('tags') or [])[:6],
+        }
+        overlay =   {
+            'site_theme'    :   theme,
+            'theme'         :   _theme_mode(theme),
+            'theme_toggle'  :   True,
+            'accent'        :   (theme.get('palette') or {}).get('accent') or '',
+            'mcp_style'     :   mcp_style,
+        }
+        apply_overlay(proposal, overlay)
+        overlays[str(proposal.get('id'))]    =   overlay
+        chosen.append(mcp_style)
+    if overlays:
+        save_overlays(store, seed, overlays)
+    return {
+        'query'     :   _style_query(prompt),
+        'styles'    :   chosen,
+        'available' :   len(styles),
+    }
+
+
+def _benefit(store, code):
+    from .services import profile_has_benefit
+
+    return profile_has_benefit(store.user, code)
+
+
+def generate_from_prompt(store, prompt = None, history = None, seed = None, message = ''):
+    """Pedido estructurado (o texto) -> propuestas con el skill que elige el MCP."""
+    data    =   prompt if isinstance(prompt, dict) else {}
+    if not data and message:
+        data    =   parse_message(message)
+    if not data:
         raise AiDesignError('Contanos lo mínimo de tu negocio para armar la propuesta.')
-    if len(text) > MAX_MESSAGE:
+    if message and len(str(message)) > MAX_MESSAGE:
         raise AiDesignError(f'El pedido admite hasta {MAX_MESSAGE} caracteres.')
-    #El historial aporta contexto de turnos anteriores sin pisar el mensaje
-    #actual: el pedido del último turno manda.
     turns   =   normalize_history(history)
-    context =   ' '.join([row['content'] for row in turns if row['role'] == 'user'][-6:] + [text])
-    payload =   parse_message(text)
-    if not payload:
-        #Sin bloques reconocibles el motor deduce todo de la tienda: no es
-        #un error, es "prefiero que decidas vos".
-        payload =   parse_message(context)
-    #`seed` extra pide "otra tanda" con las MISMAS respuestas (el motor
-    #suma la semilla del pedido a la derivada de la tienda).
+    #El historial solo aporta notas de contexto: la estructura del turno
+    #actual manda sobre cualquier respuesta vieja.
+    if turns and not data.get('notes'):
+        data    =   {**data, 'notes': ' '.join(row['content'] for row in turns if row['role'] == 'user')[-160:]}
+    clean_prompt =  normalize_prompt(data)
+    payload      =  _engine_payload(clean_prompt)
     if seed:
         try:
             payload['seed'] = max(0, int(seed))
         except (TypeError, ValueError):
             pass
     result  =   generate(store, payload)
+    styles  =   select_styles(clean_prompt)
+    mcp     =   _decorate(store, result.get('seed'), result, styles, clean_prompt)
     return {
         'proposals' :   result.get('proposals') or [],
         'seed'      :   result.get('seed'),
         'missing'   :   result.get('missing') or [],
         'checks'    :   result.get('checks') or [],
-        'echo'      :   text,
-        'parsed'    :   {
-            'rubro'         :   payload.get('rubro') or '',
-            'goals'         :   payload.get('goals') or [],
-            'tone'          :   payload.get('tone') or '',
-            'audience'      :   payload.get('audience') or '',
-            'must_have'     :   payload.get('must_have') or [],
-            'content_hint'  :   payload.get('content_hint') or '',
-        },
+        'prompt'    :   clean_prompt,
+        'mcp'       :   mcp,
     }
+
+
+def generate_from_message(store, message, history = None, seed = None):
+    """Compatibilidad con el contrato de texto anterior."""
+    return generate_from_prompt(store, parse_message(message), history, seed, message = str(message or ''))

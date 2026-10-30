@@ -122,12 +122,11 @@ const hydrated = ref(false)
 // ---------- Wizard ----------
 const step = ref(0)
 const stepTitle = ref(null)
-// Bloques del mensaje que el dueño editó o borró a mano (no tocan las
-// respuestas: el mensaje es lo que viaja).
-const blockEdits = reactive({})
+// Claves del pedido que el dueño quitó a mano antes de enviar.
 const blockHidden = reactive({})
-const editingBlock = ref('')
-const draft = ref('')
+const showJson = ref(false)
+// Lo que decidió el MCP: skills de diseño aplicados a la tanda.
+const mcp = ref(null)
 
 let requestSeq = 0
 let timer = null
@@ -196,50 +195,44 @@ const hasAnswers = computed(() => Boolean(
   answers.audience || answers.must_have.length || answers.content_hint
 ))
 
-// ---------- Mensaje acumulado ----------
+// ---------- Prompt estructurado ----------
+// Cada respuesta del wizard es una clave del pedido que se manda al MCP.
+// `blockHidden` deja quitar una clave antes de enviar (volver a responder
+// ese paso la restaura).
 const rubroMeta = computed(() => RUBROS.find((r) => r.id === answers.rubro) || null)
 const toneMeta = computed(() => TONES.find((t) => t.id === answers.tone) || null)
 const audienceLabel = computed(() => AUDIENCES.find((a) => a.id === answers.audience)?.label || '')
 const goalLabels = computed(() => answers.goals.map((id) => GOALS.find((g) => g.id === id)?.label).filter(Boolean))
 const mustLabels = computed(() => answers.must_have.map((id) => MUST_HAVE.find((m) => m.id === id)?.label).filter(Boolean))
 
+const prompt = computed(() => {
+  const p = {}
+  if (!blockHidden.rubro && answers.rubro) p.rubro = answers.rubro
+  if (!blockHidden.goals && answers.goals.length) p.goals = [...answers.goals]
+  if (!blockHidden.tone && answers.tone) p.tone = answers.tone
+  if (!blockHidden.audience && answers.audience) p.audience = answers.audience
+  if (!blockHidden.must_have && answers.must_have.length) p.must_have = [...answers.must_have]
+  const notes = String(answers.content_hint || '').trim()
+  if (!blockHidden.notes && notes) p.notes = notes
+  return p
+})
+const promptJson = computed(() => JSON.stringify(prompt.value, null, 2))
+
 const BLOCK_ROWS = computed(() => [
-  { id: 'rubro', label: 'Rubro', icon: 'tag', value: rubroMeta.value?.label || '' },
-  { id: 'goals', label: 'Objetivo', icon: 'flag', value: goalLabels.value.join(', ') },
-  { id: 'tone', label: 'Tono', icon: 'palette', value: toneMeta.value?.label || '' },
-  { id: 'audience', label: 'Audiencia', icon: 'users', value: audienceLabel.value },
-  { id: 'must_have', label: 'Imprescindible', icon: 'checklist', value: mustLabels.value.join(', ') },
-  { id: 'notes', label: 'Notas', icon: 'file-text', value: String(answers.content_hint || '').trim() }
+  { id: 'rubro', label: 'Rubro', key: 'rubro', icon: 'tag', value: rubroMeta.value?.label || '' },
+  { id: 'goals', label: 'Objetivo', key: 'goals', icon: 'flag', value: goalLabels.value.join(', ') },
+  { id: 'tone', label: 'Tono', key: 'tone', icon: 'palette', value: toneMeta.value?.label || '' },
+  { id: 'audience', label: 'Audiencia', key: 'audience', icon: 'users', value: audienceLabel.value },
+  { id: 'must_have', label: 'Imprescindible', key: 'must_have', icon: 'checklist', value: mustLabels.value.join(', ') },
+  { id: 'notes', label: 'Notas', key: 'notes', icon: 'file-text', value: String(answers.content_hint || '').trim() }
 ])
-const blocks = computed(() => BLOCK_ROWS.value
-  .filter((row) => !blockHidden[row.id])
-  .map((row) => ({ ...row, text: blockEdits[row.id]?.text ?? row.value }))
-  .filter((row) => row.text))
-const composerMessage = computed(() => blocks.value.map((b) => `${b.label}: ${b.text}`).join('\n'))
+const blocks = computed(() => BLOCK_ROWS.value.filter((row) => row.id in prompt.value))
 
 function restoreBlock(id) {
   delete blockHidden[id]
-  delete blockEdits[id]
-}
-function startEdit(block) {
-  editingBlock.value = block.id
-  draft.value = block.text
-}
-function saveEdit() {
-  if (!editingBlock.value) return
-  const text = draft.value.trim()
-  if (text) blockEdits[editingBlock.value] = { text }
-  else blockHidden[editingBlock.value] = true
-  editingBlock.value = ''
-  draft.value = ''
-}
-function cancelEdit() {
-  editingBlock.value = ''
-  draft.value = ''
 }
 function removeBlock(block) {
   blockHidden[block.id] = true
-  if (editingBlock.value === block.id) cancelEdit()
   if (block.id === 'rubro') answers.rubro = ''
   else if (block.id === 'goals') answers.goals = []
   else if (block.id === 'tone') answers.tone = ''
@@ -442,12 +435,13 @@ async function submit(extraSeed = 0) {
   selectedId.value = ''
   proposals.value = []
   previewProposal.value = null
+  mcp.value = null
   clearTimeout(timer)
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { aidTimeout: true })), 20000)
   })
   try {
-    const body = { message: composerMessage.value, history: [] }
+    const body = { prompt: prompt.value, history: [] }
     if (extraSeed) body.seed = extraSeed
     const data = await Promise.race([storesApi.aiDesignMcp(body), timeout])
     if (seq !== requestSeq) return
@@ -456,6 +450,7 @@ async function submit(extraSeed = 0) {
     missing.value = Array.isArray(data.missing) ? data.missing : []
     checks.value = Array.isArray(data.checks) ? data.checks : checks.value
     proposals.value = data.proposals
+    mcp.value = data.mcp || null
     phase.value = 'results'
     track('generate', { meta: { rubro: answers.rubro, goal: answers.goals[0] || '', tone: resolvedTone() || '', count: data.proposals.length } })
     await nextTick()
@@ -550,13 +545,12 @@ function startOver() {
   requestSeq++
   clearTimeout(timer)
   Object.assign(answers, EMPTY())
-  Object.keys(blockEdits).forEach((key) => delete blockEdits[key])
   Object.keys(blockHidden).forEach((key) => delete blockHidden[key])
-  cancelEdit()
   try { localStorage.removeItem(storageKey.value) } catch { /* storage bloqueado */ }
   proposals.value = []
   missing.value = []
   seed.value = null
+  mcp.value = null
   published.value = null
   selectedId.value = ''
   constraints.value = {}
@@ -852,48 +846,37 @@ function closePreview() {
           </section>
         </div>
 
-        <!-- PEDIDO ACUMULADO -->
+        <!-- PEDIDO ESTRUCTURADO -->
         <aside class="aidw-ask" aria-label="Tu pedido">
           <header class="aidw-ask-head">
-            <h3><AppIcon name="message-circle" :size="16" /> Tu pedido</h3>
+            <h3><AppIcon name="clipboard-list" :size="16" /> Tu pedido</h3>
             <span class="aidw-ask-count">{{ blocks.length }}</span>
           </header>
           <p v-if="!blocks.length" class="aidw-ask-empty">
-            A medida que respondas, acá ves el pedido que le vamos a mandar. Podés editarlo antes de generar.
+            Cada respuesta arma una clave del pedido. El MCP lee esta estructura y elige el estilo de diseño.
           </p>
           <ul v-else class="aidw-bubbles">
-            <li v-for="b in blocks" :key="b.id" class="aidw-bubble" :class="{ editing: editingBlock === b.id }">
+            <li v-for="b in blocks" :key="b.id" class="aidw-bubble">
               <span class="aidw-bubble-ico" aria-hidden="true"><AppIcon :name="b.icon" :size="14" /></span>
               <div class="aidw-bubble-body">
                 <span class="aidw-bubble-label">{{ b.label }}</span>
-                <template v-if="editingBlock === b.id">
-                  <textarea
-                    v-model="draft"
-                    class="aidw-bubble-input"
-                    rows="2"
-                    :aria-label="`Editar ${b.label}`"
-                    @keydown.enter.exact.prevent="saveEdit"
-                    @keydown.esc="cancelEdit"
-                  ></textarea>
-                  <div class="aidw-bubble-actions">
-                    <button type="button" class="aidw-mini" @click="saveEdit">Guardar</button>
-                    <button type="button" class="aidw-mini ghost" @click="cancelEdit">Cancelar</button>
-                  </div>
-                </template>
-                <template v-else>
-                  <span class="aidw-bubble-text">{{ b.text }}</span>
-                  <div class="aidw-bubble-actions">
-                    <button type="button" class="aidw-icon-btn" :aria-label="`Editar ${b.label}`" title="Editar" @click="startEdit(b)"><AppIcon name="pencil" :size="14" /></button>
-                    <button type="button" class="aidw-icon-btn" :aria-label="`Quitar ${b.label}`" title="Quitar" @click="removeBlock(b)"><AppIcon name="trash" :size="14" /></button>
-                  </div>
-                </template>
+                <span class="aidw-bubble-text">{{ b.value }}</span>
+                <code class="aidw-bubble-key">{{ b.key }}: {{ b.key === 'goals' || b.key === 'must_have' ? '[]' : '""' }}</code>
+              </div>
+              <div class="aidw-bubble-actions">
+                <button type="button" class="aidw-icon-btn" :aria-label="`Quitar ${b.label}`" title="Quitar" @click="removeBlock(b)"><AppIcon name="trash" :size="14" /></button>
               </div>
             </li>
           </ul>
+          <button v-if="blocks.length" type="button" class="aidw-json-btn" :aria-expanded="showJson" @click="showJson = !showJson">
+            <AppIcon :name="showJson ? 'chevron-up' : 'chevron-down'" :size="14" />
+            {{ showJson ? 'Ocultar' : 'Ver' }} la estructura de datos
+          </button>
+          <pre v-if="showJson && blocks.length" class="aidw-json" aria-label="Pedido en formato de datos">{{ promptJson }}</pre>
           <button type="button" class="btn btn-auto aidw-send" :disabled="!canSubmit" @click="submit()">
             <AppIcon name="send" :size="16" /> Generar propuesta
           </button>
-          <p class="aidw-ask-note">Se manda como un solo mensaje a nuestro motor de diseño.</p>
+          <p class="aidw-ask-note">El MCP elige el estilo de diseño a partir de este pedido.</p>
         </aside>
       </div>
 
@@ -933,6 +916,20 @@ function closePreview() {
         <p v-if="varietyNotice" class="aid-variety">
           <AppIcon name="sparkles" :size="14" aria-hidden="true" /> {{ varietyNotice }}
         </p>
+
+        <div v-if="mcp?.styles?.length" class="aid-mcp">
+          <div class="aid-mcp-head">
+            <AppIcon name="gem" :size="16" aria-hidden="true" />
+            <strong>El MCP eligió {{ mcp.styles.length === 1 ? 'este estilo' : `${mcp.styles.length} estilos` }} de su catálogo</strong>
+          </div>
+          <ul class="aid-mcp-list">
+            <li v-for="s in mcp.styles" :key="s.slug">
+              <strong>{{ s.nombre }}</strong>
+              <span class="aid-mcp-cat">{{ s.categoria }}</span>
+              <span v-if="s.tags?.length" class="aid-mcp-tags">{{ s.tags.join(' · ') }}</span>
+            </li>
+          </ul>
+        </div>
 
         <div class="aid-grid">
           <AiIdeaCard
@@ -1217,18 +1214,28 @@ function closePreview() {
   padding: 10px; border: 1px solid var(--line); border-radius: var(--radius);
   background: var(--card);
 }
-.aidw-bubble.editing { border-color: var(--brand-500); }
 .aidw-bubble-ico { flex: none; color: var(--muted); padding-top: 2px; }
 .aidw-bubble-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
 .aidw-bubble-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .aidw-bubble-text { font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
-.aidw-bubble-input {
-  width: 100%; min-width: 0; padding: 7px 8px;
-  border: 1px solid var(--line); border-radius: 8px;
-  background: var(--surface); color: var(--ink); font: inherit; font-size: 12.5px;
-  resize: vertical;
+.aidw-bubble-key {
+  margin-top: 2px; color: var(--muted); font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 10.5px; overflow-wrap: anywhere;
 }
-.aidw-bubble-input:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+.aidw-json-btn {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  padding: 4px 8px; border: 1px dashed var(--line-strong); border-radius: 8px;
+  background: transparent; color: var(--ink-2); font: inherit; font-size: 11.5px; font-weight: 600;
+  cursor: pointer;
+}
+.aidw-json-btn:hover { border-color: var(--brand-500); color: var(--brand-ink); }
+.aidw-json-btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-json {
+  margin: 0; padding: 10px; max-height: 220px; overflow: auto;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
+  color: var(--ink-2); font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
 .aidw-bubble-actions { display: flex; gap: 4px; margin-left: auto; }
 .aidw-icon-btn {
   display: grid; place-items: center; width: 28px; height: 28px;
@@ -1238,13 +1245,26 @@ function closePreview() {
 }
 .aidw-icon-btn:hover { background: var(--surface); color: var(--ink-2); border-color: var(--line); }
 .aidw-icon-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
-.aidw-mini {
-  padding: 5px 10px; border: 1px solid var(--brand-500); border-radius: 999px;
-  background: var(--brand-500); color: #fff; font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
-}
-.aidw-mini.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
-.aidw-mini:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 .aidw-send { width: 100%; justify-content: center; }
 .aidw-send:disabled { opacity: .55; cursor: not-allowed; }
 .aidw-ask-note { margin: 0; color: var(--muted); font-size: 11.5px; text-align: center; }
+
+/* Decisión del MCP sobre la tanda */
+.aid-mcp {
+  display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  padding: 14px 16px; border: 1px solid var(--brand-soft-line); border-radius: var(--radius-lg);
+  background: var(--brand-soft);
+}
+.aid-mcp-head { display: flex; align-items: center; gap: 8px; color: var(--brand-ink); font-size: 13px; }
+.aid-mcp-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.aid-mcp-list li {
+  display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; min-width: 0;
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); font-size: 12px;
+}
+.aid-mcp-cat {
+  padding: 1px 7px; border-radius: 999px; background: var(--surface);
+  color: var(--muted); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+}
+.aid-mcp-tags { color: var(--muted); font-size: 11px; }
 </style>
