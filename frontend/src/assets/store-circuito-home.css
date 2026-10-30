@@ -1843,10 +1843,12 @@
 .store-page[data-template='circuito'] .sp-faq-item summary {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 14px;
   padding: 15px 18px;
   font-size: 14px;
   font-weight: 500;
+  text-align: start;
   color: var(--ci-ink);
 }
 .store-page[data-template='circuito'] .sp-faq-item summary::before {
@@ -1866,6 +1868,7 @@
   flex: none;
   width: 26px;
   height: 26px;
+  margin-inline-start: auto;
   border-radius: 0;
   background: color-mix(in srgb, var(--ci-accent) 8%, transparent);
   color: var(--ci-accent-text);

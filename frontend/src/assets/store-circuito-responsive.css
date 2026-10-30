@@ -73,6 +73,30 @@
   .store-page[data-template='circuito'] .ci-cat-counters { flex-wrap: wrap; }
 }
 
+@media (max-width: 1100px) {
+  /* La barra superior no envuelve nunca: marca elástica, CTA y acciones
+     fijas. (En 320 el wrap empujaba el botón Catálogo sobre los anuncios.) */
+  .store-page[data-template='circuito'] .sp-top-inner {
+    flex-wrap: nowrap;
+    gap: 10px;
+    height: var(--sp-top-h);
+  }
+  .store-page[data-template='circuito'] .sp-top-links { display: none; }
+  .store-page[data-template='circuito'] .sp-brand { flex: 1 1 auto; min-width: 0; gap: 10px; }
+  .store-page[data-template='circuito'] .sp-brand-copy { flex: 1 1 auto; min-width: 0; }
+  .store-page[data-template='circuito'] .sp-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .store-page[data-template='circuito'] .sp-mono,
+  .store-page[data-template='circuito'] .sp-logo.sm { width: 38px; height: 38px; font-size: 22px; }
+  .store-page[data-template='circuito'] .sp-top-end { flex: 0 0 auto; }
+  .store-page[data-template='circuito'] .sp-top-cta { height: 40px; padding: 0 12px; }
+}
+
+@media (max-width: 380px) {
+  /* El catálogo ya vive en la barra inferior: se libera el ancho del nombre. */
+  .store-page[data-template='circuito'] .sp-top-cta { display: none; }
+  .store-page[data-template='circuito'] .sp-top .sp-name { max-width: none; font-size: 18px; }
+}
+
 @media (max-width: 640px) {
   .store-page[data-template='circuito'] { --ci-gutter: 20px; --ci-section: 48px; }
   .store-page[data-template='circuito'] :is(.sp-top-inner, .sp-hal-grid, .sp-shop-featured-head,
@@ -85,6 +109,20 @@
   .store-page[data-template='circuito'] .ci-hero-sub { font-size: 15.5px; }
   .store-page[data-template='circuito'] .ci-hero-card { aspect-ratio: 4 / 3; }
   .store-page[data-template='circuito'] .ci-btn { flex: 1 1 auto; }
+  /* Tarjetas de producto: en una columna la foto cuadrada estiraba la
+     tarjeta a media pantalla; en móvil la placa pasa a 16:11. */
+  .store-page[data-template='circuito'] :is(.sp-shop-featured, .sp-offers) .tpc {
+    --tpc-ratio: 16 / 11;
+    --tpc-pad: 12px 14px 14px;
+    --tpc-gap: 6px;
+  }
+  /* El sistema compartido fija aspect-ratio 1/1 en .sp-card .tpc-media:
+     en móvil la placa se aplana para que la tarjeta no ocupe media pantalla. */
+  .store-page[data-template='circuito'] :is(.sp-shop-featured, .sp-offers) .tpc .tpc-media {
+    aspect-ratio: 16 / 11;
+  }
+  .store-page[data-template='circuito'] :is(.sp-shop-featured, .sp-offers) .tpc-name { font-size: 15px; }
+  .store-page[data-template='circuito'] :is(.sp-shop-featured, .sp-offers) .tpc-price strong { font-size: 20px; }
   /* Acciones del hero: dos botones a lo ancho y, abajo, el link + compartir. */
   .store-page[data-template='circuito'] .ci-hero-ctas {
     display: grid;
@@ -98,21 +136,40 @@
   .store-page[data-template='circuito'] .ci-hero-ctas .ci-iconbtn { width: 46px; }
   .store-page[data-template='circuito'] .sp-ann-item { font-size: 10.5px; padding-right: 22px; }
   .store-page[data-template='circuito'] .sp-ann-item + .sp-ann-item::before { display: none; }
+  /* Nombres de marca largos: en la cinta envuelta (móvil / movimiento
+     reducido) se recortan con elipsis en vez de desbordar el ancho. */
+  .store-page[data-template='circuito'] .sp-brands .sp-ann-item {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .ci-guar-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='circuito'] .ci-guar-item { border-top: 1px solid var(--ci-line); padding: 16px 18px; }
   .store-page[data-template='circuito'] .ci-guar-item:first-child { border-top: 0; }
-  /* El layout base convierte las categorías en un carrusel táctil: Circuito
-     mantiene la grilla (6 en 3×2 / 2 / 1) también en móvil. */
+  /* Categorías: la firma es la grilla (3×2 en escritorio); en móvil se
+     mantiene en 2 columnas compactas y pasa a 1 sola bajo 360 px. */
   .store-page[data-template='circuito'] .sp-shop-depts {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
     margin: 20px auto 0;
     padding-inline: 0;
     overflow: visible;
   }
-  .store-page[data-template='circuito'] .sp-shop-dept { width: auto; padding: 16px 18px; }
-  .store-page[data-template='circuito'] .sp-shop-dept-thumb { width: 38px; height: 38px; }
+  .store-page[data-template='circuito'] .sp-shop-dept {
+    width: auto;
+    padding: 12px 12px 12px 10px;
+    column-gap: 10px;
+  }
+  .store-page[data-template='circuito'] .sp-shop-dept-thumb { width: 34px; height: 34px; }
+  .store-page[data-template='circuito'] .sp-shop-dept-name {
+    padding-right: 14px;
+    font-size: 12.5px;
+    line-height: 1.25;
+  }
+  .store-page[data-template='circuito'] .sp-shop-dept-count { font-size: 9px; }
+  .store-page[data-template='circuito'] .sp-shop-dept::before { font-size: 8px; top: 7px; right: 9px; }
+  .store-page[data-template='circuito'] .sp-shop-dept.all { grid-column: 1 / -1; }
   .store-page[data-template='circuito'] .sp-shop-featured-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='circuito'] .sp-testimonials-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='circuito'] .ci-grid,
@@ -124,6 +181,11 @@
   .store-page[data-template='circuito'] .ci-sec-head { flex-wrap: wrap; align-items: flex-start; }
   .store-page[data-template='circuito'] .ci-pd-buy { padding: 18px; }
   .store-page[data-template='circuito'] .ci-pd-specs th { width: 42%; }
+}
+
+@media (max-width: 359px) {
+  .store-page[data-template='circuito'] .sp-shop-depts { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='circuito'] .sp-shop-dept.all { grid-column: auto; }
 }
 
 /* Barra fija de compra en móvil (ficha de producto) */

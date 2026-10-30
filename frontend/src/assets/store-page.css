@@ -2876,6 +2876,9 @@ html{ scroll-behavior: smooth; }
   /* Sin animación las copias del loop (aria-hidden) solo duplican la cinta:
      se ocultan para que quede una única secuencia legible. */
   .sp-ann-item[aria-hidden='true']{ display: none; }
+  /* La secuencia única puede ser más ancha que la pantalla: se permite el
+     corte en varias líneas en vez de recortarla. */
+  .sp-ann-item{ white-space: normal; max-width: 100%; }
 }
 
 .sp-video{ padding: clamp(44px, 6vw, 84px) 0; }

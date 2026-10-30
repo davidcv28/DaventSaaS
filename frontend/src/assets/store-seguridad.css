@@ -665,6 +665,9 @@
   background: #fff;
 }
 .store-page[data-template='seguridad'] .sg-card .tpc-media { border-bottom: 2px solid var(--sg-ink); }
+/* El titular h2 global del diseño (clamp 34–52) pisaba el nombre de la
+   tarjeta: acá manda el token del contrato (.tpc-name-size). */
+.store-page[data-template='seguridad'] .tpc-name { font-size: var(--tpc-name-size, 24px); }
 .store-page[data-template='seguridad'] .sg-card .tpc-name {
   text-transform: uppercase;
   display: -webkit-box;
@@ -1505,18 +1508,55 @@
   .store-page[data-template='seguridad'] .sp-mono,
   .store-page[data-template='seguridad'] .sp-logo.sm { width: 38px; height: 38px; font-size: 22px; }
   .store-page[data-template='seguridad'] .sp-top-end { flex: 0 0 auto; }
+  .store-page[data-template='seguridad'] .sp-brand-copy { flex: 1 1 auto; min-width: 0; }
+}
+
+@media (max-width: 380px) {
+  /* El tope de 90 px del nombre cortaba la marca a "BENC…". */
+  .store-page[data-template='seguridad'] .sp-top .sp-name { max-width: none; font-size: 18px; }
 }
 
 @media (max-width: 640px) {
   .store-page[data-template='seguridad'] { --sg-gutter: 18px; --sg-section: 48px; }
   .store-page[data-template='seguridad'] .sg-featured-grid,
   .store-page[data-template='seguridad'] .sg-grid { grid-template-columns: minmax(0, 1fr); }
-  /* Categorías: 2 columnas con tarjeta horizontal (imagen + nombre + badge).
-     Se neutraliza el carrusel táctil del sistema compartido (≤640) para que
-     la grilla 2×N no herede ancho fijo de 96 px ni el scroll horizontal. */
+  /* Ofertas: el bloque usa la grilla de 4 del sistema (variante 'grid') y en
+     móvil quedaba en columnas de 76 px con el nombre partido en una letra. */
+  .store-page[data-template='seguridad'] .sp-offers .sp-shop-featured-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .store-page[data-template='seguridad'] .sp-offers .tpc {
+    --tpc-name-size: 16px;
+    --tpc-price-size: 21px;
+    --tpc-pad: 12px 12px 14px;
+  }
+  /* El h2 global (line-height 1, mayúsculas) rompía el clamp del nombre:
+     se restituye la caja de 2 líneas del contrato de tarjeta. */
+  .store-page[data-template='seguridad'] .sp-offers .tpc .tpc-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font-size: 16px;
+    line-height: 1.2;
+    min-height: 0;
+  }
+  .store-page[data-template='seguridad'] .sp-offers .tpc .tpc-price strong { font-size: 21px; }
+  .store-page[data-template='seguridad'] :is(.sg-card, .sp-offers .tpc) {
+    --tpc-name-size: clamp(18px, 5vw, 22px);
+    --tpc-price-size: 24px;
+    --tpc-pad: 14px 14px 16px;
+  }
+  .store-page[data-template='seguridad'] :is(.sg-card, .sp-offers .tpc) .tpc-name { font-size: var(--tpc-name-size); }
+  .store-page[data-template='seguridad'] :is(.sg-card, .sp-offers .tpc) .tpc-price strong { font-size: 24px; }
+  .store-page[data-template='seguridad'] .sg-card-wa { font-size: 14px; min-height: 42px; }
+  /* Categorías: una tarjeta horizontal por fila (la grilla 2×N a 172 px
+     desbordaba el nombre y el badge de productos). */
   .store-page[data-template='seguridad'] .sg-cats .sp-shop-depts {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
     margin: 0;
     padding: 0;
@@ -1524,45 +1564,66 @@
   }
   .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept {
     display: grid;
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 84px minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: center;
     width: auto;
     min-width: 0;
-    padding: 0 8px 0 0;
-    border-radius: 0;
+    padding: 0;
+    overflow: hidden;
   }
   .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-thumb {
     grid-column: 1;
     grid-row: 1 / span 2;
-    width: 72px;
-    min-width: 72px;
-    height: 72px;
+    width: 84px;
+    min-width: 84px;
+    height: 84px;
     border-right: 2px solid var(--sg-ink);
   }
   .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-name {
     grid-column: 2;
     grid-row: 1;
     align-self: end;
+    justify-self: stretch;
+    width: auto;
     min-width: 0;
-    padding: 8px 8px 2px;
-    font-size: clamp(15px, 4.2vw, 18px);
+    padding: 12px 14px 2px;
+    font-size: 20px;
     line-height: 1.05;
-    overflow-wrap: normal;
-    word-break: keep-all;
-    hyphens: none;
+    text-align: start;
+    overflow-wrap: anywhere;
   }
   .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-count {
     grid-column: 2;
     grid-row: 2;
     justify-self: start;
     align-self: start;
-    margin: 0 8px 8px;
+    margin: 2px 14px 12px;
     font-size: 11px;
-    padding: 2px 6px;
+    text-align: start;
+    padding: 2px 8px;
     white-space: nowrap;
   }
   .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept.all { grid-column: 1 / -1; }
+  .store-page[data-template='seguridad'] .sp-about-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: clamp(26px, 8vw, 34px);
+    line-height: 1.05;
+  }
+  .store-page[data-template='seguridad'] .sp-about-heading-icon { width: 40px; height: 40px; }
+  /* Titulares de sección y portada: un punto más chicos para que no queden
+     partidos en 4–5 líneas a 390 px. */
+  .store-page[data-template='seguridad'] .sg-home h2:not(.tpc-name),
+  .store-page[data-template='seguridad'] .sg-home .sp-section-title,
+  .store-page[data-template='seguridad'] .sg-home .sp-shop-featured-title {
+    font-size: clamp(28px, 7.8vw, 34px);
+    text-wrap: balance;
+  }
+  .store-page[data-template='seguridad'] .sg-hero-title {
+    font-size: clamp(36px, 10vw, 46px);
+    text-wrap: balance;
+  }
   .store-page[data-template='seguridad'] .sg-services-cards { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='seguridad'] .sg-classes-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='seguridad'] .sg-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
