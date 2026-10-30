@@ -52,12 +52,31 @@
 .tpl-thumb[data-tpl='raiz']::before { left: 50%; top: 17%; width: 13%; aspect-ratio: 1; border-radius: 28%; background: #fff; transform: translateX(-50%); box-shadow: 0 5px 10px -4px rgba(0, 0, 0, .35); }
 .tpl-thumb[data-tpl='raiz']::after { left: 24%; right: 24%; top: 37%; height: 3.2%; border-radius: 99px; background: #fff; box-shadow: 0 7px 0 -.5px rgba(255, 255, 255, .55), 0 15px 0 -.5px rgba(255, 255, 255, .0); }
 
-/* Trama: retail editorial — placas duras, tinta y acento. */
-.tpl-thumb[data-tpl='trama'] { --tp-bg: #e9e8e4; --tp-nav: #e9e8e4; --tp-line: rgba(16, 19, 24, .16); --tp-hero: linear-gradient(#e9e8e4, #e9e8e4); --tp-card: #f2f1ed; --tp-img: #cfcdc6; --tp-ink: #101318; --tp-mute: #8a8d94; border-color: #cfcdc6; }
-.tpl-thumb[data-tpl='trama']::before { right: 7%; top: 17%; width: 30%; height: 38%; border-radius: 2px; background: var(--tp-acc); box-shadow: -9px 9px 0 -2px #101318; }
-.tpl-thumb[data-tpl='trama']::after { left: 7%; top: 19%; width: 46%; height: 8%; background: #101318; box-shadow: 0 13px 0 -2px #101318, 0 27px 0 -1px var(--tp-acc); }
-.tpl-thumb[data-tpl='trama'] i b { border-radius: 2px; background-size: 34% 2px, 68% 2px, 100% 66%; border-color: rgba(16, 19, 24, .14); }
-.tpl-thumb[data-tpl='trama'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#101318, #101318); }
+/* Trama: indumentaria profesional — crema, blanco, tinta y acento marino.
+   Refleja el rediseño «Indumentaria · Profesional»: hero partido (titular +
+   foto en panel), tarjetas altas con marco fino y botón de acento. */
+.tpl-thumb[data-tpl='trama'] { --tp-bg: #FAF9F7; --tp-nav: #FFFFFF; --tp-line: rgba(22, 24, 29, .13); --tp-hero: linear-gradient(#FAF9F7, #FAF9F7); --tp-card: #FFFFFF; --tp-img: #EFEDE8; --tp-ink: #16181D; --tp-mute: #B7BAC1; border-color: #E3E1DC; }
+.tpl-thumb[data-tpl='trama']::before {
+  right: 6%; top: 15%; width: 39%; height: 44%;
+  border-radius: 6px; border: 1px solid var(--tp-line);
+  background:
+    linear-gradient(var(--tp-line), var(--tp-line)) 50% 116% / 44% 1px no-repeat,
+    linear-gradient(#EFEDE8, #EFEDE8);
+}
+.tpl-thumb[data-tpl='trama']::after {
+  left: 6%; top: 19%; width: 45%; height: 2.8%;
+  border-radius: 2px; background: var(--tp-acc);
+  box-shadow:
+    0 7px 0 -0.5px var(--tp-ink),
+    0 13px 0 -1px var(--tp-ink),
+    0 19px 0 -1.5px var(--tp-ink),
+    0 27.5px 0 -1px var(--tp-mute),
+    0 33.5px 0 -1.5px var(--tp-mute),
+    0 46px 0 0 var(--tp-acc);
+}
+.tpl-thumb[data-tpl='trama'] i { top: 63%; bottom: 5%; gap: 4%; }
+.tpl-thumb[data-tpl='trama'] i b { border-radius: 6px; border-color: var(--tp-line); background-size: 34% 2px, 74% 2px, 100% 70%; }
+.tpl-thumb[data-tpl='trama'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#E7E4DD, #E7E4DD); }
 
 /* Circuito: tecnología oscura — retícula y glow de acento. */
 .tpl-thumb[data-tpl='circuito'] { --tp-bg: #0d1420; --tp-nav: #0d1420; --tp-line: rgba(126, 160, 220, .28); --tp-hero: linear-gradient(rgba(120, 160, 220, .1) 1px, transparent 1px) 0 0 / 11px 11px, linear-gradient(90deg, rgba(120, 160, 220, .1) 1px, transparent 1px) 0 0 / 11px 11px, #0d1420; --tp-card: #121a2a; --tp-img: #1d2a44; --tp-ink: #dfe8fa; --tp-mute: #3d4f78; border-color: #1d2a44; }
