@@ -1074,7 +1074,7 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_skin_catalog_is_closed_and_composed(self):
         #26 familias desde la v5: las 18 del contrato + las 8 de los estilos.
-        self.assertEqual(len({skin['family'] for skin in SKINS.values()}), 26)
+        self.assertEqual(len({skin['family'] for skin in SKINS.values()}), 32)
         self.assertEqual(len({skin['style'] for skin in SKINS.values()}), 8, 'los 8 estilos deben tener pieles')
         for skin_id, skin in SKINS.items():
             self.assertTrue(skin_id.startswith(f"{skin['family']}-"), skin_id)

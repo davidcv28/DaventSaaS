@@ -33,6 +33,9 @@ SKIN_FAMILIES   =   (
     'playful', 'mono', 'gradient', 'cinematic',
     #v5: familias que cubren los estilos de diseño (ver STYLE_FAMILIES).
     'swiss', 'magazine', 'pop', 'aurora', 'craft', 'nostalgia', 'prestige', 'showcase',
+    #Exclusivas de "Diseñar con IA": identidades de diseños retirados del
+    #selector manual (ver AI_ONLY_FAMILIES).
+    'atelier', 'terminal', 'riso', 'vitrina', 'cobre', 'lumen',
 )
 
 SKIN_FAMILY_SET =   frozenset(SKIN_FAMILIES)
@@ -569,7 +572,122 @@ _FAMILIES   =   {
         'tones': ('moderno', 'serio'),
         'accents': ('#0f766e', '#334155', '#1d4ed8'),
     },
+    #===== EXCLUSIVAS DE LA IA (retiradas del diseño manual) =====
+    #Identidades del catálogo viejo que el dueño ya no puede elegir a mano
+    #(TEMPLATE_RETIRED_MAP): el motor las sigue proponiendo como pieles.
+    #Nunca aparecen en el selector del Studio.
+    'atelier': {
+        'label': 'Atelier',
+        'style': 'luxury',
+        'variants': (
+            {'name': 'lino', 'label': 'Atelier lino'},
+            {'name': 'tinta', 'label': 'Atelier tinta', 'palette': _dark(_p('#1c1917', '#292524', '#b91c1c', '', '', '', '', ''))},
+        ),
+        'palette': _p('#1c1917', '#44403c', '#b91c1c', '#faf7f2', '#fffdf9', '#171412', '#6b625a', '#e6ded2'),
+        'containers': {'radius': 'none', 'shadow': 'none', 'border': 'thin', 'density': 'spacious', 'surface': 'flat'},
+        'buttons': {'shape': 'square', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'none', 'intensity': 'subtle'},
+        'typography': {'pair': 'serif-luxe', 'scale': 'editorial'},
+        'layout': {'density': 'spacious', 'grid': 'editorial', 'hero': 'editorial', 'gutter': 'lg', 'measure': 'narrow', 'radiusScale': 'none'},
+        'rubros': ('indumentaria', 'arte', 'belleza', 'comercio'),
+        'tones': ('serio', 'calido'),
+        'accents': ('#b91c1c', '#1c1917', '#a16207'),
+    },
+    'terminal': {
+        'label': 'Terminal',
+        'style': 'tech',
+        'variants': (
+            {'name': 'fosforo', 'label': 'Terminal fósforo'},
+            {'name': 'ambar', 'label': 'Terminal ámbar', 'palette': _p('#0b0d0c', '#151a17', '#f59e0b', '#080a09', '#101512', '#eef3ef', '#9fb3a6', '#25312b')},
+        ),
+        'palette': _p('#0b0d0c', '#151a17', '#22d3ee', '#080a09', '#101512', '#eef3ef', '#9fb3a6', '#25312b'),
+        'containers': {'radius': 'none', 'shadow': 'none', 'border': 'bold', 'density': 'compact', 'surface': 'outlined'},
+        'buttons': {'shape': 'square', 'style': 'outline', 'size': 'sm'},
+        'background': {'type': 'pattern', 'overlay': 'strong'},
+        'motion': {'reveal': 'none', 'hover': 'glow', 'intensity': 'subtle'},
+        'typography': {'pair': 'mono-tech', 'scale': 'compact'},
+        'layout': {'density': 'compact', 'grid': '12', 'hero': 'split', 'gutter': 'sm', 'measure': 'wide', 'radiusScale': 'none'},
+        'rubros': ('tecnologia', 'servicios_profesionales', 'construccion', 'otro'),
+        'tones': ('serio', 'moderno'),
+        'accents': ('#22d3ee', '#84cc16', '#f59e0b'),
+    },
+    'riso': {
+        'label': 'Riso',
+        'style': 'retro',
+        'variants': (
+            {'name': 'duo', 'label': 'Riso duotono'},
+            {'name': 'noche', 'label': 'Riso nocturno', 'palette': _dark(_p('#111827', '#1f2937', '#f43f5e', '', '', '', '', ''))},
+        ),
+        'palette': _p('#1f2937', '#374151', '#e11d48', '#fdf6ec', '#fffdf8', '#181410', '#6b6358', '#e8ddcb'),
+        'containers': {'radius': 'sm', 'shadow': 'none', 'border': 'bold', 'density': 'comfortable', 'surface': 'flat'},
+        'buttons': {'shape': 'square', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'stagger', 'hover': 'none', 'intensity': 'medium'},
+        'typography': {'pair': 'retro-display', 'scale': 'editorial'},
+        'layout': {'density': 'comfortable', 'grid': 'bento', 'hero': 'centered', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'sm'},
+        'rubros': ('arte', 'comercio', 'gastronomia', 'mascotas'),
+        'tones': ('calido', 'audaz'),
+        'accents': ('#e11d48', '#2563eb', '#16a34a'),
+    },
+    'vitrina': {
+        'label': 'Vitrina',
+        'style': 'catalog',
+        'variants': (
+            {'name': 'dia', 'label': 'Vitrina de día'},
+            {'name': 'noche', 'label': 'Vitrina nocturna', 'palette': _dark(_p('#334155', '#1e293b', '#0ea5e9', '', '', '', '', ''))},
+        ),
+        'palette': _p('#334155', '#1e293b', '#0f766e', '#f7f9fb', '#ffffff', '#0f172a', '#5b6678', '#dfe6ee'),
+        'containers': {'radius': 'md', 'shadow': 'soft', 'border': 'thin', 'density': 'compact', 'surface': 'elevated'},
+        'buttons': {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'solid', 'overlay': 'none'},
+        'motion': {'reveal': 'rise', 'hover': 'lift', 'intensity': 'subtle'},
+        'typography': {'pair': 'modern-sans', 'scale': 'balanced'},
+        'layout': {'density': 'compact', 'grid': 'bento', 'hero': 'split', 'gutter': 'md', 'measure': 'normal', 'radiusScale': 'md'},
+        'rubros': ('comercio', 'indumentaria', 'tecnologia', 'mascotas'),
+        'tones': ('moderno', 'calido'),
+        'accents': ('#0f766e', '#1d4ed8', '#b45309'),
+    },
+    'cobre': {
+        'label': 'Cobre',
+        'style': 'craft',
+        'variants': (
+            {'name': 'pulido', 'label': 'Cobre pulido'},
+            {'name': 'patina', 'label': 'Cobre pátina', 'palette': _p('#2f2a24', '#3f372e', '#0f766e', '#f6f1e8', '#fffaf1', '#1b1712', '#6a6055', '#e5d9c6')},
+        ),
+        'palette': _p('#2f2a24', '#3f372e', '#b45309', '#f8f2e8', '#fffaf2', '#1b1712', '#6a6055', '#e6d8c4'),
+        'containers': {'radius': 'sm', 'shadow': 'medium', 'border': 'thin', 'density': 'comfortable', 'surface': 'elevated'},
+        'buttons': {'shape': 'rounded', 'style': 'solid', 'size': 'md'},
+        'background': {'type': 'gradient', 'overlay': 'none'},
+        'motion': {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
+        'typography': {'pair': 'warm-serif', 'scale': 'editorial'},
+        'layout': {'density': 'comfortable', 'grid': 'editorial', 'hero': 'split', 'gutter': 'lg', 'measure': 'normal', 'radiusScale': 'sm'},
+        'rubros': ('gastronomia', 'construccion', 'arte', 'comercio'),
+        'tones': ('calido', 'serio'),
+        'accents': ('#b45309', '#92400e', '#0f766e'),
+    },
+    'lumen': {
+        'label': 'Lumen',
+        'style': 'editorial',
+        'variants': (
+            {'name': 'cine', 'label': 'Lumen cinematográfico'},
+            {'name': 'sala', 'label': 'Lumen de sala', 'palette': _p('#0c0f14', '#151b24', '#e2b04a', '#0a0d12', '#121821', '#f3f6fa', '#a4b0c0', '#232c39')},
+        ),
+        'palette': _p('#0c0f14', '#151b24', '#e2b04a', '#0a0d12', '#121821', '#f3f6fa', '#a4b0c0', '#232c39'),
+        'containers': {'radius': 'sm', 'shadow': 'deep', 'border': 'thin', 'density': 'comfortable', 'surface': 'glass'},
+        'buttons': {'shape': 'square', 'style': 'ghost', 'size': 'lg'},
+        'background': {'type': 'image', 'overlay': 'strong'},
+        'motion': {'reveal': 'stagger', 'hover': 'glow', 'intensity': 'medium'},
+        'typography': {'pair': 'editorial-display', 'scale': 'editorial'},
+        'layout': {'density': 'comfortable', 'grid': 'asym', 'hero': 'cinema', 'gutter': 'lg', 'measure': 'wide', 'radiusScale': 'sm'},
+        'rubros': ('turismo', 'gastronomia', 'arte', 'belleza'),
+        'tones': ('audaz', 'serio'),
+        'accents': ('#e2b04a', '#f3f4f6', '#38bdf8'),
+    },
 }
+
+#Pieles que el diseño manual ya no ofrece: solo las propone el motor de IA.
+AI_ONLY_FAMILIES    =   frozenset({'atelier', 'terminal', 'riso', 'vitrina', 'cobre', 'lumen'})
 
 
 def _build_skins():
@@ -645,6 +763,14 @@ SKIN_STYLE_PRESET   =   {
     'aurora':       'aurora-degradada',
     'cinematic':    'vidrio-nocturno',
     'mono':         'monocromo',
+    #Exclusivas de la IA: el preset solo publica el aire visual (style.id);
+    #la identidad completa la lleva la piel.
+    'atelier':      'lujo-serif',
+    'terminal':     'neon-tech',
+    'riso':         'papel-riso',
+    'vitrina':      'retail-vibrante',
+    'cobre':        'terracota',
+    'lumen':        'cobalto-nocturno',
 }
 #Plantilla de cada preset del Studio: fuente ÚNICA (la consumen
 #site_theme._style_preset_templates y el motor). El style.id solo se guarda
@@ -705,6 +831,13 @@ SKIN_TYPE_PAIR  =   {
     'aurora':       'serif-editorial',
     'cinematic':    'serif-editorial',
     'mono':         'grotesk-clean',
+    #Exclusivas de la IA.
+    'atelier':      'serif-luxe',
+    'terminal':     'mono-tech',
+    'riso':         'retro-display',
+    'vitrina':      'modern-sans',
+    'cobre':        'warm-serif',
+    'lumen':        'editorial-display',
 }
 #Variante de layout alternativa por piel: lo que hace que dos propuestas de
 #la misma familia no compartan composición. Solo valores que existen en el
@@ -737,6 +870,13 @@ SKIN_LAYOUT_ALT =   {
     'aurora':       {'hero': 'cinema', 'grid': 'split'},
     'cinematic':    {'hero': 'editorial', 'grid': 'bento'},
     'mono':         {'hero': 'editorial', 'grid': '12'},
+    #Exclusivas de la IA.
+    'atelier':      {'hero': 'split', 'grid': 'editorial'},
+    'terminal':     {'hero': 'cinema', 'grid': 'bento'},
+    'riso':         {'hero': 'editorial', 'grid': 'asym'},
+    'vitrina':      {'hero': 'cinema', 'grid': 'split'},
+    'cobre':        {'hero': 'centered', 'grid': 'bento'},
+    'lumen':        {'hero': 'editorial', 'grid': 'split'},
 }
 
 

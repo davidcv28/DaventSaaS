@@ -94,6 +94,9 @@ CONTRACT_SKIN_FAMILIES = (
     'paper', 'neon', 'minimal', 'organic', 'retro', 'corporate', 'playful',
     'mono', 'gradient', 'cinematic',
     'swiss', 'magazine', 'pop', 'aurora', 'craft', 'nostalgia', 'prestige', 'showcase',
+    #exclusivas de "Diseñar con IA" (identidades de diseños retirados del
+    #selector manual): el contrato las admite, el Studio no las ofrece.
+    'atelier', 'terminal', 'riso', 'vitrina', 'cobre', 'lumen',
 )
 #Los 13 roles tipográficos del contrato v2.
 CONTRACT_ROLES      =   (
@@ -636,8 +639,9 @@ class Layout(_AiDesignBase):
     def test_the_skin_catalog_has_the_contract_families(self):
         self.assertEqual(tuple(SKIN_FAMILIES), CONTRACT_SKIN_FAMILIES)
         #v5: 18 del contrato original + las 8 de los estilos de diseño.
-        self.assertEqual(len(SKIN_FAMILIES), 26)
-        self.assertEqual(len(SKIN_IDS), 52)
+        #+ las 6 exclusivas de la IA.
+        self.assertEqual(len(SKIN_FAMILIES), 32)
+        self.assertEqual(len(SKIN_IDS), 64)
         self.assertEqual(set(SKIN_FAMILY_OF), set(SKIN_IDS))
 
     def test_every_style_of_the_training_has_skins(self):

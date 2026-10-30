@@ -231,6 +231,13 @@ SKIN_TYPE_VOICES    =   {
     'brutal':       _ALL_VOICES,
     'pop':          _ALL_VOICES,
     'playful':      _ALL_VOICES,
+    #exclusivas de la IA (diseños retirados del selector manual).
+    'atelier':      frozenset({'serif', 'clean'}),
+    'cobre':        frozenset({'serif', 'clean'}),
+    'lumen':        frozenset({'serif', 'clean'}),
+    'terminal':     frozenset({'clean', 'mono'}),
+    'riso':         frozenset({'serif', 'clean', 'poster'}),
+    'vitrina':      _ALL_VOICES,
 }
 
 #Tracking por rol en el formato que guarda site_theme.typography.letterSpacing

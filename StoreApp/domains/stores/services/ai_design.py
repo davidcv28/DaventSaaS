@@ -614,6 +614,9 @@ def _style_candidates(facts, stats, answers, allowed, seed):
         score   +=  4 if template in R.TEMPLATE_GOAL_AFFINITY.get(goal, ()) else 0
         score   +=  3 if tone in skin['tones'] else 0
         score   +=  2 if answers['rubro'] in skin['rubros'] else 0
+        #Pieles exclusivas de la IA: entran al pool, pero por detrás de la
+        #firma del rubro (el diseño del rubro no se pierde nunca).
+        score   -=  1 if skin['family'] in SKIN.AI_ONLY_FAMILIES else 0
         score   +=  min(density, 6)
         score   +=  _data_signal(template, stats, facts)
         #Sin modo noche pedido, una piel de dos caras fuerza el interruptor y
@@ -2186,6 +2189,29 @@ def _diversify_skin_layout(skin, used, facts):
     return skin, used
 
 
+def _ensure_rubro_signature(chosen, candidates, answers, allowed, count):
+    """
+    El diseño firma del rubro no se pierde: si la diversidad obligatoria lo
+    dejó afuera y el plan lo permite, entra en el último slot con una piel y
+    un par que no repitan los de las otras propuestas.
+    """
+    signature   =   [item['template'] for item in R.RUBRO_STYLES.get(answers['rubro'], ())]
+    primary     =   next((template for template in signature if template in allowed), None)
+    if not primary or any(item['template'] == primary for item in chosen):
+        return chosen
+    if len(chosen) < count:
+        best    =   next((item for item in candidates if item['template'] == primary), None)
+        return chosen + [best] if best else chosen
+    head    =   chosen[:-1]
+    for item in candidates:
+        if item['template'] != primary or item in head:
+            continue
+        if any(item['template'] == other['template'] or item['skin'] == other['skin'] or item['pair'] == other['pair'] for other in head):
+            continue
+        return head + [item]
+    return chosen
+
+
 def _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai = False):
     """
     2-4 propuestas de web completa. Cada una es una TERNA de estilo
@@ -2205,6 +2231,7 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         styles      =   [{'template': fallback, 'skin': SKIN.SKIN_IDS[seed % len(SKIN.SKIN_IDS)],
                           'pair': 'grotesk-clean', 'source': R.style_source_of(fallback), 'score': 0}]
     chosen          =   _select_styles(styles, count, allow_repeat_template = len(set(allowed)) < count)
+    chosen          =   _ensure_rubro_signature(chosen, styles, answers, allowed, count)
     rng             =   random.Random(seed)
     use_icons       =   answers.get('use_icons')
     if use_icons is None:

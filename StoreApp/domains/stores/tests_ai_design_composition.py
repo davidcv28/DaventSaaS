@@ -461,3 +461,40 @@ class LayoutDiversityTests(unittest.TestCase):
         self.assertTrue(all(note.endswith(':1') for note in notes))
         ratios  =   [float(note.rsplit(' ', 1)[1][:-2]) for note in notes]
         self.assertTrue(all(ratio >= 4.5 for ratio in ratios), notes)
+
+
+class AiOnlyLooksTests(unittest.TestCase):
+    #Identidades de diseños retirados del selector manual: el motor las sigue
+    #proponiendo (el cliente no puede elegirlas a mano).
+
+    def style_answers(self, rubro):
+        return {
+            'rubro': rubro, 'tone': 'moderno', 'goals': [next(iter(R.GOAL_RECIPES))],
+            'must_have': [], 'styles': [], 'brand_color': '', 'night_mode': {'enabled': False, 'default': ''},
+            'cover_choice': 'auto', 'use_icons': None, 'accept_extras': True, 'extras': [],
+            'content_hint': '', 'selection': {},
+        }
+
+    def test_every_ai_only_family_is_a_complete_skin(self):
+        self.assertTrue(SKIN.AI_ONLY_FAMILIES)
+        for family in SKIN.AI_ONLY_FAMILIES:
+            self.assertIn(family, SKIN.SKIN_FAMILY_SET)
+            self.assertIn(family, SKIN.SKIN_STYLE_PRESET)
+            self.assertIn(family, SKIN.SKIN_TYPE_PAIR)
+            self.assertIn(family, SKIN.SKIN_LAYOUT_ALT)
+            self.assertTrue([skin for skin in SKIN.SKINS.values() if skin['family'] == family])
+
+    def test_the_engine_proposes_ai_only_looks(self):
+        stats   =   {'products': 20, 'images': 18, 'categories': 4, 'brands': 3,
+                     'gallery': 6, 'carousel': 3, 'offers': 2, 'text_chars': 400}
+        allowed =   ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad')
+        hits    =   0
+        for rubro in RUBROS:
+            for seed in range(4):
+                candidates  =   A._style_candidates(facts(), stats, self.style_answers(rubro), allowed, seed)
+                chosen      =   A._explore_styles(candidates, seed, 3)
+                hits        +=  sum(
+                    1 for item in chosen
+                    if SKIN.SKINS[item['skin']]['family'] in SKIN.AI_ONLY_FAMILIES
+                )
+        self.assertGreater(hits, 0)
