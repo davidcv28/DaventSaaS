@@ -195,6 +195,7 @@ INSTALLED_APPS = [
     'StoreApp.domains.stores.apps.apps.StoresAppConfig',
     'StoreApp.domains.catalog.apps.apps.CatalogAppConfig',
     'StoreApp.domains.services.apps.apps.ServicesAppConfig',
+    'StoreApp.domains.design.apps.apps.DesignAppConfig',
     #MCP APP (biblioteca de estilos de diseño para la IA; servidor MCP propio)
     'McpApp.domains.skills.apps.apps.SkillsAppConfig'
 ]
