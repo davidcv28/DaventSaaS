@@ -7434,6 +7434,485 @@
         "seguridad",
         "advanced"
       ]
+    },
+    {
+      "slug": "atelier",
+      "nombre": "Atelier",
+      "categoria": "indumentaria",
+      "descripcion": "Alta costura y sastrería: serif Cormorant, aire editorial, foto en arco y acento ciruela para una marca de autor.",
+      "tier": "plus",
+      "template": "boutique",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "editorial",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "lead",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "stats",
+            "variant": "band",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "gallery",
+            "variant": "masonry",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 11
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "jost",
+          "cormorant-garamond"
+        ],
+        "accent": "#6B2D4F"
+      },
+      "tags": [
+        "atelier",
+        "indumentaria",
+        "alta-costura",
+        "sastreria",
+        "plus"
+      ]
+    },
+    {
+      "slug": "urbano",
+      "nombre": "Urbano",
+      "categoria": "indumentaria",
+      "descripcion": "Streetwear: hero partido, marquesina de avisos, carruseles de categorías y ofertas, marcas y acento grafito.",
+      "tier": "plus",
+      "template": "trama",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "variant": "rail",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "variant": "quick",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "countdown",
+            "variant": "band",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offers",
+            "variant": "rail",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "brands",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "testimonials",
+            "variant": "carousel",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 11
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "inter",
+          "inter-tight"
+        ],
+        "accent": "#111827"
+      },
+      "tags": [
+        "urbano",
+        "indumentaria",
+        "streetwear",
+        "graffiti",
+        "plus"
+      ]
+    },
+    {
+      "slug": "vitrina",
+      "nombre": "Vitrina",
+      "categoria": "indumentaria",
+      "descripcion": "Retail multimarca: portada compacta, garantías en bento, vitrina masonry, ofertas, cuenta regresiva y contacto con mapa.",
+      "tier": "plus",
+      "template": "indumentaria",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "compact",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "benefits",
+            "variant": "bento",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "masonry",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "offers",
+            "variant": "grid",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "countdown",
+            "variant": "card",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "gallery",
+            "variant": "rail",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "faq",
+            "variant": "cols",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "contact",
+            "variant": "map",
+            "enabled": true,
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "inter",
+          "inter-tight"
+        ],
+        "accent": "#1F3A5F"
+      },
+      "tags": [
+        "vitrina",
+        "indumentaria",
+        "retail",
+        "multimarca",
+        "plus"
+      ]
     }
   ]
 }
