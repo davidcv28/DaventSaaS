@@ -102,6 +102,7 @@ export const SITE_THEME_DEFAULTS = deepFreeze({
   },
   typography: {
     heading: 'inter',
+    subheading: 'inter',
     body: 'inter',
     scale: 'balanced',
     weightHeading: 800,
@@ -218,6 +219,9 @@ export function resolveSiteTheme(partial = {}) {
     },
     typography: {
       heading: pickCssText(typ.heading, d.typography.heading, 120),
+      // Subtítulos: sin valor propio heredan la familia de los títulos, así
+      // un tema viejo (sin `subheading`) se ve exactamente igual que antes.
+      subheading: pickCssText(typ.subheading, pickCssText(typ.heading, d.typography.heading, 120), 120),
       body: pickCssText(typ.body, d.typography.body, 120),
       scale: pickEnum(STUDIO_ENUMS.typeScale, typ.scale, d.typography.scale),
       weightHeading: Number.isFinite(weight) ? Math.min(900, Math.max(100, Math.round(weight))) : d.typography.weightHeading,
@@ -490,6 +494,7 @@ export function themeToCssVars(theme, resolveFont, mode = 'light') {
     '--st-card-pad': density.pad,
     '--st-section-gap': density.gap,
     '--st-font-heading': fontOf(t.typography.heading, resolveFont),
+    '--st-font-subheading': fontOf(t.typography.subheading, resolveFont),
     '--st-font-body': fontOf(t.typography.body, resolveFont),
     '--st-h1-size': scale.h1,
     '--st-h2-size': scale.h2,
@@ -574,6 +579,7 @@ export const STUDIO_VAR_KEYS = {
   '--st-card-pad': ['containers.density'],
   '--st-section-gap': ['containers.density'],
   '--st-font-heading': ['typography.heading'],
+  '--st-font-subheading': ['typography.subheading'],
   '--st-font-body': ['typography.body'],
   '--st-h1-size': ['typography.scale'],
   '--st-h2-size': ['typography.scale'],
@@ -630,6 +636,7 @@ export function themeDataAttrs(theme, explicit = null, mode = 'light') {
     'data-st-grid': on('mobile.gridCols') ? String(t.mobile.gridCols) : null,
     'data-st-brand': on('palette.primary') || on('palette.accent') ? '' : null,
     'data-st-font-heading': on('typography.heading') ? '' : null,
+    'data-st-font-subheading': on('typography.subheading') ? '' : null,
     'data-st-font-body': on('typography.body') ? '' : null,
     'data-st-scale': on('typography.scale') ? '' : null,
     'data-st-weight': on('typography.weightHeading') ? '' : null,

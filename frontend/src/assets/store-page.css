@@ -1274,7 +1274,7 @@ html{ scroll-behavior: smooth; }
    oscurece y los textos vuelven a blanco para conservar el contraste. */
 
 /* ---------- Portada de fondo en los diseños editoriales ----------
-   los dise�os del cat�logo
+   los dise�os del cat�logo
    también llevan la portada como fondo de la banda. Como en Perspectiva,
    el papel cede a la foto: el velo del acento oscurece y los textos del
    hero pasan a tinta clara, conservando las marcas tipográficas de cada
@@ -3441,6 +3441,11 @@ html{ scroll-behavior: smooth; }
 .store-page[data-st-font-body]{ font-family: var(--st-font-body, var(--store-font, Inter, system-ui, sans-serif)); }
 .store-page[data-st-font-heading] :is(h1, h2, h3, .sp-hero-title, .sp-hal-title, .sp-section-title){
   font-family: var(--st-font-heading, var(--sp-display, var(--store-font, inherit)));
+}
+/* Subtítulos (títulos de sección y de bloque): familia propia si el tema la
+   fija; si no, cae a la de los títulos. */
+.store-page[data-st-font-subheading] :is(.sp-section-title, .sp-h2, .sp-block-title, .spd-sec-title){
+  font-family: var(--st-font-subheading, var(--st-font-heading, var(--sp-display, var(--store-font, inherit))));
 }
 .store-page[data-st-weight] :is(h1, .sp-hero-title:not(.is-name), .sp-hal-title:not(.is-name)){
   font-weight: var(--st-weight-heading, 800);

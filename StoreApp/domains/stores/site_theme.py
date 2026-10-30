@@ -162,6 +162,7 @@ _SECTION_SPECS  =   {
     },
     'typography'    :   {
         'heading'       :   ('font',),
+        'subheading'    :   ('font',),
         'body'          :   ('font',),
         'scale'         :   ('enum', _TYPE_SCALE),
         'weightHeading' :   ('int', 100, 900),

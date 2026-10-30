@@ -21,7 +21,7 @@ import {
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
   validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
-  validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES,
+  validateImageFile, validateLogoFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
   MARKETING_LIMITS, SERVICE_ICONS, serviceHue,
   validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl
@@ -2034,11 +2034,59 @@ async function onMoveGallery(imageId, direction) {
   if (!ok) galleryErr.value = store.lastError
 }
 
-// Logo y portada de la web pública: la subida/quita vive en DesignLookTab;
-// acá quedan los accesos de lectura que comparten la vista previa y el resto del panel.
+// Logo y portada de la web pública: viven en la pestaña Fotos junto con la
+// galería (la pestaña Diseño solo elige estructura, estilo y tipografía).
 const LOGO_ACCEPT_TYPES = LOGO_ACCEPT
 const currentLogo = computed(() => store.customization.logo || '')
 const currentCover = computed(() => store.customization.cover || '')
+const logoInput = ref(null)
+const logoBusy = ref(false)
+const logoErr = ref('')
+const coverInput = ref(null)
+const coverBusy = ref(false)
+const coverErr = ref('')
+
+async function onLogoPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  logoErr.value = validateLogoFile(file)
+  if (logoErr.value) return
+  logoBusy.value = true
+  const ok = await store.uploadLogo(file)
+  logoBusy.value = false
+  if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
+}
+
+async function onRemoveLogo() {
+  if (logoBusy.value) return
+  logoErr.value = ''
+  logoBusy.value = true
+  const ok = await store.removeLogo()
+  logoBusy.value = false
+  if (!ok) logoErr.value = store.fieldErrors.logo || store.lastError
+}
+
+async function onCoverPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file || !canDesignAdvanced.value) return
+  coverErr.value = validateImageFile(file)
+  if (coverErr.value) return
+  coverBusy.value = true
+  const ok = await store.uploadCover(file)
+  coverBusy.value = false
+  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
+}
+
+async function onRemoveCover() {
+  if (coverBusy.value || !canDesignAdvanced.value) return
+  coverErr.value = ''
+  coverBusy.value = true
+  const ok = await store.removeCover()
+  coverBusy.value = false
+  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
+}
 
 onMounted(async () => {
   // Puente entre pestañas: el retorno de MP cae en la pestaña del checkout,
@@ -4120,6 +4168,44 @@ async function changePassword() {
           </div>
           <div v-show="designTab === 'images'" class="card dsg-card">
             <h3><AppIcon name="images" :size="18" /> Imágenes</h3>
+            <div class="field">
+              <label id="design-logo-label">Logo</label>
+              <div class="carousel-box">
+                <div v-if="currentLogo" class="carousel-thumb">
+                  <img :src="currentLogo" alt="Logo de tu tienda" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn danger" aria-label="Quitar logo" :disabled="logoBusy" @click="onRemoveLogo"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button type="button" class="carousel-add" :disabled="logoBusy" @click="logoInput?.click()">
+                  <span v-if="logoBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="image" :size="20" />
+                  {{ currentLogo ? 'Cambiar logo' : 'Subir logo' }}
+                </button>
+              </div>
+              <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-logo-label" @change="onLogoPicked" />
+              <p class="hint">PNG, JPG, WebP o GIF de hasta 2 MB. Mejor si es cuadrado.</p>
+              <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
+            </div>
+            <div class="field" :class="{ locked: !canDesignAdvanced }">
+              <label id="design-cover-label">Foto de portada <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
+              <div class="carousel-box">
+                <div v-if="currentCover" class="carousel-thumb">
+                  <img :src="currentCover" alt="Portada actual de tu web" />
+                  <div class="carousel-thumb-actions">
+                    <button v-if="canDesignAdvanced" type="button" class="icon-btn danger" aria-label="Quitar portada" :disabled="coverBusy" @click="onRemoveCover"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button type="button" class="carousel-add" :disabled="coverBusy || !canDesignAdvanced" @click="coverInput?.click()">
+                  <span v-if="coverBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="image" :size="20" />
+                  {{ currentCover ? 'Cambiar portada' : 'Subir portada' }}
+                </button>
+              </div>
+              <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-cover-label" :disabled="!canDesignAdvanced" @change="onCoverPicked" />
+              <p class="hint">Foto apaisada y luminosa de hasta 4 MB; la ajustamos sola.</p>
+              <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
+            </div>
             <div class="field" :class="{ locked: !canGallery }">
               <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Con plan activo</span></label>
               <div v-if="canGallery || galleryImages.length" class="carousel-box">
