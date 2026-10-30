@@ -127,8 +127,29 @@
 
 ### FASE 4 — Rediseño de plantillas (landing, catálogo, servicios)
 
-- [ ] Nuevo render por diseño a partir de `DesignPattern.html/css/js` con variables
-  resueltas contra los datos de la tienda (server-side o cliente, según contrato de Fase 1).
+- [x] Nuevo render por diseño a partir de `DesignPattern.html/css/js` con variables
+  resueltas contra los datos de la tienda. **(TERMINADO)** — server-side:
+  `StoreApp/domains/design/services/pattern_render.py` (`build_store_context`,
+  `theme_css`, `pattern_for_template`, `render_store_pattern`) +
+  `GET /api/stores/public/<slug>/pattern/` (AllowAny, `has_public_link`, cache
+  por `public_cache_stamp`, honra `?preview=`). `DesignPattern.render(ctx, raw)`
+  acepta fragmentos de lista ya escapados; el texto se sigue escapando.
+  Frontend: `api/stores.api.js#publicPattern`, `components/store/PatternSurface.vue`
+  (iframe `srcdoc` sin `allow-same-origin`, alto por postMessage, tema por
+  postMessage) montado en `StorePublicLayout` cuando el patrón declara
+  `variables` (`ready`), con toggle de modo noche flotante; en el Studio y para
+  patrones sin contrato se sigue usando la plantilla Vue. QA headless a
+  1360/390 en claro y oscuro: 0 scroll horizontal, 0 errores de consola.
+- [x] Convertir `raiz` al contrato de variables (referencia). **(TERMINADO)** —
+  fuente editable en `StoreApp/domains/design/sources/raiz.html` (doc completo,
+  `{{store_*}}` + `{{products}}`/`{{categories}}`, `--ds-accent`/`--ds-radius`,
+  modo noche por `prefers-color-scheme` + `html[data-ds-theme]`); el seed se
+  regenera con `seed_design_catalog --patterns-only` y `variables` viaja en
+  `seed_data.json`. Fragmentos con clases `ds-*` (producto, categoría, servicio,
+  galería, vacío).
+- [ ] Convertir los 8 patrones restantes (`alimentos`, `trama`, `indumentaria`,
+  `boutique`, `atelier`, `clasico`, `circuito`, `seguridad`) al mismo contrato:
+  hoy su markup es demo estático y la web sigue con la plantilla Vue.
 - [ ] Landing única por rubro (composición propia, no genérica).
 - [ ] Catálogo único por rubro (filtros, orden, vacíos, responsive).
 - [ ] Servicios único por rubro (selector, presupuesto, CTA).
@@ -172,7 +193,8 @@ del sistema de bloques del render, del Studio y de las vistas (Fase 3
 completa), documentación vieja borrada (Fase 0).
 
 **Falta lo pesado:** Fase 4 (rediseñar landing/catálogo/servicios de cada diseño
-sobre `DesignPattern.html/css/js` con variables) y Fase 6 (rediseño profundo del
+sobre `DesignPattern.html/css/js` con variables: el pipeline ya está y `raiz` es
+la referencia; faltan los otros 8 patrones) y Fase 6 (rediseño profundo del
 Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.py`
 (`DesignPattern.render`), `frontend/src/templates/index.js` (`resolveLayout`) y
 `frontend/src/views/StorePublicLayout.vue` (`provide('storeIconSet')`).
@@ -196,5 +218,18 @@ Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.p
   `DistribucionPanel.vue` eliminados. Fase 2: test de tema/persistencia
   (`utils/storeTheme.js`). Fase 5 cerrada (fallback de iconos verificado).
   Vitest 25 tests OK, `verify:studio` OK, `vite build` OK con `TMP` local.
-- Próximo paso: Fase 4 (render por `DesignPattern.html/css/js` con variables y
-  rediseño de landing/catálogo/servicios por rubro) y Fase 6 (rediseño del Studio).
+- (2026-10-30) Fase 4 arranca por el render: `services/pattern_render.py` +
+  `GET /api/stores/public/<slug>/pattern/` + `PatternSurface.vue` montado en
+  `StorePublicLayout` (solo patrones con `variables`, o sea `raiz` por ahora;
+  el resto sigue con la plantilla Vue). `DesignPattern.render(ctx, raw)` ahora
+  recibe los fragmentos de lista (`products`/`categories`/`services`/`gallery`)
+  ya escapados; `seed_design_catalog` persiste `variables` y
+  `supports_dark_mode`. `raiz` reescrito en
+  `StoreApp/domains/design/sources/raiz.html` (variables + `--ds-*` + modo
+  noche). QA: `manage.py test StoreApp.domains.design` 33 OK; stores 607 con
+  2 fallas PREEXISTENTES de `ai_design` (verificadas con `git stash`);
+  `vite build` OK; `npx vitest run` 25 OK; navegador headless sobre `/demo`
+  (payload interceptado por el throttle `store_visit`) en 1360/390, claro y
+  oscuro. `sync_design_neon --slug raiz` OK.
+- Próximo paso: convertir los 8 patrones restantes al contrato de variables
+  (landing/catálogo/servicios por rubro) y Fase 6 (rediseño del Studio).

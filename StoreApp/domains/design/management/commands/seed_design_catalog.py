@@ -93,6 +93,11 @@ class Command(BaseCommand):
                     'html'          :   html,
                     'css'           :   css,
                     'js'            :   js,
+                    #Contrato de datos del patrón: sin `variables` el
+                    #markup es demo estático y la web sigue con la
+                    #plantilla Vue (ver services/pattern_render.py).
+                    'variables'     :   pattern.get('variables') or {},
+                    'supports_dark_mode': pattern.get('supports_dark_mode', True),
                     'tokens'        :   pattern.get('tokens') or {},
                     'tags'          :   pattern.get('tags') or [],
                     'preview'       :   pattern.get('preview', ''),

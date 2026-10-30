@@ -255,19 +255,26 @@ class DesignPattern(models.Model):
     def __str__(self):
         return f'{self.nombre} ({self.slug})'
 
-    def render(self, context = None):
+    def render(self, context = None, raw = None):
         """
         Interpola `{{variable}}` en el HTML usando solo las variables
         declaradas. Una variable no declarada se reemplaza por vacio: el
         markup nunca ejecuta datos arbitrarios de la tienda.
+
+        `raw` es el mapa de variables de tipo `list` que viajan como HTML
+        ya armado y escapado por el backend (fragmentos de catálogo,
+        servicios, galería): esos valores no se vuelven a escapar.
         """
         from django.utils.html import escape
         declared = self.variables or {}
+        raw = raw if isinstance(raw, dict) else {}
         def _replace(match):
             name = match.group(1)
             spec = declared.get(name)
             if not spec:
                 return ''
+            if spec.get('type') == 'list' and name in raw:
+                return str(raw.get(name) or '')
             value = (context or {}).get(name, spec.get('default', ''))
             return escape(str(value))
         return _PATTERN_VAR_RE.sub(_replace, self.html or '')

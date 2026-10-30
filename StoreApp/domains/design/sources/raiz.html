@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}} · Mostrador de barrio</title>
+<style>
+  :root{
+    --paper:#f3f7f3; --card:#ffffff; --ink:#0d2420; --muted:#4f6b64;
+    --teal:var(--ds-accent,#0f766e); --deep:#115e59; --lime:#d9f99d; --line:#d3e4dc;
+    --radius:var(--ds-radius,12px); --radius-btn:var(--ds-radius-btn,999px);
+    --ease:cubic-bezier(.22,1,.36,1); --dur:520ms;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.5}
+  h1,h2,h3{font-family:"Segoe UI",system-ui,sans-serif;line-height:1.02;letter-spacing:-.03em;margin:0}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1240px,94vw);margin:0 auto}
+  .top{display:flex;align-items:center;gap:22px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;margin-right:auto}
+  .brand svg{color:var(--teal)}
+  .brand-logo{width:28px;height:28px;object-fit:contain;border-radius:6px}
+  .top nav{display:flex;gap:22px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .top nav a:hover{color:var(--teal)}
+  .top .hours{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--deep);border:1px solid var(--line);padding:7px 10px;border-radius:var(--radius-btn)}
+  .top .hours:empty{display:none}
+  .top .cta{background:var(--teal);color:#fff;padding:9px 15px;border-radius:var(--radius-btn);font-size:11px;font-weight:700}
+  .top .cta:empty{display:none}
+  .counter{display:grid;grid-template-columns:210px minmax(0,1fr) 270px;gap:0;border-bottom:1px solid var(--line);min-height:520px}
+  .rail{padding:26px 22px 26px 0;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+  .rail .lbl{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .rail a{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700;transition:background var(--dur) var(--ease),padding var(--dur) var(--ease)}
+  .rail a span:first-child{font-size:9px;color:var(--teal);letter-spacing:.1em}
+  .rail a b{font-weight:700}
+  .rail a i{font-style:normal;color:var(--muted);font-size:10px}
+  .rail a:hover{background:var(--card);padding-left:14px}
+  .board{padding:34px 34px 30px;position:relative;overflow:hidden}
+  .board::after{content:"01";position:absolute;right:-10px;bottom:-30px;font-family:"Segoe UI",sans-serif;font-size:240px;font-weight:800;color:#0f766e0a;line-height:1;pointer-events:none}
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--deep);background:#e3f2ec;padding:6px 10px;border-radius:var(--radius-btn)}
+  .board h1{font-size:clamp(42px,5vw,70px);margin:16px 0 14px;max-width:14ch}
+  .board h1 em{font-style:normal;color:var(--teal);box-shadow:inset 0 -.22em 0 var(--lime)}
+  .board p{max-width:44ch;color:var(--muted);font-size:15px;margin:0 0 22px}
+  .board p:empty{display:none}
+  .ticket{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;max-width:360px;box-shadow:0 18px 40px -30px #0d2420;position:relative}
+  .ticket::before{content:"";position:absolute;left:-1px;top:14px;bottom:14px;width:3px;background:var(--teal);border-radius:3px}
+  .ticket .row{display:flex;justify-content:space-between;gap:14px;font-size:11px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .ticket .row:last-child{border-bottom:0;font-weight:800;font-size:13px;color:var(--teal);padding-top:10px}
+  .ticket .row span:first-child{color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-size:9px}
+  .ticket .row span:last-child:empty{display:none}
+  .info{border-left:1px solid var(--line);padding:26px 0 26px 22px;display:flex;flex-direction:column;gap:18px}
+  .info .panel{border-bottom:1px solid var(--line);padding-bottom:14px}
+  .info h3{font-size:13px;letter-spacing:.02em;margin-bottom:5px}
+  .info p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.55}
+  .info p:empty{display:none}
+  .info .badge{display:inline-flex;align-items:center;gap:6px;background:#e3f2ec;color:var(--deep);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:4px;margin-top:7px}
+  .shelf{padding:30px 0 10px}
+  .shelf-head{display:flex;justify-content:space-between;align-items:end;border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:0}
+  .shelf-head h2{font-size:26px}
+  .shelf-head span{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  /* Ficha de producto (fragmento {{products}} del backend) */
+  .ds-product{border-bottom:1px solid var(--line)}
+  .ds-product-link{display:grid;grid-template-columns:46px 1fr 120px 80px;gap:14px;align-items:center;padding:15px 0;transition:background var(--dur) var(--ease),padding var(--dur) var(--ease)}
+  .ds-product-link:hover{background:var(--card);padding-left:10px}
+  .ds-product-img{width:46px;height:46px;object-fit:cover;border-radius:calc(var(--radius) / 2);background:var(--line)}
+  .ds-product-copy{min-width:0}
+  .ds-product-name{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-product-desc{display:block;font-size:10.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-product-cat{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .ds-product-price{font-weight:800;color:var(--teal);font-size:13px;display:flex;gap:6px;align-items:baseline}
+  .ds-product-old{color:var(--muted);font-weight:400;font-size:11px}
+  .ds-empty{padding:18px 0;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line)}
+  /* Categorías del mostrador (fragmento {{categories}}) */
+  .ds-cat{display:flex;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700;transition:background var(--dur) var(--ease),padding var(--dur) var(--ease)}
+  .ds-cat:hover{background:var(--card);padding-left:14px}
+  .counter:not(:has(.ds-cat)){grid-template-columns:minmax(0,1fr) 270px}
+  .counter:not(:has(.ds-cat)) .rail{display:none}
+  .strip{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:26px 0 30px}
+  .strip div{padding:13px 16px;border-right:1px solid var(--line);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center}
+  .strip div:last-child{border-right:0}
+  .strip svg{color:var(--teal)}
+  footer{display:flex;justify-content:space-between;gap:16px;padding:16px 0;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  footer span:empty{display:none}
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .reveal.on{opacity:1;transform:none}
+  /* Modo noche: sistema + toggle explícito de la web */
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#0b1512;--card:#132420;--ink:#e8f3ee;--muted:#9db6ae;--line:#233a33;--deep:#7fd4c7;--lime:#2f4a1f}
+    .eyebrow,.info .badge{background:#17322b;color:#b7e8dd}
+    .board::after{color:#7fd4c714}
+  }
+  html[data-ds-theme="dark"]{--paper:#0b1512;--card:#132420;--ink:#e8f3ee;--muted:#9db6ae;--line:#233a33;--deep:#7fd4c7;--lime:#2f4a1f}
+  html[data-ds-theme="dark"] .eyebrow,html[data-ds-theme="dark"] .info .badge{background:#17322b;color:#b7e8dd}
+  @media (max-width:900px){.counter{grid-template-columns:1fr}.rail{border-right:0;border-bottom:1px solid var(--line);padding-right:0}
+    .info{border-left:0;border-top:1px solid var(--line);padding-left:0}.board{padding:26px 0}
+    .ds-product-link{grid-template-columns:32px 1fr auto}.ds-product-cat{display:none}.top nav{display:none}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#inicio">
+      <img class="brand-logo" src="{{store_logo}}" alt="" onerror="this.remove()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 21v-8"/><path d="M12 13c-4 0-7-2.7-7-6 4 0 7 2.7 7 6Z"/><path d="M12 13c4 0 7-2.7 7-6-4 0-7 2.7-7 6Z"/></svg>
+      {{store_name}}
+    </a>
+    <nav aria-label="Principal"><a href="#catalogo">Tienda</a><a href="#servicios">Servicios</a><a href="#nosotros">Nosotros</a><a href="#contacto">Contacto</a></nav>
+    <span class="hours">{{store_hours}}</span>
+    <a class="cta" href="{{store_whatsapp_url}}">Pedir por WhatsApp</a>
+  </header>
+
+  <section class="counter" id="inicio" data-block="hero">
+    <aside class="rail" data-block="categories" aria-label="Categorías">
+      <span class="lbl">Mostrador</span>
+      {{categories}}
+    </aside>
+
+    <div class="board">
+      <span class="eyebrow"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg> {{store_location}}</span>
+      <h1>{{store_tagline}}</h1>
+      <p>{{store_description}}</p>
+      <div class="ticket" aria-label="Datos del negocio">
+        <div class="row"><span>Ubicación</span><span>{{store_location}}</span></div>
+        <div class="row"><span>Dirección</span><span>{{store_address}}</span></div>
+        <div class="row"><span>Horarios</span><span>{{store_hours}}</span></div>
+        <div class="row"><span>Contacto</span><span>{{store_phone}}</span></div>
+      </div>
+    </div>
+
+    <aside class="info">
+      <div class="panel" id="nosotros">
+        <h3>Quiénes somos</h3>
+        <p>{{store_about}}</p>
+      </div>
+      <div class="panel">
+        <h3>Dónde estamos</h3>
+        <p>{{store_address}}</p>
+        <p>{{store_location}}</p>
+      </div>
+      <div class="panel" id="contacto">
+        <h3>Hablar con nosotros</h3>
+        <p>{{store_hours}}</p>
+        <a class="badge" href="{{store_whatsapp_url}}">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> {{store_phone}}
+        </a>
+      </div>
+    </aside>
+  </section>
+
+  <section class="shelf" id="catalogo" data-block="featured">
+    <div class="shelf-head reveal"><h2>Los más pedidos</h2><span>Stock real · precio final</span></div>
+    {{products}}
+  </section>
+
+  <div class="strip">
+    <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M3 7h11v10H3z"/><path d="M14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg> Envíos a todo el país</div>
+    <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg> Compra protegida</div>
+    <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Retiro en el día</div>
+  </div>
+
+  <footer data-block="contact"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_address}}</span><span>{{year}}</span></footer>
+</div>
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) { items.forEach(function(el){el.classList.add('on')}); return; }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  },{threshold:.16});
+  items.forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>

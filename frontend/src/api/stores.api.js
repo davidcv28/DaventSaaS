@@ -181,6 +181,14 @@ export const storesApi = {
     return data
   },
 
+  async publicPattern(slug, { preview } = {}) {
+    // Documento del DesignPattern resuelto contra la tienda (HTML/CSS/JS
+    // con variables). `{}` cuando el diseño todavía no tiene contrato de
+    // datos: la web sigue con la plantilla Vue.
+    const { data } = await publicHttp.get(`/stores/public/${slug}/pattern/`, { params: preview ? { preview } : {} })
+    return data
+  },
+
   async publicCatalog(slug, params = {}) {
     const { data } = await publicHttp.get(`/stores/public/${slug}/catalog/`, { params: normalizeCatalogParams(params) })
     return data

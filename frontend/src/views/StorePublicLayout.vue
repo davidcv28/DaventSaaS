@@ -9,6 +9,7 @@ import { env, storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import StoreBot from '../components/StoreBot.vue'
+import PatternSurface from '../components/store/PatternSurface.vue'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
@@ -69,6 +70,14 @@ const { defaultPattern, defaultStyle, iconStyles, defaultIconStyle, load: loadDe
 // Layout del patrón de diseño de la base: única fuente de composición de las
 // tres superficies cuando la tienda no guardó su propio layout_config.
 const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?.layout))
+// Diseño del catálogo servido como documento propio (HTML/CSS/JS con las
+// variables resueltas por el backend). Solo se usa cuando el patrón ya
+// declara su contrato de datos (`ready`); en el Studio se sigue editando
+// con la plantilla Vue, que es la que responde a los cambios en vivo.
+const patternDoc = ref(null)
+const usePattern = computed(() => Boolean(
+  !studioMode.value && patternDoc.value?.ready && patternDoc.value?.html
+))
 const custom = computed(() => {
   const raw = store.value?.customization || {}
   const merged = {
@@ -755,6 +764,13 @@ onMounted(async () => {
   else if (isProduct.value) loadPublicCatalog()
   // La página Servicios no necesita el catálogo: sus ítems viajan en el
   // payload público de la tienda (service_items).
+  // El documento del diseño viaja en paralelo con la ficha: si el patrón
+  // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
+  if (!studioMode.value) {
+    storesApi.publicPattern(slug.value, { preview: previewToken.value })
+      .then((doc) => { patternDoc.value = doc && doc.html ? doc : null })
+      .catch(() => { patternDoc.value = null })
+  }
   try {
     store.value = await storesApi.publicStore(slug.value, { preview: previewToken.value })
     status.value = 'success'
@@ -808,6 +824,25 @@ onBeforeUnmount(() => {
   <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
+    <!-- Diseño del catálogo con contrato de datos: se pinta el documento
+         del patrón (HTML/CSS/JS) en vez de la plantilla Vue. -->
+    <PatternSurface
+      v-if="usePattern"
+      :doc="patternDoc"
+      :theme="pageTheme"
+      :title="shopName"
+    />
+    <button
+      v-if="usePattern && showThemeToggle"
+      type="button"
+      class="sp-pattern-theme"
+      :aria-label="pageTheme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+      :aria-pressed="pageTheme === 'dark'"
+      @click="togglePageTheme"
+    >
+      <AppIcon :name="pageTheme === 'dark' ? 'sun' : 'moon'" :size="17" />
+    </button>
+    <div v-if="!usePattern" class="sp-vue-page">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
@@ -1069,5 +1104,6 @@ onBeforeUnmount(() => {
       :logo="custom.logo"
       :initial="initial"
     />
+    </div>
   </div>
 </template>

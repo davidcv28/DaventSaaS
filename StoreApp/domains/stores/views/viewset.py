@@ -355,7 +355,7 @@ class AiDesignMcpThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
@@ -510,6 +510,34 @@ class StoreViewSet(StoreBaseViewSet):
         #Cache corta: la misma visita no repide la ficha al navegar entre
         #Inicio/Catálogo/Producto ni al volver atrás. El conteo de visitas no
         #se ve afectado (la dedup por visitante/día ya corre en cache.add).
+        patch_cache_control(response, public = True, max_age = 30)
+        return response
+    #=========================================
+    # PUBLIC PATTERN (documento del DesignPattern con los datos de la tienda)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern', throttle_classes = [PublicReadThrottle])
+    def public_pattern(self, request, slug = None):
+        #Render server-side del diseño elegido: HTML + CSS + JS del
+        #DesignPattern con las variables resueltas contra la tienda. `{}`
+        #cuando el diseño no trae markup (la web sigue con la plantilla Vue).
+        store               =   get_object_or_404(
+            Store.objects.select_related('user', 'customization'),
+            slug = slug, is_published = True, is_blocked = False,
+        )
+        if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
+        customization       =   getattr(store, 'customization', None)
+        if customization is not None and self._preview_ok(request, store):
+            customization.template          =   customization.template_draft or customization.template
+            customization.site_theme        =   customization.site_theme_draft
+        epoch, ver          =   public_cache_stamp(store.pk)
+        cache_key           =   f'store:pattern:v1:{store.pk}:{epoch}:{ver}'
+        data                =   cache_get(cache_key)
+        if data is None:
+            from StoreApp.domains.design.services import render_store_pattern
+            data            =   render_store_pattern(store, customization) or {}
+            cache_set(cache_key, data, PUBLIC_CACHE_TTL)
+        response            =   Response(data, status = status.HTTP_200_OK)
         patch_cache_control(response, public = True, max_age = 30)
         return response
     #=========================================
