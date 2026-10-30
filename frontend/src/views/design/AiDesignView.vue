@@ -125,6 +125,9 @@ const stepTitle = ref(null)
 // Claves del pedido que el dueño quitó a mano antes de enviar.
 const blockHidden = reactive({})
 const showJson = ref(false)
+// En pantallas chicas "Tu pedido" arranca plegado: primero la pregunta, el
+// resumen queda a un toque de distancia.
+const askOpen = ref(false)
 // Lo que decidió el MCP: skills de diseño aplicados a la tanda.
 const mcp = ref(null)
 
@@ -190,6 +193,8 @@ const stepValid = computed(() => {
   return true
 })
 const canSubmit = computed(() => Boolean(answers.rubro && answers.goals.length && answers.tone))
+// Avance del wizard para la barra de progreso (paso actual + pasos hechos).
+const stepPct = computed(() => Math.round(((step.value + (stepValid.value ? 1 : 0)) / STEPS.length) * 100))
 const hasAnswers = computed(() => Boolean(
   answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length ||
   answers.audience || answers.must_have.length || answers.content_hint
@@ -672,6 +677,12 @@ function closePreview() {
               </button>
             </li>
           </ol>
+          <div class="aidw-progress">
+            <div class="aidw-progress-track" role="progressbar" :aria-valuenow="stepPct" aria-valuemin="0" aria-valuemax="100" :aria-label="`Avance del pedido: ${stepPct}%`">
+              <span class="aidw-progress-fill" :style="{ width: `${stepPct}%` }"></span>
+            </div>
+            <span class="aidw-progress-txt">Paso {{ step + 1 }} de {{ STEPS.length }} · {{ stepPct }}%</span>
+          </div>
 
           <section class="aidw-step" :aria-labelledby="`aidw-title-${currentStep.id}`">
             <header class="aidw-step-head">
@@ -847,11 +858,20 @@ function closePreview() {
         </div>
 
         <!-- PEDIDO ESTRUCTURADO -->
-        <aside class="aidw-ask" aria-label="Tu pedido">
+        <aside class="aidw-ask" :class="{ 'is-open': askOpen }" aria-label="Tu pedido">
           <header class="aidw-ask-head">
             <h3><AppIcon name="clipboard-list" :size="16" /> Tu pedido</h3>
             <span class="aidw-ask-count">{{ blocks.length }}</span>
+            <button
+              type="button" class="aidw-ask-toggle"
+              :aria-expanded="askOpen" aria-controls="aidw-ask-body"
+              @click="askOpen = !askOpen"
+            >
+              {{ askOpen ? 'Ocultar' : 'Ver' }}
+              <AppIcon :name="askOpen ? 'chevron-up' : 'chevron-down'" :size="14" />
+            </button>
           </header>
+          <div id="aidw-ask-body" class="aidw-ask-body">
           <p v-if="!blocks.length" class="aidw-ask-empty">
             Cada respuesta arma una clave del pedido. El MCP lee esta estructura y elige el estilo de diseño.
           </p>
@@ -877,6 +897,7 @@ function closePreview() {
             <AppIcon name="send" :size="16" /> Generar propuesta
           </button>
           <p class="aidw-ask-note">El MCP elige el estilo de diseño a partir de este pedido.</p>
+          </div>
         </aside>
       </div>
 
@@ -1068,8 +1089,24 @@ function closePreview() {
 .aidw { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
 @media (max-width: 980px) {
   .aidw { grid-template-columns: minmax(0, 1fr); }
-  .aidw-ask { order: -1; }
+  /* En mobile el resumen va arriba pero plegado: primero la pregunta. */
+  .aidw-ask { order: -1; position: static; gap: 10px; }
+  .aidw-ask-body { display: none; }
+  .aidw-ask.is-open .aidw-ask-body { display: flex; flex-direction: column; gap: 12px; }
+  .aidw-ask-toggle { display: inline-flex; }
+  .aidw-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .aidw-bar::-webkit-scrollbar { display: none; }
+  .aidw-bar-item { flex: 0 0 auto; }
+  .aidw-bar-label { max-width: 110px; }
 }
+.aidw-ask-toggle {
+  display: none; align-items: center; gap: 4px; margin-left: auto;
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); color: var(--ink-2); font: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+.aidw-ask-toggle:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-ask-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* Barra de progreso */
 .aidw-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
@@ -1095,6 +1132,12 @@ function closePreview() {
 .aidw-bar-item.now .aidw-bar-num { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
 .aidw-bar-item.done .aidw-bar-btn { color: var(--ink-2); }
 .aidw-bar-item.done .aidw-bar-num { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+
+/* Avance */
+.aidw-progress { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.aidw-progress-track { flex: 1; height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.aidw-progress-fill { display: block; height: 100%; border-radius: 999px; background: var(--brand-500); transition: width var(--dur) var(--ease-out); }
+.aidw-progress-txt { flex: none; color: var(--muted); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* Paso */
 .aidw-step {
@@ -1195,6 +1238,7 @@ function closePreview() {
 /* Pedido acumulado */
 .aidw-ask {
   display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  /* El cuerpo es el que scrollea/plega; la cabecera queda siempre visible. */
   padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg);
   background: var(--surface);
   position: sticky; top: 12px;
