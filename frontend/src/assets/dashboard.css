@@ -652,6 +652,9 @@
 .nav-label { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .nav-label > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nav-label small { font-size: 11px; line-height: 1.25; color: var(--rail-ink, #a5b4d4); opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* El rail de escritorio muestra solo el nombre: la microdescripción se
+   reserva para el sheet móvil "Más", donde sí ayuda a elegir. */
+.sidebar nav .nav-label small { display: none; }
 .sidebar nav button.active .nav-label small { color: var(--brand-200); opacity: .9; }
 .sidebar nav button.locked { opacity: .62; }
 .sidebar nav button.locked:hover { opacity: 1; }
@@ -861,8 +864,10 @@
 .wp-frame { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--sunk); }
 .wp-url { display: flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 11.5px; color: var(--muted); background: var(--card); border-bottom: 1px solid var(--line-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wp-mini { border-radius: 0; border: 0; max-height: 240px; overflow: hidden; pointer-events: none; }
-.wp-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.wp-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .wp-actions .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.wp-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink-2); cursor: pointer; transition: border-color .18s, color .18s, background-color .18s, transform .18s var(--ease-out); }
+.wp-icon:hover { border-color: var(--brand-soft-line); background: var(--brand-soft); color: var(--brand-ink); transform: translateY(-1px); }
 .wp-empty { padding: 18px 4px 6px; text-align: center; }
 .wp-empty p { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
 
@@ -879,6 +884,7 @@
 
 /* Checklist */
 .steps-msg { margin: -4px 0 12px; font-size: 13.5px; color: var(--muted); }
+.steps-done-msg { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--ok-ink); font-size: 13.5px; font-weight: 600; }
 .steps-card.complete .steps-msg { color: var(--ok-ink); font-weight: 600; }
 .steps-card.complete .steps-bar span { background: var(--ok); }
 

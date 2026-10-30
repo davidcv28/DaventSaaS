@@ -561,10 +561,7 @@ const stepsDone = computed(() => nextSteps.value.filter((s) => s.done).length)
 const stepsPct = computed(() => Math.round((stepsDone.value / nextSteps.value.length) * 100))
 const nextStepIdx = computed(() => nextSteps.value.findIndex((s) => !s.done))
 const nextStep = computed(() => (nextStepIdx.value >= 0 ? nextSteps.value[nextStepIdx.value] : null))
-const stepsMsg = computed(() => {
-  if (stepsDone.value >= nextSteps.value.length) return '¡Tu tienda está completa! Ya podés vender desde tu web.'
-  return `Tu tienda está al ${stepsPct.value}% — lo que sigue: ${nextStep.value?.title?.toLowerCase() || ''}.`
-})
+const pendingSteps = computed(() => nextSteps.value.filter((s) => !s.done))
 
 // --- "Tu negocio hoy": alertas, números con contexto y actividad -----------
 
@@ -574,7 +571,6 @@ const alertsOpen = ref(false)
 const alertQueue = computed(() => {
   const list = []
   const go = (id) => () => { section.value = id }
-  if (needsEmailVerification.value) list.push({ id: 'verify', kind: 'danger', title: 'Verificá tu correo electrónico', text: `Te enviamos un enlace a ${auth.user?.email}. Hasta confirmarlo no podés crear tu web pública.`, cta: 'Reenviar correo', run: resendVerification })
   if (!billing.hasSubscription && billing.status !== 'loading') list.push({ id: 'nosub', kind: 'brand', title: 'Elegí tu plan para empezar a vender', text: 'En un minuto montás tu catálogo y lo compartís con tus clientes.', cta: 'Ver planes', run: go('plans') })
   if (plan.value && !plan.value.isCurrent && plan.value.status !== 'Pendiente de pago') list.push({ id: 'expired', kind: 'danger', title: 'Tu suscripción venció', text: 'Tu web pública está pausada. Renová el plan para reactivarla al instante.', cta: 'Renovar', run: go('plans') })
   else if (inGrace.value) list.push({ id: 'grace', kind: 'warn', title: 'Estamos reintentando el débito', text: 'Mercado Pago reintenta la renovación durante unos días; tu plan sigue activo mientras tanto.', cta: 'Ver mi plan', run: go('plans') })
@@ -3037,11 +3033,11 @@ async function changePassword() {
       <div class="page-head ov-head">
         <div>
           <h1>{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></h1>
-          <p>Tu negocio hoy: qué hacer ahora y cómo viene tu web.</p>
+          <p>Tu negocio, de un vistazo.</p>
         </div>
         <div v-if="billing.hasSubscription && store.hasStore" class="ov-actions">
+          <button class="btn btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="16" /> Editar mi web</button>
           <a class="btn secondary btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="16" /> Ver mi tienda</a>
-          <button class="btn btn-auto" @click="section = 'catalogs'"><AppIcon name="plus" :size="16" /> Cargar productos</button>
         </div>
       </div>
 
@@ -3062,7 +3058,6 @@ async function changePassword() {
           <button type="button" class="chip-btn strong" @click="section = 'plans'">{{ plan.isTrial ? 'Ver planes' : 'Cambiar plan' }}</button>
         </span>
       </div>
-      <p v-if="plan?.isTrial" class="plan-note">Plan de prueba: al terminar el día de prueba elegí un plan para seguir publicado.</p>
 
       <div v-if="confirmCancel" class="card confirm-card">
         <h3><AppIcon name="triangle-alert" :size="18" /> Cancelar la renovación automática</h3>
@@ -3146,10 +3141,10 @@ async function changePassword() {
               </div>
             </div>
             <div class="wp-actions">
-              <button type="button" class="btn secondary btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="15" /> Editar</button>
-              <button type="button" class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="15" /> Copiar link</button>
-              <button type="button" class="btn ghost btn-auto" @click="shareWhatsApp"><AppIcon name="phone" :size="15" /> WhatsApp</button>
-              <button type="button" class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="15" /> Abrir</button>
+              <button type="button" class="btn btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="15" /> Editar</button>
+              <button type="button" class="wp-icon" aria-label="Copiar link" title="Copiar link" @click="copyLink"><AppIcon name="copy" :size="16" /></button>
+              <button type="button" class="wp-icon" aria-label="Compartir por WhatsApp" title="Compartir por WhatsApp" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /></button>
+              <button type="button" class="wp-icon" aria-label="Abrir mi página" title="Abrir mi página" @click="openStore"><AppIcon name="external-link" :size="16" /></button>
             </div>
           </template>
           <div v-else class="wp-empty">
@@ -3165,7 +3160,6 @@ async function changePassword() {
             <div class="stat-body">
               <strong><CountUp :value="billing.hasSubscription ? catalog.products.length : 0" /></strong>
               <small>Productos en tu web</small>
-              <span class="stat-sub">{{ catalog.products.length ? 'Sumá más para vender más' : 'Empezá por el primero' }}</span>
             </div>
             <AppIcon class="stat-go" name="arrow-up-right" :size="16" />
           </button>
@@ -3174,11 +3168,10 @@ async function changePassword() {
             <div class="stat-body">
               <strong><CountUp :value="canStats ? visitWeek.now : '—'" /></strong>
               <small>Visitas esta semana</small>
-              <span v-if="!canStats" class="stat-sub">Disponible en planes superiores</span>
+              <span v-if="!canStats" class="stat-sub">Con plan superior</span>
               <span v-else-if="visitWeek.delta !== null" class="stat-delta" :class="{ down: visitWeek.delta < 0 }">
-                <AppIcon :name="visitWeek.delta >= 0 ? 'trending-up' : 'chevron-down'" :size="12" /> {{ Math.abs(visitWeek.delta) }}% vs. semana anterior
+                <AppIcon :name="visitWeek.delta >= 0 ? 'trending-up' : 'chevron-down'" :size="12" /> {{ Math.abs(visitWeek.delta) }}%
               </span>
-              <span v-else class="stat-sub">{{ visitWeek.now ? 'Primeras visitas' : 'Compartí tu link para recibir visitas' }}</span>
             </div>
             <svg v-if="sparkline" class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
               <polygon class="spk-area" :points="sparkline.area" /><polyline class="spk-line" :points="sparkline.line" fill="none" />
@@ -3200,24 +3193,23 @@ async function changePassword() {
             <div class="stat-body">
               <strong><CountUp :value="plan?.remaining ?? '—'" /></strong>
               <small>{{ plan?.autoRenew ? 'Se renueva solo' : 'Días de plan' }}</small>
-              <span class="stat-sub">{{ plan?.isCurrent ? plan.name : 'Sin plan activo' }}</span>
             </div>
             <AppIcon class="stat-go" name="arrow-up-right" :size="16" />
           </button>
         </div>
 
-        <!-- Checklist de activación -->
-        <div class="card steps-card" :class="{ complete: stepsDone >= nextSteps.length }">
+        <!-- Checklist de activación: solo lo que falta, sin ruido -->
+        <div class="card steps-card" :class="{ complete: !pendingSteps.length }">
           <h3><AppIcon name="checklist" :size="18" /> Puesta en marcha <span class="steps-count">{{ stepsDone }} de {{ nextSteps.length }}</span></h3>
-          <p class="steps-msg">{{ stepsMsg }}</p>
           <div class="steps-bar" role="progressbar" aria-label="Pasos completados" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
-          <ol class="steps-list">
-            <li v-for="(s, i) in nextSteps" :key="s.title" :class="{ done: s.done, next: i === nextStepIdx }" :style="{ '--i': i }">
-              <span class="steps-num" aria-hidden="true"><AppIcon v-if="s.done" name="check" :size="14" :stroke="2.25" /><template v-else>{{ i + 1 }}</template></span>
+          <ol v-if="pendingSteps.length" class="steps-list">
+            <li v-for="(s, i) in pendingSteps" :key="s.title" :class="{ next: i === 0 }" :style="{ '--i': i }">
+              <span class="steps-num" aria-hidden="true">{{ stepsDone + i + 1 }}</span>
               <div><strong>{{ s.title }}</strong><small>{{ s.text }}</small></div>
-              <button v-if="!s.done" type="button" class="steps-go" :aria-label="`Ir a: ${s.title}`" @click="s.run ? s.run() : (section = s.target)"><AppIcon name="arrow-right" :size="16" /></button>
+              <button type="button" class="steps-go" :aria-label="`Ir a: ${s.title}`" @click="s.run ? s.run() : (section = s.target)"><AppIcon name="arrow-right" :size="16" /></button>
             </li>
           </ol>
+          <p v-else class="steps-done-msg"><AppIcon name="check" :size="15" /> Todo listo. Compartí tu link para empezar a vender.</p>
         </div>
 
         <!-- Actividad reciente accionable + espacio de fotos -->
@@ -3230,7 +3222,7 @@ async function changePassword() {
               <button type="button" class="feed-cta" @click="a.run">{{ a.cta }}</button>
             </li>
           </ul>
-          <p v-else class="feed-empty">Cuando pase algo importante en tu negocio va a aparecer acá: opiniones nuevas, picos de visitas, mensajes de soporte.</p>
+          <p v-else class="feed-empty">Sin novedades por ahora.</p>
           <div v-if="store.hasStore" class="feed-storage"><StorageMeter /></div>
         </div>
       </div>
