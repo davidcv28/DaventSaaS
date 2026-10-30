@@ -75,7 +75,12 @@ class Command(BaseCommand):
     #PATRONES
     def _patterns(self, patterns):
         for position, pattern in enumerate(patterns):
+            #Un patrón puede traer su markup propio en el seed (diseño
+            #hecho a mano); si no, se arma el esqueleto por bloque.
             html, css, js = build_markup(pattern)
+            html = pattern.get('html') or html
+            css = pattern.get('css') or css
+            js = pattern.get('js') or js
             DesignPattern.objects.update_or_create(
                 slug = pattern['slug'],
                 defaults = {

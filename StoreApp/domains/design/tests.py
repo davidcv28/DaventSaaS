@@ -159,8 +159,12 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertEqual(DesignStyle.objects.filter(is_default = True).count(), 1)
         self.assertEqual(DesignPattern.objects.filter(is_default = True).count(), 1)
         self.assertGreaterEqual(DesignStyle.objects.count(), 20)
-        self.assertEqual(DesignPattern.objects.count(), 11)
+        self.assertEqual(DesignPattern.objects.count(), 12)
         pattern = DesignPattern.objects.get(slug = 'raiz')
         self.assertIn('data-block="hero"', pattern.html)
+        #Un patrón puede traer su propio markup: no se pisa con el esqueleto.
+        daven = DesignPattern.objects.get(slug = 'daven-indumentaria')
+        self.assertIn('dvn-stage', daven.html)
+        self.assertNotIn('data-block=', daven.html)
         self.assertTrue(pattern.layout.get('landing'))
         self.assertTrue(DesignStyle.objects.get(slug = 'base').tokens.get('palette'))

@@ -7913,6 +7913,204 @@
         "multimarca",
         "plus"
       ]
+    },
+    {
+      "slug": "daven-indumentaria",
+      "nombre": "Daven - Indumentaria",
+      "categoria": "indumentaria",
+      "descripcion": "Editorial de ropa con masthead fijo, portada partida en collage, indice numerado, riel de novedades, lookbook escalonado y manifiesto del taller.",
+      "tier": "plus",
+      "template": "indumentaria",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "cinema",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "rail",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "cols2",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offers",
+            "variant": "quick",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "gallery",
+            "variant": "masonry",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "variant": "cards",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "benefits",
+            "variant": "bento",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "testimonials",
+            "variant": "masonry",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "faq",
+            "variant": "list",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "cta",
+            "variant": "card",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "contact",
+            "variant": "map",
+            "enabled": true,
+            "order": 16
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "variant": "chips",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "variant": "masonry",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 5
+          }
+        ]
+      },
+      "html": "<div class=\"dvn\" data-pattern=\"daven-indumentaria\">\n  <header class=\"dvn-head\">\n    <a class=\"dvn-brand\" href=\"#dvn-inicio\">\n      <span class=\"dvn-brand__mark\">D</span>\n      <span class=\"dvn-brand__name\">Daven<small>indumentaria</small></span>\n    </a>\n    <nav class=\"dvn-nav\" aria-label=\"Secciones\">\n      <a href=\"#dvn-nuevo\">Nuevo</a>\n      <a href=\"#dvn-tienda\">Tienda</a>\n      <a href=\"#dvn-lookbook\">Lookbook</a>\n      <a href=\"#dvn-taller\">Taller</a>\n    </nav>\n    <div class=\"dvn-head__actions\">\n      <button class=\"dvn-bag\" type=\"button\" data-dvn-bag>Bolsa <span data-dvn-count>0</span></button>\n      <button class=\"dvn-burger\" type=\"button\" aria-expanded=\"false\" aria-controls=\"dvn-drawer\" data-dvn-burger>\n        <span></span><span></span>\n      </button>\n    </div>\n  </header>\n\n  <aside class=\"dvn-drawer\" id=\"dvn-drawer\" hidden data-dvn-drawer>\n    <a href=\"#dvn-nuevo\">Nuevo</a>\n    <a href=\"#dvn-tienda\">Tienda</a>\n    <a href=\"#dvn-lookbook\">Lookbook</a>\n    <a href=\"#dvn-taller\">Taller</a>\n    <a href=\"#dvn-contacto\">Contacto</a>\n  </aside>\n\n  <div class=\"dvn-ticker\" aria-hidden=\"true\">\n    <div class=\"dvn-ticker__track\" data-dvn-track>\n      <span>Envío gratis desde $80.000</span><span>Cambios sin cargo 30 días</span>\n      <span>Hecho en Argentina</span><span>Nueva cápsula otoño 26</span>\n    </div>\n  </div>\n\n  <main class=\"dvn-main\">\n    <section class=\"dvn-stage\" id=\"dvn-inicio\">\n      <div class=\"dvn-stage__copy\">\n        <p class=\"dvn-kicker\">Cápsula 04 · Otoño 26</p>\n        <h1 class=\"dvn-title\">Vestir<br><em>sin</em> ruido</h1>\n        <p class=\"dvn-lede\">Prendas de lino y algodón peinado, cortadas en series cortas. Nada que sobre, nada que falte.</p>\n        <div class=\"dvn-row\">\n          <a class=\"dvn-btn dvn-btn--ink\" href=\"#dvn-tienda\">Ver la colección</a>\n          <a class=\"dvn-btn dvn-btn--ghost\" href=\"#dvn-lookbook\">Lookbook</a>\n        </div>\n      </div>\n      <figure class=\"dvn-collage\">\n        <div class=\"dvn-collage__tall\" role=\"img\" aria-label=\"Camisa de lino cruda\"></div>\n        <div class=\"dvn-collage__wide\" role=\"img\" aria-label=\"Pantalón sastre oliva\"></div>\n        <figcaption class=\"dvn-vertical\">hecho en talleres de Buenos Aires</figcaption>\n      </figure>\n    </section>\n\n    <section class=\"dvn-index\" id=\"dvn-tienda\">\n      <header class=\"dvn-section-head\">\n        <h2 class=\"dvn-h2\">La tienda</h2>\n        <p class=\"dvn-note\">Cuatro líneas, temporada tras temporada.</p>\n      </header>\n      <ol class=\"dvn-index__list\">\n        <li><a href=\"#dvn-tienda\"><span class=\"dvn-index__n\">01</span><span class=\"dvn-index__name\">Camisas</span><span class=\"dvn-index__meta\">12 piezas</span></a></li>\n        <li><a href=\"#dvn-tienda\"><span class=\"dvn-index__n\">02</span><span class=\"dvn-index__name\">Pantalones</span><span class=\"dvn-index__meta\">9 piezas</span></a></li>\n        <li><a href=\"#dvn-tienda\"><span class=\"dvn-index__n\">03</span><span class=\"dvn-index__name\">Abrigos</span><span class=\"dvn-index__meta\">6 piezas</span></a></li>\n        <li><a href=\"#dvn-tienda\"><span class=\"dvn-index__n\">04</span><span class=\"dvn-index__name\">Accesorios</span><span class=\"dvn-index__meta\">15 piezas</span></a></li>\n      </ol>\n    </section>\n\n    <section class=\"dvn-runway\" id=\"dvn-nuevo\">\n      <header class=\"dvn-section-head dvn-section-head--inline\">\n        <h2 class=\"dvn-h2\">Recién cortado</h2>\n        <a class=\"dvn-link\" href=\"#dvn-tienda\">Todo lo nuevo</a>\n      </header>\n      <div class=\"dvn-runway__rail\" data-dvn-rail>\n        <article class=\"dvn-card\">\n          <div class=\"dvn-card__media dvn-card__media--a\"></div>\n          <div class=\"dvn-card__body\">\n            <h3>Camisa Lino Cruda</h3>\n            <p class=\"dvn-price\">$ 42.900</p>\n            <button class=\"dvn-add\" type=\"button\" data-dvn-add>Agregar a la bolsa</button>\n          </div>\n        </article>\n        <article class=\"dvn-card\">\n          <div class=\"dvn-card__media dvn-card__media--b\"></div>\n          <div class=\"dvn-card__body\">\n            <h3>Pantalón Sastre Oliva</h3>\n            <p class=\"dvn-price\">$ 56.400</p>\n            <button class=\"dvn-add\" type=\"button\" data-dvn-add>Agregar a la bolsa</button>\n          </div>\n        </article>\n        <article class=\"dvn-card\">\n          <div class=\"dvn-card__media dvn-card__media--c\"></div>\n          <div class=\"dvn-card__body\">\n            <h3>Tapado Lana Doble</h3>\n            <p class=\"dvn-price\">$ 128.000</p>\n            <button class=\"dvn-add\" type=\"button\" data-dvn-add>Agregar a la bolsa</button>\n          </div>\n        </article>\n        <article class=\"dvn-card\">\n          <div class=\"dvn-card__media dvn-card__media--d\"></div>\n          <div class=\"dvn-card__body\">\n            <h3>Buzo Peinado Humo</h3>\n            <p class=\"dvn-price\">$ 38.700</p>\n            <button class=\"dvn-add\" type=\"button\" data-dvn-add>Agregar a la bolsa</button>\n          </div>\n        </article>\n      </div>\n    </section>\n\n    <section class=\"dvn-lookbook\" id=\"dvn-lookbook\">\n      <h2 class=\"dvn-h2\">Lookbook</h2>\n      <div class=\"dvn-lookbook__grid\">\n        <figure class=\"dvn-look dvn-look--one\"><figcaption>01 · Sábado de mercado</figcaption></figure>\n        <figure class=\"dvn-look dvn-look--two\"><figcaption>02 · Oficina de tarde</figcaption></figure>\n        <figure class=\"dvn-look dvn-look--three\"><figcaption>03 · Domingo largo</figcaption></figure>\n      </div>\n    </section>\n\n    <section class=\"dvn-manifesto\" id=\"dvn-taller\">\n      <div class=\"dvn-manifesto__side\">\n        <p class=\"dvn-kicker\">El taller</p>\n        <p class=\"dvn-manifesto__sticky\">Producimos en series de 80 prendas para no acumular stock ni desperdiciar tela.</p>\n      </div>\n      <div class=\"dvn-manifesto__body\">\n        <p>Trabajamos con tres talleres familiares de Buenos Aires. Cada prenda se corta, se cose y se plancha a mano; la etiqueta lleva el nombre de quien la hizo.</p>\n        <dl class=\"dvn-facts\">\n          <div><dt>2014</dt><dd>Primer taller propio</dd></div>\n          <div><dt>3</dt><dd>Talleres asociados</dd></div>\n          <div><dt>80</dt><dd>Prendas por serie</dd></div>\n        </dl>\n      </div>\n    </section>\n\n    <section class=\"dvn-service\">\n      <h2 class=\"dvn-h2\">Cómo comprar</h2>\n      <ol class=\"dvn-service__steps\">\n        <li><span>01</span><h3>Elegís</h3><p>Armás la bolsa y confirmás el talle con la guía de medidas.</p></li>\n        <li><span>02</span><h3>Probás</h3><p>Recibís en 48 h y tenés 30 días para cambiar sin cargo.</p></li>\n        <li><span>03</span><h3>Volvés</h3><p>Cada temporada te avisamos cuando entra la nueva serie.</p></li>\n      </ol>\n    </section>\n\n    <section class=\"dvn-news\" id=\"dvn-contacto\">\n      <div class=\"dvn-news__copy\">\n        <h2 class=\"dvn-h2\">Entrá primero</h2>\n        <p class=\"dvn-note\">Avisamos cuando abre cada serie. Sin spam, una vez por temporada.</p>\n      </div>\n      <form class=\"dvn-news__form\" novalidate>\n        <label class=\"dvn-sr\" for=\"dvn-email\">Email</label>\n        <input id=\"dvn-email\" type=\"email\" placeholder=\"tu@email.com\" autocomplete=\"email\" required>\n        <button class=\"dvn-btn dvn-btn--ink\" type=\"submit\">Anotarme</button>\n      </form>\n    </section>\n  </main>\n\n  <footer class=\"dvn-foot\">\n    <p class=\"dvn-foot__brand\">Daven · indumentaria</p>\n    <p class=\"dvn-foot__meta\">Buenos Aires · Envíos a todo el país</p>\n  </footer>\n</div>",
+      "css": ".dvn {\n  --dvn-ink: #16150f;\n  --dvn-bone: #f2eee6;\n  --dvn-olive: #5b6146;\n  --dvn-clay: #b07a5a;\n  --dvn-line: rgba(22, 21, 15, .16);\n  --dvn-gap: clamp(1rem, 3vw, 2.5rem);\n  background: var(--dvn-bone);\n  color: var(--dvn-ink);\n  font-family: 'Manrope', system-ui, sans-serif;\n  line-height: 1.5;\n  overflow-x: clip;\n}\n.dvn *, .dvn *::before, .dvn *::after { box-sizing: border-box; }\n.dvn img { max-width: 100%; display: block; }\n.dvn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }\n\n.dvn-head {\n  position: sticky;\n  top: 0;\n  z-index: 30;\n  display: grid;\n  grid-template-columns: auto 1fr auto;\n  align-items: center;\n  gap: var(--dvn-gap);\n  padding: .9rem clamp(1rem, 4vw, 3rem);\n  background: color-mix(in srgb, var(--dvn-bone) 88%, transparent);\n  backdrop-filter: blur(10px);\n  border-bottom: 1px solid var(--dvn-line);\n}\n.dvn-brand { display: inline-flex; align-items: center; gap: .6rem; color: inherit; text-decoration: none; }\n.dvn-brand__mark {\n  display: grid;\n  place-items: center;\n  width: 2.2rem;\n  height: 2.2rem;\n  border-radius: 50%;\n  background: var(--dvn-ink);\n  color: var(--dvn-bone);\n  font-family: 'Fraunces', Georgia, serif;\n  font-size: 1.15rem;\n}\n.dvn-brand__name { display: flex; flex-direction: column; font-weight: 700; letter-spacing: .02em; line-height: 1; }\n.dvn-brand__name small { font-size: .58rem; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; color: var(--dvn-olive); margin-top: .3rem; }\n.dvn-nav { display: flex; justify-content: center; gap: clamp(.8rem, 2vw, 1.8rem); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }\n.dvn-nav a { color: inherit; text-decoration: none; padding: .35rem 0; border-bottom: 1px solid transparent; }\n.dvn-nav a:hover, .dvn-nav a:focus-visible { border-color: var(--dvn-ink); }\n.dvn-head__actions { display: flex; align-items: center; gap: .75rem; }\n.dvn-bag {\n  border: 1px solid var(--dvn-ink);\n  background: transparent;\n  color: inherit;\n  border-radius: 999px;\n  padding: .45rem .9rem;\n  font: inherit;\n  font-size: .78rem;\n  letter-spacing: .08em;\n  text-transform: uppercase;\n  cursor: pointer;\n}\n.dvn-bag span { display: inline-grid; place-items: center; min-width: 1.25rem; height: 1.25rem; margin-left: .35rem; border-radius: 999px; background: var(--dvn-ink); color: var(--dvn-bone); font-size: .7rem; }\n.dvn-burger { display: none; width: 2.4rem; height: 2.4rem; border: 1px solid var(--dvn-line); background: transparent; border-radius: 50%; cursor: pointer; }\n.dvn-burger span { display: block; width: 1rem; height: 1px; margin: .28rem auto; background: var(--dvn-ink); transition: transform .25s ease; }\n.dvn-burger[aria-expanded=\"true\"] span:first-child { transform: translateY(3px) rotate(45deg); }\n.dvn-burger[aria-expanded=\"true\"] span:last-child { transform: translateY(-3px) rotate(-45deg); }\n.dvn-drawer {\n  position: fixed;\n  inset: 3.6rem 0 auto;\n  z-index: 29;\n  display: grid;\n  gap: .25rem;\n  padding: 1.25rem clamp(1rem, 4vw, 3rem) 2rem;\n  background: var(--dvn-bone);\n  border-bottom: 1px solid var(--dvn-line);\n}\n.dvn-drawer a { color: inherit; text-decoration: none; font-size: 1.4rem; font-family: 'Fraunces', Georgia, serif; padding: .35rem 0; }\n\n.dvn-ticker { overflow: hidden; border-bottom: 1px solid var(--dvn-line); background: var(--dvn-ink); color: var(--dvn-bone); }\n.dvn-ticker__track { display: flex; gap: 2.5rem; width: max-content; padding: .55rem 0; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; animation: dvn-run 26s linear infinite; }\n.dvn-ticker__track span { white-space: nowrap; }\n@keyframes dvn-run { to { transform: translateX(-50%); } }\n\n.dvn-main { padding: 0 clamp(1rem, 4vw, 3rem); }\n.dvn-kicker { margin: 0 0 1rem; font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; color: var(--dvn-olive); }\n.dvn-h2 { margin: 0; font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.8rem, 3.4vw, 2.9rem); letter-spacing: -.02em; }\n.dvn-note { margin: .5rem 0 0; max-width: 34ch; color: color-mix(in srgb, var(--dvn-ink) 70%, var(--dvn-bone)); }\n.dvn-link { color: inherit; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--dvn-ink); padding-bottom: .15rem; }\n.dvn-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--dvn-gap); margin-bottom: clamp(1.2rem, 3vw, 2.4rem); }\n.dvn-section-head--inline { align-items: center; }\n\n.dvn-stage {\n  display: grid;\n  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);\n  grid-template-areas: \"copy collage\";\n  align-items: center;\n  gap: clamp(1.5rem, 5vw, 4rem);\n  padding: clamp(2.5rem, 7vw, 6rem) 0 clamp(2rem, 5vw, 4rem);\n}\n.dvn-stage__copy { grid-area: copy; max-width: 34rem; }\n.dvn-title { margin: 0 0 1.25rem; font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: clamp(3rem, 8vw, 6.5rem); line-height: .9; letter-spacing: -.04em; }\n.dvn-title em { font-style: italic; color: var(--dvn-clay); }\n.dvn-lede { margin: 0 0 1.75rem; max-width: 32ch; font-size: clamp(1rem, 1.4vw, 1.12rem); color: color-mix(in srgb, var(--dvn-ink) 78%, var(--dvn-bone)); }\n.dvn-row { display: flex; flex-wrap: wrap; gap: .75rem; }\n.dvn-btn { display: inline-flex; align-items: center; justify-content: center; padding: .85rem 1.5rem; border-radius: 999px; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; border: 1px solid var(--dvn-ink); cursor: pointer; font-family: inherit; }\n.dvn-btn--ink { background: var(--dvn-ink); color: var(--dvn-bone); }\n.dvn-btn--ghost { background: transparent; color: var(--dvn-ink); }\n.dvn-btn:hover { transform: translateY(-1px); }\n\n.dvn-collage {\n  grid-area: collage;\n  position: relative;\n  display: grid;\n  grid-template-columns: 1.2fr .8fr;\n  grid-template-rows: repeat(6, 1fr);\n  gap: .75rem;\n  margin: 0;\n  min-height: clamp(24rem, 52vw, 38rem);\n}\n.dvn-collage__tall {\n  grid-column: 1;\n  grid-row: 1 / span 6;\n  background: linear-gradient(160deg, #d9d2c2 0%, #c2b9a4 55%, #8f866f 100%);\n  clip-path: polygon(0 4%, 100% 0, 100% 96%, 0 100%);\n}\n.dvn-collage__wide {\n  grid-column: 2;\n  grid-row: 2 / span 3;\n  background: linear-gradient(200deg, #6f7558 0%, #4c5239 100%);\n}\n.dvn-vertical {\n  position: absolute;\n  right: -.25rem;\n  bottom: 0;\n  writing-mode: vertical-rl;\n  transform: rotate(180deg);\n  font-size: .66rem;\n  letter-spacing: .24em;\n  text-transform: uppercase;\n  color: var(--dvn-olive);\n}\n\n.dvn-index { padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--dvn-line); }\n.dvn-index__list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--dvn-line); }\n.dvn-index__list li { border-bottom: 1px solid var(--dvn-line); }\n.dvn-index__list a { display: grid; grid-template-columns: 4rem 1fr auto; align-items: baseline; gap: 1rem; padding: clamp(.9rem, 2vw, 1.4rem) 0; color: inherit; text-decoration: none; transition: padding-left .25s ease, color .25s ease; }\n.dvn-index__list a:hover, .dvn-index__list a:focus-visible { padding-left: .75rem; color: var(--dvn-olive); }\n.dvn-index__n { font-size: .72rem; letter-spacing: .16em; color: var(--dvn-clay); }\n.dvn-index__name { font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.4rem, 3vw, 2.2rem); letter-spacing: -.01em; }\n.dvn-index__meta { font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--dvn-olive); }\n\n.dvn-runway { padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--dvn-line); }\n.dvn-runway__rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(15rem, 22rem); gap: var(--dvn-gap); overflow-x: auto; padding-bottom: 1rem; scroll-snap-type: x mandatory; scrollbar-width: thin; }\n.dvn-card { scroll-snap-align: start; display: flex; flex-direction: column; gap: .9rem; }\n.dvn-card__media { aspect-ratio: 3 / 4; border-radius: 2px; }\n.dvn-card__media--a { background: linear-gradient(150deg, #e3dccd, #b8ad94); }\n.dvn-card__media--b { background: linear-gradient(150deg, #8a9070, #4e5539); }\n.dvn-card__media--c { background: linear-gradient(150deg, #b9a99c, #7a6558); }\n.dvn-card__media--d { background: linear-gradient(150deg, #d5d2cd, #9a968e); }\n.dvn-card__body h3 { margin: 0; font-size: .95rem; font-weight: 600; }\n.dvn-price { margin: .15rem 0 .6rem; font-size: .85rem; color: var(--dvn-olive); }\n.dvn-add { align-self: flex-start; background: none; border: 0; border-bottom: 1px solid var(--dvn-ink); padding: 0 0 .15rem; font: inherit; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }\n\n.dvn-lookbook { padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--dvn-line); }\n.dvn-lookbook__grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--dvn-gap); }\n.dvn-look { margin: 0; position: relative; display: flex; align-items: flex-end; min-height: clamp(16rem, 30vw, 26rem); }\n.dvn-look figcaption { position: relative; z-index: 1; padding: .75rem 1rem; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--dvn-bone); }\n.dvn-look--one { grid-column: 1 / span 7; background: linear-gradient(180deg, #c9c2b1, #6f6a59); }\n.dvn-look--two { grid-column: 8 / span 5; background: linear-gradient(180deg, #7d8367, #3f452e); margin-top: clamp(1.5rem, 4vw, 3rem); }\n.dvn-look--three { grid-column: 3 / span 8; background: linear-gradient(180deg, #b58f76, #6d4c3b); margin-top: calc(var(--dvn-gap) * -0.5); }\n\n.dvn-manifesto { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(1.5rem, 5vw, 4rem); padding: clamp(3rem, 7vw, 6rem) 0; border-top: 1px solid var(--dvn-line); }\n.dvn-manifesto__side { position: relative; }\n.dvn-manifesto__sticky { position: sticky; top: 6rem; margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.35rem, 2.4vw, 1.9rem); line-height: 1.25; letter-spacing: -.01em; }\n.dvn-manifesto__body p { margin: 0 0 2rem; max-width: 46ch; color: color-mix(in srgb, var(--dvn-ink) 80%, var(--dvn-bone)); }\n.dvn-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding-top: 1.5rem; border-top: 1px solid var(--dvn-line); }\n.dvn-facts dt { font-family: 'Fraunces', Georgia, serif; font-size: clamp(1.6rem, 3vw, 2.4rem); }\n.dvn-facts dd { margin: .2rem 0 0; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dvn-olive); }\n\n.dvn-service { padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--dvn-line); }\n.dvn-service__steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--dvn-gap); }\n.dvn-service__steps li { padding-top: 1.25rem; border-top: 2px solid var(--dvn-ink); }\n.dvn-service__steps span { font-size: .72rem; letter-spacing: .16em; color: var(--dvn-clay); }\n.dvn-service__steps h3 { margin: .6rem 0 .4rem; font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 1.4rem; }\n.dvn-service__steps p { margin: 0; max-width: 28ch; font-size: .92rem; color: color-mix(in srgb, var(--dvn-ink) 76%, var(--dvn-bone)); }\n\n.dvn-news { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; gap: var(--dvn-gap); padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid var(--dvn-line); }\n.dvn-news__form { display: flex; gap: .6rem; flex-wrap: wrap; }\n.dvn-news__form input { flex: 1 1 12rem; min-width: 0; padding: .85rem 1rem; border: 1px solid var(--dvn-line); background: transparent; color: inherit; font: inherit; border-radius: 999px; }\n.dvn-news__form input:focus-visible { outline: 2px solid var(--dvn-olive); outline-offset: 2px; }\n\n.dvn-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: 1.5rem clamp(1rem, 4vw, 3rem); border-top: 1px solid var(--dvn-line); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dvn-olive); }\n.dvn-foot p { margin: 0; }\n\n@media (max-width: 860px) {\n  .dvn-nav { display: none; }\n  .dvn-burger { display: block; }\n  .dvn-stage { grid-template-columns: 1fr; grid-template-areas: \"copy\" \"collage\"; }\n  .dvn-collage { min-height: 26rem; }\n  .dvn-manifesto, .dvn-news { grid-template-columns: 1fr; }\n  .dvn-manifesto__sticky { position: static; }\n  .dvn-service__steps { grid-template-columns: 1fr; }\n  .dvn-look--one, .dvn-look--two, .dvn-look--three { grid-column: 1 / -1; margin-top: 0; }\n  .dvn-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n}\n@media (prefers-reduced-motion: reduce) {\n  .dvn-ticker__track { animation: none; }\n  .dvn-index__list a, .dvn-btn { transition: none; }\n}",
+      "js": "(function () {\n  var root = document.querySelector('[data-pattern=\"daven-indumentaria\"]');\n  if (!root) return;\n\n  var burger = root.querySelector('[data-dvn-burger]');\n  var drawer = root.querySelector('[data-dvn-drawer]');\n  if (burger && drawer) {\n    burger.addEventListener('click', function () {\n      var open = burger.getAttribute('aria-expanded') === 'true';\n      burger.setAttribute('aria-expanded', String(!open));\n      drawer.hidden = open;\n    });\n    drawer.addEventListener('click', function (event) {\n      if (event.target.tagName === 'A') {\n        burger.setAttribute('aria-expanded', 'false');\n        drawer.hidden = true;\n      }\n    });\n  }\n\n  var track = root.querySelector('[data-dvn-track]');\n  if (track) track.innerHTML += track.innerHTML;\n\n  var count = root.querySelector('[data-dvn-count]');\n  root.querySelectorAll('[data-dvn-add]').forEach(function (button) {\n    button.addEventListener('click', function () {\n      if (!count) return;\n      count.textContent = String(Number(count.textContent || 0) + 1);\n    });\n  });\n\n  var rail = root.querySelector('[data-dvn-rail]');\n  if (rail) {\n    rail.addEventListener('keydown', function (event) {\n      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;\n      event.preventDefault();\n      rail.scrollBy({ left: (event.key === 'ArrowRight' ? 1 : -1) * rail.clientWidth * 0.8, behavior: 'smooth' });\n    });\n  }\n\n  var form = root.querySelector('.dvn-news__form');\n  if (form) {\n    form.addEventListener('submit', function (event) {\n      event.preventDefault();\n      var input = form.querySelector('input[type=\"email\"]');\n      if (input && input.checkValidity()) form.reset();\n    });\n  }\n})();",
+      "tokens": {
+        "fonts": [
+          "fraunces",
+          "manrope"
+        ],
+        "accent": "#5b6146",
+        "palette": {
+          "primary": "#16150f",
+          "secondary": "#5b6146",
+          "accent": "#b07a5a",
+          "bg": "#f2eee6",
+          "surface": "#e8e2d6",
+          "text": "#16150f",
+          "muted": "#5b6146",
+          "border": "#d6cfc0"
+        }
+      },
+      "tags": [
+        "indumentaria",
+        "ropa",
+        "moda",
+        "editorial",
+        "daven",
+        "plus"
+      ]
     }
   ]
 }
