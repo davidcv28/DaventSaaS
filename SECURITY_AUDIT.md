@@ -982,3 +982,21 @@ derivada del `SECRET_KEY` y queda ilegible al definirlas después.
 throttle por IP en `/api/token/` (credential stuffing distribuido), pin de las
 acciones de terceros por SHA (`appleboy/*`), y sacar del árbol los `qa_*.py`
 (38 archivos) que hoy entran al SAST y al lint.
+
+---
+
+## 4. Cierre pre-lanzamiento (2026-10-30, ronda 2)
+
+| # | Severidad | Brecha | Fix aplicado |
+|---|-----------|--------|--------------|
+| 25 | **Alta** | Solo existía throttle de login **por IP** (5/min): el credential stuffing que rota IPs (proxies/botnets) podía probar contraseñas sin límite contra una cuenta | Lockout por **cuenta** en `CustomTokenObtainPairView`: 10 fallos/15 min sobre `sha256(username)` (el username no se guarda en claro en la cache), 429 + `Retry-After`, contador limpio al login exitoso. Se cuenta en el `except APIException` porque SimpleJWT lanza 401 en vez de devolver response |
+| 26 | **Alta** | Render construye directo del Dockerfile: ni el job `test` ni el preflight del VPS corrían, así que un env incompleto (ADMIN_URL default, keyring de PII ausente, HSTS apagado) arrancaba igual | `check --deploy --fail-level ERROR` en `docker/api/entrypoint.sh` cuando `DEBUG != True` (fail-closed: el deploy queda rojo y Render sigue sirviendo la versión anterior) |
+| 27 | **Media** | Acciones de terceros pineadas por tag mutable (`appleboy/*`, `gitleaks`, `trivy`): un tag reescrito ejecuta código arbitrario con los secretos del deploy | Pin por **SHA** (con el tag en comentario para Dependabot) en `ci-cd.yml` y `security-schedule.yml` |
+| 28 | **Baja** | Job `security` sin `pull-requests: read`: gitleaks no podía anotar hallazgos en PRs | `permissions` explícitos por job |
+
+### Verificado en esta ronda (sin cambios)
+
+- **Sin mass-assignment**: `UserUpdateSerializer` expone solo `email`; `is_staff`/`is_superuser` nunca son escribibles desde la API; el perfil usa `HiddenField(CurrentUserDefault())` + queryset filtrado por `request.user`.
+- **Uploads**: firma real por magic bytes + `content_type`, tope por archivo, recodificación a WebP y clave R2 generada server-side (`stores/<id>/<folder>/<uuid>.webp`) — el nombre del cliente nunca toca la ruta.
+- **IDOR**: facturas (queryset propio / admin), chat (`?thread=` solo staff, cliente siempre su propio hilo), pagos (`sync` valida `external_reference`), tiendas (`?mine=1`), cupones (`IsAdminUser`).
+- **Compose**: db/redis sin puertos, `read_only` + `cap_drop: ALL` + `no-new-privileges` en todos los servicios, `migrate` one-shot.

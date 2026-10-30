@@ -97,3 +97,37 @@ def _html_response(policy):
     response    =   HttpResponse('<html></html>')
     response['Content-Security-Policy'] =   policy
     return response
+
+
+class LoginLockoutTests(TestCase):
+    """
+    Lockout por cuenta (además del throttle por IP): el credential stuffing
+    rota IPs. Se prueba el helper y el corte previo a la autenticación.
+    """
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        from AdminApp.domains.users.views.auth_views import _login_fail_key
+        self.key    =   _login_fail_key
+        self.url    =   '/api/token/'
+
+    def test_locked_username_is_rejected_before_checking_credentials(self):
+        from django.core.cache import cache
+        from AdminApp.domains.users.views.auth_views import LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW
+        cache.set(self.key('victima'), LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW)
+        response    =   self.client.post(self.url, {'username': 'victima', 'password': 'x'}, format = 'json')
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.headers.get('Retry-After'), str(LOGIN_FAIL_WINDOW))
+
+    def test_failed_login_counts_and_success_clears(self):
+        from django.core.cache import cache
+        from django.contrib.auth.models import User
+        User.objects.create_user(username = 'cliente', email = 'c@example.com', password = 'ClaveSegura-2026!')
+        self.client.post(self.url, {'username': 'cliente', 'password': 'incorrecta'}, format = 'json')
+        self.assertEqual(cache.get(self.key('cliente')), 1)
+        self.client.post(self.url, {'username': 'cliente', 'password': 'ClaveSegura-2026!'}, format = 'json')
+        self.assertIsNone(cache.get(self.key('cliente')))
+
+    def test_username_is_hashed_in_cache_keys(self):
+        self.assertNotIn('victima', self.key('victima'))
+        self.assertEqual(self.key('Victima'), self.key('victima'))

@@ -6,6 +6,15 @@ set -e
 # en cada restart costaba ~4-6s de arranque y hacía que dos réplicas migraran
 # en paralelo. En plataformas sin job previo (Render free) quedan en "1".
 if [ "$1" = "gunicorn" ]; then
+    # Fail-closed: en producción (DEBUG=False) la config se valida ANTES de
+    # servir tráfico. Render construye directo del Dockerfile —no pasa por el
+    # job `test` de CI ni por el preflight del VPS— así que sin esto un env
+    # incompleto (ADMIN_URL default, keyring de PII ausente, HSTS apagado)
+    # arrancaba igual. Si falla, el deploy queda en rojo y Render sigue
+    # sirviendo la versión anterior.
+    if [ "$DEBUG" != "True" ]; then
+        python manage.py check --deploy --fail-level ERROR
+    fi
     if [ "$RUN_COLLECTSTATIC" != "0" ]; then
         python manage.py collectstatic --noinput
     fi

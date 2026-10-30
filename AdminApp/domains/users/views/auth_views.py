@@ -1,12 +1,14 @@
+import hashlib
 import logging
 import secrets
 from datetime import timedelta
 
 from decouple import config
 from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpResponseRedirect
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
@@ -58,6 +60,34 @@ def _remember_requested(request) -> bool:
     el booleano JSON o sus equivalentes textuales.
     """
     return request.data.get('remember') in (True, 1, '1', 'true', 'True')
+
+
+# Lockout por CUENTA además del throttle por IP: el credential stuffing rota
+# IPs (proxies/botnets) y el scope 'login' (5/min por IP) no lo ve. Se cuenta
+# sobre el hash del username — nunca el username en claro en la cache — y el
+# contador se limpia al primer login exitoso.
+LOGIN_FAIL_LIMIT    =   10
+LOGIN_FAIL_WINDOW   =   900
+
+def _login_fail_key(username : str) -> str:
+    digest  =   hashlib.sha256((username or '').strip().lower().encode('utf-8')).hexdigest()[:32]
+    return f'login-fail:{digest}'
+
+def _login_locked(username : str) -> bool:
+    if not username:
+        return False
+    return int(cache.get(_login_fail_key(username)) or 0) >= LOGIN_FAIL_LIMIT
+
+def _register_login_failure(username : str) -> None:
+    if not username:
+        return
+    key =   _login_fail_key(username)
+    if cache.add(key, 1, LOGIN_FAIL_WINDOW):
+        return
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, LOGIN_FAIL_WINDOW)
 
 
 class LoginRateThrottle(AnonRateThrottle):
@@ -161,12 +191,35 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+        username    =   request.data.get('username') or ''
+        if _login_locked(username):
+            response    =   Response(
+                {'detail': 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.'},
+                status = status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+            response['Retry-After'] =   str(LOGIN_FAIL_WINDOW)
+            return response
+        #SimpleJWT lanza AuthenticationFailed (401) en vez de devolver un
+        #response: sin el except el conteo por cuenta nunca correría (DRF
+        #convierte la excepción en 401 recién en dispatch).
+        try:
+            response = super().post(request, *args, **kwargs)
+        except APIException as exc:
+            logger.warning('Login rechazado (status=%s user=%s ip=%s)',
+                           exc.status_code, username, _client_ip(request))
+            if exc.status_code in (400, 401):
+                _register_login_failure(username)
+            raise
         if response.status_code != 200:
             #Auditoría de fuerza bruta: nunca se loguea la contraseña.
             logger.warning('Login rechazado (status=%s user=%s ip=%s)',
-                           response.status_code, request.data.get('username'), _client_ip(request))
+                           response.status_code, username, _client_ip(request))
+            #Solo credenciales inválidas cuentan: un 429 del throttle no es un
+            #intento de adivinar y no debe alargar el lockout.
+            if response.status_code in (400, 401):
+                _register_login_failure(username)
             return response
+        cache.delete(_login_fail_key(username))
         refresh = response.data.pop('refresh', None)
         if refresh:
             remember    =   _remember_requested(request)
