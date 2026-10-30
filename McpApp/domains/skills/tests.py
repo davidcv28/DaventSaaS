@@ -21,7 +21,15 @@ class DesignStyleTests(TestCase):
         call_command('seed_design_styles', verbosity = 0)
 
     def test_seed_creates_twenty_styles(self):
-        self.assertEqual(DesignModelMcp.objects.count(), 20)
+        self.assertEqual(DesignModelMcp.objects.count(), 40)
+
+    def test_seed_loads_external_sources(self):
+        style = get_design_style('bb-minimal-catalog')
+        self.assertIsNotNone(style)
+        self.assertEqual(style.tokens_diseno['primary'], '#3b82f6')
+        self.assertEqual(style.tokens_diseno['source_repo'], 'bbulakh/tailwind-ecommerce')
+        self.assertIn('filters', style.html_componentes)
+        self.assertIn('grid', style.html_componentes)
 
     def test_slug_is_unique(self):
         with self.assertRaises(Exception):

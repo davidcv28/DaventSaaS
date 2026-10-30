@@ -195,6 +195,114 @@ PRESETS = [
 
 
 #=========================================
+# FUENTES DE DISEÑO (repos de referencia)
+#=========================================
+#Cada fuente es una variación de página de un repo Tailwind real. El seed
+#la convierte en un DesignModelMcp completo: tokens (color de acento de la
+#fuente + base neutra del repo) y bloques HTML del tipo de página.
+FUENTES_DISEÑO = [
+    # ---- REPO 1: bbulakh/tailwind-ecommerce (Variaciones) ----
+    {"slug": "bb-minimal-home", "url": "https://githubusercontent.com", "cat": "moda", "tag": ["home", "azul", "limpio"], "col": "#3b82f6"},
+    {"slug": "bb-minimal-catalog", "url": "https://githubusercontent.com", "cat": "moda", "tag": ["grid", "filtros", "catalogo"], "col": "#3b82f6"},
+    {"slug": "bb-minimal-product", "url": "https://githubusercontent.com", "cat": "moda", "tag": ["detalle", "galeria", "producto"], "col": "#3b82f6"},
+    {"slug": "bb-minimal-cart", "url": "https://githubusercontent.com", "cat": "moda", "tag": ["checkout", "lista", "carrito"], "col": "#3b82f6"},
+    {"slug": "bb-minimal-account", "url": "https://githubusercontent.com", "cat": "admin", "tag": ["perfil", "usuario", "dashboard"], "col": "#3b82f6"},
+
+    # ---- REPO 2: spacemadev/Tailstore (Variaciones) ----
+    {"slug": "ts-premium-home", "url": "https://githubusercontent.com", "cat": "general", "tag": ["moderno", "swiper", "premium"], "col": "#10b981"},
+    {"slug": "ts-premium-shop", "url": "https://githubusercontent.com", "cat": "general", "tag": ["tienda", "sidebar", "galeria"], "col": "#10b981"},
+    {"slug": "ts-premium-detail", "url": "https://githubusercontent.com", "cat": "general", "tag": ["tabs", "reviews", "compras"], "col": "#10b981"},
+    {"slug": "ts-premium-checkout", "url": "https://githubusercontent.com", "cat": "checkout", "tag": ["pago", "formulario", "envio"], "col": "#10b981"},
+    {"slug": "ts-premium-auth", "url": "https://githubusercontent.com", "cat": "seguridad", "tag": ["login", "registro", "ingreso"], "col": "#10b981"},
+
+    # ---- REPO 3: codescandy/freshcart (Variaciones) ----
+    {"slug": "fc-grocery-home", "url": "https://githubusercontent.com", "cat": "alimentos", "tag": ["retail", "fresco", "grocery"], "col": "#0aad0a"},
+    {"slug": "fc-grocery-shop", "url": "https://githubusercontent.com", "cat": "alimentos", "tag": ["sidebar", "desplegable", "productos"], "col": "#0aad0a"},
+    {"slug": "fc-grocery-single", "url": "https://githubusercontent.com", "cat": "alimentos", "tag": ["zoom", "informacion", "stock"], "col": "#0aad0a"},
+    {"slug": "fc-grocery-checkout", "url": "https://githubusercontent.com", "cat": "checkout", "tag": ["resumen", "cupon", "tarjeta"], "col": "#0aad0a"},
+    {"slug": "fc-grocery-dashboard", "url": "https://githubusercontent.com", "cat": "admin", "tag": ["metricas", "ordenes", "graficos"], "col": "#0aad0a"},
+
+    # ---- REPO 4: jluterek/tailwind-ecommerce-template (Variaciones) ----
+    {"slug": "jl-alpine-home", "url": "https://githubusercontent.com", "cat": "tecnologia", "tag": ["alpine", "ligero", "minimal"], "col": "#4f46e5"},
+    {"slug": "jl-alpine-category", "url": "https://githubusercontent.com", "cat": "tecnologia", "tag": ["categorias", "filtros", "cuadrícula"], "col": "#4f46e5"},
+    {"slug": "jl-alpine-product", "url": "https://githubusercontent.com", "cat": "tecnologia", "tag": ["galeria", "botones", "descripcion"], "col": "#4f46e5"},
+    {"slug": "jl-alpine-cart", "url": "https://githubusercontent.com", "cat": "checkout", "tag": ["tabla", "totales", "comprar"], "col": "#4f46e5"},
+    {"slug": "jl-alpine-contact", "url": "https://githubusercontent.com", "cat": "soporte", "tag": ["contacto", "mapa", "formulario"], "col": "#4f46e5"},
+]
+
+#Base neutra por repo: el acento sale de la fuente, el resto del sistema visual del repo.
+FUENTES_REPOS = {
+    'bb': {
+        'nombre': 'Tailwind Ecommerce', 'repo': 'bbulakh/tailwind-ecommerce', 'secondary': '#0ea5e9',
+        'background': '#ffffff', 'surface': '#f8fafc', 'text': '#0f172a', 'muted': '#64748b',
+        'border': '#e2e8f0', 'font': 'Inter', 'heading_font': 'Inter', 'radius': '12px',
+        'shadow': '0 10px 30px rgba(15,23,42,.08)',
+    },
+    'ts': {
+        'nombre': 'Tailstore', 'repo': 'spacemadev/Tailstore', 'secondary': '#065f46',
+        'background': '#ffffff', 'surface': '#f9fafb', 'text': '#111827', 'muted': '#6b7280',
+        'border': '#e5e7eb', 'font': 'Plus Jakarta Sans', 'heading_font': 'Sora', 'radius': '16px',
+        'shadow': '0 18px 40px rgba(17,24,39,.08)',
+    },
+    'fc': {
+        'nombre': 'Freshcart', 'repo': 'codescandy/freshcart', 'secondary': '#065f46',
+        'background': '#ffffff', 'surface': '#f6fbf6', 'text': '#111827', 'muted': '#6b7280',
+        'border': '#e6f0e6', 'font': 'Inter', 'heading_font': 'Inter', 'radius': '10px',
+        'shadow': '0 12px 28px rgba(10,173,10,.10)',
+    },
+    'jl': {
+        'nombre': 'Alpine Ecommerce', 'repo': 'jluterek/tailwind-ecommerce-template', 'secondary': '#312e81',
+        'background': '#ffffff', 'surface': '#f8fafc', 'text': '#0f172a', 'muted': '#64748b',
+        'border': '#e2e8f0', 'font': 'Inter', 'heading_font': 'Manrope', 'radius': '8px',
+        'shadow': '0 10px 26px rgba(79,70,229,.10)',
+    },
+}
+
+#Sufijo de la variación → tipo de página (define qué bloques se generan).
+FUENTES_TIPOS = {
+    'home': 'home', 'catalog': 'catalog', 'shop': 'catalog', 'category': 'catalog',
+    'product': 'product', 'detail': 'product', 'single': 'product',
+    'cart': 'checkout', 'checkout': 'checkout',
+    'account': 'dashboard', 'dashboard': 'dashboard',
+    'auth': 'auth', 'contact': 'contact',
+}
+
+
+def _fuente_partes(slug : str) -> tuple[str, str]:
+    prefix, _, variation = slug.partition('-')
+    return prefix, variation
+
+
+def _fuente_tokens(fuente : dict) -> dict:
+    prefix, _    =   _fuente_partes(fuente['slug'])
+    repo        =   FUENTES_REPOS[prefix]
+    return {
+        'primary'       :   fuente['col'],
+        'secondary'     :   repo['secondary'],
+        'background'    :   repo['background'],
+        'surface'       :   repo['surface'],
+        'text'          :   repo['text'],
+        'muted'         :   repo['muted'],
+        'border'        :   repo['border'],
+        'font'          :   repo['font'],
+        'heading_font'  :   repo['heading_font'],
+        'radius'        :   repo['radius'],
+        'shadow'        :   repo['shadow'],
+        'source_repo'   :   repo['repo'],
+        'source_url'    :   fuente['url'],
+    }
+
+
+def _fuente_nombre(fuente : dict) -> str:
+    prefix, variation  =   _fuente_partes(fuente['slug'])
+    return f"{FUENTES_REPOS[prefix]['nombre']} · {variation.replace('-', ' ').title()}"
+
+
+def _fuente_tipo(slug : str) -> str:
+    return FUENTES_TIPOS.get(slug.rpartition('-')[2], 'home')
+
+
+#=========================================
 # COMPONENT BUILDER
 #=========================================
 def _components(t : dict) -> dict:
@@ -278,8 +386,222 @@ def _components(t : dict) -> dict:
     }
 
 
+def _fuente_components(tipo : str, t : dict) -> dict:
+    bg, surface, text, muted = t['background'], t['surface'], t['text'], t['muted']
+    primary, secondary, border = t['primary'], t['secondary'], t['border']
+    radius, head = t['radius'], t['heading_font'].replace(' ', '_')
+    shadow = t['shadow']
+    blocks = {
+        'header': (
+            f'<header class="sticky top-0 z-40 border-b border-[{border}] bg-[{bg}]/90 backdrop-blur">'
+            f'<div class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">'
+            f'<a href="/" class="font-[{head}] text-xl font-bold tracking-tight text-[{text}]">Tienda</a>'
+            f'<nav class="hidden gap-6 text-sm text-[{muted}] md:flex">'
+            f'<a href="/catalogo" class="hover:text-[{primary}]">Catálogo</a>'
+            f'<a href="/nosotros" class="hover:text-[{primary}]">Nosotros</a>'
+            f'<a href="/contacto" class="hover:text-[{primary}]">Contacto</a></nav>'
+            f'<a href="/carrito" class="rounded-[{radius}] bg-[{primary}] px-4 py-2 text-sm font-semibold text-[{bg}]" style="box-shadow:{shadow}">Comprar</a>'
+            f'</div></header>'
+        ),
+        'footer': (
+            f'<footer class="border-t border-[{border}] bg-[{surface}] px-6 py-12 text-[{muted}]">'
+            f'<div class="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">'
+            f'<div><p class="font-[{head}] text-lg font-bold text-[{text}]">Tienda</p>'
+            f'<p class="mt-2 text-sm">Tu negocio, con una web a la altura.</p></div>'
+            f'<div><p class="font-semibold text-[{text}]">Contacto</p>'
+            f'<p class="mt-2 text-sm">WhatsApp · Instagram · Email</p></div>'
+            f'<div><p class="font-semibold text-[{text}]">Legal</p>'
+            f'<p class="mt-2 text-sm">Términos y privacidad</p></div>'
+            f'</div></footer>'
+        ),
+    }
+    if tipo == 'home':
+        blocks['hero'] = (
+            f'<section class="bg-[{bg}] px-6 py-24 text-[{text}]"><div class="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2">'
+            f'<div><p class="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[{primary}]">Nueva colección</p>'
+            f'<h1 class="font-[{head}] text-4xl font-bold leading-tight md:text-6xl">Diseño que se siente tuyo</h1>'
+            f'<p class="mt-6 max-w-md text-base text-[{muted}]">Productos seleccionados, envío a todo el país y atención personalizada.</p>'
+            f'<div class="mt-8 flex flex-wrap gap-3">'
+            f'<a href="/catalogo" class="rounded-[{radius}] bg-[{primary}] px-6 py-3 font-semibold text-[{bg}]" style="box-shadow:{shadow}">Ver catálogo</a>'
+            f'<a href="/nosotros" class="rounded-[{radius}] border border-[{border}] px-6 py-3 font-semibold text-[{text}]">Conocer más</a>'
+            f'</div></div>'
+            f'<div class="aspect-[4/3] rounded-[{radius}] border border-[{border}] bg-[{surface}]" aria-hidden="true"></div>'
+            f'</div></section>'
+        )
+        blocks['benefits'] = (
+            f'<section class="bg-[{surface}] px-6 py-16 text-[{text}]"><div class="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">'
+            f'<article class="rounded-[{radius}] border border-[{border}] bg-[{bg}] p-6">'
+            f'<h3 class="font-[{head}] text-lg font-semibold">Envío rápido</h3>'
+            f'<p class="mt-2 text-sm text-[{muted}]">Despachamos en 24 horas a todo el país.</p></article>'
+            f'<article class="rounded-[{radius}] border border-[{border}] bg-[{bg}] p-6">'
+            f'<h3 class="font-[{head}] text-lg font-semibold">Pago seguro</h3>'
+            f'<p class="mt-2 text-sm text-[{muted}]">Tarjetas, transferencia y cuotas sin interés.</p></article>'
+            f'<article class="rounded-[{radius}] border border-[{border}] bg-[{bg}] p-6">'
+            f'<h3 class="font-[{head}] text-lg font-semibold">Atención real</h3>'
+            f'<p class="mt-2 text-sm text-[{muted}]">Te respondemos por WhatsApp en minutos.</p></article>'
+            f'</div></section>'
+        )
+        blocks['featured'] = _product_grid(t, 'Destacados', 4)
+    elif tipo == 'catalog':
+        blocks['filters'] = (
+            f'<section class="border-b border-[{border}] bg-[{surface}] px-6 py-6"><div class="mx-auto flex max-w-6xl flex-wrap items-center gap-3">'
+            f'<span class="text-sm font-semibold text-[{text}]">Filtrar:</span>'
+            f'<button class="rounded-full border border-[{border}] bg-[{bg}] px-4 py-1.5 text-sm text-[{muted}]">Categoría</button>'
+            f'<button class="rounded-full border border-[{border}] bg-[{bg}] px-4 py-1.5 text-sm text-[{muted}]">Precio</button>'
+            f'<button class="rounded-full border border-[{primary}] bg-[{primary}] px-4 py-1.5 text-sm font-semibold text-[{bg}]">Talle</button>'
+            f'<select class="ml-auto rounded-[{radius}] border border-[{border}] bg-[{bg}] px-3 py-1.5 text-sm text-[{text}]">'
+            f'<option>Ordenar: destacados</option><option>Menor precio</option><option>Mayor precio</option></select>'
+            f'</div></section>'
+        )
+        blocks['grid'] = _product_grid(t, 'Catálogo', 8)
+    elif tipo == 'product':
+        blocks['gallery'] = (
+            f'<section class="bg-[{bg}] px-6 py-16 text-[{text}]"><div class="mx-auto grid max-w-6xl gap-10 md:grid-cols-2">'
+            f'<div><div class="aspect-square rounded-[{radius}] border border-[{border}] bg-[{surface}]" aria-hidden="true"></div>'
+            f'<div class="mt-3 grid grid-cols-4 gap-3">'
+            + ''.join(
+                f'<button class="aspect-square rounded-[{radius}] border border-[{border}] bg-[{surface}]" aria-label="Miniatura {i}"></button>'
+                for i in range(1, 5)
+            )
+            + f'</div></div>'
+            f'<div><p class="text-xs font-semibold uppercase tracking-[0.25em] text-[{primary}]">Producto</p>'
+            f'<h1 class="mt-3 font-[{head}] text-3xl font-bold md:text-4xl">Nombre del producto</h1>'
+            f'<p class="mt-3 text-2xl font-semibold text-[{primary}]">$49.900</p>'
+            f'<p class="mt-4 text-sm text-[{muted}]">Descripción breve del producto, materiales y cuidados.</p>'
+            f'<div class="mt-6 flex gap-3">'
+            f'<button class="rounded-[{radius}] border border-[{border}] px-4 py-2 text-sm text-[{text}]">Talle</button>'
+            f'<button class="rounded-[{radius}] border border-[{border}] px-4 py-2 text-sm text-[{text}]">Color</button></div>'
+            f'<button class="mt-6 w-full rounded-[{radius}] bg-[{primary}] px-6 py-3 font-semibold text-[{bg}]" style="box-shadow:{shadow}">Agregar al carrito</button>'
+            f'<div class="mt-8 border-t border-[{border}] pt-6 text-sm text-[{muted}]">'
+            f'<p><strong class="text-[{text}]">Envío:</strong> 24-48 h a todo el país.</p>'
+            f'<p class="mt-2"><strong class="text-[{text}]">Cambios:</strong> 30 días sin costo.</p></div>'
+            f'</div></div></section>'
+        )
+        blocks['related'] = _product_grid(t, 'También te puede gustar', 4)
+    elif tipo == 'checkout':
+        blocks['summary'] = (
+            f'<section class="bg-[{bg}] px-6 py-16 text-[{text}]"><div class="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1.4fr_1fr]">'
+            f'<div class="rounded-[{radius}] border border-[{border}] bg-[{surface}] p-6">'
+            f'<h2 class="font-[{head}] text-xl font-bold">Tu carrito</h2>'
+            + ''.join(
+                f'<div class="mt-4 flex items-center gap-4 border-t border-[{border}] pt-4">'
+                f'<div class="h-16 w-16 rounded-[{radius}] bg-[{bg}]" aria-hidden="true"></div>'
+                f'<div class="flex-1"><p class="text-sm font-semibold">Producto {i}</p>'
+                f'<p class="text-xs text-[{muted}]">Cantidad 1</p></div>'
+                f'<p class="text-sm font-semibold">${i}900</p></div>'
+                for i in range(1, 4)
+            )
+            + f'</div>'
+            f'<aside class="h-fit rounded-[{radius}] border border-[{border}] bg-[{surface}] p-6">'
+            f'<h2 class="font-[{head}] text-xl font-bold">Resumen</h2>'
+            f'<dl class="mt-4 space-y-2 text-sm"><div class="flex justify-between"><dt class="text-[{muted}]">Subtotal</dt><dd>$12.700</dd></div>'
+            f'<div class="flex justify-between"><dt class="text-[{muted}]">Envío</dt><dd>Gratis</dd></div>'
+            f'<div class="flex justify-between border-t border-[{border}] pt-2 text-base font-semibold"><dt>Total</dt><dd>$12.700</dd></div></dl>'
+            f'<div class="mt-4 flex gap-2"><input class="min-w-0 flex-1 rounded-[{radius}] border border-[{border}] bg-[{bg}] px-3 py-2 text-sm" placeholder="Cupón">'
+            f'<button class="rounded-[{radius}] border border-[{border}] px-4 py-2 text-sm font-semibold text-[{text}]">Aplicar</button></div>'
+            f'<button class="mt-4 w-full rounded-[{radius}] bg-[{primary}] px-4 py-3 font-semibold text-[{bg}]" style="box-shadow:{shadow}">Pagar</button>'
+            f'</aside></div></section>'
+        )
+        blocks['shipping'] = (
+            f'<section class="bg-[{surface}] px-6 py-16 text-[{text}]"><div class="mx-auto max-w-5xl rounded-[{radius}] border border-[{border}] bg-[{bg}] p-6">'
+            f'<h2 class="font-[{head}] text-xl font-bold">Datos de envío</h2>'
+            f'<form class="mt-6 grid gap-4 md:grid-cols-2">'
+            f'<input class="rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Nombre" aria-label="Nombre">'
+            f'<input class="rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Apellido" aria-label="Apellido">'
+            f'<input class="rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Email" aria-label="Email">'
+            f'<input class="rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Teléfono" aria-label="Teléfono">'
+            f'<input class="md:col-span-2 rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Dirección" aria-label="Dirección">'
+            f'<input class="rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Provincia" aria-label="Provincia">'
+            f'<input class="rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Ciudad" aria-label="Ciudad">'
+            f'<button type="button" class="md:col-span-2 rounded-[{radius}] bg-[{primary}] px-4 py-3 font-semibold text-[{bg}]">Continuar al pago</button>'
+            f'</form></div></section>'
+        )
+    elif tipo == 'dashboard':
+        blocks['sidebar'] = (
+            f'<aside class="hidden w-60 shrink-0 border-r border-[{border}] bg-[{surface}] px-4 py-6 lg:block">'
+            f'<p class="font-[{head}] text-lg font-bold text-[{text}]">Mi cuenta</p>'
+            f'<nav class="mt-6 space-y-1 text-sm">'
+            f'<a href="#" class="block rounded-[{radius}] bg-[{primary}] px-3 py-2 font-semibold text-[{bg}]">Resumen</a>'
+            f'<a href="#" class="block rounded-[{radius}] px-3 py-2 text-[{muted}] hover:bg-[{bg}]">Pedidos</a>'
+            f'<a href="#" class="block rounded-[{radius}] px-3 py-2 text-[{muted}] hover:bg-[{bg}]">Direcciones</a>'
+            f'<a href="#" class="block rounded-[{radius}] px-3 py-2 text-[{muted}] hover:bg-[{bg}]">Datos personales</a>'
+            f'</nav></aside>'
+        )
+        blocks['metrics'] = (
+            f'<section class="flex-1 bg-[{bg}] px-6 py-10 text-[{text}]"><div class="mx-auto max-w-5xl">'
+            f'<h1 class="font-[{head}] text-2xl font-bold">Hola de nuevo</h1>'
+            f'<div class="mt-6 grid gap-4 sm:grid-cols-3">'
+            + ''.join(
+                f'<article class="rounded-[{radius}] border border-[{border}] bg-[{surface}] p-5">'
+                f'<p class="text-xs uppercase tracking-wide text-[{muted}]">{label}</p>'
+                f'<p class="mt-2 font-[{head}] text-2xl font-bold text-[{primary}]">{value}</p></article>'
+                for label, value in (("Pedidos", "12"), ("En tránsito", "2"), ("Puntos", "340"))
+            )
+            + f'</div>'
+            f'<div class="mt-8 rounded-[{radius}] border border-[{border}] bg-[{surface}] p-6">'
+            f'<h2 class="font-[{head}] text-lg font-bold">Último pedido</h2>'
+            f'<p class="mt-2 text-sm text-[{muted}]">#1042 · En camino · Llega el jueves</p></div>'
+            f'</div></section>'
+        )
+    elif tipo == 'auth':
+        blocks['auth'] = (
+            f'<section class="grid min-h-[70vh] bg-[{bg}] text-[{text}] md:grid-cols-2">'
+            f'<div class="hidden bg-[{primary}] p-12 text-[{bg}] md:flex md:flex-col md:justify-between">'
+            f'<p class="font-[{head}] text-2xl font-bold">Tienda</p>'
+            f'<p class="max-w-sm text-sm opacity-90">Tu cuenta, tus pedidos y tus direcciones en un solo lugar.</p></div>'
+            f'<div class="flex items-center justify-center px-6 py-16"><div class="w-full max-w-sm">'
+            f'<h1 class="font-[{head}] text-3xl font-bold">Ingresar</h1>'
+            f'<form class="mt-8 space-y-4">'
+            f'<input class="w-full rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Email" aria-label="Email">'
+            f'<input type="password" class="w-full rounded-[{radius}] border border-[{border}] bg-[{surface}] px-4 py-2.5 text-sm" placeholder="Contraseña" aria-label="Contraseña">'
+            f'<button type="button" class="w-full rounded-[{radius}] bg-[{primary}] px-4 py-3 font-semibold text-[{bg}]" style="box-shadow:{shadow}">Entrar</button>'
+            f'</form>'
+            f'<p class="mt-6 text-sm text-[{muted}]">¿No tenés cuenta? <a href="#" class="font-semibold text-[{primary}]">Registrate</a></p>'
+            f'</div></div></section>'
+        )
+    elif tipo == 'contact':
+        blocks['contact'] = (
+            f'<section class="bg-[{bg}] px-6 py-16 text-[{text}]"><div class="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">'
+            f'<div><h1 class="font-[{head}] text-3xl font-bold">Contacto</h1>'
+            f'<p class="mt-3 text-sm text-[{muted}]">Escribinos y te respondemos dentro del día.</p>'
+            f'<dl class="mt-6 space-y-3 text-sm"><div><dt class="font-semibold">WhatsApp</dt><dd class="text-[{muted}]">+54 9 11 0000 0000</dd></div>'
+            f'<div><dt class="font-semibold">Email</dt><dd class="text-[{muted}]">hola@tienda.com</dd></div>'
+            f'<div><dt class="font-semibold">Horario</dt><dd class="text-[{muted}]">Lun a vie, 9 a 18 h</dd></div></dl>'
+            f'<div class="mt-6 aspect-[4/3] rounded-[{radius}] border border-[{border}] bg-[{surface}]" aria-hidden="true"></div></div>'
+            f'<form class="h-fit rounded-[{radius}] border border-[{border}] bg-[{surface}] p-6">'
+            f'<input class="w-full rounded-[{radius}] border border-[{border}] bg-[{bg}] px-4 py-2.5 text-sm" placeholder="Nombre" aria-label="Nombre">'
+            f'<input class="mt-4 w-full rounded-[{radius}] border border-[{border}] bg-[{bg}] px-4 py-2.5 text-sm" placeholder="Email" aria-label="Email">'
+            f'<textarea rows="5" class="mt-4 w-full rounded-[{radius}] border border-[{border}] bg-[{bg}] px-4 py-2.5 text-sm" placeholder="Mensaje" aria-label="Mensaje"></textarea>'
+            f'<button type="button" class="mt-4 w-full rounded-[{radius}] bg-[{primary}] px-4 py-3 font-semibold text-[{bg}]" style="box-shadow:{shadow}">Enviar</button>'
+            f'</form></div></section>'
+        )
+    return blocks
+
+
+def _product_grid(t : dict, title : str, total : int) -> str:
+    bg, surface, text, muted = t['background'], t['surface'], t['text'], t['muted']
+    primary, secondary, border = t['primary'], t['secondary'], t['border']
+    radius, head = t['radius'], t['heading_font'].replace(' ', '_')
+    return (
+        f'<section class="bg-[{bg}] px-6 py-20 text-[{text}]"><div class="mx-auto max-w-6xl">'
+        f'<div class="mb-10 flex items-end justify-between"><h2 class="font-[{head}] text-3xl font-bold">{title}</h2>'
+        f'<a href="/catalogo" class="text-sm font-semibold text-[{primary}]">Ver todo</a></div>'
+        f'<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">'
+        + ''.join(
+            f'<article class="overflow-hidden rounded-[{radius}] border border-[{border}] bg-[{surface}]">'
+            f'<div class="aspect-square bg-[{bg}]" aria-hidden="true"></div>'
+            f'<div class="p-4"><h3 class="font-semibold">Producto {i}</h3>'
+            f'<p class="mt-1 text-sm text-[{muted}]">${i}900</p>'
+            f'<button class="mt-4 w-full rounded-[{radius}] bg-[{secondary}] px-3 py-2 text-sm font-semibold text-[{bg}]">Agregar</button>'
+            f'</div></article>'
+            for i in range(1, total + 1)
+        )
+        + f'</div></div></section>'
+    )
+
+
 def build_styles() -> list[dict]:
-    return [
+    styles  =   [
         {
             'slug'              :   preset['slug'],
             'nombre'            :   preset['nombre'],
@@ -290,3 +612,16 @@ def build_styles() -> list[dict]:
         }
         for preset in PRESETS
     ]
+    #Fuentes externas: tokens del repo + color de acento de la variación y
+    #bloques del tipo de página que representa el slug.
+    for fuente in FUENTES_DISEÑO:
+        tokens  =   _fuente_tokens(fuente)
+        styles.append({
+            'slug'              :   fuente['slug'],
+            'nombre'            :   _fuente_nombre(fuente),
+            'categoria'         :   fuente['cat'],
+            'tags'              :   fuente['tag'],
+            'tokens_diseno'     :   tokens,
+            'html_componentes'  :   _fuente_components(_fuente_tipo(fuente['slug']), tokens),
+        })
+    return styles
