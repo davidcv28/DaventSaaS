@@ -1,1 +1,0 @@
-import{s as t}from"./index--SnESJTr.js";import{y as n,bN as s,l as r,bS as c,m}from"./index-slk71Vvv.js";const i={__name:"StoreHomeView",setup(p){const e=c("storePage"),a=r(()=>{var o;return t((o=e==null?void 0:e.pageTemplate)==null?void 0:o.value,"landing")});return(o,l)=>(m(),n(s(a.value)))}};export{i as default};

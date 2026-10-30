@@ -48,3 +48,7 @@ qa_token.tmp
 # Directorios temporales de herramientas/agentes en la raíz (tmpXXXX):
 # rompen `git add -A` y `git status`, e inflan el contexto de build.
 /tmp*/
+
+# Store local de pnpm y configs de herramientas locales
+.pnpm-store/
+.claude/settings.local.json

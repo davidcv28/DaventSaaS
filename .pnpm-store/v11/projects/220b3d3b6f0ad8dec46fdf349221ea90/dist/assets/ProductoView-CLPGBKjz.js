@@ -1,1 +1,0 @@
-import r from"./ProductoView-C3-Z_drk.js";/* empty css                            */import{m as o,y as t}from"./index-slk71Vvv.js";import"./TplProductCard-D-rfsbJN.js";import"./ProductReviews-D4TKRive.js";import"./reveal-PfVpgicn.js";const u={__name:"ProductoView",setup(c){return(m,p)=>(o(),t(r,{class:"tr-product"}))}};export{u as default};
