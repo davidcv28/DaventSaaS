@@ -43,7 +43,19 @@ const { patterns, styles, status, load } = useDesignCatalog()
 // recargar la página.
 onMounted(() => load(true))
 
-const patternOptions = computed(() => patterns.value.filter((p) => p.is_active !== false))
+// "Patrones de diseño" se alimenta directo del modelo DesignPattern
+// (/api/design/patterns/), no del catálogo resumido: así aparece todo lo
+// cargado en la base, incluidos los patrones importados con html/css/js.
+const modelPatterns = ref([])
+onMounted(() => {
+  designApi.listPatterns()
+    .then((list) => { modelPatterns.value = list })
+    .catch(() => { modelPatterns.value = [] })
+})
+
+const patternOptions = computed(() => (
+  modelPatterns.value.length ? modelPatterns.value : patterns.value
+))
 const styleOptions = computed(() => styles.value.filter((s) => s.is_active !== false))
 const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
@@ -260,9 +272,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 
           <div class="dmenu-fields">
             <div class="dmenu-field" @focusin="emit('ring', 'hero')">
-              <label for="dm-pattern">Diseño</label>
+              <label for="dm-pattern">Patrones de diseño</label>
               <select id="dm-pattern" class="select" :value="currentPattern" :disabled="!patternOptions.length" @change="onPatternPick">
-                <option value="" disabled>Elegí un diseño…</option>
+                <option value="" disabled>Elegí un patrón…</option>
                 <option v-for="p in patternOptions" :key="p.slug" :value="p.slug" :disabled="!allowedTemplate(p.template)">
                   {{ p.nombre }} · {{ p.categoria }} · {{ tierLabel(p.template) }}
                 </option>
