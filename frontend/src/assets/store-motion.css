@@ -1,0 +1,370 @@
+/* ===========================================================================
+   MOVIMIENTO v2 — capa de animación de la web pública.
+   Se carga después de store-page.css (StorePublicLayout) y antes de que el
+   import dinámico de skin-<familia>.css resuelva: las pieles solo declaran
+   tokens, así que esta hoja manda en animaciones y transiciones.
+
+   Reglas de la casa:
+   - Solo se animan opacity / transform / filter / background-position.
+   - Cada familia de piel tiene su propio carácter de movimiento (--mo-*).
+   - Todo se apaga con prefers-reduced-motion (bloque final).
+   =========================================================================== */
+
+/* --- Tokens de movimiento por familia ------------------------------------ */
+.store-page{
+  --mo-ease: cubic-bezier(.22, .61, .36, 1);
+  --mo-ease-out: cubic-bezier(.16, 1, .3, 1);
+  --mo-ease-snap: cubic-bezier(.34, 1.56, .64, 1);
+  --mo-fast: .22s;
+  --mo-mid: .42s;
+  --mo-slow: .85s;
+  --mo-lift: 6px;
+  --mo-tilt: 0deg;
+  --mo-sheen: 1;
+}
+
+/* Papel, revista, suizo y mono: movimiento contenido y preciso. */
+.store-page:is([data-st-skin='editorial'], [data-st-skin='paper'], [data-st-skin='magazine'],
+  [data-st-skin='swiss'], [data-st-skin='mono'], [data-st-skin='minimal'], [data-st-skin='book']){
+  --mo-ease: cubic-bezier(.33, 0, .2, 1);
+  --mo-slow: 1s;
+  --mo-lift: 3px;
+  --mo-sheen: 0;
+}
+/* Vidrio, aurora, degradado, cine y neón: luz y deriva lenta. */
+.store-page:is([data-st-skin='glass'], [data-st-skin='aurora'], [data-st-skin='gradient'],
+  [data-st-skin='cinematic'], [data-st-skin='neon'], [data-st-skin='lumen']){
+  --mo-ease: cubic-bezier(.16, 1, .3, 1);
+  --mo-slow: 1.1s;
+  --mo-lift: 8px;
+}
+/* Brutal, kinetic, pop y showcase: respuesta dura y con rebote. */
+.store-page:is([data-st-skin='brutal'], [data-st-skin='kinetic'], [data-st-skin='pop'],
+  [data-st-skin='showcase']){
+  --mo-ease: cubic-bezier(.2, .9, .1, 1);
+  --mo-ease-snap: cubic-bezier(.3, 1.9, .5, 1);
+  --mo-fast: .16s;
+  --mo-mid: .3s;
+  --mo-lift: 10px;
+  --mo-tilt: -.6deg;
+}
+/* Suave, lúdico, orgánico, cálido, artesanal y nostalgia: flotación amable. */
+.store-page:is([data-st-skin='soft'], [data-st-skin='playful'], [data-st-skin='organic'],
+  [data-st-skin='warm'], [data-st-skin='craft'], [data-st-skin='nostalgia'], [data-st-skin='retro']){
+  --mo-ease: cubic-bezier(.34, 1.3, .64, 1);
+  --mo-mid: .5s;
+  --mo-lift: 7px;
+  --mo-tilt: .8deg;
+}
+/* Lujo, prestigio, atelier y corporativo: cadencia larga, sin exceso. */
+.store-page:is([data-st-skin='luxury'], [data-st-skin='prestige'], [data-st-skin='atelier'],
+  [data-st-skin='corporate'], [data-st-skin='vitrina']){
+  --mo-ease: cubic-bezier(.25, .46, .45, .94);
+  --mo-slow: 1.15s;
+  --mo-mid: .55s;
+  --mo-lift: 4px;
+  --mo-sheen: .7;
+}
+/* Terminal y tecnología: pasos cortos, lectura de consola. */
+.store-page:is([data-st-skin='tech'], [data-st-skin='terminal']){
+  --mo-ease: cubic-bezier(.4, 0, .2, 1);
+  --mo-fast: .18s;
+  --mo-mid: .34s;
+  --mo-lift: 4px;
+}
+
+/* --- Keyframes ----------------------------------------------------------- */
+@keyframes mo-rise{ from{ opacity:0; transform: translate3d(0, 18px, 0) scale(.985); } to{ opacity:1; transform:none; } }
+@keyframes mo-fade{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes mo-slide-in{ from{ opacity:0; transform: translate3d(-14px, 0, 0); } to{ opacity:1; transform:none; } }
+@keyframes mo-float{ 0%, 100%{ transform: translateY(0); } 50%{ transform: translateY(-6px); } }
+@keyframes mo-breathe{ 0%, 100%{ opacity:.55; transform: scale(1); } 50%{ opacity:1; transform: scale(1.05); } }
+@keyframes mo-sheen{ from{ transform: translateX(-140%) skewX(-18deg); } to{ transform: translateX(240%) skewX(-18deg); } }
+@keyframes mo-pulse-ring{ 0%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--store-accent) 42%, transparent); } 70%{ box-shadow: 0 0 0 12px transparent; } 100%{ box-shadow: 0 0 0 0 transparent; } }
+@keyframes mo-underline{ from{ transform: scaleX(0); } to{ transform: scaleX(1); } }
+@keyframes mo-drift{ 0%{ background-position: 0% 50%; } 50%{ background-position: 100% 50%; } 100%{ background-position: 0% 50%; } }
+@keyframes mo-scan{ from{ transform: translateY(-120%); } to{ transform: translateY(120%); } }
+@keyframes mo-tick{ 0%, 100%{ transform: rotate(0); } 30%{ transform: rotate(-5deg); } 70%{ transform: rotate(5deg); } }
+@keyframes mo-blink{ 0%, 48%{ opacity:1; } 49%, 100%{ opacity:0; } }
+@keyframes mo-pop-in{ 0%{ opacity:0; transform: scale(.92); } 65%{ opacity:1; transform: scale(1.015); } 100%{ transform: scale(1); } }
+@keyframes mo-shimmer{ from{ background-position: -220% 0; } to{ background-position: 220% 0; } }
+@keyframes mo-glow{ 0%, 100%{ box-shadow: 0 0 0 0 transparent; } 50%{ box-shadow: 0 14px 40px -18px color-mix(in srgb, var(--store-accent) 65%, transparent); } }
+@keyframes mo-line-y{ from{ transform: scaleY(0); } to{ transform: scaleY(1); } }
+@keyframes mo-marquee{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
+@keyframes mo-spin-slow{ to{ transform: rotate(1turn); } }
+
+/* --- Entrada de portada: el hero se arma por capas ------------------------ */
+@media (prefers-reduced-motion: no-preference){
+  .sp-hero-inner > *,
+  .sp-hero-logo-inner > *{
+    animation: mo-rise var(--mo-slow) var(--mo-ease-out) both;
+  }
+  .sp-hero-inner > :nth-child(1){ animation-delay: .02s; }
+  .sp-hero-inner > :nth-child(2){ animation-delay: .08s; }
+  .sp-hero-inner > :nth-child(3){ animation-delay: .14s; }
+  .sp-hero-inner > :nth-child(4){ animation-delay: .2s; }
+  .sp-hero-inner > :nth-child(5){ animation-delay: .26s; }
+  .sp-hero-inner > :nth-child(6){ animation-delay: .32s; }
+  .sp-hero-inner > :nth-child(n+7){ animation-delay: .38s; }
+  .sp-hero-logo-inner > :nth-child(2){ animation-delay: .1s; }
+  .sp-hero-logo-inner > :nth-child(3){ animation-delay: .18s; }
+  .sp-hero-logo-inner > :nth-child(4){ animation-delay: .26s; }
+  .sp-hero-logo-inner > :nth-child(n+5){ animation-delay: .34s; }
+
+  /* Ambientación del hero: la malla respira y una luz cruza despacio. */
+  .sp-hero-band::before{
+    content: '';
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    background: radial-gradient(38% 46% at 28% 22%, color-mix(in srgb, var(--sp-band-c3, var(--store-accent)) 32%, transparent), transparent 70%);
+    opacity: .5;
+    animation: mo-breathe 14s var(--mo-ease) infinite;
+    z-index: 0;
+  }
+  .sp-hero-band > :is(.sp-container, .sp-hero-inner){ position: relative; z-index: 1; }
+
+  /* Carrusel: el slide activo nunca queda quieto. */
+  .sp-carousel-img.active{ animation: mo-drift 18s ease-in-out infinite alternate; }
+}
+
+/* --- Etiquetas: filete de marca + lectura de sello profesional ------------ */
+.sp-eyebrow{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: .14em;
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+.sp-eyebrow::before{
+  content: '';
+  width: 22px;
+  height: 1.5px;
+  flex: none;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: .55;
+  transform-origin: 0 50%;
+  animation: mo-underline var(--mo-mid) var(--mo-ease-out) both;
+}
+.sp-eyebrow.is-center{ justify-content: center; }
+.sp-eyebrow.is-center::after{
+  content: '';
+  width: 22px;
+  height: 1.5px;
+  flex: none;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: .55;
+  transform-origin: 100% 50%;
+  animation: mo-underline var(--mo-mid) var(--mo-ease-out) both;
+}
+
+/* Píldora del hero: punto vivo + brillo que cruza cada tanto. */
+.sp-hero-badge{ position: relative; overflow: hidden; }
+.sp-hero-badge::before{
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+  animation: mo-breathe 3.2s var(--mo-ease) infinite;
+}
+.sp-hero-badge::after{
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .38), transparent);
+  animation: mo-sheen 7s var(--mo-ease) infinite;
+  pointer-events: none;
+}
+
+/* Contador y encabezados de navegación como etiquetas, no como texto suelto. */
+.sp-count{
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 99px;
+  background: var(--sp-soft);
+  color: var(--sp-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sp-nav-heading{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: .12em;
+  font-size: 10.5px;
+}
+.sp-nav-heading::after{
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: .22;
+}
+
+/* --- Contenedores: borde vivo, elevación y foco --------------------------- */
+.sp-card,
+.sp-service,
+.sp-form,
+.sp-testimonial,
+.sp-faq-item,
+.sp-about-card,
+.spd-sec{
+  transition:
+    transform var(--mo-mid) var(--mo-ease-out),
+    box-shadow var(--mo-mid) var(--mo-ease-out),
+    border-color var(--mo-fast) var(--mo-ease),
+    background-color var(--mo-fast) var(--mo-ease);
+  will-change: transform;
+}
+.sp-card:hover{ transform: translateY(calc(var(--mo-lift) * -1)); }
+.sp-service:hover,
+.sp-testimonial:hover,
+.sp-faq-item:hover{
+  transform: translateY(calc(var(--mo-lift) * -.6));
+}
+.sp-service-icon{ transition: transform var(--mo-mid) var(--mo-ease-snap), filter var(--mo-fast); }
+.sp-service:hover .sp-service-icon{ transform: scale(1.1) rotate(-3deg); }
+
+/* Ficha y sheet: entrada con foco. */
+.spd-sec:hover{ border-color: color-mix(in srgb, var(--store-accent) 26%, var(--sp-line)); }
+.sp-form:focus-within{
+  border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--store-accent) 12%, transparent);
+}
+
+/* --- Controles: respuesta táctil coherente -------------------------------- */
+.sp-btn,
+.sp-icon-btn,
+.sp-chip,
+.sp-carousel-dot,
+.sp-modal-close,
+.sp-drawer-close,
+.sp-sort,
+.sp-foot-col a{ transition-timing-function: var(--mo-ease-out); }
+.sp-btn:not(.ghost):hover{ transform: translateY(-2px) scale(1.012); }
+.sp-icon-btn:hover{ transform: translateY(-2px) rotate(calc(var(--mo-tilt) * 3)); }
+.sp-chip:hover{ transform: translateY(-2px) scale(1.02); }
+.sp-top-links a:hover{ transform: translateY(-1px); }
+
+/* --- Títulos de sección: subrayado que crece y brilla --------------------- */
+.sp-section-title::after{
+  background-image: linear-gradient(90deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 25%, transparent));
+  background-size: 200% 100%;
+}
+.sp-rv.is-in .sp-section-title::after,
+.sp-section-title.is-in::after{
+  animation: mo-drift 6s linear infinite;
+}
+
+/* --- Listas, acordeones y estados ---------------------------------------- */
+.sp-faq-item[open] > :not(summary){ animation: mo-fade var(--mo-mid) var(--mo-ease-out) both; }
+.sp-faq-item summary{ transition: color var(--mo-fast) var(--mo-ease), padding-left var(--mo-fast) var(--mo-ease); }
+.sp-faq-item summary:hover{ color: var(--sp-accent-text); padding-left: 4px; }
+
+.sp-empty-icon, .sp-state-icon{ animation: mo-float 5s var(--mo-ease) infinite; }
+.sp-ann{ animation: mo-slide-in var(--mo-mid) var(--mo-ease-out) both; }
+
+/* Enlaces del pie: subrayado que se dibuja. */
+.sp-foot-col a{ position: relative; }
+.sp-foot-col a::after{
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--mo-fast) var(--mo-ease-out);
+}
+.sp-foot-col a:hover::after{ transform: scaleX(1); }
+
+/* --- Carácter por familia ------------------------------------------------ */
+/* Editorial, papel y suizo: el movimiento es tipográfico, no decorativo. */
+.store-page:is([data-st-skin='editorial'], [data-st-skin='paper'], [data-st-skin='magazine'],
+  [data-st-skin='swiss'], [data-st-skin='mono'], [data-st-skin='minimal'])
+  .sp-hero-badge::after{ display: none; }
+.store-page:is([data-st-skin='editorial'], [data-st-skin='magazine'], [data-st-skin='swiss'])
+  .sp-section-title::after{ animation: none; }
+
+/* Vidrio, aurora, degradado y cine: halo que respira en las tarjetas. */
+.store-page:is([data-st-skin='glass'], [data-st-skin='aurora'], [data-st-skin='gradient'],
+  [data-st-skin='cinematic'], [data-st-skin='neon'], [data-st-skin='lumen'])
+  :is(.sp-card, .sp-service, .sp-testimonial):hover{
+  box-shadow: 0 22px 60px -28px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+.store-page:is([data-st-skin='aurora'], [data-st-skin='gradient'], [data-st-skin='cinematic'])
+  .sp-hero-band{ animation: mo-drift 22s ease-in-out infinite alternate; background-size: 180% 180%; }
+
+/* Brutal, kinetic, pop: inclinación seca al hover. */
+.store-page:is([data-st-skin='brutal'], [data-st-skin='kinetic'], [data-st-skin='pop'],
+  [data-st-skin='showcase']) .sp-card:hover{
+  transform: translateY(calc(var(--mo-lift) * -1)) rotate(var(--mo-tilt));
+  box-shadow: 0 0 0 2px var(--store-accent-ink), 0 16px 0 -8px var(--store-accent-ink);
+}
+.store-page:is([data-st-skin='brutal'], [data-st-skin='kinetic'], [data-st-skin='pop'])
+  .sp-btn:active{ transform: translateY(2px) scale(.99); }
+
+/* Suave, lúdico, orgánico, cálido y artesanal: respiración y flotación. */
+.store-page:is([data-st-skin='soft'], [data-st-skin='playful'], [data-st-skin='organic'],
+  [data-st-skin='warm'], [data-st-skin='craft'], [data-st-skin='nostalgia'], [data-st-skin='retro'])
+  .sp-service-icon{ animation: mo-float 6s var(--mo-ease) infinite; }
+.store-page:is([data-st-skin='playful'], [data-st-skin='soft'])
+  .sp-hero-badge{ animation: mo-pop-in var(--mo-mid) var(--mo-ease-snap) both; }
+
+/* Lujo, prestigio y atelier: filete que se enciende, sin rebote. */
+.store-page:is([data-st-skin='luxury'], [data-st-skin='prestige'], [data-st-skin='atelier'])
+  :is(.sp-card, .sp-service, .sp-testimonial){
+  transition-duration: var(--mo-slow);
+}
+.store-page:is([data-st-skin='luxury'], [data-st-skin='prestige'], [data-st-skin='atelier'])
+  .sp-btn::after{ background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .55), transparent); }
+
+/* Tecnología y terminal: barrido de consola sobre el hero. */
+.store-page:is([data-st-skin='tech'], [data-st-skin='terminal']) .sp-hero-band{ overflow: hidden; }
+.store-page:is([data-st-skin='tech'], [data-st-skin='terminal']) .sp-hero-band::before{
+  inset: 0;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--store-accent) 16%, transparent), transparent);
+  opacity: .8;
+  animation: mo-scan 7s linear infinite;
+}
+.store-page:is([data-st-skin='tech'], [data-st-skin='terminal']) .sp-eyebrow::before{
+  animation: mo-blink 1.6s steps(1, end) infinite;
+}
+
+/* Mostrador y vitrina: marquesina de anuncios si la hay. */
+.store-page:is([data-st-skin='showcase'], [data-st-skin='vitrina'], [data-st-skin='pop'])
+  .sp-ann-track{ animation: mo-marquee 24s linear infinite; }
+
+/* --- Modal y drawer: entrada con intención -------------------------------- */
+.sp-drawer-head strong{ letter-spacing: -.01em; }
+
+/* --- Accesibilidad: nada de esto corre si el visitante lo apagó ----------- */
+@media (prefers-reduced-motion: reduce){
+  .store-page *,
+  .store-page *::before,
+  .store-page *::after{
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sp-card:hover,
+  .sp-service:hover,
+  .sp-testimonial:hover,
+  .sp-faq-item:hover,
+  .sp-btn:not(.ghost):hover,
+  .sp-icon-btn:hover,
+  .sp-chip:hover{ transform: none !important; }
+}

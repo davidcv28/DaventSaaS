@@ -1,7 +1,7 @@
 <script setup>
 import { computed, inject, unref } from 'vue'
 import { PROCEDURAL_SLUG_RE, proceduralIconBody } from '../utils/proceduralIcon.js'
-import { familyIcon, familyStroke } from '../utils/styleIcons.js'
+import { familyStroke, iconFor } from '../utils/styleIcons.js'
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -174,8 +174,14 @@ const LUCIDE = Object.fromEntries(
 // Familia de iconos del estilo de diseño activo (web pública): la provee
 // StorePublicLayout. Sin familia el icono se dibuja igual que siempre.
 const iconFamily = inject('storeIconFamily', null)
+const iconContext = inject('storeIconContext', null)
 const family = computed(() => unref(iconFamily) || '')
-const iconName = computed(() => familyIcon(props.name, family.value))
+const context = computed(() => unref(iconContext) || {})
+const iconName = computed(() => iconFor(props.name, {
+  family: family.value,
+  styleId: context.value.styleId || '',
+  template: context.value.template || ''
+}))
 const iconStroke = computed(() => (
   props.stroke === 1.75 ? (familyStroke(family.value) ?? props.stroke) : props.stroke
 ))

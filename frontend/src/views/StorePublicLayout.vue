@@ -21,6 +21,8 @@ import {
   storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES
 } from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
+// Capa de movimiento (keyframes + microinteracciones) por familia de piel.
+import '../assets/store-motion.css'
 // Base de layout de la página Servicios (.rz-sv-* + primitivas .rz-btn /
 // .rz-eyebrow / .rz-field), compartida por todos los diseños: la vista
 // funcional del embudo es única y su layout no puede vivir solo en la hoja de
@@ -605,6 +607,11 @@ const iconFamily = computed(() => familyOf({
   template: pageTemplate.value
 }))
 provide('storeIconFamily', iconFamily)
+// Contexto para el ajuste fino por rubro (styleIcons.js: iconFor).
+provide('storeIconContext', computed(() => ({
+  styleId: custom.value.site_theme?.style?.id || '',
+  template: pageTemplate.value
+})))
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,

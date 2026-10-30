@@ -161,6 +161,44 @@ export const TEMPLATE_FAMILY = {
   seguridad: 'brutal'
 }
 
+// Ajuste fino por estilo: dentro de una familia, el rubro del estilo manda.
+// Cambia iconos semánticos por otros del mismo set según el tipo de negocio
+// (gastronomía, moda, belleza, kids, consola…). Gana sobre el alias de familia.
+export const STYLE_ICON_OVERRIDES = {
+  'gourmet-calido': { store: 'coffee', sparkles: 'flame', tag: 'leaf', package: 'truck', clock: 'timer' },
+  'terracota': { store: 'flower', sparkles: 'leaf', tag: 'leaf' },
+  'papel-riso': { sparkles: 'star', tag: 'percent' },
+  'kids-ludico': { store: 'paw-print', sparkles: 'star', clock: 'timer' },
+  'belleza-rosa': { store: 'heart', sparkles: 'flower', tag: 'percent' },
+  'atelier-moda': { store: 'scissors', tag: 'gem', sparkles: 'diamond' },
+  'denim-urbano': { store: 'scissors', tag: 'percent', sparkles: 'star' },
+  'daven-indumentaria': { store: 'scissors', tag: 'percent' },
+  'urbano-sticker': { sparkles: 'zap', tag: 'percent', store: 'tag' },
+  'consola-retro': { store: 'bot', sparkles: 'terminal', clock: 'timer' },
+  'neon-tech': { store: 'terminal', sparkles: 'zap' },
+  'cobalto-nocturno': { store: 'bot', sparkles: 'zap' },
+  'suizo-editorial': { store: 'building-2', menu: 'list-ordered', sparkles: 'hexagon' },
+  'editorial-minima': { store: 'book', sparkles: 'star' },
+  'lujo-serif': { store: 'crown', sparkles: 'diamond', tag: 'gem' },
+  'corporativo': { store: 'building-2', sparkles: 'layout-grid' },
+  'retail-vibrante': { tag: 'percent', sparkles: 'star' },
+  'aurora-degradada': { sparkles: 'zap', tag: 'percent' },
+  'neo-brutalista': { sparkles: 'zap', tag: 'percent' },
+  'pastel-suave': { store: 'heart', sparkles: 'star' },
+  'monocromo': { store: 'building-2', sparkles: 'hexagon' },
+  'vidrio-nocturno': { store: 'layout-grid', sparkles: 'zap' }
+}
+
+// Ajuste por plantilla (tienda sin estilo elegido).
+export const TEMPLATE_ICON_OVERRIDES = {
+  alimentos: { store: 'coffee', sparkles: 'flame', tag: 'leaf' },
+  boutique: { store: 'gem', sparkles: 'diamond', tag: 'percent' },
+  indumentaria: { store: 'scissors', tag: 'percent' },
+  circuito: { store: 'terminal', sparkles: 'zap' },
+  seguridad: { store: 'shield-check', sparkles: 'hard-hat' },
+  clasico: { store: 'building-2' }
+}
+
 export function familyOf({ styleId = '', template = '' } = {}) {
   return STYLE_FAMILY[styleId] || TEMPLATE_FAMILY[template] || 'editorial'
 }
@@ -173,4 +211,13 @@ export function familyStroke(family) {
 export function familyIcon(name, family) {
   const alias = ICON_FAMILIES[family]?.alias
   return (alias && alias[name]) || name
+}
+
+// Icono final de la web pública: estilo > plantilla > familia > nombre.
+export function iconFor(name, { family = '', styleId = '', template = '' } = {}) {
+  const byStyle = STYLE_ICON_OVERRIDES[styleId]
+  if (byStyle && byStyle[name]) return byStyle[name]
+  const byTemplate = TEMPLATE_ICON_OVERRIDES[template]
+  if (!styleId && byTemplate && byTemplate[name]) return byTemplate[name]
+  return familyIcon(name, family)
 }
