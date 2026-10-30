@@ -61,14 +61,15 @@ export const ROLE_KEYS = [
   'quote', 'price', 'nav', 'button', 'footer'
 ]
 
-// Espejo de SKIN_FAMILIES de ai_design_skins.py (26 desde la v5: se suman
-// las 8 familias de los estilos de diseño). Un id desconocido no carga hoja
-// y la tienda queda como está.
+// Espejo de SKIN_FAMILIES de ai_design_skins.py (32: las 26 de la v5 + las 6
+// exclusivas de la IA, que el Studio no ofrece pero el motor sí propone).
+// Un id desconocido no carga hoja y la tienda queda como está.
 export const SKIN_FAMILIES = [
   'glass', 'editorial', 'brutal', 'soft', 'tech', 'warm', 'luxury', 'kinetic',
   'paper', 'neon', 'minimal', 'organic', 'retro', 'corporate', 'playful',
   'mono', 'gradient', 'cinematic',
-  'swiss', 'magazine', 'pop', 'aurora', 'craft', 'nostalgia', 'prestige', 'showcase'
+  'swiss', 'magazine', 'pop', 'aurora', 'craft', 'nostalgia', 'prestige', 'showcase',
+  'atelier', 'terminal', 'riso', 'vitrina', 'cobre', 'lumen'
 ]
 
 const ROLE_SIZES = {

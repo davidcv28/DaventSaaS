@@ -2172,21 +2172,27 @@ def _diversify_skin_layout(skin, used, facts):
     Dos propuestas de la misma generación no comparten grilla ni portada: si
     la combinación ya salió, la piel toma la próxima libre del catálogo. La
     composición cambia de verdad, no solo el color.
+
+    El layout EFECTIVO (piel + variante) se escribe también en `layout`: es
+    el que emite `_theme`, así la vista previa y la web aplicada muestran la
+    misma composición.
     """
     config  =   _skin_layout_config(skin, facts)
     combo   =   (config.get('grid'), config.get('hero'))
-    if combo not in used:
+    if combo in used:
+        for grid, hero in _LAYOUT_ROTATION:
+            if (grid, hero) in used or grid == combo[0]:
+                continue
+            used.add((grid, hero))
+            config  =   {**config, 'grid': grid, 'hero': hero}
+            break
+        else:
+            used.add(combo)
+    else:
         used.add(combo)
-        return skin, used
-    for grid, hero in _LAYOUT_ROTATION:
-        if (grid, hero) in used or grid == combo[0]:
-            continue
-        used.add((grid, hero))
-        alt =   dict(skin.get('layout_alt') or {})
-        alt.update({'grid': grid, 'hero': hero})
-        return {**skin, 'layout': {**skin['layout'], 'grid': grid, 'hero': hero}, 'layout_alt': alt}, used
-    used.add(combo)
-    return skin, used
+    alt =   dict(skin.get('layout_alt') or {})
+    alt.update({'grid': config.get('grid'), 'hero': config.get('hero')})
+    return {**skin, 'layout': {**skin['layout'], **config}, 'layout_alt': alt}, used
 
 
 def _ensure_rubro_signature(chosen, candidates, answers, allowed, count):

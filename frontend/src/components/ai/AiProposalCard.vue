@@ -128,13 +128,21 @@ const FAMILY_LABELS = {
   glass: 'Cristal', editorial: 'Editorial', brutal: 'Brutal', tech: 'Tecnología',
   warm: 'Cálida', luxury: 'Lujo', kinetic: 'Cinética', paper: 'Papel', neon: 'Neón',
   minimal: 'Minimal', organic: 'Orgánica', retro: 'Retro', corporate: 'Corporativa',
-  playful: 'Lúdica', mono: 'Monocromo', gradient: 'Degradé', cinematic: 'Cinemática'
+  playful: 'Lúdica', mono: 'Monocromo', gradient: 'Degradé', cinematic: 'Cinemática',
+  swiss: 'Suiza', magazine: 'Revista', pop: 'Pop', aurora: 'Aurora',
+  craft: 'Artesanal', nostalgia: 'Nostalgia', prestige: 'Prestigio', showcase: 'Showroom',
+  atelier: 'Atelier', terminal: 'Terminal', riso: 'Risografía', vitrina: 'Vitrina',
+  cobre: 'Cobre', lumen: 'Lumen'
 }
 const FAMILY_COLORS = {
   glass: '#38bdf8', editorial: '#334155', brutal: '#111827', tech: '#0ea5e9',
   warm: '#f97316', luxury: '#a16207', kinetic: '#ec4899', paper: '#c9b892', neon: '#84cc16',
   minimal: '#64748b', organic: '#16a34a', retro: '#e11d48', corporate: '#1d4ed8',
-  playful: '#f59e0b', mono: '#475569', gradient: '#8b5cf6', cinematic: '#0f766e'
+  playful: '#f59e0b', mono: '#475569', gradient: '#8b5cf6', cinematic: '#0f766e',
+  swiss: '#0f172a', magazine: '#7c2d12', pop: '#db2777', aurora: '#6366f1',
+  craft: '#8a4b28', nostalgia: '#a855f7', prestige: '#1c1917', showcase: '#0f766e',
+  atelier: '#b91c1c', terminal: '#22d3ee', riso: '#e11d48', vitrina: '#1d4ed8',
+  cobre: '#b45309', lumen: '#e2b04a'
 }
 // Tamaño relativo de cada rol (los tokens son xs..display; acá se achican
 // para que los tres "Aa" entren en una tira sin dominar la tarjeta).
