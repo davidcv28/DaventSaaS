@@ -82,7 +82,7 @@ const MUST_HAVE = [
 const STEP_TITLES = ['A qué te dedicás', 'Qué querés lograr', 'Cómo se siente', 'Tu marca', 'Qué no puede faltar', 'Tus propuestas']
 
 const EMPTY = () => ({
-  rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [],
+  rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [], content_hint: '',
   brand_color: '', night_mode: { enabled: false, default: 'light' }, cover_choice: 'auto', use_icons: true,
   accept_extras: true
 })
@@ -203,6 +203,7 @@ function hydrate() {
       : []
     answers.audience = typeof saved.audience === 'string' ? saved.audience : base.audience
     answers.must_have = Array.isArray(saved.must_have) ? saved.must_have.filter((m) => MUST_HAVE.some((o) => o.id === m)) : []
+    answers.content_hint = typeof saved.content_hint === 'string' ? saved.content_hint.slice(0, 160) : ''
     answers.brand_color = /^#[0-9a-f]{6}$/i.test(saved.brand_color || '') ? saved.brand_color.toLowerCase() : ''
     const nm = saved.night_mode
     answers.night_mode = (nm && typeof nm === 'object')
@@ -225,6 +226,23 @@ function persist() {
 
 watch(answers, persist, { deep: true })
 watch(storageKey, () => { if (storeId.value && !hydrated.value) hydrate() }, { immediate: true })
+
+// ---------- Telemetría del funnel (5.1) ----------
+// Fire-and-forget: si falla (offline, throttle) la sección sigue igual.
+const sessionId = (() => {
+  try {
+    const key = 'davent:ai-design:session'
+    let id = sessionStorage.getItem(key)
+    if (!id) {
+      id = String(crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`).slice(0, 40)
+      sessionStorage.setItem(key, id)
+    }
+    return id
+  } catch { return '' }
+})()
+function track(action, extra = {}) {
+  storesApi.aiDesignEvent({ session: sessionId, action, step: progressStep.value, ...extra }).catch(() => {})
+}
 
 // ---------- Preview ----------
 const HEX_RE = /^#[0-9a-f]{6}$/i
@@ -283,6 +301,8 @@ function payload(extra = {}) {
   if (tone) p.tone = tone
   if (answers.audience) p.audience = answers.audience
   if (answers.must_have.length) p.must_have = [...answers.must_have]
+  const hint = String(answers.content_hint || '').trim()
+  if (hint) p.content_hint = hint.slice(0, 160)
   p.brand_color = answers.brand_color || ''
   p.night_mode = {
     enabled: Boolean(answers.night_mode.enabled),
@@ -326,6 +346,7 @@ async function generate(extra = {}, useAnswers = true, opts = {}) {
     missing.value = Array.isArray(data.missing) ? data.missing : []
     proposals.value = data.proposals
     phase.value = 'results'
+    track('generate', { meta: { rubro: answers.rubro, goal: answers.goals[0] || '', tone: resolvedTone() || '', count: data.proposals.length } })
     await nextTick()
     resultsRef.value?.querySelector('.aidp')?.focus?.()
   } catch (e) {
@@ -341,16 +362,21 @@ async function generate(extra = {}, useAnswers = true, opts = {}) {
 }
 
 function next() {
+  track('step_done', { step: stepIndex.value })
   if (stepIndex.value < 5) stepIndex.value += 1
   else generate()
 }
 function back() {
-  if (stepIndex.value > 1) stepIndex.value -= 1
+  if (stepIndex.value > 1) {
+    track('step_abandon', { step: stepIndex.value })
+    stepIndex.value -= 1
+  }
 }
 function decideForMe() {
   generate({}, false)
 }
 function anotherStyle() {
+  track('explore', { meta: { count: proposals.value.length } })
   generate({ seed: (seed.value || 0) + 1 }, true, { keepPublished: true })
 }
 function redoWithPhotos() {
@@ -401,6 +427,10 @@ async function apply({ proposal, autofill, extras }) {
     published.value = { id: proposal.id, label: proposal.label }
     publishedSnapshot.value = proposal
     browsing.value = false
+    track('apply', {
+      proposal_id: proposal.id,
+      meta: { template: proposal.template, family: proposal.skin?.family || '', style: proposal.variety?.style || '' }
+    })
     emit('applied', { action: 'publish' })
   } catch (e) {
     actionError.value = e?.response?.data?.detail || 'No pudimos establecer el estilo. Probá de nuevo.'
@@ -461,6 +491,17 @@ function closePreview() {
           <div class="aid-fields">
             <AiSelect v-model="answers.tone" :options="TONES" label="Estilo" placeholder="Elegí un estilo" />
             <AiSelect v-model="answers.audience" :options="AUDIENCES" label="A quién le hablás" placeholder="¿A quién le hablás?" />
+            <div class="aid-field">
+              <p class="aid-field-title">Contanos tu negocio en dos líneas <span class="aid-optional">Opcional</span></p>
+              <textarea
+                v-model="answers.content_hint"
+                class="aid-input"
+                rows="3"
+                maxlength="160"
+                placeholder="Ej.: panadería de barrio, hacemos pan de masa madre y tortas por encargo."
+              ></textarea>
+              <p class="aid-hints-note">Lo usamos para escribir mejor el texto de la web. No inventamos datos: solo lo que nos contás.</p>
+            </div>
             <div class="aid-field">
               <p class="aid-field-title">¿Qué te importa más? <span class="aid-optional">Opcional</span></p>
               <p class="aid-hints-note">Elegí hasta dos. Nos ayuda a que tu estilo no se parezca a otro.</p>

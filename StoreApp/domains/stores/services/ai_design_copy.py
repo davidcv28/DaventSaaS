@@ -129,6 +129,38 @@ RUBRO_COPY                  =   {
     },
 }
 
+#A quién le habla la web (paso 3 de la entrevista). Nunca reemplaza al
+#rubro: suma una línea a la descripción y un cierre de CTA coherente. Sin
+#audiencia elegida no se agrega nada (comportamiento histórico).
+AUDIENCE_COPY               =   {
+    'particulares': {
+        'line':     'Pensado para que elijas rápido y sin vueltas.',
+        'cta_text': 'Escribinos y te respondemos con lo que necesitás.',
+    },
+    'empresas': {
+        'line':     'Trabajamos con empresas y equipos, con propuestas claras.',
+        'cta_text': 'Pedinos una propuesta con detalle: te respondemos con alcance y tiempos.',
+    },
+    'ambas': {
+        'line':     'Atendemos a personas y a empresas por igual.',
+        'cta_text': 'Escribinos contando si es para vos o para tu empresa: te respondemos igual.',
+    },
+}
+
+#Lo que el dueño escribió en "contanos tu negocio" viaja como texto, nunca
+#como HTML: se normaliza, se descarta si parece marcado y se recorta.
+_HINT_BAD                   =   ('<', '>', '{', '}', '`', '\\')
+
+
+def _clean_hint(raw):
+    text    =   ' '.join(str(raw or '').split())
+    if len(text) < 12 or any(token in text for token in _HINT_BAD):
+        return ''
+    if not any(char.isalpha() for char in text):
+        return ''
+    return _clip(text, 160).rstrip(' .,;:')
+
+
 #Apertura y cierre de la descripción según el tono elegido. El cuerpo es
 #siempre el mismo (datos reales); lo que cambia es cómo se dice.
 TONE_COPY                   =   {
@@ -217,15 +249,18 @@ def _context(store, customization, rubro, facts, stats):
     }
 
 
-def build(store, customization, rubro, tone, facts, stats, rng):
+def build(store, customization, rubro, tone, facts, stats, rng, audience = '', hint = ''):
     """
     Copy de la propuesta: {headline, description, cta_title, cta_text,
     cta_label}. Todo sale de plantillas + datos reales; la semilla solo
-    elige entre variantes igual de válidas.
+    elige entre variantes igual de válidas. `audience` y `hint` (texto
+    libre de la entrevista) suman contexto, nunca datos inventados.
     """
     copy    =   RUBRO_COPY.get(rubro) or RUBRO_COPY['otro']
     flavor  =   TONE_COPY.get(tone) or TONE_COPY['moderno']
     ctx     =   _context(store, customization, rubro, facts, stats)
+    audience_copy   =   AUDIENCE_COPY.get(audience) or {}
+    hint_text       =   _clean_hint(hint)
 
     headline    =   rng.choice(copy['headlines']).format(**ctx)
     #El titular con solo el nombre se queda corto: le sumamos el rubro.
@@ -233,6 +268,10 @@ def build(store, customization, rubro, tone, facts, stats, rng):
         headline    =   f"{ctx['name']}: {copy['what']} con atención directa{ctx['place']}"
 
     parts       =   [flavor['open'].format(**ctx) + ctx['city_clause'] + ctx['years_clause'] + ctx['spec_clause'] + '.']
+    if audience_copy.get('line'):
+        parts.append(audience_copy['line'])
+    if hint_text:
+        parts.append(hint_text + '.')
     parts.append(copy['service_line'].format(**ctx))
     if facts.get('products'):
         parts.append(f'Hoy tenemos {ctx["products"]} {copy["what"]} publicados en el catálogo.')
@@ -248,7 +287,7 @@ def build(store, customization, rubro, tone, facts, stats, rng):
         'headline'      :   _clip(headline, _HEADLINE_MAX),
         'description'   :   _clip(' '.join(parts), _DESCRIPTION_MAX),
         'cta_title'     :   _clip(copy['cta_title'], _CTA_TITLE_MAX),
-        'cta_text'      :   _clip(copy['cta_text'], _CTA_TEXT_MAX),
+        'cta_text'      :   _clip(audience_copy.get('cta_text') or copy['cta_text'], _CTA_TEXT_MAX),
         'cta_label'     :   _clip(copy['cta_label'], _CTA_LABEL_MAX),
     }
 

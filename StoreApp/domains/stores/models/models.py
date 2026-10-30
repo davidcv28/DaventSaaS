@@ -550,6 +550,35 @@ class StoreDailyVisit(models.Model):
         ]
     def __str__(self):
         return f'{self.store.slug}@{self.date}:{self.count}'
+
+
+class AiDesignEvent(models.Model):
+    """
+    Telemetría del funnel de "Diseñar con IA" (5.1): un evento por acción
+    del dueño, sin PII — solo ids, paso y metadatos cortos. Permite
+    responder abandono por paso, generaciones por sesión, "ver otro
+    estilo", aplicar y feedback sin depender de herramientas externas.
+    """
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'ai_design_events')
+    session                     =   models.CharField(max_length = 40, blank = True, verbose_name = 'Sesión')
+    step                        =   models.PositiveSmallIntegerField(null = True, blank = True, verbose_name = 'Paso')
+    action                      =   models.CharField(max_length = 32, verbose_name = 'Acción')
+    proposal_id                 =   models.CharField(max_length = 16, blank = True, verbose_name = 'Propuesta')
+    meta                        =   models.JSONField(default = dict, blank = True, verbose_name = 'Metadatos')
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Evento de Diseñar con IA'
+        verbose_name_plural     =   'Eventos de Diseñar con IA'
+        ordering                =   ['-created_at']
+        indexes                 =   [
+            models.Index(fields = ['store', '-created_at'], name = 'idx_aidesign_store_date'),
+            models.Index(fields = ['action', 'created_at'], name = 'idx_aidesign_action_date'),
+        ]
+    def __str__(self):
+        return f'{self.store_id}:{self.action}@{self.created_at:%Y-%m-%d}'
+
+
 #=========================================
 # PUBLIC CACHE BUST (ver public_cache.py: las ediciones del dueño se ven
 # al instante en su web pública — el payload no queda servido viejo)

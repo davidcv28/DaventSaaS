@@ -755,6 +755,51 @@ BLOCK_GATES                 =   {
     },
 }
 
+#Pasos de la entrevista (mismo orden que la UI): los usa la telemetría
+#para informar abandono por paso sin traducir ids a mano.
+STEP_LABELS                 =   (
+    'A qué te dedicás',
+    'Qué querés lograr',
+    'Cómo se siente',
+    'Tu marca',
+    'Qué no puede faltar',
+    'Tus propuestas',
+)
+
+#=========================================
+# ENTREVISTA -> BLOQUES (contrato §2.1)
+#=========================================
+#La UI pregunta en lenguaje del dueño ("¿Qué no puede faltar?") y manda ids
+#de DESEO; el motor compone con ids de BLOQUE. Este mapa es la única
+#traducción válida: lo que no está acá no se inventa. Un deseo puede tocar
+#más de un bloque (WhatsApp = contacto + cierre).
+MUST_HAVE_BLOCKS            =   {
+    'whatsapp':     ('contact', 'cta'),
+    'hours':        ('contact',),
+    'map':          ('contact',),
+    'prices':       ('offers',),
+    'testimonials': ('testimonials',),
+    'faqs':         ('faq',),
+}
+#Etiquetas humanas para `notes` (nunca el id crudo del bloque).
+MUST_HAVE_LABELS            =   {
+    'whatsapp':     'Botón de WhatsApp',
+    'hours':        'Horarios',
+    'map':          'Mapa y dirección',
+    'prices':       'Precios',
+    'testimonials': 'Opiniones de clientes',
+    'faqs':         'Preguntas frecuentes',
+}
+#Dato real que habilita el bloque pedido: sin esto la sección queda
+#apagada (regla 2.5, nunca una sección que mienta). `()` = siempre.
+MUST_HAVE_DATA              =   {
+    'contact':      ('contact', 'hours'),
+    'cta':          (),
+    'offers':       ('offers',),
+    'testimonials': ('testimonials',),
+    'faq':          ('faqs',),
+}
+
 #Bloques que, si tienen datos, no deberían quedar fuera aunque la receta
 #del objetivo no los mencione (el motor los agrega al final del grupo).
 BLOCK_FALLBACKS             =   {

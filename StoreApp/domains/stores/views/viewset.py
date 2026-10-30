@@ -72,6 +72,9 @@ from StoreApp.domains.stores.services.ai_design import (
 from StoreApp.domains.stores.services.ai_design import (
     generate as generate_ai_design,
 )
+from StoreApp.domains.stores.services.ai_design_telemetry import (
+    record_event as record_ai_design_event,
+)
 
 from .viewset_base import StoreBaseViewSet
 from .viewset_config import StoreConfigs
@@ -964,6 +967,17 @@ class StoreViewSet(StoreBaseViewSet):
             },
             status = status.HTTP_200_OK,
         )
+
+    @action(detail = False, methods = ['post'], url_path = 'ai-design/event', throttle_classes = [AiDesignThrottle])
+    def ai_design_event(self, request):
+        #Telemetría del funnel (5.1): sin gate de plan a propósito — si el
+        #dueño perdió el beneficio igual queremos saber dónde abandonó.
+        store       =   get_object_or_404(Store, user__user = request.user)
+        try:
+            record_ai_design_event(store, request.data)
+        except ValueError as error:
+            return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return Response({'ok': True}, status = status.HTTP_200_OK)
 
     @action(detail = False, methods = ['post'], url_path = 'ai-design/image', throttle_classes = [AiDesignImageThrottle])
     def ai_design_image(self, request):

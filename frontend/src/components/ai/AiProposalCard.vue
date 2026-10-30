@@ -101,12 +101,17 @@ const changed = computed(() => {
 const score = computed(() => {
   const raw = props.proposal.score
   if (!raw || typeof raw !== 'object') return null
+  const todo = Array.isArray(raw.todo) ? raw.todo.filter((i) => typeof i === 'string' && i.trim()).slice(0, 3) : []
+  // Sin datos suficientes el backend manda total null: no se inventa un número.
+  if (raw.total == null) {
+    return todo.length ? { total: null, label: String(raw.label || 'Faltan datos'), level: 0, issues: [], todo } : null
+  }
   const total = Number(raw.total)
   if (!Number.isFinite(total)) return null
-  const label = total >= 90 ? 'Excelente' : total >= 80 ? 'Muy bueno' : total >= 70 ? 'Bueno' : 'Aceptable'
-  const level = total >= 90 ? 3 : total >= 75 ? 2 : 1
+  const label = String(raw.label || '').trim() || (total >= 90 ? 'Excelente' : total >= 80 ? 'Muy bueno' : total >= 70 ? 'Bueno' : 'Aceptable')
+  const level = total >= 85 ? 3 : total >= 70 ? 2 : 1
   const issues = Array.isArray(raw.issues) ? raw.issues.filter((i) => typeof i === 'string' && i.trim()).slice(0, 2) : []
-  return { total, label, level, issues }
+  return { total, label, level, issues, todo }
 })
 
 const nightMode = computed(() => props.proposal.night_mode || null)
@@ -311,6 +316,11 @@ watch(
       </span>
       <span class="aidp-score-text">Se ve así de bien: <strong>{{ score.label }}</strong></span>
       <small v-for="(issue, k) in score.issues" :key="`i${k}`" class="aidp-score-issue">{{ issue }}</small>
+      <ul v-if="score.todo.length" class="aidp-score-todo">
+        <li v-for="(item, k) in score.todo" :key="`t${k}`">
+          <AppIcon name="arrow-up-right" :size="12" aria-hidden="true" /> {{ item }}
+        </li>
+      </ul>
     </div>
 
     <!-- Extras: chips con Quitar (aplicados) / Sumar (ofrecidos) y "N de 4". -->

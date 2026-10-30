@@ -1,4 +1,5 @@
 from .models import (
+    AiDesignEvent,
     Store,
     StoreCarouselImage,
     StoreChatbot,

@@ -122,6 +122,11 @@ def _facts(store, customization):
         'gallery'       :   store.gallery_images.count(),
         'carousel'      :   store.carousel_images.count(),
         'offers'        :   products.exclude(offer_price__isnull = True).count(),
+        #Horarios y domicilio son datos de la ficha, no del catálogo: el
+        #bloque de contacto los usa y la regla 2.5 apaga la sección si no
+        #están (nunca una web que prometa horarios que no existen).
+        'hours'         :   len(customization.hours or []) if customization.show_hours else 0,
+        'location'      :   bool(getattr(store.user, 'address', '') and customization.show_location),
         #Cuánto texto real hay cargado: una web con relato pide una
         #plantilla con más libertad tipográfica (los ai_*).
         'text_chars'    :   len(customization.about_text or '') + len(customization.description or '') + sum(
@@ -146,7 +151,10 @@ def _facts(store, customization):
         'highlights'    :   stats['products'] >= 3 or bool(customization.about_specialties),
         'about'         :   bool(customization.about_text or customization.about_specialties or customization.about_years),
         'services'      :   bool(customization.services) and customization.show_services,
-        'stats'         :   bool(customization.stats) and customization.show_stats,
+        'stats'         :   bool(customization.stats) and customization.show_stats and any(
+            isinstance(row, dict) and any(str(value or '').strip() for value in row.values())
+            for row in (customization.stats or [])
+        ),
         'benefits'      :   bool(customization.benefits) and customization.show_benefits,
         'timeline'      :   bool(customization.timeline) and customization.show_timeline,
         'team'          :   bool(customization.team) and customization.show_team,
@@ -397,7 +405,19 @@ def _answers(store, customization, payload, stats):
     goals       =   [goal for goal in (payload.get('goals') or []) if goal in R.GOALS][:2]
     if not goals:
         goals   =   _guess_goals(customization, stats)
-    must_have   =   [block for block in (payload.get('must_have') or []) if block in TEMPLATE_BLOCKS['landing']]
+    #"¿Qué no puede faltar?" viaja con ids de DESEO (whatsapp, hours, map…):
+    #el mapa de recipes los traduce a bloques reales. Un id de bloque
+    #histórico se acepta tal cual (clientes viejos).
+    must_asked  =   []
+    for option in (payload.get('must_have') or []):
+        if option in R.MUST_HAVE_BLOCKS or option in TEMPLATE_BLOCKS['landing']:
+            if option not in must_asked:
+                must_asked.append(option)
+    must_have   =   []
+    for option in must_asked:
+        for block in R.MUST_HAVE_BLOCKS.get(option, (option,)):
+            if block in TEMPLATE_BLOCKS['landing'] and block not in must_have:
+                must_have.append(block)
     #Estilos pedidos (opcional): se priorizan, nunca se imponen — si el plan
     #no permite la plantilla del estilo, el motor cae al siguiente.
     styles      =   []
@@ -440,6 +460,7 @@ def _answers(store, customization, payload, stats):
         'tone'          :   tone,
         'goals'         :   goals,
         'must_have'     :   must_have,
+        'must_have_asked':  must_asked,
         'styles'        :   styles[:3],
         'audience'      :   str(payload.get('audience') or '').strip()[:120],
         'brand_color'   :   brand_color,
@@ -461,7 +482,10 @@ def _base_seed(store, answers):
     #sha256(store, respuestas normalizadas, versión del motor): dos tiendas
     #con la misma entrevista no salen iguales y la misma tienda sí.
     raw     =   json.dumps(
-        {'store': store.pk, 'answers': answers, 'engine': ENGINE_VERSION},
+        #`must_have_asked` es bookkeeping de la entrevista (para notes): no
+        #compone, así que no entra en la semilla. Cambiarlo no debe cambiar
+        #la propuesta de una tienda que no pidió nada.
+        {'store': store.pk, 'answers': {key: value for key, value in answers.items() if key != 'must_have_asked'}, 'engine': ENGINE_VERSION},
         sort_keys = True, ensure_ascii = False,
     )
     return int(hashlib.sha256(raw.encode('utf-8')).hexdigest()[:12], 16)
@@ -1008,7 +1032,19 @@ def _variant_for(surface, block_id, answers, rng, shift, pattern = None):
     return pool[rng.randrange(len(pool))]
 
 
-def _build_surface(surface, facts, answers, rng, shift, pattern = None):
+def _must_have_has_data(block_id, facts, stats):
+    """¿El bloque pedido en la entrevista tiene con qué mostrarse?"""
+    gates   =   R.MUST_HAVE_DATA.get(block_id)
+    if gates is None:
+        return False
+    if any(facts.get(gate) for gate in gates):
+        return True
+    #El contacto también se sostiene con horarios cargados (la tarjeta los
+    #muestra aunque no haya WhatsApp ni mapa).
+    return block_id == 'contact' and bool(stats.get('hours'))
+
+
+def _build_surface(surface, facts, answers, rng, shift, pattern = None, stats = None):
     order, off      =   _order_for(surface, answers, pattern, shift)
     density         =   _density_off(answers) if surface == 'landing' else set()
     blocks          =   []
@@ -1026,6 +1062,11 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         #Lo que el cliente destacó tampoco se apaga.
         if block_id in density and gate is not None and block_id not in _selection_ids(answers, 'highlight'):
             enabled =   False
+        #Lo que el dueño pidió explícitamente gana sobre la densidad del
+        #tono, nunca sobre el dato: sin contenido real el bloque sigue
+        #apagado (regla 2.5).
+        if surface == 'landing' and block_id in set(answers.get('must_have') or ()):
+            enabled =   enabled or _must_have_has_data(block_id, facts, stats or {})
         block   =   {'id': block_id, 'enabled': enabled}
         variant =   _variant_for(surface, block_id, answers, rng, shift, pattern)
         if variant:
@@ -1269,10 +1310,10 @@ def _enforce_hierarchy(blocks):
     return head + middle + social + cta + tail
 
 
-def _layout(store, facts, answers, rng, shift, pattern = None):
+def _layout(store, facts, answers, rng, shift, pattern = None, stats = None):
     layout  =   {}
     for surface in ('landing', 'catalog', 'services'):
-        layout[surface] =   _build_surface(surface, facts, answers, rng, shift, pattern)
+        layout[surface] =   _build_surface(surface, facts, answers, rng, shift, pattern, stats)
     return layout
 
 
@@ -1378,7 +1419,14 @@ def _frontend_only_variant(surface, block_id):
     return (surface, block_id) in _FRONTEND_VARIANTS
 
 
-def _apply_skin_layout(layout, skin, facts):
+def _hero_title_len(customization):
+    """Largo del título real que la portada tiene que sostener."""
+    if customization is None:
+        return 0
+    return len(str(customization.headline or customization.display_name or '').strip())
+
+
+def _apply_skin_layout(layout, skin, facts, customization = None):
     """
     Rediseño completo: la portada, la vitrina, la grilla del catálogo y la
     firma del resto de los bloques (landing, catálogo y servicios) toman la
@@ -1397,6 +1445,10 @@ def _apply_skin_layout(layout, skin, facts):
             if surface == 'landing' and block_id == 'hero':
                 if hero:
                     block['variant']    =   hero
+                #Un nombre largo rompe la portada centrada: se cambia de
+                #variante REAL del catálogo, nunca se recorta el nombre.
+                if block.get('variant') == 'centered' and _hero_title_len(customization) > 32:
+                    block['variant']    =   'compact'
                 continue
             if surface == 'landing' and block_id == 'featured':
                 block['variant']    =   featured
@@ -1412,6 +1464,22 @@ def _apply_skin_layout(layout, skin, facts):
             spec    =   TEMPLATE_BLOCKS[surface].get(block_id) or {}
             if wanted and (_frontend_only_variant(surface, block_id) or wanted in (spec.get('variants') or ())):
                 block['variant']    =   wanted
+    return layout
+
+
+def _apply_must_have_variants(layout, answers, stats):
+    """
+    Lo que el dueño pidió en la entrevista ajusta la VARIANTE, después de la
+    piel (que es la que fija la firma del layout): pedir mapa con domicilio
+    real deja el contacto en su variante `map`, que muestra dirección y
+    horarios. Sin domicilio no se fuerza nada (BlkContact ya cae a `card`).
+    """
+    asked   =   set(answers.get('must_have_asked') or ())
+    if not asked:
+        return layout
+    for block in (layout.get('landing') or {}).get('blocks', []):
+        if block['id'] == 'contact' and block.get('enabled') and 'map' in asked and stats.get('location'):
+            block['variant']    =   'map'
     return layout
 
 
@@ -1975,7 +2043,12 @@ def _why(answers, template, index, pattern = None):
     return f"Variante {R.TEMPLATE_LABELS.get(template, template)}: mismo contenido, otro ritmo de lectura y otro cierre."[:160]
 
 
-def _notes(facts, stats, answers, template, has_advanced):
+def _block_label(block_id):
+    spec    =   TEMPLATE_BLOCKS['landing'].get(block_id) or {}
+    return spec.get('label') or block_id
+
+
+def _notes(facts, stats, answers, template, has_advanced, layout = None):
     notes       =   []
     if stats['products']:
         notes.append(f"Tu catálogo tiene {stats['products']} productos: vitrina destacada y grilla en 3 columnas.")
@@ -1986,8 +2059,21 @@ def _notes(facts, stats, answers, template, has_advanced):
         notes.append('Falta ' + ' y '.join(MISSING_LABELS.get(key, key) for key in missing) + ': ese bloque queda apagado hasta que lo cargues.')
     if not has_advanced:
         notes.append('Tu plan no incluye los bloques premium: no los sumamos para que nada quede vacío.')
-    if answers['must_have']:
-        notes.append('Respetamos lo que pediste: ' + ', '.join(answers['must_have']) + '.')
+    #Lo pedido en la entrevista se informa con etiquetas humanas y solo si
+    #de verdad entró (o explicando por qué no): nunca ids crudos ni una
+    #promesa que el layout no cumple.
+    asked       =   answers.get('must_have_asked') or []
+    if asked:
+        enabled =   {block['id'] for block in ((layout or {}).get('landing') or {}).get('blocks', []) if block.get('enabled')}
+        done, pending =   [], []
+        for option in asked:
+            blocks  =   R.MUST_HAVE_BLOCKS.get(option, (option,))
+            label   =   R.MUST_HAVE_LABELS.get(option) or _block_label(option)
+            (done if any(block in enabled for block in blocks) else pending).append(label)
+        if done:
+            notes.append('Respetamos lo que pediste: ' + ', '.join(done) + '.')
+        if pending:
+            notes.append('Pediste ' + ', '.join(pending) + ': falta el dato, así que esa sección queda apagada hasta que lo cargues.')
     return notes[:4]
 
 
@@ -2097,12 +2183,16 @@ _GRID_LABELS    =   {
 }
 
 
-def _score(theme, clean_theme, has_advanced):
+def _score(theme, clean_theme, has_advanced, facts = None, stats = None, answers = None, layout = None, text = None):
     """
-    Calidad medible de la propuesta: contraste REAL de los cinco pares del
-    tema emitido (los que la web pinta), no una estimación. Las propuestas se
-    emiten ya corregidas, así que contrast sale 100 salvo un dato corrupto.
+    Calidad MEDIBLE de la propuesta (contrato §2.2): cuatro partes con
+    información real — datos del negocio, densidad de secciones, copy y
+    fotos — más el contraste efectivo de los pares que la web pinta. Si la
+    tienda no tiene ningún dato, no se inventa un número (`total: None`).
     """
+    facts   =   facts or {}
+    stats   =   stats or {}
+    text    =   text or {}
     palette =   theme['palette']
     sets        =   theme.get('styleColors') or {}
     pairs       =   [
@@ -2124,15 +2214,94 @@ def _score(theme, clean_theme, has_advanced):
     issues      =   []
     if fail:
         issues.append('Algún texto no alcanza el contraste mínimo: lo corregimos al aplicar.')
-    hierarchy   =   round((contrast + 94) / 2)
-    harmony     =   round((contrast + 90) / 2)
-    fit         =   95 if has_advanced else 88
+    #Datos: lo que la web puede afirmar hoy, sin inventar nada.
+    checks  =   (
+        ('products',    stats.get('products', 0) > 0),
+        ('photos',      stats.get('images', 0) >= 3 or stats.get('gallery', 0) >= 3),
+        ('categories',  stats.get('categories', 0) >= 2),
+        ('about',       bool(facts.get('about'))),
+        ('services',    bool(facts.get('services'))),
+        ('contact',     bool(facts.get('contact')) or bool(stats.get('hours'))),
+        ('trust',       bool(facts.get('testimonials')) or bool(facts.get('faqs'))),
+        ('hours',       bool(stats.get('hours'))),
+    )
+    data        =   int(round(100 * sum(1 for _, ok in checks if ok) / len(checks)))
+    #Densidad: cuántas secciones frente a cuánto contenido hay. El ideal
+    #crece con los datos: una tienda vacía no necesita 9 bloques.
+    enabled     =   [block for block in ((layout or {}).get('landing') or {}).get('blocks', []) if block.get('enabled')]
+    ideal       =   4 + int(round(data / 100 * 4))
+    density     =   max(0, 100 - 12 * abs(len(enabled) - ideal))
+    #Copy: el titular y la descripción que de verdad se van a publicar.
+    headline    =   str(text.get('headline') or '')
+    description =   str(text.get('description') or '')
+    cta         =   str(text.get('cta_label') or '')
+    copy_score  =   100
+    if len(headline) < 18 or len(headline) > 70:
+        copy_score  -=   25
+    if len(description) < 80:
+        copy_score  -=   25
+    if len(description) > 600:
+        copy_score  -=   15
+    if not cta:
+        copy_score  -=   20
+    copy_score  =   max(0, copy_score)
+    #Fotos: lo que hace que la web no se vea vacía.
+    assets      =   0
+    if stats.get('images', 0) >= 3:
+        assets  +=  45
+    elif stats.get('images', 0):
+        assets  +=  25
+    if stats.get('gallery', 0) >= 3:
+        assets  +=  35
+    elif stats.get('gallery', 0):
+        assets  +=  20
+    if facts.get('cover'):
+        assets  +=  20
+    assets      =   min(100, assets)
+    parts       =   {'data': data, 'density': density, 'copy': copy_score, 'assets': assets}
+    signal      =   any((
+        stats.get('products'), stats.get('images'), stats.get('gallery'),
+        stats.get('categories'), stats.get('text_chars'), any(facts.values()),
+    ))
+    total       =   int(round((data + density + copy_score + assets) / 4 * 0.75 + contrast * 0.25)) if signal else None
+    if total is None:
+        label   =   'Faltan datos'
+    elif total >= 85:
+        label   =   'Excelente'
+    elif total >= 70:
+        label   =   'Muy buena'
+    elif total >= 55:
+        label   =   'Buena'
+    else:
+        label   =   'Mejorable'
+    #"Qué falta para subir": acciones concretas, nunca una nota genérica.
+    todo        =   []
+    if not stats.get('images') and not stats.get('gallery'):
+        todo.append('Subí 3 fotos de tu local o de tus productos.')
+    elif not facts.get('cover'):
+        todo.append('Elegí una foto de portada: es lo primero que se ve.')
+    if not facts.get('about'):
+        todo.append('Completá "Sobre nosotros" con dos líneas de tu negocio.')
+    if not facts.get('contact') and not stats.get('hours'):
+        todo.append('Agregá tu WhatsApp o tu email para que te puedan escribir.')
+    if not stats.get('hours'):
+        todo.append('Cargá tus horarios: la sección de contacto los muestra.')
+    if not facts.get('faqs'):
+        todo.append('Sumá dos preguntas frecuentes: responden antes de la consulta.')
+    if not facts.get('testimonials'):
+        todo.append('Cargá una opinión de cliente como testimonio.')
+    if not stats.get('products'):
+        todo.append('Cargá tus productos o servicios: hoy la web no tiene qué mostrar.')
+    if copy_score < 80:
+        todo.append('Revisá el titular: que se entienda qué hacés en una línea.')
+    if density < 70:
+        todo.append('Ajustá cuántas secciones mostrar: hay bloques de más para el contenido que tenés.')
     return {
         'contrast'  :   contrast,
-        'harmony'   :   harmony,
-        'hierarchy' :   hierarchy,
-        'fit'       :   fit,
-        'total'     :   int(round((contrast + harmony + hierarchy + fit) / 4)),
+        'total'     :   total,
+        'label'     :   label,
+        'parts'     :   parts,
+        'todo'      :   todo[:4],
         'issues'    :   issues,
     }
 
@@ -2278,8 +2447,9 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         extras_composed =   []
         for attempt in range(4):
             extras_composed =   []
-            layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern)
-            layout  =   _apply_skin_layout(layout, skin, facts)
+            layout  =   _layout(store, facts, answers, rng, shift + attempt, pattern, stats)
+            layout  =   _apply_skin_layout(layout, skin, facts, customization)
+            layout  =   _apply_must_have_variants(layout, answers, stats)
             layout, extras, extras_items    =   _add_elements(
                 layout, customization, facts, stats, answers, use_icons, has_ai, extras_composed,
             )
@@ -2308,7 +2478,11 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         if block_styles:
             theme['blocks'] =   block_styles
         night, theme_mode, theme_toggle =   _resolve_night(answers, theme, template)
-        text    =   ai_design_copy.build(store, customization, answers['rubro'], answers['tone'], facts, stats, rng)
+        text    =   ai_design_copy.build(
+            store, customization, answers['rubro'], answers['tone'], facts, stats, rng,
+            audience    =   answers.get('audience') or '',
+            hint        =   answers.get('content_hint') or '',
+        )
         clean_theme     =   clean_site_theme(
             theme,
             has_plus        =   has_plus,
@@ -2330,7 +2504,7 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             #qué le cambió respecto de lo que el dueño ya tenía.
             'look'          :   _look(skin, pair, theme, layout, template),
             #Calidad medible de la propuesta (contraste real, no estimado).
-            'score'         :   _score(theme, clean_theme, has_advanced),
+            'score'         :   _score(theme, clean_theme, has_advanced, facts, stats, answers, layout, text),
             #v6 — elementos extra: `offered` con el detalle legible de cada
             #uno (label/why/needs + bloque con su contenido armado por el
             #motor), lo que ya viaja en el layout (`applied`) y lo que el
@@ -2367,7 +2541,7 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'theme'         :   theme_mode,
             'theme_toggle'  :   theme_toggle,
             'copy'          :   text,
-            'notes'         :   _notes(facts, stats, answers, template, has_advanced) + _contrast_notes(theme['palette']),
+            'notes'         :   _notes(facts, stats, answers, template, has_advanced, layout) + _contrast_notes(theme['palette']),
             'copy_draft'    :   ai_design_copy.draft_business_fields(store, customization, answers['rubro'], answers['tone'], facts, stats, rng),
             'image_requests':   _image_requests(stats, layout),
         })

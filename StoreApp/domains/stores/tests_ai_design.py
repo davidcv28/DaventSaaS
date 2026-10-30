@@ -483,9 +483,13 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         store, _    =   self._store(products = 6)
         for proposal in self._proposals(store):
             score   =   proposal['score']
-            self.assertEqual(set(score), {'contrast', 'harmony', 'hierarchy', 'fit', 'total', 'issues'})
+            self.assertEqual(set(score), {'contrast', 'total', 'label', 'parts', 'todo', 'issues'})
+            self.assertEqual(set(score['parts']), {'data', 'density', 'copy', 'assets'})
             self.assertEqual(score['contrast'], 100, proposal['id'])
-            self.assertTrue(score['total'] >= 80)
+            self.assertIsNotNone(score['total'])
+            self.assertTrue(55 <= score['total'] <= 100, score)
+            self.assertTrue(score['label'])
+            self.assertIsInstance(score['todo'], list)
             look    =   proposal['look']
             self.assertGreaterEqual(len(look['changed']), 3)
             self.assertEqual(look['accent'], proposal['site_theme']['palette']['accent'])

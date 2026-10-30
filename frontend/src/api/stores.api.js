@@ -239,6 +239,12 @@ export const storesApi = {
     return data
   },
 
+  // Telemetría del funnel (5.1): fire-and-forget, nunca bloquea la UI.
+  async aiDesignEvent(payload = {}) {
+    const { data } = await http.post('/stores/ai-design/event/', payload)
+    return data
+  },
+
   // Studio — flujo borrador → publicar: publish aplica los *_draft a la
   // web y guarda la versión; discard los vuelve a lo publicado; versions
   // lista el historial y restore recupera un snapshot; sharePreview emite

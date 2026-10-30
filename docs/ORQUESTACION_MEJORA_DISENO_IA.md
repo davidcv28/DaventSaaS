@@ -338,3 +338,18 @@ discrimina, cambios automáticos sin deshacer, layout generado por LLM.
 | 2 | 1.1, 1.2, 1.3, 2.1, 2.3, 3.1, 3.2, 3.4 | 4-6 semanas | `ai-design/9`, refine con delta verificado |
 | 3 | 4.1-4.5, 5.2-5.4, 1.4, 1.5, 2.2, 2.4, 3.3, 3.5 | 6-8 semanas | conversión por estilo medible |
 | 4 | 6.1 si y solo si los datos lo justifican | — | coste/beneficio documentado |
+
+---
+
+## 7. Estado de ejecución
+
+| Fase | Ítem | Estado | Evidencia |
+|---|---|---|---|
+| 0 | Contrato §2 | Hecho | `MUST_HAVE_BLOCKS`/`MUST_HAVE_DATA`/`STEP_LABELS` en `ai_design_recipes.py` |
+| 1 | 0.1 must_have real | Hecho | `_answers` + `_must_have_has_data` + `_apply_must_have_variants`; tests `MustHaveTests` |
+| 1 | 0.2 audience/content_hint | Hecho | `ai_design_copy.AUDIENCE_COPY`/`_clean_hint`; tests `CopyInputTests` |
+| 1 | 0.3 score honesto | Hecho | `_score` con `parts`/`todo`/`label` y `total: null` sin señal; tests `ScoreTests` |
+| 1 | 2.5 secciones honestas | Hecho | gates de `stats` con filas reales, hero `centered`→`compact`, notas con lo que falta; tests `HonestSectionsTests` |
+| 1 | 5.1 telemetría | Hecho | `AiDesignEvent` (mig. 0056) + `POST /api/stores/ai-design/event/` + `prune_ai_design_events`; tests `TelemetryTests` |
+| 1 | Q1 snapshots | Parcial | invariantes de layout + `snapshot_ai_design` para el golden set operativo |
+| 2-4 | restantes | Pendiente | — |
