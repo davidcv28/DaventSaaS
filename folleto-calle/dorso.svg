@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="105mm" height="148mm" viewBox="0 0 105 148">
+<title>DAVENT · folleto para la calle · dorso</title>
+<defs>
+  <radialGradient id="band" cx="100" cy="-2" r="120" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#8b5cf6"/>
+    <stop offset="0.42" stop-color="#6d28d9"/>
+    <stop offset="1" stop-color="#4338ca"/>
+  </radialGradient>
+  <linearGradient id="logoGradF" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#4338ca"/>
+  </linearGradient>
+  <linearGradient id="logoGradB" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#4338ca"/>
+  </linearGradient>
+  <linearGradient id="yellowBand" x1="6" y1="0" x2="99" y2="0" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fde047"/><stop offset="1" stop-color="#facc15"/>
+  </linearGradient>
+  <linearGradient id="topPlan" x1="6" y1="0" x2="99" y2="0" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#4338ca"/><stop offset="1" stop-color="#7c3aed"/>
+  </linearGradient>
+  <pattern id="dots" width="2.2" height="2.2" patternUnits="userSpaceOnUse">
+    <circle cx="0.5" cy="0.5" r="0.27" fill="#fff"/>
+  </pattern>
+  <clipPath id="clipHead"><rect x="0" y="0" width="105" height="58"/></clipPath>
+  <clipPath id="clipPromo"><rect x="6" y="99.2" width="93" height="14.2" rx="2.2"/></clipPath>
+  <clipPath id="clipCta"><rect x="0" y="117.4" width="105" height="30.6"/></clipPath>
+</defs>
+<rect width="105" height="148" fill="#fff"/>
+
+<!-- CABECERA -->
+<rect width="105" height="17.6" fill="url(#band)"/>
+<g clip-path="url(#clipHeadBack)">
+  <rect width="105" height="17.6" fill="url(#dots)" opacity="0.4"/>
+  <circle cx="99" cy="-8" r="15" fill="none" stroke="#fff" stroke-width="6" opacity="0.08"/>
+</g>
+<clipPath id="clipHeadBack"><rect width="105" height="17.6"/></clipPath>
+<g>
+    <rect x="6" y="4" width="8" height="8" rx="2.08" fill="#fff"/>
+    <g transform="translate(6.6 4.6) scale(0.17)">
+      <rect width="40" height="40" rx="10" fill="url(#logoGradB)"/>
+      <path d="M12 10h8.5c5.2 0 9 3.8 9 10s-3.8 10-9 10H12V10Z" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M12 20h8" stroke="#c7d2fe" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+<text x="16.6" y="10.4" font-family="Segoe UI Black" font-weight="400" font-size="3.387" fill="#fff" letter-spacing="0.61" text-anchor="start">DAVENT</text>
+<text x="16.6" y="13.4" font-family="Segoe UI" font-weight="700" font-size="1.693" fill="#cfc6ff" letter-spacing="0.237" text-anchor="start">TU NEGOCIO EN INTERNET</text>
+<rect x="74" y="6.0" width="25" height="5.8" rx="2.9" fill="none" stroke="#fde047" stroke-width="0.35" opacity="0.9"/>
+<text x="86.5" y="9.95" font-family="Segoe UI" font-weight="700" font-size="1.905" fill="#fde047" letter-spacing="0.267" text-anchor="middle">PLANES Y PRECIOS</text>
+
+<!-- TITULO -->
+<text x="6" y="25.8" font-family="Segoe UI Black" font-weight="400" font-size="5.292" fill="#1b1740" letter-spacing="-0.159" text-anchor="start">Elegí tu plan.</text>
+<text x="6" y="31.2" font-family="Segoe UI Black" font-weight="400" font-size="5.292" fill="#4338ca" letter-spacing="-0.159" text-anchor="start">Sin contratos.</text>
+<text x="6" y="35" font-family="Segoe UI" font-weight="400" font-size="2.364" fill="#5b5476" text-anchor="start">Pago mensual en pesos. Cambiás de plan o das de baja cuando quieras.</text>
+
+<!-- PLANES -->
+<g>
+    <rect x="6" y="38.2" width="93" height="16.4" rx="2.2" fill="#f8f6ff" stroke="#e7e1fb" stroke-width="0.35"/>
+    <text x="9" y="44.6" font-family="Segoe UI Black" font-weight="400" font-size="3.175" fill="#1b1740" text-anchor="start">Básico</text>
+    
+    <text x="9" y="49.1" font-family="Segoe UI" font-weight="400" font-size="2.187" fill="#5b5476" text-anchor="start">Web con catálogo · hasta 100 productos · estadísticas</text>
+    <text x="96" y="46.3" font-family="Segoe UI Black" font-weight="400" font-size="3.739" fill="#4338ca" text-anchor="end">$25.000</text>
+    <text x="96" y="50.1" font-family="Segoe UI" font-weight="700" font-size="1.976" fill="#7a7295" text-anchor="end">/mes</text>
+  </g>
+<g>
+    <rect x="6" y="56.5" width="93" height="16.4" rx="2.2" fill="url(#topPlan)" />
+    <text x="9" y="62.9" font-family="Segoe UI Black" font-weight="400" font-size="3.175" fill="#fff" text-anchor="start">Estándar</text>
+    <rect x="24.558" y="60.5" width="16.483" height="3.5" rx="1.75" fill="#fde047"/>
+    <text x="32.8" y="62.95" font-family="Segoe UI" font-weight="700" font-size="1.729" fill="#1b1740" letter-spacing="0.138" text-anchor="middle">MÁS ELEGIDO</text>
+    <text x="9" y="67.4" font-family="Segoe UI" font-weight="400" font-size="2.187" fill="#dcd5ff" text-anchor="start">+ QR, folletos, mapa y página de servicios</text>
+    <text x="96" y="64.6" font-family="Segoe UI Black" font-weight="400" font-size="3.739" fill="#fde047" text-anchor="end">$30.000</text>
+    <text x="96" y="68.4" font-family="Segoe UI" font-weight="700" font-size="1.976" fill="#dcd5ff" text-anchor="end">/mes</text>
+  </g>
+<g>
+    <rect x="6" y="74.8" width="93" height="16.4" rx="2.2" fill="#f8f6ff" stroke="#e7e1fb" stroke-width="0.35"/>
+    <text x="9" y="81.2" font-family="Segoe UI Black" font-weight="400" font-size="3.175" fill="#1b1740" text-anchor="start">Premium</text>
+    
+    <text x="9" y="85.7" font-family="Segoe UI" font-weight="400" font-size="2.187" fill="#5b5476" text-anchor="start">+ asistencia en vivo, IA de diseño y sin límites</text>
+    <text x="96" y="82.9" font-family="Segoe UI Black" font-weight="400" font-size="3.739" fill="#4338ca" text-anchor="end">$40.000</text>
+    <text x="96" y="86.7" font-family="Segoe UI" font-weight="700" font-size="1.976" fill="#7a7295" text-anchor="end">/mes</text>
+  </g>
+
+<!-- PRUEBA -->
+<rect x="6" y="94.4" width="93" height="12.0" rx="2.2" fill="#f4f1ff" stroke="#c4b5fd" stroke-width="0.35" stroke-dasharray="1.2 0.9"/>
+<rect x="8.6" y="97.6" width="5.6" height="5.6" rx="1.5" fill="#4338ca"/>
+<g transform="translate(11.4 100.4) scale(0.142) translate(-12 -12)" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" color="#fff"><path d="M12 3l1.9 5.4L19.3 10l-5.4 1.9L12 17.3l-1.9-5.4L4.7 10l5.4-1.6z"/><path d="M18.6 15.4l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></g>
+<text x="16.4" y="100" font-family="Segoe UI" font-weight="700" font-size="2.469" fill="#1b1740" text-anchor="start">¿Primera vez? Probá sin pagar</text>
+<text x="16.4" y="103.3" font-family="Segoe UI" font-weight="400" font-size="2.152" fill="#5b5476" text-anchor="start">Al registrarte arrancás con un plan de prueba, sin tarjeta.</text>
+
+<!-- PASOS -->
+<text x="6" y="111.7" font-family="Segoe UI" font-weight="700" font-size="1.976" fill="#4338ca" letter-spacing="0.296" text-anchor="start">EMPEZÁ HOY EN 3 PASOS</text>
+<rect x="41.338" y="111.1" width="57.662" height="0.3" fill="#ddd6fe"/>
+<g>
+  <circle cx="9" cy="116.2" r="3" fill="#fde047"/>
+  <text x="9" y="117.4" font-family="Segoe UI Black" font-weight="400" font-size="2.681" fill="#1b1740" text-anchor="middle">1</text>
+  <text x="6" y="122.4" font-family="Segoe UI" font-weight="700" font-size="2.293" fill="#1b1740" text-anchor="start">Escaneá el QR</text>
+  <text x="6" y="125" font-family="Segoe UI" font-weight="400" font-size="2.081" fill="#5b5476" text-anchor="start">Entrás a la web</text>
+  <text x="6" y="127.4" font-family="Segoe UI" font-weight="400" font-size="2.081" fill="#5b5476" text-anchor="start">de DAVENT.</text>
+</g>
+<g>
+  <circle cx="40.5" cy="116.2" r="3" fill="#fde047"/>
+  <text x="40.5" y="117.4" font-family="Segoe UI Black" font-weight="400" font-size="2.681" fill="#1b1740" text-anchor="middle">2</text>
+  <text x="37.5" y="122.4" font-family="Segoe UI" font-weight="700" font-size="2.293" fill="#1b1740" text-anchor="start">Registrate</text>
+  <text x="37.5" y="125" font-family="Segoe UI" font-weight="400" font-size="2.081" fill="#5b5476" text-anchor="start">Con tu email</text>
+  <text x="37.5" y="127.4" font-family="Segoe UI" font-weight="400" font-size="2.081" fill="#5b5476" text-anchor="start">y tu celular.</text>
+</g>
+<g>
+  <circle cx="72" cy="116.2" r="3" fill="#fde047"/>
+  <text x="72" y="117.4" font-family="Segoe UI Black" font-weight="400" font-size="2.681" fill="#1b1740" text-anchor="middle">3</text>
+  <text x="69" y="122.4" font-family="Segoe UI" font-weight="700" font-size="2.293" fill="#1b1740" text-anchor="start">Publicá tu web</text>
+  <text x="69" y="125" font-family="Segoe UI" font-weight="400" font-size="2.081" fill="#5b5476" text-anchor="start">Compartí el link</text>
+  <text x="69" y="127.4" font-family="Segoe UI" font-weight="400" font-size="2.081" fill="#5b5476" text-anchor="start">y empezá a vender.</text>
+</g>
+
+<!-- PIE -->
+<rect x="0" y="131" width="105" height="1.1" fill="#fde047"/>
+<rect x="0" y="132.1" width="105" height="15.9" fill="#141231"/>
+<rect x="6" y="134.0" width="13.0" height="12.6" rx="1.8" fill="#fff"/>
+<g transform="translate(7.3 135.1) scale(0.315)" shape-rendering="crispEdges"><path d="M0 0h7v1h-7zM11 0h1v1h-1zM14 0h3v1h-3zM18 0h2v1h-2zM21 0h2v1h-2zM24 0h1v1h-1zM26 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h2v1h-2zM11 1h1v1h-1zM13 1h1v1h-1zM15 1h1v1h-1zM17 1h2v1h-2zM21 1h2v1h-2zM26 1h1v1h-1zM32 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM8 2h1v1h-1zM10 2h2v1h-2zM14 2h2v1h-2zM17 2h1v1h-1zM19 2h4v1h-4zM24 2h1v1h-1zM26 2h1v1h-1zM28 2h3v1h-3zM32 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM8 3h1v1h-1zM13 3h1v1h-1zM15 3h1v1h-1zM17 3h1v1h-1zM21 3h3v1h-3zM26 3h1v1h-1zM28 3h3v1h-3zM32 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM8 4h3v1h-3zM13 4h2v1h-2zM21 4h3v1h-3zM26 4h1v1h-1zM28 4h3v1h-3zM32 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM11 5h1v1h-1zM13 5h2v1h-2zM17 5h4v1h-4zM23 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM24 6h1v1h-1zM26 6h7v1h-7zM9 7h3v1h-3zM14 7h2v1h-2zM18 7h1v1h-1zM20 7h1v1h-1zM22 7h3v1h-3zM2 8h1v1h-1zM5 8h4v1h-4zM11 8h7v1h-7zM20 8h1v1h-1zM24 8h2v1h-2zM27 8h5v1h-5zM3 9h3v1h-3zM10 9h3v1h-3zM14 9h3v1h-3zM19 9h2v1h-2zM22 9h6v1h-6zM29 9h1v1h-1zM31 9h2v1h-2zM1 10h1v1h-1zM4 10h1v1h-1zM6 10h3v1h-3zM12 10h2v1h-2zM17 10h1v1h-1zM20 10h5v1h-5zM27 10h4v1h-4zM32 10h1v1h-1zM1 11h3v1h-3zM5 11h1v1h-1zM7 11h2v1h-2zM10 11h1v1h-1zM17 11h4v1h-4zM22 11h3v1h-3zM26 11h2v1h-2zM31 11h2v1h-2zM0 12h3v1h-3zM6 12h2v1h-2zM9 12h1v1h-1zM11 12h2v1h-2zM14 12h2v1h-2zM21 12h2v1h-2zM26 12h2v1h-2zM29 12h1v1h-1zM32 12h1v1h-1zM1 13h1v1h-1zM7 13h2v1h-2zM12 13h3v1h-3zM16 13h1v1h-1zM21 13h4v1h-4zM26 13h2v1h-2zM29 13h2v1h-2zM32 13h1v1h-1zM0 14h2v1h-2zM5 14h2v1h-2zM8 14h1v1h-1zM10 14h3v1h-3zM15 14h1v1h-1zM17 14h2v1h-2zM23 14h1v1h-1zM29 14h2v1h-2zM32 14h1v1h-1zM0 15h2v1h-2zM3 15h1v1h-1zM5 15h1v1h-1zM10 15h1v1h-1zM12 15h7v1h-7zM20 15h1v1h-1zM22 15h1v1h-1zM25 15h3v1h-3zM29 15h1v1h-1zM31 15h2v1h-2zM0 16h4v1h-4zM6 16h1v1h-1zM10 16h1v1h-1zM12 16h6v1h-6zM19 16h2v1h-2zM22 16h2v1h-2zM26 16h2v1h-2zM29 16h1v1h-1zM2 17h1v1h-1zM4 17h2v1h-2zM8 17h2v1h-2zM13 17h8v1h-8zM23 17h1v1h-1zM26 17h2v1h-2zM30 17h1v1h-1zM32 17h1v1h-1zM0 18h2v1h-2zM3 18h4v1h-4zM8 18h2v1h-2zM12 18h1v1h-1zM14 18h2v1h-2zM17 18h1v1h-1zM19 18h1v1h-1zM21 18h1v1h-1zM23 18h1v1h-1zM25 18h1v1h-1zM29 18h2v1h-2zM32 18h1v1h-1zM1 19h2v1h-2zM7 19h5v1h-5zM17 19h4v1h-4zM22 19h2v1h-2zM25 19h1v1h-1zM29 19h1v1h-1zM31 19h2v1h-2zM0 20h2v1h-2zM3 20h2v1h-2zM6 20h3v1h-3zM11 20h1v1h-1zM15 20h3v1h-3zM20 20h1v1h-1zM23 20h2v1h-2zM26 20h2v1h-2zM1 21h2v1h-2zM5 21h1v1h-1zM12 21h3v1h-3zM26 21h1v1h-1zM29 21h1v1h-1zM31 21h2v1h-2zM0 22h3v1h-3zM4 22h1v1h-1zM6 22h3v1h-3zM12 22h1v1h-1zM15 22h3v1h-3zM19 22h1v1h-1zM22 22h5v1h-5zM32 22h1v1h-1zM3 23h3v1h-3zM7 23h1v1h-1zM9 23h1v1h-1zM11 23h1v1h-1zM13 23h1v1h-1zM15 23h1v1h-1zM17 23h1v1h-1zM19 23h2v1h-2zM23 23h2v1h-2zM27 23h1v1h-1zM29 23h1v1h-1zM32 23h1v1h-1zM0 24h2v1h-2zM4 24h3v1h-3zM8 24h1v1h-1zM10 24h2v1h-2zM13 24h2v1h-2zM22 24h1v1h-1zM24 24h5v1h-5zM8 25h1v1h-1zM12 25h1v1h-1zM15 25h2v1h-2zM18 25h1v1h-1zM21 25h1v1h-1zM24 25h1v1h-1zM28 25h5v1h-5zM0 26h7v1h-7zM8 26h3v1h-3zM12 26h1v1h-1zM15 26h2v1h-2zM18 26h1v1h-1zM20 26h1v1h-1zM24 26h1v1h-1zM26 26h1v1h-1zM28 26h2v1h-2zM32 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM8 27h2v1h-2zM12 27h1v1h-1zM14 27h2v1h-2zM17 27h1v1h-1zM19 27h1v1h-1zM21 27h1v1h-1zM24 27h1v1h-1zM28 27h2v1h-2zM31 27h2v1h-2zM0 28h1v1h-1zM2 28h3v1h-3zM6 28h1v1h-1zM10 28h3v1h-3zM14 28h1v1h-1zM16 28h1v1h-1zM19 28h1v1h-1zM21 28h1v1h-1zM23 28h7v1h-7zM0 29h1v1h-1zM2 29h3v1h-3zM6 29h1v1h-1zM9 29h1v1h-1zM11 29h1v1h-1zM13 29h2v1h-2zM16 29h1v1h-1zM20 29h2v1h-2zM23 29h1v1h-1zM25 29h1v1h-1zM27 29h5v1h-5zM0 30h1v1h-1zM2 30h3v1h-3zM6 30h1v1h-1zM8 30h1v1h-1zM11 30h1v1h-1zM13 30h1v1h-1zM15 30h2v1h-2zM18 30h1v1h-1zM21 30h2v1h-2zM28 30h1v1h-1zM31 30h2v1h-2zM0 31h1v1h-1zM6 31h1v1h-1zM13 31h3v1h-3zM17 31h1v1h-1zM21 31h2v1h-2zM24 31h2v1h-2zM29 31h1v1h-1zM0 32h7v1h-7zM11 32h3v1h-3zM15 32h2v1h-2zM19 32h1v1h-1zM22 32h1v1h-1zM24 32h3v1h-3zM28 32h2v1h-2zM32 32h1v1h-1z" fill="#000"/></g>
+<text x="22.6" y="137.4" font-family="Segoe UI Black" font-weight="400" font-size="2.822" fill="#fff" text-anchor="start">www.davent.com.ar</text>
+<g transform="translate(22.6 139.5) scale(0.121)" fill="#25d366"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.2 1l-2.3 2.2Z"/></g>
+<text x="26.4" y="141.5" font-family="Segoe UI" font-weight="700" font-size="2.328" fill="#8ee7ab" text-anchor="start">WhatsApp 387 518-1791</text>
+<text x="22.6" y="145.6" font-family="Segoe UI" font-weight="400" font-size="1.623" fill="#a9a3c4" text-anchor="start">Precios en ARS por mes · renovación mensual · baja cuando quieras.</text>
+</svg>

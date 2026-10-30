@@ -1,0 +1,10 @@
+<!doctype html>
+<!--
+  DEPRECADO: desde la migración a cookie-refresh, la sesión vive en una cookie
+  httpOnly que ningún JS puede escribir/leer (anti-robo XSS). Esta página ya no
+  puede inyectar sesiones — se loguea por el formulario normal.
+-->
+<script>
+  location.replace('/login')
+</script>
+<p>Esta herramienta quedó obsoleta (la sesión es una cookie httpOnly). Redirigiendo al login…</p>

@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Harness QA del panel "Estilos" (dev-only, como qa-look-harness.html):
+  monta EstilosPanel real con un `form` de defaults, beneficios por query
+  (?advanced=0 para la variante bloqueada) y un stub del provider
+  'studioPresets' con la misma semántica del shell. Vite dev lo sirve en
+  /qa-estilos.html — nunca entra al build (vite build usa solo index.html).
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>QA Estilos</title>
+  <style>
+    body { margin: 0; background: #e7eaf3; }
+    .qa-panel { max-width: 322px; margin: 0 auto; padding: 14px; min-height: 100dvh; background: #fff; box-shadow: 0 0 0 1px rgba(15, 23, 42, .06); }
+    @media (max-width: 768px) { .qa-panel { max-width: none; padding: 12px 14px 18px; } }
+    /* Réplica de los overrides scoped que StudioPanel aplica con .stp-look :deep() */
+    .stp-look .dl-hbtn { display: none; }
+    .stp-look .dsg-card { border: 0; box-shadow: none; padding: 0; border-radius: 0; background: transparent; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module">
+    import { createApp, reactive, ref, computed, h } from 'vue'
+    import { createPinia, setActivePinia } from 'pinia'
+    import '/src/assets/styles.css'
+    import '/src/assets/dashboard.css'
+    import '/src/assets/studio-panels.css'
+    import EstilosPanel from '/src/components/studio/panels/EstilosPanel.vue'
+    import { CUSTOMIZATION_DEFAULTS } from '/src/api/stores.api.js'
+    import { STUDIO_PRESETS } from '/src/studio/presets/index.js'
+    import { useStoreStore } from '/src/stores/store.store.js'
+
+    const params = new URLSearchParams(location.search)
+    const advanced = params.get('advanced') !== '0'
+
+    // Pinia activo + seed del store (logo/portada vacíos, template 'classic').
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useStoreStore()
+    store.store = {
+      slug: 'demo', business_name: 'Tienda Demo',
+      customization: {
+        headline: 'Todo lo que tu comercio necesita',
+        template: 'classic', theme: 'light', accent: 'indigo',
+        name_font: 'inter', name_font_size: 32,
+        logo: '', cover: ''
+      },
+      storage: { used_bytes: 0, max_mb: 200 }
+    }
+
+    // Borrador con los mismos campos que escribe el shell (designForm).
+    const form = reactive({ ...CUSTOMIZATION_DEFAULTS })
+
+    // Stub de 'studioPresets': misma API que StudioShell (ensayo deshacible).
+    const trial = ref(null)
+    const tryingId = computed(() => trial.value?.id || null)
+    const tryingPalette = computed(() => trial.value?.palette || 'original')
+    const snap = () => JSON.parse(JSON.stringify(form))
+    function applyPreset(p, part = 'all') {
+      const t = p.theme || {}
+      if (part === 'all' || part === 'palette') form.accent_custom = t.palette?.accent || form.accent_custom
+      if (part === 'all' || part === 'typography') form.name_font = t.typography?.body || form.name_font
+      if (part === 'all') { form.theme = p.pageTheme || 'light'; form.template = p.template }
+    }
+    const app = createApp({
+      render: () => h('div', { class: 'qa-panel stp-look' }, [
+        h(EstilosPanel, {
+          form, benefits: { has_customization: true, has_design_plus: true, has_design_advanced: advanced },
+          shopName: 'Tienda Demo',
+          onNavigate: () => {}, onRing: () => {}, onSetViewer: () => {}
+        })
+      ])
+    })
+    app.provide('studioPresets', {
+      presets: STUDIO_PRESETS,
+      tryingId,
+      tryIt: (p) => { if (!trial.value) trial.value = { id: p.id, snap: snap() }; else trial.value = { id: p.id }; applyPreset(p) },
+      tryPalette: (p, paletteId) => {
+        if (!trial.value) trial.value = { id: p.id, palette: paletteId, snap: snap() }
+        else trial.value = { ...trial.value, id: p.id, palette: paletteId }
+      },
+      tryingPalette,
+      apply: applyPreset,
+      applyAndSave: (p) => { trial.value = null; applyPreset(p) },
+      revertTrial: () => { if (trial.value?.snap) Object.assign(form, trial.value.snap); trial.value = null },
+      keepTrial: () => { trial.value = null },
+      goPlans: () => {}
+    })
+    app.use(pinia)
+    app.mount('#app')
+    window.__qa_ready = true
+  </script>
+</body>
+</html>

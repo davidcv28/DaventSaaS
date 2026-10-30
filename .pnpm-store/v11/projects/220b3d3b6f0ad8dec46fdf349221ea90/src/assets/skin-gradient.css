@@ -1,0 +1,29 @@
+/* Skin 'gradient' — superficies con degradado y brillo suave.
+   Solo tiendas con data-st-skin='gradient'. */
+.store-page[data-st-skin='gradient'] {
+  --sp-radius: 20px;
+  --sp-card: linear-gradient(160deg, color-mix(in srgb, var(--store-accent-soft, #eef2ff) 70%, #fff), #fff 62%);
+  --sp-card-solid: #fff;
+  --sp-surface: linear-gradient(150deg, color-mix(in srgb, var(--store-accent-soft, #eef2ff) 80%, #f7f9ff), #fff 70%);
+  --sp-line: color-mix(in srgb, var(--store-accent) 24%, #dfe5f3);
+  --sp-shadow-sm: 0 4px 16px -12px color-mix(in srgb, var(--store-accent) 55%, transparent);
+  --sp-shadow-md: 0 20px 46px -26px color-mix(in srgb, var(--store-accent) 55%, transparent);
+}
+.store-page[data-st-skin='gradient'][data-store-theme='dark'] {
+  --sp-card: linear-gradient(160deg, color-mix(in srgb, var(--store-accent) 18%, #131a2b), #111726 70%);
+  --sp-card-solid: #131a2b;
+  --sp-surface: linear-gradient(150deg, color-mix(in srgb, var(--store-accent) 14%, #0f1524), #0d1220 72%);
+  --sp-line: color-mix(in srgb, var(--store-accent) 32%, #26304a);
+}
+.store-page[data-st-skin='gradient'] .sp-card,
+.store-page[data-st-skin='gradient'] .sp-aigrid-card,
+.store-page[data-st-skin='gradient'] .sp-aipricing-card,
+.store-page[data-st-skin='gradient'] .sp-aiprocess-step {
+  border-radius: 20px;
+  border-color: transparent;
+  background-image: var(--sp-card);
+  background-color: var(--sp-card-solid);
+  box-shadow: var(--sp-shadow-md);
+}
+.store-page[data-st-skin='gradient'] .sp-btn { border-radius: 999px; background-image: linear-gradient(120deg, var(--store-accent), var(--store-accent-ink)); }
+.store-page[data-st-skin='gradient'] .sp-section-title::after { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--store-accent), color-mix(in srgb, var(--store-accent) 20%, transparent)); }

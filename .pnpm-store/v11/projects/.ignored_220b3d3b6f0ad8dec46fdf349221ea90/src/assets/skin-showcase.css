@@ -1,0 +1,42 @@
+/* Skin 'showcase' — showroom de catálogo: la imagen manda, datos mínimos,
+   grilla pareja y filtros discretos. No cambia la caja de la tarjeta
+   (tpc): solo tokens y ritmo vertical.
+   Solo tiendas con data-st-skin='showcase'. */
+.store-page[data-st-skin='showcase'] {
+  --sp-radius: 6px;
+  --sp-bg: #f8fafc;
+  --sp-card: #ffffff;
+  --sp-card-solid: #ffffff;
+  --sp-surface: #f1f5f9;
+  --sp-line: color-mix(in srgb, #334155 14%, transparent);
+  --sp-shadow-sm: 0 1px 2px rgba(15, 23, 42, .06);
+  --sp-shadow-md: 0 12px 28px rgba(15, 23, 42, .08);
+}
+.store-page[data-st-skin='showcase'][data-store-theme='dark'] {
+  --sp-bg: #0b0f14;
+  --sp-card: #131920;
+  --sp-card-solid: #131920;
+  --sp-surface: #0f151b;
+  --sp-line: color-mix(in srgb, #e2e8f0 14%, transparent);
+}
+.store-page[data-st-skin='showcase'] :is(.sp-card, .sp-service, .sp-testimonial) {
+  border-radius: 6px;
+  box-shadow: var(--sp-shadow-sm);
+  border-color: var(--sp-line);
+}
+.store-page[data-st-skin='showcase'] :is(.sp-hero-title, .sp-section-title) {
+  font-family: var(--sp-display);
+  font-weight: 700;
+  letter-spacing: -.028em;
+}
+.store-page[data-st-skin='showcase'] .sp-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--sp-ink-2);
+}
+.store-page[data-st-skin='showcase'] .sp-section-title {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+.store-page[data-st-skin='showcase'] .sp-btn { border-radius: 6px; }

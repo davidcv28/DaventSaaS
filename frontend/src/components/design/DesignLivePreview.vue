@@ -159,12 +159,12 @@ function reload() {
   border: 1px solid var(--line, #e5e7eb); border-radius: 8px; background: transparent; color: inherit; cursor: pointer;
 }
 .dlp-stage {
-  position: relative; height: clamp(320px, 46vh, 520px); overflow: hidden;
+  position: relative; height: clamp(520px, 72vh, 900px); overflow: hidden;
   border: 1px solid var(--line, #e5e7eb); border-radius: 10px; background: var(--surface-2, #f8fafc);
   display: flex; justify-content: center;
 }
 .dlp-stage.mobile { padding: 10px 0; background: var(--surface-3, #eef2f7); }
 .dlp-frame { width: 100%; height: 100%; border: 0; background: #fff; }
-.dlp-stage.mobile .dlp-frame { width: 390px; max-width: 100%; height: 100%; border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+.dlp-stage.mobile .dlp-frame { width: 430px; max-width: 100%; height: 100%; border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
 .dlp-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 12px; opacity: .8; }
 </style>

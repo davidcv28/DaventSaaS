@@ -1,0 +1,1061 @@
+/* ==========================================================================
+   VISTA PREVIA DEL DASHBOARD — LOOK REAL POR DISEÑO
+   `.design-preview[data-store-template='<id>']` (DesignPreview.vue emite el
+   template y el modo claro/oscuro en el frame).
+
+   Hoy sólo CIRCUITO: la preview genérica de styles.css (banda de acento +
+   hero centrado) no se parecía a la web real del diseño. Acá se reconstruye
+   con las clases dp-* existentes: barra técnica mono, hero partido con
+   retícula de circuito + glow del acento, badge HUD, Space Grotesk, botones
+   biselados y catálogo como panel técnico.
+
+   Todo va scopeado a `[data-store-template='circuito']`: los otros diseños
+   conservan su preview intacta. El acento sale de `--store-accent` (lo inyecta
+   `storeThemeVars()` en el frame), nunca de un color fijo.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Variantes de modo: claro (por defecto) y oscuro.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] {
+  --dpc-bg: #F2F6FB;
+  --dpc-surface: #FFFFFF;
+  --dpc-surface-2: #E8EFF8;
+  --dpc-line: #C9D7E7;
+  --dpc-ink: #0B1220;
+  --dpc-ink-2: #2C3B4E;
+  --dpc-muted: #52657C;
+  --dpc-accent: var(--store-accent, #4F46E5);
+  --dpc-accent-text: color-mix(in srgb, var(--dpc-accent) 62%, #071018);
+  --dpc-soft: color-mix(in srgb, var(--dpc-accent) 12%, transparent);
+  --dpc-solid: var(--dpc-accent-text);
+  --dpc-on-solid: #F7FAFF;
+  --dpc-nav: #FFFFFF;
+  --dpc-nav-ink: #0B1220;
+  --dpc-nav-muted: #52657C;
+  --dpc-nav-line: color-mix(in srgb, var(--dpc-accent) 32%, #C9D7E7);
+  --dpc-hero-1: #F7FAFE;
+  --dpc-hero-2: #E9F0F9;
+  --dpc-grid: color-mix(in srgb, var(--dpc-line) 78%, transparent);
+  --dpc-glow: color-mix(in srgb, var(--dpc-accent) 26%, transparent);
+  --dpc-hero-ink: var(--dpc-ink);
+  --dpc-hero-ink-2: var(--dpc-ink-2);
+  --dpc-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --dpc-display: 'Space Grotesk', system-ui, sans-serif;
+
+  border-color: var(--dpc-line);
+  background: var(--dpc-bg);
+  color: var(--dpc-ink);
+}
+
+.design-preview[data-store-template='circuito'][data-store-theme='dark'] {
+  --dpc-bg: #0A0E14;
+  --dpc-surface: #111823;
+  --dpc-surface-2: #0E141D;
+  --dpc-line: #1F2933;
+  --dpc-ink: #E6EDF3;
+  --dpc-ink-2: #B6C2CF;
+  --dpc-muted: #8FA1B3;
+  --dpc-accent-text: color-mix(in srgb, var(--dpc-accent) 72%, #FFFFFF);
+  --dpc-soft: color-mix(in srgb, var(--dpc-accent) 16%, transparent);
+  --dpc-solid: color-mix(in srgb, var(--dpc-accent) 72%, #FFFFFF);
+  --dpc-on-solid: #04141A;
+  --dpc-nav: #05090F;
+  --dpc-nav-ink: #E6EDF3;
+  --dpc-nav-muted: #93A5B7;
+  --dpc-nav-line: color-mix(in srgb, var(--dpc-accent) 28%, #1F2933);
+  --dpc-hero-1: #0A0E14;
+  --dpc-hero-2: #0D131C;
+  --dpc-grid: color-mix(in srgb, var(--dpc-line) 80%, transparent);
+  --dpc-glow: color-mix(in srgb, var(--dpc-accent) 34%, transparent);
+  --dpc-hero-ink: #E6EDF3;
+  --dpc-hero-ink-2: #B6C2CF;
+}
+
+/* --------------------------------------------------------------------------
+   BARRA SUPERIOR: técnica, mono, borde inferior de acento.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] .dp-nav {
+  background: var(--dpc-nav);
+  border-bottom: 1px solid var(--dpc-nav-line);
+  padding: 9px 12px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-brand {
+  gap: 7px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-mono {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--dpc-solid);
+  color: var(--dpc-on-solid);
+  font-family: var(--dpc-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+}
+.design-preview[data-store-template='circuito'] .dp-nav-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-name {
+  font-family: var(--dpc-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--dpc-nav-ink);
+}
+.design-preview[data-store-template='circuito'] .dp-nav-links {
+  gap: 1px;
+}
+.design-preview[data-store-template='circuito'] .dp-nav-item {
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-family: var(--dpc-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dpc-nav-muted);
+  transition: background-color .15s ease, color .15s ease;
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='circuito'] .dp-nav-item:hover {
+    background: var(--dpc-soft);
+    color: var(--dpc-accent-text);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   HERO: partido a la izquierda, retícula de circuito a la derecha, glow del
+   acento y un nodo luminoso. Los velos son pseudo-elementos para no pisar la
+   portada del dueño (.dp-hero.has-cover).
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] .dp-hero {
+  position: relative;
+  isolation: isolate;
+  justify-items: start;
+  text-align: left;
+  gap: 7px;
+  padding: 24px 16px 22px;
+  overflow: hidden;
+  color: var(--dpc-hero-ink);
+  background:
+    radial-gradient(240px 150px at 88% -18%, var(--dpc-glow), transparent 66%),
+    linear-gradient(180deg, var(--dpc-hero-1), var(--dpc-hero-2));
+}
+/* Retícula técnica: sólo en la mitad derecha, nunca bajo el texto. */
+.design-preview[data-store-template='circuito'] .dp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 50%;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--dpc-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--dpc-grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(78% 82% at 62% 34%, #000, transparent 76%);
+  mask-image: radial-gradient(78% 82% at 62% 34%, #000, transparent 76%);
+  pointer-events: none;
+}
+/* Traza + nodo del acento. */
+.design-preview[data-store-template='circuito'] .dp-hero::after {
+  content: '';
+  position: absolute;
+  top: 16%;
+  right: 7%;
+  z-index: 0;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--dpc-accent) 55%, transparent) 0%, transparent 68%);
+  opacity: .75;
+  pointer-events: none;
+}
+.design-preview[data-store-template='circuito'] .dp-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Portada del dueño: se respeta la imagen y se le suma la retícula/glow. */
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #05090F 62%, transparent), color-mix(in srgb, #05090F 82%, transparent)),
+    var(--dp-cover) center / cover no-repeat;
+  color: #F5F9FF;
+}
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-title,
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-desc {
+  color: #F5F9FF;
+}
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-btn.ghost {
+  color: #F5F9FF;
+}
+
+.design-preview[data-store-template='circuito'] .dp-mono {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--dpc-accent) 45%, var(--dpc-line));
+  background: var(--dpc-surface-2);
+  color: var(--dpc-accent-text);
+  font-family: var(--dpc-display);
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dpc-accent) 10%, transparent);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.design-preview[data-store-template='circuito'] .dp-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--dpc-surface);
+}
+
+/* Badge HUD: píldora rectangular con corte biselado y LED del acento. */
+.design-preview[data-store-template='circuito'] .dp-badge {
+  position: relative;
+  padding: 3px 9px 3px 16px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--dpc-accent) 48%, transparent);
+  background: var(--dpc-soft);
+  color: var(--dpc-accent-text);
+  font-family: var(--dpc-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+.design-preview[data-store-template='circuito'] .dp-hero.has-cover .dp-badge {
+  background: color-mix(in srgb, #05090F 55%, transparent);
+}
+.design-preview[data-store-template='circuito'] .dp-badge::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.design-preview[data-store-template='circuito'] .dp-title {
+  font-family: var(--dpc-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1.04;
+  color: var(--dpc-hero-ink);
+  text-wrap: balance;
+}
+.design-preview[data-store-template='circuito'] .dp-title.is-name {
+  font-size: clamp(16px, calc(var(--store-name-size, 32px) * .56), 32px);
+}
+.design-preview[data-store-template='circuito'] .dp-desc {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--dpc-hero-ink-2);
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* CTAs biselados, mono, con halo del acento. */
+.design-preview[data-store-template='circuito'] .dp-cta {
+  justify-content: flex-start;
+  gap: 7px;
+  margin-top: 5px;
+}
+.design-preview[data-store-template='circuito'] .dp-btn {
+  padding: 7px 13px;
+  border-radius: 0;
+  background: var(--dpc-solid);
+  color: var(--dpc-on-solid);
+  font-family: var(--dpc-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dpc-accent) 40%, transparent);
+  transition: translate .15s ease, filter .15s ease;
+}
+.design-preview[data-store-template='circuito'] .dp-btn.ghost {
+  background: transparent;
+  color: var(--dpc-hero-ink);
+  box-shadow: inset 0 0 0 1px var(--dpc-line);
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='circuito'] .dp-btn:hover {
+    translate: 0 -1px;
+    filter: brightness(1.06);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   CATÁLOGO: panel técnico con cabecera mono y carrusel enmarcado.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='circuito'] .dp-catalog {
+  margin: 0 12px 12px;
+  border: 1px solid var(--dpc-line);
+  border-radius: 5px;
+  background: var(--dpc-surface);
+  overflow: hidden;
+  box-shadow: 0 12px 26px -24px rgba(11, 18, 32, .5);
+}
+.design-preview[data-store-template='circuito'] .dp-section-label {
+  margin: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dpc-line);
+  background: var(--dpc-surface-2);
+  color: var(--dpc-accent-text);
+  font-family: var(--dpc-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+.design-preview[data-store-template='circuito'] .dp-section-label::before {
+  content: '// ';
+  opacity: .7;
+}
+.design-preview[data-store-template='circuito'] .dp-carousel {
+  height: 72px;
+  margin: 9px;
+  border: 1px solid var(--dpc-line);
+  border-radius: 3px;
+  background: var(--dpc-surface-2);
+  box-shadow: inset 0 0 0 3px var(--dpc-surface);
+}
+.design-preview[data-store-template='circuito'] .dp-map {
+  margin: 0 12px 12px;
+  border: 1px dashed color-mix(in srgb, var(--dpc-accent) 40%, var(--dpc-line));
+  border-radius: 4px;
+  background: var(--dpc-surface-2);
+  color: var(--dpc-muted);
+  font-family: var(--dpc-mono);
+  font-size: 9.5px;
+  letter-spacing: .04em;
+}
+.design-preview[data-store-template='circuito'] .dp-map .icon {
+  color: var(--dpc-accent-text);
+}
+
+/* --------------------------------------------------------------------------
+   MOVIMIENTO REDUCIDO
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .design-preview[data-store-template='circuito'] .dp-btn,
+  .design-preview[data-store-template='circuito'] .dp-nav-item {
+    transition: none;
+  }
+  @media (hover: hover) {
+    .design-preview[data-store-template='circuito'] .dp-btn:hover {
+      translate: 0 0;
+    }
+  }
+}
+
+/* ==========================================================================
+   BOUTIQUE — miniatura editorial de la portada real
+   `.design-preview[data-store-template='boutique']`
+
+   La preview genérica (banda de acento + hero centrado) no se parecía a la
+   web boutique: acá se reconstruye su portada firma con markup propio —
+   header centrado (marca serif itálica) + navegación versalita, hero partido
+   con foto en arco, tira de highlights hairline, "Recién llegado" y la cita
+   en serif itálica. Tipografía Cormorant Garamond (display) + Jost (cuerpo),
+   radios 0, aire generoso y acento ciruela del dueño (`--store-accent*`),
+   nunca un color fijo.
+
+   Todo scopeado a `[data-store-template='boutique']`; los otros diseños
+   conservan su preview intacta. En móvil (300px) el hero se apila centrado
+   como en la web real; tablet/escritorio muestran el split editorial.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Tokens: claro (por defecto) y oscuro.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] {
+  --dpb-bg: #F8F4F5;
+  --dpb-surface: #FFFFFF;
+  --dpb-soft: #EFE6E9;
+  --dpb-soft-2: #E4D8DD;
+  --dpb-plate: #D8C8CF;
+  --dpb-line: #E2D6DB;
+  --dpb-line-strong: #CDB9C2;
+  --dpb-ink: #2A1F27;
+  --dpb-ink-2: #5E4A57;
+  --dpb-muted: #6F5B66;
+  --dpb-accent: var(--store-accent-ink, #6B2D4F);
+  --dpb-accent-soft: color-mix(in srgb, var(--store-accent, #6B2D4F) 12%, transparent);
+  --dpb-solid: var(--store-accent-ink, #6B2D4F);
+  --dpb-on-solid: #FFFFFF;
+  --dpb-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --dpb-body: 'Jost', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  border-color: var(--dpb-line);
+  background: var(--dpb-bg);
+  color: var(--dpb-ink);
+  font-family: var(--dpb-body);
+  /* El propio frame es el contenedor de consulta: la composición escala con
+     el ancho real del mockup (300px móvil, ~400px aside, 800px+ aislado). */
+  container-type: inline-size;
+}
+
+.design-preview[data-store-template='boutique'][data-store-theme='dark'] {
+  --dpb-bg: #171214;
+  --dpb-surface: #211A1E;
+  --dpb-soft: #241C20;
+  --dpb-soft-2: #2C2228;
+  --dpb-plate: #352930;
+  --dpb-line: #33262C;
+  --dpb-line-strong: #4C3A42;
+  --dpb-ink: #F4ECEE;
+  --dpb-ink-2: #D6C7CD;
+  --dpb-muted: #B3A1A9;
+  --dpb-accent: color-mix(in srgb, var(--store-accent, #6B2D4F) 38%, #F6EAEE);
+  --dpb-accent-soft: color-mix(in srgb, var(--store-accent, #6B2D4F) 22%, transparent);
+  --dpb-solid: color-mix(in srgb, var(--store-accent, #6B2D4F) 40%, #F2E4E8);
+  --dpb-on-solid: #171214;
+}
+
+/* --------------------------------------------------------------------------
+   HEADER: marca centrada (serif itálica del acento) + nav versalita spaced.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] .dp-bq-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 11px 14px 0;
+  background: var(--dpb-bg);
+  border-bottom: 1px solid var(--dpb-line);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-brand {
+  flex: 0 0 auto;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-nav .dp-nav-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--dpb-line-strong);
+  background: var(--dpb-surface);
+  object-fit: cover;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-nav .dp-nav-mono {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--dpb-line-strong);
+  color: var(--dpb-accent);
+  font-family: var(--dpb-display);
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 500;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-nav .dp-nav-name {
+  font-family: var(--dpb-display);
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--dpb-accent);
+  min-width: 0;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-links {
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 12px;
+  margin-top: 3px;
+  padding-bottom: 8px;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-links .dp-nav-item {
+  padding: 2px 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--dpb-body);
+  font-size: 6.5px;
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dpb-muted);
+  transition: color .18s ease, box-shadow .18s ease;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-links .dp-nav-item.is-active {
+  color: var(--dpb-ink);
+  box-shadow: inset 0 -1px 0 var(--dpb-accent);
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='boutique'] .dp-bq-links .dp-nav-item:hover {
+    color: var(--dpb-accent);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   HERO: móvil apilado y centrado (como la web real bajo 900px); tablet y
+   escritorio muestran el split editorial con la foto en arco a la derecha.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] .dp-bq-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 24px 16px 18px;
+  background:
+    radial-gradient(112% 64% at 50% -20%, var(--dpb-accent-soft), transparent 72%),
+    var(--dpb-bg);
+  color: var(--dpb-ink);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-copy {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-eyebrow {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--dpb-body);
+  font-size: 6.8px;
+  font-weight: 500;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--dpb-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-title {
+  margin: 0;
+  font-family: var(--dpb-display);
+  font-size: 27px;
+  font-weight: 500;
+  line-height: .98;
+  letter-spacing: -.012em;
+  color: var(--dpb-ink);
+  text-wrap: balance;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-title .dp-bq-accent {
+  font-style: italic;
+  color: var(--dpb-accent);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-title.is-name {
+  font-size: clamp(22px, calc(var(--store-name-size, 32px) * .78), 32px);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-desc {
+  margin: 0;
+  max-width: 32ch;
+  font-family: var(--dpb-body);
+  font-size: 9.5px;
+  line-height: 1.65;
+  color: var(--dpb-ink-2);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-ctas {
+  justify-content: center;
+  gap: 7px;
+  margin-top: 3px;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 0;
+  background: var(--dpb-solid);
+  color: var(--dpb-on-solid);
+  font-family: var(--dpb-body);
+  font-size: 7.2px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  transition: translate .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn.ghost {
+  background: transparent;
+  border: 1px solid var(--dpb-line-strong);
+  color: var(--dpb-ink);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn.ghost .icon {
+  color: var(--dpb-accent);
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn:hover {
+    translate: 0 -1px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn.ghost:hover {
+    border-color: var(--dpb-accent);
+    color: var(--dpb-accent);
+  }
+}
+
+/* Arco: marco hairline del acento, placa tonal y foto recortada. */
+.design-preview[data-store-template='boutique'] .dp-bq-arch {
+  margin: 0;
+  width: min(100%, 186px);
+  padding: 6px;
+  border: 1px solid var(--dpb-accent);
+  border-radius: 999px 999px 0 0;
+  background: var(--dpb-soft-2);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-arch-inner {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 184px;
+  border-radius: 999px 999px 0 0;
+  background: var(--dpb-plate);
+  overflow: hidden;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-arch-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-arch.is-cover .dp-bq-arch-inner::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--dpb-bg) 62%, transparent));
+  pointer-events: none;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-arch-mono {
+  align-self: center;
+  font-family: var(--dpb-display);
+  font-size: 56px;
+  font-style: italic;
+  line-height: 1;
+  color: color-mix(in srgb, var(--dpb-ink) 18%, transparent);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-arch-caption {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 9px;
+  padding: 0 8px;
+  font-family: var(--dpb-body);
+  font-size: 6px;
+  font-weight: 500;
+  letter-spacing: .2em;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--dpb-ink-2);
+  text-shadow: 0 1px 12px var(--dpb-bg);
+}
+
+/* A partir de ~360px de mockup: split editorial (texto | arco), que es la
+   firma de escritorio del diseño. En móvil (300px) queda apilado y centrado,
+   como la web real bajo 900px. */
+@container (min-width: 360px) {
+  .design-preview[data-store-template='boutique'] .dp-bq-hero {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, .84fr);
+    align-items: center;
+    justify-items: stretch;
+    text-align: left;
+    gap: 12px;
+    padding: 20px 16px 16px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-copy {
+    justify-items: start;
+    text-align: left;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-title {
+    font-size: 19px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-title.is-name {
+    font-size: clamp(17px, calc(var(--store-name-size, 32px) * .58), 24px);
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-desc {
+    max-width: 24ch;
+    font-size: 8.5px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas {
+    justify-content: flex-start;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn {
+    padding: 6px 9px;
+    font-size: 6.2px;
+    letter-spacing: .14em;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch {
+    width: 100%;
+    padding: 5px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch-inner {
+    min-height: 196px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch-mono {
+    font-size: 44px;
+  }
+}
+
+/* Wide (mockup aislado / lienzo grande): la miniatura crece en proporción
+   para conservar el aire editorial del diseño sin parecer un móvil estirado. */
+@container (min-width: 640px) {
+  .design-preview[data-store-template='boutique'] .dp-bq-nav {
+    padding: 20px 24px 0;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-brand {
+    gap: 11px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-nav .dp-nav-logo,
+  .design-preview[data-store-template='boutique'] .dp-bq-nav .dp-nav-mono {
+    width: 32px;
+    height: 32px;
+    font-size: 17px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-nav .dp-nav-name {
+    font-size: 26px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-links {
+    gap: 2px 24px;
+    margin-top: 6px;
+    padding-bottom: 13px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-links .dp-nav-item {
+    font-size: 9px;
+    padding: 4px 0;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+    gap: clamp(22px, 5cqw, 54px);
+    padding: 40px 32px 30px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-copy {
+    gap: 14px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-eyebrow {
+    font-size: 9px;
+    letter-spacing: .26em;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-title {
+    font-size: clamp(26px, 4.4cqw, 46px);
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-title.is-name {
+    font-size: clamp(24px, calc(var(--store-name-size, 32px) * .9), 40px);
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-desc {
+    max-width: 30ch;
+    font-size: 12px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas {
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn {
+    padding: 10px 18px;
+    font-size: 8.5px;
+    letter-spacing: .18em;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch {
+    padding: 9px;
+    max-width: 420px;
+    justify-self: end;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch-inner {
+    min-height: clamp(240px, 38cqw, 380px);
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch-mono {
+    font-size: clamp(64px, 11cqw, 120px);
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-arch-caption {
+    margin-bottom: 18px;
+    font-size: 9px;
+    letter-spacing: .22em;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-highlights {
+    padding: 14px 32px;
+    gap: 6px 28px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-highlight {
+    font-size: 8.5px;
+    letter-spacing: .2em;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-featured {
+    padding: 28px 32px 0;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-featured-title {
+    font-size: clamp(24px, 3.4cqw, 38px);
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-featured-link {
+    font-size: 8px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-quote {
+    padding: 32px 40px 36px;
+    gap: 6px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-quote-mark {
+    font-size: 56px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-quote-text {
+    max-width: 42ch;
+    font-size: 24px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-quote-by {
+    font-size: 9px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-foot {
+    padding: 30px 32px 24px;
+    gap: 9px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-foot-brand {
+    font-size: 30px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-foot-wa {
+    font-size: 10px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-foot-line {
+    font-size: 8px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-bq-foot-copy {
+    font-size: 8.5px;
+  }
+  .design-preview[data-store-template='boutique'] .dp-map {
+    margin: 0 32px 22px;
+    padding: 12px;
+    font-size: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   HIGHLIGHTS: franja hairline con datos en versalita.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] .dp-bq-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 14px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--dpb-line);
+  border-bottom: 1px solid var(--dpb-line);
+  background: var(--dpb-bg);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-highlight {
+  font-family: var(--dpb-body);
+  font-size: 6px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  color: var(--dpb-ink-2);
+}
+
+/* --------------------------------------------------------------------------
+   "RECIÉN LLEGADO": título serif + grilla 4:5 con flag (solo premium con
+   imágenes de carrusel, igual que la web).
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] .dp-bq-featured {
+  padding: 14px 16px 0;
+  background: var(--dpb-bg);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-featured-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--dpb-line);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-featured-title {
+  font-family: var(--dpb-display);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--dpb-ink);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-featured-title em {
+  font-style: italic;
+  color: var(--dpb-accent);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-featured-link {
+  font-family: var(--dpb-body);
+  font-size: 5.8px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--dpb-accent);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--dpb-soft-2);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale .45s ease;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-card-flag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  padding: 2px 4px;
+  background: color-mix(in srgb, var(--dpb-surface) 88%, transparent);
+  color: var(--dpb-ink);
+  font-family: var(--dpb-body);
+  font-size: 5.2px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+@media (hover: hover) {
+  .design-preview[data-store-template='boutique'] .dp-bq-card:hover img {
+    scale: 1.03;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   CITA: testimonio en serif itálica con comilla grande del acento.
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] .dp-bq-quote {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 3px;
+  padding: 18px 20px 20px;
+  background: var(--dpb-bg);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-quote-mark {
+  font-family: var(--dpb-display);
+  font-size: 30px;
+  line-height: .5;
+  color: var(--dpb-accent);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-quote-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  max-width: 32ch;
+  font-family: var(--dpb-display);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.32;
+  color: var(--dpb-ink);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-quote-by {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--dpb-body);
+  font-size: 6.4px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dpb-muted);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-quote-by strong {
+  font-weight: 600;
+  color: var(--dpb-ink-2);
+}
+
+/* Mapa: misma tira hairline del diseño, sin radios. */
+.design-preview[data-store-template='boutique'] .dp-map {
+  margin: 0 16px 14px;
+  padding: 8px;
+  border: 1px dashed var(--dpb-line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dpb-muted);
+  font-family: var(--dpb-body);
+  font-size: 8px;
+  letter-spacing: .04em;
+}
+.design-preview[data-store-template='boutique'] .dp-map .icon {
+  color: var(--dpb-accent);
+}
+
+/* --------------------------------------------------------------------------
+   PIE: cierre centrado con la marca en serif itálica y las líneas hairline
+   del pie real (WhatsApp, información legal y copyright).
+   -------------------------------------------------------------------------- */
+.design-preview[data-store-template='boutique'] .dp-bq-foot {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 16px 16px 14px;
+  border-top: 1px solid var(--dpb-line);
+  background: var(--dpb-bg);
+  text-align: center;
+}
+.design-preview[data-store-template='boutique'] .dp-bq-foot-brand {
+  font-family: var(--dpb-display);
+  font-size: 18px;
+  font-style: italic;
+  line-height: 1;
+  color: var(--dpb-accent);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-foot-wa {
+  font-family: var(--dpb-body);
+  font-size: 6.6px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  color: var(--dpb-ink-2);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-foot-line {
+  font-family: var(--dpb-body);
+  font-size: 5.8px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--dpb-muted);
+}
+.design-preview[data-store-template='boutique'] .dp-bq-foot-copy {
+  font-family: var(--dpb-body);
+  font-size: 6px;
+  letter-spacing: .04em;
+  color: var(--dpb-muted);
+}
+
+/* --------------------------------------------------------------------------
+   MOVIMIENTO REDUCIDO
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn,
+  .design-preview[data-store-template='boutique'] .dp-bq-links .dp-nav-item,
+  .design-preview[data-store-template='boutique'] .dp-bq-card img {
+    transition: none;
+  }
+  @media (hover: hover) {
+    .design-preview[data-store-template='boutique'] .dp-bq-ctas .dp-btn:hover {
+      translate: 0 0;
+    }
+    .design-preview[data-store-template='boutique'] .dp-bq-card:hover img {
+      scale: 1;
+    }
+  }
+}

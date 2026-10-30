@@ -1,0 +1,42 @@
+<script setup>
+// Bloque 'faq' (Preguntas frecuentes): respuestas desplegables. Se apaga
+// con show_faq y se oculta solo sin ítems. props.title pisa el título.
+import { computed, inject } from 'vue'
+import AppIcon from '../../AppIcon.vue'
+import { vReveal } from '../../../directives/reveal.js'
+
+const props = defineProps({ block: { type: Object, default: null } })
+
+const ctx = inject('storePage')
+const { custom } = ctx
+
+const faqs = computed(() => (Array.isArray(custom.value.faqs) ? custom.value.faqs : []))
+const show = computed(() => custom.value.show_faq !== false && faqs.value.length > 0)
+const faqsTitle = computed(() => props.block?.props?.title?.trim() || custom.value.faqs_title?.trim() || 'Preguntas frecuentes')
+const eyebrowUnless = (label, title) => (String(title || '').trim().toLowerCase() === label.toLowerCase() ? '' : label)
+const faqEyebrow = computed(() => eyebrowUnless('Dudas frecuentes', faqsTitle.value))
+const faqVariant = computed(() => props.block?.variant || 'accordion')
+</script>
+
+<template>
+  <section v-if="show" class="sp-faq" :class="`is-${faqVariant}`" :data-blk-variant="faqVariant !== 'accordion' ? faqVariant : null" aria-labelledby="sp-faq-title">
+    <div class="sp-container sp-faq-wrap">
+      <div class="sp-faq-intro">
+        <p v-if="faqEyebrow" class="sp-eyebrow">{{ faqEyebrow }}</p>
+        <h2 id="sp-faq-title" v-reveal class="sp-section-title">{{ faqsTitle }}</h2>
+      </div>
+      <div v-if="faqVariant === 'list'" class="sp-faq-list">
+        <div v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item is-open">
+          <strong class="sp-faq-q">{{ f.q }}</strong>
+          <p class="sp-faq-answer">{{ f.a }}</p>
+        </div>
+      </div>
+      <div v-else class="sp-faq-list">
+        <details v-for="(f, i) in faqs" :key="i" v-reveal="(i % 4) * 60" class="sp-faq-item">
+          <summary>{{ f.q }}<span class="sp-faq-caret" aria-hidden="true"><AppIcon name="chevron-down" :size="16" /></span></summary>
+          <p class="sp-faq-answer">{{ f.a }}</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</template>

@@ -1,0 +1,1 @@
+import{s as a}from"./index--SnESJTr.js";import{y as t,bN as r,l as c,bS as n,m}from"./index-slk71Vvv.js";const _={__name:"StoreServicesView",setup(p){const e=n("storePage"),s=c(()=>{var o;return a((o=e==null?void 0:e.pageTemplate)==null?void 0:o.value,"services")});return(o,i)=>(m(),t(r(s.value)))}};export{_ as default};

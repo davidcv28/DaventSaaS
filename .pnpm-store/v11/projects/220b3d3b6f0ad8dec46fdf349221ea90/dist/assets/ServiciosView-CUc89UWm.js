@@ -1,0 +1,1 @@
+import r from"./ServiciosView-D0qs9kws.js";import{m as o,y as t}from"./index-slk71Vvv.js";import"./services.api-C-ef34R_.js";import"./useLayout-DaliIOzk.js";import"./index--SnESJTr.js";import"./contract-BOJ-5Os_.js";import"./reveal-PfVpgicn.js";const l={__name:"ServiciosView",setup(e){return(c,i)=>(o(),t(r,{class:"cl-services"}))}};export{l as default};

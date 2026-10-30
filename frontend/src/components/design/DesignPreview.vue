@@ -322,7 +322,7 @@ watch(() => props.template, (t) => {
   position: static; padding: 10px; gap: 0; width: 100%; max-width: 100%;
   background: var(--surface); box-shadow: none;
 }
-.dsg-preview.is-compact .dp-stage { max-height: 340px; min-height: 200px; }
+.dsg-preview.is-compact .dp-stage { max-height: 560px; min-height: 340px; }
 @media (max-width: 1100px) {
   .dsg-layout > .dsg-preview { display: none; position: fixed; left: var(--dsg-left, 8px); width: var(--dsg-w, calc(100% - 16px)); right: auto; bottom: var(--dsg-sheet-bottom, 80px); top: auto; z-index: 60; margin: 0; max-height: min(78dvh, calc(100dvh - var(--dsg-sheet-bottom, 80px) - 76px)); padding: 12px; border-radius: 18px; box-shadow: 0 -12px 40px -12px rgba(9, 12, 24, .45); }
   .dsg-layout > .dsg-preview.is-open { display: flex; animation: dsg-sheet-in .22s ease both; }

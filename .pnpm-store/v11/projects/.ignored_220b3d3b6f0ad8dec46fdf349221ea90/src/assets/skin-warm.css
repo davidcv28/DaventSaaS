@@ -1,0 +1,28 @@
+/* Skin 'warm' — crema, ámbar y sombra cálida.
+   Solo tiendas con data-st-skin='warm'. */
+.store-page[data-st-skin='warm'] {
+  --sp-radius: 14px;
+  --sp-bg: color-mix(in srgb, #fdf6ec 90%, var(--store-accent-soft, #eef2ff));
+  --sp-card: #fffaf2;
+  --sp-card-solid: #fffaf2;
+  --sp-surface: #f8efe1;
+  --sp-line: color-mix(in srgb, #a4703c 22%, #e8dcc9);
+  --sp-shadow-sm: 0 2px 6px rgba(120, 78, 32, .06);
+  --sp-shadow-md: 0 16px 36px -22px rgba(120, 78, 32, .34);
+}
+.store-page[data-st-skin='warm'][data-store-theme='dark'] {
+  --sp-bg: #16110c;
+  --sp-card: #221a12;
+  --sp-card-solid: #221a12;
+  --sp-surface: #1b140e;
+  --sp-line: color-mix(in srgb, #e0b483 20%, #3a2c20);
+}
+.store-page[data-st-skin='warm'] .sp-card,
+.store-page[data-st-skin='warm'] .sp-aigrid-card,
+.store-page[data-st-skin='warm'] .sp-aicheck.is-cards .sp-aicheck-item,
+.store-page[data-st-skin='warm'] .sp-aipricing-card,
+.store-page[data-st-skin='warm'] .sp-aiprocess-step { border-radius: 14px; border-color: var(--sp-line); }
+.store-page[data-st-skin='warm'] .sp-btn { border-radius: 10px; }
+.store-page[data-st-skin='warm'] .sp-section-title { letter-spacing: -.01em; }
+.store-page[data-st-skin='warm'] .sp-section-title::after { background: color-mix(in srgb, #c2762c 80%, var(--store-accent)); }
+.store-page[data-st-skin='warm'] .sp-eyebrow { color: color-mix(in srgb, #a4703c 70%, var(--sp-ink)); }

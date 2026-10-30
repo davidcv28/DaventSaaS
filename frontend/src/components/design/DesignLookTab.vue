@@ -2,13 +2,14 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import {
-  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_TEMPLATE_FAMILIES,
+  CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES,
   STORE_FONTS, STORE_FONT_GROUPS, STORE_FONT_PICKER, storeFontFamily, ensureStoreFont, ensureStoreFontPicker,
   NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX, allowedTemplatesFor, storeThemeVars, resolveStoreTemplate,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, formatStorageMB, effectiveAccent
 } from '../../api/stores.api.js'
-import { extractLogoColors, contrastRatio, deriveAccent, fixAccent, harmonicAccent, normalizeHex, isHex } from '../../utils/colorTools.js'
+import { extractLogoColors, contrastRatio, deriveAccent, fixAccent, harmonicAccent, normalizeHex, isHex, nearestAccent, hexToRgb } from '../../utils/colorTools.js'
 import { PALETTES } from '../../utils/palettes.js'
+import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import AppIcon from '../AppIcon.vue'
 import DesignPreview from './DesignPreview.vue'
 
@@ -310,34 +311,48 @@ const stepSum = computed(() => ({
   style: `${tplLabel.value} · ${currentCover.value ? 'con portada' : 'sin portada'}`
 }))
 
-// Los 8 estilos del catálogo: una familia por opción (Raíz, Alimentos, Trama,
-// Indumentaria, Boutique, Clásico, Circuito y Seguridad). Cada opción del
-// selector lleva su rubro y la miniatura real del estilo se ve al lado; se
-// elige al instante (el borrador viaja por `studio:update`).
-// `allowedTemplates` gatea los de otro plan.
-const storeTemplates = STORE_TEMPLATES
-const templateFamilies = STORE_TEMPLATE_FAMILIES
-const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
-const templateTierLabel = (key) => {
-  const tier = STORE_TEMPLATES[key]?.tier
+// Los estilos del selectbox salen del catálogo del dominio design (base de
+// datos): nada de listas de plantillas en el front.
+const { styles: designStyles, load: loadDesignStyles } = useDesignCatalog()
+onMounted(() => loadDesignStyles())
+const styleOptions = computed(() => designStyles.value.filter((s) => s.is_active !== false))
+const tierLabel = (tpl) => {
+  const tier = STORE_TEMPLATES[tpl]?.tier
   return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Incluido'
 }
-const currentFamily = computed(() => (
-  templateFamilies.find((f) => f.templates.includes(props.form.template)) || templateFamilies[0]
-))
-// Selectbox de estilos: escribir la plantilla del borrador alcanza para que
-// el shell la mande por `studio:update` y la vista previa cambie al instante.
+const currentStyleId = computed(() => {
+  const id = props.form.site_theme?.style?.id
+  if (id && styleOptions.value.some((s) => s.slug === id)) return id
+  return styleOptions.value.find((s) => s.template === props.form.template)?.slug || ''
+})
+// Selectbox de estilos: escribir el estilo del borrador alcanza para que
+// el shell lo mande por `studio:update` y la vista previa cambie al instante.
 // El Guardar del Studio ya viaja con `template_draft` al publicar.
 function onStylePick(event) {
-  const key = event.target.value
-  if (!allowedTemplates.value.includes(key)) {
+  const s = styleOptions.value.find((x) => x.slug === event.target.value)
+  if (!s) return
+  if (!allowedTemplates.value.includes(s.template)) {
     // Opción de otro plan: el <select> no puede quedar mostrando lo que no
-    // se aplicó, así que vuelve a la plantilla vigente.
-    event.target.value = props.form.template
+    // se aplicó, así que vuelve al estilo vigente.
+    event.target.value = currentStyleId.value
     emit('go-plans')
     return
   }
-  props.form.template = key
+  const tokens = s.tokens || {}
+  props.form.site_theme = { ...(props.form.site_theme || {}), style: { id: s.slug } }
+  props.form.theme = s.page_theme || props.form.theme
+  const body = tokens.typography?.body
+  if (body) {
+    props.form.name_font = body
+    ensureStoreFont(body)
+  }
+  const accent = tokens.palette?.accent
+  if (accent && advanced.value) props.form.accent_custom = accent
+  else if (accent) {
+    const slug = nearestAccent(hexToRgb(accent), STORE_ACCENTS)
+    if (slug) props.form.accent = slug
+  }
+  props.form.template = s.template
 }
 
 const HISTORY_FIELDS = ['theme', 'accent', 'accent_custom', 'name_font', 'name_font_size', 'template', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay']
@@ -684,18 +699,19 @@ onBeforeUnmount(dropLocalLogo)
               <div class="dl-style-row">
                 <span class="tpl-thumb dl-style-prev" :data-tpl="form.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>
                 <div class="dl-style-sel">
-                  <select id="design-style" class="select" :value="form.template" aria-describedby="design-style-help" @change="onStylePick">
-                    <option v-for="f in templateFamilies" :key="f.key" :value="f.templates[0]" :disabled="!familyAllowed(f)">
-                      {{ storeTemplates[f.templates[0]]?.label }} · {{ f.caption }}
+                  <select id="design-style" class="select" :value="currentStyleId" :disabled="!styleOptions.length" aria-describedby="design-style-help" @change="onStylePick">
+                    <option value="" disabled>Elegí un estilo…</option>
+                    <option v-for="s in styleOptions" :key="s.slug" :value="s.slug" :disabled="!allowedTemplates.includes(s.template)">
+                      {{ s.nombre }} · {{ s.categoria }} · {{ tierLabel(s.template) }}
                     </option>
                   </select>
                   <span class="dl-style-meta">
-                    {{ currentFamily?.label }}
-                    <span class="pick-tier" :class="storeTemplates[form.template]?.tier">{{ templateTierLabel(form.template) }}</span>
+                    {{ styleOptions.find((s) => s.slug === currentStyleId)?.nombre || '' }}
+                    <span class="pick-tier" :class="STORE_TEMPLATES[form.template]?.tier">{{ tierLabel(form.template) }}</span>
                   </span>
                 </div>
               </div>
-              <p id="design-style-help" class="hint">Ocho diseños para tu rubro. Cambia la estructura de tu portada sin perder contenido y se ve al instante en la vista previa.</p>
+              <p id="design-style-help" class="hint">Estilos del catálogo de diseño. Cambia la piel de tu web sin perder contenido y se ve al instante en la vista previa.</p>
             </div>
             <div v-if="!advanced" class="dl-lock">
               <AppIcon name="lock" :size="16" aria-hidden="true" />

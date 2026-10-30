@@ -1,0 +1,44 @@
+{
+  "name": "davent-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Frontend Vue 3 — Autenticación, registro y recuperación para SaaS DAVENT",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "release:apk": "node scripts/release-apk.mjs",
+    "verify:studio": "node scripts/verify-studio-contract.mjs",
+    "preview": "vite preview --port 5173",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.5",
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6",
+    "@capgo/capacitor-social-login": "^7.20.0",
+    "axios": "^1.7.4",
+    "pinia": "^2.2.2",
+    "qrcode": "^1.5.4",
+    "vue": "^3.4.38",
+    "vue-router": "^4.4.5"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.9",
+    "@vitejs/plugin-vue": "^5.1.2",
+    "eslint": "^9.39.1",
+    "vite": "^5.4.8",
+    "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

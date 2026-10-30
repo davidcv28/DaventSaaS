@@ -47,7 +47,7 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
 .dstyles-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dstyles-live { min-width: 0; }
 @media (min-width: 1100px) {
-  .dstyles-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 460px); align-items: start; }
+  .dstyles-grid { grid-template-columns: minmax(0, 1fr) minmax(520px, 720px); align-items: start; }
   .dstyles-live { position: sticky; top: 12px; }
 }
 .dstyles-studio {

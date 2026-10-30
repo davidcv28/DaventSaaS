@@ -1,0 +1,103 @@
+import { http } from './http.js'
+
+// Panel de administración (todos los endpoints requieren usuario staff):
+// GET  /api/payments/admin-summary/      Bearer admin -> KPIs + revenue_by_day/month + by_plan
+// GET  /api/payments/                    Bearer staff -> TODOS los pagos (paginado, PAGE_SIZE=10)
+// GET  /api/suscriptions/                Bearer staff -> TODAS las suscripciones (paginado)
+// POST /api/payments/<id>/approve/       Bearer admin -> sella status=approved + paid_at y acredita el plan
+// GET  /api/daily-revenues/              Bearer admin -> rollups materializados por día
+// GET  /api/monthly-revenues/            Bearer admin -> rollups materializados por mes
+// POST /api/suscription-plans/           Bearer admin {name, price} -> crear plan
+// PUT  /api/suscription-plans/<id>/      Bearer admin {name, price} -> actualizar plan
+// GET  /api/user/                        Bearer admin -> listado de usuarios [{id, username, email, is_staff}]
+// GET  /api/stores/                      Bearer staff -> TODAS las webs de clientes (slug, dueño, plan, acceso, bloqueo)
+// POST /api/stores/<id>/block/           Bearer admin {reason?} -> bloquea la web: sus rutas públicas pasan a 404
+// POST /api/stores/<id>/unblock/         Bearer admin -> levanta el bloqueo (la web vuelve a regirse por plan + is_published)
+// POST /api/suscriptions/assign/         Bearer admin {user_id, plan_id} -> asigna plan al usuario (30 días)
+// GET  /api/coupons/                     Bearer admin -> cupones con auditoría de canjes
+// POST /api/coupons/                     Bearer admin {code, plan, days, max_uses?, expires_at?} -> crear cupón
+// PUT  /api/coupons/<id>/                Bearer admin {campos parciales} -> editar/activar/desactivar cupón
+
+// DRF pagina con PageNumberPagination (PAGE_SIZE=10). Recorremos todas las
+// páginas con ?page=N hasta que `next` sea null (tope de seguridad en 50).
+async function fetchAllPages(path) {
+  const out = []
+  for (let page = 1; page <= 50; page++) {
+    const { data } = await http.get(path, { params: { page } })
+    if (Array.isArray(data)) return out.concat(data)
+    out.push(...(data?.results || []))
+    if (!data?.next) break
+  }
+  return out
+}
+
+export const adminApi = {
+  async summary() {
+    const { data } = await http.get('/payments/admin-summary/')
+    return data
+  },
+
+  async listAllPayments() {
+    return fetchAllPages('/payments/')
+  },
+
+  async listAllSuscriptions() {
+    return fetchAllPages('/suscriptions/')
+  },
+
+  async approvePayment(id) {
+    const { data } = await http.post(`/payments/${id}/approve/`)
+    return data
+  },
+
+  async listPlans() {
+    return fetchAllPages('/suscription-plans/')
+  },
+
+  async createPlan({ name, price }) {
+    const { data } = await http.post('/suscription-plans/', { name: name.trim(), price: Number(price) })
+    return data
+  },
+
+  async updatePlan(id, { name, price }) {
+    const { data } = await http.put(`/suscription-plans/${id}/`, { name: name.trim(), price: Number(price) })
+    return data
+  },
+
+  async listUsers() {
+    return fetchAllPages('/user/')
+  },
+
+  async listAllStores() {
+    return fetchAllPages('/stores/')
+  },
+
+  async blockStore(id, reason) {
+    const { data } = await http.post(`/stores/${id}/block/`, { reason })
+    return data
+  },
+
+  async unblockStore(id) {
+    const { data } = await http.post(`/stores/${id}/unblock/`)
+    return data
+  },
+
+  async assignPlan(userId, planId) {
+    const { data } = await http.post('/suscriptions/assign/', { user_id: userId, plan_id: planId })
+    return data
+  },
+
+  async listCoupons() {
+    return fetchAllPages('/coupons/')
+  },
+
+  async createCoupon(payload) {
+    const { data } = await http.post('/coupons/', payload)
+    return data
+  },
+
+  async updateCoupon(id, payload) {
+    const { data } = await http.put(`/coupons/${id}/`, payload)
+    return data
+  }
+}

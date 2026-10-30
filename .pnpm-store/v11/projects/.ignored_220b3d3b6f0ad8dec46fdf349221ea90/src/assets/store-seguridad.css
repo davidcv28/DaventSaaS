@@ -1,0 +1,1736 @@
+/* ==========================================================================
+   DISEÑO SEGURIDAD — seguridad industrial / bomberos / EPP (nivel advanced)
+   Raíz de todo el CSS: [data-template="seguridad"] (lo emite StorePublicLayout).
+   Dirección de arte de la referencia (§4 "seguridad" de
+   docs/PLANTILLAS_GENERATIVAS.md): tinta negra + rojo de acento + amarillo
+   hazard, Barlow Condensed en mayúsculas para titulares, Barlow para texto,
+   bordes de 1-2 px, radios 0 y cintas hazard amarillo/negro como firma.
+   Esta hoja se carga SOLO cuando la tienda usa el diseño (TEMPLATE_CSS).
+   ========================================================================== */
+
+.store-page[data-template='seguridad'] {
+  /* --- Paleta fija del diseño --- */
+  --sg-bg: #F3F3F1;
+  --sg-surface: #FFFFFF;
+  --sg-surface-2: #E4E4E0;
+  --sg-line: #D8D8D3;
+  --sg-ink: #121212;
+  --sg-ink-2: #2A2A28;
+  --sg-muted: #4A4A46;
+  --sg-dark: #121212;
+  --sg-dark-2: #232323;
+  --sg-yellow: #FFC400;
+  --sg-ok: #4ADE80;
+  /* El acento del dueño pinta CTAs y banda. El texto sobre relleno sólido es
+     blanco y el relleno usa --sp-band-c1 (el acento o su tinta oscurecida que
+     el tema garantiza con AA 4.5 sobre blanco); el texto de acento sobre
+     fondo claro se oscurece hacia la tinta para pasar AA con cualquier acento
+     del catálogo. */
+  --sg-accent: var(--store-accent, #C8200E);
+  --sg-accent-text: color-mix(in srgb, var(--sg-accent) 72%, #121212);
+  --sg-accent-soft: color-mix(in srgb, var(--sg-accent) 10%, #F3F3F1);
+  --sg-solid: var(--sp-band-c1, var(--sg-accent));
+  --sg-solid-2: var(--sp-band-c2, var(--sg-solid));
+  --sg-on-accent: #FFFFFF;
+  /* Tipografía */
+  --sg-display: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+  --sg-body: 'Barlow', system-ui, -apple-system, sans-serif;
+  /* Ritmo y formas (radios 0: firma del diseño) */
+  --sg-container: 1240px;
+  --sg-gutter: 32px;
+  --sg-section: 72px;
+  --sg-hazard: repeating-linear-gradient(-45deg, #FFC400 0 14px, #121212 14px 28px);
+
+  /* Puente con el sistema compartido: todos los bloques Blk*, la ficha y el
+     chrome heredan esta piel sin duplicar CSS. */
+  --sp-bg: var(--sg-bg);
+  --sp-card: var(--sg-surface);
+  --sp-card-solid: var(--sg-surface);
+  --sp-surface: var(--sg-surface-2);
+  --sp-soft: var(--sg-surface-2);
+  --sp-ink: var(--sg-ink);
+  --sp-ink-2: var(--sg-ink-2);
+  --sp-muted: var(--sg-muted);
+  --sp-line: var(--sg-line);
+  --sp-radius: 0px;
+  --sp-display: var(--sg-display);
+  --sp-accent-text: var(--sg-accent-text);
+  --sp-on-band: #FFFFFF;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-shop-shadow: none;
+  --sp-shop-radius: 0;
+  --sp-top-h: 74px;
+  --sp-chrome: #FFFFFF;
+
+  font-family: var(--sg-body);
+  background: var(--sg-bg);
+  color: var(--sg-ink);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: clip;
+}
+
+/* La barra superior se ve siempre, también en el inicio (el layout base la
+   esconde en is-home porque las landings viejas traían su propio hero). */
+.store-page[data-template='seguridad'].is-home .sp-top { display: block; }
+
+/* Sin glows ambientales del sistema compartido: la página es plana. */
+.store-page[data-template='seguridad']::before,
+.store-page[data-template='seguridad']::after { display: none; }
+
+/* --------------------------------------------------------------------------
+   TIPOGRAFÍA
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] :is(h1, h2, h3, h4) {
+  font-family: var(--sg-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -.005em;
+  line-height: 1;
+  margin: 0;
+  color: inherit;
+}
+.store-page[data-template='seguridad'] h1 { font-size: clamp(48px, 7vw, 96px); line-height: .94; }
+.store-page[data-template='seguridad'] h2,
+.store-page[data-template='seguridad'] .sp-section-title,
+.store-page[data-template='seguridad'] .sp-shop-featured-title {
+  font-size: clamp(34px, 4.6vw, 52px);
+  line-height: 1;
+  margin: 0;
+}
+.store-page[data-template='seguridad'] h3 { font-size: 22px; }
+.store-page[data-template='seguridad'] .sp-section-title::after { display: none; }
+.store-page[data-template='seguridad'] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--sg-accent);
+  outline-offset: 2px;
+}
+.store-page[data-template='seguridad'] ::selection { background: var(--sg-yellow); color: var(--sg-ink); }
+
+/* Etiqueta ("eyebrow") condensada en mayúsculas con tracking amplio. */
+.store-page[data-template='seguridad'] :is(.sg-eyebrow, .sp-eyebrow, .sp-shop-featured-eyebrow) {
+  display: inline-block;
+  margin: 0 0 14px;
+  font-family: var(--sg-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--sg-accent-text);
+}
+/* El layout base dibuja una barra de acento de 26×2 en este pseudo: en
+   seguridad el remate tipográfico es el amarillo, no la barra. */
+.store-page[data-template='seguridad'] :is(.sg-eyebrow, .sp-eyebrow)::before {
+  content: none;
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   PRIMITIVAS DEL DISEÑO
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-wrap {
+  width: 100%;
+  max-width: var(--sg-container);
+  margin-inline: auto;
+  padding-inline: var(--sg-gutter);
+}
+/* Los bloques compartidos usan .sp-container (1360 px por defecto): en
+   seguridad el ancho de referencia es 1240 con 32 de gutter. */
+.store-page[data-template='seguridad'] .sp-container {
+  max-width: var(--sg-container);
+  padding-inline: var(--sg-gutter);
+}
+.store-page[data-template='seguridad'] .sg-hazard {
+  height: 10px;
+  background: var(--sg-hazard);
+}
+.store-page[data-template='seguridad'] .sg-hazard.is-tall { height: 14px; }
+/* Cinta de anuncios → hero: raya amarilla para separar las dos bandas
+   oscuras cuando el layout deja los bloques consecutivos. */
+.store-page[data-template='seguridad'] .sg-home > .sp-ann { border-bottom: 3px solid var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sg-sec-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.store-page[data-template='seguridad'] .sg-sec-title {
+  font-family: var(--sg-display);
+  font-size: clamp(34px, 4.6vw, 52px);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  margin: 0;
+}
+.store-page[data-template='seguridad'] .sg-sec-more {
+  font-family: var(--sg-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--sg-accent-text);
+  text-decoration: none;
+  padding: 8px 0;
+}
+.store-page[data-template='seguridad'] .sg-sec-more:hover { color: var(--sg-ink); }
+
+/* Botones rectangulares, condensados y en mayúsculas. */
+.store-page[data-template='seguridad'] .sg-btn,
+.store-page[data-template='seguridad'] .sp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 28px;
+  border: 2px solid transparent;
+  border-radius: 0;
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease;
+}
+.store-page[data-template='seguridad'] .sg-btn:hover,
+.store-page[data-template='seguridad'] .sp-btn:hover { background: var(--sg-ink); color: #fff; border-color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-btn--yellow { background: var(--sg-yellow); color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-btn--yellow:hover { background: var(--sg-ink); color: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sg-btn--ghost { background: transparent; border-color: #fff; color: #fff; }
+.store-page[data-template='seguridad'] .sg-btn--ghost:hover { background: var(--sg-yellow); border-color: var(--sg-yellow); color: var(--sg-ink); }
+
+.store-page[data-template='seguridad'] .sg-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   CHROME COMPARTIDO — barra superior blanca, cinta hazard y CTA de acento
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sp-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #fff;
+  color: var(--sg-ink);
+  border-bottom: 3px solid var(--sg-ink);
+  box-shadow: none;
+  backdrop-filter: none;
+  animation: none;
+}
+/* Cinta hazard pegada arriba del header. */
+.store-page[data-template='seguridad'] .sp-top::before {
+  content: '';
+  display: block;
+  height: 10px;
+  background: var(--sg-hazard);
+}
+.store-page[data-template='seguridad'] .sp-top-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 26px;
+  max-width: var(--sg-container);
+  padding: 12px var(--sg-gutter);
+}
+.store-page[data-template='seguridad'] .sp-brand { gap: 12px; }
+.store-page[data-template='seguridad'] .sp-mono {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-size: 26px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+.store-page[data-template='seguridad'] .sp-name {
+  font-family: var(--sg-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-logo.sm { width: 44px; height: 44px; border-radius: 0; object-fit: contain; }
+.store-page[data-template='seguridad'] .sp-top-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  flex: 1 1 auto;
+}
+.store-page[data-template='seguridad'] .sp-top-links a {
+  position: relative;
+  padding: 8px 0;
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--sg-ink);
+  text-decoration: none;
+}
+.store-page[data-template='seguridad'] .sp-top-links a:hover { color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sp-top-links a.router-link-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--sg-yellow);
+}
+.store-page[data-template='seguridad'] .sp-top-end { gap: 8px; }
+.store-page[data-template='seguridad'] .sp-top-cta {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sp-top-cta:hover { background: var(--sg-ink); color: #fff; }
+.store-page[data-template='seguridad'] .sp-icon-btn,
+.store-page[data-template='seguridad'] .sp-burger {
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  background: #fff;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-icon-btn:hover,
+.store-page[data-template='seguridad'] .sp-burger:hover { background: var(--sg-yellow); color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sp-progress { background: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sp-search {
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  background: #fff;
+  min-height: 44px;
+}
+.store-page[data-template='seguridad'] .sp-search input { font-family: var(--sg-body); font-size: 15px; }
+
+/* Drawer y tab bar móviles. */
+.store-page[data-template='seguridad'] .sp-drawer { background: var(--sg-dark); color: #fff; border-radius: 0; }
+.store-page[data-template='seguridad'] .sp-drawer-head { border-bottom: 3px solid var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sp-drawer-head strong,
+.store-page[data-template='seguridad'] .sp-nav-item {
+  font-family: var(--sg-display);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.store-page[data-template='seguridad'] .sp-nav-item { color: #fff; border-bottom: 1px solid #3A3A36; }
+.store-page[data-template='seguridad'] .sp-nav-item:hover { color: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sp-tabbar {
+  background: var(--sg-dark);
+  color: #fff;
+  border-top: 3px solid var(--sg-yellow);
+  border-radius: 0;
+}
+.store-page[data-template='seguridad'] .sp-tab { color: #C9C9C4; }
+.store-page[data-template='seguridad'] .sp-tab.active { color: var(--sg-yellow); }
+
+/* Pie: banda hazard + tinta negra. */
+.store-page[data-template='seguridad'] .sp-foot {
+  position: relative;
+  margin-top: 0;
+  background: var(--sg-dark);
+  color: #E4E4E0;
+  border: 0;
+  border-radius: 0;
+  padding-top: 10px;
+}
+.store-page[data-template='seguridad'] .sp-foot::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 10px;
+  background: var(--sg-hazard);
+}
+.store-page[data-template='seguridad'] .sp-foot .sp-container { padding-top: 40px; padding-bottom: 28px; }
+.store-page[data-template='seguridad'] .sp-foot strong {
+  font-family: var(--sg-display);
+  font-size: 26px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sp-foot :is(a, .sp-foot-heading) {
+  font-family: var(--sg-display);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #E4E4E0;
+}
+.store-page[data-template='seguridad'] .sp-foot-heading { color: var(--sg-yellow); font-weight: 800; }
+.store-page[data-template='seguridad'] .sp-foot a:hover { color: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sp-foot-bottom { border-top: 1px solid #3A3A36; }
+
+/* --------------------------------------------------------------------------
+   CINTA DE ANUNCIOS (BlkAnnouncements, variante fija)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sp-ann {
+  background: var(--sg-dark);
+  color: #fff;
+  border: 0;
+  padding: 10px 0;
+}
+.store-page[data-template='seguridad'] .sp-ann-track { justify-content: center; gap: 6px 40px; }
+.store-page[data-template='seguridad'] .sp-ann-item {
+  font-family: var(--sg-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sp-ann-item svg { color: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sp-ann-item:nth-child(even) { color: var(--sg-yellow); }
+
+/* --------------------------------------------------------------------------
+   HERO (firma)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-hero {
+  background: var(--sg-dark);
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sg-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 48px;
+  align-items: center;
+  padding-block: 72px 64px;
+}
+.store-page[data-template='seguridad'] .sg-hero-copy { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.store-page[data-template='seguridad'] .sg-hero-eyebrow {
+  align-self: flex-start;
+  margin: 0;
+  background: var(--sg-yellow);
+  color: var(--sg-ink);
+  padding: 5px 14px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+.store-page[data-template='seguridad'] .sg-hero-title {
+  font-family: var(--sg-display);
+  font-size: clamp(54px, 8.4vw, 96px);
+  font-weight: 800;
+  line-height: .93;
+  letter-spacing: -.005em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sg-hero-accent { color: var(--sg-yellow); display: block; }
+.store-page[data-template='seguridad'] .sg-hero-lead {
+  margin: 0;
+  max-width: 54ch;
+  font-size: 19px;
+  color: #E4E4E0;
+}
+.store-page[data-template='seguridad'] .sg-hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+.store-page[data-template='seguridad'] .sg-hero-ctas .sg-btn { min-height: 58px; font-size: 20px; }
+.store-page[data-template='seguridad'] .sg-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #E4E4E0;
+}
+.store-page[data-template='seguridad'] .sg-hero-meta li { display: inline-flex; align-items: center; gap: 8px; }
+.store-page[data-template='seguridad'] .sg-dot { width: 9px; height: 9px; border-radius: 99px; background: var(--sg-ok); flex: none; }
+.store-page[data-template='seguridad'] .sg-hero-aside { min-width: 0; }
+.store-page[data-template='seguridad'] .sg-hero-frame {
+  position: relative;
+  margin: 0;
+  min-height: 440px;
+  background: var(--sg-dark-2);
+  border: 3px solid var(--sg-yellow);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.store-page[data-template='seguridad'] .sg-hero-frame img { width: 100%; height: 100%; min-height: 440px; object-fit: cover; display: block; }
+.store-page[data-template='seguridad'] .sg-hero-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 440px;
+  padding: 24px;
+  text-align: center;
+}
+.store-page[data-template='seguridad'] .sg-hero-plate img { width: 96px; height: 96px; object-fit: contain; background: #fff; padding: 8px; }
+.store-page[data-template='seguridad'] .sg-hero-initial {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-size: 56px;
+  font-weight: 800;
+}
+.store-page[data-template='seguridad'] .sg-hero-plate strong {
+  font-family: var(--sg-display);
+  font-size: 28px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sg-hero-seal {
+  position: absolute;
+  top: 0;
+  right: 24px;
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  padding: 12px 16px;
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   FRANJA DE 4 CHECKS (BlkHighlights re-skineado)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sp-highlights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: none;
+  padding: 0 var(--sg-gutter);
+  background: #fff;
+  border-bottom: 1px solid var(--sg-line);
+}
+.store-page[data-template='seguridad'] .sp-hl {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 24px 18px 24px 0;
+  border-right: 1px solid var(--sg-line);
+  color: var(--sg-ink);
+  text-decoration: none;
+}
+.store-page[data-template='seguridad'] .sp-hl:last-child { border-right: 0; }
+.store-page[data-template='seguridad'] .sp-hl-icon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--sg-yellow);
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-hl strong {
+  display: block;
+  font-family: var(--sg-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-hl-text { display: block; margin-top: 2px; font-size: 14px; color: var(--sg-muted); }
+
+/* --------------------------------------------------------------------------
+   CATEGORÍAS 3×2 CON BADGE DE CONTEO (BlkCategories re-skineado)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-cats { padding: var(--sg-section) 0 32px; }
+.store-page[data-template='seguridad'] .sg-cats .sp-container { max-width: none; padding: 0; }
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-depts {
+  max-width: none !important; /* el Blk* calcula un ancho fijo por fila: acá manda la grilla 3×2 */
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  color: var(--sg-ink);
+  text-decoration: none;
+  transition: transform .18s ease;
+}
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept:hover { transform: translateY(-2px); }
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-thumb {
+  height: 130px;
+  background: var(--sg-surface-2);
+  border-radius: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-initial {
+  font-family: var(--sg-display);
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--sg-muted);
+}
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-name {
+  padding: 14px 18px 6px;
+  font-family: var(--sg-display);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-count {
+  align-self: flex-start;
+  margin: 0 18px 16px;
+  background: var(--sg-yellow);
+  color: var(--sg-ink);
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: none;
+}
+.store-page[data-template='seguridad'] .sg-cats .sp-shop-dept.all .sp-shop-dept-thumb { background: var(--sg-ink); color: var(--sg-yellow); }
+
+/* --------------------------------------------------------------------------
+   PRODUCTOS DESTACADOS (TplProductCard con tokens --tpc-*)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-featured { padding: 40px 0 var(--sg-section); }
+.store-page[data-template='seguridad'] .sg-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+.store-page[data-template='seguridad'] .sg-card {
+  --tpc-bg: #fff;
+  --tpc-ink: var(--sg-ink);
+  --tpc-border: 2px solid var(--sg-ink);
+  --tpc-radius: 0;
+  --tpc-shadow: none;
+  --tpc-ratio: 1.16;
+  --tpc-fit: cover;
+  --tpc-media-bg: var(--sg-surface-2);
+  --tpc-pad: 16px 18px 20px;
+  --tpc-gap: 8px;
+  --tpc-name-font: var(--sg-display);
+  --tpc-name-size: 24px;
+  --tpc-name-weight: 700;
+  --tpc-name-lh: 1.1;
+  --tpc-eyebrow-size: 12px;
+  --tpc-eyebrow-weight: 700;
+  --tpc-eyebrow-track: .08em;
+  --tpc-eyebrow-transform: uppercase;
+  --tpc-eyebrow-ink: var(--sg-muted);
+  --tpc-price-font: var(--sg-display);
+  --tpc-price-size: 30px;
+  --tpc-price-weight: 800;
+  --tpc-price-ink: var(--sg-ink);
+  --tpc-flag-radius: 0;
+  --tpc-flag-bg: var(--sg-ink);
+  --tpc-flag-ink: #fff;
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-offer-bg: var(--sg-solid);
+  --tpc-offer-ink: var(--sg-on-accent);
+  --tpc-focus: var(--sg-accent);
+  background: #fff;
+}
+.store-page[data-template='seguridad'] .sg-card .tpc-media { border-bottom: 2px solid var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-card .tpc-name {
+  text-transform: uppercase;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.store-page[data-template='seguridad'] .sg-card .tpc-body { align-content: start; }
+.store-page[data-template='seguridad'] .sg-card .tpc-price strong { letter-spacing: -.01em; }
+.store-page[data-template='seguridad'] .sg-card .tpc-price s { font-family: var(--sg-body); font-size: 14px; font-weight: 600; }
+.store-page[data-template='seguridad'] .sg-card .tpc-flags { gap: 0; }
+.store-page[data-template='seguridad'] .sg-card-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.store-page[data-template='seguridad'] .sg-card-specs li {
+  background: var(--sg-yellow);
+  color: var(--sg-ink);
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.store-page[data-template='seguridad'] .sg-card-promo { margin: 0; font-size: 12px; font-weight: 700; color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sg-card-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+.store-page[data-template='seguridad'] .sg-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--sg-display);
+}
+.store-page[data-template='seguridad'] .sg-card-price strong { font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+.store-page[data-template='seguridad'] .sg-card-price s { font-family: var(--sg-body); font-size: 14px; font-weight: 600; color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sg-card-wa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 12px;
+  background: var(--sg-ink);
+  color: #fff;
+  font-family: var(--sg-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+}
+.store-page[data-template='seguridad'] a.sg-card-wa:hover { background: var(--sg-solid); color: var(--sg-on-accent); }
+
+/* --------------------------------------------------------------------------
+   BANDA ROJA DE SERVICIOS (firma)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-services {
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  padding: var(--sg-section) 0;
+}
+.store-page[data-template='seguridad'] .sg-services-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: 48px;
+  align-items: center;
+}
+.store-page[data-template='seguridad'] .sg-services-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.store-page[data-template='seguridad'] .sg-eyebrow--light { color: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sg-services .sg-sec-title {
+  font-size: clamp(38px, 5vw, 56px);
+  line-height: .98;
+  color: inherit;
+}
+.store-page[data-template='seguridad'] .sg-services-lead { margin: 0; font-size: 17px; opacity: .94; max-width: 52ch; }
+.store-page[data-template='seguridad'] .sg-services-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.store-page[data-template='seguridad'] .sg-service {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  color: var(--sg-ink);
+  border-left: 8px solid var(--sg-yellow);
+  padding: 22px;
+}
+.store-page[data-template='seguridad'] .sg-service-title {
+  font-family: var(--sg-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-service-text { font-size: 14px; color: var(--sg-muted); }
+
+/* --------------------------------------------------------------------------
+   GRILLA A/B/C/K (firma)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-classes { padding: var(--sg-section) 0; }
+.store-page[data-template='seguridad'] .sg-classes .sg-sec-title { margin-bottom: 28px; }
+.store-page[data-template='seguridad'] .sg-classes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.store-page[data-template='seguridad'] .sg-class {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  border: 2px solid var(--sg-ink);
+  padding: 22px;
+}
+.store-page[data-template='seguridad'] .sg-class-letter {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  background: var(--sg-ink);
+  color: var(--sg-yellow);
+  font-family: var(--sg-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+.store-page[data-template='seguridad'] .sg-class-title {
+  font-family: var(--sg-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.store-page[data-template='seguridad'] .sg-class-text { font-size: 14px; color: var(--sg-muted); }
+
+/* --------------------------------------------------------------------------
+   CIFRAS EN BANDA NEGRA (firma)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-stats {
+  background: var(--sg-dark);
+  color: #fff;
+  padding: 64px 0;
+}
+.store-page[data-template='seguridad'] .sg-stats-title { margin: 0 0 28px; color: #fff; }
+.store-page[data-template='seguridad'] .sg-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+}
+.store-page[data-template='seguridad'] .sg-stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  border-top: 4px solid var(--sg-yellow);
+  padding-top: 14px;
+  margin: 0;
+}
+.store-page[data-template='seguridad'] .sg-stat-value {
+  margin: 0;
+  font-family: var(--sg-display);
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sg-stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #E4E4E0;
+}
+
+/* --------------------------------------------------------------------------
+   MARCAS EN BANDA NEGRA (BlkBrands, variante logos)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sp-brands {
+  background: var(--sg-dark);
+  color: #fff;
+  padding: 8px 0 48px;
+  border: 0;
+  margin: 0;
+}
+.store-page[data-template='seguridad'] .sp-brands-title {
+  font-family: var(--sg-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sg-yellow);
+  margin: 0 0 18px;
+}
+.store-page[data-template='seguridad'] .sp-brands-logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: none;
+}
+.store-page[data-template='seguridad'] .sp-brands-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid #4A4A46;
+  background: transparent;
+  padding: 12px 26px;
+  border-radius: 0;
+}
+.store-page[data-template='seguridad'] .sp-brands-logo strong {
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.store-page[data-template='seguridad'] .sp-brands-logo-initial { display: none; }
+.store-page[data-template='seguridad'] .sp-brands .sp-ann { background: transparent; }
+
+/* --------------------------------------------------------------------------
+   GALERÍA, TESTIMONIOS, FAQ, CTA Y CONTACTO
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sp-gallery { padding: var(--sg-section) 0 40px; }
+.store-page[data-template='seguridad'] .sp-gallery .sp-section-title { margin: 0 0 24px; }
+.store-page[data-template='seguridad'] .sp-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.store-page[data-template='seguridad'] .sp-gallery-item {
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  overflow: hidden;
+  padding: 0;
+  background: var(--sg-surface-2);
+  aspect-ratio: 4 / 3;
+}
+.store-page[data-template='seguridad'] .sp-gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+
+.store-page[data-template='seguridad'] .sp-testimonials { padding: 40px 0 var(--sg-section); }
+.store-page[data-template='seguridad'] .sp-testimonials .sp-section-title { margin: 0 0 26px; }
+.store-page[data-template='seguridad'] .sp-testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.store-page[data-template='seguridad'] .sp-testimonial {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  padding: 24px;
+  box-shadow: none;
+}
+.store-page[data-template='seguridad'] .sp-testimonial-quote { color: var(--sg-accent); }
+.store-page[data-template='seguridad'] .sp-testimonial-text { margin: 0; font-size: 16px; color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sp-testimonial-by strong {
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-testimonial-by span { color: var(--sg-muted); }
+
+.store-page[data-template='seguridad'] .sp-faq { padding: 40px 0 var(--sg-section); }
+.store-page[data-template='seguridad'] .sp-faq .sp-container.sp-faq-wrap { display: block; max-width: 860px; margin-inline: auto; }
+.store-page[data-template='seguridad'] .sp-faq .sp-section-title { margin: 0 0 24px; }
+.store-page[data-template='seguridad'] .sp-faq-list { display: grid; gap: 10px; max-width: none; }
+.store-page[data-template='seguridad'] .sp-faq-item {
+  background: #fff;
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  padding: 0 22px;
+  box-shadow: none;
+}
+.store-page[data-template='seguridad'] .sp-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0;
+  font-weight: 700;
+  color: var(--sg-ink);
+  cursor: pointer;
+}
+.store-page[data-template='seguridad'] .sp-faq-item[open] summary { color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sp-faq-answer { margin: 0 0 16px; color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sp-faq-caret { color: var(--sg-ink); }
+
+.store-page[data-template='seguridad'] .sp-cta { background: var(--sg-yellow); color: var(--sg-ink); padding: 0; }
+.store-page[data-template='seguridad'] .sp-cta-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: var(--sg-container);
+  margin-inline: auto;
+  padding: 48px var(--sg-gutter);
+  text-align: left;
+  justify-items: initial;
+  box-shadow: none;
+}
+.store-page[data-template='seguridad'] .sp-cta-inner::after { content: none; display: none; }
+.store-page[data-template='seguridad'] .sp-cta-title {
+  margin: 0;
+  font-size: clamp(34px, 4.6vw, 52px);
+  line-height: 1;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-cta-text { margin: 0; max-width: 60ch; color: var(--sg-ink-2); }
+.store-page[data-template='seguridad'] .sp-cta-btn { background: var(--sg-ink); border-color: var(--sg-ink); color: #fff; min-height: 60px; font-size: 20px; }
+.store-page[data-template='seguridad'] .sp-cta-btn:hover { background: #fff; color: var(--sg-ink); }
+
+.store-page[data-template='seguridad'] .sp-contact { padding: var(--sg-section) 0; }
+.store-page[data-template='seguridad'] .sp-contact .sp-container { max-width: var(--sg-container); }
+.store-page[data-template='seguridad'] .sp-contact-title { margin: 0 0 12px; }
+.store-page[data-template='seguridad'] .sp-contact-sub { color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sp-contact-hours {
+  background: #fff;
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.store-page[data-template='seguridad'] .sp-contact-hours li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--sg-line);
+  font-size: 15px;
+}
+.store-page[data-template='seguridad'] .sp-contact-hours li:last-child { border-bottom: 0; }
+.store-page[data-template='seguridad'] .sp-contact-hours strong { margin-left: auto; color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sp-form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.store-page[data-template='seguridad'] .sp-form-head { align-items: center; }
+.store-page[data-template='seguridad'] .sp-form-badge { background: var(--sg-yellow); color: var(--sg-ink); border-radius: 0; }
+.store-page[data-template='seguridad'] .sp-field label,
+.store-page[data-template='seguridad'] .sp-form label {
+  font-family: var(--sg-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sp-input {
+  min-height: 52px;
+  border: 2px solid var(--sg-ink);
+  border-radius: 0;
+  background: #fff;
+  color: var(--sg-ink);
+  box-shadow: none;
+  font-family: var(--sg-body);
+}
+.store-page[data-template='seguridad'] .sp-input:focus { border-color: var(--sg-accent); }
+.store-page[data-template='seguridad'] .sp-textarea { min-height: 132px; padding-block: 12px; }
+.store-page[data-template='seguridad'] .sp-input-wrap { border: 0; background: transparent; }
+.store-page[data-template='seguridad'] .sp-input-wrap > svg { color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sp-form-foot .sp-btn { min-height: 56px; }
+.store-page[data-template='seguridad'] .sp-captcha-q { border: 2px solid var(--sg-ink); background: var(--sg-yellow); color: var(--sg-ink); border-radius: 0; font-weight: 700; }
+.store-page[data-template='seguridad'] .sp-map-frame { border: 2px solid var(--sg-ink); border-radius: 0; overflow: hidden; }
+
+/* --------------------------------------------------------------------------
+   CATÁLOGO (.sg-catalog)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-catalog { min-width: 0; }
+.store-page[data-template='seguridad'] .sg-cat-head {
+  background: var(--sg-dark);
+  color: #fff;
+  padding: 40px 0 32px;
+  border-bottom: 10px solid var(--sg-yellow);
+}
+.store-page[data-template='seguridad'] .sg-crumbs { display: flex; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #C9C9C4; margin-bottom: 18px; }
+.store-page[data-template='seguridad'] .sg-crumbs a { color: var(--sg-yellow); text-decoration: none; }
+.store-page[data-template='seguridad'] .sg-cat-head-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.store-page[data-template='seguridad'] .sg-cat-head .sg-eyebrow { color: var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sg-cat-title { font-size: clamp(42px, 6vw, 68px); color: #fff; }
+.store-page[data-template='seguridad'] .sg-cat-lead { margin: 8px 0 0; max-width: 56ch; color: #E4E4E0; font-size: 17px; }
+.store-page[data-template='seguridad'] .sg-cat-counts { display: flex; flex-wrap: wrap; gap: 28px; margin: 0; padding: 0; list-style: none; }
+.store-page[data-template='seguridad'] .sg-cat-counts li { display: flex; flex-direction: column; border-top: 4px solid var(--sg-yellow); padding-top: 8px; }
+.store-page[data-template='seguridad'] .sg-cat-counts strong { font-family: var(--sg-display); font-size: 40px; font-weight: 800; line-height: 1; color: #fff; }
+.store-page[data-template='seguridad'] .sg-cat-counts span { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #C9C9C4; }
+.store-page[data-template='seguridad'] .sg-cat-note {
+  margin: 0;
+  padding: 10px var(--sg-gutter);
+  background: var(--sg-yellow);
+  color: var(--sg-ink);
+  font-family: var(--sg-display);
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-cat-main { padding-block: 32px 88px; }
+.store-page[data-template='seguridad'] .sg-promos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: baseline;
+  background: var(--sg-yellow);
+  color: var(--sg-ink);
+  border: 2px solid var(--sg-ink);
+  padding: 12px 18px;
+  margin-bottom: 24px;
+}
+.store-page[data-template='seguridad'] .sg-promos-label { font-family: var(--sg-display); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-promos ul { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; padding: 0; list-style: none; font-size: 14px; font-weight: 600; }
+.store-page[data-template='seguridad'] .sg-cat-body { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 32px; align-items: start; }
+.store-page[data-template='seguridad'] .sg-filters {
+  position: sticky;
+  top: calc(var(--sp-top-h) + 16px);
+  background: #fff;
+  border: 2px solid var(--sg-ink);
+  padding: 18px;
+}
+.store-page[data-template='seguridad'] .sg-filters-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 2px solid var(--sg-ink); padding-bottom: 10px; margin-bottom: 14px; }
+.store-page[data-template='seguridad'] .sg-filters-head strong { font-family: var(--sg-display); font-size: 22px; font-weight: 800; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-linkbtn { background: none; border: 0; padding: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--sg-accent-text); cursor: pointer; text-decoration: underline; }
+.store-page[data-template='seguridad'] .sg-linkbtn:disabled { color: var(--sg-muted); cursor: default; }
+.store-page[data-template='seguridad'] .sg-filter-group { border: 0; border-top: 1px solid var(--sg-line); margin: 0; padding: 14px 0 4px; min-width: 0; }
+.store-page[data-template='seguridad'] .sg-filter-group:first-of-type { border-top: 0; padding-top: 0; }
+.store-page[data-template='seguridad'] .sg-filter-group legend { font-family: var(--sg-display); font-size: 16px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 0; margin-bottom: 8px; }
+.store-page[data-template='seguridad'] .sg-check { display: flex; align-items: center; gap: 9px; padding: 5px 0; font-size: 14px; cursor: pointer; }
+.store-page[data-template='seguridad'] .sg-check input { accent-color: var(--sg-accent); width: 16px; height: 16px; }
+.store-page[data-template='seguridad'] .sg-check span { flex: 1; min-width: 0; }
+.store-page[data-template='seguridad'] .sg-check em { font-style: normal; font-size: 12px; color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sg-price { display: flex; gap: 8px; }
+.store-page[data-template='seguridad'] .sg-price label { flex: 1; }
+.store-page[data-template='seguridad'] .sg-price input { width: 100%; min-height: 40px; border: 2px solid var(--sg-ink); border-radius: 0; padding: 0 10px; font: inherit; background: #fff; color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-filter-hint { margin: 8px 0 0; font-size: 12.5px; color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sg-filters-apply { display: none; width: 100%; margin-top: 12px; }
+.store-page[data-template='seguridad'] .sg-filters-toggle { display: none; }
+.store-page[data-template='seguridad'] .sg-results { min-width: 0; }
+.store-page[data-template='seguridad'] .sg-results-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--sg-ink); padding-bottom: 12px; margin-bottom: 18px; }
+.store-page[data-template='seguridad'] .sg-results-head h2 { font-size: 28px; }
+.store-page[data-template='seguridad'] .sg-sort { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.store-page[data-template='seguridad'] .sg-sort select { min-height: 38px; border: 2px solid var(--sg-ink); border-radius: 0; padding: 0 10px; font: inherit; font-weight: 600; background: #fff; color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.store-page[data-template='seguridad'] .sg-tags button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--sg-ink); background: #fff; color: var(--sg-ink); padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 0; }
+.store-page[data-template='seguridad'] .sg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.store-page[data-template='seguridad'] .sg-skel { display: block; min-height: 360px; background: #E7E7E2; border: 2px solid var(--sg-line); }
+.store-page[data-template='seguridad'] .sg-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 56px 20px; border: 2px dashed var(--sg-line); background: #fff; }
+.store-page[data-template='seguridad'] .sg-empty strong { font-family: var(--sg-display); font-size: 24px; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-empty p { margin: 0; color: var(--sg-muted); max-width: 48ch; }
+.store-page[data-template='seguridad'] .sg-more { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 32px; }
+.store-page[data-template='seguridad'] .sg-more p { margin: 0; font-size: 13px; font-weight: 600; color: var(--sg-muted); }
+
+/* --------------------------------------------------------------------------
+   FICHA DE PRODUCTO (.sg-product, vista compartida rz-pdp-*)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-product :is(h1, h2, h3) { text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-name {
+  font-family: var(--sg-display);
+  font-size: clamp(34px, 4.4vw, 52px);
+  font-weight: 800;
+  line-height: .98;
+  text-transform: uppercase;
+  letter-spacing: -.005em;
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-price {
+  font-family: var(--sg-display);
+  font-size: clamp(30px, 3.6vw, 42px);
+  font-weight: 800;
+  color: var(--sg-ink);
+  letter-spacing: -.01em;
+}
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-pricebox { border-block: 2px solid var(--sg-ink); border-radius: 0; background: transparent; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-old { font-family: var(--sg-body); color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-sheet,
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-gallery,
+.store-page[data-template='seguridad'] .sg-product .rz-frame { border-radius: 0; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-gallery { border: 2px solid var(--sg-ink); background: #fff; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-buy { gap: 16px; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-buy-btn,
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-stick-btn,
+.store-page[data-template='seguridad'] .sg-product .rz-btn {
+  border-radius: 0;
+  border: 2px solid var(--sg-solid);
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-buy-btn:hover,
+.store-page[data-template='seguridad'] .sg-product .rz-btn:hover { background: var(--sg-ink); border-color: var(--sg-ink); color: #fff; }
+.store-page[data-template='seguridad'] .sg-product .rz-btn--ghost { background: transparent; color: var(--sg-ink); border-color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-specs th,
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-specs td { border-color: var(--sg-line); }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-specs th { font-family: var(--sg-display); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-sec-title,
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-caption-cat {
+  font-family: var(--sg-display);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-rel-grid { gap: 18px; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-off {
+  border-radius: 0;
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-seal { border-radius: 0; background: var(--sg-yellow); color: var(--sg-ink); font-family: var(--sg-display); font-weight: 700; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-crumbs { font-family: var(--sg-display); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-product .rz-pdp-crumbs a { color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sg-product :is(.rz-eyebrow, .rz-pdp-kicker) {
+  font-family: var(--sg-display);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sg-accent-text);
+}
+
+/* --------------------------------------------------------------------------
+   SERVICIOS (.sg-services, vista compartida rz-sv-*)
+   -------------------------------------------------------------------------- */
+.store-page[data-template='seguridad'] .sg-services .rz-sv-page { min-width: 0; }
+.store-page[data-template='seguridad'] .sg-services :is(h1, h2, h3) { text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-services .rz-sv-title {
+  font-family: var(--sg-display);
+  font-weight: 800;
+  line-height: .98;
+  letter-spacing: -.005em;
+}
+.store-page[data-template='seguridad'] .sg-services .rz-sv-mark { color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sg-services .rz-sv-lead { color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sg-services :is(.rz-btn, button, .rz-sv-wa) {
+  border-radius: 0;
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-services .rz-btn { border: 2px solid var(--sg-solid); background: var(--sg-solid); color: var(--sg-on-accent); }
+.store-page[data-template='seguridad'] .sg-services .rz-btn:hover { background: var(--sg-ink); border-color: var(--sg-ink); color: #fff; }
+.store-page[data-template='seguridad'] .sg-services .rz-btn--ghost { background: transparent; border-color: var(--sg-ink); color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-services :is(.rz-sv-item, .rz-sv-step, .rz-sv-faq details, .rz-sv-pick, .rz-sv-sheet) {
+  border-radius: 0;
+  border-color: var(--sg-ink);
+  background: #fff;
+}
+.store-page[data-template='seguridad'] .sg-services .rz-sv-item[aria-pressed='true'] {
+  border-color: var(--sg-accent);
+  box-shadow: inset 4px 0 0 var(--sg-accent);
+}
+.store-page[data-template='seguridad'] .sg-services :is(.rz-sv-item, .rz-sv-total, .rz-sv-price) strong,
+.store-page[data-template='seguridad'] .sg-services .rz-sv-price {
+  font-family: var(--sg-display);
+  font-weight: 800;
+}
+.store-page[data-template='seguridad'] .sg-services .rz-sv-quote {
+  background: var(--sg-ink);
+  color: #fff;
+  border-radius: 0;
+}
+.store-page[data-template='seguridad'] .sg-services .rz-sv-quote .rz-btn { background: var(--sg-yellow); border-color: var(--sg-yellow); color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-services :is(.rz-eyebrow, .rz-sv-crumbs) {
+  font-family: var(--sg-display);
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-services .rz-sv-crumbs a { color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sg-services .rz-sv-item-num { background: var(--sg-yellow); color: var(--sg-ink); border-radius: 0; font-family: var(--sg-display); font-weight: 800; }
+.store-page[data-template='seguridad'] .sg-services .rz-sv-item[aria-pressed='true'] .rz-sv-item-num { background: var(--sg-solid); color: var(--sg-on-accent); }
+
+/* ==========================================================================
+   SUPERFICIES Catálogo / Ficha / Servicios
+   Producto y Servicios reutilizan la vista + la piel base de Raíz dentro de
+   un subárbol `.store-page[data-template='raiz']` (`.sg-skin`, ver
+   ProductoView/ServiciosView). Acá se remapean los tokens --rz-* a la paleta
+   seguridad y se ajustan las piezas visibles; la lógica y la geometría no se
+   tocan. El selector usa `.store-page.sg-skin` para ganarle por
+   especificidad a la hoja de Raíz sin depender del orden de carga.
+   ========================================================================== */
+.store-page[data-template='seguridad'] .store-page.sg-skin {
+  --rz-bg: var(--sg-bg);
+  --rz-surface: #FFFFFF;
+  --rz-surface-2: var(--sg-surface-2);
+  --rz-surface-3: color-mix(in srgb, var(--sg-surface-2) 62%, #FFFFFF);
+  --rz-line: var(--sg-line);
+  --rz-line-strong: var(--sg-ink);
+  --rz-line-ui: var(--sg-muted);
+  --rz-ink: var(--sg-ink);
+  --rz-ink-2: var(--sg-ink-2);
+  --rz-muted: var(--sg-muted);
+  --rz-accent: var(--sg-solid);
+  --rz-accent-soft: var(--sg-accent-soft);
+  --rz-accent-text: var(--sg-accent-text);
+  --rz-accent-deep: color-mix(in srgb, var(--sg-accent) 80%, #121212);
+  --rz-accent-deep-2: color-mix(in srgb, var(--sg-accent) 60%, #121212);
+  --rz-band-1: var(--sg-solid);
+  --rz-band-2: var(--sg-solid-2);
+  --rz-on-band: var(--sg-on-accent);
+  --rz-on-band-2: color-mix(in srgb, var(--sg-on-accent) 88%, transparent);
+  --rz-on-band-muted: color-mix(in srgb, var(--sg-on-accent) 78%, transparent);
+  --rz-focus: var(--sg-accent);
+  --rz-selection: var(--sg-yellow);
+  --rz-inverse-bg: var(--sg-ink);
+  --rz-inverse-bg-2: var(--sg-dark-2);
+  --rz-inverse-ink: #FFFFFF;
+  --rz-inverse-ink-2: #E4E4E0;
+  --rz-inverse-muted: #C9C9C4;
+  --rz-inverse-line: rgb(255 255 255 / .22);
+  --rz-inverse-accent: var(--sg-yellow);
+  --rz-display: var(--sg-display);
+  --rz-body: var(--sg-body);
+  --rz-rad-sm: 0;
+  --rz-rad-md: 0;
+  --rz-rad-lg: 0;
+  --rz-rad-pill: 0;
+  --rz-radius-card: 0;
+  --rz-radius-media: 0;
+  --rz-shadow-1: none;
+  --rz-shadow-2: none;
+  --rz-shadow: none;
+  --rz-theme-color: #F3F3F1;
+  --rz-container: 1240px;
+  --rz-gutter: 32px;
+  --rz-section-y: 72px;
+
+  /* Puente --sp-* para los componentes compartidos que viven dentro de la
+     superficie (reseñas, formularios, tarjetas, chrome del layout). */
+  --sp-top-h: 74px;
+  --sp-bg: var(--sg-bg);
+  --sp-card: #FFFFFF;
+  --sp-card-solid: #FFFFFF;
+  --sp-surface: var(--sg-surface-2);
+  --sp-soft: var(--sg-surface-2);
+  --sp-ink: var(--sg-ink);
+  --sp-ink-2: var(--sg-ink-2);
+  --sp-muted: var(--sg-muted);
+  --sp-line: var(--sg-line);
+  --sp-radius: 0;
+  --sp-accent-text: var(--sg-accent-text);
+
+  min-height: 0;
+  background: var(--sg-bg);
+  color: var(--sg-ink);
+  font-family: var(--sg-body);
+}
+.store-page[data-template='seguridad'] .store-page.sg-skin .sp-page-root {
+  background: var(--sg-bg);
+  min-width: 0;
+}
+/* Tipografía de la superficie: condensada en mayúsculas. */
+.store-page[data-template='seguridad'] .sg-skin :is(h1, h2, h3, .rz-sv-title, .rz-pdp-name, .rz-pdp-sec-title) {
+  font-family: var(--sg-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -.005em;
+}
+.store-page[data-template='seguridad'] .sg-skin :is(.rz-eyebrow, .rz-pdp-kicker, .rz-sv-crumbs, .rz-pdp-crumbs) {
+  font-family: var(--sg-display);
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='seguridad'] .sg-skin :is(.rz-eyebrow, .rz-sv-crumbs a, .rz-pdp-crumbs a) { color: var(--sg-accent-text); }
+/* Primitivas Raíz → seguridad: botones rectangulares de acento. */
+.store-page[data-template='seguridad'] .sg-skin .rz-btn {
+  border-radius: 0;
+  border: 2px solid var(--sg-solid);
+  background: var(--sg-solid);
+  color: var(--sg-on-accent);
+  font-family: var(--sg-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+.store-page[data-template='seguridad'] .sg-skin .rz-btn:hover {
+  background: var(--sg-ink);
+  border-color: var(--sg-ink);
+  color: #fff;
+  transform: none;
+  box-shadow: none;
+}
+.store-page[data-template='seguridad'] .sg-skin .rz-btn--ghost {
+  background: transparent;
+  border-color: var(--sg-ink);
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'] .sg-skin .rz-btn--ghost:hover { background: var(--sg-ink); color: #fff; }
+.store-page[data-template='seguridad'] .sg-skin .rz-frame,
+.store-page[data-template='seguridad'] .sg-skin .rz-plate,
+.store-page[data-template='seguridad'] .sg-skin .rz-tag { border-radius: 0; box-shadow: none; }
+
+/* Ficha: acentos, cajas y precios. */
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-pricebox { border-block: 2px solid var(--sg-ink); background: transparent; border-radius: 0; }
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-price { font-family: var(--sg-display); font-weight: 800; color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-frame { border: 2px solid var(--sg-ink); border-radius: 0; overflow: hidden; }
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-specs th { font-family: var(--sg-display); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-off { border-radius: 0; background: var(--sg-solid); color: var(--sg-on-accent); font-family: var(--sg-display); font-weight: 800; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-seal { border-radius: 0; background: var(--sg-yellow); color: var(--sg-ink); font-family: var(--sg-display); font-weight: 700; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-rev-item,
+.store-page[data-template='seguridad'] .sg-skin .rz-pdp-share { border-radius: 0; }
+
+/* Servicios: misma estructura, piel seguridad (cinta oscura + amarillo). */
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-hero { padding-block: 28px 56px; }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-title { font-weight: 800; line-height: .98; }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-mark { color: var(--sg-accent-text); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-lead { color: var(--sg-muted); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-band { background: var(--sg-ink); color: #fff; border-block: 3px solid var(--sg-yellow); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-band-track span { font-family: var(--sg-display); letter-spacing: .14em; text-transform: uppercase; }
+.store-page[data-template='seguridad'] .sg-skin :is(.rz-sv-item, .rz-sv-step, .rz-sv-faq details, .rz-sv-pick, .rz-sv-sheet, .rz-sv-field input, .rz-sv-field select, .rz-sv-field textarea) {
+  border-radius: 0;
+  box-shadow: none;
+}
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-item { border: 2px solid var(--sg-ink); background: #fff; }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-item[aria-pressed='true'] { border-color: var(--sg-accent); box-shadow: inset 4px 0 0 var(--sg-accent); background: var(--sg-accent-soft); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-item-num { border-radius: 0; background: var(--sg-yellow); color: var(--sg-ink); font-family: var(--sg-display); font-weight: 800; }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-item[aria-pressed='true'] .rz-sv-item-num { background: var(--sg-solid); color: var(--sg-on-accent); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-price,
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-total { font-family: var(--sg-display); font-weight: 800; }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-quote { background: var(--sg-ink); color: #fff; border-radius: 0; }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-quote .rz-btn { background: var(--sg-yellow); border-color: var(--sg-yellow); color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-quote .rz-btn:hover { background: #fff; border-color: #fff; color: var(--sg-ink); }
+.store-page[data-template='seguridad'] .sg-skin .rz-sv-wa { border-radius: 0; font-family: var(--sg-display); font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE — 320–768 sin scroll horizontal
+   -------------------------------------------------------------------------- */
+@media (max-width: 1180px) {
+  .store-page[data-template='seguridad'] .sg-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-depts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sg-cat-body { grid-template-columns: 240px minmax(0, 1fr); }
+  .store-page[data-template='seguridad'] .sg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sp-highlights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sp-hl:nth-child(2n) { border-right: 0; }
+  .store-page[data-template='seguridad'] .sp-brands-logos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .store-page[data-template='seguridad'] .sg-hero-grid { grid-template-columns: minmax(0, 1fr); padding-block: 48px 40px; gap: 32px; }
+  .store-page[data-template='seguridad'] .sg-hero-frame,
+  .store-page[data-template='seguridad'] .sg-hero-frame img,
+  .store-page[data-template='seguridad'] .sg-hero-plate { min-height: 320px; }
+  .store-page[data-template='seguridad'] .sg-hero-seal { right: 12px; font-size: 15px; padding: 8px 11px; }
+  .store-page[data-template='seguridad'] .sg-hero-title { font-size: clamp(46px, 12vw, 76px); }
+  .store-page[data-template='seguridad'] .sg-services-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .store-page[data-template='seguridad'] .sg-classes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sg-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='seguridad'] .sp-testimonials-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='seguridad'] .sg-cat-body { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='seguridad'] .sg-filters-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 2px solid var(--sg-ink);
+    background: #fff;
+    color: var(--sg-ink);
+    font-family: var(--sg-display);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .store-page[data-template='seguridad'] .sg-filters-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    background: var(--sg-solid);
+    color: var(--sg-on-accent);
+    font-size: 12px;
+  }
+  .store-page[data-template='seguridad'] .sg-filters {
+    display: none;
+    position: static;
+    margin-bottom: 18px;
+  }
+  .store-page[data-template='seguridad'] .sg-filters.open { display: block; }
+  .store-page[data-template='seguridad'] .sg-filters-apply { display: inline-flex; }
+  .store-page[data-template='seguridad'] .sp-top-cta { display: none; }
+  .store-page[data-template='seguridad'] .sp-search,
+  .store-page[data-template='seguridad'] .sp-search.sp-search-top { display: none; }
+}
+
+/* El chrome base oculta la nav y muestra el burger ≤1100; las reglas de
+   arriba (más específicas) la volvían a mostrar y rompían el header a
+   390/320. Acá se restituye el comportamiento de trama/circuito. */
+@media (max-width: 1100px) {
+  .store-page[data-template='seguridad'] .sp-top-inner {
+    flex-wrap: nowrap;
+    gap: 10px;
+    height: var(--sp-top-h);
+  }
+  .store-page[data-template='seguridad'] .sp-top-links { display: none; }
+  .store-page[data-template='seguridad'] .sp-brand { flex: 1 1 auto; min-width: 0; gap: 10px; }
+  .store-page[data-template='seguridad'] .sp-brand-copy { min-width: 0; }
+  .store-page[data-template='seguridad'] .sp-name {
+    font-size: clamp(20px, 5.6vw, 26px);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .store-page[data-template='seguridad'] .sp-mono,
+  .store-page[data-template='seguridad'] .sp-logo.sm { width: 38px; height: 38px; font-size: 22px; }
+  .store-page[data-template='seguridad'] .sp-top-end { flex: 0 0 auto; }
+}
+
+@media (max-width: 640px) {
+  .store-page[data-template='seguridad'] { --sg-gutter: 18px; --sg-section: 48px; }
+  .store-page[data-template='seguridad'] .sg-featured-grid,
+  .store-page[data-template='seguridad'] .sg-grid { grid-template-columns: minmax(0, 1fr); }
+  /* Categorías: 2 columnas con tarjeta horizontal (imagen + nombre + badge).
+     Se neutraliza el carrusel táctil del sistema compartido (≤640) para que
+     la grilla 2×N no herede ancho fijo de 96 px ni el scroll horizontal. */
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-depts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    width: auto;
+    min-width: 0;
+    padding: 0 8px 0 0;
+    border-radius: 0;
+  }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-thumb {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 72px;
+    min-width: 72px;
+    height: 72px;
+    border-right: 2px solid var(--sg-ink);
+  }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-name {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    min-width: 0;
+    padding: 8px 8px 2px;
+    font-size: clamp(15px, 4.2vw, 18px);
+    line-height: 1.05;
+    overflow-wrap: normal;
+    word-break: keep-all;
+    hyphens: none;
+  }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept-count {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    align-self: start;
+    margin: 0 8px 8px;
+    font-size: 11px;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept.all { grid-column: 1 / -1; }
+  .store-page[data-template='seguridad'] .sg-services-cards { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='seguridad'] .sg-classes-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='seguridad'] .sg-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .store-page[data-template='seguridad'] .sg-stat-value { font-size: 48px; }
+  .store-page[data-template='seguridad'] .sp-highlights { grid-template-columns: minmax(0, 1fr); padding-inline: var(--sg-gutter); }
+  .store-page[data-template='seguridad'] .sp-hl { border-right: 0; border-bottom: 1px solid var(--sg-line); padding-right: 0; }
+  .store-page[data-template='seguridad'] .sp-hl:last-child { border-bottom: 0; }
+  .store-page[data-template='seguridad'] .sp-ann-track { justify-content: flex-start; flex-wrap: wrap; gap: 4px 18px; }
+  .store-page[data-template='seguridad'] .sp-ann-item { font-size: 13px; }
+  .store-page[data-template='seguridad'] .sp-cta-inner { flex-direction: column; align-items: flex-start; }
+  .store-page[data-template='seguridad'] .sg-cat-counts { gap: 18px; }
+  .store-page[data-template='seguridad'] .sg-cat-counts strong { font-size: 30px; }
+  .store-page[data-template='seguridad'] .sg-hero-ctas .sg-btn { width: 100%; }
+}
+
+/* Solo 320 px: una sola columna, la tarjeta de categoría sigue horizontal
+   (de 360 px en adelante manda la grilla de 2 columnas). */
+@media (max-width: 350px) {
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-depts { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept.all { grid-column: auto; }
+}
+
+/* --------------------------------------------------------------------------
+   MOVIMIENTO REDUCIDO
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='seguridad'] *,
+  .store-page[data-template='seguridad'] *::before,
+  .store-page[data-template='seguridad'] *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .store-page[data-template='seguridad'] .sg-cats .sp-shop-dept:hover { transform: none; }
+  .store-page[data-template='seguridad'] .sp-ann-track { animation: none !important; flex-wrap: wrap; width: auto; }
+  .store-page[data-template='seguridad'] .sp-ann-item { white-space: normal; }
+}
+
+/* ==========================================================================
+   MODO OSCURO — "servicio nocturno": carbón industrial, tinta clara, rojo y
+   amarillo hazard intactos. El root de la plantilla pisa los --sp-* del
+   layout, así que la paleta se redefine acá; las superficies que estaban
+   fijas en #fff pasan a --sg-surface y los bordes duros siguen siendo la
+   firma (ahora en tinta clara).
+   ========================================================================== */
+.store-page[data-template='seguridad'][data-store-theme='dark'] {
+  color-scheme: dark;
+  --sg-bg: #101010;
+  --sg-surface: #1A1A18;
+  --sg-surface-2: #242422;
+  --sg-line: #3A3A36;
+  --sg-ink: #F2F2EE;
+  --sg-ink-2: #D6D6CF;
+  --sg-muted: #B8B8B0;
+  --sg-dark: #0B0B0B;
+  --sg-dark-2: #1F1F1D;
+  --sg-yellow: #FFC400;
+  --sg-ok: #6EE7A8;
+  --sg-accent: var(--store-accent, #C8200E);
+  --sg-accent-text: color-mix(in srgb, var(--store-accent) 52%, #fff);
+  --sg-accent-soft: color-mix(in srgb, var(--store-accent) 22%, #101010);
+  --sg-solid: var(--sp-band-c1, var(--sg-accent));
+  --sg-solid-2: var(--sp-band-c2, var(--sg-solid));
+  --sg-on-accent: #FFFFFF;
+
+  --sp-bg: var(--sg-bg);
+  --sp-card: var(--sg-surface);
+  --sp-card-solid: var(--sg-surface);
+  --sp-surface: var(--sg-surface-2);
+  --sp-soft: var(--sg-surface-2);
+  --sp-ink: var(--sg-ink);
+  --sp-ink-2: var(--sg-ink-2);
+  --sp-muted: var(--sg-muted);
+  --sp-line: var(--sg-line);
+  --sp-accent-text: var(--sg-accent-text);
+  --sp-on-band: #FFFFFF;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-shop-shadow: none;
+  --sp-chrome: var(--sg-surface);
+  --sp-theme-color: #101010;
+}
+/* Superficies fijas en blanco (header, filtros, tarjetas, ficha, servicios). */
+.store-page[data-template='seguridad'][data-store-theme='dark']
+  :is(.sp-top, .sp-icon-btn, .sp-burger, .sp-search, .sp-highlights,
+      .sg-cats .sp-shop-dept, .sg-service, .sg-class, .sp-testimonial,
+      .sp-faq-item, .sp-contact-hours, .sp-input, .sg-filters, .sg-empty,
+      .sg-price input, .sg-sort select, .sg-tags button, .rz-pdp-gallery,
+      .sg-filters-toggle,
+      .sg-services :is(.rz-sv-item, .rz-sv-step, .rz-sv-faq details, .rz-sv-pick, .rz-sv-sheet)) {
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+  border-color: var(--sg-line);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-skel {
+  background: #2A2A27;
+  border-color: var(--sg-line);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-hero-plate img {
+  background: var(--sg-surface);
+}
+/* Botones con relleno de tinta: en oscuro la tinta es clara y el texto es bg. */
+.store-page[data-template='seguridad'][data-store-theme='dark']
+  :is(.sp-btn:hover, .sg-btn:hover, .sp-top-cta:hover, .sg-product .rz-btn:hover,
+      .sg-services .rz-btn:hover, .sp-cta-btn:hover) {
+  background: var(--sg-ink);
+  border-color: var(--sg-ink);
+  color: var(--sg-bg);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-skin .rz-sv-quote .rz-btn:hover {
+  background: var(--sg-surface);
+  border-color: var(--sg-surface);
+  color: var(--sg-ink);
+}
+/* .sg-skin redefine --sp-card/#fff y la tarjeta .sg-card tiene fondo blanco
+   propio: sin este bloque el cuerpo de la tarjeta y su botón de WhatsApp
+   quedaban blancos con texto claro encima. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-skin {
+  --sp-card: var(--sg-surface);
+  --sp-card-solid: var(--sg-surface);
+  --tpc-flag-bg: var(--sg-yellow);
+  --tpc-flag-ink: #151515;
+  --tpc-flag-border: 0;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-card {
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-card .tpc-body {
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+}
+/* La bandera "Nuevo" venía con tinta clara sobre placa clara. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .tpc-flag {
+  background: var(--sg-yellow);
+  color: #151515;
+  border-color: transparent;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .tpc-flag.offer {
+  background: var(--sg-solid);
+  color: #FFFFFF;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-card-wa {
+  background: var(--sg-solid);
+  color: #FFFFFF;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] a.sg-card-wa:hover {
+  background: var(--sg-yellow);
+  color: #151515;
+}
+/* Placas amarillas y bandas hazard: tinta profunda, nunca tinta clara. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-hero-eyebrow,
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-title,
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-text {
+  color: #151515;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-btn {
+  background: #101010;
+  border-color: #101010;
+  color: #FFFFFF;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #101010;
+}
+/* El amarillo puro no llega a AA sobre el acento índigo de la banda. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-eyebrow--light {
+  color: #FFE08A;
+}

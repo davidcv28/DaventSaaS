@@ -1,0 +1,23 @@
+/* Skin 'kinetic' — mayúsculas, bloques de acento y borde inclinado.
+   Solo tiendas con data-st-skin='kinetic'. */
+.store-page[data-st-skin='kinetic'] {
+  --sp-radius: 8px;
+  --sp-line: color-mix(in srgb, var(--store-accent) 40%, var(--sp-ink));
+  --sp-shadow-sm: 0 2px 0 var(--sp-ink);
+  --sp-shadow-md: 0 8px 0 -2px color-mix(in srgb, var(--store-accent) 55%, transparent);
+}
+.store-page[data-st-skin='kinetic'][data-store-theme='dark'] {
+  --sp-shadow-sm: 0 2px 0 rgba(255, 255, 255, .55);
+  --sp-shadow-md: 0 8px 0 -2px color-mix(in srgb, var(--store-accent) 45%, transparent);
+}
+.store-page[data-st-skin='kinetic'] .sp-hero-title,
+.store-page[data-st-skin='kinetic'] .sp-section-title,
+.store-page[data-st-skin='kinetic'] .spd-sec-title { text-transform: uppercase; font-weight: 900; letter-spacing: -.02em; }
+.store-page[data-st-skin='kinetic'] .sp-card,
+.store-page[data-st-skin='kinetic'] .sp-aigrid-card,
+.store-page[data-st-skin='kinetic'] .sp-aipricing-card,
+.store-page[data-st-skin='kinetic'] .sp-aiprocess-step { border-radius: 6px; border: 2px solid var(--sp-line); box-shadow: var(--sp-shadow-md); }
+.store-page[data-st-skin='kinetic'] .sp-btn { border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: .06em; transform: skewX(-6deg); }
+.store-page[data-st-skin='kinetic'] .sp-btn > * { transform: skewX(6deg); }
+.store-page[data-st-skin='kinetic'] .sp-section-title::after { width: 72px; height: 5px; transform: skewX(-14deg); }
+.store-page[data-st-skin='kinetic'] .sp-eyebrow { text-transform: uppercase; letter-spacing: .2em; }

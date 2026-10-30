@@ -1,0 +1,37 @@
+/* Skin 'vitrina' — vitrina de local: superficie limpia, radios medios,
+   sombra corta y catálogo al frente. Solo tiendas con data-st-skin='vitrina'. */
+.store-page[data-st-skin='vitrina'] {
+  --sp-radius: 8px;
+  --sp-bg: #f7f9fb;
+  --sp-card: #ffffff;
+  --sp-card-solid: #ffffff;
+  --sp-surface: #eef2f6;
+  --sp-line: color-mix(in srgb, #334155 14%, transparent);
+  --sp-shadow-sm: 0 1px 2px rgba(15, 23, 42, .06);
+  --sp-shadow-md: 0 14px 30px -18px rgba(15, 23, 42, .22);
+}
+.store-page[data-st-skin='vitrina'][data-store-theme='dark'] {
+  --sp-bg: #0b0f14;
+  --sp-card: #131a22;
+  --sp-card-solid: #131a22;
+  --sp-surface: #0f151c;
+  --sp-line: color-mix(in srgb, #e2e8f0 14%, transparent);
+}
+.store-page[data-st-skin='vitrina'] :is(.sp-card, .sp-service, .sp-testimonial, .sp-faq-item) {
+  border-radius: 8px;
+  border-color: var(--sp-line);
+  box-shadow: var(--sp-shadow-sm);
+}
+.store-page[data-st-skin='vitrina'] :is(.sp-hero-title, .sp-section-title) {
+  font-family: var(--sp-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.store-page[data-st-skin='vitrina'] .sp-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--sp-ink-2);
+}
+.store-page[data-st-skin='vitrina'] .sp-btn { border-radius: 8px; }
