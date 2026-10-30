@@ -50,6 +50,7 @@ from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 STORES_URL  =   '/api/stores/'
 AI_URL      =   f'{STORES_URL}ai-design/'
+CHAT_URL    =   f'{STORES_URL}ai-design/chat/'
 APPLY_URL   =   f'{STORES_URL}ai-design/apply/'
 IMAGE_URL   =   f'{STORES_URL}ai-design/image/'
 
@@ -97,7 +98,7 @@ class AiDesignBase(TestCase):
     def setUp(self):
         cache.clear()
 
-    def _store(self, advanced = True, ai = True, customization = True, products = 0, username = 'duenio', limits = False):
+    def _store(self, advanced = True, ai = True, customization = True, products = 0, username = 'duenio', limits = False, ai_chat = False):
         user, profile   =   _make_user(username)
         extra           =   {'max_gallery_images': 10, 'max_images': 30, 'max_storage_mb': 50} if limits else {}
         _grant(
@@ -107,6 +108,7 @@ class AiDesignBase(TestCase):
             has_design_plus         =   advanced,
             has_design_advanced     =   advanced,
             has_ai_design           =   ai,
+            has_ai_chat             =   ai_chat,
             **extra,
         )
         store   =   Store.objects.create(user = profile, slug = f'tienda-{username}')
@@ -1423,3 +1425,44 @@ class AiDesignExtrasTests(AiDesignBase):
         self.assertIn('hero', enabled)
         if chosen != 'aipricing':
             self.assertFalse(stored['aipricing']['enabled'])
+
+
+class AiChatTests(AiDesignBase):
+    """Chat de diseño (has_ai_chat): patch saneado que NO se aplica solo."""
+
+    def test_requires_ai_chat_benefit(self):
+        store, _    =   self._store(ai_chat = False)
+        response    =   self._client(store).post(CHAT_URL, {'message': 'quiero algo minimalista'}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_rejects_empty_message(self):
+        store, _    =   self._store(ai_chat = True)
+        response    =   self._client(store).post(CHAT_URL, {'message': '   '}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_returns_sanitized_patch_without_applying(self):
+        store, draft    =   self._store(ai_chat = True, products = 3)
+        response        =   self._client(store).post(CHAT_URL, {
+            'message': 'Quiero una web minimalista con verde y modo oscuro',
+            'history': [
+                {'role': 'user', 'content': 'hola'},
+                {'role': 'assistant', 'content': 'contame qué querés'},
+            ],
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])
+        data    =   response.json()
+        self.assertTrue(data['reply'])
+        patch   =   data['patch']
+        self.assertIn(patch['template'], allowed_templates_of(store.user))
+        self.assertIsInstance(patch['site_theme'], dict)
+        self.assertIsInstance(patch['layout_config'], dict)
+        #El patch NO se aplica: el borrador sigue como estaba.
+        draft.refresh_from_db()
+        self.assertFalse(draft.site_theme)
+        self.assertFalse(draft.layout_config)
+
+    def test_history_is_normalized(self):
+        store, _    =   self._store(ai_chat = True)
+        history     =   [{'role': 'user', 'content': 'x' * 1500}] * 30 + [{'role': 'hacker', 'content': 'no'}]
+        response    =   self._client(store).post(CHAT_URL, {'message': 'más aire', 'history': history}, format = 'json')
+        self.assertEqual(response.status_code, 200, response.content[:300])

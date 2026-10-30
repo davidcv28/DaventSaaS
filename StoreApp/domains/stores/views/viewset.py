@@ -81,6 +81,7 @@ from StoreApp.domains.stores.services.ai_design import (
 from StoreApp.domains.stores.services.ai_design_telemetry import (
     record_event as record_ai_design_event,
 )
+from StoreApp.domains.stores.services.ai_chat import chat as ai_design_chat
 
 from .viewset_base import StoreBaseViewSet
 from .viewset_config import StoreConfigs
@@ -328,6 +329,13 @@ class AiDesignImageThrottle(UserRateThrottle):
     #Cada foto se recodifica con Pillow y consume cuota del plan: 60/h deja
     #subir las 2-3 fotos de cada propuesta sin abrir la puerta al storage.
     scope   =   'ai_design_image'
+#=========================================
+# AI CHAT THROTTLE (chat de diseño, rate en settings)
+#=========================================
+class AiChatThrottle(UserRateThrottle):
+    #Por usuario: cada mensaje recorre el motor local; 60/h alcanza para
+    #iterar la conversación sin servir para martillar el endpoint.
+    scope   =   'ai_chat'
 #=========================================
 # STORE VIEWSET
 #=========================================
@@ -1057,6 +1065,29 @@ class StoreViewSet(StoreBaseViewSet):
             },
             status = status.HTTP_200_OK,
         )
+
+    @action(detail = False, methods = ['post'], url_path = 'ai-design/chat', throttle_classes = [AiChatThrottle])
+    def ai_design_chat(self, request):
+        #Chat conversacional del diseño: el dueño describe y el service
+        #interpreta la intención con el MISMO motor de ai_design. Devuelve
+        #un patch saneado (site_theme/layout_config/template) que NO se
+        #aplica solo: el frontend lo confirma con el PATCH de customization.
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_chat'):
+            return Response(
+                {'detail': 'El chat de diseño está disponible en el Plan premium.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        try:
+            data    =   ai_design_chat(store, request.data.get('message'), request.data.get('history'))
+        except AiDesignError as error:
+            return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return Response(data, status = status.HTTP_200_OK)
     #=========================================
     # STUDIO: PUBLISH / DISCARD / VERSIONS / RESTORE (borrador vs publicado)
     #=========================================

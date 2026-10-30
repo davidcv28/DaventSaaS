@@ -1335,6 +1335,10 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .dsg-tab{ flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 14px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
 .dsg-tab:hover{ background: var(--surface); }
 .dsg-tab.active{ background: var(--brand-500); color: #fff; }
+.dsg-tab.locked{ color: var(--ink-2); opacity: .8; }
+.dsg-tab.locked .lock-badge{ margin-left: 2px; }
+.dsg-tabs-sep{ flex: none; width: 1px; align-self: stretch; margin: 4px 2px; background: var(--line); }
+.dsg-ai{ min-width: 0; }
 /* Como items de la grilla, la card y la vista previa imponían su
    min-content como piso de la columna: la barra .dp-nav de la vista
    previa (~370px entre marca y links) desbordaba toda la sección en

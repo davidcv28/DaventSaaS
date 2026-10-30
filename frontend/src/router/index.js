@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core'
 import { env, storeHostSlug } from '../config/env.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import { useStoreStore } from '../stores/store.store.js'
+import { useBillingStore } from '../stores/billing.store.js'
 
 const LandingView = () => import('../views/LandingView.vue')
 const LoginView = () => import('../views/LoginView.vue')
@@ -11,6 +12,7 @@ const ForgotPasswordView = () => import('../views/ForgotPasswordView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const VerifyEmailView = () => import('../views/VerifyEmailView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
+const DesignStudioView = () => import('../views/design/DesignStudioView.vue')
 const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
 const ReportView = () => import('../views/ReportView.vue')
@@ -100,6 +102,14 @@ const routes = [
     name: 'dashboard',
     component: DashboardView,
     meta: { requiresAuth: true, customerOnly: true, title: 'Panel' }
+  },
+  // Studio de diseño a pantalla completa (premium, has_design_advanced):
+  // la guarda redirige al panel con aviso si el plan no lo incluye.
+  {
+    path: '/dashboard/diseno/studio',
+    name: 'design-studio',
+    component: DesignStudioView,
+    meta: { requiresAuth: true, customerOnly: true, title: 'Studio de diseño' }
   },
   // Onboarding: claim del link público en el primer ingreso
   {
@@ -291,6 +301,19 @@ router.beforeEach(async (to) => {
       if (!needsOnboarding) return { name: 'dashboard' }
     } else if (needsOnboarding) {
       return { name: 'onboarding' }
+    }
+    // Studio exclusivo: exige has_design_advanced (mismo criterio que la
+    // pestaña premium). Sin el beneficio vuelve al panel con aviso.
+    if (to.name === 'design-studio' && !auth.user?.is_staff) {
+      const billing = useBillingStore()
+      await Promise.all([
+        billing.plansStatus === 'idle' ? billing.loadPlans() : Promise.resolve(),
+        billing.status === 'idle' ? billing.loadMine() : Promise.resolve()
+      ])
+      const plan = billing.currentPlan
+      if (!plan?.isCurrent || !plan?.benefits?.has_design_advanced) {
+        return { name: 'dashboard', query: { locked: 'design_studio' } }
+      }
     }
   }
   return true

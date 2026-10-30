@@ -110,6 +110,10 @@ REST_FRAMEWORK = {
         #una imagen (Pillow) y consume cuota de la tienda — 60/h alcanza para
         #cargar varias propuestas sin servir para inundar el storage.
         'ai_design_image': '60/hour',
+        #Chat de diseño ("Diseñar con IA", has_ai_chat): cada mensaje corre
+        #el motor local — 60/h cubre una conversación de ajustes sin abrir
+        #la puerta a martillar el endpoint.
+        'ai_chat': '60/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a
         #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
         'content_report': '5/hour',

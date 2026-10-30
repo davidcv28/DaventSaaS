@@ -260,6 +260,14 @@ export const storesApi = {
     return data
   },
 
+  // Chat de diseño ("Diseñar con IA", has_ai_chat): el mensaje se interpreta
+  // con el motor de ai_design y vuelve {reply, patch, proposal_id, seed,
+  // needs}. El patch NO se aplica solo: se confirma con updateCustomization.
+  async aiDesignChat({ message, history = [] }) {
+    const { data } = await http.post('/stores/ai-design/chat/', { message, history })
+    return data
+  },
+
   // Studio — flujo borrador → publicar: publish aplica los *_draft a la
   // web y guarda la versión; discard los vuelve a lo publicado; versions
   // lista el historial y restore recupera un snapshot; sharePreview emite

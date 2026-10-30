@@ -21,7 +21,6 @@ import {
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
   validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
-  normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateImageFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
   MARKETING_LIMITS, SERVICE_ICONS, serviceHue,
@@ -71,8 +70,10 @@ import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
 import LayoutEditor from '../components/LayoutEditor.vue'
 import DesignPreview from '../components/design/DesignPreview.vue'
-import StudioShell from '../components/studio/StudioShell.vue'
+import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import AiDesignView from './design/AiDesignView.vue'
+import AiChatView from './design/AiChatView.vue'
+import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -299,9 +300,8 @@ const tabGroups = computed(() => {
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
     web.push(
-      { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Propuestas automáticas' },
+      { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Estilos, Studio e IA' },
       { id: 'pages', label: 'Plantillas', icon: 'layout-grid', hint: 'Qué páginas tiene tu web' },
-      { id: 'design', label: 'Cómo se ve', icon: 'palette', hint: 'Textos, colores e imágenes' },
       { id: 'blocks', label: 'Bloques', icon: 'sliders', hint: 'Qué secciones van y su orden' },
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
@@ -322,7 +322,9 @@ const tabGroups = computed(() => {
 // (vista previa del beneficio: 'expired' = suscripción vencida, 'upgrade' =
 // falta el beneficio en el plan actual).
 const SECTION_BENEFITS = {
-  ai: ['has_ai_design'],
+  design_assisted: ['has_ai_design'],
+  design_studio: ['has_design_advanced'],
+  design_ai: ['has_ai_chat'],
   services: ['has_services_site'],
   reviews: ['has_product_comments'],
   support: ['has_support_chat'],
@@ -331,7 +333,9 @@ const SECTION_BENEFITS = {
   tools: ['has_qr', 'has_flyers']
 }
 const LOCKED_FEATURES = {
-  ai: { icon: 'sparkles', title: 'Diseñá tu web con IA', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
+  design_assisted: { icon: 'sparkles', title: 'Diseño asistido', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
+  design_studio: { icon: 'layout-panel-left', title: 'Studio de diseño', text: 'El editor completo con vista previa en vivo: colores, tipografía, contenedores, portada y versión de prueba antes de publicar.' },
+  design_ai: { icon: 'bot', title: 'Diseñar con IA', text: 'Un chat donde describís tu web ideal y la IA la configura por vos. Revisás la propuesta y la aplicás cuando te gusta.' },
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
@@ -350,7 +354,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'ai']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats']) {
     map[id] = !hasAccess ? 'expired' : gated(id) ? 'upgrade' : null
   }
   return map
@@ -367,7 +371,6 @@ const navItems = computed(() => {
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
     { heading: 'Mi web' },
     { id: 'store', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
-    { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Tu web armada en un minuto', locked: L.ai },
     { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
     { id: 'support', label: 'Asistente de diseño', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
@@ -1271,14 +1274,41 @@ async function saveBot() {
 // ensuciaría los defaults del módulo.
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [] })
 const designTouched = reactive({})
-const designBusy = ref(false)
-const designTab = ref('content')
+const designTab = ref('look')
+// Sub-secciones de "Diseño": las tres últimas se muestran con candado cuando
+// el plan no trae el beneficio (nunca se ocultan).
 const designTabs = [
+  { id: 'look', label: 'Diseño', icon: 'palette' },
+  { id: 'assisted', label: 'Diseño asistido', icon: 'sparkles', benefit: 'has_ai_design' },
+  { id: 'studio', label: 'Studio', icon: 'layout-panel-left', benefit: 'has_design_advanced' },
+  { id: 'ai', label: 'Diseñar con IA', icon: 'bot', benefit: 'has_ai_chat' }
+]
+const designContentTabs = [
   { id: 'content', label: 'Mis datos', icon: 'pencil' },
-  { id: 'look', label: 'Studio', icon: 'sparkles' },
   { id: 'images', label: 'Fotos', icon: 'images' },
   { id: 'sections', label: 'Qué mostrar', icon: 'layout-grid' }
 ]
+const DESIGN_TAB_LOCKS = { assisted: 'design_assisted', studio: 'design_studio', ai: 'design_ai' }
+function designTabLocked(tab) {
+  return Boolean(tab.benefit) && !plan.value?.benefits?.[tab.benefit]
+}
+function openDesignTab(tab) {
+  if (designTabLocked(tab)) { openLocked(DESIGN_TAB_LOCKS[tab.id] || 'design_studio'); return }
+  if (tab.id === 'studio') { openStudioRoute(); return }
+  designTab.value = tab.id
+}
+// Studio en pestaña/ventana exclusiva: ruta propia a pantalla completa.
+function openStudioRoute() {
+  if (!canDesignAdvanced.value) { openLocked('design_studio'); return }
+  router.push({ name: 'design-studio' })
+}
+// Navegación interna de las sub-secciones (Diseño asistido / IA): las
+// secciones reales del panel cambian `section`; "design" apunta a Fotos.
+function onDesignNav(target) {
+  if (target === 'design' || target === 'images') { designTab.value = 'images'; return }
+  if (validIds.value.has(target)) { section.value = target; return }
+  section.value = 'design'
+}
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
@@ -1304,9 +1334,9 @@ watch(allowedTemplates, (list) => {
 watch(() => designForm.name_font, (f) => ensureStoreFont(f))
 
 let lastServerDesign = null
-let acceptServerDesign = false
-// Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
-const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', ...Object.keys(IDENTITY_DEFAULTS)]
+// Bandera compartida con useStudioDesign: true mientras el save del diseño
+// está en vuelo, para que el watcher de la tienda no pise lo editado.
+const serverFlags = { accept: false }
 const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
@@ -1315,10 +1345,10 @@ watch(() => store.store, (s) => {
   // el usuario editó y todavía no guardó en el diseño se conserva (salvo
   // justo después de guardar el diseño, donde manda lo que devolvió el server).
   const keep = {}
-  if (lastServerDesign && !acceptServerDesign) {
+  if (lastServerDesign && !serverFlags.accept) {
     DESIGN_FIELDS.forEach((k) => { if (designFieldValue(designForm[k]) !== designFieldValue(lastServerDesign[k])) keep[k] = designForm[k] })
   }
-  acceptServerDesign = false
+  serverFlags.accept = false
   Object.assign(designForm, store.customization)
   Object.assign(designForm, keep)
   lastServerDesign = Object.fromEntries(DESIGN_FIELDS.map((k) => [k, { ...CUSTOMIZATION_DEFAULTS, ...store.customization }[k]]))
@@ -1623,65 +1653,21 @@ const designDirty = computed(() => {
     return designFieldValue(designForm[k]) !== designFieldValue(base[k])
   })
 })
-// Studio de diseño (pestaña "Studio"): su siteTheme viaja por site_theme en
-// el save (el backend lo limpia/gatea por plan). El dirty del tema se une al
-// de los campos para el savebar, el leave-guard y el beforeunload.
-const studioRef = ref(null)
-const studioDirty = ref(false)
-const studioTheme = ref(null)
-const studioSavedTheme = ref(null)
-// Ensayo del Studio: layout_config + plantilla en prueba (emitidos por
-// update:layout). null = sin ensayo -> saveDesign manda lo de siempre.
-const studioExtras = ref(null)
-const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
-
-// --- Studio: flujo borrador → publicar ------------------------------------
-// has_unpublished llega en el customization anidado (backend: drafts ≠
-// publicado). versions/busy/share alimentan el panel "Publicar".
-const hasUnpublished = computed(() => Boolean(store.customization?.has_unpublished))
-const studioVersions = ref([])
-const studioVersionsLoading = ref(false)
-const studioActionBusy = ref('')
-const studioShare = ref(null) // {url, expiresAt}
-const studioHealthCtx = computed(() => ({
-  carousel: store.customization?.carousel || [],
-  gallery: store.customization?.gallery || [],
-  logoSize: store.customization?.logo_size || 0,
-  coverSize: store.customization?.cover_size || 0,
-  products: catalog.products || [],
-  categories: catalog.categories || [],
-  catalogLoaded: catalog.status === 'success' || (catalog.products || []).length > 0,
-  servicesCount: (services.items || []).length,
-  servicesLoaded: services.status === 'success' || (services.items || []).length > 0
-}))
-
-async function loadStudioVersions() {
-  studioVersionsLoading.value = true
-  try { studioVersions.value = await storesApi.studioVersions() }
-  catch { /* el panel muestra el vacío; no interrumpe el flujo */ }
-  finally { studioVersionsLoading.value = false }
-}
-async function publishStudio(note) {
-  if (designDirtyAll.value) return
-  studioActionBusy.value = 'publish'
-  const ok = await store.publishCustomization(note)
-  studioActionBusy.value = ''
-  if (!ok) return
-  await nextTick()
-  studioSavedTheme.value = studioTheme.value
-  studioRef.value?.markSaved()
-  pushToast('Publicado: tu web ya muestra los cambios ✓')
-  loadStudioVersions()
-}
-async function discardStudioDraft() {
-  studioActionBusy.value = 'discard'
-  const ok = await store.discardCustomization()
-  studioActionBusy.value = ''
-  if (!ok) return
-  await nextTick()
-  studioRef.value?.discardDraft()
-  pushToast('Borrador descartado')
-}
+// Studio de diseño: estado y handlers viven en el composable compartido con
+// la ruta exclusiva /dashboard/diseno/studio (sin duplicar guardado/publicación).
+const {
+  designBusy, designDirtyAll, saveDesign, discardDesign
+} = useStudioDesign({
+  store, plan, designForm, designDirty, designErrors, designTouched,
+  canDesignAdvanced, canLocationMap, catalog, services,
+  pushToast, serverFlags, companyFields: COMPANY_FIELDS,
+  designTab,
+  navigate(target) {
+    if (target === 'tools') { section.value = 'tools'; toolsTab.value = 'studio' }
+    else if (['blocks', 'plans', 'company', 'catalogs', 'services'].includes(target)) section.value = target
+    else pushToast('Esa sección no está disponible desde el Studio')
+  }
+})
 
 // Diseñar con IA: la vista aplica/publica/descarta sobre el borrador y avisa
 // acá para refrescar el estado de la tienda y mover al usuario si pidió seguir
@@ -1693,47 +1679,6 @@ async function onAiApplied(payload) {
     : action === 'discard' ? 'Borrador descartado'
     : 'Diseño aplicado al borrador')
   if (payload?.section) sectionInner.value = payload.section
-}
-async function restoreStudioVersion(versionId) {
-  studioActionBusy.value = `restore:${versionId}`
-  const ok = await store.restoreStudioVersion(versionId)
-  studioActionBusy.value = ''
-  if (!ok) return
-  await nextTick()
-  studioRef.value?.discardDraft()
-  pushToast('Versión restaurada ✓')
-}
-async function shareStudioPreview() {
-  studioActionBusy.value = 'share'
-  const res = await store.createShareLink()
-  studioActionBusy.value = ''
-  if (!res) return
-  studioShare.value = res
-  try {
-    await navigator.clipboard.writeText(res.url)
-    pushToast('Enlace copiado: la vista previa vence en 72 h ✓')
-  } catch {
-    pushToast('Enlace generado: copialo desde el panel Publicar')
-  }
-}
-// Relativo a propósito: el iframe hereda el origen actual y queda
-// same-origin siempre. Con env.appUrl (localhost fijo en dev) el puente
-// postMessage moría en silencio si el panel se abría por 127.0.0.1, la IP
-// LAN o un alias distinto — la preview solo cambiaba al recargar.
-const studioPreviewSrc = computed(() => (store.store?.slug ? `/${store.store.slug}?studio=1` : ''))
-function onStudioNav(target) {
-  if (target === 'tools') { section.value = 'tools'; toolsTab.value = 'studio' }
-  else if (['blocks', 'plans', 'company', 'catalogs', 'services'].includes(target)) section.value = target
-  else if (['content', 'images', 'sections'].includes(target)) designTab.value = target
-  else if (target === 'close') designTab.value = 'content'
-  else pushToast('Esa sección no está disponible desde el Studio')
-}
-function discardDesign() {
-  const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
-  DESIGN_FIELDS.forEach((k) => { designForm[k] = base[k] })
-  Object.keys(designTouched).forEach((k) => { delete designTouched[k] })
-  ensureStoreFont(designForm.name_font)
-  studioRef.value?.discardDraft()
 }
 const lookRing = ref(null)
 const previewSheet = ref(false)
@@ -1772,90 +1717,6 @@ onUnmounted(() => {
   window.removeEventListener('beforeunload', onBeforeUnload)
   window.removeEventListener('resize', measureSheet)
 })
-
-async function saveDesign(asDraft = false, quiet = false) {
-  Object.keys(designForm).forEach((k) => { designTouched[k] = true })
-  if (Object.keys(designErrors.value).some((k) => !COMPANY_FIELDS.includes(k))) return
-  designBusy.value = true
-  acceptServerDesign = true
-  const payload = {
-    display_name: designForm.display_name.trim(),
-    headline: designForm.headline.trim(),
-    description: designForm.description.trim(),
-    show_about: Boolean(designForm.show_about),
-    show_gallery: Boolean(designForm.show_gallery),
-    show_highlights: Boolean(designForm.show_highlights),
-    show_offers: Boolean(designForm.show_offers),
-    show_brands: Boolean(designForm.show_brands),
-    show_countdown: Boolean(designForm.show_countdown),
-    contact_email: designForm.contact_email.trim(),
-    show_contact: Boolean(designForm.show_contact),
-    theme: designForm.theme,
-    theme_toggle: Boolean(designForm.theme_toggle),
-    whatsapp: normalizeWhatsapp(designForm.whatsapp),
-    instagram: normalizeInstagram(designForm.instagram),
-    tiktok: normalizeTiktok(designForm.tiktok),
-    facebook: normalizeFacebook(designForm.facebook)
-  }
-  // Sin has_design_advanced no se envían las opciones premium (el backend las descartaría igual).
-  if (canDesignAdvanced.value) {
-    Object.assign(payload, {
-      name_font: designForm.name_font,
-      name_font_size: Number(designForm.name_font_size),
-      accent: designForm.accent,
-      accent_custom: designForm.accent_custom || '',
-      logo_scale: designForm.logo_scale,
-      logo_mode: designForm.logo_mode,
-      mono_style: designForm.mono_style,
-      cover_overlay: Number(designForm.cover_overlay),
-      cover_focus_x: Number(designForm.cover_focus_x),
-      cover_focus_y: Number(designForm.cover_focus_y)
-    })
-  }
-  // La plantilla viaja siempre: el backend la descarta del payload si
-  // quedó fuera del nivel del plan (allowed_templates_of). El ensayo del
-  // Studio (preset) pisa la del form cuando existe.
-  // En modo borrador (save del Studio) template/layout/tema viajan en sus
-  // columnas *_draft: la web sigue mostrando lo publicado hasta "Publicar".
-  // `template` publicado NO se envía en ese modo: el serializer lo copiaría
-  // al borrador (validate()) y pisaría un ensayo guardado en template_draft.
-  if (asDraft) {
-    const trialTemplate = studioExtras.value?.template
-    const formTemplateChanged = designForm.template !== (store.customization?.template || 'raiz')
-    const nextTemplate = trialTemplate || (formTemplateChanged ? designForm.template : null)
-    if (nextTemplate) payload.template_draft = nextTemplate
-  } else {
-    payload.template = studioExtras.value?.template || designForm.template
-  }
-  // El tema del Studio viaja como site_theme(_draft): el backend lo sanea y
-  // gatea por plan (clean_site_theme descarta en silencio lo que el plan no
-  // cubre). Solo se envía si el Studio llegó a montarse.
-  if (studioTheme.value) payload[asDraft ? 'site_theme_draft' : 'site_theme'] = studioTheme.value
-  // Ensayo de layout (preset aplicado en el Studio): viaja como
-  // layout_config(_draft) — clean_layout_config valida ids/variantes/bloques
-  // premium contra el plan de la misma forma que el editor de bloques.
-  if (studioExtras.value?.layout_config) payload[asDraft ? 'layout_config_draft' : 'layout_config'] = studioExtras.value.layout_config
-  // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
-  if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
-  const okDesign = await store.saveCustomization(payload)
-  acceptServerDesign = false
-  designBusy.value = false
-  if (okDesign) {
-    studioSavedTheme.value = studioTheme.value
-    studioRef.value?.markSaved()
-    if (!quiet) pushToast(asDraft ? 'Borrador guardado ✓' : 'Diseño guardado ✓')
-  }
-  return okDesign
-}
-
-// "Guardar" del Studio guarda el borrador y lo publica en el mismo gesto:
-// el cambio queda visible en la web sin pasar por "Publicar".
-async function saveStudioDesign() {
-  const ok = await saveDesign(true, true)
-  if (!ok) return
-  await nextTick()
-  await publishStudio('')
-}
 
 // Páginas de la web (site_templates): multi-selección de catálogo cerrado
 // que reemplazó al site_mode (both/marketing/catalog). El plan fija el
@@ -2219,6 +2080,12 @@ onMounted(async () => {
     await handlePaymentReturn()
   })
   await Promise.allSettled([fastLane, payments.loadPayments(), invoices.loadInvoices()])
+  // Aviso de una ruta exclusiva bloqueada (ej. Studio sin has_design_advanced).
+  if (route.query.locked) {
+    const { locked, ...rest } = route.query
+    fastLane.then(() => openLocked(String(locked)))
+    router.replace({ query: rest })
+  }
   // Red de seguridad en segundo plano (registra pagos ya acreditados en MP
   // que aún no estén en el sistema): el barrido contra la API de MP tarda
   // ~1s, así que ya no se espera — el backend además lo acota a uno cada
@@ -4185,16 +4052,12 @@ async function changePassword() {
         <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
       </div>
     </div>
-    <!-- ================= DISEÑAR CON IA ================= -->
-    <div v-if="seen.ai" v-show="section === 'ai'" :class="{ 'sec-on': section === 'ai' }">
-      <AiDesignView :plan="plan" @applied="onAiApplied" @navigate="section = $event" />
-    </div>
-    <!-- ================= DISEÑO WEB ================= -->
+    <!-- ================= DISEÑO (4 sub-secciones) ================= -->
     <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
         <div>
-          <h1>Cómo se ve mi página</h1>
-          <p>Elegí textos, colores e imágenes. Cuando guardás, tu página se actualiza al instante.</p>
+          <h1>Diseño de mi página</h1>
+          <p>Elegí el estilo, ajustá todo en el Studio o dejá que la IA lo arme. Cuando guardás, tu página se actualiza al instante.</p>
         </div>
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
@@ -4206,44 +4069,41 @@ async function changePassword() {
       <template v-if="canCustomize">
         <div class="dsg-wrap">
           <nav class="dsg-tabs" role="tablist" aria-label="Opciones de diseño">
-            <button v-for="t in designTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
+            <button v-for="t in designTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id, locked: designTabLocked(t) }" :aria-selected="designTab === t.id" @click="openDesignTab(t)">
+              <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
+              <span v-if="designTabLocked(t)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /></span>
+            </button>
+            <span class="dsg-tabs-sep" aria-hidden="true"></span>
+            <button v-for="t in designContentTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
               <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
             </button>
           </nav>
-        <StudioShell
+        <DesignStylesTab
           v-if="designTab === 'look'"
-          ref="studioRef"
           :form="designForm"
-          :customization="store.customization || {}"
           :benefits="plan?.benefits || {}"
           :shop-name="designShopName"
-          :public-url="publicUrl"
-          :preview-url="studioPreviewSrc"
-          :site-templates="designSiteTemplates"
-          :busy="designBusy"
-          :dirty="designDirty"
-          :initial-theme="studioTheme"
-          :saved-theme="studioSavedTheme"
-          :initial-extras="studioExtras"
-          @update:dirty="studioDirty = $event"
-          @update:theme="studioTheme = $event"
-          @update:layout="studioExtras = $event"
-          :health-ctx="studioHealthCtx"
-          :has-unpublished="hasUnpublished"
-          :versions="studioVersions"
-          :versions-loading="studioVersionsLoading"
-          :action-busy="studioActionBusy"
-          :share-url="studioShare?.url || ''"
-          :share-expires="studioShare?.expiresAt || ''"
-          @save="saveStudioDesign"
-          @discard="discardDesign"
-          @navigate="onStudioNav"
-          @publish="publishStudio"
-          @discard-draft="discardStudioDraft"
-          @restore="restoreStudioVersion"
-          @share="shareStudioPreview"
-          @load-versions="loadStudioVersions"
+          :can-studio="canDesignAdvanced"
+          @navigate="onDesignNav"
+          @ring="lookRing = $event"
+          @open-studio="openStudioRoute"
         />
+        <div v-if="designTab === 'look'" class="dsg-savebar" :class="{ dirty: designDirty }">
+          <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
+            <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
+            <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
+          </p>
+          <div class="dsg-actions">
+            <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
+            <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
+          </div>
+        </div>
+        <div v-else-if="designTab === 'assisted'" class="dsg-ai">
+          <AiDesignView :plan="plan" @applied="onAiApplied" @navigate="onDesignNav" />
+        </div>
+        <div v-else-if="designTab === 'ai'" class="dsg-ai">
+          <AiChatView :plan="plan" @applied="onAiApplied" />
+        </div>
         <div v-else class="dsg-layout">
           <div class="dsg-main">
           <div v-show="designTab === 'content'" class="card dsg-card">
