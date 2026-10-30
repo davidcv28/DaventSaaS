@@ -5,17 +5,18 @@
 // Sin subidas de imágenes: logo, portada y galería viven en la pestaña Fotos.
 // Escribe los mismos campos de `form` que el Studio y dispara los mismos
 // eventos (ring/navigate), así el guardado sigue siendo uno solo.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
 import {
   STORE_ACCENTS, STORE_THEMES, STORE_FONTS, STORE_FONT_GROUPS, STORE_TEMPLATES,
-  allowedTemplatesFor, ensureStoreFont, storeFontFamily
+  allowedTemplatesFor, ensureStoreFont
 } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb, deriveAccent } from '../../utils/colorTools.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
+import DesignSelect from './DesignSelect.vue'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -68,7 +69,21 @@ const currentPattern = computed(() => (
   || ''
 ))
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
-const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
+
+// Opciones de los selectboxes con icono/color: el select nativo no puede
+// mostrar muestras, por eso el menú usa DesignSelect.
+const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
+  value: p.slug,
+  label: `${p.nombre} · ${p.categoria} · ${tierLabel(p.template)}`,
+  icon: 'layout-grid',
+  disabled: !allowedTemplate(p.template)
+})))
+const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
+  value: s.slug,
+  label: `${s.nombre} · ${s.categoria} · ${tierLabel(s.template)}`,
+  icon: 'palette',
+  disabled: !allowedTemplate(s.template)
+})))
 
 // Un patrón sin estilo elegido trae su propia piel (tokens del DesignPattern:
 // fuentes y acento). Si ya hay un estilo aplicado, el estilo manda la piel y
@@ -88,11 +103,10 @@ function patternTheme(p) {
   return theme
 }
 
-function onPatternPick(event) {
-  const p = patternOptions.value.find((x) => x.slug === event.target.value)
+function onPatternPick(value) {
+  const p = patternOptions.value.find((x) => x.slug === value)
   if (!p) return
   if (!allowedTemplate(p.template)) {
-    event.target.value = currentPattern.value
     emit('navigate', 'plans')
     return
   }
@@ -101,11 +115,10 @@ function onPatternPick(event) {
   if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
 }
 
-function onStylePick(event) {
-  const s = styleOptions.value.find((x) => x.slug === event.target.value)
+function onStylePick(value) {
+  const s = styleOptions.value.find((x) => x.slug === value)
   if (!s) return
   if (!allowedTemplate(s.template)) {
-    event.target.value = currentStyle.value
     emit('navigate', 'plans')
     return
   }
@@ -140,12 +153,14 @@ const currentMode = computed(() => (props.form.theme === 'dark' ? 'dark' : 'ligh
 const colorGroups = computed(() => Object.entries(STORE_THEMES).map(([mode, theme]) => {
   const options = Object.entries(STORE_ACCENTS).map(([key, a]) => ({
     value: `${mode}:${key}`,
-    label: `${a.label} · ${a.hex}`
+    label: `${a.label} · ${a.hex}`,
+    swatch: a.hex
   }))
   if (props.form.accent_custom) {
     options.unshift({
       value: `${mode}:custom`,
-      label: `Personalizado · ${props.form.accent_custom}`
+      label: `Personalizado · ${props.form.accent_custom}`,
+      swatch: props.form.accent_custom
     })
   }
   return { label: theme.label, options }
@@ -158,8 +173,8 @@ function withTheme(mutate) {
   props.form.site_theme = theme
 }
 
-function onColorsPick(event) {
-  const [mode, key] = String(event.target.value).split(':')
+function onColorsPick(value) {
+  const [mode, key] = String(value).split(':')
   if (STORE_THEMES[mode]) props.form.theme = mode
   if (key === 'custom' || !advanced.value) return
   const hex = STORE_ACCENTS[key]?.hex
@@ -174,12 +189,11 @@ function onColorsPick(event) {
   })
 }
 
-// --- Tipografía: títulos / subtítulos / descripciones ---------------------
-// Las tres familias salen del selector del catálogo (mismas fuentes que la
-// web). Se guardan como slug: el contrato las resuelve a familia al render.
+// --- Tipografía: títulos y descripciones ---------------------------------
+// Las familias salen del selector del catálogo (mismas fuentes que la web).
+// Se guardan como slug: el contrato las resuelve a familia al render.
 const FONT_ROLES = [
   { key: 'heading', label: 'Fuente de títulos', ring: 'typo' },
-  { key: 'subheading', label: 'Fuente de subtítulos', ring: 'typo' },
   { key: 'body', label: 'Fuente de descripciones', ring: 'page' }
 ]
 const fontGroups = computed(() => {
@@ -192,10 +206,17 @@ const fontGroups = computed(() => {
   if (saved.length) groups.push({ label: 'Actual', keys: [...new Set(saved)] })
   return groups
 })
+const fontSelectGroups = computed(() => fontGroups.value.map((g) => ({
+  label: g.label,
+  options: g.keys.map((key) => ({
+    value: key,
+    label: STORE_FONTS[key]?.label || key,
+    icon: 'type'
+  }))
+})))
 const currentFont = (key) => props.form.site_theme?.typography?.[key] || ''
 
-function onFontPick(event, key) {
-  const value = event.target.value
+function onFontPick(value, key) {
   if (value) ensureStoreFont(value)
   withTheme((theme) => {
     const typography = { ...(theme.typography || {}) }
@@ -209,49 +230,14 @@ function onFontPick(event, key) {
   if (key === 'body' && value) props.form.name_font = value
 }
 
-// Fuentes ya elegidas: se cargan al entrar para que los <select> muestren la
-// familia real y la vista previa no quede en Inter.
+// Fuentes ya elegidas: se cargan al entrar para que los selectboxes muestren
+// la familia real y la vista previa no quede en Inter.
 onMounted(() => {
   FONT_ROLES.forEach((r) => {
     const key = currentFont(r.key)
     if (key) ensureStoreFont(key)
   })
 })
-
-// --- Vista previa del diseño fuente (patrón importado) --------------------
-const patternPreview = ref(null)
-const previewBusy = ref(false)
-const previewErr = ref('')
-
-function patternDoc(p) {
-  const html = String(p.html || '')
-  if (/^\s*(<!doctype|<html)/i.test(html)) return html
-  const css = p.css ? `<style>${p.css}</style>` : ''
-  const js = p.js ? `<script>${p.js}<` + `/script>` : ''
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
-}
-
-async function openPatternPreview() {
-  const p = currentPatternMeta.value
-  if (!p?.has_markup || previewBusy.value) return
-  previewBusy.value = true
-  previewErr.value = ''
-  try {
-    const detail = await designApi.pattern(p.slug)
-    patternPreview.value = { nombre: detail.nombre || p.nombre, doc: patternDoc(detail) }
-  } catch {
-    previewErr.value = 'No pudimos cargar el diseño del patrón.'
-  } finally {
-    previewBusy.value = false
-  }
-}
-function closePatternPreview() {
-  patternPreview.value = null
-  previewErr.value = ''
-}
-function onPreviewKey(e) { if (e.key === 'Escape') closePatternPreview() }
-onMounted(() => window.addEventListener('keydown', onPreviewKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 </script>
 
 <template>
@@ -272,52 +258,39 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 
           <div class="dmenu-fields">
             <div class="dmenu-field" @focusin="emit('ring', 'hero')">
-              <label for="dm-pattern">Patrones de diseño</label>
-              <select id="dm-pattern" class="select" :value="currentPattern" :disabled="!patternOptions.length" @change="onPatternPick">
-                <option value="" disabled>Elegí un patrón…</option>
-                <option v-for="p in patternOptions" :key="p.slug" :value="p.slug" :disabled="!allowedTemplate(p.template)">
-                  {{ p.nombre }} · {{ p.categoria }} · {{ tierLabel(p.template) }}
-                </option>
-              </select>
-              <button v-if="currentPatternMeta?.has_markup" type="button" class="dmenu-link" :disabled="previewBusy" @click="openPatternPreview">
-                <AppIcon name="eye" :size="13" /> {{ previewBusy ? 'Cargando…' : 'Ver este diseño' }}
-              </button>
-              <p v-if="previewErr" class="field-error" role="alert">{{ previewErr }}</p>
+              <label>Patrones de diseño</label>
+              <DesignSelect
+                :model-value="currentPattern" :options="patternSelectOptions" icon="layout-grid"
+                aria-label="Patrones de diseño" placeholder="Elegí un patrón…"
+                :disabled="!patternOptions.length" @change="onPatternPick"
+              />
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'typo')">
-              <label for="dm-style">Estilo</label>
-              <select id="dm-style" class="select" :value="currentStyle" :disabled="!styleOptions.length" @change="onStylePick">
-                <option value="" disabled>Elegí un estilo…</option>
-                <option v-for="s in styleOptions" :key="s.slug" :value="s.slug" :disabled="!allowedTemplate(s.template)">
-                  {{ s.nombre }} · {{ s.categoria }} · {{ tierLabel(s.template) }}
-                </option>
-              </select>
+              <label>Estilo</label>
+              <DesignSelect
+                :model-value="currentStyle" :options="styleSelectOptions" icon="palette"
+                aria-label="Estilo" placeholder="Elegí un estilo…"
+                :disabled="!styleOptions.length" @change="onStylePick"
+              />
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'buttons')">
-              <label for="dm-colors">Colores</label>
-              <select id="dm-colors" class="select" :value="currentColors" @change="onColorsPick">
-                <optgroup v-for="g in colorGroups" :key="g.label" :label="g.label">
-                  <option v-for="o in g.options" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </optgroup>
-              </select>
+              <label>Colores</label>
+              <DesignSelect
+                :model-value="currentColors" :groups="colorGroups" icon="paintbrush"
+                aria-label="Colores" placeholder="Elegí un color…" @change="onColorsPick"
+              />
               <p class="dmenu-hint">Tema y color de acento. <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Acento con Premium</span></p>
             </div>
 
             <div v-for="r in FONT_ROLES" :key="r.key" class="dmenu-field" :class="{ locked: !advanced }" @focusin="emit('ring', r.ring)">
-              <label :for="`dm-font-${r.key}`">{{ r.label }}</label>
-              <select
-                :id="`dm-font-${r.key}`" class="select"
-                :value="currentFont(r.key)" :disabled="!advanced"
-                :style="currentFont(r.key) ? { fontFamily: storeFontFamily(currentFont(r.key)) } : null"
-                @change="onFontPick($event, r.key)"
-              >
-                <option value="" disabled>Elegí una fuente…</option>
-                <optgroup v-for="g in fontGroups" :key="g.label" :label="g.label">
-                  <option v-for="key in g.keys" :key="key" :value="key">{{ STORE_FONTS[key]?.label || key }}</option>
-                </optgroup>
-              </select>
+              <label>{{ r.label }}</label>
+              <DesignSelect
+                :model-value="currentFont(r.key)" :groups="fontSelectGroups" icon="type"
+                :aria-label="r.label" placeholder="Elegí una fuente…"
+                :disabled="!advanced" @change="(value) => onFontPick(value, r.key)"
+              />
             </div>
           </div>
 
@@ -352,18 +325,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
         Abrir Studio <AppIcon name="arrow-right" :size="16" />
       </button>
     </div>
-
-    <Teleport to="body">
-      <div v-if="patternPreview" class="dmv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
-        <div class="dmv-head">
-          <strong>{{ patternPreview.nombre }}</strong>
-          <button type="button" class="dmv-close" aria-label="Cerrar la vista previa" @click="closePatternPreview">
-            <AppIcon name="x" :size="16" />
-          </button>
-        </div>
-        <iframe class="dmv-frame" :srcdoc="patternPreview.doc" sandbox="allow-scripts" :title="`Diseño ${patternPreview.nombre}`"></iframe>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -379,18 +340,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 .dmenu-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: var(--ink); }
 .dmenu-head strong .icon { color: var(--brand-600); flex: none; }
 .dmenu-head small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
-.dmenu-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px 18px; min-width: 0; }
+.dmenu-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px 18px; min-width: 0; align-content: start; }
 .dmenu-field { display: grid; gap: 7px; min-width: 0; align-content: start; }
 .dmenu-field label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .dmenu-field.locked .select { opacity: .6; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
-.dmenu-link {
-  display: inline-flex; align-items: center; gap: 6px; align-self: start;
-  padding: 0; border: 0; background: transparent; color: var(--brand-600);
-  font-size: 12.5px; font-weight: 600; cursor: pointer;
-}
-.dmenu-link:disabled { opacity: .6; cursor: default; }
 .dmenu-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dmenu-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .dmenu-lock {
@@ -433,11 +388,4 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
   .dmenu-studio-txt { flex-basis: calc(100% - 52px); }
   .dmenu-studio .btn { width: 100%; justify-content: center; }
 }
-/* Vista previa del diseño fuente (patrón importado). */
-.dmv { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; padding: 16px; background: rgba(9, 12, 20, .72); }
-.dmv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 12px 12px 0 0; background: var(--card, #fff); color: var(--ink); }
-.dmv-head strong { font-size: 14px; }
-.dmv-close { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--line, #e5e7eb); border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
-.dmv-frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; border-radius: 0 0 12px 12px; background: #fff; }
-@media (max-width: 640px) { .dmv { padding: 8px; } }
 </style>

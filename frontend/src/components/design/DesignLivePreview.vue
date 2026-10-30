@@ -19,6 +19,32 @@ const src = computed(() => (slug.value ? `/${slug.value}?studio=1` : ''))
 const device = ref('desktop')
 const frame = ref(null)
 const state = ref('loading')
+// El panel es angosto: la web se renderiza a ancho de escritorio y se escala
+// para entrar completa, así al abrir la sección se ve la composición real y
+// no una versión mobile recortada.
+const stage = ref(null)
+const stageW = ref(0)
+const stageH = ref(0)
+const DESKTOP_W = 1280
+let resizeObserver = null
+
+const scale = computed(() => {
+  if (device.value === 'mobile' || !stageW.value) return 1
+  return Math.min(1, stageW.value / DESKTOP_W)
+})
+const fitStyle = computed(() => {
+  if (device.value === 'mobile') return null
+  return { width: `${Math.round(DESKTOP_W * scale.value)}px`, height: `${stageH.value}px` }
+})
+const deviceStyle = computed(() => {
+  if (device.value === 'mobile') return null
+  return {
+    width: `${DESKTOP_W}px`,
+    height: `${stageH.value / scale.value}px`,
+    transform: `scale(${scale.value})`,
+    transformOrigin: 'top left',
+  }
+})
 
 const clone = (value) => JSON.parse(JSON.stringify(value ?? null))
 
@@ -88,11 +114,21 @@ watch(() => props.form.name_font, (font) => { if (font) ensureStoreFont(font) })
 onMounted(() => {
   window.addEventListener('message', onMessage)
   loadTimer = setTimeout(() => { if (state.value === 'loading') state.value = 'failed' }, 12000)
+  if (stage.value) {
+    resizeObserver = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect
+      if (!rect) return
+      stageW.value = rect.width
+      stageH.value = rect.height
+    })
+    resizeObserver.observe(stage.value)
+  }
 })
 onBeforeUnmount(() => {
   window.removeEventListener('message', onMessage)
   clearTimeout(loadTimer)
   clearTimeout(postTimer)
+  resizeObserver?.disconnect()
 })
 
 function reload() {
@@ -123,21 +159,23 @@ function reload() {
         </a>
       </div>
     </header>
-    <div class="dlp-stage" :class="device">
-      <div class="dlp-device">
-        <div class="dlp-chrome" aria-hidden="true">
-          <span class="dlp-dots"><i></i><i></i><i></i></span>
-          <span class="dlp-url">{{ slug ? `davent.app/${slug}` : 'davent.app' }}</span>
-          <span class="dlp-live"><i></i>En vivo</span>
+    <div ref="stage" class="dlp-stage" :class="device">
+      <div class="dlp-fit" :style="fitStyle">
+        <div class="dlp-device" :style="deviceStyle">
+          <div class="dlp-chrome" aria-hidden="true">
+            <span class="dlp-dots"><i></i><i></i><i></i></span>
+            <span class="dlp-url">{{ slug ? `davent.app/${slug}` : 'davent.app' }}</span>
+            <span class="dlp-live"><i></i>En vivo</span>
+          </div>
+          <iframe
+            v-if="src"
+            ref="frame"
+            :src="src"
+            title="Vista previa de tu web"
+            class="dlp-frame"
+            @load="onLoad"
+          ></iframe>
         </div>
-        <iframe
-          v-if="src"
-          ref="frame"
-          :src="src"
-          title="Vista previa de tu web"
-          class="dlp-frame"
-          @load="onLoad"
-        ></iframe>
       </div>
       <p v-if="!src" class="dlp-empty">Guardá la dirección de tu web para verla acá.</p>
       <p v-if="state === 'failed'" class="dlp-empty" role="alert">
@@ -186,8 +224,9 @@ function reload() {
   background-image: radial-gradient(rgba(15, 23, 42, .07) 1px, transparent 1px);
   background-size: 16px 16px; opacity: .55;
 }
+.dlp-fit { position: relative; z-index: 1; flex: none; }
 .dlp-device {
-  position: relative; z-index: 1; display: flex; flex-direction: column;
+  display: flex; flex-direction: column;
   width: 100%; height: 100%; min-width: 0; overflow: hidden; background: #fff;
 }
 .dlp-chrome {
@@ -211,6 +250,7 @@ function reload() {
 .dlp-stage.mobile { padding: 18px 0; background:
     radial-gradient(90% 70% at 50% 0%, var(--brand-soft, #eef2ff), transparent 60%),
     var(--surface-3, #eef2f7); }
+.dlp-stage.mobile .dlp-fit { width: 100%; height: 100%; display: flex; justify-content: center; }
 .dlp-stage.mobile .dlp-device {
   width: 392px; max-width: calc(100% - 32px); height: 100%;
   border: 1px solid var(--line, #e5e7eb); border-radius: 26px;
