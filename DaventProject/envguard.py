@@ -155,7 +155,9 @@ def collect_errors() -> list:
 
     secret_key  =   str(getattr(settings, 'SECRET_KEY', '') or '')
     lowered     =   secret_key.lower()
-    if (not secret_key or len(secret_key) < 50
+    #En dev el placeholder de Django (django-insecure-…) es lo esperado; el
+    #guard solo lo exige en producción.
+    if prod and (not secret_key or len(secret_key) < 50
             or any(token in lowered for token in SECRET_PLACEHOLDERS)):
         errors.append(_error(
             'project.E011', 'SECRET_KEY',

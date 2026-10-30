@@ -1000,3 +1000,42 @@ acciones de terceros por SHA (`appleboy/*`), y sacar del árbol los `qa_*.py`
 - **Uploads**: firma real por magic bytes + `content_type`, tope por archivo, recodificación a WebP y clave R2 generada server-side (`stores/<id>/<folder>/<uuid>.webp`) — el nombre del cliente nunca toca la ruta.
 - **IDOR**: facturas (queryset propio / admin), chat (`?thread=` solo staff, cliente siempre su propio hilo), pagos (`sync` valida `external_reference`), tiendas (`?mine=1`), cupones (`IsAdminUser`).
 - **Compose**: db/redis sin puertos, `read_only` + `cap_drop: ALL` + `no-new-privileges` en todos los servicios, `migrate` one-shot.
+
+---
+
+## 5. Remediación auditoría 2026-10-30 (ronda 3)
+
+Hallazgos de `docs/AUDITORIA_TECNICA_2026-10-30.md` resueltos:
+
+| Bloque | Fix aplicado | Test que lo cubre |
+|---|---|---|
+| V-01/M-01 | Huella del cache público solo con filtros soportados (`_params_fingerprint`) | `stores.tests_cache_hardening.CatalogFingerprintTests` |
+| M-02 | Keys de versión con TTL 7 días + borrado en `post_delete` de `Store` | `stores.tests_cache_hardening.PublicCacheTtlTests` |
+| V-02 | Lockout por `sha256(username)+IP`, backoff 5→60 s / 10→900 s | `users.test_headers.LoginLockoutTests` |
+| ENV-01 | `backup_db` pasa env mínimo a `pg_dump` | `users.test_backup_env` |
+| ENV-02/ENV-04 | `environment:` allowlist por servicio + `DEPLOY_CHECK_STRICT=1` | CI (`check --deploy`) |
+| C-01/C-02 | Backup pre-migración fail-closed + rollback por tags previos | runbook del deploy (manual) |
+| MW-01 | `DaventProject/cache_utils.py`: fail-open salvo login de admin (503) | `users.test_headers.AdminLoginRateLimitTests` |
+| CC-01/M-03 | ONNX: `mkstemp` + `os.replace` + lock entre procesos + tope de bytes | `stores.tests_cache_hardening.ModelDownloadTests` |
+| ENV-03 | `DaventProject/envguard.py` + `project.E006…E018` + `manage.py check_env` | `users.test_envguard` |
+| V-04/V-06 | Correos por Celery (verificación, reset, factura, contacto, denuncia) | `users.test_mail_tasks` |
+| V-05 | `PASSWORD_RESET_TIMEOUT=3600` + verificación 24 h propia | `users.tests.EmailVerificationTokenTests` |
+| V-03 | Captcha con nonce de un solo uso, 5 intentos y operación de mayor entropía | `stores.tests_captcha` |
+| V-07 | Adjuntos del chat en `private/` (nginx 404) + endpoint autenticado | `chat.tests.ChatAttachmentTests` |
+| CC-02 | `Count('products')` anotado en descuentos | `catalog` (listado) |
+| CC-03 | `bulk_create(ignore_conflicts)` para blacklist de refresh | `users.tests.PasswordResetTests` |
+| CC-04 | Claim de slug: `IntegrityError` → 400 | `stores.tests` |
+| MW-02/MW-03 | `X-Request-ID`, `Retry-After`, `noindex /api/`, body cap, `client_ip()` único | `DaventProject.tests_middleware` |
+| V-09 | sha256 en la firma de layout | bandit `-ll` sin altos |
+| V-10 | Reset de contraseña del admin con el mismo rate-limit | `users.test_headers` |
+| V-11 | `tmp*/` en `.gitignore`/`.dockerignore` + limpieza local | — |
+| V-12 | Fallback de `apiBaseUrl` a `/api` | `frontend/tests/env.test.js` |
+| V-13/MW-04 | CSP report-only + `Cross-Origin-Resource-Policy` | `DaventProject.tests_middleware` |
+| M-04 | `clearInterval` en `onUnmounted` de `LoginView` | build/lint |
+| M-05 | `manage.py prune_visits` (retención 730 días) | comando |
+| C-03…C-07 | Borrado del archivo de secretos, bandit+gitleaks semanal, Trivy config+SBOM+firma, ruff/ESLint/Vitest/coverage | workflows |
+
+Desviaciones conscientes: las acciones de terceros siguen por tag (pinearlas
+por SHA requiere actualizar cada bump a mano; Dependabot queda como paso
+siguiente), `ruff format --check` corre informativo y el `select` de ruff
+arranca con ignores documentados.
