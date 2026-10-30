@@ -424,11 +424,22 @@ export function installPreviewBridge(iframe, { onPick, onBlockedNav } = {}) {
     onPick(target)
   }
   // Sandbox de interacción: un enlace o un envío de formulario NO navega el
-  // iframe (perdería ?studio=1 y el editor). El clic igual elige el elemento
-  // para abrir el control que lo edita, así el gesto no queda muerto.
+  // iframe (perdería ?studio=1 y el editor). Los controles propios de la
+  // página (acordeones, tabs, carrusel, menú, modal) siguen funcionando: solo
+  // se elige el elemento cuando el clic no es una acción interna, para que
+  // abrir un acordeón no cambie de herramienta en el panel.
+  const INTERACTIVE = 'button, summary, [role="button"], [role="tab"], input, select, textarea, label, [contenteditable="true"]'
   const onClick = (e) => {
     const link = e.target?.closest?.('a[href], area[href]')
     if (link) {
+      const href = link.getAttribute('href') || ''
+      // Ancla interna: el handler de la página (tab, acordeón) corre, pero el
+      // hash no navega ni mueve el scroll del lienzo.
+      if (href.startsWith('#')) {
+        e.preventDefault()
+        pick(e.target)
+        return
+      }
       e.preventDefault()
       e.stopPropagation()
       pick(e.target)
@@ -442,6 +453,7 @@ export function installPreviewBridge(iframe, { onPick, onBlockedNav } = {}) {
       notifyBlocked()
       return
     }
+    if (e.target?.closest?.(INTERACTIVE)) return
     pick(e.target)
   }
   const onSubmit = (e) => {

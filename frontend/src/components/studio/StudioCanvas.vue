@@ -161,7 +161,7 @@ defineExpose({ iframeEl, reload })
 .stcv-seg { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
 .stcv-opt {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-width: 44px; height: 36px; padding: 0 10px; border: 0; border-radius: 999px;
+  min-width: 44px; height: 40px; padding: 0 10px; border: 0; border-radius: 999px;
   background: transparent; color: var(--ink-2); font: inherit; font-size: 12.5px;
   font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s, color .15s;
 }

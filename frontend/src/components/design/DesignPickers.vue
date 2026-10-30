@@ -8,6 +8,8 @@ import { computed, onMounted } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { STORE_TEMPLATES, STORE_ACCENTS, allowedTemplatesFor, ensureStoreFont } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
+import { resolveSiteTheme } from '../../studio/contract.js'
+import { normalizeLayoutConfig } from '../../templates/index.js'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -30,25 +32,10 @@ const tierLabel = (tpl) => {
 const patternOptions = computed(() => patterns.value.filter((p) => p.is_active !== false))
 const styleOptions = computed(() => styles.value.filter((s) => s.is_active !== false))
 
-// Layout del patrón en el contrato {superficie: {blocks}}: el catálogo lo
-// guarda como listas por superficie (composición de la plantilla).
-function wrapLayout(layout) {
-  const out = {}
-  for (const surface of ['landing', 'catalog', 'services']) {
-    const blocks = layout?.[surface]
-    if (!Array.isArray(blocks) || !blocks.length) continue
-    out[surface] = {
-      blocks: blocks.map((b, i) => ({
-        id: b.id,
-        enabled: b.enabled !== false,
-        order: typeof b.order === 'number' ? b.order : i,
-        ...(b.variant ? { variant: b.variant } : {})
-      }))
-    }
-  }
-  return out
-}
-const patternLayout = (p) => wrapLayout(p.layout)
+// Layout del catálogo en el contrato {superficie: {blocks}}. Los patrones
+// llegan como lista por superficie y los estilos como {blocks:[...]}: el
+// normalizador acepta ambas formas y descarta ids/variantes inválidos.
+const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 
 const currentPattern = computed(() => (
@@ -82,17 +69,23 @@ function onStylePick(event) {
     event.target.value = currentStyle.value
     return
   }
-  const tokens = s.tokens || {}
-  props.form.site_theme = { ...(props.form.site_theme || {}), style: { id: s.slug } }
+  // El estilo es un tema completo: se aplican sus tokens (paleta,
+  // tipografía, contenedores, botones, fondo, movimiento y móvil) para que
+  // el look elegido se vea igual acá, en el Studio y en la web publicada.
+  const theme = resolveSiteTheme(s.tokens || {})
+  props.form.site_theme = { ...theme, style: { id: s.slug } }
   props.form.theme = s.page_theme || props.form.theme
   props.form.template = s.template || props.form.template
-  if (s.layout && Object.keys(s.layout).length) props.form.layout_config = wrapLayout(s.layout)
-  const body = tokens.typography?.body
+  const layout = normalizeLayoutConfig(s.layout)
+  if (Object.keys(layout).length) props.form.layout_config = layout
+  const heading = theme.typography?.heading
+  const body = theme.typography?.body
+  if (heading) ensureStoreFont(heading)
   if (body) {
     props.form.name_font = body
     ensureStoreFont(body)
   }
-  const accent = tokens.palette?.accent
+  const accent = theme.palette?.accent
   if (accent && advanced.value) props.form.accent_custom = accent
   else if (accent) {
     const slug = nearestAccent(hexToRgb(accent), STORE_ACCENTS)
@@ -102,11 +95,11 @@ function onStylePick(event) {
 </script>
 
 <template>
-  <section class="dpicks card" aria-label="Diseño de tu web">
-    <header class="dpicks-head">
-      <strong><AppIcon name="layout-grid" :size="16" aria-hidden="true" /> Diseño de tu web</strong>
+  <div class="dpicks" role="group" aria-labelledby="dpicks-title">
+    <div class="dpicks-head">
+      <strong id="dpicks-title"><AppIcon name="layout-grid" :size="15" aria-hidden="true" /> Diseño de tu web</strong>
       <small>Elegí el patrón y el estilo por separado: cualquier combinación funciona.</small>
-    </header>
+    </div>
     <div class="dpicks-grid">
       <div class="field">
         <label for="design-pattern">Patrón de diseño web</label>
@@ -150,22 +143,26 @@ function onStylePick(event) {
     <p v-else-if="status === 'success' && !patternOptions.length && !styleOptions.length" class="dpicks-alert" role="status">
       El catálogo está vacío: corré <code>manage.py seed_design_catalog</code> en el servidor.
     </p>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.dpicks { display: flex; flex-direction: column; gap: 14px; padding: 16px; min-width: 0; }
-.dpicks-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; }
-.dpicks-head small { display: block; margin-top: 4px; font-size: 12px; opacity: .72; }
-/* Dos columnas alineadas: misma altura de label, select, hint y estado. */
-.dpicks-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px 16px; align-items: start; min-width: 0; }
-@media (min-width: 720px) { .dpicks-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Bloque embebido dentro del paso "Estilo y portada": sin card propia, para
+   que todo el diseño viva en un solo contenedor. */
+.dpicks { display: flex; flex-direction: column; gap: 12px; min-width: 0; container-type: inline-size; }
+.dpicks-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dpicks-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--ink); }
+.dpicks-head strong .icon { color: var(--brand-600); flex: none; }
+.dpicks-head small { font-size: 12px; line-height: 1.35; color: var(--muted); }
+/* Una columna por defecto (mobile) y dos recién cuando hay ancho real. */
+.dpicks-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; min-width: 0; }
+@container (min-width: 460px) { .dpicks-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; } }
 .dpicks .field { display: grid; grid-template-rows: auto auto auto auto; gap: 6px; min-width: 0; margin: 0; }
-.dpicks .field label { font-size: 13px; font-weight: 600; line-height: 1.3; min-height: 18px; }
-.dpicks .select { width: 100%; min-width: 0; min-height: 44px; font-size: 16px; }
-.dpicks .hint { margin: 0; font-size: 12px; line-height: 1.35; opacity: .7; min-height: 16px; }
+.dpicks .field label { font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
+.dpicks .select { width: 100%; min-width: 0; min-height: 44px; font-size: 16px; text-overflow: ellipsis; }
+.dpicks .hint { margin: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
 .dpicks-current { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-2); min-width: 0; overflow-wrap: anywhere; }
 .dpicks-dot { flex: none; width: 7px; height: 7px; border-radius: 999px; background: var(--brand-500); }
-.dpicks-alert { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
+.dpicks-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dpicks-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>

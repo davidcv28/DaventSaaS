@@ -6,6 +6,16 @@
    ========================================================================= */
 
 .stp { display: flex; flex-direction: column; gap: 14px; }
+
+/* Tooltip "¿Qué es esto?" (components/TipHint.vue). Vive en dashboard.css y
+   el Studio corre fuera de DashLayout: sin esto el texto del tooltip se
+   renderiza inline, siempre visible, y el panel queda ilegible. */
+.tip { position: relative; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 4px; vertical-align: -3px; border: none; border-radius: 50%; background: var(--sunk); color: var(--muted); cursor: help; }
+.tip:hover, .tip:focus-visible { color: var(--brand-ink); background: var(--brand-soft); }
+.tip-bubble { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(3px); width: max-content; max-width: min(230px, calc(100vw - 24px)); padding: 8px 11px; border-radius: 9px; background: var(--rail, #0f1130); color: #e6eaf5; font-size: 12px; font-weight: 400; line-height: 1.45; text-align: left; white-space: normal; box-shadow: var(--shadow-md); opacity: 0; visibility: hidden; transition: opacity .16s, transform .16s var(--ease-out), visibility .16s; z-index: 60; pointer-events: none; }
+.tip-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--rail, #0f1130); }
+.tip:hover .tip-bubble, .tip:focus-visible .tip-bubble, .tip-bubble.on { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce) { .tip-bubble { transition: none; } }
 .stp-fields { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .stp-look { display: contents; }
 .stp-hint { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }

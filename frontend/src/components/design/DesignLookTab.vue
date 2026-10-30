@@ -13,6 +13,7 @@ import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
 import AppIcon from '../AppIcon.vue'
 import DesignPreview from './DesignPreview.vue'
+import DesignPickers from './DesignPickers.vue'
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -21,9 +22,9 @@ const props = defineProps({
   // Vista previa embebida (sección Diseño del panel). El Studio ya tiene su
   // propio visor a pantalla completa, así que ahí se apaga.
   preview: { type: Boolean, default: true },
-  // La sección Diseño monta los dos selectores del catálogo (patrón +
-  // estilo) arriba: se oculta el selector viejo de plantilla para no tener
-  // dos controles sobre el mismo campo.
+  // La sección Diseño monta el catálogo (patrón + estilo) DENTRO del paso
+  // "Estilo y portada": se oculta el selector viejo de plantilla para no
+  // tener dos controles sobre el mismo campo.
   pickers: { type: Boolean, default: false }
 })
 const emit = defineEmits(['go-plans', 'ring'])
@@ -436,6 +437,7 @@ onBeforeUnmount(dropLocalLogo)
   <div class="card dsg-card dl-root" @keydown="onRootKey">
     <div class="dl-shell">
       <div class="dl-main">
+        <div class="dl-box">
         <div class="dl-progress">
           <div class="dl-progress-head">
             <div class="dl-progress-title">
@@ -671,6 +673,7 @@ onBeforeUnmount(dropLocalLogo)
           </template>
 
           <template v-else>
+            <DesignPickers v-if="pickers" :form="form" :benefits="benefits" class="dl-pickers" />
             <div class="field" :class="{ locked: !advanced }" @focusin="setRing('cover')">
               <label id="design-cover-label"><AppIcon name="image" :size="14" class="label-icon" aria-hidden="true" />Imagen de portada <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="cover-box dl-logo-box">
@@ -728,6 +731,7 @@ onBeforeUnmount(dropLocalLogo)
         </div>
       </section>
         </div>
+        </div>
       </div>
 
       <aside v-if="preview && !pickers" class="dl-side" aria-label="Vista previa de tu web">
@@ -764,6 +768,9 @@ onBeforeUnmount(dropLocalLogo)
   .dl-side { position: sticky; top: 12px; }
 }
 .dl-main { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+/* Un solo contenedor para progreso + pasos: el diseño se lee como una pieza,
+   no como tarjetas sueltas apiladas. */
+.dl-box { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden; }
 .dl-side {
   display: flex; flex-direction: column; gap: 8px; min-width: 0;
   padding: 12px; border: 1px solid var(--line); border-radius: 14px;
@@ -774,7 +781,7 @@ onBeforeUnmount(dropLocalLogo)
 .dl-side-head small { color: var(--muted); font-size: 11.5px; }
 .dl-progress-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .dl-progress-title small { color: var(--muted); font-size: 11.5px; }
-.dl-progress { display: grid; gap: 10px; padding: 14px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); min-width: 0; }
+.dl-progress { display: grid; gap: 10px; padding: 14px 16px; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); min-width: 0; }
 .dl-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .dl-progress-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; min-width: 0; color: var(--ink); }
 .dl-progress-head .icon { color: var(--brand-600); flex: none; }
@@ -784,19 +791,19 @@ onBeforeUnmount(dropLocalLogo)
 .dl-sum { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .dl-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(9, 12, 24, .15); }
 
-.dl-steps { display: grid; gap: 10px; min-width: 0; }
-.dl-step { position: relative; border: 1px solid var(--line); border-radius: 14px; background: var(--card); min-width: 0; transition: border-color .15s, background .15s; }
-/* El paso abierto se marca con borde + anillo interior, sin sombra: la
-   sombra agrandaba visualmente la tarjeta y desalineaba la columna. */
-.dl-step.open { border-color: color-mix(in srgb, var(--brand-500) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 35%, transparent); background: var(--card); }
+.dl-steps { display: grid; gap: 0; min-width: 0; }
+.dl-step { position: relative; border: 0; border-radius: 0; background: transparent; min-width: 0; transition: background .15s; }
+.dl-step + .dl-step { border-top: 1px solid var(--line); }
+/* El paso abierto se marca con fondo suave y la barra lateral de marca: sin
+   borde ni sombra propia, porque ya vive dentro del contenedor único. */
+.dl-step.open { background: var(--surface); }
 .dl-step.open::before {
   content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
   border-radius: 0 3px 3px 0; background: var(--brand-500);
 }
-@media (hover: hover) { .dl-step:not(.open):hover { border-color: var(--line-strong, var(--line)); } }
+@media (hover: hover) { .dl-step:not(.open):hover { background: var(--surface); } }
 .dl-step-h { margin: 0; font-size: inherit; }
-.dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; min-width: 0; padding: 10px 14px; border: 0; border-radius: 14px; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
-.dl-step-btn:hover { background: var(--surface); }
+.dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; min-width: 0; padding: 10px 16px; border: 0; border-radius: 0; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
 .dl-step-btn:focus-visible, .dl-filter:focus-visible, .dl-font:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .dl-step-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-soft); color: var(--brand-600); }
 .dl-step.done .dl-step-ico { background: var(--ok-bg); color: var(--ok-ink); }

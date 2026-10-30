@@ -69,7 +69,11 @@ const custom = computed(() => {
     ...CUSTOMIZATION_DEFAULTS,
     ...raw,
     ...(studioCustom.value || {}),
-    ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
+    ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {}),
+    // En modo Studio el tema del borrador también tiene que ser visible para
+    // los componentes de la página que lo leen directo (p. ej. el CTA fijo de
+    // Servicios): si no, el control impacta en --st-* pero no en su lógica.
+    ...(studioMode.value && studioTheme.value ? { site_theme: studioTheme.value } : {})
   }
   const pattern = defaultPattern.value
   const style = defaultStyle.value
@@ -141,19 +145,14 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // En modo Studio manda el borrador (studioVars/studioAttrs): lo publicado no
 // se mezcla para que un campo que el borrador no fija no se cuele en el
 // lienzo y preview/publicada queden idénticas.
-// Rediseño por rubro (fase 1): los 8 diseños del catálogo NO consumen skins
-// del Studio — su paleta y tipografía las fija su propia hoja (store-raiz/
-// trama/circuito/alimentos/boutique/seguridad/clasico.css; trama e
-// indumentaria comparten la piel 'indumentaria'). El site_theme guardado de
-// una tienda vieja se sigue respetando en el payload, pero no pinta estas
-// webs: así el diseño se ve como la referencia y no mezclado con una piel
-// anterior.
-const DESIGN_SKIN_FREE = ['raiz', 'trama', 'indumentaria', 'circuito', 'alimentos', 'boutique', 'seguridad', 'clasico']
-const consumesSiteTheme = computed(() => !DESIGN_SKIN_FREE.includes(pageTemplate.value))
+// Los diseños del catálogo (raiz/trama/circuito/…) consumen los mismos
+// tokens --sp-*/--st-* que el Studio escribe: aplicar el site_theme también
+// fuera del Studio es lo que evita que el lienzo muestre un cambio que la
+// web publicada descarta.
 const publishedThemeVars = computed(() => (
-  studioMode.value || !consumesSiteTheme.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
+  studioMode.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
 ))
-const publishedThemeAttrs = computed(() => (studioMode.value || !consumesSiteTheme.value ? {} : storeSiteThemeAttrs(custom.value, pageTheme.value)))
+const publishedThemeAttrs = computed(() => (studioMode.value ? {} : storeSiteThemeAttrs(custom.value, pageTheme.value)))
 // Fuentes del tema guardado (título/cuerpo) on-demand: puede elegir una
 // familia distinta de la del nombre. Un stack CSS no es slug y no hace nada.
 watch(
@@ -224,7 +223,7 @@ const effectiveSkin = computed(() => {
   return skinOf(theme)
 })
 watch(effectiveSkin, (family) => {
-  if (consumesSiteTheme.value && SKIN_FAMILIES.includes(family)) import(`../assets/skin-${family}.css`)
+  if (SKIN_FAMILIES.includes(family)) import(`../assets/skin-${family}.css`)
 }, { immediate: true })
 // Tema efectivo: el elegido por el dueño; con customization.theme_toggle
 // el visitante puede alternarlo y su elección queda en localStorage

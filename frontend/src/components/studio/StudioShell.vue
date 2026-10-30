@@ -1126,7 +1126,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 <style scoped>
 /* ===== Grid 3 zonas + savebar ===== */
 .sts {
-  --rail-w: 68px; --panel-w: 320px;
+  --rail-w: 76px; --panel-w: 320px;
   position: relative; /* ancla de los overlays (ayuda, buscador, onboarding) */
   display: grid;
   grid-template-columns: var(--rail-w) var(--panel-w) minmax(0, 1fr);
@@ -1163,9 +1163,9 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 }
 .sts-upsell { margin-bottom: 10px; }
 .sts-tool:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
-.sts-rail-cap { margin: 10px 0 2px; padding: 0 2px; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.sts-rail-cap { margin: 10px 0 2px; padding: 0 2px; font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: center; overflow-wrap: anywhere; }
 .sts-rail-cap:first-child { margin-top: 2px; }
-.sts-tool-lb { line-height: 1.05; text-align: center; hyphens: auto; overflow-wrap: break-word; max-width: 100%; }
+.sts-tool-lb { line-height: 1.1; text-align: center; hyphens: manual; overflow-wrap: anywhere; max-width: 100%; }
 .sts-collapse { margin-top: 8px; color: var(--muted); }
 .sts-back { display: none; color: var(--muted); }
 
@@ -1217,7 +1217,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 .sts-hist { display: inline-flex; align-items: center; gap: 2px; }
 .sts-opt {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-width: 44px; height: 36px; padding: 0 10px; border: 1px solid transparent;
+  min-width: 44px; height: 40px; padding: 0 10px; border: 1px solid transparent;
   border-radius: 9px; background: transparent; color: var(--ink-2); font: inherit;
   font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
 }
