@@ -11,9 +11,21 @@
 | `raiz` | Raíz | general / retail / servicios | `base` | `has_customization` | `#0F766E` |
 | `alimentos` | Alimentos | gastronomía / almacén | `base` | `has_customization` | `#C8321D` |
 | `trama` | Trama | indumentaria / moda | `plus` | `has_design_plus` | `#1F3A5F` |
+| `indumentaria` | Indumentaria | indumentaria / moda profesional | `plus` | `has_design_plus` | `#1F3A5F` |
 | `boutique` | Boutique | moda premium / deco | `plus` | `has_design_plus` | `#6B2D4F` |
+| `clasico` | Clásico | comercio y servicios con oficio | `plus` | `has_design_plus` | `#1F4D43` |
 | `circuito` | Circuito | tecnología / electrónica | `advanced` | `has_design_advanced` | `#22D3EE` |
 | `seguridad` | Seguridad | seguridad / bomberos / industrial | `advanced` | `has_design_advanced` | `#C8200E` |
+
+- **Piel compartida (`data-skin`)**: la hoja de un diseño se resuelve por
+  `storeSkinOf(template)` (`STORE_TEMPLATE_SKIN` en `stores.api.js`) y el
+  layout la pinta en `.store-page` como `data-skin="<piel>"`. `trama` e
+  `indumentaria` comparten piel (`indumentaria` → `store-trama.css` +
+  `store-trama-catalog.css`, un solo chunk) y se diferencian por la
+  COMPOSICIÓN de su `InicioView`; el resto de los diseños tiene piel propia.
+  Los CSS de trama se scopan por `[data-skin='indumentaria']`, **no** por
+  `[data-template]`. `indumentaria` además reusa las vistas de catálogo, ficha
+  y servicios de trama (`templates/_shared.js`); `clasico` tiene las suyas.
 
 - **Fallback global: `raiz`.** Cualquier id desconocido o fuera del plan se
   resuelve a `raiz`.
@@ -24,9 +36,14 @@
   1. `StoreApp/domains/stores/models/models.py` → `TEMPLATE_CHOICES`,
      `TEMPLATE_BASE/PLUS/ADVANCED`, `TEMPLATE_RETIRED_MAP`, defaults.
   2. `frontend/src/api/stores.api.js` → `STORE_TEMPLATES`,
-     `STORE_TEMPLATE_FAMILIES`, `STORE_TEMPLATE_RETIRED_MAP`,
-     `allowedTemplatesFor`, `resolveStoreTemplate`.
+     `STORE_TEMPLATE_FAMILIES`, `STORE_TEMPLATE_SKIN`/`storeSkinOf`,
+     `STORE_TEMPLATE_RETIRED_MAP`, `allowedTemplatesFor`,
+     `resolveStoreTemplate`.
   3. `frontend/src/templates/index.js` → `TEMPLATE_DEFS`.
+- **Familias del selector** (`STORE_TEMPLATE_FAMILIES`): una opción por
+  familia (el select usa `templates[0]`). `indumentaria` (Trama) y `moda-pro`
+  (Indumentaria) son dos opciones de la misma familia de rubro; `clasico` es
+  su propia familia, después de boutique.
 
 ## 2. Mapa de archivos de un diseño
 
@@ -38,8 +55,14 @@ frontend/src/
 │  ├─ CatalogoView.vue              # superficie 'catalog'
 │  ├─ ProductoView.vue              # superficie 'product'
 │  └─ ServiciosView.vue             # superficie 'services'
-└─ assets/store-<id>.css            # piel completa (raíz [data-template="<id>"])
+└─ assets/store-<id>.css            # piel completa (raíz [data-skin="<id>"])
 ```
+
+Un diseño puede **compartir piel** con otro (declara la misma clave en
+`STORE_TEMPLATE_SKIN`) y reusar sus vistas de catálogo/ficha/servicios desde
+`templates/_shared.js`; solo `InicioView` es obligatoriamente propio porque la
+composición es lo que distingue la opción. Hoy: `indumentaria` → piel y vistas
+de trama; `clasico` → piel y vistas propias.
 
 Nada más se toca: el resto es compartido (`StorePublicLayout`, bloques de
 `components/store/blocks`, `TplProductCard`, `ProductStars`, `ProductReviews`,
@@ -123,10 +146,14 @@ const ctx = inject('storePage')
 
 ## 5. Variables CSS y raíz de la piel
 
-- La raíz de todo el CSS del diseño es **`[data-template="<id>"]`**, aplicada
-  por `StorePublicLayout` en `.store-page`.
+- La raíz de todo el CSS del diseño es **`[data-skin="<piel>"]`** (pintada por
+  `StorePublicLayout` en `.store-page` desde `storeSkinOf(pageTemplate)`); el
+  `data-template="<id>"` sigue disponible para diferencias puntuales entre dos
+  diseños que comparten piel. Un diseño nuevo declara su piel en
+  `STORE_TEMPLATE_SKIN` y, si reusa una existente, no agrega hoja.
 - Cada diseño declara su propio prefijo de tokens: `--rz-*` (Raíz), `--tr-*`
-  (Trama), `--ci-*` (Circuito).
+  (Trama e Indumentaria, piel compartida), `--ci-*` (Circuito), `--cl-*`
+  (Clásico).
 - El layout base expone variables `--sp-*` (`--sp-bg`, `--sp-card`,
   `--sp-surface`, `--sp-ink`, `--sp-ink-2`, `--sp-muted`, `--sp-line`,
   `--sp-radius`, `--sp-shadow-sm/md`, `--sp-on-band*`, `--sp-band-*`,
@@ -135,7 +162,9 @@ const ctx = inject('storePage')
 - Acento: siempre `var(--store-accent)` (lo emite `storeThemeVars`) o el
   default del diseño; **nunca** un hex crudo sobre fondo sin chequeo AA.
 - El CSS de cada diseño se carga **on-demand** (`TEMPLATE_CSS` en
-  `StorePublicLayout`): un diseño no viaja en el bundle de otro.
+  `StorePublicLayout`, indexado por diseño): un diseño no viaja en el bundle de
+  otro. `indumentaria` importa `store-trama.css` (mismo chunk que trama, el
+  bundler lo cachea) y `clasico` importa `store-clasico.css`.
 - `prefers-reduced-motion` y `:focus-visible` son obligatorios.
 
 ## 6. Qué NO puede tocar un agente de diseño

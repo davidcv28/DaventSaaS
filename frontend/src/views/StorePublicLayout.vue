@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES
+  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES, storeSkinOf
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -120,13 +120,14 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // En modo Studio manda el borrador (studioVars/studioAttrs): lo publicado no
 // se mezcla para que un campo que el borrador no fija no se cuele en el
 // lienzo y preview/publicada queden idénticas.
-// Rediseño por rubro (fase 1): los 6 diseños del catálogo NO consumen skins
-// del Studio — su paleta y tipografía las fija su propia hoja
-// (store-raiz/trama/circuito/alimentos/boutique/seguridad.css). El site_theme
-// guardado de una tienda vieja se sigue respetando en el payload, pero no
-// pinta estas webs: así el diseño se ve como la referencia y no mezclado con
-// una piel anterior.
-const DESIGN_SKIN_FREE = ['raiz', 'trama', 'circuito', 'alimentos', 'boutique', 'seguridad']
+// Rediseño por rubro (fase 1): los 8 diseños del catálogo NO consumen skins
+// del Studio — su paleta y tipografía las fija su propia hoja (store-raiz/
+// trama/circuito/alimentos/boutique/seguridad/clasico.css; trama e
+// indumentaria comparten la piel 'indumentaria'). El site_theme guardado de
+// una tienda vieja se sigue respetando en el payload, pero no pinta estas
+// webs: así el diseño se ve como la referencia y no mezclado con una piel
+// anterior.
+const DESIGN_SKIN_FREE = ['raiz', 'trama', 'indumentaria', 'circuito', 'alimentos', 'boutique', 'seguridad', 'clasico']
 const consumesSiteTheme = computed(() => !DESIGN_SKIN_FREE.includes(pageTemplate.value))
 const publishedThemeVars = computed(() => (
   studioMode.value || !consumesSiteTheme.value ? {} : storeSiteThemeVars(custom.value, pageTheme.value)
@@ -180,13 +181,19 @@ const TEMPLATE_CSS = {
   raiz:      () => import('../assets/store-raiz.css'),
   alimentos: () => import('../assets/store-alimentos.css'),
   trama:     () => import('../assets/store-trama.css'),
+  // `indumentaria` comparte la piel de Trama (misma hoja, mismo chunk
+  // cacheado); su composición distinta vive en views/store/indumentaria.
+  indumentaria: () => import('../assets/store-trama.css'),
   boutique:  () => import('../assets/store-boutique.css'),
+  clasico:   () => import('../assets/store-clasico.css'),
   circuito:  () => import('../assets/store-circuito.css'),
   seguridad: () => import('../assets/store-seguridad.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
-  if (loaded && typeof loaded.then === 'function') loaded.then(() => { syncSeo(); applyCanvasColor() }).catch(() => {})
+  if (loaded && typeof loaded.then === 'function') {
+    loaded.then(() => { syncSeo(); scheduleCanvasColor() }).catch(() => {})
+  }
 }, { immediate: true })
 // Skin v4 (site_theme.skin.family): piel de 18 familias en su propia hoja,
 // cargada por import dinámico para no engordar el bundle. Un skin sin
@@ -238,27 +245,63 @@ function togglePageTheme() {
 // una recarga en modo noche no destella claro. Al desmontar se devuelve el
 // shell a manos de la app.
 const PAGE_CANVAS = { light: '#F6F7FB', dark: '#0D1220' }
+let canvasRaf = 0
+let canvasTimer = 0
+function clearCanvasSync() {
+  if (canvasRaf) { cancelAnimationFrame(canvasRaf); canvasRaf = 0 }
+  if (canvasTimer) { clearTimeout(canvasTimer); canvasTimer = 0 }
+}
 // Tono exacto del diseño para el lienzo del documento (el genérico solo cubre
-// el primer frame, antes de que la hoja de la plantilla esté aplicada).
+// el primer frame, antes de que la hoja de la plantilla esté aplicada). Se
+// congela un instante la transición de fondo del root: si el diseño anima
+// `background-color` (p. ej. Raíz, 180 ms), leer el computed durante la
+// transición devuelve un tono intermedio y el shell quedaba con ese marco.
 function applyCanvasColor() {
   if (typeof document === 'undefined') return
   const root = document.querySelector('.store-page')
   if (!root) return
+  const prevTransition = root.style.transition
+  root.style.transition = 'none'
   const exact = getComputedStyle(root).backgroundColor
+  root.style.transition = prevTransition
   if (!exact || exact === 'rgba(0, 0, 0, 0)') return
-  document.documentElement.style.backgroundColor = exact
-  document.body.style.backgroundColor = exact
+  if (document.documentElement.style.backgroundColor !== exact) {
+    document.documentElement.style.backgroundColor = exact
+  }
+  if (document.body) document.body.style.backgroundColor = exact
+}
+// Re-sync del lienzo tras el render: primer pase síncrono (el getComputedStyle
+// de arriba fuerza el recalc con el data-store-theme nuevo), un rAF para hojas
+// que se inyectan en este mismo tick (import dinámico) y un timer de guardia
+// por si el navegador demora en aplicar el CSS del diseño.
+function scheduleCanvasColor() {
+  applyCanvasColor()
+  if (typeof requestAnimationFrame === 'function') {
+    if (canvasRaf) cancelAnimationFrame(canvasRaf)
+    canvasRaf = requestAnimationFrame(() => { canvasRaf = 0; applyCanvasColor() })
+  }
+  if (typeof setTimeout === 'function') {
+    if (canvasTimer) clearTimeout(canvasTimer)
+    canvasTimer = setTimeout(() => { canvasTimer = 0; applyCanvasColor() }, 300)
+  }
 }
 function applyPageCanvas() {
   if (typeof document === 'undefined') return
-  const bg = PAGE_CANVAS[pageTheme.value] || PAGE_CANVAS.light
+  const theme = pageTheme.value === 'dark' ? 'dark' : 'light'
+  const bg = PAGE_CANVAS[theme] || PAGE_CANVAS.light
   document.documentElement.style.backgroundColor = bg
-  document.body.style.backgroundColor = bg
-  document.documentElement.style.colorScheme = pageTheme.value
-  nextTick(applyCanvasColor)
+  if (document.body) document.body.style.backgroundColor = bg
+  document.documentElement.style.colorScheme = theme
+  // El watcher corre con flush:'post': el DOM ya tiene el nuevo tema.
+  scheduleCanvasColor()
 }
-watch(pageTheme, applyPageCanvas, { immediate: true, flush: 'sync' })
+// Anti-flash: pinta el lienzo genérico ANTES del primer frame (el root todavía
+// no está montado, applyCanvasColor no puede leer nada y no estorba).
+applyPageCanvas()
+watch([pageTheme, status], () => applyPageCanvas(), { flush: 'post' })
+onMounted(() => applyPageCanvas())
 onBeforeUnmount(() => {
+  clearCanvasSync()
   document.documentElement.style.backgroundColor = ''
   document.documentElement.style.colorScheme = ''
   document.body.style.backgroundColor = ''
@@ -331,9 +374,9 @@ const navMenuLinks = computed(() => {
   if (!landingOff.value) links.push({ to: homeTo.value, label: 'Inicio' })
   if (showServices.value) links.push({ to: servicesTo.value, label: 'Servicios' })
   if (showCatalog.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
-  if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros' })
-  if (showGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería' })
-  if (showContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto' })
+  if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros', anchor: true })
+  if (showGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
+  if (showContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto', anchor: true })
   return links
 })
 // El burger se muestra cuando hay navegación que esconder — Tienda Pro usa
@@ -694,7 +737,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->
@@ -730,9 +773,9 @@ onBeforeUnmount(() => {
           <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
           <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')">Galería</RouterLink>
-          <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')">Contacto</RouterLink>
+          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
+          <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+          <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
@@ -780,9 +823,9 @@ onBeforeUnmount(() => {
             <RouterLink v-if="!landingOff" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
             <RouterLink v-if="showServices" :to="servicesTo" :class="{ 'is-current': shopCurrent === 'services' }" :aria-current="shopCurrent === 'services' ? 'page' : null">Servicios</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null">Galería</RouterLink>
-            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
           </div>
           <span class="sp-shop-nav-note">Precios en pesos argentinos</span>
         </div>
@@ -803,6 +846,8 @@ onBeforeUnmount(() => {
         <RouterLink
           v-for="l in navMenuLinks" :key="l.label"
           :to="l.to" class="sp-nav-item"
+          :active-class="l.anchor ? 'sp-anchor' : 'router-link-active'"
+          :exact-active-class="l.anchor ? 'sp-anchor' : 'router-link-exact-active'"
           @click="ui.menuOpen = false"
         ><span>{{ l.label }}</span><AppIcon name="chevron-right" :size="15" aria-hidden="true" /></RouterLink>
       </div>
@@ -851,6 +896,8 @@ onBeforeUnmount(() => {
         <nav class="sp-more-nav" aria-label="Todas las secciones">
           <RouterLink
             v-for="l in moreLinks" :key="l.label" :to="l.to" class="sp-more-link"
+            :active-class="l.anchor ? 'sp-anchor' : 'router-link-active'"
+            :exact-active-class="l.anchor ? 'sp-anchor' : 'router-link-exact-active'"
             @click="ui.moreOpen = false"
           >
             <span>{{ l.label }}</span>
@@ -926,9 +973,9 @@ onBeforeUnmount(() => {
             <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
             <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
-            <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')">Galería</RouterLink>
-            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')">Contacto</RouterLink>
+            <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
+            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>

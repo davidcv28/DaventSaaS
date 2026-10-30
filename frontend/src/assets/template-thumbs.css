@@ -52,18 +52,23 @@
 .tpl-thumb[data-tpl='raiz']::before { left: 50%; top: 17%; width: 13%; aspect-ratio: 1; border-radius: 28%; background: #fff; transform: translateX(-50%); box-shadow: 0 5px 10px -4px rgba(0, 0, 0, .35); }
 .tpl-thumb[data-tpl='raiz']::after { left: 24%; right: 24%; top: 37%; height: 3.2%; border-radius: 99px; background: #fff; box-shadow: 0 7px 0 -.5px rgba(255, 255, 255, .55), 0 15px 0 -.5px rgba(255, 255, 255, .0); }
 
-/* Trama: indumentaria profesional — crema, blanco, tinta y acento marino.
-   Refleja el rediseño «Indumentaria · Profesional»: hero partido (titular +
-   foto en panel), tarjetas altas con marco fino y botón de acento. */
-.tpl-thumb[data-tpl='trama'] { --tp-bg: #FAF9F7; --tp-nav: #FFFFFF; --tp-line: rgba(22, 24, 29, .13); --tp-hero: linear-gradient(#FAF9F7, #FAF9F7); --tp-card: #FFFFFF; --tp-img: #EFEDE8; --tp-ink: #16181D; --tp-mute: #B7BAC1; border-color: #E3E1DC; }
-.tpl-thumb[data-tpl='trama']::before {
+/* Trama + Indumentaria: comparten la piel «Indumentaria · Profesional» (crema,
+   blanco, tinta y acento marino), así que la miniatura es la misma: hero
+   partido (titular + foto en panel), tarjetas altas con marco fino y botón de
+   acento. `indumentaria` va en el mismo selector agrupado: el look es
+   compartido y solo cambia la composición de la portada. */
+.tpl-thumb[data-tpl='trama'],
+.tpl-thumb[data-tpl='indumentaria'] { --tp-bg: #FAF9F7; --tp-nav: #FFFFFF; --tp-line: rgba(22, 24, 29, .13); --tp-hero: linear-gradient(#FAF9F7, #FAF9F7); --tp-card: #FFFFFF; --tp-img: #EFEDE8; --tp-ink: #16181D; --tp-mute: #B7BAC1; border-color: #E3E1DC; }
+.tpl-thumb[data-tpl='trama']::before,
+.tpl-thumb[data-tpl='indumentaria']::before {
   right: 6%; top: 15%; width: 39%; height: 44%;
   border-radius: 6px; border: 1px solid var(--tp-line);
   background:
     linear-gradient(var(--tp-line), var(--tp-line)) 50% 116% / 44% 1px no-repeat,
     linear-gradient(#EFEDE8, #EFEDE8);
 }
-.tpl-thumb[data-tpl='trama']::after {
+.tpl-thumb[data-tpl='trama']::after,
+.tpl-thumb[data-tpl='indumentaria']::after {
   left: 6%; top: 19%; width: 45%; height: 2.8%;
   border-radius: 2px; background: var(--tp-acc);
   box-shadow:
@@ -74,9 +79,12 @@
     0 33.5px 0 -1.5px var(--tp-mute),
     0 46px 0 0 var(--tp-acc);
 }
-.tpl-thumb[data-tpl='trama'] i { top: 63%; bottom: 5%; gap: 4%; }
-.tpl-thumb[data-tpl='trama'] i b { border-radius: 6px; border-color: var(--tp-line); background-size: 34% 2px, 74% 2px, 100% 70%; }
-.tpl-thumb[data-tpl='trama'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#E7E4DD, #E7E4DD); }
+.tpl-thumb[data-tpl='trama'] i,
+.tpl-thumb[data-tpl='indumentaria'] i { top: 63%; bottom: 5%; gap: 4%; }
+.tpl-thumb[data-tpl='trama'] i b,
+.tpl-thumb[data-tpl='indumentaria'] i b { border-radius: 6px; border-color: var(--tp-line); background-size: 34% 2px, 74% 2px, 100% 70%; }
+.tpl-thumb[data-tpl='trama'] i b:nth-child(2),
+.tpl-thumb[data-tpl='indumentaria'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#E7E4DD, #E7E4DD); }
 
 /* Circuito: tecnología oscura — retícula y glow de acento. */
 .tpl-thumb[data-tpl='circuito'] { --tp-bg: #0d1420; --tp-nav: #0d1420; --tp-line: rgba(126, 160, 220, .28); --tp-hero: linear-gradient(rgba(120, 160, 220, .1) 1px, transparent 1px) 0 0 / 11px 11px, linear-gradient(90deg, rgba(120, 160, 220, .1) 1px, transparent 1px) 0 0 / 11px 11px, #0d1420; --tp-card: #121a2a; --tp-img: #1d2a44; --tp-ink: #dfe8fa; --tp-mute: #3d4f78; border-color: #1d2a44; }
@@ -95,6 +103,33 @@
 .tpl-thumb[data-tpl='boutique']::before { left: 50%; top: 15%; width: 22%; height: 40%; translate: -50% 0; border-radius: 50% 50% 2px 2px; background: linear-gradient(#D8C8CF, #C6B2BC); }
 .tpl-thumb[data-tpl='boutique']::after { left: 31%; right: 31%; top: 59%; height: 2px; background: #2A1F27; box-shadow: 0 7px 0 -0.5px rgba(42, 31, 39, .55), 0 14px 0 -0.5px #6B2D4F; }
 .tpl-thumb[data-tpl='boutique'] i b { border-radius: 1px; border-color: #E2D6DB; }
+
+/* Clásico: comercio y servicios con oficio — marfil, serif, reglas finas,
+   foto enmarcada (passe-partout) y acento verde profundo; radio 4 en todo. */
+.tpl-thumb[data-tpl='clasico'] { --tp-bg: #FBF8F2; --tp-nav: #FFFFFF; --tp-line: #E3DCCF; --tp-hero: linear-gradient(#FFFFFF, #FFFFFF); --tp-card: #FFFFFF; --tp-img: #EDE7DC; --tp-ink: #1C1A16; --tp-mute: #B9B1A2; border-color: #E3DCCF; }
+/* Foto enmarcada: marco 1px + passe-partout blanco de 4px. */
+.tpl-thumb[data-tpl='clasico']::before {
+  right: 6%; top: 14%; width: 37%; height: 45%;
+  border-radius: 4px; border: 4px solid #FFFFFF;
+  background: linear-gradient(#EDE7DC, #E3DCCF);
+  box-shadow: 0 0 0 1px var(--tp-line), 0 7px 14px -10px rgba(28, 26, 22, .45);
+}
+/* Titular serif (monograma) + eyebrow de acento + bajada en reglas finas. */
+.tpl-thumb[data-tpl='clasico']::after {
+  content: 'Aa';
+  left: 6%; top: 15%; width: 44%; height: 42%;
+  padding-top: 8px; box-sizing: border-box;
+  border-top: 1.5px solid var(--tp-acc);
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-size: 25px; font-weight: 600; line-height: 1; letter-spacing: -.03em;
+  color: var(--tp-ink);
+  background:
+    linear-gradient(var(--tp-mute), var(--tp-mute)) 0 calc(100% - 15px) / 86% 2px no-repeat,
+    linear-gradient(var(--tp-mute), var(--tp-mute)) 0 calc(100% - 9px) / 64% 2px no-repeat;
+}
+.tpl-thumb[data-tpl='clasico'] i { top: 64%; bottom: 6%; gap: 4%; }
+.tpl-thumb[data-tpl='clasico'] i b { border-radius: 4px; border-color: var(--tp-line); background-size: 34% 2px, 74% 2px, 100% 68%; }
+.tpl-thumb[data-tpl='clasico'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#E5DDCE, #E5DDCE); }
 
 /* Seguridad: bomberos e industrial — oscuro, rojo y franjas hazard. */
 .tpl-thumb[data-tpl='seguridad'] { --tp-bg: #F3F3F1; --tp-nav: #C8200E; --tp-line: rgba(18, 18, 18, .16); --tp-hero: linear-gradient(#121212, #121212); --tp-card: #fff; --tp-img: #D8D8D3; --tp-ink: #121212; --tp-mute: #8F8F8A; border-color: #D8D8D3; }

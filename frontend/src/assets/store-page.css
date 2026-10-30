@@ -4193,3 +4193,26 @@ html{ scroll-behavior: smooth; }
 }
 .store-page[data-st-skin][data-st-style] .sp-about-text{ color: var(--sp-ink-2); }
 .store-page[data-st-skin][data-st-style] :is(.sp-foot, .sp-foot-note){ color: var(--sp-muted); }
+/* ==========================================================================
+   MODO NOCHE — huecos compartidos (T3)
+   El iframe de Google Maps no trae tema oscuro: en las plantillas que no lo
+   filtraban quedaba un rectángulo blanco >200 px dentro de la sección de
+   contacto. Raíz y Boutique ya tenían su propio filtro (misma receta); esta
+   regla genérica cubre al resto y no pisa esas variantes.
+   ========================================================================== */
+.store-page[data-store-theme='dark'] .sp-map-frame iframe {
+  filter: invert(.92) hue-rotate(180deg) saturate(.55) brightness(.92);
+}
+/* Autofill del navegador: en modo noche Chrome pinta el campo con su amarillo
+   de sistema (texto oscuro sobre claro). Se fuerza la superficie/tinta del
+   tema para que formularios y buscadores no queden como parches claros. */
+.store-page[data-store-theme='dark'] input:-webkit-autofill,
+.store-page[data-store-theme='dark'] input:-webkit-autofill:hover,
+.store-page[data-store-theme='dark'] input:-webkit-autofill:focus,
+.store-page[data-store-theme='dark'] textarea:-webkit-autofill,
+.store-page[data-store-theme='dark'] select:-webkit-autofill {
+  -webkit-text-fill-color: var(--sp-ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--sp-card) inset;
+  caret-color: var(--sp-ink);
+  transition: background-color 9999s ease-out 0s;
+}

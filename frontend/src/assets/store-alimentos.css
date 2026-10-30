@@ -256,6 +256,11 @@
    CHROME — header, cinta promo, barra móvil, drawer y pie
    ========================================================================== */
 .store-page[data-template='alimentos'] { --sp-top-h: 78px; }
+/* El header con el interruptor de noche también existe en la portada de
+   escritorio (el base lo oculta en `.is-home` a partir de 1101px y esta piel
+   no lo reponía: el botón luna quedaba en 0×0 y el modo noche era
+   inalcanzable en desktop). */
+.store-page[data-template='alimentos'].is-home .sp-top { display: block; }
 .store-page[data-template='alimentos'] .sp-top {
   background: var(--al-surface);
   color: var(--al-ink);

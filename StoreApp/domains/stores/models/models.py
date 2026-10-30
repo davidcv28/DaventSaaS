@@ -122,29 +122,36 @@ class StoreCustomization(models.Model):
         ('barlow',               'Barlow'),
         ('barlow-condensed',     'Barlow Condensed'),
     ]
-    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 6
-    #diseños, dos por nivel, organizados por RUBRO (no por "estilo de
-    #autor"): los base van con cualquier has_customization, TEMPLATE_PLUS
-    #con has_design_plus (Estándar) y TEMPLATE_ADVANCED con
-    #has_design_advanced (Premium). El viewset descarta del payload un
-    #diseño fuera del nivel del plan y la web fuerza 'raiz' (fallback
-    #global) si el guardado deja de estar permitido. Toda la identidad
-    #visual vive en el CSS del diseño (store-<id>.css).
+    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 8
+    #diseños organizados por RUBRO (no por "estilo de autor"): los base
+    #(2) van con cualquier has_customization, TEMPLATE_PLUS (4) con
+    #has_design_plus (Estándar) y TEMPLATE_ADVANCED (2) con
+    #has_design_advanced (Premium). 'indumentaria' comparte la piel de
+    #'trama' con otra composición; 'clasico' es el clásico del catálogo
+    #(distinto del id retirado 'classic', que sigue remapeado a 'raiz').
+    #El viewset descarta del payload un diseño fuera del nivel del plan y
+    #la web fuerza 'raiz' (fallback global) si el guardado deja de estar
+    #permitido. Toda la identidad visual vive en el CSS del diseño
+    #(store-<id>.css).
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
     TEMPLATE_BASE               =   ('raiz', 'alimentos')
-    TEMPLATE_PLUS               =   ('trama', 'boutique')
+    TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'clasico')
     TEMPLATE_ADVANCED           =   ('circuito', 'seguridad')
-    #El motor "Diseñar con IA" no tiene patrones exclusivos: propone solo
-    #los 6 diseños del catálogo (ver ai_design_recipes).
+    #El motor "Diseñar con IA" no tiene patrones exclusivos ni propone los
+    #diseños nuevos: sigue proponiendo solo los 6 de PUBLIC_TEMPLATES
+    #(ai_design_recipes). El dueño sí puede elegirlos a mano desde el
+    #selector del dashboard.
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
-        ('raiz',      'Raíz'),
-        ('alimentos', 'Alimentos'),
-        ('trama',     'Trama'),
-        ('boutique',  'Boutique'),
-        ('circuito',  'Circuito'),
-        ('seguridad', 'Seguridad'),
+        ('raiz',          'Raíz'),
+        ('alimentos',     'Alimentos'),
+        ('trama',         'Trama'),
+        ('indumentaria',  'Indumentaria'),
+        ('boutique',      'Boutique'),
+        ('clasico',       'Clásico'),
+        ('circuito',      'Circuito'),
+        ('seguridad',     'Seguridad'),
     ]
     #Mapa de retirada -> diseño nuevo por afinidad de rubro (mig. 0053):
     #claros/neutros -> 'raiz', editoriales/moda -> 'trama', oscuros/

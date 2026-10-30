@@ -1,15 +1,15 @@
 /* ==========================================================================
    DISEÑO TRAMA — Catálogo + ficha de producto («Indumentaria · Profesional»)
    Hoja propia, importada SOLO por las vistas de catálogo y ficha de trama.
-   Todo vive bajo `.store-page[data-template='trama']` y está scopeado a
+   Todo vive bajo `.store-page[data-skin='indumentaria']` y está scopeado a
    `.tr-catalog` / `.tr-product`: no toca landing, chrome ni otros diseños.
    Es la piel de catálogo: tipografía Inter Tight/Inter, crema cálida, tinta
    suave, líneas de 1 px, radios 6/8 y acento del dueño.
    ========================================================================== */
 
 /* --- Tokens locales de catálogo/ficha (ganan por estar en el elemento) --- */
-.store-page[data-template='trama'] .tr-catalog,
-.store-page[data-template='trama'] .tr-product {
+.store-page[data-skin='indumentaria'] .tr-catalog,
+.store-page[data-skin='indumentaria'] .tr-product {
   --trc-media: #EFEDE8;
   --trc-surface: #FFFFFF;
   --trc-line: #E3E1DC;
@@ -33,25 +33,25 @@
 /* ==========================================================================
    1. CATÁLOGO — hero blanco con migas y contadores
    ========================================================================== */
-.store-page[data-template='trama'] .tr-catalog {
+.store-page[data-skin='indumentaria'] .tr-catalog {
   background: var(--trc-bg);
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-wrap {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-wrap {
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
   padding-inline: 32px;
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-hero {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-hero {
   background: var(--trc-surface);
   border-bottom: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-hero .trc-wrap {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-hero .trc-wrap {
   padding-block: 24px 36px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-crumbs {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-crumbs {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -63,24 +63,24 @@
   text-transform: uppercase;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-crumbs a {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-crumbs a {
   color: var(--trc-ink-2);
   text-decoration: none;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-crumbs a:hover {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-crumbs a:hover {
   color: var(--trc-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-crumb-here { color: var(--trc-muted); }
-.store-page[data-template='trama'] .tr-catalog .trc-hero-row {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-crumb-here { color: var(--trc-muted); }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-hero-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 32px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-hero-copy { min-width: 0; }
-.store-page[data-template='trama'] .tr-catalog .trc-eyebrow {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-hero-copy { min-width: 0; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-eyebrow {
   margin: 0 0 10px;
   font-size: 12px;
   font-weight: 600;
@@ -89,7 +89,7 @@
   color: var(--trc-accent-ink);
   font-family: var(--trc-body);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-hero h1 {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-hero h1 {
   margin: 0 0 12px;
   font-family: var(--trc-display);
   font-size: clamp(34px, 4.6vw, 44px);
@@ -99,14 +99,14 @@
   text-transform: none;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-sub {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-sub {
   margin: 0;
   max-width: 52ch;
   font-size: 17px;
   line-height: 1.6;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-counts {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-counts {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -114,7 +114,7 @@
   padding: 0;
   list-style: none;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-counts li {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-counts li {
   display: grid;
   justify-items: start;
   gap: 4px;
@@ -124,7 +124,7 @@
   border-radius: var(--trc-radius);
   background: var(--trc-surface);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-counts strong {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-counts strong {
   font-family: var(--trc-display);
   font-size: 24px;
   font-weight: 700;
@@ -132,7 +132,7 @@
   letter-spacing: -.02em;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-counts span {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-counts span {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: .1em;
@@ -141,10 +141,10 @@
 }
 
 /* --- Cuerpo --- */
-.store-page[data-template='trama'] .tr-catalog .trc-main {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-main {
   padding-block: 28px 88px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-promos {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-promos {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -158,7 +158,7 @@
   line-height: 1.5;
   color: var(--trc-ink-2);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-promos-label {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-promos-label {
   margin: 0;
   font-size: 11px;
   font-weight: 700;
@@ -166,7 +166,7 @@
   text-transform: uppercase;
   color: var(--trc-accent-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-promos ul {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-promos ul {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 22px;
@@ -174,7 +174,7 @@
   padding: 0;
   list-style: none;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-body {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-body {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   gap: 32px;
@@ -182,10 +182,10 @@
 }
 
 /* --- Filtros --- */
-.store-page[data-template='trama'] .tr-catalog .trc-filters-toggle {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-filters-toggle {
   display: none;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-filters {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-filters {
   position: sticky;
   top: calc(var(--sp-top-h, 68px) + 16px);
   display: grid;
@@ -196,20 +196,20 @@
   background: var(--trc-surface);
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-filters-head {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-filters-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-filters-head strong {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-filters-head strong {
   font-family: var(--trc-display);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -.01em;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-linkbtn {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-linkbtn {
   padding: 0;
   border: 0;
   background: none;
@@ -221,7 +221,7 @@
   text-underline-offset: 3px;
   cursor: pointer;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-group {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-group {
   display: grid;
   gap: 8px;
   min-width: 0;
@@ -229,12 +229,12 @@
   padding: 0;
   border: 0;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-group + .trc-group {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-group + .trc-group {
   padding-top: 18px;
   border-top: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-group--plain { gap: 10px; }
-.store-page[data-template='trama'] .tr-catalog .trc-group legend {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-group--plain { gap: 10px; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-group legend {
   margin: 0 0 4px;
   padding: 0;
   font-size: 11px;
@@ -243,7 +243,7 @@
   text-transform: uppercase;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-check {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-check {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -254,8 +254,8 @@
   color: var(--trc-ink-2);
   cursor: pointer;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-check:hover { color: var(--trc-ink); }
-.store-page[data-template='trama'] .tr-catalog .trc-check input {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-check:hover { color: var(--trc-ink); }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-check input {
   flex: none;
   width: 16px;
   height: 16px;
@@ -263,21 +263,21 @@
   accent-color: var(--trc-accent);
   cursor: pointer;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-check span { min-width: 0; overflow-wrap: anywhere; }
-.store-page[data-template='trama'] .tr-catalog .trc-check em {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-check span { min-width: 0; overflow-wrap: anywhere; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-check em {
   margin-left: auto;
   font-style: normal;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-price {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-price {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-price label { min-width: 0; }
-.store-page[data-template='trama'] .tr-catalog .trc-price input {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-price label { min-width: 0; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-price input {
   width: 100%;
   min-height: 40px;
   padding: 0 10px;
@@ -288,17 +288,17 @@
   font: inherit;
   font-size: 14px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-price input::placeholder { color: var(--trc-muted); }
-.store-page[data-template='trama'] .tr-catalog .trc-hint {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-price input::placeholder { color: var(--trc-muted); }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-hint {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-apply { display: none; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-apply { display: none; }
 
 /* --- Botones del catálogo --- */
-.store-page[data-template='trama'] .tr-catalog .trc-btn {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -317,20 +317,20 @@
   cursor: pointer;
   transition: background-color .18s ease, border-color .18s ease, color .18s ease;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-btn:hover { background: var(--trc-accent-ink); color: #fff; }
-.store-page[data-template='trama'] .tr-catalog .trc-btn--ghost {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-btn:hover { background: var(--trc-accent-ink); color: #fff; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-btn--ghost {
   background: transparent;
   border-color: var(--trc-ink);
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-btn--ghost:hover {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-btn--ghost:hover {
   background: var(--trc-soft);
   color: var(--trc-ink);
 }
 
 /* --- Resultados --- */
-.store-page[data-template='trama'] .tr-catalog .trc-results { min-width: 0; }
-.store-page[data-template='trama'] .tr-catalog .trc-res-head {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-results { min-width: 0; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-res-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -339,7 +339,7 @@
   padding-bottom: 14px;
   border-bottom: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-res-head h2 {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-res-head h2 {
   margin: 0;
   font-family: var(--trc-display);
   font-size: 17px;
@@ -349,7 +349,7 @@
   text-transform: none;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-sort {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-sort {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -357,7 +357,7 @@
   font-weight: 500;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-sort select {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-sort select {
   min-height: 40px;
   padding: 0 32px 0 12px;
   border: 1px solid var(--trc-line);
@@ -368,7 +368,7 @@
   font-size: 14px;
   cursor: pointer;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-tags {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -376,7 +376,7 @@
   padding: 0;
   list-style: none;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-tags button {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-tags button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -391,11 +391,11 @@
   cursor: pointer;
   transition: border-color .18s ease, color .18s ease;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-tags button:hover {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-tags button:hover {
   border-color: var(--trc-ink);
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-grid {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px 24px;
@@ -403,8 +403,8 @@
 }
 
 /* --- Tarjeta compartida: tokens de la piel --- */
-.store-page[data-template='trama'] .tr-catalog .tpc,
-.store-page[data-template='trama'] .tr-catalog .trc-card {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc,
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-card {
   --tpc-bg: var(--trc-surface);
   --tpc-border: 1px solid var(--trc-line);
   --tpc-radius: var(--trc-radius-lg);
@@ -447,43 +447,43 @@
   border-radius: var(--trc-radius-lg);
   transition: border-color .18s ease;
 }
-.store-page[data-template='trama'] .tr-catalog .tpc:hover,
-.store-page[data-template='trama'] .tr-catalog .trc-card:hover {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc:hover,
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-card:hover {
   border-color: color-mix(in srgb, var(--trc-ink) 22%, var(--trc-line));
   translate: none;
   box-shadow: none;
 }
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-media { border-radius: 0; }
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-flag {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-media { border-radius: 0; }
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-flag {
   padding: 5px 9px;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-flag.offer {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-flag.offer {
   background: var(--trc-accent);
   color: var(--trc-on-accent);
   border-color: transparent;
 }
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-name {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-name {
   font-family: var(--trc-display);
   font-size: 17px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-price,
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-price strong {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-price,
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-price strong {
   font-weight: 600;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-old,
-.store-page[data-template='trama'] .tr-catalog .tpc-price s {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-old,
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc-price s {
   color: var(--trc-muted);
 }
 /* Barra de hover "Ver detalle" (blanca, a todo el ancho de la media) */
-.store-page[data-template='trama'] .tr-catalog .tpc .tpc-quick {
+.store-page[data-skin='indumentaria'] .tr-catalog .tpc .tpc-quick {
   left: 0;
   right: 0;
   bottom: 0;
@@ -501,48 +501,48 @@
   transition: opacity .18s ease-out, translate .18s ease-out;
 }
 @media (hover: hover) and (pointer: fine) {
-  .store-page[data-template='trama'] .tr-catalog .tpc:hover .tpc-quick,
-  .store-page[data-template='trama'] .tr-catalog .tpc:focus-visible .tpc-quick {
+  .store-page[data-skin='indumentaria'] .tr-catalog .tpc:hover .tpc-quick,
+  .store-page[data-skin='indumentaria'] .tr-catalog .tpc:focus-visible .tpc-quick {
     opacity: 1;
     translate: 0 0;
   }
 }
-.store-page[data-template='trama'] .tr-catalog .trc-card-promo {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-card-promo {
   margin: 0;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .02em;
   color: var(--trc-accent-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-card .tpc-go { text-transform: none; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-card .tpc-go { text-transform: none; }
 
 /* --- Skeleton --- */
-.store-page[data-template='trama'] .tr-catalog .trc-skel {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-skel {
   display: block;
   overflow: hidden;
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius-lg);
   background: var(--trc-surface);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-skel-media {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-skel-media {
   display: block;
   aspect-ratio: 4 / 5;
   background: linear-gradient(90deg, var(--trc-media) 25%, color-mix(in srgb, var(--trc-media) 55%, #fff) 50%, var(--trc-media) 75%);
   background-size: 200% 100%;
   animation: trc-shimmer 1.5s linear infinite;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-skel-line {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-skel-line {
   display: block;
   height: 14px;
   margin: 14px 16px 0;
   border-radius: 4px;
   background: var(--trc-soft);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-skel-line.short { width: 48%; margin-bottom: 18px; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-skel-line.short { width: 48%; margin-bottom: 18px; }
 @keyframes trc-shimmer { to { background-position: -200% 0; } }
 
 /* --- Empty / error / más --- */
-.store-page[data-template='trama'] .tr-catalog .trc-empty {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-empty {
   display: grid;
   justify-items: center;
   gap: 10px;
@@ -552,7 +552,7 @@
   background: var(--trc-surface);
   text-align: center;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-empty-ico {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-empty-ico {
   display: grid;
   place-items: center;
   width: 52px;
@@ -561,29 +561,29 @@
   background: var(--trc-accent-soft);
   color: var(--trc-accent-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-empty strong {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-empty strong {
   font-family: var(--trc-display);
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -.01em;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-empty p {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-empty p {
   margin: 0;
   max-width: 46ch;
   font-size: 14px;
   line-height: 1.6;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-catalog .trc-empty .trc-btn { margin-top: 8px; }
-.store-page[data-template='trama'] .tr-catalog .trc-more {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-empty .trc-btn { margin-top: 8px; }
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-more {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   padding-top: 40px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-more p {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-more p {
   margin: 0;
   font-size: 13px;
   color: var(--trc-muted);
@@ -593,19 +593,19 @@
    2. FICHA DE PRODUCTO — se re-skinea la estructura compartida de Raíz
    (clases .rz-pdp-*/.spd-* dentro de `.tr-product`)
    ========================================================================== */
-.store-page[data-template='trama'] .tr-product {
+.store-page[data-skin='indumentaria'] .tr-product {
   background: var(--trc-bg);
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-wrap {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-wrap {
   width: 100%;
   max-width: 1280px;
   margin-inline: auto;
   padding-inline: 32px;
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-main { padding-block: 24px 96px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-crumbs {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-main { padding-block: 24px 96px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-crumbs {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -617,24 +617,24 @@
   text-transform: uppercase;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-crumbs a {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-crumbs a {
   color: var(--trc-ink-2);
   text-decoration: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-crumbs a:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-crumbs a:hover {
   color: var(--trc-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-crumb-here {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-crumb-here {
   max-width: 46ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-sheet { min-width: 0; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-top {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-sheet { min-width: 0; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-top {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   gap: clamp(28px, 4vw, 64px);
@@ -642,12 +642,12 @@
 }
 
 /* --- Galería: paneles de media --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-gallery {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-gallery {
   position: relative;
   margin: 0;
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-frame {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-frame {
   position: relative;
   display: grid;
   place-items: center;
@@ -659,7 +659,7 @@
   border-radius: var(--trc-radius);
   background: var(--trc-media);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-frame img {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-frame img {
   display: block;
   width: auto;
   height: auto;
@@ -667,17 +667,17 @@
   max-height: 100%;
   object-fit: contain;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-ph {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-ph {
   display: grid;
   place-items: center;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-seal {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-seal {
   position: absolute;
   top: 16px;
   left: 16px;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-caption {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-caption {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -690,17 +690,17 @@
   text-transform: uppercase;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-caption-cat {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-caption-cat {
   color: var(--trc-ink-2);
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-caption-id {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-caption-id {
   flex: none;
   font-variant-numeric: tabular-nums;
 }
 
 /* --- Primitivas compartidas (la ficha de trama no carga store-raiz.css) --- */
-.store-page[data-template='trama'] .tr-product .rz-eyebrow {
+.store-page[data-skin='indumentaria'] .tr-product .rz-eyebrow {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -713,7 +713,7 @@
   line-height: 1.4;
   color: var(--trc-accent-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-eyebrow::after {
+.store-page[data-skin='indumentaria'] .tr-product .rz-eyebrow::after {
   content: '';
   flex: 1 1 32px;
   min-width: 24px;
@@ -721,18 +721,18 @@
   margin-left: 4px;
   background: var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-product .rz-eyebrow-num {
+.store-page[data-skin='indumentaria'] .tr-product .rz-eyebrow-num {
   flex: none;
   color: var(--trc-muted);
   font-variant-numeric: tabular-nums;
   letter-spacing: .04em;
 }
-.store-page[data-template='trama'] .tr-product .rz-eyebrow-num::after {
+.store-page[data-skin='indumentaria'] .tr-product .rz-eyebrow-num::after {
   content: '—';
   margin-inline: 6px 4px;
   color: var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-product .rz-plate {
+.store-page[data-skin='indumentaria'] .tr-product .rz-plate {
   display: inline-block;
   padding: 7px 11px;
   border: 1px solid var(--trc-line);
@@ -746,7 +746,7 @@
   text-transform: uppercase;
   line-height: 1.2;
 }
-.store-page[data-template='trama'] .tr-product .rz-tag {
+.store-page[data-skin='indumentaria'] .tr-product .rz-tag {
   display: inline-flex;
   align-items: center;
   min-height: 22px;
@@ -760,7 +760,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.store-page[data-template='trama'] .tr-product .rz-btn {
+.store-page[data-skin='indumentaria'] .tr-product .rz-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -779,24 +779,24 @@
   cursor: pointer;
   transition: background-color .18s ease, border-color .18s ease, color .18s ease;
 }
-.store-page[data-template='trama'] .tr-product .rz-btn:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-btn:hover {
   background: var(--trc-accent-ink);
   color: #fff;
   filter: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-btn--ghost {
+.store-page[data-skin='indumentaria'] .tr-product .rz-btn--ghost {
   background: transparent;
   border-color: var(--trc-ink);
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-btn--ghost:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-btn--ghost:hover {
   background: var(--trc-soft);
   border-color: var(--trc-ink);
   color: var(--trc-ink);
 }
 
 /* --- Panel de compra --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-buy {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-buy {
   position: sticky;
   top: calc(var(--sp-top-h, 68px) + 24px);
   align-self: start;
@@ -809,14 +809,14 @@
   border-radius: var(--trc-radius-lg);
   background: var(--trc-surface);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-buy-head {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-buy-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-kicker { margin: 0; min-width: 0; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-share {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-kicker { margin: 0; min-width: 0; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-share {
   flex: none;
   display: grid;
   place-items: center;
@@ -829,11 +829,11 @@
   cursor: pointer;
   transition: border-color .18s ease, color .18s ease;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-share:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-share:hover {
   border-color: var(--trc-ink);
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-name {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-name {
   margin: 0;
   font-family: var(--trc-display);
   font-size: clamp(30px, 3.4vw, 40px);
@@ -844,25 +844,25 @@
   color: var(--trc-ink);
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-stars {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stars {
   margin: 2px 0;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-pricebox {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-pricebox {
   display: grid;
   gap: 8px;
   padding-block: 18px;
   border-block: 1px solid var(--trc-line);
   background: transparent;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-price-row {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-price-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
   margin: 0;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-price {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-price {
   font-family: var(--trc-display);
   font-size: 24px;
   font-weight: 600;
@@ -871,15 +871,15 @@
   font-variant-numeric: tabular-nums;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-off { flex: none; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-old {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-off { flex: none; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-old {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-old s { font-variant-numeric: tabular-nums; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-promo {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-old s { font-variant-numeric: tabular-nums; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-promo {
   display: flex;
   align-items: flex-start;
   gap: 7px;
@@ -889,9 +889,9 @@
   line-height: 1.5;
   color: var(--trc-accent-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-promo svg { flex: none; margin-top: 2px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-promo-ends { color: var(--trc-muted); font-weight: 500; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-pay {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-promo svg { flex: none; margin-top: 2px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-promo-ends { color: var(--trc-muted); font-weight: 500; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-pay {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -900,15 +900,15 @@
   line-height: 1.5;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-pay svg { flex: none; margin-top: 1px; color: var(--trc-accent-ink); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-ctas { display: grid; gap: 10px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-buy-btn {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-pay svg { flex: none; margin-top: 1px; color: var(--trc-accent-ink); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-ctas { display: grid; gap: 10px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-buy-btn {
   width: 100%;
   min-height: 54px;
   font-size: 15px;
   font-weight: 600;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-backlink {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-backlink {
   justify-self: start;
   display: inline-flex;
   align-items: center;
@@ -920,12 +920,12 @@
   color: var(--trc-ink-2);
   text-decoration: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-backlink:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-backlink:hover {
   color: var(--trc-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-seller {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-seller {
   list-style: none;
   display: grid;
   gap: 10px;
@@ -936,26 +936,26 @@
   line-height: 1.5;
   color: var(--trc-ink-2);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-seller li {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-seller li {
   display: flex;
   align-items: flex-start;
   gap: 9px;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-seller svg {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-seller svg {
   flex: none;
   margin-top: 2px;
   color: var(--trc-muted);
 }
 
 /* --- Secciones: ficha técnica y descripción --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-sec {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-sec {
   margin-top: clamp(48px, 6vw, 80px);
   padding-top: 28px;
   border-top: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-sec-head { margin-bottom: 20px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-sec-head .rz-eyebrow { margin: 0 0 8px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-sec-title {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-sec-head { margin-bottom: 20px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-sec-head .rz-eyebrow { margin: 0 0 8px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-sec-title {
   margin: 0;
   font-family: var(--trc-display);
   font-size: clamp(24px, 2.6vw, 32px);
@@ -965,7 +965,7 @@
   text-transform: none;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-desc {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-desc {
   margin: 0;
   max-width: 76ch;
   font-size: 16px;
@@ -974,50 +974,50 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs-wrap {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs-wrap {
   overflow: hidden;
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius);
   background: var(--trc-surface);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs th,
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs td {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs th,
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs td {
   padding: 14px 18px;
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid var(--trc-line);
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs th {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs th {
   width: 34%;
   font-size: 14px;
   font-weight: 500;
   color: var(--trc-muted);
   background: transparent;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs td {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs td {
   font-size: 14px;
   font-weight: 500;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs tbody tr:nth-child(even) { background: var(--trc-soft); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs tbody tr:nth-child(even) th,
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs tbody tr:nth-child(even) td { background: transparent; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs tbody tr:last-child th,
-.store-page[data-template='trama'] .tr-product .rz-pdp-specs tbody tr:last-child td { border-bottom: 0; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs tbody tr:nth-child(even) { background: var(--trc-soft); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs tbody tr:nth-child(even) th,
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs tbody tr:nth-child(even) td { background: transparent; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs tbody tr:last-child th,
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs tbody tr:last-child td { border-bottom: 0; }
 
 /* --- Opiniones (ProductReviews comparte clases spd-* y sp-*) --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews { margin-top: clamp(48px, 6vw, 80px); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-sec {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews { margin-top: clamp(48px, 6vw, 80px); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-sec {
   padding: 28px 0 0;
   border-top: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-sec-title {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-sec-title {
   margin: 0;
   font-family: var(--trc-display);
   font-size: clamp(24px, 2.6vw, 32px);
@@ -1027,122 +1027,122 @@
   text-transform: none;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-head {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-head {
   padding-bottom: 14px;
   border-bottom: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-empty {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-empty {
   font-size: 14px;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-item {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-item {
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius-lg);
   background: var(--trc-surface);
   color: var(--trc-ink-2);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-item + .spd-rev-item { margin-top: 10px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-avatar {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-item + .spd-rev-item { margin-top: 10px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-avatar {
   border-radius: var(--trc-radius);
   background: var(--trc-accent-soft);
   color: var(--trc-accent-ink);
   font-weight: 600;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-who strong { color: var(--trc-ink); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-who time { color: var(--trc-muted); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-text { color: var(--trc-ink-2); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-vote { color: #2E9E6B; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-vote.down { color: #C0453F; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-pick {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-who strong { color: var(--trc-ink); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-who time { color: var(--trc-muted); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-text { color: var(--trc-ink-2); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-vote { color: #2E9E6B; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-vote.down { color: #C0453F; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-pick {
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius);
   background: var(--trc-surface);
   color: var(--trc-ink-2);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-pick:hover { transform: none; border-color: var(--trc-ink); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-pick.on {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-pick:hover { transform: none; border-color: var(--trc-ink); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-pick.on {
   border-color: #2E9E6B;
   background: color-mix(in srgb, #2E9E6B 12%, #fff);
   color: #236f4c;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .spd-rev-pick.down.on {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .spd-rev-pick.down.on {
   border-color: #C0453F;
   background: color-mix(in srgb, #C0453F 10%, #fff);
   color: #a83c36;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-form {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-form {
   padding: clamp(18px, 3vw, 28px);
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius-lg);
   background: var(--trc-surface);
   box-shadow: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-form::before,
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-form::after { content: none; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-form-badge {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-form::before,
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-form::after { content: none; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-form-badge {
   border-radius: var(--trc-radius);
   background: var(--trc-accent-soft);
   color: var(--trc-accent-ink);
   box-shadow: none;
   transform: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-form-head { border-bottom-color: var(--trc-line); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-field label {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-form-head { border-bottom-color: var(--trc-line); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-field label {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-input {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-input {
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius);
   background: var(--trc-bg);
   color: var(--trc-ink);
   box-shadow: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-input::placeholder { color: var(--trc-muted); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-input:focus {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-input::placeholder { color: var(--trc-muted); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-input:focus {
   border-color: var(--trc-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--trc-accent) 16%, transparent);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-counter,
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-form-note { color: var(--trc-muted); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-icon-btn {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-counter,
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-form-note { color: var(--trc-muted); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-icon-btn {
   border-radius: var(--trc-radius);
   border-color: var(--trc-line);
   background: var(--trc-surface);
   color: var(--trc-ink-2);
   box-shadow: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-btn {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-btn {
   border-radius: var(--trc-radius);
   background: var(--trc-accent);
   color: var(--trc-on-accent);
   font-weight: 600;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-reviews .sp-btn:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-reviews .sp-btn:hover {
   background: var(--trc-accent-ink);
   color: #fff;
   filter: none;
 }
 
 /* --- Relacionados --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-related {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-related {
   margin-top: clamp(56px, 7vw, 96px);
   padding-top: 28px;
   border-top: 1px solid var(--trc-line);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-related-head { margin-bottom: 22px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-related-head .rz-eyebrow { margin: 0 0 8px; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-grid {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-related-head { margin-bottom: 22px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-related-head .rz-eyebrow { margin: 0 0 8px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 28px 20px;
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-card,
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-card.tpc {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-card,
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-card.tpc {
   --tpc-bg: var(--trc-surface);
   --tpc-border: 1px solid var(--trc-line);
   --tpc-radius: var(--trc-radius-lg);
@@ -1174,26 +1174,26 @@
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius-lg);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-card:hover {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-card:hover {
   border-color: color-mix(in srgb, var(--trc-ink) 22%, var(--trc-line));
   box-shadow: none;
   translate: none;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-card .tpc-media { border-radius: 0; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-card .tpc-name {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-card .tpc-media { border-radius: 0; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-card .tpc-name {
   font-family: var(--trc-display);
   font-size: 15px;
   font-weight: 600;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-rel-card:hover .tpc-name { text-decoration: none; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-card:hover .tpc-name { text-decoration: none; }
 
 /* --- Barra fija móvil --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-stick { display: none; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stick { display: none; }
 
 /* --- Estados: carga y vacío --- */
-.store-page[data-template='trama'] .tr-product .rz-pdp-top:has(.rz-pdp-skel-media) { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); }
-.store-page[data-template='trama'] .tr-product .rz-pdp-skel-media {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-top:has(.rz-pdp-skel-media) { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-skel-media {
   aspect-ratio: 4 / 5;
   border: 1px solid var(--trc-line);
   border-radius: var(--trc-radius);
@@ -1201,21 +1201,21 @@
   background-size: 200% 100%;
   animation: trc-shimmer 1.5s linear infinite;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-skel-buy {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-skel-buy {
   display: grid;
   gap: 14px;
   align-content: start;
   min-width: 0;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-skel-line {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-skel-line {
   display: block;
   height: 14px;
   border-radius: 4px;
   background: var(--trc-soft);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-skel-line.short { width: 42%; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-skel-line.tall { height: 38px; width: 78%; }
-.store-page[data-template='trama'] .tr-product .rz-pdp-empty {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-skel-line.short { width: 42%; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-skel-line.tall { height: 38px; width: 78%; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-empty {
   display: grid;
   justify-items: center;
   gap: 10px;
@@ -1225,7 +1225,7 @@
   background: var(--trc-surface);
   text-align: center;
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-empty-ico {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-empty-ico {
   display: grid;
   place-items: center;
   width: 52px;
@@ -1234,30 +1234,30 @@
   background: var(--trc-accent-soft);
   color: var(--trc-accent-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-empty strong {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-empty strong {
   font-family: var(--trc-display);
   font-size: 18px;
   font-weight: 600;
   color: var(--trc-ink);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-empty p {
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-empty p {
   margin: 0;
   max-width: 46ch;
   font-size: 14px;
   line-height: 1.6;
   color: var(--trc-muted);
 }
-.store-page[data-template='trama'] .tr-product .rz-pdp-empty .rz-btn { margin-top: 8px; }
+.store-page[data-skin='indumentaria'] .tr-product .rz-pdp-empty .rz-btn { margin-top: 8px; }
 
 /* ==========================================================================
    3. FOCO visible, responsive y movimiento reducido
    ========================================================================== */
-.store-page[data-template='trama'] .tr-catalog :is(a, button, input, select, summary, [tabindex]):focus-visible,
-.store-page[data-template='trama'] .tr-product :is(a, button, input, select, summary, [tabindex]):focus-visible {
+.store-page[data-skin='indumentaria'] .tr-catalog :is(a, button, input, select, summary, [tabindex]):focus-visible,
+.store-page[data-skin='indumentaria'] .tr-product :is(a, button, input, select, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--trc-accent);
   outline-offset: 2px;
 }
-.store-page[data-template='trama'] .tr-catalog .trc-sr {
+.store-page[data-skin='indumentaria'] .tr-catalog .trc-sr {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -1270,13 +1270,13 @@
 }
 
 @media (max-width: 1023px) {
-  .store-page[data-template='trama'] .tr-catalog .trc-hero-row {
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-hero-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 26px;
   }
-  .store-page[data-template='trama'] .tr-catalog .trc-body { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-template='trama'] .tr-catalog .trc-filters-toggle {
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-body { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-filters-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1293,7 +1293,7 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .store-page[data-template='trama'] .tr-catalog .trc-filters-count {
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-filters-count {
     display: inline-grid;
     place-items: center;
     min-width: 20px;
@@ -1305,21 +1305,21 @@
     font-size: 10.5px;
     font-weight: 600;
   }
-  .store-page[data-template='trama'] .tr-catalog .trc-filters {
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-filters {
     display: none;
     position: static;
   }
-  .store-page[data-template='trama'] .tr-catalog .trc-filters.open { display: grid; }
-  .store-page[data-template='trama'] .tr-catalog .trc-apply { display: inline-flex; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-top { grid-template-columns: minmax(0, 1fr); gap: 32px; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-buy { position: static; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-frame { aspect-ratio: 4 / 3; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-rel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-filters.open { display: grid; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-apply { display: inline-flex; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-top { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-buy { position: static; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-frame { aspect-ratio: 4 / 3; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 960px) {
-  .store-page[data-template='trama'] .tr-product .rz-pdp-main { padding-bottom: calc(96px + 72px); }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-stick {
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-main { padding-bottom: calc(96px + 72px); }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stick {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -1333,16 +1333,16 @@
     border-top: 1px solid var(--trc-line);
     box-shadow: 0 -8px 24px -18px rgb(22 24 29 / .35);
   }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-stick-info {
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stick-info {
     display: grid;
     min-width: 0;
     flex: none;
   }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-stick-info s {
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stick-info s {
     font-size: 12px;
     color: var(--trc-muted);
   }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-stick-info strong {
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stick-info strong {
     font-family: var(--trc-display);
     font-size: 19px;
     font-weight: 600;
@@ -1350,55 +1350,75 @@
     color: var(--trc-ink);
     font-variant-numeric: tabular-nums;
   }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-stick-btn {
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-stick-btn {
     flex: 1;
     min-height: 46px;
   }
 }
 
 @media (max-width: 760px) {
-  .store-page[data-template='trama'] .tr-catalog .trc-wrap,
-  .store-page[data-template='trama'] .tr-product .rz-pdp-wrap { padding-inline: 20px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-hero .trc-wrap { padding-block: 20px 28px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-crumbs,
-  .store-page[data-template='trama'] .tr-product .rz-pdp-crumbs { margin-bottom: 18px; font-size: 11px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-hero h1 { font-size: 34px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-sub { font-size: 16px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-counts { width: 100%; }
-  .store-page[data-template='trama'] .tr-catalog .trc-counts li { flex: 1; min-width: 0; padding: 12px 14px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-main { padding-block: 22px 64px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-res-head {
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-wrap,
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-wrap { padding-inline: 20px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-hero .trc-wrap { padding-block: 20px 28px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-crumbs,
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-crumbs { margin-bottom: 18px; font-size: 11px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-hero h1 { font-size: 34px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-sub { font-size: 16px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-counts { width: 100%; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-counts li { flex: 1; min-width: 0; padding: 12px 14px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-main { padding-block: 22px 64px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-res-head {
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
   }
-  .store-page[data-template='trama'] .tr-catalog .trc-sort { width: 100%; justify-content: space-between; }
-  .store-page[data-template='trama'] .tr-catalog .trc-sort select { flex: 1; max-width: none; }
-  .store-page[data-template='trama'] .tr-catalog .trc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 16px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-promos { align-items: flex-start; flex-direction: column; gap: 6px; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-main { padding-block: 20px 120px; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-frame { aspect-ratio: 1 / 1; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-specs th,
-  .store-page[data-template='trama'] .tr-product .rz-pdp-specs td { padding: 11px 13px; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-specs th { width: 40%; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-sort { width: 100%; justify-content: space-between; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-sort select { flex: 1; max-width: none; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 16px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-promos { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-main { padding-block: 20px 120px; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-frame { aspect-ratio: 1 / 1; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 14px; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs th,
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs td { padding: 11px 13px; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-specs th { width: 40%; }
 }
 
 @media (max-width: 560px) {
-  .store-page[data-template='trama'] .tr-catalog .trc-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; }
-  .store-page[data-template='trama'] .tr-catalog .trc-counts li { padding: 10px 12px; }
-  .store-page[data-template='trama'] .tr-product .rz-pdp-price { font-size: 22px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-counts li { padding: 10px 12px; }
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-price { font-size: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .store-page[data-template='trama'] .tr-catalog *,
-  .store-page[data-template='trama'] .tr-product * {
+  .store-page[data-skin='indumentaria'] .tr-catalog *,
+  .store-page[data-skin='indumentaria'] .tr-product * {
     transition: none !important;
     animation: none !important;
   }
-  .store-page[data-template='trama'] .tr-catalog .trc-skel-media,
-  .store-page[data-template='trama'] .tr-product .rz-pdp-skel-media {
+  .store-page[data-skin='indumentaria'] .tr-catalog .trc-skel-media,
+  .store-page[data-skin='indumentaria'] .tr-product .rz-pdp-skel-media {
     background: var(--trc-media);
     animation: none;
   }
+}
+
+/* ==========================================================================
+   TEMA OSCURO � cat�logo y ficha de la piel compartida (trama + indumentaria).
+   Los tokens --trc-* viven en el elemento .tr-catalog/.tr-product y son
+   independientes de --tr-*: sin este bloque el cat�logo quedaba claro en la
+   web oscura (hero blanco, ficha blanca). Mismos valores que la piel de
+   landing en store-trama.css.
+   ========================================================================== */
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-catalog,
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-product {
+  --trc-media: #23272F;
+  --trc-surface: #191C22;
+  --trc-line: #2E323A;
+  --trc-bg: #121418;
+  --trc-ink: #F3F2EF;
+  --trc-ink-2: #D7D9DE;
+  --trc-muted: #A3A8B2;
+  --trc-soft: #1E2229;
+  --trc-accent-soft: color-mix(in srgb, var(--trc-accent) 22%, #191C22);
 }

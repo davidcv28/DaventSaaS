@@ -1,6 +1,6 @@
 /* ==========================================================================
    DISEÑO TRAMA — indumentaria / moda (nivel plus)
-   Raíz de todo el CSS: .store-page[data-template='trama'] (lo emite
+   Raíz de todo el CSS: .store-page[data-skin='indumentaria'] (lo emite
    StorePublicLayout). Sistema visual «Indumentaria · Profesional»: crema
    cálida, tinta suave, acento marino del dueño, Inter Tight + Inter, radios
    6/8/4, filetes de 1 px, aire generoso. Sin gradientes, sin glows, sin
@@ -10,7 +10,7 @@
    su estructura compartida y solo adopta los tokens de esta piel.
    ========================================================================== */
 
-.store-page[data-template='trama'] {
+.store-page[data-skin='indumentaria'] {
   /* ----- Paleta (SPEC §1) ----- */
   --tr-bg: #FAF9F7;
   --tr-surface: #FFFFFF;
@@ -119,50 +119,50 @@
 }
 
 /* Trama no usa glows ambientales: fondo plano, filetes y aire. */
-.store-page[data-template='trama']::before,
-.store-page[data-template='trama']::after { display: none; }
+.store-page[data-skin='indumentaria']::before,
+.store-page[data-skin='indumentaria']::after { display: none; }
 
 /* --------------------------------------------------------------------------
    BASE — tipografía, contenedor, eyebrows, foco
    -------------------------------------------------------------------------- */
-.store-page[data-template='trama'] h1,
-.store-page[data-template='trama'] h2,
-.store-page[data-template='trama'] h3,
-.store-page[data-template='trama'] h4,
-.store-page[data-template='trama'] .sp-section-title,
-.store-page[data-template='trama'] .tr-section-title,
-.store-page[data-template='trama'] .sp-hero-title,
-.store-page[data-template='trama'] .sp-hal-title {
+.store-page[data-skin='indumentaria'] h1,
+.store-page[data-skin='indumentaria'] h2,
+.store-page[data-skin='indumentaria'] h3,
+.store-page[data-skin='indumentaria'] h4,
+.store-page[data-skin='indumentaria'] .sp-section-title,
+.store-page[data-skin='indumentaria'] .tr-section-title,
+.store-page[data-skin='indumentaria'] .sp-hero-title,
+.store-page[data-skin='indumentaria'] .sp-hal-title {
   font-family: var(--tr-display);
   font-weight: 600;
   letter-spacing: -.03em;
   text-transform: none;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] h1 { font-size: clamp(40px, 6.4vw, 68px); line-height: 1.02; letter-spacing: -.035em; }
-.store-page[data-template='trama'] h2,
-.store-page[data-template='trama'] .sp-section-title,
-.store-page[data-template='trama'] .tr-section-title { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; }
-.store-page[data-template='trama'] h3 { font-size: 22px; line-height: 1.25; }
-.store-page[data-template='trama'] h4 { font-size: 20px; line-height: 1.3; }
-.store-page[data-template='trama'] p { margin: 0; }
+.store-page[data-skin='indumentaria'] h1 { font-size: clamp(40px, 6.4vw, 68px); line-height: 1.02; letter-spacing: -.035em; }
+.store-page[data-skin='indumentaria'] h2,
+.store-page[data-skin='indumentaria'] .sp-section-title,
+.store-page[data-skin='indumentaria'] .tr-section-title { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; }
+.store-page[data-skin='indumentaria'] h3 { font-size: 22px; line-height: 1.25; }
+.store-page[data-skin='indumentaria'] h4 { font-size: 20px; line-height: 1.3; }
+.store-page[data-skin='indumentaria'] p { margin: 0; }
 
 /* La tarjeta de producto tiene su propio contrato tipográfico (--tpc-*). */
-.store-page[data-template='trama'] .tpc .tpc-name {
+.store-page[data-skin='indumentaria'] .tpc .tpc-name {
   font-family: var(--tr-body);
   text-transform: none;
   letter-spacing: 0;
 }
 
-.store-page[data-template='trama'] .sp-container,
-.store-page[data-template='trama'] .tr-container {
+.store-page[data-skin='indumentaria'] .sp-container,
+.store-page[data-skin='indumentaria'] .tr-container {
   width: 100%;
   max-width: var(--tr-container);
   margin-inline: auto;
   padding-inline: max(var(--tr-gutter), env(safe-area-inset-left)) max(var(--tr-gutter), env(safe-area-inset-right));
 }
 
-.store-page[data-template='trama'] :is(.sp-eyebrow, .tr-eyebrow) {
+.store-page[data-skin='indumentaria'] :is(.sp-eyebrow, .tr-eyebrow) {
   margin: 0;
   font-family: var(--tr-body);
   font-size: 12px;
@@ -174,17 +174,17 @@
 }
 
 /* Foco visible en todo interactivo (SPEC §4). */
-.store-page[data-template='trama'] :is(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+.store-page[data-skin='indumentaria'] :is(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--tr-focus);
   outline-offset: 2px;
 }
-.store-page[data-template='trama'] :is(.sp-input, .tr-btn, .sp-btn):focus-visible {
+.store-page[data-skin='indumentaria'] :is(.sp-input, .tr-btn, .sp-btn):focus-visible {
   outline: 2px solid var(--tr-focus);
   outline-offset: 2px;
 }
 
 /* Botones: primario acento, ghost de tinta, blanco en bandas oscuras. */
-.store-page[data-template='trama'] .sp-btn {
+.store-page[data-skin='indumentaria'] .sp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -204,33 +204,33 @@
   box-shadow: none;
   transition: background-color .18s, border-color .18s, color .18s;
 }
-.store-page[data-template='trama'] .sp-btn:hover {
+.store-page[data-skin='indumentaria'] .sp-btn:hover {
   background: color-mix(in srgb, var(--tr-accent-ink) 86%, #000);
   border-color: color-mix(in srgb, var(--tr-accent-ink) 86%, #000);
   color: var(--tr-on-accent);
   filter: none;
 }
-.store-page[data-template='trama'] .sp-btn.ghost {
+.store-page[data-skin='indumentaria'] .sp-btn.ghost {
   background: transparent;
   border-color: var(--tr-ink);
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-btn.ghost:hover {
+.store-page[data-skin='indumentaria'] .sp-btn.ghost:hover {
   background: var(--tr-ink);
   border-color: var(--tr-ink);
   color: #FFFFFF;
 }
-.store-page[data-template='trama'] .sp-btn.sm { min-height: 40px; padding: 0 16px; font-size: 14px; }
-.store-page[data-template='trama'] .sp-arrow { flex: none; }
-.store-page[data-template='trama'] .sp-btn:active { transform: none; }
+.store-page[data-skin='indumentaria'] .sp-btn.sm { min-height: 40px; padding: 0 16px; font-size: 14px; }
+.store-page[data-skin='indumentaria'] .sp-arrow { flex: none; }
+.store-page[data-skin='indumentaria'] .sp-btn:active { transform: none; }
 
 /* ==========================================================================
    CHROME — header, utility bar, nav de tienda, drawer, tabbar y pie
    ========================================================================== */
-.store-page[data-template='trama'].is-home { --sp-top-h: 76px; }
-.store-page[data-template='trama'].is-home .sp-top { display: block; }
+.store-page[data-skin='indumentaria'].is-home { --sp-top-h: 76px; }
+.store-page[data-skin='indumentaria'].is-home .sp-top { display: block; }
 
-.store-page[data-template='trama'] .sp-top {
+.store-page[data-skin='indumentaria'] .sp-top {
   background: var(--tr-surface);
   color: var(--tr-ink);
   border-bottom: 1px solid var(--tr-line);
@@ -238,10 +238,10 @@
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-.store-page[data-template='trama'] .sp-top.scrolled { box-shadow: 0 12px 28px -26px rgb(22 24 29 / .45); }
-.store-page[data-template='trama'] .sp-progress { background: var(--tr-accent); height: 2px; }
+.store-page[data-skin='indumentaria'] .sp-top.scrolled { box-shadow: 0 12px 28px -26px rgb(22 24 29 / .45); }
+.store-page[data-skin='indumentaria'] .sp-progress { background: var(--tr-accent); height: 2px; }
 
-.store-page[data-template='trama'] .sp-top-inner {
+.store-page[data-skin='indumentaria'] .sp-top-inner {
   display: grid;
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
@@ -249,12 +249,12 @@
   height: 76px;
   transition: none;
 }
-.store-page[data-template='trama'] .sp-top.scrolled .sp-top-inner { height: 76px; }
+.store-page[data-skin='indumentaria'] .sp-top.scrolled .sp-top-inner { height: 76px; }
 
-.store-page[data-template='trama'] .sp-top .sp-burger { grid-column: 1; }
-.store-page[data-template='trama'] .sp-brand { grid-column: 1; justify-self: start; color: var(--tr-ink); gap: 11px; }
-.store-page[data-template='trama'] .sp-brand .sp-name,
-.store-page[data-template='trama'] .sp-top .sp-name {
+.store-page[data-skin='indumentaria'] .sp-top .sp-burger { grid-column: 1; }
+.store-page[data-skin='indumentaria'] .sp-brand { grid-column: 1; justify-self: start; color: var(--tr-ink); gap: 11px; }
+.store-page[data-skin='indumentaria'] .sp-brand .sp-name,
+.store-page[data-skin='indumentaria'] .sp-top .sp-name {
   font-family: var(--tr-display);
   font-size: 24px;
   font-weight: 700;
@@ -262,7 +262,7 @@
   line-height: 1.1;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-brand .sp-mono {
+.store-page[data-skin='indumentaria'] .sp-brand .sp-mono {
   width: 34px;
   height: 34px;
   border-radius: 6px;
@@ -270,7 +270,7 @@
   color: #FFFFFF;
   font-size: 14px;
 }
-.store-page[data-template='trama'] .sp-brand .sp-logo {
+.store-page[data-skin='indumentaria'] .sp-brand .sp-logo {
   width: 34px;
   height: 34px;
   border-radius: 6px;
@@ -278,7 +278,7 @@
   background: var(--tr-surface);
 }
 
-.store-page[data-template='trama'] .sp-top-links {
+.store-page[data-skin='indumentaria'] .sp-top-links {
   grid-column: 2;
   display: flex;
   align-items: stretch;
@@ -286,7 +286,7 @@
   gap: 0;
   min-width: 0;
 }
-.store-page[data-template='trama'] .sp-top-links a {
+.store-page[data-skin='indumentaria'] .sp-top-links a {
   display: inline-flex;
   align-items: center;
   min-height: 0;
@@ -301,22 +301,22 @@
   white-space: nowrap;
   transition: color .15s, border-color .15s;
 }
-.store-page[data-template='trama'] .sp-top-links a:hover {
+.store-page[data-skin='indumentaria'] .sp-top-links a:hover {
   background: transparent;
   color: var(--tr-ink);
   border-bottom-color: var(--tr-line);
 }
 /* Solo las rutas reales llevan subrayado activo: las anclas (#seccion) de la
    misma portada comparten ruta y no deben pintar el subrayado. */
-.store-page[data-template='trama'] .sp-top-links a.router-link-exact-active:not([href*='#']) {
+.store-page[data-skin='indumentaria'] .sp-top-links a.router-link-exact-active:not([href*='#']) {
   background: transparent;
   color: var(--tr-ink);
   border-bottom-color: var(--tr-accent);
 }
 
 /* Buscador del masthead: 44 px, radio 6, fondo bg y borde line. */
-.store-page[data-template='trama'] .sp-search,
-.store-page[data-template='trama'] .sp-search.sp-search-top {
+.store-page[data-skin='indumentaria'] .sp-search,
+.store-page[data-skin='indumentaria'] .sp-search.sp-search-top {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -330,29 +330,29 @@
   box-shadow: none;
   transition: border-color .15s;
 }
-.store-page[data-template='trama'] .sp-search.sp-search-top { grid-column: 3; justify-self: end; }
-.store-page[data-template='trama'] .sp-search:focus-within {
+.store-page[data-skin='indumentaria'] .sp-search.sp-search-top { grid-column: 3; justify-self: end; }
+.store-page[data-skin='indumentaria'] .sp-search:focus-within {
   border-color: var(--tr-accent);
   box-shadow: none;
   outline: 2px solid var(--tr-focus);
   outline-offset: 2px;
 }
-.store-page[data-template='trama'] .sp-search > svg { flex: none; color: var(--tr-muted); }
-.store-page[data-template='trama'] .sp-search input {
+.store-page[data-skin='indumentaria'] .sp-search > svg { flex: none; color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-search input {
   font-family: var(--tr-body);
   font-size: 15px;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-search input::placeholder { color: var(--tr-muted); }
-.store-page[data-template='trama'] .sp-search-toggle { display: none; }
+.store-page[data-skin='indumentaria'] .sp-search input::placeholder { color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-search-toggle { display: none; }
 
-.store-page[data-template='trama'] .sp-top-end {
+.store-page[data-skin='indumentaria'] .sp-top-end {
   grid-column: 4;
   justify-self: end;
   flex: none;
   gap: 10px;
 }
-.store-page[data-template='trama'] .sp-top .sp-icon-btn {
+.store-page[data-skin='indumentaria'] .sp-top .sp-icon-btn {
   width: 44px;
   height: 44px;
   border: 1px solid var(--tr-line);
@@ -364,14 +364,14 @@
   -webkit-backdrop-filter: none;
   transition: border-color .15s, color .15s;
 }
-.store-page[data-template='trama'] .sp-top .sp-icon-btn:hover {
+.store-page[data-skin='indumentaria'] .sp-top .sp-icon-btn:hover {
   background: transparent;
   border-color: var(--tr-ink);
   color: var(--tr-ink);
   filter: none;
   transform: none;
 }
-.store-page[data-template='trama'] .sp-top .sp-burger {
+.store-page[data-skin='indumentaria'] .sp-top .sp-burger {
   width: 44px;
   height: 44px;
   border: 1px solid var(--tr-line);
@@ -379,12 +379,12 @@
   background: transparent;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-top .sp-burger:hover {
+.store-page[data-skin='indumentaria'] .sp-top .sp-burger:hover {
   background: transparent;
   border-color: var(--tr-ink);
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-top-cta {
+.store-page[data-skin='indumentaria'] .sp-top-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -399,13 +399,13 @@
   text-decoration: none;
   transition: background-color .18s, border-color .18s;
 }
-.store-page[data-template='trama'] .sp-top-cta:hover {
+.store-page[data-skin='indumentaria'] .sp-top-cta:hover {
   background: color-mix(in srgb, var(--tr-accent-ink) 86%, #000);
   border-color: color-mix(in srgb, var(--tr-accent-ink) 86%, #000);
 }
 
 /* Utility bar (anuncios static): acento, texto blanco, sin íconos ni marquee. */
-.store-page[data-template='trama'] .sp-ann {
+.store-page[data-skin='indumentaria'] .sp-ann {
   padding: 9px 16px;
   background: var(--tr-accent);
   color: #FFFFFF;
@@ -415,7 +415,7 @@
   -webkit-mask-image: none;
   mask-image: none;
 }
-.store-page[data-template='trama'] .sp-ann .sp-ann-track {
+.store-page[data-skin='indumentaria'] .sp-ann .sp-ann-track {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -425,7 +425,7 @@
   padding: 0;
   animation: none;
 }
-.store-page[data-template='trama'] .sp-ann .sp-ann-item {
+.store-page[data-skin='indumentaria'] .sp-ann .sp-ann-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -439,15 +439,15 @@
   white-space: normal;
   text-align: center;
 }
-.store-page[data-template='trama'] .sp-ann .sp-ann-item svg { display: none; }
+.store-page[data-skin='indumentaria'] .sp-ann .sp-ann-item svg { display: none; }
 
 /* Fila de secciones de la tienda Pro. */
-.store-page[data-template='trama'] .sp-shop-nav {
+.store-page[data-skin='indumentaria'] .sp-shop-nav {
   background: var(--tr-surface);
   border-bottom: 1px solid var(--tr-line);
 }
-.store-page[data-template='trama'] .sp-shop-nav-links { gap: 2px; }
-.store-page[data-template='trama'] .sp-shop-nav-links a {
+.store-page[data-skin='indumentaria'] .sp-shop-nav-links { gap: 2px; }
+.store-page[data-skin='indumentaria'] .sp-shop-nav-links a {
   border-radius: 0;
   color: var(--tr-muted);
   font-size: 12px;
@@ -455,89 +455,89 @@
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.store-page[data-template='trama'] .sp-shop-nav-links a:hover { background: transparent; color: var(--tr-ink); }
-.store-page[data-template='trama'] .sp-shop-nav-links a.is-current {
+.store-page[data-skin='indumentaria'] .sp-shop-nav-links a:hover { background: transparent; color: var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .sp-shop-nav-links a.is-current {
   background: transparent;
   color: var(--tr-ink);
   box-shadow: inset 0 -2px 0 var(--tr-accent);
 }
-.store-page[data-template='trama'] .sp-shop-nav-note { font-size: 12px; color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-shop-nav-note { font-size: 12px; color: var(--tr-muted); }
 
 /* Drawer móvil. */
-.store-page[data-template='trama'] .sp-overlay { background: rgb(22 24 29 / .42); }
-.store-page[data-template='trama'] .sp-drawer {
+.store-page[data-skin='indumentaria'] .sp-overlay { background: rgb(22 24 29 / .42); }
+.store-page[data-skin='indumentaria'] .sp-drawer {
   background: var(--tr-surface);
   border-color: var(--tr-line);
   box-shadow: 0 18px 44px -22px rgb(22 24 29 / .35);
 }
-.store-page[data-template='trama'] .sp-drawer-head { border-bottom-color: var(--tr-line); }
-.store-page[data-template='trama'] .sp-drawer-head strong {
+.store-page[data-skin='indumentaria'] .sp-drawer-head { border-bottom-color: var(--tr-line); }
+.store-page[data-skin='indumentaria'] .sp-drawer-head strong {
   font-family: var(--tr-display);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -.02em;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-drawer-close { border-radius: 6px; color: var(--tr-ink-2); }
-.store-page[data-template='trama'] .sp-drawer-close:hover { background: var(--tr-soft); color: var(--tr-ink); }
-.store-page[data-template='trama'] .sp-nav-item {
+.store-page[data-skin='indumentaria'] .sp-drawer-close { border-radius: 6px; color: var(--tr-ink-2); }
+.store-page[data-skin='indumentaria'] .sp-drawer-close:hover { background: var(--tr-soft); color: var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .sp-nav-item {
   min-height: 48px;
   border-radius: 6px;
   color: var(--tr-ink-2);
   font-size: 15px;
   font-weight: 500;
 }
-.store-page[data-template='trama'] .sp-nav-item:hover { background: var(--tr-soft); color: var(--tr-ink); padding-left: 12px; }
-.store-page[data-template='trama'] .sp-nav-item.active { background: var(--tr-soft); color: var(--tr-ink); }
-.store-page[data-template='trama'] .sp-nav-item.active::before { display: none; }
+.store-page[data-skin='indumentaria'] .sp-nav-item:hover { background: var(--tr-soft); color: var(--tr-ink); padding-left: 12px; }
+.store-page[data-skin='indumentaria'] .sp-nav-item.active { background: var(--tr-soft); color: var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .sp-nav-item.active::before { display: none; }
 
 /* Barra inferior móvil / hoja «Más». */
-.store-page[data-template='trama'] .sp-tabbar {
+.store-page[data-skin='indumentaria'] .sp-tabbar {
   background: var(--tr-surface);
   border-top: 1px solid var(--tr-line);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-.store-page[data-template='trama'] .sp-tab {
+.store-page[data-skin='indumentaria'] .sp-tab {
   border-radius: 6px;
   color: var(--tr-muted);
   font-size: 11px;
   font-weight: 600;
 }
-.store-page[data-template='trama'] .sp-tab.active { color: var(--tr-accent-text); }
-.store-page[data-template='trama'] .sp-tab.active::before { background: var(--tr-accent); }
-.store-page[data-template='trama'] .sp-tab:active { background: var(--tr-soft); }
-.store-page[data-template='trama'] .sp-more-sheet {
+.store-page[data-skin='indumentaria'] .sp-tab.active { color: var(--tr-accent-text); }
+.store-page[data-skin='indumentaria'] .sp-tab.active::before { background: var(--tr-accent); }
+.store-page[data-skin='indumentaria'] .sp-tab:active { background: var(--tr-soft); }
+.store-page[data-skin='indumentaria'] .sp-more-sheet {
   background: var(--tr-surface);
   color: var(--tr-ink);
   border-top: 1px solid var(--tr-line);
   border-radius: 12px 12px 0 0;
 }
-.store-page[data-template='trama'] .sp-more-head { border-bottom-color: var(--tr-line); }
-.store-page[data-template='trama'] .sp-more-brand strong { font-family: var(--tr-display); font-weight: 700; letter-spacing: -.02em; }
-.store-page[data-template='trama'] .sp-more-close { border-radius: 6px; }
-.store-page[data-template='trama'] .sp-more-link { border-radius: 6px; color: var(--tr-ink); font-size: 15px; font-weight: 500; }
-.store-page[data-template='trama'] .sp-more-link:hover { background: var(--tr-soft); }
+.store-page[data-skin='indumentaria'] .sp-more-head { border-bottom-color: var(--tr-line); }
+.store-page[data-skin='indumentaria'] .sp-more-brand strong { font-family: var(--tr-display); font-weight: 700; letter-spacing: -.02em; }
+.store-page[data-skin='indumentaria'] .sp-more-close { border-radius: 6px; }
+.store-page[data-skin='indumentaria'] .sp-more-link { border-radius: 6px; color: var(--tr-ink); font-size: 15px; font-weight: 500; }
+.store-page[data-skin='indumentaria'] .sp-more-link:hover { background: var(--tr-soft); }
 
 /* Pie: #16181D, 3 columnas reales (marca + Tienda + Información). */
-.store-page[data-template='trama'] .sp-foot {
+.store-page[data-skin='indumentaria'] .sp-foot {
   margin-top: 0;
   padding: 64px 0 calc(28px + env(safe-area-inset-bottom));
   background: #16181D;
   color: #C9CCD2;
   border-top: 0;
 }
-.store-page[data-template='trama'] .sp-foot::before { display: none; }
-.store-page[data-template='trama'] .sp-foot-grid {
+.store-page[data-skin='indumentaria'] .sp-foot::before { display: none; }
+.store-page[data-skin='indumentaria'] .sp-foot-grid {
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 48px;
   padding-bottom: 40px;
 }
-.store-page[data-template='trama'] .sp-foot-grid:not(:has(> .sp-foot-col + .sp-foot-col)) {
+.store-page[data-skin='indumentaria'] .sp-foot-grid:not(:has(> .sp-foot-col + .sp-foot-col)) {
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
 }
-.store-page[data-template='trama'] .sp-foot-brand { gap: 12px; }
-.store-page[data-template='trama'] .sp-foot-brand strong {
+.store-page[data-skin='indumentaria'] .sp-foot-brand { gap: 12px; }
+.store-page[data-skin='indumentaria'] .sp-foot-brand strong {
   color: #FFFFFF;
   font-family: var(--tr-display);
   font-size: 24px;
@@ -545,11 +545,11 @@
   letter-spacing: -.02em;
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .sp-foot-brand span,
-.store-page[data-template='trama'] .sp-foot-desc { color: #C9CCD2; font-size: 14px; line-height: 1.6; }
-.store-page[data-template='trama'] .sp-foot-contact { display: grid; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
-.store-page[data-template='trama'] .sp-foot-contact li,
-.store-page[data-template='trama'] .sp-foot-contact a {
+.store-page[data-skin='indumentaria'] .sp-foot-brand span,
+.store-page[data-skin='indumentaria'] .sp-foot-desc { color: #C9CCD2; font-size: 14px; line-height: 1.6; }
+.store-page[data-skin='indumentaria'] .sp-foot-contact { display: grid; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.store-page[data-skin='indumentaria'] .sp-foot-contact li,
+.store-page[data-skin='indumentaria'] .sp-foot-contact a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -557,9 +557,9 @@
   color: #C9CCD2;
   text-decoration: none;
 }
-.store-page[data-template='trama'] .sp-foot-contact a:hover { color: #FFFFFF; }
-.store-page[data-template='trama'] .sp-foot-social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.store-page[data-template='trama'] .sp-foot-social a {
+.store-page[data-skin='indumentaria'] .sp-foot-contact a:hover { color: #FFFFFF; }
+.store-page[data-skin='indumentaria'] .sp-foot-social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.store-page[data-skin='indumentaria'] .sp-foot-social a {
   display: grid;
   place-items: center;
   width: 36px;
@@ -570,8 +570,8 @@
   color: #C9CCD2;
   transition: border-color .15s, color .15s;
 }
-.store-page[data-template='trama'] .sp-foot-social a:hover { border-color: #C9CCD2; color: #FFFFFF; }
-.store-page[data-template='trama'] .sp-foot-heading {
+.store-page[data-skin='indumentaria'] .sp-foot-social a:hover { border-color: #C9CCD2; color: #FFFFFF; }
+.store-page[data-skin='indumentaria'] .sp-foot-heading {
   margin: 0 0 6px;
   font-size: 14px;
   font-weight: 600;
@@ -579,28 +579,28 @@
   text-transform: none;
   color: #FFFFFF;
 }
-.store-page[data-template='trama'] .sp-foot-col { gap: 2px; }
-.store-page[data-template='trama'] .sp-foot-col a,
-.store-page[data-template='trama'] .sp-foot a {
+.store-page[data-skin='indumentaria'] .sp-foot-col { gap: 2px; }
+.store-page[data-skin='indumentaria'] .sp-foot-col a,
+.store-page[data-skin='indumentaria'] .sp-foot a {
   min-height: 36px;
   font-size: 14px;
   color: #C9CCD2;
 }
-.store-page[data-template='trama'] .sp-foot-col a:hover,
-.store-page[data-template='trama'] .sp-foot a:hover { color: #FFFFFF; text-decoration: none; transform: none; }
-.store-page[data-template='trama'] .sp-foot-bottom {
+.store-page[data-skin='indumentaria'] .sp-foot-col a:hover,
+.store-page[data-skin='indumentaria'] .sp-foot a:hover { color: #FFFFFF; text-decoration: none; transform: none; }
+.store-page[data-skin='indumentaria'] .sp-foot-bottom {
   padding-top: 20px;
   border-top: 1px solid #2D3038;
 }
-.store-page[data-template='trama'] .sp-foot-copy,
-.store-page[data-template='trama'] .sp-foot-note {
+.store-page[data-skin='indumentaria'] .sp-foot-copy,
+.store-page[data-skin='indumentaria'] .sp-foot-note {
   margin: 0;
   font-size: 13px;
   letter-spacing: 0;
   color: #9EA3AB;
 }
-.store-page[data-template='trama'] .sp-foot-note { margin-top: 14px; }
-.store-page[data-template='trama'] .sp-davent-badge {
+.store-page[data-skin='indumentaria'] .sp-foot-note { margin-top: 14px; }
+.store-page[data-skin='indumentaria'] .sp-davent-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -612,11 +612,11 @@
   font-size: 12.5px;
   text-decoration: none;
 }
-.store-page[data-template='trama'] .sp-davent-badge:hover { border-color: #C9CCD2; color: #FFFFFF; }
-.store-page[data-template='trama'] .sp-davent-badge strong { color: #FFFFFF; }
+.store-page[data-skin='indumentaria'] .sp-davent-badge:hover { border-color: #C9CCD2; color: #FFFFFF; }
+.store-page[data-skin='indumentaria'] .sp-davent-badge strong { color: #FFFFFF; }
 
 /* Toggles de tema (claro/oscuro) heredan el chrome del diseño. */
-.store-page[data-template='trama'] .sp-top .sp-icon-btn.primary {
+.store-page[data-skin='indumentaria'] .sp-top .sp-icon-btn.primary {
   background: var(--tr-accent-ink);
   border-color: var(--tr-accent-ink);
   color: #FFFFFF;
@@ -971,7 +971,7 @@
 }
 
 /* La barra rápida de la tarjeta es blanca con tinta del diseño. */
-.store-page[data-template='trama'] .tpc-quick { color: var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .tpc-quick { color: var(--tr-ink); }
 
 /* ==========================================================================
    LANDING — editorial «nosotros» + stats
@@ -1041,7 +1041,7 @@
   color: var(--tr-ink);
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .tr-about-title { font-size: clamp(34px, 4vw, 44px); }
+.store-page[data-skin='indumentaria'] .tr-about-title { font-size: clamp(34px, 4vw, 44px); }
 .tr-about-text {
   margin: 0;
   max-width: 52ch;
@@ -1107,13 +1107,13 @@
 /* ==========================================================================
    LANDING — banda de oferta con countdown
    ========================================================================== */
-.store-page[data-template='trama'] .sp-countdown,
-.store-page[data-template='trama'] .sp-countdown.is-band { padding: var(--tr-section) 0 0; }
-.store-page[data-template='trama'] .sp-countdown.is-band .sp-container {
+.store-page[data-skin='indumentaria'] .sp-countdown,
+.store-page[data-skin='indumentaria'] .sp-countdown.is-band { padding: var(--tr-section) 0 0; }
+.store-page[data-skin='indumentaria'] .sp-countdown.is-band .sp-container {
   max-width: var(--tr-container);
   padding-inline: max(var(--tr-gutter), env(safe-area-inset-left)) max(var(--tr-gutter), env(safe-area-inset-right));
 }
-.store-page[data-template='trama'] .sp-cd-inner {
+.store-page[data-skin='indumentaria'] .sp-cd-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
@@ -1125,8 +1125,8 @@
   box-shadow: none;
   text-align: left;
 }
-.store-page[data-template='trama'] .sp-cd-copy { min-width: 0; }
-.store-page[data-template='trama'] .sp-cd-eyebrow {
+.store-page[data-skin='indumentaria'] .sp-cd-copy { min-width: 0; }
+.store-page[data-skin='indumentaria'] .sp-cd-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1137,8 +1137,8 @@
   text-transform: uppercase;
   color: rgb(255 255 255 / .85);
 }
-.store-page[data-template='trama'] .sp-cd-eyebrow svg { display: none; }
-.store-page[data-template='trama'] .sp-cd-title {
+.store-page[data-skin='indumentaria'] .sp-cd-eyebrow svg { display: none; }
+.store-page[data-skin='indumentaria'] .sp-cd-title {
   margin: 10px 0 0;
   font-family: var(--tr-display);
   font-size: clamp(28px, 3.6vw, 44px);
@@ -1147,8 +1147,8 @@
   letter-spacing: -.03em;
   color: #FFFFFF;
 }
-.store-page[data-template='trama'] .sp-cd-clock { display: flex; gap: 12px; }
-.store-page[data-template='trama'] .sp-cd-unit {
+.store-page[data-skin='indumentaria'] .sp-cd-clock { display: flex; gap: 12px; }
+.store-page[data-skin='indumentaria'] .sp-cd-unit {
   display: grid;
   justify-items: center;
   gap: 6px;
@@ -1158,21 +1158,21 @@
   border-radius: 6px;
   background: transparent;
 }
-.store-page[data-template='trama'] .sp-cd-unit strong {
+.store-page[data-skin='indumentaria'] .sp-cd-unit strong {
   font-size: 28px;
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: #FFFFFF;
 }
-.store-page[data-template='trama'] .sp-cd-unit span {
+.store-page[data-skin='indumentaria'] .sp-cd-unit span {
   font-size: 12px;
   font-weight: 500;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: rgb(255 255 255 / .85);
 }
-.store-page[data-template='trama'] .sp-countdown .sp-btn.sp-cd-btn {
+.store-page[data-skin='indumentaria'] .sp-countdown .sp-btn.sp-cd-btn {
   flex: none;
   min-height: 52px;
   padding: 0 26px;
@@ -1181,7 +1181,7 @@
   color: var(--tr-accent-text);
   font-size: 15px;
 }
-.store-page[data-template='trama'] .sp-countdown .sp-btn.sp-cd-btn:hover {
+.store-page[data-skin='indumentaria'] .sp-countdown .sp-btn.sp-cd-btn:hover {
   border-color: #F4F3F0;
   background: #F4F3F0;
   color: var(--tr-accent-text);
@@ -1190,12 +1190,12 @@
 /* ==========================================================================
    LANDING — «Por qué elegirnos» (3 columnas numeradas 01/02/03)
    ========================================================================== */
-.store-page[data-template='trama'] .sp-services { padding: var(--tr-section) 0 0; }
-.store-page[data-template='trama'] .sp-services .sp-eyebrow {
+.store-page[data-skin='indumentaria'] .sp-services { padding: var(--tr-section) 0 0; }
+.store-page[data-skin='indumentaria'] .sp-services .sp-eyebrow {
   margin: 0 0 10px;
   color: var(--tr-accent-text);
 }
-.store-page[data-template='trama'] .sp-services .sp-section-title {
+.store-page[data-skin='indumentaria'] .sp-services .sp-section-title {
   margin: 0;
   font-family: var(--tr-display);
   font-size: clamp(28px, 3.4vw, 40px);
@@ -1204,14 +1204,14 @@
   letter-spacing: -.03em;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-services-grid {
+.store-page[data-skin='indumentaria'] .sp-services-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 32px;
   margin-top: 48px;
   counter-reset: tr-svc;
 }
-.store-page[data-template='trama'] .sp-service {
+.store-page[data-skin='indumentaria'] .sp-service {
   position: static;
   display: block;
   counter-increment: tr-svc;
@@ -1226,7 +1226,7 @@
   opacity: 1;
   transform: none;
 }
-.store-page[data-template='trama'] .sp-service::before {
+.store-page[data-skin='indumentaria'] .sp-service::before {
   content: '0' counter(tr-svc);
   position: static;
   inset: auto;
@@ -1245,9 +1245,9 @@
   letter-spacing: .08em;
   color: var(--tr-accent-text);
 }
-.store-page[data-template='trama'] .sp-service-ring,
-.store-page[data-template='trama'] .sp-service-line { display: none; }
-.store-page[data-template='trama'] .sp-service-title {
+.store-page[data-skin='indumentaria'] .sp-service-ring,
+.store-page[data-skin='indumentaria'] .sp-service-line { display: none; }
+.store-page[data-skin='indumentaria'] .sp-service-title {
   display: block;
   margin: 0 0 8px;
   font-family: var(--tr-display);
@@ -1261,26 +1261,26 @@
   -webkit-background-clip: border-box;
   background-clip: border-box;
 }
-.store-page[data-template='trama'] .sp-service p,
-.store-page[data-template='trama'] .sp-service-text {
+.store-page[data-skin='indumentaria'] .sp-service p,
+.store-page[data-skin='indumentaria'] .sp-service-text {
   margin: 0;
   font-size: 15px;
   line-height: 1.65;
   color: var(--tr-muted);
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .sp-services .sp-more { display: flex; margin-top: 40px; }
+.store-page[data-skin='indumentaria'] .sp-services .sp-more { display: flex; margin-top: 40px; }
 
 /* ==========================================================================
    LANDING — franja de marcas (logos como texto)
    ========================================================================== */
-.store-page[data-template='trama'] .sp-brands {
+.store-page[data-skin='indumentaria'] .sp-brands {
   margin-top: var(--tr-section);
   padding: 40px 0;
   background: var(--tr-surface);
   border-block: 1px solid var(--tr-line);
 }
-.store-page[data-template='trama'] .sp-brands-title {
+.store-page[data-skin='indumentaria'] .sp-brands-title {
   margin: 0 0 26px;
   font-family: var(--tr-body);
   font-size: 13px;
@@ -1290,7 +1290,7 @@
   color: var(--tr-muted);
   text-align: center;
 }
-.store-page[data-template='trama'] .sp-brands-logos {
+.store-page[data-skin='indumentaria'] .sp-brands-logos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   align-items: center;
@@ -1299,7 +1299,7 @@
   padding: 0;
   list-style: none;
 }
-.store-page[data-template='trama'] .sp-brands-logo {
+.store-page[data-skin='indumentaria'] .sp-brands-logo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1310,8 +1310,8 @@
   background: none;
   box-shadow: none;
 }
-.store-page[data-template='trama'] .sp-brands-logo-initial { display: none; }
-.store-page[data-template='trama'] .sp-brands-logo strong {
+.store-page[data-skin='indumentaria'] .sp-brands-logo-initial { display: none; }
+.store-page[data-skin='indumentaria'] .sp-brands-logo strong {
   font-family: var(--tr-display);
   font-size: 22px;
   font-weight: 600;
@@ -1327,15 +1327,15 @@
 /* ==========================================================================
    LANDING — testimonios
    ========================================================================== */
-.store-page[data-template='trama'] .sp-testimonials {
+.store-page[data-skin='indumentaria'] .sp-testimonials {
   margin-top: 0;
   padding: var(--tr-section) 0;
   background: var(--tr-surface);
   border-block: 1px solid var(--tr-line);
 }
-.store-page[data-template='trama'] .sp-testimonials .sp-eyebrow { margin: 0 0 10px; color: var(--tr-accent-text); }
-.store-page[data-template='trama'] .sp-testimonials-head { margin-bottom: 40px; }
-.store-page[data-template='trama'] .sp-testimonials .sp-section-title {
+.store-page[data-skin='indumentaria'] .sp-testimonials .sp-eyebrow { margin: 0 0 10px; color: var(--tr-accent-text); }
+.store-page[data-skin='indumentaria'] .sp-testimonials-head { margin-bottom: 40px; }
+.store-page[data-skin='indumentaria'] .sp-testimonials .sp-section-title {
   margin: 0;
   font-family: var(--tr-display);
   font-size: clamp(28px, 3.4vw, 40px);
@@ -1343,13 +1343,13 @@
   line-height: 1.1;
   letter-spacing: -.03em;
 }
-.store-page[data-template='trama'] .sp-testimonials-grid {
+.store-page[data-skin='indumentaria'] .sp-testimonials-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
   margin: 0;
 }
-.store-page[data-template='trama'] .sp-testimonial {
+.store-page[data-skin='indumentaria'] .sp-testimonial {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1361,7 +1361,7 @@
   box-shadow: none;
   min-width: 0;
 }
-.store-page[data-template='trama'] .sp-testimonial-quote {
+.store-page[data-skin='indumentaria'] .sp-testimonial-quote {
   display: block;
   width: auto;
   height: auto;
@@ -1369,33 +1369,33 @@
   background: none;
   color: var(--tr-accent);
 }
-.store-page[data-template='trama'] .sp-testimonial-text {
+.store-page[data-skin='indumentaria'] .sp-testimonial-text {
   margin: 0;
   font-size: 17px;
   line-height: 1.6;
   color: var(--tr-ink-2);
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .sp-testimonial-by { display: grid; gap: 2px; margin-top: auto; }
-.store-page[data-template='trama'] .sp-testimonial-by strong { font-size: 14px; font-weight: 600; color: var(--tr-ink); }
-.store-page[data-template='trama'] .sp-testimonial-by span { font-size: 13px; color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-testimonial-by { display: grid; gap: 2px; margin-top: auto; }
+.store-page[data-skin='indumentaria'] .sp-testimonial-by strong { font-size: 14px; font-weight: 600; color: var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .sp-testimonial-by span { font-size: 13px; color: var(--tr-muted); }
 
 /* ==========================================================================
    LANDING — galería (tira 6-up)
    ========================================================================== */
-.store-page[data-template='trama'] .sp-showcase { display: none; }
-.store-page[data-template='trama'] .sp-gallery {
+.store-page[data-skin='indumentaria'] .sp-showcase { display: none; }
+.store-page[data-skin='indumentaria'] .sp-gallery {
   margin-top: 0;
   padding: var(--tr-section) 0 0;
   scroll-margin-top: calc(var(--sp-top-h) + 24px);
 }
-.store-page[data-template='trama'] .sp-gallery .sp-section-title { display: none; }
-.store-page[data-template='trama'] .sp-gallery-grid {
+.store-page[data-skin='indumentaria'] .sp-gallery .sp-section-title { display: none; }
+.store-page[data-skin='indumentaria'] .sp-gallery-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
 }
-.store-page[data-template='trama'] .sp-gallery-item {
+.store-page[data-skin='indumentaria'] .sp-gallery-item {
   position: relative;
   display: block;
   height: 220px;
@@ -1409,43 +1409,43 @@
   cursor: zoom-in;
   transform: none;
 }
-.store-page[data-template='trama'] .sp-gallery-item img {
+.store-page[data-skin='indumentaria'] .sp-gallery-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
   transition: transform .4s ease;
 }
-.store-page[data-template='trama'] .sp-gallery-item:hover {
+.store-page[data-skin='indumentaria'] .sp-gallery-item:hover {
   border-color: transparent;
   box-shadow: none;
   transform: none;
 }
-.store-page[data-template='trama'] .sp-gallery-item:hover img { transform: scale(1.03); }
+.store-page[data-skin='indumentaria'] .sp-gallery-item:hover img { transform: scale(1.03); }
 
 /* Visor de la galería (compartido) coherente con la piel clara. */
-.store-page[data-template='trama'] .sp-lightbox { background: rgb(22 24 29 / .92); }
-.store-page[data-template='trama'] .sp-lightbox-img { border-radius: 6px; }
-.store-page[data-template='trama'] .sp-lightbox-arrow,
-.store-page[data-template='trama'] .sp-modal-close { border-radius: 6px; }
+.store-page[data-skin='indumentaria'] .sp-lightbox { background: rgb(22 24 29 / .92); }
+.store-page[data-skin='indumentaria'] .sp-lightbox-img { border-radius: 6px; }
+.store-page[data-skin='indumentaria'] .sp-lightbox-arrow,
+.store-page[data-skin='indumentaria'] .sp-modal-close { border-radius: 6px; }
 
 /* ==========================================================================
    LANDING — FAQ a dos columnas
    ========================================================================== */
-.store-page[data-template='trama'] .sp-faq {
+.store-page[data-skin='indumentaria'] .sp-faq {
   padding: var(--tr-section) 0;
   scroll-margin-top: calc(var(--sp-top-h) + 24px);
 }
-.store-page[data-template='trama'] .sp-faq-wrap {
+.store-page[data-skin='indumentaria'] .sp-faq-wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   align-items: start;
   gap: clamp(32px, 5vw, 80px);
   max-width: var(--tr-container);
 }
-.store-page[data-template='trama'] .sp-faq-intro { min-width: 0; }
-.store-page[data-template='trama'] .sp-faq-intro .sp-eyebrow { margin: 0 0 10px; color: var(--tr-accent-text); }
-.store-page[data-template='trama'] .sp-faq .sp-section-title {
+.store-page[data-skin='indumentaria'] .sp-faq-intro { min-width: 0; }
+.store-page[data-skin='indumentaria'] .sp-faq-intro .sp-eyebrow { margin: 0 0 10px; color: var(--tr-accent-text); }
+.store-page[data-skin='indumentaria'] .sp-faq .sp-section-title {
   margin: 0;
   font-family: var(--tr-display);
   font-size: clamp(28px, 3.4vw, 40px);
@@ -1453,12 +1453,12 @@
   line-height: 1.1;
   letter-spacing: -.03em;
 }
-.store-page[data-template='trama'] .sp-faq-list {
+.store-page[data-skin='indumentaria'] .sp-faq-list {
   display: block;
   max-width: none;
   border-top: 1px solid var(--tr-line);
 }
-.store-page[data-template='trama'] .sp-faq-item {
+.store-page[data-skin='indumentaria'] .sp-faq-item {
   border: 0;
   border-bottom: 1px solid var(--tr-line);
   border-radius: 0;
@@ -1466,7 +1466,7 @@
   box-shadow: none;
   overflow: visible;
 }
-.store-page[data-template='trama'] .sp-faq-item summary {
+.store-page[data-skin='indumentaria'] .sp-faq-item summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1479,8 +1479,8 @@
   cursor: pointer;
   transition: color .15s;
 }
-.store-page[data-template='trama'] .sp-faq-item summary:hover { color: var(--tr-accent-text); }
-.store-page[data-template='trama'] .sp-faq-caret {
+.store-page[data-skin='indumentaria'] .sp-faq-item summary:hover { color: var(--tr-accent-text); }
+.store-page[data-skin='indumentaria'] .sp-faq-caret {
   display: grid;
   place-items: center;
   flex: none;
@@ -1489,17 +1489,17 @@
   background: none;
   color: var(--tr-muted);
 }
-.store-page[data-template='trama'] .sp-faq-caret svg { display: none; }
-.store-page[data-template='trama'] .sp-faq-caret::before {
+.store-page[data-skin='indumentaria'] .sp-faq-caret svg { display: none; }
+.store-page[data-skin='indumentaria'] .sp-faq-caret::before {
   content: '+';
   font-family: var(--tr-body);
   font-size: 22px;
   font-weight: 400;
   line-height: 1;
 }
-.store-page[data-template='trama'] .sp-faq-item[open] .sp-faq-caret { transform: none; }
-.store-page[data-template='trama'] .sp-faq-item[open] .sp-faq-caret::before { content: '−'; }
-.store-page[data-template='trama'] .sp-faq-answer {
+.store-page[data-skin='indumentaria'] .sp-faq-item[open] .sp-faq-caret { transform: none; }
+.store-page[data-skin='indumentaria'] .sp-faq-item[open] .sp-faq-caret::before { content: '−'; }
+.store-page[data-skin='indumentaria'] .sp-faq-answer {
   margin: 0;
   padding: 0 40px 22px 0;
   max-width: 70ch;
@@ -1511,12 +1511,12 @@
 /* ==========================================================================
    LANDING — CTA oscura (banda)
    ========================================================================== */
-.store-page[data-template='trama'] .sp-cta { margin-top: 0; padding: 0; }
-.store-page[data-template='trama'] .sp-cta.is-band {
+.store-page[data-skin='indumentaria'] .sp-cta { margin-top: 0; padding: 0; }
+.store-page[data-skin='indumentaria'] .sp-cta.is-band {
   padding: 72px 0;
   background: #16181D;
 }
-.store-page[data-template='trama'] .sp-cta-inner {
+.store-page[data-skin='indumentaria'] .sp-cta-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -1533,12 +1533,12 @@
   color: #FFFFFF;
   overflow: visible;
 }
-.store-page[data-template='trama'] .sp-cta-inner::after { display: none; }
-.store-page[data-template='trama'] .sp-cta:not(.is-band) .sp-cta-inner {
+.store-page[data-skin='indumentaria'] .sp-cta-inner::after { display: none; }
+.store-page[data-skin='indumentaria'] .sp-cta:not(.is-band) .sp-cta-inner {
   padding: 56px;
   border-radius: 8px;
   background: #16181D;
-}.store-page[data-template='trama'] .sp-cta-title {
+}.store-page[data-skin='indumentaria'] .sp-cta-title {
   position: static;
   margin: 0;
   max-width: 620px;
@@ -1550,7 +1550,7 @@
   color: #FFFFFF;
   overflow-wrap: anywhere;
 }
-.store-page[data-template='trama'] .sp-cta-text {
+.store-page[data-skin='indumentaria'] .sp-cta-text {
   position: static;
   grid-column: 1;
   margin: 0;
@@ -1559,8 +1559,8 @@
   line-height: 1.6;
   color: rgb(255 255 255 / .8);
 }
-.store-page[data-template='trama'] .sp-cta .sp-btn,
-.store-page[data-template='trama'] .sp-cta .sp-btn.sp-cta-btn {
+.store-page[data-skin='indumentaria'] .sp-cta .sp-btn,
+.store-page[data-skin='indumentaria'] .sp-cta .sp-btn.sp-cta-btn {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
@@ -1575,8 +1575,8 @@
   font-size: 15px;
   font-weight: 600;
 }
-.store-page[data-template='trama'] .sp-cta .sp-btn:hover,
-.store-page[data-template='trama'] .sp-cta .sp-btn.sp-cta-btn:hover {
+.store-page[data-skin='indumentaria'] .sp-cta .sp-btn:hover,
+.store-page[data-skin='indumentaria'] .sp-cta .sp-btn.sp-cta-btn:hover {
   background: #F4F3F0;
   border-color: #F4F3F0;
   color: var(--tr-ink);
@@ -1585,13 +1585,13 @@
 /* ==========================================================================
    LANDING — contacto (datos + horarios + mapa | formulario)
    ========================================================================== */
-.store-page[data-template='trama'] .sp-contact {
+.store-page[data-skin='indumentaria'] .sp-contact {
   padding: var(--tr-section) 0;
   background: var(--tr-surface);
   border-top: 1px solid var(--tr-line);
   scroll-margin-top: calc(var(--sp-top-h) + 24px);
 }
-.store-page[data-template='trama'] .sp-contact-grid {
+.store-page[data-skin='indumentaria'] .sp-contact-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
   grid-template-areas:
@@ -1600,15 +1600,15 @@
   align-items: start;
   gap: 40px 72px;
 }
-.store-page[data-template='trama'] .sp-contact-info {
+.store-page[data-skin='indumentaria'] .sp-contact-info {
   grid-area: info;
   position: static;
   display: grid;
   gap: 16px;
   align-content: start;
 }
-.store-page[data-template='trama'] .sp-contact .sp-eyebrow { margin: 0; }
-.store-page[data-template='trama'] .sp-contact-title {
+.store-page[data-skin='indumentaria'] .sp-contact .sp-eyebrow { margin: 0; }
+.store-page[data-skin='indumentaria'] .sp-contact-title {
   margin: 0;
   font-family: var(--tr-display);
   font-size: clamp(28px, 3.4vw, 40px);
@@ -1617,14 +1617,14 @@
   letter-spacing: -.03em;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-contact-sub {
+.store-page[data-skin='indumentaria'] .sp-contact-sub {
   margin: 0;
   max-width: 44ch;
   font-size: 16px;
   line-height: 1.6;
   color: var(--tr-muted);
 }
-.store-page[data-template='trama'] .sp-map-address {
+.store-page[data-skin='indumentaria'] .sp-map-address {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1632,15 +1632,15 @@
   font-size: 15px;
   color: var(--tr-ink-2);
 }
-.store-page[data-template='trama'] .sp-map-address svg { color: var(--tr-accent-text); flex: none; }
-.store-page[data-template='trama'] .sp-contact-hours {
+.store-page[data-skin='indumentaria'] .sp-map-address svg { color: var(--tr-accent-text); flex: none; }
+.store-page[data-skin='indumentaria'] .sp-contact-hours {
   display: block;
   margin: 4px 0 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--tr-line);
 }
-.store-page[data-template='trama'] .sp-contact-hours li {
+.store-page[data-skin='indumentaria'] .sp-contact-hours li {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1651,22 +1651,22 @@
   background: none;
   font-size: 15px;
 }
-.store-page[data-template='trama'] .sp-contact-hours li svg { display: none; }
-.store-page[data-template='trama'] .sp-contact-hours span {
+.store-page[data-skin='indumentaria'] .sp-contact-hours li svg { display: none; }
+.store-page[data-skin='indumentaria'] .sp-contact-hours span {
   flex: 1;
   min-width: 0;
   font-weight: 500;
   color: var(--tr-ink-2);
 }
-.store-page[data-template='trama'] .sp-contact-hours strong {
+.store-page[data-skin='indumentaria'] .sp-contact-hours strong {
   flex: none;
   font-weight: 500;
   color: var(--tr-muted);
   white-space: nowrap;
 }
-.store-page[data-template='trama'] .sp-contact-channels { margin-top: 8px; gap: 10px; }
-.store-page[data-template='trama'] .sp-contact-channels > .sp-btn { min-height: 46px; }
-.store-page[data-template='trama'] .sp-contact-channels .sp-icon-btn {
+.store-page[data-skin='indumentaria'] .sp-contact-channels { margin-top: 8px; gap: 10px; }
+.store-page[data-skin='indumentaria'] .sp-contact-channels > .sp-btn { min-height: 46px; }
+.store-page[data-skin='indumentaria'] .sp-contact-channels .sp-icon-btn {
   width: 44px;
   height: 44px;
   border: 1px solid var(--tr-line);
@@ -1675,19 +1675,19 @@
   color: var(--tr-ink-2);
   box-shadow: none;
 }
-.store-page[data-template='trama'] .sp-contact-channels .sp-icon-btn:hover {
+.store-page[data-skin='indumentaria'] .sp-contact-channels .sp-icon-btn:hover {
   border-color: var(--tr-ink);
   background: transparent;
   color: var(--tr-ink);
   transform: none;
 }
-.store-page[data-template='trama'] .sp-contact-photo {
+.store-page[data-skin='indumentaria'] .sp-contact-photo {
   margin: 8px 0 0;
   border: 1px solid var(--tr-line);
   border-radius: 6px;
   box-shadow: none;
 }
-.store-page[data-template='trama'] .sp-map-frame {
+.store-page[data-skin='indumentaria'] .sp-map-frame {
   grid-area: map;
   position: relative;
   border: 1px solid var(--tr-line);
@@ -1695,8 +1695,8 @@
   background: var(--tr-media);
   box-shadow: none;
 }
-.store-page[data-template='trama'] .sp-map-frame iframe { width: 100%; height: 180px; border: 0; display: block; }
-.store-page[data-template='trama'] .sp-map-open {
+.store-page[data-skin='indumentaria'] .sp-map-frame iframe { width: 100%; height: 180px; border: 0; display: block; }
+.store-page[data-skin='indumentaria'] .sp-map-open {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1706,10 +1706,10 @@
   color: var(--tr-accent-text);
   text-decoration: none;
 }
-.store-page[data-template='trama'] .sp-map-open:hover { color: var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .sp-map-open:hover { color: var(--tr-ink); }
 
 /* Formulario: sin tarjeta, campos 52 px con borde cálido. */
-.store-page[data-template='trama'] .sp-form {
+.store-page[data-skin='indumentaria'] .sp-form {
   grid-area: form;
   display: grid;
   gap: 18px;
@@ -1719,19 +1719,19 @@
   background: transparent;
   box-shadow: none;
 }
-.store-page[data-template='trama'] .sp-form::before,
-.store-page[data-template='trama'] .sp-form::after { display: none; }
-.store-page[data-template='trama'] .sp-form-head { display: none; }
-.store-page[data-template='trama'] .sp-form-row { gap: 18px; }
-.store-page[data-template='trama'] .sp-field { display: grid; gap: 8px; min-width: 0; }
-.store-page[data-template='trama'] .sp-field label {
+.store-page[data-skin='indumentaria'] .sp-form::before,
+.store-page[data-skin='indumentaria'] .sp-form::after { display: none; }
+.store-page[data-skin='indumentaria'] .sp-form-head { display: none; }
+.store-page[data-skin='indumentaria'] .sp-form-row { gap: 18px; }
+.store-page[data-skin='indumentaria'] .sp-field { display: grid; gap: 8px; min-width: 0; }
+.store-page[data-skin='indumentaria'] .sp-field label {
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-form .sp-input {
+.store-page[data-skin='indumentaria'] .sp-form .sp-input {
   width: 100%;
   height: 52px;
   padding: 0 14px;
@@ -1744,24 +1744,24 @@
   box-shadow: none;
   transition: border-color .15s;
 }
-.store-page[data-template='trama'] .sp-form .sp-input:focus {
+.store-page[data-skin='indumentaria'] .sp-form .sp-input:focus {
   border-color: var(--tr-accent);
   box-shadow: none;
   outline: 2px solid var(--tr-focus);
   outline-offset: 2px;
 }
-.store-page[data-template='trama'] .sp-form .sp-input::placeholder { color: var(--tr-muted); }
-.store-page[data-template='trama'] .sp-form .sp-input-wrap > svg { display: none; }
-.store-page[data-template='trama'] .sp-form .sp-input-wrap .sp-input { padding-left: 14px; }
-.store-page[data-template='trama'] .sp-form .sp-textarea {
+.store-page[data-skin='indumentaria'] .sp-form .sp-input::placeholder { color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-form .sp-input-wrap > svg { display: none; }
+.store-page[data-skin='indumentaria'] .sp-form .sp-input-wrap .sp-input { padding-left: 14px; }
+.store-page[data-skin='indumentaria'] .sp-form .sp-textarea {
   height: auto;
   min-height: 140px;
   padding: 14px;
   resize: vertical;
 }
-.store-page[data-template='trama'] .sp-form .sp-counter { font-size: 12px; color: var(--tr-muted); text-align: right; }
-.store-page[data-template='trama'] .sp-form .sp-captcha-row { gap: 10px; align-items: stretch; }
-.store-page[data-template='trama'] .sp-form .sp-captcha-q {
+.store-page[data-skin='indumentaria'] .sp-form .sp-counter { font-size: 12px; color: var(--tr-muted); text-align: right; }
+.store-page[data-skin='indumentaria'] .sp-form .sp-captcha-row { gap: 10px; align-items: stretch; }
+.store-page[data-skin='indumentaria'] .sp-form .sp-captcha-q {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1775,9 +1775,9 @@
   font-weight: 500;
   white-space: nowrap;
 }
-.store-page[data-template='trama'] .sp-form .sp-captcha-q svg { color: var(--tr-accent-text); }
-.store-page[data-template='trama'] .sp-form .sp-captcha-row .sp-input { flex: 1; min-width: 0; }
-.store-page[data-template='trama'] .sp-form .sp-captcha-row .sp-icon-btn {
+.store-page[data-skin='indumentaria'] .sp-form .sp-captcha-q svg { color: var(--tr-accent-text); }
+.store-page[data-skin='indumentaria'] .sp-form .sp-captcha-row .sp-input { flex: 1; min-width: 0; }
+.store-page[data-skin='indumentaria'] .sp-form .sp-captcha-row .sp-icon-btn {
   width: 52px;
   height: 52px;
   flex: none;
@@ -1787,41 +1787,41 @@
   color: var(--tr-ink-2);
   box-shadow: none;
 }
-.store-page[data-template='trama'] .sp-form .sp-captcha-row .sp-icon-btn:hover {
+.store-page[data-skin='indumentaria'] .sp-form .sp-captcha-row .sp-icon-btn:hover {
   border-color: var(--tr-ink);
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-form .sp-hp {
+.store-page[data-skin='indumentaria'] .sp-form .sp-hp {
   position: absolute;
   left: -9999px;
   width: 1px;
   height: 1px;
   overflow: hidden;
 }
-.store-page[data-template='trama'] .sp-form-foot {
+.store-page[data-skin='indumentaria'] .sp-form-foot {
   display: grid;
   gap: 12px;
   align-items: stretch;
   margin-top: 4px;
 }
-.store-page[data-template='trama'] .sp-form-foot .sp-btn {
+.store-page[data-skin='indumentaria'] .sp-form-foot .sp-btn {
   width: 100%;
   height: 54px;
   min-height: 54px;
   font-size: 15px;
 }
-.store-page[data-template='trama'] .sp-form-note { font-size: 12px; color: var(--tr-muted); }
-.store-page[data-template='trama'] .sp-form-error { font-size: 13px; color: #B42318; }
-.store-page[data-template='trama'] .sp-sent { padding: 40px 8px; }
-.store-page[data-template='trama'] .sp-sent strong {
+.store-page[data-skin='indumentaria'] .sp-form-note { font-size: 12px; color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-form-error { font-size: 13px; color: #B42318; }
+.store-page[data-skin='indumentaria'] .sp-sent { padding: 40px 8px; }
+.store-page[data-skin='indumentaria'] .sp-sent strong {
   font-family: var(--tr-display);
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -.02em;
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .sp-sent p { color: var(--tr-muted); }
-.store-page[data-template='trama'] .sp-sent-check {
+.store-page[data-skin='indumentaria'] .sp-sent p { color: var(--tr-muted); }
+.store-page[data-skin='indumentaria'] .sp-sent-check {
   border-radius: 8px;
   background: var(--tr-accent-ink);
   box-shadow: none;
@@ -1830,35 +1830,35 @@
 /* ==========================================================================
    SERVICIOS (página compartida .tr-services) — solo tokens, sin rediseño
    ========================================================================== */
-.store-page[data-template='trama'] .tr-services {
+.store-page[data-skin='indumentaria'] .tr-services {
   --sp-top-h: 76px;
   font-family: var(--tr-body);
   background: var(--tr-bg);
   color: var(--tr-ink);
 }
-.store-page[data-template='trama'] .tr-services :is(.sv-item, .sv-quote, .sv-field input, .sv-field select, .sv-field textarea) {
+.store-page[data-skin='indumentaria'] .tr-services :is(.sv-item, .sv-quote, .sv-field input, .sv-field select, .sv-field textarea) {
   border-radius: 6px;
   box-shadow: none;
 }
-.store-page[data-template='trama'] .tr-services .sv-eyebrow {
+.store-page[data-skin='indumentaria'] .tr-services .sv-eyebrow {
   color: var(--tr-accent-text);
   letter-spacing: .14em;
 }
-.store-page[data-template='trama'] .tr-services h1,
-.store-page[data-template='trama'] .tr-services h2 {
+.store-page[data-skin='indumentaria'] .tr-services h1,
+.store-page[data-skin='indumentaria'] .tr-services h2 {
   font-family: var(--tr-display);
   font-weight: 600;
   letter-spacing: -.03em;
   text-transform: none;
 }
-.store-page[data-template='trama'] .tr-services .sv-btn {
+.store-page[data-skin='indumentaria'] .tr-services .sv-btn {
   min-height: 50px;
   border-radius: 6px;
   font-size: 15px;
   font-weight: 600;
 }
-.store-page[data-template='trama'] .tr-services .sv-btn--ghost { border: 1px solid var(--tr-ink); }
-.store-page[data-template='trama'] .tr-services .sv-band-track span::after { content: '·'; }
+.store-page[data-skin='indumentaria'] .tr-services .sv-btn--ghost { border: 1px solid var(--tr-ink); }
+.store-page[data-skin='indumentaria'] .tr-services .sv-band-track span::after { content: '·'; }
 
 /* ==========================================================================
    RESPONSIVE — 1440 / 1024 / 768 / 390 sin overflow horizontal
@@ -1867,17 +1867,17 @@
   .tr-hero-copy { padding-left: var(--tr-gutter); }
   .tr-about-copy { padding-right: var(--tr-gutter); }
   /* El masthead con buscador (catálogo) necesita más aire: nav compacta. */
-  .store-page[data-template='trama'] .sp-top-links a { padding: 0 8px; font-size: 14px; }
-  .store-page[data-template='trama'] .sp-search,
-  .store-page[data-template='trama'] .sp-search.sp-search-top { width: clamp(180px, 18vw, 240px); }
-  .store-page[data-template='trama'] .sp-brand .sp-name { font-size: 21px; }
+  .store-page[data-skin='indumentaria'] .sp-top-links a { padding: 0 8px; font-size: 14px; }
+  .store-page[data-skin='indumentaria'] .sp-search,
+  .store-page[data-skin='indumentaria'] .sp-search.sp-search-top { width: clamp(180px, 18vw, 240px); }
+  .store-page[data-skin='indumentaria'] .sp-brand .sp-name { font-size: 21px; }
 }
 
 @media (max-width: 1100px) {
-  .store-page[data-template='trama'] .sp-gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .store-page[data-template='trama'] .sp-brands-logos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-  .store-page[data-template='trama'] .sp-testimonials-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .store-page[data-template='trama'] .sp-cd-inner { padding: 40px 40px; gap: 24px 32px; }
+  .store-page[data-skin='indumentaria'] .sp-gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .store-page[data-skin='indumentaria'] .sp-brands-logos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .store-page[data-skin='indumentaria'] .sp-testimonials-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-skin='indumentaria'] .sp-cd-inner { padding: 40px 40px; gap: 24px 32px; }
   .tr-trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tr-trust-item:nth-child(odd) { border-left: 0; }
   .tr-trust-item:nth-child(n + 3) { border-top: 1px solid var(--tr-line); }
@@ -1886,21 +1886,21 @@
 }
 
 @media (max-width: 1100px) {
-  .store-page[data-template='trama'] { --sp-top-h: 64px; --tr-gutter: 24px; }
-  .store-page[data-template='trama'] .sp-top-inner {
+  .store-page[data-skin='indumentaria'] { --sp-top-h: 64px; --tr-gutter: 24px; }
+  .store-page[data-skin='indumentaria'] .sp-top-inner {
     grid-template-columns: auto 1fr auto;
     column-gap: 14px;
     height: 64px;
   }
-  .store-page[data-template='trama'] .sp-top.scrolled .sp-top-inner { height: 64px; }
-  .store-page[data-template='trama'] .sp-top .sp-burger { grid-column: 1; }
-  .store-page[data-template='trama'] .sp-brand { grid-column: 2; }
-  .store-page[data-template='trama'] .sp-top-inner:not(:has(.sp-burger)) .sp-brand { grid-column: 1 / span 2; }
-  .store-page[data-template='trama'] .sp-top-links { display: none; }
-  .store-page[data-template='trama'] .sp-brand .sp-name { font-size: 21px; }
-  .store-page[data-template='trama'] .sp-top-end { grid-column: 3; }
-  .store-page[data-template='trama'] .sp-top-cta { padding: 0 16px; font-size: 14px; }
-  .store-page[data-template='trama'] .sp-search.sp-search-top {
+  .store-page[data-skin='indumentaria'] .sp-top.scrolled .sp-top-inner { height: 64px; }
+  .store-page[data-skin='indumentaria'] .sp-top .sp-burger { grid-column: 1; }
+  .store-page[data-skin='indumentaria'] .sp-brand { grid-column: 2; }
+  .store-page[data-skin='indumentaria'] .sp-top-inner:not(:has(.sp-burger)) .sp-brand { grid-column: 1 / span 2; }
+  .store-page[data-skin='indumentaria'] .sp-top-links { display: none; }
+  .store-page[data-skin='indumentaria'] .sp-brand .sp-name { font-size: 21px; }
+  .store-page[data-skin='indumentaria'] .sp-top-end { grid-column: 3; }
+  .store-page[data-skin='indumentaria'] .sp-top-cta { padding: 0 16px; font-size: 14px; }
+  .store-page[data-skin='indumentaria'] .sp-search.sp-search-top {
     position: absolute;
     top: calc(100% + 6px);
     left: var(--tr-gutter);
@@ -1912,8 +1912,8 @@
     background: var(--tr-surface);
     box-shadow: 0 14px 30px -20px rgb(22 24 29 / .4);
   }
-  .store-page[data-template='trama'] .sp-search.sp-search-top.open { display: flex; }
-  .store-page[data-template='trama'] .sp-search-toggle { display: grid; }
+  .store-page[data-skin='indumentaria'] .sp-search.sp-search-top.open { display: flex; }
+  .store-page[data-skin='indumentaria'] .sp-search-toggle { display: grid; }
 
   .tr-hero { grid-template-columns: minmax(0, 1fr); }
   .tr-hero-copy { padding: 64px var(--tr-gutter) 48px; gap: 18px; }
@@ -1925,34 +1925,34 @@
   .tr-cats { padding: 80px 0 24px; }
   .tr-feat { padding: 48px 0 80px; }
 
-  .store-page[data-template='trama'] .sp-services { padding-top: 80px; }
-  .store-page[data-template='trama'] .sp-services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+  .store-page[data-skin='indumentaria'] .sp-services { padding-top: 80px; }
+  .store-page[data-skin='indumentaria'] .sp-services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
 
-  .store-page[data-template='trama'] .sp-countdown,
-  .store-page[data-template='trama'] .sp-countdown.is-band { padding-top: 80px; }
-  .store-page[data-template='trama'] .sp-cd-inner {
+  .store-page[data-skin='indumentaria'] .sp-countdown,
+  .store-page[data-skin='indumentaria'] .sp-countdown.is-band { padding-top: 80px; }
+  .store-page[data-skin='indumentaria'] .sp-cd-inner {
     grid-template-columns: minmax(0, 1fr);
     justify-items: start;
     padding: 36px 32px;
   }
-  .store-page[data-template='trama'] .sp-cd-clock { flex-wrap: wrap; }
-  .store-page[data-template='trama'] .sp-cd-unit { min-width: 68px; }
+  .store-page[data-skin='indumentaria'] .sp-cd-clock { flex-wrap: wrap; }
+  .store-page[data-skin='indumentaria'] .sp-cd-unit { min-width: 68px; }
 
-  .store-page[data-template='trama'] .sp-brands { margin-top: 80px; }
-  .store-page[data-template='trama'] .sp-testimonials { padding: 80px 0; }
-  .store-page[data-template='trama'] .sp-gallery { padding-top: 80px; }
+  .store-page[data-skin='indumentaria'] .sp-brands { margin-top: 80px; }
+  .store-page[data-skin='indumentaria'] .sp-testimonials { padding: 80px 0; }
+  .store-page[data-skin='indumentaria'] .sp-gallery { padding-top: 80px; }
 
-  .store-page[data-template='trama'] .sp-faq { padding: 80px 0; }
-  .store-page[data-template='trama'] .sp-faq-wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .store-page[data-skin='indumentaria'] .sp-faq { padding: 80px 0; }
+  .store-page[data-skin='indumentaria'] .sp-faq-wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; }
 
-  .store-page[data-template='trama'] .sp-cta.is-band { padding: 56px 0; }
-  .store-page[data-template='trama'] .sp-cta-inner { grid-template-columns: minmax(0, 1fr); justify-items: start; }
-  .store-page[data-template='trama'] .sp-cta-text { grid-column: 1; }
-  .store-page[data-template='trama'] .sp-cta .sp-btn,
-  .store-page[data-template='trama'] .sp-cta .sp-btn.sp-cta-btn { grid-column: 1; grid-row: auto; }
+  .store-page[data-skin='indumentaria'] .sp-cta.is-band { padding: 56px 0; }
+  .store-page[data-skin='indumentaria'] .sp-cta-inner { grid-template-columns: minmax(0, 1fr); justify-items: start; }
+  .store-page[data-skin='indumentaria'] .sp-cta-text { grid-column: 1; }
+  .store-page[data-skin='indumentaria'] .sp-cta .sp-btn,
+  .store-page[data-skin='indumentaria'] .sp-cta .sp-btn.sp-cta-btn { grid-column: 1; grid-row: auto; }
 
-  .store-page[data-template='trama'] .sp-contact { padding: 80px 0; }
-  .store-page[data-template='trama'] .sp-contact-grid {
+  .store-page[data-skin='indumentaria'] .sp-contact { padding: 80px 0; }
+  .store-page[data-skin='indumentaria'] .sp-contact-grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'info'
@@ -1963,14 +1963,14 @@
 }
 
 @media (max-width: 768px) {
-  .store-page[data-template='trama'] .sp-foot { padding: 48px 0 calc(24px + env(safe-area-inset-bottom)); }
-  .store-page[data-template='trama'] .sp-foot-grid,
-  .store-page[data-template='trama'] .sp-foot-grid:not(:has(> .sp-foot-col + .sp-foot-col)) {
+  .store-page[data-skin='indumentaria'] .sp-foot { padding: 48px 0 calc(24px + env(safe-area-inset-bottom)); }
+  .store-page[data-skin='indumentaria'] .sp-foot-grid,
+  .store-page[data-skin='indumentaria'] .sp-foot-grid:not(:has(> .sp-foot-col + .sp-foot-col)) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 32px;
   }
-  .store-page[data-template='trama'] .sp-foot-brand { grid-column: 1 / -1; }
-  .store-page[data-template='trama'] .sp-foot-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .store-page[data-skin='indumentaria'] .sp-foot-brand { grid-column: 1 / -1; }
+  .store-page[data-skin='indumentaria'] .sp-foot-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
 
   .tr-section-head { flex-direction: column; align-items: flex-start; gap: 8px; }
   .tr-feat-head { flex-direction: column; align-items: flex-start; }
@@ -1985,24 +1985,24 @@
   .tr-feat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
   .tr-about-stats { gap: 16px; }
   .tr-about-stat strong { font-size: 34px; }
-  .store-page[data-template='trama'] .sp-services-grid { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-template='trama'] .sp-testimonials-grid { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-template='trama'] .sp-brands-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .store-page[data-template='trama'] .sp-brands-logo strong { font-size: 19px; }
-  .store-page[data-template='trama'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .store-page[data-template='trama'] .sp-gallery-item { height: auto; aspect-ratio: 3 / 4; }
-  .store-page[data-template='trama'] .sp-cd-inner { padding: 28px 22px; }
-  .store-page[data-template='trama'] .sp-cd-title { font-size: 28px; }
-  .store-page[data-template='trama'] .sp-cd-unit { min-width: 60px; padding: 10px 6px; }
-  .store-page[data-template='trama'] .sp-cd-unit strong { font-size: 24px; }
-  .store-page[data-template='trama'] .sp-cta:not(.is-band) .sp-cta-inner { padding: 36px 24px; }
-  .store-page[data-template='trama'] .sp-form .sp-form-row { grid-template-columns: minmax(0, 1fr); }
-  .store-page[data-template='trama'] .sp-form .sp-captcha-row { flex-wrap: wrap; }
-  .store-page[data-template='trama'] .sp-form .sp-captcha-q { flex: 1 1 100%; min-height: 46px; }
+  .store-page[data-skin='indumentaria'] .sp-services-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-skin='indumentaria'] .sp-testimonials-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-skin='indumentaria'] .sp-brands-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-skin='indumentaria'] .sp-brands-logo strong { font-size: 19px; }
+  .store-page[data-skin='indumentaria'] .sp-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .store-page[data-skin='indumentaria'] .sp-gallery-item { height: auto; aspect-ratio: 3 / 4; }
+  .store-page[data-skin='indumentaria'] .sp-cd-inner { padding: 28px 22px; }
+  .store-page[data-skin='indumentaria'] .sp-cd-title { font-size: 28px; }
+  .store-page[data-skin='indumentaria'] .sp-cd-unit { min-width: 60px; padding: 10px 6px; }
+  .store-page[data-skin='indumentaria'] .sp-cd-unit strong { font-size: 24px; }
+  .store-page[data-skin='indumentaria'] .sp-cta:not(.is-band) .sp-cta-inner { padding: 36px 24px; }
+  .store-page[data-skin='indumentaria'] .sp-form .sp-form-row { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-skin='indumentaria'] .sp-form .sp-captcha-row { flex-wrap: wrap; }
+  .store-page[data-skin='indumentaria'] .sp-form .sp-captcha-q { flex: 1 1 100%; min-height: 46px; }
 }
 
 @media (max-width: 700px) {
-  .store-page[data-template='trama'] { --tr-gutter: 20px; --tr-section: 64px; }
+  .store-page[data-skin='indumentaria'] { --tr-gutter: 20px; --tr-section: 64px; }
   .tr-hero-copy { padding: 48px var(--tr-gutter) 40px; }
   .tr-hero-media { min-height: 380px; }
   .tr-lead,
@@ -2020,39 +2020,39 @@
   .tr-feat { padding: 40px 0 64px; }
   .tr-tabs { gap: 2px 20px; }
   .tr-tab { font-size: 14px; padding-bottom: 10px; }
-  .store-page[data-template='trama'] .sp-cd-clock { gap: 8px; }
-  .store-page[data-template='trama'] .sp-cd-unit { flex: 1 1 0; min-width: 0; }
-  .store-page[data-template='trama'] .sp-foot-grid,
-  .store-page[data-template='trama'] .sp-foot-grid:not(:has(> .sp-foot-col + .sp-foot-col)) {
+  .store-page[data-skin='indumentaria'] .sp-cd-clock { gap: 8px; }
+  .store-page[data-skin='indumentaria'] .sp-cd-unit { flex: 1 1 0; min-width: 0; }
+  .store-page[data-skin='indumentaria'] .sp-foot-grid,
+  .store-page[data-skin='indumentaria'] .sp-foot-grid:not(:has(> .sp-foot-col + .sp-foot-col)) {
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
-  .store-page[data-template='trama'] .sp-form .sp-input { height: 48px; }
-  .store-page[data-template='trama'] .sp-form .sp-captcha-row .sp-icon-btn { width: 48px; height: 48px; }
+  .store-page[data-skin='indumentaria'] .sp-form .sp-input { height: 48px; }
+  .store-page[data-skin='indumentaria'] .sp-form .sp-captcha-row .sp-icon-btn { width: 48px; height: 48px; }
 }
 
 /* ==========================================================================
    PREFERS-REDUCED-MOTION — sin transiciones ni marquees
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  .store-page[data-template='trama'],
-  .store-page[data-template='trama'] *,
-  .store-page[data-template='trama'] *::before,
-  .store-page[data-template='trama'] *::after {
+  .store-page[data-skin='indumentaria'],
+  .store-page[data-skin='indumentaria'] *,
+  .store-page[data-skin='indumentaria'] *::before,
+  .store-page[data-skin='indumentaria'] *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
-  .store-page[data-template='trama'] .sp-ann .sp-ann-track { animation: none; }
-  .store-page[data-template='trama'] .sp-gallery-item:hover img,
+  .store-page[data-skin='indumentaria'] .sp-ann .sp-ann-track { animation: none; }
+  .store-page[data-skin='indumentaria'] .sp-gallery-item:hover img,
   .tr-cat:hover .tr-cat-media > img { transform: none; }
 }
 
 /* ==========================================================================
    TEMA OSCURO — mismos tokens invertidos (la web del dueño puede ser dark)
    ========================================================================== */
-.store-page[data-template='trama'][data-store-theme='dark'] {
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] {
   --tr-bg: #121418;
   --tr-surface: #191C22;
   --tr-media: #23272F;
@@ -2084,25 +2084,25 @@
   --tpc-flag-ink: var(--tr-ink-2);
   --tpc-flag-border: 1px solid var(--tr-line);
 }
-.store-page[data-template='trama'][data-store-theme='dark'] .tr-hero-garment,
-.store-page[data-template='trama'][data-store-theme='dark'] .tr-about-garment,
-.store-page[data-template='trama'][data-store-theme='dark'] .tr-cat-svg { color: #3A3F49; }
-.store-page[data-template='trama'][data-store-theme='dark'] .tr-hero-media > img,
-.store-page[data-template='trama'][data-store-theme='dark'] .tr-about-figure img { opacity: .92; }
-.store-page[data-template='trama'][data-store-theme='dark'] :is(.tr-hero-chip, .tr-about-chip) {
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-hero-garment,
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-about-garment,
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-cat-svg { color: #3A3F49; }
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-hero-media > img,
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-about-figure img { opacity: .92; }
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] :is(.tr-hero-chip, .tr-about-chip) {
   background: var(--tr-surface);
   border-color: var(--tr-line);
   color: var(--tr-muted);
 }
-.store-page[data-template='trama'][data-store-theme='dark'] .sp-ann,
-.store-page[data-template='trama'][data-store-theme='dark'] .sp-ann .sp-ann-item { color: #FFFFFF; }
-.store-page[data-template='trama'][data-store-theme='dark'] .sp-foot {
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .sp-ann,
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .sp-ann .sp-ann-item { color: #FFFFFF; }
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .sp-foot {
   background: #0E1014;
   color: #C9CCD2;
 }
-.store-page[data-template='trama'][data-store-theme='dark'] .sp-foot-brand strong { color: #FFFFFF; }
-.store-page[data-template='trama'][data-store-theme='dark'] .sp-cta.is-band { background: #0E1014; }
-.store-page[data-template='trama'][data-store-theme='dark'] .tr-sizes span {
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .sp-foot-brand strong { color: #FFFFFF; }
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .sp-cta.is-band { background: #0E1014; }
+.store-page[data-skin='indumentaria'][data-store-theme='dark'] .tr-sizes span {
   background: rgb(25 28 34 / .92);
   color: var(--tr-ink-2);
 }

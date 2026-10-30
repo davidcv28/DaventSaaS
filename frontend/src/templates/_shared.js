@@ -10,40 +10,51 @@
 // ===== Superficies por diseño =====
 // Inicio, Catálogo, Ficha de producto y Servicios viven en la carpeta del
 // diseño (views/store/<id>/). Un diseño nuevo solo agrega sus loaders acá.
+// 'indumentaria' comparte las vistas de catálogo/ficha/servicios con 'trama'
+// (misma piel, misma lógica). El bundler cachea el mismo módulo: no duplica
+// código ni CSS.
 export const landingViews = {
-  raiz:      () => import('../views/store/raiz/InicioView.vue'),
-  alimentos: () => import('../views/store/alimentos/InicioView.vue'),
-  trama:     () => import('../views/store/trama/InicioView.vue'),
-  boutique:  () => import('../views/store/boutique/InicioView.vue'),
-  circuito:  () => import('../views/store/circuito/InicioView.vue'),
-  seguridad: () => import('../views/store/seguridad/InicioView.vue')
+  raiz:         () => import('../views/store/raiz/InicioView.vue'),
+  alimentos:    () => import('../views/store/alimentos/InicioView.vue'),
+  trama:        () => import('../views/store/trama/InicioView.vue'),
+  indumentaria: () => import('../views/store/indumentaria/InicioView.vue'),
+  boutique:     () => import('../views/store/boutique/InicioView.vue'),
+  clasico:      () => import('../views/store/clasico/InicioView.vue'),
+  circuito:     () => import('../views/store/circuito/InicioView.vue'),
+  seguridad:    () => import('../views/store/seguridad/InicioView.vue')
 }
 
 export const catalogViews = {
-  raiz:      () => import('../views/store/raiz/CatalogoView.vue'),
-  alimentos: () => import('../views/store/alimentos/CatalogoView.vue'),
-  trama:     () => import('../views/store/trama/CatalogoView.vue'),
-  boutique:  () => import('../views/store/boutique/CatalogoView.vue'),
-  circuito:  () => import('../views/store/circuito/CatalogoView.vue'),
-  seguridad: () => import('../views/store/seguridad/CatalogoView.vue')
+  raiz:         () => import('../views/store/raiz/CatalogoView.vue'),
+  alimentos:    () => import('../views/store/alimentos/CatalogoView.vue'),
+  trama:        () => import('../views/store/trama/CatalogoView.vue'),
+  indumentaria: () => import('../views/store/trama/CatalogoView.vue'),
+  boutique:     () => import('../views/store/boutique/CatalogoView.vue'),
+  clasico:      () => import('../views/store/clasico/CatalogoView.vue'),
+  circuito:     () => import('../views/store/circuito/CatalogoView.vue'),
+  seguridad:    () => import('../views/store/seguridad/CatalogoView.vue')
 }
 
 export const productViews = {
-  raiz:      () => import('../views/store/raiz/ProductoView.vue'),
-  alimentos: () => import('../views/store/alimentos/ProductoView.vue'),
-  trama:     () => import('../views/store/trama/ProductoView.vue'),
-  boutique:  () => import('../views/store/boutique/ProductoView.vue'),
-  circuito:  () => import('../views/store/circuito/ProductoView.vue'),
-  seguridad: () => import('../views/store/seguridad/ProductoView.vue')
+  raiz:         () => import('../views/store/raiz/ProductoView.vue'),
+  alimentos:    () => import('../views/store/alimentos/ProductoView.vue'),
+  trama:        () => import('../views/store/trama/ProductoView.vue'),
+  indumentaria: () => import('../views/store/trama/ProductoView.vue'),
+  boutique:     () => import('../views/store/boutique/ProductoView.vue'),
+  clasico:      () => import('../views/store/clasico/ProductoView.vue'),
+  circuito:     () => import('../views/store/circuito/ProductoView.vue'),
+  seguridad:    () => import('../views/store/seguridad/ProductoView.vue')
 }
 
 export const servicesViews = {
-  raiz:      () => import('../views/store/raiz/ServiciosView.vue'),
-  alimentos: () => import('../views/store/alimentos/ServiciosView.vue'),
-  trama:     () => import('../views/store/trama/ServiciosView.vue'),
-  boutique:  () => import('../views/store/boutique/ServiciosView.vue'),
-  circuito:  () => import('../views/store/circuito/ServiciosView.vue'),
-  seguridad: () => import('../views/store/seguridad/ServiciosView.vue')
+  raiz:         () => import('../views/store/raiz/ServiciosView.vue'),
+  alimentos:    () => import('../views/store/alimentos/ServiciosView.vue'),
+  trama:        () => import('../views/store/trama/ServiciosView.vue'),
+  indumentaria: () => import('../views/store/trama/ServiciosView.vue'),
+  boutique:     () => import('../views/store/boutique/ServiciosView.vue'),
+  clasico:      () => import('../views/store/clasico/ServiciosView.vue'),
+  circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
+  seguridad:    () => import('../views/store/seguridad/ServiciosView.vue')
 }
 
 // ===== Listas canónicas de bloques =====

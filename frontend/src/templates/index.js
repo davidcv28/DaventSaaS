@@ -7,13 +7,16 @@
 //               canónico por defecto de la portada (la vista lo monta de
 //               forma generativa con useLayout; ver abajo).
 //
-// Catálogo cerrado de 6 diseños, dos por rubro y nivel de plan:
-//   raiz      (base)     generalista / retail / servicios
-//   alimentos (base)     gastronomía / almacén / panadería
-//   trama     (plus)     indumentaria / moda
-//   boutique  (plus)     moda premium / deco / joyería
-//   circuito  (advanced) tecnología / electrónica
-//   seguridad (advanced) seguridad / bomberos / industrial
+// Catálogo cerrado de 8 diseños, dos por nivel de plan:
+//   raiz         (base)     generalista / retail / servicios
+//   alimentos    (base)     gastronomía / almacén / panadería
+//   trama        (plus)     indumentaria / moda
+//   indumentaria (plus)     indumentaria / moda profesional (piel de trama,
+//                           composición propia)
+//   boutique     (plus)     moda premium / deco / joyería
+//   clasico      (plus)     comercio y servicios con oficio (marfil + serif)
+//   circuito     (advanced) tecnología / electrónica
+//   seguridad    (advanced) seguridad / bomberos / industrial
 // El fallback global es 'raiz'. Todo id retirado se remapea con
 // STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
 //
@@ -28,14 +31,16 @@ import { defineAsyncComponent } from 'vue'
 import { blockSpec } from './blocks.js'
 import { SECTION_ORDER_KEYS, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
 
-import raiz      from './raiz/index.js'
-import alimentos from './alimentos/index.js'
-import trama     from './trama/index.js'
-import boutique  from './boutique/index.js'
-import circuito from './circuito/index.js'
-import seguridad from './seguridad/index.js'
+import raiz         from './raiz/index.js'
+import alimentos    from './alimentos/index.js'
+import trama        from './trama/index.js'
+import indumentaria from './indumentaria/index.js'
+import boutique     from './boutique/index.js'
+import clasico      from './clasico/index.js'
+import circuito     from './circuito/index.js'
+import seguridad    from './seguridad/index.js'
 
-export const TEMPLATE_DEFS = { raiz, alimentos, trama, boutique, circuito, seguridad }
+export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, clasico, circuito, seguridad }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 

@@ -1,4 +1,4 @@
-# Plantillas generativas — contrato del rediseño (6 diseños + portada compuesta por la IA)
+# Plantillas generativas — contrato del rediseño (8 diseños + portada compuesta por la IA)
 
 > Fase "motor generativo". Objetivo: que **Diseñar con IA** deje de estar atado a
 > composiciones fijas. El motor ya genera `layout_config` por superficie; ahora la
@@ -6,16 +6,20 @@
 > efectivo (orden + on/off + variante + props) y la IA puede recomponer la página
 > para cada cliente. Se suman 3 diseños profesionales nuevos (boutique, alimentos,
 > seguridad) portados de las referencias reales, y el motor queda entrenado para
-> proponer los 5 estilos de negocio.
+> proponer los 5 estilos de negocio. Después se sumaron 2 diseños `plus` más
+> (`indumentaria` y `clasico`) que el dueño elige a mano: **el motor IA sigue
+> proponiendo solo 6** (`PUBLIC_TEMPLATES`), ver §5.
 
-## 1. Catálogo (6 diseños, 3 niveles)
+## 1. Catálogo (8 diseños, 3 niveles)
 
 | id (≤12) | tier (`TEMPLATE_BASE/PLUS/ADVANCED`) | Rubro firma | Fuentes (`STORE_FONTS`) | Acento por defecto |
 |---|---|---|---|---|
 | `raiz` | base | generalista / retail | manrope + bricolage-grotesque | `#0F766E` |
 | `alimentos` | base | gastronomía / almacén | dm-sans + dm-serif-display | `#C8321D` |
 | `trama` | plus | indumentaria / moda | inter-tight + inter | `#1F3A5F` |
+| `indumentaria` | plus | indumentaria / moda profesional | inter + inter-tight | `#1F3A5F` |
 | `boutique` | plus | moda premium / deco / joyería | jost + cormorant-garamond | `#6B2D4F` |
+| `clasico` | plus | comercio y servicios con oficio | inter + playfair-display | `#1F4D43` |
 | `circuito` | advanced | tecnología / electrónica | space-grotesk + jetbrains-mono | `#22D3EE` |
 | `seguridad` | advanced | seguridad / bomberos / industrial | barlow + barlow-condensed | `#C8200E` |
 
@@ -25,8 +29,14 @@
 - Fuentes nuevas del catálogo cerrado: `jost`, `barlow`, `barlow-condensed`
   (Google Fonts). Sumarlas a `STORE_FONTS` (frontend) y a `FONT_CHOICES`
   (backend, `models.py`) — el catálogo se usa también para `name_font`.
-- Los 3 diseños nuevos entran a `DESIGN_SKIN_FREE` (el render los pinta con su
-  propia hoja, no con `site_theme`/pieles) y a `TEMPLATE_CSS`.
+- `indumentaria` y `clasico` no agregan fuentes: reusan `inter-tight`,
+  `inter` y `playfair-display` que ya están en el catálogo cerrado.
+- Los diseños nuevos entran a `DESIGN_SKIN_FREE` (el render los pinta con su
+  propia hoja, no con `site_theme`/pieles) y a `TEMPLATE_CSS`. `trama` e
+  `indumentaria` comparten piel (`STORE_TEMPLATE_SKIN` → `indumentaria`,
+  `store-trama.css`/`store-trama-catalog.css` scopados por `data-skin`); solo
+  cambia la composición de la portada. `clasico` tiene piel propia
+  (`store-clasico.css` + `store-clasico-catalog.css`).
 
 ## 2. Referencias (fuente de verdad visual)
 
@@ -132,7 +142,13 @@ simple), `featured` (grid/rail), `categories` (row/rail), `benefits`
 
 `StoreApp/domains/stores/services/ai_design_recipes.py` + `ai_design_skins.py`:
 
-- `PUBLIC_TEMPLATES` = los 6 ids; `TEMPLATE_LABELS` con los 6.
+- `PUBLIC_TEMPLATES` = los **6 ids históricos** (`raiz`, `alimentos`, `trama`,
+  `boutique`, `circuito`, `seguridad`); `TEMPLATE_LABELS` con esos 6. El motor
+  IA **no propone** `indumentaria` ni `clasico`: son diseños elegibles a mano
+  desde el selector del dashboard (tier `plus`) y quedan fuera del ranking de
+  afinidad a propósito (evita propuestas duplicadas con trama/boutique). Si se
+  suman al motor, actualizar también `RUBRO_STYLES`/`STYLE_PRESET_TEMPLATES` y
+  los tests de contrato.
 - `RUBROS`: sumar `seguridad` (seguridad industrial, bomberos, EPP) con
   `keywords`/`hints`; afinidades de plantilla por rubro:
   gastronomia→alimentos; indumentaria→trama,boutique; belleza→boutique,trama;
@@ -144,21 +160,25 @@ simple), `featured` (grid/rail), `categories` (row/rail), `benefits`
 - `TEMPLATE_TONE_AFFINITY` / `TEMPLATE_GOAL_AFFINITY` / `STYLE_PRESET_TEMPLATES`:
   agregar los 3 ids (boutique→`luxury`, alimentos→`craft`, seguridad→`bold`).
 - Los estilos (8 familias) NO cambian; el mapeo diseño→estilo es el de arriba.
-- `has_ai_design` (Premium/trial) habilita la IA; en Premium los 6 diseños están
-  permitidos. Básico: raiz+alimentos; Estándar: +trama+boutique; Premium: +circuito+seguridad.
+- `has_ai_design` (Premium/trial) habilita la IA; en Premium los 8 diseños están
+  permitidos. Básico: raiz+alimentos; Estándar: +trama+indumentaria+boutique+clasico;
+  Premium: +circuito+seguridad. La IA propone solo los 6 de `PUBLIC_TEMPLATES`.
 - El motor sigue siendo determinista/offline (sin IA externa) y sus propuestas
   deben componer `layout_config` con orden/variantes distintas por cliente.
 
 ## 6. Registro frontend (espejos obligatorios)
 
-1. `frontend/src/api/stores.api.js`: `STORE_TEMPLATES` (6), `STORE_TEMPLATE_FAMILIES`
-   (general, alimentos, indumentaria, boutique, tecnología, seguridad),
-   `STORE_TEMPLATE_RETIRED_MAP` sin `boutique`, `STORE_FONTS` (+3), gating por tier.
+1. `frontend/src/api/stores.api.js`: `STORE_TEMPLATES` (8), `STORE_TEMPLATE_FAMILIES`
+   (general, alimentos, indumentaria, moda-pro, boutique, clasico, tecnología,
+   seguridad), `STORE_TEMPLATE_SKIN` + `storeSkinOf`, `STORE_TEMPLATE_RETIRED_MAP`
+   sin `boutique`, `STORE_FONTS` (+3), gating por tier.
 2. `frontend/src/templates/index.js`: imports + `TEMPLATE_DEFS`.
-3. `frontend/src/templates/_shared.js`: loaders de las 4 superficies de cada id.
-4. `frontend/src/views/StorePublicLayout.vue`: `DESIGN_SKIN_FREE` + `TEMPLATE_CSS`.
+3. `frontend/src/templates/_shared.js`: loaders de las 4 superficies de cada id
+   (`indumentaria` reusa los de trama en catálogo/ficha/servicios).
+4. `frontend/src/views/StorePublicLayout.vue`: `DESIGN_SKIN_FREE` + `TEMPLATE_CSS`
+   + `:data-skin="storeSkinOf(pageTemplate)"`.
 5. `frontend/src/components/design/DesignLookTab.vue` + `assets/template-thumbs.css`:
-   miniaturas/etiquetas de los 6.
+   miniaturas/etiquetas de los 8 (indumentaria comparte la de trama).
 6. `frontend/src/views/design/AiDesignView.vue`: lista `RUBROS` con `seguridad`.
 7. Migración backend de `TEMPLATE_CHOICES` (choices + default sin cambios).
 
@@ -186,6 +206,6 @@ venv\Scripts\python.exe manage.py test StoreApp.domains.stores
 venv\Scripts\python.exe qa_shots.py   # o el script QA que corresponda
 ```
 
-Criterios: build verde; tests verdes; 6 diseños se pueden elegir y publicar;
+Criterios: build verde; tests verdes; 8 diseños se pueden elegir y publicar;
 la portada respeta el orden/on-off de `layout_config`; sin regresiones en
-raiz/trama/circuito; fidelidad visual contra las capturas (1360 y 390).
+raiz/trama/boutique/circuito; fidelidad visual contra las capturas (1360 y 390).

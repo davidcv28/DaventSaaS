@@ -292,10 +292,11 @@ const stepSum = computed(() => ({
   style: `${tplLabel.value} · ${currentCover.value ? 'con portada' : 'sin portada'}`
 }))
 
-// Los 6 estilos del catálogo: una familia por diseño (Raíz, Alimentos, Trama,
-// Boutique, Circuito y Seguridad). Cada opción del selector lleva su rubro y
-// la miniatura real del estilo se ve al lado; se elige al instante (el borrador
-// viaja por `studio:update`). `allowedTemplates` gatea los de otro plan.
+// Los 8 estilos del catálogo: una familia por opción (Raíz, Alimentos, Trama,
+// Indumentaria, Boutique, Clásico, Circuito y Seguridad). Cada opción del
+// selector lleva su rubro y la miniatura real del estilo se ve al lado; se
+// elige al instante (el borrador viaja por `studio:update`).
+// `allowedTemplates` gatea los de otro plan.
 const storeTemplates = STORE_TEMPLATES
 const templateFamilies = STORE_TEMPLATE_FAMILIES
 const familyAllowed = (f) => f.templates.some((k) => allowedTemplates.value.includes(k))
@@ -745,7 +746,7 @@ onBeforeUnmount(dropLocalLogo)
                   </span>
                 </div>
               </div>
-              <p id="design-style-help" class="hint">Seis diseños, uno por rubro. Cambia la estructura de tu portada sin perder contenido y se ve al instante en la vista previa.</p>
+              <p id="design-style-help" class="hint">Ocho diseños para tu rubro. Cambia la estructura de tu portada sin perder contenido y se ve al instante en la vista previa.</p>
             </div>
             <div v-if="!advanced" class="dl-lock">
               <AppIcon name="lock" :size="16" aria-hidden="true" />

@@ -1652,6 +1652,7 @@
       .sg-cats .sp-shop-dept, .sg-service, .sg-class, .sp-testimonial,
       .sp-faq-item, .sp-contact-hours, .sp-input, .sg-filters, .sg-empty,
       .sg-price input, .sg-sort select, .sg-tags button, .rz-pdp-gallery,
+      .sg-filters-toggle,
       .sg-services :is(.rz-sv-item, .rz-sv-step, .rz-sv-faq details, .rz-sv-pick, .rz-sv-sheet)) {
   background: var(--sg-surface);
   color: var(--sg-ink);

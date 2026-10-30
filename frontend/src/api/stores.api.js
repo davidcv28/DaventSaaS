@@ -685,10 +685,11 @@ export const STORE_THEMES = {
 }
 
 // Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES)
-// — catálogo de 6, dos por nivel, organizado por RUBRO (no por "estilo de
+// — catálogo de 8, dos por nivel, organizado por RUBRO (no por "estilo de
 // autor"). `tier` marca qué beneficio lo habilita:
 //   'base'     -> todo plan con has_customization (Básico): raiz, alimentos
-//   'plus'     -> has_design_plus (Estándar y Premium): trama, boutique
+//   'plus'     -> has_design_plus (Estándar y Premium): trama, indumentaria,
+//                 boutique, clasico
 //   'advanced' -> has_design_advanced (Premium): circuito, seguridad
 // El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
 // 'raiz' (fallback global) si el guardado deja de estar permitido (baja de
@@ -696,26 +697,47 @@ export const STORE_THEMES = {
 // afinidad de rubro al más cercano del catálogo (STORE_TEMPLATE_RETIRED_MAP).
 // El orden de las claves es el del catálogo (lo usan allowedTemplatesFor y
 // el selector del dashboard): mantiene base → plus → advanced.
+// `trama` e `indumentaria` comparten piel (data-skin='indumentaria'), pero
+// son composiciones distintas: ver STORE_TEMPLATE_SKIN.
 export const STORE_TEMPLATES = {
-  raiz:     { label: 'Raíz',     rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
-  alimentos:{ label: 'Alimentos', rubro: 'alimentos',   tier: 'base',     defaultAccent: '#C8321D', desc: 'Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».' },
-  trama:    { label: 'Trama',    rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.' },
-  boutique: { label: 'Boutique', rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
-  circuito: { label: 'Circuito', rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
-  seguridad:{ label: 'Seguridad',rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
+  raiz:        { label: 'Raíz',        rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
+  alimentos:   { label: 'Alimentos',   rubro: 'alimentos',    tier: 'base',     defaultAccent: '#C8321D', desc: 'Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».' },
+  trama:       { label: 'Trama',       rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.' },
+  indumentaria:{ label: 'Indumentaria',rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.' },
+  boutique:    { label: 'Boutique',    rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
+  clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
+  circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
+  seguridad:   { label: 'Seguridad',   rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
 }
 
 // Familias de diseño para el selector del dashboard: una por RUBRO, con los
 // diseños de ese rubro. El orden espeja el del catálogo (STORE_TEMPLATES).
+// `indumentaria` (Trama) y `moda-pro` (Indumentaria) son dos opciones de la
+// misma familia de rubro: el select usa `templates[0]`.
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
   { key: 'alimentos',    label: 'Alimentos',    caption: 'Gastronomía y almacén',   templates: ['alimentos'] },
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',       templates: ['trama'] },
+  { key: 'moda-pro',     label: 'Indumentaria', caption: 'Moda profesional',        templates: ['indumentaria'] },
   { key: 'boutique',     label: 'Boutique',     caption: 'Moda premium y deco',     templates: ['boutique'] },
+  { key: 'clasico',      label: 'Clásico',      caption: 'Comercio y servicios',    templates: ['clasico'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',      templates: ['circuito'] },
   { key: 'seguridad',    label: 'Seguridad',    caption: 'Seguridad y bomberos',    templates: ['seguridad'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
+
+// Piel (hoja de estilo) de cada diseño. `trama` e `indumentaria` comparten
+// `store-trama.css`/`store-trama-catalog.css` (scopados por data-skin, no por
+// data-template) y por eso declaran la misma piel: la composición distinta es
+// del InicioView, el look es compartido. StorePublicLayout pinta
+// :data-skin="storeSkinOf(pageTemplate)" en .store-page y resuelve la hoja
+// desde TEMPLATE_CSS con esta misma clave.
+export const STORE_TEMPLATE_SKIN = {
+  raiz: 'raiz', alimentos: 'alimentos', trama: 'indumentaria',
+  indumentaria: 'indumentaria', boutique: 'boutique', circuito: 'circuito',
+  seguridad: 'seguridad', clasico: 'clasico'
+}
+export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
 // Mapa de retiro (espejo de StoreCustomization.TEMPLATE_RETIRED_MAP): una
 // tienda con un diseño viejo se sirve con el nuevo equivalente, nunca cae al
