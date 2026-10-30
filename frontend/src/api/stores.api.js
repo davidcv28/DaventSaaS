@@ -231,6 +231,21 @@ export const storesApi = {
     return data
   },
 
+  // Lo que el motor ya deduce del negocio (nombre, ciudad, rubro, objetivos
+  // probables y conteos reales): la entrevista arranca con eso a la vista.
+  async aiDesignPrefill() {
+    const { data } = await http.get('/stores/ai-design/prefill/')
+    return data
+  },
+
+  // Ajuste de la propuesta elegida sin rehacer la tanda: tipografía, aire,
+  // color y portada. Devuelve la MISMA propuesta recalculada (mismo id).
+  // Sin `constraints` vuelve a la versión original.
+  async aiDesignRefine({ seed, proposal_id, constraints = {} }) {
+    const { data } = await http.post('/stores/ai-design/refine/', { seed, proposal_id, constraints })
+    return data
+  },
+
   async aiDesignApply({ seed, proposal_id, extras = null, skip_extras = false }) {
     const payload = { seed, proposal_id }
     if (extras) payload.extras = extras

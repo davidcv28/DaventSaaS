@@ -1,10 +1,12 @@
 <script setup>
-import { ref, reactive, computed, nextTick, watch, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, nextTick, watch, onBeforeUnmount, onMounted } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
-import AiSelect from '../../components/ai/AiSelect.vue'
-import AiStep from '../../components/ai/AiStep.vue'
 import AiProposalCard from '../../components/ai/AiProposalCard.vue'
-import AiColorField from '../../components/ai/AiColorField.vue'
+import AiKnownCard from '../../components/ai/AiKnownCard.vue'
+import AiIdeaCard from '../../components/ai/AiIdeaCard.vue'
+import AiCompareTable from '../../components/ai/AiCompareTable.vue'
+import AiAdjustPanel from '../../components/ai/AiAdjustPanel.vue'
+import AiPublishedPanel from '../../components/ai/AiPublishedPanel.vue'
 import AiNightModeField from '../../components/ai/AiNightModeField.vue'
 import AiCoverField from '../../components/ai/AiCoverField.vue'
 import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
@@ -78,8 +80,20 @@ const MUST_HAVE = [
   { id: 'testimonials', label: 'Opiniones de clientes', icon: 'quote', desc: 'Lo que dicen de vos' },
   { id: 'faqs', label: 'Preguntas frecuentes', icon: 'circle-help', desc: 'Las dudas que te preguntan siempre' }
 ]
-
-const STEP_TITLES = ['A qué te dedicás', 'Qué querés lograr', 'Cómo se siente', 'Tu marca', 'Qué no puede faltar', 'Tus propuestas']
+// Lo que la entrevista vieja preguntaba y no cambia el diseño (pantalla 1:
+// "lo que no te vamos a preguntar"). Se dice explícito para bajar la ansiedad
+// del dueño que espera un formulario largo.
+const NOT_ASKED = ['Historia del negocio', 'Misión', 'Horarios', 'Formas de pago', 'Redes sociales']
+// Tipografías que el motor sabe aplicar (ids de TYPE_PAIRS en el backend).
+const PAIR_OPTIONS = [
+  { id: 'grotesk-clean', label: 'Grotesk limpio', icon: 'type', desc: 'Neutra y actual' },
+  { id: 'serif-editorial', label: 'Serif editorial', icon: 'type', desc: 'Con carácter, tipo revista' },
+  { id: 'serif-classic', label: 'Serif clásico', icon: 'type', desc: 'Sobria y elegante' },
+  { id: 'display-heavy', label: 'Peso máximo', icon: 'type', desc: 'Títulos que se imponen' },
+  { id: 'geometric', label: 'Geométrica', icon: 'type', desc: 'Moderna y limpia' },
+  { id: 'warm-serif', label: 'Serif cálida', icon: 'type', desc: 'Cercana, con detalle' }
+]
+const STEP_TITLES = ['Contanos', 'Propuestas']
 
 const EMPTY = () => ({
   rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [], content_hint: '',
@@ -88,16 +102,21 @@ const EMPTY = () => ({
 })
 const answers = reactive(EMPTY())
 
-const stepIndex = ref(1)
-const phase = ref('ask') // ask | loading | results | error
+// ask | loading | results | adjust | published | error
+const phase = ref('ask')
 const proposals = ref([])
 const seed = ref(null)
 const missing = ref([])
+const checks = ref([])
+const prefill = ref(null)
+const selectedId = ref('')
+const constraints = ref({})
+const initialConstraints = ref({})
+const appliedLabels = ref([])
+const refining = ref(false)
 const errorMsg = ref('')
 const actionError = ref('')
 const published = ref(null) // { id, label }
-const publishedSnapshot = ref(null) // propuesta publicada, para no perderla al ver otro estilo
-const browsing = ref(false) // el usuario pidió "Cambiar el estilo"
 const busy = ref('')
 const previewProposal = ref(null)
 const resultsRef = ref(null)
@@ -113,10 +132,11 @@ const benefits = computed(() => props.plan?.benefits || {})
 const hasDesignAdvanced = computed(() => Boolean(benefits.value.has_design_advanced))
 const canUse = computed(() => Boolean(props.plan?.isCurrent && benefits.value.has_customization && benefits.value.has_ai_design))
 const allowed = computed(() => allowedTemplatesFor(benefits.value))
-const shopName = computed(() => store.customization.display_name || store.store?.business_name || 'Tu negocio')
+const shopName = computed(() => store.customization.display_name || store.store?.business_name || prefill.value?.name || 'Tu negocio')
 const initial = computed(() => (shopName.value || 'T').slice(0, 1).toUpperCase())
 const logo = computed(() => store.customization.logo || '')
 const cover = computed(() => store.customization.cover || '')
+const description = computed(() => String(store.customization.description || '').trim())
 const storeId = computed(() => store.store?.id || '')
 // La vista previa corre SIEMPRE en el mismo origen (alias /<slug>): el
 // subdominio de la tienda puede no resolver (dev con *.localhost, Render sin
@@ -124,16 +144,8 @@ const storeId = computed(() => store.store?.id || '')
 // origen = la landing real, con el mensaje del Studio aceptado por origen.
 const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
-const progressStep = computed(() => (phase.value === 'results' ? 6 : stepIndex.value))
-const showPublished = computed(() => Boolean(published.value) && !browsing.value)
-const visibleProposals = computed(() => {
-  if (showPublished.value) return proposals.value.filter((p) => p.id === published.value.id)
-  // "Ver otro estilo": la publicada no desaparece, encabeza la lista nueva.
-  if (browsing.value && publishedSnapshot.value && !proposals.value.some((p) => p.id === published.value?.id)) {
-    return [publishedSnapshot.value, ...proposals.value]
-  }
-  return proposals.value
-})
+const progressStep = computed(() => (phase.value === 'ask' ? 1 : 2))
+const selectedProposal = computed(() => proposals.value.find((p) => p.id === selectedId.value) || null)
 // Cuántas familias visuales distintas trajo esta tanda (para avisarlo).
 const distinctFamilies = computed(() => {
   const set = new Set()
@@ -144,9 +156,10 @@ const distinctFamilies = computed(() => {
   return set.size
 })
 const varietyNotice = computed(() => {
-  if (showPublished.value || proposals.value.length < 2 || distinctFamilies.value < 2) return ''
+  if (proposals.value.length < 2 || distinctFamilies.value < 2) return ''
   return `${proposals.value.length} estilos distintos para tu rubro`
 })
+const adjustDirty = computed(() => JSON.stringify(constraints.value) !== JSON.stringify(initialConstraints.value))
 
 const autofillDefault = computed(() => {
   const c = store.customization || {}
@@ -157,10 +170,10 @@ const autofillDefault = computed(() => {
 const liveMessage = computed(() => {
   if (phase.value === 'loading') return 'Armando tus propuestas…'
   if (phase.value === 'error') return 'No pudimos armar las propuestas.'
-  if (phase.value === 'results') {
-    return showPublished.value ? 'Tu web ya está publicada.' : `${proposals.value.length} propuestas listas.`
-  }
-  return `Paso ${stepIndex.value} de 6: ${STEP_TITLES[stepIndex.value - 1]}`
+  if (phase.value === 'results') return `${proposals.value.length} propuestas listas.`
+  if (phase.value === 'adjust') return 'Ajustando la propuesta elegida.'
+  if (phase.value === 'published') return 'Tu web ya está publicada.'
+  return 'Paso 1 de 2: contanos lo mínimo.'
 })
 
 const hasAnswers = computed(() => Boolean(
@@ -227,6 +240,24 @@ function persist() {
 watch(answers, persist, { deep: true })
 watch(storageKey, () => { if (storeId.value && !hydrated.value) hydrate() }, { immediate: true })
 
+// ---------- Prefill: lo que la IA ya sabe (pantalla 1) ----------
+async function loadPrefill() {
+  if (!canUse.value || prefill.value) return
+  try {
+    const data = await storesApi.aiDesignPrefill()
+    prefill.value = data
+    //La deducción solo rellena lo que el dueño no eligió: nunca pisa su
+    //respuesta guardada.
+    if (!answers.rubro && data?.rubro) answers.rubro = data.rubro
+    if (!answers.goals.length && Array.isArray(data?.goals)) {
+      answers.goals = data.goals.filter((goal) => GOALS.some((o) => o.id === goal)).slice(0, 2)
+    }
+    if (Array.isArray(data?.checks)) checks.value = data.checks
+  } catch { /* sin prefill la entrevista funciona igual */ }
+}
+onMounted(loadPrefill)
+watch(canUse, (value) => { if (value) loadPrefill() })
+
 // ---------- Telemetría del funnel (5.1) ----------
 // Fire-and-forget: si falla (offline, throttle) la sección sigue igual.
 const sessionId = (() => {
@@ -292,6 +323,16 @@ function toggleHint(id) {
   if (answers.style_hint.length >= 2) answers.style_hint.shift()
   answers.style_hint.push(id)
 }
+function toggleGoal(id) {
+  const i = answers.goals.indexOf(id)
+  if (i >= 0) answers.goals.splice(i, 1)
+  else answers.goals.push(id)
+}
+function toggleMustHave(id) {
+  const i = answers.must_have.indexOf(id)
+  if (i >= 0) answers.must_have.splice(i, 1)
+  else answers.must_have.push(id)
+}
 
 function payload(extra = {}) {
   const p = {}
@@ -317,22 +358,14 @@ function payload(extra = {}) {
 
 async function generate(extra = {}, useAnswers = true, opts = {}) {
   if (phase.value === 'loading') return
-  // "Ver otro estilo" no borra lo publicado: la tarjeta elegida sigue
-  // arriba con su estado y solo se reemplaza si el usuario aplica otra.
-  const keep = Boolean(opts.keepPublished && published.value && publishedSnapshot.value)
   const seq = ++requestSeq
   phase.value = 'loading'
   errorMsg.value = ''
   actionError.value = ''
-  if (!keep) {
-    published.value = null
-    publishedSnapshot.value = null
-  }
-  browsing.value = keep
-  if (!keep) {
-    proposals.value = []
-    previewProposal.value = null
-  }
+  published.value = null
+  selectedId.value = ''
+  proposals.value = []
+  previewProposal.value = null
   clearTimeout(timer)
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { aidTimeout: true })), 15000)
@@ -344,11 +377,12 @@ async function generate(extra = {}, useAnswers = true, opts = {}) {
     if (!data || !Array.isArray(data.proposals) || !data.proposals.length) throw new Error('empty')
     seed.value = data.seed
     missing.value = Array.isArray(data.missing) ? data.missing : []
+    checks.value = Array.isArray(data.checks) ? data.checks : checks.value
     proposals.value = data.proposals
     phase.value = 'results'
     track('generate', { meta: { rubro: answers.rubro, goal: answers.goals[0] || '', tone: resolvedTone() || '', count: data.proposals.length } })
     await nextTick()
-    resultsRef.value?.querySelector('.aidp')?.focus?.()
+    resultsRef.value?.querySelector('.aidi')?.focus?.()
   } catch (e) {
     if (seq !== requestSeq) return
     if (e?.aidTimeout) requestSeq++
@@ -361,31 +395,81 @@ async function generate(extra = {}, useAnswers = true, opts = {}) {
   }
 }
 
-function next() {
-  track('step_done', { step: stepIndex.value })
-  if (stepIndex.value < 5) stepIndex.value += 1
-  else generate()
-}
-function back() {
-  if (stepIndex.value > 1) {
-    track('step_abandon', { step: stepIndex.value })
-    stepIndex.value -= 1
-  }
-}
 function decideForMe() {
+  track('step_done', { step: 1 })
   generate({}, false)
 }
 function anotherStyle() {
   track('explore', { meta: { count: proposals.value.length } })
-  generate({ seed: (seed.value || 0) + 1 }, true, { keepPublished: true })
+  generate({ seed: (seed.value || 0) + 1 }, true)
 }
 function redoWithPhotos() {
   generate({ seed: seed.value })
 }
 function backToQuestions() {
   phase.value = 'ask'
-  stepIndex.value = 1
-  browsing.value = false
+  previewProposal.value = null
+}
+
+// ---------- Elegir / ajustar (pantallas 2 y 3) ----------
+function constraintsOf(proposal) {
+  const look = proposal?.look || {}
+  return {
+    typography: look.fonts?.pair || '',
+    cover: proposal?.cover?.mode === 'logo' ? 'logo' : (answers.cover_choice === 'auto' ? 'auto' : 'foto'),
+    air: look.density || '',
+    color: proposal?.theme_choice?.source === 'user' ? String(proposal.theme_choice.accent || '').toLowerCase() : ''
+  }
+}
+
+function choose(id) {
+  const proposal = proposals.value.find((p) => p.id === id)
+  if (!proposal) return
+  selectedId.value = id
+  constraints.value = constraintsOf(proposal)
+  initialConstraints.value = { ...constraints.value }
+  appliedLabels.value = []
+  actionError.value = ''
+  phase.value = 'adjust'
+  track('step_done', { proposal_id: id, step: 2 })
+}
+
+async function refine(next = constraints.value) {
+  const proposal = selectedProposal.value
+  if (!proposal || refining.value || !seed.value) return
+  refining.value = true
+  busy.value = `refine:${proposal.id}`
+  actionError.value = ''
+  try {
+    const data = await storesApi.aiDesignRefine({
+      seed: seed.value,
+      proposal_id: proposal.id,
+      constraints: { ...next }
+    })
+    const index = proposals.value.findIndex((p) => p.id === proposal.id)
+    if (index >= 0) proposals.value.splice(index, 1, data.proposal)
+    initialConstraints.value = { ...next }
+    constraints.value = { ...next }
+    appliedLabels.value = Array.isArray(data.applied) ? data.applied : []
+    track('refine', { proposal_id: proposal.id, meta: { applied: (data.applied || []).join(',') } })
+  } catch (e) {
+    actionError.value = e?.response?.data?.detail || 'No pudimos aplicar el cambio. Probá de nuevo.'
+  } finally {
+    refining.value = false
+    busy.value = ''
+  }
+}
+
+function resetAdjust() {
+  const proposal = selectedProposal.value
+  if (!proposal) return
+  //Sin constraints el motor devuelve la propuesta original de la tanda.
+  constraints.value = { typography: '', cover: 'auto', air: '', color: '' }
+  refine({})
+}
+
+function backToResults() {
+  phase.value = 'results'
   previewProposal.value = null
 }
 
@@ -398,13 +482,13 @@ function startOver() {
   missing.value = []
   seed.value = null
   published.value = null
-  publishedSnapshot.value = null
-  browsing.value = false
+  selectedId.value = ''
+  constraints.value = {}
+  initialConstraints.value = {}
   actionError.value = ''
   errorMsg.value = ''
   previewProposal.value = null
   phase.value = 'ask'
-  stepIndex.value = 1
 }
 
 // El contrato v3 aplica y publica en un solo request: ya no hay publish/discard
@@ -425,18 +509,38 @@ async function apply({ proposal, autofill, extras }) {
     })
     await store.refreshCustomization()
     published.value = { id: proposal.id, label: proposal.label }
-    publishedSnapshot.value = proposal
-    browsing.value = false
+    phase.value = 'published'
     track('apply', {
       proposal_id: proposal.id,
       meta: { template: proposal.template, family: proposal.skin?.family || '', style: proposal.variety?.style || '' }
     })
     emit('applied', { action: 'publish' })
+    //La lista de chequeo se recalcula con los datos que acaban de cambiar
+    //(el autofill puede haber escrito la descripción).
+    storesApi.aiDesignPrefill().then((data) => {
+      if (Array.isArray(data?.checks)) checks.value = data.checks
+    }).catch(() => {})
   } catch (e) {
     actionError.value = e?.response?.data?.detail || 'No pudimos establecer el estilo. Probá de nuevo.'
   } finally {
     busy.value = ''
   }
+}
+
+// "Todo cambio se puede deshacer": vuelve a la propuesta original de la
+// tanda y la republica (el ajuste se descarta, no la propuesta).
+async function revertPublished() {
+  if (!selectedProposal.value || !seed.value || busy.value) return
+  await refine({})
+  if (actionError.value) return
+  if (selectedProposal.value) {
+    await apply({ proposal: selectedProposal.value, autofill: false })
+  }
+}
+
+function copyLink() {
+  if (!publicUrl.value) return
+  navigator.clipboard?.writeText(publicUrl.value).catch(() => {})
 }
 
 function openPreview(p) {
@@ -453,8 +557,8 @@ function closePreview() {
       <div class="aid-head-text">
         <span class="aid-badge-new">Nuevo</span>
         <h1><AppIcon name="sparkles" :size="20" /> Diseñar con IA</h1>
-        <p>Contanos cinco cosas de tu negocio y te armamos la web lista. Después la ajustás a tu gusto.</p>
-        <span v-if="showPublished" class="aid-pub-chip"><AppIcon name="circle-check" :size="13" /> Publicada</span>
+        <p>Contanos dos líneas de tu negocio y te armamos tres ideas de web. Después la ajustás sin empezar de cero.</p>
+        <span v-if="phase === 'published'" class="aid-pub-chip"><AppIcon name="circle-check" :size="13" /> Publicada</span>
       </div>
       <button v-if="phase !== 'ask' || hasAnswers" class="btn ghost btn-auto" type="button" @click="startOver">
         <AppIcon name="refresh" :size="16" /> Empezar de nuevo
@@ -472,62 +576,117 @@ function closePreview() {
       <p class="aid-live" aria-live="polite">{{ liveMessage }}</p>
 
       <div class="aid-progress" role="group" aria-label="Progreso">
-        <span v-for="n in 6" :key="n" class="aid-progress-dot" :class="{ on: progressStep >= n, now: progressStep === n }">
+        <span v-for="n in 2" :key="n" class="aid-progress-dot" :class="{ on: progressStep >= n, now: progressStep === n }">
           <span class="sr-only">Paso {{ n }}: {{ STEP_TITLES[n - 1] }}</span>
         </span>
       </div>
 
-      <!-- PREGUNTAS -->
+      <!-- PANTALLA 1 · EMPEZAR EN DOS PASOS -->
       <div v-if="phase === 'ask'" class="aid-ask">
-        <AiStep v-if="stepIndex === 1" :number="1" title="¿A qué te dedicás?" subtitle="Elegí lo que más se parezca. Con esto sabemos qué mostrar primero.">
-          <AiSelect v-model="answers.rubro" :options="RUBROS" label="Rubro" placeholder="Elegí tu rubro" />
-        </AiStep>
+        <AiKnownCard v-model="answers.rubro" :prefill="prefill" :rubro-options="RUBROS" />
 
-        <AiStep v-else-if="stepIndex === 2" :number="2" title="¿Qué querés lograr?" subtitle="Podés elegir más de uno. Lo usamos para ordenar las secciones.">
-          <AiSelect v-model="answers.goals" :options="GOALS" multiple label="Objetivos" placeholder="Elegí uno o varios objetivos" />
-        </AiStep>
+        <div class="aid-field">
+          <p class="aid-field-title">Contanos en dos líneas qué hacés y a quién le vendés</p>
+          <textarea
+            v-model="answers.content_hint"
+            class="aid-input"
+            rows="3"
+            maxlength="160"
+            placeholder="Ej.: ferretería de barrio, vendemos herramientas y pintura; el que más nos escribe es el que arregla en su casa."
+          ></textarea>
+          <p class="aid-hints-note">Lo usamos para escribir el texto de la web. No inventamos datos: solo lo que nos contás.</p>
+        </div>
 
-        <AiStep v-else-if="stepIndex === 3" :number="3" title="¿Cómo querés que se sienta?" subtitle="El estilo de los colores y las letras.">
-          <div class="aid-fields">
-            <AiSelect v-model="answers.tone" :options="TONES" label="Estilo" placeholder="Elegí un estilo" />
-            <AiSelect v-model="answers.audience" :options="AUDIENCES" label="A quién le hablás" placeholder="¿A quién le hablás?" />
+        <div class="aid-field">
+          <p class="aid-field-title">¿Qué querés lograr?</p>
+          <div class="aid-hints" role="group" aria-label="¿Qué querés lograr?">
+            <button
+              v-for="goal in GOALS"
+              :key="goal.id"
+              type="button"
+              class="aid-hint-chip"
+              :class="{ on: answers.goals.includes(goal.id) }"
+              :aria-pressed="answers.goals.includes(goal.id)"
+              @click="toggleGoal(goal.id)"
+            >
+              <AppIcon :name="goal.icon" :size="15" aria-hidden="true" />
+              <span>{{ goal.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="aid-field">
+          <p class="aid-field-title">A quién le hablás <span class="aid-optional">Opcional</span></p>
+          <div class="aid-hints" role="group" aria-label="A quién le hablás">
+            <button
+              v-for="audience in AUDIENCES"
+              :key="audience.id"
+              type="button"
+              class="aid-hint-chip"
+              :class="{ on: answers.audience === audience.id }"
+              :aria-pressed="answers.audience === audience.id"
+              @click="answers.audience = answers.audience === audience.id ? '' : audience.id"
+            >
+              <AppIcon :name="audience.icon" :size="15" aria-hidden="true" />
+              <span>{{ audience.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="aid-field">
+          <p class="aid-field-title">Cómo se siente <span class="aid-optional">Opcional</span></p>
+          <div class="aid-hints" role="group" aria-label="Cómo se siente">
+            <button
+              v-for="tone in TONES"
+              :key="tone.id"
+              type="button"
+              class="aid-hint-chip"
+              :class="{ on: answers.tone === tone.id }"
+              :aria-pressed="answers.tone === tone.id"
+              @click="answers.tone = answers.tone === tone.id ? '' : tone.id"
+            >
+              <AppIcon :name="tone.icon" :size="15" aria-hidden="true" />
+              <span>{{ tone.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <details class="aid-more">
+          <summary>Más opciones (no hace falta tocarlas)</summary>
+          <div class="aid-fields aid-more-body">
             <div class="aid-field">
-              <p class="aid-field-title">Contanos tu negocio en dos líneas <span class="aid-optional">Opcional</span></p>
-              <textarea
-                v-model="answers.content_hint"
-                class="aid-input"
-                rows="3"
-                maxlength="160"
-                placeholder="Ej.: panadería de barrio, hacemos pan de masa madre y tortas por encargo."
-              ></textarea>
-              <p class="aid-hints-note">Lo usamos para escribir mejor el texto de la web. No inventamos datos: solo lo que nos contás.</p>
-            </div>
-            <div class="aid-field">
-              <p class="aid-field-title">¿Qué te importa más? <span class="aid-optional">Opcional</span></p>
-              <p class="aid-hints-note">Elegí hasta dos. Nos ayuda a que tu estilo no se parezca a otro.</p>
-              <div class="aid-hints" role="group" aria-label="¿Qué te importa más?">
+              <p class="aid-field-title">¿Qué no puede faltar?</p>
+              <div class="aid-hints" role="group" aria-label="¿Qué no puede faltar?">
                 <button
-                  v-for="h in STYLE_HINTS"
-                  :key="h.id"
+                  v-for="item in MUST_HAVE"
+                  :key="item.id"
                   type="button"
                   class="aid-hint-chip"
-                  :class="{ on: answers.style_hint.includes(h.id) }"
-                  :aria-pressed="answers.style_hint.includes(h.id)"
-                  @click="toggleHint(h.id)"
+                  :class="{ on: answers.must_have.includes(item.id) }"
+                  :aria-pressed="answers.must_have.includes(item.id)"
+                  @click="toggleMustHave(item.id)"
                 >
-                  <AppIcon :name="h.icon" :size="15" aria-hidden="true" />
-                  <span>{{ h.label }}</span>
+                  <AppIcon :name="item.icon" :size="15" aria-hidden="true" />
+                  <span>{{ item.label }}</span>
                 </button>
               </div>
             </div>
-          </div>
-        </AiStep>
-
-        <AiStep v-else-if="stepIndex === 4" :number="4" title="Tu marca" subtitle="El color, el modo noche y la portada. Todo se puede cambiar después.">
-          <div class="aid-fields">
             <div class="aid-field">
-              <p class="aid-field-title">¿Querés elegir el color de tu marca?</p>
-              <AiColorField v-model="answers.brand_color" />
+              <p class="aid-field-title">¿Qué te importa más? <span class="aid-optional">Opcional</span></p>
+              <div class="aid-hints" role="group" aria-label="¿Qué te importa más?">
+                <button
+                  v-for="hint in STYLE_HINTS"
+                  :key="hint.id"
+                  type="button"
+                  class="aid-hint-chip"
+                  :class="{ on: answers.style_hint.includes(hint.id) }"
+                  :aria-pressed="answers.style_hint.includes(hint.id)"
+                  @click="toggleHint(hint.id)"
+                >
+                  <AppIcon :name="hint.icon" :size="15" aria-hidden="true" />
+                  <span>{{ hint.label }}</span>
+                </button>
+              </div>
             </div>
             <div class="aid-field">
               <p class="aid-field-title">¿Usamos una foto de portada?</p>
@@ -544,33 +703,31 @@ function closePreview() {
                 <small>Ayudan a que se entienda rápido qué ofrecés.</small>
               </span>
             </label>
-          </div>
-        </AiStep>
-
-        <AiStep v-else :number="5" title="¿Qué no puede faltar?" subtitle="Marcá lo que sí o sí tiene que estar en tu web.">
-          <AiSelect v-model="answers.must_have" :options="MUST_HAVE" multiple label="Lo que no puede faltar" placeholder="Elegí lo importante" />
-          <!-- v6: elementos extra que la IA puede sumar con datos reales. -->
-          <div class="aid-field aid-extras-ask">
-            <p class="aid-field-title">Elementos extra que puedo sumar</p>
             <label class="aid-switch">
               <input v-model="answers.accept_extras" type="checkbox" />
               <span class="aid-switch-text">
-                <strong>Que la IA agregue estos elementos</strong>
-                <small>Bandas, mosaicos de fotos, precios y otros bloques armados con tus datos. Después los quitás o sumás uno por uno.</small>
+                <strong>Que la IA agregue elementos extra</strong>
+                <small>Bandas, mosaicos de fotos y precios armados con tus datos. Después los quitás uno por uno.</small>
               </span>
             </label>
           </div>
-        </AiStep>
+        </details>
+
+        <div class="aid-notask">
+          <p class="aid-notask-title">Lo que no te vamos a preguntar</p>
+          <div class="aid-hints">
+            <span v-for="item in NOT_ASKED" :key="item" class="aid-notask-chip">{{ item }}</span>
+          </div>
+        </div>
 
         <div class="aid-actions">
-          <button v-if="stepIndex > 1" class="btn ghost btn-auto" type="button" @click="back">
-            <AppIcon name="chevron-left" :size="16" /> Atrás
+          <button class="btn btn-auto aid-primary" type="button" @click="generate()">
+            <AppIcon name="sparkles" :size="16" /> Armar mis propuestas
           </button>
-          <button class="btn btn-auto aid-primary" type="button" @click="next">
-            <AppIcon :name="stepIndex === 5 ? 'sparkles' : 'chevron-right'" :size="16" />
-            {{ stepIndex === 5 ? 'Armar mis propuestas' : 'Siguiente' }}
+          <button class="btn ghost btn-auto" type="button" @click="decideForMe">
+            Prefiero que decidas vos
           </button>
-          <button class="btn ghost btn-auto" type="button" @click="decideForMe">Prefiero que decidas vos</button>
+          <span class="aid-micro">2 pasos · menos de 1 minuto</span>
         </div>
       </div>
 
@@ -587,7 +744,7 @@ function closePreview() {
         <p class="aid-loading-text">Estamos armando tu web… puede tardar unos segundos.</p>
       </div>
 
-      <!-- RESULTADOS -->
+      <!-- PANTALLA 2 · TRES IDEAS, NO TRES COLORES -->
       <div v-else-if="phase === 'results'" ref="resultsRef" class="aid-results">
         <p v-if="actionError" class="aid-error" role="alert">{{ actionError }}</p>
 
@@ -610,14 +767,10 @@ function closePreview() {
         <p v-if="varietyNotice" class="aid-variety">
           <AppIcon name="sparkles" :size="14" aria-hidden="true" /> {{ varietyNotice }}
         </p>
-        <p v-if="browsing && published" class="aid-keep-note">
-          <AppIcon name="circle-check" :size="14" aria-hidden="true" />
-          Seguís con <strong>{{ published.label }}</strong> publicado hasta que elijas otro.
-        </p>
 
         <div class="aid-grid">
-          <AiProposalCard
-            v-for="p in visibleProposals"
+          <AiIdeaCard
+            v-for="p in proposals"
             :key="p.id"
             :proposal="p"
             :form="proposalForm(p)"
@@ -631,17 +784,16 @@ function closePreview() {
             :show-map="answers.must_have.includes('map')"
             :name-font="proposalNameFont(p)"
             :busy="busy"
-            :published="published?.id === p.id"
+            :selected="selectedId === p.id"
             :public-url="publicUrl"
-            :autofill-default="autofillDefault"
             @preview="openPreview(p)"
-            @apply="apply"
-            @change-style="anotherStyle"
-            @refresh-images="redoWithPhotos"
+            @choose="choose(p.id)"
           />
         </div>
 
-        <div v-if="!showPublished" class="aid-actions">
+        <AiCompareTable :proposals="proposals" :selected-id="selectedId" @choose="choose" />
+
+        <div class="aid-actions">
           <button class="btn btn-auto" type="button" @click="anotherStyle">
             <AppIcon name="refresh" :size="16" /> Ver otro estilo
           </button>
@@ -650,6 +802,69 @@ function closePreview() {
           </button>
         </div>
       </div>
+
+      <!-- PANTALLA 3 · AJUSTAR SIN EMPEZAR DE CERO -->
+      <div v-else-if="phase === 'adjust' && selectedProposal" class="aid-results">
+        <p v-if="actionError" class="aid-error" role="alert">{{ actionError }}</p>
+        <p class="aid-keep-note">
+          <AppIcon name="check" :size="14" aria-hidden="true" />
+          Elegiste <strong>{{ selectedProposal.thesis?.label || selectedProposal.label }}</strong>. Cambiá solo lo que quieras.
+        </p>
+
+        <div class="aid-adjust">
+          <div class="aid-adjust-preview">
+            <AiProposalCard
+              :proposal="selectedProposal"
+              :form="proposalForm(selectedProposal)"
+              :vars="proposalVars(selectedProposal)"
+              :template="proposalTemplate(selectedProposal)"
+              :shop-name="shopName"
+              :initial="initial"
+              :logo="logo"
+              :cover="proposalCover(selectedProposal)"
+              :advanced="hasDesignAdvanced"
+              :show-map="answers.must_have.includes('map')"
+              :name-font="proposalNameFont(selectedProposal)"
+              :busy="busy"
+              :public-url="publicUrl"
+              :autofill-default="autofillDefault"
+              @preview="openPreview(selectedProposal)"
+              @apply="apply"
+              @change-style="anotherStyle"
+              @refresh-images="redoWithPhotos"
+            />
+          </div>
+          <div class="aid-adjust-controls">
+            <AiAdjustPanel
+              v-model="constraints"
+              :pair-options="PAIR_OPTIONS"
+              :has-logo="Boolean(logo)"
+              :busy="refining"
+              :dirty="adjustDirty"
+              :applied="appliedLabels"
+              @apply="refine()"
+              @reset="resetAdjust"
+            />
+            <button class="btn ghost btn-auto" type="button" @click="backToResults">
+              <AppIcon name="chevron-left" :size="16" /> Volver a las propuestas
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANTALLA 4 · PUBLICADA, REVISADA Y COMPARTIBLE -->
+      <AiPublishedPanel
+        v-else-if="phase === 'published'"
+        :checks="checks"
+        :name="shopName"
+        :description="description"
+        :logo="logo"
+        :public-url="publicUrl"
+        :busy="Boolean(busy)"
+        @navigate="emit('navigate', $event === 'images' ? 'design' : $event)"
+        @revert="revertPublished"
+        @copy="copyLink"
+      />
 
       <!-- ERROR -->
       <div v-else class="card aid-error-box" role="alert">

@@ -72,6 +72,12 @@ from StoreApp.domains.stores.services.ai_design import (
 from StoreApp.domains.stores.services.ai_design import (
     generate as generate_ai_design,
 )
+from StoreApp.domains.stores.services.ai_design import (
+    prefill as prefill_ai_design,
+)
+from StoreApp.domains.stores.services.ai_design import (
+    refine as refine_ai_design,
+)
 from StoreApp.domains.stores.services.ai_design_telemetry import (
     record_event as record_ai_design_event,
 )
@@ -925,6 +931,46 @@ class StoreViewSet(StoreBaseViewSet):
                 status = status.HTTP_403_FORBIDDEN,
             )
         return Response(generate_ai_design(store, request.data), status = status.HTTP_200_OK)
+
+    @action(detail = False, methods = ['get'], url_path = 'ai-design/prefill', throttle_classes = [AiDesignThrottle])
+    def ai_design_prefill(self, request):
+        #Lo que la IA ya sabe del negocio (nombre, ciudad, rubro, conteos):
+        #la entrevista arranca con eso a la vista en vez de preguntarlo.
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_design'):
+            return Response(
+                {'detail': 'El diseño automático está disponible en tu plan actual.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        return Response(prefill_ai_design(store), status = status.HTTP_200_OK)
+
+    @action(detail = False, methods = ['post'], url_path = 'ai-design/refine', throttle_classes = [AiDesignThrottle])
+    def ai_design_refine(self, request):
+        #Ajuste de la propuesta elegida (tipografía/aire/color/portada) sin
+        #rehacer la tanda: recibe semilla + id + constraints, devuelve la
+        #misma propuesta recalculada. El ajuste queda en la caché de la
+        #tanda, así que `apply` publica exactamente lo que se vio.
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_design'):
+            return Response(
+                {'detail': 'El diseño automático está disponible en tu plan actual.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        try:
+            data    =   refine_ai_design(store, request.data)
+        except AiDesignError as error:
+            return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return Response(data, status = status.HTTP_200_OK)
 
     @action(detail = False, methods = ['post'], url_path = 'ai-design/apply', throttle_classes = [AiDesignThrottle])
     def ai_design_apply(self, request):

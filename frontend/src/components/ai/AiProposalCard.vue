@@ -396,7 +396,7 @@ watch(
         <AppIcon name="eye" :size="16" /> Ver en grande
       </button>
       <button class="btn btn-auto aid-primary" type="button" :disabled="Boolean(busy)" @click="applyProposal">
-        <AppIcon name="check" :size="16" /> {{ applying ? 'Publicando…' : 'Establecer este estilo' }}
+        <AppIcon name="check" :size="16" /> {{ applying ? 'Publicando…' : 'Publicar esta web' }}
       </button>
     </footer>
   </article>

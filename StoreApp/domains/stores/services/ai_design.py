@@ -455,6 +455,17 @@ def _answers(store, customization, payload, stats):
         'hide'      :   _selected('hide'),
         'highlight' :   _selected('highlight'),
     }
+    #Ajustes de `refine`: valores fuera del catálogo se ignoran (nunca 400).
+    pair_override   =   str(payload.get('pair_override') or '').strip()
+    if pair_override not in TYPE.TYPE_PAIRS:
+        pair_override   =   ''
+    density_override =   str(payload.get('density_override') or '').strip()
+    if density_override not in ('compact', 'comfortable', 'spacious'):
+        density_override    =   ''
+    color_override  =   _norm_hex(payload.get('color_override')) or ''
+    cover_override  =   payload.get('cover_override')
+    if cover_override not in ('foto', 'logo', 'auto'):
+        cover_override  =   ''
     return {
         'rubro'         :   rubro,
         'tone'          :   tone,
@@ -475,6 +486,13 @@ def _answers(store, customization, payload, stats):
         'extras'        :   extras[:R.AI_ELEMENT_MAX],
         'content_hint'  :   str(payload.get('content_hint') or '').strip()[:160],
         'selection'     :   selection,
+        #Ajustes finos de la propuesta elegida (contrato 2.4 `refine`): pisan
+        #tipografía, aire, color y portada SIN cambiar la tanda. Vacío = el
+        #motor decide, así que una propuesta sin refinar es la original.
+        'pair_override' :   pair_override,
+        'density_override': density_override,
+        'color_override':   color_override,
+        'cover_override':   cover_override,
     }
 
 
@@ -484,8 +502,11 @@ def _base_seed(store, answers):
     raw     =   json.dumps(
         #`must_have_asked` es bookkeeping de la entrevista (para notes): no
         #compone, así que no entra en la semilla. Cambiarlo no debe cambiar
-        #la propuesta de una tienda que no pidió nada.
-        {'store': store.pk, 'answers': {key: value for key, value in answers.items() if key != 'must_have_asked'}, 'engine': ENGINE_VERSION},
+        #la propuesta de una tienda que no pidió nada. Los `*_override` de
+        #`refine` tampoco: son un ajuste de la propuesta ya elegida, no otra
+        #tanda (si entraran, afinar el color cambiaría la composición).
+        {'store': store.pk, 'answers': {key: value for key, value in answers.items()
+                                        if key != 'must_have_asked' and not key.endswith('_override')}, 'engine': ENGINE_VERSION},
         sort_keys = True, ensure_ascii = False,
     )
     return int(hashlib.sha256(raw.encode('utf-8')).hexdigest()[:12], 16)
@@ -1825,6 +1846,8 @@ def _theme(skin, pair, answers, rng, shift, template = None, store = None):
     roles del par elegido. El tono ajusta energía (curvas, aire, movimiento),
     no la identidad.
     """
+    #`refine`: la tipografía y el aire elegidos a mano mandan sobre la piel.
+    pair    =   answers.get('pair_override') or pair
     theme   =   {
         'palette'       :   copy.deepcopy(skin['palette']),
         'containers'    :   copy.deepcopy(skin['containers']),
@@ -1842,6 +1865,9 @@ def _theme(skin, pair, answers, rng, shift, template = None, store = None):
         theme['layout']['density']  =   'compact'
     elif answers['tone'] == 'calido':
         theme['layout']['gutter']   =   'lg'
+    if answers.get('density_override'):
+        theme['layout']['density']  =   answers['density_override']
+        theme['containers']['density']  =   answers['density_override']
     #Tipografía por rol: el par fija las familias, la piel y el tono los
     #pesos/tamaños. Nunca dos familias distintas para roles de cuerpo.
     roles       =   TYPE.roles_for(pair, answers['tone'], skin['family'])
@@ -1860,10 +1886,11 @@ def _theme(skin, pair, answers, rng, shift, template = None, store = None):
         'letterSpacing' :   TYPE.tracking_css(roles['h1']['tracking']),
         'roles'         :   roles,
     }
-    if answers.get('brand_color'):
+    color   =   answers.get('color_override') or answers.get('brand_color')
+    if color:
         #El color del dueño manda: la paleta se deriva de él y la propuesta
         #lo declara como elección del usuario.
-        theme['palette']    =   _palette_from_brand(answers['brand_color'], theme['palette'])
+        theme['palette']    =   _palette_from_brand(color, theme['palette'])
         choice              =   {'source': 'user', 'accent': theme['palette']['accent']}
     else:
         accents =   skin['accents'] or (theme['palette']['accent'],)
@@ -1944,7 +1971,7 @@ def _cover_for(answers, facts):
     """Logo o foto de portada: el pedido explícito manda; en 'auto' el
     logo reemplaza a la portada solo si no hay foto cargada."""
     has_logo    =   bool(facts.get('logo'))
-    choice      =   answers.get('cover_choice')
+    choice      =   answers.get('cover_override') or answers.get('cover_choice')
     if choice == 'logo' and has_logo:
         return {'mode': 'logo', 'reason': 'Tu logo ya es tu mejor portada: la web abre con la marca, sin foto.'}
     if choice == 'auto' and has_logo and not facts.get('cover'):
@@ -2048,6 +2075,52 @@ def _block_label(block_id):
     return spec.get('label') or block_id
 
 
+#=========================================
+# TESIS DE LA PROPUESTA (qué promete cada idea)
+#=========================================
+#Cada propuesta defiende UNA tesis, no un color: la tesis sale del bloque que
+#abre la landing (lo que el motor puso primero es lo que la web promete), no
+#de una lista fija por índice. Si la composición no dice nada, manda el
+#objetivo de la entrevista.
+THESES                      =   {
+    'vender_online':        {'id': 'vender',    'label': 'Para vender',
+                             'line': 'Catálogo y compra arriba: menos scroll hasta el producto.'},
+    'mostrar_servicios':    {'id': 'servicios', 'label': 'Para que entiendan qué hacés',
+                             'line': 'Servicios y pasos antes que la prueba social.'},
+    'conseguir_consultas':  {'id': 'consultas', 'label': 'Para que te escriban',
+                             'line': 'Cada bloque empuja al contacto.'},
+    'dar_confianza':        {'id': 'confianza', 'label': 'Para dar confianza',
+                             'line': 'Historia, cifras y equipo como argumento.'},
+    'mostrar_trabajos':     {'id': 'trabajos',  'label': 'Para mostrar tus trabajos',
+                             'line': 'Las fotos van antes que el texto.'},
+}
+_THESIS_BY_BLOCK            =   {
+    'featured': 'vender_online', 'offers': 'vender_online', 'categories': 'vender_online',
+    'highlights': 'vender_online', 'aipricing': 'vender_online', 'compare': 'vender_online',
+    'services': 'mostrar_servicios', 'steps': 'mostrar_servicios',
+    'gallery': 'mostrar_trabajos', 'aimosaic': 'mostrar_trabajos',
+    'about': 'dar_confianza', 'stats': 'dar_confianza', 'team': 'dar_confianza',
+    'timeline': 'dar_confianza', 'testimonials': 'dar_confianza', 'aiquote': 'dar_confianza',
+    'faq': 'conseguir_consultas', 'benefits': 'conseguir_consultas',
+}
+
+
+def _thesis(layout, answers, pattern = None):
+    """Tesis de la propuesta: qué promete la composición, en tres palabras."""
+    landing =   (layout.get('landing') or {}).get('blocks') or []
+    opened  =   [block['id'] for block in landing if block.get('enabled') and block['id'] != 'hero']
+    goal    =   ''
+    for block in opened[:4]:
+        goal    =   _THESIS_BY_BLOCK.get(block, '')
+        if goal:
+            break
+    if not goal:
+        goal    =   ((pattern or {}).get('goals') or answers.get('goals') or ('dar_confianza',))[0]
+    thesis  =   dict(THESES.get(goal) or THESES['dar_confianza'])
+    thesis['goal']  =   goal
+    return thesis
+
+
 def _notes(facts, stats, answers, template, has_advanced, layout = None):
     notes       =   []
     if stats['products']:
@@ -2075,6 +2148,40 @@ def _notes(facts, stats, answers, template, has_advanced, layout = None):
         if pending:
             notes.append('Pediste ' + ', '.join(pending) + ': falta el dato, así que esa sección queda apagada hasta que lo cargues.')
     return notes[:4]
+
+
+#=========================================
+# LISTA DE CHEQUEO DE LA WEB PUBLICADA (3 bien + las que faltan)
+#=========================================
+def _checks(facts, stats, customization):
+    """
+    Lo que la web publicada tiene y lo que le falta, cada cosa con su
+    `action` para resolverla desde el panel. Nunca promete algo que la web
+    no hace: cada ítem se apoya en un dato real del perfil o del catálogo.
+    """
+    photos  =   stats['gallery'] + stats['images']
+    checks  =   [
+        ('contact',     bool(facts.get('contact')),
+         'Hay un botón para escribirte',
+         'Cargá tu WhatsApp o tu email: sin eso el cierre queda sin acción.', 'company'),
+        ('cover',       bool(facts.get('cover') or stats['gallery']),
+         'La portada tiene una foto propia',
+         'Subí una foto horizontal del local o de tu trabajo.', 'design'),
+        ('description', bool((customization.description or customization.about_text or '').strip()),
+         'El link muestra qué hacés',
+         'La descripción del perfil es lo que se lee al compartir la web.', 'company'),
+        ('photos',      photos >= 3,
+         f'{photos} de 3 fotos para la galería' if photos else 'Faltan las fotos de la galería',
+         'Tres fotos alcanzan para que la web no se vea vacía.', 'design'),
+        ('hours',       bool(stats['hours']),
+         'Los horarios están cargados',
+         'La sección de contacto los muestra y responde antes de la consulta.', 'company'),
+        ('products',    stats['products'] > 0,
+         'El catálogo tiene productos',
+         'Sin productos, la vitrina y los precios quedan apagados.', 'catalog'),
+    ]
+    return [{'key': key, 'ok': ok, 'label': label, 'hint': hint, 'action': action}
+            for key, ok, label, hint, action in checks]
 
 
 #=========================================
@@ -2163,9 +2270,17 @@ def _look(skin, pair, theme, layout, template):
     return {
         'style_label'   :   SKIN.STYLE_LABELS.get(skin['style'], ''),
         'skin_label'    :   skin['label'],
-        'fonts'         :   {'heading': heading, 'body': pair_data['body'], 'pair': pair},
+        'fonts'         :   {'heading': heading, 'body': pair_data['body'], 'pair': pair,
+                             'label': pair_data.get('label') or ''},
         'accent'        :   palette['accent'],
         'mode'          :   'dark' if _luminance(palette['bg']) < 0.4 else 'light',
+        #Decisiones en castellano para la tarjeta y la tabla comparativa:
+        #la UI no traduce enums del motor (y dos propuestas se comparan por
+        #lo que de verdad cambia, no por mirar miniaturas).
+        'hero'          :   _HERO_LABELS.get(hero_block.get('variant') or '', ''),
+        'grid'          :   _GRID_LABELS.get(layout_cfg.get('grid') or '', ''),
+        'density'       :   theme['layout'].get('density') or '',
+        'density_label' :   _DENSITY_LABELS.get(theme['layout'].get('density') or '', ''),
         'structure'     :   {'landing': [block['id'] for block in hero if block.get('enabled')]},
         'changed'       :   changed[:5],
     }
@@ -2181,6 +2296,7 @@ _GRID_LABELS    =   {
     '12': 'en 12 columnas', 'asym': 'asimétrica', 'split': 'en dos bloques',
     'bento': 'tipo bento', 'editorial': 'editorial',
 }
+_DENSITY_LABELS =   {'compact': 'compacta', 'comfortable': 'cómoda', 'spacious': 'con aire'}
 
 
 def _score(theme, clean_theme, has_advanced, facts = None, stats = None, answers = None, layout = None, text = None):
@@ -2463,6 +2579,9 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
                 if block['id'] == 'hero':
                     block['variant']    =   'logo'
         theme, choice   =   _theme(skin, pair, answers, rng, shift + attempt, template, store)
+        #Par efectivo: el `refine` puede haber pisado el de la piel, y la
+        #tarjeta tiene que nombrar la tipografía que se publica.
+        pair    =   answers.get('pair_override') or pair
         if not (theme.get('style') or {}).get('id'):
             #Ningún preset del catálogo entra en el plan: no se manda `style`
             #ni a medias (el sanitizador rechazaría la sección).
@@ -2494,6 +2613,9 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'id'            :   f'p{index + 1}',
             'label'         :   (pattern['label'] if pattern else R.GOAL_RECIPES[answers['goals'][0]]['labels'][index % 3])[:32],
             'why'           :   _why(answers, template, index, pattern),
+            #Tesis de la propuesta (qué promete): la UI la usa como etiqueta
+            #de la tarjeta y como fila de la tabla comparativa.
+            'thesis'        :   _thesis(layout, answers, pattern),
             'template'      :   template,
             'style_source'  :   style['source'],
             'skin'          :   {'id': skin['id'], 'family': skin['family'], 'label': skin['label']},
@@ -2558,6 +2680,9 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             for key in MISSING_ORDER if not facts.get(key)
         ][:6],
         'proposals' :   proposals,
+        #Chequeo de la web publicada (pantalla "Publicada"): qué está bien y
+        #qué falta, con la sección del panel que lo resuelve.
+        'checks'    :   _checks(facts, stats, customization),
     }
 
 
@@ -2596,6 +2721,105 @@ def generate(store, payload):
 
 def _cache_key(store, seed):
     return f'ai_design:{store.pk}:{int(seed)}'
+
+
+#=========================================
+# PREFILL: LO QUE LA IA YA SABE (contrato 2.4)
+#=========================================
+def prefill(store):
+    """
+    Lo que el motor puede deducir SIN preguntar: nombre, ciudad, rubro y
+    objetivos probables, más los conteos reales de catálogo y fotos. La
+    entrevista arranca con esto a la vista ("esto ya lo sabemos de vos") en
+    vez de seis pantallas de preguntas.
+    """
+    customization   =   StoreCustomization.objects.get_or_create(store = store)[0]
+    facts, stats    =   _facts(store, customization)
+    profile         =   store.user
+    city            =   getattr(getattr(profile, 'city', None), 'name_city', '') or ''
+    province        =   getattr(getattr(profile, 'province', None), 'name_province', '') or ''
+    photos          =   stats['gallery'] + stats['carousel'] + stats['images']
+    return {
+        'name'      :   (customization.display_name or getattr(profile, 'business_name', '') or store.slug or '')[:80],
+        'slug'      :   store.slug,
+        'city'      :   city[:80],
+        'province'  :   province[:80],
+        'rubro'     :   _guess_rubro(store, customization, stats),
+        'goals'     :   _guess_goals(customization, stats),
+        'counts'    :   {
+            'products'      :   stats['products'],
+            'photos'        :   photos,
+            'categories'    :   stats['categories'],
+        },
+        'missing'   :   [
+            {
+                'code'      :   key,
+                'label'     :   MISSING_LABELS.get(key, key),
+                'hint'      :   MISSING_HINTS.get(key, ''),
+                'action'    :   MISSING_ACTIONS.get(key, 'empresa'),
+            }
+            for key in MISSING_ORDER if not facts.get(key)
+        ][:4],
+        #La lista de chequeo también viaja acá: la pantalla "Publicada" la
+        #refresca después de publicar sin volver a generar propuestas.
+        'checks'    :   _checks(facts, stats, customization),
+    }
+
+
+#=========================================
+# REFINE: AJUSTAR LA PROPUESTA ELEGIDA SIN REHACER LA TANDA (contrato 2.4)
+#=========================================
+def refine(store, payload):
+    """
+    Cambia SOLO lo pedido (tipografía, aire, color, portada) sobre la
+    propuesta elegida y devuelve la misma propuesta recalculada. La tanda
+    sale de la caché del `generate`: sin ella no hay nada que ajustar. Los
+    ajustes se guardan con la tanda, así que `apply` publica lo ajustado.
+    """
+    payload     =   payload if isinstance(payload, dict) else {}
+    seed        =   _request_seed(payload)
+    proposal_id =   str(payload.get('proposal_id') or '').strip()
+    base        =   cache.get(_cache_key(store, seed))
+    if not isinstance(base, dict):
+        raise AiDesignError('La tanda venció. Volvé a generar las propuestas.')
+    constraints =   payload.get('constraints') if isinstance(payload.get('constraints'), dict) else {}
+    #Se parte de la entrevista SIN ajustes previos: la UI manda el estado
+    #completo de los controles, así que afinar dos veces no acumula.
+    answers     =   {key: value for key, value in base.items() if not key.endswith('_override')}
+    applied     =   []
+    pair        =   str(constraints.get('typography') or '').strip()
+    if pair in TYPE.TYPE_PAIRS:
+        answers['pair_override']    =   pair
+        applied.append('Tipografía')
+    density     =   str(constraints.get('air') or '').strip()
+    if density in ('compact', 'comfortable', 'spacious'):
+        answers['density_override'] =   density
+        applied.append('Aire')
+    color       =   _norm_hex(constraints.get('color'))
+    if color:
+        answers['color_override']   =   color
+        applied.append('Color')
+    cover       =   constraints.get('cover')
+    if cover in ('foto', 'logo', 'auto'):
+        answers['cover_override']   =   cover
+        applied.append('Portada')
+    customization   =   StoreCustomization.objects.get_or_create(store = store)[0]
+    facts, stats    =   _facts(store, customization)
+    allowed         =   _engine_templates(store.user)
+    has_advanced    =   profile_has_benefit(store.user, 'has_design_advanced')
+    has_ai          =   profile_has_benefit(store.user, 'has_ai_design')
+    result          =   _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai)
+    proposal        =   next((item for item in result['proposals'] if item['id'] == proposal_id), None)
+    if proposal is None:
+        raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
+    #`apply` recalcula con esta caché: el ajuste queda en lo que se publica.
+    cache.set(_cache_key(store, seed), answers, CACHE_TTL)
+    return {
+        'engine'    :   result['engine'],
+        'seed'      :   seed,
+        'proposal'  :   proposal,
+        'applied'   :   applied,
+    }
 
 
 def _apply_titles(layout, rubro):
