@@ -172,7 +172,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model                   =   StoreCustomization
         fields                  =   [
-            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'theme_toggle', 'accent', 'template', 'template_draft',
+            'display_name', 'name_font', 'name_font_size', 'headline', 'description', 'theme', 'theme_toggle', 'icon_style', 'accent', 'template', 'template_draft',
             'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y',
             'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
             'services', 'services_title', 'show_services', 'stats', 'show_stats',
@@ -192,6 +192,15 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'logo', 'cover', 'logo_size', 'cover_size', 'carousel', 'gallery', 'decor', 'updated_at',
         ]
         read_only_fields        =   ['updated_at', 'logo_size', 'cover_size']
+    def validate_icon_style(self, value):
+        #Set de iconos del menú: slug del catálogo (vacío = hereda el diseño).
+        from StoreApp.domains.design.models import DesignIconStyle
+        slug                    =   str(value or '').strip().lower()
+        if not slug:
+            return ''
+        if not DesignIconStyle.objects.filter(slug = slug, is_active = True).exists():
+            raise serializers.ValidationError('Ese estilo de iconos no existe.')
+        return slug
     def get_logo(self, customization):
         return object_url(customization.logo_key)
     def get_cover(self, customization):

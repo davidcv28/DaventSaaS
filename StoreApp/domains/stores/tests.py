@@ -465,15 +465,32 @@ class StoreTemplateGatingTests(TestCase):
         client, store   =   self._client('has_design_plus')
         StoreCustomization.objects.create(store = store)
         public          =   APIClient()
+        #El modo noche es universal: una tienda nueva ya arranca con el
+        #interruptor habilitado.
         before          =   public.get(f'{STORES_URL}public/mi-tienda/')
-        self.assertFalse(before.data['customization']['theme_toggle'])
+        self.assertTrue(before.data['customization']['theme_toggle'])
         stamp_before    =   public_cache_stamp(store.pk)
-        response        =   client.patch(f'{STORES_URL}customization/', {'theme_toggle': True}, format = 'json')
+        response        =   client.patch(f'{STORES_URL}customization/', {'theme_toggle': False}, format = 'json')
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.data['customization']['theme_toggle'])
+        self.assertFalse(response.data['customization']['theme_toggle'])
         self.assertNotEqual(public_cache_stamp(store.pk), stamp_before)
         after           =   public.get(f'{STORES_URL}public/mi-tienda/')
-        self.assertTrue(after.data['customization']['theme_toggle'])
+        self.assertFalse(after.data['customization']['theme_toggle'])
+
+    def test_icon_style_is_a_catalog_choice(self):
+        #El set de iconos del menú se elige del catálogo; un slug inexistente
+        #se rechaza y vacío significa heredar el del diseño.
+        from StoreApp.domains.design.models import DesignIconStyle
+        DesignIconStyle.objects.create(slug = 'lineal', nombre = 'Lineal', is_default = True)
+        client, _       =   self._client('has_design_plus')
+        ok              =   client.patch(f'{STORES_URL}customization/', {'icon_style': 'lineal'}, format = 'json')
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(ok.data['customization']['icon_style'], 'lineal')
+        bad             =   client.patch(f'{STORES_URL}customization/', {'icon_style': 'nope'}, format = 'json')
+        self.assertEqual(bad.status_code, 400)
+        blank           =   client.patch(f'{STORES_URL}customization/', {'icon_style': ''}, format = 'json')
+        self.assertEqual(blank.status_code, 200)
+        self.assertEqual(blank.data['customization']['icon_style'], '')
 
     def test_downgraded_template_is_not_persisted(self):
         #Con el plan vigente guarda 'boutique'; si el beneficio se pierde,

@@ -1,2 +1,2 @@
 from .catalog import DesignCatalogView
-from .viewset import DesignPatternViewSet, DesignStyleViewSet
+from .viewset import DesignIconStyleViewSet, DesignPatternViewSet, DesignStyleViewSet

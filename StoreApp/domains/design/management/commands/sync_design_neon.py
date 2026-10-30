@@ -5,7 +5,7 @@ from decouple import config
 from django.core.management import BaseCommand, CommandError
 from psycopg2.extras import Json
 
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
 
 """
 
@@ -21,15 +21,19 @@ Uso:
 """
 PATTERN_COLS    =   [
     'slug', 'nombre', 'categoria', 'descripcion', 'tier', 'template', 'layout',
-    'html', 'css', 'js', 'tokens', 'tags', 'preview', 'is_default', 'is_active',
-    'position', 'created_at', 'updated_at',
+    'html', 'css', 'js', 'variables', 'supports_dark_mode', 'tokens', 'tags',
+    'preview', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
 ]
 STYLE_COLS      =   [
     'slug', 'nombre', 'categoria', 'descripcion', 'tier', 'template', 'layout',
-    'layout_spec', 'page_theme', 'tokens', 'tags', 'is_default', 'is_active',
-    'position', 'created_at', 'updated_at',
+    'layout_spec', 'page_theme', 'tokens', 'effects', 'tags', 'is_default',
+    'is_active', 'position', 'created_at', 'updated_at',
 ]
-JSON_COLS       =   {'layout', 'layout_spec', 'tokens'}
+ICON_COLS       =   [
+    'slug', 'nombre', 'descripcion', 'categoria', 'icons', 'stroke_width',
+    'preview', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
+]
+JSON_COLS       =   {'layout', 'layout_spec', 'tokens', 'effects', 'variables', 'icons'}
 IDENT_RE        =   re.compile(r'^[a-z_][a-z0-9_]*$')
 
 #=========================================
@@ -48,7 +52,7 @@ class Command(BaseCommand):
         if not slugs and not options['all']:
             raise CommandError('Indicá --slug <slug> (repetible) o --all.')
 
-        queryset    =   DesignPattern.objects.select_related('style')
+        queryset    =   DesignPattern.objects.select_related('style', 'icon_style')
         if slugs:
             queryset = queryset.filter(slug__in = slugs)
             missing  = set(slugs) - set(queryset.values_list('slug', flat = True))
@@ -62,7 +66,13 @@ class Command(BaseCommand):
             pattern.style for pattern in patterns if pattern.style_id
         ]
 
+        icon_styles = list(DesignIconStyle.objects.all()) if options['all'] else [
+            pattern.icon_style for pattern in patterns if pattern.icon_style_id
+        ]
+
         if options['dry_run']:
+            for icon_style in icon_styles:
+                self.stdout.write(f'[dry-run] icon-style {icon_style.slug}')
             for style in styles:
                 self.stdout.write(f'[dry-run] style {style.slug} - template={style.template}')
             for pattern in patterns:
@@ -77,12 +87,19 @@ class Command(BaseCommand):
         connection  =   psycopg2.connect(url)
         try:
             with connection, connection.cursor() as cursor:
+                for icon_style in icon_styles:
+                    self._upsert(cursor, 'design_designiconstyle', ICON_COLS, self._values(icon_style, ICON_COLS))
+                    self.stdout.write(self.style.SUCCESS(f'icon-style {icon_style.slug} -> Neon'))
                 for style in styles:
                     self._style(cursor, style)
                     self.stdout.write(self.style.SUCCESS(f'style {style.slug} -> Neon'))
                 for pattern in patterns:
                     style_id = self._style(cursor, pattern.style) if pattern.style_id else None
-                    self._pattern(cursor, pattern, style_id)
+                    icon_id = self._upsert(
+                        cursor, 'design_designiconstyle', ICON_COLS,
+                        self._values(pattern.icon_style, ICON_COLS),
+                    ) if pattern.icon_style_id else None
+                    self._pattern(cursor, pattern, style_id, icon_id)
                     self.stdout.write(self.style.SUCCESS(f'pattern {pattern.slug} -> Neon'))
         finally:
             connection.close()
@@ -93,10 +110,11 @@ class Command(BaseCommand):
         return self._upsert(cursor, 'design_designstyle', STYLE_COLS, self._values(style, STYLE_COLS))
 
     #PATRÓN
-    def _pattern(self, cursor, pattern, style_id):
+    def _pattern(self, cursor, pattern, style_id, icon_id):
         values  =   self._values(pattern, PATTERN_COLS)
         values.append(style_id)
-        return self._upsert(cursor, 'design_designpattern', [*PATTERN_COLS, 'style_id'], values)
+        values.append(icon_id)
+        return self._upsert(cursor, 'design_designpattern', [*PATTERN_COLS, 'style_id', 'icon_style_id'], values)
 
     def _values(self, instance, columns):
         return [

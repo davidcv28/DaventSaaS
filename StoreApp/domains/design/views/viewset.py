@@ -1,8 +1,9 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
 from StoreApp.domains.design.serializers import (
+    DesignIconStyleSerializer,
     DesignPatternListSerializer,
     DesignPatternSerializer,
     DesignStyleListSerializer,
@@ -43,3 +44,19 @@ class DesignPatternViewSet(DesignCatalogViewSet):
         if not pattern:
             return Response({'detail': 'No hay patrón predeterminado.'}, status = 404)
         return Response(DesignPatternSerializer(pattern).data)
+
+#=========================================
+# DESIGN ICON STYLE VIEWSET (/api/design/icon-styles/)
+#=========================================
+class DesignIconStyleViewSet(DesignCatalogViewSet):
+    queryset            =   DesignIconStyle.objects.all()
+    list_serializer     =   DesignIconStyleSerializer
+    write_serializer    =   DesignIconStyleSerializer
+
+    #SET BASE (el que hereda un diseno sin set propio)
+    @action(detail = False, methods = ['get'], url_path = 'default')
+    def default(self, request):
+        icon_style = self.get_queryset().filter(is_default = True, is_active = True).first()
+        if not icon_style:
+            return Response({'detail': 'No hay estilo de iconos predeterminado.'}, status = 404)
+        return Response(DesignIconStyleSerializer(icon_style).data)

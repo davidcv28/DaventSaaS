@@ -207,7 +207,10 @@ class StoreCustomization(models.Model):
     theme                       =   models.CharField(max_length = 10, choices = THEME_CHOICES, default = THEME_LIGHT, verbose_name = 'Tema')
     #Modo noche: con theme_toggle=True la web pública muestra un interruptor
     #claro/oscuro y arranca en `theme` (que sigue siendo el default).
-    theme_toggle                =   models.BooleanField(default = False, verbose_name = 'Modo noche en la web')
+    theme_toggle                =   models.BooleanField(default = True, verbose_name = 'Modo noche en la web')
+    #Set de iconos de los controles de menú (slug de DesignIconStyle). Vacío =
+    #hereda el del diseño; el usuario puede cambiarlo sin tocar el diseño.
+    icon_style                  =   models.CharField(max_length = 80, blank = True, default = '', verbose_name = 'Estilo de iconos')
     template                    =   models.CharField(max_length = 12, choices = TEMPLATE_CHOICES, default = TEMPLATE_DEFAULT, verbose_name = 'Diseño de la web')
     accent                      =   models.CharField(max_length = 10, choices = ACCENT_CHOICES, default = ACCENT_INDIGO, verbose_name = 'Color de acento')
     #Identidad visual Premium (has_design_advanced; el viewset descarta estos

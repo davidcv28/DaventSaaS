@@ -2,8 +2,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
 from StoreApp.domains.design.serializers import (
+    DesignIconStyleSerializer,
     DesignPatternListSerializer,
     DesignPatternSerializer,
     DesignStyleListSerializer,
@@ -28,6 +29,9 @@ def default_pattern():
 def default_style():
     return DesignStyle.objects.filter(is_default = True, is_active = True).first()
 
+def default_icon_style():
+    return DesignIconStyle.objects.filter(is_default = True, is_active = True).first()
+
 #=========================================
 # DESIGN CATALOG VIEW
 #=========================================
@@ -46,6 +50,11 @@ class DesignCatalogView(APIView):
             'styles':   DesignStyleListSerializer(
                 DesignStyle.objects.filter(is_active = True), many = True
             ).data,
+            'icon_styles': DesignIconStyleSerializer(
+                DesignIconStyle.objects.filter(is_active = True), many = True
+            ).data,
+            'default_icon_style': DesignIconStyleSerializer(default_icon_style()).data
+                if default_icon_style() else None,
         })
         # El catálogo cambia cuando el staff edita la base: nunca se sirve
         # desde caché del navegador/proxy.
