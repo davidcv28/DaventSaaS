@@ -786,7 +786,9 @@ onBeforeUnmount(dropLocalLogo)
 
 .dl-steps { display: grid; gap: 10px; min-width: 0; }
 .dl-step { position: relative; border: 1px solid var(--line); border-radius: 14px; background: var(--card); min-width: 0; transition: border-color .15s, background .15s; }
-.dl-step.open { border-color: color-mix(in srgb, var(--brand-500) 45%, var(--line)); box-shadow: var(--shadow-sm); background: var(--card); }
+/* El paso abierto se marca con borde + anillo interior, sin sombra: la
+   sombra agrandaba visualmente la tarjeta y desalineaba la columna. */
+.dl-step.open { border-color: color-mix(in srgb, var(--brand-500) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 35%, transparent); background: var(--card); }
 .dl-step.open::before {
   content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px;
   border-radius: 0 3px 3px 0; background: var(--brand-500);
