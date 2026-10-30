@@ -14,7 +14,7 @@
 |---|---|---|---|---|
 | `raiz` | base | generalista / retail | manrope + bricolage-grotesque | `#0F766E` |
 | `alimentos` | base | gastronomía / almacén | dm-sans + dm-serif-display | `#C8321D` |
-| `trama` | plus | indumentaria / moda | archivo + anton | `#E4472B` |
+| `trama` | plus | indumentaria / moda | inter-tight + inter | `#1F3A5F` |
 | `boutique` | plus | moda premium / deco / joyería | jost + cormorant-garamond | `#6B2D4F` |
 | `circuito` | advanced | tecnología / electrónica | space-grotesk + jetbrains-mono | `#22D3EE` |
 | `seguridad` | advanced | seguridad / bomberos / industrial | barlow + barlow-condensed | `#C8200E` |

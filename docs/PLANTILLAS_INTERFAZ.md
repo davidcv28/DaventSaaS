@@ -10,7 +10,7 @@
 |---|---|---|---|---|---|
 | `raiz` | Raíz | general / retail / servicios | `base` | `has_customization` | `#0F766E` |
 | `alimentos` | Alimentos | gastronomía / almacén | `base` | `has_customization` | `#C8321D` |
-| `trama` | Trama | indumentaria / moda | `plus` | `has_design_plus` | `#E4472B` |
+| `trama` | Trama | indumentaria / moda | `plus` | `has_design_plus` | `#1F3A5F` |
 | `boutique` | Boutique | moda premium / deco | `plus` | `has_design_plus` | `#6B2D4F` |
 | `circuito` | Circuito | tecnología / electrónica | `advanced` | `has_design_advanced` | `#22D3EE` |
 | `seguridad` | Seguridad | seguridad / bomberos / industrial | `advanced` | `has_design_advanced` | `#C8200E` |

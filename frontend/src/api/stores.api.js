@@ -699,7 +699,7 @@ export const STORE_THEMES = {
 export const STORE_TEMPLATES = {
   raiz:     { label: 'Raíz',     rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
   alimentos:{ label: 'Alimentos', rubro: 'alimentos',   tier: 'base',     defaultAccent: '#C8321D', desc: 'Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».' },
-  trama:    { label: 'Trama',    rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#E4472B', desc: 'Editorial de moda: blanco y tinta, titulares condensados, marquee de acento y lookbook.' },
+  trama:    { label: 'Trama',    rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.' },
   boutique: { label: 'Boutique', rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
   circuito: { label: 'Circuito', rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
   seguridad:{ label: 'Seguridad',rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
@@ -813,8 +813,9 @@ export const STORE_FONTS = {
   'libre-baskerville':{ label: 'Libre Baskerville', family: "'Libre Baskerville', Georgia, serif",  google: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400' },
   'outfit':           { label: 'Outfit',           family: "'Outfit', system-ui, sans-serif",      google: 'Outfit:wght@300..900' },
   'plus-jakarta-sans':{ label: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', system-ui, sans-serif", google: 'Plus+Jakarta+Sans:wght@300..800' },
-  // Fuentes propias de los diseños nuevos (boutique/alimentos/seguridad):
+  // Fuentes propias de los diseños nuevos (trama/boutique/alimentos/seguridad):
   // el layout las carga con ensureStoreFont desde templateFonts(id).
+  'inter-tight':      { label: 'Inter Tight',      family: "'Inter Tight', sans-serif",            google: 'Inter+Tight:wght@500;600;700' },
   'jost':             { label: 'Jost',             family: "'Jost', system-ui, sans-serif",        google: 'Jost:wght@400..700' },
   'barlow':           { label: 'Barlow',           family: "'Barlow', system-ui, sans-serif",      google: 'Barlow:wght@400;500;600;700;800' },
   'barlow-condensed': { label: 'Barlow Condensed', family: "'Barlow Condensed', 'Arial Narrow', sans-serif", google: 'Barlow+Condensed:wght@400;500;600;700;800' }
