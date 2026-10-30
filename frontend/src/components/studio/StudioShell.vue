@@ -584,7 +584,7 @@ function onMessage(e) {
 }
 onMounted(() => {
   window.addEventListener('message', onMessage)
-  loadDesignCatalog().then(() => {
+  loadDesignCatalog(true).then(() => {
     // Tienda sin layout propio: el ensayo arranca con el layout del patrón
     // de diseño de la base (las plantillas ya no traen secciones por defecto).
     if (savedLayout.value || draft.layout) return
