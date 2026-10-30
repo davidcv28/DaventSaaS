@@ -72,7 +72,6 @@ import LayoutEditor from '../components/LayoutEditor.vue'
 import DesignPreview from '../components/design/DesignPreview.vue'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import AiDesignView from './design/AiDesignView.vue'
-import AiChatView from './design/AiChatView.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 
 const router = useRouter()
@@ -1280,15 +1279,14 @@ const designTab = ref('look')
 const designTabs = [
   { id: 'look', label: 'Diseño', icon: 'palette' },
   { id: 'assisted', label: 'Diseño asistido', icon: 'sparkles', benefit: 'has_ai_design' },
-  { id: 'studio', label: 'Studio', icon: 'layout-panel-left', benefit: 'has_design_advanced' },
-  { id: 'ai', label: 'Diseñar con IA', icon: 'bot', benefit: 'has_ai_chat' }
+  { id: 'studio', label: 'Studio', icon: 'layout-panel-left', benefit: 'has_design_advanced' }
 ]
 const designContentTabs = [
   { id: 'content', label: 'Mis datos', icon: 'pencil' },
   { id: 'images', label: 'Fotos', icon: 'images' },
   { id: 'sections', label: 'Qué mostrar', icon: 'layout-grid' }
 ]
-const DESIGN_TAB_LOCKS = { assisted: 'design_assisted', studio: 'design_studio', ai: 'design_ai' }
+const DESIGN_TAB_LOCKS = { assisted: 'design_assisted', studio: 'design_studio' }
 function designTabLocked(tab) {
   return Boolean(tab.benefit) && !plan.value?.benefits?.[tab.benefit]
 }
@@ -4101,9 +4099,6 @@ async function changePassword() {
         </template>
         <div v-else-if="designTab === 'assisted'" class="dsg-ai">
           <AiDesignView :plan="plan" @applied="onAiApplied" @navigate="onDesignNav" />
-        </div>
-        <div v-else-if="designTab === 'ai'" class="dsg-ai">
-          <AiChatView :plan="plan" @applied="onAiApplied" />
         </div>
         <div v-else class="dsg-layout">
           <div class="dsg-main">

@@ -114,6 +114,9 @@ REST_FRAMEWORK = {
         #el motor local — 60/h cubre una conversación de ajustes sin abrir
         #la puerta a martillar el endpoint.
         'ai_chat': '60/hour',
+        #Wizard "Diseño asistido" -> MCP de estilos (por usuario): cada
+        #pedido arma una tanda completa, mismo costo que `ai_design`.
+        'ai_design_mcp': '20/hour',
         #Denuncias públicas de contenido: cada POST válido envía un mail a
         #LEGAL_REPORTS_EMAIL — sin este scope quedaba como vector de spam.
         'content_report': '5/hour',

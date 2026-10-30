@@ -19,7 +19,10 @@ const props = defineProps({
   nameFont: { type: Object, default: () => ({}) },
   ring: { type: String, default: null },
   open: { type: Boolean, default: false },
-  sheetBottom: { type: Number, default: 0 }
+  sheetBottom: { type: Number, default: 0 },
+  // Miniatura embebida: sin cabecera, sin toolbar y sin sheet móvil. Se usa
+  // dentro de la sección Diseño para ver el resultado mientras se edita.
+  compact: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:open'])
 
@@ -38,8 +41,8 @@ const mode = computed(() => modeOverride.value || props.form.theme || 'light')
 watch(() => props.form.theme, () => { modeOverride.value = null })
 
 const mq = window.matchMedia?.('(max-width: 1100px)')
-const isSheet = ref(Boolean(mq?.matches))
-const onMq = (e) => { isSheet.value = e.matches; if (!e.matches) emit('update:open', false) }
+const isSheet = ref(Boolean(mq?.matches) && !props.compact)
+const onMq = (e) => { if (props.compact) return; isSheet.value = e.matches; if (!e.matches) emit('update:open', false) }
 const close = () => emit('update:open', false)
 const onKey = (e) => { if (e.key === 'Escape' && props.open && isSheet.value) close() }
 
@@ -158,12 +161,12 @@ watch(() => props.template, (t) => {
 
 <template>
   <div v-if="open && isSheet" class="dsg-scrim" :style="{ bottom: `${sheetBottom}px` }" aria-hidden="true" @click="close"></div>
-  <aside ref="root" class="card dsg-preview" :class="{ 'is-open': open }" :style="{ '--dsg-sheet-bottom': `${sheetBottom}px`, ...(sheetBox ? { '--dsg-left': `${sheetBox.left}px`, '--dsg-w': `${sheetBox.width}px` } : null) }" aria-label="Vista previa de tu página">
-    <div class="dsg-preview-head">
+  <aside ref="root" class="card dsg-preview" :class="{ 'is-open': open, 'is-compact': compact }" :style="{ '--dsg-sheet-bottom': `${sheetBottom}px`, ...(sheetBox ? { '--dsg-left': `${sheetBox.left}px`, '--dsg-w': `${sheetBox.width}px` } : null) }" aria-label="Vista previa de tu página">
+    <div v-if="!compact" class="dsg-preview-head">
       <h3><AppIcon name="eye" :size="18" /> Vista previa</h3>
       <button type="button" class="icon-btn dsg-preview-close" aria-label="Cerrar vista previa" @click="close"><AppIcon name="x" :size="16" /></button>
     </div>
-    <div class="dp-toolbar">
+    <div v-if="!compact" class="dp-toolbar">
       <div class="dp-seg" role="group" aria-label="Dispositivo de la vista previa">
         <button v-for="d in devices" :key="d.id" type="button" class="dp-seg-btn" :class="{ active: device === d.id }" :aria-pressed="device === d.id" :aria-label="d.label" :title="d.label" @click="device = d.id">
           <AppIcon :name="d.icon" :size="17" aria-hidden="true" />
@@ -313,6 +316,13 @@ watch(() => props.template, (t) => {
 @keyframes dp-ring-pulse { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
 
 .dsg-scrim { display: none; }
+
+/* Miniatura embebida (sección Diseño): sin chrome de panel y sin sheet. */
+.dsg-preview.is-compact {
+  position: static; padding: 10px; gap: 0; width: 100%; max-width: 100%;
+  background: var(--surface); box-shadow: none;
+}
+.dsg-preview.is-compact .dp-stage { max-height: 340px; min-height: 200px; }
 @media (max-width: 1100px) {
   .dsg-layout > .dsg-preview { display: none; position: fixed; left: var(--dsg-left, 8px); width: var(--dsg-w, calc(100% - 16px)); right: auto; bottom: var(--dsg-sheet-bottom, 80px); top: auto; z-index: 60; margin: 0; max-height: min(78dvh, calc(100dvh - var(--dsg-sheet-bottom, 80px) - 76px)); padding: 12px; border-radius: 18px; box-shadow: 0 -12px 40px -12px rgba(9, 12, 24, .45); }
   .dsg-layout > .dsg-preview.is-open { display: flex; animation: dsg-sheet-in .22s ease both; }

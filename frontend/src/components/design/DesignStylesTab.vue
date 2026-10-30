@@ -17,7 +17,7 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
 <template>
   <div class="dstyles">
     <EstilosPanel
-      :form="form" :benefits="benefits" :shop-name="shopName"
+      :form="form" :benefits="benefits" :shop-name="shopName" preview
       @navigate="emit('navigate', $event)"
       @ring="emit('ring', $event)"
     />

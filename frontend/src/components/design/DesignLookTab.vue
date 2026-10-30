@@ -4,17 +4,21 @@ import { useStoreStore } from '../../stores/store.store.js'
 import {
   CUSTOMIZATION_DEFAULTS, STORE_ACCENTS, STORE_THEMES, STORE_TEMPLATES, STORE_TEMPLATE_FAMILIES,
   STORE_FONTS, STORE_FONT_GROUPS, STORE_FONT_PICKER, storeFontFamily, ensureStoreFont, ensureStoreFontPicker,
-  NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX, allowedTemplatesFor,
+  NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX, allowedTemplatesFor, storeThemeVars, resolveStoreTemplate,
   validateLogoFile, validateImageFile, LOGO_ACCEPT, formatStorageMB, effectiveAccent
 } from '../../api/stores.api.js'
 import { extractLogoColors, contrastRatio, deriveAccent, fixAccent, harmonicAccent, normalizeHex, isHex } from '../../utils/colorTools.js'
 import { PALETTES } from '../../utils/palettes.js'
 import AppIcon from '../AppIcon.vue'
+import DesignPreview from './DesignPreview.vue'
 
 const props = defineProps({
   form: { type: Object, required: true },
   benefits: { type: Object, default: () => ({}) },
-  shopName: { type: String, default: '' }
+  shopName: { type: String, default: '' },
+  // Vista previa embebida (sección Diseño del panel). El Studio ya tiene su
+  // propio visor a pantalla completa, así que ahí se apaga.
+  preview: { type: Boolean, default: true }
 })
 const emit = defineEmits(['go-plans', 'ring'])
 
@@ -31,6 +35,16 @@ const steps = [
 
 const currentLogo = computed(() => store.customization.logo || '')
 const currentCover = computed(() => store.customization.cover || '')
+
+// Vista previa embebida: mismos datos y mismas reglas que el panel lateral
+// del Dashboard, pero en miniatura y siempre visible mientras se edita.
+const IDENTITY_DEFAULTS = { accent_custom: '', logo_scale: 'm', logo_mode: 'logo_name', mono_style: 'accent', cover_overlay: 0 }
+const previewVars = computed(() => storeThemeVars(advanced.value ? props.form : { ...props.form, ...IDENTITY_DEFAULTS }))
+const previewTemplate = computed(() => resolveStoreTemplate(props.form.template, allowedTemplates.value))
+const previewInitial = computed(() => (props.shopName || 'T').slice(0, 1).toUpperCase())
+const previewNameFont = computed(() => ({ fontFamily: storeFontFamily(props.form.name_font) }))
+const previewCatalogOn = computed(() => props.form.show_catalog !== false)
+const previewCarousel = computed(() => store.customization.carousel || [])
 
 const done = computed(() => ({
   identity: Boolean(currentLogo.value),
@@ -322,61 +336,7 @@ function onStylePick(event) {
   props.form.template = key
 }
 
-const cropView = ref('desktop')
-const CROP_RATIOS = { desktop: 2.8, mobile: 0.9 }
-const imgRatio = ref(1.6)
-const cropDragging = ref(false)
-function onCoverLoad(e) {
-  const i = e.target
-  if (i.naturalWidth && i.naturalHeight) imgRatio.value = i.naturalWidth / i.naturalHeight
-}
-const cropRect = computed(() => {
-  const ri = imgRatio.value
-  const rc = CROP_RATIOS[cropView.value]
-  const w = ri >= rc ? (rc / ri) * 100 : 100
-  const h = ri >= rc ? 100 : (ri / rc) * 100
-  return { w, h, x: ((100 - w) * props.form.cover_focus_x) / 100, y: ((100 - h) * props.form.cover_focus_y) / 100 }
-})
-const cropStyle = computed(() => ({ left: `${cropRect.value.x}%`, top: `${cropRect.value.y}%`, width: `${cropRect.value.w}%`, height: `${cropRect.value.h}%` }))
-const clampPct = (v) => Math.round(Math.min(100, Math.max(0, v)))
-function focusFromPointer(e) {
-  const r = e.currentTarget?.getBoundingClientRect()
-  if (!r || !r.width || !r.height) return
-  const px = ((e.clientX - r.left) / r.width) * 100
-  const py = ((e.clientY - r.top) / r.height) * 100
-  const { w, h } = cropRect.value
-  props.form.cover_focus_x = w >= 99.9 ? 50 : clampPct(((px - w / 2) / (100 - w)) * 100)
-  props.form.cover_focus_y = h >= 99.9 ? 50 : clampPct(((py - h / 2) / (100 - h)) * 100)
-}
-function onCropDown(e) {
-  if (!advanced.value || (e.pointerType === 'mouse' && e.button !== 0)) return
-  cropDragging.value = true
-  e.currentTarget.setPointerCapture(e.pointerId)
-  focusFromPointer(e)
-  setRing('cover')
-}
-function onCropMove(e) {
-  if (cropDragging.value) focusFromPointer(e)
-}
-function onCropUp(e) {
-  cropDragging.value = false
-  try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ya liberada */ }
-}
-function onCropKey(e) {
-  if (!advanced.value) return
-  const step = e.shiftKey ? 10 : 2
-  const d = { ArrowLeft: ['cover_focus_x', -step], ArrowRight: ['cover_focus_x', step], ArrowUp: ['cover_focus_y', -step], ArrowDown: ['cover_focus_y', step] }[e.key]
-  if (!d) return
-  e.preventDefault()
-  props.form[d[0]] = clampPct(props.form[d[0]] + d[1])
-}
-function centerFocus() {
-  if (!advanced.value) return
-  props.form.cover_focus_x = 50
-  props.form.cover_focus_y = 50
-}
-
-const HISTORY_FIELDS = ['theme', 'accent', 'accent_custom', 'name_font', 'name_font_size', 'template', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y']
+const HISTORY_FIELDS = ['theme', 'accent', 'accent_custom', 'name_font', 'name_font_size', 'template', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay']
 const HISTORY_MAX = 20
 const snapshot = () => Object.fromEntries(HISTORY_FIELDS.map((k) => [k, props.form[k]]))
 const past = ref([])
@@ -449,22 +409,27 @@ onBeforeUnmount(dropLocalLogo)
 
 <template>
   <div class="card dsg-card dl-root" @keydown="onRootKey">
-    <div class="dl-progress">
-      <div class="dl-progress-head">
-        <strong><AppIcon name="badge-check" :size="16" aria-hidden="true" /> Tu diseño</strong>
-        <span class="dl-history">
-          <button type="button" class="dl-hbtn" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer el último cambio" @click="undo"><AppIcon name="undo" :size="17" aria-hidden="true" /></button>
-          <button type="button" class="dl-hbtn" :disabled="!canRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer el cambio" @click="redo"><AppIcon name="redo" :size="17" aria-hidden="true" /></button>
-          <span class="dl-progress-count">{{ doneCount }}/4</span>
-        </span>
-      </div>
+    <div class="dl-shell">
+      <div class="dl-main">
+        <div class="dl-progress">
+          <div class="dl-progress-head">
+            <div class="dl-progress-title">
+              <strong><AppIcon name="badge-check" :size="16" aria-hidden="true" /> Tu diseño</strong>
+              <small>Cuatro pasos y tu web queda lista.</small>
+            </div>
+            <span class="dl-history">
+              <button type="button" class="dl-hbtn" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer el último cambio" @click="undo"><AppIcon name="undo" :size="17" aria-hidden="true" /></button>
+              <button type="button" class="dl-hbtn" :disabled="!canRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer el cambio" @click="redo"><AppIcon name="redo" :size="17" aria-hidden="true" /></button>
+              <span class="dl-progress-count">{{ doneCount }}/4</span>
+            </span>
+          </div>
 
-      <div class="dl-bar" role="progressbar" aria-label="Identidad visual completada" aria-valuemin="0" aria-valuemax="4" :aria-valuenow="doneCount">
-        <span :style="{ transform: `scaleX(${doneCount / 4})` }"></span>
-      </div>
-    </div>
+          <div class="dl-bar" role="progressbar" aria-label="Identidad visual completada" aria-valuemin="0" aria-valuemax="4" :aria-valuenow="doneCount">
+            <span :style="{ transform: `scaleX(${doneCount / 4})` }"></span>
+          </div>
+        </div>
 
-    <div class="dl-steps">
+        <div class="dl-steps">
       <section v-for="(s, i) in steps" :key="s.id" class="dl-step" :class="{ open: open === s.id, done: done[s.id] }">
         <h4 class="dl-step-h">
           <button
@@ -701,26 +666,6 @@ onBeforeUnmount(dropLocalLogo)
               <p class="hint">Foto apaisada y luminosa de hasta 4 MB; la ajustamos sola.</p>
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
-            <div v-if="currentCover" class="field dl-crop" :class="{ locked: !advanced }" @focusin="setRing('cover')">
-              <label id="design-crop-label"><AppIcon name="image" :size="14" class="label-icon" aria-hidden="true" />Punto focal y recorte</label>
-              <div class="dl-seg wide" role="group" aria-label="Ver el recorte en">
-                <button type="button" class="dl-seg-btn" :class="{ active: cropView === 'desktop' }" :aria-pressed="cropView === 'desktop'" @click="cropView = 'desktop'"><AppIcon name="monitor" :size="16" aria-hidden="true" /><span class="dl-ell">Escritorio</span></button>
-                <button type="button" class="dl-seg-btn" :class="{ active: cropView === 'mobile' }" :aria-pressed="cropView === 'mobile'" @click="cropView = 'mobile'"><AppIcon name="smartphone" :size="16" aria-hidden="true" /><span class="dl-ell">Móvil</span></button>
-              </div>
-              <div class="dl-crop-wrap"><div class="dl-crop-stage" :class="{ dragging: cropDragging }" @pointerdown="onCropDown" @pointermove="onCropMove" @pointerup="onCropUp" @pointercancel="onCropUp">
-                <img :src="currentCover" alt="" draggable="false" @load="onCoverLoad" />
-                <div
-                  class="dl-crop-win" role="slider" tabindex="0" :style="cropStyle"
-                  aria-labelledby="design-crop-label" :aria-valuenow="form.cover_focus_x" aria-valuemin="0" aria-valuemax="100"
-                  :aria-valuetext="`Horizontal ${form.cover_focus_x} por ciento, vertical ${form.cover_focus_y} por ciento`"
-                  :aria-disabled="!advanced" @keydown="onCropKey"
-                ><span class="dl-crop-dot" aria-hidden="true"></span></div>
-              </div></div>
-              <div class="dl-crop-foot">
-                <p class="hint">Arrastrá el recuadro (o usá las flechas) para elegir qué parte se ve en {{ cropView === 'mobile' ? 'celulares' : 'pantallas grandes' }}.</p>
-                <button type="button" class="btn ghost btn-auto" :disabled="!advanced || (form.cover_focus_x === 50 && form.cover_focus_y === 50)" @click="centerFocus"><AppIcon name="refresh" :size="16" /> Centrar</button>
-              </div>
-            </div>
             <div class="field" :class="{ locked: !advanced }" @focusin="setRing('cover')">
               <label for="design-cover-overlay"><AppIcon name="moon" :size="14" class="label-icon" aria-hidden="true" />Oscurecer la portada <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
               <div class="size-slider">
@@ -756,12 +701,53 @@ onBeforeUnmount(dropLocalLogo)
           </template>
         </div>
       </section>
+        </div>
+      </div>
+
+      <aside v-if="preview" class="dl-side" aria-label="Vista previa de tu web">
+        <div class="dl-side-head">
+          <strong><AppIcon name="eye" :size="15" aria-hidden="true" /> Así se ve</strong>
+          <small>Se actualiza mientras editás</small>
+        </div>
+        <DesignPreview
+          compact
+          :form="form"
+          :vars="previewVars"
+          :template="previewTemplate"
+          :shop-name="shopName"
+          :initial="previewInitial"
+          :logo="currentLogo"
+          :cover="currentCover"
+          :advanced="advanced"
+          :catalog-on="previewCatalogOn"
+          :carousel="previewCarousel"
+          :name-font="previewNameFont"
+        />
+      </aside>
     </div>
   </div>
 </template>
 
 <style>
 .dl-root { container-type: inline-size; }
+/* Editor + miniatura: en pantallas anchas la vista previa acompaña; abajo de
+   1040px pasa arriba para que el resultado se vea antes de tocar nada. */
+.dl-shell { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+@media (min-width: 1040px) {
+  .dl-shell { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; }
+  .dl-side { position: sticky; top: 12px; }
+}
+.dl-main { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.dl-side {
+  display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  padding: 12px; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface);
+}
+.dl-side-head { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-side-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); }
+.dl-side-head small { color: var(--muted); font-size: 11.5px; }
+.dl-progress-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-progress-title small { color: var(--muted); font-size: 11.5px; }
 .dl-progress { display: grid; gap: 10px; padding: 14px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); min-width: 0; }
 .dl-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .dl-progress-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; min-width: 0; color: var(--ink); }
@@ -865,7 +851,7 @@ onBeforeUnmount(dropLocalLogo)
 .dl-hbtn { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink-2); cursor: pointer; transition: background .15s, opacity .15s; }
 .dl-hbtn:hover:not(:disabled) { background: var(--surface); }
 .dl-hbtn:disabled { opacity: .4; cursor: default; }
-.dl-hbtn:focus-visible, .dl-seg-btn:focus-visible, .dl-pal:focus-visible, .dl-link:focus-visible, .dl-crop-win:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.dl-hbtn:focus-visible, .dl-seg-btn:focus-visible, .dl-pal:focus-visible, .dl-link:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .dl-seg { display: inline-flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); max-width: 100%; }
 .dl-seg.wide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
 .dl-seg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 44px; min-height: 44px; padding: 6px 14px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: var(--ink-2); cursor: pointer; transition: background .15s, color .15s; }
@@ -904,15 +890,5 @@ onBeforeUnmount(dropLocalLogo)
 .dl-pal-name { font-size: 13px; font-weight: 700; }
 .dl-pal-hint { color: var(--muted); font-size: 11.5px; line-height: 1.3; overflow-wrap: anywhere; }
 
-.dl-crop-wrap { display: flex; justify-content: center; min-width: 0; margin-top: 10px; }
-.dl-crop-stage { position: relative; max-width: 100%; overflow: hidden; line-height: 0; border: 1px solid var(--line); border-radius: 12px; background: #0b0f1a; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-.dl-crop-stage.dragging { cursor: grabbing; }
-.dl-crop-stage img { display: block; width: auto; height: auto; max-width: 100%; max-height: min(50dvh, 340px); pointer-events: none; }
-.dl-crop-win { position: absolute; box-sizing: border-box; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 0 0 999px rgba(8, 10, 24, .55); display: grid; place-items: center; }
-.dl-crop-dot { width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, .4); }
-.dl-crop-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 8px; min-width: 0; }
-.dl-crop-foot .hint { flex: 1 1 180px; margin: 0; }
-.dl-crop-foot .btn { min-height: 44px; }
-.field.locked .dl-crop-stage { cursor: default; }
 @media (prefers-reduced-motion: reduce) { .dl-hbtn, .dl-seg-btn { transition: none; } }
 </style>

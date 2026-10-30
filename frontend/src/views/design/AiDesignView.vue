@@ -2,13 +2,10 @@
 import { ref, reactive, computed, nextTick, watch, onBeforeUnmount, onMounted } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import AiProposalCard from '../../components/ai/AiProposalCard.vue'
-import AiKnownCard from '../../components/ai/AiKnownCard.vue'
 import AiIdeaCard from '../../components/ai/AiIdeaCard.vue'
 import AiCompareTable from '../../components/ai/AiCompareTable.vue'
 import AiAdjustPanel from '../../components/ai/AiAdjustPanel.vue'
 import AiPublishedPanel from '../../components/ai/AiPublishedPanel.vue'
-import AiNightModeField from '../../components/ai/AiNightModeField.vue'
-import AiCoverField from '../../components/ai/AiCoverField.vue'
 import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import {
@@ -25,29 +22,30 @@ const emit = defineEmits(['applied', 'navigate'])
 
 const store = useStoreStore()
 
+// Rubros del motor (ids de RUBROS en ai_design_recipes): el mensaje que se
+// arma acá se traduce del otro lado, pero el id canónico es el que manda.
 const RUBROS = [
-  { id: 'Indumentaria y moda', label: 'Indumentaria y moda', icon: 'tag', desc: 'Ropa, calzado y accesorios' },
-  { id: 'Comida y bebida', label: 'Comida y bebida', icon: 'coffee', desc: 'Restó, bar, panadería o delivery' },
-  { id: 'Belleza y estética', label: 'Belleza y estética', icon: 'flower', desc: 'Peluquería, uñas, maquillaje' },
-  { id: 'Salud y bienestar', label: 'Salud y bienestar', icon: 'heart', desc: 'Consultorios, terapias, gym' },
-  { id: 'Servicios para el hogar', label: 'Servicios para el hogar', icon: 'wrench', desc: 'Plomería, electricidad, arreglos' },
-  // Rubro nuevo del motor (id interno de RUBROS en el backend): seguridad
-  // industrial, bomberos y EPP. Se manda el id, no el label.
-  { id: 'seguridad', label: 'Seguridad y bomberos', icon: 'shield-check', desc: 'Seguridad industrial, bomberos, EPP' },
-  { id: 'Tecnología', label: 'Tecnología', icon: 'monitor', desc: 'Equipos, reparaciones, software' },
-  { id: 'Hogar y deco', label: 'Hogar y deco', icon: 'package', desc: 'Muebles, decoración, regalos' },
-  { id: 'Educación', label: 'Educación', icon: 'graduation-cap', desc: 'Clases, cursos, talleres' },
-  { id: 'Profesionales', label: 'Profesionales', icon: 'file-text', desc: 'Estudios, consultoría, oficios' },
-  { id: 'Mascotas', label: 'Mascotas', icon: 'paw-print', desc: 'Veterinaria, peluquería, alimento' },
-  { id: 'Deportes', label: 'Deportes', icon: 'dumbbell', desc: 'Indumentaria, clases, torneos' },
-  { id: 'Otro', label: 'Otra cosa', icon: 'sparkles', desc: 'Te lo armamos igual' }
+  { id: 'comercio', label: 'Comercio o tienda', icon: 'tag', desc: 'Local, kiosco, mayorista' },
+  { id: 'gastronomia', label: 'Comida y bebida', icon: 'coffee', desc: 'Restó, bar, panadería, delivery' },
+  { id: 'indumentaria', label: 'Indumentaria y moda', icon: 'tag', desc: 'Ropa, calzado, accesorios' },
+  { id: 'belleza', label: 'Belleza y estética', icon: 'flower', desc: 'Peluquería, uñas, maquillaje' },
+  { id: 'salud', label: 'Salud y bienestar', icon: 'heart', desc: 'Consultorios, terapias, gym' },
+  { id: 'construccion', label: 'Construcción y oficios', icon: 'wrench', desc: 'Obra, plomería, electricidad' },
+  { id: 'seguridad', label: 'Seguridad y bomberos', icon: 'shield-check', desc: 'Seguridad industrial, EPP' },
+  { id: 'tecnologia', label: 'Tecnología', icon: 'monitor', desc: 'Equipos, reparaciones, software' },
+  { id: 'educacion', label: 'Educación', icon: 'graduation-cap', desc: 'Clases, cursos, talleres' },
+  { id: 'turismo', label: 'Turismo y viajes', icon: 'map-pin', desc: 'Alojamiento, excursiones' },
+  { id: 'mascotas', label: 'Mascotas', icon: 'paw-print', desc: 'Veterinaria, peluquería, alimento' },
+  { id: 'arte', label: 'Arte y diseño', icon: 'palette', desc: 'Muebles, deco, regalos, talleres' },
+  { id: 'servicios_profesionales', label: 'Servicios profesionales', icon: 'file-text', desc: 'Estudios, consultoría, oficios' },
+  { id: 'otro', label: 'Otra cosa', icon: 'sparkles', desc: 'Te lo armamos igual' }
 ]
 const GOALS = [
-  { id: 'vender', label: 'Vender online', icon: 'credit-card', desc: 'Que puedan comprar desde la web' },
-  { id: 'servicios', label: 'Mostrar mis servicios', icon: 'wrench', desc: 'Explicar qué hacés y cuánto sale' },
-  { id: 'consultas', label: 'Recibir consultas', icon: 'message-circle', desc: 'Que te escriban o te llamen' },
-  { id: 'confianza', label: 'Dar confianza', icon: 'shield-check', desc: 'Que vean que sos un negocio serio' },
-  { id: 'trabajos', label: 'Mostrar mis trabajos', icon: 'images', desc: 'Fotos de lo que hacés' }
+  { id: 'vender_online', label: 'Vender online', icon: 'credit-card', desc: 'Que puedan comprar desde la web' },
+  { id: 'mostrar_servicios', label: 'Mostrar mis servicios', icon: 'wrench', desc: 'Explicar qué hacés y cuánto sale' },
+  { id: 'conseguir_consultas', label: 'Recibir consultas', icon: 'message-circle', desc: 'Que te escriban o te llamen' },
+  { id: 'dar_confianza', label: 'Dar confianza', icon: 'shield-check', desc: 'Que vean que sos un negocio serio' },
+  { id: 'mostrar_trabajos', label: 'Mostrar mis trabajos', icon: 'images', desc: 'Fotos de lo que hacés' }
 ]
 const TONES = [
   { id: 'calido', label: 'Cálido y cercano', icon: 'heart', desc: 'Como una charla entre conocidos' },
@@ -62,7 +60,7 @@ const AUDIENCES = [
 ]
 // "¿Qué te importa más?": matiz fino sobre el estilo. El motor solo entiende
 // `tone`, así que cada matiz vota por uno de los cuatro estilos (y el
-// elegido a mano en el select siempre gana).
+// elegido a mano siempre gana).
 const STYLE_HINTS = [
   { id: 'elegancia', label: 'Elegancia', icon: 'gem', tone: 'serio' },
   { id: 'energia', label: 'Energía', icon: 'flame', tone: 'audaz' },
@@ -80,10 +78,14 @@ const MUST_HAVE = [
   { id: 'testimonials', label: 'Opiniones de clientes', icon: 'quote', desc: 'Lo que dicen de vos' },
   { id: 'faqs', label: 'Preguntas frecuentes', icon: 'circle-help', desc: 'Las dudas que te preguntan siempre' }
 ]
-// Lo que la entrevista vieja preguntaba y no cambia el diseño (pantalla 1:
-// "lo que no te vamos a preguntar"). Se dice explícito para bajar la ansiedad
-// del dueño que espera un formulario largo.
-const NOT_ASKED = ['Historia del negocio', 'Misión', 'Horarios', 'Formas de pago', 'Redes sociales']
+// Los cuatro pasos del wizard. `icon`/`title`/`subtitle` encabezan cada
+// pantalla; `hint` es la ayuda corta debajo del título.
+const STEPS = [
+  { id: 'business', icon: 'store', title: 'Tu negocio', subtitle: 'Contanos qué hacés y te armamos una web', hint: 'Elegí el rubro que más se parezca al tuyo.' },
+  { id: 'goal', icon: 'flag', title: 'Qué buscás', subtitle: 'Para qué querés la web y a quién le hablás', hint: 'Podés marcar más de un objetivo.' },
+  { id: 'style', icon: 'palette', title: 'Tu estilo', subtitle: 'Cómo querés que se sienta tu web', hint: 'Se puede cambiar después sin rehacer nada.' },
+  { id: 'must', icon: 'checklist', title: 'Lo que no puede faltar', subtitle: 'Las secciones que tu cliente tiene que encontrar', hint: 'Todo lo que marques aparece en la propuesta.' }
+]
 // Tipografías que el motor sabe aplicar (ids de TYPE_PAIRS en el backend).
 const PAIR_OPTIONS = [
   { id: 'grotesk-clean', label: 'Grotesk limpio', icon: 'type', desc: 'Neutra y actual' },
@@ -93,13 +95,8 @@ const PAIR_OPTIONS = [
   { id: 'geometric', label: 'Geométrica', icon: 'type', desc: 'Moderna y limpia' },
   { id: 'warm-serif', label: 'Serif cálida', icon: 'type', desc: 'Cercana, con detalle' }
 ]
-const STEP_TITLES = ['Contanos', 'Propuestas']
 
-const EMPTY = () => ({
-  rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [], content_hint: '',
-  brand_color: '', night_mode: { enabled: false, default: 'light' }, cover_choice: 'auto', use_icons: true,
-  accept_extras: true
-})
+const EMPTY = () => ({ rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [], content_hint: '' })
 const answers = reactive(EMPTY())
 
 // ask | loading | results | adjust | published | error
@@ -121,6 +118,16 @@ const busy = ref('')
 const previewProposal = ref(null)
 const resultsRef = ref(null)
 const hydrated = ref(false)
+
+// ---------- Wizard ----------
+const step = ref(0)
+const stepTitle = ref(null)
+// Bloques del mensaje que el dueño editó o borró a mano (no tocan las
+// respuestas: el mensaje es lo que viaja).
+const blockEdits = reactive({})
+const blockHidden = reactive({})
+const editingBlock = ref('')
+const draft = ref('')
 
 let requestSeq = 0
 let timer = null
@@ -144,7 +151,7 @@ const storeId = computed(() => store.store?.id || '')
 // origen = la landing real, con el mensaje del Studio aceptado por origen.
 const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
-const progressStep = computed(() => (phase.value === 'ask' ? 1 : 2))
+const progressStep = computed(() => (phase.value === 'ask' ? step.value + 1 : STEPS.length))
 const selectedProposal = computed(() => proposals.value.find((p) => p.id === selectedId.value) || null)
 // Cuántas familias visuales distintas trajo esta tanda (para avisarlo).
 const distinctFamilies = computed(() => {
@@ -173,14 +180,143 @@ const liveMessage = computed(() => {
   if (phase.value === 'results') return `${proposals.value.length} propuestas listas.`
   if (phase.value === 'adjust') return 'Ajustando la propuesta elegida.'
   if (phase.value === 'published') return 'Tu web ya está publicada.'
-  return 'Paso 1 de 2: contanos lo mínimo.'
+  return `Paso ${step.value + 1} de ${STEPS.length}: ${STEPS[step.value].title}.`
 })
 
+const currentStep = computed(() => STEPS[step.value])
+const stepValid = computed(() => {
+  if (step.value === 0) return Boolean(answers.rubro)
+  if (step.value === 1) return answers.goals.length > 0
+  if (step.value === 2) return Boolean(answers.tone)
+  return true
+})
+const canSubmit = computed(() => Boolean(answers.rubro && answers.goals.length && answers.tone))
 const hasAnswers = computed(() => Boolean(
-  answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length || answers.audience ||
-  answers.must_have.length || answers.brand_color || answers.night_mode.enabled ||
-  answers.cover_choice !== 'auto' || !answers.use_icons || answers.accept_extras === false
+  answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length ||
+  answers.audience || answers.must_have.length || answers.content_hint
 ))
+
+// ---------- Mensaje acumulado ----------
+const rubroMeta = computed(() => RUBROS.find((r) => r.id === answers.rubro) || null)
+const toneMeta = computed(() => TONES.find((t) => t.id === answers.tone) || null)
+const audienceLabel = computed(() => AUDIENCES.find((a) => a.id === answers.audience)?.label || '')
+const goalLabels = computed(() => answers.goals.map((id) => GOALS.find((g) => g.id === id)?.label).filter(Boolean))
+const mustLabels = computed(() => answers.must_have.map((id) => MUST_HAVE.find((m) => m.id === id)?.label).filter(Boolean))
+
+const BLOCK_ROWS = computed(() => [
+  { id: 'rubro', label: 'Rubro', icon: 'tag', value: rubroMeta.value?.label || '' },
+  { id: 'goals', label: 'Objetivo', icon: 'flag', value: goalLabels.value.join(', ') },
+  { id: 'tone', label: 'Tono', icon: 'palette', value: toneMeta.value?.label || '' },
+  { id: 'audience', label: 'Audiencia', icon: 'users', value: audienceLabel.value },
+  { id: 'must_have', label: 'Imprescindible', icon: 'checklist', value: mustLabels.value.join(', ') },
+  { id: 'notes', label: 'Notas', icon: 'file-text', value: String(answers.content_hint || '').trim() }
+])
+const blocks = computed(() => BLOCK_ROWS.value
+  .filter((row) => !blockHidden[row.id])
+  .map((row) => ({ ...row, text: blockEdits[row.id]?.text ?? row.value }))
+  .filter((row) => row.text))
+const composerMessage = computed(() => blocks.value.map((b) => `${b.label}: ${b.text}`).join('\n'))
+
+function restoreBlock(id) {
+  delete blockHidden[id]
+  delete blockEdits[id]
+}
+function startEdit(block) {
+  editingBlock.value = block.id
+  draft.value = block.text
+}
+function saveEdit() {
+  if (!editingBlock.value) return
+  const text = draft.value.trim()
+  if (text) blockEdits[editingBlock.value] = { text }
+  else blockHidden[editingBlock.value] = true
+  editingBlock.value = ''
+  draft.value = ''
+}
+function cancelEdit() {
+  editingBlock.value = ''
+  draft.value = ''
+}
+function removeBlock(block) {
+  blockHidden[block.id] = true
+  if (editingBlock.value === block.id) cancelEdit()
+  if (block.id === 'rubro') answers.rubro = ''
+  else if (block.id === 'goals') answers.goals = []
+  else if (block.id === 'tone') answers.tone = ''
+  else if (block.id === 'audience') answers.audience = ''
+  else if (block.id === 'must_have') answers.must_have = []
+  else if (block.id === 'notes') answers.content_hint = ''
+}
+
+// ---------- Selección de cada paso ----------
+function pickRubro(id) {
+  answers.rubro = answers.rubro === id ? '' : id
+  restoreBlock('rubro')
+}
+function toggleGoal(id) {
+  const i = answers.goals.indexOf(id)
+  if (i >= 0) answers.goals.splice(i, 1)
+  else answers.goals.push(id)
+  restoreBlock('goals')
+}
+function pickTone(id) {
+  answers.tone = answers.tone === id ? '' : id
+  restoreBlock('tone')
+}
+function pickAudience(id) {
+  answers.audience = answers.audience === id ? '' : id
+  restoreBlock('audience')
+}
+function toggleHint(id) {
+  const i = answers.style_hint.indexOf(id)
+  if (i >= 0) { answers.style_hint.splice(i, 1); return }
+  if (answers.style_hint.length >= 2) answers.style_hint.shift()
+  answers.style_hint.push(id)
+}
+function toggleMustHave(id) {
+  const i = answers.must_have.indexOf(id)
+  if (i >= 0) answers.must_have.splice(i, 1)
+  else answers.must_have.push(id)
+  restoreBlock('must_have')
+}
+function onNotes() {
+  restoreBlock('notes')
+}
+
+function goStep(index) {
+  if (index < 0 || index >= STEPS.length) return
+  if (index > step.value && !stepValid.value) return
+  step.value = index
+  nextTick(() => stepTitle.value?.focus?.())
+}
+function nextStep() {
+  if (!stepValid.value) return
+  if (step.value < STEPS.length - 1) goStep(step.value + 1)
+  else submit()
+}
+function prevStep() {
+  goStep(step.value - 1)
+}
+function onStepKey(event) {
+  if (event.key !== 'Enter' || event.shiftKey) return
+  const tag = event.target?.tagName
+  if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A' || tag === 'INPUT') return
+  event.preventDefault()
+  nextStep()
+}
+
+// El estilo elegido a mano manda; si no eligió, deciden los "me importa más".
+function resolvedTone() {
+  if (answers.tone) return answers.tone
+  const votes = {}
+  answers.style_hint.forEach((h) => {
+    const tone = STYLE_HINTS.find((o) => o.id === h)?.tone
+    if (tone) votes[tone] = (votes[tone] || 0) + 1
+  })
+  const keys = Object.keys(votes)
+  if (!keys.length) return ''
+  return keys.sort((a, b) => (votes[b] - votes[a]) || (HINT_TONE_ORDER.indexOf(a) - HINT_TONE_ORDER.indexOf(b)))[0]
+}
 
 const MISSING_ACTIONS = {
   catalog: 'catalogs',
@@ -208,24 +344,15 @@ function hydrate() {
     if (!raw) return
     const saved = JSON.parse(raw)
     const base = EMPTY()
-    answers.rubro = typeof saved.rubro === 'string' ? saved.rubro : base.rubro
-    answers.goals = Array.isArray(saved.goals) ? saved.goals.filter((g) => GOALS.some((o) => o.id === g)) : []
-    answers.tone = typeof saved.tone === 'string' ? saved.tone : base.tone
+    answers.rubro = RUBROS.some((r) => r.id === saved.rubro) ? saved.rubro : base.rubro
+    answers.goals = Array.isArray(saved.goals) ? saved.goals.filter((g) => GOALS.some((o) => o.id === g)).slice(0, 2) : []
+    answers.tone = TONES.some((t) => t.id === saved.tone) ? saved.tone : base.tone
     answers.style_hint = Array.isArray(saved.style_hint)
       ? saved.style_hint.filter((h) => STYLE_HINTS.some((o) => o.id === h)).slice(0, 2)
       : []
-    answers.audience = typeof saved.audience === 'string' ? saved.audience : base.audience
+    answers.audience = AUDIENCES.some((a) => a.id === saved.audience) ? saved.audience : base.audience
     answers.must_have = Array.isArray(saved.must_have) ? saved.must_have.filter((m) => MUST_HAVE.some((o) => o.id === m)) : []
     answers.content_hint = typeof saved.content_hint === 'string' ? saved.content_hint.slice(0, 160) : ''
-    answers.brand_color = /^#[0-9a-f]{6}$/i.test(saved.brand_color || '') ? saved.brand_color.toLowerCase() : ''
-    const nm = saved.night_mode
-    answers.night_mode = (nm && typeof nm === 'object')
-      ? { enabled: Boolean(nm.enabled), default: nm.default === 'dark' ? 'dark' : 'light' }
-      : { enabled: false, default: 'light' }
-    answers.cover_choice = ['foto', 'logo', 'auto'].includes(saved.cover_choice) ? saved.cover_choice : 'auto'
-    answers.use_icons = saved.use_icons !== false
-    // v6: "¿sumar extras?" — ausente = sí (decisión del brief §2.3).
-    answers.accept_extras = saved.accept_extras !== false
   } catch { /* storage bloqueado o dato viejo */ }
   hydrated.value = true
 }
@@ -240,7 +367,7 @@ function persist() {
 watch(answers, persist, { deep: true })
 watch(storageKey, () => { if (storeId.value && !hydrated.value) hydrate() }, { immediate: true })
 
-// ---------- Prefill: lo que la IA ya sabe (pantalla 1) ----------
+// ---------- Prefill: lo que la IA ya sabe (paso 1) ----------
 async function loadPrefill() {
   if (!canUse.value || prefill.value) return
   try {
@@ -248,12 +375,12 @@ async function loadPrefill() {
     prefill.value = data
     //La deducción solo rellena lo que el dueño no eligió: nunca pisa su
     //respuesta guardada.
-    if (!answers.rubro && data?.rubro) answers.rubro = data.rubro
+    if (!answers.rubro && RUBROS.some((r) => r.id === data?.rubro)) answers.rubro = data.rubro
     if (!answers.goals.length && Array.isArray(data?.goals)) {
       answers.goals = data.goals.filter((goal) => GOALS.some((o) => o.id === goal)).slice(0, 2)
     }
     if (Array.isArray(data?.checks)) checks.value = data.checks
-  } catch { /* sin prefill la entrevista funciona igual */ }
+  } catch { /* sin prefill el wizard funciona igual */ }
 }
 onMounted(loadPrefill)
 watch(canUse, (value) => { if (value) loadPrefill() })
@@ -305,59 +432,8 @@ const previewNameFont = computed(() => (previewProposal.value ? proposalNameFont
 const previewCover = computed(() => (previewProposal.value ? proposalCover(previewProposal.value) : cover.value))
 
 // ---------- Flujo ----------
-// El estilo elegido a mano manda; si no eligió, deciden los "me importa más".
-function resolvedTone() {
-  if (answers.tone) return answers.tone
-  const votes = {}
-  answers.style_hint.forEach((h) => {
-    const tone = STYLE_HINTS.find((o) => o.id === h)?.tone
-    if (tone) votes[tone] = (votes[tone] || 0) + 1
-  })
-  const keys = Object.keys(votes)
-  if (!keys.length) return ''
-  return keys.sort((a, b) => (votes[b] - votes[a]) || (HINT_TONE_ORDER.indexOf(a) - HINT_TONE_ORDER.indexOf(b)))[0]
-}
-function toggleHint(id) {
-  const i = answers.style_hint.indexOf(id)
-  if (i >= 0) { answers.style_hint.splice(i, 1); return }
-  if (answers.style_hint.length >= 2) answers.style_hint.shift()
-  answers.style_hint.push(id)
-}
-function toggleGoal(id) {
-  const i = answers.goals.indexOf(id)
-  if (i >= 0) answers.goals.splice(i, 1)
-  else answers.goals.push(id)
-}
-function toggleMustHave(id) {
-  const i = answers.must_have.indexOf(id)
-  if (i >= 0) answers.must_have.splice(i, 1)
-  else answers.must_have.push(id)
-}
-
-function payload(extra = {}) {
-  const p = {}
-  if (answers.rubro) p.rubro = answers.rubro
-  if (answers.goals.length) p.goals = [...answers.goals]
-  const tone = resolvedTone()
-  if (tone) p.tone = tone
-  if (answers.audience) p.audience = answers.audience
-  if (answers.must_have.length) p.must_have = [...answers.must_have]
-  const hint = String(answers.content_hint || '').trim()
-  if (hint) p.content_hint = hint.slice(0, 160)
-  p.brand_color = answers.brand_color || ''
-  p.night_mode = {
-    enabled: Boolean(answers.night_mode.enabled),
-    default: answers.night_mode.enabled && answers.night_mode.default === 'dark' ? 'dark' : 'light'
-  }
-  p.cover_choice = answers.cover_choice || 'auto'
-  p.use_icons = answers.use_icons !== false
-  // v6 §2.3: ausente = true en el motor; acá siempre viaja explícito.
-  p.accept_extras = answers.accept_extras !== false
-  return { ...p, ...extra }
-}
-
-async function generate(extra = {}, useAnswers = true, opts = {}) {
-  if (phase.value === 'loading') return
+async function submit(extraSeed = 0) {
+  if (phase.value === 'loading' || !canSubmit.value) return
   const seq = ++requestSeq
   phase.value = 'loading'
   errorMsg.value = ''
@@ -368,11 +444,12 @@ async function generate(extra = {}, useAnswers = true, opts = {}) {
   previewProposal.value = null
   clearTimeout(timer)
   const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { aidTimeout: true })), 15000)
+    timer = setTimeout(() => reject(Object.assign(new Error('timeout'), { aidTimeout: true })), 20000)
   })
   try {
-    const body = useAnswers ? payload(extra) : { ...extra }
-    const data = await Promise.race([storesApi.aiDesign(body), timeout])
+    const body = { message: composerMessage.value, history: [] }
+    if (extraSeed) body.seed = extraSeed
+    const data = await Promise.race([storesApi.aiDesignMcp(body), timeout])
     if (seq !== requestSeq) return
     if (!data || !Array.isArray(data.proposals) || !data.proposals.length) throw new Error('empty')
     seed.value = data.seed
@@ -395,16 +472,12 @@ async function generate(extra = {}, useAnswers = true, opts = {}) {
   }
 }
 
-function decideForMe() {
-  track('step_done', { step: 1 })
-  generate({}, false)
-}
 function anotherStyle() {
   track('explore', { meta: { count: proposals.value.length } })
-  generate({ seed: (seed.value || 0) + 1 }, true)
+  submit((seed.value || 0) + 1)
 }
 function redoWithPhotos() {
-  generate({ seed: seed.value })
+  submit(seed.value || 0)
 }
 function backToQuestions() {
   phase.value = 'ask'
@@ -416,7 +489,7 @@ function constraintsOf(proposal) {
   const look = proposal?.look || {}
   return {
     typography: look.fonts?.pair || '',
-    cover: proposal?.cover?.mode === 'logo' ? 'logo' : (answers.cover_choice === 'auto' ? 'auto' : 'foto'),
+    cover: proposal?.cover?.mode === 'logo' ? 'logo' : 'auto',
     air: look.density || '',
     color: proposal?.theme_choice?.source === 'user' ? String(proposal.theme_choice.accent || '').toLowerCase() : ''
   }
@@ -431,7 +504,7 @@ function choose(id) {
   appliedLabels.value = []
   actionError.value = ''
   phase.value = 'adjust'
-  track('step_done', { proposal_id: id, step: 2 })
+  track('step_done', { proposal_id: id, step: STEPS.length + 1 })
 }
 
 async function refine(next = constraints.value) {
@@ -477,6 +550,9 @@ function startOver() {
   requestSeq++
   clearTimeout(timer)
   Object.assign(answers, EMPTY())
+  Object.keys(blockEdits).forEach((key) => delete blockEdits[key])
+  Object.keys(blockHidden).forEach((key) => delete blockHidden[key])
+  cancelEdit()
   try { localStorage.removeItem(storageKey.value) } catch { /* storage bloqueado */ }
   proposals.value = []
   missing.value = []
@@ -489,6 +565,8 @@ function startOver() {
   errorMsg.value = ''
   previewProposal.value = null
   phase.value = 'ask'
+  step.value = 0
+  nextTick(() => stepTitle.value?.focus?.())
 }
 
 // El contrato v3 aplica y publica en un solo request: ya no hay publish/discard
@@ -555,9 +633,8 @@ function closePreview() {
   <div class="aid">
     <header class="aid-head">
       <div class="aid-head-text">
-        <span class="aid-badge-new">Nuevo</span>
-        <h1><AppIcon name="sparkles" :size="20" /> Diseñar con IA</h1>
-        <p>Contanos dos líneas de tu negocio y te armamos tres ideas de web. Después la ajustás sin empezar de cero.</p>
+        <h1><AppIcon name="sparkles" :size="20" /> Diseño asistido</h1>
+        <p>Contanos qué hacés y te armamos una web. Después la ajustás sin empezar de cero.</p>
         <span v-if="phase === 'published'" class="aid-pub-chip"><AppIcon name="circle-check" :size="13" /> Publicada</span>
       </div>
       <button v-if="phase !== 'ask' || hasAnswers" class="btn ghost btn-auto" type="button" @click="startOver">
@@ -567,7 +644,7 @@ function closePreview() {
 
     <div v-if="!canUse" class="empty">
       <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
-      <h3>Diseñar con IA viene con tu plan</h3>
+      <h3>El diseño asistido viene con tu plan</h3>
       <p>Sumá el beneficio desde Mi plan y volvé a entrar.</p>
       <button class="btn btn-auto" type="button" @click="emit('navigate', 'plans')">Ver planes</button>
     </div>
@@ -575,160 +652,249 @@ function closePreview() {
     <template v-else>
       <p class="aid-live" aria-live="polite">{{ liveMessage }}</p>
 
-      <div class="aid-progress" role="group" aria-label="Progreso">
-        <span v-for="n in 2" :key="n" class="aid-progress-dot" :class="{ on: progressStep >= n, now: progressStep === n }">
-          <span class="sr-only">Paso {{ n }}: {{ STEP_TITLES[n - 1] }}</span>
-        </span>
-      </div>
-
-      <!-- PANTALLA 1 · EMPEZAR EN DOS PASOS -->
-      <div v-if="phase === 'ask'" class="aid-ask">
-        <AiKnownCard v-model="answers.rubro" :prefill="prefill" :rubro-options="RUBROS" />
-
-        <div class="aid-field">
-          <p class="aid-field-title">Contanos en dos líneas qué hacés y a quién le vendés</p>
-          <textarea
-            v-model="answers.content_hint"
-            class="aid-input"
-            rows="3"
-            maxlength="160"
-            placeholder="Ej.: ferretería de barrio, vendemos herramientas y pintura; el que más nos escribe es el que arregla en su casa."
-          ></textarea>
-          <p class="aid-hints-note">Lo usamos para escribir el texto de la web. No inventamos datos: solo lo que nos contás.</p>
-        </div>
-
-        <div class="aid-field">
-          <p class="aid-field-title">¿Qué querés lograr?</p>
-          <div class="aid-hints" role="group" aria-label="¿Qué querés lograr?">
-            <button
-              v-for="goal in GOALS"
-              :key="goal.id"
-              type="button"
-              class="aid-hint-chip"
-              :class="{ on: answers.goals.includes(goal.id) }"
-              :aria-pressed="answers.goals.includes(goal.id)"
-              @click="toggleGoal(goal.id)"
+      <!-- PANTALLA 1 · WIZARD DE 4 PASOS + PEDIDO ACUMULADO -->
+      <div v-if="phase === 'ask'" class="aidw" @keydown="onStepKey">
+        <div class="aidw-main">
+          <ol class="aidw-bar" aria-label="Progreso del pedido">
+            <li
+              v-for="(s, i) in STEPS"
+              :key="s.id"
+              class="aidw-bar-item"
+              :class="{ done: i < step, now: i === step }"
             >
-              <AppIcon :name="goal.icon" :size="15" aria-hidden="true" />
-              <span>{{ goal.label }}</span>
-            </button>
-          </div>
-        </div>
+              <button
+                type="button"
+                class="aidw-bar-btn"
+                :aria-current="i === step ? 'step' : undefined"
+                :aria-label="`Paso ${i + 1}: ${s.title}`"
+                :disabled="i > step && !stepValid"
+                @click="goStep(i)"
+              >
+                <span class="aidw-bar-num" aria-hidden="true">
+                  <AppIcon v-if="i < step" name="check" :size="13" :stroke="2.5" />
+                  <template v-else>{{ i + 1 }}</template>
+                </span>
+                <span class="aidw-bar-label">{{ s.title }}</span>
+              </button>
+            </li>
+          </ol>
 
-        <div class="aid-field">
-          <p class="aid-field-title">A quién le hablás <span class="aid-optional">Opcional</span></p>
-          <div class="aid-hints" role="group" aria-label="A quién le hablás">
-            <button
-              v-for="audience in AUDIENCES"
-              :key="audience.id"
-              type="button"
-              class="aid-hint-chip"
-              :class="{ on: answers.audience === audience.id }"
-              :aria-pressed="answers.audience === audience.id"
-              @click="answers.audience = answers.audience === audience.id ? '' : audience.id"
-            >
-              <AppIcon :name="audience.icon" :size="15" aria-hidden="true" />
-              <span>{{ audience.label }}</span>
-            </button>
-          </div>
-        </div>
+          <section class="aidw-step" :aria-labelledby="`aidw-title-${currentStep.id}`">
+            <header class="aidw-step-head">
+              <span class="aidw-step-ico" aria-hidden="true"><AppIcon :name="currentStep.icon" :size="20" /></span>
+              <div class="aidw-step-text">
+                <h2 :id="`aidw-title-${currentStep.id}`" ref="stepTitle" tabindex="-1">{{ currentStep.title }}</h2>
+                <p>{{ currentStep.subtitle }}</p>
+              </div>
+            </header>
+            <p class="aidw-step-hint">{{ currentStep.hint }}</p>
 
-        <div class="aid-field">
-          <p class="aid-field-title">Cómo se siente <span class="aid-optional">Opcional</span></p>
-          <div class="aid-hints" role="group" aria-label="Cómo se siente">
-            <button
-              v-for="tone in TONES"
-              :key="tone.id"
-              type="button"
-              class="aid-hint-chip"
-              :class="{ on: answers.tone === tone.id }"
-              :aria-pressed="answers.tone === tone.id"
-              @click="answers.tone = answers.tone === tone.id ? '' : tone.id"
-            >
-              <AppIcon :name="tone.icon" :size="15" aria-hidden="true" />
-              <span>{{ tone.label }}</span>
-            </button>
-          </div>
-        </div>
+            <!-- PASO 1 · TU NEGOCIO -->
+            <div v-if="currentStep.id === 'business'" class="aidw-grid rubros" role="radiogroup" aria-label="Rubro de tu negocio">
+              <button
+                v-for="r in RUBROS"
+                :key="r.id"
+                type="button"
+                role="radio"
+                class="aidw-card"
+                :class="{ on: answers.rubro === r.id }"
+                :aria-checked="answers.rubro === r.id"
+                @click="pickRubro(r.id)"
+              >
+                <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="r.icon" :size="18" /></span>
+                <span class="aidw-card-txt">
+                  <strong>{{ r.label }}</strong>
+                  <small>{{ r.desc }}</small>
+                </span>
+                <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.rubro === r.id" name="check" :size="13" :stroke="2.5" /></span>
+              </button>
+            </div>
 
-        <details class="aid-more">
-          <summary>Más opciones (no hace falta tocarlas)</summary>
-          <div class="aid-fields aid-more-body">
-            <div class="aid-field">
-              <p class="aid-field-title">¿Qué no puede faltar?</p>
-              <div class="aid-hints" role="group" aria-label="¿Qué no puede faltar?">
+            <!-- PASO 2 · QUÉ BUSCÁS -->
+            <template v-else-if="currentStep.id === 'goal'">
+              <p class="aidw-field-title">¿Qué querés lograr con la web?</p>
+              <div class="aidw-grid goals" role="group" aria-label="¿Qué querés lograr con la web?">
                 <button
-                  v-for="item in MUST_HAVE"
-                  :key="item.id"
+                  v-for="g in GOALS"
+                  :key="g.id"
                   type="button"
-                  class="aid-hint-chip"
-                  :class="{ on: answers.must_have.includes(item.id) }"
-                  :aria-pressed="answers.must_have.includes(item.id)"
-                  @click="toggleMustHave(item.id)"
+                  class="aidw-card"
+                  :class="{ on: answers.goals.includes(g.id) }"
+                  :aria-pressed="answers.goals.includes(g.id)"
+                  @click="toggleGoal(g.id)"
                 >
-                  <AppIcon :name="item.icon" :size="15" aria-hidden="true" />
-                  <span>{{ item.label }}</span>
+                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="g.icon" :size="18" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ g.label }}</strong>
+                    <small>{{ g.desc }}</small>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.goals.includes(g.id)" name="check" :size="13" :stroke="2.5" /></span>
                 </button>
               </div>
-            </div>
-            <div class="aid-field">
-              <p class="aid-field-title">¿Qué te importa más? <span class="aid-optional">Opcional</span></p>
-              <div class="aid-hints" role="group" aria-label="¿Qué te importa más?">
+              <p class="aidw-field-title">¿A quién le hablás? <span class="aidw-opt">Opcional</span></p>
+              <div class="aidw-grid audiences" role="radiogroup" aria-label="¿A quién le hablás?">
                 <button
-                  v-for="hint in STYLE_HINTS"
-                  :key="hint.id"
+                  v-for="a in AUDIENCES"
+                  :key="a.id"
                   type="button"
-                  class="aid-hint-chip"
-                  :class="{ on: answers.style_hint.includes(hint.id) }"
-                  :aria-pressed="answers.style_hint.includes(hint.id)"
-                  @click="toggleHint(hint.id)"
+                  role="radio"
+                  class="aidw-card"
+                  :class="{ on: answers.audience === a.id }"
+                  :aria-checked="answers.audience === a.id"
+                  @click="pickAudience(a.id)"
                 >
-                  <AppIcon :name="hint.icon" :size="15" aria-hidden="true" />
-                  <span>{{ hint.label }}</span>
+                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="a.icon" :size="18" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ a.label }}</strong>
+                    <small>{{ a.desc }}</small>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.audience === a.id" name="check" :size="13" :stroke="2.5" /></span>
                 </button>
               </div>
-            </div>
-            <div class="aid-field">
-              <p class="aid-field-title">¿Usamos una foto de portada?</p>
-              <AiCoverField v-model="answers.cover_choice" :has-logo="Boolean(logo)" />
-            </div>
-            <div class="aid-field">
-              <p class="aid-field-title">¿Querés modo noche?</p>
-              <AiNightModeField v-model="answers.night_mode" :accent="answers.brand_color || '#7c3aed'" />
-            </div>
-            <label class="aid-switch">
-              <input v-model="answers.use_icons" type="checkbox" />
-              <span class="aid-switch-text">
-                <strong>Usar íconos en las secciones</strong>
-                <small>Ayudan a que se entienda rápido qué ofrecés.</small>
-              </span>
-            </label>
-            <label class="aid-switch">
-              <input v-model="answers.accept_extras" type="checkbox" />
-              <span class="aid-switch-text">
-                <strong>Que la IA agregue elementos extra</strong>
-                <small>Bandas, mosaicos de fotos y precios armados con tus datos. Después los quitás uno por uno.</small>
-              </span>
-            </label>
-          </div>
-        </details>
+            </template>
 
-        <div class="aid-notask">
-          <p class="aid-notask-title">Lo que no te vamos a preguntar</p>
-          <div class="aid-hints">
-            <span v-for="item in NOT_ASKED" :key="item" class="aid-notask-chip">{{ item }}</span>
-          </div>
+            <!-- PASO 3 · TU ESTILO -->
+            <template v-else-if="currentStep.id === 'style'">
+              <p class="aidw-field-title">¿Cómo se tiene que sentir?</p>
+              <div class="aidw-grid tones" role="radiogroup" aria-label="¿Cómo se tiene que sentir tu web?">
+                <button
+                  v-for="t in TONES"
+                  :key="t.id"
+                  type="button"
+                  role="radio"
+                  class="aidw-card tone"
+                  :class="{ on: answers.tone === t.id }"
+                  :aria-checked="answers.tone === t.id"
+                  @click="pickTone(t.id)"
+                >
+                  <span class="aidw-card-ico big" aria-hidden="true"><AppIcon :name="t.icon" :size="22" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ t.label }}</strong>
+                    <small>{{ t.desc }}</small>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.tone === t.id" name="check" :size="13" :stroke="2.5" /></span>
+                </button>
+              </div>
+              <p class="aidw-field-title">¿Qué te importa más? <span class="aidw-opt">Opcional, hasta dos</span></p>
+              <div class="aidw-chips" role="group" aria-label="¿Qué te importa más?">
+                <button
+                  v-for="h in STYLE_HINTS"
+                  :key="h.id"
+                  type="button"
+                  class="aidw-chip"
+                  :class="{ on: answers.style_hint.includes(h.id) }"
+                  :aria-pressed="answers.style_hint.includes(h.id)"
+                  @click="toggleHint(h.id)"
+                >
+                  <AppIcon :name="h.icon" :size="15" aria-hidden="true" /> {{ h.label }}
+                </button>
+              </div>
+            </template>
+
+            <!-- PASO 4 · LO QUE NO PUEDE FALTAR -->
+            <template v-else>
+              <p class="aidw-field-title">Marcá lo que tu cliente tiene que encontrar</p>
+              <div class="aidw-grid must" role="group" aria-label="Lo que no puede faltar">
+                <button
+                  v-for="m in MUST_HAVE"
+                  :key="m.id"
+                  type="button"
+                  class="aidw-card"
+                  :class="{ on: answers.must_have.includes(m.id) }"
+                  :aria-pressed="answers.must_have.includes(m.id)"
+                  @click="toggleMustHave(m.id)"
+                >
+                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="m.icon" :size="18" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ m.label }}</strong>
+                    <small>{{ m.desc }}</small>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.must_have.includes(m.id)" name="check" :size="13" :stroke="2.5" /></span>
+                </button>
+              </div>
+              <p class="aidw-field-title">Contalo con tus palabras <span class="aidw-opt">Opcional</span></p>
+              <textarea
+                v-model="answers.content_hint"
+                class="aidw-input"
+                rows="3"
+                maxlength="160"
+                aria-label="Contanos en dos líneas qué hacés y a quién le vendés"
+                placeholder="Ej.: ferretería de barrio, vendemos herramientas y pintura; el que más nos escribe es el que arregla en su casa."
+                @input="onNotes"
+              ></textarea>
+              <p class="aidw-note">Lo usamos para escribir el texto de la web. No inventamos datos: solo lo que nos contás.</p>
+            </template>
+
+            <div class="aidw-nav">
+              <button v-if="step > 0" type="button" class="btn ghost btn-auto" @click="prevStep">
+                <AppIcon name="chevron-left" :size="16" /> Atrás
+              </button>
+              <button
+                v-if="step < STEPS.length - 1"
+                type="button"
+                class="btn btn-auto aidw-next"
+                :disabled="!stepValid"
+                @click="nextStep"
+              >
+                Siguiente <AppIcon name="chevron-right" :size="16" />
+              </button>
+              <button
+                v-else
+                type="button"
+                class="btn btn-auto aidw-next"
+                :disabled="!canSubmit"
+                @click="submit()"
+              >
+                <AppIcon name="sparkles" :size="16" /> Generar propuesta
+              </button>
+              <span class="aidw-nav-note">{{ step + 1 }} de {{ STEPS.length }}</span>
+            </div>
+          </section>
         </div>
 
-        <div class="aid-actions">
-          <button class="btn btn-auto aid-primary" type="button" @click="generate()">
-            <AppIcon name="sparkles" :size="16" /> Armar mis propuestas
+        <!-- PEDIDO ACUMULADO -->
+        <aside class="aidw-ask" aria-label="Tu pedido">
+          <header class="aidw-ask-head">
+            <h3><AppIcon name="message-circle" :size="16" /> Tu pedido</h3>
+            <span class="aidw-ask-count">{{ blocks.length }}</span>
+          </header>
+          <p v-if="!blocks.length" class="aidw-ask-empty">
+            A medida que respondas, acá ves el pedido que le vamos a mandar. Podés editarlo antes de generar.
+          </p>
+          <ul v-else class="aidw-bubbles">
+            <li v-for="b in blocks" :key="b.id" class="aidw-bubble" :class="{ editing: editingBlock === b.id }">
+              <span class="aidw-bubble-ico" aria-hidden="true"><AppIcon :name="b.icon" :size="14" /></span>
+              <div class="aidw-bubble-body">
+                <span class="aidw-bubble-label">{{ b.label }}</span>
+                <template v-if="editingBlock === b.id">
+                  <textarea
+                    v-model="draft"
+                    class="aidw-bubble-input"
+                    rows="2"
+                    :aria-label="`Editar ${b.label}`"
+                    @keydown.enter.exact.prevent="saveEdit"
+                    @keydown.esc="cancelEdit"
+                  ></textarea>
+                  <div class="aidw-bubble-actions">
+                    <button type="button" class="aidw-mini" @click="saveEdit">Guardar</button>
+                    <button type="button" class="aidw-mini ghost" @click="cancelEdit">Cancelar</button>
+                  </div>
+                </template>
+                <template v-else>
+                  <span class="aidw-bubble-text">{{ b.text }}</span>
+                  <div class="aidw-bubble-actions">
+                    <button type="button" class="aidw-icon-btn" :aria-label="`Editar ${b.label}`" title="Editar" @click="startEdit(b)"><AppIcon name="pencil" :size="14" /></button>
+                    <button type="button" class="aidw-icon-btn" :aria-label="`Quitar ${b.label}`" title="Quitar" @click="removeBlock(b)"><AppIcon name="trash" :size="14" /></button>
+                  </div>
+                </template>
+              </div>
+            </li>
+          </ul>
+          <button type="button" class="btn btn-auto aidw-send" :disabled="!canSubmit" @click="submit()">
+            <AppIcon name="send" :size="16" /> Generar propuesta
           </button>
-          <button class="btn ghost btn-auto" type="button" @click="decideForMe">
-            Prefiero que decidas vos
-          </button>
-          <span class="aid-micro">2 pasos · menos de 1 minuto</span>
-        </div>
+          <p class="aidw-ask-note">Se manda como un solo mensaje a nuestro motor de diseño.</p>
+        </aside>
       </div>
 
       <!-- CARGANDO -->
@@ -873,7 +1039,7 @@ function closePreview() {
           <h2>No pudimos armar las propuestas</h2>
           <p>{{ errorMsg }}</p>
           <div class="aid-actions">
-            <button class="btn btn-auto" type="button" @click="generate()">Reintentar</button>
+            <button class="btn btn-auto" type="button" @click="submit()">Reintentar</button>
             <button class="btn ghost btn-auto" type="button" @click="phase = 'ask'">Volver a las preguntas</button>
           </div>
         </div>
@@ -900,3 +1066,185 @@ function closePreview() {
     />
   </div>
 </template>
+
+<style scoped>
+.aidw { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+@media (max-width: 980px) {
+  .aidw { grid-template-columns: minmax(0, 1fr); }
+  .aidw-ask { order: -1; }
+}
+
+/* Barra de progreso */
+.aidw-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+.aidw-bar-item { flex: 1 1 120px; min-width: 0; }
+.aidw-bar-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;
+  padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; text-align: left;
+  transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+.aidw-bar-btn:hover:not(:disabled) { border-color: var(--line-strong); color: var(--ink-2); }
+.aidw-bar-btn:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-bar-btn:disabled { cursor: not-allowed; opacity: .6; }
+.aidw-bar-num {
+  display: grid; place-items: center; flex: none;
+  width: 22px; height: 22px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line);
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.aidw-bar-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aidw-bar-item.now .aidw-bar-btn { border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); }
+.aidw-bar-item.now .aidw-bar-num { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+.aidw-bar-item.done .aidw-bar-btn { color: var(--ink-2); }
+.aidw-bar-item.done .aidw-bar-num { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+
+/* Paso */
+.aidw-step {
+  display: flex; flex-direction: column; gap: 14px; min-width: 0;
+  padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+  background: var(--card); box-shadow: var(--shadow-sm);
+}
+.aidw-step-head { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.aidw-step-ico {
+  display: grid; place-items: center; flex: none;
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--brand-soft); color: var(--brand-ink);
+  border: 1px solid var(--brand-soft-line);
+}
+.aidw-step-text { min-width: 0; }
+.aidw-step-text h2 { margin: 0; font-size: 18px; line-height: 1.25; }
+.aidw-step-text h2:focus { outline: none; }
+.aidw-step-text h2:focus-visible { outline: var(--focus-ring); outline-offset: 3px; border-radius: 4px; }
+.aidw-step-text p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.aidw-step-hint { margin: 0; color: var(--muted); font-size: 12.5px; }
+.aidw-field-title { margin: 4px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.aidw-opt { font-weight: 500; color: var(--muted); font-size: 11.5px; }
+
+/* Grillas de selección */
+.aidw-grid { display: grid; gap: 10px; min-width: 0; }
+.aidw-grid.rubros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.aidw-grid.goals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.aidw-grid.audiences { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.aidw-grid.tones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.aidw-grid.must { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1180px) {
+  .aidw-grid.rubros, .aidw-grid.must { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .aidw-grid.rubros, .aidw-grid.goals, .aidw-grid.audiences, .aidw-grid.tones, .aidw-grid.must { grid-template-columns: minmax(0, 1fr); }
+}
+
+.aidw-card {
+  position: relative; display: flex; align-items: flex-start; gap: 10px; min-width: 0;
+  padding: 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--card); color: var(--ink); font: inherit; text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.aidw-card:hover { border-color: var(--line-strong); background: var(--surface); }
+.aidw-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-card.on {
+  border-color: var(--brand-500);
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 1px var(--brand-500) inset;
+}
+.aidw-card-ico {
+  display: grid; place-items: center; flex: none;
+  width: 34px; height: 34px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink-2);
+}
+.aidw-card-ico.big { width: 40px; height: 40px; border-radius: 12px; }
+.aidw-card.on .aidw-card-ico { background: var(--card); border-color: var(--brand-500); color: var(--brand-ink); }
+.aidw-card-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.aidw-card-txt strong { font-size: 13.5px; line-height: 1.3; }
+.aidw-card-txt small { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+.aidw-card-check {
+  position: absolute; top: 9px; right: 9px;
+  display: grid; place-items: center;
+  width: 18px; height: 18px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); color: #fff;
+}
+.aidw-card.on .aidw-card-check { background: var(--brand-500); border-color: var(--brand-500); }
+.aidw-card.tone { padding: 14px; }
+
+/* Chips */
+.aidw-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.aidw-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+.aidw-chip:hover { border-color: var(--line-strong); }
+.aidw-chip:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-chip.on { border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); }
+
+.aidw-input {
+  width: 100%; min-width: 0; padding: 11px 12px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 13px;
+  resize: vertical;
+}
+.aidw-input:focus-visible { outline: var(--focus-ring); outline-offset: 1px; border-color: var(--brand-500); }
+.aidw-note { margin: 0; color: var(--muted); font-size: 11.5px; }
+
+/* Navegación del paso */
+.aidw-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.aidw-next { margin-left: auto; }
+.aidw-nav-note { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+/* Pedido acumulado */
+.aidw-ask {
+  display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+  background: var(--surface);
+  position: sticky; top: 12px;
+}
+@media (max-width: 980px) { .aidw-ask { position: static; } }
+.aidw-ask-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.aidw-ask-head h3 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 14px; }
+.aidw-ask-count {
+  display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 7px;
+  border-radius: 999px; background: var(--card); border: 1px solid var(--line);
+  color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums;
+}
+.aidw-ask-empty { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.aidw-bubbles { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.aidw-bubble {
+  display: flex; gap: 8px; min-width: 0;
+  padding: 10px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--card);
+}
+.aidw-bubble.editing { border-color: var(--brand-500); }
+.aidw-bubble-ico { flex: none; color: var(--muted); padding-top: 2px; }
+.aidw-bubble-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
+.aidw-bubble-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.aidw-bubble-text { font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.aidw-bubble-input {
+  width: 100%; min-width: 0; padding: 7px 8px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 12.5px;
+  resize: vertical;
+}
+.aidw-bubble-input:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+.aidw-bubble-actions { display: flex; gap: 4px; margin-left: auto; }
+.aidw-icon-btn {
+  display: grid; place-items: center; width: 28px; height: 28px;
+  border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--muted); cursor: pointer;
+  transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+.aidw-icon-btn:hover { background: var(--surface); color: var(--ink-2); border-color: var(--line); }
+.aidw-icon-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+.aidw-mini {
+  padding: 5px 10px; border: 1px solid var(--brand-500); border-radius: 999px;
+  background: var(--brand-500); color: #fff; font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.aidw-mini.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); }
+.aidw-mini:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-send { width: 100%; justify-content: center; }
+.aidw-send:disabled { opacity: .55; cursor: not-allowed; }
+.aidw-ask-note { margin: 0; color: var(--muted); font-size: 11.5px; text-align: center; }
+</style>

@@ -268,6 +268,16 @@ export const storesApi = {
     return data
   },
 
+  // Wizard "Diseño asistido": el mensaje acumulado (bloques legibles) va al
+  // proxy MCP del backend, que lo traduce al motor y devuelve las propuestas
+  // con el mismo contrato que aiDesign (proposals + seed + missing).
+  async aiDesignMcp({ message, history = [], seed = null }) {
+    const payload = { message, history }
+    if (seed) payload.seed = seed
+    const { data } = await http.post('/stores/ai-design/mcp/', payload)
+    return data
+  },
+
   // Studio — flujo borrador → publicar: publish aplica los *_draft a la
   // web y guarda la versión; discard los vuelve a lo publicado; versions
   // lista el historial y restore recupera un snapshot; sharePreview emite

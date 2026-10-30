@@ -11,7 +11,10 @@ import DesignLookTab from '../../design/DesignLookTab.vue'
 defineProps({
   form: { type: Object, required: true },
   benefits: { type: Object, default: () => ({}) },
-  shopName: { type: String, default: '' }
+  shopName: { type: String, default: '' },
+  // El Studio ya tiene su visor a pantalla completa: la miniatura embebida
+  // del LookTab solo se usa en la sección Diseño del panel.
+  preview: { type: Boolean, default: false }
 })
 const emit = defineEmits(['navigate', 'ring'])
 
@@ -23,7 +26,7 @@ const onLookRing = (key) => emit('ring', RING_MAP[key] || key)
 <template>
   <div class="est">
     <DesignLookTab
-      :form="form" :benefits="benefits" :shop-name="shopName"
+      :form="form" :benefits="benefits" :shop-name="shopName" :preview="preview"
       @go-plans="emit('navigate', 'plans')"
       @ring="onLookRing"
     />

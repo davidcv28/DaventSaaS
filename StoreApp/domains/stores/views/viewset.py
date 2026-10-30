@@ -61,6 +61,7 @@ from StoreApp.domains.stores.services import (
     verify_captcha,
     visit_stats_of,
 )
+from StoreApp.domains.stores.services.ai_chat import chat as ai_design_chat
 from StoreApp.domains.stores.services.ai_design import (
     AiDesignError,
     design_image_url,
@@ -78,10 +79,12 @@ from StoreApp.domains.stores.services.ai_design import (
 from StoreApp.domains.stores.services.ai_design import (
     refine as refine_ai_design,
 )
+from StoreApp.domains.stores.services.ai_design_mcp import (
+    generate_from_message as generate_ai_design_mcp,
+)
 from StoreApp.domains.stores.services.ai_design_telemetry import (
     record_event as record_ai_design_event,
 )
-from StoreApp.domains.stores.services.ai_chat import chat as ai_design_chat
 
 from .viewset_base import StoreBaseViewSet
 from .viewset_config import StoreConfigs
@@ -336,6 +339,13 @@ class AiChatThrottle(UserRateThrottle):
     #Por usuario: cada mensaje recorre el motor local; 60/h alcanza para
     #iterar la conversación sin servir para martillar el endpoint.
     scope   =   'ai_chat'
+#=========================================
+# AI DESIGN MCP THROTTLE (wizard "Diseño asistido", rate en settings)
+#=========================================
+class AiDesignMcpThrottle(UserRateThrottle):
+    #Mismo costo que `ai-design` (una tanda completa por pedido): 20/h es
+    #el techo razonable para probar variantes.
+    scope   =   'ai_design_mcp'
 #=========================================
 # STORE VIEWSET
 #=========================================
@@ -1085,6 +1095,36 @@ class StoreViewSet(StoreBaseViewSet):
             )
         try:
             data    =   ai_design_chat(store, request.data.get('message'), request.data.get('history'))
+        except AiDesignError as error:
+            return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+        return Response(data, status = status.HTTP_200_OK)
+    #=========================================
+    # AI DESIGN MCP: WIZARD "DISEÑO ASISTIDO" -> PROPUESTAS
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'ai-design/mcp', throttle_classes = [AiDesignMcpThrottle])
+    def ai_design_mcp(self, request):
+        #El wizard acumula las respuestas en un solo mensaje legible y lo
+        #manda acá. El service lo traduce al motor de siempre y devuelve las
+        #propuestas con el mismo contrato que `ai-design/` (proposals+seed),
+        #así el ajuste fino y la publicación siguen funcionando igual.
+        store       =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_customization'):
+            return Response(
+                {'detail': 'La personalización de tu web requiere una suscripción activa.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        if not profile_has_benefit(store.user, 'has_ai_design'):
+            return Response(
+                {'detail': 'El diseño automático está disponible en tu plan actual.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        try:
+            data    =   generate_ai_design_mcp(
+                store,
+                request.data.get('message'),
+                request.data.get('history'),
+                seed    =   request.data.get('seed'),
+            )
         except AiDesignError as error:
             return Response({'detail': str(error)}, status = status.HTTP_400_BAD_REQUEST)
         return Response(data, status = status.HTTP_200_OK)
