@@ -6574,140 +6574,133 @@
         }
       },
       "layout": {
-        "landing": {
-          "blocks": [
-            {
-              "id": "announcements",
-              "enabled": true,
-              "order": 0,
-              "variant": "static"
-            },
-            {
-              "id": "hero",
-              "enabled": true,
-              "order": 1,
-              "variant": "split"
-            },
-            {
-              "id": "categories",
-              "enabled": true,
-              "order": 2,
-              "variant": "row"
-            },
-            {
-              "id": "featured",
-              "enabled": true,
-              "order": 3,
-              "variant": "grid"
-            },
-            {
-              "id": "about",
-              "enabled": true,
-              "order": 4
-            },
-            {
-              "id": "benefits",
-              "enabled": true,
-              "order": 5,
-              "variant": "cards"
-            },
-            {
-              "id": "gallery",
-              "enabled": true,
-              "order": 6,
-              "variant": "masonry"
-            },
-            {
-              "id": "testimonials",
-              "enabled": true,
-              "order": 7,
-              "variant": "cards"
-            },
-            {
-              "id": "faq",
-              "enabled": true,
-              "order": 8,
-              "variant": "accordion"
-            },
-            {
-              "id": "cta",
-              "enabled": true,
-              "order": 9,
-              "variant": "band"
-            },
-            {
-              "id": "contact",
-              "enabled": true,
-              "order": 10,
-              "variant": "card"
-            }
-          ]
-        },
-        "catalog": {
-          "blocks": [
-            {
-              "id": "note",
-              "enabled": true,
-              "order": 0
-            },
-            {
-              "id": "filters",
-              "enabled": true,
-              "order": 1,
-              "variant": "chips"
-            },
-            {
-              "id": "sort",
-              "enabled": true,
-              "order": 2
-            },
-            {
-              "id": "grid",
-              "enabled": true,
-              "order": 3,
-              "variant": "masonry"
-            },
-            {
-              "id": "promo",
-              "enabled": true,
-              "order": 4
-            }
-          ]
-        },
-        "services": {
-          "blocks": [
-            {
-              "id": "hero",
-              "enabled": true,
-              "order": 0
-            },
-            {
-              "id": "picker",
-              "enabled": true,
-              "order": 1
-            },
-            {
-              "id": "steps",
-              "enabled": true,
-              "order": 2
-            },
-            {
-              "id": "form",
-              "enabled": true,
-              "order": 3
-            },
-            {
-              "id": "faq",
-              "enabled": true,
-              "order": 4
-            },
-            {
-              "id": "band",
-              "enabled": true,
-              "order": 5
-            }
-          ]
-        }
+          "landing": {
+              "blocks": [
+                  {
+                      "id": "announcements",
+                      "order": 0,
+                      "enabled": true
+                  },
+                  {
+                      "id": "hero",
+                      "order": 1,
+                      "enabled": true
+                  },
+                  {
+                      "id": "featured",
+                      "order": 2,
+                      "enabled": true
+                  },
+                  {
+                      "id": "highlights",
+                      "order": 3,
+                      "enabled": true
+                  },
+                  {
+                      "id": "about",
+                      "order": 4,
+                      "enabled": true
+                  },
+                  {
+                      "id": "services",
+                      "order": 5,
+                      "enabled": true
+                  },
+                  {
+                      "id": "benefits",
+                      "order": 6,
+                      "enabled": true
+                  },
+                  {
+                      "id": "testimonials",
+                      "order": 7,
+                      "enabled": true
+                  },
+                  {
+                      "id": "gallery",
+                      "order": 8,
+                      "enabled": true
+                  },
+                  {
+                      "id": "faq",
+                      "order": 9,
+                      "enabled": true
+                  },
+                  {
+                      "id": "cta",
+                      "order": 10,
+                      "enabled": true
+                  },
+                  {
+                      "id": "contact",
+                      "order": 11,
+                      "enabled": true
+                  }
+              ]
+          },
+          "catalog": {
+              "blocks": [
+                  {
+                      "id": "note",
+                      "order": 0,
+                      "enabled": true
+                  },
+                  {
+                      "id": "promo",
+                      "order": 1,
+                      "enabled": true
+                  },
+                  {
+                      "id": "filters",
+                      "order": 2,
+                      "enabled": true
+                  },
+                  {
+                      "id": "sort",
+                      "order": 3,
+                      "enabled": true
+                  },
+                  {
+                      "id": "grid",
+                      "order": 4,
+                      "enabled": true
+                  }
+              ]
+          },
+          "services": {
+              "blocks": [
+                  {
+                      "id": "hero",
+                      "order": 0,
+                      "enabled": true
+                  },
+                  {
+                      "id": "band",
+                      "order": 1,
+                      "enabled": true
+                  },
+                  {
+                      "id": "picker",
+                      "order": 2,
+                      "enabled": true
+                  },
+                  {
+                      "id": "steps",
+                      "order": 3,
+                      "enabled": true
+                  },
+                  {
+                      "id": "form",
+                      "order": 4,
+                      "enabled": true
+                  },
+                  {
+                      "id": "faq",
+                      "order": 5,
+                      "enabled": true
+                  }
+              ]
+          }
       },
       "layout_spec": {
         "landing": {
