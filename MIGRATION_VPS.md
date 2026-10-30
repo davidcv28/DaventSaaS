@@ -112,7 +112,7 @@ GUNICORN_THREADS=4
 
 ```
 PLATFORM_DOMAIN=davent.com.ar
-ALLOWED_HOSTS=.davent.com.ar                  # el punto = apex + *.subdominios
+ALLOWED_HOSTS=.davent.com.ar,216.24.57.1            # el punto = apex + *.subdominios; IP para probar sin DNS
 CORS_ALLOWED_ORIGINS=https://www.davent.com.ar,https://davent.com.ar
 CORS_ALLOW_CREDENTIALS=True
 CSRF_TRUSTED_ORIGINS=https://www.davent.com.ar,https://davent.com.ar,https://*.davent.com.ar
