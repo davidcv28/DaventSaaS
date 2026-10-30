@@ -308,7 +308,7 @@ def _fuente_tipo(slug : str) -> str:
 def _components(t : dict) -> dict:
     bg, surface, text, muted = t['background'], t['surface'], t['text'], t['muted']
     primary, secondary, border = t['primary'], t['secondary'], t['border']
-    radius, font, heading = t['radius'], t['font'], t['heading_font']
+    radius, heading = t['radius'], t['heading_font']
     head = heading.replace(' ', '_')
     return {
         'header': (
@@ -362,7 +362,7 @@ def _components(t : dict) -> dict:
                 f'</div></article>'
                 for i in range(1, 5)
             )
-            + f'</div></div></section>'
+            + '</div></div></section>'
         ),
         'testimonials': (
             f'<section class="bg-[{surface}] px-6 py-16 text-[{text}]"><div class="mx-auto max-w-4xl text-center">'
@@ -388,7 +388,7 @@ def _components(t : dict) -> dict:
 
 def _fuente_components(tipo : str, t : dict) -> dict:
     bg, surface, text, muted = t['background'], t['surface'], t['text'], t['muted']
-    primary, secondary, border = t['primary'], t['secondary'], t['border']
+    primary, border = t['primary'], t['border']
     radius, head = t['radius'], t['heading_font'].replace(' ', '_')
     shadow = t['shadow']
     blocks = {
@@ -596,7 +596,7 @@ def _product_grid(t : dict, title : str, total : int) -> str:
             f'</div></article>'
             for i in range(1, total + 1)
         )
-        + f'</div></div></section>'
+        + '</div></div></section>'
     )
 
 

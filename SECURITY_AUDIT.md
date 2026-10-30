@@ -1039,3 +1039,39 @@ Desviaciones conscientes: las acciones de terceros siguen por tag (pinearlas
 por SHA requiere actualizar cada bump a mano; Dependabot queda como paso
 siguiente), `ruff format --check` corre informativo y el `select` de ruff
 arranca con ignores documentados.
+
+---
+
+## 6. Auditoría pre-push 2026-10-30 (ronda 4)
+
+Checklist adversarial (§184 de `AGENTS.md`) sobre el árbol de trabajo.
+
+| Control | Resultado |
+|---|---|
+| `manage.py check` | 0 issues |
+| `manage.py check --deploy` | solo W004/W008/W009/W012/W016/W018 — esperado en local (`DEBUG=True` + `SECRET_KEY` de dev); CI corre el job con env de producción |
+| `manage.py makemigrations --check --dry-run` | sin cambios |
+| `manage.py test` | 1004 tests — 1 fallo corregido (ver abajo) |
+| `ruff check` | 6 hallazgos corregidos (I001 ×2, F541 ×2, F841 ×2) — el job `lint` del CI quedaba rojo |
+| `bandit -ll` | 4 medios → 1 corregido (B608), 3 documentados como falso positivo (B113) |
+| `pip-audit` | sin salida (sin red desde este entorno); cubierto por el job `security` del CI |
+| `npm audit --omit=dev` | 0 vulnerabilidades |
+| gitleaks | no instalado local; cubierto por el CI |
+| Secretos en el diff | ninguno (solo nombres de headers) |
+| `sync_design_neon --all --dry-run` | 14 patrones listos (incluye `aula-abierta` y turismo) |
+
+Hallazgos y veredicto:
+
+- **Test rojo `design.tests.test_seed_catalog_idempotent`** (medio): el conteo
+  esperado (13) quedó fijo mientras `seed_data.json` ya tiene 14 patrones
+  (turismo + Aula Abierta). Se reemplazó por el conteo real del seed
+  (`len(_seed_data()['patterns'])`), así el próximo patrón no vuelve a romper la
+  suite.
+- **B608 en `sync_design_neon._upsert`** (medio, explotabilidad nula): tabla y
+  columnas son constantes del módulo y los valores van parametrizados. Se agregó
+  validación `IDENT_RE` (identificadores SQL) + `# nosec B608` justificado.
+- **B113 ×3 en `skills/services/{llm,anthropic}.py`** (bajo, falso positivo): el
+  `timeout` se pasa vía `getattr(settings, …, 30)` y bandit no resuelve el
+  kwarg dinámico; se anotó `# nosec B113` con el motivo.
+- **F841 en `seed_data.py`** (bajo): variables `font`/`secondary` sin uso,
+  eliminadas; sin cambio de markup.

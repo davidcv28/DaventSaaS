@@ -1,8 +1,9 @@
+import re
+
 import psycopg2
 from decouple import config
-from psycopg2.extras import Json
-
 from django.core.management import BaseCommand, CommandError
+from psycopg2.extras import Json
 
 from StoreApp.domains.design.models import DesignPattern
 
@@ -29,6 +30,7 @@ STYLE_COLS      =   [
     'position', 'created_at', 'updated_at',
 ]
 JSON_COLS       =   {'layout', 'layout_spec', 'tokens'}
+IDENT_RE        =   re.compile(r'^[a-z_][a-z0-9_]*$')
 
 #=========================================
 # SYNC DESIGN NEON
@@ -95,10 +97,12 @@ class Command(BaseCommand):
         ]
 
     def _upsert(self, cursor, table, columns, values):
+        if not IDENT_RE.match(table) or not all(IDENT_RE.match(c) for c in columns):
+            raise CommandError(f'Identificador SQL inválido: {table} {columns}')
         placeholders    =   ','.join(['%s'] * len(columns))
         updates         =   ','.join(f'{column} = EXCLUDED.{column}' for column in columns if column != 'slug')
         cursor.execute(
-            f'INSERT INTO {table} ({",".join(columns)}) VALUES ({placeholders}) '
+            f'INSERT INTO {table} ({",".join(columns)}) VALUES ({placeholders}) '  # nosec B608 — tabla/columnas son constantes del módulo y validan contra IDENT_RE
             f'ON CONFLICT (slug) DO UPDATE SET {updates} RETURNING id',
             values,
         )

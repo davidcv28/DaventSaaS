@@ -11,6 +11,7 @@ from StoreApp.domains.design.serializers import (
 
 from .viewset_base import DesignCatalogViewSet
 
+
 #=========================================
 # DESIGN STYLE VIEWSET (/api/design/styles/)
 #=========================================

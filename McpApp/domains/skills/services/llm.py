@@ -75,7 +75,7 @@ def _ask_gemini(system : str, messages : list[dict], max_tokens : int, temperatu
             'thinkingConfig'    :   {'thinkingBudget': 0},
         },
     }
-    response    =   requests.post(
+    response    =   requests.post(  # nosec B113 — timeout dinámico vía LLM_TIMEOUT
         GEMINI_URL.format(model = model),
         params  =   {'key': _key('gemini')},
         headers =   {'content-type': 'application/json'},
@@ -98,7 +98,7 @@ def _ask_openai_compatible(url : str, api_key : str, model : str, system : str, 
         'temperature'   :   temperature,
         'messages'      :   [{'role': 'system', 'content': system}] + messages,
     }
-    response    =   requests.post(
+    response    =   requests.post(  # nosec B113 — timeout dinámico vía LLM_TIMEOUT
         url,
         headers =   {'Authorization': f'Bearer {api_key}', 'content-type': 'application/json', **(extra_headers or {})},
         data    =   json.dumps(payload),

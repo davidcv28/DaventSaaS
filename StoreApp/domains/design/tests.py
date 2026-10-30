@@ -4,6 +4,9 @@ Tests del dominio design.
 Catálogo de patrones (HTML/CSS/JS) y estilos (tokens): lectura
 autenticada, escritura staff, filtros y visibilidad de solo activos.
 """
+import json
+from pathlib import Path
+
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
@@ -14,6 +17,11 @@ from StoreApp.domains.design.models import DesignPattern, DesignStyle
 STYLES_URL      =   '/api/design/styles/'
 PATTERNS_URL    =   '/api/design/patterns/'
 CATALOG_URL     =   '/api/design/catalog/'
+SEED_FILE       =   Path(__file__).resolve().parent / 'seed_data.json'
+
+
+def _seed_data():
+    return json.loads(SEED_FILE.read_text(encoding = 'utf-8'))
 
 
 def _user(username, staff = False):
@@ -159,7 +167,7 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertEqual(DesignStyle.objects.filter(is_default = True).count(), 1)
         self.assertEqual(DesignPattern.objects.filter(is_default = True).count(), 1)
         self.assertGreaterEqual(DesignStyle.objects.count(), 20)
-        self.assertEqual(DesignPattern.objects.count(), 13)
+        self.assertEqual(DesignPattern.objects.count(), len(_seed_data()['patterns']))
         pattern = DesignPattern.objects.get(slug = 'raiz')
         self.assertIn('data-block="hero"', pattern.html)
         #Un patrón puede traer su propio markup: no se pisa con el esqueleto.

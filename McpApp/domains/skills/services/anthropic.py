@@ -33,7 +33,7 @@ def ask_claude(system : str, messages : list[dict], max_tokens : int = 400, temp
         'messages'      :   messages,
     }
     try:
-        response    =   requests.post(
+        response    =   requests.post(  # nosec B113 — timeout dinámico vía ANTHROPIC_TIMEOUT
             getattr(settings, 'ANTHROPIC_BASE_URL', 'https://api.anthropic.com/v1') + '/messages',
             headers = {
                 'x-api-key'         :   api_key,
