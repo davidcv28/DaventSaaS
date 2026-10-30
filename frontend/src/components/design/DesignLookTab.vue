@@ -10,6 +10,7 @@ import {
 import { extractLogoColors, contrastRatio, deriveAccent, fixAccent, harmonicAccent, normalizeHex, isHex, nearestAccent, hexToRgb } from '../../utils/colorTools.js'
 import { PALETTES } from '../../utils/palettes.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
+import { normalizeLayoutConfig } from '../../templates/index.js'
 import AppIcon from '../AppIcon.vue'
 import DesignPreview from './DesignPreview.vue'
 
@@ -353,6 +354,11 @@ function onStylePick(event) {
     if (slug) props.form.accent = slug
   }
   props.form.template = s.template
+  // Un estilo es un diseño completo: además de la piel aplica su estructura
+  // (orden y variantes de los bloques por superficie) para que el cambio se
+  // vea en la ubicación de los elementos, no solo en los colores.
+  const layout = normalizeLayoutConfig(s.layout)
+  if (Object.keys(layout).length) props.form.layout_config = layout
 }
 
 const HISTORY_FIELDS = ['theme', 'accent', 'accent_custom', 'name_font', 'name_font_size', 'template', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay']

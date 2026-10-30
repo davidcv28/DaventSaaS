@@ -53,7 +53,11 @@ const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 const currentPattern = computed(() => (
   patternOptions.value.find((p) => (
     p.template === props.form.template && sameJson(patternLayout(p), props.form.layout_config)
-  ))?.slug || ''
+  ))?.slug
+  // Un estilo aplica su propia estructura: si no hay patrón idéntico se
+  // muestra el de la misma plantilla en vez de dejar el select vacío.
+  || patternOptions.value.find((p) => p.template === props.form.template)?.slug
+  || ''
 ))
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
 
@@ -78,6 +82,11 @@ function onStylePick(event) {
   const tokens = s.tokens || {}
   props.form.site_theme = { ...(props.form.site_theme || {}), style: { id: s.slug } }
   props.form.theme = s.page_theme || props.form.theme
+  // El estilo también es un diseño completo: cambia la estructura (plantilla
+  // + orden de bloques por superficie) además de la piel. El patrón queda
+  // como control para volver a mover la estructura después.
+  props.form.template = s.template || props.form.template
+  if (s.layout && Object.keys(s.layout).length) props.form.layout_config = wrapLayout(s.layout)
   const body = tokens.typography?.body
   if (body) {
     props.form.name_font = body
@@ -123,7 +132,7 @@ function onStylePick(event) {
             {{ s.nombre }} · {{ s.categoria }} · {{ tierLabel(s.template) }}
           </option>
         </select>
-        <p class="hint">Colores, tipografía y modo claro u oscuro, sin tocar la estructura.</p>
+        <p class="hint">Colores, tipografía, modo claro u oscuro, estructura e iconos de la web.</p>
       </div>
     </div>
     <p v-if="status === 'error'" class="dpicks-alert" role="alert">

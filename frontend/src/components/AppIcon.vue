@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, inject, unref } from 'vue'
 import { PROCEDURAL_SLUG_RE, proceduralIconBody } from '../utils/proceduralIcon.js'
+import { familyIcon, familyStroke } from '../utils/styleIcons.js'
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -170,20 +171,28 @@ const LUCIDE = Object.fromEntries(
   ])
 )
 
-const isLucide = computed(() => props.name.startsWith('lucide:'))
+// Familia de iconos del estilo de diseño activo (web pública): la provee
+// StorePublicLayout. Sin familia el icono se dibuja igual que siempre.
+const iconFamily = inject('storeIconFamily', null)
+const family = computed(() => unref(iconFamily) || '')
+const iconName = computed(() => familyIcon(props.name, family.value))
+const iconStroke = computed(() => (
+  props.stroke === 1.75 ? (familyStroke(family.value) ?? props.stroke) : props.stroke
+))
+const isLucide = computed(() => iconName.value.startsWith('lucide:'))
 // Glifo procedural determinístico (contrato `gen:<slug>` del diseño con IA).
 const isGen = computed(() => {
-  const raw = props.name.toLowerCase()
+  const raw = iconName.value.toLowerCase()
   return raw.startsWith('gen:') && PROCEDURAL_SLUG_RE.test(raw.slice(4))
 })
-const isBrand = computed(() => !isLucide.value && !isGen.value && props.name in BRAND_ICONS)
+const isBrand = computed(() => !isLucide.value && !isGen.value && iconName.value in BRAND_ICONS)
 const html = computed(() => {
-  if (isGen.value) return proceduralIconBody(props.name.toLowerCase().slice('gen:'.length))
+  if (isGen.value) return proceduralIconBody(iconName.value.toLowerCase().slice('gen:'.length))
   if (isLucide.value) {
-    const key = props.name.slice('lucide:'.length)
+    const key = iconName.value.slice('lucide:'.length)
     return LUCIDE[key] || LUCIDE.sparkles || ICONS.sparkles || ''
   }
-  return ICONS[props.name] || BRAND_ICONS[props.name] || ''
+  return ICONS[iconName.value] || BRAND_ICONS[iconName.value] || ''
 })
 </script>
 
@@ -195,7 +204,7 @@ const html = computed(() => {
     viewBox="0 0 24 24"
     :fill="isBrand ? 'currentColor' : 'none'"
     :stroke="isBrand ? 'none' : 'currentColor'"
-    :stroke-width="stroke"
+    :stroke-width="iconStroke"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"

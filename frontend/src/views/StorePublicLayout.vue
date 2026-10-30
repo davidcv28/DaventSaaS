@@ -15,6 +15,7 @@ import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts, normalizeLayoutConfig } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
+import { familyOf } from '../utils/styleIcons.js'
 import {
   studioPreviewVars, studioPreviewAttrs, applyFocusRing,
   storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES
@@ -594,6 +595,16 @@ function loadPublicCatalog(params = {}) {
   }
   return req
 }
+
+// Familia de iconos del estilo activo: la web entera (chrome, portada,
+// catálogo, servicios, ficha) dibuja los iconos con el trazo y los alias de
+// la familia. En el Studio manda el estilo del borrador; si la tienda no
+// eligió estilo, la familia sale de su plantilla.
+const iconFamily = computed(() => familyOf({
+  styleId: custom.value.site_theme?.style?.id || '',
+  template: pageTemplate.value
+}))
+provide('storeIconFamily', iconFamily)
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
