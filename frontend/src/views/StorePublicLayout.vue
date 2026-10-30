@@ -75,8 +75,11 @@ const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?
 // declara su contrato de datos (`ready`); en el Studio se sigue editando
 // con la plantilla Vue, que es la que responde a los cambios en vivo.
 const patternDoc = ref(null)
+//El documento del patrón pinta la portada: catálogo, ficha y servicios
+//siguen en la plantilla Vue, que es la que tiene sus vistas y su embudo.
 const usePattern = computed(() => Boolean(
-  !studioMode.value && patternDoc.value?.ready && patternDoc.value?.html
+  !studioMode.value && route.name === 'store-public' &&
+  patternDoc.value?.ready && patternDoc.value?.html
 ))
 const custom = computed(() => {
   const raw = store.value?.customization || {}
@@ -766,7 +769,7 @@ onMounted(async () => {
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
-  if (!studioMode.value) {
+  if (!studioMode.value && isHome.value) {
     storesApi.publicPattern(slug.value, { preview: previewToken.value })
       .then((doc) => { patternDoc.value = doc && doc.html ? doc : null })
       .catch(() => { patternDoc.value = null })

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}} · Sala de control</title>
+<style>
+  :root{
+    --void:#070b12; --panel:#0c1420; --cyan:var(--ds-accent,#22d3ee); --lime:#a3e635; --text:#e2f4f8;
+    --muted:#8ba6b6; --line:#183244; --radius:var(--ds-radius,2px);
+    --ease:cubic-bezier(.7,0,.84,0); --dur:380ms;
+  }
+  *{box-sizing:border-box}
+  img[src=""]{display:none}
+  body{margin:0;background:var(--void);color:var(--text);line-height:1.55;font-family:"Lucida Console",Monaco,monospace;
+    background-image:linear-gradient(#18324440 1px,#0000 1px),linear-gradient(90deg,#18324440 1px,#0000 1px);background-size:48px 48px}
+  h1,h2,h3{font-family:"Lucida Console",Monaco,monospace;font-weight:700;line-height:1.04;letter-spacing:-.02em;margin:0;text-transform:uppercase}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1280px,95vw);margin:0 auto}
+  .top{display:flex;align-items:center;gap:18px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:9px;margin-right:auto;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+  .brand svg{color:var(--cyan)}
+  .brand img{width:26px;height:26px;object-fit:contain}
+  .brand i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime);animation:blink 2.4s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  .top nav{display:flex;gap:16px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .top nav a:hover{color:var(--cyan)}
+  .top .link{border:1px solid var(--cyan);color:var(--cyan);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:8px 12px}
+  .top .link:empty{display:none}
+  .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:0;border-bottom:1px solid var(--line);min-height:460px}
+  .hero-copy{padding:38px 30px 32px 0;border-right:1px solid var(--line)}
+  .tag{display:inline-flex;align-items:center;gap:8px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--lime);border:1px solid #a3e63555;padding:5px 9px}
+  .tag::before{content:"";width:6px;height:6px;background:var(--lime)}
+  .hero h1{font-size:clamp(34px,4.8vw,62px);margin:20px 0 16px;max-width:18ch}
+  .hero h1 span{color:var(--cyan)}
+  .hero p{max-width:46ch;font-size:12.5px;color:var(--muted);margin:0 0 24px}
+  .hero p:empty{display:none}
+  .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid var(--line);background:var(--panel)}
+  .metrics div{padding:12px 14px;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .metrics div:nth-child(odd){border-right:1px solid var(--line)}
+  .metrics div:nth-last-child(-n+2){border-bottom:0}
+  .metrics b{display:block;margin-top:5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--text);font-weight:400}
+  .diagnostic{padding:30px 0 28px 28px;display:flex;flex-direction:column;gap:14px}
+  .diag-head{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .bars{display:flex;align-items:flex-end;gap:5px;height:120px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .bars i{flex:1;background:linear-gradient(180deg,var(--cyan),#22d3ee22);height:var(--h,40%)}
+  .diag-note{font-size:10.5px;color:var(--muted);margin:0}
+  .diag-note:empty{display:none}
+  .console{border:1px solid var(--line);background:#08101a;padding:10px 12px;font-size:10px;color:var(--lime);overflow:hidden}
+  .console span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .console span b{color:var(--cyan);font-weight:400}
+  .catalog{padding:34px 0 10px}
+  .catalog-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;border-bottom:1px solid var(--cyan);padding-bottom:8px}
+  .catalog-head h2{font-size:clamp(20px,2.4vw,28px)}
+  .catalog-head span{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;padding:14px 0 0}
+  /* Categorías (fragmento {{categories}}) */
+  .ds-cat{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:6px 10px;background:#0a121c}
+  .ds-cat:hover{color:var(--void);background:var(--cyan);border-color:var(--cyan)}
+  .rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;margin-top:18px}
+  /* Módulos (fragmento {{products}}) */
+  .ds-product{border-bottom:1px solid var(--line);position:relative}
+  .ds-product-link{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;transition:background var(--dur) var(--ease)}
+  .ds-product-link:hover{background:var(--panel)}
+  .ds-product-img{width:44px;height:44px;object-fit:cover;border:1px solid var(--line);background:#0a121c}
+  .ds-product-copy{min-width:0}
+  .ds-product-name{font-size:12.5px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-product-desc{display:block;font-size:9.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-product-cat{display:none}
+  .ds-product-price{font-size:12px;color:var(--lime);text-align:right;white-space:nowrap}
+  .ds-product-old{display:block;font-size:9.5px;color:var(--muted);text-decoration:line-through}
+  .ds-empty{padding:14px 0;color:var(--muted);font-size:10.5px;border-bottom:1px solid var(--line)}
+  .status{display:grid;grid-template-columns:.8fr 1.2fr;gap:clamp(18px,4vw,50px);margin-top:40px;padding:30px 0 34px;border-top:1px solid var(--line)}
+  .status h2{font-size:clamp(20px,2.6vw,28px);margin-bottom:12px}
+  .status p{font-size:11px;color:var(--muted);margin:0 0 10px;max-width:42ch}
+  .status p:empty{display:none}
+  .ds-services-list{list-style:none;margin:0;padding:0;counter-reset:mod}
+  .ds-service{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line);font-size:11px}
+  .ds-service::before{content:"SYS-" counter(mod,decimal-leading-zero);counter-increment:mod;font-size:9px;color:var(--cyan);letter-spacing:.1em}
+  .ds-service-name{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+  .ds-service-desc{grid-column:2;font-size:9.5px;color:var(--muted)}
+  .ds-service::after{content:"OK";grid-row:1;grid-column:3;font-size:9px;color:var(--lime);letter-spacing:.14em}
+  .gallery:empty{display:none}
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:24px}
+  .ds-shot{margin:0;border:1px solid var(--line)}
+  .ds-shot img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;filter:saturate(.8) contrast(1.05)}
+  footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 0 30px;margin-top:26px;border-top:1px solid var(--line);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  footer span:empty{display:none}
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .reveal.on{opacity:1;transform:none}
+  /* Modo noche: el diseño ya es oscuro; la noche baja el fondo y sube el contraste. */
+  @media (prefers-color-scheme:dark){
+    :root{--void:#03060b;--panel:#080f19;--text:#f0fbff;--muted:#a2bccb;--line:#1f3d52;--lime:#b8f14a}
+  }
+  html[data-ds-theme="dark"]{--void:#03060b;--panel:#080f19;--text:#f0fbff;--muted:#a2bccb;--line:#1f3d52;--lime:#b8f14a}
+  html[data-ds-theme="dark"] .console{background:#050c14}
+  @media (max-width:960px){
+    .hero{grid-template-columns:1fr}
+    .hero-copy{border-right:0;border-bottom:1px solid var(--line);padding-right:0}
+    .diagnostic{padding-left:0}
+    .rows{grid-template-columns:1fr}
+    .status{grid-template-columns:1fr}
+    .top nav{display:none}
+  }
+  @media (max-width:560px){
+    .metrics{grid-template-columns:1fr}
+    .metrics div:nth-child(odd){border-right:0}
+    .metrics div:nth-last-child(-n+2){border-bottom:1px solid var(--line)}
+    .metrics div:last-child{border-bottom:0}
+    .gallery{grid-template-columns:repeat(2,1fr)}
+    .ds-service{grid-template-columns:auto 1fr}
+    .ds-service::after{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#inicio">
+      <img src="{{store_logo}}" alt="" onerror="this.remove()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 7h10v8H4z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="8" cy="17" r="2"/><circle cx="18" cy="17" r="2"/></svg>
+      {{store_name}} <i aria-hidden="true"></i>
+    </a>
+    <nav aria-label="Principal"><a href="#modulos">Módulos</a><a href="#sistema">Sistema</a><a href="#contacto">Contacto</a></nav>
+    <a class="link" href="{{store_whatsapp_url}}">Soporte</a>
+  </header>
+
+  <section class="hero" id="inicio">
+    <div class="hero-copy">
+      <span class="tag">{{store_location}} · en línea</span>
+      <h1>{{store_tagline}} <span>/</span></h1>
+      <p>{{store_description}}</p>
+      <div class="metrics">
+        <div>Horario<b>{{store_hours}}</b></div>
+        <div>Contacto<b>{{store_phone}}</b></div>
+        <div>Base<b>{{store_address}}</b></div>
+        <div>Red<b><a href="{{store_whatsapp_url}}">WhatsApp</a></b></div>
+      </div>
+    </div>
+    <div class="diagnostic">
+      <div class="diag-head"><span>Diagnóstico</span><span>{{year}} · v1.0</span></div>
+      <div class="bars" aria-hidden="true"><i style="--h:38%"></i><i style="--h:62%"></i><i style="--h:46%"></i><i style="--h:78%"></i><i style="--h:54%"></i><i style="--h:88%"></i><i style="--h:66%"></i><i style="--h:92%"></i></div>
+      <div class="console" aria-hidden="true">
+        <span><b>›</b> {{store_name}} · conexión estable</span>
+        <span><b>›</b> stock sincronizado</span>
+        <span><b>›</b> {{store_location}} · latencia 12ms</span>
+      </div>
+      <p class="diag-note">{{store_about}}</p>
+    </div>
+  </section>
+
+  <section class="catalog" id="modulos">
+    <div class="catalog-head"><h2>Módulos disponibles</h2><span>Stock real · precio final</span></div>
+    <div class="tabs" id="lineas">{{categories}}</div>
+    <div class="rows">{{products}}</div>
+  </section>
+
+  <section class="status" id="sistema">
+    <div>
+      <h2>Sistema de atención</h2>
+      <p>{{store_about}}</p>
+      <p>{{store_address}}</p>
+    </div>
+    <div id="contacto">{{services}}</div>
+  </section>
+
+  <div class="gallery">{{gallery}}</div>
+
+  <footer><span>{{store_name}} · {{store_tagline}}</span><span>{{store_email}}</span><span>{{year}}</span></footer>
+</div>
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) { items.forEach(function(el){el.classList.add('on')}); return; }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  },{threshold:.14});
+  items.forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>

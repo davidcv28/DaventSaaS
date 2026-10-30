@@ -147,9 +147,19 @@
   regenera con `seed_design_catalog --patterns-only` y `variables` viaja en
   `seed_data.json`. Fragmentos con clases `ds-*` (producto, categoría, servicio,
   galería, vacío).
-- [ ] Convertir los 8 patrones restantes (`alimentos`, `trama`, `indumentaria`,
-  `boutique`, `atelier`, `clasico`, `circuito`, `seguridad`) al mismo contrato:
-  hoy su markup es demo estático y la web sigue con la plantilla Vue.
+- [x] Convertir los 8 patrones restantes (`alimentos`, `trama`, `indumentaria`,
+  `boutique`, `atelier`, `clasico`, `circuito`, `seguridad`) al mismo contrato.
+  **(TERMINADO)** — fuente editable `sources/<slug>.html` para los 9 patrones;
+  `seed_design_catalog` parte la fuente (`services/source_document.py`) y
+  **deriva `variables` de los placeholders reales** (solo claves del contrato),
+  así el seed no puede declarar lo que el diseño no pinta. Cada diseño trae
+  composición propia (pizarra/editorial/vitrina/boutique/arco/ledger/consola/
+  protocolo), fragmentos `ds-*` estilados, `--ds-accent`/`--ds-radius`, modo
+  noche por `prefers-color-scheme` + `html[data-ds-theme]` y responsive
+  360→1920. `usePattern` ahora solo pinta la portada (`store-public`): catálogo,
+  ficha y servicios siguen con la plantilla Vue. QA `qa_patterns.py` (9 × 2
+  temas × 6 anchos): 0 scroll horizontal, 0 errores de consola; `manage.py test
+  StoreApp.domains.design` 37 OK; `vitest` 25 OK; `sync_design_neon` de los 9.
 - [ ] Landing única por rubro (composición propia, no genérica).
 - [ ] Catálogo único por rubro (filtros, orden, vacíos, responsive).
 - [ ] Servicios único por rubro (selector, presupuesto, CTA).
@@ -231,5 +241,9 @@ Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.p
   `vite build` OK; `npx vitest run` 25 OK; navegador headless sobre `/demo`
   (payload interceptado por el throttle `store_visit`) en 1360/390, claro y
   oscuro. `sync_design_neon --slug raiz` OK.
-- Próximo paso: convertir los 8 patrones restantes al contrato de variables
-  (landing/catálogo/servicios por rubro) y Fase 6 (rediseño del Studio).
+- (2026-10-30) Fase 4: los 9 patrones convertidos al contrato de variables con
+  fuente editable en `sources/` y variables derivadas del markup. Portada
+  propia por rubro; el documento del patrón queda limitado a la portada
+  (catálogo/ficha/servicios siguen en la plantilla Vue). QA headless 9×2×6.
+- Próximo paso: catálogo y servicios propios por rubro sobre el patrón
+  (hoy esas superficies siguen en Vue) y Fase 6 (rediseño del Studio).

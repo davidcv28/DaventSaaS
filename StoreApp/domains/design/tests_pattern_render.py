@@ -180,3 +180,60 @@ class PublicPatternEndpointTests(TestCase):
         with patch('StoreApp.domains.stores.views.viewset.profile_has_benefit', return_value = False):
             response = self.client.get(PATTERN_URL)
         self.assertEqual(response.status_code, 404)
+
+
+class PatternSourceTests(TestCase):
+    """
+    Los patrones convertidos al contrato de variables tienen su fuente
+    editable en `sources/<slug>.html`: el markup se parte en html/css/js y
+    las variables declaradas se derivan de los placeholders que usa.
+    """
+
+    SLUGS = (
+        'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique',
+        'atelier', 'clasico', 'circuito', 'seguridad',
+    )
+
+    def test_split_document_returns_three_layers(self):
+        from StoreApp.domains.design.services.source_document import split_document
+        html, css, js = split_document(
+            '<html><head><style>.a{color:red}</style></head>'
+            '<body><h1>{{store_name}}</h1><script>var a = 1</script></body></html>'
+        )
+        self.assertEqual(html, '<h1>{{store_name}}</h1>')
+        self.assertIn('.a{color:red}', css)
+        self.assertIn('var a = 1', js)
+
+    def test_variables_come_from_the_markup_only(self):
+        from StoreApp.domains.design.services.source_document import variables_from_markup
+        variables = variables_from_markup('<h1>{{store_name}}</h1><p>{{no_existe}}</p>')
+        self.assertEqual(list(variables), ['store_name'])
+
+    def test_converted_patterns_have_a_ready_source(self):
+        from StoreApp.domains.design.services.source_document import load_source
+        for slug in self.SLUGS:
+            with self.subTest(slug = slug):
+                source = load_source(slug)
+                self.assertIsNotNone(source, f'falta sources/{slug}.html')
+                html, css, js, variables = source
+                self.assertIn('store_name', variables)
+                self.assertIn('products', variables)
+                self.assertIn('categories', variables)
+                #El estilo solo puede tocar colores/bordes: el diseño usa --ds-*.
+                self.assertIn('var(--ds-accent', css)
+                #Modo noche explícito, además de prefers-color-scheme.
+                self.assertIn('data-ds-theme="dark"', css)
+
+    def test_converted_patterns_render_and_escape_store_data(self):
+        from django.utils.html import escape
+        from StoreApp.domains.design.services.source_document import load_source
+        for slug in self.SLUGS:
+            with self.subTest(slug = slug):
+                html, _, _, variables = load_source(slug)
+                pattern = DesignPattern(
+                    slug = slug, nombre = slug.title(), categoria = 'general',
+                    template = slug, html = html, variables = variables,
+                )
+                rendered = pattern.render({'store_name': '<b>x</b>'})
+                self.assertIn(escape('<b>x</b>'), rendered)
+                self.assertNotRegex(rendered, r'\{\{\s*[a-z_]+\s*\}\}')

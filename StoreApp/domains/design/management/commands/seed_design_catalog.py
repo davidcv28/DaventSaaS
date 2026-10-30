@@ -11,6 +11,7 @@ from StoreApp.domains.design.seed import (
     DEFAULT_STYLE,
     build_markup,
 )
+from StoreApp.domains.design.services.source_document import load_source
 
 """
 
@@ -81,6 +82,13 @@ class Command(BaseCommand):
             html = pattern.get('html') or html
             css = pattern.get('css') or css
             js = pattern.get('js') or js
+            variables = pattern.get('variables') or {}
+            #La fuente editable (`sources/<slug>.html`) manda sobre el JSON:
+            #el markup se parte en html/css/js y las variables declaradas se
+            #derivan de los placeholders que el diseño usa de verdad.
+            source = load_source(pattern['slug'])
+            if source is not None:
+                html, css, js, variables = source
             DesignPattern.objects.update_or_create(
                 slug = pattern['slug'],
                 defaults = {
@@ -96,7 +104,7 @@ class Command(BaseCommand):
                     #Contrato de datos del patrón: sin `variables` el
                     #markup es demo estático y la web sigue con la
                     #plantilla Vue (ver services/pattern_render.py).
-                    'variables'     :   pattern.get('variables') or {},
+                    'variables'     :   variables,
                     'supports_dark_mode': pattern.get('supports_dark_mode', True),
                     'tokens'        :   pattern.get('tokens') or {},
                     'tags'          :   pattern.get('tags') or [],

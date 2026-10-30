@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}} · Taller de otoño</title>
+<style>
+  :root{
+    --paper:#f4f2ec; --ink:#1f2a24; --forest:var(--ds-accent,#2d4a3e); --moss:#4f6b58;
+    --clay:#8f4407; --line:#d8d2c4; --radius:var(--ds-radius,4px);
+    --ease:cubic-bezier(.16,1,.3,1); --dur:680ms;
+  }
+  *{box-sizing:border-box}
+  img[src=""]{display:none}
+  body{margin:0;background:var(--paper);color:var(--ink);line-height:1.55;font-family:"Trebuchet MS","Segoe UI",sans-serif}
+  h1,h2,h3{font-family:"Arial Black",Arial,sans-serif;line-height:.96;letter-spacing:-.045em;margin:0}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1240px,94vw);margin:0 auto}
+  .top{display:flex;align-items:center;gap:20px;padding:18px 0;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:9px;margin-right:auto;font-family:"Arial Black",Arial,sans-serif;font-size:18px;letter-spacing:-.04em}
+  .brand svg{color:var(--forest)}
+  .brand img{width:30px;height:30px;object-fit:contain;border-radius:50%}
+  .top nav{display:flex;gap:20px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss)}
+  .top nav a:hover{color:var(--forest)}
+  .top .book{border-bottom:2px solid var(--forest);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding-bottom:3px;color:var(--forest)}
+  .top .book:empty{display:none}
+  .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(20px,4vw,56px);align-items:center;padding:44px 0 40px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--clay)}
+  .kicker::before{content:"";width:26px;height:1px;background:var(--clay)}
+  .hero h1{font-size:clamp(44px,6.6vw,88px);margin:16px 0 18px;max-width:12ch}
+  .hero h1 em{font-style:normal;color:var(--forest)}
+  .hero p{max-width:42ch;font-size:14px;color:var(--moss);margin:0}
+  .hero p:empty{display:none}
+  .hero .cta{display:inline-flex;align-items:center;gap:10px;margin-top:26px;background:var(--forest);color:#f7f4ec;padding:13px 20px;border-radius:var(--radius);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+  .hero .cta span{font-size:14px}
+  .arch{position:relative;border-radius:999px 999px var(--radius) var(--radius);overflow:hidden;background:#e2ddd0;min-height:clamp(360px,44vw,520px);border:1px solid var(--line)}
+  .arch img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .arch .label{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:#f4f2ecdd;color:var(--forest);font-size:9px;letter-spacing:.22em;text-transform:uppercase;padding:7px 12px;border-radius:999px;white-space:nowrap}
+  .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 0 8px}
+  .facts div{padding:16px 16px 16px 0;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--moss)}
+  .facts b{display:block;margin-top:5px;font-size:12.5px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:400}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:2px solid var(--ink);padding:36px 0 10px}
+  .head h2{font-size:clamp(26px,3.4vw,40px)}
+  .head span{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--moss);text-align:right}
+  .lines{display:flex;flex-wrap:wrap;gap:6px;padding:14px 0 22px}
+  /* Líneas (fragmento {{categories}}) */
+  .ds-cat{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--forest);border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:#faf8f3}
+  .ds-cat:hover{border-color:var(--forest);background:#fff}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2.6vw,32px) clamp(16px,3vw,40px)}
+  /* Piezas (fragmento {{products}}) */
+  .ds-product-link{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:2px 18px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);transition:padding var(--dur) var(--ease)}
+  .ds-product-img{grid-row:1/4}
+  .ds-product-copy{grid-column:2;grid-row:1}
+  .ds-product-cat{grid-column:2;grid-row:2}
+  .ds-product-price{grid-column:2/4;grid-row:3}
+  .ds-product-link:hover{padding-left:6px}
+  .ds-product-img{width:150px;height:170px;object-fit:cover;border-radius:999px 999px var(--radius) var(--radius);background:#e2ddd0;display:block}
+  .ds-product-img.is-empty{display:block;background:linear-gradient(160deg,#e4dfd2,#d3ccbb)}
+  .ds-product-copy{min-width:0}
+  .ds-product-name{font-family:"Arial Black",Arial,sans-serif;font-size:18px;line-height:1.05;letter-spacing:-.03em}
+  .ds-product-cat{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--clay);margin-top:4px}
+  .ds-product-desc{font-size:11.5px;color:var(--moss);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ds-product-price{margin-top:8px;font-family:"Arial Black",Arial,sans-serif;font-size:14px;color:var(--forest)}
+  .ds-product-old{font-family:"Trebuchet MS",sans-serif;font-weight:400;color:var(--moss);font-size:11px;text-decoration:line-through;margin-left:6px}
+  .ds-empty{padding:18px 0;color:var(--moss);font-size:12px;border-bottom:1px solid var(--line)}
+  .craft{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(20px,4vw,56px);margin-top:48px;padding:38px 0;border-top:1px solid var(--line)}
+  .craft h2{font-size:clamp(26px,3.2vw,38px);max-width:14ch}
+  .craft p{font-size:13px;color:var(--moss);margin:14px 0 0;max-width:38ch}
+  .craft p:empty{display:none}
+  .ds-services-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+  .ds-service{padding:13px 0;border-bottom:1px solid var(--line);counter-increment:step}
+  .ds-service::before{content:"0" counter(step);display:block;font-size:9px;letter-spacing:.2em;color:var(--clay);margin-bottom:5px}
+  .ds-services-list{counter-reset:step}
+  .ds-service-name{display:block;font-family:"Arial Black",Arial,sans-serif;font-size:14px;letter-spacing:-.02em}
+  .ds-service-desc{display:block;font-size:11.5px;color:var(--moss);margin-top:4px}
+  .gallery:empty{display:none}
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:34px 0 0}
+  .ds-shot{margin:0;border-radius:var(--radius);overflow:hidden}
+  .ds-shot img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+  footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:26px 0 32px;margin-top:36px;border-top:2px solid var(--ink);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--moss)}
+  footer span:empty{display:none}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .reveal.on{opacity:1;transform:none}
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#121713;--ink:#f0efe6;--moss:#b6c3b4;--line:#2f3a33;--clay:#e0a05a;
+      --forest:color-mix(in srgb,var(--ds-accent,#2d4a3e) 40%,#d6ecdc)}
+    .arch{background:#1b231e}
+    .arch .label{background:#121713dd;color:#d6ecdc}
+    .ds-cat{background:#1a211c}
+    .ds-cat:hover{background:#212a24}
+    .ds-product-img.is-empty{background:linear-gradient(160deg,#232c26,#1b231e)}
+    .hero .cta{color:#0e1410}
+  }
+  html[data-ds-theme="dark"]{--paper:#121713;--ink:#f0efe6;--moss:#b6c3b4;--line:#2f3a33;--clay:#e0a05a;
+    --forest:color-mix(in srgb,var(--ds-accent,#2d4a3e) 40%,#d6ecdc)}
+  html[data-ds-theme="dark"] .arch{background:#1b231e}
+  html[data-ds-theme="dark"] .arch .label{background:#121713dd;color:#d6ecdc}
+  html[data-ds-theme="dark"] .ds-cat{background:#1a211c}
+  html[data-ds-theme="dark"] .ds-product-img.is-empty{background:linear-gradient(160deg,#232c26,#1b231e)}
+  html[data-ds-theme="dark"] .hero .cta{color:#0e1410}
+  @media (max-width:980px){
+    .hero{grid-template-columns:1fr}
+    .arch{order:-1;min-height:300px}
+    .facts{grid-template-columns:repeat(2,1fr)}
+    .craft{grid-template-columns:1fr}
+    .gallery{grid-template-columns:repeat(2,1fr)}
+    .top nav{display:none}
+  }
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr}
+    .ds-product-link{grid-template-columns:110px minmax(0,1fr);gap:14px}
+    .ds-product-img{width:110px;height:130px}
+    .ds-services-list{grid-template-columns:1fr}
+    .head{flex-direction:column;align-items:flex-start;gap:6px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#inicio">
+      <img src="{{store_logo}}" alt="" onerror="this.remove()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21V8"/><path d="M12 12c-4 0-7-2.6-7-6 4 0 7 2.6 7 6Z"/><path d="M12 12c4 0 7-2.6 7-6-4 0-7 2.6-7 6Z"/></svg>
+      {{store_name}}
+    </a>
+    <nav aria-label="Principal"><a href="#piezas">Piezas</a><a href="#taller">Taller</a><a href="#contacto">Contacto</a></nav>
+    <a class="book" href="{{store_whatsapp_url}}">Reservar visita</a>
+  </header>
+
+  <section class="hero" id="inicio">
+    <div>
+      <span class="kicker">{{store_location}} · edición otoño</span>
+      <h1>{{store_tagline}}</h1>
+      <p>{{store_description}}</p>
+      <a class="cta" href="{{store_whatsapp_url}}">Ver la colección <span>→</span></a>
+    </div>
+    <div class="arch">
+      <img src="{{store_cover}}" alt="{{store_name}}" onerror="this.remove()">
+      <span class="label">{{store_name}} · {{year}}</span>
+    </div>
+  </section>
+
+  <div class="facts">
+    <div>Taller<b>{{store_address}}</b></div>
+    <div>Horarios<b>{{store_hours}}</b></div>
+    <div>Contacto<b>{{store_phone}}</b></div>
+    <div>Pedidos<b><a href="{{store_whatsapp_url}}">WhatsApp</a></b></div>
+  </div>
+
+  <section id="piezas">
+    <div class="head"><h2>Piezas del taller</h2><span>Tejido y cuero · hecho acá</span></div>
+    <div class="lines" id="lineas">{{categories}}</div>
+    <div class="grid">{{products}}</div>
+  </section>
+
+  <section class="craft" id="taller">
+    <div>
+      <h2>Oficio de otoño</h2>
+      <p>{{store_about}}</p>
+    </div>
+    <div>{{services}}</div>
+  </section>
+
+  <div class="gallery">{{gallery}}</div>
+
+  <footer id="contacto"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_email}}</span><span>{{store_location}}</span></footer>
+</div>
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) { items.forEach(function(el){el.classList.add('on')}); return; }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  },{threshold:.14});
+  items.forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>
