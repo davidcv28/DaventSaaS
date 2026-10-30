@@ -11,7 +11,7 @@ Capa LLM multi-proveedor del asistente de diseño.
 
 Anthropic quedó con la cuenta sin crédito, así que el orden por defecto
 prioriza los planes gratuitos con más margen:
-  1. Google Gemini (free tier: ~15 RPM / 1.500 req/día)
+  1. Google Gemini (free tier sin tarjeta; límites por proyecto)
   2. Groq (free tier, muy rápido, sin tarjeta)
   3. OpenRouter (modelos :free)
   4. Anthropic (si hay crédito)
@@ -56,7 +56,7 @@ def llm_enabled() -> bool:
 # PROVEEDORES
 #=========================================
 def _ask_gemini(system : str, messages : list[dict], max_tokens : int, temperature : float) -> str | None:
-    model   =   getattr(settings, 'GEMINI_MODEL', 'gemini-2.0-flash')
+    model   =   getattr(settings, 'GEMINI_MODEL', 'gemini-3.8-flash')
     contents    =   [
         {
             'role'  :   'model' if m['role'] == 'assistant' else 'user',
