@@ -83,10 +83,15 @@ jobs:
           --health-interval 10s --health-timeout 5s --health-retries 5
     env:
       # W009: con menos de 50 chars Django lo marca en cada `check --deploy`.
-      SECRET_KEY: ci-only-secret-key-with-more-than-fifty-characters-000000
+      # Sin placeholders conocidos (change-me/django-insecure/ci-only): el
+      # guard `check_env` los rechaza aunque sea un dummy de CI.
+      SECRET_KEY: 9f4c2b7e1a6d8035c9b2e4f7a1d6c3b8e5f2a9d4c7b1e6f3a8d5c2b9e4f7a1d6
       DEBUG: "False"
       ALLOWED_HOSTS: localhost,127.0.0.1
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/davent_test
+      # Presencia obligatoria en producción (project.E012): el job no levanta
+      # un Redis real, solo valida que la var esté definida.
+      REDIS_URL: redis://localhost:6379/1
       CORS_ALLOWED_ORIGINS: http://localhost:5173
       SECRET_MP_KEY: TEST-dummy
       # Dummy de CI (no es un secreto real): sin esto payments.E001 (checks.py,
@@ -118,6 +123,9 @@ jobs:
 
       - name: Checklist de despliegue de Django
         run: python manage.py check --deploy
+
+      - name: Guard de variables de entorno
+        run: python manage.py check_env
 
       - name: Migraciones sin commitear (drift de modelos)
         # `manage.py test` ya aplica TODAS las migraciones sobre la DB de test:

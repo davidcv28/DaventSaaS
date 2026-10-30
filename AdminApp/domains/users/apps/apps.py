@@ -20,3 +20,5 @@ class UsersAppConfig(AppConfig):
         #Checks de despliegue a nivel proyecto (cabeceras de transporte en
         #producción): se registran acá porque es la primera app instalada.
         from DaventProject import checks as project_checks  # noqa: F401
+        #Guard central de env vars (project.E006…E018).
+        from DaventProject import envguard  # noqa: F401
