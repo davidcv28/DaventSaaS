@@ -1776,10 +1776,14 @@
   color: #151515;
 }
 /* Placas amarillas y bandas hazard: tinta profunda, nunca tinta clara. */
-.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-hero-eyebrow,
-.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-title,
-.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-text {
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-hero-eyebrow {
   color: #151515;
+}
+/* La banda del CTA la pinta el motor (--sp-band-c1 → --store-accent-ink) y su
+   tinta es la de la banda: en oscuro la tinta del diseño es clara y el
+   #151515 fijo dejaba el texto a 3.5 sobre el acento. */
+.store-page[data-template='seguridad'] :is(.sp-cta-title, .sp-cta-text) {
+  color: var(--sp-on-band, #fff);
 }
 .store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-btn {
   background: #101010;
@@ -1791,7 +1795,30 @@
   border-color: #FFFFFF;
   color: #101010;
 }
-/* El amarillo puro no llega a AA sobre el acento índigo de la banda. */
-.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-eyebrow--light {
-  color: #FFE08A;
+/* El amarillo puro no llega a AA sobre el acento de la banda: la etiqueta
+   usa la tinta que el motor garantiza para esa banda. */
+.store-page[data-template='seguridad'] .sg-eyebrow--light {
+  color: var(--sp-on-band, #fff);
+}
+/* Placas amarillas del diseño (chips, sellos, pasos, avisos): en oscuro la
+   tinta clara del tema las dejaba a 1.42. Tinta profunda fija, como las
+   bandas hazard. */
+.store-page[data-template='seguridad'][data-store-theme='dark']
+  :is(.sg-btn--yellow, .sg-btn--ghost:hover, .sp-icon-btn:hover, .sp-burger:hover,
+      .sg-cats .sp-shop-dept-count, .sg-card-specs li, .sp-form-badge,
+      .sp-captcha-q, .sg-cat-note, .sg-cat-summary, .sp-hl-icon,
+      .sg-product .rz-pdp-seal, .sg-skin .rz-pdp-seal,
+      .sg-services .rz-sv-item-num, .sg-skin .rz-sv-item-num,
+      .sg-services .rz-sv-quote .rz-btn) {
+  color: #151515;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] ::selection {
+  background: var(--sg-yellow);
+  color: #151515;
+}
+/* Hover de los botones amarillos: la tinta clara no sirve como relleno. */
+.store-page[data-template='seguridad'][data-store-theme='dark']
+  :is(.sg-btn--yellow:hover, .sg-cats .sp-shop-dept.all .sp-shop-dept-thumb) {
+  background: #101010;
+  color: var(--sg-yellow);
 }

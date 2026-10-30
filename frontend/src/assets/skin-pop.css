@@ -51,3 +51,10 @@
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-st-skin='pop'] .sp-btn:active { transform: none; }
 }
+/* La etiqueta es un chip de tinta sólida (no texto sobre banda): el tema
+   publicado pinta los .sp-eyebrow con la tinta de banda y sobre el chip
+   claro del modo noche quedaba a 1.07. El chip conserva su par ink/bg. */
+.store-page[data-st-skin='pop'][data-store-theme='dark'] :is(.sp-eyebrow, .sp-badge) {
+  background: var(--sp-ink);
+  color: var(--sp-bg);
+}

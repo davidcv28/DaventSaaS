@@ -87,7 +87,19 @@
   **(TERMINADO)** — `showThemeToggle` ya no depende del plan; `theme_toggle` default True.
 - [x] Persistencia por tienda + respeto de `prefers-color-scheme` + `color-scheme`.
   **(TERMINADO)** — la infraestructura ya existía (`davent:store-theme:<slug>`).
-- [ ] Revisar contraste AA de las pieles activas en oscuro.
+- [x] Revisar contraste AA de las pieles activas en oscuro. **(TERMINADO)** —
+  auditoría real en navegador de las 32 familias (`qa_skin_dark.py`, payload de
+  bench-store servido por `route()` para no gastar el throttle `store_visit`)
+  a 1360 y 390: 0 fallas tras corregir (a) las placas amarillas de `seguridad`
+  —`.sg-btn--yellow`, `.sp-captcha-q`, `.sg-cats .sp-shop-dept-count`,
+  `.sg-card-specs li`, `.sp-form-badge`, `.sg-cat-note`, `.sg-cat-summary`,
+  `.sp-hl-icon`, sellos `.rz-pdp-seal`, pasos `.rz-sv-item-num`, hover de
+  `.sg-btn--ghost`/`.sp-icon-btn`/`.sp-burger`, `::selection`, que quedaban a
+  1.42 por la tinta clara del modo noche—, (b) el texto del CTA y
+  `.sg-eyebrow--light` sobre la banda de acento (usaban tinta fija #151515 /
+  amarillo y quedaban a 3.5 y 4.02: ahora `--sp-on-band`), y (c) el chip
+  `.sp-eyebrow`/`.sp-badge` de la piel `pop` (1.07 por la tinta de banda del
+  tema publicado: recupera su par ink/bg).
 - [ ] Test de render (clase/tema y persistencia).
 
 ### FASE 3 — Retiro del sistema de bloques
@@ -164,5 +176,9 @@ Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.p
 - (2026-10-30) Fase 3 (UI + render): `resolveLayout` ignora `layout_config`; sin
   sección "Bloques" ni panel "Distribución" en el Studio. `vite build` OK con
   `TMP` local (el temp de Windows de esbuild da "Acceso denegado").
+- (2026-10-30) Contraste AA en oscuro: auditoría de las 32 pieles con
+  `qa_skin_dark.py` (bench-store, payload interceptado) → placas amarillas de
+  `seguridad`, CTA/eyebrow sobre la banda y chip de `pop` corregidos; 0 fallas
+  a 1360 y 390.
 - Próximo paso: Fase 3 (limpieza de `useLayout`/`blocks.js` en las vistas) y Fase 4
   (render por `DesignPattern.html/css/js` con variables).
