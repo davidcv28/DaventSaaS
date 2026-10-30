@@ -18,7 +18,9 @@ const props = defineProps({
 })
 
 const { patterns, styles, status, load } = useDesignCatalog()
-onMounted(() => load())
+// El catálogo es la base de datos: se revalida al entrar a la sección para
+// que los patrones/estilos recién cargados aparezcan sin recargar la página.
+onMounted(() => load(true))
 
 const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
 const allowed = computed(() => allowedTemplatesFor(props.benefits || {}))
@@ -51,6 +53,24 @@ const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
 const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
 const currentStyleMeta = computed(() => styleOptions.value.find((s) => s.slug === currentStyle.value) || null)
 
+// Un patrón sin estilo elegido trae su propia piel (tokens del DesignPattern:
+// fuentes y acento). Si ya hay un estilo aplicado, el estilo manda la piel y
+// el patrón solo cambia la estructura.
+function patternTheme(p) {
+  const tokens = p.tokens || {}
+  const theme = { ...(props.form.site_theme || {}) }
+  const fonts = Array.isArray(tokens.fonts) ? tokens.fonts.filter(Boolean) : []
+  if (fonts.length) {
+    theme.typography = { ...(theme.typography || {}), body: fonts[0], heading: fonts[1] || fonts[0] }
+    fonts.forEach((f) => ensureStoreFont(f))
+  }
+  const palette = { ...(theme.palette || {}) }
+  if (tokens.accent) palette.accent = tokens.accent
+  if (tokens.palette && typeof tokens.palette === 'object') Object.assign(palette, tokens.palette)
+  if (Object.keys(palette).length) theme.palette = palette
+  return theme
+}
+
 function onPatternPick(event) {
   const p = patternOptions.value.find((x) => x.slug === event.target.value)
   if (!p) return
@@ -60,6 +80,7 @@ function onPatternPick(event) {
   }
   props.form.template = p.template
   props.form.layout_config = patternLayout(p)
+  if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
 }
 
 function onStylePick(event) {
@@ -97,7 +118,12 @@ function onStylePick(event) {
 <template>
   <div class="dpicks" role="group" aria-labelledby="dpicks-title">
     <div class="dpicks-head">
-      <strong id="dpicks-title"><AppIcon name="layout-grid" :size="15" aria-hidden="true" /> Diseño de tu web</strong>
+      <div class="dpicks-title">
+        <strong id="dpicks-title"><AppIcon name="layout-grid" :size="15" aria-hidden="true" /> Diseño de tu web</strong>
+        <button type="button" class="dpicks-refresh" :disabled="status === 'loading'" @click="load(true)">
+          <AppIcon name="refresh" :size="13" /> {{ status === 'loading' ? 'Cargando…' : 'Actualizar' }}
+        </button>
+      </div>
       <small>Elegí el patrón y el estilo por separado: cualquier combinación funciona.</small>
     </div>
     <div class="dpicks-grid">
@@ -151,6 +177,14 @@ function onStylePick(event) {
    que todo el diseño viva en un solo contenedor. */
 .dpicks { display: flex; flex-direction: column; gap: 14px; min-width: 0; height: 100%; container-type: inline-size; }
 .dpicks-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dpicks-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.dpicks-refresh {
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  padding: 4px 9px; border: 1px solid var(--line, #e5e7eb); border-radius: 8px;
+  background: transparent; color: var(--muted); font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.dpicks-refresh:hover:not(:disabled) { color: var(--ink); border-color: var(--line-2, #cbd5e1); }
+.dpicks-refresh:disabled { opacity: .6; cursor: default; }
 .dpicks-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink); }
 .dpicks-head strong .icon { color: var(--brand-600); flex: none; }
 .dpicks-head small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }

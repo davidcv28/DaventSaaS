@@ -11,6 +11,7 @@ import { extractLogoColors, contrastRatio, deriveAccent, fixAccent, harmonicAcce
 import { PALETTES } from '../../utils/palettes.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
+import { resolveSiteTheme } from '../../studio/contract.js'
 import AppIcon from '../AppIcon.vue'
 import DesignPreview from './DesignPreview.vue'
 import DesignPickers from './DesignPickers.vue'
@@ -316,7 +317,8 @@ const stepSum = computed(() => ({
 // Los estilos del selectbox salen del catálogo del dominio design (base de
 // datos): nada de listas de plantillas en el front.
 const { styles: designStyles, load: loadDesignStyles } = useDesignCatalog()
-onMounted(() => loadDesignStyles())
+// Revalidar contra la base al montar: los estilos nuevos se ven sin recargar.
+onMounted(() => loadDesignStyles(true))
 const styleOptions = computed(() => designStyles.value.filter((s) => s.is_active !== false))
 const tierLabel = (tpl) => {
   const tier = STORE_TEMPLATES[tpl]?.tier
@@ -341,14 +343,20 @@ function onStylePick(event) {
     return
   }
   const tokens = s.tokens || {}
-  props.form.site_theme = { ...(props.form.site_theme || {}), style: { id: s.slug } }
+  // El estilo es un tema completo: se aplican todos sus tokens (paleta,
+  // tipografía, contenedores, botones, fondo, movimiento y móvil) para que la
+  // vista previa cambie al instante igual que en la sección Diseño.
+  const theme = resolveSiteTheme(tokens)
+  props.form.site_theme = { ...theme, style: { id: s.slug } }
   props.form.theme = s.page_theme || props.form.theme
-  const body = tokens.typography?.body
+  const heading = theme.typography?.heading
+  const body = theme.typography?.body
+  if (heading) ensureStoreFont(heading)
   if (body) {
     props.form.name_font = body
     ensureStoreFont(body)
   }
-  const accent = tokens.palette?.accent
+  const accent = theme.palette?.accent
   if (accent && advanced.value) props.form.accent_custom = accent
   else if (accent) {
     const slug = nearestAccent(hexToRgb(accent), STORE_ACCENTS)

@@ -37,7 +37,7 @@ class DesignCatalogView(APIView):
     def get(self, request):
         pattern     =   default_pattern()
         style       =   default_style()
-        return Response({
+        response    =   Response({
             'pattern':  DesignPatternSerializer(pattern).data if pattern else None,
             'style':    DesignStyleSerializer(style).data if style else None,
             'patterns': DesignPatternListSerializer(
@@ -47,3 +47,7 @@ class DesignCatalogView(APIView):
                 DesignStyle.objects.filter(is_active = True), many = True
             ).data,
         })
+        # El catálogo cambia cuando el staff edita la base: nunca se sirve
+        # desde caché del navegador/proxy.
+        response['Cache-Control'] = 'no-store'
+        return response
