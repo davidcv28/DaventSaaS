@@ -12,7 +12,7 @@ from .ai_design import (
     _ensure_contrast,
     _luminance,
     _norm_hex,
-    apply_theme_overlay,
+    apply_design_overlay,
     generate,
 )
 
@@ -20,20 +20,28 @@ from .ai_design import (
 Proxy del wizard "Diseño asistido" hacia el MCP de estilos.
 
 El frontend manda el pedido del cliente como ESTRUCTURA DE DATO (una clave
-por pregunta del wizard) y el MCP decide qué skill de diseño aplicar:
+por pregunta del wizard) y el MCP decide qué PATRÓN DE DISEÑO aplicar,
+tomado de las fuentes de repos cargadas en `DesignModelMcp`
+(`html_componentes` + `tokens_diseno.source_repo`), NO de los presets
+curados del sistema:
 
   1. `prompt` -> respuestas del motor (`ai_design.generate`): rubro,
      objetivos, tono, audiencia, imprescindibles y notas libres.
-  2. `select_styles` consulta el catálogo del MCP (`McpApp.domains.skills`:
-     `search_design_styles` / `list_design_styles`) con una query armada
-     desde el prompt y rankea por solapamiento de tags.
-  3. Cada propuesta del motor recibe un skill DISTINTO: sus `tokens_diseno`
-     se traducen a `site_theme` (paleta, contenedores y tipografía del
-     catálogo cerrado) y se pasan por `clean_site_theme`, así lo que se ve
-     en la tarjeta es lo que se publica.
-  4. El overlay queda en caché por (tienda, semilla): `apply` y `refine`
-     lo reaplican sobre el recálculo del motor, por eso publicar no pierde
-     el estilo elegido por el MCP.
+  2. `select_styles` consulta el catálogo del MCP (`search_design_styles` /
+     `list_design_styles`) y se queda SOLO con las entradas que vienen de un
+     repo (`tokens_diseno.source_repo`), priorizando las que traen una
+     página completa (`hero` en `html_componentes`).
+  3. `pattern_from_components` lee los bloques HTML del repo y deriva el
+     patrón: qué secciones usa y en qué orden, y la variante de portada y
+     de vitrina (split/centered/full, cols3/cols4…).
+  4. Cada propuesta del motor recibe un patrón DISTINTO: el orden y las
+     variantes se aplican al `layout_config` (saneado con
+     `clean_layout_config`) y los `tokens_diseno` del repo se traducen a
+     `site_theme` (saneado con `clean_site_theme`). Lo que se ve en la
+     tarjeta es lo que se publica.
+  5. El overlay queda en caché por (tienda, semilla): `apply` y `refine` lo
+     reaplican sobre el recálculo del motor, por eso publicar no pierde el
+     patrón elegido por el MCP.
 
 El token del MCP y cualquier credencial quedan del lado del servidor: el
 navegador nunca ve nada más que este endpoint.
@@ -344,9 +352,126 @@ def select_styles(prompt, limit = MAX_STYLES):
                     break
     if not rows:
         rows    =   list_design_styles(limit = limit * 3)
+    #Solo fuentes de repo: el patrón de diseño sale de `html_componentes`
+    #real, no de los presets curados del sistema.
+    repo_rows   =   [style for style in rows if _is_repo_style(style)]
+    if repo_rows:
+        rows    =   repo_rows
+    else:
+        #Catálogo sin fuentes de repo cargadas: el wizard sigue con el motor.
+        rows    =   []
     #Ranking estable: afinidad de tags y, a igualdad, id (determinista).
     rows.sort(key = lambda style: (-_score(style, terms), style.id))
     return [design_payload(style, full = True) for style in rows[:limit]]
+
+
+def _is_repo_style(style):
+    """Una fuente de repo: tokens con `source_repo` y bloques HTML."""
+    tokens      =   getattr(style, 'tokens_diseno', None) or {}
+    components  =   getattr(style, 'html_componentes', None) or {}
+    if not isinstance(tokens, dict) or not isinstance(components, dict):
+        return False
+    return bool(tokens.get('source_repo')) and bool(components)
+
+
+#=========================================
+# PATRÓN DE DISEÑO DESDE LOS COMPONENTES DEL REPO
+#=========================================
+#Componente del repo -> bloque de la landing del Studio. Los que no son de
+#landing (header/footer, checkout, cuenta) quedan afuera del patrón.
+_COMPONENT_BLOCKS   =   {
+    'hero'          :   'hero',
+    'features'      :   'benefits',
+    'benefits'      :   'benefits',
+    'products'      :   'featured',
+    'featured'      :   'featured',
+    'grid'          :   'featured',
+    'related'       :   'featured',
+    'categories'    :   'categories',
+    'testimonials'  :   'testimonials',
+    'about'         :   'about',
+    'gallery'       :   'gallery',
+    'metrics'       :   'stats',
+    'contact'       :   'contact',
+}
+
+
+def pattern_from_components(components):
+    """
+    Deriva el patrón de diseño de los bloques HTML del repo: qué secciones
+    usa, en qué orden, y la variante de portada/vitrina que sugiere el
+    markup (grillas de 2/3/4 columnas, hero partido, centrado, etc.).
+    """
+    components  =   components if isinstance(components, dict) else {}
+    order       =   []
+    variants    =   {}
+    for name, html in components.items():
+        block   =   _COMPONENT_BLOCKS.get(str(name))
+        if not block or block in order:
+            continue
+        order.append(block)
+        markup  =   str(html or '')
+        if block == 'hero':
+            if 'md:grid-cols-2' in markup or 'lg:grid-cols-2' in markup:
+                variants['hero']    =   'split'
+            elif 'text-center' in markup or 'items-center text-center' in markup:
+                variants['hero']    =   'centered'
+            else:
+                variants['hero']    =   'full'
+        elif block == 'featured':
+            if 'lg:grid-cols-4' in markup or 'xl:grid-cols-4' in markup:
+                variants['featured']    =   'cols4'
+            elif 'lg:grid-cols-3' in markup or 'md:grid-cols-3' in markup:
+                variants['featured']    =   'cols3'
+            elif 'lg:grid-cols-2' in markup or 'md:grid-cols-2' in markup:
+                variants['featured']    =   'cols2'
+            else:
+                variants['featured']    =   'grid'
+        elif block == 'benefits' and 'md:grid-cols-3' in markup:
+            variants['benefits']    =   'cards'
+    return {'order': order, 'variants': variants}
+
+
+def apply_pattern(layout, pattern):
+    """
+    Aplica el patrón del repo sobre el `layout_config` del motor: ordena los
+    bloques activos como en el repo y fija las variantes derivadas. Los
+    bloques que el motor armó y el repo no trae se conservan al final (nunca
+    se pierde contenido), y los desactivados no se tocan.
+    """
+    pattern =   pattern if isinstance(pattern, dict) else {}
+    order   =   pattern.get('order') or []
+    if not order or not isinstance(layout, dict):
+        return layout
+    surface =   layout.get('landing')
+    if not isinstance(surface, dict):
+        return layout
+    blocks  =   surface.get('blocks')
+    if not isinstance(blocks, list) or not blocks:
+        return layout
+    index   =   {block_id: position for position, block_id in enumerate(order)}
+    variants =  pattern.get('variants') or {}
+    enabled =   []
+    disabled =  []
+    for position, block in enumerate(blocks):
+        if not isinstance(block, dict):
+            continue
+        block.setdefault('order', position)
+        if block.get('enabled') is False:
+            disabled.append(block)
+            continue
+        enabled.append((position, block))
+    enabled.sort(key = lambda pair: (index.get(pair[1].get('id'), len(index)), pair[0]))
+    ordered =   []
+    for position, block in enumerate(block for _, block in enabled):
+        variant =   variants.get(block.get('id'))
+        if variant:
+            block['variant']    =   variant
+        block['order']          =   position
+        ordered.append(block)
+    surface['blocks']   =   ordered + disabled
+    layout['landing']   =   surface
+    return layout
 
 
 #=========================================
@@ -444,8 +569,8 @@ def _theme_mode(theme):
 
 
 def apply_overlay(proposal, overlay):
-    """Alias del overlay del motor (`apply_theme_overlay`)."""
-    return apply_theme_overlay(proposal, overlay)
+    """Alias del overlay del motor (`apply_design_overlay`)."""
+    return apply_design_overlay(proposal, overlay)
 
 
 #=========================================
@@ -476,13 +601,14 @@ def overlay_of(store, seed, proposal_id = None):
 # FLUJO
 #=========================================
 def _decorate(store, seed, result, styles, prompt):
-    """Asigna un skill distinto a cada propuesta y guarda el overlay."""
+    """Aplica a cada propuesta un patrón de diseño distinto del MCP."""
     proposals   =   result.get('proposals') or []
     overlays    =   {}
     chosen      =   []
     has_plus    =   _benefit(store, 'has_design_plus')
     has_advanced =  _benefit(store, 'has_design_advanced')
     has_style   =   _benefit(store, 'has_customization')
+    has_ai      =   _benefit(store, 'has_ai_design')
     for index, proposal in enumerate(proposals):
         if not styles:
             break
@@ -490,35 +616,44 @@ def _decorate(store, seed, result, styles, prompt):
         tokens  =   style.get('tokens_diseno') or {}
         if not tokens:
             continue
-        theme   =   theme_from_tokens(tokens, proposal.get('site_theme') or {})
+        pattern =   pattern_from_components(style.get('html_componentes') or {})
+        layout  =   apply_pattern(copy.deepcopy(proposal.get('layout_config') or {}), pattern)
         try:
+            from StoreApp.domains.stores.layout_blocks import clean_layout_config
             from StoreApp.domains.stores.site_theme import clean_site_theme
 
             theme   =   clean_site_theme(
-                theme,
+                theme_from_tokens(tokens, proposal.get('site_theme') or {}),
                 has_plus        =   has_plus,
                 has_advanced    =   has_advanced,
                 has_style       =   has_style,
                 store           =   store,
             )
+            if pattern.get('order'):
+                layout  =   clean_layout_config(layout, has_advanced, has_ai)
         except serializers.ValidationError:
             #Un token fuera de contrato nunca tumba la propuesta: se queda
-            #el tema del motor.
+            #el patrón del motor.
             continue
         mcp_style   =   {
-            'slug'      :   style.get('slug'),
-            'nombre'    :   style.get('nombre'),
-            'categoria' :   style.get('categoria'),
-            'tags'      :   list(style.get('tags') or [])[:6],
+            'slug'          :   style.get('slug'),
+            'nombre'        :   style.get('nombre'),
+            'categoria'     :   style.get('categoria'),
+            'tags'          :   list(style.get('tags') or [])[:6],
+            #Trazabilidad del patrón aplicado: de qué repo sale y qué
+            #secciones ordenó.
+            'source_repo'   :   tokens.get('source_repo') or '',
+            'pattern'       :   list(pattern.get('order') or []),
         }
         overlay =   {
             'site_theme'    :   theme,
+            'layout_config' :   layout if pattern.get('order') else None,
             'theme'         :   _theme_mode(theme),
             'theme_toggle'  :   True,
             'accent'        :   (theme.get('palette') or {}).get('accent') or '',
             'mcp_style'     :   mcp_style,
         }
-        apply_overlay(proposal, overlay)
+        apply_design_overlay(proposal, overlay)
         overlays[str(proposal.get('id'))]    =   overlay
         chosen.append(mcp_style)
     if overlays:

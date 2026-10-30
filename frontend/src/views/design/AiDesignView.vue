@@ -920,13 +920,13 @@ function closePreview() {
         <div v-if="mcp?.styles?.length" class="aid-mcp">
           <div class="aid-mcp-head">
             <AppIcon name="gem" :size="16" aria-hidden="true" />
-            <strong>El MCP eligió {{ mcp.styles.length === 1 ? 'este estilo' : `${mcp.styles.length} estilos` }} de su catálogo</strong>
+            <strong>El MCP eligió {{ mcp.styles.length === 1 ? 'este patrón' : `${mcp.styles.length} patrones` }} de sus fuentes</strong>
           </div>
           <ul class="aid-mcp-list">
             <li v-for="s in mcp.styles" :key="s.slug">
               <strong>{{ s.nombre }}</strong>
               <span class="aid-mcp-cat">{{ s.categoria }}</span>
-              <span v-if="s.tags?.length" class="aid-mcp-tags">{{ s.tags.join(' · ') }}</span>
+              <span v-if="s.source_repo" class="aid-mcp-tags">{{ s.source_repo }}</span>
             </li>
           </ul>
         </div>

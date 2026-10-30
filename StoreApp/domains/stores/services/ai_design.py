@@ -2814,7 +2814,7 @@ def refine(store, payload, theme_overlay = None):
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
     #El wizard "Diseño asistido" deja acá el skill que eligió el MCP: el
     #ajuste cambia tipografía/aire/color/portada, no la piel elegida.
-    proposal    =   apply_theme_overlay(proposal, theme_overlay)
+    proposal    =   apply_design_overlay(proposal, theme_overlay)
     #`apply` recalcula con esta caché: el ajuste queda en lo que se publica.
     cache.set(_cache_key(store, seed), answers, CACHE_TTL)
     return {
@@ -3015,17 +3015,20 @@ def _resolve_extras(layout, extras, accept, skip_extras, has_ai, blocks = None):
     return layout
 
 
-def apply_theme_overlay(proposal, overlay):
+def apply_design_overlay(proposal, overlay):
     """
-    Superpone el skill que eligió el MCP (`ai-design/mcp`) sobre una
-    propuesta recalculada por el motor. El overlay ya viene saneado por
-    `clean_site_theme`, así que reemplazar la piel no rompe el contrato del
-    Studio; sin overlay la propuesta queda exactamente como la armó el motor.
+    Superpone el patrón de diseño que eligió el MCP (`ai-design/mcp`) sobre
+    una propuesta recalculada por el motor: la piel (`site_theme`, ya
+    saneada por `clean_site_theme`) y el orden/variantes de los bloques
+    (`layout_config`, ya saneado por `clean_layout_config`). Sin overlay la
+    propuesta queda exactamente como la armó el motor.
     """
     if not isinstance(overlay, dict):
         return proposal
     if overlay.get('site_theme'):
         proposal['site_theme']      =   copy.deepcopy(overlay['site_theme'])
+    if overlay.get('layout_config'):
+        proposal['layout_config']   =   copy.deepcopy(overlay['layout_config'])
     if overlay.get('theme'):
         proposal['theme']           =   overlay['theme']
         proposal['theme_toggle']    =   bool(overlay.get('theme_toggle'))
@@ -3071,7 +3074,7 @@ def apply(store, seed, proposal_id, autofill = False, extras = None, skip_extras
     if proposal is None:
         raise AiDesignError('La propuesta no existe o venció: generá las propuestas de nuevo.')
     #La piel la eligió el MCP en el wizard: se republica tal cual se vio.
-    proposal    =   apply_theme_overlay(proposal, theme_overlay)
+    proposal    =   apply_design_overlay(proposal, theme_overlay)
 
     if later and later['offered'] is None:
         #Sin lista de ofrecidos se toman los que la propuesta ya evaluó

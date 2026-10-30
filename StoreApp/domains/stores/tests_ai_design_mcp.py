@@ -25,7 +25,11 @@ from rest_framework.test import APIClient
 from McpApp.domains.skills.models import DesignModelMcp
 from StoreApp.domains.stores.models import StoreCustomization
 from StoreApp.domains.stores.services import ai_design_recipes as R
-from StoreApp.domains.stores.services.ai_design_mcp import parse_message
+from StoreApp.domains.stores.services.ai_design_mcp import (
+    apply_pattern,
+    parse_message,
+    pattern_from_components,
+)
 from StoreApp.domains.stores.tests_ai_design_contract import (
     AI_DESIGN,
     CUSTOMIZATION,
@@ -65,26 +69,51 @@ TOKENS  =   {
     'heading_font'  :   'Playfair Display',
     'radius'        :   '18px',
     'shadow'        :   '0 14px 34px rgba(59,42,32,.10)',
+    'source_repo'   :   'bbulakh/tailwind-ecommerce',
+    'source_url'    :   'https://github.com/bbulakh/tailwind-ecommerce',
+}
+
+#Bloques HTML de una página home de repo: definen el PATRÓN (orden + variantes).
+HOME_COMPONENTS =   {
+    'header'        :   '<header class="sticky top-0">Tienda</header>',
+    'hero'          :   '<section class="px-6 py-24"><div class="grid gap-12 md:grid-cols-2">hero</div></section>',
+    'benefits'      :   '<section class="py-16"><div class="grid gap-6 md:grid-cols-3">beneficios</div></section>',
+    'featured'      :   '<section class="py-20"><div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">productos</div></section>',
+    'testimonials'  :   '<section class="py-16"><blockquote>opinión</blockquote></section>',
+    'footer'        :   '<footer>Contacto</footer>',
 }
 
 
 def _seed_styles():
+    #Fuentes de repo: son las únicas que el wizard puede elegir.
+    DesignModelMcp.objects.create(
+        slug = 'bb-minimal-home', nombre = 'Tailwind Ecommerce · Minimal Home', categoria = 'moda',
+        tags = ['home', 'azul', 'limpio'],
+        tokens_diseno = TOKENS, html_componentes = HOME_COMPONENTS,
+    )
+    DesignModelMcp.objects.create(
+        slug = 'fc-grocery-home', nombre = 'Freshcart · Grocery Home', categoria = 'alimentos',
+        tags = ['retail', 'fresco', 'grocery', 'calido'],
+        tokens_diseno = {**TOKENS, 'primary': '#0aad0a', 'background': '#f6fbf6', 'radius': '10px'},
+        html_componentes = {
+            **HOME_COMPONENTS,
+            'hero': '<section class="py-20"><div class="grid md:grid-cols-2">hero</div></section>',
+            'featured': '<section><div class="grid md:grid-cols-3">productos</div></section>',
+        },
+    )
+    DesignModelMcp.objects.create(
+        slug = 'ts-premium-home', nombre = 'Tailstore · Premium Home', categoria = 'general',
+        tags = ['moderno', 'swiper', 'premium'],
+        tokens_diseno = {**TOKENS, 'primary': '#10b981', 'background': '#ffffff'},
+        html_componentes = HOME_COMPONENTS,
+    )
+    #Preset curado del sistema: NO tiene `source_repo`, así que el wizard no
+    #puede elegirlo aunque matchee mejor las palabras del pedido.
     DesignModelMcp.objects.create(
         slug = 'organic-terracotta', nombre = 'Organic Terracotta', categoria = 'alimentos',
-        tags = ['calido', 'artesanal', 'organico', 'terracota', 'natural'],
-        tokens_diseno = TOKENS, html_componentes = {},
-    )
-    DesignModelMcp.objects.create(
-        slug = 'pastel-bakery', nombre = 'Pastel Bakery', categoria = 'alimentos',
-        tags = ['pastel', 'dulce', 'bakery', 'suave', 'rosa'],
-        tokens_diseno = {**TOKENS, 'primary': '#e98aa8', 'background': '#fff7f9', 'radius': '24px'},
-        html_componentes = {},
-    )
-    DesignModelMcp.objects.create(
-        slug = 'cyberpunk-dark', nombre = 'Cyberpunk Premium Dark', categoria = 'tecnologia',
-        tags = ['oscuro', 'neon', 'gamer', 'futurista'],
-        tokens_diseno = {**TOKENS, 'primary': '#00ffcc', 'background': '#07070d'},
-        html_componentes = {},
+        tags = ['calido', 'artesanal', 'organico', 'terracota', 'gastronomia'],
+        tokens_diseno = {key: value for key, value in TOKENS.items() if not key.startswith('source_')},
+        html_componentes = {'hero': '<section>preset</section>'},
     )
 
 
@@ -108,6 +137,28 @@ class AiDesignMcpParseTests(TestCase):
         prompt  =   parse_message('Hola, quiero una web linda')
         self.assertEqual(prompt.get('rubro', ''), '')
         self.assertIn('web linda', prompt.get('notes', ''))
+
+
+class PatternFromRepoTests(TestCase):
+    def test_pattern_reads_repo_sections_and_variants(self):
+        pattern =   pattern_from_components(HOME_COMPONENTS)
+        self.assertEqual(pattern['order'], ['hero', 'benefits', 'featured', 'testimonials'])
+        self.assertEqual(pattern['variants']['hero'], 'split')
+        self.assertEqual(pattern['variants']['benefits'], 'cards')
+        self.assertEqual(pattern['variants']['featured'], 'cols4')
+
+    def test_apply_pattern_reorders_and_keeps_unknown_blocks(self):
+        layout  =   {'landing': {'blocks': [
+            {'id': 'featured', 'enabled': True, 'order': 0},
+            {'id': 'about', 'enabled': True, 'order': 1},
+            {'id': 'hero', 'enabled': True, 'order': 2},
+            {'id': 'cta', 'enabled': False, 'order': 3},
+        ]}}
+        out     =   apply_pattern(layout, pattern_from_components(HOME_COMPONENTS))
+        ids     =   [block['id'] for block in out['landing']['blocks']]
+        self.assertEqual(ids, ['hero', 'featured', 'about', 'cta'])
+        self.assertEqual(out['landing']['blocks'][0]['variant'], 'split')
+        self.assertEqual(out['landing']['blocks'][1]['variant'], 'cols4')
 
 
 class AiDesignMcpEndpointTests(TestCase):
@@ -140,11 +191,31 @@ class AiDesignMcpEndpointTests(TestCase):
         self.assertEqual(body['prompt']['tone'], 'calido')
         self.assertTrue(body['mcp']['styles'])
         slugs = {style['slug'] for style in body['mcp']['styles']}
-        self.assertTrue(slugs <= {'organic-terracotta', 'pastel-bakery', 'cyberpunk-dark'})
+        #Solo fuentes de repo: el preset curado nunca entra.
+        self.assertNotIn('organic-terracotta', slugs)
+        self.assertTrue(slugs <= {'bb-minimal-home', 'fc-grocery-home', 'ts-premium-home'})
         for proposal in body['proposals']:
             self.assertIn(proposal['mcp_style']['slug'], slugs)
             self.assertIn('palette', proposal['site_theme'])
             self.assertIn('containers', proposal['site_theme'])
+            self.assertTrue(proposal['mcp_style']['source_repo'])
+
+    def test_pattern_comes_from_repo_components(self):
+        client, _   =   self._premium()
+        body        =   client.post(self.url, {'prompt': PROMPT}, format = 'json').json()
+        proposal    =   body['proposals'][0]
+        pattern     =   proposal['mcp_style']['pattern']
+        self.assertEqual(pattern[:3], ['hero', 'benefits', 'featured'])
+        blocks      =   proposal['layout_config']['landing']['blocks']
+        enabled     =   [block for block in blocks if block.get('enabled') is not False]
+        ids         =   [block['id'] for block in enabled]
+        self.assertEqual(ids[0], 'hero')
+        #Los bloques activos siguen el orden del repo (los que el motor no
+        #trae se conservan al final).
+        in_pattern  =   [block_id for block_id in ids if block_id in pattern]
+        self.assertEqual(in_pattern, [block_id for block_id in pattern if block_id in ids])
+        hero        =   next(block for block in enabled if block['id'] == 'hero')
+        self.assertEqual(hero.get('variant'), 'split')
 
     def test_mcp_tokens_land_in_site_theme(self):
         client, _   =   self._premium()
@@ -173,6 +244,10 @@ class AiDesignMcpEndpointTests(TestCase):
             (draft.get('palette') or {}).get('bg'),
             (proposal['site_theme'].get('palette') or {}).get('bg'),
         )
+        #El patrón (orden + variantes del repo) también se republica.
+        published   =   (customization.layout_config_draft or {}).get('landing', {}).get('blocks') or []
+        expected    =   proposal['layout_config']['landing']['blocks']
+        self.assertEqual([b['id'] for b in published], [b['id'] for b in expected])
 
     def test_text_message_still_works(self):
         client, _   =   self._premium()
