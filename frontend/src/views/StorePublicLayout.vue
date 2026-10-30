@@ -205,6 +205,7 @@ const TEMPLATE_CSS = {
   // cacheado); su composición distinta vive en views/store/indumentaria.
   indumentaria: () => import('../assets/store-trama.css'),
   boutique:  () => import('../assets/store-boutique.css'),
+  atelier:   () => import('../assets/store-atelier.css'),
   clasico:   () => import('../assets/store-clasico.css'),
   circuito:  () => import('../assets/store-circuito.css'),
   seguridad: () => import('../assets/store-seguridad.css')

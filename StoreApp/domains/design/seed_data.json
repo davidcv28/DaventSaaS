@@ -6491,7 +6491,7 @@
       "categoria": "Editorial indumentaria",
       "descripcion": "Papel cálido, verde bosque y ocre: portada en collage, chips de categoría, grilla de prendas y navegación inferior para una marca de ropa de autor.",
       "tier": "plus",
-      "template": "boutique",
+      "template": "atelier",
       "page_theme": "light",
       "tokens": {
         "palette": {

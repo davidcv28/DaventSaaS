@@ -745,6 +745,7 @@ export const STORE_TEMPLATES = {
   trama:       { label: 'Trama',       rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.' },
   indumentaria:{ label: 'Indumentaria',rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.' },
   boutique:    { label: 'Boutique',    rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
+  atelier:     { label: 'Atelier',     rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#2D4A3E', desc: 'Indumentaria editorial: papel cálido, verde bosque, Bricolage y grilla de prendas con chips.' },
   clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
   circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
   seguridad:   { label: 'Seguridad',   rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
@@ -759,6 +760,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'alimentos',    label: 'Alimentos',    caption: 'Gastronomía y almacén',   templates: ['alimentos'] },
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',       templates: ['trama'] },
   { key: 'moda-pro',     label: 'Indumentaria', caption: 'Moda profesional',        templates: ['indumentaria'] },
+  { key: 'atelier',      label: 'Indumentaria', caption: 'Editorial de temporada',   templates: ['atelier'] },
   { key: 'boutique',     label: 'Boutique',     caption: 'Moda premium y deco',     templates: ['boutique'] },
   { key: 'clasico',      label: 'Clásico',      caption: 'Comercio y servicios',    templates: ['clasico'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',      templates: ['circuito'] },
@@ -774,8 +776,8 @@ export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.tem
 // desde TEMPLATE_CSS con esta misma clave.
 export const STORE_TEMPLATE_SKIN = {
   raiz: 'raiz', alimentos: 'alimentos', trama: 'indumentaria',
-  indumentaria: 'indumentaria', boutique: 'boutique', circuito: 'circuito',
-  seguridad: 'seguridad', clasico: 'clasico'
+  indumentaria: 'indumentaria', boutique: 'boutique', atelier: 'atelier',
+  circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
@@ -786,7 +788,7 @@ export const STORE_TEMPLATE_RETIRED_MAP = {
   classic: 'raiz', duo: 'raiz', minimal: 'raiz', calma: 'raiz',
   mercado: 'raiz', studio: 'raiz', arena: 'raiz', proceso: 'raiz',
   carta: 'raiz', terra: 'raiz', bloque: 'raiz', shop: 'raiz',
-  atelier: 'trama', lookbook: 'trama', signature: 'trama',
+  lookbook: 'trama', signature: 'trama',
   cobre: 'trama', vitrina: 'trama', street: 'trama', riso: 'trama',
   promo: 'trama', aurora: 'trama',
   perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',

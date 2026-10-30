@@ -94,7 +94,7 @@ PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storag
 
 #Catálogo del plan (los 8 diseños públicos del selector) y los exclusivos de IA.
 PLAN_TEMPLATES      =   ('raiz', 'alimentos')
-STYLE_TEMPLATES     =   frozenset(('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
+STYLE_TEMPLATES     =   frozenset(('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -399,7 +399,7 @@ class FuentesDeEstilo(_AiDesignBase):
     def test_with_advanced_the_whitelist_covers_the_eight_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(tuple(allowed), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
+        self.assertEqual(tuple(allowed), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'))
 
     def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
         #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
@@ -411,8 +411,8 @@ class FuentesDeEstilo(_AiDesignBase):
         _, plus, _      =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS))
         _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
         self.assertEqual(tuple(allowed_templates_of(base)), ('raiz', 'alimentos'))
-        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico'))
-        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
+        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico'))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'))
 
     def test_the_engine_has_no_exclusive_or_legacy_designs(self):
         from StoreApp.domains.stores.models import StoreCustomization
@@ -433,7 +433,7 @@ class FuentesDeEstilo(_AiDesignBase):
         self.assertFalse(retired & set(STYLE_TEMPLATES))
         self.assertNotIn('boutique', retired)
         self.assertIn('boutique', STYLE_TEMPLATES)
-        self.assertEqual(set(R.PUBLIC_TEMPLATES), set(STYLE_TEMPLATES) - {'indumentaria', 'clasico'})
+        self.assertEqual(set(R.PUBLIC_TEMPLATES), set(STYLE_TEMPLATES) - {'indumentaria', 'clasico', 'atelier'})
 
     def test_style_source_of_is_always_the_plan(self):
         for template in STYLE_TEMPLATES:

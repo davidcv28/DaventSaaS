@@ -139,7 +139,7 @@ class StoreCustomization(models.Model):
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
     TEMPLATE_BASE               =   ('raiz', 'alimentos')
-    TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'clasico')
+    TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'atelier', 'clasico')
     TEMPLATE_ADVANCED           =   ('circuito', 'seguridad')
     #El motor "Diseñar con IA" no tiene patrones exclusivos ni propone los
     #diseños nuevos: sigue proponiendo solo los 6 de PUBLIC_TEMPLATES
@@ -152,6 +152,7 @@ class StoreCustomization(models.Model):
         ('trama',         'Trama'),
         ('indumentaria',  'Indumentaria'),
         ('boutique',      'Boutique'),
+        ('atelier',       'Atelier'),
         ('clasico',       'Clásico'),
         ('circuito',      'Circuito'),
         ('seguridad',     'Seguridad'),
@@ -166,7 +167,7 @@ class StoreCustomization(models.Model):
         'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz',
         'proceso': 'raiz', 'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz',
         'shop': 'raiz',
-        'atelier': 'trama', 'lookbook': 'trama',
+        'lookbook': 'trama',
         'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
         'street': 'trama', 'riso': 'trama', 'promo': 'trama',
         'aurora': 'trama',

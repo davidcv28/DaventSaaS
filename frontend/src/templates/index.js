@@ -38,11 +38,12 @@ import alimentos    from './alimentos/index.js'
 import trama        from './trama/index.js'
 import indumentaria from './indumentaria/index.js'
 import boutique     from './boutique/index.js'
+import atelier      from './atelier/index.js'
 import clasico      from './clasico/index.js'
 import circuito     from './circuito/index.js'
 import seguridad    from './seguridad/index.js'
 
-export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, clasico, circuito, seguridad }
+export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, atelier, clasico, circuito, seguridad }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 
