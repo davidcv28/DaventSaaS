@@ -306,4 +306,10 @@ Si aparece un pedido nuevo, los puntos de entrada son
   Fase 7: `qa_studio_design.py` 15/15, `vitest` 38 OK, `verify:studio` OK,
   `manage.py test StoreApp.domains.design` 39 OK, `stores.tests` 165 OK,
   `manage.py check` limpio, `vite build` OK.
+- (2026-10-30) Sincronización final con Neon: `sync_design_neon --all` → 22
+  patrones, 31 estilos y 4 sets de iconos (faltaban `minimal`, `relleno` y
+  `trazo-grueso`); los 22 patrones quedan con `icon_style_id` y los 9 con
+  `variables`. Verificado por consulta directa: 0 diferencias de `html`/`css`/
+  `js`/`variables`/`tokens`/`effects`/`template`/`tier` entre local y Neon.
+  `manage.py check` limpio, `test StoreApp.domains.design` 39 OK, `vitest` 38 OK.
 - Próximo paso: nada pendiente en este documento.
