@@ -347,9 +347,10 @@ class StoreCoverGatingTests(TestCase):
 
 class StoreTemplateGatingTests(TestCase):
     """
-    Plantillas de portada por nivel de plan — catálogo de 6 (2 por
-    nivel): Básico elige raiz/alimentos, Estándar (has_design_plus) suma
-    trama/boutique y Premium (has_design_advanced) circuito/seguridad. Los
+    Plantillas de portada por nivel de plan — catálogo de 8: Básico elige
+    raiz/alimentos, Estándar (has_design_plus) suma
+    trama/indumentaria/boutique/clasico y Premium (has_design_advanced)
+    circuito/seguridad. Los
     diseños retirados no están en allowed_templates: un PATCH con ellos se
     descarta igual que uno fuera del nivel, y la mig. 0053 remapeó las
     tiendas que los tenían al más cercano del mismo plan
@@ -387,13 +388,13 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_basic_discards_plus_and_advanced_templates(self):
         client, _       =   self._client()
-        for key in ('trama', 'boutique', 'circuito', 'seguridad'):
+        for key in ('trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'raiz')
 
     def test_standard_picks_plus_templates(self):
         client, _       =   self._client('has_design_plus')
-        for key in ('raiz', 'alimentos', 'trama', 'boutique'):
+        for key in ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
@@ -405,7 +406,7 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_premium_picks_any_template(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        for key in ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'):
+        for key in ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
@@ -427,10 +428,10 @@ class StoreTemplateGatingTests(TestCase):
         self.assertEqual(response.data['customization']['template'], 'boutique')
 
     def test_retired_map_points_to_the_new_catalog(self):
-        #Todos los ids viejos se remapean a uno de los 6 diseños nuevos y
-        #el mapa no conserva ni inventa claves fuera del catálogo.
+        #Todos los ids viejos se remapean a uno de los diseños del catálogo
+        #y el mapa no conserva ni inventa claves fuera de él.
         known       =   {key for key, _ in StoreCustomization.TEMPLATE_CHOICES}
-        self.assertEqual(known, {'raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'})
+        self.assertEqual(known, {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'})
         self.assertTrue(StoreCustomization.TEMPLATE_RETIRED_MAP)
         for old, new in StoreCustomization.TEMPLATE_RETIRED_MAP.items():
             self.assertIn(new, known, f'{old} -> {new}')
@@ -438,7 +439,25 @@ class StoreTemplateGatingTests(TestCase):
     def test_public_payload_lists_allowed_templates(self):
         client, store   =   self._client('has_design_plus')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'boutique'])
+        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico'])
+
+    def test_theme_toggle_patch_is_visible_in_the_public_payload_immediately(self):
+        #Modo noche: el dueño guarda theme_toggle y la web pública ya lo ve
+        #en el GET siguiente — el post_save de la customización bumpea la
+        #versión del cache público (public_cache_stamp / PUBLIC_CACHE_TTL).
+        from StoreApp.domains.stores.public_cache import public_cache_stamp
+        client, store   =   self._client('has_design_plus')
+        StoreCustomization.objects.create(store = store)
+        public          =   APIClient()
+        before          =   public.get(f'{STORES_URL}public/mi-tienda/')
+        self.assertFalse(before.data['customization']['theme_toggle'])
+        stamp_before    =   public_cache_stamp(store.pk)
+        response        =   client.patch(f'{STORES_URL}customization/', {'theme_toggle': True}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['customization']['theme_toggle'])
+        self.assertNotEqual(public_cache_stamp(store.pk), stamp_before)
+        after           =   public.get(f'{STORES_URL}public/mi-tienda/')
+        self.assertTrue(after.data['customization']['theme_toggle'])
 
     def test_downgraded_template_is_not_persisted(self):
         #Con el plan vigente guarda 'boutique'; si el beneficio se pierde,
@@ -466,13 +485,13 @@ class StoreTemplateGatingTests(TestCase):
         client, _       =   self._client()
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
         self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos'])
-        for key in ('trama', 'boutique', 'circuito', 'seguridad'):
+        for key in ('trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'):
             self.assertNotIn(key, response.data['allowed_templates'])
 
     def test_public_allowed_templates_match_the_plan(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'])
+        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'])
 
 
 class MarketingFieldsTests(TestCase):
