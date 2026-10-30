@@ -6159,6 +6159,331 @@
       ],
       "preview": "",
       "style": "Cobalto profundo"
+    },
+    {
+      "slug": "daven-indumentaria",
+      "nombre": "Daven - Indumentaria",
+      "categoria": "Editorial indumentaria",
+      "descripcion": "Hueso, tinta y oliva: masthead fijo, collage partido, indice numerado y lookbook escalonado para vender ropa.",
+      "tier": "plus",
+      "template": "indumentaria",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#16150f",
+          "secondary": "#5b6146",
+          "accent": "#b07a5a",
+          "bg": "#f2eee6",
+          "surface": "#e8e2d6",
+          "text": "#16150f",
+          "muted": "#5b6146",
+          "border": "#d6cfc0",
+          "success": "#5b6146",
+          "danger": "#a4442f"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "body": "manrope",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.03em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 2,
+          "cardStyle": "overlay",
+          "stickyCta": true,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#16150f",
+              "body": "#16150f",
+              "muted": "#5b6146",
+              "link": "#5b6146"
+            },
+            "containers": {
+              "bg": "#f2eee6",
+              "surface": "#e8e2d6",
+              "border": "#d6cfc0",
+              "onSurface": "#16150f"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f2eee6",
+              "body": "#f2eee6",
+              "muted": "#b4b19f",
+              "link": "#c89a7d"
+            },
+            "containers": {
+              "bg": "#16150f",
+              "surface": "#1f1e16",
+              "border": "#3a3830",
+              "onSurface": "#f2eee6"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 0,
+              "variant": "marquee"
+            },
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 1,
+              "variant": "cinema"
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 3,
+              "variant": "rail"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 4,
+              "variant": "cols2"
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 5,
+              "variant": "quick"
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 6,
+              "variant": "masonry"
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "timeline",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9,
+              "variant": "cards"
+            },
+            {
+              "id": "video",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 11,
+              "variant": "bento"
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 12,
+              "variant": "masonry"
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 14,
+              "variant": "list"
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 15,
+              "variant": "card"
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 16,
+              "variant": "map"
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1,
+              "variant": "chips"
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3,
+              "variant": "masonry"
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "announcements",
+            "hero",
+            "highlights",
+            "categories",
+            "featured",
+            "offers",
+            "gallery",
+            "about",
+            "timeline",
+            "stats",
+            "video",
+            "benefits",
+            "testimonials",
+            "services",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "marquee",
+            "hero": "cinema",
+            "categories": "rail",
+            "featured": "cols2",
+            "offers": "quick",
+            "gallery": "masonry",
+            "stats": "cards",
+            "benefits": "bento",
+            "testimonials": "masonry",
+            "faq": "list",
+            "cta": "card",
+            "contact": "map"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid",
+            "promo"
+          ],
+          "var": {
+            "filters": "chips",
+            "grid": "masonry"
+          }
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq",
+            "band"
+          ]
+        }
+      },
+      "tags": [
+        "indumentaria",
+        "ropa",
+        "moda",
+        "editorial",
+        "daven",
+        "plus"
+      ]
     }
   ],
   "patterns": [
