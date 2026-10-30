@@ -32,6 +32,13 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true
       }
+    },
+    // OneDrive + escrituras atómicas de los editores crean carpetas
+    // `.archivo.<pid>.<uuid>.tmpdir/` que el watcher de Vite intenta observar y
+    // termina con EBUSY, tirando el servidor dev. Ignorarlas (y los temporales
+    // de QA) evita el crash sin tocar el build.
+    watch: {
+      ignored: ['**/.*.tmpdir/**', '**/*.tmp', '**/.qa-tmp/**', '**/tmp*/**']
     }
   },
   preview: {
