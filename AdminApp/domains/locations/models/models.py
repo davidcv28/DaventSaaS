@@ -1,6 +1,5 @@
 from django.db import models
 
-
 """
 
 Creación de modelos para el dominio locations

@@ -1,6 +1,10 @@
 from rest_framework.permissions import AllowAny
-from AdminApp.domains.suscriptions.models                    import SuscriptionPlan
-from SuscriptionApp.domains.benefits.serializers.serializers import PlanCatalogSerializer
+
+from AdminApp.domains.suscriptions.models import SuscriptionPlan
+from SuscriptionApp.domains.benefits.serializers.serializers import (
+    PlanCatalogSerializer,
+)
+
 """
 
 Configuración de los viewsets del dominio Benefits.

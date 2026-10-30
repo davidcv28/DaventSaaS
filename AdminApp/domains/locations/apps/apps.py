@@ -1,6 +1,5 @@
 from django.apps import AppConfig
 
-
 """
 Creamos la app para el dominio locations
 """

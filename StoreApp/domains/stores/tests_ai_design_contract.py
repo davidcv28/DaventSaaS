@@ -45,21 +45,39 @@ from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.stores.layout_blocks import (
-    AI_ICONS, TEMPLATE_BLOCKS, clean_layout_config,
+    AI_ICONS,
+    TEMPLATE_BLOCKS,
+    clean_layout_config,
 )
 from StoreApp.domains.stores.models import (
-    Store, StoreCustomization, StoreGalleryImage, StudioVersion,
+    Store,
+    StoreCustomization,
+    StoreGalleryImage,
+    StudioVersion,
 )
-from StoreApp.domains.stores.services import allowed_templates_of
 from StoreApp.domains.stores.services import ai_design_recipes as R
+from StoreApp.domains.stores.services import allowed_templates_of
 from StoreApp.domains.stores.services.ai_design import _contrast_ratio
 from StoreApp.domains.stores.services.ai_design_skins import (
-    SKIN_FAMILIES, SKIN_FAMILY_OF, SKIN_IDS, SKINS, STYLE_FAMILIES,
+    SKIN_FAMILIES,
+    SKIN_FAMILY_OF,
+    SKIN_IDS,
+    SKINS,
+    STYLE_FAMILIES,
 )
 from StoreApp.domains.stores.services.ai_design_typography import (
-    FONT_FAMILIES, FONT_KINDS, FONT_SLUGS, TYPE_CASES, TYPE_LEADING,
-    QUOTE_DISPLAY_SKINS, TYPE_PAIRS, TYPE_SIZES, TYPE_TRACKING,
-    TYPOGRAPHY_ROLES, roles_for, type_pair_signature,
+    FONT_FAMILIES,
+    FONT_KINDS,
+    FONT_SLUGS,
+    QUOTE_DISPLAY_SKINS,
+    TYPE_CASES,
+    TYPE_LEADING,
+    TYPE_PAIRS,
+    TYPE_SIZES,
+    TYPE_TRACKING,
+    TYPOGRAPHY_ROLES,
+    roles_for,
+    type_pair_signature,
 )
 from StoreApp.domains.stores.site_theme import SITE_THEME_MAX_BYTES, clean_site_theme
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit

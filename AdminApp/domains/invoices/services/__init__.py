@@ -1,7 +1,7 @@
+from .afip import RequestCaeQuery, afip_enabled
 from .services import (
-    IssueInvoiceQuery,
     DeriveInvoiceTypeQuery,
     FinalizeInvoiceQuery,
+    IssueInvoiceQuery,
     SendInvoiceEmailQuery,
 )
-from .afip import RequestCaeQuery, afip_enabled

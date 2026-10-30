@@ -1,7 +1,10 @@
 from rest_framework import serializers
-from AdminApp.domains.locations.models import Province, City, ZipCode
+
+from AdminApp.domains.locations.models import City, Province, ZipCode
+
 from .config_fields import LocationFieldsConfig
 from .mixins import LocationCityValidatorsMixin
+
 """
 Serializers públicos del dominio Locations.
 Lectura para selects del frontend (registro) + ABM admin.

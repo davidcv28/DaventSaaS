@@ -1,4 +1,9 @@
 from .serializers import (
-    UserSerializer, UserUpdateSerializer, UserUpdatePasswordSerializer, UserProfileSerializer, RegisterUserSerializer,
-    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    RegisterUserSerializer,
+    UserProfileSerializer,
+    UserSerializer,
+    UserUpdatePasswordSerializer,
+    UserUpdateSerializer,
 )

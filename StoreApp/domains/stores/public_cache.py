@@ -1,4 +1,10 @@
-from DaventProject.cache_utils import cache_add, cache_delete, cache_get_many, cache_incr
+from DaventProject.cache_utils import (
+    cache_add,
+    cache_delete,
+    cache_get_many,
+    cache_incr,
+)
+
 """
 
 Versionado del cache server-side de las webs públicas

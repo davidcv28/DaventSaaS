@@ -8,7 +8,11 @@ from django.conf import settings
 from django.core.management import BaseCommand, CommandError
 from django.utils import timezone
 
-from StoreApp.domains.stores.services.storage import _bucket, _client, storage_configured
+from StoreApp.domains.stores.services.storage import (
+    _bucket,
+    _client,
+    storage_configured,
+)
 
 """
 Backup de la base Postgres hacia Cloudflare R2.

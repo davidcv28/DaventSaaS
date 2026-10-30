@@ -1,1 +1,7 @@
-from .viewset import CategoryViewSet, BrandViewSet, ProductViewSet, DiscountViewSet, ReviewViewSet
+from .viewset import (
+    BrandViewSet,
+    CategoryViewSet,
+    DiscountViewSet,
+    ProductViewSet,
+    ReviewViewSet,
+)

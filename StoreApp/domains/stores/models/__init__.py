@@ -1,1 +1,9 @@
-from .models import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreDailyVisit, StoreChatbot, StudioVersion
+from .models import (
+    Store,
+    StoreCarouselImage,
+    StoreChatbot,
+    StoreCustomization,
+    StoreDailyVisit,
+    StoreGalleryImage,
+    StudioVersion,
+)

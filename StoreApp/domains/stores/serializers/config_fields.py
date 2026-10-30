@@ -1,4 +1,5 @@
 from AdminApp.domains.suscriptions.serializers.mixins import CurrentUserProfileDefault
+
 """
 
 Configuración de campos de los serializers del dominio Stores.

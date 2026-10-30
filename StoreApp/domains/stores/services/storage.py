@@ -1,11 +1,15 @@
 import uuid
+
 import boto3
 from botocore.config import Config as BotoConfig
 from decouple import config
 from django.db import transaction
+
 from StoreApp.domains.stores.models import Store
+
+from .imaging import normalize_image
 from .services import plan_benefits_of
-from .imaging  import normalize_image
+
 """
 
 Almacenamiento de archivos en Cloudflare R2 (imágenes del cliente),

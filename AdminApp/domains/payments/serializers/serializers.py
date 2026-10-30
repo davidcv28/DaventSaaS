@@ -1,7 +1,14 @@
 from rest_framework import serializers
-from AdminApp.domains.payments.models import Payment, DailyRevenue, MonthlyRevenue
-from .config_fields import PaymentFieldsConfig, DailyRevenueFieldsConfig, MonthlyRevenueFieldsConfig
-from .mixins        import PaymentCreateMixin, PaymentCreateMethod
+
+from AdminApp.domains.payments.models import DailyRevenue, MonthlyRevenue, Payment
+
+from .config_fields import (
+    DailyRevenueFieldsConfig,
+    MonthlyRevenueFieldsConfig,
+    PaymentFieldsConfig,
+)
+from .mixins import PaymentCreateMethod, PaymentCreateMixin
+
 """
 
 PAYMENTS SERIALIZERS

@@ -1,0 +1,19 @@
+[run]
+source =
+    AdminApp
+    StoreApp
+    SuscriptionApp
+    DaventProject
+# `manage.py test --parallel` corre en subprocesos: sin esto cada worker
+# escribe su propio .coverage y el reporte final queda vacío.
+concurrency = multiprocessing
+parallel = true
+
+[report]
+omit =
+    */migrations/*
+    */tests.py
+    */tests_*.py
+    */test_*.py
+    manage.py
+show_missing = true

@@ -1,7 +1,17 @@
 from rest_framework.throttling import AnonRateThrottle
 
-from .viewset_base import UserBaseViewSet, UserPassWordBaseViewSet, UserProfileBaseVieSet, RegisterUserBaseViewSet
-from .viewset_config import UserViewSetConfig, UserPassWordViewSetConfig, UserProfileVieSetConfig, UserRegisterViewSetConfig
+from .viewset_base import (
+    RegisterUserBaseViewSet,
+    UserBaseViewSet,
+    UserPassWordBaseViewSet,
+    UserProfileBaseVieSet,
+)
+from .viewset_config import (
+    UserPassWordViewSetConfig,
+    UserProfileVieSetConfig,
+    UserRegisterViewSetConfig,
+    UserViewSetConfig,
+)
 
 
 class RegisterRateThrottle(AnonRateThrottle):

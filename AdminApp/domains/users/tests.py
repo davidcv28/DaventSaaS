@@ -7,7 +7,7 @@ Cubren los flujos que no pueden romperse antes del lanzamiento:
 - Invalidación de sesiones (blacklist de refresh) tras cambiar la clave
 - Verificación de email (token firmado, marcado, reset al cambiar correo)
 """
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
@@ -654,10 +654,11 @@ import os as _os
 from datetime import timedelta as _td
 
 from django.core.management import call_command
-from django.db import connection, IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 
 from AdminApp.domains.invoices.services import IssueInvoiceQuery
-from AdminApp.domains.invoices.services import afip as _afip, vault as _vault
+from AdminApp.domains.invoices.services import afip as _afip
+from AdminApp.domains.invoices.services import vault as _vault
 from AdminApp.domains.payments.models import Payment
 from AdminApp.domains.users.models.fields import digest_for
 from AdminApp.domains.users.services import BillingMissingFieldsQuery
@@ -823,7 +824,8 @@ class EncryptedProfileFieldsTests(TestCase):
 import io as _io
 import logging as _logging
 
-from DaventProject.logscrub import ScrubSecretsFilter, scrub as _scrub
+from DaventProject.logscrub import ScrubSecretsFilter
+from DaventProject.logscrub import scrub as _scrub
 
 _PEM_TEST   =   '-----BEGIN PRIVATE KEY-----\nMIIBVgIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----'
 _TOKEN_TEST =   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 'A' * 40 + '.sig12345'
@@ -904,8 +906,9 @@ class GenericErrorResponseTests(TestCase):
     sin el mensaje de la excepción, sin datos internos."""
 
     def test_non_drf_exception_returns_generic_500(self):
-        from DaventProject.exceptions import exception_handler
         from rest_framework.test import APIRequestFactory
+
+        from DaventProject.exceptions import exception_handler
         request     =   APIRequestFactory().get('/api/fake/')
         context     =   {'view': None, 'request': request}
         try:

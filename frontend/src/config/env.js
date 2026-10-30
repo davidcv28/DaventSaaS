@@ -6,7 +6,9 @@ const { protocol, hostname, port } = window.location
 const platformHost = `${platformDomain}${port ? `:${port}` : ''}`
 
 export const env = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
+  //Fallback relativo: si un build olvida VITE_API_BASE_URL, la SPA le pega
+  //al mismo origen (nginx/Render proxya /api) en vez de a localhost.
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
   appName: import.meta.env.VITE_APP_NAME || 'DAVENT',
   appTagline: import.meta.env.VITE_APP_TAGLINE || 'Gestión SaaS para e-commerce tecnológicos',
   platformDomain,

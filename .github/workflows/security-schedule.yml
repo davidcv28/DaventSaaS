@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   audit:
-    name: pip-audit + npm audit + Trivy (fs)
+    name: pip-audit + npm audit + bandit + gitleaks + Trivy (fs)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -42,6 +42,16 @@ jobs:
         # runner (evita otra acción que mantener).
         working-directory: frontend
         run: npm audit --omit=dev --audit-level=high
+
+      - name: bandit — SAST semanal (no solo en push)
+        run: |
+          pip install bandit==1.9.4
+          bandit -r AdminApp StoreApp SuscriptionApp DaventProject -ll
+
+      - name: gitleaks — secretos commiteados
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trivy — vulnerabilidades en dependencias/archivos
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0

@@ -1,5 +1,7 @@
 from AdminApp.domains.locations.models import Province, ZipCode
+
 from .validators import LocationValidators
+
 """
 Módulo de configuración de campos para los serializers del dominio Locations.
 Define diccionarios reutilizables listos para desempaquetar con ** en el serializer.

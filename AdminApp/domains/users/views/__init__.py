@@ -1,1 +1,6 @@
-from .viewset import UserViewSet, UserPassWordViewSet, UserProfileViewSet, RegisterUserViewSet
+from .viewset import (
+    RegisterUserViewSet,
+    UserPassWordViewSet,
+    UserProfileViewSet,
+    UserViewSet,
+)

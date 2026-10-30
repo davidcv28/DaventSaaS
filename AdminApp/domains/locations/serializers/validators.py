@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 """
 Validadores personalizados para los serializers del dominio Locations.
 Contiene validaciones de unicidad amigables antes de persistir.

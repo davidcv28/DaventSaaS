@@ -1,16 +1,27 @@
 
-from rest_framework import serializers
+import re
+
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework import serializers
+
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.models.fields import digest_for
 from AdminApp.domains.users.services import (
+    RegisterUserQuery,
+    UpdatePasswordUserQuery,
+    UpdateProfileQuery,
     #USER QUERYS
-    UpdateUserQuery, UpdatePasswordUserQuery, UpdateProfileQuery, RegisterUserQuery
+    UpdateUserQuery,
 )
-from .operations import ProvinceAndCityComparation, DocumentFormat, TypeDocumentSelect, BusinessNameRequired
-import re
+
+from .operations import (
+    BusinessNameRequired,
+    DocumentFormat,
+    ProvinceAndCityComparation,
+    TypeDocumentSelect,
+)
 
 """
 

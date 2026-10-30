@@ -57,12 +57,14 @@ class SecurityHeadersTests(TestCase):
 class ClientIpTests(TestCase):
     def test_xff_uses_last_hop_not_client_supplied_first(self):
         from django.test import RequestFactory
+
         from DaventProject.middleware import client_ip
         request =   RequestFactory().get('/', HTTP_X_FORWARDED_FOR = '1.2.3.4, 5.6.7.8')
         self.assertEqual(client_ip(request), '5.6.7.8')
 
     def test_xff_ignored_without_trusted_proxy(self):
         from django.test import RequestFactory, override_settings
+
         from DaventProject.middleware import client_ip
         request =   RequestFactory().get('/', HTTP_X_FORWARDED_FOR = '1.2.3.4', REMOTE_ADDR = '9.9.9.9')
         with override_settings(REST_FRAMEWORK = {**settings.REST_FRAMEWORK, 'NUM_PROXIES': 0}):
@@ -70,6 +72,7 @@ class ClientIpTests(TestCase):
 
     def test_garbage_xff_falls_back_to_remote_addr(self):
         from django.test import RequestFactory
+
         from DaventProject.middleware import client_ip
         request =   RequestFactory().get('/', HTTP_X_FORWARDED_FOR = 'not-an-ip', REMOTE_ADDR = '9.9.9.9')
         self.assertEqual(client_ip(request), '9.9.9.9')
@@ -118,7 +121,11 @@ class LoginLockoutTests(TestCase):
 
     def test_locked_username_and_ip_is_rejected_before_checking_credentials(self):
         from django.core.cache import cache
-        from AdminApp.domains.users.views.auth_views import LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW
+
+        from AdminApp.domains.users.views.auth_views import (
+            LOGIN_FAIL_LIMIT,
+            LOGIN_FAIL_WINDOW,
+        )
         cache.set(self.key('victima', '10.0.0.1'), LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW)
         response    =   self._login('victima', 'x')
         self.assertEqual(response.status_code, 429)
@@ -126,7 +133,11 @@ class LoginLockoutTests(TestCase):
 
     def test_soft_backoff_after_five_failures(self):
         from django.core.cache import cache
-        from AdminApp.domains.users.views.auth_views import LOGIN_FAIL_SOFT_LIMIT, LOGIN_FAIL_SOFT_WINDOW
+
+        from AdminApp.domains.users.views.auth_views import (
+            LOGIN_FAIL_SOFT_LIMIT,
+            LOGIN_FAIL_SOFT_WINDOW,
+        )
         cache.set(self.key('victima', '10.0.0.1'), LOGIN_FAIL_SOFT_LIMIT)
         response    =   self._login('victima', 'x')
         self.assertEqual(response.status_code, 429)
@@ -144,8 +155,8 @@ class LoginLockoutTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_failed_login_counts_and_success_clears(self):
-        from django.core.cache import cache
         from django.contrib.auth.models import User
+        from django.core.cache import cache
         User.objects.create_user(username = 'cliente', email = 'c@example.com', password = 'ClaveSegura-2026!')
         self._login('cliente', 'incorrecta')
         self.assertEqual(cache.get(self.key('cliente', '10.0.0.1')), 1)

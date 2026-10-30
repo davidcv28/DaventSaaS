@@ -1,7 +1,8 @@
-from django.db import models
-from AdminApp.domains.locations.models import Province, City
-from AdminApp.domains.users.models.fields import EncryptedCharField, digest_for
 from django.conf import settings
+from django.db import models
+
+from AdminApp.domains.locations.models import City, Province
+from AdminApp.domains.users.models.fields import EncryptedCharField, digest_for
 
 #Versión vigente de los Términos y Condiciones (actualizar junto con frontend/views/TermsView.vue)
 TERMS_VERSION     =   '1.0'
@@ -82,6 +83,8 @@ class UserProfile(models.Model):
 # ubicación/datos del perfil — un cambio refresca la web al instante)
 #=========================================
 from django.db.models.signals import post_save
+
+
 def _bust_public_profile(sender, instance, **kwargs):
     from StoreApp.domains.stores.public_cache import bump_public_owner
     bump_public_owner(instance.pk)

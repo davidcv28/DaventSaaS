@@ -1,6 +1,8 @@
 from django.core.management import BaseCommand
-from .seeds import dict_suscriptions
+
 from AdminApp.domains.suscriptions.models import SuscriptionPlan
+
+from .seeds import dict_suscriptions
 
 """
 

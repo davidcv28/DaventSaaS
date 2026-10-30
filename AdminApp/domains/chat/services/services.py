@@ -1,11 +1,11 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.db.models import Count, Q, OuterRef, Subquery
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.utils import timezone
 
-from AdminApp.domains.chat.models         import ChatMessage, ChatPresence, ChatThread
-from StoreApp.domains.stores.services     import profile_has_benefit
+from AdminApp.domains.chat.models import ChatMessage, ChatPresence, ChatThread
+from StoreApp.domains.stores.services import profile_has_benefit
 
 """
 Queries/servicios del chat de soporte.

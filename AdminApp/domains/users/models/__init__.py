@@ -1,1 +1,1 @@
-from .models import UserProfile, TERMS_VERSION
+from .models import TERMS_VERSION, UserProfile

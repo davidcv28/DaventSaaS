@@ -1,10 +1,10 @@
 from rest_framework.permissions import AllowAny, IsAdminUser
 
-from AdminApp.domains.legal.models                     import ContentReport
-from AdminApp.domains.legal.serializers                import (
-    ContentReportSerializer,
+from AdminApp.domains.legal.models import ContentReport
+from AdminApp.domains.legal.serializers import (
     ContentReportListSerializer,
-    ContentReportUpdateSerializer
+    ContentReportSerializer,
+    ContentReportUpdateSerializer,
 )
 
 """

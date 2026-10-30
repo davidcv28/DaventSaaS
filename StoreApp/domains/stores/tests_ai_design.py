@@ -20,18 +20,32 @@ from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Product
 from StoreApp.domains.stores.layout_blocks import TEMPLATE_BLOCKS, clean_layout_config
-from StoreApp.domains.stores.models import Store, StoreCarouselImage, StoreCustomization, StoreGalleryImage, StudioVersion
-from StoreApp.domains.stores.site_theme import clean_site_theme
-from StoreApp.domains.stores.services import allowed_templates_of
-from StoreApp.domains.stores.services import ai_design_skins as SKIN
-from StoreApp.domains.stores.services.ai_design_skins import SKINS, SKIN_IDS, STYLE_FAMILIES
-from StoreApp.domains.stores.services.ai_design_typography import (
-    BODY_ROLES, FONT_SLUGS, TYPOGRAPHY_ROLES,
-    TYPE_CASES, TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING,
+from StoreApp.domains.stores.models import (
+    Store,
+    StoreCarouselImage,
+    StoreCustomization,
+    StoreGalleryImage,
+    StudioVersion,
 )
-from StoreApp.domains.stores.services import storage
 from StoreApp.domains.stores.services import ai_design_recipes as R
+from StoreApp.domains.stores.services import ai_design_skins as SKIN
+from StoreApp.domains.stores.services import allowed_templates_of, storage
 from StoreApp.domains.stores.services.ai_design import generate as generate_ai_design
+from StoreApp.domains.stores.services.ai_design_skins import (
+    SKIN_IDS,
+    SKINS,
+    STYLE_FAMILIES,
+)
+from StoreApp.domains.stores.services.ai_design_typography import (
+    BODY_ROLES,
+    FONT_SLUGS,
+    TYPE_CASES,
+    TYPE_LEADING,
+    TYPE_SIZES,
+    TYPE_TRACKING,
+    TYPOGRAPHY_ROLES,
+)
+from StoreApp.domains.stores.site_theme import clean_site_theme
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 STORES_URL  =   '/api/stores/'
@@ -329,6 +343,7 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         `styleColors`). Se verifica lo que de verdad llega a la web.
         """
         import random as _random
+
         from StoreApp.domains.stores.services import ai_design as A
         answers =   {
             'tone': 'moderno', 'brand_color': None, 'night_mode': None,
@@ -375,6 +390,7 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         de la piel es el presupuesto de origen, no lo que se publica.
         """
         import random as _random
+
         from StoreApp.domains.stores.services import ai_design as A
         answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
                      'goals': ['vender_online'], 'must_have': []}
@@ -393,6 +409,7 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         superficie (era el caso de `brutal-concrete` con marca clara).
         """
         import random as _random
+
         from StoreApp.domains.stores.services import ai_design as A
         answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
                      'goals': ['vender_online'], 'must_have': []}
@@ -420,6 +437,7 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
         """A.1-5: en oscuro el fondo baja de 0.1 y la superficie se despega
         hacia arriba (≥ 1.08×), no se hunde en el fondo."""
         import random as _random
+
         from StoreApp.domains.stores.services import ai_design as A
         answers =   {'tone': 'moderno', 'brand_color': None, 'night_mode': None,
                      'goals': ['vender_online'], 'must_have': []}
@@ -437,6 +455,7 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
     def test_emitted_themes_survive_the_sanitizer_for_every_skin(self):
         """El motor emite sets que ya pasan: `_v_style_set` no puede dar 400."""
         import random as _random
+
         from StoreApp.domains.stores.services import ai_design as A
         answers =   {'tone': 'serio', 'brand_color': None, 'night_mode': None,
                      'goals': ['dar_confianza'], 'must_have': []}
@@ -450,7 +469,9 @@ class AiDesignSkinAndContrastTests(AiDesignBase):
 
     def test_style_preset_is_always_a_known_preset_the_plan_can_carry(self):
         """A.4: style.id sale del mapeo explícito y su plantilla entra en el plan."""
-        from StoreApp.domains.stores.services.ai_design_skins import STYLE_PRESET_TEMPLATES
+        from StoreApp.domains.stores.services.ai_design_skins import (
+            STYLE_PRESET_TEMPLATES,
+        )
         store, _    =   self._store(products = 3)
         allowed     =   set(allowed_templates_of(store.user))
         for proposal in generate_ai_design(store, {})['proposals']:
@@ -862,7 +883,10 @@ class AiDesignV3Tests(AiDesignBase):
     def test_brand_color_sets_accent_with_aa(self):
         store, _    =   self._store()
         data        =   self._generate(store, {'brand_color': '#1d4ed8'})
-        from StoreApp.domains.stores.services.ai_design import _contrast_ratio, _palette_from_brand
+        from StoreApp.domains.stores.services.ai_design import (
+            _contrast_ratio,
+            _palette_from_brand,
+        )
         for proposal in data['proposals']:
             self.assertEqual(proposal['theme_choice']['source'], 'user')
             accent  =   proposal['theme_choice']['accent']

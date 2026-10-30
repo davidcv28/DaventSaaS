@@ -15,7 +15,11 @@ from rest_framework import serializers
 from rest_framework.test import APIClient
 
 from AdminApp.domains.invoices.models import Invoice, TypeInvoice
-from AdminApp.domains.invoices.services import IssueInvoiceQuery, FinalizeInvoiceQuery, RequestCaeQuery
+from AdminApp.domains.invoices.services import (
+    FinalizeInvoiceQuery,
+    IssueInvoiceQuery,
+    RequestCaeQuery,
+)
 from AdminApp.domains.invoices.services.afip import AfipError
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.payments.models import Payment
@@ -216,7 +220,9 @@ class RetryCaeEndpointTests(TestCase):
 # PENTEST: secretos fiscales en reposo + fuga de datos
 #=========================================
 import os as _os
-from AdminApp.domains.invoices.services import afip as _afip, vault as _vault
+
+from AdminApp.domains.invoices.services import afip as _afip
+from AdminApp.domains.invoices.services import vault as _vault
 
 _PEM = '-----BEGIN PRIVATE KEY-----\nMIIBVgIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----\n'
 
@@ -342,9 +348,9 @@ class AfipKeyPassphraseTests(TestCase):
     también cifrada enc:v1: — nunca más password=None fijo."""
 
     def _keypair(self, passphrase = None):
-        from cryptography.hazmat.primitives.asymmetric import rsa
-        from cryptography.hazmat.primitives import hashes, serialization
         from cryptography import x509
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
         from cryptography.x509.oid import NameOID
         from django.utils import timezone
         key     =   rsa.generate_private_key(public_exponent = 65537, key_size = 2048)

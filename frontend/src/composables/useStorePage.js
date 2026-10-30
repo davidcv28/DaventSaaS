@@ -119,7 +119,7 @@ export function useStorePage() {
   const featureValues = (p, ...names) => {
     const rows = featureRows(p)
     const hit = rows.find(([k]) => names.some((n) => k.toLowerCase().includes(n)))
-    return hit ? String(hit[1]).split(/[,\/·]/).map((s) => s.trim()).filter(Boolean) : []
+    return hit ? String(hit[1]).split(/[,/·]/).map((s) => s.trim()).filter(Boolean) : []
   }
   // Relacionados: misma categoría primero, misma marca después, resto al final.
   const related = (p, limit = 6) => {

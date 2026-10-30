@@ -1,6 +1,8 @@
 import json
 import re
+
 from rest_framework import serializers
+
 """
 
 Tema visual del Studio (`site_theme` de StoreCustomization) — espejo del
@@ -83,14 +85,26 @@ _MEASURE        =   ('narrow', 'normal', 'wide')
 _RADIUS_SCALE   =   ('none', 'sm', 'md', 'lg', 'xl')
 #Espejo de ai_design_typography (catálogo cerrado de 13 roles y 24
 #familias). Se importa acá para validar `typography.roles` y `skin`.
-from .services.ai_design_typography import (    # noqa: E402
-    FONT_SLUGS          as _TYPE_FONT_SLUGS,
-    TYPOGRAPHY_ROLES    as _TYPE_ROLES,
-    TYPE_SIZES          as _TYPE_SIZE,
-    TYPE_TRACKING       as _TYPE_TRACKING,
-    TYPE_LEADING        as _TYPE_LEADING,
-    TYPE_CASES          as _TYPE_CASE,
+from .services.ai_design_typography import (  # noqa: E402
+    FONT_SLUGS as _TYPE_FONT_SLUGS,
 )
+from .services.ai_design_typography import (
+    TYPE_CASES as _TYPE_CASE,
+)
+from .services.ai_design_typography import (
+    TYPE_LEADING as _TYPE_LEADING,
+)
+from .services.ai_design_typography import (
+    TYPE_SIZES as _TYPE_SIZE,
+)
+from .services.ai_design_typography import (
+    TYPE_TRACKING as _TYPE_TRACKING,
+)
+from .services.ai_design_typography import (
+    TYPOGRAPHY_ROLES as _TYPE_ROLES,
+)
+
+
 #El catálogo de pieles se resuelve por función; `ai_design_skins` es la
 #fuente única de ids, familias y presets del Studio.
 def _skin_ids():

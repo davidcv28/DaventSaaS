@@ -18,18 +18,19 @@ import base64
 import logging
 import time
 from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
+from xml.etree.ElementTree import Element  #solo type hints: el parseo va por defusedxml
 from zoneinfo import ZoneInfo
 
 import requests
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.serialization import pkcs7
+
 #defusedxml: los envelopes/tickets que parsea este módulo vienen de la red —
 #bloquea entidades expandidas/XXE que xml.etree acepta sin quejarse.
 from defusedxml import ElementTree as ET
 from defusedxml.common import DefusedXmlException
-from xml.etree.ElementTree import Element   #solo type hints: el parseo va por defusedxml
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.serialization import pkcs7
 from django.conf import settings
 from django.core.cache import cache
 

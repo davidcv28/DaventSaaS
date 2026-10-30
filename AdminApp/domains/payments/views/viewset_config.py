@@ -1,11 +1,11 @@
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 
-from AdminApp.domains.payments.models                   import Payment, DailyRevenue, MonthlyRevenue
-from AdminApp.domains.payments.serializers.serializers  import (
+from AdminApp.domains.payments.models import DailyRevenue, MonthlyRevenue, Payment
+from AdminApp.domains.payments.serializers.serializers import (
+    DailyRevenueSerializer,
+    MonthlyRevenueSerializer,
     PaymentSerializer,
     PaymentSerializerList,
-    DailyRevenueSerializer,
-    MonthlyRevenueSerializer
 )
 
 """

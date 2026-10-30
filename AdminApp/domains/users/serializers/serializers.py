@@ -1,24 +1,33 @@
 
-from rest_framework import serializers
-from AdminApp.domains.users.models import UserProfile
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from .mixins import (
-    #USER MODEL MIXINS
-    UsersValidatorsMixins, UserPasswordUpdateMethod, UserPasswordValidateMixin, UserUpdateMethod,
-    #PROFILE MODEL MIXINS
-    UserProfileValidatorsMixins, UserProfileUpdateMethod,
-    #REGISTER MIXINS
-     UserRegisterValidate,UserRegisterCreateMethod)
+from rest_framework import serializers
+
+from AdminApp.domains.users.models import UserProfile
+
 from .config_fields import (
     #USER FIELDS 
-    UserFieldsConfig, UserPasswordFieldsConfig, UserProfileFieldsConfig)
-
-
+    UserFieldsConfig,
+    UserPasswordFieldsConfig,
+    UserProfileFieldsConfig,
+)
+from .mixins import (
+    UserPasswordUpdateMethod,
+    UserPasswordValidateMixin,
+    UserProfileUpdateMethod,
+    #PROFILE MODEL MIXINS
+    UserProfileValidatorsMixins,
+    UserRegisterCreateMethod,
+    #REGISTER MIXINS
+    UserRegisterValidate,
+    #USER MODEL MIXINS
+    UsersValidatorsMixins,
+    UserUpdateMethod,
+)
 
 """
 USER PROFILE SERIALIZERS

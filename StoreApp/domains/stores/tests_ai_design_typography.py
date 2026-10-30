@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests de aceptación del Agente C — Tipografía v6 ("Diseñar con IA").
 
 Cubre §6.2 del brief:
@@ -15,17 +14,36 @@ Cubre además §6.1-5/§6.1-6 (aire tipográfico y tracking publicado):
 - el `letterSpacing`/`weightHeading` publicados salen del rol h1, no de un fijo.
 """
 import random
+
 from django.test import TestCase
 
 from StoreApp.domains.stores.services.ai_design_recipes import RUBRO_STYLES
-from StoreApp.domains.stores.services.ai_design_typography import (
-    BODY_ROLES, FONT_SLUGS, PAIR_VOICES, SKIN_TYPE_VOICES, TRACKING_EM, TYPE_CASES,
-    TYPE_LEADING, TYPE_SIZES, TYPE_TRACKING, TYPE_VOICES, TYPE_PAIRS,
-    QUOTE_DISPLAY_SKINS, compatible_pairs, pair_is_consistent, resolve_pair,
-    roles_for, tracking_css, type_pair_signature, voice_of_pair,
-)
 from StoreApp.domains.stores.services.ai_design_skins import (
-    SKIN_FAMILIES, SKIN_IDS, SKINS, type_pair_of,
+    SKIN_FAMILIES,
+    SKIN_IDS,
+    SKINS,
+    type_pair_of,
+)
+from StoreApp.domains.stores.services.ai_design_typography import (
+    BODY_ROLES,
+    FONT_SLUGS,
+    PAIR_VOICES,
+    QUOTE_DISPLAY_SKINS,
+    SKIN_TYPE_VOICES,
+    TRACKING_EM,
+    TYPE_CASES,
+    TYPE_LEADING,
+    TYPE_PAIRS,
+    TYPE_SIZES,
+    TYPE_TRACKING,
+    TYPE_VOICES,
+    compatible_pairs,
+    pair_is_consistent,
+    resolve_pair,
+    roles_for,
+    tracking_css,
+    type_pair_signature,
+    voice_of_pair,
 )
 
 #Los 4 tonos del contrato (claves de _TONE_ROLES).
@@ -300,7 +318,12 @@ class ResolvePairTests(TestCase):
         #par al azar (`pairs[(index * 5 + seed) % len(pairs)]`).
         from StoreApp.domains.stores.services import ai_design as A
         from StoreApp.domains.stores.tests_ai_design_selection import (
-            PLAN_BASIC, PLAN_PLUS, answers, facts_empty, facts_full, stats_dense,
+            PLAN_BASIC,
+            PLAN_PLUS,
+            answers,
+            facts_empty,
+            facts_full,
+            stats_dense,
             stats_empty,
         )
         plans = (PLAN_BASIC, PLAN_PLUS)

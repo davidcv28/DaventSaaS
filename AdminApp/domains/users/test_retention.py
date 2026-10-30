@@ -37,6 +37,7 @@ class PurgePersonalDataTests(TestCase):
 
     def _run(self, *args):
         from io import StringIO
+
         from django.core.management import call_command
         out     =   StringIO()
         with patch('AdminApp.domains.users.management.commands.purge_personal_data.storage.storage_configured', return_value = False), \

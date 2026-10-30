@@ -1,5 +1,7 @@
-﻿from rest_framework import serializers
-import re
+﻿import re
+
+from rest_framework import serializers
+
 """
 Validadores personalizados para los serializers del dominio Users.
 

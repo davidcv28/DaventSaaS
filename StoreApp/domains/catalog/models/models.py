@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
+
 from StoreApp.domains.stores.models import Store
+
 """
 
 Catálogo de la web del cliente: cuelga de Store (una tienda = un
@@ -176,6 +178,8 @@ class ProductReview(models.Model):
 # marcas, categorías, ofertas u opiniones refresca la web pública al toque)
 #=========================================
 from django.db.models.signals import post_delete, post_save
+
+
 def _bust_public_catalog(sender, instance, **kwargs):
     from StoreApp.domains.stores.public_cache import bump_public_store
     bump_public_store(instance.store_id)

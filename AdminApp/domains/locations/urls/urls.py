@@ -1,5 +1,10 @@
 from rest_framework import routers
-from AdminApp.domains.locations.views.viewset import ProvinceViewSet, CityViewSet, ZipCodeViewSet
+
+from AdminApp.domains.locations.views.viewset import (
+    CityViewSet,
+    ProvinceViewSet,
+    ZipCodeViewSet,
+)
 
 router = routers.DefaultRouter()
 

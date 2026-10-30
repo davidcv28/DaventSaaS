@@ -1,1 +1,1 @@
-from .viewset import ProvinceViewSet, CityViewSet, ZipCodeViewSet
+from .viewset import CityViewSet, ProvinceViewSet, ZipCodeViewSet

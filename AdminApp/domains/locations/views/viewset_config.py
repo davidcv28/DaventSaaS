@@ -1,10 +1,12 @@
 from rest_framework.permissions import AllowAny
-from AdminApp.domains.locations.models import Province, City, ZipCode
+
+from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.locations.serializers import (
-    ProvinceSerializer,
     CitySerializer,
+    ProvinceSerializer,
     ZipCodeSerializer,
 )
+
 """
 Configuración por acción (patrón viewset_config del proyecto).
 Lectura pública para que el registro (anónimo) pueda poblar selects.

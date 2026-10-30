@@ -3,7 +3,12 @@ from pathlib import Path
 
 from django.core.management import BaseCommand, CommandError
 
-from StoreApp.domains.stores.services.storage import _bucket, _client, object_url, storage_configured
+from StoreApp.domains.stores.services.storage import (
+    _bucket,
+    _client,
+    object_url,
+    storage_configured,
+)
 
 """
 Publicación de la APK de DAVENT en Cloudflare R2 (distribución web directa).

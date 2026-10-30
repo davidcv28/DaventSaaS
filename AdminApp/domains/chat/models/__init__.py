@@ -1,4 +1,4 @@
-from .models import ChatThread, ChatMessage, ChatPresence
+from .models import ChatMessage, ChatPresence, ChatThread
 
 __all__ = [
     'ChatThread',

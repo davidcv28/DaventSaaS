@@ -1,10 +1,12 @@
 from django.db.models import Count, Q
 from rest_framework.permissions import IsAuthenticated
-from StoreApp.domains.stores.models                    import Store
-from StoreApp.domains.stores.serializers.serializers   import (
+
+from StoreApp.domains.stores.models import Store
+from StoreApp.domains.stores.serializers.serializers import (
     StoreSerializer,
-    StoreSerializerList
+    StoreSerializerList,
 )
+
 """
 
 Configuración de los viewsets del dominio Stores.

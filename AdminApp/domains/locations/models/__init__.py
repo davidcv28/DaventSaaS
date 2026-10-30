@@ -1,1 +1,1 @@
-from .models import Province, City, ZipCode
+from .models import City, Province, ZipCode

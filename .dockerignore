@@ -31,3 +31,8 @@ docker/certbot/
 **/*.pem
 **/*.key
 *.csr
+# Temporales de herramientas/agentes (no deben entrar a ninguna imagen).
+tmp*/
+.agentsroom/
+.claude/
+.pnpm-store/

@@ -10,7 +10,8 @@
     "release:apk": "node scripts/release-apk.mjs",
     "verify:studio": "node scripts/verify-studio-contract.mjs",
     "preview": "vite preview --port 5173",
-    "lint": "echo \"(sin eslint configurado — ver FRONTEND_RULES.md)\""
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.9",
@@ -30,7 +31,9 @@
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.6.9",
     "@vitejs/plugin-vue": "^5.1.2",
-    "vite": "^5.4.8"
+    "eslint": "^9.39.1",
+    "vite": "^5.4.8",
+    "vitest": "^3.2.4"
   },
   "overrides": {
     "@grpc/grpc-js": "^1.13.6"

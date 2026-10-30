@@ -1,5 +1,9 @@
 from .viewset_base import LocationBaseViewSet
-from .viewset_config import ProvinceViewSetConfig, CityViewSetConfig, ZipCodeViewSetConfig
+from .viewset_config import (
+    CityViewSetConfig,
+    ProvinceViewSetConfig,
+    ZipCodeViewSetConfig,
+)
 
 """
 En este modulo simplemente asignamos la view_config para cada base viewset

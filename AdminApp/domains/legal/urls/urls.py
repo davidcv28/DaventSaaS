@@ -1,4 +1,5 @@
 from rest_framework import routers
+
 from AdminApp.domains.legal.views import ContentReportViewSet
 
 router  =   routers.DefaultRouter()

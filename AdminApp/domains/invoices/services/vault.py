@@ -38,7 +38,7 @@ def _derived_key() -> bytes:
     """Llave maestra estable derivada del SECRET_KEY, para dev/test sin
     SECRETS_MASTER_KEYS. En producción el deploy check exige el keyring real:
     derivarla del SECRET_KEY dejaría todo el ciphertext ilegible si rotara."""
-    return hashlib.sha256(f'davent-master-keyring:{settings.SECRET_KEY}'.encode('utf-8')).digest()
+    return hashlib.sha256(f'davent-master-keyring:{settings.SECRET_KEY}'.encode()).digest()
 
 
 def _keyring() -> dict:

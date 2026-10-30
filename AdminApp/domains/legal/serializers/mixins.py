@@ -1,5 +1,6 @@
 
 from rest_framework import serializers
+
 from AdminApp.domains.legal.services import CreateContentReportQuery
 
 """

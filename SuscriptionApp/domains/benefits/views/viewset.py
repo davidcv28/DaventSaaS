@@ -1,6 +1,8 @@
-from .viewset_base   import BenefitBaseViewSet
-from .viewset_config import PlanCatalogConfigs
 from DaventProject.throttling import PublicReadThrottle
+
+from .viewset_base import BenefitBaseViewSet
+from .viewset_config import PlanCatalogConfigs
+
 """
 
 Viewsets del dominio Benefits.

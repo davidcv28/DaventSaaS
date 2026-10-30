@@ -1,7 +1,9 @@
 #===== IMPORTACIONES =====
 from django.core.management import BaseCommand
-from AdminApp.domains.locations.models import Province, City, ZipCode
-from .seeds import list_province, list_cities, list_zipcode
+
+from AdminApp.domains.locations.models import City, Province, ZipCode
+
+from .seeds import list_cities, list_province, list_zipcode
 
 """
 GENERAMOS AUTOMATICAMENTE LAS PROVINCIAS, CIUDADES Y CODIGOS POSTALES

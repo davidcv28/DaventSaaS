@@ -2,9 +2,10 @@
 Configuración de los viewsets del dominio Invoices.
 queryset y serializer se pasan como lambda view: ... y se ejecutan en la base.
 """
-from AdminApp.domains.invoices.models       import Invoice
-from AdminApp.domains.invoices.serializers  import InvoiceSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
+from AdminApp.domains.invoices.models import Invoice
+from AdminApp.domains.invoices.serializers import InvoiceSerializer
 
 _INVOICE_RELATED = (
     'user', 'user__province', 'user__city', 'user__user',

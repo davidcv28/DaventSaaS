@@ -1,6 +1,14 @@
 from .services import (
-    SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES, SERVICES_MAX,
-    services_enabled, site_templates_limit, allowed_site_templates,
-    normalize_site_templates, validate_site_templates, effective_site_templates,
-    site_mode_of, can_add_service, apply_service_order,
+    DEFAULT_SITE_TEMPLATES,
+    SERVICES_MAX,
+    SITE_TEMPLATES,
+    allowed_site_templates,
+    apply_service_order,
+    can_add_service,
+    effective_site_templates,
+    normalize_site_templates,
+    services_enabled,
+    site_mode_of,
+    site_templates_limit,
+    validate_site_templates,
 )

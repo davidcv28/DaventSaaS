@@ -40,14 +40,14 @@ def hash_key() -> bytes:
     raw = (getattr(settings, 'SECRETS_HASH_KEY', '') or '').strip()
     if raw:
         return raw.encode('utf-8')
-    return hashlib.sha256(f'davent-field-hash:{settings.SECRET_KEY}'.encode('utf-8')).digest()
+    return hashlib.sha256(f'davent-field-hash:{settings.SECRET_KEY}'.encode()).digest()
 
 
 def digest_for(field_name: str, value) -> str:
     """Huella estable para igualdad sobre el valor en claro (casefold: equivale
     al __iexact que usaban los validadores sobre document/phone)."""
     normalized = str(value).strip().casefold()
-    return hmac.new(hash_key(), f'{field_name}:{normalized}'.encode('utf-8'), hashlib.sha256).hexdigest()
+    return hmac.new(hash_key(), f'{field_name}:{normalized}'.encode(), hashlib.sha256).hexdigest()
 
 
 class EncryptedCharField(models.TextField):

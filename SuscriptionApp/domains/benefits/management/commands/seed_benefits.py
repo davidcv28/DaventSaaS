@@ -1,7 +1,13 @@
 from django.core.management import BaseCommand
-from .seeds import dict_benefits, dict_plan_benefits
-from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit, PlanPresentation
+
 from AdminApp.domains.suscriptions.models import SuscriptionPlan
+from SuscriptionApp.domains.benefits.models import (
+    Benefit,
+    PlanBenefit,
+    PlanPresentation,
+)
+
+from .seeds import dict_benefits, dict_plan_benefits
 
 """
 

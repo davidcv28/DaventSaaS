@@ -25,6 +25,7 @@ _RETRY = dict(autoretry_for = (Exception,), retry_backoff = True, max_retries = 
 @shared_task(**_RETRY)
 def send_verification_email(user_id : int) -> None:
     from django.contrib.auth.models import User
+
     from AdminApp.domains.users.services import SendVerificationEmailQuery
     user    =   User.objects.filter(pk = user_id).first()
     if user:
@@ -34,6 +35,7 @@ def send_verification_email(user_id : int) -> None:
 @shared_task(**_RETRY)
 def send_password_reset_email(user_id : int) -> None:
     from django.contrib.auth.models import User
+
     from AdminApp.domains.users.services import SendPasswordResetEmailQuery
     user    =   User.objects.filter(pk = user_id).first()
     if user:

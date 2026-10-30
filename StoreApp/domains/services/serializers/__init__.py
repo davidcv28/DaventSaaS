@@ -1,1 +1,5 @@
-from .serializers import ServiceSerializer, ServiceSerializerList, ServicePublicSerializer
+from .serializers import (
+    ServicePublicSerializer,
+    ServiceSerializer,
+    ServiceSerializerList,
+)

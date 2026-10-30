@@ -1,15 +1,19 @@
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from AdminApp.permissions import IsAnonimous
 from django.contrib.auth.models import User
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.serializers import (
-    #USER SERIALIZER
-    UserSerializer, UserUpdateSerializer, UserUpdatePasswordSerializer,
+    #REGISTER SERIALIZER
+    RegisterUserSerializer,
     #USER PROFILE
     UserProfileSerializer,
-    #REGISTER SERIALIZER
-    RegisterUserSerializer
+    #USER SERIALIZER
+    UserSerializer,
+    UserUpdatePasswordSerializer,
+    UserUpdateSerializer,
 )
+from AdminApp.permissions import IsAnonimous
+
 #=============================
 # USER VIEWSET CONFIG
 #=============================

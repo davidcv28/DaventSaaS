@@ -14,7 +14,12 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
-from AdminApp.domains.suscriptions.models import Coupon, CouponRedemption, Suscription, SuscriptionPlan
+from AdminApp.domains.suscriptions.models import (
+    Coupon,
+    CouponRedemption,
+    Suscription,
+    SuscriptionPlan,
+)
 from AdminApp.domains.users.models import UserProfile
 
 SUSCRIPTIONS_URL  =   '/api/suscriptions/'
@@ -405,8 +410,8 @@ class CouponBillingIsolationTests(TestCase):
         return Coupon.objects.create(**defaults)
 
     def test_redeem_creates_no_payment_no_invoice(self):
-        from AdminApp.domains.payments.models import Payment
         from AdminApp.domains.invoices.models import Invoice
+        from AdminApp.domains.payments.models import Payment
         client, profile =   self._client()
         self._coupon()
         response        =   client.post(REDEEM_URL, {'code': 'FLYER7'}, format = 'json')

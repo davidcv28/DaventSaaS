@@ -1,5 +1,12 @@
 from rest_framework import routers
-from StoreApp.domains.catalog.views import CategoryViewSet, BrandViewSet, ProductViewSet, DiscountViewSet, ReviewViewSet
+
+from StoreApp.domains.catalog.views import (
+    BrandViewSet,
+    CategoryViewSet,
+    DiscountViewSet,
+    ProductViewSet,
+    ReviewViewSet,
+)
 
 router  =   routers.DefaultRouter()
 

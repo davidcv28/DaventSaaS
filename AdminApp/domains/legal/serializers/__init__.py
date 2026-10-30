@@ -1,1 +1,5 @@
-from .serializers import ContentReportSerializer, ContentReportListSerializer, ContentReportUpdateSerializer
+from .serializers import (
+    ContentReportListSerializer,
+    ContentReportSerializer,
+    ContentReportUpdateSerializer,
+)

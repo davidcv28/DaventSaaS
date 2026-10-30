@@ -1,4 +1,5 @@
 from rest_framework import routers
+
 from SuscriptionApp.domains.benefits.views import PlanCatalogViewSet
 
 router  =   routers.DefaultRouter()

@@ -19,8 +19,8 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+from AdminApp.domains.users.models import TERMS_VERSION, UserProfile
 
 logger                  =   logging.getLogger(__name__)
 GOOGLE_CLIENT_ID        =   config('GOOGLE_CLIENT_ID', default = '')

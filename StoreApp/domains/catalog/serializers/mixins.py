@@ -1,6 +1,8 @@
 from django.db import models
 from rest_framework import serializers
-from .config_fields import FeatureLimits, DiscountLimits
+
+from .config_fields import DiscountLimits, FeatureLimits
+
 """
 
 Mixins de validación de los serializers del dominio Catalog.

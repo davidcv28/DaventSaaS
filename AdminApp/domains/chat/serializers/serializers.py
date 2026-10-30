@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from AdminApp.domains.chat.models     import ChatMessage, ChatThread
+from AdminApp.domains.chat.models import ChatMessage, ChatThread
 
 """
 Serializers del chat de soporte.

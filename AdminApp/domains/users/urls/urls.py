@@ -1,5 +1,12 @@
 from rest_framework import routers
-from AdminApp.domains.users.views import UserViewSet, UserPassWordViewSet, UserProfileViewSet, RegisterUserViewSet
+
+from AdminApp.domains.users.views import (
+    RegisterUserViewSet,
+    UserPassWordViewSet,
+    UserProfileViewSet,
+    UserViewSet,
+)
+
 router = routers.DefaultRouter()
 
 #USER ENDPOINTS

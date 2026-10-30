@@ -11,7 +11,7 @@ import hashlib
 import os
 import tempfile
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.core.cache import cache
 from django.http import QueryDict

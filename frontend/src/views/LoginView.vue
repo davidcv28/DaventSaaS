@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import AuthLayout from '../components/AuthLayout.vue'
@@ -22,6 +22,13 @@ onMounted(() => {
   if (route.query.expired) {
     auth.lastError = 'Tu sesión expiró. Iniciá sesión nuevamente.'
   }
+})
+
+// El intervalo del cooldown muere con la vista: navegar durante los 60 s
+// dejaba el timer vivo (una fuga por visita al login).
+onUnmounted(() => {
+  clearInterval(timer)
+  timer = null
 })
 
 function startCooldown() {

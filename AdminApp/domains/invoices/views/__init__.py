@@ -1,1 +1,1 @@
-from .viewset import InvoiceViewSet, InvoiceAdminViewSet
+from .viewset import InvoiceAdminViewSet, InvoiceViewSet

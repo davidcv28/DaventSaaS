@@ -1,6 +1,8 @@
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
+
 from AdminApp.domains.users.models import UserProfile
+
 """
 
 Web del cliente: Store es la identidad pública del negocio.
@@ -553,6 +555,8 @@ class StoreDailyVisit(models.Model):
 # al instante en su web pública — el payload no queda servido viejo)
 #=========================================
 from django.db.models.signals import post_delete, post_save
+
+
 def _bust_public_store(sender, instance, **kwargs):
     #La versión se keyea por store_id (atributo plano de la FK): no hace
     #fetch y sobrevive a los post_delete en cascada del propio Store.

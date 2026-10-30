@@ -1,4 +1,10 @@
 from .serializers import (
-    CategorySerializer, BrandSerializer, ProductSerializer, ProductSerializerList, ProductPublicSerializer,
-    DiscountSerializer, DiscountSerializerList, DiscountPublicSerializer,
+    BrandSerializer,
+    CategorySerializer,
+    DiscountPublicSerializer,
+    DiscountSerializer,
+    DiscountSerializerList,
+    ProductPublicSerializer,
+    ProductSerializer,
+    ProductSerializerList,
 )

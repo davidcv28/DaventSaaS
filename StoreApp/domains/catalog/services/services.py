@@ -1,9 +1,10 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import Q
 from django.utils import timezone
 
 from StoreApp.domains.stores.services import plan_benefits_of
+
 """
 
 Servicios del dominio Catalog.

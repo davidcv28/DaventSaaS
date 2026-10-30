@@ -1,7 +1,9 @@
 from rest_framework import serializers
+
 from AdminApp.domains.legal.models import ContentReport
+
 from .config_fields import ContentReportFieldsConfig
-from .mixins import ContentReportValidate, ContentReportCreateMethod
+from .mixins import ContentReportCreateMethod, ContentReportValidate
 
 """
 CONTENT REPORT SERIALIZERS

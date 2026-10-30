@@ -5,7 +5,8 @@ Invoice es el comprobante fiscal de un Payment aprobado (un cobro = una factura)
 from django.db import models
 
 from AdminApp.domains.payments.models import Payment
-from AdminApp.domains.users.models    import UserProfile
+from AdminApp.domains.users.models import UserProfile
+
 
 #=========================================
 # INVOICE TYPE

@@ -1,4 +1,5 @@
 import re
+
 """
 
 Validadores de campo del dominio Stores.

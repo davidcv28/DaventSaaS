@@ -60,10 +60,18 @@ jobs:
           cache: pip
           cache-dependency-path: requirements.txt
 
-      - name: Ruff (estilo + errores estáticos backend)
+      - name: Ruff (estilo, imports, bugs, modernización y seguridad)
         run: |
           pip install ruff==0.17.3
           ruff check --output-format=github .
+
+      - name: Ruff format (informativo)
+        # `ruff format --check` todavía no es gate: formatear todo el repo es
+        # un diff masivo aparte. Se corre para medir y no bloquea.
+        continue-on-error: true
+        run: |
+          pip install ruff==0.17.3
+          ruff format --check --diff .
 
   # ---------------------------------------------------------------------------
   test:
@@ -119,7 +127,7 @@ jobs:
           cache-dependency-path: requirements.txt
 
       - name: Dependencias
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt coverage==7.6.10
 
       - name: Checklist de despliegue de Django
         run: python manage.py check --deploy
@@ -141,7 +149,10 @@ jobs:
           SECURE_SSL_REDIRECT: "False"
           SESSION_COOKIE_SECURE: "False"
           CSRF_COOKIE_SECURE: "False"
-        run: python manage.py test
+        run: |
+          coverage run manage.py test --parallel
+          coverage combine
+          coverage report --fail-under=50
 
   # ---------------------------------------------------------------------------
   frontend:
@@ -165,6 +176,12 @@ jobs:
 
       - name: Dependencias (lockfile estricto)
         run: npm ci --no-audit --no-fund
+
+      - name: ESLint (flat config)
+        run: npm run lint
+
+      - name: Vitest (env/api/flyer)
+        run: npm test
 
       - name: Contrato del Studio
         run: npm run verify:studio
@@ -238,9 +255,18 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write          # firma keyless (cosign/OIDC)
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
+
+      - name: Trivy — misconfig de Dockerfile/compose
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
 
       - name: Login GHCR
         if: github.event_name != 'pull_request'
@@ -277,6 +303,8 @@ jobs:
           file: docker/api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-api.outputs.tags }}
+          sbom: true
+          provenance: true
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
 
@@ -287,11 +315,23 @@ jobs:
           file: docker/web/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-web.outputs.tags }}
+          sbom: true
+          provenance: true
           build-args: |
             VITE_API_BASE_URL=/api
             VITE_PLATFORM_DOMAIN=${{ vars.PLATFORM_DOMAIN }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
+
+      - name: Instalar cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3
+
+      - name: Firmar imágenes (keyless)
+        if: github.event_name != 'pull_request'
+        run: |
+          cosign sign --yes "${{ env.API_IMAGE }}:sha-${{ github.sha }}"
+          cosign sign --yes "${{ env.WEB_IMAGE }}:sha-${{ github.sha }}"
 
       - name: Trivy — scan de la imagen API publicada
         if: github.event_name != 'pull_request'

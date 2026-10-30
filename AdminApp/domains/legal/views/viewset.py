@@ -1,5 +1,5 @@
-from .viewset_base       import  ContentReportBaseViewSet
-from .viewset_config     import  ContentReportConfigs
+from .viewset_base import ContentReportBaseViewSet
+from .viewset_config import ContentReportConfigs
 
 """
 

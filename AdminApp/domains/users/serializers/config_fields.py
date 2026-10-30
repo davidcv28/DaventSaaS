@@ -1,7 +1,10 @@
 from rest_framework import serializers
-from AdminApp.domains.locations.models import Province, City
+
+from AdminApp.domains.locations.models import City, Province
 from AdminApp.domains.users.models import UserProfile
-from .validators import UserPasswordValidators, UserValidators, UserProfileValidators
+
+from .validators import UserPasswordValidators, UserProfileValidators, UserValidators
+
 """
 Módulo de configuración de campos para los serializers del dominio Users.
 

@@ -14,32 +14,39 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from urllib.parse import urlparse
+
 from decouple import config
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import FileResponse, Http404, JsonResponse
-from django.urls import path, include, re_path
-from urllib.parse import urlparse
+from django.urls import include, path, re_path
 
 
 def healthz(request):
     # Healthcheck de contenedores (Docker/compose) y monitores: 200 si el
     # proceso WSGI responde. No toca la DB a propósito.
     return JsonResponse({'status': 'ok'})
-from rest_framework_simplejwt.views import TokenVerifyView
-from AdminApp.domains.users.views.auth_views import (
-    CustomTokenObtainPairView,
-    CookieTokenRefreshView,
-    TokenLogoutView,
-    PasswordResetRequestView,
-    PasswordResetConfirmView,
-    VerifyEmailView,
-    VerifyEmailResendView,
-    GoogleAuthView,
-    PublicConfigView,
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
 )
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from rest_framework_simplejwt.views import TokenVerifyView
+
+from AdminApp.domains.users.views.auth_views import (
+    CookieTokenRefreshView,
+    CustomTokenObtainPairView,
+    GoogleAuthView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
+    PublicConfigView,
+    TokenLogoutView,
+    VerifyEmailResendView,
+    VerifyEmailView,
+)
+
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
     #ADMIN_URL por env: en prod un path no obvio reduce el ruido de bots que

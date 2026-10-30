@@ -1,5 +1,8 @@
-# Config de tooling Python. Ruff arranca con un baseline pragmático (pyflakes +
-# errores de sintaxis); ir subiendo select a medida que se limpie el código.
+# Config de tooling Python. Baseline de calidad de la auditoría 30/10/2026:
+# se suman estilo (E/W), orden de imports (I), bugs (B), modernización (UP) y
+# seguridad (S/bandit) sobre el pyflakes original. Las reglas que exigirían
+# un refactor masivo quedan ignoradas de forma explícita (documentadas) en
+# vez de escondidas.
 [tool.ruff]
 target-version = "py311"
 extend-exclude = [
@@ -11,8 +14,33 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E9", "F"]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = [
+    # Formato: lo cubre `ruff format` (no se gatea todavía).
+    "E501",   # línea larga — el estilo del repo usa alineación manual
+    "E701",   # varias sentencias en una línea (idiom del proyecto)
+    "E402",   # imports después del docstring de módulo
+    "W291", "W293", "W292",  # espacios/salto final
+    # Refactors pendientes (no bloquean el gate):
+    "B904",   # raise-from en except anidados
+    "B905",   # zip(strict=)
+    "B007",   # variable de loop sin usar
+    "B023",   # closure sobre variable de loop
+    "B017",   # assertRaises(Exception) en tests
+    "E731",   # lambda asignada
+    "UP031",  # %-formatting
+    "S110",   # try/except/pass (usado en limpiezas best-effort)
+    "S324",   # hashlib no criptográfico (hashes de firma, no seguridad)
+    "S603",   # subprocess con argv controlado (pg_dump)
+    "S608",   # SQL armado con parámetros internos (tests/ETL)
+    "S311",   # random no criptográfico (seeds, muestreo de UI)
+    "S105", "S106",  # "contraseñas" hardcodeadas en tests/dummies
+]
 
 [tool.ruff.lint.per-file-ignores]
 # Re-export de símbolos en __init__ es el idiom del proyecto (DDD domains).
 "__init__.py" = ["F401"]
+# Los tests usan asserts, dummies de credenciales y helpers "sucios" a propósito.
+"*/tests.py" = ["S101", "S105", "S106", "S311", "B017"]
+"*/tests_*.py" = ["S101", "S105", "S106", "S311", "B017"]
+"*/test_*.py" = ["S101", "S105", "S106", "S311", "B017"]

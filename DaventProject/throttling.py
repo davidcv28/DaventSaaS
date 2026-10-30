@@ -1,6 +1,7 @@
 import logging
 
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+
 """
 
 Throttles compartidos entre dominios.

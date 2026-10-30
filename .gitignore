@@ -44,3 +44,7 @@ qa_token.tmp
 .agentsroom/handoff-summary-*.md
 .agentsroom/fork-context-*.txt
 .agentsroom/transfer-context-*.txt
+
+# Directorios temporales de herramientas/agentes en la raíz (tmpXXXX):
+# rompen `git add -A` y `git status`, e inflan el contexto de build.
+/tmp*/

@@ -1,5 +1,6 @@
 from rest_framework import routers
-from AdminApp.domains.invoices.views import InvoiceViewSet, InvoiceAdminViewSet
+
+from AdminApp.domains.invoices.views import InvoiceAdminViewSet, InvoiceViewSet
 
 router  =   routers.DefaultRouter()
 

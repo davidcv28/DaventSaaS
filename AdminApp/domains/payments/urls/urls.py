@@ -1,5 +1,10 @@
 from rest_framework import routers
-from AdminApp.domains.payments.views import PaymentViewSet, DailyRevenueViewSet, MonthlyRevenueViewSet
+
+from AdminApp.domains.payments.views import (
+    DailyRevenueViewSet,
+    MonthlyRevenueViewSet,
+    PaymentViewSet,
+)
 
 router  =   routers.DefaultRouter()
 

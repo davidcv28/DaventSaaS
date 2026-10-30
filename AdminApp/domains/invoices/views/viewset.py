@@ -7,7 +7,12 @@ from rest_framework.response import Response
 
 from AdminApp.domains.invoices.services import RequestCaeQuery, afip_enabled
 from AdminApp.domains.invoices.views.viewset_base import InvoiceBaseViewSet
-from AdminApp.domains.invoices.views.viewset_config import InvoiceUserConfig, InvoiceAdminConfig
+from AdminApp.domains.invoices.views.viewset_config import (
+    InvoiceAdminConfig,
+    InvoiceUserConfig,
+)
+
+
 #=========================================
 # INVOICE VIEWSET
 #=========================================

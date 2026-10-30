@@ -1,4 +1,5 @@
 from AdminApp.domains.legal.models import ContentReport
+
 from .validators import LegalValidators
 
 """

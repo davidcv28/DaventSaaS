@@ -5,9 +5,11 @@ import os
 import tempfile
 import threading
 import time
+
 import requests
 from decouple import config
 from PIL import Image, ImageOps, UnidentifiedImageError
+
 """
 
 Procesado automático de imágenes del cliente (Pillow, server-side).

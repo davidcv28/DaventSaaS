@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from AdminApp.domains.locations.models import City
+
 """
 Mixins de validación a nivel objeto para el dominio Locations.
 La ciudad debe pertenecer a la provincia indicada (misma regla que users).

@@ -5,7 +5,6 @@ from datetime import timedelta
 
 from decouple import config
 from django.conf import settings
-from django.core.cache import cache
 from django.http import HttpResponseRedirect
 from rest_framework import status
 from rest_framework.exceptions import APIException, PermissionDenied
@@ -19,9 +18,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from AdminApp.domains.users.serializers import (
-    PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
 )
+from AdminApp.domains.users.services import (
+    FRONTEND_URL,
+    GOOGLE_CLIENT_ID,
+    ConfirmPasswordResetQuery,
+    RequestPasswordResetQuery,
+    SocialAuthError,
+    SocialLoginQuery,
+    VerifyEmailQuery,
+    VerifyGoogleCredentialQuery,
+)
+
 #Misma resolución de IP que el middleware del admin (XFF del proxy confiable).
 from DaventProject.cache_utils import (
     CacheUnavailable,
@@ -32,17 +42,6 @@ from DaventProject.cache_utils import (
     cache_set_strict,
 )
 from DaventProject.middleware import client_ip as _client_ip
-from AdminApp.domains.users.services import (
-    RequestPasswordResetQuery,
-    ConfirmPasswordResetQuery,
-    SendVerificationEmailQuery,
-    VerifyEmailQuery,
-    SocialAuthError,
-    SocialLoginQuery,
-    VerifyGoogleCredentialQuery,
-    GOOGLE_CLIENT_ID,
-    FRONTEND_URL,
-)
 
 # Sesión web: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ — el
 # JavaScript del cliente jamás lo lee (anti-robo por XSS) y solo viaja a los

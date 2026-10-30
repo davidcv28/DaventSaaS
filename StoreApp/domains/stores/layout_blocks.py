@@ -28,8 +28,8 @@
 import json
 import re
 
-from django.utils.html     import strip_tags
-from rest_framework        import serializers
+from django.utils.html import strip_tags
+from rest_framework import serializers
 
 LAYOUT_SURFACES             =   ('landing', 'catalog', 'services')
 LAYOUT_MAX_BYTES            =   8192
