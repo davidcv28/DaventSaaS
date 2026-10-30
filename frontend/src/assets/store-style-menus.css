@@ -1,0 +1,359 @@
+/* ==========================================================================
+   MENÚS POR ESTILO DEL CATÁLOGO
+   Cada DesignStyle tiene una barra, una tipografía de enlaces y un CTA
+   propios. Se scopea con [data-style][data-template] para ganarle a la piel
+   de la plantilla sin tocar sus secciones. En móvil manda el drawer/tabbar
+   compartido: acá solo se tiñe la barra.
+   ========================================================================== */
+
+/* --- base: los 22 estilos heredan una barra limpia ---------------------- */
+.store-page[data-style][data-template] .sp-top-links a{
+  position: relative;
+  text-decoration: none;
+}
+
+/* 01 · editorial-minima — papel, versalitas y filete de tinta -------------- */
+.store-page[data-style='editorial-minima'][data-template] .sp-top{
+  background: color-mix(in srgb, var(--sp-bg) 92%, #fff);
+  border-bottom: 1px solid var(--sp-line);
+  box-shadow: none;
+}
+.store-page[data-style='editorial-minima'][data-template] .sp-top-links{ gap: 4px; }
+.store-page[data-style='editorial-minima'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 9px 10px; font-size: 10.5px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--sp-ink);
+}
+.store-page[data-style='editorial-minima'][data-template] .sp-top-links a::after{
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: 5px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: left;
+  transition: transform .5s cubic-bezier(.2,.7,.2,1);
+}
+.store-page[data-style='editorial-minima'][data-template] .sp-top-links a:hover{ background: transparent; }
+.store-page[data-style='editorial-minima'][data-template] .sp-top-links a:hover::after{ transform: scaleX(1); }
+.store-page[data-style='editorial-minima'][data-template] .sp-top-cta{
+  border-radius: 0; background: transparent; color: var(--sp-ink);
+  border: 1px solid var(--sp-ink); box-shadow: none;
+}
+.store-page[data-style='editorial-minima'][data-template] .sp-top-cta:hover{ background: var(--sp-ink); color: var(--sp-bg); }
+
+/* 02 · vidrio-nocturno — barra flotante de vidrio -------------------------- */
+.store-page[data-style='vidrio-nocturno'][data-template] .sp-top{
+  margin: 10px 14px 0; border: 1px solid rgba(148, 197, 255, .22); border-radius: 18px;
+  background: color-mix(in srgb, #0b1424 72%, transparent);
+  backdrop-filter: saturate(150%) blur(16px); -webkit-backdrop-filter: saturate(150%) blur(16px);
+  box-shadow: 0 18px 50px -30px #22d3ee88, inset 0 1px 0 #ffffff1f;
+}
+.store-page[data-style='vidrio-nocturno'][data-template] .sp-top-inner{ padding-inline: 14px; }
+.store-page[data-style='vidrio-nocturno'][data-template] .sp-top-links a{
+  border-radius: 999px; padding: 8px 14px; font-size: 12px; letter-spacing: .04em;
+  color: #cfe6ff; border: 1px solid transparent;
+}
+.store-page[data-style='vidrio-nocturno'][data-template] .sp-top-links a:hover{
+  background: #38bdf81f; border-color: #38bdf866; color: #eaf6ff;
+}
+.store-page[data-style='vidrio-nocturno'][data-template] .sp-top-cta{
+  border-radius: 999px; border: 1px solid #22d3ee80;
+  background: linear-gradient(135deg, #0e7490, #155e75); color: #eaffff;
+  box-shadow: 0 0 22px -8px #22d3ee;
+}
+.store-page[data-style='vidrio-nocturno'][data-template] .sp-top-cta:hover{ filter: brightness(1.12); transform: translateY(-2px); }
+
+/* 03 · bento — barra modular con enlaces en cápsulas ---------------------- */
+.store-page[data-style='bento'][data-template] .sp-top{
+  margin: 10px 12px 0; border: 1px solid var(--sp-line); border-radius: 14px;
+  background: var(--sp-card); box-shadow: 0 12px 26px -24px #0f172a;
+}
+.store-page[data-style='bento'][data-template] .sp-top-inner{ gap: 10px; }
+.store-page[data-style='bento'][data-template] .sp-top-links{ gap: 5px; padding: 4px; background: var(--sp-surface); border-radius: 10px; }
+.store-page[data-style='bento'][data-template] .sp-top-links a{
+  border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 700;
+}
+.store-page[data-style='bento'][data-template] .sp-top-links a:hover{ background: #fff; box-shadow: 0 4px 10px -8px #0f172a; }
+.store-page[data-style='bento'][data-template] .sp-top-cta{ border-radius: 10px; background: var(--store-accent); color: #fff; }
+
+/* 04 · neo-brutalista — borde duro y sombra desplazada -------------------- */
+.store-page[data-style='neo-brutalista'][data-template] .sp-top{
+  background: #f2e9d8; border-bottom: 3px solid #0b0b0b; box-shadow: 0 5px 0 #0b0b0b;
+}
+.store-page[data-style='neo-brutalista'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 8px 10px; font-size: 11px; font-weight: 900;
+  letter-spacing: .06em; text-transform: uppercase; color: #0b0b0b;
+}
+.store-page[data-style='neo-brutalista'][data-template] .sp-top-links a:hover{
+  background: #0b0b0b; color: #fff8e7; box-shadow: 3px 3px 0 #e11d48;
+}
+.store-page[data-style='neo-brutalista'][data-template] .sp-top-cta{
+  border-radius: 0; background: #0b0b0b; color: #fff8e7; border: 2px solid #0b0b0b;
+  box-shadow: 3px 3px 0 #e11d48;
+}
+.store-page[data-style='neo-brutalista'][data-template] .sp-top-cta:hover{ transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #e11d48; }
+
+/* 05 · lujo-serif — marca centrada y navegación de salón ------------------ */
+.store-page[data-style='lujo-serif'][data-template] .sp-top{
+  background: #0d0a07; border-bottom: 1px solid #d4af3755; box-shadow: none;
+}
+.store-page[data-style='lujo-serif'][data-template] .sp-top-inner{ position: relative; justify-content: space-between; }
+.store-page[data-style='lujo-serif'][data-template] .sp-brand{
+  position: absolute; left: 50%; transform: translateX(-50%);
+}
+.store-page[data-style='lujo-serif'][data-template] .sp-top-links{ gap: 30px; margin-left: 0; }
+.store-page[data-style='lujo-serif'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 6px 0; font-size: 9.5px; letter-spacing: .26em;
+  text-transform: uppercase; color: #d4af37;
+}
+.store-page[data-style='lujo-serif'][data-template] .sp-top-links a:hover{ background: transparent; color: #f2e9d8; }
+.store-page[data-style='lujo-serif'][data-template] .sp-top-cta{
+  border-radius: 0; border: 1px solid #d4af37; background: transparent; color: #d4af37;
+}
+.store-page[data-style='lujo-serif'][data-template] .sp-top-cta:hover{ background: #d4af37; color: #0d0a07; }
+
+/* 06 · pastel-suave — barra flotante y enlaces pastilla ------------------- */
+.store-page[data-style='pastel-suave'][data-template] .sp-top{
+  margin: 10px 14px 0; border-radius: 22px; background: #fffafd;
+  border: 1px solid #e8d9ec; box-shadow: 0 18px 40px -30px #8e4a9e;
+}
+.store-page[data-style='pastel-suave'][data-template] .sp-top-inner{ padding-inline: 16px; }
+.store-page[data-style='pastel-suave'][data-template] .sp-top-links a{
+  border-radius: 999px; padding: 8px 15px; font-size: 12.5px; font-weight: 700;
+  color: #6d5a78;
+}
+.store-page[data-style='pastel-suave'][data-template] .sp-top-links a:hover{ background: #f3d9f7; color: #8e4a9e; }
+.store-page[data-style='pastel-suave'][data-template] .sp-top-cta{ border-radius: 999px; background: #8e4a9e; color: #fff; }
+
+/* 07 · neon-tech — barra de terminal con glow ----------------------------- */
+.store-page[data-style='neon-tech'][data-template] .sp-top{
+  background: #04070a; border-top: 1px solid #00e67a66; border-bottom: 1px solid #00e67a66;
+  box-shadow: 0 0 26px -8px #00e67a66, inset 0 -1px 0 #00e67a22;
+}
+.store-page[data-style='neon-tech'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 7px 9px; font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #8fb3a8;
+}
+.store-page[data-style='neon-tech'][data-template] .sp-top-links a::before{ content: "> "; color: #00e67a; }
+.store-page[data-style='neon-tech'][data-template] .sp-top-links a:hover{ background: #00e67a12; color: #e8fff7; text-shadow: 0 0 10px #00e67a; }
+.store-page[data-style='neon-tech'][data-template] .sp-top-cta{
+  border-radius: 0; background: #00e67a; color: #04110b; box-shadow: 0 0 18px -4px #00e67a;
+}
+
+/* 08 · terracota — papel cálido y puntos de arcilla ----------------------- */
+.store-page[data-style='terracota'][data-template] .sp-top{
+  background: #f7efe4; border-bottom: 1px solid #b7512e44;
+}
+.store-page[data-style='terracota'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 8px 12px; font-size: 12.5px; font-weight: 700; color: #6f5a4a;
+}
+.store-page[data-style='terracota'][data-template] .sp-top-links a::before{
+  content: ""; display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+  background: #b7512e; margin-right: 7px; vertical-align: 2px; opacity: .7;
+}
+.store-page[data-style='terracota'][data-template] .sp-top-links a:hover{ background: #fffaf2; color: #9a3f24; }
+.store-page[data-style='terracota'][data-template] .sp-top-cta{ border-radius: 8px; background: transparent; border: 1px solid #9a3f24; color: #9a3f24; }
+
+/* 09 · monocromo — galería, regla negra e inversión ----------------------- */
+.store-page[data-style='monocromo'][data-template] .sp-top{
+  background: #fff; border-bottom: 2px solid #111; box-shadow: none;
+}
+.store-page[data-style='monocromo'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 8px 10px; font-size: 10.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: #111;
+}
+.store-page[data-style='monocromo'][data-template] .sp-top-links a:hover{ background: #111; color: #fff; }
+.store-page[data-style='monocromo'][data-template] .sp-top-cta{ border-radius: 0; background: #111; color: #fff; border: 1px solid #111; }
+
+/* 10 · retail-vibrante — etiquetas de oferta ------------------------------ */
+.store-page[data-style='retail-vibrante'][data-template] .sp-top{
+  background: #fff7e0; border-bottom: 4px solid #b91c1c;
+}
+.store-page[data-style='retail-vibrante'][data-template] .sp-top-links a{
+  border-radius: 6px 6px 6px 0; padding: 8px 14px; font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .03em; color: #1c1408; background: #fff;
+  border: 1px solid #f0dfb8;
+}
+.store-page[data-style='retail-vibrante'][data-template] .sp-top-links a:hover{ background: #c2410c; color: #fff; border-color: #c2410c; transform: rotate(-1deg); }
+.store-page[data-style='retail-vibrante'][data-template] .sp-top-cta{ border-radius: 10px; background: #b91c1c; color: #fff; box-shadow: 0 4px 0 #7f1d1d; }
+
+/* 11 · aurora-degradada — barra de malla y bordes luminosos --------------- */
+.store-page[data-style='aurora-degradada'][data-template] .sp-top{
+  background: linear-gradient(90deg, #f4f8f4ee, #e9f4efee);
+  border-bottom: 1px solid #0f766e33; backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px -26px #0f766e;
+}
+.store-page[data-style='aurora-degradada'][data-template] .sp-top-links a{
+  border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 700; color: #526b62;
+  border: 1px solid transparent;
+}
+.store-page[data-style='aurora-degradada'][data-template] .sp-top-links a:hover{
+  background: #fff; border-color: #0f766e44; color: #0f766e;
+}
+.store-page[data-style='aurora-degradada'][data-template] .sp-top-cta{
+  border-radius: 999px; background: linear-gradient(135deg, #0f766e, #0e7490); color: #fff;
+}
+
+/* 12 · papel-riso — doble registro azul/rojo ------------------------------ */
+.store-page[data-style='papel-riso'][data-template] .sp-top{
+  background: #fff6e8; border-bottom: 1px solid #1d4ed8;
+  box-shadow: 0 3px 0 #e11d48;
+}
+.store-page[data-style='papel-riso'][data-template] .sp-top-links a{
+  border-radius: 4px; padding: 8px 11px; font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: #1b1b1b;
+}
+.store-page[data-style='papel-riso'][data-template] .sp-top-links a:hover{
+  background: #fffdf7; color: #1d4ed8; text-shadow: 1px 1px 0 #e11d48; transform: translate(-1px, -1px);
+}
+.store-page[data-style='papel-riso'][data-template] .sp-top-cta{ border-radius: 4px; background: #1d4ed8; color: #fff; box-shadow: 2px 2px 0 #e11d48; }
+
+/* 13 · corporativo — informe con filete institucional --------------------- */
+.store-page[data-style='corporativo'][data-template] .sp-top{
+  background: #fff; border-bottom: 1px solid #d5ddd8; border-left: 4px solid #0f5132;
+}
+.store-page[data-style='corporativo'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 8px 11px; font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: #55645e;
+}
+.store-page[data-style='corporativo'][data-template] .sp-top-links a:hover{ background: #f2f4f2; color: #0b3d5c; box-shadow: inset 2px 0 0 #0f5132; }
+.store-page[data-style='corporativo'][data-template] .sp-top-cta{ border-radius: 2px; background: #0b3d5c; color: #fff; }
+
+/* 14 · gourmet-calido — carta con marca al centro ------------------------- */
+.store-page[data-style='gourmet-calido'][data-template] .sp-top{
+  background: #fbf3e6; border-bottom: 1px solid #b4530944;
+}
+.store-page[data-style='gourmet-calido'][data-template] .sp-top-inner{ position: relative; justify-content: space-between; }
+.store-page[data-style='gourmet-calido'][data-template] .sp-brand{ position: absolute; left: 50%; transform: translateX(-50%); }
+.store-page[data-style='gourmet-calido'][data-template] .sp-top-links{ gap: 20px; }
+.store-page[data-style='gourmet-calido'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 6px 0; font-family: Georgia, serif; font-size: 12px;
+  font-style: italic; letter-spacing: .04em; color: #6d5a48;
+}
+.store-page[data-style='gourmet-calido'][data-template] .sp-top-links a::after{ content: " —"; color: #b45309; }
+.store-page[data-style='gourmet-calido'][data-template] .sp-top-links a:hover{ background: transparent; color: #7c2d12; }
+.store-page[data-style='gourmet-calido'][data-template] .sp-top-cta{ border-radius: 8px; background: #7c2d12; color: #fffaf1; }
+
+/* 15 · belleza-rosa — barra de tocador ------------------------------------ */
+.store-page[data-style='belleza-rosa'][data-template] .sp-top{
+  background: #fdf1f4; border-bottom: 1px solid #b4530933;
+}
+.store-page[data-style='belleza-rosa'][data-template] .sp-top-links a{
+  border-radius: 999px; padding: 8px 15px; font-size: 12px; letter-spacing: .06em; color: #7a5563;
+  border: 1px solid transparent;
+}
+.store-page[data-style='belleza-rosa'][data-template] .sp-top-links a:hover{ background: #fffafb; border-color: #d4a373; color: #9d174d; }
+.store-page[data-style='belleza-rosa'][data-template] .sp-top-cta{ border-radius: 999px; background: transparent; border: 1px solid #9d174d; color: #9d174d; }
+
+/* 16 · kids-ludico — chips de colores ------------------------------------ */
+.store-page[data-style='kids-ludico'][data-template] .sp-top{
+  background: #fffbe0; border-bottom: 3px solid #1d4ed8;
+}
+.store-page[data-style='kids-ludico'][data-template] .sp-top-links a{
+  border-radius: 999px; padding: 8px 13px; font-size: 12px; font-weight: 800; color: #14213d;
+  background: #fff; border: 2px solid #14213d; box-shadow: 0 3px 0 #14213d;
+}
+.store-page[data-style='kids-ludico'][data-template] .sp-top-links a:nth-child(2n){ transform: rotate(-1.5deg); }
+.store-page[data-style='kids-ludico'][data-template] .sp-top-links a:nth-child(2n+1){ transform: rotate(1deg); }
+.store-page[data-style='kids-ludico'][data-template] .sp-top-links a:hover{ background: #7c3aed; color: #fff; border-color: #7c3aed; transform: rotate(0) translateY(-2px); }
+.store-page[data-style='kids-ludico'][data-template] .sp-top-cta{ border-radius: 999px; background: #1d4ed8; color: #fff; box-shadow: 0 4px 0 #14213d; }
+
+/* 17 · urbano-sticker — etiquetas pegadas --------------------------------- */
+.store-page[data-style='urbano-sticker'][data-template] .sp-top{
+  background: #fff; border-bottom: 2px solid #0a0a0a; box-shadow: 0 4px 0 #eab308;
+}
+.store-page[data-style='urbano-sticker'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 7px 11px; font-size: 10.5px; font-weight: 900;
+  letter-spacing: .06em; text-transform: uppercase; color: #0a0a0a; background: #f4f4f4;
+  border: 2px solid #0a0a0a;
+}
+.store-page[data-style='urbano-sticker'][data-template] .sp-top-links a:nth-child(odd){ transform: rotate(-2deg); }
+.store-page[data-style='urbano-sticker'][data-template] .sp-top-links a:nth-child(even){ transform: rotate(1.5deg); }
+.store-page[data-style='urbano-sticker'][data-template] .sp-top-links a:hover{ background: #eab308; transform: rotate(0) scale(1.04); }
+.store-page[data-style='urbano-sticker'][data-template] .sp-top-cta{ border-radius: 0; background: #0a0a0a; color: #fff; border: 2px solid #0a0a0a; }
+
+/* 18 · consola-retro — prompt de terminal --------------------------------- */
+.store-page[data-style='consola-retro'][data-template] .sp-top{
+  background: #050a07; border-top: 1px solid #4ade8033; border-bottom: 1px solid #4ade8033;
+  box-shadow: inset 0 0 40px #4ade8008;
+}
+.store-page[data-style='consola-retro'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 7px 8px; font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 10.5px; letter-spacing: .08em; color: #7fae8e;
+}
+.store-page[data-style='consola-retro'][data-template] .sp-top-links a::before{ content: "> "; color: #4ade80; }
+.store-page[data-style='consola-retro'][data-template] .sp-top-links a:hover{ background: transparent; color: #d7ffe4; animation: sp-menu-blink .8s steps(2,end) infinite; }
+.store-page[data-style='consola-retro'][data-template] .sp-top-cta{ border-radius: 0; background: transparent; border: 1px solid #4ade80; color: #4ade80; }
+@keyframes sp-menu-blink{ 50%{ opacity: .35; } }
+
+/* 19 · denim-urbano — costura naranja ------------------------------------- */
+.store-page[data-style='denim-urbano'][data-template] .sp-top{
+  background: #eef2f6; border-bottom: 2px dashed #1e3a5f;
+}
+.store-page[data-style='denim-urbano'][data-template] .sp-top-links a{
+  border-radius: 3px; padding: 8px 11px; font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: #1e3a5f;
+}
+.store-page[data-style='denim-urbano'][data-template] .sp-top-links a:hover{ background: #fff; box-shadow: inset 0 -2px 0 #b45309; }
+.store-page[data-style='denim-urbano'][data-template] .sp-top-cta{ border-radius: 3px; background: #1e3a5f; color: #fff; }
+
+/* 20 · atelier-moda — navegación de pasarela ------------------------------ */
+.store-page[data-style='atelier-moda'][data-template] .sp-top{
+  background: #f8f3ef; border-bottom: 1px solid #7f1d3a33;
+}
+.store-page[data-style='atelier-moda'][data-template] .sp-top-inner{ justify-content: space-between; }
+.store-page[data-style='atelier-moda'][data-template] .sp-top-links{ margin-inline: auto; gap: 28px; }
+.store-page[data-style='atelier-moda'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 6px 0; font-family: Georgia, serif; font-size: 13px;
+  font-style: italic; letter-spacing: .06em; color: #6f5a5f;
+}
+.store-page[data-style='atelier-moda'][data-template] .sp-top-links a:hover{ background: transparent; color: #7f1d3a; box-shadow: inset 0 -1px 0 #7f1d3a; }
+.store-page[data-style='atelier-moda'][data-template] .sp-top-cta{ border-radius: 0; background: transparent; border: 1px solid #7f1d3a; color: #7f1d3a; }
+
+/* 21 · suizo-editorial — grilla dura y bloque rojo ------------------------ */
+.store-page[data-style='suizo-editorial'][data-template] .sp-top{
+  background: #fff; border-bottom: 2px solid #111; box-shadow: none;
+}
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-inner{ gap: 20px; }
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-links{ margin-left: auto; gap: 18px; }
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-links a{
+  border-radius: 0; padding: 8px 0; font-size: 11px; font-weight: 800;
+  letter-spacing: .02em; text-transform: uppercase; color: #111;
+}
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-links a::before{
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px;
+  background: transparent; vertical-align: 1px;
+}
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-links a:hover::before,
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-links a.router-link-exact-active::before{ background: #e11d48; }
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-links a:hover{ background: transparent; color: #e11d48; }
+.store-page[data-style='suizo-editorial'][data-template] .sp-top-cta{ border-radius: 0; background: #e11d48; color: #fff; }
+
+/* 22 · cobalto-nocturno — haz eléctrico ----------------------------------- */
+.store-page[data-style='cobalto-nocturno'][data-template] .sp-top{
+  background: #04091a; border-bottom: 1px solid #3b82f666;
+  box-shadow: 0 10px 40px -26px #3b82f6, inset 0 -1px 0 #f59e0b22;
+}
+.store-page[data-style='cobalto-nocturno'][data-template] .sp-top-links a{
+  border-radius: 8px; padding: 8px 12px; font-size: 12px; letter-spacing: .04em; color: #93a4c8;
+}
+.store-page[data-style='cobalto-nocturno'][data-template] .sp-top-links a::after{
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #f59e0b); transform: scaleX(0);
+  transition: transform .4s cubic-bezier(.3,0,0,1);
+}
+.store-page[data-style='cobalto-nocturno'][data-template] .sp-top-links a:hover{ background: #3b82f614; color: #e8eefc; }
+.store-page[data-style='cobalto-nocturno'][data-template] .sp-top-links a:hover::after{ transform: scaleX(1); }
+.store-page[data-style='cobalto-nocturno'][data-template] .sp-top-cta{ border-radius: 10px; background: #3b82f6; color: #fff; box-shadow: 0 0 22px -8px #3b82f6; }
+
+/* --- móvil: las barras flotantes no deben recortar el drawer ------------ */
+@media (max-width: 899px){
+  .store-page[data-style][data-template] .sp-top{ margin: 0; border-radius: 0; }
+  .store-page[data-style='lujo-serif'][data-template] .sp-brand,
+  .store-page[data-style='gourmet-calido'][data-template] .sp-brand{ position: static; transform: none; }
+  .store-page[data-style='atelier-moda'][data-template] .sp-top-links,
+  .store-page[data-style='lujo-serif'][data-template] .sp-top-links,
+  .store-page[data-style='gourmet-calido'][data-template] .sp-top-links,
+  .store-page[data-style='suizo-editorial'][data-template] .sp-top-links{ margin: 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-style][data-template] .sp-top-links a,
+  .store-page[data-style][data-template] .sp-top-cta{ transition: none !important; }
+  .store-page[data-style='consola-retro'][data-template] .sp-top-links a:hover{ animation: none; }
+}

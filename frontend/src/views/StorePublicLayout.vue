@@ -23,6 +23,9 @@ import {
 import '../assets/store-page.css'
 // Capa de movimiento (keyframes + microinteracciones) por familia de piel.
 import '../assets/store-motion.css'
+// Menú y movimiento propios de cada estilo del catálogo (DesignStyle).
+import '../assets/store-style-menus.css'
+import '../assets/store-style-motion.css'
 // Base de layout de la página Servicios (.rz-sv-* + primitivas .rz-btn /
 // .rz-eyebrow / .rz-field), compartida por todos los diseños: la vista
 // funcional del embudo es única y su layout no puede vivir solo en la hoja de
@@ -190,6 +193,13 @@ const pageTemplate = computed(() => {
     return resolveStoreTemplate(studioTemplate.value, [...Object.keys(STORE_TEMPLATES), ...AI_EXTRA_TEMPLATES])
   }
   return resolveStoreTemplate(custom.value.template, store.value?.allowed_templates)
+})
+// Estilo del catálogo (DesignStyle) aplicado a la tienda: alimenta el menú
+// y la firma de movimiento propios de cada estilo. Sin estilo elegido cae
+// en `base` (la barra neutra de la plataforma).
+const pageStyle = computed(() => {
+  const id = custom.value?.site_theme?.style?.id
+  return typeof id === 'string' && id ? id : 'base'
 })
 // Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
@@ -776,7 +786,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- ===== Barra superior ===== -->

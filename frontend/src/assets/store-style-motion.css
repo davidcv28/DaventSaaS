@@ -1,0 +1,187 @@
+/* ==========================================================================
+   MOVIMIENTO POR ESTILO DEL CATÁLOGO
+   Cada DesignStyle redefine las variables de movimiento de la web pública:
+   entrada de portada, reveal on-scroll, hover de tarjetas y micro-interacción
+   de CTA. Solo transform/opacity/filter; todo se apaga con reduced-motion.
+   ========================================================================== */
+
+/* 01 · editorial-minima — 560ms · (.2,.7,.2,1) · fade de imprenta ---------- */
+.store-page[data-style='editorial-minima'][data-template]{
+  --sp-ease: cubic-bezier(.2,.7,.2,1); --rv-dur: .56s;
+  --mo-ease: cubic-bezier(.2,.7,.2,1); --mo-ease-out: cubic-bezier(.2,.7,.2,1);
+  --mo-fast: .2s; --mo-mid: .34s; --mo-slow: .56s; --mo-lift: 3px; --mo-tilt: 0deg;
+}
+/* 02 · vidrio-nocturno — 720ms · (.16,1,.3,1) · rise de vidrio ------------ */
+.store-page[data-style='vidrio-nocturno'][data-template]{
+  --sp-ease: cubic-bezier(.16,1,.3,1); --rv-dur: .72s;
+  --mo-ease: cubic-bezier(.16,1,.3,1); --mo-ease-out: cubic-bezier(.16,1,.3,1);
+  --mo-fast: .26s; --mo-mid: .44s; --mo-slow: .72s; --mo-lift: 8px; --mo-tilt: 0deg;
+}
+/* 03 · bento — 420ms · (.34,1.56,.64,1) · pop modular --------------------- */
+.store-page[data-style='bento'][data-template]{
+  --sp-ease: cubic-bezier(.34,1.56,.64,1); --rv-dur: .42s;
+  --mo-ease: cubic-bezier(.34,1.56,.64,1); --mo-ease-out: cubic-bezier(.34,1.56,.64,1);
+  --mo-fast: .16s; --mo-mid: .28s; --mo-slow: .42s; --mo-lift: 5px; --mo-tilt: 0deg;
+}
+/* 04 · neo-brutalista — 300ms · (.8,0,.2,1) · slam duro ------------------ */
+.store-page[data-style='neo-brutalista'][data-template]{
+  --sp-ease: cubic-bezier(.8,0,.2,1); --rv-dur: .3s;
+  --mo-ease: cubic-bezier(.8,0,.2,1); --mo-ease-out: cubic-bezier(.8,0,.2,1);
+  --mo-fast: .12s; --mo-mid: .22s; --mo-slow: .3s; --mo-lift: 9px; --mo-tilt: -.4deg;
+}
+/* 05 · lujo-serif — 900ms · (.19,1,.22,1) · cortina ---------------------- */
+.store-page[data-style='lujo-serif'][data-template]{
+  --sp-ease: cubic-bezier(.19,1,.22,1); --rv-dur: .9s;
+  --mo-ease: cubic-bezier(.19,1,.22,1); --mo-ease-out: cubic-bezier(.19,1,.22,1);
+  --mo-fast: .32s; --mo-mid: .58s; --mo-slow: .9s; --mo-lift: 4px; --mo-tilt: 0deg;
+}
+/* 06 · pastel-suave — 640ms · (.22,.61,.36,1) · flotación ---------------- */
+.store-page[data-style='pastel-suave'][data-template]{
+  --sp-ease: cubic-bezier(.22,.61,.36,1); --rv-dur: .64s;
+  --mo-ease: cubic-bezier(.22,.61,.36,1); --mo-ease-out: cubic-bezier(.22,.61,.36,1);
+  --mo-fast: .24s; --mo-mid: .4s; --mo-slow: .64s; --mo-lift: 7px; --mo-tilt: .5deg;
+}
+/* 07 · neon-tech — 240ms · (.4,0,.6,1) · respuesta de terminal ----------- */
+.store-page[data-style='neon-tech'][data-template]{
+  --sp-ease: cubic-bezier(.4,0,.6,1); --rv-dur: .24s;
+  --mo-ease: cubic-bezier(.4,0,.6,1); --mo-ease-out: cubic-bezier(.4,0,.6,1);
+  --mo-fast: .1s; --mo-mid: .18s; --mo-slow: .24s; --mo-lift: 6px; --mo-tilt: 0deg;
+}
+/* 08 · terracota — 600ms · (.25,.8,.25,1) · barro ------------------------ */
+.store-page[data-style='terracota'][data-template]{
+  --sp-ease: cubic-bezier(.25,.8,.25,1); --rv-dur: .6s;
+  --mo-ease: cubic-bezier(.25,.8,.25,1); --mo-ease-out: cubic-bezier(.25,.8,.25,1);
+  --mo-fast: .22s; --mo-mid: .38s; --mo-slow: .6s; --mo-lift: 5px; --mo-tilt: .3deg;
+}
+/* 09 · monocromo — 480ms · (.65,0,.35,1) · corte de galería -------------- */
+.store-page[data-style='monocromo'][data-template]{
+  --sp-ease: cubic-bezier(.65,0,.35,1); --rv-dur: .48s;
+  --mo-ease: cubic-bezier(.65,0,.35,1); --mo-ease-out: cubic-bezier(.65,0,.35,1);
+  --mo-fast: .18s; --mo-mid: .3s; --mo-slow: .48s; --mo-lift: 2px; --mo-tilt: 0deg;
+}
+/* 10 · retail-vibrante — 360ms · (.5,1.8,.5,1) · rebote de góndola ------- */
+.store-page[data-style='retail-vibrante'][data-template]{
+  --sp-ease: cubic-bezier(.5,1.8,.5,1); --rv-dur: .36s;
+  --mo-ease: cubic-bezier(.5,1.8,.5,1); --mo-ease-out: cubic-bezier(.5,1.8,.5,1);
+  --mo-fast: .14s; --mo-mid: .24s; --mo-slow: .36s; --mo-lift: 8px; --mo-tilt: -.6deg;
+}
+/* 11 · aurora-degradada — 800ms · (.4,0,.2,1) · deriva ------------------- */
+.store-page[data-style='aurora-degradada'][data-template]{
+  --sp-ease: cubic-bezier(.4,0,.2,1); --rv-dur: .8s;
+  --mo-ease: cubic-bezier(.4,0,.2,1); --mo-ease-out: cubic-bezier(.4,0,.2,1);
+  --mo-fast: .3s; --mo-mid: .52s; --mo-slow: .8s; --mo-lift: 7px; --mo-tilt: 0deg;
+}
+/* 12 · papel-riso — 380ms · (.7,0,.84,0) · registro desplazado ----------- */
+.store-page[data-style='papel-riso'][data-template]{
+  --sp-ease: cubic-bezier(.7,0,.84,0); --rv-dur: .38s;
+  --mo-ease: cubic-bezier(.7,0,.84,0); --mo-ease-out: cubic-bezier(.7,0,.84,0);
+  --mo-fast: .14s; --mo-mid: .26s; --mo-slow: .38s; --mo-lift: 4px; --mo-tilt: -.8deg;
+}
+/* 13 · corporativo — 520ms · (.2,.8,.2,1) · grilla ----------------------- */
+.store-page[data-style='corporativo'][data-template]{
+  --sp-ease: cubic-bezier(.2,.8,.2,1); --rv-dur: .52s;
+  --mo-ease: cubic-bezier(.2,.8,.2,1); --mo-ease-out: cubic-bezier(.2,.8,.2,1);
+  --mo-fast: .2s; --mo-mid: .34s; --mo-slow: .52s; --mo-lift: 3px; --mo-tilt: 0deg;
+}
+/* 14 · gourmet-calido — 700ms · (.3,.7,.3,1) · vapor --------------------- */
+.store-page[data-style='gourmet-calido'][data-template]{
+  --sp-ease: cubic-bezier(.3,.7,.3,1); --rv-dur: .7s;
+  --mo-ease: cubic-bezier(.3,.7,.3,1); --mo-ease-out: cubic-bezier(.3,.7,.3,1);
+  --mo-fast: .26s; --mo-mid: .46s; --mo-slow: .7s; --mo-lift: 5px; --mo-tilt: .4deg;
+}
+/* 15 · belleza-rosa — 660ms · (.2,.9,.3,1) · pétalos --------------------- */
+.store-page[data-style='belleza-rosa'][data-template]{
+  --sp-ease: cubic-bezier(.2,.9,.3,1); --rv-dur: .66s;
+  --mo-ease: cubic-bezier(.2,.9,.3,1); --mo-ease-out: cubic-bezier(.2,.9,.3,1);
+  --mo-fast: .24s; --mo-mid: .42s; --mo-slow: .66s; --mo-lift: 6px; --mo-tilt: .6deg;
+}
+/* 16 · kids-ludico — 440ms · (.68,-.55,.27,1.55) · burbuja ---------------- */
+.store-page[data-style='kids-ludico'][data-template]{
+  --sp-ease: cubic-bezier(.68,-.55,.27,1.55); --rv-dur: .44s;
+  --mo-ease: cubic-bezier(.68,-.55,.27,1.55); --mo-ease-out: cubic-bezier(.68,-.55,.27,1.55);
+  --mo-fast: .16s; --mo-mid: .3s; --mo-slow: .44s; --mo-lift: 9px; --mo-tilt: -1deg;
+}
+/* 17 · urbano-sticker — 320ms · (.6,-.28,.74,.05) · calcomanía ----------- */
+.store-page[data-style='urbano-sticker'][data-template]{
+  --sp-ease: cubic-bezier(.6,-.28,.74,.05); --rv-dur: .32s;
+  --mo-ease: cubic-bezier(.6,-.28,.74,.05); --mo-ease-out: cubic-bezier(.6,-.28,.74,.05);
+  --mo-fast: .12s; --mo-mid: .22s; --mo-slow: .32s; --mo-lift: 10px; --mo-tilt: -1.2deg;
+}
+/* 18 · consola-retro — 200ms steps(4) · tecleo -------------------------- */
+.store-page[data-style='consola-retro'][data-template]{
+  --sp-ease: steps(4,end); --rv-dur: .2s;
+  --mo-ease: steps(4,end); --mo-ease-out: steps(4,end);
+  --mo-fast: .08s; --mo-mid: .16s; --mo-slow: .2s; --mo-lift: 4px; --mo-tilt: 0deg;
+}
+/* 19 · denim-urbano — 500ms · (.45,.05,.55,.95) · pliegue ---------------- */
+.store-page[data-style='denim-urbano'][data-template]{
+  --sp-ease: cubic-bezier(.45,.05,.55,.95); --rv-dur: .5s;
+  --mo-ease: cubic-bezier(.45,.05,.55,.95); --mo-ease-out: cubic-bezier(.45,.05,.55,.95);
+  --mo-fast: .2s; --mo-mid: .34s; --mo-slow: .5s; --mo-lift: 5px; --mo-tilt: 0deg;
+}
+/* 20 · atelier-moda — 820ms · (.16,.84,.44,1) · pasarela ----------------- */
+.store-page[data-style='atelier-moda'][data-template]{
+  --sp-ease: cubic-bezier(.16,.84,.44,1); --rv-dur: .82s;
+  --mo-ease: cubic-bezier(.16,.84,.44,1); --mo-ease-out: cubic-bezier(.16,.84,.44,1);
+  --mo-fast: .3s; --mo-mid: .54s; --mo-slow: .82s; --mo-lift: 6px; --mo-tilt: 0deg;
+}
+/* 21 · suizo-editorial — 260ms · (1,0,0,1) · corte seco ------------------ */
+.store-page[data-style='suizo-editorial'][data-template]{
+  --sp-ease: cubic-bezier(1,0,0,1); --rv-dur: .26s;
+  --mo-ease: cubic-bezier(1,0,0,1); --mo-ease-out: cubic-bezier(1,0,0,1);
+  --mo-fast: .1s; --mo-mid: .18s; --mo-slow: .26s; --mo-lift: 0px; --mo-tilt: 0deg;
+}
+/* 22 · cobalto-nocturno — 580ms · (.3,0,0,1) · haz ----------------------- */
+.store-page[data-style='cobalto-nocturno'][data-template]{
+  --sp-ease: cubic-bezier(.3,0,0,1); --rv-dur: .58s;
+  --mo-ease: cubic-bezier(.3,0,0,1); --mo-ease-out: cubic-bezier(.3,0,0,1);
+  --mo-fast: .22s; --mo-mid: .4s; --mo-slow: .58s; --mo-lift: 8px; --mo-tilt: 0deg;
+}
+
+/* --- firmas de entrada: cada estilo arranca con una curva distinta ------ */
+@media (prefers-reduced-motion: no-preference){
+  .store-page[data-style='editorial-minima'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='monocromo'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='corporativo'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='consola-retro'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='suizo-editorial'][data-template] .sp-hero-inner > *{
+    animation-name: mo-fade;
+  }
+  .store-page[data-style='neo-brutalista'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='papel-riso'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='urbano-sticker'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='denim-urbano'][data-template] .sp-hero-inner > *{
+    animation-name: mo-slide-in;
+  }
+  .store-page[data-style='bento'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='pastel-suave'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='retail-vibrante'][data-template] .sp-hero-inner > *,
+  .store-page[data-style='kids-ludico'][data-template] .sp-hero-inner > *{
+    animation-name: mo-pop-in;
+  }
+  /* Hover de tarjetas: misma mecánica, distinto desplazamiento por estilo. */
+  .store-page[data-style][data-template] .sp-card:hover{
+    transform: translateY(calc(var(--mo-lift) * -1)) rotate(var(--mo-tilt));
+  }
+  /* CTA: el botón responde con el lift del estilo. */
+  .store-page[data-style][data-template] .sp-top-cta:hover,
+  .store-page[data-style][data-template] .sp-btn:hover{
+    transform: translateY(calc(var(--mo-lift) * -.45));
+  }
+  /* Enlaces del menú: subrayado/desplazamiento con la curva del estilo. */
+  .store-page[data-style][data-template] .sp-top-links a{
+    transition: background var(--mo-fast) var(--mo-ease),
+      color var(--mo-fast) var(--mo-ease),
+      transform var(--mo-fast) var(--mo-ease),
+      box-shadow var(--mo-fast) var(--mo-ease);
+  }
+  .store-page[data-style][data-template] .sp-top-links a:hover{ transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-style][data-template] .sp-hero-inner > *{ animation: none !important; }
+  .store-page[data-style][data-template] .sp-card:hover,
+  .store-page[data-style][data-template] .sp-top-cta:hover,
+  .store-page[data-style][data-template] .sp-btn:hover,
+  .store-page[data-style][data-template] .sp-top-links a:hover{ transform: none !important; }
+}

@@ -5,7 +5,7 @@
 // Sin subidas de imágenes: logo, portada y galería viven en la pestaña Fotos.
 // Escribe los mismos campos de `form` que el Studio y dispara los mismos
 // eventos (ring/navigate), así el guardado sigue siendo uno solo.
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
 import {
@@ -69,6 +69,44 @@ const currentPattern = computed(() => (
   || ''
 ))
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
+const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
+
+// Vista del HTML propio del patrón (el diseño fuente, con su menú y sus
+// animaciones), en un iframe aislado. El listado no trae el markup: se pide
+// el detalle recién al abrir.
+const patternPreview = ref(null)
+const previewBusy = ref(false)
+const previewErr = ref('')
+
+function patternDoc(p) {
+  const html = String(p.html || '')
+  if (/^\s*(<!doctype|<html)/i.test(html)) return html
+  const css = p.css ? `<style>${p.css}</style>` : ''
+  const js = p.js ? `<script>${p.js}<` + `/script>` : ''
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
+}
+
+async function openPatternPreview() {
+  const meta = currentPatternMeta.value
+  if (!meta?.has_markup || previewBusy.value) return
+  previewBusy.value = true
+  previewErr.value = ''
+  try {
+    const detail = await designApi.pattern(meta.slug)
+    patternPreview.value = { nombre: detail.nombre || meta.nombre, doc: patternDoc(detail) }
+  } catch {
+    previewErr.value = 'No pudimos cargar el diseño del patrón.'
+  } finally {
+    previewBusy.value = false
+  }
+}
+function closePatternPreview() {
+  patternPreview.value = null
+  previewErr.value = ''
+}
+function onPreviewKey(e) { if (e.key === 'Escape') closePatternPreview() }
+onMounted(() => window.addEventListener('keydown', onPreviewKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 
 // Opciones de los selectboxes con icono/color: el select nativo no puede
 // mostrar muestras, por eso el menú usa DesignSelect.
@@ -264,6 +302,14 @@ onMounted(() => {
                 aria-label="Patrones de diseño" placeholder="Elegí un patrón…"
                 :disabled="!patternOptions.length" @change="onPatternPick"
               />
+              <button
+                v-if="currentPatternMeta?.has_markup" type="button"
+                class="btn ghost btn-auto dmenu-preview" :disabled="previewBusy"
+                @click="openPatternPreview"
+              >
+                <AppIcon name="eye" :size="15" /> {{ previewBusy ? 'Cargando…' : 'Ver este diseño' }}
+              </button>
+              <p v-if="previewErr" class="dmenu-alert" role="alert">{{ previewErr }}</p>
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'typo')">
@@ -326,6 +372,21 @@ onMounted(() => {
       </button>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div v-if="patternPreview" class="dpv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
+      <div class="dpv-head">
+        <strong>{{ patternPreview.nombre }}</strong>
+        <button type="button" class="dpv-close" aria-label="Cerrar la vista previa" @click="closePatternPreview">
+          <AppIcon name="x" :size="16" />
+        </button>
+      </div>
+      <iframe
+        class="dpv-frame" :srcdoc="patternPreview.doc" sandbox="allow-scripts"
+        :title="`Diseño ${patternPreview.nombre}`"
+      ></iframe>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -387,5 +448,26 @@ onMounted(() => {
   .dmenu-studio { flex-wrap: wrap; align-items: flex-start; }
   .dmenu-studio-txt { flex-basis: calc(100% - 52px); }
   .dmenu-studio .btn { width: 100%; justify-content: center; }
+}
+.dmenu-preview { justify-self: start; width: auto; }
+/* Vista del HTML fuente del patrón: menú, composición y animaciones reales. */
+.dpv {
+  position: fixed; inset: 0; z-index: 1200; display: flex; flex-direction: column;
+  background: rgba(8, 12, 20, .72); backdrop-filter: blur(6px); padding: 3vh 3vw;
+}
+.dpv-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 0 2px 12px; color: #f8fafc;
+}
+.dpv-head strong { font-size: 15px; letter-spacing: -.01em; }
+.dpv-close {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .12);
+  color: #fff; cursor: pointer;
+}
+.dpv-close:hover { background: rgba(255, 255, 255, .24); }
+.dpv-frame {
+  flex: 1 1 auto; width: 100%; border: 0; border-radius: 14px; background: #fff;
+  box-shadow: 0 30px 80px -30px #000;
 }
 </style>
