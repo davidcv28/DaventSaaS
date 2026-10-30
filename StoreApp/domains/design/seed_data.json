@@ -6763,6 +6763,274 @@
         "editorial",
         "plus"
       ]
+    },
+    {
+      "slug": "aula-abierta",
+      "nombre": "Aula Abierta",
+      "categoria": "Educación editorial",
+      "descripcion": "Cuaderno de cátedra: papel con renglones y margen rojo, índice numerado, hero partido con horario, banda diagonal de materias, programa como lista editorial, docentes en tira duotono y admisión como libro contable.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#173A63",
+          "secondary": "#B98B3C",
+          "accent": "#C93F26",
+          "bg": "#F5F1E6",
+          "surface": "#FFFDF7",
+          "text": "#101827",
+          "muted": "#6B7385",
+          "border": "#D3C9B4",
+          "success": "#173A63",
+          "danger": "#C93F26"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "crisp",
+          "border": "hairline",
+          "density": "airy",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "newsreader",
+          "body": "manrope",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.022em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "ruled",
+          "value": null,
+          "overlay": "grain"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "invert",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "editorial",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#101827",
+              "body": "#101827",
+              "muted": "#6B7385",
+              "link": "#C93F26"
+            },
+            "containers": {
+              "bg": "#F5F1E6",
+              "surface": "#FFFDF7",
+              "border": "#D3C9B4",
+              "onSurface": "#101827"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#F2EEE2",
+              "body": "#F2EEE2",
+              "muted": "#A7AEBD",
+              "link": "#E9765F"
+            },
+            "containers": {
+              "bg": "#101827",
+              "surface": "#182234",
+              "border": "#2C3A50",
+              "onSurface": "#F2EEE2"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "order": 0,
+              "enabled": true
+            },
+            {
+              "id": "highlights",
+              "order": 1,
+              "enabled": true
+            },
+            {
+              "id": "categories",
+              "order": 2,
+              "enabled": true
+            },
+            {
+              "id": "featured",
+              "order": 3,
+              "enabled": true
+            },
+            {
+              "id": "about",
+              "order": 4,
+              "enabled": true
+            },
+            {
+              "id": "timeline",
+              "order": 5,
+              "enabled": true
+            },
+            {
+              "id": "team",
+              "order": 6,
+              "enabled": true
+            },
+            {
+              "id": "testimonials",
+              "order": 7,
+              "enabled": true
+            },
+            {
+              "id": "faq",
+              "order": 8,
+              "enabled": true
+            },
+            {
+              "id": "cta",
+              "order": 9,
+              "enabled": true
+            },
+            {
+              "id": "contact",
+              "order": 10,
+              "enabled": true
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "order": 0,
+              "enabled": true
+            },
+            {
+              "id": "promo",
+              "order": 1,
+              "enabled": true
+            },
+            {
+              "id": "filters",
+              "order": 2,
+              "enabled": true
+            },
+            {
+              "id": "sort",
+              "order": 3,
+              "enabled": true
+            },
+            {
+              "id": "grid",
+              "order": 4,
+              "enabled": true
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "order": 0,
+              "enabled": true
+            },
+            {
+              "id": "band",
+              "order": 1,
+              "enabled": true
+            },
+            {
+              "id": "picker",
+              "order": 2,
+              "enabled": true
+            },
+            {
+              "id": "steps",
+              "order": 3,
+              "enabled": true
+            },
+            {
+              "id": "form",
+              "order": 4,
+              "enabled": true
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "categories",
+            "featured",
+            "about",
+            "timeline",
+            "team",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "categories": "row",
+            "featured": "lead",
+            "timeline": "editorial",
+            "team": "strip",
+            "testimonials": "quote",
+            "faq": "accordion",
+            "cta": "band",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid",
+            "promo"
+          ],
+          "var": {
+            "filters": "chips",
+            "grid": "grid"
+          }
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form"
+          ],
+          "var": {}
+        }
+      },
+      "tags": [
+        "educacion",
+        "escuela",
+        "curso",
+        "academico",
+        "editorial",
+        "papel",
+        "plus"
+      ]
     }
   ],
   "patterns": [
@@ -8886,6 +9154,109 @@
         "ofertas",
         "base"
       ]
+    },
+    {
+      "slug": "aula-abierta",
+      "nombre": "Aula Abierta",
+      "categoria": "educacion",
+      "descripcion": "Landing de educación como cuaderno de cátedra: renglones de papel, margen rojo, índice numerado, hero partido con horario, banda diagonal de materias, programa en lista editorial, método con numerales gigantes, docentes en tira duotono, cita con comilla de agua y admisión como libro contable.",
+      "tier": "plus",
+      "template": "raiz",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "variant": "lead",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "timeline",
+            "variant": "editorial",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "team",
+            "variant": "strip",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "testimonials",
+            "variant": "quote",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 10
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#C93F26",
+        "fonts": [
+          "manrope",
+          "newsreader"
+        ],
+        "palette": {
+          "bg": "#F5F1E6",
+          "surface": "#FFFDF7",
+          "text": "#101827",
+          "muted": "#6B7385",
+          "border": "#D3C9B4",
+          "accent": "#C93F26",
+          "primary": "#173A63",
+          "secondary": "#B98B3C"
+        }
+      },
+      "tags": [
+        "educacion",
+        "escuela",
+        "curso",
+        "academia",
+        "editorial"
+      ],
+      "html": "<svg width=\"0\" height=\"0\" style=\"position:absolute\" aria-hidden=\"true\">\n  <symbol id=\"i-book\" viewBox=\"0 0 24 24\"><path d=\"M3 5.5A2.5 2.5 0 0 1 5.5 3H11v17H5.5A2.5 2.5 0 0 0 3 22.5z\"/><path d=\"M21 5.5A2.5 2.5 0 0 0 18.5 3H13v17h5.5a2.5 2.5 0 0 1 2.5 2.5z\"/></symbol>\n  <symbol id=\"i-arrow\" viewBox=\"0 0 24 24\"><path d=\"M7 17 17 7M8 7h9v9\"/></symbol>\n  <symbol id=\"i-check\" viewBox=\"0 0 24 24\"><path d=\"m4 12.5 5 5L20 6.5\"/></symbol>\n  <symbol id=\"i-plus\" viewBox=\"0 0 24 24\"><path d=\"M12 5v14M5 12h14\"/></symbol>\n  <symbol id=\"i-menu\" viewBox=\"0 0 24 24\"><path d=\"M4 7h16M4 12h16M4 17h16\"/></symbol>\n  <symbol id=\"i-home\" viewBox=\"0 0 24 24\"><path d=\"M4 10.5 12 4l8 6.5V20H4z\"/></symbol>\n  <symbol id=\"i-grid\" viewBox=\"0 0 24 24\"><path d=\"M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z\"/></symbol>\n  <symbol id=\"i-user\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"8\" r=\"3.4\"/><path d=\"M5 20c1.4-3.5 4-5 7-5s5.6 1.5 7 5\"/></symbol>\n  <symbol id=\"i-mail\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"1.5\"/><path d=\"m4 7 8 6 8-6\"/></symbol>\n  <!-- retratos abstractos duotono -->\n  <symbol id=\"p1\" viewBox=\"0 0 120 160\"><rect width=\"120\" height=\"160\" fill=\"#DDE5EF\"/><circle cx=\"60\" cy=\"62\" r=\"30\" fill=\"#173A63\"/><path d=\"M10 160c6-34 26-52 50-52s44 18 50 52z\" fill=\"#101827\"/><rect x=\"30\" y=\"34\" width=\"60\" height=\"8\" fill=\"#F5F1E6\" opacity=\".5\"/></symbol>\n  <symbol id=\"p2\" viewBox=\"0 0 120 160\"><rect width=\"120\" height=\"160\" fill=\"#F4DCD4\"/><circle cx=\"60\" cy=\"60\" r=\"31\" fill=\"#C93F26\"/><path d=\"M6 160c8-36 28-54 54-54s46 18 54 54z\" fill=\"#173A63\"/><circle cx=\"60\" cy=\"60\" r=\"42\" fill=\"none\" stroke=\"#101827\" stroke-width=\"1\"/></symbol>\n  <symbol id=\"p3\" viewBox=\"0 0 120 160\"><rect width=\"120\" height=\"160\" fill=\"#EDE7D7\"/><circle cx=\"60\" cy=\"58\" r=\"29\" fill=\"#B98B3C\"/><path d=\"M8 160c7-33 26-50 52-50s45 17 52 50z\" fill=\"#101827\"/><path d=\"M24 22h72M24 30h48\" stroke=\"#173A63\" stroke-width=\"2\"/></symbol>\n  <symbol id=\"p4\" viewBox=\"0 0 120 160\"><rect width=\"120\" height=\"160\" fill=\"#DDE5EF\"/><circle cx=\"60\" cy=\"63\" r=\"30\" fill=\"#101827\"/><path d=\"M4 160c8-35 28-53 56-53s48 18 56 53z\" fill=\"#C93F26\"/><rect x=\"18\" y=\"112\" width=\"84\" height=\"2\" fill=\"#F5F1E6\" opacity=\".7\"/></symbol>\n</svg>\n\n<div class=\"top\">\n  <div class=\"wrap top-in\">\n    <a class=\"brand\" href=\"#inicio\" aria-label=\"Aula Abierta, inicio\">\n      <svg viewBox=\"0 0 24 24\" class=\"i\" style=\"width:26px;height:26px\"><use href=\"#i-book\"/></svg>\n      <span>Aula <b>Abierta</b></span>\n    </a>\n    <nav class=\"nav\" aria-label=\"Principal\">\n      <a href=\"#programa\">Programa</a>\n      <a href=\"#como\">Cómo funciona</a>\n      <a href=\"#docentes\">Docentes</a>\n      <a href=\"#admission\">Admisión</a>\n    </nav>\n    <a class=\"btn btn-solid top-cta\" href=\"#admission\">Pedí el programa <svg class=\"i\"><use href=\"#i-arrow\"/></svg></a>\n    <button class=\"menu-btn\" type=\"button\" aria-label=\"Abrir menú\" aria-expanded=\"false\" aria-controls=\"menu-movil\">\n      <svg class=\"i\"><use href=\"#i-menu\"/></svg>\n    </button>\n  </div>\n  <nav id=\"menu-movil\" class=\"wrap menu\" hidden aria-label=\"Menú móvil\">\n    <a href=\"#programa\">Programa</a>\n    <a href=\"#como\">Cómo funciona</a>\n    <a href=\"#docentes\">Docentes</a>\n    <a href=\"#admission\">Admisión</a>\n  </nav>\n</div>\n\n<div class=\"shell\">\n  <aside class=\"rail\" aria-label=\"Índice de la página\">\n    <ol>\n      <li><a href=\"#inicio\" data-rail><span>01</span><i></i>Portada</a></li>\n      <li><a href=\"#programa\" data-rail><span>02</span><i></i>Programa</a></li>\n      <li><a href=\"#como\" data-rail><span>03</span><i></i>Método</a></li>\n      <li><a href=\"#docentes\" data-rail><span>04</span><i></i>Docentes</a></li>\n      <li><a href=\"#voces\" data-rail><span>05</span><i></i>Voces</a></li>\n      <li><a href=\"#admission\" data-rail><span>06</span><i></i>Admisión</a></li>\n      <li><a href=\"#preguntas\" data-rail><span>07</span><i></i>Dudas</a></li>\n    </ol>\n  </aside>\n\n  <main class=\"main\">\n\n    <!-- HERO -->\n    <section class=\"hero\" id=\"inicio\" aria-labelledby=\"h1\">\n      <div class=\"hero-grid\">\n        <div class=\"hero-copy\">\n          <p class=\"eyebrow\">Ciclo lectivo 2026 · Modalidad híbrida</p>\n          <h1 id=\"h1\">Aprender es <em>hacer</em>,<br>no <span class=\"mark\">memorizar</span>.</h1>\n          <p class=\"lede\">Tres trayectos cortos, un proyecto real por trimestre y un docente de referencia que te sigue hasta la entrega. Sin videos pregrabados ni aulas de mil personas.</p>\n          <div class=\"hero-actions\">\n            <a class=\"btn btn-solid\" href=\"#admission\">Reservar una entrevista <svg class=\"i\"><use href=\"#i-arrow\"/></svg></a>\n            <a class=\"btn btn-ghost\" href=\"#programa\">Ver el programa completo</a>\n          </div>\n          <div class=\"hero-stats\">\n            <div><b>12</b><small>Cursos activos</small></div>\n            <div><b>18</b><small>Alumnos por aula</small></div>\n            <div><b>94%</b><small>Termina el trayecto</small></div>\n          </div>\n        </div>\n\n        <div class=\"schedule\" aria-labelledby=\"h-agenda\">\n          <svg class=\"seal\" viewBox=\"0 0 100 100\" aria-hidden=\"true\">\n            <circle cx=\"50\" cy=\"50\" r=\"46\"/>\n            <circle cx=\"50\" cy=\"50\" r=\"36\"/>\n            <path class=\"star\" d=\"M50 16l3.4 8.6 9.2.6-7.1 5.9 2.3 8.9L50 35l-7.8 5 2.3-8.9-7.1-5.9 9.2-.6z\"/>\n            <text x=\"50\" y=\"72\" text-anchor=\"middle\">CICLO 2026</text>\n          </svg>\n          <div class=\"schedule-head\">\n            <h2 id=\"h-agenda\">Esta semana en el aula</h2>\n            <span>Semana 08</span>\n          </div>\n          <ol>\n            <li><time>Lun 09:30</time><strong>Taller de escritura</strong><em>4 cupos</em></li>\n            <li><time>Mar 14:00</time><strong>Laboratorio de datos</strong><em>Abierto</em></li>\n            <li><time>Jue 18:30</time><strong>Clínica de proyectos</strong><em>1:1</em></li>\n            <li><time>Sáb 10:00</time><strong>Seminario abierto</strong><em>Gratis</em></li>\n          </ol>\n          <p class=\"schedule-foot\"><span class=\"dot\" aria-hidden=\"true\"></span>Las clases quedan grabadas 90 días en tu campus.</p>\n        </div>\n      </div>\n    </section>\n\n    <!-- BANDA DE MATERIAS -->\n    <div class=\"band\" aria-hidden=\"true\">\n      <div class=\"band-track\">\n        <span>Escritura</span><span>Datos</span><span>Diseño</span><span>Investigación</span><span>Oficio</span><span>Pensamiento crítico</span>\n        <span>Escritura</span><span>Datos</span><span>Diseño</span><span>Investigación</span><span>Oficio</span><span>Pensamiento crítico</span>\n      </div>\n    </div>\n\n    <!-- PROGRAMA -->\n    <section class=\"section\" id=\"programa\" aria-labelledby=\"h-programa\">\n      <div class=\"section-head\">\n        <div>\n          <p class=\"eyebrow\">02 · Programa</p>\n          <h2 id=\"h-programa\">Un recorrido, tres tramos, un proyecto.</h2>\n        </div>\n        <p class=\"note\">Cada tramo dura <b>10 semanas</b> y termina con una entrega revisada por un docente externo. Podés empezar por el tramo que te corresponde.</p>\n      </div>\n\n      <div class=\"tabs\" role=\"tablist\" aria-label=\"Tramos del programa\">\n        <button class=\"tab\" role=\"tab\" id=\"tab-1\" aria-controls=\"tramo-1\" aria-selected=\"true\">Tramo 01 · Fundamentos</button>\n        <button class=\"tab\" role=\"tab\" id=\"tab-2\" aria-controls=\"tramo-2\" aria-selected=\"false\" tabindex=\"-1\">Tramo 02 · Oficio</button>\n        <button class=\"tab\" role=\"tab\" id=\"tab-3\" aria-controls=\"tramo-3\" aria-selected=\"false\" tabindex=\"-1\">Tramo 03 · Proyecto</button>\n      </div>\n\n      <ul class=\"program\" id=\"tramo-1\" role=\"tabpanel\" aria-labelledby=\"tab-1\">\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">01</span>\n          <span><h3>Leer para escribir</h3><p class=\"desc\">Análisis de textos reales y primeras piezas propias. La consigna es publicar, no entregar.</p></span>\n          <span class=\"meta\">10 semanas · 4 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">02</span>\n          <span><h3>Datos que cuentan algo</h3><p class=\"desc\">Planillas, consultas y una historia con evidencia. Sin estadística decorativa.</p></span>\n          <span class=\"meta\">10 semanas · 4 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">03</span>\n          <span><h3>Forma y función</h3><p class=\"desc\">Diseño de interfaces desde el contenido hacia arriba: retícula, tipografía y jerarquía.</p></span>\n          <span class=\"meta\">10 semanas · 3 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n      </ul>\n\n      <ul class=\"program\" id=\"tramo-2\" role=\"tabpanel\" aria-labelledby=\"tab-2\" hidden>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">04</span>\n          <span><h3>Oficio y método</h3><p class=\"desc\">Rutinas de trabajo, control de versiones y revisión entre pares cada viernes.</p></span>\n          <span class=\"meta\">10 semanas · 5 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">05</span>\n          <span><h3>Investigación aplicada</h3><p class=\"desc\">Del problema al hallazgo: entrevistas, observación y un informe que se pueda defender.</p></span>\n          <span class=\"meta\">10 semanas · 4 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">06</span>\n          <span><h3>Comunicar el trabajo</h3><p class=\"desc\">Presentar, escribir y sostener una idea frente a otros. Ensayo, pitch y portafolio.</p></span>\n          <span class=\"meta\">10 semanas · 3 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n      </ul>\n\n      <ul class=\"program\" id=\"tramo-3\" role=\"tabpanel\" aria-labelledby=\"tab-3\" hidden>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">07</span>\n          <span><h3>Proyecto propio</h3><p class=\"desc\">Un problema elegido por vos, con tutoría semanal y bitácora pública.</p></span>\n          <span class=\"meta\">12 semanas · 6 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">08</span>\n          <span><h3>Clínica de entrega</h3><p class=\"desc\">Tres rondas de crítica con docentes externos antes de la defensa final.</p></span>\n          <span class=\"meta\">6 semanas · 2 h/sem</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n        <li><a class=\"program-row\" href=\"#admission\">\n          <span class=\"num\">09</span>\n          <span><h3>Defensa y salida</h3><p class=\"desc\">Presentación abierta y devolución escrita. El proyecto queda publicado en el archivo.</p></span>\n          <span class=\"meta\">1 jornada</span>\n          <svg class=\"i arrow\"><use href=\"#i-arrow\"/></svg>\n        </a></li>\n      </ul>\n    </section>\n\n    <!-- MÉTODO -->\n    <section class=\"section\" id=\"como\" aria-labelledby=\"h-como\">\n      <div class=\"section-head\">\n        <div>\n          <p class=\"eyebrow\">03 · Método</p>\n          <h2 id=\"h-como\">Cómo se enseña acá.</h2>\n        </div>\n        <p class=\"note\">No hay clases magistrales de dos horas. Hay <b>trabajo, devolución y ajuste</b>, en ese orden.</p>\n      </div>\n      <div class=\"steps\">\n        <article class=\"step\">\n          <span class=\"tag\">Semana 1</span>\n          <div class=\"step-num\">01</div>\n          <h3>Empezás por un problema</h3>\n          <p>Cada tramo arranca con un encargo concreto y un cliente real del ecosistema de Aula.</p>\n        </article>\n        <article class=\"step\">\n          <span class=\"tag\">Semana 2–8</span>\n          <div class=\"step-num\">02</div>\n          <h3>Trabajás con devolución</h3>\n          <p>Encuentros de 90 minutos, grupos de 18 y una crítica escrita por semana sobre tu proceso.</p>\n        </article>\n        <article class=\"step\">\n          <span class=\"tag\">Semana 9–10</span>\n          <div class=\"step-num\">03</div>\n          <h3>Entregás en público</h3>\n          <p>Defensa abierta, revisión externa y publicación del trabajo en el archivo del aula.</p>\n        </article>\n      </div>\n    </section>\n\n    <!-- DOCENTES -->\n    <section class=\"section\" id=\"docentes\" aria-labelledby=\"h-docentes\">\n      <div class=\"head-row\" style=\"margin-bottom:26px\">\n        <div>\n          <p class=\"eyebrow\">04 · Docentes</p>\n          <h2 id=\"h-docentes\">Gente que sigue haciendo su oficio.</h2>\n        </div>\n        <p class=\"note\" style=\"max-width:32ch\">Todos los docentes trabajan en lo que enseñan. Ese es el requisito, no un plus.</p>\n      </div>\n      <div class=\"teachers\">\n        <article class=\"teacher\">\n          <div class=\"portrait\"><span class=\"idx\">A/01</span><svg viewBox=\"0 0 120 160\" role=\"img\" aria-label=\"Retrato ilustrado de Mariana Otero\"><use href=\"#p1\"/></svg></div>\n          <h3>Mariana Otero</h3>\n          <p class=\"role\">Escritura · Tramo 01</p>\n          <p class=\"bio\">Editora en una revista de cultura. Enseña a recortar antes de embellecer.</p>\n        </article>\n        <article class=\"teacher\">\n          <div class=\"portrait\"><span class=\"idx\">A/02</span><svg viewBox=\"0 0 120 160\" role=\"img\" aria-label=\"Retrato ilustrado de Julián Ferrer\"><use href=\"#p2\"/></svg></div>\n          <h3>Julián Ferrer</h3>\n          <p class=\"role\">Datos · Tramo 02</p>\n          <p class=\"bio\">Analista en una cooperativa de salud. Odia los tableros que nadie lee.</p>\n        </article>\n        <article class=\"teacher\">\n          <div class=\"portrait\"><span class=\"idx\">A/03</span><svg viewBox=\"0 0 120 160\" role=\"img\" aria-label=\"Retrato ilustrado de Sofía Reyna\"><use href=\"#p3\"/></svg></div>\n          <h3>Sofía Reyna</h3>\n          <p class=\"role\">Diseño · Tramo 01–03</p>\n          <p class=\"bio\">Diseñadora de producto en un estudio chico. Defiende la retícula como oficio.</p>\n        </article>\n        <article class=\"teacher\">\n          <div class=\"portrait\"><span class=\"idx\">A/04</span><svg viewBox=\"0 0 120 160\" role=\"img\" aria-label=\"Retrato ilustrado de Tomás Iriarte\"><use href=\"#p4\"/></svg></div>\n          <h3>Tomás Iriarte</h3>\n          <p class=\"role\">Proyecto · Tramo 03</p>\n          <p class=\"bio\">Investigador y docente. Acompaña proyectos con preguntas incómodas.</p>\n        </article>\n      </div>\n    </section>\n\n    <!-- VOCES -->\n    <section class=\"quote\" id=\"voces\" aria-labelledby=\"h-voces\">\n      <h2 class=\"sr\" id=\"h-voces\">Lo que dicen quienes pasaron</h2>\n      <blockquote>\n        <p>“Llegué sabiendo copiar referencias. Salí sabiendo <em>decidir</em> por qué una cosa funciona y otra no.”</p>\n      </blockquote>\n      <div class=\"quote-foot\">\n        <svg width=\"44\" height=\"44\" viewBox=\"0 0 44 44\" aria-hidden=\"true\" style=\"color:var(--red)\">\n          <circle cx=\"22\" cy=\"22\" r=\"21\" fill=\"none\" stroke=\"currentColor\"/>\n          <path d=\"M22 9v26M9 22h26\" stroke=\"currentColor\" stroke-width=\"1\"/>\n        </svg>\n        <p class=\"who\"><b>Camila Duarte</b>Egresada 2024 · Tramo 03 · hoy en un estudio de producto</p>\n      </div>\n      <div class=\"mini-quotes\">\n        <figure><q>“La devolución escrita cada viernes es lo que más me cambió la forma de trabajar.”</q><figcaption>Ramiro L. · Tramo 02</figcaption></figure>\n        <figure><q>“Dieciocho personas, no doscientas. Se nota en la calidad de la conversación.”</q><figcaption>Inés M. · Tramo 01</figcaption></figure>\n      </div>\n    </section>\n\n    <!-- ADMISIÓN -->\n    <section class=\"section\" id=\"admission\" aria-labelledby=\"h-admision\">\n      <div class=\"section-head\">\n        <div>\n          <p class=\"eyebrow\">06 · Admisión</p>\n          <h2 id=\"h-admision\">Dos formas de entrar. Ninguna es automática.</h2>\n        </div>\n        <p class=\"note\">Abrimos <b>dos comisiones por año</b>. La entrevista es obligatoria: define el tramo de entrada y el plan de trabajo.</p>\n      </div>\n\n      <div class=\"admission-grid\">\n        <div class=\"ledger\">\n          <div class=\"ledger-head\">\n            <h3>Trayecto completo</h3>\n            <p class=\"price\">$ 320.000<small>por tramo · 3 cuotas</small></p>\n          </div>\n          <ul>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Tres tramos y proyecto final<span class=\"val\">30 sem</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Tutoría semanal 1:1<span class=\"val\">Incluida</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Crítica de docentes externos<span class=\"val\">3 rondas</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Acceso al archivo y al campus<span class=\"val\">De por vida</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Certificado con portafolio<span class=\"val\">Digital</span></li>\n          </ul>\n          <div class=\"ledger-foot\">\n            <a class=\"btn btn-ghost\" href=\"#preguntas\">Consultar disponibilidad <svg class=\"i\"><use href=\"#i-arrow\"/></svg></a>\n            <p class=\"ledger-note\">Beca parcial disponible por concurso · 6 lugares</p>\n          </div>\n        </div>\n\n        <div class=\"ledger featured\">\n          <span class=\"badge-stamp\">Comisión agosto</span>\n          <div class=\"ledger-head\">\n            <h3>Tramo suelto</h3>\n            <p class=\"price\">$ 128.000<small>un tramo · 10 semanas</small></p>\n          </div>\n          <ul>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Un tramo a elección<span class=\"val\">10 sem</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Encuentros y materiales<span class=\"val\">Incluidos</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Devolución escrita semanal<span class=\"val\">10 piezas</span></li>\n            <li><svg class=\"i\"><use href=\"#i-check\"/></svg>Defensa de cierre<span class=\"val\">Abierta</span></li>\n          </ul>\n          <div class=\"ledger-foot\">\n            <a class=\"btn btn-solid\" href=\"#preguntas\">Reservar entrevista <svg class=\"i\"><use href=\"#i-arrow\"/></svg></a>\n            <p class=\"ledger-note\">Quedan 7 de 18 lugares · cierre 22 de agosto</p>\n          </div>\n        </div>\n      </div>\n    </section>\n\n    <!-- PREGUNTAS -->\n    <section class=\"section\" id=\"preguntas\" aria-labelledby=\"h-preguntas\">\n      <div class=\"section-head\">\n        <div>\n          <p class=\"eyebrow\">07 · Dudas</p>\n          <h2 id=\"h-preguntas\">Lo que suelen preguntar.</h2>\n        </div>\n      </div>\n      <div class=\"faq\">\n        <details open>\n          <summary><span class=\"n\">01</span>¿Necesito experiencia previa?<svg class=\"i plus\"><use href=\"#i-plus\"/></svg></summary>\n          <p>No para el Tramo 01. Para entrar a Oficio o Proyecto pedimos una entrevista y una pieza de trabajo: no evaluamos el nivel, evaluamos la disponibilidad para sostener diez semanas.</p>\n        </details>\n        <details>\n          <summary><span class=\"n\">02</span>¿Las clases son en vivo o grabadas?<svg class=\"i plus\"><use href=\"#i-plus\"/></svg></summary>\n          <p>En vivo, en grupos de 18. Cada encuentro queda grabado 90 días en el campus, pero la asistencia al taller es lo que sostiene el trayecto.</p>\n        </details>\n        <details>\n          <summary><span class=\"n\">03</span>¿Cómo se evalúa?<svg class=\"i plus\"><use href=\"#i-plus\"/></svg></summary>\n          <p>Con una devolución escrita por semana y una defensa pública al cierre del tramo. No hay examen final: hay un trabajo que se sostiene frente a otros.</p>\n        </details>\n        <details>\n          <summary><span class=\"n\">04</span>¿Hay becas?<svg class=\"i plus\"><use href=\"#i-plus\"/></svg></summary>\n          <p>Sí. Seis becas parciales por comisión, asignadas por concurso de una pieza y una carta de intención. La convocatoria abre junto con la inscripción.</p>\n        </details>\n      </div>\n    </section>\n\n    <!-- CIERRE -->\n    <section class=\"close\" aria-labelledby=\"h-cierre\">\n      <div class=\"wrap\" style=\"width:min(var(--maxw),100% - 40px)\">\n        <p class=\"eyebrow\" style=\"color:var(--gold)\">Inscripción abierta · Comisión agosto</p>\n        <h2 id=\"h-cierre\">Si vas a estudiar, que sea para hacer algo.</h2>\n        <p class=\"lede\">Contanos qué querés resolver. En 30 minutos te decimos si este es el lugar y por dónde empezar.</p>\n        <div class=\"close-actions\">\n          <a class=\"btn btn-solid\" href=\"#admission\">Pedir una entrevista <svg class=\"i\"><use href=\"#i-arrow\"/></svg></a>\n          <a class=\"btn btn-ghost\" href=\"#programa\">Descargar el programa</a>\n        </div>\n        <div class=\"close-meta\">\n          <span>Av. Independencia 1240 · CABA</span>\n          <span>hola@aulaabierta.edu.ar</span>\n          <span>+54 11 4822 0091</span>\n        </div>\n      </div>\n    </section>\n\n    <!-- PIE -->\n    <footer class=\"foot\">\n      <div class=\"wrap\">\n        <div class=\"foot-grid\">\n          <div>\n            <a class=\"brand\" href=\"#inicio\"><svg class=\"i\" style=\"width:26px;height:26px;color:var(--red)\"><use href=\"#i-book\"/></svg> Aula <b>Abierta</b></a>\n            <p>Escuela de oficio con proyectos reales. Buenos Aires, desde 2016.</p>\n          </div>\n          <nav aria-label=\"Programa\"><b>Programa</b><a href=\"#programa\">Tramos</a><a href=\"#como\">Método</a><a href=\"#docentes\">Docentes</a></nav>\n          <nav aria-label=\"Institución\"><b>Institución</b><a href=\"#admission\">Admisión</a><a href=\"#preguntas\">Preguntas</a><a href=\"#voces\">Egresados</a></nav>\n        </div>\n        <div class=\"foot-legal\">\n          <span>© 2026 Aula Abierta · Todos los derechos reservados</span>\n          <span>Legajo 14.882 · Resolución 221/19</span>\n        </div>\n      </div>\n    </footer>\n\n  </main>\n</div>\n\n<nav class=\"bottom\" aria-label=\"Principal móvil\">\n  <a href=\"#inicio\" aria-current=\"page\"><svg class=\"i\"><use href=\"#i-home\"/></svg>Inicio</a>\n  <a href=\"#programa\"><svg class=\"i\"><use href=\"#i-grid\"/></svg>Programa</a>\n  <a href=\"#admission\"><svg class=\"i\"><use href=\"#i-mail\"/></svg>Admisión</a>\n  <a href=\"#docentes\"><svg class=\"i\"><use href=\"#i-user\"/></svg>Docentes</a>\n</nav>",
+      "css": "@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Manrope:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');\n\n/* Aula Abierta — landing de educación.\n   Idea: la página es un cuaderno de cátedra. Papel con renglones y margen\n   rojo, índice numerado en el canto, hero partido con horario, banda\n   diagonal de materias, programa como lista editorial (no tarjetas),\n   pasos con numerales gigantes, docentes en tira de retratos duotono,\n   cita con comilla de agua y admisión como libro contable. */\n\n:root{\n  --paper:#F5F1E6;\n  --paper-2:#EDE7D7;\n  --surface:#FFFDF7;\n  --ink:#101827;\n  --ink-2:#39465A;\n  --muted:#6B7385;\n  --line:#D3C9B4;\n  --line-2:#BEB29A;\n  --red:#C93F26;\n  --red-soft:#F4DCD4;\n  --blue:#173A63;\n  --blue-soft:#DDE5EF;\n  --gold:#B98B3C;\n  --on-red:#FFF6F1;\n  --display:\"Newsreader\",\"Iowan Old Style\",Georgia,serif;\n  --body:\"Manrope\",system-ui,-apple-system,\"Segoe UI\",sans-serif;\n  --mono:\"Space Mono\",ui-monospace,\"SFMono-Regular\",monospace;\n  --rule:1px;\n  --radius:2px;\n  --shadow:0 1px 0 rgba(16,24,39,.06), 0 26px 50px -40px rgba(16,24,39,.55);\n  --maxw:1180px;\n  color-scheme: light;\n}\n*{box-sizing:border-box}\nhtml{scroll-behavior:smooth}\nhtml,body{margin:0}\nbody{\n  background:var(--paper);\n  color:var(--ink);\n  font:16px/1.62 var(--body);\n  -webkit-font-smoothing:antialiased;\n  overflow-x:hidden;\n}\n/* renglones de cuaderno + grano de papel */\nbody::before{\n  content:\"\";position:fixed;inset:0;z-index:-1;pointer-events:none;\n  background:\n    repeating-linear-gradient(to bottom, transparent 0 31px, rgba(23,58,99,.055) 31px 32px),\n    radial-gradient(120% 80% at 12% 0%, rgba(255,255,255,.7), transparent 60%),\n    repeating-linear-gradient(94deg, rgba(16,24,39,.022) 0 1px, transparent 1px 4px);\n}\nimg,svg{max-width:100%}\na{color:inherit;text-decoration:none}\nbutton,input,select{font:inherit;color:inherit}\nbutton{background:none;border:0;cursor:pointer}\nh1,h2,h3,h4{margin:0;font-family:var(--display);font-weight:500;letter-spacing:-.022em;text-wrap:balance}\nh1{font-size:clamp(2.55rem,6.2vw,5.2rem);line-height:.98}\nh2{font-size:clamp(1.85rem,3.5vw,2.9rem);line-height:1.04}\nh3{font-size:1.16rem;line-height:1.3;font-weight:600;letter-spacing:-.01em}\np{margin:0}\n:focus-visible{outline:2px solid var(--red);outline-offset:3px}\n.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}\n.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}\n\n/* ---------- retícula base ---------- */\n.wrap{width:min(var(--maxw),100% - 40px);margin-inline:auto;position:relative}\n.shell{\n  display:grid;grid-template-columns:76px minmax(0,1fr);\n  width:min(var(--maxw),100% - 40px);margin-inline:auto;\n}\n.shell > .main{min-width:0}\n.eyebrow{\n  display:inline-flex;align-items:center;gap:9px;margin:0 0 16px;\n  font:400 .68rem/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--red);\n}\n.eyebrow::before{content:\"\";width:24px;height:var(--rule);background:currentColor;opacity:.7}\n.lede{color:var(--ink-2);font-size:1.03rem;max-width:44ch}\n\n/* ---------- barra superior ---------- */\n.top{\n  position:sticky;top:0;z-index:40;\n  background:color-mix(in srgb,var(--paper) 92%,transparent);\n  backdrop-filter:blur(8px);\n  border-bottom:var(--rule) solid var(--line);\n}\n.top-in{display:flex;align-items:center;gap:20px;padding-block:13px}\n.brand{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-family:var(--display);font-size:1.24rem;letter-spacing:-.03em}\n.brand svg{width:26px;height:26px;color:var(--red)}\n.brand b{font-weight:600}\n.nav{display:none;gap:24px;margin-inline:auto;font-size:.86rem;color:var(--ink-2)}\n.nav a{position:relative;padding-block:6px;transition:color .18s}\n.nav a:hover{color:var(--red)}\n.nav a::after{content:\"\";position:absolute;left:0;right:0;bottom:0;height:var(--rule);background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .28s ease}\n.nav a:hover::after{transform:scaleX(1)}\n.btn{\n  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;\n  padding:0 20px;border:var(--rule) solid var(--ink);border-radius:var(--radius);\n  font:600 .84rem/1 var(--body);letter-spacing:.01em;\n  transition:background .18s, color .18s, border-color .18s, transform .18s;\n}\n.btn:hover{transform:translateY(-1px)}\n.btn-solid{background:var(--red);border-color:var(--red);color:var(--on-red)}\n.btn-solid:hover{background:var(--ink);border-color:var(--ink)}\n.btn-ghost{background:transparent;color:var(--ink)}\n.btn-ghost:hover{background:var(--ink);color:var(--paper)}\n.btn .i{transition:transform .22s}\n.btn:hover .i{transform:translateX(3px)}\n.top-cta{display:none}\n.menu-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin-left:auto;border:var(--rule) solid var(--line-2);border-radius:var(--radius)}\n.menu-btn:hover{border-color:var(--ink)}\n.menu{display:grid;gap:2px;padding-bottom:14px}\n.menu[hidden]{display:none}\n.menu a{padding:11px 0;border-top:var(--rule) solid var(--line);font-size:.9rem}\n\n/* ---------- índice del canto ---------- */\n.rail{\n  display:none;position:sticky;top:0;height:100vh;\n  padding-top:74px;border-right:var(--rule) solid var(--line);\n}\n.rail ol{list-style:none;margin:0;padding:0 0 0 18px;display:grid;gap:2px}\n.rail a{\n  display:flex;align-items:center;gap:8px;height:44px;\n  font:400 .62rem/1 var(--mono);letter-spacing:.1em;color:var(--muted);\n  transition:color .18s;\n}\n.rail a span{font-variant-numeric:tabular-nums}\n.rail a i{display:block;width:10px;height:var(--rule);background:currentColor;opacity:.4;transition:width .22s,opacity .22s}\n.rail a:hover,.rail a[aria-current=\"true\"]{color:var(--ink)}\n.rail a[aria-current=\"true\"] i{width:24px;opacity:1;background:var(--red)}\n\n/* ---------- hero ---------- */\n.hero{padding-block:46px 34px;position:relative}\n.hero::before{\n  content:\"\";position:absolute;left:-22px;top:0;bottom:0;width:var(--rule);\n  background:linear-gradient(var(--red) 0 34%, transparent 34%);\n  opacity:.55;\n}\n.hero-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:34px;align-items:start}\n.hero-copy{position:relative}\n.hero h1 em{font-style:italic;color:var(--blue)}\n.mark{position:relative;display:inline-block;z-index:0}\n.mark::after{\n  content:\"\";position:absolute;z-index:-1;left:-.06em;right:-.1em;bottom:.07em;height:.42em;\n  background:var(--red-soft);\n  transform:rotate(-1.1deg) skewX(-8deg);\n  border-radius:1px;\n}\n.hero .lede{margin-top:20px}\n.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}\n.hero-stats{\n  display:flex;flex-wrap:wrap;gap:0;margin-top:34px;\n  border-top:var(--rule) solid var(--line);border-bottom:var(--rule) solid var(--line);\n}\n.hero-stats div{padding:14px 20px 14px 0;margin-right:20px;border-right:var(--rule) solid var(--line)}\n.hero-stats div:last-child{border-right:0}\n.hero-stats b{display:block;font:500 1.7rem/1 var(--display);letter-spacing:-.03em}\n.hero-stats small{display:block;margin-top:4px;font:400 .62rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}\n\n/* horario: tarjeta con esquinas marcadas */\n.schedule{\n  position:relative;background:var(--surface);border:var(--rule) solid var(--line-2);\n  border-radius:var(--radius);box-shadow:var(--shadow);\n  padding:20px 20px 16px;\n}\n.schedule::before,.schedule::after{\n  content:\"\";position:absolute;width:14px;height:14px;border:var(--rule) solid var(--ink);\n}\n.schedule::before{top:-1px;left:-1px;border-right:0;border-bottom:0}\n.schedule::after{bottom:-1px;right:-1px;border-left:0;border-top:0}\n.schedule-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}\n.schedule-head h2{font-size:1.06rem;letter-spacing:-.01em}\n.schedule-head span{font:400 .6rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}\n.schedule ol{list-style:none;margin:0;padding:0}\n.schedule li{\n  display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:baseline;\n  padding:11px 0;border-top:var(--rule) solid var(--line);\n}\n.schedule li:first-child{border-top:0}\n.schedule time{font:400 .68rem/1 var(--mono);color:var(--red);letter-spacing:.02em}\n.schedule strong{font-weight:600;font-size:.92rem;line-height:1.3}\n.schedule em{font:400 .64rem/1.3 var(--mono);font-style:normal;color:var(--muted);text-align:right}\n.schedule-foot{\n  display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;\n  border-top:var(--rule) dashed var(--line-2);\n  font:400 .68rem/1.35 var(--mono);color:var(--muted);\n}\n.schedule-foot .dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex:none}\n/* sello girado */\n.seal{\n  position:absolute;right:-14px;top:-26px;width:92px;height:92px;\n  transform:rotate(-9deg);color:var(--blue);opacity:.92;\n  pointer-events:none;\n}\n.seal text{font:700 10px var(--mono);letter-spacing:.14em;fill:currentColor}\n.seal circle{fill:none;stroke:currentColor;stroke-width:1}\n.seal .star{fill:currentColor;stroke:none}\n\n/* ---------- banda diagonal de materias ---------- */\n.band{\n  position:relative;margin-block:30px 12px;\n  background:var(--blue);color:var(--paper);\n  transform:rotate(-1.15deg) scale(1.03);\n  overflow:hidden;\n}\n.band-track{display:flex;gap:0;width:max-content;animation:slide 34s linear infinite}\n.band:hover .band-track{animation-play-state:paused}\n.band span{\n  display:inline-flex;align-items:center;gap:22px;padding:13px 22px;\n  font:400 .74rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;\n}\n.band span::after{content:\"✳\";color:var(--gold);font-size:1rem;letter-spacing:0}\n@keyframes slide{to{transform:translateX(-50%)}}\n\n/* ---------- secciones ---------- */\n.section{padding-block:58px;border-top:var(--rule) solid var(--line)}\n.section-head{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-bottom:32px}\n.section-head .note{color:var(--muted);font-size:.92rem;max-width:38ch}\n.section-head .note b{color:var(--ink);font-weight:600}\n.head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}\n.rule-orn{display:flex;align-items:center;gap:10px;color:var(--line-2)}\n.rule-orn::before,.rule-orn::after{content:\"\";height:var(--rule);background:currentColor;flex:1}\n\n/* programa */\n.tabs{display:flex;gap:0;border-bottom:var(--rule) solid var(--line-2);margin-bottom:4px;flex-wrap:wrap}\n.tab{\n  min-height:44px;padding:0 16px 0 0;margin-right:8px;\n  font:400 .7rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);\n  border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s,border-color .18s;\n}\n.tab:hover{color:var(--ink)}\n.tab[aria-selected=\"true\"]{color:var(--ink);border-color:var(--red)}\n.program{list-style:none;margin:0;padding:0}\n.program li{border-bottom:var(--rule) solid var(--line)}\n.program-row{\n  display:grid;grid-template-columns:46px minmax(0,1fr) auto;\n  gap:6px 16px;align-items:baseline;padding:20px 14px 20px 6px;\n  transition:background .2s,color .2s,padding .2s;\n}\n.program-row:hover{background:var(--ink);color:var(--paper);padding-left:16px}\n.program-row:hover .num,.program-row:hover .meta,.program-row:hover .desc{color:var(--paper-2)}\n.program-row:hover .arrow{transform:translate(4px,-4px);color:var(--gold)}\n.num{font:400 .72rem/1 var(--mono);color:var(--red);letter-spacing:.06em;font-variant-numeric:tabular-nums}\n.program h3{font-size:1.2rem}\n.desc{margin-top:5px;font-size:.9rem;line-height:1.5;color:var(--muted);max-width:52ch}\n.meta{font:400 .64rem/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap}\n.arrow{grid-column:3;justify-self:end;align-self:center;width:20px;height:20px;color:var(--line-2);transition:transform .22s,color .22s}\n.program li[hidden]{display:none}\n\n/* pasos */\n.steps{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border-top:var(--rule) solid var(--line-2)}\n.step{position:relative;padding:26px 0 26px 0;border-bottom:var(--rule) solid var(--line)}\n.step-num{\n  font:500 clamp(3rem,7vw,4.6rem)/.9 var(--display);letter-spacing:-.06em;\n  color:transparent;-webkit-text-stroke:1px var(--line-2);\n}\n.step:hover .step-num{-webkit-text-stroke-color:var(--red)}\n.step h3{margin-top:6px}\n.step p{margin-top:8px;color:var(--muted);font-size:.93rem;max-width:34ch}\n.step .tag{\n  position:absolute;right:0;top:26px;font:400 .6rem/1 var(--mono);letter-spacing:.12em;\n  text-transform:uppercase;color:var(--muted);border:var(--rule) solid var(--line);\n  padding:6px 8px;border-radius:var(--radius);\n}\n.step:last-child{border-bottom:0}\n\n/* docentes */\n.teachers{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory}\n.teacher{flex:0 0 232px;scroll-snap-align:start}\n.portrait{\n  position:relative;aspect-ratio:3/4;border:var(--rule) solid var(--line-2);\n  background:var(--paper-2);overflow:hidden;\n}\n.portrait svg{display:block;width:100%;height:100%}\n.portrait::after{\n  content:\"\";position:absolute;inset:0;\n  background:repeating-linear-gradient(0deg, rgba(16,24,39,.05) 0 1px, transparent 1px 4px);\n  mix-blend-mode:multiply;pointer-events:none;\n}\n.portrait .idx{\n  position:absolute;left:8px;top:8px;z-index:1;\n  font:400 .6rem/1 var(--mono);letter-spacing:.1em;color:var(--paper);\n  background:var(--ink);padding:4px 6px;\n}\n.teacher h3{margin-top:12px;font-size:1.05rem}\n.teacher .role{margin-top:3px;font:400 .62rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--red)}\n.teacher .bio{margin-top:8px;font-size:.86rem;line-height:1.5;color:var(--muted)}\n\n/* cita */\n.quote{position:relative;padding-block:64px 54px;border-top:var(--rule) solid var(--line);overflow:hidden}\n.quote::before{\n  content:\"“\";position:absolute;left:-18px;top:-6px;\n  font:500 18rem/1 var(--display);color:var(--paper-2);pointer-events:none;\n}\n.quote blockquote{margin:0;position:relative;max-width:660px}\n.quote blockquote p{\n  font:400 clamp(1.5rem,3.4vw,2.5rem)/1.2 var(--display);letter-spacing:-.02em;\n}\n.quote blockquote em{font-style:italic;color:var(--blue)}\n.quote-foot{display:flex;align-items:center;gap:14px;margin-top:26px;flex-wrap:wrap}\n.quote-foot .who{font:400 .7rem/1.5 var(--mono);letter-spacing:.06em;color:var(--muted)}\n.quote-foot .who b{display:block;color:var(--ink);letter-spacing:.02em}\n.mini-quotes{display:grid;gap:0;margin-top:36px;border-top:var(--rule) solid var(--line)}\n.mini-quotes figure{margin:0;padding:16px 0;border-bottom:var(--rule) solid var(--line);display:grid;gap:6px}\n.mini-quotes q{font-size:.9rem;line-height:1.5;quotes:none}\n.mini-quotes figcaption{font:400 .62rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}\n\n/* admisión: libro contable */\n.ledger{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:var(--rule) solid var(--line-2);background:var(--surface)}\n.ledger-head{\n  display:flex;align-items:baseline;justify-content:space-between;gap:12px;\n  padding:18px 20px;border-bottom:var(--rule) solid var(--line);\n}\n.ledger-head h3{font-size:1.3rem}\n.ledger-head .price{font:500 1.5rem/1 var(--display);letter-spacing:-.03em;white-space:nowrap}\n.ledger-head .price small{font:400 .6rem/1 var(--mono);color:var(--muted);letter-spacing:.08em;display:block;margin-top:5px;text-align:right}\n.ledger ul{list-style:none;margin:0;padding:0}\n.ledger li{\n  display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;\n  padding:12px 20px;border-bottom:var(--rule) dashed var(--line);font-size:.9rem;\n}\n.ledger li:last-child{border-bottom:0}\n.ledger li svg{color:var(--red)}\n.ledger li .val{font:400 .68rem/1 var(--mono);color:var(--ink-2)}\n.ledger-foot{padding:18px 20px;border-top:var(--rule) solid var(--line)}\n.ledger-foot .btn{width:100%}\n.ledger-note{margin-top:10px;font:400 .62rem/1.5 var(--mono);color:var(--muted);text-align:center}\n.ledger.featured{border-color:var(--ink);box-shadow:var(--shadow);position:relative}\n.ledger.featured .ledger-head{background:var(--ink);color:var(--paper);border-bottom-color:var(--ink)}\n.ledger.featured .ledger-head .price small{color:var(--paper-2)}\n.ledger.featured .ledger-foot{background:var(--paper-2)}\n.badge-stamp{\n  position:absolute;right:14px;top:-16px;transform:rotate(6deg);\n  background:var(--red);color:var(--on-red);padding:6px 10px;\n  font:700 .58rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;\n}\n.admission-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:26px}\n\n/* faq */\n.faq{border-top:var(--rule) solid var(--line-2)}\n.faq details{border-bottom:var(--rule) solid var(--line)}\n.faq summary{\n  display:flex;align-items:center;gap:14px;min-height:56px;padding:14px 4px;\n  cursor:pointer;list-style:none;font-weight:600;font-size:.97rem;\n}\n.faq summary::-webkit-details-marker{display:none}\n.faq summary .n{font:400 .64rem/1 var(--mono);color:var(--red);letter-spacing:.06em}\n.faq summary .plus{margin-left:auto;width:20px;height:20px;color:var(--line-2);transition:transform .24s,color .24s;flex:none}\n.faq details[open] summary .plus{transform:rotate(45deg);color:var(--red)}\n.faq details p{padding:0 4px 18px 34px;color:var(--muted);font-size:.92rem;max-width:62ch}\n\n/* cierre */\n.close{padding-block:70px;background:var(--ink);color:var(--paper);position:relative;overflow:hidden}\n.close::before{\n  content:\"2026\";position:absolute;right:-10px;bottom:-58px;\n  font:500 13rem/1 var(--display);letter-spacing:-.06em;color:rgba(245,241,230,.06);\n  pointer-events:none;\n}\n.close h2{max-width:18ch}\n.close .lede{color:var(--paper-2);margin-top:16px}\n.close-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}\n.close .btn-ghost{border-color:var(--paper-2);color:var(--paper)}\n.close .btn-ghost:hover{background:var(--paper);color:var(--ink)}\n.close .btn-solid{background:var(--red);border-color:var(--red)}\n.close-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:40px;padding-top:20px;border-top:var(--rule) solid rgba(245,241,230,.22);font:400 .64rem/1.6 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--paper-2)}\n\n/* pie */\n.foot{padding-block:36px 90px;border-top:var(--rule) solid var(--line)}\n.foot-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:26px}\n.foot .brand{font-size:1.5rem}\n.foot p{margin-top:10px;color:var(--muted);font-size:.86rem;max-width:32ch}\n.foot nav{display:grid;gap:2px;font-size:.88rem;color:var(--ink-2)}\n.foot nav b{font:400 .6rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}\n.foot nav a{display:inline-flex;align-items:center;min-height:44px}\n.foot nav a:hover{color:var(--red)}\n.foot-legal{margin-top:34px;padding-top:16px;border-top:var(--rule) solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:400 .6rem/1.5 var(--mono);letter-spacing:.06em;color:var(--muted)}\n\n/* barra inferior móvil */\n.bottom{display:none}\n\n/* entrada de portada (una sola, no fade-up en todo el sitio) */\n@keyframes intro{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}\n.hero-copy{animation:intro .5s ease both}\n.schedule{animation:intro .55s .08s ease both}\n@media (prefers-reduced-motion:reduce){\n  html{scroll-behavior:auto}\n  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}\n  .hero-copy,.schedule{animation:none}\n}\n\n/* ---------- escritorio ---------- */\n@media (min-width:860px){\n  .nav{display:flex}\n  .top-cta{display:inline-flex}\n  .menu-btn{display:none}\n  .menu{display:none!important}\n  .shell{grid-template-columns:96px minmax(0,1fr)}\n  .rail{display:block}\n  .hero-grid{grid-template-columns:minmax(0,1.32fr) minmax(300px,.78fr);gap:40px}\n  .section-head{grid-template-columns:minmax(0,1.4fr) minmax(0,.6fr);align-items:end;gap:32px}\n  .steps{grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:var(--rule) solid var(--line)}\n  .step{padding:28px 24px 30px 0;border-bottom:0;border-right:var(--rule) solid var(--line)}\n  .step:last-child{border-right:0;padding-right:0}\n  .step + .step{padding-left:24px}\n  .admission-grid{grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:32px;align-items:start}\n  .ledger.featured{margin-top:-12px}\n  .mini-quotes{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:40px;border-top:0}\n  .mini-quotes figure:nth-child(1){border-top:var(--rule) solid var(--line)}\n  .mini-quotes figure:nth-child(2){border-top:var(--rule) solid var(--line)}\n  .foot-grid{grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,.5fr))}\n  .foot{padding-bottom:40px}\n}\n@media (min-width:1100px){\n  .quote{padding-left:0}\n  .quote blockquote{margin-left:6%}\n  .quote-foot{margin-left:6%}\n}\n\n/* ---------- móvil (390px pensado, no encogido) ---------- */\n@media (max-width:859px){\n  body{font-size:15.5px}\n  .shell{grid-template-columns:minmax(0,1fr)}\n  .hero{padding-block:30px 26px}\n  .hero::before{display:none}\n  h1{font-size:clamp(2.3rem,10.4vw,3.1rem);line-height:1.02}\n  .hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}\n  .hero-stats div{padding:12px 10px 12px 0;margin-right:0;border-right:var(--rule) solid var(--line)}\n  .hero-stats div:nth-child(3){border-right:0;padding-left:10px}\n  .hero-stats b{font-size:1.34rem}\n  .hero-stats small{font-size:.54rem;letter-spacing:.06em}\n  .schedule-head span{display:none}\n  .seal{width:74px;height:74px;right:-6px;top:-20px}\n  .band{transform:rotate(-1.6deg) scale(1.06);margin-block:22px 6px}\n  .band span{padding:11px 16px;font-size:.68rem;gap:16px}\n  .section{padding-block:42px}\n  .section-head{margin-bottom:24px}\n  .program-row{grid-template-columns:38px minmax(0,1fr);padding:18px 8px 18px 2px}\n  .program-row .meta{grid-column:2;text-align:left;margin-top:6px}\n  .program-row .arrow{display:none}\n  .step-num{font-size:3.2rem}\n  .step .tag{top:24px}\n  .quote{padding-block:52px 40px}\n  .quote::before{font-size:11rem;left:-10px;top:6px}\n  .quote blockquote{max-width:100%}\n  .close{padding-block:52px}\n  .close::before{font-size:8rem;bottom:-34px}\n  .foot{padding-bottom:96px}\n  .bottom{\n    display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:50;\n    background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(10px);\n    border-top:var(--rule) solid var(--line-2);\n    padding-bottom:env(safe-area-inset-bottom,0px);\n  }\n  .bottom a{\n    display:grid;justify-items:center;gap:4px;min-height:56px;padding:9px 4px 7px;\n    font:400 .58rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);\n  }\n  .bottom a[aria-current=\"page\"]{color:var(--red)}\n  .bottom .i{width:20px;height:20px}\n}",
+      "js": "(function(){\n  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;\n\n  // menú móvil\n  var menuBtn = document.querySelector('.menu-btn');\n  var menu = document.getElementById('menu-movil');\n  if (menuBtn && menu){\n    menuBtn.addEventListener('click', function(){\n      var open = menu.hasAttribute('hidden');\n      if (open) menu.removeAttribute('hidden'); else menu.setAttribute('hidden','');\n      menuBtn.setAttribute('aria-expanded', String(open));\n      menuBtn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');\n    });\n    menu.addEventListener('click', function(e){\n      if (e.target.closest('a')){ menu.setAttribute('hidden',''); menuBtn.setAttribute('aria-expanded','false'); }\n    });\n  }\n\n  // pestañas del programa\n  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));\n  function selectTab(tab){\n    tabs.forEach(function(t){\n      var on = t === tab;\n      t.setAttribute('aria-selected', String(on));\n      t.tabIndex = on ? 0 : -1;\n      var panel = document.getElementById(t.getAttribute('aria-controls'));\n      if (panel) panel.hidden = !on;\n    });\n  }\n  tabs.forEach(function(tab, i){\n    tab.addEventListener('click', function(){ selectTab(tab); });\n    tab.addEventListener('keydown', function(e){\n      var next = null;\n      if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];\n      if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];\n      if (e.key === 'Home') next = tabs[0];\n      if (e.key === 'End') next = tabs[tabs.length - 1];\n      if (next){ e.preventDefault(); selectTab(next); next.focus(); }\n    });\n  });\n\n  // índice del canto\n  var railLinks = Array.prototype.slice.call(document.querySelectorAll('[data-rail]'));\n  var targets = railLinks.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);\n  if ('IntersectionObserver' in window && targets.length){\n    var seen = new Map();\n    var spy = new IntersectionObserver(function(entries){\n      entries.forEach(function(en){ seen.set(en.target.id, en.isIntersecting ? en.intersectionRatio : 0); });\n      var best = null, bestRatio = 0;\n      seen.forEach(function(ratio, id){ if (ratio > bestRatio){ bestRatio = ratio; best = id; } });\n      railLinks.forEach(function(a){\n        a.setAttribute('aria-current', a.getAttribute('href') === '#' + best ? 'true' : 'false');\n      });\n    }, {threshold:[0, .15, .4, .7]});\n    targets.forEach(function(t){ spy.observe(t); });\n  }\n})();"
     }
   ]
 }
