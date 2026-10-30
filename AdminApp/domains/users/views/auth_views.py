@@ -392,7 +392,8 @@ class VerifyEmailResendView(APIView):
         profile =   getattr(request.user, 'profile', None)
         if profile and profile.email_verified:
             return Response({'Exito': 'Tu correo ya está verificado.'}, status = status.HTTP_200_OK)
-        SendVerificationEmailQuery(request.user)
+        from AdminApp.domains.users.tasks import send_verification_email
+        send_verification_email.delay(request.user.pk)
         return Response({'Exito': 'Te reenviamos el correo de verificación. Revisá tu casilla (y el spam).'}, status = status.HTTP_200_OK)
 
 

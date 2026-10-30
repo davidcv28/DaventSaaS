@@ -126,7 +126,9 @@ def RegisterUserQuery(validated_data : dict) -> User:
                 )
             #VERIFICACIÓN DE EMAIL: se agenda post-commit — si la transacción
             #rollbackea el alta no existió y el mail no debe salir igual.
-            transaction.on_commit(lambda : SendVerificationEmailQuery(new_user))
+            #El envío va a Celery: el alta no espera al SMTP.
+            from AdminApp.domains.users.tasks import send_verification_email
+            transaction.on_commit(lambda : send_verification_email.delay(new_user.pk))
             return new_user
     except IntegrityError:
         #La validación ya revisa duplicados, pero dos requests concurrentes
@@ -243,7 +245,10 @@ def SendPasswordResetEmailQuery(user : User) -> None:
 def RequestPasswordResetQuery(email : str) -> None:
     user    =   User.objects.filter(email__iexact = (email or '').strip()).first()
     if user:
-        SendPasswordResetEmailQuery(user)
+        #Encolado: la respuesta ya no depende del SMTP (ni el tiempo delata
+        #si la cuenta existe — anti-enumeración por timing).
+        from AdminApp.domains.users.tasks import send_password_reset_email
+        send_password_reset_email.delay(user.pk)
 
 #CONFIRM PASSWORD RESET (setea la clave y cierra TODAS las sesiones del usuario)
 def ConfirmPasswordResetQuery(user : User, new_password : str) -> User:

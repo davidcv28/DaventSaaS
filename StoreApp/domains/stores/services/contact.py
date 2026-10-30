@@ -65,7 +65,19 @@ def contact_target(store) -> str:
     return chosen or (store.user.user.email or '')
 
 def send_contact_message(store, *, name : str, email : str, message : str) -> bool:
-    """Envía el mensaje del visitante al dueño de la tienda. False sin destino."""
+    """
+    Encola el mensaje del visitante al dueño (el SMTP corre en Celery: el
+    request público no espera el envío). False sin destino.
+    """
+    if not contact_target(store):
+        return False
+    from AdminApp.domains.users.tasks import send_contact_email
+    send_contact_email.delay(store.pk, name, email, message)
+    return True
+
+
+def deliver_contact_message(store, *, name : str, email : str, message : str) -> bool:
+    """Envío real (lo corre la task de Celery). False sin destino o SMTP caído."""
     target          =   contact_target(store)
     if not target:
         return False

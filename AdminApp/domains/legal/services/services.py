@@ -16,7 +16,9 @@ def CreateContentReportQuery(validated_data : dict, user = None) -> ContentRepor
         reported_by     =   user,
         **validated_data
     )
-    NotifyContentReportQuery(report)
+    #El aviso por correo va a Celery: el alta de la denuncia no espera SMTP.
+    from AdminApp.domains.users.tasks import send_legal_report_email
+    send_legal_report_email.delay(report.pk)
     return report
 
 #CONTENT REPORT NOTIFY QUERY (aviso por correo al equipo legal)

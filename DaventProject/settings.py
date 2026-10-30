@@ -357,6 +357,10 @@ if REDIS_URL:
 # imagen de la API; el broker y el backend de resultados viven en Redis.
 CELERY_BROKER_URL     = config('CELERY_BROKER_URL', default = '')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default = '') or CELERY_BROKER_URL
+#Sin broker (dev/tests) las tasks corren en el mismo proceso: los correos
+#salen igual y la suite no necesita un worker. Con broker (compose) son
+#asíncronas y el request no espera SMTP.
+CELERY_TASK_ALWAYS_EAGER = config('CELERY_TASK_ALWAYS_EAGER', default = not CELERY_BROKER_URL, cast = bool)
 # (Sin beat schedule por ahora: el resumen diario de WhatsApp se retiró — Meta
 # cobra por mensaje business-initiated y no hay canal automático gratuito.)
 

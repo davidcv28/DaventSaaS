@@ -91,7 +91,8 @@ def FinalizeInvoiceQuery(invoice_id : int) -> None:
     except Exception:
         #RequestCaeQuery ya es fail-open; esto es solo defensa extra del hook.
         logger.exception('Finalize: fallo inesperado pidiendo CAE de la factura %s', invoice_id)
-    SendInvoiceEmailQuery(invoice)
+    from AdminApp.domains.users.tasks import send_invoice_email
+    send_invoice_email.delay(invoice_id)
 
 #=================================
 # INVOICE EMAIL
