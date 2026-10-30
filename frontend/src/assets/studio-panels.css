@@ -273,3 +273,54 @@
 .stp-import { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 
 @media (prefers-reduced-motion: reduce) { .stx-card { animation: none; } }
+
+/* =========================================================================
+   Primitivas .dl-* compartidas con la pestaña Diseño (DesignLookTab.vue).
+   Esa hoja es global pero solo se inyecta al montar el LookTab: al abrir el
+   Studio directo (ruta propia) no existe, y las tarjetas de fuentes, las
+   paletas por rubro y los medidores quedaban como botones pelados. Acá se
+   replican las reglas que usan los paneles del Studio.
+   ========================================================================= */
+.dl-ell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.dl-chip { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55); flex: none; }
+.dl-fix { display: flex; min-width: 0; }
+.dl-fix .btn { min-height: 44px; }
+.dl-lock { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 12px; border: 1px dashed var(--line-strong, var(--line)); border-radius: 12px; background: var(--brand-soft); color: var(--brand-ink); font-size: 13px; min-width: 0; }
+.dl-lock span { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+
+/* Fuentes: grilla de tarjetas "Aa" con la familia real del catálogo. */
+.dl-fonts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dl-font { position: relative; display: grid; justify-items: center; align-content: center; gap: 2px; min-width: 0; min-height: 84px; padding: 10px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); cursor: pointer; transition: border-color .15s, transform .15s; }
+@media (hover: hover) { .dl-font:hover { border-color: var(--line-strong, var(--line)); } }
+.dl-font.active { border-color: var(--brand-500); box-shadow: var(--ring); background: var(--brand-soft); }
+.dl-font-aa { font-size: 28px; line-height: 1.1; }
+.dl-font-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-ui, Inter, system-ui, sans-serif); font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.dl-font-tick { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--brand-500); color: #fff; }
+.stp-field.locked .dl-font { opacity: .6; cursor: default; }
+
+/* Paletas por rubro: mini web con los colores del preset. */
+.dl-pals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dl-pal { display: grid; gap: 5px; align-content: start; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.dl-pal.active { border-color: var(--brand-500); box-shadow: var(--ring); }
+.dl-pal:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.dl-pal-web { display: flex; flex-direction: column; height: 72px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #f4f6fb; }
+.dl-pal[data-t='dark'] .dl-pal-web { background: #0d1220; border-color: #28304d; }
+.dl-pal-nav { display: block; flex: none; height: 9px; background: var(--pi); }
+.dl-pal-hero { display: grid; place-items: center; flex: 1 1 auto; background: linear-gradient(120deg, var(--pa), var(--pi)); }
+.dl-pal-hero b { width: 38%; height: 6px; border-radius: 9px; background: #fff; }
+.dl-pal-row { display: flex; flex: none; gap: 4px; padding: 5px; }
+.dl-pal-row b { flex: 1; height: 12px; border-radius: 3px; background: var(--ps); }
+.dl-pal[data-t='dark'] .dl-pal-row b { background: rgba(255, 255, 255, .14); }
+.dl-pal-name { font-size: 13px; font-weight: 700; }
+.dl-pal-hint { color: var(--muted); font-size: 11.5px; line-height: 1.3; overflow-wrap: anywhere; }
+
+/* Medidores de contraste (Salud / Colores). */
+.dl-meters { display: grid; gap: 8px; min-width: 0; }
+.dl-meter { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--ok-line); border-radius: 12px; background: var(--ok-bg); color: var(--ok-ink); min-width: 0; }
+.dl-meter.warn { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); }
+.dl-meter-ico { flex: none; margin-top: 1px; }
+.dl-meter-body { display: grid; gap: 2px; min-width: 0; }
+.dl-meter-body strong { font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
+.dl-meter-body small { font-size: 12.5px; line-height: 1.4; overflow-wrap: anywhere; }
+.dl-meter-ratio { margin-left: 4px; font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
