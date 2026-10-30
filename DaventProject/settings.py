@@ -148,6 +148,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
     'SECURITY': [{'BearerAuth': []}],
+    # El schema es solo-dev (urls bajo `if settings.DEBUG`). Sin esto,
+    # `manage.py check --deploy` del entrypoint genera el schema entero en
+    # cada arranque y vuelca ~50 warnings W001/W002 que tapan el error real
+    # del deploy en Render.
+    'ENABLE_DJANGO_DEPLOY_CHECK': False,
 }
 # Application definition
 

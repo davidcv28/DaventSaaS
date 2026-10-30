@@ -149,6 +149,13 @@ services:
         sync: false
 
       # ---- Operación -------------------------------------------------------------
+      # El `check --deploy` del entrypoint corre siempre y deja en el log qué
+      # falta, pero no corta el arranque salvo DEPLOY_CHECK_STRICT=1. Render no
+      # tiene shell: sin esto, una var pendiente de cargar en el dashboard
+      # (MP_WEBHOOK_SECRET / SECRETS_MASTER_KEYS / ADMIN_URL) deja el deploy en
+      # rojo en bucle. Poner "1" cuando esas vars estén cargadas.
+      - key: DEPLOY_CHECK_STRICT
+        value: "0"
       # Seeds idempotentes (locations/planes/beneficios) — Render free no tiene
       # shell: corren en el entrypoint cuando AUTO_SEED=1.
       - key: AUTO_SEED

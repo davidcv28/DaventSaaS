@@ -12,8 +12,19 @@ if [ "$1" = "gunicorn" ]; then
     # incompleto (ADMIN_URL default, keyring de PII ausente, HSTS apagado)
     # arrancaba igual. Si falla, el deploy queda en rojo y Render sigue
     # sirviendo la versión anterior.
+    # El check corre SIEMPRE (queda en el log qué falta), pero solo corta el
+    # arranque con DEPLOY_CHECK_STRICT=1. En Render no hay shell: un deploy en
+    # rojo por una var que únicamente se carga desde el dashboard (MP_WEBHOOK_SECRET,
+    # SECRETS_MASTER_KEYS, ADMIN_URL) deja el servicio sin forma de volver a
+    # verde sin editar el dashboard. En el VPS/CI queda estricto.
     if [ "$DEBUG" != "True" ]; then
-        python manage.py check --deploy --fail-level ERROR
+        if ! python manage.py check --deploy --fail-level ERROR; then
+            if [ "$DEPLOY_CHECK_STRICT" = "1" ]; then
+                echo "deploy check: configuracion de produccion incompleta (DEPLOY_CHECK_STRICT=1) -> abortando arranque"
+                exit 1
+            fi
+            echo "deploy check: configuracion de produccion incompleta -> arranca igual (DEPLOY_CHECK_STRICT=0)"
+        fi
     fi
     if [ "$RUN_COLLECTSTATIC" != "0" ]; then
         python manage.py collectstatic --noinput
