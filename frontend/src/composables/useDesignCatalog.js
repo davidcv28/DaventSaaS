@@ -9,7 +9,9 @@ const catalog = reactive({
   pattern: null,
   style: null,
   patterns: [],
-  styles: []
+  styles: [],
+  iconStyles: [],
+  defaultIconStyle: null
 })
 
 // Presets del Studio: misma forma que la galería espera, armada desde la base.
@@ -49,6 +51,8 @@ export function useDesignCatalog() {
         catalog.style = data?.style || null
         catalog.patterns = data?.patterns || []
         catalog.styles = data?.styles || []
+        catalog.iconStyles = data?.icon_styles || []
+        catalog.defaultIconStyle = data?.default_icon_style || null
         catalog.status = 'success'
         loaded.value = true
         fillPresets(catalog.styles)
@@ -70,6 +74,9 @@ export function useDesignCatalog() {
     defaultPattern: computed(() => catalog.pattern),
     defaultStyle: computed(() => catalog.style),
     styles: computed(() => catalog.styles),
-    patterns: computed(() => catalog.patterns)
+    patterns: computed(() => catalog.patterns),
+    iconStyles: computed(() => catalog.iconStyles),
+    defaultIconStyle: computed(() => catalog.defaultIconStyle),
+    iconStyleBySlug: (slug) => catalog.iconStyles.find((row) => row.slug === slug) || null
   }
 }

@@ -39,7 +39,7 @@ const tierLabel = (tpl) => {
   return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Incluido'
 }
 
-const { patterns, styles, status, load } = useDesignCatalog()
+const { patterns, styles, iconStyles, status, load } = useDesignCatalog()
 // Revalidar contra la base al entrar: los diseños/estilos nuevos se ven sin
 // recargar la página.
 onMounted(() => load(true))
@@ -69,6 +69,16 @@ const currentPattern = computed(() => (
   || ''
 ))
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
+// Set de iconos de los controles (menú, buscador, carrito, tema): vacío =
+// hereda el que trae el diseño elegido.
+const iconStyleOptions = computed(() => [
+  { value: '', label: 'Heredar del diseño', icon: 'layout-grid' },
+  ...iconStyles.value.map((s) => ({ value: s.slug, label: s.nombre, icon: 'menu' }))
+])
+const currentIconStyle = computed(() => props.form.icon_style || '')
+function onIconStylePick(value) {
+  props.form.icon_style = value || ''
+}
 const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
 
 // Vista del HTML propio del patrón (el diseño fuente, con su menú y sus
@@ -319,6 +329,16 @@ onMounted(() => {
                 aria-label="Estilo" placeholder="Elegí un estilo…"
                 :disabled="!styleOptions.length" @change="onStylePick"
               />
+            </div>
+
+            <div class="dmenu-field" @focusin="emit('ring', 'buttons')">
+              <label>Iconos del menú</label>
+              <DesignSelect
+                :model-value="currentIconStyle" :options="iconStyleOptions" icon="menu"
+                aria-label="Iconos del menú" placeholder="Heredar del diseño…"
+                :disabled="!iconStyles.length" @change="onIconStylePick"
+              />
+              <p class="dmenu-hint">Se pueden cambiar sin tocar el diseño.</p>
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'buttons')">

@@ -21,7 +21,6 @@ import MobilePanel from './panels/MobilePanel.vue'
 import MotionPanel from './panels/MotionPanel.vue'
 import HealthPanel from './panels/HealthPanel.vue'
 import PublishPanel from './panels/PublishPanel.vue'
-import DistribucionPanel from './panels/DistribucionPanel.vue'
 import '../../assets/studio-panels.css'
 
 const props = defineProps({
@@ -114,15 +113,6 @@ function onImportFile(e) {
     @publish="emit('publish', $event)" @discard="emit('discard-draft')"
     @restore="emit('restore', $event)" @share="emit('share')"
     @load-versions="emit('load-versions')"
-  />
-
-  <!-- ===== Distribución ===== -->
-  <DistribucionPanel
-    v-else-if="tool === 'distribucion'"
-    :layout="layout"
-    @navigate="emit('navigate', $event)" @ring="emit('ring', $event)"
-    @move-block="emit('move-block', $event)" @toggle-block="emit('toggle-block', $event)"
-    @variant-block="emit('variant-block', $event)" @reset-layout="emit('reset-layout')"
   />
 
   <!-- ===== Folletos ===== -->

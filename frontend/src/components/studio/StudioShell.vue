@@ -863,7 +863,6 @@ const SEARCH_INDEX = [
   { tool: 'contenedores', focus: 'card',       label: 'Bordes, sombras y tarjetas',   hint: 'Contenedores', kw: 'borde sombra radio tarjeta contenedor densidad' },
   { tool: 'contenedores', focus: 'buttons',    label: 'Botones',                      hint: 'Contenedores', kw: 'boton forma estilo cta' },
   { tool: 'fondo',        focus: 'page',       label: 'Fondo de la página',           hint: 'Fondo', kw: 'fondo degradado imagen patron mesh' },
-  { tool: 'distribucion', focus: 'blk',        label: 'Bloques y orden de secciones', hint: 'Distribución', kw: 'bloque seccion orden distribucion layout' },
   { tool: 'movil',        focus: 'chrome.nav', label: 'Navegación móvil',             hint: 'Móvil', kw: 'movil celular nav menu bottom drawer' },
   { tool: 'movil',        focus: 'hero',       label: 'Portada en celular',           hint: 'Móvil', kw: 'movil hero portada altura grilla' },
   { tool: 'movimiento',   focus: 'page',       label: 'Animaciones y revelado',       hint: 'Movimiento', kw: 'animacion movimiento reveal hover efecto' },

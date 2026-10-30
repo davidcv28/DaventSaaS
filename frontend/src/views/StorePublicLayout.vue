@@ -64,7 +64,7 @@ let removeStudioGuard = null
 const studioCustom = ref(null)
 // Catálogo de diseño (patrones + estilos) desde la API: el patrón base y
 // su estilo son el fallback de la web cuando la tienda no eligió nada.
-const { defaultPattern, defaultStyle, load: loadDesignCatalog } = useDesignCatalog()
+const { defaultPattern, defaultStyle, iconStyles, defaultIconStyle, load: loadDesignCatalog } = useDesignCatalog()
 // Layout del patrón de diseño de la base: única fuente de composición de las
 // tres superficies cuando la tienda no guardó su propio layout_config.
 const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?.layout))
@@ -266,8 +266,10 @@ const pageTheme = computed(() => (studioMode.value && studioViewMode.value) || v
 // interruptor depende del switch "Modo noche" del panel (theme_toggle=true).
 // En los diseños base se mantiene visible siempre (comportamiento histórico);
 // con theme_toggle explícito en true también aparece en cualquier diseño.
-const showThemeToggle = computed(() => status.value === 'success'
-  && (Boolean(custom.value.theme_toggle) || !hasDesignAdvanced.value))
+// Modo noche universal: TODAS las webs ofrecen el interruptor, sin
+// depender del plan ni del switch del panel (theme_toggle solo define el
+// modo con el que arranca un visitante nuevo).
+const showThemeToggle = computed(() => status.value === 'success')
 function togglePageTheme() {
   visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
   try { localStorage.setItem(`davent:store-theme:${slug.value}`, visitorTheme.value) } catch { /* modo privado */ }
@@ -617,6 +619,23 @@ const iconFamily = computed(() => familyOf({
   template: pageTemplate.value
 }))
 provide('storeIconFamily', iconFamily)
+// Set explícito de iconos de los controles: el elegido por la tienda, si no
+// el que trae el diseño, si no el base del catálogo. Cambiarlo no toca el
+// diseño: solo redibuja los iconos del menú y los controles.
+const storeIconSet = computed(() => {
+  const slug = custom.value.icon_style
+  if (slug) {
+    const chosen = iconStyles.value.find((row) => row.slug === slug)
+    if (chosen) return chosen
+  }
+  const patternSlug = defaultPattern.value?.icon_style
+  if (patternSlug) {
+    const own = iconStyles.value.find((row) => row.slug === patternSlug)
+    if (own) return own
+  }
+  return defaultIconStyle.value || null
+})
+provide('storeIconSet', storeIconSet)
 // Contexto para el ajuste fino por rubro (styleIcons.js: iconFor).
 provide('storeIconContext', computed(() => ({
   styleId: custom.value.site_theme?.style?.id || '',

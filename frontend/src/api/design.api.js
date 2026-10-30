@@ -12,6 +12,8 @@ import { http } from './http.js'
 // GET /design/patterns/         Bearer -> paginado (sin html/css/js)
 // GET /design/patterns/<slug>/  Bearer -> detalle (html, css, js, layout)
 // GET /design/patterns/default/ público -> patrón base
+// GET /design/icon-styles/      Bearer -> sets de iconos de controles
+// GET /design/icon-styles/default/ público -> set base
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -46,6 +48,18 @@ export const designApi = {
   },
   async defaultPattern() {
     const { data } = await http.get('/design/patterns/default/')
+    return data
+  },
+  async listIconStyles(params = {}) {
+    const { data } = await http.get('/design/icon-styles/', { params: { page_size: 200, ...params } })
+    return unwrap(data)
+  },
+  async iconStyle(slug) {
+    const { data } = await http.get(`/design/icon-styles/${slug}/`)
+    return data
+  },
+  async defaultIconStyle() {
+    const { data } = await http.get('/design/icon-styles/default/')
     return data
   }
 }

@@ -414,6 +414,9 @@ export function publicStoreUrl(slug) {
 // paletas CSS. Nada de colores libres del usuario: la web siempre se ve bien.
 export const CUSTOMIZATION_DEFAULTS = {
   display_name: '',
+  // Set de iconos de los controles de menú (slug de DesignIconStyle).
+  // Vacío = hereda el del diseño.
+  icon_style: '',
   name_font: 'inter',
   name_font_size: 32,
   headline: '',

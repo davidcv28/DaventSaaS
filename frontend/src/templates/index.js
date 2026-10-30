@@ -114,37 +114,21 @@ export function normalizeLayoutConfig(raw) {
   return out
 }
 
-// Layout efectivo (Studio): default ∪ config guardada.
+// Layout efectivo (Studio): la composición es la del DISEÑO.
+// El sistema de bloques se retiró: `layout_config` ya no reordena, apaga ni
+// enciende secciones (se sigue aceptando y guardando por compatibilidad,
+// pero el render lo ignora). Cada plantilla declara su composición única en
+// `blocks.<superficie>` y esa es la que se monta.
 export function resolveLayout(id, surface, layoutConfig) {
-  const base = defaultLayout(id, surface)
-  const byId = new Map(base.map((b) => [b.id, b]))
-  const saved = Array.isArray(layoutConfig?.[surface]?.blocks) ? layoutConfig[surface].blocks : []
-  const savedById = new Map()
-  for (const raw of saved) {
-    if (!raw || typeof raw !== 'object') continue
-    const blockId = String(raw.id || '')
-    const known = byId.get(blockId) || (blockSpec(surface, blockId) ? { id: blockId } : null)
-    if (!known || savedById.has(blockId)) continue
-    savedById.set(blockId, {
-      ...known,
-      enabled: raw.enabled !== false,
-      // Si la config no trae variante/props se conserva la firma del default
-      // (p.ej. la cinta 'static' de trama): la IA solo pisa lo que elige.
-      ...(typeof raw.variant === 'string' && raw.variant ? { variant: raw.variant } : {}),
-      ...(raw.props && typeof raw.props === 'object' ? { props: raw.props } : {})
-    })
-  }
-  const orderedSaved = [...savedById.values()].sort((a, b) => {
-    const ia = saved.findIndex((r) => r?.id === a.id)
-    const ib = saved.findIndex((r) => r?.id === b.id)
-    return (typeof saved[ia]?.order === 'number' ? saved[ia].order : ia) - (typeof saved[ib]?.order === 'number' ? saved[ib].order : ib)
-  })
-  const merged = [...orderedSaved, ...base.filter((b) => !savedById.has(b.id))]
-  const contactAt = merged.findIndex((b) => b.id === 'contact')
-  if (contactAt >= 0 && contactAt !== merged.length - 1) merged.push(...merged.splice(contactAt, 1))
-  return merged.map((block, i) => {
-    const spec = blockSpec(surface, block.id)
-    return { ...block, order: i, enabled: spec?.locked ? true : block.enabled !== false }
+  const canonical = templateDef(id).blocks?.[surface] || []
+  return canonical.map((entry, i) => {
+    const base = typeof entry === 'string' ? { id: entry } : { ...entry }
+    const spec = blockSpec(surface, base.id)
+    return {
+      ...base,
+      order: i,
+      enabled: spec?.locked ? true : base.enabled !== false
+    }
   })
 }
 

@@ -174,6 +174,10 @@ const LUCIDE = Object.fromEntries(
 // Familia de iconos del estilo de diseño activo (web pública): la provee
 // StorePublicLayout. Sin familia el icono se dibuja igual que siempre.
 const iconFamily = inject('storeIconFamily', null)
+// Set explícito de iconos de controles (DesignIconStyle elegido por la
+// tienda o heredado del diseño). Si el control está en el set, manda su
+// path sobre la familia semántica.
+const iconSet = inject('storeIconSet', null)
 const iconContext = inject('storeIconContext', null)
 const family = computed(() => unref(iconFamily) || '')
 const context = computed(() => unref(iconContext) || {})
@@ -192,7 +196,27 @@ const isGen = computed(() => {
   return raw.startsWith('gen:') && PROCEDURAL_SLUG_RE.test(raw.slice(4))
 })
 const isBrand = computed(() => !isLucide.value && !isGen.value && iconName.value in BRAND_ICONS)
+// Nombres semánticos del chrome -> control del catálogo de iconos.
+const SET_ALIAS = {
+  x: 'close', moon: 'theme', sun: 'theme', package: 'catalog',
+  'shopping-bag': 'catalog', 'shopping-cart': 'cart', 'map-pin': 'location',
+  'share-2': 'share', 'arrow-left': 'chevron_left', 'chevron-down': 'chevron_right',
+  image: 'gallery', images: 'gallery', 'message-circle': 'whatsapp'
+}
+const setEntry = computed(() => {
+  const icons = unref(iconSet)?.icons
+  if (!icons) return null
+  const entry = icons[props.name] || icons[SET_ALIAS[props.name]]
+  return entry && entry.path ? entry : null
+})
+const iconViewBox = computed(() => setEntry.value?.view_box || '0 0 24 24')
+const iconFill = computed(() => setEntry.value?.fill ? 'currentColor' : (isBrand.value ? 'currentColor' : 'none'))
+const iconStrokeColor = computed(() => setEntry.value?.fill || isBrand.value ? 'none' : 'currentColor')
+const iconStrokeWidth = computed(() => setEntry.value?.fill
+  ? 0
+  : (setEntry.value?.stroke ?? iconStroke.value))
 const html = computed(() => {
+  if (setEntry.value) return `<path d="${setEntry.value.path}"/>`
   if (isGen.value) return proceduralIconBody(iconName.value.toLowerCase().slice('gen:'.length))
   if (isLucide.value) {
     const key = iconName.value.slice('lucide:'.length)
@@ -207,10 +231,10 @@ const html = computed(() => {
     class="icon"
     :width="size"
     :height="size"
-    viewBox="0 0 24 24"
-    :fill="isBrand ? 'currentColor' : 'none'"
-    :stroke="isBrand ? 'none' : 'currentColor'"
-    :stroke-width="iconStroke"
+    :viewBox="iconViewBox"
+    :fill="iconFill"
+    :stroke="iconStrokeColor"
+    :stroke-width="iconStrokeWidth"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"

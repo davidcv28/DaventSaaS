@@ -11,7 +11,6 @@ export const STUDIO_TOOLS = [
   { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuentes, pares recomendados, escala y peso.' },
   { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad, superficie y botones.' },
   { id: 'fondo',        icon: 'image',        label: 'Fondo',        desc: 'Color, degradado, malla, patrón o imagen de fondo.' },
-  { id: 'distribucion', icon: 'list-ordered', label: 'Distribución', desc: 'Qué bloques lleva cada página y en qué orden.' },
   { id: 'movil',        icon: 'smartphone',   label: 'Móvil',        desc: 'Navegación, grilla y portada en pantallas chicas.' },
   { id: 'movimiento',   icon: 'zap',          label: 'Movimiento',   desc: 'Revelado al bajar, reacción al mouse e intensidad.' },
   { id: 'folletos',     icon: 'printer',      label: 'Folletos',     desc: 'Piezas imprimibles con tu identidad (QR y ofertas).' },
@@ -24,7 +23,7 @@ export const STUDIO_TOOLS = [
 // se leen las herramientas (el orden de STUDIO_TOOLS manda el recorrido).
 export const STUDIO_TOOL_GROUPS = [
   { id: 'look', label: 'Look', tools: ['colores', 'tipografia', 'contenedores', 'fondo', 'movimiento'] },
-  { id: 'structure', label: 'Estructura', tools: ['distribucion', 'movil'] },
+  { id: 'structure', label: 'Estructura', tools: ['movil'] },
   { id: 'ship', label: 'Puesta a punto', tools: ['folletos', 'avanzado', 'salud', 'publicar'] }
 ]
 
@@ -101,7 +100,9 @@ export function pickTargetFor(el) {
 // ajustan en Fondo y el resto del look en Colores/Tipografía/Contenedores.
 export function toolForTarget(target) {
   if (!target) return 'colores'
-  if (target.startsWith('blk:') || target.startsWith('sec:')) return 'distribucion'
+  // El sistema de bloques se retiró: un click en una sección abre Móvil,
+  // que es el único ajuste estructural que queda en el Studio.
+  if (target.startsWith('blk:') || target.startsWith('sec:')) return 'movil'
   return {
     hero: 'fondo',
     typo: 'tipografia',
