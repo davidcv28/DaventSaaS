@@ -14,7 +14,7 @@ const props = defineProps({
   benefits: { type: Object, default: () => ({}) }
 })
 
-const { patterns, styles, load } = useDesignCatalog()
+const { patterns, styles, status, load } = useDesignCatalog()
 onMounted(() => load())
 
 const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
@@ -101,7 +101,7 @@ function onStylePick(event) {
     <div class="dpicks-grid">
       <div class="field">
         <label for="design-pattern">Patrón de diseño web</label>
-        <select id="design-pattern" class="select" :value="currentPattern" @change="onPatternPick">
+        <select id="design-pattern" class="select" :value="currentPattern" :disabled="!patternOptions.length" @change="onPatternPick">
           <option value="" disabled>Elegí un patrón…</option>
           <option
             v-for="p in patternOptions" :key="p.slug" :value="p.slug"
@@ -114,7 +114,7 @@ function onStylePick(event) {
       </div>
       <div class="field">
         <label for="design-style-pick">Estilo</label>
-        <select id="design-style-pick" class="select" :value="currentStyle" @change="onStylePick">
+        <select id="design-style-pick" class="select" :value="currentStyle" :disabled="!styleOptions.length" @change="onStylePick">
           <option value="" disabled>Elegí un estilo…</option>
           <option
             v-for="s in styleOptions" :key="s.slug" :value="s.slug"
@@ -126,6 +126,13 @@ function onStylePick(event) {
         <p class="hint">Colores, tipografía y modo claro u oscuro, sin tocar la estructura.</p>
       </div>
     </div>
+    <p v-if="status === 'error'" class="dpicks-alert" role="alert">
+      No pudimos cargar el catálogo de diseño.
+      <button type="button" class="btn ghost btn-auto" @click="load(true)">Reintentar</button>
+    </p>
+    <p v-else-if="status === 'success' && !patternOptions.length && !styleOptions.length" class="dpicks-alert" role="status">
+      El catálogo está vacío: corré <code>manage.py seed_design_catalog</code> en el servidor.
+    </p>
   </section>
 </template>
 
@@ -139,4 +146,6 @@ function onStylePick(event) {
 .dpicks .field label { font-size: 13px; font-weight: 600; }
 .dpicks .select { width: 100%; min-height: 44px; font-size: 16px; }
 .dpicks .hint { margin: 0; font-size: 12px; opacity: .7; }
+.dpicks-alert { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
+.dpicks-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>

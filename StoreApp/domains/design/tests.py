@@ -22,6 +22,10 @@ def _user(username, staff = False):
 
 class DesignCatalogTests(TestCase):
     def setUp(self):
+        #La migración 0003 deja el catálogo cargado: estos tests prueban la
+        #API con sus propias filas, así que parten de tablas vacías.
+        DesignPattern.objects.all().delete()
+        DesignStyle.objects.all().delete()
         self.owner  =   _user('owner')
         self.admin  =   _user('admin', staff = True)
         self.client =   APIClient()
@@ -123,6 +127,8 @@ class DesignCatalogTests(TestCase):
 
 class DesignCatalogDefaultsTests(TestCase):
     def setUp(self):
+        DesignPattern.objects.all().delete()
+        DesignStyle.objects.all().delete()
         self.client =   APIClient()
 
     def test_catalog_is_public(self):
