@@ -95,6 +95,7 @@ class Command(BaseCommand):
                     'js'            :   js,
                     'tokens'        :   pattern.get('tokens') or {},
                     'tags'          :   pattern.get('tags') or [],
+                    'preview'       :   pattern.get('preview', ''),
                     'position'      :   position,
                 },
             )

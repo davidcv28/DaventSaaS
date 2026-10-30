@@ -5,7 +5,7 @@ from decouple import config
 from django.core.management import BaseCommand, CommandError
 from psycopg2.extras import Json
 
-from StoreApp.domains.design.models import DesignPattern
+from StoreApp.domains.design.models import DesignPattern, DesignStyle
 
 """
 
@@ -56,10 +56,18 @@ class Command(BaseCommand):
                 raise CommandError(f'No existen en la base local: {", ".join(sorted(missing))}')
         patterns    =   list(queryset)
 
+        #--all replica el catálogo completo de estilos; con --slug alcanza con
+        #los estilos referenciados por los patrones pedidos.
+        styles  =   list(DesignStyle.objects.all()) if options['all'] else [
+            pattern.style for pattern in patterns if pattern.style_id
+        ]
+
         if options['dry_run']:
+            for style in styles:
+                self.stdout.write(f'[dry-run] style {style.slug} - template={style.template}')
             for pattern in patterns:
                 style = pattern.style.slug if pattern.style_id else '-'
-                self.stdout.write(f'[dry-run] {pattern.slug} - template={pattern.template} - style={style}')
+                self.stdout.write(f'[dry-run] pattern {pattern.slug} - template={pattern.template} - style={style}')
             return
 
         url = config('NEON_DATABASE_URL', default = '')
@@ -69,19 +77,19 @@ class Command(BaseCommand):
         connection  =   psycopg2.connect(url)
         try:
             with connection, connection.cursor() as cursor:
+                for style in styles:
+                    self._style(cursor, style)
+                    self.stdout.write(self.style.SUCCESS(f'style {style.slug} -> Neon'))
                 for pattern in patterns:
                     style_id = self._style(cursor, pattern.style) if pattern.style_id else None
                     self._pattern(cursor, pattern, style_id)
-                    self.stdout.write(self.style.SUCCESS(f'{pattern.slug} -> Neon'))
+                    self.stdout.write(self.style.SUCCESS(f'pattern {pattern.slug} -> Neon'))
         finally:
             connection.close()
 
     #ESTILO REFERENCIADO (FK)
     def _style(self, cursor, style):
-        cursor.execute('SELECT id FROM design_designstyle WHERE slug = %s', (style.slug,))
-        found = cursor.fetchone()
-        if found:
-            return found[0]
+        #Upsert real: un estilo ya existente también se actualiza.
         return self._upsert(cursor, 'design_designstyle', STYLE_COLS, self._values(style, STYLE_COLS))
 
     #PATRÓN

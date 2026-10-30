@@ -41,10 +41,17 @@ BASE_STYLE = {
         'background'    :   {'type': 'solid', 'value': None, 'overlay': 'none'},
         'motion'        :   {'reveal': 'fade', 'hover': 'lift', 'intensity': 'subtle'},
         'mobile'        :   {'cardStyle': 'standard', 'heroHeight': 'standard'},
+        'preview'       :   '/design-previews/styles/base.png',
     },
     'layout'        :   {},
     'layout_spec'   :   {},
     'tags'          :   ['general', 'base', 'neutro'],
+    'preview'       :   '/design-previews/styles/base.png',
+    'concept'       :   'Base neutra: teal institucional, Inter y contenedores suaves.',
+    'anim'          :   {'hero': 'fade-rise', 'reveal': 'fade', 'hover': 'lift', 'button': 'soft-press'},
+    'easing'        :   'cubic-bezier(.4,0,.2,1)',
+    'duration'      :   '480ms',
+    'icons'         :   {'style': 'line', 'stroke': '1.5', 'size': '24', 'corners': 'rounded'},
 }
 DEFAULT_PATTERN     =   'raiz'
 DEFAULT_STYLE       =   BASE_STYLE['slug']
