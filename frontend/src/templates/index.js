@@ -21,15 +21,17 @@
 // STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
 //
 // El render de la portada de TODOS los diseños es generativo: cada
-// InicioView monta sus secciones desde useLayout('landing') (layout por
-// defecto de la plantilla ∪ layout_config guardado), respetando orden,
-// on/off, variante y props de cada bloque. La lista `blocks.landing` de
-// cada Template Definition es el orden canónico por defecto y la
-// whitelist a la vez. resolveLayout() fuerza 'contact' al final.
+// InicioView monta sus secciones desde useLayout('landing') (layout_config
+// guardado ∪ patrón de diseño de la base), respetando orden, on/off,
+// variante y props de cada bloque. Las tres superficies (landing, catalog,
+// services) nacen VACÍAS: el front no declara secciones por defecto; la
+// composición la decide el patrón DesignPattern (StoreApp/domains/design) o
+// la config guardada de la tienda. La whitelist de ids sigue en
+// blocks.js. resolveLayout() fuerza 'contact' al final.
 
 import { defineAsyncComponent } from 'vue'
-import { blockSpec } from './blocks.js'
-import { SECTION_ORDER_KEYS, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
+import { blockSpec, LAYOUT_SURFACES } from './blocks.js'
+import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
 
 import raiz         from './raiz/index.js'
 import alimentos    from './alimentos/index.js'
@@ -72,28 +74,43 @@ export function templateOf(value) {
   return TEMPLATE_DEFS[normalized] ? normalized : DEFAULT_TEMPLATE
 }
 
-// Layout por defecto de una superficie: la lista declarativa de la plantilla.
-// Cada entrada es el id del bloque o un objeto {id, variant?, props?} que fija
-// la composición firma del diseño (p.ej. la cinta de anuncios 'static' de
-// trama) — así el default es idéntico al render fijo anterior.
-function normalizeBlockEntry(raw) {
-  if (typeof raw === 'string') return { id: raw }
-  if (!raw || typeof raw !== 'object' || !raw.id) return null
-  return { ...raw, id: String(raw.id) }
+// Las tres superficies de la web nacen VACÍAS: ninguna plantilla declara
+// secciones por defecto. La composición sale del patrón DesignPattern de la
+// base (layout) o del layout_config guardado por la tienda.
+export function defaultLayout() {
+  return []
 }
 
-export function defaultLayout(id, surface) {
-  const def = templateDef(templateOf(id))
-  let entries = (def.blocks?.[surface] || []).map(normalizeBlockEntry).filter(Boolean)
-  if (surface === 'landing' && def.usesSectionOrder) {
-    const ordered = SECTION_ORDER_KEYS.filter((k) => entries.some((e) => e.id === k))
-    const fixed = entries.filter((e) => !SECTION_ORDER_KEYS.includes(e.id))
-    const head = fixed.filter((e) => ['hero', 'categories', 'highlights', 'featured', 'announcements'].includes(e.id))
-    const tail = fixed.filter((e) => !head.includes(e) && e.id !== 'contact')
-    const contact = entries.filter((e) => e.id === 'contact')
-    entries = [...head, ...ordered.map((k) => entries.find((e) => e.id === k)), ...tail, ...contact]
+// Layout de un patrón de diseño (DesignPattern.layout / DesignStyle.layout)
+// normalizado a la forma de layout_config: {surface: {blocks: [...]}}.
+// Acepta tanto el objeto canónico como la lista plana por superficie y
+// descarta ids repetidos o inválidos.
+export function normalizeLayoutConfig(raw) {
+  const out = {}
+  if (!raw || typeof raw !== 'object') return out
+  for (const surface of LAYOUT_SURFACES) {
+    const src = raw[surface]
+    const list = Array.isArray(src) ? src : Array.isArray(src?.blocks) ? src.blocks : []
+    const seen = new Set()
+    const blocks = []
+    list.forEach((item, i) => {
+      if (!item || typeof item !== 'object' || item.id == null) return
+      const id = String(item.id)
+      if (!id || seen.has(id)) return
+      seen.add(id)
+      blocks.push({
+        id,
+        enabled: item.enabled !== false,
+        order: typeof item.order === 'number' ? item.order : i,
+        ...(typeof item.variant === 'string' && item.variant ? { variant: item.variant } : {}),
+        ...(item.props && typeof item.props === 'object' ? { props: item.props } : {})
+      })
+    })
+    if (!blocks.length) continue
+    blocks.sort((a, b) => a.order - b.order)
+    out[surface] = { blocks: blocks.map((b, i) => ({ ...b, order: i })) }
   }
-  return entries.map((entry, i) => ({ enabled: true, ...entry, order: i }))
+  return out
 }
 
 // Layout efectivo (Studio): default ∪ config guardada.

@@ -12,7 +12,7 @@ import StoreBot from '../components/StoreBot.vue'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
-import { templateFonts } from '../templates/index.js'
+import { templateFonts, normalizeLayoutConfig } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import {
@@ -59,6 +59,9 @@ const studioCustom = ref(null)
 // Catálogo de diseño (patrones + estilos) desde la API: el patrón base y
 // su estilo son el fallback de la web cuando la tienda no eligió nada.
 const { defaultPattern, defaultStyle, load: loadDesignCatalog } = useDesignCatalog()
+// Layout del patrón de diseño de la base: única fuente de composición de las
+// tres superficies cuando la tienda no guardó su propio layout_config.
+const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?.layout))
 const custom = computed(() => {
   const raw = store.value?.customization || {}
   const merged = {
@@ -67,14 +70,15 @@ const custom = computed(() => {
     ...(studioCustom.value || {}),
     ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
   }
-  if (studioMode.value) return merged
   const pattern = defaultPattern.value
   const style = defaultStyle.value
   if (!raw.template && pattern?.template) merged.template = pattern.template
-  if ((!raw.layout_config || !Object.keys(raw.layout_config).length) && pattern?.layout && Object.keys(pattern.layout).length) {
-    merged.layout_config = pattern.layout
-  }
-  if ((!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
+  const savedLayout = merged.layout_config && typeof merged.layout_config === 'object' ? merged.layout_config : {}
+  const baseLayout = patternLayout.value
+  merged.layout_config = Object.keys(savedLayout).length || Object.keys(baseLayout).length
+    ? { ...baseLayout, ...savedLayout }
+    : {}
+  if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
   return merged
 })
 function onLayoutMessage(e) {

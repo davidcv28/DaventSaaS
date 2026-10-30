@@ -12,7 +12,8 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStoreStore } from '../stores/store.store.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
 import { LAYOUT_SURFACES, SURFACE_LABELS, TEMPLATE_BLOCKS, blockSpec } from '../templates/blocks.js'
-import { resolveLayout, defaultLayout } from '../templates/index.js'
+import { resolveLayout, normalizeLayoutConfig } from '../templates/index.js'
+import { useDesignCatalog } from '../composables/useDesignCatalog.js'
 import { env } from '../config/env.js'
 import { tokenStorage } from '../api/http.js'
 import AppIcon from './AppIcon.vue'
@@ -27,6 +28,11 @@ const emit = defineEmits(['notify', 'navigate'])
 
 const store = useStoreStore()
 const catalog = useCatalogStore()
+// Layout del patrón de diseño de la base: las plantillas ya no traen
+// secciones por defecto, así que es el punto de partida del editor cuando
+// la tienda no guardó su propio layout_config.
+const { defaultPattern, load: loadDesignCatalog } = useDesignCatalog()
+const patternLayout = () => normalizeLayoutConfig(defaultPattern.value?.layout)
 
 // Sección del panel donde vive el contenido de un bloque (spec.edit).
 const SRC_LABELS = {
@@ -110,9 +116,12 @@ function blockEmpty(b) {
 
 function buildDraft() {
   const cfg = store.customization?.layout_config
+  const pattern = patternLayout()
   const next = {}
   for (const s of LAYOUT_SURFACES) {
-    next[s] = resolveLayout(props.template, s, cfg).map((b, i) => ({
+    let resolved = resolveLayout(props.template, s, cfg)
+    if (!resolved.length) resolved = resolveLayout(props.template, s, pattern)
+    next[s] = resolved.map((b, i) => ({
       id: b.id,
       enabled: b.enabled !== false,
       order: i,
@@ -136,7 +145,7 @@ watch(() => props.template, (tpl, prev) => {
   if (tpl === prev) return
   flushPending()
   const dropped = LAYOUT_SURFACES.reduce((n, s) =>
-    n + (draft.value[s] || []).filter((b) => !defaultLayout(tpl, s).some((d) => d.id === b.id)).length, 0)
+    n + (draft.value[s] || []).filter((b) => !blockSpec(s, b.id)).length, 0)
   buildDraft()
   previewKey.value++
   if (dropped) {
@@ -259,7 +268,7 @@ function onTitleBlur() {
 }
 function resetSurface() {
   pushHistory()
-  draft.value[surface.value] = defaultLayout(props.template, surface.value).map((b, i) => ({
+  draft.value[surface.value] = resolveLayout(props.template, surface.value, patternLayout()).map((b, i) => ({
     id: b.id, enabled: true, order: i, variant: '', title: ''
   }))
   emit('notify', `"${SURFACE_LABELS[surface.value]}" volvió al orden original de la plantilla.`)
@@ -544,6 +553,11 @@ onMounted(() => {
   // Catálogo diferido: alimenta los avisos "sin contenido" pero no
   // compite con el primer paint del editor.
   lazyTimer = setTimeout(() => { if (!catalog.products.length) catalog.loadAll() }, 800)
+  // El patrón de diseño llega por API: si el editor quedó sin bloques
+  // (tienda sin layout propio), se arma con el layout del patrón base.
+  loadDesignCatalog().then(() => {
+    if (LAYOUT_SURFACES.every((s) => !(draft.value[s] || []).length)) buildDraft()
+  })
   previewState.value = previewSrc.value ? 'loading' : 'failed'
   armPreviewTimeout()
   mql = window.matchMedia('(max-width: 1100px)')

@@ -38,9 +38,10 @@ import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCEN
 import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils/colorTools.js'
 import { presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
+import { normalizeLayoutConfig } from '../../templates/index.js'
 import PanelLock from './panels/PanelLock.vue'
 
-const { presets: designPresets, load: loadDesignCatalog } = useDesignCatalog()
+const { presets: designPresets, defaultPattern, load: loadDesignCatalog } = useDesignCatalog()
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -556,7 +557,15 @@ function onMessage(e) {
 }
 onMounted(() => {
   window.addEventListener('message', onMessage)
-  loadDesignCatalog()
+  loadDesignCatalog().then(() => {
+    // Tienda sin layout propio: el ensayo arranca con el layout del patrón
+    // de diseño de la base (las plantillas ya no traen secciones por defecto).
+    if (savedLayout.value || draft.layout) return
+    const base = normalizeLayoutConfig(defaultPattern.value?.layout)
+    if (!Object.keys(base).length) return
+    savedLayout.value = clone(base)
+    draft.layout = clone(base)
+  })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('message', onMessage)
