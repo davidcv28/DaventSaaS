@@ -64,7 +64,7 @@ const navItems = [
   { id: 'plans', label: 'Planes', icon: 'package' },
   { id: 'coupons', label: 'Cupones', icon: 'gift' },
   { id: 'users', label: 'Usuarios', icon: 'users' },
-  { id: 'chat', label: 'Chat soporte', icon: 'message-circle' },
+  { id: 'chat', label: 'Consultas de diseño', icon: 'message-circle' },
   { heading: 'Cuenta' },
   { id: 'flyer', label: 'Folleto promo', icon: 'printer' }
 ]

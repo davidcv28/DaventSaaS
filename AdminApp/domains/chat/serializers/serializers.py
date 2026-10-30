@@ -32,7 +32,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         #El cliente ve "Soporte" para los del staff (no se filtra el nombre
         #del empleado); el staff ve el nombre del cliente.
         if obj.from_staff:
-            return 'Soporte'
+            return 'Asistente de diseño'
         profile     =   getattr(obj.sender, 'profile', None)
         return getattr(profile, 'business_name', None) or obj.sender.username
 

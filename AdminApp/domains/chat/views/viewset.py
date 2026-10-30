@@ -20,6 +20,7 @@ from AdminApp.domains.chat.services import (
     get_or_create_thread,
     messages_payload,
     online_customer_ids,
+    reply_to_customer,
     send_message,
     staff_online,
     staff_roster,
@@ -28,6 +29,7 @@ from AdminApp.domains.chat.services import (
     touch_presence,
     unread_for,
     upload_chat_image,
+    welcome_question,
 )
 
 """
@@ -73,7 +75,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
         #Fail-closed: sin beneficio el cliente recibe 403 (el frontend
         #oculta la seccion, pero el gate es este).
         if not chat_enabled(request.user):
-            raise PermissionDenied('El chat de soporte está disponible en el plan Premium.')
+            raise PermissionDenied('El asistente de diseño está disponible en el plan Premium.')
 
     #=========================================
     # LIST — GET /api/chat/ (role-aware)
@@ -88,7 +90,11 @@ class SupportChatViewSet(viewsets.GenericViewSet):
                 'online'    :   sorted(online),
             })
         thread      =   thread_of(request.user)
-        messages    =   messages_payload(request.user, thread) if thread else []
+        if thread is None:
+            #El asistente abre la conversación con la primera pregunta de diseño.
+            thread      =   get_or_create_thread(request.user)
+            welcome_question(thread)
+        messages    =   messages_payload(request.user, thread)
         return Response({
             'thread'        :   {'id': thread.id} if thread else None,
             'messages'      :   ChatMessageSerializer(messages, many = True, context = {'request': request}).data,
@@ -139,6 +145,9 @@ class SupportChatViewSet(viewsets.GenericViewSet):
             except ValueError as exc:
                 return Response({'image': [str(exc)]}, status = status.HTTP_400_BAD_REQUEST)
         message     =   send_message(request.user, serializer.validated_data['body'], thread, image_key = image_key)
+        if not request.user.is_staff:
+            #Asistente de diseño: responde y hace la siguiente pregunta.
+            reply_to_customer(thread, serializer.validated_data['body'])
         return Response(
             {'message': ChatMessageSerializer(message, context = {'request': request}).data},
             status = status.HTTP_201_CREATED,

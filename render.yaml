@@ -132,6 +132,13 @@ services:
       - key: GOOGLE_CLIENT_ID
         sync: false
 
+      # ---- Asistente de diseño (Anthropic) -------------------------------------
+      # Vacío = guion determinista. La key vive solo en el dashboard.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-3-5-haiku-latest
+
       # ---- Emisor de comprobantes (fiscal) --------------------------------------
       - key: ISSUER_NAME
         value: DAVENT

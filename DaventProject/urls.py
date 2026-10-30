@@ -62,6 +62,7 @@ urlpatterns = [
     path('api/', include('AdminApp.domains.invoices.urls.urls')),
     path('api/', include('AdminApp.domains.legal.urls.urls')),
     path('api/', include('AdminApp.domains.chat.urls.urls')),
+    path('api/', include('McpApp.domains.skills.urls.urls')),
     path('api/', include('SuscriptionApp.domains.benefits.urls.urls')),
     path('api/', include('StoreApp.domains.stores.urls.urls')),
     path('api/', include('StoreApp.domains.catalog.urls.urls')),

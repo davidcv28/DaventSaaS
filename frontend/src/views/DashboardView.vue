@@ -336,7 +336,7 @@ const LOCKED_FEATURES = {
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
   reviews: { icon: 'star', title: 'Opiniones de clientes', text: 'Tus clientes valoran tus productos y dejan comentarios que se muestran en tu web; vos decidís qué se ve.' },
-  support: { icon: 'message-circle', title: 'Chat con el equipo', text: 'Hablá directo con soporte desde el panel, con mensajes, imágenes y aviso de respuestas.' },
+  support: { icon: 'message-circle', title: 'Asistente de diseño', text: 'Un asistente te hace preguntas sobre tu negocio y te recomienda el estilo ideal para tu web.' },
   bot: { icon: 'bot', title: 'Asistente virtual', text: 'Un ayudante en tu web que responde solo las preguntas frecuentes de tus clientes, las 24 horas.' },
   tools: { icon: 'qr-code', title: 'QR y folletos', text: 'Código QR y folletos listos para imprimir y repartir: del papel a tu web en un escaneo.' },
   stats: { icon: 'trending-up', title: 'Estadísticas de visitas', text: 'Cuánta gente entra a tu web día por día durante el último mes.' }
@@ -370,7 +370,7 @@ const navItems = computed(() => {
     { id: 'ai', label: 'Diseñar con IA', icon: 'sparkles', hint: 'Tu web armada en un minuto', locked: L.ai },
     { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
-    { id: 'support', label: 'Ayuda y chat', icon: 'message-circle', hint: 'Hablar con el equipo', locked: L.support },
+    { id: 'support', label: 'Asistente de diseño', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
     { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
     { heading: 'Crecer' },
     { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR y folletos para imprimir', locked: L.tools },
@@ -2267,7 +2267,7 @@ const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).l
 const canChat = computed(() => Boolean(plan.value?.benefits?.has_support_chat))
 // El asistente figura como un integrante más del equipo de soporte: es un
 // contacto local (respuestas automáticas, nunca toca la API del chat).
-const BOT_MEMBER = { id: 'bot', name: 'Asistente DAVENT', online: true, bot: true }
+const BOT_MEMBER = { id: 'bot', name: 'Asistente de diseño', online: true, bot: true }
 const chatContacts = computed(() => canChat.value ? [BOT_MEMBER, ...chatStaff.value] : [BOT_MEMBER])
 const botMode = computed(() => Boolean(chatTarget.value?.bot))
 // Panel de contactos que abre la burbuja flotante.
@@ -5252,8 +5252,8 @@ async function changePassword() {
     <div v-if="seen.support" v-show="section === 'support'" :class="{ 'sec-on': section === 'support' }">
       <div class="page-head">
         <div>
-          <h1>Soporte</h1>
-          <p>Mirá quién del equipo de DAVENT está disponible y pedí asistencia en vivo por chat.</p>
+          <h1>Asistente de diseño</h1>
+          <p>Contale a DAVENT qué vendés y cómo querés que se vea tu web: te guía con preguntas y te recomienda un estilo del catálogo.</p>
         </div>
         <span class="presence-chip" :class="{ on: chatStaffOnline }">
           <span class="presence-dot"></span>
@@ -5266,7 +5266,7 @@ async function changePassword() {
       <div class="support-grid">
         <aside class="card support-team">
           <div class="support-team-head">
-            <h3>Equipo de soporte</h3>
+            <h3>Asistente de diseño</h3>
             <span class="support-count">{{ chatOnlineCount }}/{{ chatStaff.length }}</span>
           </div>
           <ul class="support-list">
@@ -5289,10 +5289,10 @@ async function changePassword() {
 
         <div class="card support-side">
           <div class="support-side-icon"><AppIcon name="message-circle" :size="20" /></div>
-          <h3>¿Necesitás ayuda con tu tienda?</h3>
+          <h3>Diseñemos tu web</h3>
           <p>
-            Elegí a quién escribirle o pedí asistencia general. Si alguien está en línea,
-            la respuesta llega en el momento; si no, tu mensaje queda guardado.
+            Contale tu rubro, tu objetivo y el estilo que te gusta. El asistente te
+            recomienda un diseño y después lo aplicás desde Diseñar con IA.
           </p>
           <AppButton class="support-live" :loading="chatBusy" :disabled="!chatStaffOnline" @click="requestLiveHelp">
             Solicitar asistencia en vivo
@@ -5608,14 +5608,14 @@ async function changePassword() {
       :online="chatStaffOnline"
       :unread="chatUnread"
       :minimized="chatMin"
-      label="Mensajes de soporte"
+      label="Asistente de diseño"
       @toggle="onDockToggle"
     >
       <!-- Panel de contactos: el asistente automático figura como un
            integrante más del equipo. -->
       <div v-if="chatDockPanel" class="chat-dock-panel">
         <div class="chat-threads-head">
-          <h3><AppIcon name="message-circle" :size="16" /> Soporte DAVENT</h3>
+          <h3><AppIcon name="message-circle" :size="16" /> Asistente de diseño</h3>
           <span class="presence-chip" :class="{ on: chatStaffOnline }">
             <span class="presence-dot"></span>
             {{ chatStaffOnline ? `${chatOnlineCount} en línea` : 'Desconectado' }}
@@ -5658,8 +5658,8 @@ async function changePassword() {
               <span class="support-status" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }"></span>
             </span>
             <div class="chat-modal-who">
-              <strong>{{ chatPeer?.name || 'Equipo DAVENT' }}</strong>
-              <small><span class="chat-win-state" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }">{{ botMode ? 'Respuestas automáticas · siempre disponible' : chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Desconectado · responde a la brevedad') : (chatStaffOnline ? 'Equipo en línea' : 'Respuesta diferida') }}</span></small>
+              <strong>{{ chatPeer?.name || 'Asistente de diseño' }}</strong>
+              <small><span class="chat-win-state" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }">{{ botMode ? 'Respuestas automáticas · siempre disponible' : chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Asistente disponible') : (chatStaffOnline ? 'Asistente en línea' : 'Asistente disponible') }}</span></small>
             </div>
             <span class="chat-win-actions">
               <span v-if="chatMin && chatUnread && !botMode" class="chat-badge">{{ chatUnread }}</span>
@@ -5713,7 +5713,7 @@ async function changePassword() {
               </template>
               <template v-else>
                 <p v-if="!chatMessages.length" class="chat-empty">
-                  Todavía no hay mensajes. Escribinos tu consulta y te respondemos a la brevedad.
+                  Contale a tu asistente qué vendés y qué estilo te gustaría para tu web.
                 </p>
                 <template v-for="r in chatRows(chatMessages)" :key="r.key">
                   <div v-if="r.day" class="chat-day">{{ r.day }}</div>
@@ -5770,7 +5770,7 @@ async function changePassword() {
                 rows="1"
                 maxlength="2000"
                 :placeholder="botMode ? 'Preguntale al asistente…' : 'Escribí tu mensaje…'"
-                :aria-label="botMode ? 'Pregunta para el asistente' : 'Mensaje para soporte'"
+                :aria-label="botMode ? 'Pregunta para el asistente' : 'Mensaje para el asistente de diseño'"
                 @input="resizeChatInput"
                 @keydown.enter="onComposerEnter"
               ></textarea>

@@ -95,7 +95,10 @@ class ChatGateTests(TestCase):
         _grant_chat(profile)
         response    =   _client(user).get(CHAT_URL)
         self.assertEqual(response.status_code, 200)
-        self.assertIsNone(response.data['thread'])
+        #El asistente abre el hilo con la primera pregunta de diseño.
+        self.assertIsNotNone(response.data['thread'])
+        self.assertEqual(len(response.data['messages']), 1)
+        self.assertTrue(response.data['messages'][0]['from_staff'])
 
     def test_staff_always_allowed_without_benefit(self):
         staff, _    =   _make_user('staffer', staff = True)
@@ -126,7 +129,7 @@ class ChatMessagingTests(TestCase):
         response    =   _client(self.staff).post(CHAT_SEND_URL, {'body': 'Contanos', 'thread': thread.id}, format = 'json')
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.data['message']['from_staff'])
-        self.assertEqual(response.data['message']['sender_name'], 'Soporte')
+        self.assertEqual(response.data['message']['sender_name'], 'Asistente de diseño')
 
     def test_staff_send_requires_existing_thread(self):
         response    =   _client(self.staff).post(CHAT_SEND_URL, {'body': 'Hola'}, format = 'json')
@@ -169,7 +172,9 @@ class ChatMessagingTests(TestCase):
         first       =   ChatMessage.objects.get(body = 'primero')
         client.post(CHAT_SEND_URL, {'body': 'segundo'}, format = 'json')
         response    =   client.get(f'{CHAT_MESSAGES_URL}?after={first.id}')
-        bodies      =   [m['body'] for m in response.data['messages']]
+        #Solo los del cliente: el asistente también responde y esos viajan
+        #en el mismo incremental.
+        bodies      =   [m['body'] for m in response.data['messages'] if not m['from_staff']]
         self.assertEqual(bodies, ['segundo'])
 
     def test_staff_reads_any_thread(self):
@@ -191,7 +196,7 @@ class ChatMessagingTests(TestCase):
         thread      =   ChatThread.objects.get()
         #El staff abre los mensajes del hilo -> el mensaje del cliente queda leido
         _client(self.staff).get(f'{CHAT_MESSAGES_URL}?thread={thread.id}')
-        self.assertIsNotNone(ChatMessage.objects.get().read_at)
+        self.assertIsNotNone(ChatMessage.objects.get(body = 'pregunta').read_at)
         #Y la bandeja ya no lo cuenta como pendiente
         response    =   _client(self.staff).get(CHAT_URL)
         self.assertEqual(response.data['threads'][0]['unread'], 0)
@@ -202,7 +207,8 @@ class ChatMessagingTests(TestCase):
         thread      =   response.data['threads'][0]
         self.assertEqual(thread['unread'], 1)
         self.assertEqual(thread['customer']['name'], 'Negocio cliente')
-        self.assertEqual(thread['last_message']['body'], 'hola')
+        #El último mensaje es la siguiente pregunta del asistente.
+        self.assertTrue(thread['last_message']['from_staff'])
 
 
 class ChatPresenceTests(TestCase):
@@ -255,7 +261,7 @@ class ChatPresenceTests(TestCase):
         self.assertNotIn('email', str(response.data['messages']))
         for m in response.data['messages']:
             if m['from_staff']:
-                self.assertEqual(m['sender_name'], 'Soporte')
+                self.assertEqual(m['sender_name'], 'Asistente de diseño')
 
 
 class ChatAttachmentTests(TestCase):
@@ -299,7 +305,7 @@ class ChatAttachmentTests(TestCase):
         self.assertTrue(message['image_url'])
         #La DB guarda la key; el archivo quedó en disco bajo private/chat/
         #(nginx bloquea /media/private/: solo lo sirve la API autenticada).
-        msg_row     =   ChatMessage.objects.get()
+        msg_row     =   ChatMessage.objects.get(from_staff = False)
         self.assertTrue(msg_row.image_key.startswith('private/chat/'))
         self.assertTrue(msg_row.image_key.endswith('.webp'))
         self.assertTrue(os.path.isfile(os.path.join(self.tmp_media, msg_row.image_key)))
@@ -320,7 +326,7 @@ class ChatAttachmentTests(TestCase):
 
     def test_attachment_is_served_only_to_thread_participants(self):
         _client(self.user).post(CHAT_SEND_URL, {'image': self._png()}, format = 'multipart')
-        msg         =   ChatMessage.objects.get()
+        msg         =   ChatMessage.objects.get(from_staff = False)
         #El dueño del hilo lo baja por la vista autenticada.
         own         =   _client(self.user).get(f'/api/chat/attachment/{msg.pk}/')
         self.assertEqual(own.status_code, 200)
@@ -367,3 +373,37 @@ class ChatAttachmentTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['message']['body'], 'mirá esta captura')
         self.assertTrue(response.data['message']['image_url'])
+
+
+class ChatDesignBotTests(TestCase):
+    """El chat de soporte ahora es un asistente de diseño que entrevista."""
+
+    def setUp(self):
+        cache.clear()
+        self.user, self.profile =   _make_user('disenante')
+        _grant_chat(self.profile)
+
+    def test_opening_asks_first_design_question(self):
+        response    =   _client(self.user).get(CHAT_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['messages']), 1)
+        self.assertIn('qué vendés', response.data['messages'][0]['body'])
+        self.assertTrue(response.data['messages'][0]['from_staff'])
+
+    def test_each_answer_advances_the_interview(self):
+        client      =   _client(self.user)
+        client.get(CHAT_URL)
+        client.post(CHAT_SEND_URL, {'body': 'Vendo ropa urbana'}, format = 'json')
+        thread      =   ChatThread.objects.get(customer = self.user)
+        bot_bodies  =   list(thread.messages.filter(from_staff = True).values_list('body', flat = True))
+        self.assertEqual(len(bot_bodies), 2)
+        self.assertIn('objetivo principal', bot_bodies[-1])
+
+    def test_after_interview_recommends_a_style(self):
+        client      =   _client(self.user)
+        answers     =   ['ropa', 'vender online', 'jóvenes', 'premium', 'negro', 'productos', 'fotos', 'whatsapp', 'midominio.com', 'sí, ese']
+        for answer in answers:
+            client.post(CHAT_SEND_URL, {'body': answer}, format = 'json')
+        thread      =   ChatThread.objects.get(customer = self.user)
+        last        =   thread.messages.filter(from_staff = True).order_by('-created_at').first()
+        self.assertIn('estilo', last.body.lower())

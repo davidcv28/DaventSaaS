@@ -187,7 +187,9 @@ INSTALLED_APPS = [
     #STORE APP (web del cliente: link público, catálogo, personalización, servicios)
     'StoreApp.domains.stores.apps.apps.StoresAppConfig',
     'StoreApp.domains.catalog.apps.apps.CatalogAppConfig',
-    'StoreApp.domains.services.apps.apps.ServicesAppConfig'
+    'StoreApp.domains.services.apps.apps.ServicesAppConfig',
+    #MCP APP (biblioteca de estilos de diseño para la IA; servidor MCP propio)
+    'McpApp.domains.skills.apps.apps.SkillsAppConfig'
 ]
 
 MIDDLEWARE = [
@@ -416,6 +418,14 @@ AFIP = {
 # prefijo enc:v1: y la PII de UserProfile: documento, nombres, domicilio,
 # celular, razón social). "kid:base64url(32 bytes)" separadas por coma; la
 # primera cifra, todas descifran (rotación). Generar: manage.py encrypt_secret --gen-master-key k1
+# ---- Anthropic (asistente de diseño) --------------------------------------
+#API key del plan gratuito. Vacía = el asistente usa el guion determinista
+#(nunca deja de responder). El modelo es configurable por env.
+ANTHROPIC_API_KEY   =   config('ANTHROPIC_API_KEY', default = '')
+ANTHROPIC_MODEL     =   config('ANTHROPIC_MODEL', default = 'claude-3-5-haiku-latest')
+ANTHROPIC_BASE_URL  =   config('ANTHROPIC_BASE_URL', default = 'https://api.anthropic.com/v1')
+ANTHROPIC_TIMEOUT   =   config('ANTHROPIC_TIMEOUT', default = 12, cast = int)
+
 SECRETS_MASTER_KEYS = config('SECRETS_MASTER_KEYS', default = '')
 
 # Llave de las huellas HMAC-SHA256 (document_hash/phone_hash) para igualdad y

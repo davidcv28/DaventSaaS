@@ -1,4 +1,5 @@
 from .attachments import CHAT_PRIVATE_PREFIX, chat_image_url, upload_chat_image
+from .design_bot import reply_to_customer, welcome_question
 from .services import (
     ONLINE_SECONDS,
     chat_enabled,
@@ -31,4 +32,6 @@ __all__ = [
     'online_customer_ids',
     'chat_image_url',
     'upload_chat_image',
+    'reply_to_customer',
+    'welcome_question',
 ]
