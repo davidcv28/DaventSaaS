@@ -113,6 +113,7 @@ class StoreCustomization(models.Model):
         ('archivo',              'Archivo'),
         ('bricolage-grotesque',  'Bricolage Grotesque'),
         ('figtree',              'Figtree'),
+        ('hanken-grotesk',       'Hanken Grotesk'),
         #Familias del motor v4 (ai_design_typography, catálogo de 24).
         ('cormorant-garamond',   'Cormorant Garamond'),
         ('dm-serif-display',     'DM Serif Display'),

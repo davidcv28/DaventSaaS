@@ -6484,6 +6484,292 @@
         "daven",
         "plus"
       ]
+    },
+    {
+      "slug": "atelier-otono",
+      "nombre": "Atelier Otoño",
+      "categoria": "Editorial indumentaria",
+      "descripcion": "Papel cálido, verde bosque y ocre: portada en collage, chips de categoría, grilla de prendas y navegación inferior para una marca de ropa de autor.",
+      "tier": "plus",
+      "template": "boutique",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#2D4A3E",
+          "secondary": "#B87A35",
+          "accent": "#2D4A3E",
+          "bg": "#F4F2EC",
+          "surface": "#FFFFFF",
+          "text": "#151513",
+          "muted": "#6B6A64",
+          "border": "#DEDBD2",
+          "success": "#2D4A3E",
+          "danger": "#A4442F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "body": "hanken-grotesk",
+          "scale": "editorial",
+          "weightHeading": 700,
+          "letterSpacing": "-0.03em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 2,
+          "cardStyle": "standard",
+          "stickyCta": true,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#151513",
+              "body": "#151513",
+              "muted": "#6B6A64",
+              "link": "#2D4A3E"
+            },
+            "containers": {
+              "bg": "#F4F2EC",
+              "surface": "#FFFFFF",
+              "border": "#DEDBD2",
+              "onSurface": "#151513"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#ECEAE3",
+              "body": "#ECEAE3",
+              "muted": "#9A988F",
+              "link": "#9CC9AF"
+            },
+            "containers": {
+              "bg": "#111210",
+              "surface": "#1A1B19",
+              "border": "#2E2F2B",
+              "onSurface": "#ECEAE3"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 0,
+              "variant": "static"
+            },
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 1,
+              "variant": "split"
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 2,
+              "variant": "row"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3,
+              "variant": "grid"
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 5,
+              "variant": "cards"
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 6,
+              "variant": "masonry"
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 7,
+              "variant": "cards"
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 8,
+              "variant": "accordion"
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 9,
+              "variant": "band"
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 10,
+              "variant": "card"
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1,
+              "variant": "chips"
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3,
+              "variant": "masonry"
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "announcements",
+            "hero",
+            "categories",
+            "featured",
+            "about",
+            "benefits",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "static",
+            "hero": "split",
+            "categories": "row",
+            "featured": "grid",
+            "benefits": "cards",
+            "gallery": "masonry",
+            "testimonials": "cards",
+            "faq": "accordion",
+            "cta": "band",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid",
+            "promo"
+          ],
+          "var": {
+            "filters": "chips",
+            "grid": "masonry"
+          }
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq",
+            "band"
+          ]
+        }
+      },
+      "tags": [
+        "indumentaria",
+        "moda",
+        "ropa",
+        "atelier",
+        "otono",
+        "editorial",
+        "plus"
+      ]
     }
   ],
   "patterns": [

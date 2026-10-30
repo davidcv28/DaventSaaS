@@ -868,6 +868,7 @@ export const STORE_FONTS = {
   'bricolage-grotesque': { label: 'Bricolage Grotesque', family: "'Bricolage Grotesque', 'Arial Black', sans-serif", google: 'Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800' },
   'orbitron':         { label: 'Orbitron',        family: "'Orbitron', 'Arial Black', sans-serif",    google: 'Orbitron:wght@500..900' },
   'figtree':          { label: 'Figtree',          family: "'Figtree', system-ui, sans-serif",     google: 'Figtree:wght@400..700' },
+  'hanken-grotesk':   { label: 'Hanken Grotesk',   family: "'Hanken Grotesk', system-ui, sans-serif", google: 'Hanken+Grotesk:wght@400..800' },
   // Familias del motor de IA (typography.roles): sin entrada acá la familia
   // no se carga y el rol cae a Inter (el diseño se ve distinto al propuesto).
   'cormorant-garamond': { label: 'Cormorant Garamond', family: "'Cormorant Garamond', Georgia, serif", google: 'Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400' },
