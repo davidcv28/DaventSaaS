@@ -11,7 +11,7 @@ import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import {
   storesApi, CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  resolveStoreTemplate, allowedTemplatesFor, publicStoreUrl
+  resolveStoreTemplate, allowedTemplatesFor
 } from '../../api/stores.api.js'
 import { http } from '../../api/http.js'
 import '../../assets/ai-design.css'
@@ -118,7 +118,11 @@ const initial = computed(() => (shopName.value || 'T').slice(0, 1).toUpperCase()
 const logo = computed(() => store.customization.logo || '')
 const cover = computed(() => store.customization.cover || '')
 const storeId = computed(() => store.store?.id || '')
-const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
+// La vista previa corre SIEMPRE en el mismo origen (alias /<slug>): el
+// subdominio de la tienda puede no resolver (dev con *.localhost, Render sin
+// wildcard) y el iframe quedaba en blanco o caía al mockup estático. Mismo
+// origen = la landing real, con el mensaje del Studio aceptado por origen.
+const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
 const progressStep = computed(() => (phase.value === 'results' ? 6 : stepIndex.value))
 const showPublished = computed(() => Boolean(published.value) && !browsing.value)
