@@ -161,11 +161,19 @@
   temas × 6 anchos): 0 scroll horizontal, 0 errores de consola; `manage.py test
   StoreApp.domains.design` 37 OK; `vitest` 25 OK; `sync_design_neon` de los 9.
 - [ ] Landing única por rubro (composición propia, no genérica).
-- [ ] Catálogo único por rubro (filtros, orden, vacíos, responsive). Hoy el
-  catálogo sigue en la plantilla Vue (`views/store/<diseño>/CatalogoView`); el
-  patrón solo pinta la portada.
-- [ ] Servicios único por rubro (selector, presupuesto, CTA). Misma situación:
-  `ServiciosView` de la plantilla Vue.
+- [x] Catálogo único por rubro (filtros, orden, vacíos, responsive).
+  **(TERMINADO)** — cada diseño declara `data-surface="catalog"`: chips de
+  categoría y orden (destacados/menor/mayor/nombre) resueltos en el navegador
+  por el puente de `PatternSurface` sobre `data-cat`/`data-price`/`data-name`
+  de cada tarjeta, contador y estado vacío (`data-ds-noresults`). El backend
+  expone `surfaces`, `products_total` y `products_shown`: si la tienda tiene
+  más productos que los 24 que entran en el documento, la ruta vuelve a la
+  plantilla Vue (que pagina) para no esconder productos. La ficha de producto
+  se abre desde la tarjeta (`data-ds-product` → `store-product`).
+- [x] Servicios único por rubro (selector, presupuesto, CTA). **(TERMINADO)** —
+  `data-surface="services"` con `{{services}}` en el contenedor propio de cada
+  diseño y CTA de presupuesto por WhatsApp. Sin `{{services}}` la ruta sigue
+  con `ServiciosView` de la plantilla Vue.
 - [x] Responsive 360/390/768/1024/1360/1920 sin scroll horizontal.
   **(TERMINADO)** — `qa_patterns.py`: 9 patrones × claro/oscuro × 6 anchos,
   0 overflow y 0 errores de consola.
@@ -257,5 +265,10 @@ Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.p
   fuente editable en `sources/` y variables derivadas del markup. Portada
   propia por rubro; el documento del patrón queda limitado a la portada
   (catálogo/ficha/servicios siguen en la plantilla Vue). QA headless 9×2×6.
-- Próximo paso: catálogo y servicios propios por rubro sobre el patrón
-  (hoy esas superficies siguen en Vue) y Fase 6 (rediseño del Studio).
+- (2026-10-30) Fase 4 cerrada: superficies `landing|catalog|services` en los
+  9 patrones, catálogo con filtros/orden/contador/vacío en el navegador y
+  fichas que abren `store-product`. QA en la app (`/bench-store/catalogo` y
+  `/servicios`, payload interceptado): chips, filtro 24→13, orden por precio,
+  8 servicios; `manage.py test StoreApp.domains.design` 39 OK.
+- Próximo paso: Fase 6 (rediseño del Studio) y la verificación de Fase 7 con
+  el build de Vite.

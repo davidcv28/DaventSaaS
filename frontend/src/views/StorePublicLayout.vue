@@ -75,11 +75,20 @@ const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?
 // declara su contrato de datos (`ready`); en el Studio se sigue editando
 // con la plantilla Vue, que es la que responde a los cambios en vivo.
 const patternDoc = ref(null)
-//El documento del patrón pinta la portada: catálogo, ficha y servicios
-//siguen en la plantilla Vue, que es la que tiene sus vistas y su embudo.
+//Superficie que el documento del patrón debe pintar en esta ruta. Si el
+//diseño no la declara (`surfaces`), esa ruta sigue con la plantilla Vue.
+const patternSurface = computed(() => (
+  route.name === 'store-catalog' ? 'catalog'
+    : route.name === 'store-services' ? 'services'
+      : 'landing'
+))
 const usePattern = computed(() => Boolean(
-  !studioMode.value && route.name === 'store-public' &&
-  patternDoc.value?.ready && patternDoc.value?.html
+  !studioMode.value && patternDoc.value?.ready && patternDoc.value?.html &&
+  (patternDoc.value.surfaces || []).includes(patternSurface.value) &&
+  //El documento trae los productos ya pintados: si no entran todos, el
+  //catálogo sigue en la plantilla Vue (que pagina y filtra contra la API).
+  (patternSurface.value !== 'catalog' ||
+    (patternDoc.value.products_total || 0) <= (patternDoc.value.products_shown || 24))
 ))
 const custom = computed(() => {
   const raw = store.value?.customization || {}
@@ -106,7 +115,11 @@ const custom = computed(() => {
 })
 // Navegación del documento del patrón: sus enlaces de chrome viajan como
 // rutas (home/catalog/services) y acá se resuelven con el router de la app.
-function onPatternNavigate(route) {
+function onPatternNavigate({ route, id } = {}) {
+  if (route === 'product' && id) {
+    router.push({ name: 'store-product', params: { slug: slug.value, productId: id } })
+    return
+  }
   const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
   if (target) router.push(target)
 }
@@ -775,7 +788,7 @@ onMounted(async () => {
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
-  if (!studioMode.value && isHome.value) {
+  if (!studioMode.value && (isHome.value || isCatalog.value || isServices.value)) {
     storesApi.publicPattern(slug.value, { preview: previewToken.value })
       .then((doc) => { patternDoc.value = doc && doc.html ? doc : null })
       .catch(() => { patternDoc.value = null })
@@ -839,6 +852,7 @@ onBeforeUnmount(() => {
       v-if="usePattern"
       :doc="patternDoc"
       :theme="pageTheme"
+      :surface="patternSurface"
       :title="shopName"
       @navigate="onPatternNavigate"
     />

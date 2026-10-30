@@ -17,6 +17,8 @@ Contrato:
   tienda: el estilo solo puede tocar bordes, colores y básicos.
 """
 
+import re
+
 from django.utils.html import escape, strip_tags
 
 from StoreApp.domains.design.models import DesignPattern
@@ -50,11 +52,12 @@ PATTERN_VARIABLES = {
     'services':          {'type': 'list',  'label': 'Servicios'},
     'gallery':           {'type': 'list',  'label': 'Galería'},
 }
+SURFACE_RE = re.compile(r'data-surface="([a-z]+)"')
 LIST_VARIABLES = frozenset(name for name, spec in PATTERN_VARIABLES.items() if spec['type'] == 'list')
 
 #Cantidad máxima de items por fragmento: el patrón nunca recibe más de lo
 #que puede mostrar sin paginar.
-FRAGMENT_LIMIT = 12
+FRAGMENT_LIMIT = 24
 
 DAYS_ES = {
     'mon': 'Lun', 'tue': 'Mar', 'wed': 'Mié', 'thu': 'Jue',
@@ -71,11 +74,14 @@ def _text(value, limit = 0):
 def _attr(value):
     return escape(str(value or ''))
 
-def _money(value):
+def _amount(value):
     try:
-        amount = int(round(float(value or 0)))
+        return float(value or 0)
     except (TypeError, ValueError):
-        return ''
+        return 0.0
+
+def _money(value):
+    amount = int(round(_amount(value)))
     return '$' + f'{amount:,}'.replace(',', '.')
 
 def _hours_text(customization):
@@ -133,18 +139,25 @@ def _product_fragment(store):
     cards = []
     for product in products:
         image = object_url(product.image_key)
-        price = _money(product.offer_price if product.offer_price is not None else product.price)
+        amount = product.offer_price if product.offer_price is not None else product.price
+        #Sin precio cargado la tarjeta no inventa un $0: manda a consultar.
+        price = _money(amount) if _amount(amount) else 'Consultar'
         old = ''
-        if product.offer_price is not None and product.price:
+        if product.offer_price is not None and _amount(product.price):
             old = f'<s class="ds-product-old">{_money(product.price)}</s>'
         media = (
             f'<img class="ds-product-img" src="{_attr(image)}" alt="{_attr(product.name)}" loading="lazy">'
             if image else '<span class="ds-product-img is-empty" aria-hidden="true"></span>'
         )
         category = _text(getattr(product.category, 'name', ''), 40)
+        #Los datos de la tarjeta viajan como atributos: el catálogo del
+        #diseño filtra y ordena en el navegador sin volver al servidor.
         cards.append(
-            '<article class="ds-product">'
-            f'<a class="ds-product-link" href="#catalogo" aria-label="{_attr(product.name)}">'
+            f'<article class="ds-product" data-cat="{_attr(category)}"'
+            f' data-name="{_attr(product.name.lower())}"'
+            f' data-price="{_attr(product.offer_price if product.offer_price is not None else product.price)}">'
+            f'<a class="ds-product-link" href="#catalogo" data-ds-product="{product.pk}"'
+            f' aria-label="{_attr(product.name)}">'
             f'{media}'
             '<span class="ds-product-copy">'
             f'<h3 class="ds-product-name">{escape(_text(product.name, 120))}</h3>'
@@ -342,13 +355,24 @@ def render_store_pattern(store, customization = None):
     if pattern is None or not (pattern.html or '').strip():
         return None
     context, raw = build_store_context(store)
+    html = pattern.render(context, raw = raw)
+    from StoreApp.domains.catalog.models import Product
+
     return {
         'slug': pattern.slug,
         'nombre': pattern.nombre,
         #Un patrón sin variables declaradas todavía es demo estático: la
         #web publicada sigue con la plantilla Vue hasta convertirlo.
         'ready': bool(pattern.variables),
-        'html': pattern.render(context, raw = raw),
+        #Superficies que el documento sabe pintar (`data-surface`): el host
+        #solo usa el patrón en las rutas que el diseño cubre.
+        'surfaces': sorted(set(SURFACE_RE.findall(html))),
+        #El catálogo del diseño trae los productos ya renderizados: si la
+        #tienda tiene más de los que entran en el documento, esa ruta sigue
+        #con la plantilla Vue (que pagina) para no esconder productos.
+        'products_total': Product.objects.filter(store = store, is_active = True).count(),
+        'products_shown': FRAGMENT_LIMIT,
+        'html': html,
         'css': f'{theme_css(customization, pattern)}\n{pattern.css or ""}',
         'js': pattern.js or '',
         'dark': bool(pattern.supports_dark_mode),

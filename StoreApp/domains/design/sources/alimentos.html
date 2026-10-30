@@ -115,6 +115,8 @@
     <a class="basket" href="{{store_whatsapp_url}}">Pedir por WhatsApp</a>
   </header>
 
+  <div data-surface="landing">
+
   <section class="board" id="inicio">
     <div class="priceboard">
       <span class="kicker">{{store_location}} · precio final</span>
@@ -146,7 +148,7 @@
   </section>
 </div>
 
-<div class="ticker" aria-hidden="true">
+<div class="ticker" data-surface="landing" aria-hidden="true">
   <div><span>{{store_name}}<b>fresco</b></span><span>Precio final<b>sin sorpresas</b></span><span>Retiro en el día<b>8 h</b></span><span>{{store_location}}<b>local</b></span><span>{{store_name}}<b>fresco</b></span><span>Precio final<b>sin sorpresas</b></span><span>Retiro en el día<b>8 h</b></span><span>{{store_location}}<b>local</b></span></div>
 </div>
 
@@ -156,7 +158,32 @@
     <article class="reveal"><span>Contacto</span><p>{{store_phone}}</p></article>
     <article class="reveal"><span>Dirección</span><p>{{store_address}}</p></article>
   </section>
-  <footer data-block="contact"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_address}}</span><span>{{year}}</span></footer>
+    </div>
+
+  <section class="cat-surface" data-surface="catalog">
+    <div class="cat-head"><h1>Catálogo</h1><span data-ds-count></span></div>
+    <div class="cat-tools">
+      <div class="cat-filters" data-ds-filters></div>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Destacados</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="cat-list" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos en esta categoría.</p>
+  </section>
+
+  <section class="svc-surface" data-surface="services">
+    <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
+    <div class="svc-body">{{services}}</div>
+    <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+  </section>
+
+<footer data-block="contact"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_address}}</span><span>{{year}}</span></footer>
 </div>
 <script>
 (function(){

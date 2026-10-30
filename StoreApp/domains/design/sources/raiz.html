@@ -111,6 +111,8 @@
     <a class="cta" href="{{store_whatsapp_url}}">Pedir por WhatsApp</a>
   </header>
 
+  <div data-surface="landing">
+
   <section class="counter" id="inicio" data-block="hero">
     <aside class="rail" data-block="categories" aria-label="Categorías">
       <span class="lbl">Mostrador</span>
@@ -160,7 +162,32 @@
     <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Retiro en el día</div>
   </div>
 
-  <footer data-block="contact"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_address}}</span><span>{{year}}</span></footer>
+    </div>
+
+  <section class="cat-surface" data-surface="catalog">
+    <div class="cat-head"><h1>Catálogo</h1><span data-ds-count></span></div>
+    <div class="cat-tools">
+      <div class="cat-filters" data-ds-filters></div>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Destacados</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="shelf-list" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos en esta categoría.</p>
+  </section>
+
+  <section class="svc-surface" data-surface="services">
+    <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
+    <div class="svc-body">{{services}}</div>
+    <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+  </section>
+
+<footer data-block="contact"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_address}}</span><span>{{year}}</span></footer>
 </div>
 <script>
 (function(){

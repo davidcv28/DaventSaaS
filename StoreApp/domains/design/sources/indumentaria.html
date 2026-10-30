@@ -113,6 +113,8 @@
     <a class="bag" href="{{store_whatsapp_url}}">{{store_phone}}</a>
   </header>
 
+  <div data-surface="landing">
+
   <section class="cover" id="inicio">
     <img src="{{store_cover}}" alt="{{store_name}}" onerror="this.remove()">
     <div class="cover-copy">
@@ -142,7 +144,32 @@
 
   <div class="gallery">{{gallery}}</div>
 
-  <footer id="contacto"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_email}}</span><span>{{year}}</span></footer>
+    </div>
+
+  <section class="cat-surface" data-surface="catalog">
+    <div class="cat-head"><h1>Catálogo</h1><span data-ds-count></span></div>
+    <div class="cat-tools">
+      <div class="cat-filters" data-ds-filters></div>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Destacados</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="grid" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos en esta categoría.</p>
+  </section>
+
+  <section class="svc-surface" data-surface="services">
+    <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
+    <div class="svc-body">{{services}}</div>
+    <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+  </section>
+
+<footer id="contacto"><span>{{store_name}} · {{store_tagline}}</span><span>{{store_email}}</span><span>{{year}}</span></footer>
 </div>
 <script>
 (function(){

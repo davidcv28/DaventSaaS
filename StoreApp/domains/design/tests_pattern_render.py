@@ -147,6 +147,36 @@ class PatternRenderServiceTests(TestCase):
         self.assertIn('console.log(1)', doc['js'])
         self.assertTrue(doc['dark'])
 
+    def test_render_store_pattern_reports_surfaces_and_product_data(self):
+        DesignPattern.objects.all().delete()
+        store   =   _store(template = 'raiz')
+        Product.objects.create(store = store, name = 'Yerba', price = 1500)
+        _pattern(
+            slug = 'raiz',
+            html = (
+                '<div data-surface="landing">{{products}}</div>'
+                '<div data-surface="catalog"><div data-ds-products>{{products}}</div></div>'
+                '<div data-surface="services">{{services}}</div>'
+            ),
+        )
+        doc = render_store_pattern(store)
+        self.assertEqual(doc['surfaces'], ['catalog', 'landing', 'services'])
+        self.assertEqual(doc['products_total'], 1)
+        self.assertEqual(doc['products_shown'], 24)
+        #La tarjeta lleva sus datos: el catálogo filtra y ordena en el navegador.
+        self.assertIn('data-cat=', doc['html'])
+        self.assertIn('data-price="1500.00"', doc['html'])
+        self.assertIn('data-ds-product=', doc['html'])
+
+    def test_product_without_price_asks_to_consult(self):
+        DesignPattern.objects.all().delete()
+        store   =   _store(template = 'raiz')
+        Product.objects.create(store = store, name = 'Sin precio', price = 0)
+        _pattern(slug = 'raiz')
+        doc = render_store_pattern(store)
+        self.assertIn('Consultar', doc['html'])
+        self.assertNotIn('$0', doc['html'])
+
     def test_render_store_pattern_none_without_markup(self):
         DesignPattern.objects.all().delete()
         store   =   _store()
@@ -223,6 +253,10 @@ class PatternSourceTests(TestCase):
                 self.assertIn('var(--ds-accent', css)
                 #Modo noche explícito, además de prefers-color-scheme.
                 self.assertIn('data-ds-theme="dark"', css)
+                #Portada, catálogo y servicios son superficies del diseño.
+                for surface in ('landing', 'catalog', 'services'):
+                    self.assertIn(f'data-surface="{surface}"', html)
+                self.assertIn('data-ds-products', html)
 
     def test_converted_patterns_render_and_escape_store_data(self):
         from django.utils.html import escape
