@@ -56,7 +56,7 @@ def llm_enabled() -> bool:
 # PROVEEDORES
 #=========================================
 def _ask_gemini(system : str, messages : list[dict], max_tokens : int, temperature : float) -> str | None:
-    model   =   getattr(settings, 'GEMINI_MODEL', 'gemini-3.8-flash')
+    model   =   getattr(settings, 'GEMINI_MODEL', 'gemini-3.6-flash')
     contents    =   [
         {
             'role'  :   'model' if m['role'] == 'assistant' else 'user',
@@ -67,14 +67,20 @@ def _ask_gemini(system : str, messages : list[dict], max_tokens : int, temperatu
     payload =   {
         'systemInstruction' :   {'parts': [{'text': system}]},
         'contents'          :   contents,
-        'generationConfig'  :   {'maxOutputTokens': max_tokens, 'temperature': temperature},
+        'generationConfig'  :   {
+            'maxOutputTokens'   :   max_tokens,
+            'temperature'       :   temperature,
+            #Sin thinking: el asistente responde en 2-3 frases y no gasta
+            #presupuesto/latencia en razonamiento interno.
+            'thinkingConfig'    :   {'thinkingBudget': 0},
+        },
     }
     response    =   requests.post(
         GEMINI_URL.format(model = model),
         params  =   {'key': _key('gemini')},
         headers =   {'content-type': 'application/json'},
         data    =   json.dumps(payload),
-        timeout =   getattr(settings, 'LLM_TIMEOUT', 15),
+        timeout =   getattr(settings, 'LLM_TIMEOUT', 30),
     )
     if response.status_code >= 400:
         logger.warning('Gemini %s: %s', response.status_code, response.text[:300])
@@ -96,7 +102,7 @@ def _ask_openai_compatible(url : str, api_key : str, model : str, system : str, 
         url,
         headers =   {'Authorization': f'Bearer {api_key}', 'content-type': 'application/json', **(extra_headers or {})},
         data    =   json.dumps(payload),
-        timeout =   getattr(settings, 'LLM_TIMEOUT', 15),
+        timeout =   getattr(settings, 'LLM_TIMEOUT', 30),
     )
     if response.status_code >= 400:
         logger.warning('%s %s: %s', url, response.status_code, response.text[:300])

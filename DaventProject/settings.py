@@ -429,9 +429,9 @@ ANTHROPIC_TIMEOUT   =   config('ANTHROPIC_TIMEOUT', default = 12, cast = int)
 #(el primero con key, en ese orden). Los free tier de Gemini/Groq tienen más
 #margen que la API paga de Anthropic.
 AI_PROVIDER         =   config('AI_PROVIDER', default = '')
-LLM_TIMEOUT         =   config('LLM_TIMEOUT', default = 15, cast = int)
+LLM_TIMEOUT         =   config('LLM_TIMEOUT', default = 30, cast = int)
 GEMINI_API_KEY      =   config('GEMINI_API_KEY', default = '')
-GEMINI_MODEL        =   config('GEMINI_MODEL', default = 'gemini-3.8-flash')
+GEMINI_MODEL        =   config('GEMINI_MODEL', default = 'gemini-3.6-flash')
 GROQ_API_KEY        =   config('GROQ_API_KEY', default = '')
 GROQ_MODEL          =   config('GROQ_MODEL', default = 'llama-3.3-70b-versatile')
 OPENROUTER_API_KEY  =   config('OPENROUTER_API_KEY', default = '')
