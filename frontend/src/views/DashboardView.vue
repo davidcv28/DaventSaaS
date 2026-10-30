@@ -4078,26 +4078,27 @@ async function changePassword() {
               <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
             </button>
           </nav>
-        <DesignStylesTab
-          v-if="designTab === 'look'"
-          :form="designForm"
-          :benefits="plan?.benefits || {}"
-          :shop-name="designShopName"
-          :can-studio="canDesignAdvanced"
-          @navigate="onDesignNav"
-          @ring="lookRing = $event"
-          @open-studio="openStudioRoute"
-        />
-        <div v-if="designTab === 'look'" class="dsg-savebar" :class="{ dirty: designDirty }">
-          <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
-            <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
-            <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
-          </p>
-          <div class="dsg-actions">
-            <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
-            <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
+        <template v-if="designTab === 'look'">
+          <DesignStylesTab
+            :form="designForm"
+            :benefits="plan?.benefits || {}"
+            :shop-name="designShopName"
+            :can-studio="canDesignAdvanced"
+            @navigate="onDesignNav"
+            @ring="lookRing = $event"
+            @open-studio="openStudioRoute"
+          />
+          <div class="dsg-savebar" :class="{ dirty: designDirty }">
+            <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
+              <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
+              <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
+            </p>
+            <div class="dsg-actions">
+              <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
+              <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
+            </div>
           </div>
-        </div>
+        </template>
         <div v-else-if="designTab === 'assisted'" class="dsg-ai">
           <AiDesignView :plan="plan" @applied="onAiApplied" @navigate="onDesignNav" />
         </div>

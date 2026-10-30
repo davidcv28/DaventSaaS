@@ -159,7 +159,12 @@ onBeforeUnmount(() => {
 }
 .studio-page-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
 .studio-page-title small { font-weight: 400; opacity: .65; }
-.studio-page-shell { flex: 1; min-height: 0; }
+.studio-page-shell {
+  flex: 1; min-height: 0;
+  /* El .sts del Studio trae height: calc(100dvh - 150px) para vivir embebido:
+     acá ocupa el alto real que le deja la barra. */
+  height: 100%; min-height: 0; border-radius: 0; border: 0;
+}
 .studio-page-toast {
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
   padding: 10px 16px; border-radius: 999px; font-size: 13px;
