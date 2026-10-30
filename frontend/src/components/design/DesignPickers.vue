@@ -4,8 +4,9 @@
 // el estilo escribe tema/acento/tipografía + site_theme.style.id y, además,
 // su propia estructura (template + layout) para que el cambio se vea en la
 // ubicación de los elementos, no solo en los colores.
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
+import { designApi } from '../../api/design.api.js'
 import { STORE_TEMPLATES, STORE_ACCENTS, allowedTemplatesFor, ensureStoreFont } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
@@ -83,6 +84,42 @@ function onPatternPick(event) {
   if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
 }
 
+// Diseños importados (DesignPattern con html/css/js): se previsualizan tal
+// cual quedaron guardados en la base, en un iframe aislado. El layout del
+// catálogo sigue armando la web de la tienda; esto muestra el diseño fuente.
+const patternPreview = ref(null) // { nombre, doc }
+const previewBusy = ref(false)
+const previewErr = ref('')
+
+function patternDoc(p) {
+  const html = String(p.html || '')
+  if (/^\s*(<!doctype|<html)/i.test(html)) return html
+  const css = p.css ? `<style>${p.css}</style>` : ''
+  const js = p.js ? `<script>${p.js}<` + `/script>` : ''
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
+}
+
+async function openPatternPreview(p) {
+  if (!p?.has_markup || previewBusy.value) return
+  previewBusy.value = true
+  previewErr.value = ''
+  try {
+    const detail = await designApi.pattern(p.slug)
+    patternPreview.value = { nombre: detail.nombre || p.nombre, doc: patternDoc(detail) }
+  } catch {
+    previewErr.value = 'No pudimos cargar el diseño del patrón.'
+  } finally {
+    previewBusy.value = false
+  }
+}
+function closePatternPreview() {
+  patternPreview.value = null
+  previewErr.value = ''
+}
+function onPreviewKey(e) { if (e.key === 'Escape') closePatternPreview() }
+onMounted(() => window.addEventListener('keydown', onPreviewKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
+
 function onStylePick(event) {
   const s = styleOptions.value.find((x) => x.slug === event.target.value)
   if (!s) return
@@ -143,6 +180,14 @@ function onStylePick(event) {
           <span class="dpicks-dot" aria-hidden="true"></span>
           {{ currentPatternMeta.nombre }} · {{ tierLabel(currentPatternMeta.template) }}
         </p>
+        <button
+          v-if="currentPatternMeta?.has_markup" type="button"
+          class="dpicks-preview" :disabled="previewBusy"
+          @click="openPatternPreview(currentPatternMeta)"
+        >
+          <AppIcon name="eye" :size="14" /> {{ previewBusy ? 'Cargando…' : 'Ver este diseño' }}
+        </button>
+        <p v-if="previewErr" class="dpicks-alert" role="alert">{{ previewErr }}</p>
       </div>
       <div class="field">
         <label for="design-style-pick">Estilo</label>
@@ -170,6 +215,21 @@ function onStylePick(event) {
       El catálogo está vacío: corré <code>manage.py seed_design_catalog</code> en el servidor.
     </p>
   </div>
+
+  <Teleport to="body">
+    <div v-if="patternPreview" class="dpv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
+      <div class="dpv-head">
+        <strong>{{ patternPreview.nombre }}</strong>
+        <button type="button" class="dpv-close" aria-label="Cerrar la vista previa" @click="closePatternPreview">
+          <AppIcon name="x" :size="16" />
+        </button>
+      </div>
+      <iframe
+        class="dpv-frame" :srcdoc="patternPreview.doc" sandbox="allow-scripts"
+        :title="`Diseño ${patternPreview.nombre}`"
+      ></iframe>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -199,7 +259,34 @@ function onStylePick(event) {
   .dpicks .select { min-height: 48px; }
 }
 .dpicks-current { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-2); min-width: 0; overflow-wrap: anywhere; }
+.dpicks-preview {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  align-self: start; min-height: 36px; padding: 0 12px; border-radius: 9px;
+  border: 1px solid var(--line, #e5e7eb); background: transparent;
+  color: var(--ink-2); font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.dpicks-preview:hover:not(:disabled) { border-color: var(--brand-500, #6366f1); color: var(--brand-600, #4f46e5); }
+.dpicks-preview:disabled { opacity: .6; cursor: default; }
 .dpicks-dot { flex: none; width: 7px; height: 7px; border-radius: 999px; background: var(--brand-500); }
 .dpicks-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dpicks-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+/* Vista previa del diseño fuente (patrón importado). */
+.dpv {
+  position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column;
+  gap: 0; padding: 16px; background: rgba(9, 12, 20, .72);
+}
+.dpv-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; border-radius: 12px 12px 0 0; background: var(--card, #fff); color: var(--ink);
+}
+.dpv-head strong { font-size: 14px; }
+.dpv-close {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  border: 1px solid var(--line, #e5e7eb); border-radius: 8px; background: transparent; color: inherit; cursor: pointer;
+}
+.dpv-frame {
+  flex: 1 1 auto; width: 100%; min-height: 0; border: 0; border-radius: 0 0 12px 12px;
+  background: #fff;
+}
+@media (max-width: 640px) { .dpv { padding: 8px; } }
 </style>

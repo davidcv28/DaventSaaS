@@ -103,10 +103,15 @@ class DesignPatternSerializer(serializers.ModelSerializer):
 #=========================================
 class DesignPatternListSerializer(serializers.ModelSerializer):
     style               =   serializers.SlugRelatedField(slug_field = 'slug', read_only = True)
+    has_markup          =   serializers.SerializerMethodField()
     class Meta:
         model           =   DesignPattern
         fields          =   [
             'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
             'template', 'layout', 'tokens', 'tags', 'preview', 'style',
-            'is_default', 'is_active', 'position',
+            'has_markup', 'is_default', 'is_active', 'position',
         ]
+    def get_has_markup(self, obj):
+        # El listado no manda HTML/CSS/JS; el front pide el detalle solo si
+        # hay markup propio (diseño importado) para previsualizarlo.
+        return bool(obj.html or obj.css or obj.js)
