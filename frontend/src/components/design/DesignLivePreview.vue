@@ -161,5 +161,11 @@ function reload() {
 .dlp-stage.mobile { padding: 10px 0; background: var(--surface-3, #eef2f7); }
 .dlp-frame { width: 100%; height: 100%; border: 0; background: #fff; }
 .dlp-stage.mobile .dlp-frame { width: 430px; max-width: 100%; height: 100%; border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+/* En mobile/tablet la vista previa se abre a demanda: más baja para que el
+   formulario siga alcanzable mientras se edita. */
+@media (max-width: 1099px) {
+  .dlp-stage { height: min(58vh, 460px); }
+  .dlp-head strong { font-size: 12.5px; }
+}
 .dlp-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 12px; opacity: .8; }
 </style>

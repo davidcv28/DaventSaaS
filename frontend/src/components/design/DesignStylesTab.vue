@@ -3,9 +3,11 @@
 // Envuelve el selector de estilos real (EstilosPanel → DesignLookTab) con la
 // misma cáscara que usa el Studio en su panel "Estilos", así la sección y el
 // Studio comparten una sola implementación y los mismos eventos.
+import { ref } from 'vue'
 import EstilosPanel from '../studio/panels/EstilosPanel.vue'
 import DesignPickers from './DesignPickers.vue'
 import DesignLivePreview from './DesignLivePreview.vue'
+import AppIcon from '../AppIcon.vue'
 
 defineProps({
   form: { type: Object, required: true },
@@ -14,6 +16,9 @@ defineProps({
   canStudio: { type: Boolean, default: false }
 })
 const emit = defineEmits(['navigate', 'ring', 'open-studio'])
+// En pantallas angostas la vista previa real (iframe de la web) arranca
+// cerrada: primero se elige, después se mira. En desktop queda fija al lado.
+const previewOpen = ref(false)
 </script>
 
 <template>
@@ -21,13 +26,18 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
     <div class="dstyles-grid">
       <div class="dstyles-main">
         <DesignPickers :form="form" :benefits="benefits" />
+        <div class="dstyles-bar">
+          <button type="button" class="btn ghost btn-auto" :aria-expanded="previewOpen" @click="previewOpen = !previewOpen">
+            <AppIcon name="eye" :size="16" /> {{ previewOpen ? 'Ocultar vista previa' : 'Ver mi web' }}
+          </button>
+        </div>
         <EstilosPanel
-          :form="form" :benefits="benefits" :shop-name="shopName" preview pickers
+          :form="form" :benefits="benefits" :shop-name="shopName" :preview="false" pickers
           @navigate="emit('navigate', $event)"
           @ring="emit('ring', $event)"
         />
       </div>
-      <aside class="dstyles-live">
+      <aside class="dstyles-live" :class="{ 'is-open': previewOpen }">
         <DesignLivePreview :form="form" />
       </aside>
     </div>
@@ -46,9 +56,18 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
 .dstyles-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
 .dstyles-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dstyles-live { min-width: 0; }
+.dstyles-bar { display: none; }
+.dstyles-bar .btn { width: auto; }
 @media (min-width: 1100px) {
   .dstyles-grid { grid-template-columns: minmax(0, 1fr) minmax(520px, 720px); align-items: start; }
   .dstyles-live { position: sticky; top: 12px; }
+}
+/* Mobile/tablet: la vista previa se pide a demanda y queda pegada arriba
+   mientras se edita, en vez de empujar el formulario hacia abajo. */
+@media (max-width: 1099px) {
+  .dstyles-bar { display: flex; justify-content: flex-end; }
+  .dstyles-live { display: none; }
+  .dstyles-live.is-open { display: block; order: -1; position: sticky; top: 8px; z-index: 6; }
 }
 .dstyles-studio {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
