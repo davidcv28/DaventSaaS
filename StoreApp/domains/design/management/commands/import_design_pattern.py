@@ -31,6 +31,9 @@ STYLE_RE    =   re.compile(r'<style[^>]*>(.*?)</style>', re.S | re.I)
 SCRIPT_RE   =   re.compile(r'<script[^>]*>(.*?)</script>', re.S | re.I)
 BODY_RE     =   re.compile(r'<body[^>]*>(.*?)</body>', re.S | re.I)
 HEAD_RE     =   re.compile(r'<(title|meta)\b[^>]*>.*?</\1>|<(title|meta)\b[^>]*/?>', re.S | re.I)
+#Assets externos (CDN de Tailwind, Google Fonts): no tienen contenido inline,
+#así que se conservan tal cual al inicio del html para que el preview cargue.
+ASSET_RE    =   re.compile(r'<script\b[^>]*\bsrc=[^>]*>\s*</script>|<link\b[^>]*>', re.S | re.I)
 
 #=========================================
 # IMPORT DESIGN PATTERN
@@ -139,4 +142,8 @@ class Command(BaseCommand):
         html = STYLE_RE.sub('', html)
         html = SCRIPT_RE.sub('', html)
         html = HEAD_RE.sub('', html)
+        assets = '\n'.join(m.group(0) for m in ASSET_RE.finditer(document))
+        html = ASSET_RE.sub('', html)
+        if assets:
+            html = f'{assets}\n{html}'
         return html.strip(), css, js
