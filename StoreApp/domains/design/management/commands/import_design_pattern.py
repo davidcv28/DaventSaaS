@@ -50,6 +50,9 @@ class Command(BaseCommand):
         parser.add_argument('--fonts', default = '', help = 'Fuentes separadas por coma: cuerpo,cabecera')
         parser.add_argument('--palette', default = '', help = 'Paleta clave:#hex separada por coma (bg,surface,text,muted,border,accent,primary,secondary)')
         parser.add_argument('--typography', default = '', help = 'Tipografía clave:valor separada por coma (body,heading)')
+        parser.add_argument('--descripcion', default = '', help = 'Descripción del patrón (hereda del estilo)')
+        parser.add_argument('--tags', default = '', help = 'Etiquetas separadas por coma')
+        parser.add_argument('--position', type = int, default = 0, help = 'Orden en el catálogo')
         parser.add_argument('--preview', default = '', help = 'Miniatura/URL opcional')
         parser.add_argument('--inactive', action = 'store_true', help = 'Crear el patrón desactivado')
 
@@ -84,6 +87,7 @@ class Command(BaseCommand):
         defaults = {
             'nombre'        :   options['nombre'],
             'categoria'     :   options['categoria'] or (style.categoria if style else 'general'),
+            'descripcion'   :   options['descripcion'] or (style.descripcion if style else ''),
             'tier'          :   options['tier'] or (style.tier if style else 'base'),
             'template'      :   options['template'] or (style.template if style else 'raiz'),
             'layout'        :   (style.layout if style else {}) or {},
@@ -91,6 +95,8 @@ class Command(BaseCommand):
             'css'           :   css,
             'js'            :   js,
             'tokens'        :   tokens,
+            'tags'          :   [t.strip() for t in options['tags'].split(',') if t.strip()],
+            'position'      :   options['position'],
             'preview'       :   options['preview'],
             'is_active'     :   not options['inactive'],
         }
