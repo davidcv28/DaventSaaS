@@ -116,12 +116,12 @@
 <body>
 <div class="frame">
   <header class="top">
-    <a class="mark" href="#inicio">
+    <a class="mark" href="#inicio" data-ds-route="home">
       <img src="{{store_logo}}" alt="" onerror="this.remove()">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 5v14M16 5v14"/></svg>
       {{store_name}}
     </a>
-    <nav aria-label="Principal"><a href="#piezas">Piezas</a><a href="#categorias">Categorías</a><a href="#taller">Taller</a><a href="#contacto">Contacto</a></nav>
+    <nav aria-label="Principal"><a href="#piezas" data-ds-route="catalog">Piezas</a><a href="#categorias">Categorías</a><a href="#taller" data-ds-route="services">Taller</a><a href="#contacto">Contacto</a></nav>
     <span class="say">{{store_hours}}</span>
   </header>
 

@@ -104,6 +104,12 @@ const custom = computed(() => {
   if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
   return merged
 })
+// Navegación del documento del patrón: sus enlaces de chrome viajan como
+// rutas (home/catalog/services) y acá se resuelven con el router de la app.
+function onPatternNavigate(route) {
+  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
+  if (target) router.push(target)
+}
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
   if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
@@ -834,6 +840,7 @@ onBeforeUnmount(() => {
       :doc="patternDoc"
       :theme="pageTheme"
       :title="shopName"
+      @navigate="onPatternNavigate"
     />
     <button
       v-if="usePattern && showThemeToggle"

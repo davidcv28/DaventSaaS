@@ -161,10 +161,22 @@
   temas × 6 anchos): 0 scroll horizontal, 0 errores de consola; `manage.py test
   StoreApp.domains.design` 37 OK; `vitest` 25 OK; `sync_design_neon` de los 9.
 - [ ] Landing única por rubro (composición propia, no genérica).
-- [ ] Catálogo único por rubro (filtros, orden, vacíos, responsive).
-- [ ] Servicios único por rubro (selector, presupuesto, CTA).
-- [ ] Responsive 360/390/768/1024/1360/1920 sin scroll horizontal.
-- [ ] QA visual y de estados vacíos.
+- [ ] Catálogo único por rubro (filtros, orden, vacíos, responsive). Hoy el
+  catálogo sigue en la plantilla Vue (`views/store/<diseño>/CatalogoView`); el
+  patrón solo pinta la portada.
+- [ ] Servicios único por rubro (selector, presupuesto, CTA). Misma situación:
+  `ServiciosView` de la plantilla Vue.
+- [x] Responsive 360/390/768/1024/1360/1920 sin scroll horizontal.
+  **(TERMINADO)** — `qa_patterns.py`: 9 patrones × claro/oscuro × 6 anchos,
+  0 overflow y 0 errores de consola.
+- [x] QA visual y de estados vacíos. **(TERMINADO)** — tienda demo sin logo,
+  sin portada, sin galería, 4 productos, 1 categoría y 6 servicios; `.ds-empty`,
+  `.gallery:empty` y `.cover:empty` no dejan huecos.
+- [x] Navegación del documento del patrón a las rutas reales. **(TERMINADO)** —
+  `[data-ds-route="home|catalog|services"]` en el chrome de los 9 diseños; el
+  puente de `PatternSurface` lo traduce a un evento `navigate` y
+  `StorePublicLayout` hace `router.push` (verificado en navegador:
+  /bench-store → /bench-store/catalogo → /servicios).
 
 ### FASE 5 — Catálogo de estilos de iconos
 

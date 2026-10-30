@@ -17,8 +17,10 @@ const props = defineProps({
 const frame = ref(null)
 const height = ref(0)
 
-// Script de puente: mide el documento, avisa el alto al host y escucha el
-// cambio de modo (los diseños pintan `html[data-ds-theme]`).
+// Script de puente: mide el documento, avisa el alto al host, escucha el
+// cambio de modo (los diseños pintan `html[data-ds-theme]`) y traduce los
+// enlaces del diseño (`[data-ds-route]`) a rutas del host: catálogo, ficha
+// y servicios viven en la app, no dentro del iframe.
 const BRIDGE = `
 (function () {
   var root = document.documentElement;
@@ -30,6 +32,12 @@ const BRIDGE = `
     var d = e.data || {};
     if (d.type === 'davent:ds-theme') root.setAttribute('data-ds-theme', d.theme);
     if (d.type === 'davent:ds-measure') send();
+  });
+  document.addEventListener('click', function (e) {
+    var link = e.target && e.target.closest ? e.target.closest('[data-ds-route]') : null;
+    if (!link) return;
+    e.preventDefault();
+    parent.postMessage({ type: 'davent:ds-route', route: link.getAttribute('data-ds-route') }, '*');
   });
   window.addEventListener('load', send);
   if ('ResizeObserver' in window) new ResizeObserver(send).observe(root);
@@ -50,8 +58,15 @@ const srcdoc = computed(() => {
     + `${doc.html || ''}${inline}<script>${BRIDGE}<\/script></body></html>`
 })
 
+const emit = defineEmits(['navigate'])
+
 function onMessage(e) {
   if (e.source !== frame.value?.contentWindow) return
+  if (e.data?.type === 'davent:ds-route') {
+    const route = String(e.data.route || '')
+    if (['home', 'catalog', 'services'].includes(route)) emit('navigate', route)
+    return
+  }
   if (e.data?.type !== 'davent:ds-height') return
   const next = Number(e.data.height) || 0
   if (next > 0) height.value = next

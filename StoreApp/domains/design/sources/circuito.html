@@ -117,12 +117,12 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="#inicio">
+    <a class="brand" href="#inicio" data-ds-route="home">
       <img src="{{store_logo}}" alt="" onerror="this.remove()">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 7h10v8H4z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="8" cy="17" r="2"/><circle cx="18" cy="17" r="2"/></svg>
       {{store_name}} <i aria-hidden="true"></i>
     </a>
-    <nav aria-label="Principal"><a href="#modulos">Módulos</a><a href="#sistema">Sistema</a><a href="#contacto">Contacto</a></nav>
+    <nav aria-label="Principal"><a href="#modulos" data-ds-route="catalog">Módulos</a><a href="#sistema" data-ds-route="services">Sistema</a><a href="#contacto">Contacto</a></nav>
     <a class="link" href="{{store_whatsapp_url}}">Soporte</a>
   </header>
 

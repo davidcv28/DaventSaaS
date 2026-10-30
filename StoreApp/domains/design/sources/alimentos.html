@@ -106,12 +106,12 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="logo" href="#inicio">
+    <a class="logo" href="#inicio" data-ds-route="home">
       <img src="{{store_logo}}" alt="" onerror="this.remove()">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 11h16"/><path d="M6 11V7a6 6 0 0 1 12 0v4"/><path d="M5 11v9h14v-9"/></svg>
       {{store_name}}
     </a>
-    <nav aria-label="Principal"><a href="#catalogo">Productos</a><a href="#pasillos">Pasillos</a><a href="#nosotros">Nosotros</a><a href="#contacto">Contacto</a></nav>
+    <nav aria-label="Principal"><a href="#catalogo" data-ds-route="catalog">Productos</a><a href="#pasillos">Pasillos</a><a href="#nosotros">Nosotros</a><a href="#contacto">Contacto</a></nav>
     <a class="basket" href="{{store_whatsapp_url}}">Pedir por WhatsApp</a>
   </header>
 
