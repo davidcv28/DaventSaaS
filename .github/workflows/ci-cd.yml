@@ -136,6 +136,37 @@ jobs:
         run: python manage.py test
 
   # ---------------------------------------------------------------------------
+  frontend:
+    # El SPA solo se compilaba dentro de las imágenes: un error de import o de
+    # template Vue recién aparecía en `build` (y en main, después del merge).
+    # Acá se compila y se corre el contrato del Studio antes de construir.
+    name: SPA (npm ci + vite build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Dependencias (lockfile estricto)
+        run: npm ci --no-audit --no-fund
+
+      - name: Contrato del Studio
+        run: npm run verify:studio
+
+      - name: Build de producción
+        env:
+          VITE_API_BASE_URL: /api
+        run: npm run build
+
+  # ---------------------------------------------------------------------------
   security:
     name: Bandit + pip-audit + Trivy (fs)
     runs-on: ubuntu-latest
@@ -189,7 +220,7 @@ jobs:
     runs-on: ubuntu-latest
     # `security` también gatea: sin esto la imagen se publicaba en GHCR
     # mientras el SAST/audit todavía corrían.
-    needs: [lint, test, security]
+    needs: [lint, test, security, frontend]
     timeout-minutes: 30
     permissions:
       contents: read
@@ -322,6 +353,11 @@ jobs:
           script: |
             set -eu
             cd /opt/davent
+
+            # 0. Sin PLATFORM_DOMAIN el curl final apunta a "https:///healthz/"
+            #    y el job muere con un error críptico DESPUÉS de haber
+            #    reemplazado los contenedores. Se valida antes de tocar nada.
+            [ -n "${{ vars.PLATFORM_DOMAIN }}" ] || { echo "FATAL: la variable PLATFORM_DOMAIN no está definida en el repo"; exit 1; }
 
             # 1. Merge atómico de SOLO las claves que administra CI (el resto
             #    del .env se respeta byte a byte).

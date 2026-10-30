@@ -75,10 +75,7 @@ server {
     ssl_session_timeout 1d;
 
     # Headers de seguridad para lo que NO pasa por Django (SPA + estáticos).
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Content-Type-Options nosniff always;
-    add_header X-Frame-Options SAMEORIGIN always;
-    add_header Referrer-Policy same-origin always;
+    include /etc/nginx/snippets/security_headers.conf;
     # CSP: la API va por mismo origen (connect-src 'self' + el exchange de
     # Google Identity Services: script, frame del botón, connect y stylesheet
     # en accounts.google.com); Google Fonts on-demand del storefront; imágenes
@@ -124,6 +121,7 @@ server {
         alias /srv/static/;
         autoindex off;
         expires 7d;
+        include /etc/nginx/snippets/security_headers.conf;
         add_header Cache-Control "public";
     }
     location /media/ {
@@ -136,12 +134,15 @@ server {
     location /assets/ {
         try_files $uri =404;
         expires 30d;
+        include /etc/nginx/snippets/security_headers.conf;
         add_header Cache-Control "public, immutable";
     }
 
     # index.html nunca cacheado: el deploy del SPA se ve al instante.
+    # `expires -1` (en vez de add_header Cache-Control) conserva la herencia
+    # de los headers del server — con add_header propio se perdía la CSP.
     location = /index.html {
-        add_header Cache-Control "no-cache";
+        expires -1;
     }
 
     # SPA Vue Router (history mode): fallback a index.html.

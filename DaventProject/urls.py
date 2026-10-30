@@ -147,7 +147,10 @@ def spa(request):
         "script-src 'self' https://accounts.google.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; "
         "font-src 'self' https://fonts.gstatic.com; "
-        "img-src 'self' data: https:; "
+        #img-src blob: por las previews locales (URL.createObjectURL de las
+        #fotos de producto y adjuntos del chat) — nginx ya lo tenía y el
+        #deploy empaquetado las bloqueaba con la CSP de esta vista.
+        "img-src 'self' data: blob: https:; "
         "connect-src 'self' https://accounts.google.com; "
         f"frame-src {_FRAME_SOURCES} https://maps.google.com https://www.google.com https://accounts.google.com; "
         f"object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors {_FRAME_SOURCES}"

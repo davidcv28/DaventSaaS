@@ -1,3 +1,5 @@
+import ipaddress
+
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
@@ -7,6 +9,41 @@ from django.http import HttpResponse
 Middleware transversales del proyecto.
 
 """
+
+
+def _trusted_proxies() -> int:
+    #Misma fuente que el throttle de DRF (NUM_PROXIES): la cantidad de saltos
+    #que agregamos NOSOTROS. 0 = sin proxy confiable.
+    try:
+        return max(int(settings.REST_FRAMEWORK.get('NUM_PROXIES') or 0), 0)
+    except (AttributeError, TypeError, ValueError):
+        return 0
+
+
+def _valid_ip(value : str) -> str:
+    try:
+        return str(ipaddress.ip_address(value))
+    except ValueError:
+        return ''
+
+
+def client_ip(request) -> str:
+    """
+    IP del cliente con la MISMA regla que el throttle de DRF: se toma el
+    X-Forwarded-For que agregó el proxy confiable (NUM_PROXIES saltos), nunca
+    el primero — el cliente puede inyectar ese header y falsear la IP con la
+    que se cuenta el rate-limit (bypass de fuerza bruta). Sin proxies
+    confiables el XFF se ignora por completo y manda REMOTE_ADDR.
+    """
+    proxies     =   _trusted_proxies()
+    forwarded   =   request.META.get('HTTP_X_FORWARDED_FOR') or ''
+    if proxies and forwarded:
+        parts   =   [p.strip() for p in forwarded.split(',') if p.strip()]
+        if len(parts) >= proxies:
+            ip  =   _valid_ip(parts[-proxies])
+            if ip:
+                return ip
+    return _valid_ip(request.META.get('REMOTE_ADDR') or '') or '-'
 
 
 class ContentSecurityPolicyMiddleware:
@@ -47,33 +84,77 @@ class ContentSecurityPolicyMiddleware:
         return response
 
 
+class SecurityHeadersMiddleware:
+    """
+    Cabeceras que Django no pone por default y aplican a TODA respuesta
+    (HTML, JSON, binarios):
+
+      - Permissions-Policy: apaga APIs del navegador que la app no usa
+        (micrófono, USB, serial, pantalla). cámara/geolocalización/clipboard
+        quedan en (self) porque el panel las usa (preview de fotos,
+        "copiar link"). Sin esta cabecera cualquier origen puede pedirlas.
+      - X-Permitted-Cross-Domain-Policies: corta los crossdomain.xml viejos
+        (Flash/PDF) que permitían leer contenido del dominio.
+      - X-Robots-Tag en el admin: el login y el panel no deben indexarse
+        aunque el path se filtre (ADMIN_URL ofuscado + robots).
+    """
+    POLICY  =   (
+        "camera=(self), microphone=(), geolocation=(self), payment=(), "
+        "usb=(), serial=(), midi=(), hid=(), display-capture=(), "
+        "magnetometer=(), gyroscope=(), accelerometer=(), "
+        "clipboard-write=(self), browsing-topics=()"
+    )
+
+    def __init__(self, get_response):
+        self.get_response   =   get_response
+        self.admin_prefix   =   f'/{settings.ADMIN_URL.strip("/")}/'
+
+    def __call__(self, request):
+        response    =   self.get_response(request)
+        response.setdefault('Permissions-Policy', self.POLICY)
+        response.setdefault('X-Permitted-Cross-Domain-Policies', 'none')
+        if request.path.startswith(self.admin_prefix):
+            response.setdefault('X-Robots-Tag', 'noindex, nofollow, noarchive')
+        return response
+
+
 class AdminLoginRateLimitMiddleware:
     """
     Fuerza bruta contra el login del admin de Django: admin.site.login no
     pasa por los throttles de DRF, así que el POST a <ADMIN_URL>/login/ se
     acota por IP acá. La ofuscación de ADMIN_URL no reemplaza un límite —
     cualquier path obvio agota intentos y fuerza cooldown.
+
+    La IP sale de client_ip() (XFF del proxy confiable, no el primero): con
+    el header crudo un atacante rota el X-Forwarded-For y nunca llega al
+    límite. El contador se crea con cache.add + incr (atómico en Redis y
+    locmem): el incr-sobre-missing anterior permitía que dos requests
+    concurrentes reiniciaran la ventana.
     """
     LIMIT           =   10
     WINDOW_SECONDS  =   300
 
     def __init__(self, get_response):
         self.get_response   =   get_response
-        self.login_path     =   f'/{settings.ADMIN_URL.strip("/")}/login/'
+        self.login_path     =   f'/{settings.ADMIN_URL.strip("/")}/login/'.rstrip('/')
 
     def __call__(self, request):
-        if request.method == 'POST' and request.path == self.login_path:
-            forwarded   =   request.META.get('HTTP_X_FORWARDED_FOR') or ''
-            #Último hop: el que agregó el proxy confiable (misma regla que
-            #NUM_PROXIES / _client_ip).
-            ip          =   forwarded.split(',')[-1].strip() or request.META.get('REMOTE_ADDR') or ''
-            if ip:
-                key     =   f'admin-login:{ip}'
-                try:
-                    attempts    =   cache.incr(key)
-                except ValueError:
-                    cache.set(key, 1, self.WINDOW_SECONDS)
+        if request.method == 'POST' and request.path.rstrip('/') == self.login_path:
+            ip      =   client_ip(request)
+            if ip != '-':
+                key =   f'admin-login:{ip}'
+                if cache.add(key, 1, self.WINDOW_SECONDS):
                     attempts    =   1
+                else:
+                    try:
+                        attempts    =   cache.incr(key)
+                    except ValueError:
+                        #La clave venció entre el add y el incr (o el backend
+                        #no soporta incr sobre ella): se reabre la ventana.
+                        cache.set(key, 1, self.WINDOW_SECONDS)
+                        attempts    =   1
                 if attempts > self.LIMIT:
-                    return HttpResponse('Demasiados intentos. Probá más tarde.', status = 429)
+                    response    =   HttpResponse('Demasiados intentos. Probá más tarde.', status = 429)
+                    response['Retry-After'] =   str(self.WINDOW_SECONDS)
+                    return response
         return self.get_response(request)

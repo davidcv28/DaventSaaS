@@ -41,6 +41,56 @@ class SecurityHeadersTests(TestCase):
         response    =   middleware(object())
         self.assertEqual(response['Content-Security-Policy'], "default-src 'none'")
 
+    def test_permissions_policy_on_every_response(self):
+        #También en JSON: la política no es solo del HTML.
+        response    =   self.client.get('/api/config/')
+        policy      =   response.headers.get('Permissions-Policy', '')
+        self.assertIn('microphone=()', policy)
+        self.assertIn('camera=(self)', policy)
+        self.assertEqual(response.headers.get('X-Permitted-Cross-Domain-Policies'), 'none')
+
+    def test_admin_is_not_indexable(self):
+        response    =   self.client.get(self.admin_url)
+        self.assertIn('noindex', response.headers.get('X-Robots-Tag', ''))
+
+
+class ClientIpTests(TestCase):
+    def test_xff_uses_last_hop_not_client_supplied_first(self):
+        from django.test import RequestFactory
+        from DaventProject.middleware import client_ip
+        request =   RequestFactory().get('/', HTTP_X_FORWARDED_FOR = '1.2.3.4, 5.6.7.8')
+        self.assertEqual(client_ip(request), '5.6.7.8')
+
+    def test_xff_ignored_without_trusted_proxy(self):
+        from django.test import RequestFactory, override_settings
+        from DaventProject.middleware import client_ip
+        request =   RequestFactory().get('/', HTTP_X_FORWARDED_FOR = '1.2.3.4', REMOTE_ADDR = '9.9.9.9')
+        with override_settings(REST_FRAMEWORK = {**settings.REST_FRAMEWORK, 'NUM_PROXIES': 0}):
+            self.assertEqual(client_ip(request), '9.9.9.9')
+
+    def test_garbage_xff_falls_back_to_remote_addr(self):
+        from django.test import RequestFactory
+        from DaventProject.middleware import client_ip
+        request =   RequestFactory().get('/', HTTP_X_FORWARDED_FOR = 'not-an-ip', REMOTE_ADDR = '9.9.9.9')
+        self.assertEqual(client_ip(request), '9.9.9.9')
+
+
+class AdminLoginRateLimitTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.login_url  =   f'/{settings.ADMIN_URL.strip("/")}/login/'
+
+    def test_login_post_is_throttled_with_retry_after(self):
+        from DaventProject.middleware import AdminLoginRateLimitMiddleware
+        limit       =   AdminLoginRateLimitMiddleware.LIMIT
+        codes       =   []
+        for _ in range(limit + 1):
+            response    =   self.client.post(self.login_url, {'username': 'x', 'password': 'y'})
+            codes.append(response.status_code)
+        self.assertEqual(codes[-1], 429)
+        self.assertEqual(response.headers.get('Retry-After'), str(AdminLoginRateLimitMiddleware.WINDOW_SECONDS))
+
 
 def _html_response(policy):
     from django.http import HttpResponse

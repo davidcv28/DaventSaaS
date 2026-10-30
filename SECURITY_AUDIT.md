@@ -953,3 +953,32 @@ VPS contra el `.env` real):
 `render.yaml` con `sync: false`. Antes solo vivían en el dashboard y el
 Blueprint no las conocía; si faltan, la PII de Render se cifra con la llave
 derivada del `SECRET_KEY` y queda ilegible al definirlas después.
+
+---
+
+## 3. Repaso pre-lanzamiento (2026-10-30) — middleware y CI/CD
+
+| # | Severidad | Brecha | Fix aplicado |
+|---|-----------|--------|--------------|
+| 18 | **Alta** | `AdminLoginRateLimitMiddleware` y `_client_ip` tomaban el **último** `X-Forwarded-For` sin validar proxy ni formato: sin proxy confiable el header lo controla el cliente, y rotándolo se salteaba el límite de fuerza bruta del admin | `DaventProject.middleware.client_ip()` único (respeta `NUM_PROXIES`, valida IP, cae a `REMOTE_ADDR`); el admin y los logs de auth lo usan |
+| 19 | **Media** | Contador del login admin con `incr` sobre clave inexistente + `set`: dos POST concurrentes reiniciaban la ventana | `cache.add` + `incr` atómico; 429 con `Retry-After`; path normalizado con `rstrip('/')` |
+| 20 | **Media** | Ninguna capa publicaba `Permissions-Policy`: cualquier origen podía pedir cámara/micrófono/USB al iframe/ventana de la app | `SecurityHeadersMiddleware` (Django) + `docker/web/snippets/security_headers.conf` (nginx): micrófono/USB/serial/pantalla/accelerometer apagados, cámara/geo/clipboard en `(self)` |
+| 21 | **Media** | En nginx, un `location` con `add_header` propio **pierde** los del `server`: `/static/`, `/assets/` e `/index.html` salían sin HSTS/nosniff y el index sin CSP | Snippet `security_headers.conf` incluido en cada location con `add_header`; `/index.html` usa `expires -1` (conserva la herencia) |
+| 22 | **Media** | La CSP de la SPA empaquetada (`urls.py`) no permitía `blob:` en `img-src`: las previews de fotos de producto y adjuntos del chat (`URL.createObjectURL`) quedaban en blanco en el deploy serverless (nginx ya lo tenía) | `img-src 'self' data: blob: https:` en la vista `spa` |
+| 23 | **Baja** | El admin y el login no se marcaban como no indexables | `X-Robots-Tag: noindex, nofollow, noarchive` bajo `ADMIN_URL` |
+| 24 | **Baja** | `X-Permitted-Cross-Domain-Policies` ausente (crossdomain.xml heredados) | `none` en Django y nginx |
+
+**CI/CD** (`.github/workflows/ci-cd.yml`):
+
+- Job **`frontend`** nuevo: `npm ci` (lockfile estricto) + `verify:studio` +
+  `vite build` en cada push/PR. El SPA antes solo se compilaba dentro de las
+  imágenes, así que un error de template/import recién aparecía en `build`
+  (y en `main`, después del merge). `build` ahora depende de él.
+- Preflight del deploy: aborta si la variable `PLATFORM_DOMAIN` no está
+  definida (antes el `curl` final apuntaba a `https:///healthz/` y el job
+  moría **después** de haber reemplazado los contenedores).
+
+**Pendiente recomendado (no bloqueante):** lockout por usuario además del
+throttle por IP en `/api/token/` (credential stuffing distribuido), pin de las
+acciones de terceros por SHA (`appleboy/*`), y sacar del árbol los `qa_*.py`
+(38 archivos) que hoy entran al SAST y al lint.

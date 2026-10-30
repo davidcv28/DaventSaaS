@@ -20,6 +20,8 @@ from AdminApp.domains.users.serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
+#Misma resolución de IP que el middleware del admin (XFF del proxy confiable).
+from DaventProject.middleware import client_ip as _client_ip
 from AdminApp.domains.users.services import (
     RequestPasswordResetQuery,
     ConfirmPasswordResetQuery,
@@ -57,10 +59,6 @@ def _remember_requested(request) -> bool:
     """
     return request.data.get('remember') in (True, 1, '1', 'true', 'True')
 
-
-def _client_ip(request) -> str:
-    forwarded     =   request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    return forwarded.split(',')[-1].strip() or request.META.get('REMOTE_ADDR') or '-'
 
 class LoginRateThrottle(AnonRateThrottle):
     """

@@ -187,6 +187,9 @@ MIDDLEWARE = [
     #CSP de respaldo para HTML servido por Django (admin, browsable API):
     #rellena el header solo si ninguna capa previa lo seteó (SPA/nginx).
     'DaventProject.middleware.ContentSecurityPolicyMiddleware',
+    #Permissions-Policy / X-Permitted-Cross-Domain-Policies / X-Robots-Tag
+    #(admin): cabeceras que SecurityMiddleware no pone y aplican a toda respuesta.
+    'DaventProject.middleware.SecurityHeadersMiddleware',
     #Sirve STATIC_ROOT también sin nginx (deploys serverless tipo Render).
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
