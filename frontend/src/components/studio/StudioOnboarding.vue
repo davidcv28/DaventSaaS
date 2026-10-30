@@ -14,7 +14,7 @@ const STEPS = [
   },
   {
     icon: 'sliders', title: 'Herramientas a mano izquierda',
-    text: 'Estilos, colores, tipografía, móvil y más. También podés clickear un elemento de la vista previa y se abre su ajuste.'
+    text: 'Colores, tipografía, fondo, distribución y más. También podés clickear un elemento de la vista previa y se abre su ajuste.'
   },
   {
     icon: 'rocket', title: 'Borrador → Publicar',

@@ -5,15 +5,15 @@
 //    -> persiste hoy por la API existente.
 //  - `theme` (siteTheme del contrato) -> viaja a la vista previa por
 //    studio:update y al payload site_theme.
-// Los paneles ricos (Estilos, Colores, Tipografía, Contenedores, Fondo,
-// Móvil y Movimiento) viven en ./panels/*; acá quedan Distribución,
-// Folletos y Avanzado.
+// Los paneles ricos (Colores, Tipografía, Contenedores, Fondo, Móvil y
+// Movimiento) viven en ./panels/*; acá quedan Distribución, Folletos y
+// Avanzado. La pestaña Estilos se retiró: ese flujo vive en la sección
+// Diseño del panel (EstilosPanel → DesignStylesTab).
 // Cada campo lleva data-focus con el target del contrato: el shell lo usa
 // para el anillo animado en la vista previa y para enfocar el control
 // cuando el usuario clickea el elemento correspondiente en el iframe.
 import { computed } from 'vue'
 import AppIcon from '../AppIcon.vue'
-import EstilosPanel from './panels/EstilosPanel.vue'
 import ColorsPanel from './panels/ColorsPanel.vue'
 import TypographyPanel from './panels/TypographyPanel.vue'
 import ContainersPanel from './panels/ContainersPanel.vue'
@@ -72,21 +72,13 @@ const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
   return { id, label: SURFACE_LABELS[id] || id, active: props.siteTemplates.includes(id), count: on.length, total: blocks.length }
 }))
 
-// Anillos del LookTab -> targets del contrato en la vista previa: los
-// mapea EstilosPanel (RING_MAP interno) antes de re-emitir 'ring'.</script>
+// Anillos del contrato en la vista previa: los emite el panel que tenga el
+// control (Colores/Tipografía/Contenedores/Fondo) y el shell los dibuja.</script>
 
 <template>
-  <!-- ===== Estilos: flujo guiado en 3 niveles (presets -> rápidos -> avanzado) ===== -->
-  <div v-if="tool === 'estilos'" class="stp-look">
-    <EstilosPanel
-      :form="form" :benefits="benefits" :shop-name="shopName"
-      @navigate="emit('navigate', $event)" @ring="emit('ring', $event)" @set-viewer="emit('set-viewer', $event)"
-    />
-  </div>
-
   <!-- ===== Paneles ricos (fase Studio panels) ===== -->
   <ColorsPanel
-    v-else-if="tool === 'colores'"
+    v-if="tool === 'colores'"
     :theme="theme" :form="form" :benefits="benefits"
     :customization="customization" :viewer="viewer" :shop-name="shopName"
     @navigate="emit('navigate', $event)" @set-viewer="emit('set-viewer', $event)"

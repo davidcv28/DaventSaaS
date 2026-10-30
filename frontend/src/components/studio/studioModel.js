@@ -7,7 +7,6 @@ import { effectiveAccent } from '../../api/stores.api.js'
 // en StudioPanel.vue; cualquier fase puede reemplazarlo con el slot
 // #panel-<id> del StudioShell.
 export const STUDIO_TOOLS = [
-  { id: 'estilos',      icon: 'sparkles',     label: 'Estilos',      desc: 'Tu web en 4 pasos: estilo, identidad, colores y letra.' },
   { id: 'colores',      icon: 'palette',      label: 'Colores',      desc: 'Paleta por rol, armonías, logo y contraste accesible.' },
   { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuentes, pares recomendados, escala y peso.' },
   { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad, superficie y botones.' },
@@ -19,6 +18,14 @@ export const STUDIO_TOOLS = [
   { id: 'avanzado',     icon: 'sliders',      label: 'Avanzado',     desc: 'Tema claro/oscuro y ajustes finos del diseño.' },
   { id: 'salud',        icon: 'shield-check', label: 'Salud',        desc: 'Revisión de tu web: contraste, imágenes, textos y secciones.' },
   { id: 'publicar',     icon: 'rocket',       label: 'Publicar',     desc: 'Borrador a tu web, historial de versiones y link para compartir.' }
+]
+
+// Agrupación visual del riel: look, estructura y entrega. Solo cambia cómo
+// se leen las herramientas (el orden de STUDIO_TOOLS manda el recorrido).
+export const STUDIO_TOOL_GROUPS = [
+  { id: 'look', label: 'Look', tools: ['colores', 'tipografia', 'contenedores', 'fondo', 'movimiento'] },
+  { id: 'structure', label: 'Estructura', tools: ['distribucion', 'movil'] },
+  { id: 'ship', label: 'Puesta a punto', tools: ['folletos', 'avanzado', 'salud', 'publicar'] }
 ]
 
 export const SURFACE_LABELS = { landing: 'Inicio', catalog: 'Catálogo', services: 'Servicios' }
@@ -90,16 +97,18 @@ export function pickTargetFor(el) {
   return 'page'
 }
 
+// La pestaña Estilos se retiró del Studio: la portada y las imágenes se
+// ajustan en Fondo y el resto del look en Colores/Tipografía/Contenedores.
 export function toolForTarget(target) {
-  if (!target) return 'estilos'
+  if (!target) return 'colores'
   if (target.startsWith('blk:') || target.startsWith('sec:')) return 'distribucion'
   return {
-    hero: 'estilos',
+    hero: 'fondo',
     typo: 'tipografia',
     card: 'contenedores',
     'chrome.nav': 'movil',
     buttons: 'colores',
-    media: 'estilos',
+    media: 'fondo',
     page: 'fondo'
-  }[target] || 'estilos'
+  }[target] || 'colores'
 }

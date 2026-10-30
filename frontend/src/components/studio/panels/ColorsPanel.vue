@@ -341,7 +341,7 @@ watch(() => JSON.stringify(pal.value), () => { fixMsg.value = ''; surpriseMsg.va
       label="Color de tu logo"
       tip="¿Qué es esto? Leemos los colores dominantes de tu logo con un canvas y te los proponemos como acento, para que la página combine con tu marca."
       focus="buttons" need="advanced" :benefits="benefits"
-      :hint="logoUrl ? 'Tocá un color para aplicarlo como acento.' : 'Subí tu logo en Estilos > Identidad y te sugerimos sus colores acá.'"
+      :hint="logoUrl ? 'Tocá un color para aplicarlo como acento.' : 'Subí tu logo en Diseño → Identidad y te sugerimos sus colores acá.'"
     >
       <template v-if="logoUrl">
         <div class="dl-chips" aria-live="polite">
@@ -422,7 +422,7 @@ watch(() => JSON.stringify(pal.value), () => { fixMsg.value = ''; surpriseMsg.va
 
     <PanelLock
       v-if="!advanced"
-      text="La paleta por rol, las armonías y las paletas por rubro vienen con el Plan premium. Tu acento básico se sigue editando en Estilos."
+      text="La paleta por rol, las armonías y las paletas por rubro vienen con el Plan premium. Tu acento básico se sigue editando en Diseño."
       @plans="emit('navigate', 'plans')"
     />
   </div>

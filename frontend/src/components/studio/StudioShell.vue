@@ -23,7 +23,7 @@ import StudioHelp from './StudioHelp.vue'
 import StudioSearch from './StudioSearch.vue'
 import StudioOnboarding from './StudioOnboarding.vue'
 import {
-  STUDIO_TOOLS, seedStudioTheme, formThemePatch, mergeTheme, clone, toolForTarget
+  STUDIO_TOOLS, STUDIO_TOOL_GROUPS, seedStudioTheme, formThemePatch, mergeTheme, clone, toolForTarget
 } from './studioModel.js'
 import {
   installPreviewBridge, applyFocusRing, syncFontLink
@@ -39,7 +39,6 @@ import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils
 import { presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
-import PanelLock from './panels/PanelLock.vue'
 
 const { presets: designPresets, defaultPattern, load: loadDesignCatalog } = useDesignCatalog()
 
@@ -575,28 +574,22 @@ onBeforeUnmount(() => {
 })
 
 // Click en la preview -> herramienta + control del panel (foco + flash).
-const tool = ref('estilos')
-// El Studio completo (todas las herramientas) exige has_design_plus: el
-// plan Básico solo edita "Estilos" (el resto se muestra bloqueado como
-// upsell y el gating de datos lo hace el backend).
-const estilosOnly = computed(() => (
-  Object.keys(props.benefits || {}).length > 0 && !props.benefits?.has_design_plus
-))
-// El riel NUNCA oculta herramientas: las bloqueadas son el upsell.
-const tools = computed(() => STUDIO_TOOLS)
-watch(estilosOnly, (only) => { if (only && tool.value !== 'estilos') tool.value = 'estilos' })
-const lockedTool = ref('')
-const lockedDef = computed(() => STUDIO_TOOLS.find((t) => t.id === lockedTool.value) || null)
-const isLocked = (id) => estilosOnly.value && id !== 'estilos'
+const tool = ref('colores')
+// El Studio es exclusivo de Premium (has_design_advanced, guard de la ruta):
+// el riel muestra todas las herramientas sin candados por plan.
+// Riel agrupado (Look / Estructura / Puesta a punto): un solo lugar para
+// saber dónde está cada ajuste sin perder las 11 herramientas.
+const toolGroups = computed(() => STUDIO_TOOL_GROUPS
+  .map((g) => ({ ...g, items: g.tools.map((id) => STUDIO_TOOLS.find((t) => t.id === id)).filter(Boolean) }))
+  .filter((g) => g.items.length))
 const panelBodyEl = ref(null)
-const toolDef = computed(() => {
-  const def = STUDIO_TOOLS.find((t) => t.id === tool.value)
-  return def && !isLocked(def.id) ? def : STUDIO_TOOLS[0]
-})
+const toolDef = computed(() => (
+  STUDIO_TOOLS.find((t) => t.id === tool.value) || STUDIO_TOOLS[0]
+))
 function onPick(target) {
-  // Un click en la preview puede apuntar a una herramienta fuera del plan:
-  // pickTool avisa y caemos a Estilos para que el panel nunca quede vacío.
-  if (!pickTool(toolForTarget(target))) pickTool('estilos')
+  // Un click en la preview abre la herramienta del target; si el id no
+  // existe caemos a Colores para que el panel nunca quede vacío.
+  if (!pickTool(toolForTarget(target))) pickTool('colores')
   nextTick(() => {
     const css = target?.startsWith('blk:') || target?.startsWith('sec:') ? 'blk' : target
     const field = panelBodyEl.value?.querySelector(`[data-focus="${css}"]`)
@@ -672,14 +665,6 @@ function sheetUp() {
 function pickTool(id) {
   const def = STUDIO_TOOLS.find((t) => t.id === id)
   if (!def) return false
-  if (isLocked(id)) {
-    // Bloqueo por código (deep link, búsqueda, click en la preview, atajos):
-    // el panel sigue en Estilos y el aviso de upsell queda visible.
-    lockedTool.value = id
-    showToast(`${def.label} viene con el plan Estándar`)
-    return false
-  }
-  lockedTool.value = ''
   tool.value = id
   panelOpen.value = true
   if (isMobile.value && sheetSize.value === 'min') sheetSize.value = 'mid'
@@ -785,7 +770,6 @@ function closeOnboarding() {
 // Índice de la búsqueda: herramientas + campos clave con su data-focus (el
 // pick enfoca el control exacto como un click en la vista previa).
 const SEARCH_INDEX = [
-  { tool: 'estilos',      focus: 'hero',       label: 'Estilo de tu web',             hint: 'Estilos', kw: 'estilo diseño plantilla raiz trama circuito look' },
   { tool: 'colores',      focus: 'page',       label: 'Paleta y colores',             hint: 'Colores', kw: 'color paleta acento primario fondo texto' },
   { tool: 'colores',      focus: 'buttons',    label: 'Contraste accesible',          hint: 'Colores', kw: 'contraste aa legibilidad accesible' },
   { tool: 'tipografia',   focus: 'typo',       label: 'Fuentes y tipografía',         hint: 'Tipografía', kw: 'fuente letra tipografia texto peso escala' },
@@ -927,18 +911,19 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
         <span class="sts-tool-lb">Volver</span>
       </button>
       <div class="sts-rail-list" role="tablist" aria-orientation="vertical" aria-label="Herramientas de diseño">
-        <button
-          v-for="t in tools" :key="t.id" type="button" role="tab"
-          class="sts-tool" :class="{ active: tool === t.id, locked: isLocked(t.id) }"
-          :aria-selected="tool === t.id"
-          :aria-disabled="isLocked(t.id) ? 'true' : null"
-          :title="isLocked(t.id) ? `${t.label} — disponible desde el plan Estándar` : t.desc"
-          @click="pickTool(t.id)"
-        >
-          <AppIcon :name="t.icon" :size="19" />
-          <span class="sts-tool-lb">{{ t.label }}</span>
-          <AppIcon v-if="isLocked(t.id)" class="sts-tool-lock" name="lock" :size="11" aria-hidden="true" />
-        </button>
+        <template v-for="g in toolGroups" :key="g.id">
+          <p class="sts-rail-cap" aria-hidden="true">{{ g.label }}</p>
+          <button
+            v-for="t in g.items" :key="t.id" type="button" role="tab"
+            class="sts-tool" :class="{ active: tool === t.id }"
+            :aria-selected="tool === t.id"
+            :title="t.desc"
+            @click="pickTool(t.id)"
+          >
+            <AppIcon :name="t.icon" :size="19" />
+            <span class="sts-tool-lb">{{ t.label }}</span>
+          </button>
+        </template>
       </div>
       <button
         type="button" class="sts-tool sts-collapse" :aria-pressed="!panelOpen"
@@ -974,12 +959,6 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
         ref="panelBodyEl" class="sts-panel-body" role="tabpanel"
         @focusin="onPanelEvent" @input="onPanelEvent" @change="onPanelEvent" @click="onPanelEvent"
       >
-        <div v-if="lockedDef" class="sts-upsell">
-          <PanelLock
-            :text="`${lockedDef.label} está disponible desde el plan Estándar.`"
-            @plans="emit('navigate', 'plans')"
-          />
-        </div>
         <StudioPanel
           :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
           :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config_draft || customization?.layout_config || null"
@@ -1092,6 +1071,8 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 }
 .sts-upsell { margin-bottom: 10px; }
 .sts-tool:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
+.sts-rail-cap { margin: 10px 0 2px; padding: 0 2px; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.sts-rail-cap:first-child { margin-top: 2px; }
 .sts-tool-lb { line-height: 1.05; text-align: center; hyphens: auto; overflow-wrap: break-word; max-width: 100%; }
 .sts-collapse { margin-top: 8px; color: var(--muted); }
 .sts-back { display: none; color: var(--muted); }
@@ -1191,6 +1172,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
     overflow-x: auto; gap: 4px;
   }
   .sts-rail-list { flex-direction: row; gap: 4px; flex: 1; overflow-y: visible; }
+  .sts-rail-cap { display: none; }
   .sts-tool { flex: 1 0 auto; min-width: 60px; min-height: 50px; flex-direction: column; }
   .sts-collapse { display: none; }
   .sts-back { display: flex; }

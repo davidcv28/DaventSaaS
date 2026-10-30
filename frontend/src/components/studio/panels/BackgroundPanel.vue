@@ -227,7 +227,7 @@ function setFocus(x, y) {
         label="Imagen del fondo"
         tip="¿Qué es esto? Una foto tuya de fondo. Por seguridad solo podés usar imágenes que ya subiste a tu tienda (portada, carrusel o galería)."
         focus="page" need="advanced" :benefits="benefits"
-        :hint="images.length ? 'Elegí una de tus imágenes.' : 'Todavía no subiste imágenes: cargá tu portada en Estilos > Identidad o fotos en el editor de contenido.'"
+        :hint="images.length ? 'Elegí una de tus imágenes.' : 'Todavía no subiste imágenes: cargá tu portada en Diseño → Identidad o fotos en el editor de contenido.'"
       >
         <div v-if="images.length" class="stp-imgs" role="group" aria-label="Imágenes de tu tienda">
           <button
