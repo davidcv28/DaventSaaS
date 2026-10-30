@@ -815,14 +815,16 @@ onBeforeUnmount(dropLocalLogo)
 .dl-step-pending { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong, var(--line)); }
 .dl-chev { flex: none; color: var(--muted); transition: transform .18s ease; }
 .dl-step.open .dl-chev { transform: rotate(180deg); }
-.dl-panel { display: grid; gap: 16px; padding: 4px 14px 16px; min-width: 0; animation: dl-in .18s ease both; }
+.dl-panel { display: grid; gap: 16px; padding: 2px 16px 18px; min-width: 0; animation: dl-in .18s ease both; }
+.dl-pickers { padding-bottom: 4px; border-bottom: 1px solid var(--line); }
 .dl-panel .field { min-width: 0; margin: 0; }
 .dl-panel .hint { overflow-wrap: anywhere; }
 @keyframes dl-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (max-width: 520px) {
-  .dl-step-btn { gap: 10px; padding: 10px; }
+  .dl-step-btn { gap: 10px; padding: 10px 12px; }
   .dl-step-lock { display: none; }
-  .dl-panel { padding: 4px 10px 14px; }
+  .dl-panel { padding: 2px 12px 16px; gap: 14px; }
+  .dl-progress { padding: 12px; }
 }
 
 .dl-ell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

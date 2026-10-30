@@ -5,7 +5,6 @@
 // Studio comparten una sola implementación y los mismos eventos.
 import { computed } from 'vue'
 import EstilosPanel from '../studio/panels/EstilosPanel.vue'
-import DesignPickers from './DesignPickers.vue'
 import DesignLivePreview from './DesignLivePreview.vue'
 import AppIcon from '../AppIcon.vue'
 
@@ -28,7 +27,6 @@ const previewOpen = computed(() => props.previewOpen)
   <div class="dstyles">
     <div class="dstyles-grid">
       <div class="dstyles-main">
-        <DesignPickers :form="form" :benefits="benefits" />
         <div class="dstyles-bar">
           <button type="button" class="btn ghost btn-auto" :aria-expanded="previewOpen" @click="emit('update:previewOpen', !previewOpen)">
             <AppIcon name="eye" :size="16" /> {{ previewOpen ? 'Ocultar vista previa' : 'Ver mi web' }}
