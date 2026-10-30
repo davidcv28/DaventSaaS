@@ -2,6 +2,8 @@ from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 
+from DaventProject.throttling import PublicReadThrottle
+
 """
 
 Viewsets del dominio Design.
@@ -20,6 +22,13 @@ class DesignCatalogViewSet(viewsets.ModelViewSet):
     lookup_value_regex  =   '[^/]+'
     list_serializer     =   None
     write_serializer    =   None
+
+    def get_throttles(self):
+        #El default es público (lo consume la web del cliente): scope
+        #'public_read' en vez del anon global de 100/día.
+        if self.action == 'default':
+            return [PublicReadThrottle()]
+        return super().get_throttles()
 
     def get_permissions(self):
         if self.action == 'default':

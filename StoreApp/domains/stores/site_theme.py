@@ -125,6 +125,20 @@ def _skin_family_of():
 def _style_preset_templates():
     from .services.ai_design_skins import STYLE_PRESET_TEMPLATES
     return STYLE_PRESET_TEMPLATES
+
+def _design_style_template(style_id):
+    """Plantilla del estilo del catálogo nuevo (DesignStyle.slug)."""
+    if not isinstance(style_id, str) or not style_id:
+        return None
+    try:
+        from StoreApp.domains.design.models import DesignStyle
+        return DesignStyle.objects.filter(slug = style_id).values_list('template', flat = True).first()
+    except Exception:
+        return None
+
+def _style_template_of(style_id):
+    """Plantilla del estilo elegido: catálogo nuevo primero, presets viejos después."""
+    return _design_style_template(style_id) or _style_preset_templates().get(style_id)
 #Sección `blocks`: overrides de estilo por contenedor (id de bloque de la
 #superficie landing). Las claves de bloque se validan contra
 #TEMPLATE_BLOCKS['landing']; lo desconocido se descarta en silencio.
@@ -193,7 +207,8 @@ _SECTION_SPECS  =   {
         'heroHeight':   ('enum', _HERO_HEIGHT),
     },
     'style'         :   {
-        'id'        :   ('enum', _STYLE_IDS),
+        #'styleId': slug del catálogo DesignStyle (o de los presets viejos).
+        'id'        :   ('styleId',),
         'palette'   :   ('enum', _STYLE_PALETTES),
     },
     'styleColors'   :   {mode: ('styleSet',) for mode in _STYLE_MODES},
@@ -517,6 +532,14 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
                 out[key]    =   color
             elif kind == 'enum':
                 out[key]    =   _v_enum(raw, spec[key][1], key)
+            elif kind == 'styleId':
+                #El catálogo nuevo vive en la base: el id se valida contra
+                #DesignStyle y, si no está, contra los presets viejos.
+                if _style_template_of(raw) is None:
+                    raise serializers.ValidationError(
+                        f'"{key}": elegí un estilo del catálogo.'
+                    )
+                out[key]    =   raw
             elif kind == 'int':
                 out[key]    =   _v_int(raw, spec[key][1], spec[key][2], key)
             elif kind == 'bool':
@@ -549,7 +572,7 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
     #(Básico: classic/duo; Estándar suma calma/vitrina; Premium, todo).
     style   =   clean.get('style')
     if style and 'id' in style:
-        template    =   _style_preset_templates().get(style['id'])
+        template    =   _style_template_of(style['id'])
         try:
             from .services.services import allowed_templates_of
             allowed_tpls    =   allowed_templates_of(store.user) if store is not None else ()

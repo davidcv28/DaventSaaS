@@ -492,6 +492,30 @@ class StoreTemplateGatingTests(TestCase):
         self.assertEqual(blank.status_code, 200)
         self.assertEqual(blank.data['customization']['icon_style'], '')
 
+    def test_style_id_accepts_the_design_catalog(self):
+        #El estilo elegido en el Studio es un slug del catálogo DesignStyle
+        #(no de los presets viejos): se persiste si su plantilla entra en el
+        #plan y se descarta si el plan no la alcanza.
+        from StoreApp.domains.design.models import DesignStyle
+        DesignStyle.objects.create(
+            slug = 'base-catalogo', nombre = 'Base', categoria = 'editorial',
+            tier = 'base', template = 'raiz',
+        )
+        client, _       =   self._client('has_design_plus')
+        ok              =   client.patch(
+            f'{STORES_URL}customization/',
+            {'site_theme': {'style': {'id': 'base-catalogo'}}},
+            format = 'json',
+        )
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(ok.data['customization']['site_theme']['style']['id'], 'base-catalogo')
+        bad             =   client.patch(
+            f'{STORES_URL}customization/',
+            {'site_theme': {'style': {'id': 'no-existe'}}},
+            format = 'json',
+        )
+        self.assertEqual(bad.status_code, 400)
+
     def test_downgraded_template_is_not_persisted(self):
         #Con el plan vigente guarda 'boutique'; si el beneficio se pierde,
         #el payload público ya no lo lista (el frontend fuerza 'raiz').

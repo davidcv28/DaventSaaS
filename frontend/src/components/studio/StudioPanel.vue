@@ -5,14 +5,17 @@
 //    -> persiste hoy por la API existente.
 //  - `theme` (siteTheme del contrato) -> viaja a la vista previa por
 //    studio:update y al payload site_theme.
-// Los paneles ricos (Colores, Tipografía, Contenedores, Fondo, Móvil y
-// Movimiento) viven en ./panels/*; acá quedan Distribución, Folletos y
-// Avanzado. La pestaña Estilos se retiró: ese flujo vive en la sección
-// Diseño del panel (EstilosPanel → DesignStylesTab).
+// Los paneles ricos (Diseño, Estilo, Iconos, Colores, Tipografía,
+// Contenedores, Fondo, Móvil y Movimiento) viven en ./panels/*; acá quedan
+// Folletos y Avanzado. La pestaña Estilos se retiró: ese flujo vive en la
+// sección Diseño del panel (EstilosPanel → DesignStylesTab).
 // Cada campo lleva data-focus con el target del contrato: el shell lo usa
 // para el anillo animado en la vista previa y para enfocar el control
 // cuando el usuario clickea el elemento correspondiente en el iframe.
 import AppIcon from '../AppIcon.vue'
+import DesignPanel from './panels/DesignPanel.vue'
+import StylePanel from './panels/StylePanel.vue'
+import IconsPanel from './panels/IconsPanel.vue'
 import ColorsPanel from './panels/ColorsPanel.vue'
 import TypographyPanel from './panels/TypographyPanel.vue'
 import ContainersPanel from './panels/ContainersPanel.vue'
@@ -46,10 +49,9 @@ const props = defineProps({
   shareExpires: { type: String, default: '' }
 })
 const emit = defineEmits([
-  'navigate', 'ring', 'set-viewer',
+  'navigate', 'ring', 'set-viewer', 'layout',
   'fix', 'publish', 'discard-draft', 'restore', 'share', 'load-versions',
-  'export-theme', 'import-theme',
-  'move-block', 'toggle-block', 'variant-block', 'reset-layout'
+  'export-theme', 'import-theme'
 ])
 
 // Importar tema (.json): el archivo se lee acá y el objeto crudo sube al
@@ -69,8 +71,22 @@ function onImportFile(e) {
 
 <template>
   <!-- ===== Paneles ricos (fase Studio panels) ===== -->
+  <DesignPanel
+    v-if="tool === 'diseno'"
+    :form="form" :benefits="benefits"
+    @navigate="emit('navigate', $event)" @layout="emit('layout', $event)"
+  />
+  <StylePanel
+    v-else-if="tool === 'estilo'"
+    :form="form" :theme="theme" :benefits="benefits"
+    @navigate="emit('navigate', $event)"
+  />
+  <IconsPanel
+    v-else-if="tool === 'iconos'"
+    :form="form" :benefits="benefits"
+  />
   <ColorsPanel
-    v-if="tool === 'colores'"
+    v-else-if="tool === 'colores'"
     :theme="theme" :form="form" :benefits="benefits"
     :customization="customization" :viewer="viewer" :shop-name="shopName"
     @navigate="emit('navigate', $event)" @set-viewer="emit('set-viewer', $event)"

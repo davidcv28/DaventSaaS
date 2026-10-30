@@ -8,7 +8,6 @@
 import { ref, computed, onMounted } from 'vue'
 import AppIcon from '../../AppIcon.vue'
 import AppButton from '../../AppButton.vue'
-import { SURFACE_LABELS } from '../../../templates/blocks.js'
 
 const props = defineProps({
   hasUnpublished: { type: Boolean, default: false }, // borrador server ≠ publicado
@@ -83,13 +82,6 @@ const diffFor = (version) => {
     if (JSON.stringify(next[key]) === JSON.stringify(now[key])) continue
     const label = THEME_LABELS[key] || key
     lines.push(`${label}: ${now[key] ?? '—'} → ${next[key] ?? '—'}`)
-  }
-  for (const surface of ['landing', 'catalog', 'services']) {
-    const ids = (layout) => (layout?.[surface]?.blocks || [])
-      .filter((b) => b && b.enabled !== false).map((b) => b.id).join(',')
-    if (ids(cur.layout_config) !== ids(snap.layout_config)) {
-      lines.push(`${SURFACE_LABELS[surface] || surface}: cambian las secciones visibles o su orden`)
-    }
   }
   if ((snap.template || '') !== (cur.template || '')) {
     lines.push(`Diseño: ${cur.template || 'el actual'} → ${snap.template || 'el actual'}`)

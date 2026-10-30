@@ -39,7 +39,6 @@ import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils
 import { presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
-import { blockSpec } from '../../templates/blocks.js'
 
 const { presets: designPresets, defaultPattern, load: loadDesignCatalog } = useDesignCatalog()
 
@@ -370,7 +369,7 @@ const PREVIEW_FORM_KEYS = [
   'about_title', 'about_text', 'about_years', 'about_mission', 'about_specialties',
   'show_about', 'theme', 'accent', 'accent_custom', 'logo_scale', 'logo_mode',
   'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y', 'template',
-  'whatsapp', 'instagram', 'tiktok', 'facebook', 'contact_email', 'footer_text',
+  'icon_style', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'contact_email', 'footer_text',
   'catalog_note', 'show_location', 'show_gallery', 'show_catalog', 'show_contact',
   'show_services', 'services_title', 'show_stats', 'show_testimonials',
   'show_faq', 'show_hours', 'show_cta', 'cta_title', 'cta_text', 'cta_label',
@@ -710,74 +709,17 @@ function onPanelNav(target) {
   else emit('navigate', target)
 }
 
-// ---------------------------------------------------------------------------
-// "Salud de tu web": los arreglos con fix automático se aplican al borrador
-// (paleta/tema/bloque); los de contenido navegan a su sección.
-// El layout se resuelve con la MISMA caída que usa StudioPanel, y cada fix
-// devuelve si hubo un cambio real: sin cambio no hay toast de éxito.
-// ---------------------------------------------------------------------------
-function resolvedLayout() {
-  return draft.layout || props.customization?.layout_config_draft || props.customization?.layout_config || null
-}
-// ---------------------------------------------------------------------------
-// Distribución: reordenar, apagar/encender y cambiar variantes de bloque.
-// Escribe `draft.layout` (el ensayo que viaja a la preview por postMessage y
-// al save como layout_config_draft). Se sanea con el mismo normalizador que
-// usa el front público, así el orden que ves es el que se guarda.
-// ---------------------------------------------------------------------------
-function draftBlocks(surface) {
-  if (!draft.layout) draft.layout = clone(resolvedLayout() || {})
-  if (!draft.layout?.[surface]) return []
-  if (!Array.isArray(draft.layout[surface].blocks)) draft.layout[surface].blocks = []
-  return draft.layout[surface].blocks
-}
-function commitLayout(surface) {
-  // El orden del array es la intención: se reescribe `order` antes de
-  // normalizar (normalizeLayoutConfig ordena por ese campo).
-  for (const s of Object.values(draft.layout || {})) {
-    if (Array.isArray(s?.blocks)) s.blocks = s.blocks.map((b, i) => ({ ...b, order: i }))
-  }
-  draft.layout = normalizeLayoutConfig(draft.layout)
-  // normalizeLayoutConfig descarta superficies sin bloques: si el usuario
-  // acaba de dejar una vacía, se conserva el objeto vacío para no perderla
-  // de la vista (la preview cae al patrón igual).
-  if (!draft.layout[surface]) draft.layout[surface] = { blocks: [] }
-}
-function moveBlock({ surface, from, to }) {
-  const blocks = draftBlocks(surface)
-  if (!blocks.length || from === to || to < 0 || to >= blocks.length) return
-  const list = blocks.slice()
-  const [item] = list.splice(from, 1)
-  if (!item) return
-  list.splice(to, 0, item)
-  draft.layout[surface].blocks = list
-  commitLayout(surface)
-}
-function toggleBlock({ surface, id }) {
-  const block = draftBlocks(surface).find((b) => b && b.id === id)
-  if (!block) return
-  const spec = blockSpec(surface, id)
-  if (spec?.locked) { showToast('Esa sección es fija: no se puede ocultar'); return }
-  block.enabled = block.enabled === false
-  commitLayout(surface)
-}
-function setBlockVariant({ surface, id, variant }) {
-  const block = draftBlocks(surface).find((b) => b && b.id === id)
-  if (!block) return
-  const spec = blockSpec(surface, id)
-  const options = spec?.variants ? Object.keys(spec.variants) : []
-  if (!options.includes(variant)) return
-  // La primera variante es la default: no se guarda (queda implícita).
-  if (variant === options[0]) delete block.variant
-  else block.variant = variant
-  commitLayout(surface)
-}
-function resetLayout() {
-  draft.layout = clone(savedLayout.value)
-  draft.template = null
-  showToast('Distribución restaurada al borrador guardado')
+// El panel Diseño escribe template + layout_config en el form; el ensayo del
+// layout viaja a la vista previa por postMessage y al save como *_draft.
+function applyDraftLayout(layout) {
+  draft.layout = clone(layout || {})
 }
 
+// ---------------------------------------------------------------------------
+// "Salud de tu web": los arreglos con fix automático se aplican al borrador
+// (paleta/tema); los de contenido navegan a su sección. Cada fix devuelve si
+// hubo un cambio real: sin cambio no hay toast de éxito.
+// ---------------------------------------------------------------------------
 // El acento/primario tocado por un fix de Salud se espeja al campo
 // persistido (como ColorsPanel.setRole): sin plan premium se mapea al slug
 // más cercano que siga cumpliendo el contraste.
@@ -827,15 +769,6 @@ function applyHealthFix(fix) {
     showToast('Arreglo aplicado al borrador')
     return true
   }
-  if (fix.kind === 'block') {
-    if (!draft.layout) draft.layout = clone(resolvedLayout())
-    const block = draft.layout?.[fix.surface]?.blocks?.find((x) => x && x.id === fix.id)
-    if (!block) { showToast('No encontramos esa sección en tu diseño'); return false }
-    if (block.enabled === false) { showToast('Esa sección ya estaba oculta'); return false }
-    block.enabled = false
-    showToast('Sección ocultada en el borrador')
-    return true
-  }
   return false
 }
 
@@ -857,6 +790,10 @@ function closeOnboarding() {
 // Índice de la búsqueda: herramientas + campos clave con su data-focus (el
 // pick enfoca el control exacto como un click en la vista previa).
 const SEARCH_INDEX = [
+  { tool: 'diseno',       focus: null,         label: 'Diseño de tu web',             hint: 'Diseño', kw: 'diseno patron estructura portada catalogo rubro plantilla' },
+  { tool: 'estilo',       focus: 'page',       label: 'Estilo, bordes y colores',     hint: 'Estilo', kw: 'estilo piel bordes colores look modo noche' },
+  { tool: 'estilo',       focus: 'page',       label: 'Modo noche',                   hint: 'Estilo', kw: 'oscuro claro modo noche dark toggle interruptor' },
+  { tool: 'iconos',       focus: null,         label: 'Iconos del menú',              hint: 'Iconos', kw: 'icono iconos menu set controles' },
   { tool: 'colores',      focus: 'page',       label: 'Paleta y colores',             hint: 'Colores', kw: 'color paleta acento primario fondo texto' },
   { tool: 'colores',      focus: 'buttons',    label: 'Contraste accesible',          hint: 'Colores', kw: 'contraste aa legibilidad accesible' },
   { tool: 'tipografia',   focus: 'typo',       label: 'Fuentes y tipografía',         hint: 'Tipografía', kw: 'fuente letra tipografia texto peso escala' },
@@ -1054,9 +991,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
           :has-unpublished="hasUnpublished" :local-dirty="anyDirty"
           :versions="versions" :versions-loading="versionsLoading" :action-busy="actionBusy"
           :share-url="shareUrl" :share-expires="shareExpires"
-          @navigate="onPanelNav" @ring="ringTarget"
-          @move-block="moveBlock" @toggle-block="toggleBlock"
-          @variant-block="setBlockVariant" @reset-layout="resetLayout"
+          @navigate="onPanelNav" @ring="ringTarget" @layout="applyDraftLayout"
           @set-viewer="(v) => { if (v === 'light' || v === 'dark') viewerTheme = v }"
           @fix="applyHealthFix"
           @publish="emit('publish', $event)" @discard-draft="emit('discard-draft')"

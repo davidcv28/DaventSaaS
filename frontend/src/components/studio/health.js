@@ -2,8 +2,8 @@
 // analyzeStudioHealth() es pura: recibe el tema resuelto (borrador), los
 // campos publicados del customizer, el layout en borrador y el contenido
 // (imágenes, productos, servicios) y devuelve findings con fix opcional.
-// Fixes: {kind:'palette'|'theme'|'block'|'nav'} — los aplica StudioShell
-// sobre el borrador (palette/theme/block) o navega a la sección dueña (nav).
+// Fixes: {kind:'palette'|'theme'|'nav'} — los aplica StudioShell sobre el
+// borrador (palette/theme) o navega a la sección dueña (nav).
 import {
   contrastRatio, textOn, normalizeHex, hexToRgb, rgbToHex,
   SITE_THEME_DEFAULTS
@@ -233,9 +233,7 @@ function checkEmptySections(c, out) {
       if (!src || src.has(c)) continue
       out.push(issue(`empty-${surface}-${block.id}`, 'warn', 'layout-grid', `"${src.label}" está vacío`,
         `La sección está activada pero no tiene contenido, así que puede verse vacía.`,
-        src.nav
-          ? { kind: 'nav', target: src.nav, label: 'Cargar contenido' }
-          : { kind: 'block', surface, id: block.id, label: 'Ocultar sección' }))
+        { kind: 'nav', target: src.nav || 'content', label: 'Cargar contenido' }))
     }
   }
   scan('landing', LANDING_SOURCES)

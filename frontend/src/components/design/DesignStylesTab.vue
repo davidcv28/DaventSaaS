@@ -173,12 +173,10 @@ function onStylePick(value) {
   // El estilo es un tema completo: se aplican sus tokens (paleta,
   // tipografía, contenedores, botones, fondo, movimiento y móvil) para que
   // el look elegido se vea igual acá, en el Studio y en la web publicada.
+  // La estructura NO se toca: el template y el layout son del diseño.
   const theme = resolveSiteTheme(s.tokens || {})
   props.form.site_theme = { ...theme, style: { id: s.slug } }
   props.form.theme = s.page_theme || props.form.theme
-  props.form.template = s.template || props.form.template
-  const layout = normalizeLayoutConfig(s.layout)
-  if (Object.keys(layout).length) props.form.layout_config = layout
   const heading = theme.typography?.heading
   const body = theme.typography?.body
   if (heading) ensureStoreFont(heading)

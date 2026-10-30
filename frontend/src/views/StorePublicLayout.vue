@@ -284,8 +284,10 @@ function readVisitorThemeForStore() {
 // resolveStoreTheme junto con la elección del visitante y el preview).
 const visitorTheme = ref(readVisitorThemeForStore()) // null = tema de la tienda
 const pageTheme = computed(() => resolveStoreTheme({
-  studio: studioMode.value,
-  studioView: studioViewMode.value,
+  // `studio` es el tema que manda el lienzo (string); `studioView` es la
+  // bandera de que ese tema ya llegó por postMessage.
+  studio: studioViewMode.value,
+  studioView: studioMode.value && Boolean(studioViewMode.value),
   visitor: visitorTheme.value,
   storeDefault: custom.value.theme,
   prefersDark

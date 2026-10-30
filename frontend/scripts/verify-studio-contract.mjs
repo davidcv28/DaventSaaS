@@ -13,6 +13,7 @@ import {
   analyzeStudioHealth, repairPalette, palettePasses, CONTRAST_PAIRS, pairColors
 } from '../src/components/studio/health.js'
 import { bandPalette, adaptPalette } from '../src/utils/colorTools.js'
+import { patternChoice, styleChoice, iconChoice, savePayloadPlan } from '../src/studio/designChoice.js'
 
 let failures = 0
 function check(name, cond, extra = '') {
@@ -267,6 +268,24 @@ check('paleta ya oscura no se reescribe', adaptPalette(darkPal, 'dark') === null
 const backLight = adaptPalette(darkPal, 'light')
 check('paleta oscura -> clara recupera fondo claro', backLight && contrastRatio(backLight.text, backLight.surface) >= 4.5 && contrastRatio(backLight.primary, backLight.surface) >= 4.5)
 check('paleta ya clara no se reescribe', adaptPalette(backLight, 'light') === null)
+
+console.log('— elección de diseño / estilo / iconos —')
+const pat = { slug: 'atelier', template: 'atelier', layout: { landing: { blocks: [{ id: 'hero' }] } }, tokens: { accent: '#2d4a3e', fonts: ['hanken-grotesk', 'bricolage-grotesque'] } }
+const okPat = patternChoice(pat, { allowed: ['raiz', 'atelier'] })
+check('diseño permitido aplica template y layout', okPat && !okPat.locked && okPat.template === 'atelier' && !!okPat.layout_config.landing)
+check('diseño de otro nivel queda bloqueado', patternChoice(pat, { allowed: ['raiz'] }).locked === true)
+check('con estilo aplicado el diseño no pisa la piel', patternChoice(pat, { allowed: ['atelier'], hasStyle: true }).site_theme === undefined)
+const sty = { slug: 'papel-riso', template: 'raiz', page_theme: 'light', tokens: { palette: { accent: '#0f766e' } }, layout: { landing: { blocks: [{ id: 'x' }] } } }
+const okSty = styleChoice(sty, { allowed: ['raiz'] })
+check('estilo aplica tema sin layout ni template', okSty && !okSty.locked && !okSty.layout_config && !okSty.template && okSty.site_theme.style.id === 'papel-riso')
+check('estilo fuera del plan queda bloqueado', styleChoice({ ...sty, template: 'boutique' }, { allowed: ['raiz'] }).locked === true)
+eq('icono del catálogo se guarda', iconChoice('lineal', { options: ['lineal'] }), { icon_style: 'lineal' })
+eq('icono retirado vuelve a heredar', iconChoice('viejo', { options: ['lineal'] }), { icon_style: '' })
+const draftPlan = savePayloadPlan({ asDraft: true, formTemplate: 'atelier', savedTemplate: 'raiz', siteTheme: { palette: { accent: '#0f766e' } }, layoutConfig: { landing: { blocks: [{ id: 'hero' }] } } })
+check('el borrador guarda en columnas *_draft', !!draftPlan.template_draft && !!draftPlan.site_theme_draft && !!draftPlan.layout_config_draft && draftPlan.template === undefined)
+const pubPlan = savePayloadPlan({ asDraft: false, formTemplate: 'atelier', savedTemplate: 'raiz', siteTheme: { palette: { accent: '#0f766e' } }, layoutConfig: { landing: { blocks: [{ id: 'hero' }] } } })
+check('publicar guarda en las columnas definitivas', pubPlan.template === 'atelier' && !!pubPlan.site_theme && !!pubPlan.layout_config && pubPlan.template_draft === undefined)
+eq('borrador sin cambio de diseño no manda template_draft', savePayloadPlan({ asDraft: true, formTemplate: 'raiz', savedTemplate: 'raiz' }), {})
 
 console.log('')
 if (failures) { console.error(`${failures} chequeo(s) fallaron`); process.exit(1) }

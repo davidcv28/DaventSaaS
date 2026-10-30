@@ -99,7 +99,7 @@ onBeforeUnmount(() => {
         <AppIcon name="chevron-left" :size="16" /> Volver a Diseño
       </button>
       <div class="studio-page-title">
-        <AppIcon name="layout-panel-left" :size="16" /> Studio
+        <AppIcon name="layers" :size="16" /> Studio
         <small>{{ designShopName }}</small>
       </div>
       <a v-if="publicUrl" class="btn ghost btn-auto" :href="publicUrl" target="_blank" rel="noopener">

@@ -1,8 +1,9 @@
 import { ref, computed, nextTick, watch, onScopeDispose } from 'vue'
 import { storesApi, CUSTOMIZATION_DEFAULTS, ensureStoreFont, normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook } from '../api/stores.api.js'
+import { savePayloadPlan } from '../studio/designChoice.js'
 
 // Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
-export const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', 'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y', 'layout_config', 'site_theme']
+export const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', 'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y', 'layout_config', 'site_theme', 'icon_style']
 
 /*
 Estado y handlers del Studio de diseño, compartidos por DashboardView y la
@@ -155,6 +156,7 @@ export function useStudioDesign({
       show_contact: Boolean(designForm.show_contact),
       theme: designForm.theme,
       theme_toggle: Boolean(designForm.theme_toggle),
+      icon_style: designForm.icon_style || '',
       whatsapp: normalizeWhatsapp(designForm.whatsapp),
       instagram: normalizeInstagram(designForm.instagram),
       tiktok: normalizeTiktok(designForm.tiktok),
@@ -177,25 +179,17 @@ export function useStudioDesign({
     }
     // Patrón + estilo elegidos en la sección Diseño: el layout del patrón y
     // el tema del estilo viajan como columnas propias. El Studio los pisa
-    // abajo con su borrador cuando corresponde.
-    if (designForm.layout_config && Object.keys(designForm.layout_config).length) {
-      payload[asDraft ? 'layout_config_draft' : 'layout_config'] = designForm.layout_config
-    }
-    if (designForm.site_theme && Object.keys(designForm.site_theme).length) {
-      payload[asDraft ? 'site_theme_draft' : 'site_theme'] = designForm.site_theme
-    }
-    // En modo borrador (save del Studio) template/layout/tema viajan en sus
-    // columnas *_draft: la web sigue mostrando lo publicado hasta "Publicar".
-    if (asDraft) {
-      const trialTemplate = studioExtras.value?.template
-      const formTemplateChanged = designForm.template !== (store.customization?.template || 'raiz')
-      const nextTemplate = trialTemplate || (formTemplateChanged ? designForm.template : null)
-      if (nextTemplate) payload.template_draft = nextTemplate
-    } else {
-      payload.template = studioExtras.value?.template || designForm.template
-    }
-    if (studioTheme.value) payload[asDraft ? 'site_theme_draft' : 'site_theme'] = studioTheme.value
-    if (studioExtras.value?.layout_config) payload[asDraft ? 'layout_config_draft' : 'layout_config'] = studioExtras.value.layout_config
+    // con su borrador cuando corresponde. En modo borrador (save del Studio)
+    // template/layout/tema van a sus columnas *_draft: la web sigue
+    // mostrando lo publicado hasta "Publicar".
+    Object.assign(payload, savePayloadPlan({
+      asDraft,
+      formTemplate: designForm.template,
+      savedTemplate: store.customization?.template || 'raiz',
+      trialTemplate: studioExtras.value?.template || '',
+      siteTheme: studioTheme.value || designForm.site_theme,
+      layoutConfig: studioExtras.value?.layout_config || designForm.layout_config
+    }))
     // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
     if (canLocationMap.value) payload.show_location = Boolean(designForm.show_location)
     const okDesign = await store.saveCustomization(payload)

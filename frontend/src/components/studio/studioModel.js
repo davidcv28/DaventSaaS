@@ -7,6 +7,9 @@ import { effectiveAccent } from '../../api/stores.api.js'
 // en StudioPanel.vue; cualquier fase puede reemplazarlo con el slot
 // #panel-<id> del StudioShell.
 export const STUDIO_TOOLS = [
+  { id: 'diseno',       icon: 'layers',       label: 'Diseño',   desc: 'Elegí el diseño: portada, catálogo y servicios propios de tu rubro.' },
+  { id: 'estilo',       icon: 'brush',        label: 'Estilo',       desc: 'Bordes, colores, tipografía y modo noche del diseño elegido.' },
+  { id: 'iconos',       icon: 'grid',         label: 'Iconos',       desc: 'Set de iconos del menú y los controles, sin tocar el diseño.' },
   { id: 'colores',      icon: 'palette',      label: 'Colores',      desc: 'Paleta por rol, armonías, logo y contraste accesible.' },
   { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuentes, pares recomendados, escala y peso.' },
   { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad, superficie y botones.' },
@@ -19,9 +22,10 @@ export const STUDIO_TOOLS = [
   { id: 'publicar',     icon: 'rocket',       label: 'Publicar',     desc: 'Borrador a tu web, historial de versiones y link para compartir.' }
 ]
 
-// Agrupación visual del riel: look, estructura y entrega. Solo cambia cómo
-// se leen las herramientas (el orden de STUDIO_TOOLS manda el recorrido).
+// Agrupación visual del riel: diseño, look, estructura y entrega. Solo cambia
+// cómo se leen las herramientas (el orden de STUDIO_TOOLS manda el recorrido).
 export const STUDIO_TOOL_GROUPS = [
+  { id: 'design', label: 'Diseño', tools: ['diseno', 'estilo', 'iconos'] },
   { id: 'look', label: 'Look', tools: ['colores', 'tipografia', 'contenedores', 'fondo', 'movimiento'] },
   { id: 'structure', label: 'Estructura', tools: ['movil'] },
   { id: 'ship', label: 'Puesta a punto', tools: ['folletos', 'avanzado', 'salud', 'publicar'] }

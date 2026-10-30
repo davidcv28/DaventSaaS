@@ -160,7 +160,12 @@
   ficha y servicios siguen con la plantilla Vue. QA `qa_patterns.py` (9 × 2
   temas × 6 anchos): 0 scroll horizontal, 0 errores de consola; `manage.py test
   StoreApp.domains.design` 37 OK; `vitest` 25 OK; `sync_design_neon` de los 9.
-- [ ] Landing única por rubro (composición propia, no genérica).
+- [x] Landing única por rubro (composición propia, no genérica).
+  **(TERMINADO)** — cada uno de los 9 patrones tiene su fuente editable en
+  `StoreApp/domains/design/sources/<slug>.html` con composición propia
+  (pizarra/editorial/vitrina/boutique/arco/ledger/consola/protocolo) y su
+  propio chrome; la portada se pinta desde el documento del patrón
+  (`PatternSurface`) y el seed deriva `variables` del markup real.
 - [x] Catálogo único por rubro (filtros, orden, vacíos, responsive).
   **(TERMINADO)** — cada diseño declara `data-surface="catalog"`: chips de
   categoría y orden (destacados/menor/mayor/nombre) resueltos en el navegador
@@ -199,10 +204,26 @@
 
 ### FASE 6 — Studio
 
-- [ ] Rediseño del Studio sobre el nuevo contrato: diseño, estilo (bordes/colores),
-  iconos, modo noche, preview real, guardar/publicar.
-- [ ] Quitar paneles del sistema de bloques.
-- [ ] Tests de guardado/publicación y de gating por plan.
+- [x] Rediseño del Studio sobre el nuevo contrato: diseño, estilo (bordes/colores),
+  iconos, modo noche, preview real, guardar/publicar. **(TERMINADO)** — el riel
+  abre con el grupo **Diseño**: `panels/DesignPanel.vue` (elige `DesignPattern`
+  del catálogo → `template` + `layout_config`, y su piel solo si no hay estilo),
+  `panels/StylePanel.vue` (elige `DesignStyle`: tokens al borrador del tema,
+  nunca template/layout; + **Modo noche** con `form.theme` y `theme_toggle`) y
+  `panels/IconsPanel.vue` (set de `DesignIconStyle` con preview de paths, vacío
+  = hereda el del diseño). El panel Diseño emite `layout` al shell
+  (`applyDraftLayout`) para que el ensayo viaje a la vista previa; el lienzo ya
+  tenía el interruptor claro/oscuro. `icon_style` se sumó al payload de
+  guardado y a `PREVIEW_FORM_KEYS` (antes se elegía pero no se persistía).
+- [x] Quitar paneles del sistema de bloques. **(TERMINADO)** — se borraron de
+  `StudioShell` el ensayo de bloques (`moveBlock`/`toggleBlock`/
+  `setBlockVariant`/`resetLayout`, `blockSpec`), los fixes `kind:'block'` de
+  `health.js` (ahora navegan a cargar contenido) y el diff de secciones de
+  `PublishPanel`.
+- [x] Tests de guardado/publicación y de gating por plan. **(TERMINADO)** —
+  `src/studio/designChoice.js` (puro) + `tests/studio-design-choice.test.js`
+  (13 tests) y chequeos en `verify:studio`; backend
+  `test_style_id_accepts_the_design_catalog`.
 
 ### FASE 7 — Verificación
 
@@ -210,24 +231,26 @@
   **(TERMINADO)** — design: 20 tests OK; stores: 164 tests OK.
 - [x] `venv/Scripts/python.exe manage.py check` **(TERMINADO)** — 0 issues.
 - [x] `npm run verify:studio` + `npx vitest run` en `frontend/` **(TERMINADO)** — 15 tests OK.
-- [ ] QA visual con navegador headless (consola limpia, sin 404 de assets). **PENDIENTE**
-  (el build de Vite solo compila con `TMP` local por el temp de esbuild en Windows).
+- [x] QA visual con navegador headless (consola limpia, sin 404 de assets).
+  **(TERMINADO)** — `qa_studio_design.py` (login real, `/dashboard/diseno/studio`,
+  1440×900): riel con Diseño/Estilo/Iconos, 22 diseños, 31 estilos, 5 sets de
+  iconos, cambio de diseño/estilo/iconos aplicado en vivo, lienzo en modo noche
+  y 0 errores de consola / 0 404 (15/15). `vite build` OK con `TMP` local.
 
 ---
 
 ## 2.b Estado para el próximo agente
 
-**Hecho y verificado:** contrato de datos (Fase 1), modo noche universal
-(Fase 2 completa), catálogo + aplicación de iconos (Fase 5 completa), retiro
-del sistema de bloques del render, del Studio y de las vistas (Fase 3
-completa), documentación vieja borrada (Fase 0).
+**Todo el plan está cerrado y verificado** (Fases 0-7). El Studio opera sobre
+el contrato nuevo: el riel abre con Diseño (patrón), Estilo (piel + modo
+noche) e Iconos (set de controles); el ensayo de bloques ya no existe y el
+guardado escribe `template`/`site_theme`/`layout_config` en columnas `*_draft`
+(borrador) o definitivas (publicar).
 
-**Falta lo pesado:** Fase 4 (rediseñar landing/catálogo/servicios de cada diseño
-sobre `DesignPattern.html/css/js` con variables: el pipeline ya está y `raiz` es
-la referencia; faltan los otros 8 patrones) y Fase 6 (rediseño profundo del
-Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.py`
-(`DesignPattern.render`), `frontend/src/templates/index.js` (`resolveLayout`) y
-`frontend/src/views/StorePublicLayout.vue` (`provide('storeIconSet')`).
+Si aparece un pedido nuevo, los puntos de entrada son
+`StoreApp/domains/design/` (modelos, seed, `pattern_render.py`),
+`frontend/src/components/studio/panels/` (paneles) y
+`frontend/src/studio/designChoice.js` (gating + payload, con tests).
 
 ## 3. Bitácora
 
@@ -270,5 +293,17 @@ Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.p
   fichas que abren `store-product`. QA en la app (`/bench-store/catalogo` y
   `/servicios`, payload interceptado): chips, filtro 24→13, orden por precio,
   8 servicios; `manage.py test StoreApp.domains.design` 39 OK.
-- Próximo paso: Fase 6 (rediseño del Studio) y la verificación de Fase 7 con
-  el build de Vite.
+- (2026-10-30) Fase 6 cerrada: herramientas Diseño/Estilo/Iconos en el riel,
+  modo noche en el panel Estilo, retiro del ensayo de bloques del shell y de
+  los fixes de bloque de Salud, `designChoice.js` + 13 tests de gating y
+  payload. De paso: `icon_style` ahora viaja en el save (antes se perdía) y
+  `StorePublicLayout` pasaba `studioMode` (bool) como tema → `data-store-theme`
+  valía "true" y el lienzo nunca aplicaba la piel oscura (ahora pasa el tema
+  del visor). Backend: `/api/design/catalog/` y los `default` de los viewsets
+  usan `PublicReadThrottle` (el anon global de 100/día dejaba el catálogo vacío
+  con 429 por CGNAT) y `site_theme.style.id` valida contra `DesignStyle`
+  además de los presets viejos (guardar un estilo del catálogo daba 400).
+  Fase 7: `qa_studio_design.py` 15/15, `vitest` 38 OK, `verify:studio` OK,
+  `manage.py test StoreApp.domains.design` 39 OK, `stores.tests` 165 OK,
+  `manage.py check` limpio, `vite build` OK.
+- Próximo paso: nada pendiente en este documento.

@@ -2,6 +2,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from DaventProject.throttling import PublicReadThrottle
 from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
 from StoreApp.domains.design.serializers import (
     DesignIconStyleSerializer,
@@ -37,6 +38,10 @@ def default_icon_style():
 #=========================================
 class DesignCatalogView(APIView):
     permission_classes  =   [AllowAny]
+    #Lectura pública (la piden la web del cliente y el Studio en cada carga):
+    #scope 'public_read' y no el anon global de 100/día, que se agota por
+    #CGNAT y deja el catálogo vacío con 429.
+    throttle_classes    =   [PublicReadThrottle]
 
     def get(self, request):
         pattern     =   default_pattern()

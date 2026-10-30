@@ -52,3 +52,6 @@ qa_token.tmp
 # Store local de pnpm y configs de herramientas locales
 .pnpm-store/
 .claude/settings.local.json
+
+# Temp local de esbuild/Vite en Windows
+.tmpbuild/
