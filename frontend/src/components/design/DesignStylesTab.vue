@@ -43,18 +43,21 @@ const previewOpen = computed(() => props.previewOpen)
       </aside>
     </div>
     <div v-if="canStudio" class="dstyles-studio">
-      <div>
+      <span class="dstyles-studio-ico" aria-hidden="true"><AppIcon name="layout-panel-left" :size="18" /></span>
+      <div class="dstyles-studio-txt">
         <strong>Studio</strong>
         <small>Control total con vista previa en vivo, en pantalla completa.</small>
       </div>
-      <button type="button" class="btn secondary btn-auto" @click="emit('open-studio')">Abrir Studio</button>
+      <button type="button" class="btn secondary btn-auto" @click="emit('open-studio')">
+        Abrir Studio <AppIcon name="arrow-right" :size="16" />
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.dstyles { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.dstyles-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.dstyles { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.dstyles-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 .dstyles-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; height: 100%; }
 .dstyles-live { min-width: 0; }
 .dstyles-bar { display: none; }
@@ -78,13 +81,25 @@ const previewOpen = computed(() => props.previewOpen)
   .dstyles-live.is-open { display: block; order: -1; position: sticky; top: 8px; z-index: 6; }
 }
 .dstyles-studio {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 14px 16px; border-radius: 12px;
-  border: 1px solid var(--line, #e5e7eb); background: var(--surface-2, #f8fafc);
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: 14px;
+  border: 1px solid var(--brand-soft-line, var(--line, #e5e7eb));
+  background:
+    radial-gradient(120% 160% at 0% 0%, var(--brand-soft, #eef2ff), transparent 65%),
+    var(--surface-2, #f8fafc);
 }
-.dstyles-studio strong { display: block; font-size: 14px; }
-.dstyles-studio small { display: block; font-size: 12px; opacity: .7; }
+.dstyles-studio-ico {
+  flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px;
+  background: var(--card, #fff); border: 1px solid var(--brand-soft-line, var(--line, #e5e7eb));
+  color: var(--brand-ink, #4f46e5);
+}
+.dstyles-studio-txt { flex: 1 1 auto; min-width: 0; }
+.dstyles-studio strong { display: block; font-size: 14px; letter-spacing: -.01em; }
+.dstyles-studio small { display: block; font-size: 12px; color: var(--muted, #64748b); }
+.dstyles-studio .btn { flex: none; }
 @media (max-width: 640px) {
-  .dstyles-studio { flex-direction: column; align-items: flex-start; }
+  .dstyles-studio { flex-wrap: wrap; align-items: flex-start; }
+  .dstyles-studio-txt { flex-basis: calc(100% - 52px); }
+  .dstyles-studio .btn { width: 100%; justify-content: center; }
 }
 </style>

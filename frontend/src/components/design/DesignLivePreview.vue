@@ -124,15 +124,22 @@ function reload() {
       </div>
     </header>
     <div class="dlp-stage" :class="device">
-      <iframe
-        v-if="src"
-        ref="frame"
-        :src="src"
-        title="Vista previa de tu web"
-        class="dlp-frame"
-        @load="onLoad"
-      ></iframe>
-      <p v-else class="dlp-empty">Guardá la dirección de tu web para verla acá.</p>
+      <div class="dlp-device">
+        <div class="dlp-chrome" aria-hidden="true">
+          <span class="dlp-dots"><i></i><i></i><i></i></span>
+          <span class="dlp-url">{{ slug ? `davent.app/${slug}` : 'davent.app' }}</span>
+          <span class="dlp-live"><i></i>En vivo</span>
+        </div>
+        <iframe
+          v-if="src"
+          ref="frame"
+          :src="src"
+          title="Vista previa de tu web"
+          class="dlp-frame"
+          @load="onLoad"
+        ></iframe>
+      </div>
+      <p v-if="!src" class="dlp-empty">Guardá la dirección de tu web para verla acá.</p>
       <p v-if="state === 'failed'" class="dlp-empty" role="alert">
         No pudimos cargar la vista previa.
         <button type="button" class="btn ghost btn-auto" @click="reload">Reintentar</button>
@@ -143,36 +150,80 @@ function reload() {
 
 <style scoped>
 .dlp {
-  display: flex; flex-direction: column; gap: 10px; min-width: 0;
-  padding: 12px; border: 1px solid var(--line, #e5e7eb); border-radius: 14px;
-  background: var(--card, #fff);
+  display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  padding: 14px; border: 1px solid var(--line, #e5e7eb); border-radius: 16px;
+  background: var(--card, #fff); box-shadow: var(--shadow-md, 0 10px 30px -18px rgba(15, 23, 42, .25));
 }
 .dlp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.dlp-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.dlp-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; letter-spacing: -.01em; }
+.dlp-head strong .icon { color: var(--brand-600, #4f46e5); }
 .dlp-actions { display: inline-flex; align-items: center; gap: 6px; }
-.dlp-seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--line, #e5e7eb); border-radius: 9px; }
+.dlp-seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--line, #e5e7eb); border-radius: 10px; background: var(--surface, #f8fafc); }
 .dlp-seg button {
-  display: inline-flex; align-items: center; gap: 4px; padding: 5px 9px; border: 0; border-radius: 7px;
-  background: transparent; color: inherit; font-size: 11px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--muted, #64748b); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
+  transition: background .15s, color .15s, box-shadow .15s;
 }
-.dlp-seg button.on { background: var(--surface-2, #f1f5f9); font-weight: 600; }
+.dlp-seg button.on { background: var(--card, #fff); color: var(--ink, #0f172a); box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, .12)); }
 .dlp-icon {
-  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
-  border: 1px solid var(--line, #e5e7eb); border-radius: 8px; background: transparent; color: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+  border: 1px solid var(--line, #e5e7eb); border-radius: 9px; background: var(--card, #fff); color: var(--ink-2, #334155);
+  cursor: pointer; text-decoration: none; transition: border-color .15s, color .15s, background .15s;
 }
+.dlp-icon:hover { border-color: var(--line-strong, #cbd5e1); background: var(--surface, #f8fafc); }
+/* Escenario: fondo con retícula tenue y luz de marca, para que el lienzo
+   blanco de la web no se lea como un hueco vacío. */
 .dlp-stage {
   position: relative; height: clamp(520px, 72vh, 900px); overflow: hidden;
-  border: 1px solid var(--line, #e5e7eb); border-radius: 10px; background: var(--surface-2, #f8fafc);
+  border: 1px solid var(--line, #e5e7eb); border-radius: 14px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--brand-soft, #eef2ff), transparent 62%),
+    var(--surface-2, #f1f5f9);
   display: flex; justify-content: center;
 }
-.dlp-stage.mobile { padding: 10px 0; background: var(--surface-3, #eef2f7); }
-.dlp-frame { width: 100%; height: 100%; border: 0; background: #fff; }
-.dlp-stage.mobile .dlp-frame { width: 430px; max-width: 100%; height: 100%; border-radius: 10px; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+.dlp-stage::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(15, 23, 42, .07) 1px, transparent 1px);
+  background-size: 16px 16px; opacity: .55;
+}
+.dlp-device {
+  position: relative; z-index: 1; display: flex; flex-direction: column;
+  width: 100%; height: 100%; min-width: 0; overflow: hidden; background: #fff;
+}
+.dlp-chrome {
+  flex: none; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px;
+  border-bottom: 1px solid var(--line, #e5e7eb); background: var(--surface, #f8fafc);
+}
+.dlp-dots { display: inline-flex; gap: 5px; flex: none; }
+.dlp-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong, #cbd5e1); }
+.dlp-url {
+  flex: 1 1 auto; min-width: 0; height: 22px; display: flex; align-items: center; justify-content: center;
+  padding: 0 12px; border: 1px solid var(--line, #e5e7eb); border-radius: 99px; background: var(--card, #fff);
+  color: var(--muted, #64748b); font-size: 10.5px; font-weight: 600; letter-spacing: .01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dlp-live {
+  flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700;
+  color: var(--ok-ink, #047857); text-transform: uppercase; letter-spacing: .06em;
+}
+.dlp-live i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent); }
+.dlp-frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; background: #fff; }
+.dlp-stage.mobile { padding: 18px 0; background:
+    radial-gradient(90% 70% at 50% 0%, var(--brand-soft, #eef2ff), transparent 60%),
+    var(--surface-3, #eef2f7); }
+.dlp-stage.mobile .dlp-device {
+  width: 392px; max-width: calc(100% - 32px); height: 100%;
+  border: 1px solid var(--line, #e5e7eb); border-radius: 26px;
+  box-shadow: 0 24px 50px -24px rgba(15, 23, 42, .45), 0 0 0 6px rgba(15, 23, 42, .04);
+}
+.dlp-stage.mobile .dlp-chrome { display: none; }
+.dlp-stage.mobile .dlp-frame { border-radius: 26px; }
 /* En mobile/tablet la vista previa se abre a demanda: más baja para que el
    formulario siga alcanzable mientras se edita. */
 @media (max-width: 1099px) {
   .dlp-stage { height: min(58vh, 460px); }
   .dlp-head strong { font-size: 12.5px; }
+  .dlp-chrome { display: none; }
 }
 .dlp-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 12px; opacity: .8; }
 </style>

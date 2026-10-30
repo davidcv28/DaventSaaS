@@ -789,13 +789,14 @@ onBeforeUnmount(dropLocalLogo)
 .dl-side-head small { color: var(--muted); font-size: 11.5px; }
 .dl-progress-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .dl-progress-title small { color: var(--muted); font-size: 11.5px; }
-.dl-progress { display: grid; gap: 10px; padding: 14px 16px; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); min-width: 0; }
+.dl-progress { position: relative; display: grid; gap: 12px; padding: 16px 18px; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); min-width: 0; }
+.dl-progress::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--brand-500), var(--accent)); opacity: .9; }
 .dl-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
-.dl-progress-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; min-width: 0; color: var(--ink); }
+.dl-progress-head strong { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; letter-spacing: -.01em; min-width: 0; color: var(--ink); }
 .dl-progress-head .icon { color: var(--brand-600); flex: none; }
-.dl-progress-count { flex: none; font-size: 13px; font-weight: 800; color: var(--brand-ink); font-variant-numeric: tabular-nums; }
+.dl-progress-count { flex: none; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--brand-soft-line, var(--line)); background: var(--card); font-size: 12px; font-weight: 800; color: var(--brand-ink); font-variant-numeric: tabular-nums; }
 .dl-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
-.dl-bar span { display: block; height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--brand-500), var(--accent)); transform-origin: 0 50%; transition: transform .22s ease; }
+.dl-bar span { display: block; height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--brand-500), var(--accent)); box-shadow: 0 0 12px -2px var(--brand-500); transform-origin: 0 50%; transition: transform .22s ease; }
 .dl-sum { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .dl-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(9, 12, 24, .15); }
 
@@ -811,18 +812,21 @@ onBeforeUnmount(dropLocalLogo)
 }
 @media (hover: hover) { .dl-step:not(.open):hover { background: var(--surface); } }
 .dl-step-h { margin: 0; font-size: inherit; }
-.dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; min-width: 0; padding: 12px 16px; border: 0; border-radius: 0; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
+.dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; min-width: 0; padding: 12px 16px; border: 0; border-radius: 0; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; transition: background .15s; }
 .dl-step-btn:focus-visible, .dl-filter:focus-visible, .dl-font:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
-.dl-step-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-soft); color: var(--brand-600); }
+.dl-step-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-soft); color: var(--brand-600); transition: background .15s, color .15s, box-shadow .15s; }
+.dl-step.open .dl-step-ico { background: var(--brand-500); color: #fff; box-shadow: 0 6px 14px -6px var(--brand-500); }
 .dl-step.done .dl-step-ico { background: var(--ok-bg); color: var(--ok-ink); }
+.dl-step.open.done .dl-step-ico { background: var(--ok); color: #fff; box-shadow: 0 6px 14px -6px var(--ok); }
 .dl-step-txt { display: grid; gap: 2px; flex: 1; min-width: 0; }
 .dl-step-txt strong { display: flex; align-items: center; gap: 8px; font-size: 14.5px; line-height: 1.25; min-width: 0; }
+.dl-step.open .dl-step-txt strong { color: var(--brand-ink); }
 .dl-step-txt small { color: var(--muted); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
 .dl-step-lock { flex: none; margin-left: 0; }
 .dl-step-state { flex: none; display: grid; place-items: center; width: 22px; height: 22px; color: var(--ok); }
 .dl-step-pending { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong, var(--line)); }
-.dl-chev { flex: none; color: var(--muted); transition: transform .18s ease; }
-.dl-step.open .dl-chev { transform: rotate(180deg); }
+.dl-chev { flex: none; color: var(--muted); transition: transform .18s ease, color .18s ease; }
+.dl-step.open .dl-chev { transform: rotate(180deg); color: var(--brand-ink); }
 .dl-panel { display: grid; gap: 18px; padding: 6px 18px 20px; min-width: 0; animation: dl-in .18s ease both; }
 .dl-pickers { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .dl-panel .field { min-width: 0; margin: 0; }
