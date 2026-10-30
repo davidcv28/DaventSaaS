@@ -179,3 +179,117 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertIn('--ml-yellow:#FFE600', mercado.css)
         self.assertTrue(pattern.layout.get('landing'))
         self.assertTrue(DesignStyle.objects.get(slug = 'base').tokens.get('palette'))
+
+
+ICON_URL        =   '/api/design/icon-styles/'
+
+
+class DesignContractTests(TestCase):
+    """Contrato nuevo: estilo limitado, variables de patrón e iconos."""
+
+    def setUp(self):
+        self.admin  =   _user('admin2', staff = True)
+        self.owner  =   _user('owner2')
+        self.client =   APIClient()
+
+    def _auth(self, user):
+        self.client.force_authenticate(user = user)
+
+    def test_style_effects_discard_structural_keys(self):
+        self._auth(self.admin)
+        response = self.client.post(STYLES_URL, {
+            'slug': 'contrato', 'nombre': 'Contrato', 'categoria': 'general',
+            'effects': {
+                'radius': 'pill', 'accent': '#12AB34', 'border_width': 2,
+                'shadow': 'soft', 'layout': {'landing': []},
+                'template': 'raiz', 'html': '<script>alert(1)</script>',
+                'border_width_evil': 9,
+            },
+        }, format = 'json')
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(response.json()['effects'], {
+            'radius': 'pill', 'accent': '#12ab34', 'border_width': 2, 'shadow': 'soft',
+        })
+
+    def test_style_effects_reject_invalid_values(self):
+        self._auth(self.admin)
+        response = self.client.post(STYLES_URL, {
+            'slug': 'contrato2', 'nombre': 'Contrato 2', 'categoria': 'general',
+            'effects': {'accent': 'red', 'radius': 'huge', 'border_width': 99, 'divider': 'line'},
+        }, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['effects'], {'divider': 'line'})
+
+    def test_pattern_variables_and_render(self):
+        pattern = DesignPattern.objects.create(
+            slug = 'vars', nombre = 'Vars', categoria = 'landing',
+            html = '<h1>{{store_name}}</h1><p>{{missing}}</p><script>{{store_name}}</script>',
+            variables = {
+                'store_name': {'type': 'text', 'label': 'Nombre'},
+                'bad key': {'type': 'text'},
+                'layout': 'ignored',
+            },
+        )
+        self.assertEqual(list(pattern.variables.keys()), ['store_name'])
+        rendered = pattern.render({'store_name': 'Mi <Negocio>'})
+        self.assertIn('Mi &lt;Negocio&gt;', rendered)
+        self.assertNotIn('<Negocio>', rendered)
+        self.assertNotIn('{{', rendered)
+
+    def test_pattern_serializer_sanitizes_variables(self):
+        self._auth(self.admin)
+        response = self.client.post(PATTERNS_URL, {
+            'slug': 'vars-api', 'nombre': 'Vars API', 'categoria': 'landing',
+            'html': '<b>{{title}}</b>',
+            'variables': {'title': {'type': 'text'}, 'Bad Name': {'type': 'text'}},
+            'supports_dark_mode': True,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(list(response.json()['variables'].keys()), ['title'])
+
+    def test_icon_style_sanitizes_paths(self):
+        from StoreApp.domains.design.models import DesignIconStyle
+        icon_style = DesignIconStyle.objects.create(
+            slug = 'test-set', nombre = 'Test', is_default = True,
+            icons = {
+                'home': {'path': 'M3 3h18v18z'},
+                'unknown': {'path': 'M0 0h1v1z'},
+                'bad': {'path': '<script>alert(1)</script>'},
+            },
+        )
+        icon_style.refresh_from_db()
+        self.assertEqual(list(icon_style.icons.keys()), ['home'])
+        self.assertEqual(icon_style.icons['home']['view_box'], '0 0 24 24')
+
+    def test_icon_style_endpoints(self):
+        from StoreApp.domains.design.models import DesignIconStyle
+        DesignIconStyle.objects.create(slug = 'base-set', nombre = 'Base', is_default = True,
+                                       icons = {'home': {'path': 'M3 3h18v18z'}})
+        DesignIconStyle.objects.create(slug = 'off-set', nombre = 'Off', is_active = False)
+        self.assertEqual(self.client.get(ICON_URL).status_code, 401)
+        self._auth(self.owner)
+        rows = self.client.get(ICON_URL).json()['results']
+        self.assertEqual([r['slug'] for r in rows], ['base-set'])
+        default = self.client.get(f'{ICON_URL}default/')
+        self.assertEqual(default.status_code, 200)
+        self.assertEqual(default.json()['slug'], 'base-set')
+
+    def test_catalog_includes_icon_styles(self):
+        from StoreApp.domains.design.models import DesignIconStyle
+        DesignIconStyle.objects.create(slug = 'catalog-set', nombre = 'Catálogo', is_default = True)
+        data = self.client.get(CATALOG_URL).json()
+        self.assertIn('icon_styles', data)
+        self.assertEqual(data['default_icon_style']['slug'], 'catalog-set')
+
+
+class IconStyleSeedTests(TestCase):
+    def test_seed_is_idempotent_and_sets_default(self):
+        from StoreApp.domains.design.models import DesignIconStyle
+        call_command('seed_icon_styles', verbosity = 0)
+        call_command('seed_icon_styles', verbosity = 0)
+        self.assertEqual(DesignIconStyle.objects.filter(is_default = True).count(), 1)
+        self.assertGreaterEqual(DesignIconStyle.objects.count(), 4)
+        lineal = DesignIconStyle.objects.get(slug = 'lineal')
+        self.assertTrue(lineal.is_default)
+        self.assertIn('home', lineal.icons)
+        self.assertIn('path', lineal.icons['home'])

@@ -132,11 +132,27 @@
 
 ### FASE 7 — Verificación
 
-- [ ] `venv/Scripts/python.exe manage.py test StoreApp.domains.design StoreApp.domains.stores`
-- [ ] `venv/Scripts/python.exe manage.py check`
-- [ ] QA visual con navegador headless (consola limpia, sin 404 de assets).
+- [x] `venv/Scripts/python.exe manage.py test StoreApp.domains.design StoreApp.domains.stores`
+  **(TERMINADO)** — design: 20 tests OK; stores: 164 tests OK.
+- [x] `venv/Scripts/python.exe manage.py check` **(TERMINADO)** — 0 issues.
+- [x] `npm run verify:studio` + `npx vitest run` en `frontend/` **(TERMINADO)** — 15 tests OK.
+- [ ] QA visual con navegador headless (consola limpia, sin 404 de assets). **PENDIENTE**
+  (el build de Vite solo compila con `TMP` local por el temp de esbuild en Windows).
 
 ---
+
+## 2.b Estado para el próximo agente
+
+**Hecho y verificado:** contrato de datos (Fase 1), modo noche universal (Fase 2
+parcial), catálogo + aplicación de iconos (Fase 5), retiro del sistema de bloques
+del render y del Studio (Fase 3, falta limpiar `useLayout`/`blocks.js` de las
+vistas), documentación vieja borrada (Fase 0).
+
+**Falta lo pesado:** Fase 4 (rediseñar landing/catálogo/servicios de cada diseño
+sobre `DesignPattern.html/css/js` con variables) y Fase 6 (rediseño profundo del
+Studio). Antes de tocar el render, leer `StoreApp/domains/design/models/models.py`
+(`DesignPattern.render`), `frontend/src/templates/index.js` (`resolveLayout`) y
+`frontend/src/views/StorePublicLayout.vue` (`provide('storeIconSet')`).
 
 ## 3. Bitácora
 
