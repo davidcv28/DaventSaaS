@@ -101,8 +101,10 @@ def _html_response(policy):
 
 class LoginLockoutTests(TestCase):
     """
-    Lockout por cuenta (además del throttle por IP): el credential stuffing
-    rota IPs. Se prueba el helper y el corte previo a la autenticación.
+    Lockout por CUENTA+IP (además del throttle por IP): el credential stuffing
+    rota IPs. La key incluye la IP — un lockout solo por username permitía
+    DoS dirigido (10 passwords erróneos bloqueaban la cuenta de cualquiera).
+    Backoff progresivo: 5 fallos → 429 corto, 10 → 429 largo.
     """
     def setUp(self):
         from django.core.cache import cache
@@ -111,23 +113,46 @@ class LoginLockoutTests(TestCase):
         self.key    =   _login_fail_key
         self.url    =   '/api/token/'
 
-    def test_locked_username_is_rejected_before_checking_credentials(self):
+    def _login(self, username, password, ip = '10.0.0.1'):
+        return self.client.post(self.url, {'username': username, 'password': password}, format = 'json', REMOTE_ADDR = ip)
+
+    def test_locked_username_and_ip_is_rejected_before_checking_credentials(self):
         from django.core.cache import cache
         from AdminApp.domains.users.views.auth_views import LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW
-        cache.set(self.key('victima'), LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW)
-        response    =   self.client.post(self.url, {'username': 'victima', 'password': 'x'}, format = 'json')
+        cache.set(self.key('victima', '10.0.0.1'), LOGIN_FAIL_LIMIT, LOGIN_FAIL_WINDOW)
+        response    =   self._login('victima', 'x')
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.headers.get('Retry-After'), str(LOGIN_FAIL_WINDOW))
+
+    def test_soft_backoff_after_five_failures(self):
+        from django.core.cache import cache
+        from AdminApp.domains.users.views.auth_views import LOGIN_FAIL_SOFT_LIMIT, LOGIN_FAIL_SOFT_WINDOW
+        cache.set(self.key('victima', '10.0.0.1'), LOGIN_FAIL_SOFT_LIMIT)
+        response    =   self._login('victima', 'x')
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.headers.get('Retry-After'), str(LOGIN_FAIL_SOFT_WINDOW))
+
+    def test_distributed_failures_do_not_lock_the_account(self):
+        #10 IPs × 1 fallo: cada contador queda en 1, la cuenta no se bloquea
+        #para la IP legítima (la víctima entra con su password correcta).
+        from django.contrib.auth.models import User
+        User.objects.create_user(username = 'victima', email = 'v@example.com', password = 'ClaveSegura-2026!')
+        for index in range(10):
+            response    =   self._login('victima', 'incorrecta', ip = f'10.0.0.{index + 1}')
+            self.assertEqual(response.status_code, 401)
+        response    =   self._login('victima', 'ClaveSegura-2026!', ip = '10.0.0.99')
+        self.assertEqual(response.status_code, 200)
 
     def test_failed_login_counts_and_success_clears(self):
         from django.core.cache import cache
         from django.contrib.auth.models import User
         User.objects.create_user(username = 'cliente', email = 'c@example.com', password = 'ClaveSegura-2026!')
-        self.client.post(self.url, {'username': 'cliente', 'password': 'incorrecta'}, format = 'json')
-        self.assertEqual(cache.get(self.key('cliente')), 1)
-        self.client.post(self.url, {'username': 'cliente', 'password': 'ClaveSegura-2026!'}, format = 'json')
-        self.assertIsNone(cache.get(self.key('cliente')))
+        self._login('cliente', 'incorrecta')
+        self.assertEqual(cache.get(self.key('cliente', '10.0.0.1')), 1)
+        self._login('cliente', 'ClaveSegura-2026!')
+        self.assertIsNone(cache.get(self.key('cliente', '10.0.0.1')))
 
     def test_username_is_hashed_in_cache_keys(self):
-        self.assertNotIn('victima', self.key('victima'))
-        self.assertEqual(self.key('Victima'), self.key('victima'))
+        self.assertNotIn('victima', self.key('victima', '10.0.0.1'))
+        self.assertEqual(self.key('Victima', '10.0.0.1'), self.key('victima', '10.0.0.1'))
+        self.assertNotEqual(self.key('victima', '10.0.0.1'), self.key('victima', '10.0.0.2'))

@@ -41,7 +41,18 @@ class Command(BaseCommand):
         retention   =   config('BACKUP_RETENTION_DAYS', default = 14, cast = int)
         key         =   f"backups/davent-{timezone.now().strftime('%Y%m%d-%H%M')}.sql.gz"
         #pg_dump lee credenciales del entorno (PGPASSWORD), nunca de argv/logs.
-        env         =   os.environ.copy()
+        #Env MÍNIMO: heredar os.environ.copy() le pasaba al hijo SECRET_KEY,
+        #SECRETS_MASTER_KEYS, tokens de MP, SMTP y R2 — cualquier volcado del
+        #proceso los exponía. Solo viajan las variables que pg_dump necesita.
+        env         =   {
+            'PATH'          :   os.environ.get('PATH', ''),
+            'HOME'          :   os.environ.get('HOME') or os.environ.get('USERPROFILE', ''),
+            'PGHOST'        :   str(db.get('HOST') or 'localhost'),
+            'PGPORT'        :   str(db.get('PORT') or '5432'),
+            'PGUSER'        :   str(db.get('USER') or 'postgres'),
+            'PGDATABASE'    :   db['NAME'],
+            'PGSSLMODE'     :   os.environ.get('PGSSLMODE', 'prefer'),
+        }
         if db.get('PASSWORD'):
             env['PGPASSWORD']   =   db['PASSWORD']
         cmd         =   [

@@ -58,9 +58,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated"
     ],
+    #Resilientes: si Redis no responde el throttle deja pasar (fail-open con
+    #log) en vez de tumbar el endpoint con un 500. El login del admin sigue
+    #fail-closed en su middleware.
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'DaventProject.throttling.ResilientAnonRateThrottle',
+        'DaventProject.throttling.ResilientUserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',

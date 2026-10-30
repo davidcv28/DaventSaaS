@@ -23,6 +23,14 @@ from AdminApp.domains.users.serializers import (
     PasswordResetConfirmSerializer,
 )
 #Misma resolución de IP que el middleware del admin (XFF del proxy confiable).
+from DaventProject.cache_utils import (
+    CacheUnavailable,
+    cache_add_strict,
+    cache_delete,
+    cache_get_strict,
+    cache_incr_strict,
+    cache_set_strict,
+)
 from DaventProject.middleware import client_ip as _client_ip
 from AdminApp.domains.users.services import (
     RequestPasswordResetQuery,
@@ -62,32 +70,47 @@ def _remember_requested(request) -> bool:
     return request.data.get('remember') in (True, 1, '1', 'true', 'True')
 
 
-# Lockout por CUENTA además del throttle por IP: el credential stuffing rota
-# IPs (proxies/botnets) y el scope 'login' (5/min por IP) no lo ve. Se cuenta
-# sobre el hash del username — nunca el username en claro en la cache — y el
-# contador se limpia al primer login exitoso.
-LOGIN_FAIL_LIMIT    =   10
-LOGIN_FAIL_WINDOW   =   900
+# Lockout por CUENTA+IP además del throttle por IP: el credential stuffing
+# rota IPs (proxies/botnets) y el scope 'login' (5/min por IP) no lo ve. El
+# contador se keyea por hash(username)+IP — un lockout por username solo
+# permitía DoS dirigido (10 passwords erróneos cada 15 min bloqueaban la
+# cuenta a cualquier atacante). Con la IP en la key, el ruido distribuido
+# contra una víctima no la bloquea; el backoff es progresivo (5 fallos →
+# 429 corto, 10 → 429 largo) y se limpia al primer login exitoso.
+LOGIN_FAIL_LIMIT        =   10
+LOGIN_FAIL_SOFT_LIMIT   =   5
+LOGIN_FAIL_WINDOW       =   900
+LOGIN_FAIL_SOFT_WINDOW  =   60
 
-def _login_fail_key(username : str) -> str:
-    digest  =   hashlib.sha256((username or '').strip().lower().encode('utf-8')).hexdigest()[:32]
+def _login_fail_key(username : str, ip : str) -> str:
+    raw     =   f'{(username or "").strip().lower()}|{ip or ""}'
+    digest  =   hashlib.sha256(raw.encode('utf-8')).hexdigest()[:32]
     return f'login-fail:{digest}'
 
-def _login_locked(username : str) -> bool:
+def _login_lock_seconds(username : str, ip : str) -> int:
     if not username:
-        return False
-    return int(cache.get(_login_fail_key(username)) or 0) >= LOGIN_FAIL_LIMIT
+        return 0
+    #FAIL-CLOSED: sin cache no se puede contar intentos (ver cache_utils).
+    count   =   int(cache_get_strict(_login_fail_key(username, ip)) or 0)
+    if count >= LOGIN_FAIL_LIMIT:
+        return LOGIN_FAIL_WINDOW
+    if count >= LOGIN_FAIL_SOFT_LIMIT:
+        return LOGIN_FAIL_SOFT_WINDOW
+    return 0
 
-def _register_login_failure(username : str) -> None:
+def _login_locked(username : str, ip : str) -> bool:
+    return _login_lock_seconds(username, ip) > 0
+
+def _register_login_failure(username : str, ip : str) -> None:
     if not username:
         return
-    key =   _login_fail_key(username)
-    if cache.add(key, 1, LOGIN_FAIL_WINDOW):
+    key =   _login_fail_key(username, ip)
+    if cache_add_strict(key, 1, LOGIN_FAIL_WINDOW):
         return
     try:
-        cache.incr(key)
+        cache_incr_strict(key)
     except ValueError:
-        cache.set(key, 1, LOGIN_FAIL_WINDOW)
+        cache_set_strict(key, 1, LOGIN_FAIL_WINDOW)
 
 
 class LoginRateThrottle(AnonRateThrottle):
@@ -192,12 +215,22 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         username    =   request.data.get('username') or ''
-        if _login_locked(username):
+        ip          =   _client_ip(request)
+        try:
+            lock_seconds    =   _login_lock_seconds(username, ip)
+        except CacheUnavailable:
+            response    =   Response(
+                {'detail': 'Servicio temporalmente no disponible. Probá en unos minutos.'},
+                status = status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+            response['Retry-After'] =   str(LOGIN_FAIL_SOFT_WINDOW)
+            return response
+        if lock_seconds:
             response    =   Response(
                 {'detail': 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.'},
                 status = status.HTTP_429_TOO_MANY_REQUESTS,
             )
-            response['Retry-After'] =   str(LOGIN_FAIL_WINDOW)
+            response['Retry-After'] =   str(lock_seconds)
             return response
         #SimpleJWT lanza AuthenticationFailed (401) en vez de devolver un
         #response: sin el except el conteo por cuenta nunca correría (DRF
@@ -206,20 +239,20 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             response = super().post(request, *args, **kwargs)
         except APIException as exc:
             logger.warning('Login rechazado (status=%s user=%s ip=%s)',
-                           exc.status_code, username, _client_ip(request))
+                           exc.status_code, username, ip)
             if exc.status_code in (400, 401):
-                _register_login_failure(username)
+                _register_login_failure(username, ip)
             raise
         if response.status_code != 200:
             #Auditoría de fuerza bruta: nunca se loguea la contraseña.
             logger.warning('Login rechazado (status=%s user=%s ip=%s)',
-                           response.status_code, username, _client_ip(request))
+                           response.status_code, username, ip)
             #Solo credenciales inválidas cuentan: un 429 del throttle no es un
             #intento de adivinar y no debe alargar el lockout.
             if response.status_code in (400, 401):
-                _register_login_failure(username)
+                _register_login_failure(username, ip)
             return response
-        cache.delete(_login_fail_key(username))
+        cache_delete(_login_fail_key(username, ip))
         refresh = response.data.pop('refresh', None)
         if refresh:
             remember    =   _remember_requested(request)

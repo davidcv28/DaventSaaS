@@ -13,6 +13,12 @@ name: davent
 
 # Env derivadas compartidas por los servicios Python: las credenciales viven
 # una sola vez en .env (POSTGRES_*/REDIS_PASSWORD) y las URLs se arman acá.
+#
+# ALLOWLIST explícita: compose interpola ${VAR} desde .env (o el entorno del
+# host) y solo inyecta lo que está en esta lista. Antes `env_file: .env`
+# pasaba TODAS las variables a db/redis/api/celery/migrate: la base y Redis
+# veían SECRET_KEY, tokens de MP, SMTP y el keyring de PII. Si se agrega una
+# var nueva a settings, hay que sumarla acá.
 x-api-env: &api-env
   DATABASE_URL:          postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
   REDIS_URL:             redis://:${REDIS_PASSWORD}@redis:6379/1
@@ -23,6 +29,81 @@ x-api-env: &api-env
   # restart pague ~4-6s y que dos réplicas migren en paralelo.
   RUN_MIGRATIONS:        "0"
   RUN_COLLECTSTATIC:     "0"
+  # El VPS tiene shell y preflight propio: el check --deploy del arranque
+  # corta el arranque si la config está incompleta (Render lo deja en "0").
+  DEPLOY_CHECK_STRICT:   "1"
+  # ---- Núcleo Django ----
+  SECRET_KEY:            ${SECRET_KEY}
+  DEBUG:                 ${DEBUG:-False}
+  ALLOWED_HOSTS:         ${ALLOWED_HOSTS}
+  CORS_ALLOWED_ORIGINS:  ${CORS_ALLOWED_ORIGINS}
+  CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-True}
+  CSRF_TRUSTED_ORIGINS:  ${CSRF_TRUSTED_ORIGINS}
+  FRONTEND_URL:          ${FRONTEND_URL}
+  BACKEND_URL:           ${BACKEND_URL}
+  ADMIN_URL:             ${ADMIN_URL}
+  PLATFORM_DOMAIN:       ${PLATFORM_DOMAIN}
+  LOG_LEVEL:             ${LOG_LEVEL:-INFO}
+  NUM_TRUSTED_PROXIES:   ${NUM_TRUSTED_PROXIES:-1}
+  GUNICORN_WORKERS:      ${GUNICORN_WORKERS:-3}
+  GUNICORN_THREADS:      ${GUNICORN_THREADS:-4}
+  # ---- HTTPS detrás de nginx ----
+  SECURE_PROXY_SSL:      ${SECURE_PROXY_SSL:-True}
+  SECURE_SSL_REDIRECT:   ${SECURE_SSL_REDIRECT:-False}
+  SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-True}
+  CSRF_COOKIE_SECURE:    ${CSRF_COOKIE_SECURE:-True}
+  SECURE_HSTS_SECONDS:   ${SECURE_HSTS_SECONDS:-31536000}
+  SECURE_HSTS_INCLUDE_SUBDOMAINS: ${SECURE_HSTS_INCLUDE_SUBDOMAINS:-True}
+  SECURE_HSTS_PRELOAD:   ${SECURE_HSTS_PRELOAD:-False}
+  # ---- Email ----
+  EMAIL_BACKEND:         ${EMAIL_BACKEND}
+  EMAIL_HOST:            ${EMAIL_HOST:-}
+  EMAIL_PORT:            ${EMAIL_PORT:-587}
+  EMAIL_USE_TLS:         ${EMAIL_USE_TLS:-True}
+  EMAIL_HOST_USER:       ${EMAIL_HOST_USER:-}
+  EMAIL_HOST_PASSWORD:   ${EMAIL_HOST_PASSWORD:-}
+  EMAIL_TIMEOUT:         ${EMAIL_TIMEOUT:-10}
+  DEFAULT_FROM_EMAIL:    ${DEFAULT_FROM_EMAIL}
+  LEGAL_REPORTS_EMAIL:   ${LEGAL_REPORTS_EMAIL:-}
+  # ---- Login social ----
+  GOOGLE_CLIENT_ID:      ${GOOGLE_CLIENT_ID:-}
+  # ---- MercadoPago ----
+  SECRET_MP_KEY:         ${SECRET_MP_KEY:-}
+  MP_WEBHOOK_SECRET:     ${MP_WEBHOOK_SECRET:-}
+  MP_WEBHOOK_ALLOW_UNSIGNED: ${MP_WEBHOOK_ALLOW_UNSIGNED:-False}
+  MP_PAYER_EMAIL:        ${MP_PAYER_EMAIL:-}
+  # ---- Cloudflare R2 / backups ----
+  S3_API:                ${S3_API:-}
+  R2_ACCESS_KEY_ID:      ${R2_ACCESS_KEY_ID:-}
+  R2_SECRET_ACCESS_KEY:  ${R2_SECRET_ACCESS_KEY:-}
+  R2_BUCKET:             ${R2_BUCKET:-}
+  R2_PUBLIC_URL:         ${R2_PUBLIC_URL:-}
+  BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+  # ---- APK ----
+  APP_APK_VERSION_NAME:  ${APP_APK_VERSION_NAME:-}
+  APP_APK_VERSION_CODE:  ${APP_APK_VERSION_CODE:-}
+  APP_APK_URL:           ${APP_APK_URL:-}
+  APP_APK_MIN_SUPPORTED_CODE: ${APP_APK_MIN_SUPPORTED_CODE:-}
+  # ---- Emisor / ARCA ----
+  ISSUER_NAME:           ${ISSUER_NAME:-DAVENT}
+  ISSUER_CUIT:           ${ISSUER_CUIT:-}
+  ISSUER_ADDRESS:        ${ISSUER_ADDRESS:-}
+  ISSUER_EMAIL:          ${ISSUER_EMAIL:-}
+  ISSUER_TAX_CONDITION:  ${ISSUER_TAX_CONDITION:-MO}
+  ISSUER_IIBB:           ${ISSUER_IIBB:-}
+  ISSUER_ACTIVITY_START: ${ISSUER_ACTIVITY_START:-}
+  AFIP_ENABLED:          ${AFIP_ENABLED:-False}
+  AFIP_ENV:              ${AFIP_ENV:-testing}
+  AFIP_CUIT:             ${AFIP_CUIT:-}
+  AFIP_CERT:             ${AFIP_CERT:-}
+  AFIP_KEY:              ${AFIP_KEY:-}
+  AFIP_KEY_PASSPHRASE:   ${AFIP_KEY_PASSPHRASE:-}
+  # ---- Cifrado de PII ----
+  SECRETS_MASTER_KEYS:   ${SECRETS_MASTER_KEYS:-}
+  SECRETS_HASH_KEY:      ${SECRETS_HASH_KEY:-}
+  # ---- Quitar fondo (ONNX) ----
+  BG_MODEL_URL:          ${BG_MODEL_URL:-}
+  BG_MODEL_SHA256:       ${BG_MODEL_SHA256:-}
 
 x-logging: &logging
   driver: json-file
@@ -36,7 +117,11 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
-    env_file: .env                       # POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB
+    #Allowlist: la base NO ve SECRET_KEY, tokens de MP, SMTP ni la keyring.
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
     networks: [internal_net]
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -56,7 +141,8 @@ services:
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
-    env_file: .env                       # REDIS_PASSWORD
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     # Auth obligatoria aunque no esté expuesto: defensa en profundidad si otro
     # contenedor del host queda comprometido.
     #
@@ -126,7 +212,6 @@ services:
       dockerfile: docker/api/Dockerfile
     restart: "no"
     command: ["sh", "-c", "python manage.py collectstatic --noinput && python manage.py migrate --noinput"]
-    env_file: .env
     environment: *api-env
     networks: [internal_net]
     volumes:
@@ -147,7 +232,6 @@ services:
       context: .
       dockerfile: docker/api/Dockerfile
     restart: unless-stopped
-    env_file: .env
     environment: *api-env
     # Puertos: ninguno publicado al host. nginx lo alcanza por edge_net.
     networks: [edge_net, internal_net]
@@ -179,7 +263,6 @@ services:
     image: ${API_IMAGE:-ghcr.io/davidcv28/daventsaas-api:latest}
     restart: unless-stopped
     command: ["celery", "-A", "DaventProject", "worker", "-l", "info", "--concurrency", "2"]
-    env_file: .env
     environment: *api-env
     networks: [edge_net, internal_net]   # edge_net para egress a MP/R2/SMTP
     depends_on:

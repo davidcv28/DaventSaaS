@@ -347,6 +347,12 @@ jobs:
           target: /opt/davent/.secrets
           overwrite: true
 
+      # El archivo de secretos no queda en el workspace del runner: se borra
+      # apenas termina el scp (siempre, incluso si el upload falla).
+      - name: Borrar secretos del runner
+        if: always()
+        run: rm -f davent-secrets.env
+
       - name: SSH -> secretos + pull imágenes + migrate + up rolling
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2  # v1.2.5
         with:
@@ -399,19 +405,40 @@ jobs:
             grep -q '^SECRETS_MASTER_KEYS=.\{20,\}' .env || { echo "FATAL: SECRETS_MASTER_KEYS ausente — la PII se cifraría con la llave derivada y quedaría ilegible al definir el keyring"; exit 1; }
             grep -q '^SECRETS_HASH_KEY=.\{20,\}' .env    || { echo "FATAL: SECRETS_HASH_KEY ausente (huellas de documento/celular)"; exit 1; }
 
+            # 2d. Tags previos ANTES de tocar nada: si el healthcheck falla,
+            #     el rollback vuelve a estas imágenes (nunca a :latest).
+            PREV_API_IMAGE=$(docker inspect --format '{{.Config.Image}}' "$(docker compose ps -q api)" 2>/dev/null || true)
+            PREV_WEB_IMAGE=$(docker inspect --format '{{.Config.Image}}' "$(docker compose ps -q web)" 2>/dev/null || true)
+            echo "Imágenes previas: api=${PREV_API_IMAGE:-<ninguna>} web=${PREV_WEB_IMAGE:-<ninguna>}"
+
             # 3. Rotación por sha (nunca :latest).
             git pull --ff-only
             export API_IMAGE=${{ env.API_IMAGE }}:sha-${{ github.sha }}
             export WEB_IMAGE=${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
             docker compose pull
+
+            # 3b. Backup de Postgres a R2 ANTES de migrar (fail-closed): una
+            #     migración destructiva o fallida no tiene otra red.
+            docker compose run --rm api python manage.py backup_db
             docker compose run --rm migrate
 
-            # 4. Rolling con espera real de healthchecks: si api/celery/web no
-            #    levantan, el job falla en vez de reportar verde.
-            docker compose up -d --remove-orphans --wait --wait-timeout 180
-
-            # 5. Verificación externa + GC de imágenes viejas (los tags
-            #    sha-<commit> se acumulaban hasta llenar el disco).
-            curl -fsS --retry 5 --retry-delay 3 -o /dev/null \
-              "https://${{ vars.PLATFORM_DOMAIN }}/healthz/"
+            # 4/5. Rolling + verificación externa con rollback: si `up -d
+            # --wait` o el healthz fallan, se re-despliegan las imágenes
+            # previas y el job termina en rojo indicando el sha.
+            rollback() {
+              echo "FATAL: el deploy de ${{ github.sha }} no quedó sano; rollback a api=${PREV_API_IMAGE:-<sin imagen previa>} web=${PREV_WEB_IMAGE:-<sin imagen previa>}"
+              [ -n "${PREV_API_IMAGE:-}" ] && export API_IMAGE="$PREV_API_IMAGE"
+              [ -n "${PREV_WEB_IMAGE:-}" ] && export WEB_IMAGE="$PREV_WEB_IMAGE"
+              docker compose up -d --remove-orphans --wait --wait-timeout 180 || true
+              curl -fsS --retry 5 --retry-delay 3 -o /dev/null "https://${{ vars.PLATFORM_DOMAIN }}/healthz/" || true
+              exit 1
+            }
+            if ! docker compose up -d --remove-orphans --wait --wait-timeout 180; then
+              rollback
+            fi
+            if ! curl -fsS --retry 5 --retry-delay 3 -o /dev/null "https://${{ vars.PLATFORM_DOMAIN }}/healthz/"; then
+              rollback
+            fi
+            # 5b. GC de imágenes viejas (los tags sha-<commit> se acumulaban
+            #     hasta llenar el disco).
             docker image prune -f --filter "until=168h"

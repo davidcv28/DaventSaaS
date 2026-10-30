@@ -564,3 +564,8 @@ for _model in (Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage,
     post_save.connect(_bust_public_store, sender = _model)
     post_delete.connect(_bust_public_store, sender = _model)
 del _model
+
+def _forget_public_store(sender, instance, **kwargs):
+    from StoreApp.domains.stores.public_cache import forget_public_store
+    forget_public_store(instance.pk)
+post_delete.connect(_forget_public_store, sender = Store)

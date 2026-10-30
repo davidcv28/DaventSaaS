@@ -1,6 +1,6 @@
 import hashlib
 from datetime import timedelta
-from django.core.cache import cache
+from DaventProject.cache_utils import cache_add, cache_get, cache_set
 from django.db.models import F, Sum
 from django.utils import timezone
 from SuscriptionApp.domains.benefits.models import Benefit
@@ -41,7 +41,7 @@ def plan_benefits_of(profile):
     if cached is not None:
         return cached
     try:
-        benefits    =   cache.get(_benefits_cache_key(profile))
+        benefits    =   cache_get(_benefits_cache_key(profile))
     except Exception:
         benefits    =   None
     if benefits is None:
@@ -56,7 +56,7 @@ def plan_benefits_of(profile):
                 code                =   plan_benefit.benefit.code
                 benefits[code]      =   plan_benefit.value if plan_benefit.benefit.kind == Benefit.LIMIT else plan_benefit.enabled
         try:
-            cache.set(_benefits_cache_key(profile), benefits, PLAN_BENEFITS_TTL)
+            cache_set(_benefits_cache_key(profile), benefits, PLAN_BENEFITS_TTL)
         except Exception:
             pass
     profile._plan_benefits_cache        =   benefits
@@ -105,13 +105,14 @@ def record_store_visit(store, request):
     guardar su IP. El update con F() no pierde hits concurrentes.
     """
     today           =   timezone.localdate()
-    #Último segmento de X-Forwarded-For: el proxy confiable (Render/CF)
-    #appendea la IP real del cliente al final — el primero es spoofeable
-    #por el propio visitante e inflaría el dedupe en su favor.
-    ip              =   (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[-1].strip() or request.META.get('REMOTE_ADDR') or ''
+    #Un solo parseo de XFF en todo el proyecto: client_ip() respeta NUM_PROXIES
+    #(el último salto del proxy confiable). El parseo local tomaba siempre el
+    #último XFF y con NUM_PROXIES=0 era spoofeable.
+    from DaventProject.middleware import client_ip
+    ip              =   client_ip(request)
     ua              =   request.META.get('HTTP_USER_AGENT', '')[:200]
     key             =   'visit:%s:%s' % (store.pk, hashlib.sha256(f'{ip}|{ua}|{today}'.encode()).hexdigest()[:32])
-    if not cache.add(key, 1, 86400):
+    if not cache_add(key, 1, 86400):
         return
     StoreDailyVisit.objects.get_or_create(store = store, date = today, defaults = {'count': 0})
     StoreDailyVisit.objects.filter(store = store, date = today).update(count = F('count') + 1)

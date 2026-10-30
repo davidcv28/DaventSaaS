@@ -1,8 +1,10 @@
+import contextlib
 import hashlib
 import io
 import os
 import tempfile
 import threading
+import time
 import requests
 from decouple import config
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -129,24 +131,88 @@ def _file_sha256(path):
         for chunk in iter(lambda : handle.read(1 << 20), b''):
             digest.update(chunk)
     return digest.hexdigest()
+BG_MODEL_MAX_BYTES  =   200 * 1024 * 1024     # tope de descarga (u2netp pesa ~4.7 MB)
+
+@contextlib.contextmanager
+def _model_file_lock(lock_path, timeout = 180):
+    """
+    Lock ENTRE PROCESOS (el threading.Lock de _session solo cubre un worker):
+    dos gunicorn/celery workers podían descargar el modelo al mismo tiempo,
+    pisarse el .tmp y dejar un archivo corrupto. msvcrt en Windows, fcntl en
+    POSIX; el lock vive en un archivo hermano del modelo.
+    """
+    handle  =   open(lock_path, 'a+b')
+    try:
+        if os.name == 'nt':
+            import msvcrt
+            deadline    =   time.time() + timeout
+            while True:
+                try:
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    if time.time() > deadline:
+                        raise
+                    time.sleep(0.1)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+def _download_model(url, expected, directory):
+    """Descarga con stream + tope de bytes a un temporal ÚNICO del mismo FS."""
+    fd, tmp     =   tempfile.mkstemp(prefix = 'davent_bg_', suffix = '.onnx.part', dir = directory)
+    try:
+        digest  =   hashlib.sha256()
+        total   =   0
+        with os.fdopen(fd, 'wb') as handle, requests.get(url, timeout = 120, stream = True) as response:
+            response.raise_for_status()
+            declared    =   int(response.headers.get('Content-Length') or 0)
+            if declared > BG_MODEL_MAX_BYTES:
+                raise ValueError('El modelo remoto excede el tamaño máximo permitido.')
+            for chunk in response.iter_content(1 << 20):
+                total   +=  len(chunk)
+                if total > BG_MODEL_MAX_BYTES:
+                    raise ValueError('La descarga del modelo excede el tamaño máximo permitido.')
+                digest.update(chunk)
+                handle.write(chunk)
+        if expected and digest.hexdigest() != expected:
+            raise ValueError('El modelo descargado no coincide con el hash esperado.')
+        return tmp
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
 def _ensure_model(path):
     """
     Garantiza que el ONNX cacheado sea íntegro: un archivo con hash distinto
     del esperado (descarga truncada, artefacto reemplazado upstream) se borra
     y se vuelve a descargar — y si la nueva descarga tampoco matchea, falla.
+    La descarga va a un temporal ÚNICO y entra con os.replace atómico, bajo
+    un lock entre procesos: dos workers concurrentes nunca ven un archivo a
+    medio escribir ni se pisan el .tmp.
     """
     expected        =   config('BG_MODEL_SHA256', default = BG_MODEL_SHA256)
-    if os.path.exists(path):
-        if not expected or _file_sha256(path) == expected:
-            return
-        os.remove(path)
-    response        =   requests.get(config('BG_MODEL_URL', default = BG_MODEL_URL), timeout = 120)
-    response.raise_for_status()
-    if expected and hashlib.sha256(response.content).hexdigest() != expected:
-        raise ValueError('El modelo descargado no coincide con el hash esperado.')
-    with open(path + '.tmp', 'wb') as handle:
-        handle.write(response.content)
-    os.replace(path + '.tmp', path)
+    with _model_file_lock(path + '.lock'):
+        if os.path.exists(path):
+            if not expected or _file_sha256(path) == expected:
+                return
+            os.remove(path)
+        tmp     =   _download_model(config('BG_MODEL_URL', default = BG_MODEL_URL), expected, os.path.dirname(path) or tempfile.gettempdir())
+        os.replace(tmp, path)
 def _session():
     global _bg_session
     if _bg_session is not None:

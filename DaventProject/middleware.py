@@ -1,8 +1,14 @@
 import ipaddress
 
 from django.conf import settings
-from django.core.cache import cache
 from django.http import HttpResponse
+
+from DaventProject.cache_utils import (
+    CacheUnavailable,
+    cache_add_strict,
+    cache_incr_strict,
+    cache_set_strict,
+)
 
 """
 
@@ -143,16 +149,24 @@ class AdminLoginRateLimitMiddleware:
             ip      =   client_ip(request)
             if ip != '-':
                 key =   f'admin-login:{ip}'
-                if cache.add(key, 1, self.WINDOW_SECONDS):
-                    attempts    =   1
-                else:
-                    try:
-                        attempts    =   cache.incr(key)
-                    except ValueError:
-                        #La clave venció entre el add y el incr (o el backend
-                        #no soporta incr sobre ella): se reabre la ventana.
-                        cache.set(key, 1, self.WINDOW_SECONDS)
+                #FAIL-CLOSED: sin cache no se puede contar intentos — servir
+                #el login del admin a ciegas habilita fuerza bruta. 503 con
+                #Retry-After en vez de un 500 con traza.
+                try:
+                    if cache_add_strict(key, 1, self.WINDOW_SECONDS):
                         attempts    =   1
+                    else:
+                        try:
+                            attempts    =   cache_incr_strict(key)
+                        except ValueError:
+                            #La clave venció entre el add y el incr (o el
+                            #backend no soporta incr sobre ella).
+                            cache_set_strict(key, 1, self.WINDOW_SECONDS)
+                            attempts    =   1
+                except CacheUnavailable:
+                    response    =   HttpResponse('Servicio temporalmente no disponible.', status = 503)
+                    response['Retry-After'] =   str(self.WINDOW_SECONDS)
+                    return response
                 if attempts > self.LIMIT:
                     response    =   HttpResponse('Demasiados intentos. Probá más tarde.', status = 429)
                     response['Retry-After'] =   str(self.WINDOW_SECONDS)

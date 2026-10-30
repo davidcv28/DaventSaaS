@@ -4,7 +4,7 @@ import json
 import logging
 import re
 from datetime import timedelta
-from django.core.cache import cache
+from DaventProject.cache_utils import cache_get, cache_set
 from django.core.signing import TimestampSigner, BadSignature
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -197,12 +197,35 @@ def _natural_key(text):
     """Orden "humano" de los valores de una faceta: 2 < 10, S < XL."""
     return [int(piece) if piece.isdigit() else piece.casefold() for piece in re.split(r'(\d+)', str(text))]
 
+#Solo estos params cambian el payload del catálogo público. Cualquier otro
+#(?x=<aleatorio>) se ignora en la huella: sin la whitelist cada query string
+#arbitraria creaba una entrada nueva del payload completo (cache flooding).
+CATALOG_FINGERPRINT_PARAMS = ('category', 'brand', 'q', 'features', 'offer', 'new', 'min_price', 'max_price', 'sort')
+
 def _params_fingerprint(request):
     #Huella estable de la querystring para el cache del catálogo público:
-    #el payload varía por cada filtro (?q=, ?category=, ?sort=...), así que
-    #la key lleva params canonizados (orden de parámetros y de valores no
-    #cambia la respuesta — ?a=1&b=2 y ?b=2&a=1 comparten entrada).
-    canonical =   sorted((k, tuple(sorted(v))) for k, v in request.query_params.lists())
+    #se canonizan SOLO los filtros soportados, con el mismo parseo que usa
+    #_public_catalog_data (orden de parámetros y de valores no cambia la
+    #respuesta; un ?q= enorme se recorta a 80 chars).
+    params  =   request.query_params
+    def _canon(name):
+        raw =   params.get(name)
+        if raw is None:
+            return ''
+        if name in ('category', 'brand'):
+            return tuple(sorted(_id_list(raw)))
+        if name == 'q':
+            return raw.strip().casefold()[:80]
+        if name == 'features':
+            parsed  =   _feature_filters(raw)
+            return tuple(sorted((key.casefold(), tuple(sorted(values))) for key, values in parsed.items()))
+        if name in ('offer', 'new'):
+            return _flag(raw)
+        if name in ('min_price', 'max_price'):
+            bound   =   _price_bound(raw)
+            return str(bound) if bound is not None else ''
+        return raw.strip()
+    canonical =   tuple((name, _canon(name)) for name in CATALOG_FINGERPRINT_PARAMS)
     return hashlib.md5(repr(canonical).encode(), usedforsecurity=False).hexdigest()
 
 def _apply_order(queryset, order):
@@ -398,7 +421,7 @@ class StoreViewSet(StoreBaseViewSet):
         #al instante ante cualquier save/delete de lo que compone el payload.
         epoch, ver  =   public_cache_stamp(store.pk)
         cache_key   =   f'store:public:v1:{store.pk}:{epoch}:{ver}'
-        data        =   cache.get(cache_key)
+        data        =   cache_get(cache_key)
         if data is None:
             #La página "Servicios" viaja en el mismo payload cuando está
             #habilitada en los site_templates efectivos: una sola query extra
@@ -408,7 +431,7 @@ class StoreViewSet(StoreBaseViewSet):
                 from StoreApp.domains.services.models import StoreService
                 store._service_items    =   list(StoreService.objects.filter(store = store, is_active = True))
             data    =   dict(StorePublicSerializer(store).data)
-            cache.set(cache_key, data, PUBLIC_CACHE_TTL)
+            cache_set(cache_key, data, PUBLIC_CACHE_TTL)
         record_store_visit(store, request)
         response    =   Response(data, status = status.HTTP_200_OK)
         #Cache corta: la misma visita no repide la ficha al navegar entre
@@ -483,10 +506,10 @@ class StoreViewSet(StoreBaseViewSet):
         #distinto y los kill-switches de arriba quedan vivos en cada request.
         epoch, ver  =   public_cache_stamp(store.pk)
         cache_key   =   f'store:catalog:v1:{store.pk}:{epoch}:{ver}:{_params_fingerprint(request)}'
-        data        =   cache.get(cache_key)
+        data        =   cache_get(cache_key)
         if data is None:
             data    =   self._public_catalog_data(request, store, customization)
-            cache.set(cache_key, data, PUBLIC_CACHE_TTL)
+            cache_set(cache_key, data, PUBLIC_CACHE_TTL)
         response    =   Response(data, status = status.HTTP_200_OK)
         #Idem /public/<slug>/: el visitante que pasa de la portada al catálogo
         #o a una ficha no vuelve a pegarle a la API por el mismo listado.
