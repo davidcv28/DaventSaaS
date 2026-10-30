@@ -12,7 +12,7 @@ import {
   STORE_ACCENTS, STORE_THEMES, STORE_FONTS, STORE_FONT_GROUPS, STORE_TEMPLATES,
   allowedTemplatesFor, ensureStoreFont, storeFontFamily
 } from '../../api/stores.api.js'
-import { nearestAccent, hexToRgb } from '../../utils/colorTools.js'
+import { nearestAccent, hexToRgb, deriveAccent } from '../../utils/colorTools.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
@@ -140,40 +140,25 @@ const colorGroups = computed(() => Object.entries(STORE_THEMES).map(([mode, them
 }))
 const currentColors = computed(() => `${currentMode.value}:${props.form.accent_custom ? 'custom' : (props.form.accent || 'indigo')}`)
 
-function onColorsPick(event) {
-  const [mode, key] = String(event.target.value).split(':')
-  if (STORE_THEMES[mode]) props.form.theme = mode
-  if (key === 'custom' || !advanced.value) return
-  props.form.accent = key
-  props.form.accent_custom = ''
-}
-
-// --- Color de fuente ------------------------------------------------------
-const TEXT_COLORS = [
-  { value: '', label: 'Automático (según el estilo)' },
-  { value: '#0f172a', label: 'Tinta · #0f172a' },
-  { value: '#1f2937', label: 'Grafito · #1f2937' },
-  { value: '#334155', label: 'Pizarra · #334155' },
-  { value: '#475569', label: 'Humo · #475569' },
-  { value: '#5b6678', label: 'Gris · #5b6678' },
-  { value: '#e2e8f0', label: 'Nieve · #e2e8f0' },
-  { value: '#f8fafc', label: 'Blanco · #f8fafc' }
-]
-const currentTextColor = computed(() => props.form.site_theme?.palette?.text || '')
-
 function withTheme(mutate) {
   const theme = { ...(props.form.site_theme || {}) }
   mutate(theme)
   props.form.site_theme = theme
 }
 
-function onTextColorPick(event) {
-  const hex = event.target.value
+function onColorsPick(event) {
+  const [mode, key] = String(event.target.value).split(':')
+  if (STORE_THEMES[mode]) props.form.theme = mode
+  if (key === 'custom' || !advanced.value) return
+  const hex = STORE_ACCENTS[key]?.hex
+  if (!hex) return
+  props.form.accent = key
+  props.form.accent_custom = ''
+  // El estilo aplicado fija su propia paleta en site_theme: si solo se
+  // cambiara `accent`, la web seguiría mostrando el color del estilo.
+  const a = deriveAccent(hex)
   withTheme((theme) => {
-    const palette = { ...(theme.palette || {}) }
-    if (hex) palette.text = hex
-    else delete palette.text
-    theme.palette = palette
+    theme.palette = { ...(theme.palette || {}), accent: a.hex, primary: a.hex, secondary: a.ink }
   })
 }
 
@@ -206,6 +191,10 @@ function onFontPick(event, key) {
     else delete typography[key]
     theme.typography = typography
   })
+  // La descripción es el texto corrido de toda la web: además del tema, se
+  // escribe `name_font` (el token que ya consumen las plantillas), si no las
+  // pieles de cada diseño mantienen su propia familia.
+  if (key === 'body' && value) props.form.name_font = value
 }
 
 // Fuentes ya elegidas: se cargan al entrar para que los <select> muestren la
@@ -304,13 +293,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
               <p class="dmenu-hint">Tema y color de acento. <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Acento con Premium</span></p>
             </div>
 
-            <div class="dmenu-field" :class="{ locked: !advanced }" @focusin="emit('ring', 'page')">
-              <label for="dm-text-color">Color de fuente</label>
-              <select id="dm-text-color" class="select" :value="currentTextColor" :disabled="!advanced" @change="onTextColorPick">
-                <option v-for="c in TEXT_COLORS" :key="c.value" :value="c.value">{{ c.label }}</option>
-              </select>
-            </div>
-
             <div v-for="r in FONT_ROLES" :key="r.key" class="dmenu-field" :class="{ locked: !advanced }" @focusin="emit('ring', r.ring)">
               <label :for="`dm-font-${r.key}`">{{ r.label }}</label>
               <select
@@ -337,7 +319,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 
           <div v-if="!advanced" class="dmenu-lock">
             <AppIcon name="lock" :size="16" aria-hidden="true" />
-            <span>Las fuentes y los colores de fuente vienen con el Plan premium.</span>
+            <span>Las fuentes vienen con el Plan premium.</span>
             <button type="button" class="btn ghost btn-auto" @click="emit('navigate', 'plans')">Ver planes</button>
           </div>
         </div>

@@ -2871,7 +2871,12 @@ html{ scroll-behavior: smooth; }
 .sp-ann-item{ display: inline-flex; align-items: center; gap: 9px; padding-right: 44px; font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--sp-ink-2); white-space: nowrap; }
 .sp-ann-item svg{ color: var(--store-accent); flex: none; }
 @keyframes sp-ann{ to { transform: translateX(calc(-100% / 3)); } }
-@media (prefers-reduced-motion: reduce){ .sp-ann-track{ animation: none; flex-wrap: wrap; width: 100%; justify-content: center; padding: 0 16px; gap: 10px 0; } }
+@media (prefers-reduced-motion: reduce){
+  .sp-ann-track{ animation: none; flex-wrap: wrap; width: 100%; justify-content: center; padding: 0 16px; gap: 10px 0; }
+  /* Sin animación las copias del loop (aria-hidden) solo duplican la cinta:
+     se ocultan para que quede una única secuencia legible. */
+  .sp-ann-item[aria-hidden='true']{ display: none; }
+}
 
 .sp-video{ padding: clamp(44px, 6vw, 84px) 0; }
 .sp-video-head{ margin-bottom: 26px; }
@@ -3438,14 +3443,33 @@ html{ scroll-behavior: smooth; }
   font-size: var(--st-text-size, 15px);
   line-height: var(--st-leading, 1.5);
 }
-.store-page[data-st-font-body]{ font-family: var(--st-font-body, var(--store-font, Inter, system-ui, sans-serif)); }
+/* La elección explícita del dueño gana sobre la familia de la piel de cada
+   diseño (store-<tpl>.css declara font-family en los mismos elementos con
+   más especificidad y se carga después): por eso el !important, que solo
+   existe cuando el tema trae el campo elegido. Las pieles guardan la familia
+   del texto en un token propio (--bq-body, --rz-body, …): se pisan todos. */
+.store-page[data-st-font-body]{
+  font-family: var(--st-font-body, var(--store-font, Inter, system-ui, sans-serif)) !important;
+  --al-body: var(--st-font-body) !important;
+  --bq-body: var(--st-font-body) !important;
+  --ci-body: var(--st-font-body) !important;
+  --cl-body: var(--st-font-body) !important;
+  --clc-body: var(--st-font-body) !important;
+  --dpb-body: var(--st-font-body) !important;
+  --fs-body: var(--st-font-body) !important;
+  --rz-body: var(--st-font-body) !important;
+  --sg-body: var(--st-font-body) !important;
+  --sv-body: var(--st-font-body) !important;
+  --tr-body: var(--st-font-body) !important;
+  --trc-body: var(--st-font-body) !important;
+}
 .store-page[data-st-font-heading] :is(h1, h2, h3, .sp-hero-title, .sp-hal-title, .sp-section-title){
-  font-family: var(--st-font-heading, var(--sp-display, var(--store-font, inherit)));
+  font-family: var(--st-font-heading, var(--sp-display, var(--store-font, inherit))) !important;
 }
 /* Subtítulos (títulos de sección y de bloque): familia propia si el tema la
    fija; si no, cae a la de los títulos. */
 .store-page[data-st-font-subheading] :is(.sp-section-title, .sp-h2, .sp-block-title, .spd-sec-title){
-  font-family: var(--st-font-subheading, var(--st-font-heading, var(--sp-display, var(--store-font, inherit))));
+  font-family: var(--st-font-subheading, var(--st-font-heading, var(--sp-display, var(--store-font, inherit)))) !important;
 }
 .store-page[data-st-weight] :is(h1, .sp-hero-title:not(.is-name), .sp-hal-title:not(.is-name)){
   font-weight: var(--st-weight-heading, 800);
