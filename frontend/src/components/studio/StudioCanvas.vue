@@ -193,6 +193,9 @@ defineExpose({ iframeEl, reload })
   .stcv-opt-lb, .stcv-size, .stcv-zoom input { display: none; }
   .stcv-zoom-pct { display: none; }
   .stcv-zoom { display: none; }
-  .stcv-bar { justify-content: space-between; gap: 8px; }
+  .stcv-bar { justify-content: space-between; gap: 6px; padding: 6px 8px; flex-wrap: nowrap; }
+  .stcv-opt { min-width: 36px; height: 34px; padding: 0 6px; }
+  .stcv-seg { gap: 0; padding: 2px; }
+  .stcv-acts { gap: 0; }
 }
 </style>

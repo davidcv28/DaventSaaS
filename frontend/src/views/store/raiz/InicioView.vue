@@ -63,6 +63,6 @@ const visible = computed(() => blocks.value.filter((b) => b.enabled !== false &&
 
 <template>
   <main class="sp-page-root rz-home">
-    <component v-for="b in visible" :key="b.id" :is="MAP[b.id]" :block="b" />
+    <component v-for="b in visible" :key="b.id" :is="MAP[b.id]" :block="b" :data-blk="b.id" />
   </main>
 </template>

@@ -120,6 +120,7 @@ const phoneVars = computed(() => ({
       label="Botón de contacto fijo"
       tip="¿Qué es esto? Un botón de compra o contacto que queda siempre visible abajo del celular mientras se hace scroll."
       focus="chrome.nav" need="advanced" :benefits="benefits"
+      hint="Se aplica a la página Servicios (el presupuesto queda siempre a mano)."
     >
       <label class="stp-check" data-focus="chrome.nav">
         <input type="checkbox" :checked="mob.stickyCta" @change="mob.stickyCta = $event.target.checked" />

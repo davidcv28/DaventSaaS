@@ -8,6 +8,7 @@
 import { ref, computed, onMounted } from 'vue'
 import AppIcon from '../../AppIcon.vue'
 import AppButton from '../../AppButton.vue'
+import { SURFACE_LABELS } from '../../../templates/blocks.js'
 
 const props = defineProps({
   hasUnpublished: { type: Boolean, default: false }, // borrador server ≠ publicado
@@ -16,7 +17,9 @@ const props = defineProps({
   versionsLoading: { type: Boolean, default: false },
   busy: { type: String, default: '' },               // 'publish'|'discard'|'share'|'restore:<id>'
   shareUrl: { type: String, default: '' },
-  shareExpires: { type: String, default: '' }
+  shareExpires: { type: String, default: '' },
+  // Estado vigente: contra esto se compara el snapshot de cada versión.
+  customization: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['publish', 'discard', 'restore', 'share', 'load-versions'])
 
@@ -25,6 +28,78 @@ onMounted(() => emit('load-versions'))
 const note = ref('')
 const confirmDiscard = ref(false)
 const confirmRestore = ref(0)
+const showDiff = ref(0)
+
+// ---------------------------------------------------------------------------
+// Diff legible entre una versión del historial y lo que hay hoy: qué campos
+// del tema, qué secciones y qué diseño cambian si la restaurás. No expone
+// JSON crudo: solo las diferencias que el dueño puede entender.
+// ---------------------------------------------------------------------------
+const THEME_LABELS = {
+  'palette.primary': 'Color primario',
+  'palette.secondary': 'Color secundario',
+  'palette.accent': 'Acento',
+  'palette.bg': 'Fondo',
+  'palette.surface': 'Superficie',
+  'palette.text': 'Texto',
+  'palette.muted': 'Texto suave',
+  'palette.border': 'Bordes',
+  'typography.heading': 'Fuente de títulos',
+  'typography.body': 'Fuente del texto',
+  'typography.scale': 'Escala tipográfica',
+  'typography.weightHeading': 'Peso de títulos',
+  'typography.letterSpacing': 'Interletrado',
+  'containers.radius': 'Radios',
+  'containers.shadow': 'Sombras',
+  'containers.density': 'Densidad',
+  'buttons.shape': 'Forma de botones',
+  'buttons.style': 'Estilo de botones',
+  'background.type': 'Tipo de fondo',
+  'background.value': 'Fondo',
+  'motion.reveal': 'Animación de aparición',
+  'motion.hover': 'Reacción al mouse',
+  'mobile.nav': 'Navegación móvil',
+  'mobile.gridCols': 'Columnas en móvil',
+  'mobile.cardStyle': 'Tarjetas en móvil',
+  'mobile.heroHeight': 'Portada en móvil',
+  'mobile.stickyCta': 'Botón fijo en móvil'
+}
+const MAX_DIFF = 7
+function flattenTheme(obj, prefix = '', out = {}) {
+  for (const [key, value] of Object.entries(obj || {})) {
+    const full = prefix ? `${prefix}.${key}` : key
+    if (value && typeof value === 'object' && !Array.isArray(value)) flattenTheme(value, full, out)
+    else out[full] = value
+  }
+  return out
+}
+const diffFor = (version) => {
+  const snap = version?.snapshot || {}
+  const cur = props.customization || {}
+  const lines = []
+  const next = flattenTheme(snap.site_theme)
+  const now = flattenTheme(cur.site_theme)
+  for (const key of new Set([...Object.keys(next), ...Object.keys(now)])) {
+    if (JSON.stringify(next[key]) === JSON.stringify(now[key])) continue
+    const label = THEME_LABELS[key] || key
+    lines.push(`${label}: ${now[key] ?? '—'} → ${next[key] ?? '—'}`)
+  }
+  for (const surface of ['landing', 'catalog', 'services']) {
+    const ids = (layout) => (layout?.[surface]?.blocks || [])
+      .filter((b) => b && b.enabled !== false).map((b) => b.id).join(',')
+    if (ids(cur.layout_config) !== ids(snap.layout_config)) {
+      lines.push(`${SURFACE_LABELS[surface] || surface}: cambian las secciones visibles o su orden`)
+    }
+  }
+  if ((snap.template || '') !== (cur.template || '')) {
+    lines.push(`Diseño: ${cur.template || 'el actual'} → ${snap.template || 'el actual'}`)
+  }
+  return lines
+}
+const visibleDiff = (version) => {
+  const lines = diffFor(version)
+  return { lines: lines.slice(0, MAX_DIFF), more: Math.max(0, lines.length - MAX_DIFF), total: lines.length }
+}
 
 const state = computed(() => {
   if (props.localDirty) return { icon: 'pencil', title: 'Tenés cambios sin guardar', text: 'Guardalos con el botón de la barra de abajo antes de publicar o compartir.' }
@@ -108,11 +183,32 @@ async function copyLink() {
           </div>
           <button
             v-if="confirmRestore !== v.id" type="button" class="btn ghost btn-auto"
-            :disabled="busy === `restore:${v.id}`" @click="confirmRestore = v.id"
+            :disabled="busy === `restore:${v.id}`" @click="confirmRestore = v.id; showDiff = 0"
           ><AppIcon name="undo" :size="13" /> Restaurar</button>
-          <button v-else type="button" class="btn secondary btn-auto stpb-danger" :disabled="busy === `restore:${v.id}`" @click="emit('restore', v.id); confirmRestore = 0">
-            Restaurar esta versión
-          </button>
+          <template v-else>
+            <div class="stpb-confirm" role="group" :aria-label="`Restaurar la versión ${v.note || ''}`">
+              <button
+                type="button" class="btn ghost btn-auto stpb-diff-btn" :aria-expanded="showDiff === v.id"
+                @click="showDiff = showDiff === v.id ? 0 : v.id"
+              >
+                <AppIcon name="eye" :size="13" /> {{ showDiff === v.id ? 'Ocultar cambios' : `Ver qué cambia (${visibleDiff(v).total})` }}
+              </button>
+              <button type="button" class="btn secondary btn-auto stpb-danger" :disabled="busy === `restore:${v.id}`" @click="emit('restore', v.id); confirmRestore = 0; showDiff = 0">
+                Restaurar esta versión
+              </button>
+              <button type="button" class="btn ghost btn-auto" @click="confirmRestore = 0; showDiff = 0">Cancelar</button>
+            </div>
+            <div v-if="showDiff === v.id" class="stpb-diff">
+              <p v-if="!visibleDiff(v).total" class="stp-hint2">Esta versión es igual a lo que tenés hoy: no cambia nada.</p>
+              <template v-else>
+                <p class="stp-hint2">Si restaurás, tu web pasa a tener:</p>
+                <ul class="stpb-diff-list">
+                  <li v-for="(line, i) in visibleDiff(v).lines" :key="i">{{ line }}</li>
+                </ul>
+                <p v-if="visibleDiff(v).more" class="stp-hint2">y {{ visibleDiff(v).more }} cambios más.</p>
+              </template>
+            </div>
+          </template>
         </li>
       </ul>
     </div>
@@ -132,7 +228,11 @@ async function copyLink() {
 .stpb-versions { margin-top: 16px; }
 .stpb-h { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 .stpb-ver-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.stpb-ver { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--card); }
+.stpb-ver { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--card); }
+.stpb-confirm { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.stpb-diff { flex: 1 1 100%; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 9px; background: var(--surface); }
+.stpb-diff-list { margin: 4px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink-2); }
+.stpb-diff-list li { overflow-wrap: anywhere; }
 .stpb-ver-t { min-width: 0; flex: 1; }
 .stpb-ver-t strong { display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stpb-ver-t time { font-size: 11.5px; color: var(--muted); }

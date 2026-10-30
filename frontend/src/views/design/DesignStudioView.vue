@@ -51,12 +51,14 @@ const {
   designBusy, studioRef, studioDirty, studioTheme, studioSavedTheme, studioExtras,
   designDirtyAll, hasUnpublished, studioVersions, studioVersionsLoading,
   studioActionBusy, studioShare, studioHealthCtx, studioPreviewSrc,
+  autosaveState,
   loadStudioVersions, publishStudio, discardStudioDraft, restoreStudioVersion,
   shareStudioPreview, onStudioNav, saveStudioDesign, discardDesign
 } = useStudioDesign({
   store, plan, designForm, designDirty, designErrors, designTouched,
   canDesignAdvanced, canLocationMap, catalog, services,
   pushToast,
+  autosave: true,
   navigate() { backToDashboard() }
 })
 
@@ -130,6 +132,7 @@ onBeforeUnmount(() => {
       :action-busy="studioActionBusy"
       :share-url="studioShare?.url || ''"
       :share-expires="studioShare?.expiresAt || ''"
+      :autosave-state="autosaveState"
       @save="saveStudioDesign"
       @discard="discardDesign"
       @navigate="onStudioNav"

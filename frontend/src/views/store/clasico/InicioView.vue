@@ -83,6 +83,6 @@ const visible = computed(() => blocks.value
 
 <template>
   <div class="sp-page-root cl-home">
-    <component v-for="b in visible" :key="b.id" :is="MAP[b.id]" :block="b" />
+    <component v-for="b in visible" :key="b.id" :is="MAP[b.id]" :block="b" :data-blk="b.id" />
   </div>
 </template>

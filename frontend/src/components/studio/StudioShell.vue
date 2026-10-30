@@ -39,6 +39,7 @@ import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils
 import { presetLock, layoutForTemplate } from '../../studio/presets/index.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
+import { blockSpec } from '../../templates/blocks.js'
 
 const { presets: designPresets, defaultPattern, load: loadDesignCatalog } = useDesignCatalog()
 
@@ -62,7 +63,9 @@ const props = defineProps({
   versionsLoading: { type: Boolean, default: false },
   actionBusy: { type: String, default: '' },
   shareUrl: { type: String, default: '' },
-  shareExpires: { type: String, default: '' }
+  shareExpires: { type: String, default: '' },
+  // Autoguardado del borrador (lo corre el padre): idle|pending|saving|saved|error.
+  autosaveState: { type: String, default: 'idle' }
 })
 const emit = defineEmits([
   'save', 'discard', 'navigate', 'update:dirty', 'update:theme', 'update:layout',
@@ -248,6 +251,16 @@ watch(() => JSON.stringify(snapshot()), () => history.observe(snapshot()))
 function undo() { const s = history.undo(); if (s) applySnapshot(s) }
 function redo() { const s = history.redo(); if (s) applySnapshot(s) }
 const anyDirty = computed(() => themeDirty.value || layoutDirty.value || props.dirty)
+// Estado de la savebar: prioridad a lo que está pasando ahora (guardando /
+// error) y después a si hay cambios o borrador sin publicar.
+const saveStateLabel = computed(() => {
+  if (props.autosaveState === 'saving') return 'Guardando borrador…'
+  if (props.autosaveState === 'error') return 'No se pudo guardar: revisá la conexión'
+  if (anyDirty.value) return 'Cambios sin guardar'
+  if (props.autosaveState === 'saved') return 'Borrador guardado'
+  if (props.hasUnpublished) return 'Borrador sin publicar'
+  return 'Todo guardado'
+})
 
 // Dirty combinado del Studio (tema + ensayo de layout/plantilla) y valores
 // vigentes para el payload del padre (saveDesign arma site_theme y, con
@@ -373,17 +386,29 @@ const previewCustom = computed(() => {
   out.cover = props.customization?.cover || null
   return out
 })
+// Mismo objeto desde lo GUARDADO: "Comparar" muestra el antes real (campos
+// persistidos + layout + tema), no solo el tema del borrador.
+const savedCustom = computed(() => {
+  const out = {}
+  for (const key of PREVIEW_FORM_KEYS) out[key] = props.customization?.[key]
+  out.logo = props.customization?.logo || null
+  out.cover = props.customization?.cover || null
+  return out
+})
 
 let postTimer = null
 function buildUpdate() {
+  const showSaved = comparing.value
   const msg = studioUpdate({
-    theme: comparing.value ? base.value : draft.theme,
+    theme: showSaved ? base.value : draft.theme,
     // clone(): el layout de la store es un proxy reactivo — postMessage no
     // puede structured-clonar proxies (DataCloneError). draft.layout es el
     // layout de ensayo (preset) o el guardado; draft.template permite
     // previsualizar plantillas de otro nivel sin tocar form.template.
-    layout: clone(draft.layout || {}),
-    template: draft.template || liveTemplate.value,
+    layout: clone((showSaved ? savedLayout.value : draft.layout) || {}),
+    template: showSaved
+      ? (props.customization?.template || liveTemplate.value)
+      : (draft.template || liveTemplate.value),
     device: device.value
   })
   msg.mode = viewerTheme.value // aditivo al contrato: claro/oscuro del visor
@@ -391,7 +416,7 @@ function buildUpdate() {
   // esos tokens (fidelidad exacta con la web publicada, que guarda el parcial).
   msg.explicit = [...explicit.value]
   // Aditivo al contrato: identidad/cromo del form para la vista previa.
-  msg.custom = clone(previewCustom.value)
+  msg.custom = clone(showSaved ? savedCustom.value : previewCustom.value)
   return msg
 }
 function postNow() {
@@ -410,7 +435,7 @@ function queueUpdate() {
 watch(
   () => JSON.stringify([
     draft.theme, draft.layout, draft.template, comparing.value, device.value,
-    viewerTheme.value, liveTemplate.value, previewCustom.value
+    viewerTheme.value, liveTemplate.value, previewCustom.value, savedCustom.value
   ]),
   queueUpdate
 )
@@ -418,7 +443,10 @@ watch(
 let cleanupBridge = null
 function onFrameLoad(iframe) {
   cleanupBridge?.()
-  cleanupBridge = installPreviewBridge(iframe, { onPick })
+  cleanupBridge = installPreviewBridge(iframe, {
+    onPick,
+    onBlockedNav: () => showToast('En la vista previa los enlaces no navegan. Usá “Abrir en pestaña nueva”.')
+  })
   postNow()
   syncFontLink(frameDoc(), props.form.name_font || draft.theme.typography.heading)
 }
@@ -691,6 +719,65 @@ function onPanelNav(target) {
 function resolvedLayout() {
   return draft.layout || props.customization?.layout_config_draft || props.customization?.layout_config || null
 }
+// ---------------------------------------------------------------------------
+// Distribución: reordenar, apagar/encender y cambiar variantes de bloque.
+// Escribe `draft.layout` (el ensayo que viaja a la preview por postMessage y
+// al save como layout_config_draft). Se sanea con el mismo normalizador que
+// usa el front público, así el orden que ves es el que se guarda.
+// ---------------------------------------------------------------------------
+function draftBlocks(surface) {
+  if (!draft.layout) draft.layout = clone(resolvedLayout() || {})
+  if (!draft.layout?.[surface]) return []
+  if (!Array.isArray(draft.layout[surface].blocks)) draft.layout[surface].blocks = []
+  return draft.layout[surface].blocks
+}
+function commitLayout(surface) {
+  // El orden del array es la intención: se reescribe `order` antes de
+  // normalizar (normalizeLayoutConfig ordena por ese campo).
+  for (const s of Object.values(draft.layout || {})) {
+    if (Array.isArray(s?.blocks)) s.blocks = s.blocks.map((b, i) => ({ ...b, order: i }))
+  }
+  draft.layout = normalizeLayoutConfig(draft.layout)
+  // normalizeLayoutConfig descarta superficies sin bloques: si el usuario
+  // acaba de dejar una vacía, se conserva el objeto vacío para no perderla
+  // de la vista (la preview cae al patrón igual).
+  if (!draft.layout[surface]) draft.layout[surface] = { blocks: [] }
+}
+function moveBlock({ surface, from, to }) {
+  const blocks = draftBlocks(surface)
+  if (!blocks.length || from === to || to < 0 || to >= blocks.length) return
+  const list = blocks.slice()
+  const [item] = list.splice(from, 1)
+  if (!item) return
+  list.splice(to, 0, item)
+  draft.layout[surface].blocks = list
+  commitLayout(surface)
+}
+function toggleBlock({ surface, id }) {
+  const block = draftBlocks(surface).find((b) => b && b.id === id)
+  if (!block) return
+  const spec = blockSpec(surface, id)
+  if (spec?.locked) { showToast('Esa sección es fija: no se puede ocultar'); return }
+  block.enabled = block.enabled === false
+  commitLayout(surface)
+}
+function setBlockVariant({ surface, id, variant }) {
+  const block = draftBlocks(surface).find((b) => b && b.id === id)
+  if (!block) return
+  const spec = blockSpec(surface, id)
+  const options = spec?.variants ? Object.keys(spec.variants) : []
+  if (!options.includes(variant)) return
+  // La primera variante es la default: no se guarda (queda implícita).
+  if (variant === options[0]) delete block.variant
+  else block.variant = variant
+  commitLayout(surface)
+}
+function resetLayout() {
+  draft.layout = clone(savedLayout.value)
+  draft.template = null
+  showToast('Distribución restaurada al borrador guardado')
+}
+
 // El acento/primario tocado por un fix de Salud se espeja al campo
 // persistido (como ColorsPanel.setRole): sin plan premium se mapea al slug
 // más cercano que siga cumpliendo el contraste.
@@ -969,6 +1056,8 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
           :versions="versions" :versions-loading="versionsLoading" :action-busy="actionBusy"
           :share-url="shareUrl" :share-expires="shareExpires"
           @navigate="onPanelNav" @ring="ringTarget"
+          @move-block="moveBlock" @toggle-block="toggleBlock"
+          @variant-block="setBlockVariant" @reset-layout="resetLayout"
           @set-viewer="(v) => { if (v === 'light' || v === 'dark') viewerTheme = v }"
           @fix="applyHealthFix"
           @publish="emit('publish', $event)" @discard-draft="emit('discard-draft')"
@@ -991,16 +1080,17 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 
     <!-- ===== Barra de guardado ===== -->
     <footer class="sts-savebar">
-      <p class="sts-state" :class="{ dirty: anyDirty }" role="status">
-        <span v-if="anyDirty" class="sts-dot" aria-hidden="true"></span>
+      <p class="sts-state" :class="{ dirty: anyDirty, saving: autosaveState === 'saving', error: autosaveState === 'error' }" role="status" aria-live="polite">
+        <span v-if="autosaveState === 'saving'" class="sts-spin" aria-hidden="true"></span>
+        <span v-else-if="anyDirty" class="sts-dot" aria-hidden="true"></span>
         <AppIcon v-else name="circle-check" :size="15" aria-hidden="true" />
-        <span>{{ anyDirty ? 'Cambios sin guardar' : (hasUnpublished ? 'Borrador sin publicar' : 'Todo guardado') }}</span>
+        <span>{{ saveStateLabel }}</span>
       </p>
       <div class="sts-hist">
         <button type="button" class="sts-opt" :disabled="!canUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" @click="undo"><AppIcon name="undo" :size="16" /></button>
         <button type="button" class="sts-opt" :disabled="!canRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" @click="redo"><AppIcon name="redo" :size="16" /></button>
         <button
-          type="button" class="sts-opt sts-cmp" :disabled="!themeDirty" :aria-pressed="comparing"
+          type="button" class="sts-opt sts-cmp" :disabled="!anyDirty" :aria-pressed="comparing"
           title="Mantené presionado para ver la versión guardada" aria-label="Comparar con la versión guardada"
           @pointerdown="compareStart" @pointerup="compareEnd" @pointerleave="compareEnd" @pointercancel="compareEnd"
           @keydown.space.prevent="compareStart" @keyup.space="compareEnd" @blur="compareEnd"
@@ -1011,13 +1101,15 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
         <button type="button" class="sts-opt" title="Ayuda y atajos (?)" aria-label="Ayuda y atajos" @click="showHelp = true"><AppIcon name="circle-help" :size="16" /></button>
       </div>
       <div class="sts-acts">
-        <button type="button" class="btn ghost btn-auto" :disabled="busy" @click="discard"><AppIcon name="undo" :size="15" /> Descartar</button>
+        <button type="button" class="btn ghost btn-auto sts-discard" :disabled="busy" @click="discard"><AppIcon name="undo" :size="15" /> <span class="sts-act-lb">Descartar</span></button>
         <button
           v-if="hasUnpublished && !anyDirty" type="button" class="btn secondary btn-auto"
           :disabled="actionBusy === 'publish'" title="Llevar el borrador guardado a tu web"
           @click="emit('publish', '')"
-        ><AppIcon name="rocket" :size="15" /> Publicar</button>
-        <AppButton :loading="busy" type="button" title="Guardar y publicar (Ctrl+S)" @click="emit('save')">Guardar y publicar</AppButton>
+        ><AppIcon name="rocket" :size="15" /> <span class="sts-act-lb">Publicar</span></button>
+        <AppButton :loading="busy" type="button" title="Guardar y publicar (Ctrl+S)" @click="emit('save')">
+          <span class="sts-act-lb">Guardar y publicar</span><span class="sts-act-lb-short">Guardar</span>
+        </AppButton>
       </div>
     </footer>
 
@@ -1112,6 +1204,14 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 }
 .sts-state { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: 12.5px; font-weight: 600; color: var(--ok); }
 .sts-state.dirty { color: var(--warn, #b45309); }
+.sts-state.saving { color: var(--ink-2); }
+.sts-state.error { color: var(--danger, #dc2626); }
+.sts-spin {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--brand-500);
+  animation: sts-spin .7s linear infinite;
+}
+@keyframes sts-spin { to { transform: rotate(360deg); } }
 .sts-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: sts-pulse 1.6s ease-in-out infinite; }
 @keyframes sts-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .sts-hist { display: inline-flex; align-items: center; gap: 2px; }
@@ -1129,6 +1229,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 .sts-utils { margin-left: auto; }
 .sts-utils + .sts-acts { margin-left: 0; }
 .sts-acts { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+.sts-act-lb-short { display: none; }
 
 /* Toast local del Studio (fixes de salud, exportar/importar tema): sube
    desde la savebar sin tapar el lienzo. */
@@ -1159,18 +1260,20 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
      SupportBot (90) y chat-win (96). */
   .sts, .sts.is-full {
     --rail-h: calc(62px + env(safe-area-inset-bottom, 0px));
+    --save-h: 56px;
     position: fixed; inset: 0; z-index: 80;
     display: block; height: auto; min-height: 0; border: 0; border-radius: 0;
   }
   /* El lienzo se reserva solo el espacio de rail + sheet mínimo: al expandir
      la hoja el usuario acepta que tape la vista (la vuelve a achicar). */
-  .sts-canvas { position: absolute; inset: 0; padding-bottom: calc(var(--rail-h) + 130px); }
+  .sts-canvas { position: absolute; inset: 0; padding-bottom: calc(var(--rail-h) + var(--save-h) + 72px); }
   .sts-rail {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; height: var(--rail-h);
     flex-direction: row; align-items: stretch; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
     border-right: 0; border-top: 1px solid var(--line); background: var(--card);
-    overflow-x: auto; gap: 4px;
+    overflow-x: auto; gap: 4px; scrollbar-width: none;
   }
+  .sts-rail::-webkit-scrollbar { display: none; }
   .sts-rail-list { flex-direction: row; gap: 4px; flex: 1; overflow-y: visible; }
   .sts-rail-cap { display: none; }
   .sts-tool { flex: 1 0 auto; min-width: 60px; min-height: 50px; flex-direction: column; }
@@ -1178,14 +1281,24 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
   .sts-back { display: flex; }
   .sts-savebar {
     position: absolute; left: 0; right: 0; z-index: 31;
-    bottom: var(--rail-h);
-    padding: 6px 10px; gap: 8px; border-top: 0;
+    bottom: var(--rail-h); height: var(--save-h);
+    padding: 0 8px; gap: 6px; border-top: 0; flex-wrap: nowrap; overflow: hidden;
+    align-items: center;
     box-shadow: 0 -1px 0 var(--line);
   }
+  .sts-state { flex: 0 0 auto; }
   .sts-state span:last-child, .sts-opt-lb { display: none; }
+  .sts-hist { flex: 0 0 auto; }
+  .sts-utils { margin-left: auto; flex: 0 0 auto; }
+  .sts-acts { margin-left: 0; gap: 6px; flex: 0 0 auto; }
+  .sts-savebar .sts-opt { width: 38px; min-width: 38px; height: 40px; padding: 0; }
+  .sts-cmp { display: none; }
+  .sts-discard { width: 40px; min-width: 40px; padding: 0 !important; justify-content: center; }
+  .sts-act-lb { display: none; }
+  .sts-act-lb-short { display: inline; }
   .sts-panel {
     position: absolute; left: 0; right: 0; z-index: 32;
-    bottom: calc(var(--rail-h) + 56px);
+    bottom: calc(var(--rail-h) + var(--save-h));
     height: var(--sheet-h); border-right: 0; border-top: 1px solid var(--line);
     border-radius: 16px 16px 0 0; box-shadow: 0 -8px 28px rgba(15, 23, 42, .14);
     background: var(--card); overflow: hidden;
@@ -1200,7 +1313,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
   .sts-panel-title { padding-top: 4px; }
   .sts-panel-title h2 { font-size: 14px; }
   .sts-panel-title p { display: none; }
-  .sts-savebar .sts-opt { height: 44px; }
+  .sts-savebar .sts-opt { height: 40px; }
   .sts-sheet-stops { display: inline-flex; gap: 6px; padding-top: 10px; }
   .sts-stop { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; position: relative; }
   .sts-stop::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); width: 18px; bottom: 8px; border-radius: 2px; background: var(--muted); opacity: .5; }
@@ -1217,6 +1330,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 
 @media (prefers-reduced-motion: reduce) {
   .sts-dot { animation: none; }
+  .sts-spin { animation: none; border-top-color: var(--line); }
   .sts-tool, .sts-opt, .sts-panel { transition: none; }
   .sts-toast-enter-active, .sts-toast-leave-active { transition: none; }
 }

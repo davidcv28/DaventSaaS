@@ -395,28 +395,71 @@ const BRIDGE_CSS = `
 
 let lastPick = 0
 
-export function installPreviewBridge(iframe, { onPick } = {}) {
+export function installPreviewBridge(iframe, { onPick, onBlockedNav } = {}) {
   const doc = iframe?.contentDocument
   if (!doc) return () => {}
   const style = doc.createElement('style')
   style.id = 'studio-bridge'
   style.textContent = BRIDGE_CSS
   doc.head.appendChild(style)
+  // Marca el documento como vista previa: la hoja puede apagar efectos que
+  // solo tienen sentido en la web publicada (p. ej. autoplay de video).
+  doc.documentElement?.setAttribute('data-studio-preview', '')
+
+  let lastNotice = 0
+  const notifyBlocked = () => {
+    const now = Date.now()
+    if (now - lastNotice < 1600) return
+    lastNotice = now
+    onBlockedNav?.()
+  }
+  const pick = (el) => {
+    const target = pickTargetFor(el)
+    if (!target || !onPick) return
+    // El clic queda a 200ms de cooldown por target para no martillear el
+    // panel cuando el usuario navega dentro de la preview.
+    const now = Date.now()
+    if (now - lastPick <= 200) return
+    lastPick = now
+    onPick(target)
+  }
+  // Sandbox de interacción: un enlace o un envío de formulario NO navega el
+  // iframe (perdería ?studio=1 y el editor). El clic igual elige el elemento
+  // para abrir el control que lo edita, así el gesto no queda muerto.
   const onClick = (e) => {
-    const target = pickTargetFor(e.target)
-    if (target && onPick) {
-      // El clic queda a 300ms de cooldown por target para no martillear el
-      // panel cuando el usuario navega dentro de la preview.
-      const now = Date.now()
-      if (now - lastPick > 200) {
-        lastPick = now
-        onPick(target)
-      }
+    const link = e.target?.closest?.('a[href], area[href]')
+    if (link) {
+      e.preventDefault()
+      e.stopPropagation()
+      pick(e.target)
+      notifyBlocked()
+      return
     }
+    const submit = e.target?.closest?.('button[type="submit"], input[type="submit"], input[type="image"]')
+    if (submit) {
+      e.preventDefault()
+      pick(e.target)
+      notifyBlocked()
+      return
+    }
+    pick(e.target)
+  }
+  const onSubmit = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    notifyBlocked()
+  }
+  const onAuxClick = (e) => {
+    if (e.target?.closest?.('a[href]')) e.preventDefault()
   }
   doc.addEventListener('click', onClick, true)
+  doc.addEventListener('submit', onSubmit, true)
+  doc.addEventListener('auxclick', onAuxClick, true)
   return () => {
     doc.removeEventListener('click', onClick, true)
+    doc.removeEventListener('submit', onSubmit, true)
+    doc.removeEventListener('auxclick', onAuxClick, true)
+    doc.documentElement?.removeAttribute('data-studio-preview')
     style.remove()
   }
 }

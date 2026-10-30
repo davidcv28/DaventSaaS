@@ -1,4 +1,4 @@
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch, onScopeDispose } from 'vue'
 import { storesApi, CUSTOMIZATION_DEFAULTS, ensureStoreFont, normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook } from '../api/stores.api.js'
 
 // Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
@@ -16,7 +16,8 @@ hablan con los endpoints existentes de /stores/customization/.
 export function useStudioDesign({
   store, designForm, designDirty, designErrors, designTouched,
   canDesignAdvanced, canLocationMap, catalog, services,
-  pushToast, navigate, designTab, serverFlags, companyFields = []
+  pushToast, navigate, designTab, serverFlags, companyFields = [],
+  autosave = false
 }) {
   const designBusy = ref(false)
   const studioRef = ref(null)
@@ -25,6 +26,30 @@ export function useStudioDesign({
   const studioSavedTheme = ref(null)
   const studioExtras = ref(null)
   const designDirtyAll = computed(() => designDirty.value || studioDirty.value)
+
+  // -------------------------------------------------------------------------
+  // Autoguardado del BORRADOR (no publica): 2.5 s después del último cambio.
+  // El estado alimenta la savebar del Studio (guardando / guardado / error).
+  // -------------------------------------------------------------------------
+  const autosaveState = ref('idle') // idle | pending | saving | saved | error
+  let autosaveTimer = null
+  async function runAutosave() {
+    if (!autosave || designBusy.value || !designDirtyAll.value) return false
+    if (Object.keys(designErrors.value || {}).some((k) => !companyFields.includes(k))) return false
+    autosaveState.value = 'saving'
+    const ok = await saveDesign(true, true)
+    autosaveState.value = ok ? 'saved' : 'error'
+    return ok
+  }
+  if (autosave) {
+    watch(designDirtyAll, (dirty) => {
+      clearTimeout(autosaveTimer)
+      if (!dirty) return
+      autosaveState.value = 'pending'
+      autosaveTimer = setTimeout(() => { runAutosave() }, 2500)
+    }, { flush: 'post' })
+    onScopeDispose(() => clearTimeout(autosaveTimer))
+  }
 
   const hasUnpublished = computed(() => Boolean(store.customization?.has_unpublished))
   const studioVersions = ref([])
@@ -59,6 +84,7 @@ export function useStudioDesign({
     await nextTick()
     studioSavedTheme.value = studioTheme.value
     studioRef.value?.markSaved()
+    autosaveState.value = 'idle'
     pushToast('Publicado: tu web ya muestra los cambios ✓')
     loadStudioVersions()
   }
@@ -70,6 +96,7 @@ export function useStudioDesign({
     if (!ok) return
     await nextTick()
     studioRef.value?.discardDraft()
+    autosaveState.value = 'idle'
     pushToast('Borrador descartado')
   }
 
@@ -80,6 +107,7 @@ export function useStudioDesign({
     if (!ok) return
     await nextTick()
     studioRef.value?.discardDraft()
+    autosaveState.value = 'idle'
     pushToast('Versión restaurada ✓')
   }
 
@@ -195,12 +223,14 @@ export function useStudioDesign({
     Object.keys(designTouched).forEach((k) => { delete designTouched[k] })
     ensureStoreFont(designForm.name_font)
     studioRef.value?.discardDraft()
+    autosaveState.value = 'idle'
   }
 
   return {
     designBusy, studioRef, studioDirty, studioTheme, studioSavedTheme, studioExtras,
     designDirtyAll, hasUnpublished, studioVersions, studioVersionsLoading,
     studioActionBusy, studioShare, studioHealthCtx, studioPreviewSrc,
+    autosaveState, runAutosave,
     loadStudioVersions, publishStudio, discardStudioDraft, restoreStudioVersion,
     shareStudioPreview, onStudioNav, saveDesign, saveStudioDesign, discardDesign
   }

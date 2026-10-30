@@ -12,7 +12,6 @@
 // Cada campo lleva data-focus con el target del contrato: el shell lo usa
 // para el anillo animado en la vista previa y para enfocar el control
 // cuando el usuario clickea el elemento correspondiente en el iframe.
-import { computed } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import ColorsPanel from './panels/ColorsPanel.vue'
 import TypographyPanel from './panels/TypographyPanel.vue'
@@ -22,7 +21,7 @@ import MobilePanel from './panels/MobilePanel.vue'
 import MotionPanel from './panels/MotionPanel.vue'
 import HealthPanel from './panels/HealthPanel.vue'
 import PublishPanel from './panels/PublishPanel.vue'
-import { SURFACE_LABELS } from './studioModel.js'
+import DistribucionPanel from './panels/DistribucionPanel.vue'
 import '../../assets/studio-panels.css'
 
 const props = defineProps({
@@ -50,7 +49,8 @@ const props = defineProps({
 const emit = defineEmits([
   'navigate', 'ring', 'set-viewer',
   'fix', 'publish', 'discard-draft', 'restore', 'share', 'load-versions',
-  'export-theme', 'import-theme'
+  'export-theme', 'import-theme',
+  'move-block', 'toggle-block', 'variant-block', 'reset-layout'
 ])
 
 // Importar tema (.json): el archivo se lee acá y el objeto crudo sube al
@@ -64,13 +64,6 @@ function onImportFile(e) {
   reader.onerror = () => emit('import-theme', '')
   reader.readAsText(file)
 }
-
-// --- Distribución (solo lectura en esta fase: la edición vive en Bloques) ---
-const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
-  const blocks = Array.isArray(props.layout?.[id]?.blocks) ? props.layout[id].blocks : []
-  const on = blocks.filter((b) => b && b.enabled !== false)
-  return { id, label: SURFACE_LABELS[id] || id, active: props.siteTemplates.includes(id), count: on.length, total: blocks.length }
-}))
 
 // Anillos del contrato en la vista previa: los emite el panel que tenga el
 // control (Colores/Tipografía/Contenedores/Fondo) y el shell los dibuja.</script>
@@ -117,26 +110,20 @@ const surfaces = computed(() => ['landing', 'catalog', 'services'].map((id) => {
     v-else-if="tool === 'publicar'"
     :has-unpublished="hasUnpublished" :local-dirty="localDirty"
     :versions="versions" :versions-loading="versionsLoading" :busy="actionBusy"
-    :share-url="shareUrl" :share-expires="shareExpires"
+    :share-url="shareUrl" :share-expires="shareExpires" :customization="customization"
     @publish="emit('publish', $event)" @discard="emit('discard-draft')"
     @restore="emit('restore', $event)" @share="emit('share')"
     @load-versions="emit('load-versions')"
   />
 
   <!-- ===== Distribución ===== -->
-  <div v-else-if="tool === 'distribucion'" class="stp">
-    <p class="stp-hint">Las páginas activas de tu web y sus bloques. El orden y las variantes se editan en el editor de bloques.</p>
-    <ul class="stp-surfaces" data-focus="blk">
-      <li v-for="s in surfaces" :key="s.id" class="stp-surface" :data-on="s.active">
-        <AppIcon :name="s.id === 'landing' ? 'store' : s.id === 'catalog' ? 'layout-grid' : 'wrench'" :size="16" />
-        <span class="stp-surface-lb">{{ s.label }}</span>
-        <span class="stp-surface-n">{{ s.active ? `${s.count}/${s.total || s.count} bloques` : 'apagada' }}</span>
-      </li>
-    </ul>
-    <button type="button" class="btn secondary btn-auto stp-cta" @click="emit('navigate', 'blocks')">
-      <AppIcon name="list-ordered" :size="16" /> Abrir el editor de bloques
-    </button>
-  </div>
+  <DistribucionPanel
+    v-else-if="tool === 'distribucion'"
+    :layout="layout"
+    @navigate="emit('navigate', $event)" @ring="emit('ring', $event)"
+    @move-block="emit('move-block', $event)" @toggle-block="emit('toggle-block', $event)"
+    @variant-block="emit('variant-block', $event)" @reset-layout="emit('reset-layout')"
+  />
 
   <!-- ===== Folletos ===== -->
   <div v-else-if="tool === 'folletos'" class="stp">
