@@ -5,6 +5,7 @@
 // Studio comparten una sola implementación y los mismos eventos.
 import EstilosPanel from '../studio/panels/EstilosPanel.vue'
 import DesignPickers from './DesignPickers.vue'
+import DesignLivePreview from './DesignLivePreview.vue'
 
 defineProps({
   form: { type: Object, required: true },
@@ -17,12 +18,19 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
 
 <template>
   <div class="dstyles">
-    <DesignPickers :form="form" :benefits="benefits" />
-    <EstilosPanel
-      :form="form" :benefits="benefits" :shop-name="shopName" preview pickers
-      @navigate="emit('navigate', $event)"
-      @ring="emit('ring', $event)"
-    />
+    <div class="dstyles-grid">
+      <div class="dstyles-main">
+        <DesignPickers :form="form" :benefits="benefits" />
+        <EstilosPanel
+          :form="form" :benefits="benefits" :shop-name="shopName" preview pickers
+          @navigate="emit('navigate', $event)"
+          @ring="emit('ring', $event)"
+        />
+      </div>
+      <aside class="dstyles-live">
+        <DesignLivePreview :form="form" />
+      </aside>
+    </div>
     <div v-if="canStudio" class="dstyles-studio">
       <div>
         <strong>Studio</strong>
@@ -35,6 +43,13 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
 
 <style scoped>
 .dstyles { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dstyles-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.dstyles-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dstyles-live { min-width: 0; }
+@media (min-width: 1100px) {
+  .dstyles-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 460px); align-items: start; }
+  .dstyles-live { position: sticky; top: 12px; }
+}
 .dstyles-studio {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 14px 16px; border-radius: 12px;

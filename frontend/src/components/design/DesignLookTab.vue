@@ -708,7 +708,7 @@ onBeforeUnmount(dropLocalLogo)
         </div>
       </div>
 
-      <aside v-if="preview" class="dl-side" aria-label="Vista previa de tu web">
+      <aside v-if="preview && !pickers" class="dl-side" aria-label="Vista previa de tu web">
         <div class="dl-side-head">
           <strong><AppIcon name="eye" :size="15" aria-hidden="true" /> Así se ve</strong>
           <small>Se actualiza mientras editás</small>
