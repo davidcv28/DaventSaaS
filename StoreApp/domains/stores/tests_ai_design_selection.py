@@ -438,11 +438,13 @@ class StyleCandidatesEdgeTests(unittest.TestCase):
         )
         self.assertEqual(candidates[0]['style'], 'minimal')
 
-    def test_seed_plus_one_changes_the_head(self):
-        first   =   A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, 0)[:3]
-        second  =   A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, 1)[:3]
-        signatures = lambda items: [(item['template'], item['skin']) for item in items]
-        self.assertNotEqual(signatures(first), signatures(second))
+    def test_seed_does_not_reorder_the_affinity_ranking(self):
+        #El ranking es por afinidad real; la variedad entre generaciones la
+        #resuelve `_explore_styles` (ExploreStylesTests). Antes la semilla
+        #solo permutaba la cabeza y "otra propuesta" mostraba los mismos tres.
+        pool    =   A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, 0)
+        ordered =   sorted(pool, key = lambda item: (-item['score'], item['template'], item['skin']))
+        self.assertEqual(pool, ordered)
 
     def test_same_inputs_are_byte_for_byte_deterministic(self):
         for seed in range(4):
@@ -600,3 +602,89 @@ class CandidatesToSelectionTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+#=========================================
+# _explore_styles — reglas de generación
+#=========================================
+class ExploreStylesTests(unittest.TestCase):
+    """
+    El set de cada generación se SORTEA sobre el ranking de afinidad: el bug
+    reportado era que "otra propuesta" solo permutaba las mismas tres
+    tarjetas (el cliente veía siempre los mismos diseños).
+    """
+    def _pool(self, allowed = PLAN_ADVANCED, seed = 0, **kwargs):
+        return A._style_candidates(facts_full(), stats_dense(), answers(**kwargs), allowed, seed)
+
+    @staticmethod
+    def _sig(items):
+        return [(item['template'], item['skin']) for item in items]
+
+    def test_seed_plus_one_changes_the_generation_set(self):
+        first   =   A._explore_styles(self._pool(), 0, 3)[:3]
+        second  =   A._explore_styles(self._pool(), 1, 3)[:3]
+        self.assertNotEqual(self._sig(first), self._sig(second))
+
+    def test_exploration_is_not_three_fixed_cards(self):
+        #Con 8 semillas la generación tiene que conocer más de 3 sets.
+        sets = {tuple(self._sig(A._explore_styles(self._pool(), seed, 3)[:3])) for seed in range(8)}
+        self.assertGreater(len(sets), 3)
+
+    def test_same_seed_is_deterministic(self):
+        for seed in range(5):
+            self.assertEqual(
+                A._explore_styles(self._pool(), seed, 3),
+                A._explore_styles(self._pool(), seed, 3),
+            )
+
+    def test_never_returns_more_than_count(self):
+        for count in (2, 3, 4):
+            self.assertEqual(len(A._explore_styles(self._pool(), 7, count)[:count]), count)
+
+    def test_requested_style_opens_the_generation(self):
+        out = A._explore_styles(self._pool(styles = ['minimal']), 5, 3, requested = ['minimal'])
+        self.assertEqual(out[0]['style'], 'minimal')
+
+    def test_empty_pool_is_empty(self):
+        self.assertEqual(A._explore_styles([], 0, 3), [])
+
+    def test_pool_never_loses_candidates(self):
+        pool = self._pool()
+        out  = A._explore_styles(pool, 3, 3)
+        self.assertEqual(len(out), len(pool))
+        self.assertEqual(
+            {(item['template'], item['skin']) for item in out},
+            {(item['template'], item['skin']) for item in pool},
+        )
+
+
+class ExploreSignatureTests(unittest.TestCase):
+    """La firma del rubro entra siempre, pero nunca ocupa todas las tarjetas."""
+    def _pool(self, rubro = 'comercio'):
+        return A._style_candidates(facts_full(), stats_dense(), answers(rubro = rubro), PLAN_ADVANCED, 0)
+
+    def test_signature_designs_are_always_offered(self):
+        signature = {style['template'] for style in R.RUBRO_STYLES['comercio']}
+        for seed in range(5):
+            out = A._explore_styles(self._pool(), seed, 3, signature = signature)[:3]
+            self.assertTrue(signature & {item['template'] for item in out}, (seed, out))
+
+    def test_signature_rotation_changes_the_opening_design(self):
+        signature = {style['template'] for style in R.RUBRO_STYLES['comercio']}
+        openings = {
+            A._explore_styles(self._pool(), seed, 3, signature = signature)[0]['template']
+            for seed in range(6)
+        }
+        self.assertGreater(len(openings), 1)
+
+    def test_exploration_slot_is_not_the_signature(self):
+        #Con 4+ plantillas en el plan, la última tarjeta sale del resto del
+        #catálogo (la variedad no es "el mismo trío con otro color").
+        signature = {style['template'] for style in R.RUBRO_STYLES['comercio']}
+        pool      = self._pool()
+        outside   = {item['template'] for item in pool if item['template'] not in signature}
+        if not outside:
+            self.skipTest('el plan no tiene diseños fuera de la firma')
+        for seed in range(6):
+            out = A._explore_styles(pool, seed, 4, signature = signature)[:4]
+            self.assertTrue(outside & {item['template'] for item in out}, seed)

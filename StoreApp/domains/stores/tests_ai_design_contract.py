@@ -11,7 +11,8 @@ Contrato v4 (engine 'ai-design/6'):
   1) diversidad: 14 rubros con tuplas (template, skin) propias; dentro de una
      generación las 2-3 propuestas difieren en template, skin y par tipográfico;
      seed+1 cambia la familia visual;
-  2) fuentes de estilo: el catálogo público de 6 diseños (2 por nivel); sin el
+  2) fuentes de estilo: el catálogo público de 8 diseños (el motor propone los
+     6 de PUBLIC_TEMPLATES); sin el
      flag, exactamente las del plan;
   3) site_theme v2: typography.roles (13 roles), layout y skin del catálogo;
   4) bloques nuevos (aipricing/aiprocess/aimosaic) solo con has_ai_design y
@@ -73,9 +74,9 @@ PUBLIC_LINK         =   ('has_public_link',)
 #Cuotas típicas del plan premium (sin ellas, storage/gallery_limit = 0).
 PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storage_mb': 200}
 
-#Catálogo del plan (los 6 diseños públicos del selector) y los exclusivos de IA.
+#Catálogo del plan (los 8 diseños públicos del selector) y los exclusivos de IA.
 PLAN_TEMPLATES      =   ('raiz', 'alimentos')
-STYLE_TEMPLATES     =   frozenset(('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
+STYLE_TEMPLATES     =   frozenset(('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -372,25 +373,25 @@ class Diversidad(_AiDesignBase):
 # 2) FUENTES DE ESTILO (contrato 2)
 #=========================================
 class FuentesDeEstilo(_AiDesignBase):
-    """Catálogo de 6 diseños (2 por nivel); el motor nunca se sale de él."""
+    """Catálogo de 8 diseños; el motor propone solo los 6 de PUBLIC_TEMPLATES."""
 
-    def test_with_advanced_the_whitelist_covers_the_six_designs(self):
+    def test_with_advanced_the_whitelist_covers_the_eight_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(tuple(allowed), ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
+        self.assertEqual(tuple(allowed), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
 
     def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
         #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
         _, profile, _   =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
         self.assertEqual(set(allowed_templates_of(profile)), STYLE_TEMPLATES)
 
-    def test_plan_tiers_add_two_designs_each(self):
+    def test_plan_tiers_add_their_designs(self):
         _, base, _      =   _make_account(*CUSTOMIZATION)
         _, plus, _      =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS))
         _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
         self.assertEqual(tuple(allowed_templates_of(base)), ('raiz', 'alimentos'))
-        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'alimentos', 'trama', 'boutique'))
-        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
+        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico'))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
 
     def test_the_engine_has_no_exclusive_or_legacy_designs(self):
         from StoreApp.domains.stores.models import StoreCustomization
@@ -401,15 +402,17 @@ class FuentesDeEstilo(_AiDesignBase):
                          set(StoreCustomization.TEMPLATE_RETIRED_MAP))
 
     def test_retired_designs_never_reappear(self):
-        #El catálogo público de 6 es la única salida del motor: ningún id
-        #retirado vuelve a choices ni a la whitelist (y 'boutique' ya no
-        #está retirado: es un diseño plus).
+        #El catálogo público de 8 es la única salida del selector; el motor
+        #sigue limitado a los 6 de PUBLIC_TEMPLATES. Ningún id retirado
+        #vuelve a choices ni a la whitelist (y 'boutique' ya no está
+        #retirado: es un diseño plus).
         from StoreApp.domains.stores.models import StoreCustomization
         retired =   set(StoreCustomization.TEMPLATE_RETIRED_MAP)
         self.assertEqual({key for key, _ in StoreCustomization.TEMPLATE_CHOICES}, set(STYLE_TEMPLATES))
         self.assertFalse(retired & set(STYLE_TEMPLATES))
         self.assertNotIn('boutique', retired)
         self.assertIn('boutique', STYLE_TEMPLATES)
+        self.assertEqual(set(R.PUBLIC_TEMPLATES), set(STYLE_TEMPLATES) - {'indumentaria', 'clasico'})
 
     def test_style_source_of_is_always_the_plan(self):
         for template in STYLE_TEMPLATES:
@@ -431,7 +434,7 @@ class FuentesDeEstilo(_AiDesignBase):
 
     def test_engine_reports_v7(self):
         client, _, _    =   self._premium_client()
-        self.assertEqual(self._generate(client).json()['engine'], 'ai-design/7')
+        self.assertEqual(self._generate(client).json()['engine'], 'ai-design/8')
 
 
 #=========================================

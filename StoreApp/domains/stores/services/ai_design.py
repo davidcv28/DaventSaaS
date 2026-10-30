@@ -1,7 +1,7 @@
 #=========================================
 # MOTOR DE DISEÑO AUTOMÁTICO (sin IA paga, offline y determinista)
 #=========================================
-#Entrevista corta (todo opcional) + datos reales de la tienda → 2-3
+#Entrevista corta (todo opcional) + datos reales de la tienda → 2-4
 #propuestas de web completa: plantilla, look (site_theme) y qué bloques
 #van, en qué orden y con qué variante.
 #Cero llamadas de red: las recetas viven en ai_design_recipes y el texto
@@ -9,6 +9,12 @@
 #semilla derivada del store + respuestas + ENGINE_VERSION, así que el mismo
 #input devuelve el mismo JSON byte a byte (y la semilla que manda el
 #frontend se suma para pedir "otra propuesta").
+#REGLAS DE GENERACIÓN (v6, ver `_explore_styles`): el pool de estilos se
+#puntúa por afinidad real (rubro, tono, objetivo, datos cargados) y sobre
+#ese ranking se SORTEA el set de cada generación — "otra propuesta" cambia
+#las propuestas, no solo su orden. Reglas duras: pedido del dueño primero,
+#nunca dos propuestas con la misma plantilla ni con el mismo aire visual,
+#todo dentro de la whitelist del plan.
 #Nada de lo que arma el motor se escribe sin pasar por clean_layout_config
 #ni por la whitelist de plantillas del plan: los invariantes del editor
 #(locked siempre activo, premium fuera sin has_design_advanced, bloque sin
@@ -597,6 +603,11 @@ def _style_candidates(facts, stats, answers, allowed, seed):
         score   +=  2 if answers['rubro'] in skin['rubros'] else 0
         score   +=  min(density, 6)
         score   +=  _data_signal(template, stats, facts)
+        #Sin modo noche pedido, una piel de dos caras fuerza el interruptor y
+        #el tema oscuro: se penaliza para que no le gane a una de una sola
+        #cara (sigue alcanzable si no hay otra en el estilo).
+        if skin['family'] in _TWO_FACE_FAMILIES and not (answers.get('night_mode') or {}).get('enabled'):
+            score   -=  45
         candidates.append({
             'template'  :   template,
             'skin'      :   skin_id,
@@ -627,8 +638,30 @@ def _style_candidates(facts, stats, answers, allowed, seed):
         add(free[style_index % len(free)], pool[seed % len(pool)],
             pairs[(style_index + seed) % len(pairs)], 80, strict = True)
     #1) matriz "firma" del rubro: piso de diversidad (plan + legacy + ai).
+    #La firma fija el ESTILO (el aire del rubro), no la piel exacta: la piel
+    #rota por semilla dentro del mismo estilo — "otra propuesta" cambia
+    #paleta y tipografía sin perder la firma. Antes la piel era fija y, con
+    #un plan de 3 plantillas, la generación salía idéntica para todo seed.
     for index, signature in enumerate(R.RUBRO_STYLES.get(answers['rubro'], ())):
-        add(signature['template'], signature['skin'], signature['pair'], 40 - index * 5)
+        style       =   SKIN.SKINS[signature['skin']]['style']
+        #La piel curada del rubro abre el pool (seed 0 = la firma original) y
+        #las alternativas del MISMO estilo entran rotando por semilla. La
+        #rotación va por FAMILIA, no por piel suelta: "otra propuesta" cambia
+        #el aire visual (paleta/tipografía), no solo un tono de la misma.
+        pool        =   [signature['skin']] + [skin_id for skin_id in _style_pool(style, answers['rubro'], tone)
+                                              if skin_id != signature['skin']]
+        by_family   =   {}
+        for skin_id in pool:
+            by_family.setdefault(SKIN.SKINS[skin_id]['family'], []).append(skin_id)
+        families    =   list(by_family)
+        #Sin modo noche pedido, una familia de dos caras forzaría el
+        #interruptor (y el tema oscuro): se evita salvo que el estilo no
+        #tenga otra familia.
+        night       =   bool((answers.get('night_mode') or {}).get('enabled'))
+        single      =   [family for family in families if night or family not in _TWO_FACE_FAMILIES] or families
+        family      =   single[seed % len(single)]
+        options     =   by_family[family]
+        add(signature['template'], options[(seed // len(single)) % len(options)], signature['pair'], 40 - index * 5)
     #2) el resto de las plantillas permitidas, con piel rotada.
     #Cada plantilla entra UNA vez al bloque general. Con el catálogo de 3
     #diseños la piel se elige con dos prioridades: (a) estilos PEDIDOS por el
@@ -711,19 +744,68 @@ def _style_candidates(facts, stats, answers, allowed, seed):
                                'skin': pool[style_index % len(pool)],
                                'style': style,
                                'score': 34 if style in requested else 5})
-    #Los mejores compiten; entre los tres estilos "firma" del rubro la
-    #semilla decide el orden (así "otra propuesta" cambia de familia
-    #visual, no de variante).
+    #Ranking por afinidad real. La semilla NO reordena acá: el set de cada
+    #generación lo decide `_explore_styles` (antes la rotación de la cabeza
+    #solo permutaba las mismas tres propuestas y "otra propuesta" no se
+    #notaba — el cliente veía siempre los mismos tres diseños).
     candidates.sort(key = lambda item: (-item['score'], item['template'], item['skin']))
-    #La rotación de la semilla juega SOLO entre los estilos "firma" del
-    #rubro: los estilos que el dueño pidió quedan clavados al frente (si no,
-    #"otra propuesta" se los comía y el pedido no se notaba).
-    head    =   min(3, len(candidates))
-    locked  =   [index for index, item in enumerate(candidates[:head]) if item['style'] in requested]
-    if head > 1 and not locked:
-        rotate      =   seed % head
-        candidates  =   candidates[rotate:head] + candidates[:rotate] + candidates[head:]
     return candidates
+
+
+def _explore_styles(candidates, seed, count, requested = (), signature = ()):
+    """
+    Elige el ORDEN de competición de una generación (reglas del motor v6):
+
+      1. PEDIDO: los estilos que el dueño marcó en la entrevista abren la
+         generación.
+      2. FIRMA: los diseños curados para el rubro (`R.RUBRO_STYLES`) entran
+         sí o sí — rotados por semilla, así la tapa cambia entre
+         generaciones sin perder el diseño que le corresponde al rubro.
+         Pedido + firma nunca ocupan todas las tarjetas: al menos un slot
+         queda para explorar.
+      3. EXPLORACIÓN: ese slot (y los que sobren) se sortea SIN reemplazo,
+         ponderado por puntaje, dentro de la ventana top `count * 4`. Con
+         `seed + 1` cambia el SET de propuestas, no el orden de las mismas
+         tres.
+      4. RED DE SEGURIDAD: el pool completo (ya ordenado por puntaje) queda
+         detrás, así `_select_styles` siempre tiene de dónde completar la
+         diversidad (estilo/plantilla/piel/par distintos).
+
+    Determinista: mismo seed + mismas respuestas = mismo set, byte a byte.
+    """
+    if not candidates:
+        return []
+    if count >= len(candidates):
+        return list(candidates)
+    requested   =   set(requested or ())
+    #Pedido + firma del rubro: entran primero, pero dejan siempre al menos un
+    #slot libre para la exploración (si no, la generación volvería a ser
+    #siempre las mismas tarjetas).
+    limit       =   max(0, count - 1)
+    pinned      =   [item for item in candidates if item['style'] in requested][:limit]
+    signature   =   set(signature or ())
+    if signature:
+        sig =   [item for item in candidates if item['template'] in signature and item not in pinned]
+        if sig:
+            cut =   seed % len(sig)
+            sig =   sig[cut:] + sig[:cut]
+        pinned  =   pinned + sig[:max(0, limit - len(pinned))]
+    rest        =   [item for item in candidates if item not in pinned]
+    if not rest:
+        return pinned
+    window  =   rest[:min(len(rest), max(count * 4, count + 3))]
+    tail    =   rest[len(window):]
+    pool    =   list(window)
+    picked  =   []
+    #PRNG propio de la exploración: no toca el `random.Random(seed)` del
+    #layout, así el armado de bloques sigue siendo independiente del sorteo.
+    rng     =   random.Random((seed * 2654435761) & 0xFFFFFFFF)
+    while pool and len(picked) < count - len(pinned):
+        weights =   [1.0 / ((index + 1) ** 0.6) for index in range(len(pool))]
+        picked.append(pool.pop(rng.choices(range(len(pool)), weights = weights, k = 1)[0]))
+    #Los no sorteados vuelven al final (siguen en orden de puntaje): son la
+    #red de seguridad de `_select_styles`, no candidatos descartados.
+    return pinned + picked + pool + tail
 
 
 def seen_templates(candidates):
@@ -2000,26 +2082,35 @@ def _score(theme, clean_theme, has_advanced):
 
 
 def _proposal_count(allowed, facts):
-    #Nunca una sola: con dos plantillas permitidas ya hay dos historias
-    #distintas. Una tercera solo si el plan y los datos la justifican.
-    if len(allowed) >= 3 and sum(1 for value in facts.values() if value) >= 6:
+    #Nunca una sola. El techo lo pone el plan (una propuesta por plantilla):
+    #con 3+ plantillas permitidas y tienda con contenido, 3; con 4+ y datos
+    #suficientes, 4 — más opciones sin inventar tarjetas vacías.
+    rich = sum(1 for value in facts.values() if value) >= 6
+    if len(allowed) >= 4 and rich:
+        return 4
+    if len(allowed) >= 3 and rich:
         return 3
     return 2
 
 
 def _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai = False):
     """
-    2-3 propuestas de web completa. Cada una es una TERNA de estilo
+    2-4 propuestas de web completa. Cada una es una TERNA de estilo
     (plantilla + piel + par tipográfico) con diversidad garantizada, un
     layout de landing/catálogo/servicios rediseñado por la piel y el
     site_theme v2 (roles tipográficos incluidos).
     """
-    styles          =   _style_candidates(facts, stats, answers, allowed, seed)
+    count           =   _proposal_count(allowed, facts)
+    styles          =   _explore_styles(
+        _style_candidates(facts, stats, answers, allowed, seed),
+        seed, count,
+        requested = answers.get('styles') or (),
+        signature = tuple(signature['template'] for signature in R.RUBRO_STYLES.get(answers['rubro'], ())),
+    )
     if not styles:
         fallback    =   StoreCustomization.TEMPLATE_RAIZ if StoreCustomization.TEMPLATE_RAIZ in allowed else list(allowed)[0]
         styles      =   [{'template': fallback, 'skin': SKIN.SKIN_IDS[seed % len(SKIN.SKIN_IDS)],
                           'pair': 'grotesk-clean', 'source': R.style_source_of(fallback), 'score': 0}]
-    count           =   _proposal_count(allowed, facts)
     chosen          =   _select_styles(styles, count, allow_repeat_template = len(set(allowed)) < count)
     rng             =   random.Random(seed)
     use_icons       =   answers.get('use_icons')
@@ -2156,19 +2247,29 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
     }
 
 
+def _engine_templates(profile):
+    """
+    Whitelist EFECTIVA del motor: allowed_templates_of (8 diseños del
+    selector) ∩ PUBLIC_TEMPLATES (los 6 que la IA sabe componer). Los
+    diseños nuevos 'indumentaria'/'clasico' se eligen a mano en el
+    dashboard; la IA no los propone.
+    """
+    return tuple(template for template in allowed_templates_of(profile) if template in R.PUBLIC_TEMPLATES)
+
+
 def _prepare(store, payload):
     """Contexto común de generate/apply: tienda, borrador, respuestas y plan."""
     customization   =   StoreCustomization.objects.get_or_create(store = store)[0]
     facts, stats    =   _facts(store, customization)
     answers         =   _answers(store, customization, payload, stats)
-    allowed         =   allowed_templates_of(store.user)
+    allowed         =   _engine_templates(store.user)
     has_advanced    =   profile_has_benefit(store.user, 'has_design_advanced')
     has_ai          =   profile_has_benefit(store.user, 'has_ai_design')
     return customization, answers, allowed, has_advanced, has_ai
 
 
 def generate(store, payload):
-    """2-3 propuestas de web completa para la entrevista del dueño."""
+    """2-4 propuestas de web completa para la entrevista del dueño."""
     customization, answers, allowed, has_advanced, has_ai =   _prepare(store, payload)
     facts, stats =   _facts(store, customization)
     seed    =   _base_seed(store, answers) + _request_seed(payload)

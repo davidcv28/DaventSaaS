@@ -121,7 +121,21 @@ class AiDesignGenerateTests(AiDesignBase):
         second      =   client.post(AI_URL, payload, format = 'json')
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json(), second.json())
-        self.assertEqual(first.json()['engine'], 'ai-design/7')
+        self.assertEqual(first.json()['engine'], 'ai-design/8')
+
+    def test_another_style_changes_the_proposals(self):
+        #Bug reportado: "Ver otro estilo" devolvía siempre los mismos tres
+        #diseños (la semilla solo permutaba el orden). Ahora cambia el set.
+        store, _    =   self._store(products = 8)
+        client      =   self._client(store)
+        payload     =   {'rubro': 'gastronomia', 'tone': 'moderno'}
+        first       =   client.post(AI_URL, payload, format = 'json').json()
+        second      =   client.post(AI_URL, {**payload, 'seed': first['seed'] + 1}, format = 'json').json()
+        signature   =   lambda data: [(item['template'], item['skin']['id']) for item in data['proposals']]
+        self.assertNotEqual(signature(first), signature(second))
+        #Y sigue siendo determinista: la misma semilla repite el mismo set.
+        third       =   client.post(AI_URL, {**payload, 'seed': first['seed'] + 1}, format = 'json').json()
+        self.assertEqual(second, third)
 
     def test_two_or_three_proposals_distinct(self):
         store, _    =   self._store(products = 8)
@@ -573,12 +587,12 @@ class AiDesignV2Tests(AiDesignBase):
     def test_ai_templates_used_when_plan_allows(self):
         store, _    =   self._store()
         _, data     =   self._generate(store)
-        self.assertEqual(data['engine'], 'ai-design/7')
+        self.assertEqual(data['engine'], 'ai-design/8')
         #El motor ya no tiene diseños exclusivos: todas las propuestas son
         #del catálogo público y declaran fuente de estilo 'plan'.
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
         self.assertEqual(sources, {'plan'})
-        self.assertEqual(set(allowed_templates_of(store.user)), {'raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'})
+        self.assertEqual(set(allowed_templates_of(store.user)), {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'})
 
     def test_ai_templates_never_outside_plan(self):
         #Sin has_ai_design los ai_* no están en la whitelist del plan y el
@@ -927,6 +941,9 @@ def _contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
+CATALOG_TEMPLATES   =   frozenset(('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
+
+
 class AiDesignV4Tests(AiDesignBase):
     """Motor v4: terna (plantilla, piel, par tipográfico) con diversidad
     obligatoria, site_theme v2 (roles + layout + skin) y rediseño completo."""
@@ -944,14 +961,14 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_engine_reports_v4(self):
         store, _    =   self._store()
-        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/7')
+        self.assertEqual(self._generate(store, {'rubro': 'comercio'})['engine'], 'ai-design/8')
 
     def test_each_rubro_opens_with_a_design_and_skin_from_the_catalog(self):
-        #La apertura siempre sale del catálogo real de 6 y declara su piel.
+        #La apertura siempre sale del catálogo público y declara su piel.
         store, _    =   self._store()
         for rubro in self.RUBROS:
             proposal    =   self._generate(store, {'rubro': rubro})['proposals'][0]
-            self.assertIn(proposal['template'], ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'), rubro)
+            self.assertIn(proposal['template'], CATALOG_TEMPLATES, rubro)
             self.assertTrue(proposal['skin']['id'], rubro)
 
     def test_proposals_differ_in_template_skin_and_type_pair(self):
@@ -966,14 +983,19 @@ class AiDesignV4Tests(AiDesignBase):
         for proposal in proposals:
             self.assertEqual(proposal['variety']['differs_by'], ['template', 'skin', 'type-pair'])
 
-    def test_all_proposals_come_from_the_six_designs(self):
+    def test_all_proposals_come_from_the_public_catalog(self):
+        #Ninguna propuesta sale del catálogo público y los diseños base del
+        #motor (raiz/trama/circuito) siempre aparecen en alguna generación.
+        #La igualdad exacta con los 8 ya no aplica: la exploración varía el
+        #set por rubro/semilla (indumentaria/clasico entran solo si ganan).
         store, _    =   self._store()
         templates   =   set()
         for rubro in self.RUBROS:
             for proposal in self._generate(store, {'rubro': rubro})['proposals']:
                 self.assertEqual(proposal['style_source'], 'plan')
                 templates.add(proposal['template'])
-        self.assertEqual(templates, {'raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'})
+        self.assertTrue(templates <= CATALOG_TEMPLATES, templates - CATALOG_TEMPLATES)
+        self.assertTrue({'raiz', 'trama', 'circuito'} <= templates, templates)
 
     def test_rubro_seguridad_proposes_the_security_design(self):
         #El rubro nuevo entra al entrenamiento: la matriz firma incluye
@@ -1004,7 +1026,7 @@ class AiDesignV4Tests(AiDesignBase):
         store       =   Store.objects.create(user = profile, slug = 'tienda-estandar')
         StoreCustomization.objects.create(store = store, site_templates = ['landing', 'catalog', 'services'])
         allowed     =   set(allowed_templates_of(store.user))
-        self.assertEqual(allowed, {'raiz', 'alimentos', 'trama', 'boutique'})
+        self.assertEqual(allowed, {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico'})
         data        =   self._client(store).post(AI_URL, {'rubro': 'seguridad'}, format = 'json').json()
         self.assertTrue(data['proposals'])
         for proposal in data['proposals']:
@@ -1020,7 +1042,7 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_allowed_templates_grow_with_the_flag(self):
         premium, _  =   self._store()
-        self.assertEqual(set(allowed_templates_of(premium.user)), {'raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'})
+        self.assertEqual(set(allowed_templates_of(premium.user)), {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'})
         basic, _    =   self._store(advanced = False, username = 'basico')
         self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz', 'alimentos'})
 
