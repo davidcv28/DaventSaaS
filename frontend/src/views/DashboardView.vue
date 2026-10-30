@@ -1277,9 +1277,9 @@ const designTab = ref('look')
 // Sub-secciones de "Diseño": las tres últimas se muestran con candado cuando
 // el plan no trae el beneficio (nunca se ocultan).
 const designTabs = [
-  { id: 'look', label: 'Diseño', icon: 'palette' },
-  { id: 'assisted', label: 'Diseño asistido', icon: 'sparkles', benefit: 'has_ai_design' },
-  { id: 'studio', label: 'Studio', icon: 'layout-panel-left', benefit: 'has_design_advanced' }
+  { id: 'look', label: 'Diseño', icon: 'palette', desc: 'Estilo, colores y tipografía' },
+  { id: 'assisted', label: 'Diseño asistido', icon: 'sparkles', desc: 'La IA arma una propuesta', benefit: 'has_ai_design' },
+  { id: 'studio', label: 'Studio', icon: 'layout-panel-left', desc: 'Control total, pantalla completa', benefit: 'has_design_advanced' }
 ]
 const designContentTabs = [
   { id: 'content', label: 'Mis datos', icon: 'pencil' },
@@ -4068,16 +4068,27 @@ async function changePassword() {
 
       <template v-if="canCustomize">
         <div class="dsg-wrap">
-          <nav class="dsg-tabs" role="tablist" aria-label="Opciones de diseño">
-            <button v-for="t in designTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id, locked: designTabLocked(t) }" :aria-selected="designTab === t.id" @click="openDesignTab(t)">
-              <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
-              <span v-if="designTabLocked(t)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /></span>
-            </button>
-            <span class="dsg-tabs-sep" aria-hidden="true"></span>
-            <button v-for="t in designContentTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
-              <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
-            </button>
-          </nav>
+          <div class="dsg-nav">
+            <nav class="dsg-cards" role="tablist" aria-label="Cómo querés diseñar">
+              <button
+                v-for="t in designTabs" :key="t.id" type="button" role="tab"
+                class="dsg-card-btn" :class="{ active: designTab === t.id, locked: designTabLocked(t) }"
+                :aria-selected="designTab === t.id" @click="openDesignTab(t)"
+              >
+                <span class="dsg-card-ico"><AppIcon :name="t.icon" :size="18" /></span>
+                <span class="dsg-card-txt">
+                  <strong>{{ t.label }}</strong>
+                  <small>{{ t.desc }}</small>
+                </span>
+                <span v-if="designTabLocked(t)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /></span>
+              </button>
+            </nav>
+            <nav class="dsg-tabs dsg-tabs-sub" role="tablist" aria-label="Contenido de mi web">
+              <button v-for="t in designContentTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
+                <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
+              </button>
+            </nav>
+          </div>
         <template v-if="designTab === 'look'">
           <DesignStylesTab
             :form="designForm"

@@ -1331,6 +1331,35 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .dsg-wrap{ display: grid; gap: 14px; min-width: 0; }
 .dsg-layout{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); gap: 18px; align-items: start; }
 .dsg-main{ min-width: 0; display: grid; gap: 14px; }
+.dsg-nav{ display: grid; gap: 10px; min-width: 0; }
+/* Nivel 1: cómo diseñar (tarjetas con icono + explicación). */
+.dsg-cards{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dsg-card-btn{ display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink-2); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s, color .15s; }
+.dsg-card-btn:hover{ border-color: color-mix(in srgb, var(--brand-500) 45%, var(--line)); background: var(--surface); }
+.dsg-card-btn:focus-visible{ outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.dsg-card-btn.active{ border-color: var(--brand-500); background: color-mix(in srgb, var(--brand-500) 8%, var(--card)); color: var(--ink); box-shadow: inset 0 0 0 1px var(--brand-500); }
+.dsg-card-btn.locked{ opacity: .82; }
+.dsg-card-ico{ display: inline-flex; align-items: center; justify-content: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); color: var(--brand-500); }
+.dsg-card-btn.active .dsg-card-ico{ background: var(--brand-500); color: #fff; }
+.dsg-card-txt{ display: grid; gap: 2px; min-width: 0; }
+.dsg-card-txt strong{ font-size: 13.5px; font-weight: 650; overflow-wrap: anywhere; }
+.dsg-card-txt small{ font-size: 11.5px; color: var(--ink-3); overflow-wrap: anywhere; }
+.dsg-card-btn .lock-badge{ margin-left: auto; flex: none; }
+/* Nivel 2: contenido de la web (chips compactos). */
+.dsg-tabs-sub{ border-style: dashed; }
+.dsg-tabs-sub .dsg-tab{ flex: 0 1 auto; padding: 8px 12px; font-size: 12.5px; }
+@media (max-width: 860px){
+  .dsg-cards{ grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .dsg-card-btn{ padding: 10px 12px; }
+  .dsg-card-txt small{ display: none; }
+  .dsg-card-ico{ width: 32px; height: 32px; }
+}
+@media (max-width: 640px){
+  .dsg-cards{ display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 2px; scrollbar-width: none; }
+  .dsg-cards::-webkit-scrollbar{ display: none; }
+  .dsg-card-btn{ flex: 0 0 auto; min-height: 44px; scroll-snap-align: start; }
+  .dsg-tabs-sub{ scroll-snap-type: x proximity; }
+}
 .dsg-tabs{ display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); overflow-x: auto; scrollbar-width: thin; }
 .dsg-tab{ flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 14px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
 .dsg-tab:hover{ background: var(--surface); }
