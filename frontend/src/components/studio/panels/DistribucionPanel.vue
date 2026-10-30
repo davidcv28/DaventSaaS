@@ -150,7 +150,7 @@ function setVariant(block, e) { emit('variant-block', { surface: surface.value, 
   padding: 0; border: 0; background: transparent; color: var(--ink); font: inherit;
   font-size: 13px; font-weight: 600; text-align: left; cursor: pointer;
 }
-.dlv-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlv-name span { overflow-wrap: anywhere; line-height: 1.25; }
 .dlv-name:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; border-radius: 6px; }
 .dlv-lock { color: var(--muted); }
 .dlv-variant {

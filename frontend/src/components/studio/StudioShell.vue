@@ -1126,7 +1126,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
 <style scoped>
 /* ===== Grid 3 zonas + savebar ===== */
 .sts {
-  --rail-w: 76px; --panel-w: 320px;
+  --rail-w: 92px; --panel-w: 320px;
   position: relative; /* ancla de los overlays (ayuda, buscador, onboarding) */
   display: grid;
   grid-template-columns: var(--rail-w) var(--panel-w) minmax(0, 1fr);
@@ -1150,7 +1150,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
   position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   min-height: 52px; padding: 7px 2px 5px; border: 0; border-radius: 10px;
-  background: transparent; color: var(--ink-2); font: inherit; font-size: 10.5px;
+  background: transparent; color: var(--ink-2); font: inherit; font-size: 10px;
   font-weight: 600; cursor: pointer; transition: background .15s, color .15s;
 }
 .sts-tool:hover { color: var(--ink); background: var(--line-soft); }
