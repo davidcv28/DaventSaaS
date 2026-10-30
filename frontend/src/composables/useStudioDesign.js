@@ -2,7 +2,7 @@ import { ref, computed, nextTick } from 'vue'
 import { storesApi, CUSTOMIZATION_DEFAULTS, ensureStoreFont, normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook } from '../api/stores.api.js'
 
 // Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
-export const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', 'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y']
+export const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', 'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y', 'layout_config', 'site_theme']
 
 /*
 Estado y handlers del Studio de diseño, compartidos por DashboardView y la
@@ -146,6 +146,15 @@ export function useStudioDesign({
         cover_focus_x: Number(designForm.cover_focus_x),
         cover_focus_y: Number(designForm.cover_focus_y)
       })
+    }
+    // Patrón + estilo elegidos en la sección Diseño: el layout del patrón y
+    // el tema del estilo viajan como columnas propias. El Studio los pisa
+    // abajo con su borrador cuando corresponde.
+    if (designForm.layout_config && Object.keys(designForm.layout_config).length) {
+      payload[asDraft ? 'layout_config_draft' : 'layout_config'] = designForm.layout_config
+    }
+    if (designForm.site_theme && Object.keys(designForm.site_theme).length) {
+      payload[asDraft ? 'site_theme_draft' : 'site_theme'] = designForm.site_theme
     }
     // En modo borrador (save del Studio) template/layout/tema viajan en sus
     // columnas *_draft: la web sigue mostrando lo publicado hasta "Publicar".

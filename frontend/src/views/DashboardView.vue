@@ -1271,7 +1271,7 @@ async function saveBot() {
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
-const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [] })
+const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [], layout_config: {}, site_theme: {} })
 const designTouched = reactive({})
 const designTab = ref('look')
 // Sub-secciones de "Diseño": las tres últimas se muestran con candado cuando
@@ -1335,7 +1335,9 @@ let lastServerDesign = null
 // Bandera compartida con useStudioDesign: true mientras el save del diseño
 // está en vuelo, para que el watcher de la tienda no pise lo editado.
 const serverFlags = { accept: false }
-const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
+const designFieldValue = (v) => (
+  typeof v === 'string' ? v.trim() : (v && typeof v === 'object' ? JSON.stringify(v) : v ?? '')
+)
 // Precarga el diseño guardado cuando llega la tienda (customization anidada).
 watch(() => store.store, (s) => {
   if (!s) return

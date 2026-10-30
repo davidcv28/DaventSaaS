@@ -4,6 +4,7 @@
 // misma cáscara que usa el Studio en su panel "Estilos", así la sección y el
 // Studio comparten una sola implementación y los mismos eventos.
 import EstilosPanel from '../studio/panels/EstilosPanel.vue'
+import DesignPickers from './DesignPickers.vue'
 
 defineProps({
   form: { type: Object, required: true },
@@ -16,8 +17,9 @@ const emit = defineEmits(['navigate', 'ring', 'open-studio'])
 
 <template>
   <div class="dstyles">
+    <DesignPickers :form="form" :benefits="benefits" />
     <EstilosPanel
-      :form="form" :benefits="benefits" :shop-name="shopName" preview
+      :form="form" :benefits="benefits" :shop-name="shopName" preview pickers
       @navigate="emit('navigate', $event)"
       @ring="emit('ring', $event)"
     />

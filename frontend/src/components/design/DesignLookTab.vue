@@ -18,7 +18,11 @@ const props = defineProps({
   shopName: { type: String, default: '' },
   // Vista previa embebida (sección Diseño del panel). El Studio ya tiene su
   // propio visor a pantalla completa, así que ahí se apaga.
-  preview: { type: Boolean, default: true }
+  preview: { type: Boolean, default: true },
+  // La sección Diseño monta los dos selectores del catálogo (patrón +
+  // estilo) arriba: se oculta el selector viejo de plantilla para no tener
+  // dos controles sobre el mismo campo.
+  pickers: { type: Boolean, default: false }
 })
 const emit = defineEmits(['go-plans', 'ring'])
 
@@ -675,7 +679,7 @@ onBeforeUnmount(dropLocalLogo)
               <p class="hint">Ayuda a que el texto se lea sobre fotos claras.</p>
             </div>
 
-            <div class="field" @focusin="setRing('cover')">
+            <div v-if="!pickers" class="field" @focusin="setRing('cover')">
               <label for="design-style"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Estilo de tu web</label>
               <div class="dl-style-row">
                 <span class="tpl-thumb dl-style-prev" :data-tpl="form.template" aria-hidden="true"><i><b></b><b></b><b></b></i></span>

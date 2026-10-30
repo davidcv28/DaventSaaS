@@ -14,7 +14,10 @@ defineProps({
   shopName: { type: String, default: '' },
   // El Studio ya tiene su visor a pantalla completa: la miniatura embebida
   // del LookTab solo se usa en la sección Diseño del panel.
-  preview: { type: Boolean, default: false }
+  preview: { type: Boolean, default: false },
+  // La sección Diseño monta los dos selectores del catálogo (patrón +
+  // estilo) fuera del LookTab: ahí se esconde el selector viejo de plantilla.
+  pickers: { type: Boolean, default: false }
 })
 const emit = defineEmits(['navigate', 'ring'])
 
@@ -26,7 +29,7 @@ const onLookRing = (key) => emit('ring', RING_MAP[key] || key)
 <template>
   <div class="est">
     <DesignLookTab
-      :form="form" :benefits="benefits" :shop-name="shopName" :preview="preview"
+      :form="form" :benefits="benefits" :shop-name="shopName" :preview="preview" :pickers="pickers"
       @go-plans="emit('navigate', 'plans')"
       @ring="onLookRing"
     />
