@@ -70,8 +70,11 @@ function queuePost() {
 }
 
 function onFrameLoad() {
-  loaded.value = true
+  // `load` es el documento vacío: la tienda todavía no pintó. La señal real
+  // es studio:ready (el layout la manda con los datos ya cargados); hasta
+  // entonces se mantiene el esqueleto en vez de mostrar un marco blanco.
   clearTimeout(loadTimer)
+  loadTimer = setTimeout(() => { if (!loaded.value) failed.value = true }, 15000)
   postNow()
 }
 
@@ -79,7 +82,11 @@ function onMessage(e) {
   const win = frameEl.value?.contentWindow
   if (!win || e.source !== win) return
   if (!isStudioMessage(e.data)) return
-  if (e.data.type === STUDIO_MSG.READY) postNow()
+  if (e.data.type === STUDIO_MSG.READY) {
+    loaded.value = true
+    clearTimeout(loadTimer)
+    postNow()
+  }
 }
 
 // La miniatura no se carga hasta que la tarjeta entra en pantalla: tres
@@ -88,7 +95,7 @@ function activate() {
   if (active.value) return
   active.value = true
   if (!src.value) return
-  loadTimer = setTimeout(() => { if (!loaded.value) failed.value = true }, 12000)
+  loadTimer = setTimeout(() => { if (!loaded.value) failed.value = true }, 15000)
   nextTick(postNow)
 }
 

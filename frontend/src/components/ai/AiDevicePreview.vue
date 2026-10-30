@@ -95,9 +95,12 @@ function queuePost() {
 
 let loadTimer = null
 function onFrameLoad() {
-  loaded.value = true
-  failed.value = false
+  // El `load` del iframe llega con el documento vacío: la tienda todavía no
+  // pidió sus datos ni pintó una sección. La señal real es studio:ready, que
+  // el layout manda recién cuando ya tiene la tienda cargada — sin esto el
+  // modal mostraba un rectángulo blanco en lugar de la vista previa.
   clearTimeout(loadTimer)
+  loadTimer = setTimeout(() => { if (!loaded.value) failed.value = true }, 15000)
   postNow()
 }
 // Si la página no carga (subdominio sin DNS, red caída) se cae al mockup en
@@ -105,7 +108,7 @@ function onFrameLoad() {
 function watchLoad() {
   clearTimeout(loadTimer)
   if (!src.value) return
-  loadTimer = setTimeout(() => { if (!loaded.value) failed.value = true }, 12000)
+  loadTimer = setTimeout(() => { if (!loaded.value) failed.value = true }, 15000)
 }
 watch(src, () => { loaded.value = false; failed.value = false; nextTick(watchLoad) })
 
@@ -113,8 +116,13 @@ function onMessage(e) {
   const win = frameEl.value?.contentWindow
   if (!win || e.source !== win) return
   if (!isStudioMessage(e.data)) return
-  // El iframe avisa al montar: recién ahí tiene el listener listo.
-  if (e.data.type === STUDIO_MSG.READY) postNow()
+  // El iframe avisa al montar con la tienda ya cargada: recién ahí tiene el
+  // listener listo y el contenido pintado.
+  if (e.data.type === STUDIO_MSG.READY) {
+    loaded.value = true
+    clearTimeout(loadTimer)
+    postNow()
+  }
 }
 
 watch(
