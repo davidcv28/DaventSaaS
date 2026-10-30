@@ -48,6 +48,8 @@ class Command(BaseCommand):
         parser.add_argument('--style', default = '', help = 'Slug del DesignStyle del que hereda layout/plantilla')
         parser.add_argument('--accent', default = '', help = 'Color de acento (#RRGGBB) para los tokens')
         parser.add_argument('--fonts', default = '', help = 'Fuentes separadas por coma: cuerpo,cabecera')
+        parser.add_argument('--palette', default = '', help = 'Paleta clave:#hex separada por coma (bg,surface,text,muted,border,accent,primary,secondary)')
+        parser.add_argument('--typography', default = '', help = 'Tipografía clave:valor separada por coma (body,heading)')
         parser.add_argument('--preview', default = '', help = 'Miniatura/URL opcional')
         parser.add_argument('--inactive', action = 'store_true', help = 'Crear el patrón desactivado')
 
@@ -71,6 +73,13 @@ class Command(BaseCommand):
             tokens['accent'] = options['accent']
         if style and isinstance(style.tokens, dict):
             tokens = {**style.tokens, **tokens}
+
+        palette = self._pairs(options['palette'], hex_only = True)
+        if palette:
+            tokens['palette'] = {**tokens.get('palette', {}), **palette}
+        typography = self._pairs(options['typography'])
+        if typography:
+            tokens['typography'] = {**tokens.get('typography', {}), **typography}
 
         defaults = {
             'nombre'        :   options['nombre'],
@@ -97,6 +106,21 @@ class Command(BaseCommand):
             f'{"Creado" if created else "Actualizado"} patrón {pattern.slug} · '
             f'html {len(html)} · css {len(css)} · js {len(js)}'
         ))
+
+    #=========================================
+    # PARES CLAVE:VALOR
+    #=========================================
+    def _pairs(self, raw, hex_only = False):
+        pairs = {}
+        for chunk in (raw or '').split(','):
+            key, _, value = chunk.partition(':')
+            key, value = key.strip(), value.strip()
+            if not key or not value:
+                continue
+            if hex_only and not re.fullmatch(r'#[0-9a-fA-F]{3,8}', value):
+                raise CommandError(f'Color inválido para {key}: {value}')
+            pairs[key] = value
+        return pairs
 
     #=========================================
     # SPLIT DEL DOCUMENTO
