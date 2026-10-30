@@ -415,6 +415,18 @@ def _answers(store, customization, payload, stats):
     for extra in (payload.get('extras') or []):
         if extra in R.AI_ELEMENT_ORDER and extra not in extras:
             extras.append(extra)
+    #Selección del cliente sobre la landing: lo que movió, ocultó o destacó
+    #manda sobre la receta. Solo ids reales (el hero no se mueve) y lo que
+    #está en `hide` gana sobre el resto.
+    selection_raw   =   payload.get('selection') if isinstance(payload.get('selection'), dict) else {}
+    def _selected(key):
+        return [block for block in (selection_raw.get(key) or ())
+                if block in TEMPLATE_BLOCKS['landing'] and block != 'hero']
+    selection       =   {
+        'move_up'   :   _selected('move_up'),
+        'hide'      :   _selected('hide'),
+        'highlight' :   _selected('highlight'),
+    }
     return {
         'rubro'         :   rubro,
         'tone'          :   tone,
@@ -433,6 +445,7 @@ def _answers(store, customization, payload, stats):
         'accept_extras' :   accept_extras,
         'extras'        :   extras[:R.AI_ELEMENT_MAX],
         'content_hint'  :   str(payload.get('content_hint') or '').strip()[:160],
+        'selection'     :   selection,
     }
 
 
@@ -999,7 +1012,8 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         #Densidad por tono: 'serio' pide aire. Un bloque con datos reales y
         #siempre-presente (gate None) no se apaga: la densidad solo logra que
         #el bloque no empuje el arranque; el dato pesa más que el gusto.
-        if block_id in density and gate is not None:
+        #Lo que el cliente destacó tampoco se apaga.
+        if block_id in density and gate is not None and block_id not in _selection_ids(answers, 'highlight'):
             enabled =   False
         block   =   {'id': block_id, 'enabled': enabled}
         variant =   _variant_for(surface, block_id, answers, rng, shift, pattern)
@@ -1035,9 +1049,39 @@ def _build_surface(surface, facts, answers, rng, shift, pattern = None):
         blocks  =   _rotate_to_opening(blocks, answers)
         blocks  =   _alternate_rhythm(blocks, answers)
         blocks  =   _enforce_hierarchy(blocks)
+        #La selección del cliente corre al final: es lo último que se aplica
+        #y nada de lo anterior puede deshacerla.
+        blocks  =   _apply_selection(blocks, answers)
     for index, block in enumerate(blocks):
         block['order']  =   index
     return {'blocks': blocks}
+
+
+def _selection_ids(answers, key):
+    return set((answers.get('selection') or {}).get(key) or ())
+
+
+def _apply_selection(blocks, answers):
+    """
+    Selección del cliente: lo oculto se apaga (queda en el borrador), lo que
+    subió va justo después de la portada y lo destacado se mantiene visible.
+    El cierre (cta/contacto) no se mueve: la jerarquía de la web sigue.
+    """
+    hidden  =   _selection_ids(answers, 'hide')
+    up      =   [block_id for block_id in _selection_ids(answers, 'move_up') if block_id not in hidden]
+    out     =   []
+    for block in blocks:
+        block   =   dict(block)
+        if block['id'] in hidden:
+            block['enabled']    =   False
+        out.append(block)
+    if not up:
+        return out
+    head    =   [block for block in out if block['id'] == 'hero']
+    tail    =   [block for block in out if block['id'] in _PINNED_BLOCKS]
+    moved   =   [block for block in out if block['id'] in up and block['id'] not in _PINNED_BLOCKS]
+    rest    =   [block for block in out if block not in head + moved + tail]
+    return head + moved + rest + tail
 
 
 #Bloques que la jerarquía fija: el ritmo alternado nunca los usa como
@@ -2081,6 +2125,22 @@ def _score(theme, clean_theme, has_advanced):
     }
 
 
+def _contrast_notes(palette):
+    """
+    Ratios reales de los pares texto/fondo que la web pinta: la propuesta
+    declara con qué contraste se publica, no una estimación.
+    """
+    surface =   palette.get('surface') or palette['bg']
+    pairs   =   (
+        ('texto/fondo', palette['text'], palette['bg']),
+        ('secundario/fondo', palette['muted'], palette['bg']),
+        ('texto/superficie', palette['text'], surface),
+        ('secundario/superficie', palette['muted'], surface),
+        ('acento/fondo', palette['accent'], palette['bg']),
+    )
+    return [f'{label} {_contrast_ratio(a, b):.1f}:1' for label, a, b in pairs]
+
+
 def _proposal_count(allowed, facts):
     #Nunca una sola. El techo lo pone el plan (una propuesta por plantilla):
     #con 3+ plantillas permitidas y tienda con contenido, 3; con 4+ y datos
@@ -2091,6 +2151,39 @@ def _proposal_count(allowed, facts):
     if len(allowed) >= 3 and rich:
         return 3
     return 2
+
+
+#Combinaciones de composición que la generación usa para que dos propuestas
+#no compartan grilla ni portada (el catálogo cerrado, nunca CSS).
+_LAYOUT_ROTATION    =   (
+    ('asym', 'editorial'),
+    ('bento', 'centered'),
+    ('editorial', 'split'),
+    ('split', 'cinema'),
+    ('12', 'centered'),
+)
+
+
+def _diversify_skin_layout(skin, used, facts):
+    """
+    Dos propuestas de la misma generación no comparten grilla ni portada: si
+    la combinación ya salió, la piel toma la próxima libre del catálogo. La
+    composición cambia de verdad, no solo el color.
+    """
+    config  =   _skin_layout_config(skin, facts)
+    combo   =   (config.get('grid'), config.get('hero'))
+    if combo not in used:
+        used.add(combo)
+        return skin, used
+    for grid, hero in _LAYOUT_ROTATION:
+        if (grid, hero) in used or grid == combo[0]:
+            continue
+        used.add((grid, hero))
+        alt =   dict(skin.get('layout_alt') or {})
+        alt.update({'grid': grid, 'hero': hero})
+        return {**skin, 'layout': {**skin['layout'], 'grid': grid, 'hero': hero}, 'layout_alt': alt}, used
+    used.add(combo)
+    return skin, used
 
 
 def _build(store, customization, answers, seed, has_advanced, allowed, facts, stats, has_ai = False):
@@ -2123,6 +2216,8 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
     #Firma (plantilla + orden + variantes de las 3 superficies): dos
     #propuestas no pueden ser la misma web con otro color.
     signatures      =   set()
+    #Composición usada (grilla + portada): tampoco se repite entre propuestas.
+    used_layouts    =   set()
     for index, style in enumerate(chosen):
         #La propuesta 0 va con el mejor estilo; las demás ya vienen con
         #plantilla/piel/par distintos (diversidad obligatoria).
@@ -2131,6 +2226,9 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
         #Las propuestas alternativas usan la variante de layout de la
         #familia: el rediseño se ve en la composición, no solo en el color.
         skin        =   {**SKIN.SKINS[style['skin']], 'layout_alt': SKIN.SKIN_LAYOUT_ALT.get(SKIN.SKINS[style['skin']]['family']) if shift else None}
+        #Grilla y portada propias: la propuesta se ve distinta aunque la piel
+        #caiga en la misma familia visual que otra.
+        skin, used_layouts =   _diversify_skin_layout(skin, used_layouts, facts)
         pair        =   style['pair']
         pattern     =   _pattern_for(template, answers, shift)
         attempt     =   0
@@ -2227,7 +2325,7 @@ def _build(store, customization, answers, seed, has_advanced, allowed, facts, st
             'theme'         :   theme_mode,
             'theme_toggle'  :   theme_toggle,
             'copy'          :   text,
-            'notes'         :   _notes(facts, stats, answers, template, has_advanced),
+            'notes'         :   _notes(facts, stats, answers, template, has_advanced) + _contrast_notes(theme['palette']),
             'copy_draft'    :   ai_design_copy.draft_business_fields(store, customization, answers['rubro'], answers['tone'], facts, stats, rng),
             'image_requests':   _image_requests(stats, layout),
         })

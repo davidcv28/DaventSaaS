@@ -403,3 +403,61 @@ class PortadaDobladaTests(unittest.TestCase):
             ids     =   [block['id'] for block in landing_blocks(layout)]
             self.assertEqual(ids[0], 'hero', f'rot {rot}')
             self.assertEqual(ids[-1], 'contact', f'rot {rot}')
+
+
+class SelectionTests(unittest.TestCase):
+    #La selección del cliente (mover / ocultar / destacar) manda sobre la
+    #receta: se aplica al final y nada de lo anterior la deshace.
+
+    def with_selection(self, move_up = (), hide = (), highlight = (), tone = 'moderno'):
+        data            =   answers('comercio', 'vender_online', tone)
+        data['selection']   =   {
+            'move_up':   list(move_up),
+            'hide':      list(hide),
+            'highlight': list(highlight),
+        }
+        return landing_blocks(A._build_surface('landing', facts(), data, random.Random(0), 0))
+
+    def test_hidden_block_is_disabled_but_kept_in_the_draft(self):
+        blocks  =   {block['id']: block for block in self.with_selection(hide = ['gallery'])}
+        self.assertIn('gallery', blocks)
+        self.assertFalse(blocks['gallery']['enabled'])
+
+    def test_move_up_lands_right_after_the_hero(self):
+        ids =   [block['id'] for block in self.with_selection(move_up = ['testimonials'])]
+        self.assertEqual(ids[0], 'hero')
+        self.assertEqual(ids[1], 'testimonials')
+        self.assertEqual(ids[-1], 'contact')
+
+    def test_highlight_survives_the_tone_density(self):
+        dense   =   set(R.TONE_DENSITY['serio'])
+        blocks  =   {block['id']: block for block in self.with_selection(tone = 'serio')}
+        target  =   next(block_id for block_id in blocks if block_id in dense)
+        self.assertFalse(blocks[target]['enabled'])
+        blocks  =   {block['id']: block for block in self.with_selection(highlight = [target], tone = 'serio')}
+        self.assertTrue(blocks[target]['enabled'])
+
+
+class LayoutDiversityTests(unittest.TestCase):
+
+    def test_two_proposals_do_not_share_grid_and_hero(self):
+        used    =   set()
+        skin    =   dict(SKIN.SKINS[SKIN.SKIN_IDS[0]])
+        first, used     =   A._diversify_skin_layout(dict(skin), used, facts())
+        second, used    =   A._diversify_skin_layout(dict(skin), used, facts())
+        combo   =   lambda item: (
+            A._skin_layout_config(item, facts()).get('grid'),
+            A._skin_layout_config(item, facts()).get('hero'),
+        )
+        self.assertNotEqual(combo(first), combo(second))
+        self.assertNotEqual(combo(first)[0], combo(second)[0])
+
+    def test_contrast_notes_declare_real_ratios(self):
+        palette =   {
+            'text': '#F2F4F2', 'muted': '#A8B0AA', 'accent': '#FFC24B',
+            'bg': '#0E1113', 'surface': '#171B1D',
+        }
+        notes   =   A._contrast_notes(palette)
+        self.assertTrue(all(note.endswith(':1') for note in notes))
+        ratios  =   [float(note.rsplit(' ', 1)[1][:-2]) for note in notes]
+        self.assertTrue(all(ratio >= 4.5 for ratio in ratios), notes)
