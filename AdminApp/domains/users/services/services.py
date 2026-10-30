@@ -2,19 +2,31 @@ import logging
 from datetime import timedelta
 
 from decouple import config
-from AdminApp.domains.users.models import UserProfile, TERMS_VERSION
-from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
+from django.contrib.auth.tokens import (
+    PasswordResetTokenGenerator,
+    default_token_generator,
+)
 from django.core.mail import EmailMultiAlternatives
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
+from django.utils.crypto import constant_time_compare
 from django.utils.encoding import force_bytes, force_str
 from django.utils.html import escape
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import (
+    base36_to_int,
+    urlsafe_base64_decode,
+    urlsafe_base64_encode,
+)
 from rest_framework import serializers
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from rest_framework_simplejwt.token_blacklist.models import (
+    BlacklistedToken,
+    OutstandingToken,
+)
+
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+from AdminApp.domains.users.models import TERMS_VERSION, UserProfile
 
 logger          =   logging.getLogger(__name__)
 #Vacío en .env != ausente: un valor vacío también cae al default de dev.
@@ -45,6 +57,20 @@ def UpdateUserQuery(user: User, validated_data : dict) -> User:
         user.save()
     return user
 
+def _revoke_sessions(user : User) -> None:
+    """
+    Cierra TODAS las sesiones del usuario en 2 queries (antes: 1 SELECT + 1
+    INSERT por token). El borrado de OutstandingToken NO sirve acá:
+    BlacklistedToken cuelga con CASCADE, así que borrar el outstanding
+    borraría también la entrada de blacklist y el refresh seguiría válido.
+    """
+    outstanding =   list(OutstandingToken.objects.filter(user = user))
+    BlacklistedToken.objects.bulk_create(
+        [BlacklistedToken(token = token) for token in outstanding],
+        ignore_conflicts = True,
+    )
+
+
 #USER PASSWORD UPDATE
 def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
     new_password = validated_data['new_password']
@@ -52,8 +78,7 @@ def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
     user.save()
     #Igual que el reset: cualquier refresh emitido antes del cambio queda en
     #blacklist — una sesión robada no sobrevive al cambio de contraseña.
-    for token in OutstandingToken.objects.filter(user = user):
-        BlacklistedToken.objects.get_or_create(token = token)
+    _revoke_sessions(user)
     logger.info('Cambio de contraseña: sesiones revocadas (user_id=%s)', user.pk)
     return user
 
@@ -142,9 +167,25 @@ class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
     """
     Token firmado para verificar el correo. El hash incluye email_verified:
     una vez usado (o al re-verificar tras un cambio de correo) el link viejo
-    se inutiliza solo. El vencimiento lo fija settings.PASSWORD_RESET_TIMEOUT.
+    se inutiliza solo. Vencimiento propio de 24 h (el reset de contraseña
+    quedó en 1 h): no comparten la ventana de settings.
     """
     key_salt    =   'AdminApp.domains.users.email_verification'
+    timeout     =   60 * 60 * 24
+    def check_token(self, user, token):
+        if not (user and token):
+            return False
+        try:
+            ts_b36, _   =   token.split('-')
+            ts          =   base36_to_int(ts_b36)
+        except ValueError:
+            return False
+        if (self._num_seconds(self._now()) - ts) > self.timeout:
+            return False
+        for secret in [self.secret, *self.secret_fallbacks]:
+            if constant_time_compare(self._make_token_with_timestamp(user, ts, secret), token):
+                return True
+        return False
     def _make_hash_value(self, user, timestamp):
         profile     =   getattr(user, 'profile', None)
         verified    =   getattr(profile, 'email_verified', False)
@@ -256,8 +297,7 @@ def ConfirmPasswordResetQuery(user : User, new_password : str) -> User:
     user.save()
     #Cualquier refresh token emitido antes del cambio queda en blacklist: el
     #robo de sesión que motivó el reseteo se corta en todos los dispositivos.
-    for token in OutstandingToken.objects.filter(user = user):
-        BlacklistedToken.objects.get_or_create(token = token)
+    _revoke_sessions(user)
     logger.info('Reset de contraseña confirmado: sesiones revocadas (user_id=%s)', user.pk)
     return user
 #=================================

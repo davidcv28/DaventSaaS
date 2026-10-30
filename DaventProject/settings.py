@@ -9,9 +9,10 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-from decouple import config
 from pathlib import Path
+
 import dj_database_url
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -137,6 +138,7 @@ REST_FRAMEWORK = {
 # tab. Rotación obligatoria + blacklist: un refresh robado queda inservible al
 # primer uso legítimo y su replay se detecta.
 from datetime import timedelta
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME'    : timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME'   : timedelta(days=7),
@@ -189,6 +191,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    #Correlación (X-Request-ID), Retry-After en 429, noindex de /api/ y cap
+    #de body: va primero para envolver a todos los demás.
+    'DaventProject.middleware.RequestIdMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'DaventProject.middleware.AdminLoginRateLimitMiddleware',
@@ -255,6 +260,17 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+# Vencimiento del link de reset de contraseña: 1 h (el default de Django son
+# 3 días — ventana demasiado amplia para robo/replay de correo). El token de
+# verificación de email tiene su propio TTL de 24 h
+# (EmailVerificationTokenGenerator.timeout).
+PASSWORD_RESET_TIMEOUT = 3600
+
+# Cap explícito del cuerpo (además del límite de nginx): sin proxy
+# (serverless) DRF leería el body completo en memoria.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 
 # Internationalization

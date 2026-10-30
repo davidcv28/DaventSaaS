@@ -297,9 +297,10 @@ class ChatAttachmentTests(TestCase):
         message     =   response.data['message']
         self.assertEqual(message['body'], '')
         self.assertTrue(message['image_url'])
-        #La DB guarda la key; el archivo quedó en disco bajo chat/<thread>/
+        #La DB guarda la key; el archivo quedó en disco bajo private/chat/
+        #(nginx bloquea /media/private/: solo lo sirve la API autenticada).
         msg_row     =   ChatMessage.objects.get()
-        self.assertTrue(msg_row.image_key.startswith('chat/'))
+        self.assertTrue(msg_row.image_key.startswith('private/chat/'))
         self.assertTrue(msg_row.image_key.endswith('.webp'))
         self.assertTrue(os.path.isfile(os.path.join(self.tmp_media, msg_row.image_key)))
 
@@ -316,6 +317,19 @@ class ChatAttachmentTests(TestCase):
         )
         self.assertEqual(reply.status_code, 201)
         self.assertTrue(reply.data['message']['from_staff'])
+
+    def test_attachment_is_served_only_to_thread_participants(self):
+        _client(self.user).post(CHAT_SEND_URL, {'image': self._png()}, format = 'multipart')
+        msg         =   ChatMessage.objects.get()
+        #El dueño del hilo lo baja por la vista autenticada.
+        own         =   _client(self.user).get(f'/api/chat/attachment/{msg.pk}/')
+        self.assertEqual(own.status_code, 200)
+        #Otro cliente no (404, sin filtrar existencia).
+        other, other_profile    =   _make_user('intruso')
+        _grant_chat(other_profile)
+        self.assertEqual(_client(other).get(f'/api/chat/attachment/{msg.pk}/').status_code, 404)
+        #El staff sí.
+        self.assertEqual(_client(self.staff).get(f'/api/chat/attachment/{msg.pk}/').status_code, 200)
 
     def test_non_image_file_rejected(self):
         bad         =   SimpleUploadedFile('virus.exe', b'MZ fake bytes', content_type = 'application/octet-stream')

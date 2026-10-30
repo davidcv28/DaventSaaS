@@ -19,7 +19,11 @@ from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.stores.models import (
-    Store, StoreCarouselImage, StoreCustomization, StoreDailyVisit, StoreGalleryImage,
+    Store,
+    StoreCarouselImage,
+    StoreCustomization,
+    StoreDailyVisit,
+    StoreGalleryImage,
     StudioVersion,
 )
 from StoreApp.domains.stores.services import contact as contact_service
@@ -240,6 +244,7 @@ class ImageNormalizationTests(TestCase):
     @staticmethod
     def _upload(size, mode = 'RGB', color = (200, 30, 30), fmt = 'PNG'):
         import io
+
         from PIL import Image
         buffer  =   io.BytesIO()
         Image.new(mode, size, color).save(buffer, format = fmt)
@@ -248,7 +253,9 @@ class ImageNormalizationTests(TestCase):
 
     def test_gallery_clamps_extreme_ratio_and_outputs_webp(self):
         import io
+
         from PIL import Image
+
         from StoreApp.domains.stores.services.imaging import normalize_image
         body, ext, content_type =   normalize_image(self._upload((4000, 500)), 'gallery')
         width, height           =   Image.open(io.BytesIO(body)).size
@@ -258,7 +265,9 @@ class ImageNormalizationTests(TestCase):
 
     def test_product_flattens_transparency_on_white(self):
         import io
+
         from PIL import Image
+
         from StoreApp.domains.stores.services.imaging import normalize_image
         body, _, _  =   normalize_image(self._upload((300, 300), 'RGBA', (0, 0, 0, 0)), 'product')
         pixel       =   Image.open(io.BytesIO(body)).convert('RGB').getpixel((10, 10))
@@ -266,13 +275,16 @@ class ImageNormalizationTests(TestCase):
 
     def test_invalid_file_is_rejected(self):
         import io
+
         from StoreApp.domains.stores.services.imaging import normalize_image
         with self.assertRaises(ValueError):
             normalize_image(io.BytesIO(b'no soy una imagen'), 'gallery')
 
     def test_cover_crops_portrait_to_square_and_caps_size(self):
         import io
+
         from PIL import Image
+
         from StoreApp.domains.stores.services.imaging import normalize_image
         body, ext, _    =   normalize_image(self._upload((1000, 3000)), 'cover')
         width, height   =   Image.open(io.BytesIO(body)).size
@@ -283,7 +295,9 @@ class ImageNormalizationTests(TestCase):
 
     def test_logo_keeps_transparency_and_outputs_webp(self):
         import io
+
         from PIL import Image
+
         from StoreApp.domains.stores.services.imaging import normalize_image
         body, ext, content_type =   normalize_image(self._upload((1600, 1600), 'RGBA', (10, 20, 30, 0)), 'logo')
         out                     =   Image.open(io.BytesIO(body))
@@ -294,7 +308,9 @@ class ImageNormalizationTests(TestCase):
 
     def test_carousel_behaves_like_cover(self):
         import io
+
         from PIL import Image
+
         from StoreApp.domains.stores.services.imaging import normalize_image
         body, ext, _    =   normalize_image(self._upload((1000, 3000)), 'carousel')
         width, height   =   Image.open(io.BytesIO(body)).size
@@ -765,16 +781,25 @@ class CaptchaTests(TestCase):
     anti-bot y comparación timing-safe.
     """
 
-    def _answer(self, slug, challenge_id):
-        payload     =   signing.loads(challenge_id, salt = contact_service.CAPTCHA_SALT)
-        return str(next(
-            answer for answer in range(2, 19)
-            if contact_service._answer_hash(slug, answer) == payload['h']
-        ))
+    def _answer(self, slug, challenge):
+        #La operación puede ser suma, resta o producto: se resuelve desde la
+        #pregunta y se comprueba contra el hash firmado.
+        import re
+        numbers     =   [int(value) for value in re.findall(r'\d+', challenge['question'])]
+        a, b        =   numbers[0], numbers[1]
+        if '×' in challenge['question']:
+            answer  =   a * b
+        elif '-' in challenge['question']:
+            answer  =   a - b
+        else:
+            answer  =   a + b
+        payload     =   signing.loads(challenge['challenge_id'], salt = contact_service.CAPTCHA_SALT)
+        assert contact_service._answer_hash(slug, answer) == payload['h']
+        return str(answer)
 
     def test_valid_challenge_verifies(self):
         challenge   =   contact_service.issue_captcha('mi-tienda')
-        answer      =   self._answer('mi-tienda', challenge['challenge_id'])
+        answer      =   self._answer('mi-tienda', challenge)
         with patch('time.time', return_value = timezone.now().timestamp() + 4):
             self.assertTrue(contact_service.verify_captcha('mi-tienda', challenge['challenge_id'], answer))
 
@@ -789,7 +814,7 @@ class CaptchaTests(TestCase):
 
     def test_challenge_bound_to_slug(self):
         challenge   =   contact_service.issue_captcha('mi-tienda')
-        answer      =   self._answer('mi-tienda', challenge['challenge_id'])
+        answer      =   self._answer('mi-tienda', challenge)
         with patch('time.time', return_value = timezone.now().timestamp() + 4):
             self.assertFalse(contact_service.verify_captcha('otra-tienda', challenge['challenge_id'], answer))
 
@@ -797,12 +822,12 @@ class CaptchaTests(TestCase):
         #El captcha exige un mínimo de segundos desde que se emitió: un bot
         #que responde al instante se frena sin llegar a comparar el hash.
         challenge   =   contact_service.issue_captcha('mi-tienda')
-        answer      =   self._answer('mi-tienda', challenge['challenge_id'])
+        answer      =   self._answer('mi-tienda', challenge)
         self.assertFalse(contact_service.verify_captcha('mi-tienda', challenge['challenge_id'], answer))
 
     def test_expired_challenge_rejected(self):
         challenge   =   contact_service.issue_captcha('mi-tienda')
-        answer      =   self._answer('mi-tienda', challenge['challenge_id'])
+        answer      =   self._answer('mi-tienda', challenge)
         with patch('time.time', return_value = timezone.now().timestamp() + 700):
             self.assertFalse(contact_service.verify_captcha('mi-tienda', challenge['challenge_id'], answer))
 

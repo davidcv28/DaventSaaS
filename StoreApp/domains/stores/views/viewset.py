@@ -4,8 +4,9 @@ import json
 import logging
 import re
 from datetime import timedelta
-from DaventProject.cache_utils import cache_get, cache_set
-from django.core.signing import TimestampSigner, BadSignature
+
+from django.core.signing import BadSignature, TimestampSigner
+from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -15,33 +16,66 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
-from StoreApp.domains.stores.models                  import Store, StoreCustomization, StoreCarouselImage, StoreGalleryImage, StoreChatbot, StudioVersion
-from StoreApp.domains.stores.serializers.serializers import (
-    StoreSerializerList, StorePublicSerializer, StoreCustomizationSerializer,
-    StoreCarouselImageSerializer, StoreGalleryImageSerializer, StoreContactSerializer,
-    StoreChatbotSerializer,
-)
-from StoreApp.domains.stores.serializers.validators  import (
-    RESERVED_SLUGS,
-    validate_slug_format,
-    validate_slug_available,
-)
-from StoreApp.domains.stores.services                import (
-    profile_has_benefit, allowed_templates_of, storage_payload,
-    upload_logo, delete_logo, upload_cover, delete_cover,
-    upload_carousel_image, delete_carousel_image,
-    upload_gallery_image, delete_gallery_image,
-    issue_captcha, verify_captcha, send_contact_message, contact_target,
-    record_store_visit, visit_stats_of,
-)
-from StoreApp.domains.stores.public_cache            import public_cache_stamp
-from StoreApp.domains.stores.services.ai_design      import (
-    AiDesignError, apply as apply_ai_design, generate as generate_ai_design,
-    upload_design_image, design_image_url,
-)
-from .viewset_base   import StoreBaseViewSet
-from .viewset_config import StoreConfigs
+
+from DaventProject.cache_utils import cache_get, cache_set
 from DaventProject.throttling import PublicReadThrottle
+from StoreApp.domains.stores.models import (
+    Store,
+    StoreCarouselImage,
+    StoreChatbot,
+    StoreCustomization,
+    StoreGalleryImage,
+    StudioVersion,
+)
+from StoreApp.domains.stores.public_cache import public_cache_stamp
+from StoreApp.domains.stores.serializers.serializers import (
+    StoreCarouselImageSerializer,
+    StoreChatbotSerializer,
+    StoreContactSerializer,
+    StoreCustomizationSerializer,
+    StoreGalleryImageSerializer,
+    StorePublicSerializer,
+    StoreSerializerList,
+)
+from StoreApp.domains.stores.serializers.validators import (
+    RESERVED_SLUGS,
+    validate_slug_available,
+    validate_slug_format,
+)
+from StoreApp.domains.stores.services import (
+    allowed_templates_of,
+    contact_target,
+    delete_carousel_image,
+    delete_cover,
+    delete_gallery_image,
+    delete_logo,
+    issue_captcha,
+    profile_has_benefit,
+    record_store_visit,
+    send_contact_message,
+    storage_payload,
+    upload_carousel_image,
+    upload_cover,
+    upload_gallery_image,
+    upload_logo,
+    verify_captcha,
+    visit_stats_of,
+)
+from StoreApp.domains.stores.services.ai_design import (
+    AiDesignError,
+    design_image_url,
+    upload_design_image,
+)
+from StoreApp.domains.stores.services.ai_design import (
+    apply as apply_ai_design,
+)
+from StoreApp.domains.stores.services.ai_design import (
+    generate as generate_ai_design,
+)
+
+from .viewset_base import StoreBaseViewSet
+from .viewset_config import StoreConfigs
+
 """
 
 Viewsets del dominio Stores.
@@ -336,7 +370,16 @@ class StoreViewSet(StoreBaseViewSet):
                     {'detail': 'Antes de crear tu web pública cargá tu número de celular en tu perfil.'},
                     status = status.HTTP_403_FORBIDDEN,
                 )
-        return super().create(request)
+        try:
+            return super().create(request)
+        except IntegrityError:
+            #Carrera de dos claims del mismo slug (doble click / 2 pestañas):
+            #el pre-check pasó en ambos, la constraint única corta acá. Antes
+            #salía un 500; ahora el mismo 400 que el pre-check.
+            return Response(
+                {'slug': ['Ese link ya está en uso.']},
+                status = status.HTTP_400_BAD_REQUEST,
+            )
     #=========================================
     # SLUG AVAILABLE (check de disponibilidad para el onboarding)
     #=========================================
@@ -521,16 +564,31 @@ class StoreViewSet(StoreBaseViewSet):
     def _public_catalog_data(self, request, store, customization):
         from StoreApp.domains.catalog.models import Product
         from StoreApp.domains.catalog.serializers.serializers import (
-            CategorySerializer, BrandSerializer, ProductPublicSerializer, DiscountPublicSerializer,
+            BrandSerializer,
+            CategorySerializer,
+            DiscountPublicSerializer,
+            ProductPublicSerializer,
         )
-        from StoreApp.domains.catalog.services.services import running_discounts_of, effective_pricing_of
+        from StoreApp.domains.catalog.services.services import (
+            effective_pricing_of,
+            running_discounts_of,
+        )
         products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
         #La valoración solo se anota si el dueño habilitó opiniones y el
         #plan las incluye (has_product_comments, premium): score 0-5 =
         #5 × likes/votos (is_positive binario — el promedio sale del ratio
         #de likes); sin el flag viaja rating_avg/count en None.
         if customization is not None and customization.show_reviews and profile_has_benefit(store.user, 'has_product_comments'):
-            from django.db.models import Avg, Count, Q, Case, When, Value, FloatField, ExpressionWrapper
+            from django.db.models import (
+                Avg,
+                Case,
+                Count,
+                ExpressionWrapper,
+                FloatField,
+                Q,
+                Value,
+                When,
+            )
             products    =   products.annotate(
                 rating_avg      =   ExpressionWrapper(
                     Value(5.0) * Avg(
@@ -761,10 +819,11 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['get', 'post'], url_path = r'public/(?P<slug>[a-z0-9-]+)/products/(?P<product_id>[0-9]+)/reviews', throttle_classes = [StoreReviewThrottle])
     def product_reviews(self, request, slug = None, product_id = None):
         from StoreApp.domains.catalog.models import ProductReview
-        from StoreApp.domains.catalog.serializers.serializers import (
-            ReviewPublicSerializer, ReviewCreateSerializer,
-        )
         from StoreApp.domains.catalog.serializers.config_fields import ReviewLimits
+        from StoreApp.domains.catalog.serializers.serializers import (
+            ReviewCreateSerializer,
+            ReviewPublicSerializer,
+        )
         store, can_rate, can_comment    =   self._review_store(slug)
         product                         =   self._review_product(store, product_id)
         if request.method == 'GET':

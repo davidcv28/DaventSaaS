@@ -5,12 +5,13 @@ Todo objeto vive dentro de la tienda del dueño autenticado: los querysets
 están scopeados por owner, las taxonomías se validan por pertenencia y los
 cupos del plan se rechequean bajo lock en el create.
 """
+import secrets
 import time
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.core.cache import cache
 from django.core import signing
+from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -18,7 +19,13 @@ from rest_framework.test import APIClient
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
-from StoreApp.domains.catalog.models import Brand, Category, Discount, Product, ProductReview
+from StoreApp.domains.catalog.models import (
+    Brand,
+    Category,
+    Discount,
+    Product,
+    ProductReview,
+)
 from StoreApp.domains.stores.models import Store, StoreCustomization
 from StoreApp.domains.stores.services.contact import CAPTCHA_SALT, _answer_hash
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
@@ -742,7 +749,7 @@ def _review_captcha(slug, answer = 7):
     Challenge válido y envejecido (30s > CAPTCHA_MIN_SECONDS): pasa la
     verificación real de firma + antigüedad + respuesta.
     """
-    payload =   {'s': slug, 'h': _answer_hash(slug, answer), 't': time.time() - 30}
+    payload =   {'s': slug, 'h': _answer_hash(slug, answer), 't': time.time() - 30, 'n': secrets.token_urlsafe(16)}
     return {
         'challenge_id'  :   signing.dumps(payload, salt = CAPTCHA_SALT),
         'captcha_answer':   str(answer),

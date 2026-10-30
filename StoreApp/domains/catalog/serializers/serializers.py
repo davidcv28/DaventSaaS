@@ -1,12 +1,28 @@
 from django.utils import timezone
 from rest_framework import serializers
-from StoreApp.domains.catalog.models import Category, Brand, Product, Discount, ProductReview
+
+from StoreApp.domains.catalog.models import (
+    Brand,
+    Category,
+    Discount,
+    Product,
+    ProductReview,
+)
 from StoreApp.domains.catalog.services.services import (
-    running_discounts_of, discount_covers, discount_price_of,
+    discount_covers,
+    discount_price_of,
+    running_discounts_of,
 )
 from StoreApp.domains.stores.services.storage import object_url
-from .config_fields import TaxonomyFields, ProductFields, DiscountFields, ReviewFields
-from .mixins        import TaxonomyMixinValidator, CategorySchemaMixinValidator, ProductMixinValidator, DiscountMixinValidator
+
+from .config_fields import DiscountFields, ProductFields, ReviewFields, TaxonomyFields
+from .mixins import (
+    CategorySchemaMixinValidator,
+    DiscountMixinValidator,
+    ProductMixinValidator,
+    TaxonomyMixinValidator,
+)
+
 """
 
 Serializers del dominio Catalog.
@@ -252,4 +268,7 @@ class DiscountSerializerList(serializers.ModelSerializer):
             return 'scheduled'
         return 'active'
     def get_products_count(self, discount):
-        return discount.products.count()
+        #Anotado en el queryset (Count('products')); el fallback cubre el
+        #detalle/creación, donde no hace falta la anotación.
+        annotated =   getattr(discount, 'products_count', None)
+        return annotated if annotated is not None else discount.products.count()

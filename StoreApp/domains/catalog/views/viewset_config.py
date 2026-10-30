@@ -1,10 +1,23 @@
-from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
-from StoreApp.domains.catalog.models                    import Category, Brand, Product, Discount, ProductReview
-from StoreApp.domains.catalog.serializers.serializers   import (
-    CategorySerializer, BrandSerializer, ProductSerializer, ProductSerializerList,
-    DiscountSerializer, DiscountSerializerList, ReviewSerializerList,
+from rest_framework.permissions import IsAuthenticated
+
+from StoreApp.domains.catalog.models import (
+    Brand,
+    Category,
+    Discount,
+    Product,
+    ProductReview,
 )
+from StoreApp.domains.catalog.serializers.serializers import (
+    BrandSerializer,
+    CategorySerializer,
+    DiscountSerializer,
+    DiscountSerializerList,
+    ProductSerializer,
+    ProductSerializerList,
+    ReviewSerializerList,
+)
+
 """
 
 Configuración de los viewsets del dominio Catalog.
@@ -19,7 +32,11 @@ def _own_brands(view):
 def _own_products(view):
     return Product.objects.filter(store = view.my_store()).select_related('category', 'brand')
 def _own_discounts(view):
-    return Discount.objects.filter(store = view.my_store()).select_related('category', 'brand').prefetch_related('products')
+    #products_count se anota acá: el serializer del listado hacía un COUNT
+    #por descuento (N+1 clásico en GET /api/discounts/).
+    return Discount.objects.filter(store = view.my_store()).select_related('category', 'brand').annotate(
+        products_count = Count('products'),
+    )
 def _own_reviews(view):
     return ProductReview.objects.filter(store = view.my_store()).select_related('product')
 #=========================================

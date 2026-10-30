@@ -11,7 +11,6 @@ corregida y sin metadatos de ubicación.
 """
 from uuid import uuid4
 
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
@@ -20,6 +19,10 @@ from StoreApp.domains.stores.services import imaging, storage
 #La URL del adjunto es firmada y de vida corta: aunque se filtre el link,
 #deja de servir en una hora. Nunca usa la URL pública del bucket.
 CHAT_IMAGE_TTL_SECONDS  =   60 * 60
+#Sin R2 el adjunto NO puede quedar en /media/ público (nginx lo servía sin
+#auth ni expiración): va bajo este prefijo, que nginx bloquea y que solo
+#sirve la vista autenticada GET /api/chat/attachment/<id>/.
+CHAT_PRIVATE_PREFIX     =   'private/'
 
 def upload_chat_image(thread, upload):
     """
@@ -36,8 +39,9 @@ def upload_chat_image(thread, upload):
         storage.put_object(key, body, content_type)
     else:
         # Sin R2 (dev local / VPS sin bucket): el archivo va al disco del
-        # servidor bajo MEDIA_ROOT — jamás a la base de datos.
-        key     =   default_storage.save(key, ContentFile(body))
+        # servidor bajo MEDIA_ROOT/private (nginx bloquea esa ruta) — jamás a
+        # la base de datos ni a una URL pública.
+        key     =   default_storage.save(CHAT_PRIVATE_PREFIX + key, ContentFile(body))
     return key
 
 
@@ -51,5 +55,7 @@ def chat_image_url(request, message):
     url         =   storage.object_url(message.image_key, private = True, expires = CHAT_IMAGE_TTL_SECONDS)
     if url:
         return url
-    media       =   f'/{settings.MEDIA_URL}{message.image_key}'
-    return request.build_absolute_uri(media) if request else media
+    #Adjunto local: solo por la vista autenticada (el path de /media/ no se
+    #sirve ni en nginx ni en el storage público).
+    path        =   f'/api/chat/attachment/{message.pk}/'
+    return request.build_absolute_uri(path) if request else path

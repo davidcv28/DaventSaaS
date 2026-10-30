@@ -34,15 +34,23 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
 
-from StoreApp.domains.stores.layout_blocks  import TEMPLATE_BLOCKS, AI_ICONS, clean_layout_config
-from StoreApp.domains.stores.models         import Store, StoreCustomization, StoreGalleryImage, StudioVersion
-from StoreApp.domains.stores.site_theme     import clean_site_theme
+from StoreApp.domains.stores.layout_blocks import (
+    AI_ICONS,
+    TEMPLATE_BLOCKS,
+    clean_layout_config,
+)
+from StoreApp.domains.stores.models import (
+    Store,
+    StoreCustomization,
+    StoreGalleryImage,
+    StudioVersion,
+)
+from StoreApp.domains.stores.site_theme import clean_site_theme
 
-from . import ai_design_copy
+from . import ai_design_copy, imaging, storage
 from . import ai_design_recipes as R
 from . import ai_design_skins as SKIN
 from . import ai_design_typography as TYPE
-from . import imaging, storage
 from .services import allowed_templates_of, profile_has_benefit
 
 ENGINE_VERSION              =   R.ENGINE_VERSION
@@ -101,7 +109,7 @@ def _facts(store, customization):
     `stats` los conteos que usan el puntaje y el texto. Una sola pasada de
     consultas: el motor no vuelve a pegarle a la base.
     """
-    from StoreApp.domains.catalog.models            import Product, Category, Brand
+    from StoreApp.domains.catalog.models import Brand, Category, Product
     from StoreApp.domains.catalog.services.services import running_discounts_of
 
     products    =   Product.objects.filter(store = store, is_active = True)
@@ -2036,7 +2044,8 @@ def _layout_signature(template, layout):
             for block in (layout.get(surface) or {}).get('blocks', [])
         ])
     raw =   json.dumps(payload, sort_keys = True, ensure_ascii = False)
-    return hashlib.sha1(raw.encode('utf-8')).hexdigest()
+    #Hash de firma de layout (no seguridad): sha256 evita el B324 de bandit.
+    return hashlib.sha256(raw.encode('utf-8')).hexdigest()
 
 
 #=========================================

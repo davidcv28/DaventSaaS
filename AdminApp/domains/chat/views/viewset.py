@@ -1,3 +1,6 @@
+from django.core.files.storage import default_storage
+from django.http import FileResponse, Http404
+from django.shortcuts import redirect
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -5,13 +8,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from AdminApp.domains.chat.models         import ChatMessage, ChatThread
-from AdminApp.domains.chat.serializers    import (
+from AdminApp.domains.chat.models import ChatMessage, ChatThread
+from AdminApp.domains.chat.serializers import (
     ChatMessageSerializer,
     ChatSendSerializer,
     ChatThreadSerializer,
 )
-from AdminApp.domains.chat.services       import (
+from AdminApp.domains.chat.services import (
+    CHAT_PRIVATE_PREFIX,
     chat_enabled,
     get_or_create_thread,
     messages_payload,
@@ -139,6 +143,28 @@ class SupportChatViewSet(viewsets.GenericViewSet):
             {'message': ChatMessageSerializer(message, context = {'request': request}).data},
             status = status.HTTP_201_CREATED,
         )
+
+    #=========================================
+    # ATTACHMENT — GET /api/chat/attachment/<id>/ (solo dueño del hilo o staff)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = r'attachment/(?P<message_id>[0-9]+)')
+    def attachment(self, request, message_id = None):
+        self._gate(request)
+        message =   ChatMessage.objects.select_related('thread').filter(pk = message_id).first()
+        if message is None or not message.image_key:
+            raise Http404
+        if not request.user.is_staff and message.thread.customer_id != request.user.pk:
+            #Un id ajeno no filtra existencia.
+            raise Http404
+        if message.image_key.startswith(CHAT_PRIVATE_PREFIX):
+            handle  =   default_storage.open(message.image_key, 'rb')
+            return FileResponse(handle, content_type = 'image/webp')
+        #Bucket: URL firmada de vida corta (nunca la pública).
+        from StoreApp.domains.stores.services import storage
+        url     =   storage.object_url(message.image_key, private = True, expires = 3600)
+        if not url:
+            raise Http404
+        return redirect(url)
 
     #=========================================
     # HEARTBEAT — POST /api/chat/heartbeat/

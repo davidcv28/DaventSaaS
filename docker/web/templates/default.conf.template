@@ -124,6 +124,12 @@ server {
         include /etc/nginx/snippets/security_headers.conf;
         add_header Cache-Control "public";
     }
+    # Adjuntos privados del chat: NUNCA se sirven directo (los entrega la API
+    # autenticada GET /api/chat/attachment/<id>/). Va antes del bloque /media/.
+    location ^~ /media/private/ {
+        return 404;
+    }
+
     location /media/ {
         alias /srv/media/;
         autoindex off;

@@ -1,4 +1,8 @@
 import ipaddress
+import logging
+import re
+import time
+import uuid
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -15,6 +19,8 @@ from DaventProject.cache_utils import (
 Middleware transversales del proyecto.
 
 """
+
+logger = logging.getLogger(__name__)
 
 
 def _trusted_proxies() -> int:
@@ -87,6 +93,55 @@ class ContentSecurityPolicyMiddleware:
         #header ya seteado (SPA, futuras vistas) nunca se pisa.
         if 'text/html' in content_type and 'Content-Security-Policy' not in response:
             response['Content-Security-Policy'] =   self.POLICY
+            #Fase de reporte: la política estricta se evalúa sin romper el
+            #admin (que necesita 'unsafe-inline') antes de promoverla.
+            response.setdefault('Content-Security-Policy-Report-Only', self.POLICY)
+        return response
+
+
+class RequestIdMiddleware:
+    """
+    Correlación de requests + higiene transversal de respuestas:
+
+      - `X-Request-ID`: se acepta el que manda el proxy/cliente (validado) o
+        se genera uno; viaja en la respuesta y en el log con la latencia.
+      - `Retry-After` en cualquier 429 que no lo traiga (throttles de DRF).
+      - `X-Robots-Tag: noindex` para `/api/` (la API JSON es indexable hoy).
+      - Cap de body también sin nginx: un Content-Length mayor al límite se
+        corta con 413 antes de que DRF lea el cuerpo completo.
+    """
+    HEADER          =   'X-Request-ID'
+    MAX_BODY_BYTES  =   10 * 1024 * 1024
+
+    def __init__(self, get_response):
+        self.get_response   =   get_response
+
+    def _request_id(self, request):
+        incoming    =   (request.META.get('HTTP_X_REQUEST_ID') or '').strip()
+        if incoming and len(incoming) <= 64 and re.fullmatch(r'[A-Za-z0-9._:-]+', incoming):
+            return incoming
+        return uuid.uuid4().hex
+
+    def __call__(self, request):
+        request.request_id  =   self._request_id(request)
+        try:
+            declared    =   int(request.META.get('CONTENT_LENGTH') or 0)
+        except (TypeError, ValueError):
+            declared    =   0
+        if declared > self.MAX_BODY_BYTES:
+            response    =   HttpResponse('El cuerpo de la solicitud es demasiado grande.', status = 413)
+            response[self.HEADER] = request.request_id
+            return response
+        started     =   time.monotonic()
+        response    =   self.get_response(request)
+        response.setdefault(self.HEADER, request.request_id)
+        if response.status_code == 429 and not response.headers.get('Retry-After'):
+            response['Retry-After'] =   '60'
+        if request.path.startswith('/api/'):
+            response.setdefault('X-Robots-Tag', 'noindex, nofollow')
+        logger.info('request id=%s %s %s -> %s (%.0fms)',
+                    request.request_id, request.method, request.path,
+                    response.status_code, (time.monotonic() - started) * 1000)
         return response
 
 
@@ -119,6 +174,8 @@ class SecurityHeadersMiddleware:
         response    =   self.get_response(request)
         response.setdefault('Permissions-Policy', self.POLICY)
         response.setdefault('X-Permitted-Cross-Domain-Policies', 'none')
+        #CORP: ningún otro origen puede embeber/leer respuestas de la API.
+        response.setdefault('Cross-Origin-Resource-Policy', 'same-origin')
         if request.path.startswith(self.admin_prefix):
             response.setdefault('X-Robots-Tag', 'noindex, nofollow, noarchive')
         return response
@@ -142,10 +199,17 @@ class AdminLoginRateLimitMiddleware:
 
     def __init__(self, get_response):
         self.get_response   =   get_response
-        self.login_path     =   f'/{settings.ADMIN_URL.strip("/")}/login/'.rstrip('/')
+        admin               =   f'/{settings.ADMIN_URL.strip("/")}'
+        #El reset de contraseña del admin también dispara correos y es
+        #público: no pasa por throttles DRF, se acota con la misma ventana.
+        self.guarded_paths  =   {
+            f'{admin}/login/'.rstrip('/'),
+            f'{admin}/password_reset/'.rstrip('/'),
+        }
+        self.login_path     =   f'{admin}/login/'.rstrip('/')
 
     def __call__(self, request):
-        if request.method == 'POST' and request.path.rstrip('/') == self.login_path:
+        if request.method == 'POST' and request.path.rstrip('/') in self.guarded_paths:
             ip      =   client_ip(request)
             if ip != '-':
                 key =   f'admin-login:{ip}'
