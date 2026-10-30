@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import AppIcon from '../AppIcon.vue'
+import { ensureStoreFont } from '../../api/stores.api.js'
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -106,6 +107,53 @@ const ringStyle = computed(() => (box.value
   ? { width: `${box.value.w}px`, height: `${box.value.h}px`, transform: `translate(${box.value.x}px, ${box.value.y}px)`, opacity: 1 }
   : { opacity: 0 }))
 const heroCover = computed(() => (props.advanced && props.cover ? { '--dp-cover': `url(${props.cover})` } : null))
+
+// ---------------------------------------------------------------------------
+// BOUTIQUE — miniatura editorial de la portada real (BqHero + highlights +
+// "Recién llegado" + cita). Se reusa el mismo dato del formulario que ya
+// recibe la vista previa; sin datos, cada pieza se auto-oculta igual que en
+// la web pública.
+// ---------------------------------------------------------------------------
+const isBoutique = computed(() => props.template === 'boutique')
+// Última palabra del titular en serif itálica y color de acento (solo si el
+// dueño cargó un titular de más de una palabra; el nombre de la marca no se
+// parte). Mismo criterio que BqHero.vue.
+const bqTitle = computed(() => {
+  const headline = String(props.form.headline || '').trim()
+  const raw = headline || String(props.shopName || '').trim()
+  const words = raw.split(/\s+/).filter(Boolean)
+  if (!headline || words.length < 2) return { lead: raw, accent: '' }
+  return { lead: words.slice(0, -1).join(' '), accent: words[words.length - 1] }
+})
+const bqEyebrow = computed(() => (String(props.form.headline || '').trim()
+  ? props.shopName
+  : (props.catalogOn ? 'Catálogo online' : 'Sitio oficial')))
+// El arco necesita una foto concreta: portada premium, si no la primera del
+// carrusel; sin imágenes queda el monograma serif de la inicial.
+const bqMedia = computed(() => (props.advanced && props.cover ? props.cover : (props.carousel[0]?.url || '')))
+const bqHighlights = computed(() => {
+  const list = []
+  if (props.catalogOn) list.push('Catálogo online')
+  list.push('Atención personalizada')
+  const years = Number(props.form.about_years)
+  if (Number.isFinite(years) && years > 0) list.push(`${years} años de trayectoria`)
+  return list
+})
+const bqQuote = computed(() => {
+  if (props.form.show_testimonials === false) return null
+  const list = Array.isArray(props.form.testimonials) ? props.form.testimonials : []
+  return list.find((t) => String(t?.text || '').trim()) || null
+})
+const bqFeatured = computed(() => (props.catalogOn && props.advanced ? props.carousel.slice(0, 3) : []))
+const bqYear = new Date().getFullYear()
+
+// La piel boutique trae su propia tipografía (Cormorant Garamond + Jost): se
+// piden on-demand para que la miniatura no caiga al fallback del sistema.
+watch(() => props.template, (t) => {
+  if (t !== 'boutique') return
+  ensureStoreFont('cormorant-garamond')
+  ensureStoreFont('jost')
+}, { immediate: true })
 </script>
 
 <template>
@@ -129,6 +177,76 @@ const heroCover = computed(() => (props.advanced && props.cover ? { '--dp-cover'
     </div>
     <div ref="stage" class="dp-stage">
       <div ref="frame" class="design-preview dp-frame" :class="`dev-${device}`" :data-store-theme="mode" :data-store-template="template" :data-logo-mode="advanced ? form.logo_mode : null" :data-has-logo="logo ? '' : null" :data-mono="advanced ? form.mono_style : null" :style="vars">
+        <!-- ================= BOUTIQUE (miniatura editorial) ================= -->
+        <template v-if="isBoutique">
+          <div class="dp-nav dp-bq-nav" aria-hidden="true">
+            <span class="dp-nav-brand dp-bq-brand">
+              <img v-if="logo" class="dp-nav-logo" data-ring="logo" :src="logo" alt="" />
+              <span v-else class="dp-nav-mono" data-ring="logo" aria-hidden="true">{{ initial }}</span>
+              <span class="dp-nav-name">{{ shopName }}</span>
+            </span>
+            <span class="dp-nav-links dp-bq-links">
+              <span class="dp-nav-item is-active">Inicio</span>
+              <span v-if="catalogOn" class="dp-nav-item">Catálogo</span>
+              <span v-if="form.show_gallery !== false" class="dp-nav-item">Galería</span>
+              <span class="dp-nav-item">Contacto</span>
+            </span>
+          </div>
+          <section class="dp-hero dp-bq-hero">
+            <div class="dp-bq-copy">
+              <span class="dp-badge dp-bq-eyebrow">{{ bqEyebrow }}</span>
+              <strong class="dp-title dp-bq-title" data-ring="font" :class="{ 'is-name': !form.headline }">
+                {{ bqTitle.lead }}<template v-if="bqTitle.accent">{{ ' ' }}<em class="dp-bq-accent">{{ bqTitle.accent }}</em></template>
+              </strong>
+              <span v-if="form.description" class="dp-desc dp-bq-desc">{{ form.description }}</span>
+              <div class="dp-cta dp-bq-ctas" data-ring="accent">
+                <span v-if="catalogOn" class="dp-btn">Ver catálogo</span>
+                <span class="dp-btn ghost">Contáctanos <AppIcon name="arrow-right" :size="10" aria-hidden="true" /></span>
+              </div>
+            </div>
+            <figure class="dp-bq-arch" data-ring="cover" :class="{ 'is-cover': Boolean(bqMedia) }">
+              <span class="dp-bq-arch-inner">
+                <img v-if="bqMedia" class="dp-bq-arch-img" :src="bqMedia" alt="" draggable="false" />
+                <span v-else class="dp-bq-arch-mono" aria-hidden="true">{{ initial }}</span>
+                <span class="dp-bq-arch-caption">{{ shopName }}</span>
+              </span>
+            </figure>
+          </section>
+          <div v-if="bqHighlights.length" class="dp-bq-highlights" aria-hidden="true">
+            <span v-for="h in bqHighlights" :key="h" class="dp-bq-highlight">{{ h }}</span>
+          </div>
+          <div v-if="bqFeatured.length" class="dp-bq-featured">
+            <div class="dp-bq-featured-head">
+              <span class="dp-bq-featured-title">Recién <em>llegado</em></span>
+              <span class="dp-bq-featured-link">Ver todo el catálogo</span>
+            </div>
+            <div class="dp-bq-featured-grid">
+              <span v-for="(img, i) in bqFeatured" :key="img.id || i" class="dp-bq-card">
+                <img :src="img.url" alt="" draggable="false" />
+                <span class="dp-bq-card-flag">Nuevo</span>
+              </span>
+            </div>
+          </div>
+          <div v-if="bqQuote" class="dp-bq-quote">
+            <span class="dp-bq-quote-mark" aria-hidden="true">“</span>
+            <span class="dp-bq-quote-text">{{ bqQuote.text }}</span>
+            <span class="dp-bq-quote-by">
+              <strong>{{ bqQuote.name }}</strong>
+              <span v-if="bqQuote.detail">{{ bqQuote.detail }}</span>
+            </span>
+          </div>
+          <div v-if="showMap" class="dp-map" aria-hidden="true">
+            <AppIcon name="map-pin" :size="13" /> Mapa con la ubicación de tu negocio
+          </div>
+          <footer class="dp-bq-foot" aria-hidden="true">
+            <span class="dp-bq-foot-brand">{{ shopName }}</span>
+            <span v-if="form.whatsapp" class="dp-bq-foot-wa">{{ form.whatsapp }}</span>
+            <span class="dp-bq-foot-line">Información · Términos y condiciones · Denunciar contenido</span>
+            <span class="dp-bq-foot-copy">© {{ bqYear }} {{ shopName }}. Todos los derechos reservados.</span>
+          </footer>
+        </template>
+        <!-- ================= RESTO DE DISEÑOS (preview genérica) ================= -->
+        <template v-else>
         <div class="dp-nav" aria-hidden="true">
           <span class="dp-nav-brand">
             <img v-if="logo" class="dp-nav-logo" :src="logo" alt="" />
@@ -163,6 +281,7 @@ const heroCover = computed(() => (props.advanced && props.cover ? { '--dp-cover'
         <div v-if="showMap" class="dp-map" aria-hidden="true">
           <AppIcon name="map-pin" :size="13" /> Mapa con la ubicación de tu negocio
         </div>
+        </template>
         <span class="dp-ring" :style="ringStyle" aria-hidden="true"></span>
       </div>
     </div>

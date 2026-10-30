@@ -4,6 +4,8 @@
 // contenido (misma regla que BlkAbout) y respeta show_about.
 // Cifras: años (`about_years`), productos del catálogo y testimonios cargados;
 // sin datos no se inventa ninguna.
+// Composición editorial: eyebrow con regla, esquinas hairline sobre el marco,
+// cita de misión enmarcada y cifras separadas por hairlines.
 import { computed, inject } from 'vue'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
@@ -44,11 +46,18 @@ const stats = computed(() => {
         <figure class="bq-about-media">
           <img v-if="photo" :src="photo" :alt="`Imagen de ${shopName}`" loading="lazy" />
           <span v-else class="bq-about-mono" aria-hidden="true">{{ initial }}</span>
+          <span class="bq-about-tick bq-about-tick--tl" aria-hidden="true"></span>
+          <span class="bq-about-tick bq-about-tick--tr" aria-hidden="true"></span>
+          <span class="bq-about-tick bq-about-tick--bl" aria-hidden="true"></span>
+          <span class="bq-about-tick bq-about-tick--br" aria-hidden="true"></span>
         </figure>
       </div>
       <div class="bq-about-copy">
-        <p v-reveal class="bq-eyebrow">Sobre nosotros</p>
-        <h2 id="bq-about-title" v-reveal="60" class="bq-section-title">
+        <p v-reveal class="bq-eyebrow bq-about-eyebrow">
+          Sobre nosotros
+          <span class="bq-eyebrow-rule" aria-hidden="true"></span>
+        </p>
+        <h2 id="bq-about-title" v-reveal="60" class="bq-sec-title bq-section-title">
           {{ custom.about_title?.trim() || 'Una selección' }}<template v-if="!custom.about_title?.trim()"> <em>hecha a mano</em></template>
         </h2>
         <p v-if="aboutText" v-reveal="120" class="bq-about-text">{{ aboutText }}</p>

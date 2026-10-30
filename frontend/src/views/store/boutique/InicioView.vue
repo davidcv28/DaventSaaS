@@ -40,6 +40,11 @@ import BqCategories from './BqCategories.vue'
 import BqAbout from './BqAbout.vue'
 import BqQuote from './BqQuote.vue'
 import { useCardTitles } from './useCardTitles.js'
+// Capa de composición + movimiento de la portada boutique. Se importa acá
+// (chunk lazy del landing) y no en main.js para no cargarla en el resto de la
+// plataforma; va después de store-boutique.css en el grafo del landing y sus
+// selectores son más específicos, así que no compite con la piel.
+import '../../../assets/store-boutique-motion.css'
 
 const { blocks } = useLayout('landing')
 const pageEl = ref(null)

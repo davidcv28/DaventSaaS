@@ -1036,3 +1036,109 @@
   .store-page[data-template='trama'] *::before,
   .store-page[data-template='trama'] *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
+
+/* ==========================================================================
+   MODO OSCURO — "editorial nocturno": negro cálido, blanco roto y el acento
+   de la marca solo en palabras/bandas. Los tokens se redefinen acá porque el
+   root de la plantilla pisa los --sp-* del layout (misma especificidad).
+   Las piezas que usan --tr-ink como RELLENO (botones, sellos, placas) se
+   invierten a blanco roto con tinta profunda, igual que en claro se usaba
+   tinta con blanco.
+   ========================================================================== */
+.store-page[data-template='trama'][data-store-theme='dark'] {
+  color-scheme: dark;
+  --tr-bg: #0F0F0E;
+  --tr-surface: #171716;
+  --tr-surface-2: #232320;
+  --tr-line: #34342F;
+  --tr-ink: #F5F4EF;
+  --tr-ink-2: #D6D3CB;
+  --tr-muted: #A9A69C;
+  --tr-soft: #1C1C1A;
+  --tr-accent: var(--store-accent, #E4472B);
+  /* Tinta de acento clara para texto sobre nocturno (AA sobre bg/surface). */
+  --tr-accent-ink: color-mix(in srgb, var(--store-accent) 58%, #fff);
+  --tr-on-accent: #FFFFFF;
+
+  --sp-bg: var(--tr-bg);
+  --sp-card: var(--tr-surface);
+  --sp-card-solid: var(--tr-surface);
+  --sp-surface: var(--tr-soft);
+  --sp-soft: var(--tr-soft);
+  --sp-ink: var(--tr-ink);
+  --sp-ink-2: var(--tr-ink-2);
+  --sp-muted: var(--tr-muted);
+  --sp-line: var(--tr-line);
+  --sp-accent-text: var(--tr-accent-ink);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-chrome: var(--tr-surface);
+  --sp-theme-color: #171716;
+
+  --tpc-media-bg: #26262A;
+  --tpc-flag-bg: var(--tr-ink);
+  --tpc-flag-ink: var(--tr-bg);
+  --tpc-offer-bg: var(--tr-ink);
+  --tpc-offer-ink: var(--tr-bg);
+  --tpc-quick-bg: var(--tr-ink);
+  --tpc-add-bg: var(--tr-ink);
+  --tpc-add-ink: var(--tr-bg);
+}
+/* Rellenos de tinta: en oscuro la tinta es clara, así que su texto es el bg. */
+.store-page[data-template='trama'][data-store-theme='dark']
+  :is(.sp-btn, .tr-btn, .sp-top-cta, .sp-brand .sp-mono, .spd-buy-btn,
+      .spd-ctas .sp-btn, .spd-stick-btn, .spd-offer-pill, .spd-rev-avatar,
+      .sp-form-badge, .tr-filters-count) {
+  color: var(--tr-bg);
+}
+/* El ghost no es un relleno de tinta: en oscuro conserva la tinta clara. */
+.store-page[data-template='trama'][data-store-theme='dark']
+  :is(.sp-btn.ghost, .tr-btn--ghost) {
+  background: transparent;
+  color: var(--tr-ink);
+}
+/* El acento crudo no llega a AA sobre las superficies nocturnas: el eyebrow
+   usa la tinta de acento aclarada, igual que el resto de textos de marca. */
+.store-page[data-template='trama'][data-store-theme='dark'] .tr-eyebrow--accent {
+  color: var(--tr-accent-ink);
+}
+.store-page[data-template='trama'][data-store-theme='dark'] :is(.sp-btn:hover, .tr-btn:hover) {
+  background: var(--sp-band-base1, var(--tr-accent));
+  border-color: var(--sp-band-base1, var(--tr-accent));
+  color: #FFFFFF;
+}
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-top-cta:hover {
+  background: var(--sp-band-base1, var(--tr-accent));
+  border-color: var(--sp-band-base1, var(--tr-accent));
+  color: #FFFFFF;
+}
+.store-page[data-template='trama'][data-store-theme='dark']
+  :is(.sp-btn.ghost:hover, .tr-btn--ghost:hover) {
+  background: var(--tr-ink);
+  border-color: var(--tr-ink);
+  color: var(--tr-bg);
+}
+.store-page[data-template='trama'][data-store-theme='dark']
+  :is(.sp-top .sp-icon-btn:hover, .sp-top .sp-burger:hover, .tr-hero-share:hover,
+      .sp-contact-channels .sp-icon-btn:hover, .tr-tags button:hover) {
+  color: var(--tr-bg);
+}
+/* Bandas/paneles que en claro eran "tinta": siguen profundos, no claros. */
+.store-page[data-template='trama'][data-store-theme='dark'] .tr-look { background: var(--tr-surface-2); }
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-ann {
+  background: var(--tr-surface-2);
+  color: var(--tr-ink);
+}
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-ann .sp-ann-item { color: var(--tr-ink-2); }
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-foot { background: #0B0B0A; }
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-top { border-bottom-color: var(--tr-line); }
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-cta .sp-btn {
+  background: var(--tr-ink);
+  border-color: var(--tr-ink);
+  color: var(--tr-bg);
+}
+.store-page[data-template='trama'][data-store-theme='dark'] .sp-cta .sp-btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: var(--tr-bg);
+}

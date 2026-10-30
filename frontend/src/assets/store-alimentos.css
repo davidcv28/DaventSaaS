@@ -1357,3 +1357,91 @@
   .al-link:hover .icon { transform: none; }
   .al-skel { animation: none; }
 }
+
+/* ==========================================================================
+   MODO OSCURO — "almacén de noche": espresso profundo, crema cálida y el
+   amarillo de promo intacto (siempre con tinta oscura encima). El root de la
+   plantilla pisa los --sp-* del layout, así que la paleta se redefina acá.
+   Los botones ya usan tinta/relleno invertidos (--al-ink de fondo, --al-bg de
+   texto): al cambiar los tokens se invierten solos.
+   ========================================================================== */
+.store-page[data-template='alimentos'][data-store-theme='dark'] {
+  color-scheme: dark;
+  --al-bg: #17110B;
+  --al-surface: #221A12;
+  --al-soft: #2B2118;
+  --al-soft-2: #322619;
+  --al-line: #3D3023;
+  --al-ink: #FBF3E6;
+  --al-ink-2: #EDE2D2;
+  --al-muted: #C7B39E;
+  --al-yellow: #FCD34D;
+  --al-yellow-soft: #4A3A16;
+  --al-green: #7EE2A2;
+  --al-green-soft: #17301E;
+  --al-white: #FFFFFF;
+  --al-accent: var(--store-accent, #C8321D);
+  /* Tinta de acento clara para texto sobre fondo nocturno. */
+  --al-accent-ink: color-mix(in srgb, var(--store-accent) 52%, #fff);
+
+  --sp-bg: var(--al-bg);
+  --sp-card: var(--al-surface);
+  --sp-card-solid: var(--al-surface);
+  --sp-surface: var(--al-surface);
+  --sp-soft: var(--al-soft);
+  --sp-ink: var(--al-ink);
+  --sp-ink-2: var(--al-ink-2);
+  --sp-muted: var(--al-muted);
+  --sp-line: var(--al-line);
+  --sp-accent-text: var(--al-accent-ink);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: 0 20px 44px -28px rgb(0 0 0 / .55);
+  --sp-chrome: var(--al-ink);
+  --sp-theme-color: #17110B;
+
+  --tpc-media-bg: var(--al-soft-2);
+  --tpc-flag-bg: var(--al-yellow);
+  --tpc-flag-ink: #241710;
+  --tpc-offer-bg: var(--al-accent);
+  --tpc-offer-ink: #FFFFFF;
+  --tpc-quick-bg: var(--al-ink);
+  --tpc-add-bg: var(--al-ink);
+  --tpc-add-ink: var(--al-bg);
+  --tpc-eyebrow-ink: var(--al-accent-ink);
+}
+/* Pie: en claro es tinta oscura con texto crema; en oscuro se queda profundo
+   para no invertirse a un bloque claro. */
+.store-page[data-template='alimentos'][data-store-theme='dark'] .sp-foot { background: #0F0A06; }
+/* Superficies que estaban fijas en crema. */
+.store-page[data-template='alimentos'][data-store-theme='dark'] .sp-contact .sp-eyebrow::before {
+  background: var(--al-bg);
+}
+.store-page[data-template='alimentos'][data-store-theme='dark'] .sp-contact-channels .sp-btn {
+  background: var(--al-bg);
+  color: var(--al-ink);
+}
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-chip--status {
+  background: var(--al-green-soft);
+  color: var(--al-green);
+}
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-home .sp-contact .sp-form {
+  box-shadow: 0 20px 44px -30px rgb(0 0 0 / .6);
+}
+/* La banda "Cómo pedir" usaba --al-ink de fondo: en oscuro la tinta es crema
+   y quedaba un bloque claro. Pasa a superficie nocturna con tinta clara. */
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-steps {
+  background: var(--al-surface);
+  color: var(--al-ink);
+}
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-steps .al-sec-title,
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-steps .al-step-title {
+  color: var(--al-ink);
+}
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-steps .al-step-text {
+  color: var(--al-muted);
+}
+/* Placas amarillas con tinta profunda, nunca crema sobre amarillo. */
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-hero-badge,
+.store-page[data-template='alimentos'][data-store-theme='dark'] .al-flag.is-new {
+  color: #241710;
+}

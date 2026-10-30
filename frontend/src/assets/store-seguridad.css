@@ -1601,3 +1601,135 @@
   .store-page[data-template='seguridad'] .sp-ann-track { animation: none !important; flex-wrap: wrap; width: auto; }
   .store-page[data-template='seguridad'] .sp-ann-item { white-space: normal; }
 }
+
+/* ==========================================================================
+   MODO OSCURO — "servicio nocturno": carbón industrial, tinta clara, rojo y
+   amarillo hazard intactos. El root de la plantilla pisa los --sp-* del
+   layout, así que la paleta se redefine acá; las superficies que estaban
+   fijas en #fff pasan a --sg-surface y los bordes duros siguen siendo la
+   firma (ahora en tinta clara).
+   ========================================================================== */
+.store-page[data-template='seguridad'][data-store-theme='dark'] {
+  color-scheme: dark;
+  --sg-bg: #101010;
+  --sg-surface: #1A1A18;
+  --sg-surface-2: #242422;
+  --sg-line: #3A3A36;
+  --sg-ink: #F2F2EE;
+  --sg-ink-2: #D6D6CF;
+  --sg-muted: #B8B8B0;
+  --sg-dark: #0B0B0B;
+  --sg-dark-2: #1F1F1D;
+  --sg-yellow: #FFC400;
+  --sg-ok: #6EE7A8;
+  --sg-accent: var(--store-accent, #C8200E);
+  --sg-accent-text: color-mix(in srgb, var(--store-accent) 52%, #fff);
+  --sg-accent-soft: color-mix(in srgb, var(--store-accent) 22%, #101010);
+  --sg-solid: var(--sp-band-c1, var(--sg-accent));
+  --sg-solid-2: var(--sp-band-c2, var(--sg-solid));
+  --sg-on-accent: #FFFFFF;
+
+  --sp-bg: var(--sg-bg);
+  --sp-card: var(--sg-surface);
+  --sp-card-solid: var(--sg-surface);
+  --sp-surface: var(--sg-surface-2);
+  --sp-soft: var(--sg-surface-2);
+  --sp-ink: var(--sg-ink);
+  --sp-ink-2: var(--sg-ink-2);
+  --sp-muted: var(--sg-muted);
+  --sp-line: var(--sg-line);
+  --sp-accent-text: var(--sg-accent-text);
+  --sp-on-band: #FFFFFF;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-shop-shadow: none;
+  --sp-chrome: var(--sg-surface);
+  --sp-theme-color: #101010;
+}
+/* Superficies fijas en blanco (header, filtros, tarjetas, ficha, servicios). */
+.store-page[data-template='seguridad'][data-store-theme='dark']
+  :is(.sp-top, .sp-icon-btn, .sp-burger, .sp-search, .sp-highlights,
+      .sg-cats .sp-shop-dept, .sg-service, .sg-class, .sp-testimonial,
+      .sp-faq-item, .sp-contact-hours, .sp-input, .sg-filters, .sg-empty,
+      .sg-price input, .sg-sort select, .sg-tags button, .rz-pdp-gallery,
+      .sg-services :is(.rz-sv-item, .rz-sv-step, .rz-sv-faq details, .rz-sv-pick, .rz-sv-sheet)) {
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+  border-color: var(--sg-line);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-skel {
+  background: #2A2A27;
+  border-color: var(--sg-line);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-hero-plate img {
+  background: var(--sg-surface);
+}
+/* Botones con relleno de tinta: en oscuro la tinta es clara y el texto es bg. */
+.store-page[data-template='seguridad'][data-store-theme='dark']
+  :is(.sp-btn:hover, .sg-btn:hover, .sp-top-cta:hover, .sg-product .rz-btn:hover,
+      .sg-services .rz-btn:hover, .sp-cta-btn:hover) {
+  background: var(--sg-ink);
+  border-color: var(--sg-ink);
+  color: var(--sg-bg);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-skin .rz-sv-quote .rz-btn:hover {
+  background: var(--sg-surface);
+  border-color: var(--sg-surface);
+  color: var(--sg-ink);
+}
+/* .sg-skin redefine --sp-card/#fff y la tarjeta .sg-card tiene fondo blanco
+   propio: sin este bloque el cuerpo de la tarjeta y su botón de WhatsApp
+   quedaban blancos con texto claro encima. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-skin {
+  --sp-card: var(--sg-surface);
+  --sp-card-solid: var(--sg-surface);
+  --tpc-flag-bg: var(--sg-yellow);
+  --tpc-flag-ink: #151515;
+  --tpc-flag-border: 0;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-card {
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-card .tpc-body {
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+}
+/* La bandera "Nuevo" venía con tinta clara sobre placa clara. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .tpc-flag {
+  background: var(--sg-yellow);
+  color: #151515;
+  border-color: transparent;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .tpc-flag.offer {
+  background: var(--sg-solid);
+  color: #FFFFFF;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-card-wa {
+  background: var(--sg-solid);
+  color: #FFFFFF;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] a.sg-card-wa:hover {
+  background: var(--sg-yellow);
+  color: #151515;
+}
+/* Placas amarillas y bandas hazard: tinta profunda, nunca tinta clara. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-hero-eyebrow,
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-title,
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-text {
+  color: #151515;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-btn {
+  background: #101010;
+  border-color: #101010;
+  color: #FFFFFF;
+}
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sp-cta-btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #101010;
+}
+/* El amarillo puro no llega a AA sobre el acento índigo de la banda. */
+.store-page[data-template='seguridad'][data-store-theme='dark'] .sg-eyebrow--light {
+  color: #FFE08A;
+}

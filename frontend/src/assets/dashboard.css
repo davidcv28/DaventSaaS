@@ -31,6 +31,11 @@
   --sunk: #0a0f1d;
   --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4.5px var(--brand-400);
 }
+/* Contraste AA en modo oscuro: los encabezados de grupo del rail y el chip
+   sólido quedaban en 4.32:1 / 4.47:1 (bajo el 4.5 de texto chico). */
+[data-theme='dark'] .nav-heading { color: #7a89b2; }
+[data-theme='dark'] .chip-btn.strong { background: var(--brand-600); border-color: var(--brand-600); }
+[data-theme='dark'] .chip-btn.strong:hover { background: #4338ca; border-color: #4338ca; }
 @keyframes nav-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes shimmer { to { transform: translateX(100%); } }

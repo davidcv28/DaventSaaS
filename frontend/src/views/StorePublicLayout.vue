@@ -186,7 +186,7 @@ const TEMPLATE_CSS = {
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
-  if (loaded && typeof loaded.then === 'function') loaded.then(() => syncSeo()).catch(() => {})
+  if (loaded && typeof loaded.then === 'function') loaded.then(() => { syncSeo(); applyCanvasColor() }).catch(() => {})
 }, { immediate: true })
 // Skin v4 (site_theme.skin.family): piel de 18 familias en su propia hoja,
 // cargada por import dinámico para no engordar el bundle. Un skin sin
@@ -232,6 +232,37 @@ function togglePageTheme() {
   visitorTheme.value = pageTheme.value === 'dark' ? 'light' : 'dark'
   try { localStorage.setItem(`davent:store-theme:${slug.value}`, visitorTheme.value) } catch { /* modo privado */ }
 }
+// Anti-flash del lienzo: el shell del producto (html/body) hereda el fondo del
+// panel. Mientras esta web está montada se pinta con el tema efectivo ANTES
+// del primer frame (la hoja de la plantilla afina el tono exacto después), así
+// una recarga en modo noche no destella claro. Al desmontar se devuelve el
+// shell a manos de la app.
+const PAGE_CANVAS = { light: '#F6F7FB', dark: '#0D1220' }
+// Tono exacto del diseño para el lienzo del documento (el genérico solo cubre
+// el primer frame, antes de que la hoja de la plantilla esté aplicada).
+function applyCanvasColor() {
+  if (typeof document === 'undefined') return
+  const root = document.querySelector('.store-page')
+  if (!root) return
+  const exact = getComputedStyle(root).backgroundColor
+  if (!exact || exact === 'rgba(0, 0, 0, 0)') return
+  document.documentElement.style.backgroundColor = exact
+  document.body.style.backgroundColor = exact
+}
+function applyPageCanvas() {
+  if (typeof document === 'undefined') return
+  const bg = PAGE_CANVAS[pageTheme.value] || PAGE_CANVAS.light
+  document.documentElement.style.backgroundColor = bg
+  document.body.style.backgroundColor = bg
+  document.documentElement.style.colorScheme = pageTheme.value
+  nextTick(applyCanvasColor)
+}
+watch(pageTheme, applyPageCanvas, { immediate: true, flush: 'sync' })
+onBeforeUnmount(() => {
+  document.documentElement.style.backgroundColor = ''
+  document.documentElement.style.colorScheme = ''
+  document.body.style.backgroundColor = ''
+})
 const shopName = computed(() => custom.value.display_name || store.value?.business_name || 'Tienda')
 const nameFont = computed(() => ({ fontFamily: storeFontFamily(custom.value.name_font) }))
 const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
