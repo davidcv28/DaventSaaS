@@ -149,18 +149,21 @@ function onStylePick(event) {
 <style scoped>
 /* Bloque embebido dentro del paso "Estilo y portada": sin card propia, para
    que todo el diseño viva en un solo contenedor. */
-.dpicks { display: flex; flex-direction: column; gap: 12px; min-width: 0; container-type: inline-size; }
-.dpicks-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.dpicks-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--ink); }
+.dpicks { display: flex; flex-direction: column; gap: 14px; min-width: 0; height: 100%; container-type: inline-size; }
+.dpicks-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dpicks-head strong { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink); }
 .dpicks-head strong .icon { color: var(--brand-600); flex: none; }
-.dpicks-head small { font-size: 12px; line-height: 1.35; color: var(--muted); }
+.dpicks-head small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
 /* Una columna por defecto (mobile) y dos recién cuando hay ancho real. */
-.dpicks-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; min-width: 0; }
-@container (min-width: 460px) { .dpicks-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; } }
-.dpicks .field { display: grid; grid-template-rows: auto auto auto auto; gap: 6px; min-width: 0; margin: 0; }
-.dpicks .field label { font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
-.dpicks .select { width: 100%; min-width: 0; min-height: 44px; font-size: 16px; text-overflow: ellipsis; }
-.dpicks .hint { margin: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
+.dpicks-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; min-width: 0; }
+@container (min-width: 520px) { .dpicks-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; } }
+.dpicks .field { display: grid; grid-template-rows: auto auto auto auto; gap: 8px; min-width: 0; margin: 0; align-content: start; }
+.dpicks .field label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
+.dpicks .select { width: 100%; min-width: 0; min-height: 54px; padding: 0 14px; font-size: 16px; text-overflow: ellipsis; }
+.dpicks .hint { margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+@container (max-width: 380px) {
+  .dpicks .select { min-height: 48px; }
+}
 .dpicks-current { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-2); min-width: 0; overflow-wrap: anywhere; }
 .dpicks-dot { flex: none; width: 7px; height: 7px; border-radius: 999px; background: var(--brand-500); }
 .dpicks-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }

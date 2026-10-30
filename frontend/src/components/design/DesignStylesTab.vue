@@ -55,13 +55,20 @@ const previewOpen = computed(() => props.previewOpen)
 <style scoped>
 .dstyles { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dstyles-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
-.dstyles-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dstyles-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; height: 100%; }
 .dstyles-live { min-width: 0; }
 .dstyles-bar { display: none; }
 .dstyles-bar .btn { width: auto; }
 @media (min-width: 1100px) {
-  .dstyles-grid { grid-template-columns: minmax(0, 1fr) minmax(520px, 720px); align-items: start; }
-  .dstyles-live { position: sticky; top: 12px; }
+  /* El editor ocupa todo el alto de la fila: sin hueco muerto debajo de la
+     card mientras la vista previa sigue más abajo. */
+  .dstyles-grid { grid-template-columns: minmax(0, 1fr) minmax(440px, 620px); align-items: stretch; }
+  .dstyles-live { position: sticky; top: 12px; align-self: start; }
+  .dstyles-main :deep(.est) { flex: 1 1 auto; min-height: 0; }
+  .dstyles-main :deep(.dl-root) { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+  .dstyles-main :deep(.dl-shell) { flex: 1 1 auto; }
+  .dstyles-main :deep(.dl-box) { display: flex; flex-direction: column; flex: 1 0 auto; }
+  .dstyles-main :deep(.dl-steps) { flex: 1 0 auto; align-content: start; }
 }
 /* Mobile/tablet: la vista previa se pide a demanda y queda pegada arriba
    mientras se edita, en vez de empujar el formulario hacia abajo. */

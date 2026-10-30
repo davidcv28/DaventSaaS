@@ -803,7 +803,7 @@ onBeforeUnmount(dropLocalLogo)
 }
 @media (hover: hover) { .dl-step:not(.open):hover { background: var(--surface); } }
 .dl-step-h { margin: 0; font-size: inherit; }
-.dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; min-width: 0; padding: 10px 16px; border: 0; border-radius: 0; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
+.dl-step-btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; min-width: 0; padding: 12px 16px; border: 0; border-radius: 0; background: transparent; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
 .dl-step-btn:focus-visible, .dl-filter:focus-visible, .dl-font:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .dl-step-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-soft); color: var(--brand-600); }
 .dl-step.done .dl-step-ico { background: var(--ok-bg); color: var(--ok-ink); }
@@ -815,15 +815,15 @@ onBeforeUnmount(dropLocalLogo)
 .dl-step-pending { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong, var(--line)); }
 .dl-chev { flex: none; color: var(--muted); transition: transform .18s ease; }
 .dl-step.open .dl-chev { transform: rotate(180deg); }
-.dl-panel { display: grid; gap: 16px; padding: 2px 16px 18px; min-width: 0; animation: dl-in .18s ease both; }
-.dl-pickers { padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+.dl-panel { display: grid; gap: 18px; padding: 6px 18px 20px; min-width: 0; animation: dl-in .18s ease both; }
+.dl-pickers { padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .dl-panel .field { min-width: 0; margin: 0; }
 .dl-panel .hint { overflow-wrap: anywhere; }
 @keyframes dl-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (max-width: 520px) {
-  .dl-step-btn { gap: 10px; padding: 10px 12px; }
+  .dl-step-btn { gap: 10px; min-height: 64px; padding: 10px 12px; }
   .dl-step-lock { display: none; }
-  .dl-panel { padding: 2px 12px 16px; gap: 14px; }
+  .dl-panel { padding: 6px 12px 16px; gap: 16px; }
   .dl-progress { padding: 12px; }
 }
 
