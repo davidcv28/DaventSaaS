@@ -5,6 +5,7 @@ Catálogo de patrones (HTML/CSS/JS) y estilos (tokens): lectura
 autenticada, escritura staff, filtros y visibilidad de solo activos.
 """
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -12,6 +13,7 @@ from StoreApp.domains.design.models import DesignPattern, DesignStyle
 
 STYLES_URL      =   '/api/design/styles/'
 PATTERNS_URL    =   '/api/design/patterns/'
+CATALOG_URL     =   '/api/design/catalog/'
 
 
 def _user(username, staff = False):
@@ -117,3 +119,42 @@ class DesignCatalogTests(TestCase):
         self._auth(self.admin)
         response = self.client.post(STYLES_URL, {'slug': 'minimal', 'nombre': 'Otro', 'categoria': 'minimal'}, format = 'json')
         self.assertEqual(response.status_code, 400)
+
+
+class DesignCatalogDefaultsTests(TestCase):
+    def setUp(self):
+        self.client =   APIClient()
+
+    def test_catalog_is_public(self):
+        response = self.client.get(CATALOG_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('pattern', response.json())
+        self.assertIn('styles', response.json())
+
+    def test_defaults_public(self):
+        self.assertEqual(self.client.get(f'{STYLES_URL}default/').status_code, 404)
+        DesignStyle.objects.create(slug = 'base', nombre = 'Base', categoria = 'general', is_default = True)
+        DesignPattern.objects.create(slug = 'raiz', nombre = 'Raíz', categoria = 'general', is_default = True)
+        style = self.client.get(f'{STYLES_URL}default/')
+        pattern = self.client.get(f'{PATTERNS_URL}default/')
+        self.assertEqual(style.status_code, 200)
+        self.assertEqual(style.json()['slug'], 'base')
+        self.assertEqual(pattern.status_code, 200)
+        self.assertEqual(pattern.json()['slug'], 'raiz')
+        catalog = self.client.get(CATALOG_URL).json()
+        self.assertEqual(catalog['style']['slug'], 'base')
+        self.assertEqual(catalog['pattern']['slug'], 'raiz')
+
+    def test_seed_catalog_idempotent(self):
+        call_command('seed_design_catalog', verbosity = 0)
+        call_command('seed_design_catalog', verbosity = 0)
+        self.assertTrue(DesignStyle.objects.filter(slug = 'base', is_default = True).exists())
+        self.assertTrue(DesignPattern.objects.filter(slug = 'raiz', is_default = True).exists())
+        self.assertEqual(DesignStyle.objects.filter(is_default = True).count(), 1)
+        self.assertEqual(DesignPattern.objects.filter(is_default = True).count(), 1)
+        self.assertGreaterEqual(DesignStyle.objects.count(), 20)
+        self.assertEqual(DesignPattern.objects.count(), 8)
+        pattern = DesignPattern.objects.get(slug = 'raiz')
+        self.assertIn('data-block="hero"', pattern.html)
+        self.assertTrue(pattern.layout.get('landing'))
+        self.assertTrue(DesignStyle.objects.get(slug = 'base').tokens.get('palette'))

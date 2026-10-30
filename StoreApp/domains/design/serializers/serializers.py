@@ -25,6 +25,12 @@ def validate_tokens(value):
     return value
 
 
+def validate_layout(value):
+    if not isinstance(value, dict):
+        raise serializers.ValidationError('El layout debe ser un objeto por superficie.')
+    return value
+
+
 def validate_code(value, label):
     if len(value) > CODE_MAX:
         raise serializers.ValidationError(f'{label} supera el máximo de {CODE_MAX} caracteres.')
@@ -38,19 +44,30 @@ class DesignStyleSerializer(serializers.ModelSerializer):
     class Meta:
         model           =   DesignStyle
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'tokens', 'tags',
-            'is_active', 'position', 'created_at', 'updated_at',
+            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
+            'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'tags',
+            'is_default', 'is_active', 'position', 'created_at', 'updated_at',
         ]
         read_only_fields    =   ['id', 'created_at', 'updated_at']
     def validate_tokens(self, value):
         return validate_tokens(value)
+    def validate_layout(self, value):
+        return validate_layout(value)
+    def validate_page_theme(self, value):
+        if value not in ('light', 'dark'):
+            raise serializers.ValidationError('El modo debe ser light o dark.')
+        return value
 #=========================================
 # DESIGN STYLE LIST SERIALIZER (payload mínimo del catálogo)
 #=========================================
 class DesignStyleListSerializer(serializers.ModelSerializer):
     class Meta:
         model           =   DesignStyle
-        fields          =   ['id', 'slug', 'nombre', 'categoria', 'tokens', 'tags', 'is_active', 'position']
+        fields          =   [
+            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
+            'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'tags',
+            'is_default', 'is_active', 'position',
+        ]
 #=========================================
 # DESIGN PATTERN SERIALIZER (detalle: patrón aplicable)
 #=========================================
@@ -65,13 +82,16 @@ class DesignPatternSerializer(serializers.ModelSerializer):
     class Meta:
         model           =   DesignPattern
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'descripcion',
-            'html', 'css', 'js', 'tokens', 'tags', 'preview', 'style',
-            'is_active', 'position', 'created_at', 'updated_at',
+            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
+            'template', 'layout', 'html', 'css', 'js', 'tokens', 'tags',
+            'preview', 'style', 'is_default', 'is_active', 'position',
+            'created_at', 'updated_at',
         ]
         read_only_fields    =   ['id', 'created_at', 'updated_at']
     def validate_tokens(self, value):
         return validate_tokens(value)
+    def validate_layout(self, value):
+        return validate_layout(value)
     def validate_html(self, value):
         return validate_code(value, 'El HTML')
     def validate_css(self, value):
@@ -86,6 +106,7 @@ class DesignPatternListSerializer(serializers.ModelSerializer):
     class Meta:
         model           =   DesignPattern
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tokens',
-            'tags', 'preview', 'style', 'is_active', 'position',
+            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
+            'template', 'layout', 'tokens', 'tags', 'preview', 'style',
+            'is_default', 'is_active', 'position',
         ]

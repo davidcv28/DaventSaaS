@@ -36,8 +36,11 @@ import {
 import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils/colorTools.js'
-import { STUDIO_PRESETS, presetLock, layoutForTemplate } from '../../studio/presets/index.js'
+import { presetLock, layoutForTemplate } from '../../studio/presets/index.js'
+import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import PanelLock from './panels/PanelLock.vue'
+
+const { presets: designPresets, load: loadDesignCatalog } = useDesignCatalog()
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -527,7 +530,7 @@ async function applyAndSave(p) {
 }
 
 provide('studioPresets', {
-  presets: STUDIO_PRESETS,
+  presets: designPresets,
   tryingId,
   tryingPalette,
   // Estilo y paleta que ya están en el borrador (también después de
@@ -551,7 +554,10 @@ function onMessage(e) {
   if (!isStudioMessage(e.data)) return
   if (e.data.type === STUDIO_MSG.READY) postNow()
 }
-onMounted(() => window.addEventListener('message', onMessage))
+onMounted(() => {
+  window.addEventListener('message', onMessage)
+  loadDesignCatalog()
+})
 onBeforeUnmount(() => {
   window.removeEventListener('message', onMessage)
   cleanupBridge?.()

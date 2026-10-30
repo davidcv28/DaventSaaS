@@ -1,0 +1,7439 @@
+{
+  "styles": [
+    {
+      "slug": "editorial-minima",
+      "nombre": "Editorial mínima",
+      "categoria": "Minimal editorial",
+      "descripcion": "Papel, tinta y aire: la foto y la palabra mandan.",
+      "tier": "advanced",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#1c1917",
+          "secondary": "#161412",
+          "accent": "#1c1917",
+          "bg": "#fafaf9",
+          "surface": "#ffffff",
+          "text": "#1c1917",
+          "muted": "#78716c",
+          "border": "#e7e5e4",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "outline",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#1c1917",
+              "body": "#1c1917",
+              "muted": "#78716c",
+              "link": "#1c1917"
+            },
+            "containers": {
+              "bg": "#fafaf9",
+              "surface": "#ffffff",
+              "border": "#e7e5e4",
+              "onSurface": "#1c1917"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#858382"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0,
+              "variant": "compact"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 7
+            },
+            {
+              "id": "highlights",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "stats",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "cta",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "featured",
+            "about",
+            "gallery",
+            "testimonials",
+            "faq",
+            "contact"
+          ],
+          "var": {
+            "hero": "compact"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "moda",
+        "lifestyle",
+        "services",
+        "general"
+      ],
+      "preview": "",
+      "style": "Minimal editorial"
+    },
+    {
+      "slug": "vidrio-nocturno",
+      "nombre": "Vidrio nocturno",
+      "categoria": "Glass oscuro",
+      "descripcion": "Noche profunda con placas de vidrio esmerilado.",
+      "tier": "advanced",
+      "template": "trama",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#38bdf8",
+          "secondary": "#0678ab",
+          "accent": "#38bdf8",
+          "bg": "#070b16",
+          "surface": "#0d1424",
+          "text": "#e6ecf7",
+          "muted": "#8b96ad",
+          "border": "#1c2a44",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "deep",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "glass"
+        },
+        "typography": {
+          "heading": "sora",
+          "body": "space-grotesk",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "gradient",
+          "size": "md"
+        },
+        "background": {
+          "type": "mesh",
+          "value": "radial-gradient(60% 50% at 18% 0%, rgba(56,189,248,.28), transparent 70%), radial-gradient(55% 45% at 85% 8%, rgba(139,92,246,.26), transparent 72%), #070b16",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "glow",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "overlay",
+          "stickyCta": true,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#5b6678",
+              "link": "#24799f"
+            },
+            "containers": {
+              "bg": "#f4f6fb",
+              "surface": "#ffffff",
+              "border": "#e2e6f0",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#e6ecf7",
+              "body": "#e6ecf7",
+              "muted": "#8b96ad",
+              "link": "#38bdf8"
+            },
+            "containers": {
+              "bg": "#070b16",
+              "surface": "#0d1424",
+              "border": "#1c2a44",
+              "onSurface": "#e6ecf7"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 7
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "faq",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "stats",
+            "featured",
+            "benefits",
+            "offers",
+            "gallery",
+            "testimonials",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "tech",
+        "gamer",
+        "general"
+      ],
+      "preview": "",
+      "style": "Glass oscuro"
+    },
+    {
+      "slug": "bento",
+      "nombre": "Bento",
+      "categoria": "Bento",
+      "descripcion": "Tarjetas redondas que ordenan todo en módulos.",
+      "tier": "plus",
+      "template": "trama",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#0ea5e9",
+          "secondary": "#0a79aa",
+          "accent": "#0ea5e9",
+          "bg": "#eef2f7",
+          "surface": "#ffffff",
+          "text": "#0f172a",
+          "muted": "#64748b",
+          "border": "#e2e8f0",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "soft",
+          "border": "none",
+          "density": "compact",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "body": "manrope",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 2,
+          "cardStyle": "compact",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#606f85",
+              "link": "#0a74a3"
+            },
+            "containers": {
+              "bg": "#eef2f7",
+              "surface": "#ffffff",
+              "border": "#e2e8f0",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#0ea5e9"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0,
+              "variant": "compact"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 7
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "form",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "stats",
+            "featured",
+            "benefits",
+            "offers",
+            "gallery",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "compact",
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "filters",
+            "sort",
+            "grid",
+            "promo"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "tech",
+        "general"
+      ],
+      "preview": "",
+      "style": "Bento"
+    },
+    {
+      "slug": "neo-brutalista",
+      "nombre": "Neo-brutal",
+      "categoria": "Neo-brutalista",
+      "descripcion": "Bordes duros, tinta plana y tipografía que grita.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#e11d48",
+          "secondary": "#c1193e",
+          "accent": "#e11d48",
+          "bg": "#f4f1ea",
+          "surface": "#ffffff",
+          "text": "#0b0b0b",
+          "muted": "#55504a",
+          "border": "#0b0b0b",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "bold",
+          "density": "compact",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "archivo-black",
+          "body": "archivo",
+          "scale": "editorial",
+          "weightHeading": 900,
+          "letterSpacing": "-0.03em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "sm"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "compact",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0b0b0b",
+              "body": "#0b0b0b",
+              "muted": "#55504a",
+              "link": "#d41b44"
+            },
+            "containers": {
+              "bg": "#f4f1ea",
+              "surface": "#ffffff",
+              "border": "#0b0b0b",
+              "onSurface": "#0b0b0b"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#e7486b"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1,
+              "variant": "static"
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 4,
+              "variant": "band"
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "highlights",
+            "featured",
+            "stats",
+            "benefits",
+            "offers",
+            "brands",
+            "gallery",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "static",
+            "stats": "band"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "moda",
+        "gamer",
+        "lifestyle"
+      ],
+      "preview": "",
+      "style": "Neo-brutalista"
+    },
+    {
+      "slug": "lujo-serif",
+      "nombre": "Lujo serif",
+      "categoria": "Luxury serif",
+      "descripcion": "Noche de espresso, dorado y grabados de autor.",
+      "tier": "advanced",
+      "template": "trama",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#c9a24b",
+          "secondary": "#92722c",
+          "accent": "#c9a24b",
+          "bg": "#0e0b08",
+          "surface": "#171310",
+          "text": "#ede4d3",
+          "muted": "#a89a84",
+          "border": "#2e2620",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "cinzel",
+          "body": "lora",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "0.03em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "outline",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#5b6678",
+              "link": "#856b32"
+            },
+            "containers": {
+              "bg": "#f4f6fb",
+              "surface": "#ffffff",
+              "border": "#e2e6f0",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#ede4d3",
+              "body": "#ede4d3",
+              "muted": "#a89a84",
+              "link": "#c9a24b"
+            },
+            "containers": {
+              "bg": "#0e0b08",
+              "surface": "#171310",
+              "border": "#2e2620",
+              "onSurface": "#ede4d3"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 7
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 3
+            },
+            {
+              "id": "filters",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "featured",
+            "about",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "contact"
+          ],
+          "var": {
+            "stats": "band"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "belleza",
+        "lifestyle",
+        "food"
+      ],
+      "preview": "",
+      "style": "Luxury serif"
+    },
+    {
+      "slug": "pastel-suave",
+      "nombre": "Pastel suave",
+      "categoria": "Soft pastel",
+      "descripcion": "Lavanda, rosa y aire: calma que vende.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#d16ba5",
+          "secondary": "#c4408b",
+          "accent": "#d16ba5",
+          "bg": "#f7f3fb",
+          "surface": "#ffffff",
+          "text": "#54475e",
+          "muted": "#8b7f99",
+          "border": "#e9dfeb",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "soft",
+          "border": "none",
+          "density": "spacious",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "lora",
+          "body": "nunito",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "0em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#54475e",
+              "body": "#54475e",
+              "muted": "#756b81",
+              "link": "#a35381"
+            },
+            "containers": {
+              "bg": "#f7f3fb",
+              "surface": "#ffffff",
+              "border": "#e9dfeb",
+              "onSurface": "#54475e"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#d16ba5"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "stats",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "featured",
+            "about",
+            "benefits",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "belleza",
+        "hogar",
+        "services"
+      ],
+      "preview": "",
+      "style": "Soft pastel"
+    },
+    {
+      "slug": "neon-tech",
+      "nombre": "Neón tech",
+      "categoria": "Neón tech",
+      "descripcion": "Verde fósforo sobre negro: energía de arena.",
+      "tier": "plus",
+      "template": "trama",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#00e67a",
+          "secondary": "#008547",
+          "accent": "#00e67a",
+          "bg": "#05060a",
+          "surface": "#0b0f14",
+          "text": "#e8fff2",
+          "muted": "#7d8a8f",
+          "border": "#1d2a24",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "orbitron",
+          "body": "space-grotesk",
+          "scale": "compact",
+          "weightHeading": 700,
+          "letterSpacing": "0.02em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "mesh",
+          "value": "radial-gradient(55% 40% at 80% 0%, rgba(0,230,122,.18), transparent 70%), #05060a",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "glow",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "compact",
+          "stickyCta": true,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#5b6678",
+              "link": "#008144"
+            },
+            "containers": {
+              "bg": "#f4f6fb",
+              "surface": "#ffffff",
+              "border": "#e2e6f0",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#e8fff2",
+              "body": "#e8fff2",
+              "muted": "#7d8a8f",
+              "link": "#00e67a"
+            },
+            "containers": {
+              "bg": "#05060a",
+              "surface": "#0b0f14",
+              "border": "#1d2a24",
+              "onSurface": "#e8fff2"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1,
+              "variant": "marquee"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "countdown",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "steps",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "stats",
+            "featured",
+            "offers",
+            "brands",
+            "countdown",
+            "gallery",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "marquee",
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "gamer",
+        "tech"
+      ],
+      "preview": "",
+      "style": "Neón tech"
+    },
+    {
+      "slug": "terracota",
+      "nombre": "Terracota",
+      "categoria": "Terracota artesanal",
+      "descripcion": "Barro, papel crudo y serif cálida de taller.",
+      "tier": "advanced",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#b7512e",
+          "secondary": "#9a4427",
+          "accent": "#b7512e",
+          "bg": "#f5ede3",
+          "surface": "#fffaf2",
+          "text": "#3a2c22",
+          "muted": "#8a7461",
+          "border": "#e3d5c2",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "body": "nunito",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#3a2c22",
+              "body": "#3a2c22",
+              "muted": "#7c6857",
+              "link": "#b04e2c"
+            },
+            "containers": {
+              "bg": "#f5ede3",
+              "surface": "#fffaf2",
+              "border": "#e3d5c2",
+              "onSurface": "#3a2c22"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#c36c4e"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 4,
+              "variant": "band"
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "about",
+            "featured",
+            "stats",
+            "benefits",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "stats": "band"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "hogar",
+        "food",
+        "general"
+      ],
+      "preview": "",
+      "style": "Terracota artesanal"
+    },
+    {
+      "slug": "monocromo",
+      "nombre": "Monocromo",
+      "categoria": "Monocromo fotográfico",
+      "descripcion": "Blanco y negro puro: la foto hace todo el trabajo.",
+      "tier": "advanced",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#18181b",
+          "secondary": "#131316",
+          "accent": "#18181b",
+          "bg": "#f4f4f5",
+          "surface": "#ffffff",
+          "text": "#18181b",
+          "muted": "#71717a",
+          "border": "#d4d4d8",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "body": "inter",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "overlay",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#18181b",
+              "body": "#18181b",
+              "muted": "#6f6f78",
+              "link": "#18181b"
+            },
+            "containers": {
+              "bg": "#f4f4f5",
+              "surface": "#ffffff",
+              "border": "#d4d4d8",
+              "onSurface": "#18181b"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#838384"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 7
+            },
+            {
+              "id": "highlights",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "stats",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "cta",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 2
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 3
+            },
+            {
+              "id": "filters",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 4
+            },
+            {
+              "id": "steps",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "featured",
+            "about",
+            "gallery",
+            "testimonials",
+            "faq",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "moda",
+        "lifestyle",
+        "general"
+      ],
+      "preview": "",
+      "style": "Monocromo fotográfico"
+    },
+    {
+      "slug": "retail-vibrante",
+      "nombre": "Retail vibrante",
+      "categoria": "Retail vibrante",
+      "descripcion": "Góndola cargada: oferta primero, compra rápida.",
+      "tier": "advanced",
+      "template": "trama",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#dc2626",
+          "secondary": "#bf1f1f",
+          "accent": "#dc2626",
+          "bg": "#fef9ec",
+          "surface": "#ffffff",
+          "text": "#1c1917",
+          "muted": "#78716c",
+          "border": "#e7e5e4",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "medium",
+          "border": "none",
+          "density": "compact",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "archivo",
+          "body": "dm-sans",
+          "scale": "compact",
+          "weightHeading": 800,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 2,
+          "cardStyle": "compact",
+          "stickyCta": true,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#1c1917",
+              "body": "#1c1917",
+              "muted": "#78716c",
+              "link": "#dc2626"
+            },
+            "containers": {
+              "bg": "#fef9ec",
+              "surface": "#ffffff",
+              "border": "#e7e5e4",
+              "onSurface": "#1c1917"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#e34f4f"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1,
+              "variant": "marquee"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "countdown",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "highlights",
+            "offers",
+            "featured",
+            "about",
+            "countdown",
+            "benefits",
+            "brands",
+            "gallery",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "marquee"
+          }
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "ofertas",
+        "general"
+      ],
+      "preview": "",
+      "style": "Retail vibrante"
+    },
+    {
+      "slug": "aurora-degradada",
+      "nombre": "Aurora",
+      "categoria": "Gradiente aurora",
+      "descripcion": "Cortinas de color suave sobre papel claro.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#7c3aed",
+          "secondary": "#6619ea",
+          "accent": "#7c3aed",
+          "bg": "#f3f5fd",
+          "surface": "#ffffff",
+          "text": "#1e1b4b",
+          "muted": "#6b7280",
+          "border": "#e3e6f5",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "soft",
+          "border": "none",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "sora",
+          "body": "dm-sans",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "gradient",
+          "size": "md"
+        },
+        "background": {
+          "type": "mesh",
+          "value": "radial-gradient(60% 45% at 15% 0%, rgba(124,58,237,.16), transparent 70%), radial-gradient(55% 45% at 88% 12%, rgba(34,211,238,.18), transparent 72%), radial-gradient(45% 40% at 55% 0%, rgba(244,114,182,.12), transparent 70%), #f3f5fd",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "overlay",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#1e1b4b",
+              "body": "#1e1b4b",
+              "muted": "#69707d",
+              "link": "#7c3aed"
+            },
+            "containers": {
+              "bg": "#f3f5fd",
+              "surface": "#ffffff",
+              "border": "#e3e6f5",
+              "onSurface": "#1e1b4b"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#9a67f1"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "highlights",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "stats",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "faq",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "featured",
+            "benefits",
+            "offers",
+            "gallery",
+            "testimonials",
+            "cta",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "tech",
+        "general",
+        "belleza"
+      ],
+      "preview": "",
+      "style": "Gradiente aurora"
+    },
+    {
+      "slug": "papel-riso",
+      "nombre": "Papel riso",
+      "categoria": "Papel/Riso",
+      "descripcion": "Risografía: crema punteado y tintas que se solapan.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#3550f5",
+          "secondary": "#1333f3",
+          "accent": "#3550f5",
+          "bg": "#fff5e6",
+          "surface": "#fffdf8",
+          "text": "#1e1a33",
+          "muted": "#6e6883",
+          "border": "#1e1a33",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "none",
+          "border": "bold",
+          "density": "comfortable",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "body": "figtree",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "pattern",
+          "value": "repeating-linear-gradient(45deg, rgba(30,26,51,.05) 0 2px, transparent 2px 9px), #fff5e6",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#1e1a33",
+              "body": "#1e1a33",
+              "muted": "#6e6883",
+              "link": "#3550f5"
+            },
+            "containers": {
+              "bg": "#fff5e6",
+              "surface": "#fffdf8",
+              "border": "#1e1a33",
+              "onSurface": "#1e1a33"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#6379f7"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 3,
+              "variant": "cards"
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "featured",
+            "stats",
+            "benefits",
+            "offers",
+            "about",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "hogar",
+        "food",
+        "general"
+      ],
+      "preview": "",
+      "style": "Papel/Riso"
+    },
+    {
+      "slug": "corporativo",
+      "nombre": "Corporativo sobrio",
+      "categoria": "Corporativo sobrio",
+      "descripcion": "Azul institucional, orden y confianza.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#1e40af",
+          "secondary": "#193591",
+          "accent": "#1e40af",
+          "bg": "#f3f6fa",
+          "surface": "#ffffff",
+          "text": "#0f172a",
+          "muted": "#52617a",
+          "border": "#d8e0ec",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "montserrat",
+          "body": "open-sans",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "0em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#52617a",
+              "link": "#1e40af"
+            },
+            "containers": {
+              "bg": "#f3f6fa",
+              "surface": "#ffffff",
+              "border": "#d8e0ec",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#6b81ca"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 4,
+              "variant": "band"
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "gallery",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "about",
+            "services",
+            "stats",
+            "benefits",
+            "featured",
+            "brands",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "stats": "band"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "banner",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "services",
+        "general",
+        "ofertas"
+      ],
+      "preview": "",
+      "style": "Corporativo sobrio"
+    },
+    {
+      "slug": "gourmet-calido",
+      "nombre": "Gourmet cálido",
+      "categoria": "Gourmet cálido",
+      "descripcion": "Menú de autor: madera, crema y apetito.",
+      "tier": "advanced",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#9a3412",
+          "secondary": "#7a290e",
+          "accent": "#9a3412",
+          "bg": "#faf6ef",
+          "surface": "#fffdf7",
+          "text": "#292018",
+          "muted": "#7c6a56",
+          "border": "#e5d9c6",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "body": "lora",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "compact",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#292018",
+              "body": "#292018",
+              "muted": "#7c6a56",
+              "link": "#9a3412"
+            },
+            "containers": {
+              "bg": "#faf6ef",
+              "surface": "#fffdf7",
+              "border": "#e5d9c6",
+              "onSurface": "#292018"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#b9725b"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 4,
+              "variant": "band"
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "highlights",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 3
+            },
+            {
+              "id": "filters",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "featured",
+            "about",
+            "offers",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "stats": "band"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "food"
+      ],
+      "preview": "",
+      "style": "Gourmet cálido"
+    },
+    {
+      "slug": "belleza-rosa",
+      "nombre": "Belleza rosa",
+      "categoria": "Beauty rosado",
+      "descripcion": "Vidriera rosa empolvada con serif de revista.",
+      "tier": "plus",
+      "template": "trama",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#db2777",
+          "secondary": "#bf2066",
+          "accent": "#db2777",
+          "bg": "#fdf4f8",
+          "surface": "#ffffff",
+          "text": "#4a1d33",
+          "muted": "#9a6b82",
+          "border": "#f3d3e2",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "soft",
+          "border": "none",
+          "density": "spacious",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "body": "nunito",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "gradient",
+          "value": "linear-gradient(160deg, #fdf4f8, #fbe8f0 60%, #f6dcea)",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "overlay",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#4a1d33",
+              "body": "#4a1d33",
+              "muted": "#8e6278",
+              "link": "#d22572"
+            },
+            "containers": {
+              "bg": "#fdf4f8",
+              "surface": "#ffffff",
+              "border": "#f3d3e2",
+              "onSurface": "#4a1d33"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#e1498c"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "featured",
+            "about",
+            "benefits",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "belleza",
+        "moda",
+        "lifestyle"
+      ],
+      "preview": "",
+      "style": "Beauty rosado"
+    },
+    {
+      "slug": "kids-ludico",
+      "nombre": "Kids lúdico",
+      "categoria": "Kids lúdico",
+      "descripcion": "Colores redondos y alegres para chicos y grandes.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#7c3aed",
+          "secondary": "#6619ea",
+          "accent": "#7c3aed",
+          "bg": "#fefce8",
+          "surface": "#ffffff",
+          "text": "#27272a",
+          "muted": "#6b7280",
+          "border": "#e9d5ff",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "comfortaa",
+          "body": "nunito",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "0em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "lg"
+        },
+        "background": {
+          "type": "pattern",
+          "value": "repeating-linear-gradient(45deg, rgba(124,58,237,.06) 0 2px, transparent 2px 10px), #fefce8",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "bold"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 2,
+          "cardStyle": "standard",
+          "stickyCta": true,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#27272a",
+              "body": "#27272a",
+              "muted": "#6b7280",
+              "link": "#7c3aed"
+            },
+            "containers": {
+              "bg": "#fefce8",
+              "surface": "#ffffff",
+              "border": "#e9d5ff",
+              "onSurface": "#27272a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#9a67f1"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "stats",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "featured",
+            "about",
+            "benefits",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "general",
+        "ofertas"
+      ],
+      "preview": "",
+      "style": "Kids lúdico"
+    },
+    {
+      "slug": "urbano-sticker",
+      "nombre": "Urbano sticker",
+      "categoria": "Urbano sticker",
+      "descripcion": "Streetwear: titulares XXL y amarillo señal.",
+      "tier": "plus",
+      "template": "trama",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#eab308",
+          "secondary": "#8c6b05",
+          "accent": "#eab308",
+          "bg": "#ffffff",
+          "surface": "#ffffff",
+          "text": "#111827",
+          "muted": "#6b7280",
+          "border": "#111827",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "bold",
+          "density": "compact",
+          "surface": "outlined"
+        },
+        "typography": {
+          "heading": "archivo-black",
+          "body": "space-grotesk",
+          "scale": "editorial",
+          "weightHeading": 900,
+          "letterSpacing": "-0.03em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "bold"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "compact",
+          "stickyCta": true,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#111827",
+              "body": "#111827",
+              "muted": "#6b7280",
+              "link": "#916f05"
+            },
+            "containers": {
+              "bg": "#ffffff",
+              "surface": "#ffffff",
+              "border": "#111827",
+              "onSurface": "#111827"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#eab308"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1,
+              "variant": "marquee"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "countdown",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "faq",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 4
+            },
+            {
+              "id": "steps",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "highlights",
+            "featured",
+            "offers",
+            "brands",
+            "countdown",
+            "gallery",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "marquee"
+          }
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "moda",
+        "gamer"
+      ],
+      "preview": "",
+      "style": "Urbano sticker"
+    },
+    {
+      "slug": "consola-retro",
+      "nombre": "Consola retro",
+      "categoria": "Consola retro",
+      "descripcion": "Fósforo verde y scanlines: terminal viva.",
+      "tier": "advanced",
+      "template": "raiz",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#4ade80",
+          "secondary": "#188640",
+          "accent": "#4ade80",
+          "bg": "#070b08",
+          "surface": "#0b120d",
+          "text": "#b8f0c6",
+          "muted": "#5d7a66",
+          "border": "#1c2a21",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "jetbrains-mono",
+          "body": "space-mono",
+          "scale": "compact",
+          "weightHeading": 700,
+          "letterSpacing": "0em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "outline",
+          "size": "sm"
+        },
+        "background": {
+          "type": "pattern",
+          "value": "repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0, rgba(0,0,0,.22) 1px, transparent 1px, transparent 3px), #070b08",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "compact",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#5b6678",
+              "link": "#297c48"
+            },
+            "containers": {
+              "bg": "#f4f6fb",
+              "surface": "#ffffff",
+              "border": "#e2e6f0",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#b8f0c6",
+              "body": "#b8f0c6",
+              "muted": "#66826f",
+              "link": "#4ade80"
+            },
+            "containers": {
+              "bg": "#070b08",
+              "surface": "#0b120d",
+              "border": "#1c2a21",
+              "onSurface": "#b8f0c6"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1,
+              "variant": "static"
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 2,
+              "variant": "cards"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "highlights",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "stats",
+            "featured",
+            "about",
+            "benefits",
+            "offers",
+            "gallery",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "static",
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "gamer",
+        "tech"
+      ],
+      "preview": "",
+      "style": "Consola retro"
+    },
+    {
+      "slug": "denim-urbano",
+      "nombre": "Denim urbano",
+      "categoria": "Denim urbano",
+      "descripcion": "Jeans, calle y tipografía condensada: ropa de todos los días.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#1e3a5f",
+          "secondary": "#152944",
+          "accent": "#1e3a5f",
+          "bg": "#f2f4f7",
+          "surface": "#ffffff",
+          "text": "#101828",
+          "muted": "#5d6b7f",
+          "border": "#d7dde6",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "compact",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "oswald",
+          "body": "work-sans",
+          "scale": "compact",
+          "weightHeading": 600,
+          "letterSpacing": "0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 2,
+          "cardStyle": "compact",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#101828",
+              "body": "#101828",
+              "muted": "#5d6b7f",
+              "link": "#1e3a5f"
+            },
+            "containers": {
+              "bg": "#f2f4f7",
+              "surface": "#ffffff",
+              "border": "#d7dde6",
+              "onSurface": "#101828"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#72849b"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1,
+              "variant": "static"
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 4,
+              "variant": "cards"
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "highlights",
+            "featured",
+            "stats",
+            "offers",
+            "gallery",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "announcements": "static",
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "filters",
+            "sort",
+            "grid",
+            "promo"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "moda",
+        "lifestyle"
+      ],
+      "preview": "",
+      "style": "Denim urbano"
+    },
+    {
+      "slug": "atelier-moda",
+      "nombre": "Atelier de moda",
+      "categoria": "Atelier editorial",
+      "descripcion": "Editorial de pasarela: serif fina, aire y fotos grandes.",
+      "tier": "plus",
+      "template": "trama",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#8c1d3f",
+          "secondary": "#6e1732",
+          "accent": "#8c1d3f",
+          "bg": "#faf7f5",
+          "surface": "#ffffff",
+          "text": "#1c1714",
+          "muted": "#7c7069",
+          "border": "#e7dfd9",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "body": "figtree",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "outline",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#1c1714",
+              "body": "#1c1714",
+              "muted": "#7a6e67",
+              "link": "#8c1d3f"
+            },
+            "containers": {
+              "bg": "#faf7f5",
+              "surface": "#ffffff",
+              "border": "#e7dfd9",
+              "onSurface": "#1c1714"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#b56d83"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0,
+              "variant": "compact"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 7
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "band",
+              "enabled": false,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "featured",
+            "about",
+            "gallery",
+            "testimonials",
+            "faq",
+            "contact"
+          ],
+          "var": {
+            "hero": "compact"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "moda",
+        "belleza",
+        "lifestyle"
+      ],
+      "preview": "",
+      "style": "Atelier editorial"
+    },
+    {
+      "slug": "suizo-editorial",
+      "nombre": "Suizo tipográfico",
+      "categoria": "Suizo tipográfico",
+      "descripcion": "Retícula suiza, tinta negra y un rojo que señala.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#e11d48",
+          "secondary": "#c1193e",
+          "accent": "#e11d48",
+          "bg": "#ffffff",
+          "surface": "#ffffff",
+          "text": "#0b0b0b",
+          "muted": "#5b5b5b",
+          "border": "#d9d9d9",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "archivo",
+          "body": "inter",
+          "scale": "editorial",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "sm"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "compact",
+          "stickyCta": false,
+          "heroHeight": "compact"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0b0b0b",
+              "body": "#0b0b0b",
+              "muted": "#5b5b5b",
+              "link": "#e11d48"
+            },
+            "containers": {
+              "bg": "#ffffff",
+              "surface": "#ffffff",
+              "border": "#d9d9d9",
+              "onSurface": "#0b0b0b"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#f1f5f9",
+              "body": "#f1f5f9",
+              "muted": "#94a3b8",
+              "link": "#e7486b"
+            },
+            "containers": {
+              "bg": "#0b1220",
+              "surface": "#111a2c",
+              "border": "#243049",
+              "onSurface": "#f1f5f9"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 4,
+              "variant": "band"
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "benefits",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "offers",
+              "enabled": false,
+              "order": 13
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 14
+            },
+            {
+              "id": "testimonials",
+              "enabled": false,
+              "order": 15
+            },
+            {
+              "id": "cta",
+              "enabled": false,
+              "order": 16
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "promo",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "highlights",
+            "about",
+            "services",
+            "stats",
+            "featured",
+            "gallery",
+            "faq",
+            "contact"
+          ],
+          "var": {
+            "stats": "band"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "services",
+        "tech",
+        "general"
+      ],
+      "preview": "",
+      "style": "Suizo tipográfico"
+    },
+    {
+      "slug": "cobalto-nocturno",
+      "nombre": "Cobalto nocturno",
+      "categoria": "Cobalto profundo",
+      "descripcion": "Azul profundo, filo luminoso y datos en primer plano.",
+      "tier": "plus",
+      "template": "trama",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#3b82f6",
+          "secondary": "#196cf4",
+          "accent": "#3b82f6",
+          "bg": "#050a18",
+          "surface": "#0a1327",
+          "text": "#e8eefc",
+          "muted": "#8296b8",
+          "border": "#152441",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "sora",
+          "body": "manrope",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "gradient",
+          "size": "md"
+        },
+        "background": {
+          "type": "mesh",
+          "value": "radial-gradient(60% 45% at 15% 0%, rgba(59,130,246,.30), transparent 70%), radial-gradient(50% 40% at 88% 8%, rgba(14,165,233,.20), transparent 72%), #050a18",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "glow",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "nav": "bottom",
+          "gridCols": 1,
+          "cardStyle": "overlay",
+          "stickyCta": false,
+          "heroHeight": "tall"
+        },
+        "styleColors": {
+          "light": {
+            "fonts": {
+              "heading": "#0f172a",
+              "body": "#0f172a",
+              "muted": "#5b6678",
+              "link": "#326dcf"
+            },
+            "containers": {
+              "bg": "#f4f6fb",
+              "surface": "#ffffff",
+              "border": "#e2e6f0",
+              "onSurface": "#0f172a"
+            }
+          },
+          "dark": {
+            "fonts": {
+              "heading": "#e8eefc",
+              "body": "#e8eefc",
+              "muted": "#8296b8",
+              "link": "#3b82f6"
+            },
+            "containers": {
+              "bg": "#050a18",
+              "surface": "#0a1327",
+              "border": "#152441",
+              "onSurface": "#e8eefc"
+            }
+          }
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "announcements",
+              "enabled": false,
+              "order": 8
+            },
+            {
+              "id": "categories",
+              "enabled": false,
+              "order": 9
+            },
+            {
+              "id": "about",
+              "enabled": false,
+              "order": 10
+            },
+            {
+              "id": "countdown",
+              "enabled": false,
+              "order": 11
+            },
+            {
+              "id": "services",
+              "enabled": false,
+              "order": 12
+            },
+            {
+              "id": "brands",
+              "enabled": false,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "note",
+              "enabled": false,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "stats",
+            "featured",
+            "benefits",
+            "offers",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "stats": "cards"
+          }
+        },
+        "catalog": {
+          "on": [
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "tech",
+        "services",
+        "general"
+      ],
+      "preview": "",
+      "style": "Cobalto profundo"
+    }
+  ],
+  "patterns": [
+    {
+      "slug": "raiz",
+      "nombre": "Raíz",
+      "categoria": "general",
+      "descripcion": "Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.",
+      "tier": "base",
+      "template": "raiz",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "highlights",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "about",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "stats",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "services",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "benefits",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "countdown",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "offers",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "brands",
+            "order": 11
+          },
+          {
+            "enabled": true,
+            "id": "gallery",
+            "order": 12
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "order": 13
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 14
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "order": 15
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "order": 16
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 6
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "manrope",
+          "bricolage-grotesque"
+        ],
+        "accent": "#0F766E"
+      },
+      "tags": [
+        "raiz",
+        "general",
+        "base"
+      ]
+    },
+    {
+      "slug": "alimentos",
+      "nombre": "Alimentos",
+      "categoria": "alimentos",
+      "descripcion": "Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».",
+      "tier": "base",
+      "template": "alimentos",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "countdown",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "benefits",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "about",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "stats",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "order": 11
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "order": 12
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 6
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "dm-sans",
+          "dm-serif-display"
+        ],
+        "accent": "#C8321D"
+      },
+      "tags": [
+        "alimentos",
+        "alimentos",
+        "base"
+      ]
+    },
+    {
+      "slug": "trama",
+      "nombre": "Trama",
+      "categoria": "indumentaria",
+      "descripcion": "Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.",
+      "tier": "plus",
+      "template": "trama",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "variant": "static",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "benefits",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "about",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "countdown",
+            "variant": "band",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "services",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "brands",
+            "variant": "logos",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "variant": "cards",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "gallery",
+            "variant": "grid",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 11
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "variant": "band",
+            "order": 12
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "variant": "card",
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "inter",
+          "inter-tight"
+        ],
+        "accent": "#1F3A5F"
+      },
+      "tags": [
+        "trama",
+        "indumentaria",
+        "plus"
+      ]
+    },
+    {
+      "slug": "indumentaria",
+      "nombre": "Indumentaria",
+      "categoria": "indumentaria",
+      "descripcion": "Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.",
+      "tier": "plus",
+      "template": "indumentaria",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "variant": "static",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "benefits",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "about",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "countdown",
+            "variant": "band",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "offers",
+            "variant": "grid",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "services",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "variant": "cards",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "gallery",
+            "variant": "grid",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 11
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "variant": "band",
+            "order": 12
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "variant": "card",
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "inter",
+          "inter-tight"
+        ],
+        "accent": "#1F3A5F"
+      },
+      "tags": [
+        "indumentaria",
+        "indumentaria",
+        "plus"
+      ]
+    },
+    {
+      "slug": "boutique",
+      "nombre": "Boutique",
+      "categoria": "boutique",
+      "descripcion": "Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.",
+      "tier": "plus",
+      "template": "boutique",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "highlights",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "about",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "benefits",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "gallery",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "order": 11
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "jost",
+          "cormorant-garamond"
+        ],
+        "accent": "#6B2D4F"
+      },
+      "tags": [
+        "boutique",
+        "boutique",
+        "plus"
+      ]
+    },
+    {
+      "slug": "clasico",
+      "nombre": "Clásico",
+      "categoria": "general",
+      "descripcion": "Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.",
+      "tier": "plus",
+      "template": "clasico",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "variant": "static",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "benefits",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "about",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "countdown",
+            "variant": "band",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "services",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "brands",
+            "variant": "logos",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "variant": "cards",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "gallery",
+            "variant": "grid",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 11
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "variant": "band",
+            "order": 12
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "variant": "card",
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "inter",
+          "playfair-display"
+        ],
+        "accent": "#1F4D43"
+      },
+      "tags": [
+        "clasico",
+        "general",
+        "plus"
+      ]
+    },
+    {
+      "slug": "circuito",
+      "nombre": "Circuito",
+      "categoria": "tecnologia",
+      "descripcion": "Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.",
+      "tier": "advanced",
+      "template": "circuito",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "variant": "static",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "highlights",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "services",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "countdown",
+            "variant": "band",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "brands",
+            "variant": "logos",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "order": 10
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 6
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "space-grotesk",
+          "jetbrains-mono"
+        ],
+        "accent": "#22D3EE"
+      },
+      "tags": [
+        "circuito",
+        "tecnologia",
+        "advanced"
+      ]
+    },
+    {
+      "slug": "seguridad",
+      "nombre": "Seguridad",
+      "categoria": "seguridad",
+      "descripcion": "Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.",
+      "tier": "advanced",
+      "template": "seguridad",
+      "layout": {
+        "landing": [
+          {
+            "enabled": true,
+            "id": "announcements",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "highlights",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "categories",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "featured",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "services",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "aigrid",
+            "order": 6
+          },
+          {
+            "enabled": true,
+            "id": "stats",
+            "order": 7
+          },
+          {
+            "enabled": true,
+            "id": "brands",
+            "order": 8
+          },
+          {
+            "enabled": true,
+            "id": "gallery",
+            "order": 9
+          },
+          {
+            "enabled": true,
+            "id": "testimonials",
+            "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 11
+          },
+          {
+            "enabled": true,
+            "id": "cta",
+            "order": 12
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "note",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "promo",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "filters",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "sort",
+            "order": 5
+          },
+          {
+            "enabled": true,
+            "id": "grid",
+            "order": 6
+          }
+        ],
+        "services": [
+          {
+            "enabled": true,
+            "id": "hero",
+            "order": 0
+          },
+          {
+            "enabled": true,
+            "id": "band",
+            "order": 1
+          },
+          {
+            "enabled": true,
+            "id": "picker",
+            "order": 2
+          },
+          {
+            "enabled": true,
+            "id": "steps",
+            "order": 3
+          },
+          {
+            "enabled": true,
+            "id": "form",
+            "order": 4
+          },
+          {
+            "enabled": true,
+            "id": "faq",
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "fonts": [
+          "barlow",
+          "barlow-condensed"
+        ],
+        "accent": "#C8200E"
+      },
+      "tags": [
+        "seguridad",
+        "seguridad",
+        "advanced"
+      ]
+    }
+  ]
+}

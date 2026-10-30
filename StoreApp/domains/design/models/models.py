@@ -17,10 +17,24 @@ aquí: nacen vacíos. Solo esta tabla se puebla con patrones y estilos.
 #=========================================
 # DESIGN STYLE MODEL (tema: tokens de diseño)
 #=========================================
+TIER_CHOICES = [
+    ('base', 'Base'),
+    ('plus', 'Plus'),
+    ('advanced', 'Advanced'),
+]
+
+
 class DesignStyle(models.Model):
     slug                =   models.SlugField(max_length = 120, unique = True, db_index = True, verbose_name = 'Slug')
     nombre              =   models.CharField(max_length = 120, verbose_name = 'Nombre')
     categoria           =   models.CharField(max_length = 60, db_index = True, verbose_name = 'Categoría')
+    descripcion         =   models.TextField(blank = True, verbose_name = 'Descripción')
+    tier                =   models.CharField(max_length = 10, choices = TIER_CHOICES, default = 'base', verbose_name = 'Nivel de plan')
+    #Plantilla y layout que aplica el estilo (vacío = solo tema)
+    template            =   models.CharField(max_length = 20, blank = True, verbose_name = 'Plantilla')
+    layout              =   models.JSONField(default = dict, blank = True, verbose_name = 'Layout por superficie')
+    layout_spec         =   models.JSONField(default = dict, blank = True, verbose_name = 'Layout compacto (spec)')
+    page_theme          =   models.CharField(max_length = 10, default = 'light', verbose_name = 'Modo claro/oscuro')
     #Paleta, fuentes, radios y sombras: se mergea sobre el tema neutro
     tokens              =   models.JSONField(default = dict, blank = True, verbose_name = 'Tokens de diseño')
     tags                =   ArrayField(
@@ -29,6 +43,7 @@ class DesignStyle(models.Model):
         blank = True,
         verbose_name = 'Tags',
     )
+    is_default          =   models.BooleanField(default = False, db_index = True, verbose_name = 'Predeterminado')
     is_active           =   models.BooleanField(default = True, db_index = True, verbose_name = 'Activo')
     position            =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
     created_at          =   models.DateTimeField(auto_now_add = True)
@@ -42,6 +57,13 @@ class DesignStyle(models.Model):
         indexes             =   [
             models.Index(fields = ['categoria', 'position'], name = 'idx_design_style_cat'),
         ]
+        constraints         =   [
+            models.UniqueConstraint(
+                fields = ['is_default'],
+                condition = models.Q(is_default = True),
+                name = 'uq_design_style_default',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.nombre} ({self.slug})'
@@ -53,6 +75,10 @@ class DesignPattern(models.Model):
     nombre              =   models.CharField(max_length = 120, verbose_name = 'Nombre')
     categoria           =   models.CharField(max_length = 60, db_index = True, verbose_name = 'Categoría')
     descripcion         =   models.TextField(blank = True, verbose_name = 'Descripción')
+    tier                =   models.CharField(max_length = 10, choices = TIER_CHOICES, default = 'base', verbose_name = 'Nivel de plan')
+    #Plantilla del front que monta el patrón y layout por superficie
+    template            =   models.CharField(max_length = 20, blank = True, verbose_name = 'Plantilla')
+    layout              =   models.JSONField(default = dict, blank = True, verbose_name = 'Layout por superficie')
     #Markup del patrón (secciones/bloques que arma la web del cliente)
     html                =   models.TextField(blank = True, verbose_name = 'HTML')
     css                 =   models.TextField(blank = True, verbose_name = 'CSS')
@@ -75,6 +101,7 @@ class DesignPattern(models.Model):
         related_name = 'patterns',
         verbose_name = 'Estilo',
     )
+    is_default          =   models.BooleanField(default = False, db_index = True, verbose_name = 'Predeterminado')
     is_active           =   models.BooleanField(default = True, db_index = True, verbose_name = 'Activo')
     position            =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
     created_at          =   models.DateTimeField(auto_now_add = True)
@@ -87,6 +114,13 @@ class DesignPattern(models.Model):
         ordering            =   ['position', 'nombre', 'id']
         indexes             =   [
             models.Index(fields = ['categoria', 'position'], name = 'idx_design_pattern_cat'),
+        ]
+        constraints         =   [
+            models.UniqueConstraint(
+                fields = ['is_default'],
+                condition = models.Q(is_default = True),
+                name = 'uq_design_pattern_default',
+            ),
         ]
 
     def __str__(self):

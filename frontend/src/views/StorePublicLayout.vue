@@ -13,6 +13,7 @@ import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts } from '../templates/index.js'
+import { useDesignCatalog } from '../composables/useDesignCatalog.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import {
   studioPreviewVars, studioPreviewAttrs, applyFocusRing,
@@ -55,12 +56,27 @@ let removeStudioGuard = null
 // (tamaño del nombre, portada, logo, copy de secciones): lo que se ve en el
 // lienzo es exactamente lo que va a quedar guardado, sin recargar.
 const studioCustom = ref(null)
-const custom = computed(() => ({
-  ...CUSTOMIZATION_DEFAULTS,
-  ...(store.value?.customization || {}),
-  ...(studioCustom.value || {}),
-  ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
-}))
+// Catálogo de diseño (patrones + estilos) desde la API: el patrón base y
+// su estilo son el fallback de la web cuando la tienda no eligió nada.
+const { defaultPattern, defaultStyle, load: loadDesignCatalog } = useDesignCatalog()
+const custom = computed(() => {
+  const raw = store.value?.customization || {}
+  const merged = {
+    ...CUSTOMIZATION_DEFAULTS,
+    ...raw,
+    ...(studioCustom.value || {}),
+    ...(layoutOverride.value ? { layout_config: layoutOverride.value } : {})
+  }
+  if (studioMode.value) return merged
+  const pattern = defaultPattern.value
+  const style = defaultStyle.value
+  if (!raw.template && pattern?.template) merged.template = pattern.template
+  if ((!raw.layout_config || !Object.keys(raw.layout_config).length) && pattern?.layout && Object.keys(pattern.layout).length) {
+    merged.layout_config = pattern.layout
+  }
+  if ((!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
+  return merged
+})
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
   if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
@@ -300,6 +316,7 @@ function applyPageCanvas() {
 applyPageCanvas()
 watch([pageTheme, status], () => applyPageCanvas(), { flush: 'post' })
 onMounted(() => applyPageCanvas())
+onMounted(() => loadDesignCatalog())
 onBeforeUnmount(() => {
   clearCanvasSync()
   document.documentElement.style.backgroundColor = ''

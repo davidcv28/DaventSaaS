@@ -6,7 +6,7 @@
 // del estilo activo y la barra de prueba.
 // Probar es un ensayo deshacible del shell (api.tryIt / tryPalette /
 // revertTrial / keepTrial): nada se guarda hasta el Guardar de la savebar.
-import { computed, inject, nextTick, onMounted, ref } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import { ensurePresetFonts, presetLock } from './catalog.js'
 import { STYLE_PALETTES, stylePaletteColors } from '../contract.js'
@@ -23,7 +23,8 @@ const props = defineProps({
 const api = inject('studioPresets')
 const store = useStoreStore()
 
-onMounted(ensurePresetFonts)
+onMounted(() => ensurePresetFonts(api.presets))
+watch(() => api.presets.length, (n) => { if (n) ensurePresetFonts(api.presets) })
 
 const custom = computed(() => store.customization || {})
 const stored = computed(() => custom.value.site_theme_draft?.style || custom.value.site_theme?.style || null)

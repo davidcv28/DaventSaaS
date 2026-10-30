@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 
 """
 
@@ -22,6 +22,8 @@ class DesignCatalogViewSet(viewsets.ModelViewSet):
     write_serializer    =   None
 
     def get_permissions(self):
+        if self.action == 'default':
+            return [AllowAny()]
         if self.action in ('create', 'update', 'partial_update', 'destroy'):
             return [IsAdminUser()]
         return super().get_permissions()

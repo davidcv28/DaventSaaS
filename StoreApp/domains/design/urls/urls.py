@@ -1,6 +1,11 @@
+from django.urls import path
 from rest_framework import routers
 
-from StoreApp.domains.design.views import DesignPatternViewSet, DesignStyleViewSet
+from StoreApp.domains.design.views import (
+    DesignCatalogView,
+    DesignPatternViewSet,
+    DesignStyleViewSet,
+)
 
 router  =   routers.DefaultRouter()
 
@@ -10,4 +15,6 @@ router.register(r'design/patterns', DesignPatternViewSet, basename = 'StoreDesig
 
 
 #PATTERNS
-urlpatterns = [] + router.urls
+urlpatterns = [
+    path('design/catalog/', DesignCatalogView.as_view(), name = 'design-catalog'),
+] + router.urls
