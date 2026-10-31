@@ -83,7 +83,10 @@ const patternSurface = computed(() => (
       : 'landing'
 ))
 const usePattern = computed(() => Boolean(
-  !studioMode.value && patternDoc.value?.ready && patternDoc.value?.html &&
+  //También en el Studio: la vista previa tiene que mostrar el mismo
+  //documento que se publica (antes enseñaba la plantilla Vue y la web
+  //publicada rompía).
+  patternDoc.value?.ready && patternDoc.value?.html &&
   (patternDoc.value.surfaces || []).includes(patternSurface.value) &&
   //El documento trae los productos ya pintados: si no entran todos, el
   //catálogo sigue en la plantilla Vue (que pagina y filtra contra la API).
@@ -113,6 +116,13 @@ const custom = computed(() => {
   if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
   return merged
 })
+//El documento del diseño se sirve desde la base: logo/portada subidos en
+//el Studio obligan a recargarlo para que la vista previa no mienta.
+const patternRevision = computed(() => (
+  studioMode.value
+    ? JSON.stringify([custom.value.logo?.url || '', custom.value.cover?.url || ''])
+    : ''
+))
 // Navegación del documento del patrón: sus enlaces de chrome viajan como
 // rutas (home/catalog/services) y acá se resuelven con el router de la app.
 function onPatternNavigate({ route, id } = {}) {
@@ -790,7 +800,7 @@ onMounted(async () => {
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
-  if (!studioMode.value && (isHome.value || isCatalog.value || isServices.value)) {
+  if (isHome.value || isCatalog.value || isServices.value) {
     storesApi.publicPattern(slug.value, { preview: previewToken.value })
       .then((doc) => { patternDoc.value = doc && doc.html ? doc : null })
       .catch(() => { patternDoc.value = null })
@@ -852,7 +862,10 @@ onBeforeUnmount(() => {
          del patrón (HTML/CSS/JS) en vez de la plantilla Vue. -->
     <PatternSurface
       v-if="usePattern"
-      :doc="patternDoc"
+      :slug="slug"
+      :preview="previewToken"
+      :template="studioMode && studioTemplate ? studioTemplate : ''"
+      :revision="patternRevision"
       :theme="pageTheme"
       :surface="patternSurface"
       :title="shopName"

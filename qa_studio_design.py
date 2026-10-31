@@ -74,7 +74,9 @@ with sync_playwright() as pw:
     page.goto(f'{BASE}/dashboard/diseno/studio', wait_until='domcontentloaded')
     page.wait_for_selector('.sts', timeout=15000)
     page.wait_for_selector('.sts iframe', timeout=15000)
-    page.frame_locator('.sts iframe').locator('.store-page').wait_for(timeout=30000)
+    # La vista previa puede ser la plantilla Vue (.store-page) o el
+    # documento real del diseño (iframe.ds-surface anidado).
+    page.frame_locator('.sts iframe').locator('.store-page, iframe.ds-surface').first.wait_for(timeout=30000)
     page.wait_for_timeout(1200)
 
     tools = page.evaluate("""() => [...document.querySelectorAll('.sts-rail .sts-tool')]
@@ -136,8 +138,13 @@ with sync_playwright() as pw:
         b?.click()
     }""")
     page.wait_for_timeout(1200)
-    theme = page.evaluate("""() => document.querySelector('.sts iframe')?.contentDocument
-        ?.querySelector('.store-page')?.getAttribute('data-store-theme')""")
+    theme = page.evaluate("""() => {
+        const outer = document.querySelector('.sts iframe')?.contentDocument
+        const inner = outer?.querySelector('iframe.ds-surface')
+        const doc = inner?.contentDocument || outer
+        return doc?.querySelector('.store-page')?.getAttribute('data-store-theme')
+          || doc?.documentElement?.getAttribute('data-ds-theme')
+    }""")
     ok('el lienzo cambia a modo noche', theme == 'dark', str(theme))
     page.screenshot(path=f'{OUT}/noche.png')
 

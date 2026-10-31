@@ -6,7 +6,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import { STUDIO_MSG, isStudioMessage, studioUpdate, themeExplicitKeys } from '../../studio/contract.js'
-import { ensureStoreFont } from '../../api/stores.api.js'
+import { ensureStoreFont, storesApi } from '../../api/stores.api.js'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -15,7 +15,16 @@ const props = defineProps({
 
 const store = useStoreStore()
 const slug = computed(() => store.store?.slug || '')
-const src = computed(() => (slug.value ? `/${slug.value}?studio=1` : ''))
+// Token firmado del borrador: la vista previa tiene que mostrar el mismo
+// documento del diseño que se publica, pero con el borrador guardado
+// (template/site_theme) en vez de lo último publicado.
+const previewToken = ref('')
+const src = computed(() => {
+  if (!slug.value) return ''
+  const params = new URLSearchParams({ studio: '1' })
+  if (previewToken.value) params.set('preview', previewToken.value)
+  return `/${slug.value}?${params}`
+})
 const device = ref('desktop')
 const frame = ref(null)
 const state = ref('loading')
@@ -112,6 +121,9 @@ watch(
 watch(() => props.form.name_font, (font) => { if (font) ensureStoreFont(font) })
 
 onMounted(() => {
+  storesApi.sharePreview()
+    .then((data) => { previewToken.value = data?.token || '' })
+    .catch(() => { previewToken.value = '' })
   window.addEventListener('message', onMessage)
   loadTimer = setTimeout(() => { if (state.value === 'loading') state.value = 'failed' }, 12000)
   if (stage.value) {

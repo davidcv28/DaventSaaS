@@ -355,7 +355,7 @@ class AiDesignMcpThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
@@ -515,29 +515,95 @@ class StoreViewSet(StoreBaseViewSet):
     #=========================================
     # PUBLIC PATTERN (documento del DesignPattern con los datos de la tienda)
     #=========================================
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern', throttle_classes = [PublicReadThrottle])
-    def public_pattern(self, request, slug = None):
-        #Render server-side del diseño elegido: HTML + CSS + JS del
-        #DesignPattern con las variables resueltas contra la tienda. `{}`
-        #cuando el diseño no trae markup (la web sigue con la plantilla Vue).
-        store               =   get_object_or_404(
+    def _pattern_doc(self, request, store):
+        #Documento del diseño con los datos de la tienda. Con `?preview` se
+        #renderiza el borrador y NO se cachea (el payload es de una persona).
+        customization   =   getattr(store, 'customization', None)
+        preview         =   customization is not None and self._preview_ok(request, store)
+        if preview:
+            customization.template          =   customization.template_draft or customization.template
+            customization.site_theme        =   customization.site_theme_draft
+            #El Studio prueba un diseño antes de guardarlo: el override solo
+            #vale con el token de vista previa (nunca en la web pública).
+            override                        =   (request.query_params.get('template') or '').strip()
+            if override:
+                customization.template      =   override
+        from StoreApp.domains.design.services import render_store_pattern
+        if preview:
+            return render_store_pattern(store, customization) or {}
+        epoch, ver      =   public_cache_stamp(store.pk)
+        cache_key       =   f'store:pattern:v2:{store.pk}:{epoch}:{ver}'
+        data            =   cache_get(cache_key)
+        if data is None:
+            data        =   render_store_pattern(store, customization) or {}
+            cache_set(cache_key, data, PUBLIC_CACHE_TTL)
+        return data
+
+    def _pattern_store(self, slug):
+        store           =   get_object_or_404(
             Store.objects.select_related('user', 'customization'),
             slug = slug, is_published = True, is_blocked = False,
         )
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
-        customization       =   getattr(store, 'customization', None)
-        if customization is not None and self._preview_ok(request, store):
-            customization.template          =   customization.template_draft or customization.template
-            customization.site_theme        =   customization.site_theme_draft
-        epoch, ver          =   public_cache_stamp(store.pk)
-        cache_key           =   f'store:pattern:v1:{store.pk}:{epoch}:{ver}'
-        data                =   cache_get(cache_key)
-        if data is None:
-            from StoreApp.domains.design.services import render_store_pattern
-            data            =   render_store_pattern(store, customization) or {}
-            cache_set(cache_key, data, PUBLIC_CACHE_TTL)
+        return store
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern', throttle_classes = [PublicReadThrottle])
+    def public_pattern(self, request, slug = None):
+        #Render server-side del diseño elegido: HTML + CSS + JS del
+        #DesignPattern con las variables resueltas contra la tienda. `{}`
+        #cuando el diseño no trae markup (la web sigue con la plantilla Vue).
+        data                =   self._pattern_doc(request, self._pattern_store(slug))
         response            =   Response(data, status = status.HTTP_200_OK)
+        patch_cache_control(response, public = True, max_age = 30)
+        return response
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/document', throttle_classes = [PublicReadThrottle])
+    def public_pattern_document(self, request, slug = None):
+        #Documento real (text/html) que cargan la web publicada y la vista
+        #previa. Los scripts viajan como `<script src>`: el CSP de
+        #producción (`script-src 'self'`) bloquea los inline y el iframe
+        #quedaba sin puente (alto roto, reveal oculto, toggle muerto).
+        from django.http import HttpResponse
+        from StoreApp.domains.design.services.pattern_document import pattern_document
+        data                =   self._pattern_doc(request, self._pattern_store(slug))
+        if not data.get('html'):
+            raise Http404
+        theme               =   'dark' if request.query_params.get('theme') == 'dark' else 'light'
+        surface             =   request.query_params.get('surface') or 'landing'
+        if surface not in (data.get('surfaces') or []):
+            surface         =   'landing'
+        html                =   pattern_document(
+            data['html'], data.get('css') or '', theme, surface,
+            request.query_params.get('preview') or '',
+        )
+        response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
+        #El documento se embebe en la web (iframe same-origin): el default
+        #`DENY` de Django lo bloqueaba.
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        patch_cache_control(response, private = True, no_store = True)
+        return response
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/bridge.js', throttle_classes = [PublicReadThrottle])
+    def public_pattern_bridge(self, request, slug = None):
+        #Puente del documento (alto, tema, rutas y catálogo). Se sirve desde
+        #la misma URL que el documento para no depender del host del front.
+        from django.http import HttpResponse
+        from StoreApp.domains.design.services.pattern_document import BRIDGE_SCRIPT
+        response            =   HttpResponse(BRIDGE_SCRIPT, content_type = 'application/javascript; charset=utf-8')
+        response['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        patch_cache_control(response, public = True, max_age = 3600)
+        return response
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/script.js', throttle_classes = [PublicReadThrottle])
+    def public_pattern_script(self, request, slug = None):
+        #JS del diseño como archivo aparte (mismo motivo que el documento).
+        from django.http import HttpResponse
+        data                =   self._pattern_doc(request, self._pattern_store(slug))
+        response            =   HttpResponse(data.get('js') or '', content_type = 'application/javascript; charset=utf-8')
+        #El iframe va sandboxeado (origen opaco): el default `same-origin`
+        #de Django bloqueaba el script como cross-origin.
+        response['Cross-Origin-Resource-Policy'] = 'cross-origin'
         patch_cache_control(response, public = True, max_age = 30)
         return response
     #=========================================

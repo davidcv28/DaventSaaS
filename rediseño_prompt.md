@@ -239,6 +239,35 @@
 
 ---
 
+### FASE 8 — Web publicada = vista previa (CSP + documento real)
+
+- [x] El documento del diseño se sirve como URL propia
+  (`GET /api/stores/public/<slug>/pattern/document/`), no como `srcdoc`.
+  El CSP de producción (`script-src 'self'`, sin `unsafe-inline`) bloqueaba
+  los scripts inline heredados por `srcdoc`: el iframe quedaba a 70vh, las
+  secciones `.reveal` invisibles y el toggle de tema muerto. **(TERMINADO)**
+- [x] El JS del diseño y el puente viajan como `<script src>` del mismo
+  origen (`../script.js/`, `../bridge.js/`); `pattern_document.py` además
+  quita handlers `on*=` y `<script>` del markup. **(TERMINADO)**
+- [x] El documento se puede embeber (`X-Frame-Options: SAMEORIGIN`,
+  `Cross-Origin-Resource-Policy: cross-origin` en los scripts) y el iframe
+  usa `allow-same-origin` para que el CSP `'self'` y el CORP no lo bloqueen.
+  **(TERMINADO)**
+- [x] La vista previa del panel Diseño y el Studio pintan el MISMO documento
+  que se publica (`usePattern` ya no se apaga en `?studio=1`); el diseño en
+  ensayo viaja como `?template=` solo con el token `?preview=` firmado.
+  **(TERMINADO)**
+- [x] `DesignLivePreview` pide el token del borrador (`sharePreview`) y lo
+  agrega al iframe; logo/portada subidos recargan el documento (`revision`).
+  **(TERMINADO)**
+- [x] Bug del puente: `[''].concat(cats).forEach(...)` se encadenaba al
+  `forEach` anterior (ASI) y rompía el catálogo (`undefined['']`).
+  **(TERMINADO)**
+- [x] Verificación: documento servido con CSP `script-src 'self'` (chips,
+  contador y superficie OK, 0 errores); 7 tiendas × 1360 con iframe y alto
+  correcto; panel Diseño con token, cambio de patrón en vivo
+  (`template=trama`) y sin errores de consola. **(TERMINADO)**
+
 ## 2.b Estado para el próximo agente
 
 **Todo el plan está cerrado y verificado** (Fases 0-7). El Studio opera sobre
@@ -312,4 +341,9 @@ Si aparece un pedido nuevo, los puntos de entrada son
   `variables`. Verificado por consulta directa: 0 diferencias de `html`/`css`/
   `js`/`variables`/`tokens`/`effects`/`template`/`tier` entre local y Neon.
   `manage.py check` limpio, `test StoreApp.domains.design` 39 OK, `vitest` 38 OK.
+- (2026-10-30) Fase 8: la web publicada rompía en producción por el CSP
+  (`script-src 'self'`): el `srcdoc` heredaba la política y el puente no
+  corría. Ahora el diseño se sirve como documento real con scripts externos
+  del mismo origen; la vista previa usa el mismo documento (con token del
+  borrador y `?template=` para el ensayo). QA con CSP estricto y 7 tiendas.
 - Próximo paso: nada pendiente en este documento.
