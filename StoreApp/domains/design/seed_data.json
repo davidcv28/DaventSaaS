@@ -5582,7 +5582,7 @@
     },
     {
       "slug": "mercado",
-      "nombre": "Mercado",
+      "nombre": "Bazar",
       "categoria": "Marketplace",
       "descripcion": "Marketplace masivo: masthead amarillo, buscador blanco, grilla densa de productos y descuentos en verde.",
       "tier": "plus",
@@ -7527,7 +7527,7 @@
     },
     {
       "slug": "mercado",
-      "nombre": "Mercado",
+      "nombre": "Bazar",
       "categoria": "retail",
       "descripcion": "Marketplace masivo: barra amarilla, búsqueda al frente, grilla densa de productos y descuentos en verde.",
       "tier": "plus",

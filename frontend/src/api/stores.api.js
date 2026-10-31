@@ -757,7 +757,7 @@ export const STORE_TEMPLATES = {
   indumentaria:{ label: 'Indumentaria',rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.' },
   boutique:    { label: 'Boutique',    rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
   atelier:     { label: 'Atelier',     rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#2D4A3E', desc: 'Indumentaria editorial: papel cálido, verde bosque, Bricolage y grilla de prendas con chips.' },
-  mercado:     { label: 'Mercado',     rubro: 'general',      tier: 'plus',     defaultAccent: '#3483FA', desc: 'Marketplace: masthead amarillo, buscador, tarjetas blancas densas y precios con descuento.' },
+  mercado:     { label: 'Bazar',       rubro: 'general',      tier: 'plus',     defaultAccent: '#3483FA', desc: 'Marketplace: masthead amarillo, buscador, tarjetas blancas densas y precios con descuento.' },
   clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
   circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
   seguridad:   { label: 'Seguridad',   rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },

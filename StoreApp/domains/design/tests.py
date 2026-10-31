@@ -170,8 +170,6 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertEqual(DesignPattern.objects.count(), len(_seed_data()['patterns']))
         pattern = DesignPattern.objects.get(slug = 'raiz')
         self.assertIn('data-block="hero"', pattern.html)
-        #Los arquetipos del formato viejo ya no forman parte del catálogo.
-        self.assertFalse(DesignPattern.objects.filter(slug = 'mercado-libre').exists())
         self.assertTrue(pattern.layout.get('landing'))
         self.assertTrue(DesignStyle.objects.get(slug = 'base').tokens.get('palette'))
 

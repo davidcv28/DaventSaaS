@@ -214,7 +214,7 @@
 }
 .store-page[data-template='atelier'] .sp-card .tpc-quick { display: none; }
 .store-page[data-template='atelier'] .sp-card .tpc-go { display: none; }
-/* Flag legacy de la tarjeta clásica (verde MercadoLibre) -> flag boutique. */
+/* Flag legacy de la tarjeta clásica (verde clásico) -> flag boutique. */
 .store-page[data-template='atelier'] .sp-card .tpc-flag {
   position: static;
   inset: auto;

@@ -153,7 +153,7 @@ class StoreCustomization(models.Model):
         ('indumentaria',  'Indumentaria'),
         ('boutique',      'Boutique'),
         ('atelier',       'Atelier'),
-        ('mercado',       'Mercado'),
+        ('mercado',       'Bazar'),
         ('clasico',       'Clásico'),
         ('circuito',      'Circuito'),
         ('seguridad',     'Seguridad'),

@@ -220,7 +220,7 @@ TEMPLATE_LABELS             =   {
     #Los 20 retirados del selector: la IA sí los usa (v4).
     'perspective': 'Perspectiva', 'bloque': 'Bloque', 'riso': 'Riso',
     'street': 'Calle', 'promo': 'Promo', 'atelier': 'Atelier',
-    'circuit': 'Circuito', 'arena': 'Arena', 'mercado': 'Mercado',
+    'circuit': 'Circuito', 'arena': 'Arena', 'mercado': 'Bazar',
     'studio': 'Estudio', 'lookbook': 'Lookbook', 'shop': 'Shop',
     'boutique': 'Boutique', 'signature': 'Signature', 'aurora': 'Aurora',
     'terminal': 'Terminal', 'terra': 'Terra', 'lab': 'Lab',
