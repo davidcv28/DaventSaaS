@@ -36,7 +36,11 @@ const leadPct = computed(() => (lead.value ? offerPct(lead.value) : 0))
 const leadPrice = computed(() => (lead.value ? formatARS(effectivePrice(lead.value)) : ''))
 const leadOld = computed(() => (lead.value && productOffer(lead.value) != null ? formatARS(lead.value.price) : ''))
 const tiles = computed(() => products.value.filter((p) => p.image && p.id !== lead.value?.id).slice(0, 3))
-const tones = ['#F5F5F5', '#E8F0FE', '#FFF3D6']
+const tones = [
+  'color-mix(in srgb, var(--mc-blue) 8%, var(--mc-surface))',
+  'color-mix(in srgb, var(--mc-yellow) 18%, var(--mc-surface))',
+  'color-mix(in srgb, var(--mc-blue) 4%, var(--mc-surface))'
+]
 </script>
 
 <template>
@@ -62,7 +66,7 @@ const tones = ['#F5F5F5', '#E8F0FE', '#FFF3D6']
       </div>
 
       <div v-reveal="60" class="mc-hero-art">
-        <div class="mc-hero-tiles" aria-hidden="true">
+        <div v-if="tiles.length" class="mc-hero-tiles" aria-hidden="true">
           <span
             v-for="(t, i) in tiles" :key="t.id"
             class="mc-hero-tile" :class="`mc-hero-tile--${i + 1}`"

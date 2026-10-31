@@ -40,7 +40,7 @@ img[src=""]{display:none!important}
 .svc-head h1{font-size:clamp(28px,4vw,44px)}
 .svc-head p{margin:8px 0 0;font-size:12.5px;opacity:.75;max-width:46ch}
 .svc-head p:empty{display:none}
-.svc-cta{display:inline-block;margin-top:22px;padding:11px 16px;border-radius:var(--ds-radius,6px);background:var(--ds-accent,#111);color:#fff;font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
+.svc-cta{display:inline-block;margin-top:22px;padding:11px 16px;border-radius:var(--ds-radius,6px);background:var(--ds-accent,#111);color:var(--ds-accent-ink,#fff);font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
 
 /* Personalidad de subtítulos (común a todos los diseños): el texto que
    acompaña a un título de sección se lee como etiqueta editorial, con una
@@ -67,11 +67,11 @@ img[src=""]{display:none!important}
    rectángulo gris. */
 .ds-product-img.is-empty,.hero-media{
   background-image:
-    radial-gradient(120% 100% at 18% 0%,color-mix(in srgb,var(--ds-accent,#888) 18%,transparent),transparent 62%),
-    linear-gradient(150deg,color-mix(in srgb,var(--ink,#111) 7%,transparent),transparent 58%);
+    radial-gradient(120% 100% at 18% 0%,color-mix(in srgb,var(--ds-accent,#888) 13%,transparent),transparent 62%),
+    linear-gradient(150deg,color-mix(in srgb,var(--ink,#111) 5%,transparent),transparent 58%);
   background-color:var(--soft,var(--surface,#f5f5f5));
 }
-.ds-product-img.is-empty::after{opacity:.5}
+.ds-product-img.is-empty::after{opacity:.55}
 """
 
 #El puente vive junto a este módulo y se sirve desde la misma URL del

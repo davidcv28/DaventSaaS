@@ -1,10 +1,10 @@
 /* ==========================================================================
    DISEÑO MERCADO — marketplace (nivel plus)
    Raíz de todo el CSS: [data-template="mercado"] (lo emite StorePublicLayout).
-   Identidad tomada del comercio masivo: masthead amarillo, buscador blanco
-   con botón azul, fondo gris, tarjetas blancas de radio corto, precios
-   grandes y descuentos en verde. El acento del dueño (--store-accent) pinta
-   CTAs y focos; el amarillo del masthead es la firma del diseño.
+   Identidad de marketplace: masthead amarillo, buscador blanco con botón
+   azul, fondo gris, tarjetas blancas de radio corto, precios grandes y
+   descuentos en verde. El acento del tema pinta masthead, CTAs, links y
+   focos; el amarillo del masthead es la firma del diseño.
    La hoja se carga solo cuando la tienda usa este diseño.
    ========================================================================== */
 
@@ -14,10 +14,12 @@
      aplicado quedan los colores firma del marketplace. */
   --mc-yellow: var(--st-accent, #FFE600);
   --mc-yellow-line: color-mix(in srgb, var(--mc-yellow) 84%, #000000);
-  --mc-blue: var(--st-primary, #3483FA);
-  --mc-blue-deep: var(--st-secondary, #2968C8);
+  --mc-blue: var(--st-primary, #2563EB);
+  --mc-blue-deep: var(--st-secondary, #1D4ED8);
   --mc-green: var(--st-success, #007A3D);
-  --mc-green-ink: var(--mc-green);
+  /* Texto de ahorro: se oscurece hacia la tinta para garantizar AA aunque
+     el tema elija un verde claro; en oscuro se aclara (override abajo). */
+  --mc-green-ink: color-mix(in srgb, var(--mc-green) 78%, var(--mc-ink));
   --mc-bg: var(--st-bg, #EBEBEB);
   --mc-surface: var(--st-surface, #FFFFFF);
   --mc-soft: color-mix(in srgb, var(--mc-surface) 92%, var(--mc-bg));
@@ -29,13 +31,14 @@
   /* #666 sobre #EBEBEB = 4.8:1 (AA); #737373 quedaba en 4.0. */
   --mc-muted: var(--st-muted, #666666);
   --mc-on-band: var(--st-on-accent, #333333);
-  --mc-accent-raw: var(--store-accent, #3483FA);
-  --mc-accent: var(--store-accent-ink, #2968C8);
+  --mc-accent-raw: var(--st-primary, #2563EB);
+  --mc-accent: var(--mc-blue-deep);
   /* Texto legible sobre cada relleno de marca (AA del tema). */
   --mc-on-blue: var(--st-on-primary, #FFFFFF);
   --mc-on-blue-deep: var(--st-on-secondary, #FFFFFF);
   --mc-on-green: var(--st-on-success, #FFFFFF);
   --mc-on-accent: var(--mc-on-blue);
+  --mc-link: var(--mc-blue-deep);
   /* Tipografía */
   --mc-display: var(--store-font, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mc-body: var(--store-font, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -154,7 +157,7 @@
 }
 .store-page[data-template='mercado'] a:focus-visible,
 .store-page[data-template='mercado'] button:focus-visible,
-.store-page[data-template='mercado'] input:focus-visible { outline: 2px solid var(--mc-blue); outline-offset: 2px; }
+.store-page[data-template='mercado'] input:focus-visible { outline: 2px solid var(--mc-link); outline-offset: 2px; }
 
 /* ==========================================================================
    CHROME — masthead amarillo, buscador blanco, secciones y pie
@@ -216,7 +219,7 @@
    ancho al nombre y al buscador en móvil. */
 .store-page[data-template='mercado'] .sp-top-cta { display: none; }
 .store-page[data-template='mercado'] .sp-shop-nav {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   border-bottom: 1px solid var(--mc-line);
 }
 .store-page[data-template='mercado'] .sp-shop-nav-links a {
@@ -224,7 +227,7 @@
   letter-spacing: 0;
   font-size: 13px;
   font-weight: 500;
-  color: #666666;
+  color: var(--mc-muted);
   border-radius: 4px;
   padding: 10px 12px;
 }
@@ -235,7 +238,7 @@
 .store-page[data-template='mercado'] .sp-shop-nav-links a.is-current {
   color: var(--mc-ink);
   background: transparent;
-  box-shadow: inset 0 -2px 0 var(--mc-blue);
+  box-shadow: inset 0 -2px 0 var(--mc-link);
 }
 .store-page[data-template='mercado'] .sp-shop-nav-note { color: var(--mc-muted); font-weight: 400; }
 
@@ -248,11 +251,11 @@
 .store-page[data-template='mercado'] .sp-ann-item .icon { color: var(--mc-surface); }
 
 .store-page[data-template='mercado'] .sp-foot {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   border-top: 1px solid var(--mc-line);
 }
 .store-page[data-template='mercado'] .sp-foot-heading { color: var(--mc-muted); }
-.store-page[data-template='mercado'] .sp-foot-col a:hover { color: var(--mc-blue-deep); }
+.store-page[data-template='mercado'] .sp-foot-col a:hover { color: var(--mc-link); }
 
 /* ==========================================================================
    LANDING — hero, categorías, ofertas, destacados y confianza
@@ -281,8 +284,8 @@
   margin: 0 0 14px;
   padding: 5px 10px;
   border-radius: 4px;
-  background: var(--mc-on-band);
-  color: var(--mc-yellow);
+  background: color-mix(in srgb, var(--mc-ink) 90%, var(--mc-yellow));
+  color: var(--mc-surface);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .04em;
@@ -318,11 +321,11 @@
 .store-page[data-template='mercado'] .mc-btn--primary { background: var(--mc-blue); color: var(--mc-on-blue); }
 .store-page[data-template='mercado'] .mc-btn--primary:hover { background: var(--mc-blue-deep); }
 .store-page[data-template='mercado'] .mc-btn--ghost {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   color: var(--mc-ink);
-  border-color: rgba(51, 51, 51, .18);
+  border-color: var(--mc-line-strong);
 }
-.store-page[data-template='mercado'] .mc-btn--ghost:hover { border-color: #333333; }
+.store-page[data-template='mercado'] .mc-btn--ghost:hover { border-color: var(--mc-ink); }
 .store-page[data-template='mercado'] .mc-hero-stats {
   display: flex;
   flex-wrap: wrap;
@@ -350,12 +353,11 @@
 .store-page[data-template='mercado'] .mc-hero-tile {
   border-radius: 8px;
   overflow: hidden;
-  background: #FFFFFF;
+  background: var(--mc-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
 }
 .store-page[data-template='mercado'] .mc-hero-tile img { width: 100%; height: 100%; object-fit: cover; }
 .store-page[data-template='mercado'] .mc-hero-tile--1 { grid-row: 1 / 3; }
-.store-page[data-template='mercado'] .mc-hero-tile--3 { display: none; }
 .store-page[data-template='mercado'] .mc-hero-card {
   position: relative;
   z-index: 1;
@@ -365,7 +367,7 @@
   margin: 24px auto;
   padding: 14px;
   border-radius: 8px;
-  background: #FFFFFF;
+  background: var(--mc-surface);
   color: var(--mc-ink);
   text-decoration: none;
   box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .5);
@@ -390,27 +392,32 @@
   aspect-ratio: 1 / 1;
   border-radius: 6px;
   overflow: hidden;
-  background: var(--mc-soft);
+  background-color: var(--mc-soft);
+  background-image:
+    radial-gradient(120% 100% at 18% 0%, color-mix(in srgb, var(--mc-yellow) 16%, transparent), transparent 62%),
+    linear-gradient(150deg, color-mix(in srgb, var(--mc-ink) 5%, transparent), transparent 58%);
   color: var(--mc-muted);
 }
-.store-page[data-template='mercado'] .mc-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.store-page[data-template='mercado'] .mc-hero-media img { width: 100%; height: 100%; object-fit: contain; }
+.store-page[data-template='mercado'] .mc-hero-media > svg { width: 56px; height: 56px; opacity: .5; }
 .store-page[data-template='mercado'] .mc-hero-card-body { display: grid; gap: 4px; padding-top: 10px; }
 .store-page[data-template='mercado'] .mc-hero-card-name {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
   font-size: 13.5px;
   line-height: 1.35;
 }
-.store-page[data-template='mercado'] .mc-hero-card-price { display: flex; align-items: baseline; gap: 8px; }
+.store-page[data-template='mercado'] .mc-hero-card-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
 .store-page[data-template='mercado'] .mc-hero-card-price s { color: var(--mc-muted); font-size: 12px; }
 .store-page[data-template='mercado'] .mc-hero-card-price strong { font-size: 22px; font-weight: 600; }
 .store-page[data-template='mercado'] .mc-hero-card-link {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--mc-blue-deep);
+  color: var(--mc-link);
   font-size: 12px;
   font-weight: 600;
 }
@@ -434,7 +441,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--mc-blue-deep);
+  color: var(--mc-link);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -444,7 +451,7 @@
 
 /* --- Categorías --- */
 .store-page[data-template='mercado'] .mc-cats {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   padding-block: var(--mc-section) 8px;
 }
 .store-page[data-template='mercado'] .mc-cats-rail {
@@ -483,6 +490,7 @@
   font-weight: 600;
 }
 .store-page[data-template='mercado'] .mc-cat-media img { width: 100%; height: 100%; object-fit: cover; }
+.store-page[data-template='mercado'] .mc-cat-initial { font-size: 22px; font-weight: 600; line-height: 1; }
 .store-page[data-template='mercado'] .mc-cat-name {
   max-width: 100%;
   overflow: hidden;
@@ -495,7 +503,7 @@
 
 /* --- Ofertas y destacados --- */
 .store-page[data-template='mercado'] .mc-offers {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   padding-block: 18px var(--mc-section);
 }
 .store-page[data-template='mercado'] .mc-featured {
@@ -527,9 +535,25 @@
 .store-page[data-template='mercado'] .mc-card .tpc-body { padding: var(--tpc-pad); }
 .store-page[data-template='mercado'] .mc-card .tpc-name { min-height: 2.7em; }
 .store-page[data-template='mercado'] .mc-card .tpc-foot { align-items: flex-end; }
-.store-page[data-template='mercado'] .mc-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.store-page[data-template='mercado'] .mc-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
 .store-page[data-template='mercado'] .mc-price s { color: var(--mc-muted); font-size: 12px; font-weight: 400; }
-.store-page[data-template='mercado'] .mc-price strong { font-size: 22px; font-weight: 600; color: var(--mc-ink); }
+.store-page[data-template='mercado'] .mc-price strong { font-size: 22px; font-weight: 600; color: var(--mc-ink); overflow-wrap: anywhere; }
+/* Media sin imagen: degradado de marca + icono grande, nunca un gris plano. */
+.store-page[data-template='mercado'] .mc-card .tpc-media:has(.tpc-ph),
+.store-page[data-template='mercado'] .mc-catalog .rz-cat-card .tpc-media:has(.tpc-ph) {
+  background-image:
+    radial-gradient(120% 100% at 18% 0%, color-mix(in srgb, var(--mc-yellow) 15%, transparent), transparent 62%),
+    linear-gradient(150deg, color-mix(in srgb, var(--mc-ink) 5%, transparent), transparent 58%);
+}
+.store-page[data-template='mercado'] .mc-card .tpc-ph,
+.store-page[data-template='mercado'] .mc-catalog .rz-cat-card .tpc-ph {
+  width: auto;
+  height: auto;
+  background: transparent;
+  color: color-mix(in srgb, var(--mc-ink) 30%, transparent);
+}
+.store-page[data-template='mercado'] .mc-card .tpc-ph svg,
+.store-page[data-template='mercado'] .mc-catalog .rz-cat-card .tpc-ph svg { width: 52px; height: 52px; }
 .store-page[data-template='mercado'] .mc-off {
   margin-left: auto;
   color: var(--mc-green-ink);
@@ -548,7 +572,7 @@
 
 /* --- Confianza --- */
 .store-page[data-template='mercado'] .mc-trust {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   padding-block: var(--mc-section);
   border-top: 1px solid var(--mc-line);
   border-bottom: 1px solid var(--mc-line);
@@ -571,8 +595,8 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--mc-blue) 10%, #FFFFFF);
-  color: var(--mc-blue-deep);
+  background: color-mix(in srgb, var(--mc-blue) 10%, var(--mc-surface));
+  color: var(--mc-link);
 }
 .store-page[data-template='mercado'] .mc-trust-copy { display: grid; gap: 2px; min-width: 0; }
 .store-page[data-template='mercado'] .mc-trust-copy strong { font-size: 13.5px; font-weight: 600; color: var(--mc-ink); }
@@ -589,7 +613,7 @@
 .store-page[data-template='mercado'] .sp-stats,
 .store-page[data-template='mercado'] .sp-cta,
 .store-page[data-template='mercado'] .sp-contact {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   padding-block: var(--mc-section);
   border-top: 1px solid var(--mc-line);
 }
@@ -630,7 +654,7 @@
   --rz-ink-2: var(--mc-ink-2);
   --rz-muted: var(--mc-muted);
   --rz-accent: var(--mc-accent-raw);
-  --rz-accent-soft: color-mix(in srgb, var(--mc-blue) 8%, #FFFFFF);
+  --rz-accent-soft: color-mix(in srgb, var(--mc-blue) 8%, var(--mc-surface));
   --rz-accent-text: var(--mc-accent);
   --rz-accent-deep: var(--mc-blue-deep);
   --rz-accent-deep-2: #1E55A8;
@@ -640,7 +664,7 @@
   --rz-on-band-2: rgba(255, 255, 255, .9);
   --rz-on-band-muted: rgba(255, 255, 255, .78);
   --rz-focus: var(--mc-blue);
-  --rz-selection: color-mix(in srgb, var(--mc-blue) 20%, #FFFFFF);
+  --rz-selection: color-mix(in srgb, var(--mc-blue) 20%, var(--mc-surface));
   --rz-inverse-bg: #333333;
   --rz-inverse-bg-2: #222222;
   --rz-inverse-ink: #FFFFFF;
@@ -710,9 +734,9 @@
   border-color: var(--mc-ink);
 }
 .store-page[data-template='mercado'] .mc-skin .rz-btn--ink {
-  background: #333333;
-  border-color: #333333;
-  color: #FFFFFF;
+  background: var(--mc-ink);
+  border-color: var(--mc-ink);
+  color: var(--mc-surface);
 }
 .store-page[data-template='mercado'] .mc-skin .rz-eyebrow {
   color: var(--mc-muted);
@@ -728,7 +752,7 @@
 .store-page[data-template='mercado'] .mc-catalog .rz-cat-title { font-weight: 600; }
 .store-page[data-template='mercado'] .mc-catalog .rz-cat-lead { font-size: 14.5px; color: var(--mc-muted); }
 .store-page[data-template='mercado'] .mc-catalog .rz-cat-rail {
-  background: #FFFFFF;
+  background: var(--mc-surface);
   border-color: var(--mc-line);
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
@@ -740,7 +764,7 @@
 }
 .store-page[data-template='mercado'] .mc-catalog .rz-cat-card {
   --tpc-ratio: 1 / 1;
-  --tpc-bg: #FFFFFF;
+  --tpc-bg: var(--mc-surface);
   --tpc-border: 0;
   --tpc-radius: 6px;
   --tpc-pad: 10px 12px 14px;
@@ -760,7 +784,7 @@
   --tpc-flag-track: 0;
   --tpc-go-ink: var(--mc-blue-deep);
   --tpc-quick-bg: var(--mc-blue);
-  background: #FFFFFF;
+  background: var(--mc-surface);
   border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
   transition: box-shadow .18s, transform .18s;
@@ -779,7 +803,7 @@
 .store-page[data-template='mercado'] .mc-catalog .rz-cat-empty {
   border-color: var(--mc-line);
   border-radius: 6px;
-  background: #FFFFFF;
+  background: var(--mc-surface);
 }
 
 /* Ficha de producto: panel de compra y CTA azul. */
@@ -787,7 +811,7 @@
 .store-page[data-template='mercado'] .mc-product .rz-pdp-frame {
   border-radius: 6px;
   border: 1px solid var(--mc-line);
-  background: #FFFFFF;
+  background: var(--mc-surface);
 }
 .store-page[data-template='mercado'] .mc-product .rz-pdp-name { font-weight: 600; }
 .store-page[data-template='mercado'] .mc-product .rz-pdp-pricebox {
@@ -830,7 +854,7 @@
 }
 .store-page[data-template='mercado'] .mc-services .rz-sv-item[aria-pressed='true'] {
   border-color: var(--mc-blue);
-  background: color-mix(in srgb, var(--mc-blue) 7%, #FFFFFF);
+  background: color-mix(in srgb, var(--mc-blue) 7%, var(--mc-surface));
 }
 .store-page[data-template='mercado'] .mc-services .rz-sv-band { background: var(--mc-blue-deep); color: var(--mc-on-blue-deep); }
 
@@ -847,18 +871,21 @@
   --mc-ink: #F2F3F5;
   --mc-ink-2: #D3D6DB;
   --mc-muted: #A0A5AE;
+  --mc-link: color-mix(in srgb, var(--mc-blue) 55%, #FFFFFF);
   /* Sobre superficie oscura el verde de marca queda por debajo de AA. */
   --mc-green-ink: #5BD68A;
 }
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero {
   background:
-    radial-gradient(760px 360px at 88% -20%, rgba(255, 255, 255, .22), transparent 62%),
-    linear-gradient(180deg, color-mix(in srgb, var(--mc-yellow) 90%, #FFFFFF), color-mix(in srgb, var(--mc-yellow) 82%, #000000));
+    radial-gradient(760px 360px at 88% -20%, color-mix(in srgb, var(--mc-yellow) 12%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--mc-yellow) 12%, var(--mc-bg)), var(--mc-bg));
+  border-bottom-color: var(--mc-line);
+  color: var(--mc-ink);
 }
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero h1,
-.store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero .mc-hero-text,
-.store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero .mc-hero-stats,
-.store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero .mc-hero-stats strong { color: var(--mc-on-band); }
+.store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero .mc-hero-stats strong { color: var(--mc-ink); }
+.store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero .mc-hero-text { color: var(--mc-ink-2); }
+.store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero .mc-hero-stats { color: var(--mc-muted); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-cats,
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-offers,
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-trust,
@@ -874,6 +901,9 @@
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-foot { background: var(--mc-surface); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-cta { background: var(--mc-soft); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-shop-nav { background: var(--mc-surface); }
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-ann { background: var(--mc-soft); color: var(--mc-ink); }
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-ann-item,
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-ann-item .icon { color: var(--mc-ink); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-shop-nav-links a { color: var(--mc-muted); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-shop-nav-links a.is-current { color: var(--mc-ink); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-top {
@@ -938,6 +968,7 @@
   }
   /* La foto entera dentro de la tarjeta, sin recortes. */
   .store-page[data-template='mercado'] .mc-card .tpc-media { --tpc-fit: contain; }
+  .store-page[data-template='mercado'] .mc-catalog .rz-cat-card .tpc-media { --tpc-fit: contain; }
   /* El tema móvil "compacto" pone la tarjeta en fila: acá manda la columna. */
   .store-page[data-template='mercado'][data-st-card='compact'] .tpc { flex-direction: column; align-items: stretch; }
   .store-page[data-template='mercado'][data-st-card='compact'] .tpc-media { width: 100%; }
@@ -954,9 +985,12 @@
 
 @media (max-width: 560px) {
   .store-page[data-template='mercado'] { --mc-gutter: 14px; }
+  /* Cinco secciones entran sin cortar "Contacto" en 390 px. */
+  .store-page[data-template='mercado'] .sp-shop-nav-links a { padding: 10px 8px; font-size: 12px; }
   .store-page[data-template='mercado'] .mc-hero { padding-block: 20px 26px; }
   .store-page[data-template='mercado'] .mc-hero-art { min-height: 210px; }
   .store-page[data-template='mercado'] .mc-hero-card { width: 88%; margin: 18px auto; }
+  .store-page[data-template='mercado'] .mc-hero-media { aspect-ratio: 4 / 3; }
   .store-page[data-template='mercado'] .mc-cats-rail { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
   .store-page[data-template='mercado'] .mc-cat-media { width: 56px; height: 56px; }
   .store-page[data-template='mercado'] .mc-cat { padding: 8px 2px; }

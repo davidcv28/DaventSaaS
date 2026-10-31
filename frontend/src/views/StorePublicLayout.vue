@@ -113,7 +113,9 @@ const custom = computed(() => {
   merged.layout_config = Object.keys(savedLayout).length || Object.keys(baseLayout).length
     ? { ...baseLayout, ...savedLayout }
     : {}
-  if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
+  // Mercado (Bazar) trae su propia piel: sin tema elegido no se le aplica la
+  // paleta neutra del estilo base, que le pisaba el amarillo/azul firma.
+  if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens && merged.template !== 'mercado') merged.site_theme = style.tokens
   return merged
 })
 //El documento del diseño se sirve desde la base: logo/portada subidos en
@@ -285,9 +287,13 @@ watch(effectiveSkin, (family) => {
 // el visitante puede alternarlo y su elección queda en localStorage
 // (clave por tienda). El valor se lee en setup — antes del primer paint —
 // así la página no arranca en claro y salta a oscuro.
-const prefersDark = typeof window !== 'undefined' && window.matchMedia
-  ? window.matchMedia('(prefers-color-scheme: dark)').matches
-  : false
+// Mercado (Bazar) no hereda la preferencia del sistema: el modo noche lo
+// decide el visitante desde el interruptor (o el tema fijado por la tienda).
+const prefersDark = computed(() => (
+  typeof window !== 'undefined' && window.matchMedia && pageTemplate.value !== 'mercado'
+    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+    : false
+))
 function readVisitorThemeForStore() {
   return readVisitorTheme(typeof localStorage !== 'undefined' ? localStorage : null, slug.value)
 }
@@ -301,7 +307,7 @@ const pageTheme = computed(() => resolveStoreTheme({
   studioView: studioMode.value && Boolean(studioViewMode.value),
   visitor: visitorTheme.value,
   storeDefault: custom.value.theme,
-  prefersDark
+  prefersDark: prefersDark.value
 }))
 // Interruptor de noche: lo habilita el negocio (theme_toggle). Payloads
 // viejos sin el campo conservan la regla anterior (sin diseño avanzado el

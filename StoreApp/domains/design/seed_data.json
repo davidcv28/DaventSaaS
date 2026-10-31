@@ -10,8 +10,8 @@
       "page_theme": "light",
       "tokens": {
         "palette": {
-          "primary": "#3483fa",
-          "secondary": "#2968c8",
+          "primary": "#2563eb",
+          "secondary": "#1d4ed8",
           "accent": "#ffe600",
           "bg": "#ebebeb",
           "surface": "#ffffff",
@@ -602,8 +602,8 @@
         "accent": "#ffe600",
         "palette": {
           "accent": "#ffe600",
-          "primary": "#3483fa",
-          "secondary": "#2968c8",
+          "primary": "#2563eb",
+          "secondary": "#1d4ed8",
           "bg": "#ebebeb",
           "surface": "#ffffff",
           "text": "#333333",

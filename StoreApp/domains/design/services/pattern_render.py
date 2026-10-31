@@ -304,7 +304,9 @@ def _contrast_ink(value):
     r, g, b = (int(digits[i:i + 2], 16) / 255 for i in (0, 2, 4))
     linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in (r, g, b)]
     luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
-    return '#191611' if luminance > 0.42 else '#FFFDF8'
+    #Umbral AA real para texto blanco (ratio 4.5): L = 0.1833. Con 0.42
+    #quedaban acentos medios (p. ej. #3483FA) con blanco a 3.6:1.
+    return '#191611' if luminance > 0.1833 else '#FFFDF8'
 
 
 def theme_css(customization, pattern = None):
@@ -314,13 +316,24 @@ def theme_css(customization, pattern = None):
     solo se traducen a custom properties.
     """
     style = None
+    palette = {}
     if customization is not None:
-        style = customization.site_theme.get('style') if isinstance(customization.site_theme, dict) else None
+        site_theme = customization.site_theme if isinstance(customization.site_theme, dict) else {}
+        style = site_theme.get('style')
+        if isinstance(site_theme.get('palette'), dict):
+            palette = site_theme['palette']
     effects = {}
     if isinstance(style, dict) and isinstance(style.get('effects'), dict):
         effects = style['effects']
     tokens = pattern.tokens if pattern is not None and isinstance(pattern.tokens, dict) else {}
-    color = _text(getattr(customization, 'accent_custom', ''), 7) or tokens.get('accent') or effects.get('accent') or ''
+    #El acento del panel de Diseño manda sobre el del estilo y el del patrón.
+    color = (
+        _text(getattr(customization, 'accent_custom', ''), 7)
+        or _text(palette.get('accent'), 7)
+        or tokens.get('accent')
+        or effects.get('accent')
+        or ''
+    )
     vars_ = {
         '--ds-radius': RADIUS_MAP.get(effects.get('radius', ''), ''),
         '--ds-radius-btn': BUTTON_MAP.get(effects.get('button_shape', ''), ''),
@@ -332,10 +345,18 @@ def theme_css(customization, pattern = None):
         '--ds-accent': color if str(color).startswith('#') else '',
         '--ds-accent-ink': _contrast_ink(color),
     }
+    #Superficies, bordes y texto del tema aplicado: la paleta del panel de
+    #Diseño manda sobre los effects del estilo. Sin paleta, la hoja del
+    #diseño usa su propia piel (fallback en CSS).
     for key in ('primary', 'secondary', 'bg', 'surface', 'text', 'muted', 'border', 'success', 'danger'):
-        value = effects.get(key)
-        if isinstance(value, str) and value.startswith('#'):
+        value = _text(palette.get(key), 7) or _text(effects.get(key), 7)
+        if value.startswith('#'):
             vars_[f'--ds-{key}'] = value
+    #Texto legible sobre cada relleno de marca (mismo criterio que --st-*).
+    for key in ('primary', 'secondary', 'success'):
+        fill = vars_.get(f'--ds-{key}')
+        if fill:
+            vars_[f'--ds-{key}-ink'] = _contrast_ink(fill)
     body = ''.join(f'{name}:{value};' for name, value in vars_.items() if value)
     return f':root{{{body}}}' if body else ''
 

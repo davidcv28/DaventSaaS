@@ -52,12 +52,14 @@
     var st = document.createElement('style')
     st.textContent =
       '.ds-theme-toggle{margin-inline-start:auto;display:inline-grid;place-items:center;flex:none;' +
-      'width:38px;height:38px;padding:0;border-radius:999px;border:1px solid currentColor;' +
+      'width:44px;height:44px;padding:0;border-radius:999px;border:1px solid currentColor;' +
       'background:transparent;color:inherit;opacity:.72;cursor:pointer;' +
       'transition:opacity .18s,transform .18s,background .18s}' +
       '.ds-theme-toggle:hover{opacity:1;transform:translateY(-1px);' +
       'background:color-mix(in srgb,currentColor 10%,transparent)}' +
-      '.ds-theme-toggle:focus-visible{outline:2px solid currentColor;outline-offset:2px}'
+      '.ds-theme-toggle:focus-visible{outline:2px solid currentColor;outline-offset:2px}' +
+      '@media (prefers-reduced-motion:reduce){.ds-theme-toggle{transition:none}' +
+      '.ds-theme-toggle:hover{transform:none}}'
     document.head.appendChild(st)
     themeToggle = document.createElement('button')
     themeToggle.type = 'button'
