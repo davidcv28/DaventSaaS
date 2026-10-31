@@ -53,7 +53,7 @@ BASE_STYLE = {
     'duration'      :   '480ms',
     'icons'         :   {'style': 'line', 'stroke': '1.5', 'size': '24', 'corners': 'rounded'},
 }
-DEFAULT_PATTERN     =   'raiz'
+DEFAULT_PATTERN     =   'mercado'
 DEFAULT_STYLE       =   BASE_STYLE['slug']
 
 #=========================================
