@@ -110,6 +110,9 @@ class Command(BaseCommand):
                     'tokens'        :   pattern.get('tokens') or {},
                     'tags'          :   pattern.get('tags') or [],
                     'preview'       :   pattern.get('preview', ''),
+                    #Estilo firma del patrón (FK opcional): permite que el
+                    #documento use `data-ds-style` aun sin estilo elegido.
+                    'style'         :   DesignStyle.objects.filter(slug = pattern.get('style')).first() if pattern.get('style') else None,
                     'position'      :   position,
                 },
             )

@@ -397,9 +397,14 @@ def render_store_pattern(store, customization = None):
     html = pattern.render(context, raw = raw)
     from StoreApp.domains.catalog.models import Product
 
+    site_theme = customization.site_theme if customization is not None and isinstance(customization.site_theme, dict) else {}
+    style = site_theme.get('style') if isinstance(site_theme.get('style'), dict) else {}
     return {
         'slug': pattern.slug,
         'nombre': pattern.nombre,
+        #Estilo elegido (DesignStyle.slug): el documento lo expone como
+        #`data-ds-style` para que la piel y los menús móviles varíen por estilo.
+        'style': str(style.get('id') or (pattern.style.slug if pattern.style_id else '')),
         #Un patrón sin variables declaradas todavía es demo estático: la
         #web publicada sigue con la plantilla Vue hasta convertirlo.
         'ready': bool(pattern.variables),

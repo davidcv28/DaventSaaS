@@ -575,7 +575,7 @@ class StoreViewSet(StoreBaseViewSet):
             surface         =   'landing'
         html                =   pattern_document(
             data['html'], data.get('css') or '', theme, surface,
-            request.query_params.get('preview') or '',
+            request.query_params.get('preview') or '', data.get('style') or '',
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default

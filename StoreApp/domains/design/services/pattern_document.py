@@ -81,7 +81,7 @@ BRIDGE_SCRIPT = Path(__file__).with_name('pattern_bridge.js').read_text(encoding
 BRIDGE_URL = '../bridge.js/'
 
 
-def pattern_document(html, css, theme, surface, preview = ''):
+def pattern_document(html, css, theme, surface, preview = '', style = ''):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -93,8 +93,11 @@ def pattern_document(html, css, theme, surface, preview = ''):
     script = f'../script.js/?{urlencode(query)}'
     html = INLINE_SCRIPT_RE.sub('', html or '')
     html = INLINE_HANDLER_RE.sub('', html)
+    #Solo slug ASCII: el atributo lo escriben selectores CSS, nunca HTML.
+    style = re.sub(r'[^a-z0-9-]', '', str(style or '').lower())[:80]
+    style_attr = f' data-ds-style="{style}"' if style else ''
     return (
-        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}">'
+        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'<style>html,body{{margin:0}}{css}{SURFACE_CSS}</style></head><body>'

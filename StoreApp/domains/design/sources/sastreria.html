@@ -217,6 +217,106 @@
   .reveal{opacity:0;transform:translateY(16px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
   .reveal.on{opacity:1;transform:none}
 
+  /* ==========================================================================
+     MENÚS MÓVILES POR ESTILO (data-ds-style del documento)
+     - sastreria: tab bar inferior + hoja, calcada del dashboard.
+     - sastreria-noche: píldora flotante + hoja a pantalla completa.
+     - sastreria-cruda: hamburguesa + drawer lateral con índice.
+     ========================================================================== */
+  .m-burger,.m-tabs,.m-scrim,.m-sheet{display:none}
+  .m-burger{place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);cursor:pointer}
+  .m-burger-lines,.m-burger-lines::before,.m-burger-lines::after{display:block;width:18px;height:1.5px;background:currentColor;content:""}
+  .m-burger-lines{position:relative}
+  .m-burger-lines::before{position:absolute;top:-5px;left:0}
+  .m-burger-lines::after{position:absolute;top:5px;left:0}
+
+  @media(max-width:680px){
+    html[data-ds-style] .top-nav{display:none}
+    html[data-ds-style] .top-in{flex-wrap:nowrap}
+    html[data-ds-style] .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
+    html[data-ds-style] .top-meta{display:none}
+
+    /* Hoja compartida: panel deslizante. */
+    html[data-ds-style] .m-sheet{
+      display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
+      left:0;right:0;bottom:0;max-height:min(78dvh,560px);
+      background:var(--card);color:var(--ink);border-top:1px solid var(--line);
+      transform:translateY(102%);transition:transform .3s var(--ease),visibility .3s;
+      box-shadow:0 -18px 50px -18px rgba(0,0,0,.45);
+    }
+    html[data-ds-style] .m-sheet.open{visibility:visible;transform:none}
+    html[data-ds-style] .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px solid var(--line)}
+    html[data-ds-style] .m-grab{justify-self:center;width:38px;height:4px;border-radius:4px;background:var(--line)}
+    html[data-ds-style] .m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
+    html[data-ds-style] .m-sheet-brand .mark.sm{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--ink);border-radius:50%;font:500 12px var(--display)}
+    html[data-ds-style] .m-sheet-brand strong{font:500 16px var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    html[data-ds-style] .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:var(--paper);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+    html[data-ds-style] .m-sheet-nav{display:grid;gap:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto}
+    html[data-ds-style] .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:15px}
+    html[data-ds-style] .m-sheet-nav a span:last-child{font:500 9.5px var(--mono);letter-spacing:.14em;color:var(--muted)}
+    html[data-ds-style] .m-sheet-nav a:hover{color:var(--leather)}
+    html[data-ds-style] .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(8,7,6,.55)}
+    html[data-ds-style].m-lock,html[data-ds-style].m-lock body{overflow:hidden}
+
+    /* 01 · Sastrería: tab bar inferior del dashboard (4 destinos). */
+    html[data-ds-style='sastreria'] body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+    html[data-ds-style='sastreria'] .m-tabs{
+      position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
+      background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(14px) saturate(1.3);
+      border-top:1px solid var(--line);
+      padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+    }
+    html[data-ds-style='sastreria'] .m-tab{
+      position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      min-height:52px;padding:0 4px;border:0;border-radius:12px;background:none;color:var(--muted);
+      font:600 10.5px var(--body);text-align:center;text-decoration:none;cursor:pointer;
+    }
+    html[data-ds-style='sastreria'] .m-tab svg{transition:transform .2s}
+    html[data-ds-style='sastreria'] .m-tab:hover{color:var(--ink)}
+    html[data-ds-style='sastreria'] .m-tab.is-on{color:var(--leather)}
+    html[data-ds-style='sastreria'] .m-tab.is-on::before{content:"";position:absolute;top:2px;left:50%;width:18px;height:3px;border-radius:3px;background:var(--leather);transform:translateX(-50%)}
+    html[data-ds-style='sastreria'] .m-tab:active{background:var(--card)}
+
+    /* 02 · Noche: píldora flotante y hoja a pantalla completa. */
+    html[data-ds-style='sastreria-noche'] body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+    html[data-ds-style='sastreria-noche'] .m-tabs{
+      position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));z-index:68;display:flex;align-items:center;gap:4px;
+      transform:translateX(-50%);padding:6px;border-radius:999px;background:var(--ink);color:var(--paper);
+      box-shadow:0 16px 34px -18px rgba(0,0,0,.65);
+    }
+    html[data-ds-style='sastreria-noche'] .m-tab{
+      display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;min-height:48px;padding:5px 10px;
+      border:0;border-radius:999px;background:none;color:color-mix(in srgb,var(--paper) 72%,transparent);
+      font:600 9.5px var(--mono);letter-spacing:.06em;text-decoration:none;cursor:pointer;
+    }
+    html[data-ds-style='sastreria-noche'] .m-tab.is-on{background:var(--leather);color:var(--on-leather)}
+    html[data-ds-style='sastreria-noche'] .m-sheet{
+      left:0;right:0;top:0;bottom:0;max-height:none;border:0;border-radius:0;background:var(--ink);color:var(--paper);
+      transform:translateY(-100%);
+    }
+    html[data-ds-style='sastreria-noche'] .m-sheet.open{transform:none}
+    html[data-ds-style='sastreria-noche'] .m-sheet-head{border-bottom-color:color-mix(in srgb,var(--paper) 18%,transparent)}
+    html[data-ds-style='sastreria-noche'] .m-sheet-brand .mark.sm{border-color:var(--paper)}
+    html[data-ds-style='sastreria-noche'] .m-sheet-nav a{border-bottom-color:color-mix(in srgb,var(--paper) 16%,transparent);color:var(--paper)}
+    html[data-ds-style='sastreria-noche'] .m-sheet-nav a span:last-child{color:color-mix(in srgb,var(--paper) 55%,transparent)}
+    html[data-ds-style='sastreria-noche'] .m-close{background:color-mix(in srgb,var(--paper) 12%,transparent);color:var(--paper)}
+
+    /* 03 · Cruda: hamburguesa + drawer lateral numerado. */
+    html[data-ds-style='sastreria-cruda'] .m-burger{display:grid;order:2;margin-inline-start:auto}
+    html[data-ds-style='sastreria-cruda'] .top-in .ds-theme-toggle{order:3;margin-inline-start:8px}
+    html[data-ds-style='sastreria-cruda'] .m-sheet{
+      left:0;right:auto;top:0;bottom:0;width:min(84vw,360px);max-height:none;border:0;border-right:1px solid var(--line);
+      border-radius:0;transform:translateX(-102%);
+    }
+    html[data-ds-style='sastreria-cruda'] .m-sheet.open{transform:none}
+    html[data-ds-style='sastreria-cruda'] .m-sheet-nav{padding-top:16px}
+    html[data-ds-style='sastreria-cruda'] .m-sheet-nav a{font:500 17px var(--display);border-bottom-color:var(--line)}
+    html[data-ds-style='sastreria-cruda'] .m-sheet-nav a span:last-child{font:600 10px var(--mono);color:var(--leather)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html[data-ds-style] .m-sheet{transition:none}
+  }
+
   /* Modo noche real. */
   html[data-ds-theme="dark"]{
     color-scheme:dark;
@@ -307,6 +407,9 @@
       <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
       <span class="brand-copy"><strong>{{store_name}}</strong><small>{{store_location}}</small></span>
     </a>
+    <button class="m-burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="m-sheet" data-m-open>
+      <span class="m-burger-lines" aria-hidden="true"></span>
+    </button>
     <nav class="top-nav" aria-label="Secciones">
       <a href="#inicio" data-ds-route="home"><i>01</i> Inicio</a>
       <a href="#catalogo" data-ds-route="catalog"><i>02</i> Catálogo</a>
@@ -315,6 +418,44 @@
     <div class="top-meta">{{store_hours}}</div>
   </div>
 </header>
+
+<nav class="m-tabs" aria-label="Secciones principales">
+  <a class="m-tab" href="#inicio" data-ds-route="home">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    <span>Inicio</span>
+  </a>
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
+    <span>Catálogo</span>
+  </a>
+  <a class="m-tab" href="#servicios" data-ds-route="services">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
+    <span>Servicios</span>
+  </a>
+  <button class="m-tab" type="button" aria-expanded="false" aria-controls="m-sheet" data-m-open>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>Más</span>
+  </button>
+</nav>
+
+<div class="m-scrim" data-m-close aria-hidden="true"></div>
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+  <div class="m-sheet-head">
+    <span class="m-grab" aria-hidden="true"></span>
+    <div class="m-sheet-brand">
+      <span class="mark sm">{{store_initial}}</span>
+      <strong>{{store_name}}</strong>
+    </div>
+    <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
+  </div>
+  <nav class="m-sheet-nav" aria-label="Todas las secciones">
+    <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
+    <a href="#servicios" data-ds-route="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
+    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
+  </nav>
+</div>
 
 <div data-surface="landing">
   <section class="hero" id="inicio">
@@ -444,6 +585,38 @@
 
 <script>
   (function () {
+    var sheet = document.getElementById('m-sheet')
+    if (sheet) {
+      var scrim = document.querySelector('.m-scrim')
+      var openers = [].slice.call(document.querySelectorAll('[data-m-open]'))
+      var closers = [].slice.call(document.querySelectorAll('[data-m-close]'))
+      function setOpen(open) {
+        sheet.classList.toggle('open', open)
+        if (scrim) scrim.classList.toggle('open', open)
+        openers.forEach(function (b) { b.setAttribute('aria-expanded', open ? 'true' : 'false') })
+        document.documentElement.classList.toggle('m-lock', open)
+      }
+      openers.forEach(function (b) {
+        b.addEventListener('click', function () { setOpen(!sheet.classList.contains('open')) })
+      })
+      closers.forEach(function (el) { el.addEventListener('click', function () { setOpen(false) }) })
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false) })
+    }
+
+    // Pestaña activa de la barra móvil (el host cambia data-ds-surface).
+    function paintTabs() {
+      var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing'
+      ;[].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function (tab) {
+        var route = tab.getAttribute('data-ds-route')
+        var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services')
+        tab.classList.toggle('is-on', on)
+        if (on) tab.setAttribute('aria-current', 'page')
+        else tab.removeAttribute('aria-current')
+      })
+    }
+    paintTabs()
+    new MutationObserver(paintTabs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ds-surface'] })
+
     var nodes = document.querySelectorAll('.reveal')
     if (!nodes.length || !('IntersectionObserver' in window)) return
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
