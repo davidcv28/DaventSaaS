@@ -546,6 +546,12 @@ const nextStepIdx = computed(() => nextSteps.value.findIndex((s) => !s.done))
 const nextStep = computed(() => (nextStepIdx.value >= 0 ? nextSteps.value[nextStepIdx.value] : null))
 const pendingSteps = computed(() => nextSteps.value.filter((s) => !s.done))
 
+// Primera vez en el panel (todavía sin link público): la portada se arma
+// como bienvenida guiada — tres pasos, un solo CTA — y esconde los paneles
+// que aún no tienen datos (números en cero y actividad vacía).
+const firstRun = computed(() => !store.hasStore)
+const welcomeSteps = computed(() => nextSteps.value.slice(0, 3))
+
 // --- "Tu negocio hoy": alertas, números con contexto y actividad -----------
 
 // Cola de alertas priorizada: una sola franja visible, el resto se despliega
@@ -3050,7 +3056,7 @@ async function changePassword() {
       <div class="page-head ov-head">
         <div>
           <h1>{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></h1>
-          <p>Tu negocio, de un vistazo.</p>
+          <p>{{ firstRun ? 'Este es tu panel: acá vas a ver tu web, tus productos y tus visitas. Empecemos.' : 'Tu negocio, de un vistazo.' }}</p>
         </div>
         <div v-if="billing.hasSubscription && store.hasStore" class="ov-actions">
           <button class="btn btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="16" /> Editar mi web</button>
@@ -3115,11 +3121,32 @@ async function changePassword() {
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
-      <div class="today">
+      <div class="today" :class="{ 'first-run': firstRun }">
         <!-- Una sola decisión principal: el próximo paso de la puesta en marcha -->
-        <div class="card next-do">
-          <span class="next-do-tag"><AppIcon name="sparkles" :size="13" /> Qué hacer ahora</span>
-          <template v-if="nextStep">
+        <div class="card next-do" :class="{ 'first-run': firstRun }">
+          <span class="next-do-tag"><AppIcon name="sparkles" :size="13" /> {{ firstRun ? 'Bienvenido a DAVENT' : 'Qué hacer ahora' }}</span>
+          <template v-if="firstRun">
+            <h2>Tu tienda online, en tres pasos</h2>
+            <p>Reservá tu link, elegí un plan y cargá tus primeros productos. Te acompañamos en cada paso y podés volver a esta guía cuando quieras.</p>
+            <ol class="first-steps">
+              <li v-for="(s, i) in welcomeSteps" :key="s.title" :class="{ done: s.done }">
+                <span class="first-steps-num" aria-hidden="true">
+                  <AppIcon v-if="s.done" name="check" :size="13" />
+                  <template v-else>{{ i + 1 }}</template>
+                </span>
+                <span class="first-steps-txt"><strong>{{ s.title }}</strong><small>{{ s.text }}</small></span>
+              </li>
+            </ol>
+            <div class="first-cta">
+              <button type="button" class="btn btn-auto next-do-cta" @click="section = 'store'">
+                Empezar ahora <AppIcon name="arrow-right" :size="16" />
+              </button>
+              <button type="button" class="btn ghost btn-auto" @click="tourOpen = true">
+                <AppIcon name="graduation-cap" :size="16" /> Ver la guía
+              </button>
+            </div>
+          </template>
+          <template v-else-if="nextStep">
             <h2>{{ nextStep.title }}</h2>
             <p>{{ nextStep.text }}</p>
             <button type="button" class="btn btn-auto next-do-cta" @click="nextStep.run ? nextStep.run() : (section = nextStep.target)">
@@ -3171,7 +3198,7 @@ async function changePassword() {
         </div>
 
         <!-- Números con contexto: valor + variación + tendencia de 30 días -->
-        <div class="stats" aria-label="Números de tu negocio">
+        <div v-if="!firstRun" class="stats" aria-label="Números de tu negocio">
           <button type="button" class="stat stat-link" @click="section = 'catalogs'">
             <span class="stat-icon"><AppIcon name="package" :size="20" /></span>
             <div class="stat-body">
@@ -3216,7 +3243,7 @@ async function changePassword() {
         </div>
 
         <!-- Checklist de activación: solo lo que falta, sin ruido -->
-        <div class="card steps-card" :class="{ complete: !pendingSteps.length }">
+        <div v-if="!firstRun" class="card steps-card" :class="{ complete: !pendingSteps.length }">
           <h3><AppIcon name="checklist" :size="18" /> Puesta en marcha <span class="steps-count">{{ stepsDone }} de {{ nextSteps.length }}</span></h3>
           <div class="steps-bar" role="progressbar" aria-label="Pasos completados" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
           <ol v-if="pendingSteps.length" class="steps-list">
@@ -3230,7 +3257,7 @@ async function changePassword() {
         </div>
 
         <!-- Actividad reciente accionable + espacio de fotos -->
-        <div class="card feed-card">
+        <div v-if="!firstRun" class="card feed-card">
           <h3><AppIcon name="bell" :size="18" /> Actividad reciente</h3>
           <ul v-if="activityFeed.length" class="feed-list">
             <li v-for="(a, i) in activityFeed" :key="i">

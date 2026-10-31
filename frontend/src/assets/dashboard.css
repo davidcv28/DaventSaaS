@@ -859,6 +859,42 @@
 .next-do-cta { min-height: 46px; padding: 10px 20px; font-size: 15px; }
 .next-do-step { display: block; margin-top: 12px; font-size: 12px; color: var(--muted); }
 
+/* Primera vez en el panel: bienvenida guiada. Un solo CTA, tres pasos y
+   aire de marca; los paneles sin datos no se muestran (ver .today.first-run). */
+.today.first-run { grid-template-areas: 'next wp'; }
+.next-do.first-run {
+  padding: 26px 28px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--brand-500) 18%, transparent), transparent 62%),
+    linear-gradient(135deg, var(--brand-soft), transparent 72%),
+    var(--card);
+}
+.next-do.first-run::after {
+  content: ''; position: absolute; right: -48px; top: -48px; width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-500) 26%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.next-do.first-run > * { position: relative; z-index: 1; }
+.next-do.first-run h2 { font-size: 23px; }
+.first-steps { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 8px; }
+.first-steps li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line-soft); border-radius: 12px; background: color-mix(in srgb, var(--card) 72%, transparent); }
+.first-steps li.done { border-color: var(--ok-line); background: var(--ok-bg); }
+.first-steps-num { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; font-size: 12px; font-weight: 700; }
+.first-steps li.done .first-steps-num { background: var(--ok); }
+.first-steps-txt { display: grid; gap: 1px; min-width: 0; }
+.first-steps-txt strong { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.first-steps-txt small { font-size: 12px; color: var(--muted); }
+.first-cta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 960px) {
+  .today.first-run { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'next' 'wp'; }
+}
+@media (max-width: 640px) {
+  .next-do.first-run { padding: 20px; }
+  .next-do.first-run h2 { font-size: 20px; }
+  .first-cta { flex-direction: column; align-items: stretch; }
+  .first-cta .btn { width: 100%; justify-content: center; }
+}
+
 /* Vista previa viva: mini navegador con el mock real del diseño. */
 .wp-card h3 { margin-bottom: 12px; }
 .wp-frame { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--sunk); }
