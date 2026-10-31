@@ -32,6 +32,26 @@
 - Tier declarado (`base`/`plus`/`advanced`); si es premium, el saneo recorta paleta
   igual que un diseño elegido a mano.
 - `preview` con imagen o `has_markup` + `iframe srcdoc` sandbox en "Ver este diseño".
+- **Alcance obligatorio**: el diseño se implementa siempre para las **tres superficies
+  del usuario**: landing page, catálogo y servicios. No se entrega con una sola vista
+  resuelta ni se reusa la vista de otro diseño sin adaptarla; las tres salen del mismo
+  `layout_config` y comparten piel, pero con composición propia en cada una.
+
+## 2.1 Anti-repetición (obligatorio)
+
+- Prohibido repetir patrones de diseño entre plantillas: si dos diseños comparten
+  estructura de secciones, grilla o hero, uno se rehace.
+- **El menú debe ser distinto en cada diseño**: no se repite el mismo header/nav
+  (posición, alto, alineación, tipografía, CTA, comportamiento en móvil). Alternar
+  entre: barra superior clásica, header partido en dos filas, nav lateral fija,
+  menú flotante tipo píldora, header centrado editorial, barra inferior en móvil,
+  menú a pantalla completa, nav con índice numerado, etc.
+- Prohibido generar plantillas genéricas o "de plantilla": nada de hero centrado +
+  3 cards + testimonios + footer idéntico al anterior. Cada diseño necesita una idea
+  visual reconocible (editorial, técnica, brutalista, catálogo tipo revista, tienda
+  inmersiva…).
+- Antes de crear: revisar los diseños existentes (`/api/design/patterns/`,
+  `StoreApp/domains/design/sources/`) y anotar en qué se diferencia el nuevo.
 
 ## 3. Modo noche
 
@@ -79,6 +99,20 @@
   SVG, marquesina, cita editorial, chips, divisores, textura o bloque CTA secundario.
 - La decoración nunca tapa contenido ni reduce contraste.
 
+## 8.1 Animaciones de fondo / cintas loop (preguntar siempre)
+
+- **Obligatorio preguntar al usuario antes de cerrar el diseño**: "¿querés animaciones
+  detrás del fondo o cintas en loop para decorar?" Se espera respuesta explícita; no se
+  asume ni se omite la pregunta.
+- Si acepta, implementar con `IntersectionObserver` (pausa fuera de viewport), `transform`
+  y `opacity` solamente, `will-change` acotado, `pointer-events: none`, `aria-hidden="true"`,
+  y apagado total con `prefers-reduced-motion`.
+- Opciones válidas: gradiente malla animado, campo de partículas sutil, cinta marquesina
+  (texto o logos), línea/láser en movimiento, grano o dither animado, blobs orgánicos,
+  patrón SVG en loop. Elegir la que corresponda a la identidad del diseño, no una por defecto.
+- Nunca animar el fondo completo con JS por frame si alcanza CSS; nunca superponer la
+  animación sobre texto sin capa de contraste.
+
 ## 9. Persistencia (obligatorio, mismo paso)
 
 1. `venv/Scripts/python.exe manage.py import_design_pattern --file <html> --slug <slug> --nombre "Nombre" [--style <slug>] [--accent #hex] [--fonts cuerpo,cabecera]`
@@ -92,6 +126,9 @@
 
 ## Checklist de cierre
 
+- [ ] Landing, catálogo y servicios implementados
+- [ ] Menú distinto al de las demás plantillas (sin patrones repetidos)
+- [ ] Preguntado al usuario por animaciones de fondo / cintas loop
 - [ ] Nombre y slug legales y únicos
 - [ ] Studio + Diseño + Diseño asistido funcionando
 - [ ] Toggle de modo noche real
