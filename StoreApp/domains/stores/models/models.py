@@ -121,6 +121,7 @@ class StoreCustomization(models.Model):
         ('outfit',               'Outfit'),
         ('plus-jakarta-sans',    'Plus Jakarta Sans'),
         #Fuentes de los diseños nuevos (alimentos/boutique/seguridad).
+        ('instrument-sans',      'Instrument Sans'),
         ('jost',                 'Jost'),
         ('barlow',               'Barlow'),
         ('barlow-condensed',     'Barlow Condensed'),

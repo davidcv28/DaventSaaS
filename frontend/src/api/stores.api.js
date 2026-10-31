@@ -914,7 +914,7 @@ export function storeFontFamily(nameFont) {
 // quedan para renderizar diseños guardados y tipografía propia de
 // plantillas — nunca para elección libre del usuario.
 export const STORE_FONT_GROUPS = [
-  { label: 'Sans serif',  keys: ['inter', 'roboto', 'open-sans', 'lato', 'montserrat', 'poppins', 'raleway', 'nunito', 'dm-sans', 'work-sans', 'rubik', 'manrope'] },
+  { label: 'Sans serif',  keys: ['inter', 'roboto', 'open-sans', 'lato', 'montserrat', 'poppins', 'raleway', 'nunito', 'dm-sans', 'work-sans', 'instrument-sans', 'rubik', 'manrope'] },
   { label: 'Serif',       keys: ['playfair-display', 'merriweather', 'lora'] },
   { label: 'Display',     keys: ['oswald', 'bebas-neue', 'anton'] },
   { label: 'Manuscritas', keys: ['dancing-script', 'pacifico'] },
