@@ -84,7 +84,7 @@ check('ignora secciones vacías', themeExplicitKeys({ containers: {} }).size ===
 check('null no cuenta como elegido', !themeExplicitKeys({ background: { value: null } }).has('background.value'))
 const full = themeToCssVars(partial)
 const only = pickThemeVars(full, keys)
-eq('filtra vars a los campos elegidos', Object.keys(only).sort(), ['--st-accent', '--st-radius'])
+eq('filtra vars a los campos elegidos', Object.keys(only).sort(), ['--st-accent', '--st-on-accent', '--st-radius'])
 eq('radius explícito llega', only['--st-radius'], '24px')
 eq('sin explícitas = set completo', Object.keys(pickThemeVars(full)).length, Object.keys(full).length)
 const attrsOnly = themeDataAttrs(partial, keys)

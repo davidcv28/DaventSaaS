@@ -5596,9 +5596,9 @@
           "bg": "#ebebeb",
           "surface": "#ffffff",
           "text": "#333333",
-          "muted": "#737373",
+          "muted": "#666666",
           "border": "#e6e6e6",
-          "success": "#00a650",
+          "success": "#007a3d",
           "danger": "#e53935"
         },
         "containers": {
@@ -5629,6 +5629,11 @@
           "reveal": "fade",
           "hover": "lift",
           "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
         }
       },
       "layout": {
@@ -7670,7 +7675,19 @@
         ]
       },
       "tokens": {
-        "accent": "#3483fa",
+        "accent": "#ffe600",
+        "palette": {
+          "accent": "#ffe600",
+          "primary": "#3483fa",
+          "secondary": "#2968c8",
+          "bg": "#ebebeb",
+          "surface": "#ffffff",
+          "text": "#333333",
+          "muted": "#666666",
+          "border": "#e6e6e6",
+          "success": "#007a3d",
+          "danger": "#e53935"
+        },
         "fonts": [
           "inter"
         ],
