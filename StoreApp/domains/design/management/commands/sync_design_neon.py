@@ -61,10 +61,14 @@ class Command(BaseCommand):
         patterns    =   list(queryset)
 
         #--all replica el catálogo completo de estilos; con --slug alcanza con
-        #los estilos referenciados por los patrones pedidos.
-        styles  =   list(DesignStyle.objects.all()) if options['all'] else [
-            pattern.style for pattern in patterns if pattern.style_id
-        ]
+        #los estilos referenciados por los patrones pedidos (FK directa y los
+        #que declaran el patrón en su propia FK: un diseño puede traer varios).
+        styles  =   list(DesignStyle.objects.all()) if options['all'] else list({
+            style.pk: style for style in [
+                *[pattern.style for pattern in patterns if pattern.style_id],
+                *DesignStyle.objects.filter(pattern__slug__in = slugs),
+            ]
+        }.values())
 
         icon_styles = list(DesignIconStyle.objects.all()) if options['all'] else [
             pattern.icon_style for pattern in patterns if pattern.icon_style_id

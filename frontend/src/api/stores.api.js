@@ -757,6 +757,7 @@ export const STORE_TEMPLATES = {
   indumentaria:{ label: 'Indumentaria',rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.' },
   boutique:    { label: 'Boutique',    rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
   atelier:     { label: 'Atelier',     rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#2D4A3E', desc: 'Indumentaria editorial: papel cálido, verde bosque, Bricolage y grilla de prendas con chips.' },
+  sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   mercado:     { label: 'Bazar',       rubro: 'general',      tier: 'plus',     defaultAccent: '#2563EB', desc: 'Marketplace: masthead amarillo, buscador, tarjetas blancas densas y precios con descuento.' },
   clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
   circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
@@ -773,6 +774,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',       templates: ['trama'] },
   { key: 'moda-pro',     label: 'Indumentaria', caption: 'Moda profesional',        templates: ['indumentaria'] },
   { key: 'atelier',      label: 'Indumentaria', caption: 'Editorial de temporada',   templates: ['atelier'] },
+  { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
   { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
   { key: 'boutique',     label: 'Boutique',     caption: 'Moda premium y deco',     templates: ['boutique'] },
   { key: 'clasico',      label: 'Clásico',      caption: 'Comercio y servicios',    templates: ['clasico'] },
@@ -790,6 +792,7 @@ export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.tem
 export const STORE_TEMPLATE_SKIN = {
   raiz: 'raiz', alimentos: 'alimentos', trama: 'indumentaria',
   indumentaria: 'indumentaria', boutique: 'boutique', atelier: 'atelier',
+  sastreria: 'sastreria',
   mercado: 'mercado',
   circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico'
 }
@@ -872,6 +875,7 @@ export const STORE_FONTS = {
   'merriweather':     { label: 'Merriweather',     family: "'Merriweather', Georgia, serif",      google: 'Merriweather:wght@400..800' },
   'lora':             { label: 'Lora',             family: "'Lora', Georgia, serif",              google: 'Lora:wght@400..700' },
   'fraunces':         { label: 'Fraunces',         family: "'Fraunces', Georgia, serif",          google: 'Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900' },
+  'instrument-sans':  { label: 'Instrument Sans',  family: "'Instrument Sans', system-ui, sans-serif", google: 'Instrument+Sans:ital,wght@0,400..700;1,400..700' },
   'cinzel':           { label: 'Cinzel',           family: "'Cinzel', Georgia, serif",            google: 'Cinzel:wght@400..800' },
   'pacifico':         { label: 'Pacifico',         family: "'Pacifico', cursive",                 google: 'Pacifico' },
   'dancing-script':   { label: 'Dancing Script',   family: "'Dancing Script', cursive",           google: 'Dancing+Script:wght@400..700' },

@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}} · Sastrería</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:var(--ds-bg,#F3EFE7);
+    --card:var(--ds-surface,#FBF8F2);
+    --ink:var(--ds-text,#1B1A17);
+    --ink-2:color-mix(in srgb,var(--ink) 82%,var(--paper));
+    --muted:var(--ds-muted,#6B665C);
+    --line:var(--ds-border,#D9D3C6);
+    --line-strong:color-mix(in srgb,var(--line) 62%,var(--ink));
+    --leather:var(--ds-accent,#6E4A2F);
+    --leather-deep:color-mix(in srgb,var(--leather) 78%,#000);
+    --on-leather:var(--ds-accent-ink,#FFFDF8);
+    --sage:var(--ds-success,#5E6B57);
+    --display:'Fraunces',Georgia,'Times New Roman',serif;
+    --body:'Instrument Sans','Helvetica Neue',system-ui,-apple-system,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+    --radius:var(--ds-radius,2px);
+    --radius-btn:var(--ds-radius-btn,2px);
+    --shadow:var(--ds-shadow,0 1px 0 rgba(27,26,23,.06));
+    --dur:560ms;
+    --ease:cubic-bezier(.2,.7,.2,1);
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font:15.5px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  img{max-width:100%}
+  img[src=""]{display:none}
+  a{color:inherit;text-decoration:none}
+  .shell{max-width:1180px;margin:0 auto;padding:0 32px}
+
+  /* Fondo sutil animado: dos capas de líneas de sastre que derivan muy
+     despacio. Solo transform/opacity, nunca tapa contenido. */
+  .backdrop{position:fixed;inset:-10%;z-index:0;pointer-events:none;overflow:hidden}
+  .backdrop::before,.backdrop::after{content:"";position:absolute;inset:-20%;will-change:transform}
+  .backdrop::before{
+    background:repeating-linear-gradient(90deg,transparent 0 118px,color-mix(in srgb,var(--line) 70%,transparent) 118px 119px);
+    opacity:.5;animation:drift-a 46s linear infinite;
+  }
+  .backdrop::after{
+    background:
+      radial-gradient(60% 50% at 82% 4%,color-mix(in srgb,var(--leather) 9%,transparent),transparent 70%),
+      repeating-linear-gradient(0deg,transparent 0 178px,color-mix(in srgb,var(--line) 45%,transparent) 178px 179px);
+    opacity:.6;animation:drift-b 62s linear infinite;
+  }
+  @keyframes drift-a{from{transform:translate3d(-38px,0,0)}to{transform:translate3d(38px,0,0)}}
+  @keyframes drift-b{from{transform:translate3d(0,-28px,0)}to{transform:translate3d(0,28px,0)}}
+  header,main,[data-surface],footer,.season{position:relative;z-index:1}
+
+  /* Cabecera partida: marca + índice numerado. */
+  .top{background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .top-in{display:flex;align-items:center;gap:26px;min-height:78px}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand .mark{position:relative;display:grid;place-items:center;flex:none;width:42px;height:42px;border:1px solid var(--ink);border-radius:50%;font:600 15px var(--display);overflow:hidden}
+  .brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--card)}
+  .brand-copy{display:grid;min-width:0;line-height:1.15}
+  .brand-copy strong{font:500 18px/1.1 var(--display);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-copy small{font:500 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top-nav{display:flex;align-items:stretch;gap:0;margin-left:auto;border-left:1px solid var(--line)}
+  .top-nav a{display:flex;align-items:baseline;gap:7px;padding:0 20px;min-height:78px;border-right:1px solid var(--line);font-size:13px;color:var(--ink-2);transition:background .2s,color .2s}
+  .top-nav a i{font:500 9.5px var(--mono);font-style:normal;letter-spacing:.08em;color:var(--muted)}
+  .top-nav a:hover{background:var(--card);color:var(--ink)}
+  html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"],
+  html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"],
+  html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{background:var(--ink);color:var(--paper)}
+  html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"] i,
+  html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"] i,
+  html[data-ds-surface="services"] .top-nav a[data-ds-route="services"] i{color:color-mix(in srgb,var(--paper) 62%,transparent)}
+  .top-meta{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .top-meta:empty{display:none}
+
+  /* Etiqueta vertical de temporada (escritorio). */
+  .season{position:fixed;left:12px;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;z-index:2;font:500 9.5px var(--mono);letter-spacing:.42em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+
+  /* Portada editorial asimétrica. */
+  .hero{padding:64px 0 0}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:64px;align-items:end}
+  .kicker{display:flex;align-items:center;gap:12px;margin:0 0 22px;font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--leather)}
+  .kicker::after{content:"";flex:1 1 auto;height:1px;background:var(--line-strong);max-width:120px}
+  .hero h1{margin:0;font:300 clamp(42px,6.2vw,86px)/.96 var(--display);letter-spacing:-.035em;text-wrap:balance}
+  .hero h1:empty{display:none}
+  .hero h1 em{font-style:italic;color:var(--leather)}
+  .lead{max-width:42ch;margin:24px 0 0;font-size:16.5px;color:var(--ink-2)}
+  .lead:empty{display:none}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 26px;border:1px solid var(--ink);border-radius:var(--radius-btn);font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;transition:background .2s,color .2s,transform .2s}
+  .btn-primary{background:var(--ink);color:var(--paper)}
+  .btn-primary:hover{background:var(--leather-deep);border-color:var(--leather-deep);color:var(--on-leather);transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--ink)}
+  .btn-ghost:hover{background:var(--card)}
+  .specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:38px 0 0;border-top:1px solid var(--line)}
+  .specs div{padding:14px 14px 0 0;min-width:0}
+  .specs div + div{padding-left:14px;border-left:1px solid var(--line)}
+  .specs dt{font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .specs dd{margin:4px 0 0;font-size:13.5px;overflow-wrap:anywhere}
+  .specs dd:empty{display:none}
+  .hero-media{position:relative;margin:0;min-height:440px;background:var(--card);border:1px solid var(--line)}
+  .hero-media img{width:100%;height:100%;min-height:440px;object-fit:cover;display:block;filter:saturate(.92)}
+  .hero-media:not(:has(img))::before{content:"{{store_initial}}";position:absolute;inset:0;display:grid;place-items:center;font:300 180px/1 var(--display);color:color-mix(in srgb,var(--ink) 8%,transparent)}
+  .hero-index{position:absolute;top:-1px;right:-1px;display:grid;place-items:center;width:64px;height:64px;background:var(--ink);color:var(--paper);font:500 13px var(--mono);letter-spacing:.06em}
+  .hero-note{position:absolute;left:-1px;bottom:-1px;right:88px;display:grid;gap:3px;padding:18px 20px;background:color-mix(in srgb,var(--card) 94%,transparent);border-top:1px solid var(--line);border-right:1px solid var(--line)}
+  .hero-note .tag{font:500 9px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--leather)}
+  .hero-note strong{font:500 16px var(--display)}
+  .hero-note span{font-size:12.5px;color:var(--muted)}
+  .hero-note span:empty{display:none}
+  .hero-note a{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--leather)}
+  .hero-note a:empty{display:none}
+
+  /* Muestrario de materiales: rellena el hueco bajo la portada. */
+  .swatches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:56px;border:1px solid var(--line);background:var(--line)}
+  .swatch{display:flex;align-items:center;gap:12px;padding:16px 18px;background:var(--card)}
+  .swatch .chip{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+  .swatch:nth-child(1) .chip{background:#D8CBB4}
+  .swatch:nth-child(2) .chip{background:#8C9A86}
+  .swatch:nth-child(3) .chip{background:#6E4A2F}
+  .swatch b{display:block;font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+  .swatch small{display:block;font-size:11.5px;color:var(--muted)}
+
+  /* Bandas editoriales. */
+  .band{padding:64px 0}
+  .band + .band{padding-top:0}
+  .head{display:flex;align-items:baseline;justify-content:space-between;gap:18px;padding-bottom:14px;border-bottom:1px solid var(--line-strong)}
+  .head h2{margin:0;font:300 clamp(28px,3.6vw,44px)/1 var(--display);letter-spacing:-.02em}
+  .head a,.head span{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--leather)}
+  .cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .ds-cat{display:inline-flex;align-items:center;padding:10px 18px;border:1px solid var(--line);border-radius:999px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);transition:border-color .2s,color .2s}
+  .ds-cat:hover{border-color:var(--leather);color:var(--leather)}
+  .cats:not(:has(.ds-cat)){display:none}
+
+  /* Vitrina en filas de sastre: imagen, ficha y precio alineados a la regla. */
+  .lookbook{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 40px;margin-top:8px;border-top:1px solid var(--line)}
+  .ds-product{min-width:0;border-bottom:1px solid var(--line)}
+  .ds-product-link{display:grid;grid-template-columns:132px minmax(0,1fr) auto;align-items:center;gap:18px;padding:18px 0;min-height:132px}
+  .ds-product-img{width:132px;height:164px;object-fit:cover;background:var(--card);border:1px solid var(--line)}
+  .ds-product-img.is-empty{display:grid;place-items:center}
+  .ds-product-img.is-empty::after{content:"✂";color:color-mix(in srgb,var(--ink) 22%,transparent);font-size:34px}
+  .ds-product-copy{display:grid;gap:5px;min-width:0}
+  .ds-product-name{margin:0;font:400 19px/1.2 var(--display);letter-spacing:-.01em;overflow-wrap:anywhere}
+  .ds-product-desc{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-product-desc:empty{display:none}
+  .ds-product-cat{grid-column:2;font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .ds-product-price{grid-column:3;grid-row:1 / span 2;align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font:500 17px var(--display);white-space:nowrap}
+  .ds-product-old{font:400 11px var(--mono);color:var(--muted);text-decoration:line-through}
+  .ds-product:hover .ds-product-img{border-color:var(--leather)}
+  .ds-product:hover .ds-product-name{color:var(--leather)}
+  .ds-empty{grid-column:1/-1;padding:26px 0;color:var(--muted);font-size:13.5px}
+
+  .editorial{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:start;padding:56px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .editorial .num{font:300 92px/1 var(--display);color:color-mix(in srgb,var(--ink) 12%,transparent)}
+  .editorial h2{margin:0 0 16px;font:300 clamp(26px,3vw,38px)/1.1 var(--display);letter-spacing:-.02em}
+  .editorial p{margin:0;max-width:52ch;color:var(--ink-2)}
+  .editorial p:empty{display:none}
+  .editorial ul{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+  .editorial li{display:flex;gap:12px;font-size:13.5px;color:var(--ink-2)}
+  .editorial li::before{content:"—";color:var(--leather)}
+
+  .trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line);background:var(--card)}
+  .trust-item{display:grid;gap:6px;padding:24px 22px;min-width:0}
+  .trust-item + .trust-item{border-left:1px solid var(--line)}
+  .trust-item b{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--leather)}
+  .trust-item strong{font:400 17px/1.25 var(--display)}
+  .trust-item span{font-size:12.5px;color:var(--muted)}
+
+  /* Catálogo y servicios: superficies propias. */
+  .cat-surface,.svc-surface{padding:48px 0 72px}
+  .cat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line-strong)}
+  .cat-head h1,.svc-head h1{margin:0;font:300 clamp(32px,4.4vw,56px)/1 var(--display);letter-spacing:-.03em}
+  .cat-head span{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .cat-tools{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px 22px;padding:18px 0 22px}
+  .cat-filters-panel{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;flex:1 1 520px;min-width:0}
+  .cat-filters{display:flex;flex-wrap:wrap;gap:8px}
+  .cat-price{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .cat-price input{width:92px;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink);font:400 13px var(--body)}
+  .cat-offers{display:inline-flex;align-items:center;gap:8px;min-height:40px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+  .cat-offers input{width:17px;height:17px;accent-color:var(--leather)}
+  .cat-clear{min-height:40px;padding:0 4px;border:0;background:transparent;color:var(--leather);font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+  .cat-sort{display:inline-flex;align-items:center;gap:9px;margin-left:auto;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .cat-sort select{font:400 12.5px var(--body);letter-spacing:0;text-transform:none;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink)}
+  .cat-filters-toggle{display:none;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink);font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+  .cat-filters-toggle[aria-expanded="true"]{border-color:var(--leather);color:var(--leather)}
+  .cat-surface .lookbook{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+  .svc-surface .svc-head{padding-bottom:14px;border-bottom:1px solid var(--line-strong)}
+  .svc-head p{margin:10px 0 0;max-width:54ch;font-size:13.5px;color:var(--muted)}
+  .svc-head p:empty{display:none}
+  .svc-body{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;align-items:start;margin-top:26px}
+  .ds-services-list{grid-column:1;display:grid;gap:0;margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+  .ds-service{display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;padding:20px 0;border-bottom:1px solid var(--line)}
+  .ds-service::before{counter-increment:svc;content:"0" counter(svc);font:500 11px var(--mono);color:var(--leather);letter-spacing:.1em;padding-top:4px}
+  .ds-services-list{counter-reset:svc}
+  .ds-service-name{font:400 19px/1.2 var(--display)}
+  .ds-service-desc{grid-column:2;font-size:12.5px;color:var(--muted)}
+  .ds-service-desc:empty{display:none}
+  .svc-body:empty::before{content:"Todavía no cargaste servicios: agregalos desde el panel y aparecen acá.";padding:22px;border:1px dashed var(--line);color:var(--muted);font-size:13.5px}
+  .svc-cta{grid-column:2;grid-row:1;position:sticky;top:24px;display:grid;gap:10px;padding:24px;border:0;background:var(--ink);color:var(--paper);font:600 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+  .svc-cta::before{content:"Pedido a medida";font:500 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:color-mix(in srgb,var(--paper) 60%,transparent)}
+  .svc-cta::after{content:"Escribinos por WhatsApp y coordinamos una primera consulta sin cargo.";font:400 12.5px/1.5 var(--body);letter-spacing:0;text-transform:none;color:color-mix(in srgb,var(--paper) 78%,transparent)}
+  .svc-cta:hover{background:var(--leather-deep);color:var(--on-leather)}
+
+  .foot{border-top:1px solid var(--line);padding:40px 0 34px}
+  .foot-name{margin:0 0 22px;font:300 34px/1 var(--display);letter-spacing:-.02em}
+  .foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;font-size:12.5px;color:var(--muted)}
+  .foot-grid span{display:block}
+  .foot-grid span:empty{display:none}
+  .foot-grid a{font-weight:600;color:var(--ink-2)}
+  .foot-legal{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);font:500 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .reveal.on{opacity:1;transform:none}
+
+  /* Modo noche real. */
+  html[data-ds-theme="dark"]{
+    color-scheme:dark;
+    --paper:#171614;--card:#211F1C;--ink:#F2EEE4;--ink-2:#D7D1C4;--muted:#A39C8D;
+    --line:#3A362F;--line-strong:#5A5348;
+    --leather:color-mix(in srgb,var(--ds-accent,#C08A5A) 82%,#F2EEE4);
+    --leather-deep:#8A623F;--on-leather:#171614;
+    --sage:#A9B79E;
+    --shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+  html[data-ds-theme="dark"] .backdrop::before{opacity:.26}
+  html[data-ds-theme="dark"] .backdrop::after{opacity:.34}
+  html[data-ds-theme="dark"] .top{background:color-mix(in srgb,var(--paper) 90%,transparent)}
+  html[data-ds-theme="dark"] .hero-media img{filter:saturate(.82) brightness(.92)}
+  html[data-ds-theme="dark"] .btn-primary{background:var(--ink);color:var(--paper)}
+  html[data-ds-theme="dark"] .btn-primary:hover{background:var(--leather);color:var(--on-leather);border-color:var(--leather)}
+  html[data-ds-theme="dark"] .svc-cta{background:var(--ink);color:var(--paper)}
+  html[data-ds-theme="dark"] .cat-sort select{color-scheme:dark}
+  html[data-ds-theme="dark"] .swatch .chip{border-color:color-mix(in srgb,var(--ink) 26%,transparent)}
+
+  @media(max-width:1024px){
+    .hero-grid{gap:40px}
+    .hero-media,.hero-media img{min-height:380px}
+    .top-nav a{padding:0 14px}
+    .season{display:none}
+    .svc-body{grid-template-columns:1fr}
+    .svc-cta{grid-column:1;grid-row:auto;position:static}
+  }
+  @media(max-width:860px){
+    .hero-grid{grid-template-columns:1fr;gap:34px}
+    .hero-media{min-height:340px}
+    .hero-media img{min-height:340px}
+    .lookbook,.cat-surface .lookbook{grid-template-columns:minmax(0,1fr)}
+    .editorial{grid-template-columns:1fr;gap:24px}
+    .trust{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .trust-item:nth-child(3){border-left:0;border-top:1px solid var(--line)}
+    .trust-item:nth-child(4){border-top:1px solid var(--line)}
+    .top-meta{display:none}
+  }
+  @media(max-width:680px){
+    .shell{padding:0 18px}
+    .top-in{min-height:64px;gap:12px;flex-wrap:wrap;padding:10px 0}
+    .brand-copy small{display:none}
+    .top-nav{order:3;flex:1 1 100%;margin-left:0;border-left:0;border-top:1px solid var(--line)}
+    .top-nav a{flex:1 1 0;justify-content:center;min-height:46px;padding:0 8px;font-size:12px;border-right:0;border-left:1px solid var(--line)}
+    .top-nav a:first-child{border-left:0}
+    .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
+    .hero{padding:40px 0 0}
+    .hero h1{font-size:clamp(38px,11vw,56px)}
+    .specs{grid-template-columns:1fr;gap:0}
+    .specs div{padding:12px 0;border-bottom:1px solid var(--line)}
+    .specs div + div{padding-left:0;border-left:0}
+    .swatches{grid-template-columns:1fr;margin-top:36px}
+    .band{padding:44px 0}
+    .head h2{font-size:clamp(26px,8vw,34px)}
+    .ds-product-link{grid-template-columns:104px minmax(0,1fr);gap:14px;min-height:0}
+    .ds-product-img{width:104px;height:132px}
+    .ds-product-price{grid-column:2;grid-row:auto;flex-direction:row;align-items:baseline;gap:8px;justify-content:flex-start;font-size:15px}
+    .ds-product-cat{grid-column:2}
+    .cat-tools{gap:10px}
+    .cat-filters-toggle{display:inline-flex;order:1}
+    .cat-sort{order:2;margin-left:auto}
+    .cat-filters-panel{display:none;flex:1 1 100%;order:3}
+    .cat-filters-panel[data-open]{display:grid;gap:12px;padding:14px;border:1px solid var(--line);background:var(--card)}
+    .cat-price{width:100%}
+    .cat-price input{flex:1 1 110px;width:100%}
+    .trust{grid-template-columns:1fr}
+    .trust-item + .trust-item{border-left:0;border-top:1px solid var(--line)}
+    .foot-grid{grid-template-columns:1fr}
+    .ds-service{grid-template-columns:34px minmax(0,1fr)}
+    .cat-filters .ds-cat,.cat-sort select,.cat-filters-toggle,.cat-price input,.cat-clear{min-height:44px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    .backdrop::before,.backdrop::after{animation:none}
+    .reveal{opacity:1;transform:none}
+  }
+  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--leather);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="backdrop" aria-hidden="true"></div>
+<span class="season" aria-hidden="true">Sastrería · Temporada {{year}}</span>
+
+<header class="top">
+  <div class="shell top-in">
+    <a class="brand" href="#inicio" data-ds-route="home">
+      <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
+      <span class="brand-copy"><strong>{{store_name}}</strong><small>{{store_location}}</small></span>
+    </a>
+    <nav class="top-nav" aria-label="Secciones">
+      <a href="#inicio" data-ds-route="home"><i>01</i> Inicio</a>
+      <a href="#catalogo" data-ds-route="catalog"><i>02</i> Catálogo</a>
+      <a href="#servicios" data-ds-route="services"><i>03</i> Servicios</a>
+    </nav>
+    <div class="top-meta">{{store_hours}}</div>
+  </div>
+</header>
+
+<div data-surface="landing">
+  <section class="hero" id="inicio">
+    <div class="shell hero-grid">
+      <div class="hero-copy reveal">
+        <p class="kicker">01 — Colección</p>
+        <h1>{{store_tagline}}</h1>
+        <p class="lead">{{store_description}}</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog">Ver la colección</a>
+          <a class="btn btn-ghost" href="{{store_whatsapp_url}}">Pedir turno</a>
+        </div>
+        <dl class="specs">
+          <div><dt>Atelier</dt><dd>{{store_location}}</dd></div>
+          <div><dt>Horarios</dt><dd>{{store_hours}}</dd></div>
+          <div><dt>Contacto</dt><dd>{{store_phone}}</dd></div>
+        </dl>
+      </div>
+      <figure class="hero-media reveal">
+        <img src="{{store_cover}}" alt="{{store_name}}" loading="eager">
+        <span class="hero-index" aria-hidden="true">01</span>
+        <figcaption class="hero-note">
+          <span class="tag">Pieza de temporada</span>
+          <strong>{{store_name}}</strong>
+          <span>{{store_address}}</span>
+          <a href="{{store_whatsapp_url}}">Consultar disponibilidad</a>
+        </figcaption>
+      </figure>
+    </div>
+    <div class="shell swatches" aria-hidden="true">
+      <div class="swatch"><span class="chip"></span><span><b>Lino</b><small>Ligero, de verano</small></span></div>
+      <div class="swatch"><span class="chip"></span><span><b>Lana</b><small>Fieltro y sastrería</small></span></div>
+      <div class="swatch"><span class="chip"></span><span><b>Cuero</b><small>Accesorios curtidos</small></span></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell">
+      <div class="head reveal"><h2>Categorías</h2><a href="#catalogo" data-ds-route="catalog">Ver todo</a></div>
+      <div class="cats">{{categories}}</div>
+    </div>
+  </section>
+
+  <section class="band" id="coleccion">
+    <div class="shell">
+      <div class="head reveal"><h2>La colección</h2><span>{{year}} · Otoño invierno</span></div>
+      <div class="lookbook">{{products}}</div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell editorial reveal">
+      <div aria-hidden="true"><span class="num">02</span></div>
+      <div>
+        <h2>Sobre el atelier</h2>
+        <p>{{store_about}}</p>
+        <ul>
+          <li>Medidas y ajustes en el local, sin cargo.</li>
+          <li>Telas naturales seleccionadas por temporada.</li>
+          <li>Encargos a medida con cita previa.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell trust reveal">
+      <div class="trust-item"><b>01</b><strong>Asesoramiento</strong><span>Te ayudamos a encontrar el corte y el talle.</span></div>
+      <div class="trust-item"><b>02</b><strong>Ajustes incluidos</strong><span>Arreglos básicos en todas las prendas.</span></div>
+      <div class="trust-item"><b>03</b><strong>Retiro en el local</strong><span>Coordinamos día y horario por WhatsApp.</span></div>
+      <div class="trust-item"><b>04</b><strong>Encargos a medida</strong><span>Piezas únicas sobre pedido.</span></div>
+    </div>
+  </section>
+</div>
+
+<section class="cat-surface" data-surface="catalog" id="catalogo">
+  <div class="shell">
+    <div class="cat-head reveal"><h1>Catálogo</h1><span data-ds-count></span></div>
+    <div class="cat-tools">
+      <button class="cat-filters-toggle" type="button" data-ds-filters-toggle aria-expanded="false" aria-controls="ds-catalog-filters">Filtros</button>
+      <div class="cat-filters-panel" id="ds-catalog-filters" data-ds-filters-panel>
+        <div class="cat-filters" data-ds-filters role="group" aria-label="Categorías"></div>
+        <div class="cat-price" role="group" aria-label="Rango de precio">
+          <span>Precio</span>
+          <input type="number" inputmode="numeric" min="0" step="1" placeholder="Mín." aria-label="Precio mínimo" data-ds-price-min>
+          <span aria-hidden="true">—</span>
+          <input type="number" inputmode="numeric" min="0" step="1" placeholder="Máx." aria-label="Precio máximo" data-ds-price-max>
+        </div>
+        <label class="cat-offers"><input type="checkbox" data-ds-offers> Solo ofertas</label>
+        <button class="cat-clear" type="button" data-ds-clear>Limpiar</button>
+      </div>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Sugerido</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="lookbook" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos con esos filtros.</p>
+  </div>
+</section>
+
+<section class="svc-surface" data-surface="services" id="servicios">
+  <div class="shell">
+    <div class="svc-head reveal"><h1>Servicios</h1><p>{{store_about}}</p></div>
+    <div class="svc-body">
+      {{services}}
+      <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot" id="contacto">
+  <div class="shell">
+    <p class="foot-name">{{store_name}}</p>
+    <div class="foot-grid">
+      <div><span>{{store_address}}</span><span>{{store_location}}</span></div>
+      <div><span>{{store_hours}}</span><a href="{{store_whatsapp_url}}">{{store_phone}}</a></div>
+      <div><span>{{store_email}}</span><span>{{store_tagline}}</span></div>
+    </div>
+    <p class="foot-legal">© {{year}} {{store_name}} · Sastrería editorial</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var nodes = document.querySelectorAll('.reveal')
+    if (!nodes.length || !('IntersectionObserver' in window)) return
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) {
+      for (var i = 0; i < nodes.length; i++) nodes[i].classList.add('on')
+      return
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('on')
+        io.unobserve(entry.target)
+      })
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 })
+    for (var j = 0; j < nodes.length; j++) io.observe(nodes[j])
+  })()
+</script>
+</body>
+</html>

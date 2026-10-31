@@ -262,6 +262,7 @@ const TEMPLATE_CSS = {
   indumentaria: () => import('../assets/store-trama.css'),
   boutique:  () => import('../assets/store-boutique.css'),
   atelier:   () => import('../assets/store-atelier.css'),
+  sastreria: () => import('../assets/store-sastreria.css'),
   mercado:   () => import('../assets/store-mercado.css'),
   clasico:   () => import('../assets/store-clasico.css'),
   circuito:  () => import('../assets/store-circuito.css'),

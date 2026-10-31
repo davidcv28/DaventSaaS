@@ -274,6 +274,276 @@
         "corners": "rounded"
       },
       "concept": "Marketplace masivo: amarillo, azul y tarjetas blancas densas."
+    },
+    {
+      "slug": "sastreria",
+      "nombre": "Sastrería",
+      "categoria": "Sastrería editorial",
+      "descripcion": "Papel hueso, tinta y cuero: Fraunces, reglas finas y contenedores rectos.",
+      "tier": "plus",
+      "template": "sastreria",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#6E4A2F",
+          "primary": "#1B1A17",
+          "secondary": "#3A3730",
+          "bg": "#F3EFE7",
+          "surface": "#FBF8F2",
+          "text": "#1B1A17",
+          "muted": "#6B665C",
+          "border": "#D9D3C6",
+          "success": "#5E6B57",
+          "danger": "#9E2B25"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 300,
+          "letterSpacing": "-0.035em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "outline",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "rule-shift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "sastreria",
+        "editorial",
+        "atelier",
+        "trajes"
+      ],
+      "preview": "",
+      "style": "Sastrería editorial",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "rule-shift",
+        "button": "ink-fill"
+      },
+      "easing": "cubic-bezier(.2,.7,.2,1)",
+      "duration": "560ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Hueso + tinta + cuero, Fraunces y reglas de sastre."
+    },
+    {
+      "slug": "sastreria-noche",
+      "nombre": "Sastrería Noche",
+      "categoria": "Sastrería nocturna",
+      "descripcion": "Carbón, cobre y Sora: la versión de noche del atelier, con contraste alto y aire de gala.",
+      "tier": "plus",
+      "template": "sastreria",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#C08A5A",
+          "primary": "#C08A5A",
+          "secondary": "#8A623F",
+          "bg": "#141312",
+          "surface": "#201E1A",
+          "text": "#F2EEE4",
+          "muted": "#A39C8D",
+          "border": "#3A362F",
+          "success": "#A9B79E",
+          "danger": "#D4685E"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "sora",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "balanced",
+          "weightHeading": 500,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "sastreria",
+        "noche",
+        "gala",
+        "premium"
+      ],
+      "preview": "",
+      "style": "Sastrería nocturna",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "glow",
+        "button": "copper-fill"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "480ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.6",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Carbón y cobre con Sora: sastrería de noche."
+    },
+    {
+      "slug": "sastreria-cruda",
+      "nombre": "Sastrería Cruda",
+      "categoria": "Sastrería industrial",
+      "descripcion": "Concreto, tinta y rojo de hilo: Space Grotesk, bordes duros y aire de taller.",
+      "tier": "plus",
+      "template": "sastreria",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#9E2B25",
+          "primary": "#1B1A17",
+          "secondary": "#4A4740",
+          "bg": "#EDEAE3",
+          "surface": "#FFFFFF",
+          "text": "#171614",
+          "muted": "#6A655B",
+          "border": "#C9C2B4",
+          "success": "#4F6B4A",
+          "danger": "#9E2B25"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "strong",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "compact",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "slide",
+          "hover": "underline",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "2",
+          "size": "18",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "sastreria",
+        "taller",
+        "industrial",
+        "streetwear"
+      ],
+      "preview": "",
+      "style": "Sastrería industrial",
+      "anim": {
+        "hero": "slide",
+        "reveal": "slide",
+        "hover": "underline",
+        "button": "hard-press"
+      },
+      "easing": "cubic-bezier(.7,0,.3,1)",
+      "duration": "340ms",
+      "icons": {
+        "style": "line",
+        "stroke": "2",
+        "size": "18",
+        "corners": "square"
+      },
+      "concept": "Concreto + rojo de hilo, Space Grotesk y bordes duros."
     }
   ],
   "patterns": [
@@ -641,6 +911,184 @@
       "preview": "",
       "variables": {},
       "style": "mercado"
+    },
+    {
+      "slug": "sastreria",
+      "nombre": "Sastrería",
+      "categoria": "indumentaria",
+      "descripcion": "Sastrería editorial: papel hueso, tinta y cuero, nav con índice numerado, filas de prendas tipo fichero y fondo de líneas de sastre en deriva lenta.",
+      "tier": "plus",
+      "template": "sastreria",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "editorial",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "featured",
+            "variant": "lead",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 9
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "variant": "chips",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "variant": "list",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#6E4A2F",
+        "palette": {
+          "accent": "#6E4A2F",
+          "primary": "#1B1A17",
+          "secondary": "#3A3730",
+          "bg": "#F3EFE7",
+          "surface": "#FBF8F2",
+          "text": "#1B1A17",
+          "muted": "#6B665C",
+          "border": "#D9D3C6",
+          "success": "#5E6B57",
+          "danger": "#9E2B25"
+        },
+        "fonts": [
+          "fraunces",
+          "instrument-sans",
+          "jetbrains-mono"
+        ],
+        "radius": "2px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "rule-shift",
+          "button": "ink-fill"
+        },
+        "easing": "cubic-bezier(.2,.7,.2,1)",
+        "duration": "560ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "tags": [
+        "indumentaria",
+        "moda",
+        "sastreria",
+        "atelier",
+        "editorial",
+        "trajes",
+        "medida"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "sastreria"
     }
   ]
 }
