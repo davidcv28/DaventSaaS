@@ -170,13 +170,8 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertEqual(DesignPattern.objects.count(), len(_seed_data()['patterns']))
         pattern = DesignPattern.objects.get(slug = 'raiz')
         self.assertIn('data-block="hero"', pattern.html)
-        #Un patrón puede traer su propio markup: no se pisa con el esqueleto.
-        daven = DesignPattern.objects.get(slug = 'daven-indumentaria')
-        self.assertIn('dvn-stage', daven.html)
-        self.assertNotIn('data-block=', daven.html)
-        mercado = DesignPattern.objects.get(slug = 'mercado-libre')
-        self.assertIn('data-pattern="mercado-libre"', mercado.html)
-        self.assertIn('--ml-yellow:#FFE600', mercado.css)
+        #Los arquetipos del formato viejo ya no forman parte del catálogo.
+        self.assertFalse(DesignPattern.objects.filter(slug = 'mercado-libre').exists())
         self.assertTrue(pattern.layout.get('landing'))
         self.assertTrue(DesignStyle.objects.get(slug = 'base').tokens.get('palette'))
 

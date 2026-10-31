@@ -22,9 +22,9 @@ El `layout`, la plantilla y el tier se heredan del DesignStyle indicado en
 catálogo. `--accent` y `--fonts` arman los tokens del patrón.
 
 Uso:
-    manage.py import_design_pattern --file "Atelier Otoño.html" \
-        --slug atelier-otono --nombre "Atelier Otoño" \
-        --style atelier-otono --accent "#2D4A3E" \
+    manage.py import_design_pattern --file "Mi Diseño.html" \
+        --slug mi-diseno --nombre "Mi Diseño" \
+        --style mi-diseno --accent "#2D4A3E" \
         --fonts hanken-grotesk,bricolage-grotesque
 
 """
