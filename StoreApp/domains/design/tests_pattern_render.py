@@ -221,7 +221,7 @@ class PatternSourceTests(TestCase):
 
     SLUGS = (
         'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique',
-        'atelier', 'clasico', 'circuito', 'seguridad',
+        'atelier', 'clasico', 'circuito', 'seguridad', 'mercado',
     )
 
     def test_split_document_returns_three_layers(self):

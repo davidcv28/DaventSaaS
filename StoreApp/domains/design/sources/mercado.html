@@ -3,191 +3,289 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mercado — diseño de marketplace</title>
+<title>{{store_name}} · Mercado</title>
 <style>
   :root{
-    --yellow:#FFE600; --blue:#3483FA; --blue-deep:#2968C8; --green:#00A650;
+    --yellow:#FFE600; --yellow-line:#E6CE00;
+    --blue:var(--ds-accent,#3483FA); --blue-deep:#2968C8; --green:#00A650;
     --bg:#EBEBEB; --surface:#fff; --soft:#F5F5F5; --line:#E6E6E6;
-    --ink:#333; --ink-2:#4A4A4A; --muted:#737373; --radius:6px;
+    --ink:#333; --ink-2:#4A4A4A; --muted:#737373;
+    --radius:var(--ds-radius,6px); --radius-btn:var(--ds-radius-btn,6px);
+    --shadow:var(--ds-shadow,0 1px 2px rgba(0,0,0,.1));
     --font:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+    --dur:420ms; --ease:cubic-bezier(.22,1,.36,1);
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
   img{max-width:100%}
-  a{color:inherit}
+  a{color:inherit;text-decoration:none}
   .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
-  .top{background:var(--yellow);border-bottom:1px solid #E6CE00;box-shadow:0 1px 4px rgba(0,0,0,.14)}
+
+  /* Masthead amarillo tipo marketplace */
+  .top{background:var(--yellow);border-bottom:1px solid var(--yellow-line);box-shadow:0 1px 4px rgba(0,0,0,.14)}
   .top-inner{display:flex;align-items:center;gap:18px;min-height:64px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em;text-decoration:none}
-  .brand .mark{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:var(--blue);color:#fff;font-size:15px}
-  .search{display:flex;align-items:center;flex:1 1 560px;height:40px;background:#fff;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.2);overflow:hidden}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+  .brand .mark{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:var(--blue);color:#fff;font-size:15px;overflow:hidden}
+  .brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+  .search{display:flex;align-items:center;flex:1 1 560px;height:40px;background:#fff;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.2);overflow:hidden;cursor:pointer}
   .search span{padding-left:14px;color:var(--muted);font-size:14px}
   .search .go{margin-left:auto;display:grid;place-items:center;width:38px;height:38px;margin-right:1px;border-radius:4px;background:var(--blue);color:#fff;font-size:16px}
   .top-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
-  .pill{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:4px;background:rgba(51,51,51,.08);font-size:12.5px;font-weight:600;text-decoration:none}
-  .nav{background:#fff;border-bottom:1px solid var(--line)}
+  .pill{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:4px;background:rgba(51,51,51,.08);font-size:12.5px;font-weight:600}
+  .pill:empty{display:none}
+  .nav{background:var(--surface);border-bottom:1px solid var(--line)}
   .nav-inner{display:flex;align-items:center;gap:2px;min-height:44px;overflow-x:auto}
-  .nav a{padding:10px 12px;border-radius:4px;font-size:13px;color:#666;text-decoration:none;white-space:nowrap}
-  .nav a.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--blue);border-radius:0}
-  .hero{background:radial-gradient(760px 360px at 88% -20%,rgba(255,255,255,.55),transparent 62%),linear-gradient(180deg,#FFEC00,var(--yellow));border-bottom:1px solid #E6CE00;padding:34px 0 44px}
+  .nav a{padding:10px 12px;font-size:13px;color:var(--muted);white-space:nowrap}
+  .nav a.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--blue)}
+  .nav a:hover{color:var(--ink)}
+
+  /* Hero promocional */
+  .hero{background:radial-gradient(760px 360px at 88% -20%,rgba(255,255,255,.55),transparent 62%),linear-gradient(180deg,#FFEC00,var(--yellow));border-bottom:1px solid var(--yellow-line);padding:34px 0 44px}
   .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
   .kicker{display:inline-flex;align-items:center;gap:6px;margin:0 0 14px;padding:5px 10px;border-radius:4px;background:#333;color:var(--yellow);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .kicker:empty{display:none}
   h1{margin:0;max-width:19ch;font-size:clamp(30px,4.2vw,52px);line-height:1.06;letter-spacing:-.01em}
+  h1:empty{display:none}
   .hero p.lead{margin:14px 0 0;max-width:48ch;color:var(--ink-2);font-size:16px}
+  .hero p.lead:empty{display:none}
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:6px;border:1px solid transparent;font-size:14px;font-weight:600;text-decoration:none}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--radius-btn);border:1px solid transparent;font-size:14px;font-weight:600}
   .btn-primary{background:var(--blue);color:#fff}
-  .btn-ghost{background:#fff;border-color:rgba(51,51,51,.18)}
+  .btn-ghost{background:#fff;border-color:rgba(51,51,51,.18);color:#333}
   .stats{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 0;padding:0;list-style:none;font-size:12.5px;color:var(--ink-2)}
-  .stats strong{font-size:15px;color:var(--ink)}
   .hero-art{position:relative;min-height:300px}
   .tiles{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;padding:10px;opacity:.9}
-  .tile{border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);overflow:hidden}
+  .tile{border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
   .tile.big{grid-row:1/3;background:linear-gradient(150deg,#DDEBFF,#F7FAFF)}
   .tile.t2{background:linear-gradient(150deg,#FFF1D6,#FFF9EC)}
-  .tile.t3{display:none}
-  .offer-card{position:relative;z-index:1;width:min(300px,82%);margin:24px auto;padding:14px;border-radius:8px;background:#fff;box-shadow:0 14px 30px -18px rgba(0,0,0,.5)}
-  .badge{position:absolute;top:10px;left:10px;padding:3px 7px;border-radius:4px;background:var(--green);color:#fff;font-size:12px;font-weight:700}
-  .ph{display:grid;place-items:center;aspect-ratio:1/1;border-radius:6px;background:var(--soft);color:#B5B5B5;font-size:44px}
-  .offer-body{display:grid;gap:4px;padding-top:10px}
-  .offer-name{font-size:13.5px;line-height:1.35}
-  .price{display:flex;align-items:baseline;gap:8px}
-  .price s{color:var(--muted);font-size:12px}
-  .price strong{font-size:22px;font-weight:600}
-  .link{color:var(--blue-deep);font-size:12px;font-weight:600}
-  .band{background:#fff;padding:34px 0}
+  .promo{position:relative;z-index:1;width:min(300px,82%);margin:24px auto;padding:16px;border-radius:var(--radius);background:#fff;box-shadow:0 14px 30px -18px rgba(0,0,0,.5);color:#333}
+  .promo .tag{display:inline-block;padding:3px 7px;border-radius:4px;background:var(--green);color:#fff;font-size:12px;font-weight:700}
+  .promo b{display:block;margin-top:10px;font-size:15px;line-height:1.3}
+  .promo span{display:block;font-size:12px;color:#737373;margin-top:2px}
+  .promo span:empty{display:none}
+  .promo .tel{display:inline-block;margin-top:10px;color:var(--blue-deep);font-size:12.5px;font-weight:700}
+  .promo .tel:empty{display:none}
+
+  /* Bandas y grillas */
+  .band{background:var(--surface);padding:34px 0}
   .band.gray{background:var(--bg)}
   .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px}
   h2{margin:0;font-size:24px;font-weight:600;letter-spacing:-.01em}
-  .head a{color:var(--blue-deep);font-size:13px;font-weight:600;text-decoration:none}
+  .head a{color:var(--blue-deep);font-size:13px;font-weight:600}
   .cats{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
-  .cat{display:grid;justify-items:center;gap:6px;padding:10px 4px;border-radius:6px;text-decoration:none;text-align:center}
-  .cat:hover{background:var(--soft)}
-  .cat .ring{display:grid;place-items:center;width:68px;height:68px;border-radius:50%;background:var(--soft);border:1px solid var(--line);font-size:22px;color:var(--muted)}
-  .cat b{font-size:12.5px;font-weight:500}
-  .cat small{font-size:11px;color:var(--muted)}
-  .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-  .card{background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.1);overflow:hidden}
-  .card .ph{aspect-ratio:1/1;border-radius:0;background:var(--soft)}
-  .card-body{padding:12px 14px 16px;display:grid;gap:4px}
-  .card-name{font-size:14px;line-height:1.35;min-height:2.7em}
-  .card-price{display:flex;align-items:baseline;gap:8px}
-  .card-price strong{font-size:21px;font-weight:600}
-  .card-price s{font-size:12px;color:var(--muted)}
-  .off{color:var(--green);font-size:12.5px;font-weight:700}
-  .trust{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:34px 0}
+  /* Categoría (fragmento {{categories}} del backend) */
+  .ds-cat{display:grid;justify-items:center;gap:6px;padding:10px 4px;border-radius:var(--radius);text-align:center}
+  .ds-cat:hover{background:var(--soft)}
+  .ds-cat span{font-size:12.5px;font-weight:500}
+  .cats:not(:has(.ds-cat)){display:none}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+
+  /* Tarjeta de producto (fragmento {{products}} del backend) */
+  .ds-product{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .ds-product-link{display:block;color:inherit}
+  .ds-product-img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--soft)}
+  .ds-product-img.is-empty{display:grid;place-items:center;aspect-ratio:1/1}
+  .ds-product-img.is-empty::after{content:"▣";color:var(--muted);font-size:38px;opacity:.5}
+  .ds-product-copy{display:grid;gap:4px;padding:12px 14px 14px}
+  .ds-product-name{margin:0;font-size:14px;font-weight:400;line-height:1.35;min-height:2.7em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ds-product-desc{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-product-desc:empty{display:none}
+  .ds-product-cat{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .ds-product-cat:empty{display:none}
+  .ds-product-price{display:flex;align-items:baseline;gap:8px;font-size:21px;font-weight:400;color:var(--ink)}
+  .ds-product-old{font-size:12px;color:var(--muted);font-weight:400}
+  .ds-empty{padding:22px 0;color:var(--muted);font-size:13.5px}
+
+  /* Confianza */
+  .trust{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:34px 0}
   .trust-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
   .trust-item{display:flex;gap:12px;align-items:flex-start}
   .trust-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:50%;background:#EAF2FF;color:var(--blue-deep);font-size:18px}
   .trust-item strong{display:block;font-size:13.5px}
   .trust-item span{font-size:12.5px;color:var(--muted)}
-  .foot{background:#fff;border-top:1px solid var(--line);padding:36px 0 24px;font-size:12.5px;color:var(--muted)}
+
+  /* Catálogo (superficie propia) */
+  .cat-surface{background:var(--bg)}
+  .cat-surface .cat-head{border-color:var(--line)}
+  .cat-surface .cat-head h1{color:var(--ink)}
+  .cat-surface .cat-head span{color:var(--muted)}
+  .cat-surface .cat-sort select{border-color:var(--line);background:var(--surface);border-radius:var(--radius)}
+  .cat-surface .cat-filters .ds-cat{display:inline-grid;padding:7px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-btn);font-size:12.5px}
+  .cat-surface .cat-filters .ds-cat[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff;text-decoration:none}
+
+  /* Servicios (superficie propia) */
+  .svc-surface{background:var(--bg)}
+  .svc-surface .svc-head h1{color:var(--ink)}
+  .svc-surface .svc-head p{color:var(--muted)}
+  .ds-services-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 0;padding:0;list-style:none}
+  .ds-service{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:grid;gap:6px}
+  .ds-service-name{font-size:15px}
+  .ds-service-desc{font-size:12.5px;color:var(--muted)}
+  .ds-service-desc:empty{display:none}
+
+  .foot{background:var(--surface);border-top:1px solid var(--line);padding:30px 0 22px;font-size:12.5px;color:var(--muted)}
+  .foot .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+  .foot span:empty{display:none}
+
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .reveal.on{opacity:1;transform:none}
+
+  /* Modo noche: el amarillo del masthead se mantiene, el resto oscurece */
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#1B1B1D;--surface:#262628;--soft:#303033;--line:#3A3A3D;--ink:#F0F0F0;--ink-2:#D8D8D8;--muted:#A5A5A8;--blue-deep:#7FB0FC}
+    .promo{background:#262628;color:#F0F0F0}
+    .promo span{color:#A5A5A8}
+    .btn-ghost{background:#262628;border-color:#4A4A4D;color:#F0F0F0}
+    .tile{background:#262628}
+    .trust-icon{background:#26324a}
+  }
+  html[data-ds-theme="dark"]{--bg:#1B1B1D;--surface:#262628;--soft:#303033;--line:#3A3A3D;--ink:#F0F0F0;--ink-2:#D8D8D8;--muted:#A5A5A8;--blue-deep:#7FB0FC}
+  html[data-ds-theme="dark"] .promo{background:#262628;color:#F0F0F0}
+  html[data-ds-theme="dark"] .promo span{color:#A5A5A8}
+  html[data-ds-theme="dark"] .btn-ghost{background:#262628;border-color:#4A4A4D;color:#F0F0F0}
+  html[data-ds-theme="dark"] .tile{background:#262628}
+  html[data-ds-theme="dark"] .trust-icon{background:#26324a}
+  html[data-ds-theme="dark"] .search{background:#F5F5F5}
+
   @media(max-width:960px){
     .hero-grid{grid-template-columns:1fr}
-    .hero-art{max-width:440px;margin:0 auto;min-height:240px}
+    .hero-art{max-width:440px;margin:0 auto;min-height:220px}
     .cats{grid-template-columns:repeat(4,minmax(0,1fr))}
     .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .trust-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .top-actions .pill{display:none}
+    .top-actions{display:none}
+    .ds-services-list{grid-template-columns:1fr}
   }
   @media(max-width:560px){
     .wrap{padding:0 14px}
+    .top-inner{gap:10px}
+    .search{flex-basis:auto}
     .cats{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-    .cat .ring{width:56px;height:56px}
-    .grid{grid-template-columns:1fr}
+    .grid{grid-template-columns:1fr 1fr;gap:8px}
+    .ds-product-name{font-size:12.5px}
+    .ds-product-price{font-size:17px}
   }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap top-inner">
-    <a class="brand" href="#"><span class="mark">M</span> Mercado</a>
-    <div class="search" role="search"><span>Buscar productos, marcas y más…</span><span class="go">⌕</span></div>
-    <div class="top-actions"><a class="pill" href="#">Ingresá</a><a class="pill" href="#">Ayuda</a></div>
+    <a class="brand" href="#inicio" data-ds-route="home"><span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span> {{store_name}}</a>
+    <a class="search" href="#catalogo" data-ds-route="catalog" role="search"><span>Buscar en {{store_name}}…</span><span class="go">⌕</span></a>
+    <div class="top-actions"><span class="pill">{{store_location}}</span></div>
   </div>
 </header>
 <nav class="nav" aria-label="Secciones">
   <div class="wrap nav-inner">
-    <a class="on" href="#">Inicio</a><a href="#">Ofertas</a><a href="#">Categorías</a><a href="#">Catálogo</a><a href="#">Servicios</a><a href="#">Contacto</a>
+    <a class="on" href="#inicio" data-ds-route="home">Inicio</a>
+    <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+    <a href="#servicios" data-ds-route="services">Servicios</a>
+    <a href="#contacto">Contacto</a>
   </div>
 </nav>
 
-<section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <p class="kicker">% Ofertas y novedades</p>
-      <h1>Todo lo que buscás, en un solo lugar</h1>
-      <p class="lead">Explorá el catálogo completo, compará precios y consultá por lo que te interesa.</p>
-      <div class="actions"><a class="btn btn-primary" href="#">Ver ofertas →</a><a class="btn btn-ghost" href="#">Consultar</a></div>
-      <ul class="stats"><li><strong>128</strong> productos</li><li><strong>8</strong> categorías</li><li>Buenos Aires</li></ul>
-    </div>
-    <div class="hero-art">
-      <div class="tiles" aria-hidden="true"><span class="tile big"></span><span class="tile t2"></span><span class="tile t3"></span></div>
-      <div class="offer-card">
-        <span class="badge">-35%</span>
-        <div class="ph">▣</div>
-        <div class="offer-body">
-          <span class="offer-name">Producto destacado de la semana</span>
-          <span class="price"><s>$ 45.900</s><strong>$ 29.900</strong></span>
-          <span class="link">Ver producto →</span>
+<div data-surface="landing">
+
+  <section class="hero" id="inicio">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="kicker">% Ofertas y novedades</p>
+        <h1>{{store_tagline}}</h1>
+        <p class="lead">{{store_description}}</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog">Ver catálogo →</a>
+          <a class="btn btn-ghost" href="{{store_whatsapp_url}}">Consultar</a>
+        </div>
+        <ul class="stats">
+          <li>{{store_location}}</li>
+          <li>{{store_hours}}</li>
+        </ul>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="tiles"><span class="tile big"></span><span class="tile t2"></span></div>
+        <div class="promo">
+          <span class="tag">Destacado</span>
+          <b>{{store_name}}</b>
+          <span>{{store_location}}</span>
+          <span>{{store_address}}</span>
+          <a class="tel" href="{{store_whatsapp_url}}">{{store_phone}}</a>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="band">
-  <div class="wrap">
-    <div class="head"><h2>Categorías</h2><a href="#">Ver todas →</a></div>
-    <div class="cats">
-      <a class="cat" href="#"><span class="ring">◉</span><b>Tecnología</b><small>24</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Hogar</b><small>18</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Moda</b><small>32</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Deportes</b><small>12</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Belleza</b><small>15</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Herramientas</b><small>9</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Juguetes</b><small>7</small></a>
-      <a class="cat" href="#"><span class="ring">◉</span><b>Más</b><small>11</small></a>
+  <section class="band">
+    <div class="wrap">
+      <div class="head reveal"><h2>Categorías</h2><a href="#catalogo" data-ds-route="catalog">Ver todas →</a></div>
+      <div class="cats">{{categories}}</div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="band">
-  <div class="wrap">
-    <div class="head"><h2>Ofertas</h2><a href="#">Ver todo el catálogo →</a></div>
-    <div class="grid">
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto en oferta uno</span><span class="card-price"><s>$ 45.900</s><strong>$ 29.900</strong></span><span class="off">-35%</span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto en oferta dos</span><span class="card-price"><s>$ 32.500</s><strong>$ 24.900</strong></span><span class="off">-23%</span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto en oferta tres</span><span class="card-price"><s>$ 18.000</s><strong>$ 12.900</strong></span><span class="off">-28%</span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto en oferta cuatro</span><span class="card-price"><s>$ 58.000</s><strong>$ 44.900</strong></span><span class="off">-23%</span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto en oferta cinco</span><span class="card-price"><s>$ 27.400</s><strong>$ 19.900</strong></span><span class="off">-27%</span></div></article>
+  <section class="band gray" id="ofertas">
+    <div class="wrap">
+      <div class="head reveal"><h2>Destacados</h2><a href="#catalogo" data-ds-route="catalog">Ver catálogo →</a></div>
+      <div class="grid">{{products}}</div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="band gray">
-  <div class="wrap">
-    <div class="head"><h2>Destacados</h2><a href="#">Ver catálogo →</a></div>
-    <div class="grid">
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto destacado uno</span><span class="card-price"><strong>$ 21.900</strong></span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto destacado dos</span><span class="card-price"><strong>$ 34.500</strong></span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto destacado tres</span><span class="card-price"><strong>$ 12.900</strong></span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto destacado cuatro</span><span class="card-price"><strong>$ 48.000</strong></span></div></article>
-      <article class="card"><div class="ph">▣</div><div class="card-body"><span class="card-name">Producto destacado cinco</span><span class="card-price"><strong>$ 9.800</strong></span></div></article>
+  <section class="trust">
+    <div class="wrap trust-grid">
+      <div class="trust-item"><span class="trust-icon">▤</span><span><strong>Catálogo online</strong><span>Consultá precios y disponibilidad.</span></span></div>
+      <div class="trust-item"><span class="trust-icon">✆</span><span><strong>Atención por WhatsApp</strong><span>Escribinos y te respondemos.</span></span></div>
+      <div class="trust-item"><span class="trust-icon">⌖</span><span><strong>Punto de venta</strong><span>Retiro y consultas en el local.</span></span></div>
+      <div class="trust-item"><span class="trust-icon">✓</span><span><strong>Compra simple</strong><span>Elegí, consultá y coordiná la entrega.</span></span></div>
     </div>
+  </section>
+
+</div>
+
+<section class="cat-surface" data-surface="catalog">
+  <div class="wrap">
+    <div class="cat-head"><h1>Catálogo</h1><span data-ds-count></span></div>
+    <div class="cat-tools">
+      <div class="cat-filters" data-ds-filters></div>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Más relevantes</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="grid" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos en esta categoría.</p>
   </div>
 </section>
 
-<section class="trust">
-  <div class="wrap trust-grid">
-    <div class="trust-item"><span class="trust-icon">▤</span><span><strong>Catálogo online</strong><span>Consultá precios y disponibilidad.</span></span></div>
-    <div class="trust-item"><span class="trust-icon">✆</span><span><strong>Atención por WhatsApp</strong><span>Escribinos y te respondemos.</span></span></div>
-    <div class="trust-item"><span class="trust-icon">⌖</span><span><strong>Punto de venta</strong><span>Retiro y consultas en el local.</span></span></div>
-    <div class="trust-item"><span class="trust-icon">✓</span><span><strong>Compra simple</strong><span>Elegí, consultá y coordiná la entrega.</span></span></div>
+<section class="svc-surface" data-surface="services">
+  <div class="wrap">
+    <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
+    <div class="svc-body">{{services}}</div>
+    <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
   </div>
 </section>
 
-<footer class="foot"><div class="wrap">© Mercado. Diseño de marketplace para la web del cliente.</div></footer>
+<footer class="foot" id="contacto">
+  <div class="wrap">
+    <span>{{store_name}} · {{store_tagline}}</span>
+    <span>{{store_address}} {{store_location}}</span>
+    <span>{{store_phone}} · {{store_email}}</span>
+    <span>© {{year}}</span>
+  </div>
+</footer>
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) { items.forEach(function(el){el.classList.add('on')}); return; }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  },{threshold:.16});
+  items.forEach(function(el){io.observe(el)});
+})();
+</script>
 </body>
 </html>
