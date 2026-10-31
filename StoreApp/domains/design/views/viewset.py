@@ -52,7 +52,14 @@ class DesignPatternViewSet(DesignCatalogViewSet):
         pattern = self.get_object()
         if not (pattern.html or '').strip():
             return Response({'detail': 'El patrón no tiene markup propio.'}, status = 404)
-        return Response(preview_pattern(pattern))
+        style_slug = (request.query_params.get('style') or '').strip()
+        style = DesignStyle.objects.filter(slug = style_slug).first() if style_slug else None
+        return Response(preview_pattern(
+            pattern,
+            theme = request.query_params.get('theme') or 'light',
+            accent = (request.query_params.get('accent') or '').strip(),
+            style = style,
+        ))
 
 #=========================================
 # DESIGN ICON STYLE VIEWSET (/api/design/icon-styles/)

@@ -43,8 +43,9 @@ export const designApi = {
     return data
   },
   // Diseño fuente con datos de ejemplo (sin placeholders {{variable}}).
-  async patternPreview(slug) {
-    const { data } = await http.get(`/design/patterns/${slug}/preview/`)
+  // `theme` y `accent` replican lo que tiene elegido la tienda.
+  async patternPreview(slug, params = {}) {
+    const { data } = await http.get(`/design/patterns/${slug}/preview/`, { params })
     return data
   },
   async defaultStyle() {

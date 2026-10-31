@@ -87,30 +87,56 @@ function onPatternPick(event) {
 // Diseños importados (DesignPattern con html/css/js): se previsualizan tal
 // cual quedaron guardados en la base, en un iframe aislado. El layout del
 // catálogo sigue armando la web de la tienda; esto muestra el diseño fuente.
-const patternPreview = ref(null) // { nombre, doc }
+const patternPreview = ref(null) // { nombre, html, css, js, theme }
 const previewBusy = ref(false)
 const previewErr = ref('')
+// Tema de la vista previa: arranca con el de la tienda y se alterna sin
+// volver a pedir el patrón (la hoja trae las reglas de modo noche).
+const previewTheme = ref('light')
+const previewAccent = computed(() => {
+  const hex = props.form?.accent_custom
+  return typeof hex === 'string' && hex.startsWith('#') ? hex : ''
+})
+const previewDoc = computed(() => (
+  patternPreview.value ? patternDoc(patternPreview.value) : ''
+))
 
 function patternDoc(p) {
   const html = String(p.html || '')
   if (/^\s*(<!doctype|<html)/i.test(html)) return html
   const css = p.css ? `<style>${p.css}</style>` : ''
   const js = p.js ? `<script>${p.js}<` + `/script>` : ''
-  return `<!doctype html><html lang="es" data-ds-surface="landing"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
+  const theme = p.theme === 'dark' ? 'dark' : 'light'
+  return `<!doctype html><html lang="es" data-ds-surface="landing" data-ds-theme="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
 }
 
 async function openPatternPreview(p) {
   if (!p?.has_markup || previewBusy.value) return
   previewBusy.value = true
   previewErr.value = ''
+  previewTheme.value = props.form?.theme === 'dark' ? 'dark' : 'light'
   try {
-    const detail = await designApi.patternPreview(p.slug)
-    patternPreview.value = { nombre: detail.nombre || p.nombre, doc: patternDoc(detail) }
+    const detail = await designApi.patternPreview(p.slug, {
+      theme: previewTheme.value,
+      accent: previewAccent.value,
+      style: props.form?.site_theme?.style?.id || '',
+    })
+    patternPreview.value = {
+      nombre: detail.nombre || p.nombre,
+      html: detail.html || '',
+      css: detail.css || '',
+      js: detail.js || '',
+      theme: detail.theme || previewTheme.value,
+    }
   } catch {
     previewErr.value = 'No pudimos cargar el diseño del patrón.'
   } finally {
     previewBusy.value = false
   }
+}
+function setPreviewTheme(theme) {
+  previewTheme.value = theme === 'dark' ? 'dark' : 'light'
+  if (patternPreview.value) patternPreview.value.theme = previewTheme.value
 }
 function closePatternPreview() {
   patternPreview.value = null
@@ -220,12 +246,22 @@ function onStylePick(event) {
     <div v-if="patternPreview" class="dpv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
       <div class="dpv-head">
         <strong>{{ patternPreview.nombre }}</strong>
+        <div class="dpv-theme" role="group" aria-label="Modo de la vista previa">
+          <button
+            type="button" :aria-pressed="previewTheme === 'light'"
+            :class="{ on: previewTheme === 'light' }" @click="setPreviewTheme('light')"
+          >Claro</button>
+          <button
+            type="button" :aria-pressed="previewTheme === 'dark'"
+            :class="{ on: previewTheme === 'dark' }" @click="setPreviewTheme('dark')"
+          >Noche</button>
+        </div>
         <button type="button" class="dpv-close" aria-label="Cerrar la vista previa" @click="closePatternPreview">
           <AppIcon name="x" :size="16" />
         </button>
       </div>
       <iframe
-        class="dpv-frame" :srcdoc="patternPreview.doc" sandbox="allow-scripts"
+        class="dpv-frame" :srcdoc="previewDoc" sandbox="allow-scripts"
         :title="`Diseño ${patternPreview.nombre}`"
       ></iframe>
     </div>
@@ -280,6 +316,12 @@ function onStylePick(event) {
   padding: 10px 14px; border-radius: 12px 12px 0 0; background: var(--card, #fff); color: var(--ink);
 }
 .dpv-head strong { font-size: 14px; }
+.dpv-theme { display: inline-flex; gap: 4px; margin-left: auto; padding: 3px; border-radius: 999px; background: var(--soft, #f1f5f9); }
+.dpv-theme button {
+  border: 0; border-radius: 999px; padding: 5px 11px; background: transparent;
+  color: var(--muted, #64748b); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.dpv-theme button.on { background: var(--card, #fff); color: var(--ink, #0f172a); box-shadow: 0 1px 2px rgba(15, 23, 42, .12); }
 .dpv-close {
   display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
   border: 1px solid var(--line, #e5e7eb); border-radius: 8px; background: transparent; color: inherit; cursor: pointer;

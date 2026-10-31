@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from django.utils import timezone
 
 from StoreApp.domains.design.services.pattern_document import SURFACE_CSS
@@ -87,8 +89,12 @@ def sample_context():
     }
 
 
-def preview_pattern(pattern):
-    """`{html, css, js}` del patrón con datos de ejemplo (para el modal)."""
+def preview_pattern(pattern, theme = 'light', accent = '', style = None):
+    """
+    `{html, css, js}` del patrón con datos de ejemplo (para el modal).
+    `theme` y `accent` replican lo que la tienda tiene elegido: sin eso la
+    vista previa mostraba el tema del patrón y no el de la web publicada.
+    """
     raw = {
         'products': _product_fragment(),
         'categories': _category_fragment(),
@@ -96,10 +102,17 @@ def preview_pattern(pattern):
         'gallery': '',
     }
     html = pattern.render(sample_context(), raw = raw)
+    #El estilo elegido también manda en la web publicada (bordes, sombras,
+    #colores): se replica con un customization mínimo.
+    customization = SimpleNamespace(
+        accent_custom = accent if str(accent or '').startswith('#') else '',
+        site_theme = {'style': {'effects': style.effects}} if style is not None else {},
+    )
     return {
         'slug': pattern.slug,
         'nombre': pattern.nombre,
+        'theme': 'dark' if theme == 'dark' else 'light',
         'html': html,
-        'css': f'{theme_css(None, pattern)}\n{SURFACE_CSS}\n{pattern.css or ""}',
+        'css': f'{theme_css(customization, pattern)}\n{SURFACE_CSS}\n{pattern.css or ""}',
         'js': pattern.js or '',
     }
