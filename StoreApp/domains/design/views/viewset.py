@@ -45,6 +45,15 @@ class DesignPatternViewSet(DesignCatalogViewSet):
             return Response({'detail': 'No hay patrón predeterminado.'}, status = 404)
         return Response(DesignPatternSerializer(pattern).data)
 
+    #VISTA PREVIA CON DATOS DE EJEMPLO (modal "Ver este diseño")
+    @action(detail = True, methods = ['get'], url_path = 'preview')
+    def preview(self, request, slug = None):
+        from StoreApp.domains.design.services.pattern_preview import preview_pattern
+        pattern = self.get_object()
+        if not (pattern.html or '').strip():
+            return Response({'detail': 'El patrón no tiene markup propio.'}, status = 404)
+        return Response(preview_pattern(pattern))
+
 #=========================================
 # DESIGN ICON STYLE VIEWSET (/api/design/icon-styles/)
 #=========================================

@@ -42,6 +42,11 @@ export const designApi = {
     const { data } = await http.get(`/design/patterns/${slug}/`)
     return data
   },
+  // Diseño fuente con datos de ejemplo (sin placeholders {{variable}}).
+  async patternPreview(slug) {
+    const { data } = await http.get(`/design/patterns/${slug}/preview/`)
+    return data
+  },
   async defaultStyle() {
     const { data } = await http.get('/design/styles/default/')
     return data

@@ -96,7 +96,7 @@ function patternDoc(p) {
   if (/^\s*(<!doctype|<html)/i.test(html)) return html
   const css = p.css ? `<style>${p.css}</style>` : ''
   const js = p.js ? `<script>${p.js}<` + `/script>` : ''
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
+  return `<!doctype html><html lang="es" data-ds-surface="landing"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
 }
 
 async function openPatternPreview(p) {
@@ -104,7 +104,7 @@ async function openPatternPreview(p) {
   previewBusy.value = true
   previewErr.value = ''
   try {
-    const detail = await designApi.pattern(p.slug)
+    const detail = await designApi.patternPreview(p.slug)
     patternPreview.value = { nombre: detail.nombre || p.nombre, doc: patternDoc(detail) }
   } catch {
     previewErr.value = 'No pudimos cargar el diseño del patrón.'

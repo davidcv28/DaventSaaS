@@ -231,6 +231,23 @@ class DesignContractTests(TestCase):
         self.assertNotIn('<Negocio>', rendered)
         self.assertNotIn('{{', rendered)
 
+    def test_pattern_preview_renders_sample_data(self):
+        DesignPattern.objects.create(
+            slug = 'prev', nombre = 'Prev', categoria = 'landing',
+            html = '<h1>{{store_name}}</h1><div class="grid">{{products}}</div>',
+            variables = {
+                'store_name': {'type': 'text'},
+                'products': {'type': 'list'},
+            },
+        )
+        self._auth(self.owner)
+        response = self.client.get('/api/design/patterns/prev/preview/')
+        self.assertEqual(response.status_code, 200, response.content)
+        html = response.json()['html']
+        self.assertNotIn('{{', html)
+        self.assertIn('Tu negocio', html)
+        self.assertIn('ds-product', html)
+
     def test_pattern_serializer_sanitizes_variables(self):
         self._auth(self.admin)
         response = self.client.post(PATTERNS_URL, {
