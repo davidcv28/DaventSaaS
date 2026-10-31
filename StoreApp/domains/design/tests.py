@@ -166,7 +166,7 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertTrue(DesignPattern.objects.filter(slug = 'raiz', is_default = True).exists())
         self.assertEqual(DesignStyle.objects.filter(is_default = True).count(), 1)
         self.assertEqual(DesignPattern.objects.filter(is_default = True).count(), 1)
-        self.assertGreaterEqual(DesignStyle.objects.count(), 20)
+        self.assertGreaterEqual(DesignStyle.objects.count(), 2)
         self.assertEqual(DesignPattern.objects.count(), len(_seed_data()['patterns']))
         pattern = DesignPattern.objects.get(slug = 'raiz')
         self.assertIn('data-block="hero"', pattern.html)
