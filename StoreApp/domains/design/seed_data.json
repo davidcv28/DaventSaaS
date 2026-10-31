@@ -1089,6 +1089,154 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "sastreria"
+    },
+    {
+      "slug": "boutique",
+      "nombre": "Boutique",
+      "categoria": "moda",
+      "descripcion": "Vitrina de autor: portada tipográfica centrada, banda de imagen a sangre, mosaico asimétrico de piezas y riel de filtros con tinta ciruela.",
+      "tier": "plus",
+      "template": "boutique",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "plate",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "featured",
+            "variant": "mosaic",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "about",
+            "variant": "manifest",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "gallery",
+            "variant": "strip",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "benefits",
+            "variant": "columns",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 7
+          }
+        ],
+        "catalog": [
+          {
+            "id": "filters",
+            "variant": "rail",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "grid",
+            "variant": "mosaic",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "variant": "editorial",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 3
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#7C3B57",
+        "palette": {
+          "accent": "#7C3B57",
+          "primary": "#2B1F33",
+          "secondary": "#4A3550",
+          "bg": "#F6F2EC",
+          "surface": "#FFFDFA",
+          "text": "#221C26",
+          "muted": "#6F6674",
+          "border": "#E3DAD1",
+          "success": "#4F6B57",
+          "danger": "#9E2B3F"
+        },
+        "fonts": [
+          "playfair-display",
+          "manrope",
+          "space-mono"
+        ],
+        "radius": "2px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "image-lift",
+          "button": "ink-fill"
+        },
+        "easing": "cubic-bezier(.22,.61,.36,1)",
+        "duration": "520ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "tags": [
+        "boutique",
+        "moda",
+        "premium",
+        "vitrina",
+        "joyeria",
+        "deco",
+        "indumentaria"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true
     }
   ]
 }

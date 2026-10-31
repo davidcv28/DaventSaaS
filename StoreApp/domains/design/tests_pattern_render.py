@@ -219,7 +219,7 @@ class PatternSourceTests(TestCase):
     las variables declaradas se derivan de los placeholders que usa.
     """
 
-    SLUGS = ('circuito', 'mercado')
+    SLUGS = ('circuito', 'mercado', 'sastreria', 'boutique')
 
     def test_split_document_returns_three_layers(self):
         from StoreApp.domains.design.services.source_document import split_document
