@@ -245,7 +245,7 @@ const pageStyle = computed(() => {
 })
 // Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
 // en todas las páginas y fuera del catálogo envía a /catalogo?q=.
-const isShop = computed(() => pageTemplate.value === 'shop')
+const isShop = computed(() => pageTemplate.value === 'shop' || pageTemplate.value === 'mercado')
 
 // Hojas propias de un diseño: tiñen también el chrome (barra, pie, dock) en
 // páginas que no montan la portada (servicios, ficha). Todos se cargan
@@ -260,6 +260,7 @@ const TEMPLATE_CSS = {
   indumentaria: () => import('../assets/store-trama.css'),
   boutique:  () => import('../assets/store-boutique.css'),
   atelier:   () => import('../assets/store-atelier.css'),
+  mercado:   () => import('../assets/store-mercado.css'),
   clasico:   () => import('../assets/store-clasico.css'),
   circuito:  () => import('../assets/store-circuito.css'),
   seguridad: () => import('../assets/store-seguridad.css')

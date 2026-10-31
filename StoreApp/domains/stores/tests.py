@@ -404,13 +404,13 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_basic_discards_plus_and_advanced_templates(self):
         client, _       =   self._client()
-        for key in ('trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'):
+        for key in ('trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico', 'circuito', 'seguridad'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], 'raiz')
 
     def test_standard_picks_plus_templates(self):
         client, _       =   self._client('has_design_plus')
-        for key in ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico'):
+        for key in ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
@@ -422,7 +422,7 @@ class StoreTemplateGatingTests(TestCase):
 
     def test_premium_picks_any_template(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
-        for key in ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'):
+        for key in ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico', 'circuito', 'seguridad'):
             response    =   client.patch(f'{STORES_URL}customization/', {'template': key}, format = 'json')
             self.assertEqual(response.data['customization']['template'], key)
 
@@ -447,7 +447,7 @@ class StoreTemplateGatingTests(TestCase):
         #Todos los ids viejos se remapean a uno de los diseños del catálogo
         #y el mapa no conserva ni inventa claves fuera de él.
         known       =   {key for key, _ in StoreCustomization.TEMPLATE_CHOICES}
-        self.assertEqual(known, {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'})
+        self.assertEqual(known, {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico', 'circuito', 'seguridad'})
         self.assertTrue(StoreCustomization.TEMPLATE_RETIRED_MAP)
         for old, new in StoreCustomization.TEMPLATE_RETIRED_MAP.items():
             self.assertIn(new, known, f'{old} -> {new}')
@@ -455,7 +455,7 @@ class StoreTemplateGatingTests(TestCase):
     def test_public_payload_lists_allowed_templates(self):
         client, store   =   self._client('has_design_plus')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico'])
+        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico'])
 
     def test_theme_toggle_patch_is_visible_in_the_public_payload_immediately(self):
         #Modo noche: el dueño guarda theme_toggle y la web pública ya lo ve
@@ -542,13 +542,13 @@ class StoreTemplateGatingTests(TestCase):
         client, _       =   self._client()
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
         self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos'])
-        for key in ('trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'):
+        for key in ('trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico', 'circuito', 'seguridad'):
             self.assertNotIn(key, response.data['allowed_templates'])
 
     def test_public_allowed_templates_match_the_plan(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'clasico', 'circuito', 'seguridad'])
+        self.assertEqual(response.data['allowed_templates'], ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico', 'circuito', 'seguridad'])
 
 
 class MarketingFieldsTests(TestCase):

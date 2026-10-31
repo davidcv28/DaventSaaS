@@ -139,7 +139,7 @@ class StoreCustomization(models.Model):
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
     TEMPLATE_BASE               =   ('raiz', 'alimentos')
-    TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'atelier', 'clasico')
+    TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'atelier', 'mercado', 'clasico')
     TEMPLATE_ADVANCED           =   ('circuito', 'seguridad')
     #El motor "Diseñar con IA" no tiene patrones exclusivos ni propone los
     #diseños nuevos: sigue proponiendo solo los 6 de PUBLIC_TEMPLATES
@@ -153,6 +153,7 @@ class StoreCustomization(models.Model):
         ('indumentaria',  'Indumentaria'),
         ('boutique',      'Boutique'),
         ('atelier',       'Atelier'),
+        ('mercado',       'Mercado'),
         ('clasico',       'Clásico'),
         ('circuito',      'Circuito'),
         ('seguridad',     'Seguridad'),
@@ -161,10 +162,11 @@ class StoreCustomization(models.Model):
     #claros/neutros -> 'raiz', editoriales/moda -> 'trama', oscuros/
     #técnicos -> 'circuito'. Ninguna tienda existente pierde su web.
     #'boutique' queda FUERA del mapa: desde el rediseño es un diseño del
-    #catálogo (plus), no un id retirado.
+    #catálogo (plus), no un id retirado. Lo mismo vale para 'mercado', que
+    #pasó de id retirado a diseño plus del catálogo.
     TEMPLATE_RETIRED_MAP        =   {
         'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
-        'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz',
+        'studio': 'raiz', 'arena': 'raiz',
         'proceso': 'raiz', 'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz',
         'shop': 'raiz',
         'lookbook': 'trama',
