@@ -996,3 +996,80 @@
   background: linear-gradient(135deg, #7c3aed, #d946ef); color: #fff;
   font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
 }
+
+/* ===== Pulido móvil: color, transiciones y navegación fluida (<= 860px) ===== */
+@media (max-width: 860px) {
+  html { scroll-behavior: smooth; }
+  .app--tabs { -webkit-tap-highlight-color: transparent; }
+  .app--tabs button, .app--tabs a, .app--tabs summary { touch-action: manipulation; }
+  .app--tabs .main { overscroll-behavior-y: contain; }
+
+  /* Barra superior fija con vidrio: el contexto de la sección no se pierde
+     al scrollear formularios largos. */
+  .app--tabs .topbar {
+    position: sticky; top: 0; z-index: 30;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(14px) saturate(1.25); -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  }
+  .app--tabs .topbar-title { min-width: 0; }
+  .app--tabs .topbar-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Cabecera de sección con acento de marca. */
+  .app--tabs .page-head {
+    padding: 14px 16px; border-radius: 16px; border: 1px solid var(--line-soft);
+    background:
+      radial-gradient(120% 160% at 0% 0%, var(--brand-soft) 0%, transparent 62%),
+      var(--card);
+  }
+  .app--tabs .page-head h1 { font-size: 21px; line-height: 1.2; }
+
+  /* Tab bar: píldora activa, icono que respira y feedback al toque. */
+  .tabbar > button { border-radius: 14px; }
+  .tabbar > button.active {
+    background: color-mix(in srgb, var(--brand-500) 12%, transparent);
+  }
+  .tabbar > button.active .icon { transform: translateY(-2px) scale(1.08); }
+  .tabbar > button:active { transform: scale(.95); }
+  .tabbar > button .chat-badge { box-shadow: 0 0 0 2px var(--bg); }
+
+  /* Pestañas de Diseño: carrusel con snap y sin barra de scroll. */
+  .dsg-tabs { scrollbar-width: none; scroll-snap-type: x proximity; }
+  .dsg-tabs::-webkit-scrollbar { display: none; }
+  .dsg-tab { scroll-snap-align: start; }
+  .dsg-card-btn.active {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--brand-500), var(--accent));
+    color: #fff;
+    box-shadow: 0 10px 22px -12px rgba(79, 70, 229, .7);
+  }
+  .dsg-card-btn.active .dsg-card-ico { background: rgba(255, 255, 255, .22); color: #fff; }
+  .dsg-card-btn.active .dsg-card-txt small { color: rgba(255, 255, 255, .82); }
+
+  /* Savebar: borde de marca cuando hay cambios y botón principal destacado. */
+  .dsg-savebar { border-radius: 18px; }
+  .dsg-savebar.dirty {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--warn) 8%, transparent), transparent 70%),
+      color-mix(in srgb, var(--card) 92%, transparent);
+  }
+  .dsg-actions .btn:last-child {
+    background: linear-gradient(135deg, var(--brand-500), var(--accent));
+    box-shadow: 0 10px 22px -12px rgba(79, 70, 229, .7);
+  }
+}
+
+/* Feedback táctil de botones (sin hover pegado en pantallas táctiles). */
+@media (max-width: 860px) {
+  .app--tabs .btn:active, .app--tabs .sec-tab:active, .app--tabs .stat:active { transform: scale(.97); }
+  .app--tabs .btn, .app--tabs .sec-tab, .app--tabs .stat { transition: transform .16s var(--ease-out), background-color .18s, border-color .18s, box-shadow .18s, color .18s; }
+}
+@media (hover: hover) and (max-width: 860px) {
+  .app--tabs .dsg-card-btn:hover { transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .app--tabs .btn:active, .app--tabs .sec-tab:active, .app--tabs .stat:active,
+  .tabbar > button:active, .tabbar > button.active .icon { transform: none !important; }
+}
+

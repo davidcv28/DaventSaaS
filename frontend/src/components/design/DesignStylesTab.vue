@@ -5,7 +5,7 @@
 // Sin subidas de imágenes: logo, portada y galería viven en la pestaña Fotos.
 // Escribe los mismos campos de `form` que el Studio y dispara los mismos
 // eventos (ring/navigate), así el guardado sigue siendo uno solo.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
 import {
@@ -148,6 +148,43 @@ function closePatternPreview() {
 function onPreviewKey(e) { if (e.key === 'Escape') closePatternPreview() }
 onMounted(() => window.addEventListener('keydown', onPreviewKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
+
+// --- Vista previa en móvil: overlay a demanda ---------------------------
+// En pantallas chicas no se muestra ningún panel embebido: la web real se
+// abre desde el botón flotante en una hoja a pantalla completa.
+const closePvBtn = ref(null)
+let lastFocusEl = null
+function openMobilePreview() {
+  lastFocusEl = document.activeElement
+  emit('update:previewOpen', true)
+}
+function closeMobilePreview() {
+  emit('update:previewOpen', false)
+}
+watch(() => props.previewOpen, async (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+  if (open) {
+    await nextTick()
+    closePvBtn.value?.focus()
+  } else {
+    lastFocusEl?.focus?.()
+    lastFocusEl = null
+  }
+})
+function onMobilePreviewKey(e) { if (e.key === 'Escape' && props.previewOpen) closeMobilePreview() }
+// Si el viewport crece a escritorio, la hoja se cierra (ahí ya está el panel).
+function onViewport() {
+  if (props.previewOpen && window.matchMedia('(min-width: 1100px)').matches) closeMobilePreview()
+}
+onMounted(() => {
+  window.addEventListener('keydown', onMobilePreviewKey)
+  window.addEventListener('resize', onViewport, { passive: true })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onMobilePreviewKey)
+  window.removeEventListener('resize', onViewport)
+  if (props.previewOpen) document.body.style.overflow = ''
+})
 
 // Opciones de los selectboxes con icono/color: el select nativo no puede
 // mostrar muestras, por eso el menú usa DesignSelect.
@@ -321,12 +358,6 @@ onMounted(() => {
   <div class="dmenu">
     <div class="dmenu-grid">
       <div class="dmenu-main">
-        <div class="dmenu-bar">
-          <button type="button" class="btn ghost btn-auto" :aria-expanded="previewOpen" @click="emit('update:previewOpen', !previewOpen)">
-            <AppIcon name="eye" :size="16" /> {{ previewOpen ? 'Ocultar vista previa' : 'Ver mi web' }}
-          </button>
-        </div>
-
         <div class="card dmenu-card">
           <header class="dmenu-head">
             <strong><AppIcon name="palette" :size="17" aria-hidden="true" /> Diseño</strong>
@@ -405,7 +436,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <aside class="dmenu-live" :class="{ 'is-open': previewOpen }">
+      <aside class="dmenu-live">
         <DesignLivePreview :form="form" />
       </aside>
     </div>
@@ -420,7 +451,38 @@ onMounted(() => {
         Abrir Studio <AppIcon name="arrow-right" :size="16" />
       </button>
     </div>
+
+    <!-- Punto de acceso único a la vista previa en pantallas chicas. -->
+    <button
+      v-if="!previewOpen" type="button" class="dmenu-fab"
+      aria-label="Ver mi web en vista previa" @click="openMobilePreview"
+    >
+      <span class="dmenu-fab-ico" aria-hidden="true"><AppIcon name="eye" :size="18" /></span>
+      <span>Ver mi web</span>
+    </button>
   </div>
+
+  <Teleport to="body">
+    <Transition name="dmenu-pv">
+      <div
+        v-if="previewOpen" class="dmenu-pv" role="dialog" aria-modal="true"
+        aria-label="Vista previa de tu web"
+      >
+        <header class="dmenu-pv-head">
+          <strong><AppIcon name="eye" :size="16" aria-hidden="true" /> Tu web en vivo</strong>
+          <button
+            ref="closePvBtn" type="button" class="dmenu-pv-x"
+            aria-label="Cerrar la vista previa" @click="closeMobilePreview"
+          >
+            <AppIcon name="x" :size="18" />
+          </button>
+        </header>
+        <div class="dmenu-pv-body">
+          <DesignLivePreview :form="form" initial-device="mobile" />
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 
   <Teleport to="body">
     <div v-if="patternPreview" class="dpv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
@@ -452,8 +514,6 @@ onMounted(() => {
 .dmenu { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .dmenu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 .dmenu-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.dmenu-bar { display: none; }
-.dmenu-bar .btn { width: auto; }
 .dmenu-live { min-width: 0; }
 .dmenu-card { padding: 18px; display: flex; flex-direction: column; gap: 16px; container-type: inline-size; }
 .dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
@@ -499,9 +559,11 @@ onMounted(() => {
   .dmenu-live { position: sticky; top: 12px; }
 }
 @media (max-width: 1099px) {
-  .dmenu-bar { display: flex; justify-content: flex-end; }
+  /* Sin panel embebido: la vista previa vive en la hoja a pantalla completa. */
   .dmenu-live { display: none; }
-  .dmenu-live.is-open { display: block; order: -1; position: sticky; top: 8px; z-index: 6; }
+}
+@media (min-width: 1100px) {
+  .dmenu-fab { display: none; }
 }
 @media (max-width: 640px) {
   .dmenu-studio { flex-wrap: wrap; align-items: flex-start; }
@@ -534,5 +596,63 @@ onMounted(() => {
 .dpv-frame {
   flex: 1 1 auto; width: 100%; border: 0; border-radius: 14px; background: #fff;
   box-shadow: 0 30px 80px -30px #000;
+}
+
+/* Botón flotante de vista previa (solo < 1100px). Vive por encima de la
+   savebar sticky y de la tab bar, sin tapar los controles del formulario. */
+.dmenu-fab {
+  position: fixed; right: calc(14px + env(safe-area-inset-right));
+  bottom: calc(184px + env(safe-area-inset-bottom)); z-index: 45;
+  display: inline-flex; align-items: center; gap: 8px; min-height: 46px;
+  padding: 0 16px 0 12px; border: 0; border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand-500, #6366f1), var(--accent, #8b5cf6));
+  color: #fff; font: inherit; font-size: 13.5px; font-weight: 650; letter-spacing: -.01em;
+  box-shadow: 0 14px 30px -12px rgba(79, 70, 229, .75), 0 0 0 1px rgba(255, 255, 255, .16) inset;
+  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .18s var(--ease-out, cubic-bezier(.2, .8, .2, 1)), box-shadow .18s, filter .18s;
+}
+.dmenu-fab:hover { filter: brightness(1.06); }
+.dmenu-fab:active { transform: scale(.96); }
+.dmenu-fab:focus-visible { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 3px; }
+.dmenu-fab-ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .2); }
+
+/* Hoja de vista previa a pantalla completa (móvil/tablet). */
+.dmenu-pv {
+  position: fixed; inset: 0; z-index: 1300; display: flex; flex-direction: column;
+  background: color-mix(in srgb, var(--bg, #f8fafc) 94%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+}
+.dmenu-pv-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 2px 4px 10px;
+}
+.dmenu-pv-head strong {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 14px; letter-spacing: -.01em; color: var(--ink, #0f172a);
+}
+.dmenu-pv-head strong .icon { color: var(--brand-600, #4f46e5); }
+.dmenu-pv-x {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
+  border: 1px solid var(--line, #e5e7eb); background: var(--card, #fff); color: var(--ink-2, #334155);
+  cursor: pointer; touch-action: manipulation;
+  transition: background .15s, transform .15s, border-color .15s;
+}
+.dmenu-pv-x:hover { border-color: var(--brand-soft-line, #c7d2fe); }
+.dmenu-pv-x:active { transform: scale(.94); }
+.dmenu-pv-body { flex: 1 1 auto; min-height: 0; display: flex; }
+.dmenu-pv-body :deep(.dlp) {
+  flex: 1 1 auto; min-height: 0; padding: 10px; border-radius: 18px;
+  box-shadow: 0 20px 50px -26px rgba(9, 12, 24, .45);
+}
+.dmenu-pv-body :deep(.dlp-stage) { height: 100%; min-height: 0; }
+.dmenu-pv-body :deep(.dlp-stage.mobile) { padding: 10px 0; }
+.dmenu-pv-body :deep(.dlp-stage.mobile .dlp-device) { border-radius: 22px; }
+.dmenu-pv-enter-active, .dmenu-pv-leave-active { transition: opacity .2s ease; }
+.dmenu-pv-enter-active .dmenu-pv-body, .dmenu-pv-leave-active .dmenu-pv-body { transition: transform .22s var(--ease-out, cubic-bezier(.2, .8, .2, 1)); }
+.dmenu-pv-enter-from, .dmenu-pv-leave-to { opacity: 0; }
+.dmenu-pv-enter-from .dmenu-pv-body, .dmenu-pv-leave-to .dmenu-pv-body { transform: translateY(14px); }
+@media (prefers-reduced-motion: reduce) {
+  .dmenu-fab, .dmenu-pv, .dmenu-pv-body { transition: none !important; }
 }
 </style>

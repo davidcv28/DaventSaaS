@@ -10,7 +10,9 @@ import { ensureStoreFont, storesApi } from '../../api/stores.api.js'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
-  form: { type: Object, required: true }
+  form: { type: Object, required: true },
+  // Dispositivo con el que arranca la vista: la hoja móvil abre en "móvil".
+  initialDevice: { type: String, default: 'desktop' }
 })
 
 const store = useStoreStore()
@@ -25,7 +27,7 @@ const src = computed(() => {
   if (previewToken.value) params.set('preview', previewToken.value)
   return `/${slug.value}?${params}`
 })
-const device = ref('desktop')
+const device = ref(props.initialDevice === 'mobile' ? 'mobile' : 'desktop')
 const frame = ref(null)
 const state = ref('loading')
 // El panel es angosto: la web se renderiza a ancho de escritorio y se escala

@@ -4116,7 +4116,6 @@ async function changePassword() {
               <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
               <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
             </p>
-            <button type="button" class="btn ghost btn-auto dsg-preview-open" :aria-expanded="lookPreview" @click="lookPreview = !lookPreview"><AppIcon name="eye" :size="16" /> {{ lookPreview ? 'Ocultar' : 'Ver mi web' }}</button>
             <div class="dsg-actions">
               <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
               <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
