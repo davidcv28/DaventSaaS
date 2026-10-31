@@ -88,11 +88,6 @@
   .reveal{opacity:0;transform:translateY(14px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
   .reveal.on{opacity:1;transform:none}
   /* Modo noche: baja el piso y sube el ámbar para no perder contraste. */
-  @media (prefers-color-scheme:dark){
-    :root{--deep:#04070e;--slate:#0a1020;--text:#f2f6fd;--muted:#a9bcd4;--line:#2a3a52;--amber:#ffb020}
-    .ds-product,.ds-cat{background:#0a1020}
-    .shield{background:#ffb0201a}
-  }
   html[data-ds-theme="dark"]{--deep:#04070e;--slate:#0a1020;--text:#f2f6fd;--muted:#a9bcd4;--line:#2a3a52;--amber:#ffb020}
   html[data-ds-theme="dark"] .ds-product,html[data-ds-theme="dark"] .ds-cat{background:#0a1020}
   html[data-ds-theme="dark"] .shield{background:#ffb0201a}

@@ -41,6 +41,37 @@ img[src=""]{display:none!important}
 .svc-head p{margin:8px 0 0;font-size:12.5px;opacity:.75;max-width:46ch}
 .svc-head p:empty{display:none}
 .svc-cta{display:inline-block;margin-top:22px;padding:11px 16px;border-radius:var(--ds-radius,6px);background:var(--ds-accent,#111);color:#fff;font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
+
+/* Personalidad de subtítulos (común a todos los diseños): el texto que
+   acompaña a un título de sección se lee como etiqueta editorial, con una
+   regla corta y el acento del estilo. */
+.head > span,.head > small,.cat-head > span{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--ds-accent,currentColor);
+  font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+}
+.head > span:not(:empty)::before,
+.head > small:not(:empty)::before,
+.cat-head > span:not(:empty)::before{
+  content:"";flex:none;width:18px;height:1px;background:currentColor;opacity:.6;
+}
+
+/* Relleno visual de bandas planas: una retícula tenue evita el bloque
+   vacío sin competir con el contenido. */
+.band.white,.band.gray,.cat-surface,.svc-surface{
+  background-image:radial-gradient(color-mix(in srgb,var(--ink,currentColor) 4%,transparent) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+
+/* Media sin imagen: degradado de marca + marca de agua en vez de un
+   rectángulo gris. */
+.ds-product-img.is-empty,.hero-media{
+  background-image:
+    radial-gradient(120% 100% at 18% 0%,color-mix(in srgb,var(--ds-accent,#888) 18%,transparent),transparent 62%),
+    linear-gradient(150deg,color-mix(in srgb,var(--ink,#111) 7%,transparent),transparent 58%);
+  background-color:var(--soft,var(--surface,#f5f5f5));
+}
+.ds-product-img.is-empty::after{opacity:.5}
 """
 
 #El puente vive junto a este módulo y se sirve desde la misma URL del

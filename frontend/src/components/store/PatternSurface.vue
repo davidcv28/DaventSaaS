@@ -36,10 +36,14 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate'])
+const emit = defineEmits(['navigate', 'toggle-theme'])
 
 function onMessage(e) {
   if (e.source !== frame.value?.contentWindow) return
+  if (e.data?.type === 'davent:ds-theme-toggle') {
+    emit('toggle-theme')
+    return
+  }
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
     if (['home', 'catalog', 'services'].includes(route)) {

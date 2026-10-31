@@ -83,12 +83,6 @@
   .reveal{opacity:0;transform:translateY(16px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
   .reveal.on{opacity:1;transform:none}
   /* Modo noche: sistema + toggle explícito de la web */
-  @media (prefers-color-scheme:dark){
-    :root{--paper:#0b1512;--card:#132420;--ink:#e8f3ee;--muted:#9db6ae;--line:#233a33;--deep:#7fd4c7;--lime:#2f4a1f;
-      --teal:color-mix(in srgb,var(--ds-accent,#0f766e) 45%,#c8fff4)}
-    .eyebrow,.info .badge{background:#17322b;color:#b7e8dd}
-    .board::after{color:#7fd4c714}
-  }
   html[data-ds-theme="dark"]{--paper:#0b1512;--card:#132420;--ink:#e8f3ee;--muted:#9db6ae;--line:#233a33;--deep:#7fd4c7;--lime:#2f4a1f;
     --teal:color-mix(in srgb,var(--ds-accent,#0f766e) 45%,#c8fff4)}
   html[data-ds-theme="dark"] .eyebrow,html[data-ds-theme="dark"] .info .badge{background:#17322b;color:#b7e8dd}

@@ -251,7 +251,8 @@ class PatternSourceTests(TestCase):
                 self.assertIn('categories', variables)
                 #El estilo solo puede tocar colores/bordes: el diseño usa --ds-*.
                 self.assertIn('var(--ds-accent', css)
-                #Modo noche explícito, además de prefers-color-scheme.
+                #Modo noche explícito: lo controla el interruptor del diseño,
+                #no el sistema operativo del visitante.
                 self.assertIn('data-ds-theme="dark"', css)
                 #Portada, catálogo y servicios son superficies del diseño.
                 for surface in ('landing', 'catalog', 'services'):

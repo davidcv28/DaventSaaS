@@ -89,9 +89,6 @@
   .reveal{opacity:0;transform:translateY(12px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
   .reveal.on{opacity:1;transform:none}
   /* Modo noche: el diseño ya es oscuro; la noche baja el fondo y sube el contraste. */
-  @media (prefers-color-scheme:dark){
-    :root{--void:#03060b;--panel:#080f19;--text:#f0fbff;--muted:#a2bccb;--line:#1f3d52;--lime:#b8f14a}
-  }
   html[data-ds-theme="dark"]{--void:#03060b;--panel:#080f19;--text:#f0fbff;--muted:#a2bccb;--line:#1f3d52;--lime:#b8f14a}
   html[data-ds-theme="dark"] .console{background:#050c14}
   @media (max-width:960px){

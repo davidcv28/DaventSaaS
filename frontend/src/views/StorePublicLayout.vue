@@ -871,17 +871,8 @@ onBeforeUnmount(() => {
       :surface="patternSurface"
       :title="shopName"
       @navigate="onPatternNavigate"
+      @toggle-theme="togglePageTheme"
     />
-    <button
-      v-if="usePattern && showThemeToggle"
-      type="button"
-      class="sp-pattern-theme"
-      :aria-label="pageTheme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-      :aria-pressed="pageTheme === 'dark'"
-      @click="togglePageTheme"
-    >
-      <AppIcon :name="pageTheme === 'dark' ? 'sun' : 'moon'" :size="17" />
-    </button>
     <div v-if="!usePattern" class="sp-vue-page">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
