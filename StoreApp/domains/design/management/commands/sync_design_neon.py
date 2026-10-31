@@ -74,7 +74,7 @@ class Command(BaseCommand):
             for icon_style in icon_styles:
                 self.stdout.write(f'[dry-run] icon-style {icon_style.slug}')
             for style in styles:
-                self.stdout.write(f'[dry-run] style {style.slug} - template={style.template}')
+                self.stdout.write(f'[dry-run] style {style.slug} - template={style.template} - pattern={style.pattern.slug if style.pattern_id else "-"}')
             for pattern in patterns:
                 style = pattern.style.slug if pattern.style_id else '-'
                 self.stdout.write(f'[dry-run] pattern {pattern.slug} - template={pattern.template} - style={style}')
@@ -87,22 +87,45 @@ class Command(BaseCommand):
         connection  =   psycopg2.connect(url)
         try:
             with connection, connection.cursor() as cursor:
+                self._ensure_pattern_column(cursor)
                 for icon_style in icon_styles:
                     self._upsert(cursor, 'design_designiconstyle', ICON_COLS, self._values(icon_style, ICON_COLS))
                     self.stdout.write(self.style.SUCCESS(f'icon-style {icon_style.slug} -> Neon'))
                 for style in styles:
                     self._style(cursor, style)
                     self.stdout.write(self.style.SUCCESS(f'style {style.slug} -> Neon'))
+                pattern_ids = {}
                 for pattern in patterns:
                     style_id = self._style(cursor, pattern.style) if pattern.style_id else None
                     icon_id = self._upsert(
                         cursor, 'design_designiconstyle', ICON_COLS,
                         self._values(pattern.icon_style, ICON_COLS),
                     ) if pattern.icon_style_id else None
-                    self._pattern(cursor, pattern, style_id, icon_id)
+                    pattern_ids[pattern.slug] = self._pattern(cursor, pattern, style_id, icon_id)
                     self.stdout.write(self.style.SUCCESS(f'pattern {pattern.slug} -> Neon'))
+                #FK de estilos -> diseño: se resuelve después de los patrones
+                #(el alta de un estilo no puede referenciar una fila que
+                #todavía no existe).
+                for style in styles:
+                    if style.pattern_id and style.pattern.slug in pattern_ids:
+                        cursor.execute(
+                            'UPDATE design_designstyle SET pattern_id = %s WHERE slug = %s',
+                            (pattern_ids[style.pattern.slug], style.slug),
+                        )
         finally:
             connection.close()
+
+    #COLUMNA DEL FK (base remota creada antes del vínculo)
+    def _ensure_pattern_column(self, cursor):
+        cursor.execute('ALTER TABLE design_designstyle ADD COLUMN IF NOT EXISTS pattern_id bigint')
+        cursor.execute(
+            "SELECT 1 FROM pg_constraint WHERE conname = 'design_designstyle_pattern_id_fk'"
+        )
+        if cursor.fetchone() is None:
+            cursor.execute(
+                'ALTER TABLE design_designstyle ADD CONSTRAINT design_designstyle_pattern_id_fk '
+                'FOREIGN KEY (pattern_id) REFERENCES design_designpattern(id) ON DELETE SET NULL'
+            )
 
     #ESTILO REFERENCIADO (FK)
     def _style(self, cursor, style):

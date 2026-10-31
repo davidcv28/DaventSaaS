@@ -151,6 +151,15 @@ class DesignStyle(models.Model):
         blank = True,
         verbose_name = 'Tags',
     )
+    #Diseño al que pertenece el estilo: cada patrón tiene sus propios estilos.
+    pattern             =   models.ForeignKey(
+        'DesignPattern',
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = 'styles',
+        verbose_name = 'Diseño',
+    )
     is_default          =   models.BooleanField(default = False, db_index = True, verbose_name = 'Predeterminado')
     is_active           =   models.BooleanField(default = True, db_index = True, verbose_name = 'Activo')
     position            =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')

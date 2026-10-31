@@ -104,6 +104,9 @@ class Command(BaseCommand):
             if style and not pattern.style_id:
                 pattern.style = style
                 pattern.save(update_fields = ['style'])
+            if style and not style.pattern_id:
+                style.pattern = pattern
+                style.save(update_fields = ['pattern'])
 
         self.stdout.write(self.style.SUCCESS(
             f'{"Creado" if created else "Actualizado"} patrón {pattern.slug} · '

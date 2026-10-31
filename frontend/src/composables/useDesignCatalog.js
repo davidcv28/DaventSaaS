@@ -28,6 +28,7 @@ export function styleToPreset(style) {
     desc: style.descripcion || '',
     tier: style.tier || 'base',
     template: style.template || '',
+    pattern: style.pattern || '',
     pageTheme: style.page_theme || 'light',
     theme: style.tokens || {},
     layout: style.layout || {},
@@ -77,6 +78,11 @@ export function useDesignCatalog() {
     patterns: computed(() => catalog.patterns),
     iconStyles: computed(() => catalog.iconStyles),
     defaultIconStyle: computed(() => catalog.defaultIconStyle),
+    // Estilos propios de un diseño (FK DesignStyle.pattern): sin diseño
+    // devuelve el catálogo completo.
+    stylesForPattern: (slug) => (
+      slug ? catalog.styles.filter((row) => !row.pattern || row.pattern === slug) : catalog.styles
+    ),
     iconStyleBySlug: (slug) => catalog.iconStyles.find((row) => row.slug === slug) || null
   }
 }

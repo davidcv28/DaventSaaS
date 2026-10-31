@@ -57,7 +57,12 @@ onMounted(() => {
 const patternOptions = computed(() => (
   modelPatterns.value.length ? modelPatterns.value : patterns.value
 ))
-const styleOptions = computed(() => styles.value.filter((s) => s.is_active !== false))
+// Cada diseño trae sus propios estilos (DesignStyle.pattern): con un diseño
+// elegido solo se listan los suyos (los sin vínculo siguen disponibles).
+const styleOptions = computed(() => styles.value.filter((s) => (
+  s.is_active !== false
+  && (!currentPattern.value || !s.pattern || s.pattern === currentPattern.value)
+)))
 const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 

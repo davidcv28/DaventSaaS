@@ -290,6 +290,23 @@ BUTTON_MAP = {'square': '0', 'rounded': '8px', 'pill': '999px'}
 DIVIDER_MAP = {'none': 'transparent', 'line': 'currentColor', 'dots': 'currentColor'}
 
 
+def _contrast_ink(value):
+    """
+    Texto legible sobre un color de acento: oscuro en acentos claros,
+    claro en acentos oscuros. Evita un botón amarillo con texto blanco.
+    """
+    match = re.fullmatch(r'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})', str(value or '').strip())
+    if not match:
+        return ''
+    digits = match.group(1)
+    if len(digits) == 3:
+        digits = ''.join(ch * 2 for ch in digits)
+    r, g, b = (int(digits[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in (r, g, b)]
+    luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    return '#191611' if luminance > 0.42 else '#FFFDF8'
+
+
 def theme_css(customization, pattern = None):
     """
     Bloque `:root { --ds-* }` con lo que el estilo puede tocar. Los
@@ -313,6 +330,7 @@ def theme_css(customization, pattern = None):
         '--ds-border-style': effects.get('border_style', ''),
         '--ds-divider': DIVIDER_MAP.get(effects.get('divider', ''), ''),
         '--ds-accent': color if str(color).startswith('#') else '',
+        '--ds-accent-ink': _contrast_ink(color),
     }
     for key in ('primary', 'secondary', 'bg', 'surface', 'text', 'muted', 'border', 'success', 'danger'):
         value = effects.get(key)

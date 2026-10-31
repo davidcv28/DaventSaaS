@@ -53,12 +53,18 @@ def validate_code(value, label):
 class DesignStyleSerializer(serializers.ModelSerializer):
     tokens              =   serializers.JSONField(required = False)
     effects             =   serializers.JSONField(required = False)
+    pattern             =   serializers.SlugRelatedField(
+        slug_field = 'slug',
+        queryset = DesignPattern.objects.all(),
+        required = False,
+        allow_null = True,
+    )
     class Meta:
         model           =   DesignStyle
         fields          =   [
             'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
             'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'effects', 'tags',
-            'is_default', 'is_active', 'position', 'created_at', 'updated_at',
+            'pattern', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
         ]
         read_only_fields    =   ['id', 'created_at', 'updated_at']
     def validate_tokens(self, value):
@@ -75,12 +81,13 @@ class DesignStyleSerializer(serializers.ModelSerializer):
 # DESIGN STYLE LIST SERIALIZER (payload mínimo del catálogo)
 #=========================================
 class DesignStyleListSerializer(serializers.ModelSerializer):
+    pattern             =   serializers.SlugRelatedField(slug_field = 'slug', read_only = True)
     class Meta:
         model           =   DesignStyle
         fields          =   [
             'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
             'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'effects', 'tags',
-            'is_default', 'is_active', 'position',
+            'pattern', 'is_default', 'is_active', 'position',
         ]
 #=========================================
 # DESIGN PATTERN SERIALIZER (detalle: patrón aplicable)

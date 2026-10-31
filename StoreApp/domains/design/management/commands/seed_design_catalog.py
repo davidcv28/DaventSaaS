@@ -46,6 +46,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             style_count     =   self._styles(styles)
             pattern_count   =   self._patterns(patterns)
+            self._link_styles()
             self._mark_defaults(styles, patterns)
         self.stdout.write(self.style.SUCCESS(
             f'Estilos: {style_count} · Patrones: {pattern_count} · '
@@ -113,6 +114,20 @@ class Command(BaseCommand):
                 },
             )
         return len(patterns)
+
+    #ESTILOS PROPIOS DE CADA DISEÑO (FK DesignStyle.pattern)
+    def _link_styles(self):
+        #El vínculo explícito (patrón que ya usa el estilo) manda; si no,
+        #cae en el patrón de la misma plantilla y por último en el default.
+        #Nunca pisa un vínculo ya asignado a mano.
+        for style in DesignStyle.objects.filter(pattern__isnull = True):
+            pattern = (
+                DesignPattern.objects.filter(style = style).order_by('-is_default', 'position').first()
+                or DesignPattern.objects.filter(template = style.template).order_by('-is_default', 'position').first()
+                or DesignPattern.objects.filter(is_default = True).first()
+            )
+            if pattern is not None:
+                DesignStyle.objects.filter(pk = style.pk).update(pattern = pattern)
 
     #DEFAULTS (uno solo por tabla)
     def _mark_defaults(self, styles, patterns):
