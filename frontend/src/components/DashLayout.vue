@@ -40,6 +40,27 @@ const emit = defineEmits(['navigate', 'logout', 'locked', 'search', 'messages', 
 const open = ref(false)
 const sidebarEl = ref(null)
 const navEl = ref(null)
+const sheetEl = ref(null)
+let sheetDragY = null
+const onSheetTouchStart = (e) => { sheetDragY = e.touches[0].clientY }
+const onSheetTouchMove = (e) => {
+  if (sheetDragY === null || !sheetEl.value) return
+  // Solo arrastra cuando el menú interno ya está arriba de todo; si no, el
+  // gesto es scroll de la lista, no cierre del sheet.
+  const nav = sheetEl.value.querySelector('.sheet-nav')
+  if (nav && nav.scrollTop > 0) { sheetDragY = e.touches[0].clientY; return }
+  const dy = Math.max(0, e.touches[0].clientY - sheetDragY)
+  sheetEl.value.style.transform = `translateY(${dy}px)`
+  sheetEl.value.classList.add('dragging')
+}
+const onSheetTouchEnd = (e) => {
+  if (sheetDragY === null || !sheetEl.value) return
+  const dy = Math.max(0, e.changedTouches[0].clientY - sheetDragY)
+  sheetDragY = null
+  sheetEl.value.classList.remove('dragging')
+  sheetEl.value.style.transform = ''
+  if (dy > 90) close()
+}
 const btnEls = new Map()
 const indicator = ref({ y: 0, h: 0, ready: false })
 
@@ -143,6 +164,7 @@ onBeforeUnmount(() => {
             >
               <AppIcon :name="i.icon" :size="18" />
               <span class="nav-label"><span>{{ i.label }}</span><small v-if="i.hint">{{ i.hint }}</small></span>
+              <span v-if="i.badge" class="nav-badge">{{ i.badge > 99 ? '99+' : i.badge }}</span>
               <AppIcon v-if="i.locked" name="lock" :size="13" class="nav-lock" />
             </button>
           </template>
@@ -213,7 +235,18 @@ onBeforeUnmount(() => {
     <!-- Sheet "Más": menú completo en móvil -->
     <template v-if="hasTabs">
       <div v-if="open" class="sheet-scrim" @click="close" aria-hidden="true"></div>
-      <div id="more-sheet" class="more-sheet" :class="{ open }" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+      <div
+        id="more-sheet"
+        ref="sheetEl"
+        class="more-sheet"
+        :class="{ open }"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Todas las secciones"
+        @touchstart.passive="onSheetTouchStart"
+        @touchmove.passive="onSheetTouchMove"
+        @touchend="onSheetTouchEnd"
+      >
         <div class="sheet-head">
           <span class="sheet-grab" aria-hidden="true"></span>
           <div class="sheet-brand"><BrandLogo :size="26" /> <strong>DAVENT</strong><span v-if="planName" class="sheet-plan">{{ planName }}</span></div>
@@ -230,6 +263,7 @@ onBeforeUnmount(() => {
             >
               <AppIcon :name="i.icon" :size="18" />
               <span class="nav-label"><span>{{ i.label }}</span><small v-if="i.hint">{{ i.hint }}</small></span>
+              <span v-if="i.badge" class="nav-badge">{{ i.badge > 99 ? '99+' : i.badge }}</span>
               <AppIcon v-if="i.locked" name="lock" :size="13" class="nav-lock" />
               <AppIcon v-else name="chevron-right" :size="15" class="sheet-go" />
             </button>

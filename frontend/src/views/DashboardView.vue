@@ -348,7 +348,7 @@ const navItems = computed(() => {
   return [
     { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
     { heading: 'Vender' },
-    { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs },
+    { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs, badge: catalog.products.length || null },
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
     { heading: 'Mi web' },
@@ -490,7 +490,7 @@ const searchCommands = computed(() => {
 // Los 4 destinos del pulgar + "Más" (el quinto tab lo dibuja el layout).
 const mobileTabs = computed(() => [
   { id: 'overview', label: 'Inicio', icon: 'dashboard' },
-  { id: 'catalogs', label: 'Vender', icon: 'package' },
+  { id: 'catalogs', label: 'Vender', icon: 'package', locked: navLocks.value.catalogs },
   { id: 'store', label: 'Mi web', icon: 'store' },
   { id: 'chat', label: 'Mensajes', icon: 'message-circle', badge: chatUnread.value }
 ])
@@ -499,6 +499,14 @@ function shareWhatsApp() {
   if (!publicUrl.value) return
   const text = `Mirá mi tienda online: ${publicUrl.value}`
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
+}
+// Atajo de Inicio: ir al formulario de alta de producto y enfocarlo.
+async function goAddProduct() {
+  if (navLocks.value.catalogs) { openLocked('catalogs'); return }
+  catalogTab.value = 'products'
+  sectionInner.value = 'catalogs'
+  await nextTick()
+  document.querySelector('input[name="prod_name"]')?.focus({ preventScroll: true })
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
 
@@ -3062,6 +3070,16 @@ async function changePassword() {
           <button class="btn btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="16" /> Editar mi web</button>
           <a class="btn secondary btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="16" /> Ver mi tienda</a>
         </div>
+      </div>
+
+      <!-- Acciones rápidas: los 4 gestos más usados, al alcance del pulgar.
+           En móvil scrollean en horizontal sin romper el layout. -->
+      <div class="qa-row" role="group" aria-label="Acciones rápidas">
+        <button type="button" class="qa-chip" :disabled="!store.hasStore" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /> Compartir</button>
+        <button type="button" class="qa-chip" :disabled="!store.hasStore" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
+        <button type="button" class="qa-chip" @click="goAddProduct"><AppIcon name="plus" :size="16" /> Producto</button>
+        <button type="button" class="qa-chip" @click="section = 'design'"><AppIcon name="palette" :size="16" /> Editar web</button>
+        <button type="button" class="qa-chip" @click="section = 'tools'"><AppIcon name="qr-code" :size="16" /> Mi QR</button>
       </div>
 
       <!-- Franja de plan compacta: estado de la suscripción de un vistazo,

@@ -1109,3 +1109,51 @@
   .tabbar > button:active, .tabbar > button.active .icon { transform: none !important; }
 }
 
+
+/* ---- UX: badges de conteo en el menú (sidebar y sheet) ---- */
+.nav-badge {
+  margin-left: auto; flex: none; min-width: 20px; height: 20px; padding: 0 6px;
+  display: inline-grid; place-items: center; border-radius: 99px;
+  background: var(--brand-soft); border: 1px solid var(--brand-soft-line);
+  color: var(--brand-ink); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.sidebar nav button.active .nav-badge { background: rgba(255, 255, 255, .18); border-color: transparent; color: #fff; }
+.sheet-nav .nav-badge { background: rgba(129, 140, 248, .2); border-color: rgba(129, 140, 248, .4); color: #e0e7ff; }
+
+/* ---- UX: fila de acciones rápidas del Inicio ---- */
+.qa-row { display: flex; gap: 8px; margin: 2px 0 16px; }
+.qa-chip {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  min-height: 38px; padding: 8px 15px; border: 1px solid var(--line); border-radius: 99px;
+  background: var(--card); color: var(--ink-2); font: inherit; font-size: 13.5px; font-weight: 600;
+  white-space: nowrap; cursor: pointer; touch-action: manipulation;
+  transition: border-color .18s, transform .18s var(--ease-out), background-color .18s, color .18s;
+}
+.qa-chip .icon { color: var(--brand-ink); }
+.qa-chip:not(:disabled):hover { border-color: var(--brand-soft-line); transform: translateY(-1px); }
+.qa-chip:not(:disabled):active { transform: scale(.97); }
+.qa-chip:disabled { opacity: .5; cursor: default; }
+@media (max-width: 640px) {
+  .qa-row {
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    margin-left: -16px; margin-right: -16px; padding: 0 16px 2px;
+    scroll-snap-type: x proximity;
+  }
+  .qa-row::-webkit-scrollbar { display: none; }
+  .qa-chip { scroll-snap-align: start; min-height: 44px; }
+}
+@media (max-width: 480px) {
+  .qa-row { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
+}
+
+/* ---- UX: sheet arrastrable + pill activa en la tab bar ---- */
+.more-sheet.dragging { transition: none; }
+@media (max-width: 860px) {
+  .tabbar > button::after {
+    content: ''; position: absolute; inset: 6px 8px; border-radius: 12px;
+    background: var(--brand-soft); opacity: 0; transform: scale(.85);
+    transition: opacity .18s, transform .22s var(--ease-out); pointer-events: none;
+  }
+  .tabbar > button.active::after { opacity: 1; transform: none; }
+  .tabbar > button > * { position: relative; z-index: 1; }
+}
