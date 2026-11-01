@@ -19,7 +19,7 @@ export default {
   },
   blocks: {
     landing: [
-      'announcements', 'hero', 'highlights', 'categories', 'featured', 'about', 'plans',
+      'announcements', 'hero', 'highlights', 'categories', 'featured', 'about',
       'benefits', 'testimonials', 'gallery', 'faq', 'cta', 'contact'
     ],
     // `note` y `promo` ya vienen dentro de CATALOG_BLOCKS; el Set evita repetir

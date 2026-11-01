@@ -70,6 +70,7 @@ import DesignPreview from '../components/design/DesignPreview.vue'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import AiDesignView from './design/AiDesignView.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
+import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef } from '../templates/index.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -1406,6 +1407,18 @@ const companyErrs = reactive({})
 const mkLimits = MARKETING_LIMITS
 const serviceIcons = SERVICE_ICONS
 const serviceIconOptions = Object.entries(SERVICE_ICONS).map(([value, label]) => ({ value, label, icon: value }))
+// Apartados por diseño: cada plantilla declara su whitelist en
+// blocks.landing (templates/<id>/index.js). Si el diseño elegido no
+// soporta la sección (Servicios, Planes de suscripción…), la tarjeta se
+// bloquea y la web pública nunca la monta.
+const templateLandingBlocks = computed(() => templateDef(designForm.template).blocks?.landing || [])
+const supportsBlock = (id) => templateLandingBlocks.value.some((b) => (typeof b === 'string' ? b : b.id) === id)
+const supportsServices = computed(() => supportsBlock('services'))
+const supportsPlans = computed(() => supportsBlock('plans'))
+const blockDesigns = (id) => Object.entries(TEMPLATE_DEFS)
+  .filter(([, def]) => (def.blocks?.landing || []).some((b) => (typeof b === 'string' ? b : b.id) === id))
+  .map(([key]) => TEMPLATE_LABELS[key] || key)
+  .join(', ')
 const serviceVisibilityOptions = [
   { value: true, label: 'Visible en mi web', icon: 'eye' },
   { value: false, label: 'Oculto', icon: 'eye-off' }
@@ -1467,6 +1480,7 @@ async function saveCompany() {
 }
 
 async function saveServices() {
+  if (!supportsServices.value) return
   companyErrs.services = ''
   if (validateSectionTitle(designForm.services_title.trim())) { companyErrs.services = 'El título admite hasta 80 caracteres.'; return }
   if (hasPartialRow(designForm.services, ['title', 'text'], ['title', 'text'])) {
@@ -1483,6 +1497,7 @@ async function saveServices() {
 }
 
 async function savePlans() {
+  if (!supportsPlans.value) return
   companyErrs.plans = ''
   if (validateSectionTitle(designForm.plans_title.trim())) { companyErrs.plans = 'El título admite hasta 80 caracteres.'; return }
   if (hasPartialRow(designForm.plans, ['name', 'price'], ['name', 'price'])) {
@@ -4514,7 +4529,9 @@ async function changePassword() {
 
         <!-- ===== Qué ofrecemos (servicios/ventajas con ícono) ===== -->
         <div id="mk-services" class="card mk-card">
-          <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos</h3>
+          <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos <span v-if="!supportsServices" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
+          <p v-if="!supportsServices" class="hint">La plantilla que elegiste no tiene apartado de servicios. Disponible en: {{ blockDesigns('services') }}.</p>
+          <fieldset class="mk-fieldset" :disabled="!supportsServices">
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_services" type="checkbox" />
@@ -4555,11 +4572,14 @@ async function changePassword() {
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveServices">Guardar sección</AppButton>
           </div>
+          </fieldset>
         </div>
 
         <!-- ===== Planes de suscripción (publicidad, sin cobro online) ===== -->
         <div id="mk-plans" class="card mk-card">
-          <h3><AppIcon name="crown" :size="18" /> Planes de suscripción</h3>
+          <h3><AppIcon name="crown" :size="18" /> Planes de suscripción <span v-if="!supportsPlans" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
+          <p v-if="!supportsPlans" class="hint">La plantilla que elegiste no tiene apartado de suscripciones. Disponible en: {{ blockDesigns('plans') }}.</p>
+          <fieldset class="mk-fieldset" :disabled="!supportsPlans">
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_plans" type="checkbox" />
@@ -4598,6 +4618,7 @@ async function changePassword() {
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="savePlans">Guardar sección</AppButton>
           </div>
+          </fieldset>
         </div>
 
         <!-- ===== Tus números (cifras destacadas) ===== -->

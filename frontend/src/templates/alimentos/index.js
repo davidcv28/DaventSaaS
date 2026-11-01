@@ -19,7 +19,7 @@ export default {
   blocks: {
     landing: [
       'announcements', 'hero', 'categories', 'featured', 'steps', 'countdown',
-      'benefits', 'about', 'plans', 'stats', 'testimonials', 'faq', 'cta', 'contact'
+      'benefits', 'about', 'stats', 'testimonials', 'faq', 'cta', 'contact'
     ],
     catalog: ['note', 'promo', ...CATALOG_BLOCKS],
     services: SERVICES_BLOCKS

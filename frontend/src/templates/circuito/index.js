@@ -24,7 +24,6 @@ export default {
       'categories',
       'featured',
       'services',     // CiServicesBand (banda de servicios)
-      'plans',
       { id: 'countdown', variant: 'band' },
       { id: 'brands', variant: 'logos' },
       'testimonials',

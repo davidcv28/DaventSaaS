@@ -32,7 +32,6 @@ export default {
       { id: 'countdown', variant: 'band' },
       { id: 'offers', variant: 'grid' },
       'services',
-      'plans',
       { id: 'testimonials', variant: 'cards' },
       { id: 'gallery', variant: 'grid' },
       'faq',
