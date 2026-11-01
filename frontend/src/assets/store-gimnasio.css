@@ -19,7 +19,9 @@
   --gy-muted: #A9A79E;
   --gy-lime: var(--store-accent, #C8F169);
   --gy-lime-ink: var(--store-accent-ink, #8FBF2E);
+  --gy-deep: #557A12;
   --gy-on-lime: #0E0F0C;
+  --gy-plate: #1A1C16;
   --gy-paper: #F2EFE8;
   --gy-paper-ink: #0E0F0C;
   --gy-paper-muted: #55534B;
@@ -276,11 +278,13 @@
   margin: 0;
   display: grid;
   gap: 2px;
+  min-width: 0;
   font-size: clamp(64px, 9vw, 118px);
   font-weight: 800;
   line-height: .92;
   letter-spacing: -.01em;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 .gy-hero-accent { color: var(--gy-lime); }
 .gy-hero-lead {
@@ -335,7 +339,8 @@
   position: relative;
   margin: 0;
   min-height: 560px;
-  background: #1A1C16;
+  overflow: hidden;
+  background: var(--gy-plate);
   border: 1px solid var(--gy-line-strong);
 }
 .gy-hero-plate.is-empty { border-style: dashed; border-width: 1.5px; }
@@ -483,8 +488,11 @@
 .gy-card.is-offer .gy-card-flag { background: var(--gy-ink); color: var(--gy-lime); }
 .gy-card-price {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 4px 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--gy-display);
   font-size: 64px;
   font-weight: 800;
@@ -548,7 +556,7 @@
   background: var(--gy-paper);
   color: var(--gy-paper-ink);
 }
-.store-page[data-template='gimnasio'] .sp-services .sp-eyebrow { color: var(--gy-lime-ink); }
+.store-page[data-template='gimnasio'] .sp-services .sp-eyebrow { color: var(--gy-deep); }
 .store-page[data-template='gimnasio'] .sp-services .sp-section-title { color: var(--gy-paper-ink); }
 .store-page[data-template='gimnasio'] .sp-services p { color: var(--gy-paper-muted); }
 .store-page[data-template='gimnasio'] .sp-services-grid {
@@ -574,6 +582,7 @@
   order: 1;
   flex: 1 1 220px;
   min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--gy-display);
   font-size: 36px;
   font-weight: 700;
@@ -604,8 +613,8 @@
 .store-page[data-template='gimnasio'] .sp-service-icon { color: var(--gy-on-lime); }
 .store-page[data-template='gimnasio'] .sp-service-line { display: none; }
 .store-page[data-template='gimnasio'] .sp-services .sp-btn {
-  border-color: var(--gy-lime-ink);
-  background: var(--gy-lime-ink);
+  border-color: var(--gy-deep);
+  background: var(--gy-deep);
   color: var(--gy-paper);
 }
 .store-page[data-template='gimnasio'] .sp-services .sp-btn:hover {
@@ -763,6 +772,95 @@
   border-radius: 0;
   font-family: var(--gy-label);
   font-weight: 600;
+}
+
+/* ==========================================================================
+   MODO DÍA — gimnasio-dia: papel hueso, tinta casi negra, lima apagado.
+   ========================================================================== */
+.store-page[data-template='gimnasio'][data-store-theme='light'] {
+  --gy-ink: #F2EFE8;
+  --gy-panel: #E9E5D9;
+  --gy-card: #FAF8F1;
+  --gy-line: #C9C5B8;
+  --gy-line-strong: #A39E8E;
+  --gy-text: #0E0F0C;
+  --gy-text-2: #3A382F;
+  --gy-muted: #55534B;
+  --gy-lime: var(--store-accent, #6FA318);
+  --gy-lime-ink: var(--store-accent-ink, #4E7410);
+  --gy-deep: var(--store-accent-ink, #4E7410);
+  --gy-on-lime: #0E0F0C;
+  --gy-plate: #E9E5D9;
+  --gy-paper: #14150F;
+  --gy-paper-ink: #F2EFE8;
+  --gy-paper-muted: #B9B7AE;
+  --gy-paper-line: #3A3D32;
+  --tpc-price-ink: var(--gy-lime-ink);
+  --tpc-eyebrow-ink: var(--gy-muted);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-hero-initial {
+  color: color-mix(in srgb, var(--gy-lime) 30%, transparent);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-hero-empty img {
+  background: var(--gy-ink);
+  padding: 10px;
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-services .sp-eyebrow {
+  color: var(--gy-lime);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-services .sp-btn {
+  background: var(--gy-lime);
+  border-color: var(--gy-lime);
+  color: var(--gy-on-lime);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-services .sp-btn:hover {
+  background: var(--gy-paper-ink);
+  border-color: var(--gy-paper-ink);
+  color: var(--gy-paper);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-strip {
+  border-color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-card-flag {
+  border: 1px solid var(--gy-line-strong);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-card.is-offer .gy-card-flag {
+  border-color: transparent;
+  background: var(--gy-ink);
+  color: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] {
+  --sp-bg: #F2EFE8;
+  --sp-card: #FAF8F1;
+  --sp-card-solid: #FAF8F1;
+  --sp-surface: #E9E5D9;
+  --sp-soft: #E9E5D9;
+  --sp-ink: #0E0F0C;
+  --sp-ink-2: #3A382F;
+  --sp-muted: #55534B;
+  --sp-line: #C9C5B8;
+  --sp-accent-text: var(--store-accent-ink, #4E7410);
+  --sp-chrome: #F2EFE8;
+  background: #F2EFE8;
+  color: #0E0F0C;
+}
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-head,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-sv-head,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-pdp-sec-head {
+  border-bottom-color: #A39E8E;
+}
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-eyebrow,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-kicker {
+  color: var(--store-accent-ink, #4E7410);
+}
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-rail,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-card,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-products,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-sv-plate,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-pdp-pricebox,
+.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-pdp-gallery {
+  border-color: #C9C5B8;
+  background: #FAF8F1;
 }
 
 /* ==========================================================================
