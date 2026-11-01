@@ -9,10 +9,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
 import {
-  STORE_ACCENTS, STORE_THEMES, STORE_FONTS, STORE_FONT_GROUPS, STORE_TEMPLATES,
+  STORE_FONTS, STORE_FONT_GROUPS, STORE_TEMPLATES,
   allowedTemplatesFor, ensureStoreFont
 } from '../../api/stores.api.js'
-import { deriveAccent } from '../../utils/colorTools.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
@@ -198,12 +197,11 @@ const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
   value: s.slug,
   label: `${s.nombre} · ${s.categoria} · ${tierLabel(s.template)}`,
   icon: 'palette',
+  swatch: s.tokens?.palette?.accent || '',
   disabled: !allowedTemplate(s.template)
 })))
 
-// Un patrón sin estilo elegido trae sus fuentes (tokens del DesignPattern).
-// La paleta NO se aplica sola: el color queda en "Usa estilo base" hasta que
-// el dueño elija uno en el select de Colores.
+// Un patrón sin tema elegido trae sus fuentes (tokens del DesignPattern).
 function patternTheme(p) {
   const tokens = p.tokens || {}
   const theme = { ...(props.form.site_theme || {}) }
@@ -227,6 +225,10 @@ function onPatternPick(value) {
   if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
 }
 
+// Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
+// tema COMPLETO — paleta, tipografía, contenedores, botones, fondo, modo y
+// movimiento — para que la web publicada se vea igual que la vista previa.
+// El dueño ya no elige colores sueltos: los colores son del tema.
 function onStylePick(value) {
   const s = styleOptions.value.find((x) => x.slug === value)
   if (!s) return
@@ -234,16 +236,11 @@ function onStylePick(value) {
     emit('navigate', 'plans')
     return
   }
-  // El estilo es un tema completo: se aplican sus tokens (tipografía,
-  // contenedores, botones, fondo, movimiento y móvil) para que el look
-  // elegido se vea igual acá, en el Studio y en la web publicada. La paleta
-  // NO viaja: los colores quedan en "Usa estilo base" hasta que se elijan a
-  // mano, así el diseño no pisa los colores de la tienda. La estructura
-  // tampoco se toca: el template y el layout son del diseño.
   const theme = resolveSiteTheme(s.tokens || {})
-  delete theme.palette
   props.form.site_theme = { ...theme, style: { id: s.slug } }
   props.form.theme = s.page_theme || props.form.theme
+  // La paleta del tema manda: el acento suelto queda sin efecto.
+  props.form.accent_custom = ''
   const heading = theme.typography?.heading
   const body = theme.typography?.body
   if (heading) ensureStoreFont(heading)
@@ -253,64 +250,10 @@ function onStylePick(value) {
   }
 }
 
-// --- Colores: tema + acento en un solo selectbox --------------------------
-// Cada opción fija el par completo (claro/oscuro + acento). "Usa estilo base"
-// es el estado por defecto: sin paleta forzada en site_theme (el diseño
-// elegido no pisa los colores de la tienda).
-const currentMode = computed(() => (props.form.theme === 'dark' ? 'dark' : 'light'))
-const forcedPalette = computed(() => Boolean(
-  props.form.accent_custom || props.form.site_theme?.palette?.accent
-))
-const colorGroups = computed(() => Object.entries(STORE_THEMES).map(([mode, theme]) => {
-  const options = [{
-    value: `${mode}:base`,
-    label: 'Usa estilo base',
-    icon: 'palette'
-  }, ...Object.entries(STORE_ACCENTS).map(([key, a]) => ({
-    value: `${mode}:${key}`,
-    label: `${a.label} · ${a.hex}`,
-    swatch: a.hex
-  }))]
-  if (props.form.accent_custom) {
-    options.splice(1, 0, {
-      value: `${mode}:custom`,
-      label: `Personalizado · ${props.form.accent_custom}`,
-      swatch: props.form.accent_custom
-    })
-  }
-  return { label: theme.label, options }
-}))
-const currentColors = computed(() => (
-  forcedPalette.value
-    ? `${currentMode.value}:${props.form.accent_custom ? 'custom' : (props.form.accent || 'indigo')}`
-    : `${currentMode.value}:base`
-))
-
 function withTheme(mutate) {
   const theme = { ...(props.form.site_theme || {}) }
   mutate(theme)
   props.form.site_theme = theme
-}
-
-function onColorsPick(value) {
-  const [mode, key] = String(value).split(':')
-  if (STORE_THEMES[mode]) props.form.theme = mode
-  if (key === 'base') {
-    props.form.accent_custom = ''
-    withTheme((theme) => { delete theme.palette })
-    return
-  }
-  if (key === 'custom' || !advanced.value) return
-  const hex = STORE_ACCENTS[key]?.hex
-  if (!hex) return
-  props.form.accent = key
-  props.form.accent_custom = ''
-  // El estilo aplicado fija su propia paleta en site_theme: si solo se
-  // cambiara `accent`, la web seguiría mostrando el color del estilo.
-  const a = deriveAccent(hex)
-  withTheme((theme) => {
-    theme.palette = { ...(theme.palette || {}), accent: a.hex, primary: a.hex, secondary: a.ink }
-  })
 }
 
 // --- Tipografía: títulos y descripciones ---------------------------------
@@ -393,12 +336,13 @@ onMounted(() => {
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'typo')">
-              <label>Estilo</label>
+              <label>Tema</label>
               <DesignSelect
                 :model-value="currentStyle" :options="styleSelectOptions" icon="palette"
-                aria-label="Estilo" placeholder="Elegí un estilo…"
+                aria-label="Tema" placeholder="Elegí un tema…"
                 :disabled="!styleOptions.length" @change="onStylePick"
               />
+              <p class="dmenu-hint">Cada diseño trae sus temas: color, tipografía y modo.</p>
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'buttons')">
@@ -409,15 +353,6 @@ onMounted(() => {
                 :disabled="!iconStyles.length" @change="onIconStylePick"
               />
               <p class="dmenu-hint">Se pueden cambiar sin tocar el diseño.</p>
-            </div>
-
-            <div class="dmenu-field" @focusin="emit('ring', 'buttons')">
-              <label>Colores</label>
-              <DesignSelect
-                :model-value="currentColors" :groups="colorGroups" icon="paintbrush"
-                aria-label="Colores" placeholder="Elegí un color…" @change="onColorsPick"
-              />
-              <p class="dmenu-hint">Tema y color de acento. <span v-if="!advanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Acento con Premium</span></p>
             </div>
 
             <div v-for="r in FONT_ROLES" :key="r.key" class="dmenu-field" :class="{ locked: !advanced }" @focusin="emit('ring', r.ring)">

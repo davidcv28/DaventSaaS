@@ -330,6 +330,24 @@ export function textOn(bg, min = 4.5) {
   return contrastRatio('#ffffff', b) >= min ? '#ffffff' : fixContrast('#ffffff', b, min)
 }
 
+// Tinta de marca sobre un relleno: a diferencia de textOn (que salta a
+// blanco/gris), oscurece o aclara el PROPIO color hasta alcanzar `min`, así
+// un masthead amarillo recibe tinta oliva en vez de un gris neutro.
+export function inkOn(bg, min = 4.5) {
+  const b = normalizeHex(bg) || '#ffffff'
+  const white = contrastRatio('#ffffff', b)
+  if (white >= min) return '#ffffff'
+  const target = contrastRatio('#000000', b) >= white
+    ? [0, 0, 0]
+    : [255, 255, 255]
+  const rgb = hexToRgb(b)
+  for (let t = 0.1; t <= 1.0001; t += 0.05) {
+    const hex = rgbToHex(rgb.map((c, i) => c + (target[i] - c) * t))
+    if (contrastRatio(hex, b) >= min) return hex
+  }
+  return rgbToHex(target)
+}
+
 // ---------------------------------------------------------------------------
 // Juego de colores del estilo: fuentes + contenedores por modo. El set
 // "nativo" sale del palette del preset; el modo opuesto usa una base neutra
@@ -479,6 +497,8 @@ export function themeToCssVars(theme, resolveFont, mode = 'light') {
     '--st-secondary': p.secondary,
     '--st-accent': p.accent,
     '--st-on-accent': textOn(p.accent, 7),
+    '--st-accent-ink': inkOn(p.accent, 7),
+    '--st-accent-ink-2': inkOn(p.accent, 4.5),
     '--st-primary-soft': `color-mix(in srgb, ${p.primary} 10%, #fff)`,
     '--st-bg': p.bg,
     '--st-surface': p.surface,
@@ -569,6 +589,8 @@ export const STUDIO_VAR_KEYS = {
   '--st-on-secondary': ['palette.secondary'],
   '--st-accent': ['palette.accent'],
   '--st-on-accent': ['palette.accent'],
+  '--st-accent-ink': ['palette.accent'],
+  '--st-accent-ink-2': ['palette.accent'],
   '--st-bg': ['palette.bg'],
   '--st-surface': ['palette.surface'],
   '--st-text': ['palette.text'],

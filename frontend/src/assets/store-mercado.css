@@ -30,7 +30,9 @@
   --mc-ink-2: color-mix(in srgb, var(--mc-ink) 84%, var(--mc-surface));
   /* #666 sobre #EBEBEB = 4.8:1 (AA); #737373 quedaba en 4.0. */
   --mc-muted: var(--st-muted, #666666);
-  --mc-on-band: var(--st-on-accent, #333333);
+  --mc-on-band: var(--st-accent-ink, #2D2A00);
+  /* Texto secundario del masthead/portada: tinta de marca a AA (4.5:1). */
+  --mc-on-band-2: var(--st-accent-ink-2, #5C5300);
   --mc-accent-raw: var(--st-primary, #2563EB);
   --mc-accent: var(--mc-blue-deep);
   /* Texto legible sobre cada relleno de marca (AA del tema). */
@@ -172,8 +174,8 @@
 .store-page[data-template='mercado'] .sp-top .sp-name { color: var(--mc-on-band); }
 .store-page[data-template='mercado'] .sp-top .sp-mono { background: var(--mc-blue); color: var(--mc-on-blue); }
 .store-page[data-template='mercado'] .sp-top .sp-logo.sm { border-color: color-mix(in srgb, var(--mc-on-band) 25%, transparent); }
-.store-page[data-template='mercado'] .sp-shop-brand-meta { color: color-mix(in srgb, var(--mc-on-band) 86%, transparent); }
-.store-page[data-template='mercado'] .sp-shop-brand-meta .icon { color: color-mix(in srgb, var(--mc-on-band) 45%, transparent); }
+.store-page[data-template='mercado'] .sp-shop-brand-meta { color: var(--mc-on-band-2); }
+.store-page[data-template='mercado'] .sp-shop-brand-meta .icon { color: var(--mc-on-band-2); }
 .store-page[data-template='mercado'] .sp-top .sp-icon-btn {
   background: color-mix(in srgb, var(--mc-on-band) 8%, transparent);
   border-color: transparent;
@@ -295,7 +297,7 @@
 .store-page[data-template='mercado'] .mc-hero-text {
   margin: 14px 0 0;
   max-width: 48ch;
-  color: color-mix(in srgb, var(--mc-on-band) 88%, transparent);
+  color: var(--mc-on-band-2);
   font-size: 16px;
 }
 .store-page[data-template='mercado'] .mc-hero-actions {
@@ -334,7 +336,7 @@
   padding: 0;
   list-style: none;
   font-size: 12.5px;
-  color: color-mix(in srgb, var(--mc-on-band) 88%, transparent);
+  color: var(--mc-on-band-2);
 }
 .store-page[data-template='mercado'] .mc-hero-stats li { display: inline-flex; align-items: center; gap: 5px; }
 .store-page[data-template='mercado'] .mc-hero-stats strong { color: var(--mc-on-band); font-size: 15px; }
