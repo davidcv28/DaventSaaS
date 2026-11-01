@@ -133,7 +133,7 @@ def _product_fragment(store):
 
     products = (
         Product.objects.filter(store = store, is_active = True)
-        .select_related('category')
+        .select_related('category', 'brand')
         .order_by('-created_at')[:FRAGMENT_LIMIT]
     )
     cards = []
@@ -143,17 +143,24 @@ def _product_fragment(store):
         #Sin precio cargado la tarjeta no inventa un $0: manda a consultar.
         price = _money(amount) if _amount(amount) else 'Consultar'
         old = ''
+        off = ''
         if product.offer_price is not None and _amount(product.price):
             old = f'<s class="ds-product-old">{_money(product.price)}</s>'
+            #Porcentaje de ahorro para el badge del marketplace: solo el
+            #número, la etiqueta la dibuja la hoja del diseño.
+            off = str(max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100)))))
         media = (
             f'<img class="ds-product-img" src="{_attr(image)}" alt="{_attr(product.name)}" loading="lazy">'
             if image else '<span class="ds-product-img is-empty" aria-hidden="true"></span>'
         )
         category = _text(getattr(product.category, 'name', ''), 40)
+        brand = _text(getattr(product.brand, 'name', ''), 40)
+        off_attr = f' data-off="{off}"' if off else ''
         #Los datos de la tarjeta viajan como atributos: el catálogo del
         #diseño filtra y ordena en el navegador sin volver al servidor.
         cards.append(
             f'<article class="ds-product" data-cat="{_attr(category)}"'
+            f' data-brand="{_attr(brand)}"'
             f' data-name="{_attr(product.name.lower())}"'
             f' data-price="{_attr(product.offer_price if product.offer_price is not None else product.price)}">'
             f'<a class="ds-product-link" href="#catalogo" data-ds-product="{product.pk}"'
@@ -164,7 +171,8 @@ def _product_fragment(store):
             f'<small class="ds-product-desc">{escape(_text(product.description, 110))}</small>'
             '</span>'
             f'<span class="ds-product-cat">{escape(category)}</span>'
-            f'<span class="ds-product-price">{price}{old}</span>'
+            f'<span class="ds-product-price"{off_attr}>'
+            f'<span class="ds-product-amount">{price}</span>{old}</span>'
             '</a></article>'
         )
     if not cards:

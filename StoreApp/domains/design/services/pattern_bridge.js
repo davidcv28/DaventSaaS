@@ -82,6 +82,13 @@
     }
     if (d.type === 'davent:ds-surface') {
       root.setAttribute('data-ds-surface', d.surface)
+      var openPanel = document.querySelector('[data-ds-filters-panel].is-open')
+      if (openPanel) {
+        openPanel.classList.remove('is-open')
+        var openToggle = document.querySelector('[data-ds-filters-toggle]')
+        if (openToggle) openToggle.setAttribute('aria-expanded', 'false')
+        document.body.classList.remove('filters-open')
+      }
       catalog()
       window.scrollTo(0, 0)
       send()
@@ -106,7 +113,7 @@
    * data-name y acá se filtran por texto, categoría, rango de precio y
    * ofertas, se ordenan y se resuelven las sugerencias del buscador.
    * ------------------------------------------------------------------ */
-  var state = { q: '', cat: '', min: '', max: '', offers: false }
+  var state = { q: '', cat: '', brands: [], min: '', max: '', offers: false }
   var cards = []
   var wrap = null
   var catNames = []
@@ -114,6 +121,7 @@
   var suggestItems = []
   var applyTimer = 0
   var STORE_KEY = 'davent:ds-search:' + (typeof location !== 'undefined' ? location.pathname : '')
+  var VIEW_KEY = 'davent:ds-view:' + (typeof location !== 'undefined' ? location.pathname : '')
 
   function textOf(el) {
     return el ? String(el.textContent || '').trim() : ''
@@ -148,6 +156,7 @@
       var saved = JSON.parse(raw) || {}
       if (typeof saved.q === 'string') state.q = saved.q
       if (typeof saved.cat === 'string') state.cat = saved.cat
+      if (Array.isArray(saved.brands)) state.brands = saved.brands.filter(function (b) { return typeof b === 'string' })
       if (typeof saved.min === 'string') state.min = saved.min
       if (typeof saved.max === 'string') state.max = saved.max
       state.offers = saved.offers === true
@@ -164,6 +173,10 @@
   }
   function matchesFilters(card) {
     if (state.cat && (card.getAttribute('data-cat') || '') !== state.cat) return false
+    if (state.brands.length) {
+      var brand = card.getAttribute('data-brand') || ''
+      if (state.brands.indexOf(brand) < 0) return false
+    }
     if (state.offers && !card.querySelector('.ds-product-old')) return false
     var price = parseFloat(card.getAttribute('data-price')) || 0
     var min = numOrNull(state.min)
@@ -172,19 +185,43 @@
     if (max != null && price > max) return false
     return matchesQuery(card, state.q)
   }
+  function filterCount() {
+    return (state.cat ? 1 : 0) + state.brands.length + (state.offers ? 1 : 0) +
+      (state.min !== '' || state.max !== '' ? 1 : 0) + (state.q.trim() ? 1 : 0)
+  }
   function syncFilterUI() {
     var filters = document.querySelector('[data-ds-filters]')
     if (filters) {
       ;[].forEach.call(filters.querySelectorAll('button'), function (btn) {
-        btn.setAttribute('aria-pressed', btn.getAttribute('data-cat') === state.cat ? 'true' : 'false')
+        var on = btn.getAttribute('data-cat') === state.cat
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false')
+        if (btn.classList.contains('f-cat')) btn.classList.toggle('is-active', on)
+      })
+    }
+    var brands = document.querySelector('[data-ds-brands]')
+    if (brands) {
+      ;[].forEach.call(brands.querySelectorAll('input[type="checkbox"]'), function (input) {
+        input.checked = state.brands.indexOf(input.value) >= 0
       })
     }
     var minInput = document.querySelector('[data-ds-price-min]')
     var maxInput = document.querySelector('[data-ds-price-max]')
     var offersInput = document.querySelector('[data-ds-offers]')
-    if (minInput) minInput.value = state.min
-    if (maxInput) maxInput.value = state.max
+    // Con "Aplicar" el rango escrito queda pendiente hasta confirmarlo: no
+    // se pisa al tocar otra sección del panel.
+    if (!document.querySelector('[data-ds-price-apply]')) {
+      if (minInput) minInput.value = state.min
+      if (maxInput) maxInput.value = state.max
+    }
     if (offersInput) offersInput.checked = !!state.offers
+    var badge = document.querySelector('[data-ds-filter-count]')
+    if (badge) {
+      var n = filterCount()
+      badge.textContent = String(n)
+      badge.hidden = n === 0
+    }
+    var crumb = document.querySelector('[data-ds-crumb]')
+    if (crumb) crumb.textContent = state.cat || (state.q.trim() ? '“' + state.q.trim() + '”' : 'Todos los productos')
   }
   function setCategory(cat) {
     state.cat = cat || ''
@@ -193,9 +230,16 @@
     applyCatalog()
   }
   function buildFilters() {
+    buildCategoryFilters()
+    buildBrandFilters()
+  }
+  /* Categorías: píldoras horizontales (diseños de tarjeta) o lista vertical
+   * con conteo (catálogo tipo marketplace, `data-ds-filters-mode="list"`). */
+  function buildCategoryFilters() {
     var filters = document.querySelector('[data-ds-filters]')
     if (!filters) return
     if (!filters.getAttribute('data-built')) {
+      var listMode = filters.getAttribute('data-ds-filters-mode') === 'list'
       var withCounts = !!document.querySelector('[data-ds-search]')
       var counts = {}
       cards.forEach(function (card) {
@@ -206,15 +250,69 @@
       ;[''].concat(catNames).forEach(function (cat) {
         var btn = document.createElement('button')
         btn.type = 'button'
-        btn.className = 'ds-cat'
+        btn.className = listMode ? 'f-cat' : 'ds-cat'
         btn.setAttribute('data-cat', cat)
-        btn.textContent = cat ? (withCounts ? cat + ' (' + counts[cat] + ')' : cat) : 'Todos'
+        if (listMode) {
+          btn.innerHTML = '<span>' + esc(cat || 'Todas las categorías') + '</span>' +
+            (cat ? '<em>' + counts[cat] + '</em>' : '')
+        } else {
+          btn.textContent = cat ? (withCounts ? cat + ' (' + counts[cat] + ')' : cat) : 'Todos'
+        }
         btn.addEventListener('click', function () { setCategory(cat) })
         filters.appendChild(btn)
       })
       filters.setAttribute('data-built', '1')
     }
     if (state.cat && catNames.indexOf(state.cat) < 0) state.cat = ''
+    syncFilterUI()
+  }
+  /* Marcas: lista de checkboxes armada con `data-brand` de las tarjetas.
+   * Los diseños sin ese contenedor no muestran la sección. */
+  function buildBrandFilters() {
+    var host = document.querySelector('[data-ds-brands]')
+    if (!host) return
+    var group = host.closest('[data-ds-brands-group]') || host
+    var counts = {}
+    cards.forEach(function (card) {
+      var key = card.getAttribute('data-brand') || ''
+      if (key) counts[key] = (counts[key] || 0) + 1
+    })
+    var names = Object.keys(counts).sort(function (a, b) {
+      return (counts[b] - counts[a]) || a.localeCompare(b, 'es')
+    })
+    state.brands = state.brands.filter(function (name) { return names.indexOf(name) >= 0 })
+    if (!names.length) {
+      group.hidden = true
+      return
+    }
+    group.hidden = false
+    if (!host.getAttribute('data-built')) {
+      names.forEach(function (name) {
+        var label = document.createElement('label')
+        label.className = 'f-check'
+        var input = document.createElement('input')
+        input.type = 'checkbox'
+        input.value = name
+        input.addEventListener('change', function () {
+          var i = state.brands.indexOf(name)
+          if (input.checked && i < 0) state.brands.push(name)
+          else if (!input.checked && i >= 0) state.brands.splice(i, 1)
+          saveState()
+          syncFilterUI()
+          applyCatalog()
+        })
+        var span = document.createElement('span')
+        span.textContent = name
+        var em = document.createElement('em')
+        em.textContent = counts[name]
+        label.appendChild(input)
+        label.appendChild(span)
+        label.appendChild(em)
+        host.appendChild(label)
+      })
+      host.setAttribute('data-built', '1')
+      if (names.length > 6) host.setAttribute('data-collapsed', '')
+    }
     syncFilterUI()
   }
   function scoreCard(card, query) {
@@ -234,6 +332,7 @@
   }
   function applyCatalog() {
     if (!wrap) return
+    var market = !!document.querySelector('[data-ds-crumb]')
     var shown = 0
     cards.forEach(function (card) {
       var ok = matchesFilters(card)
@@ -251,6 +350,9 @@
       if (order === 'name') {
         return (a.getAttribute('data-name') || '').localeCompare(b.getAttribute('data-name') || '')
       }
+      if (order === 'recent') {
+        return (parseInt(a.getAttribute('data-order'), 10) || 0) - (parseInt(b.getAttribute('data-order'), 10) || 0)
+      }
       var diff = scoreCard(b, state.q) - scoreCard(a, state.q)
       if (diff) return diff
       return (parseInt(a.getAttribute('data-order'), 10) || 0) - (parseInt(b.getAttribute('data-order'), 10) || 0)
@@ -258,18 +360,28 @@
     sorted.forEach(function (card) { wrap.appendChild(card) })
     var countEl = document.querySelector('[data-ds-count]')
     if (countEl) {
-      var label = shown + (shown === 1 ? ' producto' : ' productos')
-      if (state.q.trim()) label += ' · “' + state.q.trim() + '”'
+      var label = market
+        ? shown + (shown === 1 ? ' resultado' : ' resultados')
+        : shown + (shown === 1 ? ' producto' : ' productos')
+      if (!market && state.q.trim()) label += ' · “' + state.q.trim() + '”'
       countEl.textContent = label
     }
+    var crumb = document.querySelector('[data-ds-crumb]')
+    if (crumb) crumb.textContent = state.cat || (state.q.trim() ? '“' + state.q.trim() + '”' : 'Todos los productos')
     var noRes = document.querySelector('[data-ds-noresults]')
     if (noRes) {
       noRes.hidden = shown > 0
       if (shown === 0) {
-        var filtered = state.q.trim() || state.cat || state.offers || state.min !== '' || state.max !== ''
-        noRes.textContent = filtered
-          ? 'No encontramos productos con esos filtros. Probá con otra búsqueda o limpiá los filtros.'
-          : 'No hay productos en esta categoría.'
+        var filtered = state.q.trim() || state.cat || state.offers || state.min !== '' || state.max !== '' || state.brands.length
+        if (market) {
+          noRes.textContent = filtered
+            ? 'No hay publicaciones que coincidan con tu búsqueda. Probá con otras palabras o quitá algunos filtros.'
+            : 'Todavía no hay productos publicados.'
+        } else {
+          noRes.textContent = filtered
+            ? 'No encontramos productos con esos filtros. Probá con otra búsqueda o limpiá los filtros.'
+            : 'No hay productos en esta categoría.'
+        }
       }
     }
   }
@@ -290,14 +402,6 @@
   function initFilters() {
     var toggle = document.querySelector('[data-ds-filters-toggle]')
     var panel = document.querySelector('[data-ds-filters-panel]')
-    if (toggle && panel) {
-      toggle.addEventListener('click', function () {
-        var open = panel.hasAttribute('data-open')
-        if (open) panel.removeAttribute('data-open')
-        else panel.setAttribute('data-open', '')
-        toggle.setAttribute('aria-expanded', open ? 'false' : 'true')
-      })
-    }
     var minInput = document.querySelector('[data-ds-price-min]')
     var maxInput = document.querySelector('[data-ds-price-max]')
     var offersInput = document.querySelector('[data-ds-offers]')
@@ -306,22 +410,130 @@
       state.max = maxInput ? maxInput.value.trim() : ''
       state.offers = offersInput ? !!offersInput.checked : false
       saveState()
+      syncFilterUI()
       scheduleApply()
     }
-    if (minInput) minInput.addEventListener('input', readFilters)
-    if (maxInput) maxInput.addEventListener('input', readFilters)
-    if (offersInput) offersInput.addEventListener('change', readFilters)
-    var clearBtn = document.querySelector('[data-ds-clear]')
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function () {
-        state.cat = ''
-        state.min = ''
-        state.max = ''
-        state.offers = false
-        saveState()
-        syncFilterUI()
-        applyCatalog()
+    /* Catálogo tipo marketplace: el panel de filtros es una hoja a pantalla
+     * completa en móvil, con "Aplicar" al pie. Los diseños con panel
+     * colapsable (sin botón de cierre) conservan el comportamiento previo. */
+    var sheet = !!(panel && panel.querySelector('[data-ds-filters-close]'))
+    function openSheet() {
+      panel.classList.add('is-open')
+      if (toggle) toggle.setAttribute('aria-expanded', 'true')
+      document.body.classList.add('filters-open')
+      var closeBtn = panel.querySelector('[data-ds-filters-close]')
+      if (closeBtn) closeBtn.focus()
+      send()
+    }
+    function closeSheet(refocus) {
+      if (!panel.classList.contains('is-open')) return
+      panel.classList.remove('is-open')
+      if (toggle) toggle.setAttribute('aria-expanded', 'false')
+      document.body.classList.remove('filters-open')
+      readFilters()
+      applyCatalog()
+      if (refocus && toggle) toggle.focus()
+      send()
+    }
+    if (toggle && panel) {
+      toggle.addEventListener('click', function () {
+        if (!sheet) {
+          var open = panel.hasAttribute('data-open')
+          if (open) panel.removeAttribute('data-open')
+          else panel.setAttribute('data-open', '')
+          toggle.setAttribute('aria-expanded', open ? 'false' : 'true')
+          return
+        }
+        if (panel.classList.contains('is-open')) closeSheet(true)
+        else openSheet()
       })
+      if (sheet) {
+        ;[].forEach.call(panel.querySelectorAll('[data-ds-filters-close]'), function (btn) {
+          btn.addEventListener('click', function () { closeSheet(true) })
+        })
+        panel.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            e.stopPropagation()
+            closeSheet(true)
+          }
+        })
+      }
+    }
+    var applyBtn = document.querySelector('[data-ds-price-apply]')
+    if (applyBtn) {
+      /* Precio se aplica con el botón (como el marketplace), no en cada
+       * tecla: el rango queda a la vista hasta confirmarlo. */
+      applyBtn.addEventListener('click', function () { readFilters(); applyCatalog() })
+      ;[minInput, maxInput].forEach(function (input) {
+        if (!input) return
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            readFilters()
+            applyCatalog()
+          }
+        })
+      })
+    } else {
+      if (minInput) minInput.addEventListener('input', readFilters)
+      if (maxInput) maxInput.addEventListener('input', readFilters)
+    }
+    if (offersInput) offersInput.addEventListener('change', readFilters)
+    ;[].forEach.call(document.querySelectorAll('[data-ds-clear]'), function (btn) {
+      btn.addEventListener('click', resetFilters)
+    })
+    var moreBtn = document.querySelector('[data-ds-brands-more]')
+    var brandsHost = document.querySelector('[data-ds-brands]')
+    if (moreBtn && brandsHost) {
+      moreBtn.addEventListener('click', function () {
+        var collapsed = brandsHost.hasAttribute('data-collapsed')
+        if (collapsed) brandsHost.removeAttribute('data-collapsed')
+        else brandsHost.setAttribute('data-collapsed', '')
+        moreBtn.textContent = collapsed ? 'Ver menos' : 'Ver todas las marcas'
+        send()
+      })
+    }
+  }
+  function resetFilters() {
+    state.cat = ''
+    state.brands = []
+    state.min = ''
+    state.max = ''
+    state.offers = false
+    state.q = ''
+    var input = document.querySelector('[data-ds-search-input]')
+    if (input) input.value = ''
+    var clearBtn = document.querySelector('[data-ds-search-clear]')
+    if (clearBtn) clearBtn.hidden = true
+    var minInput = document.querySelector('[data-ds-price-min]')
+    var maxInput = document.querySelector('[data-ds-price-max]')
+    if (minInput) minInput.value = ''
+    if (maxInput) maxInput.value = ''
+    saveState()
+    syncFilterUI()
+    applyCatalog()
+    closeSuggest()
+  }
+  /* Vista del catálogo: lista (filas tipo marketplace) o grilla de tarjetas.
+   * La preferencia dura la sesión y el alto se re-mide al cambiar. */
+  function initView() {
+    var host = document.querySelector('[data-ds-products]')
+    var buttons = [].slice.call(document.querySelectorAll('[data-ds-view]'))
+    if (!host || !buttons.length) return
+    var saved = ''
+    try { saved = sessionStorage.getItem(VIEW_KEY) || '' } catch (e) {}
+    var modes = buttons.map(function (btn) { return btn.getAttribute('data-ds-view') })
+    setView(modes.indexOf(saved) >= 0 ? saved : (host.getAttribute('data-ds-view-mode') || 'list'))
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () { setView(btn.getAttribute('data-ds-view')) })
+    })
+    function setView(mode) {
+      host.setAttribute('data-ds-view-mode', mode)
+      buttons.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-ds-view') === mode ? 'true' : 'false')
+      })
+      try { sessionStorage.setItem(VIEW_KEY, mode) } catch (e) {}
+      send()
     }
   }
   function setSuggestActive(index) {
@@ -500,9 +712,17 @@
   if (sortSel) sortSel.addEventListener('change', applyCatalog)
   catalog()
   restoreState()
+  ;(function restorePriceInputs() {
+    if (!document.querySelector('[data-ds-price-apply]')) return
+    var minInput = document.querySelector('[data-ds-price-min]')
+    var maxInput = document.querySelector('[data-ds-price-max]')
+    if (minInput) minInput.value = state.min
+    if (maxInput) maxInput.value = state.max
+  })()
   buildFilters()
   initSearch()
   initFilters()
+  initView()
   syncFilterUI()
   applyCatalog()
   mountThemeToggle()
