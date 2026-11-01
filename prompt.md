@@ -47,9 +47,11 @@
   `product_name`, `product_description`, `product_price`, `product_old_price`,
   `product_offer_pct` (ya formateado, ej. `-12%`), `product_image`,
   `product_category`, `product_brand`, `product_ref`, `product_whatsapp_url`
-  (mensaje con el producto citado), `product_features` (filas `<tr>` de la tabla)
-  y `product_related` (hasta 4 tarjetas `.ds-product`, mismas clases que el
-  catálogo: navegan con `data-ds-product`).
+  (mensaje con el producto citado), `product_features` (filas `<tr>` de la tabla),
+  `product_related` (hasta 4 tarjetas `.ds-product`, mismas clases que el
+  catálogo: navegan con `data-ds-product`), `product_rating_avg` /
+  `product_rating_count` (promedio 0–5 y total de valoraciones; vacíos si el
+  dueño apagó las opiniones) y `product_reviews` (bloque de opiniones).
 - Composición de publicación, no tarjeta ampliada: migas o retorno al catálogo
   (`data-ds-route="catalog"`), media principal, precio con oferta tachada + badge
   de ahorro, descripción, CTA de consulta por WhatsApp, tabla de características
@@ -62,6 +64,16 @@
 - La ficha hereda el menú propio del diseño: el `data-ds-product` de los
   relacionados navega dentro del mismo documento y el visitante puede volver
   al catálogo del diseño con un solo toque.
+- Sección de opiniones siempre presente en la ficha: `{{product_reviews}}` dentro
+  de un envoltorio propio del diseño que se oculta con `:not(:has(.ds-reviews))`
+  (el backend deja la variable vacía cuando el dueño desactivó las opiniones o el
+  plan no las incluye). El fragmento trae `.ds-rev-list` con items
+  `.ds-rev-item` (nombre, fecha, pulgar `ds-rev-vote up/down`, texto
+  `.ds-rev-text` solo si los comentarios están habilitados) y
+  `[data-ds-rev-form]`, donde el puente arma el formulario (votos solo con
+  `show_reviews`, textarea solo con `show_comments`, captcha y honeypot).
+  El diseño estiliza las clases `.ds-rev-*` a su manera; el score se muestra
+  con `product_rating_avg`/`product_rating_count` y se oculta si están vacíos.
 
 ## 2.1 Anti-repetición (obligatorio)
 

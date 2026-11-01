@@ -184,6 +184,79 @@ class PatternRenderServiceTests(TestCase):
         self.assertIsNone(render_store_pattern(store))
 
 
+class ProductReviewFragmentTests(TestCase):
+    """Las opiniones de la ficha respetan los toggles del dueño y el plan."""
+
+    def setUp(self):
+        DesignPattern.objects.all().delete()
+        self.store      =   _store()
+        self.product    =   Product.objects.create(store = self.store, name = 'Yerba', price = 1500)
+        self.custom     =   self.store.customization
+
+    def _frag(self, has_benefit = True):
+        from StoreApp.domains.catalog.models import ProductReview
+        from StoreApp.domains.design.services.pattern_render import _reviews_fragment
+        ProductReview.objects.create(
+            store = self.store, product = self.product,
+            is_positive = True, text = 'Muy buena', name = 'Ana', surname = 'Lopez', email = 'a@a.com',
+        )
+        ProductReview.objects.create(
+            store = self.store, product = self.product,
+            is_positive = None, text = 'Solo texto', name = 'Juan', surname = 'Paz', email = 'b@b.com',
+        )
+        with patch('StoreApp.domains.stores.services.profile_has_benefit', return_value = has_benefit):
+            return _reviews_fragment(self.store, self.product, self.custom)
+
+    def _flags(self, rate = False, comment = False):
+        self.custom.show_reviews  = rate
+        self.custom.show_comments = comment
+
+    def test_disabled_by_owner_renders_nothing(self):
+        self._flags()
+        self.assertEqual(self._frag(), '')
+
+    def test_without_plan_benefit_renders_nothing(self):
+        self._flags(rate = True, comment = True)
+        self.assertEqual(self._frag(has_benefit = False), '')
+
+    def test_rate_only_hides_comment_text(self):
+        self._flags(rate = True)
+        frag = self._frag()
+        self.assertIn('data-rate="1"', frag)
+        self.assertIn('data-comment="0"', frag)
+        self.assertIn('ds-rev-list', frag)
+        self.assertIn('Ana L.', frag)
+        self.assertNotIn('Muy buena', frag)   #texto oculto sin show_comments
+        self.assertNotIn('Solo texto', frag)
+        self.assertNotIn('Juan', frag)        #reseña sin voto tampoco aparece
+
+    def test_comment_only_shows_text_without_votes(self):
+        self._flags(comment = True)
+        frag = self._frag()
+        self.assertIn('data-rate="0"', frag)
+        self.assertIn('data-comment="1"', frag)
+        self.assertIn('Muy buena', frag)
+        self.assertIn('Solo texto', frag)
+
+    def test_rating_values_need_show_reviews(self):
+        from StoreApp.domains.catalog.models import ProductReview
+        from StoreApp.domains.design.services.pattern_render import _rating_values
+        ProductReview.objects.create(
+            store = self.store, product = self.product,
+            is_positive = True, name = 'Ana', surname = 'L', email = 'a@a.com',
+        )
+        ProductReview.objects.create(
+            store = self.store, product = self.product,
+            is_positive = False, name = 'Juan', surname = 'P', email = 'b@b.com',
+        )
+        with patch('StoreApp.domains.stores.services.profile_has_benefit', return_value = True):
+            self._flags(rate = True)
+            avg, count = _rating_values(self.store, self.product, self.custom)
+            self.assertEqual((avg, count), ('2.5', '2'))
+            self._flags()
+            self.assertEqual(_rating_values(self.store, self.product, self.custom), ('', ''))
+
+
 class PublicPatternEndpointTests(TestCase):
     def setUp(self):
         DesignPattern.objects.all().delete()

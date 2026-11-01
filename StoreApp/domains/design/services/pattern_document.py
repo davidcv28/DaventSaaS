@@ -73,6 +73,11 @@ img[src=""]{display:none!important}
   background-color:var(--soft,var(--surface,#f5f5f5));
 }
 .ds-product-img.is-empty::after{opacity:.55}
+
+/* Opiniones de producto: honeypot fuera de pantalla y pulgar inline. */
+.ds-rev-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
+.ds-rev-vote{display:inline-block;vertical-align:-1px}
+.ds-rev-vote svg{display:block}
 """
 
 #El puente vive junto a este módulo y se sirve desde la misma URL del

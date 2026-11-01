@@ -708,6 +708,169 @@
       if (!e.target.closest || !e.target.closest('[data-ds-search]')) closeSuggest()
     })
   }
+  /* Opiniones de la ficha: el HTML del diseño ya trae `.ds-reviews` con
+   * la lista renderizada + data-rate/data-comment (los toggles del dueño)
+   * y las URLs de la API pública. El puente arma el formulario, carga el
+   * captcha y publica por fetch — mismos endpoints que la vista Vue.
+   * Cuando ambas opciones están apagadas el fragmento llega vacío y la
+   * sección se oculta con CSS (:has/.ds-reviews ausente). */
+  var REVIEW_THUMB = {
+    up: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
+    down: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V2"/><path d="m9 18.12 1 4.88H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
+  }
+  function initReviews() {
+    var box = document.querySelector('.ds-reviews')
+    var formHost = box ? box.querySelector('[data-ds-rev-form]') : null
+    if (!box || !formHost || box.getAttribute('data-ds-rev-ready')) return
+    box.setAttribute('data-ds-rev-ready', '1')
+    var revUrl = box.getAttribute('data-rev-url') || ''
+    var capUrl = box.getAttribute('data-cap-url') || ''
+    var canRate = box.getAttribute('data-rate') === '1'
+    var canComment = box.getAttribute('data-comment') === '1'
+    var list = box.querySelector('[data-ds-rev-list]')
+    var vote = null
+    var challenge = null
+    var busy = false
+    var form = document.createElement('form')
+    form.className = 'ds-rev-fields'
+    form.setAttribute('novalidate', '')
+    var html = ''
+    if (canRate) {
+      html += '<div class="ds-rev-votes" role="radiogroup" aria-label="¿Te gustó este producto?">' +
+        '<button type="button" class="ds-rev-pick" data-v="up" role="radio" aria-checked="false">' + REVIEW_THUMB.up + '<span>Me gustó</span></button>' +
+        '<button type="button" class="ds-rev-pick" data-v="down" role="radio" aria-checked="false">' + REVIEW_THUMB.down + '<span>No me gustó</span></button>' +
+        '</div>'
+    }
+    html += '<div class="ds-rev-row">' +
+      '<input class="ds-rev-input" name="name" maxlength="80" autocomplete="given-name" placeholder="Tu nombre" required>' +
+      '<input class="ds-rev-input" name="surname" maxlength="80" autocomplete="family-name" placeholder="Tu apellido" required>' +
+      '</div>' +
+      '<input class="ds-rev-input" name="email" type="email" autocomplete="email" placeholder="nombre@correo.com" required>'
+    if (canComment) {
+      html += '<textarea class="ds-rev-input ds-rev-area" name="text" rows="3" maxlength="600" placeholder="Contale a otros qué te pareció este producto"></textarea>'
+    }
+    html += '<div class="ds-rev-cap">' +
+      '<span class="ds-rev-q" data-rev-question>Cargando…</span>' +
+      '<input class="ds-rev-input" name="captcha_answer" inputmode="numeric" autocomplete="off" placeholder="Respuesta" required>' +
+      '<button type="button" class="ds-rev-reload" data-rev-reload aria-label="Nueva pregunta" title="Nueva pregunta">↻</button>' +
+      '</div>' +
+      '<div class="ds-rev-hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>' +
+      '<p class="ds-rev-status" data-rev-status role="status" aria-live="polite"></p>' +
+      '<button type="submit" class="ds-rev-send">Publicar opinión</button>'
+    form.innerHTML = html
+    formHost.appendChild(form)
+    var status = form.querySelector('[data-rev-status]')
+    var question = form.querySelector('[data-rev-question]')
+    function say(msg, ok) {
+      if (!status) return
+      status.textContent = msg || ''
+      status.setAttribute('data-ok', ok ? '1' : '0')
+    }
+    function loadCaptcha() {
+      challenge = null
+      if (question) question.textContent = 'Cargando…'
+      if (!capUrl) { if (question) question.textContent = '—'; return }
+      fetch(capUrl).then(function (res) { return res.ok ? res.json() : null })
+        .then(function (data) {
+          challenge = data || null
+          if (question) question.textContent = (data && data.question) ? data.question : '—'
+          var capInput = form.querySelector('[name="captcha_answer"]')
+          if (capInput) capInput.value = ''
+        })
+        .catch(function () { if (question) question.textContent = '—' })
+    }
+    function reviewItem(r) {
+      var li = document.createElement('li')
+      li.className = 'ds-rev-item'
+      var voteHtml = ''
+      if (r.is_positive === true || r.is_positive === false) {
+        var cls = r.is_positive ? 'up' : 'down'
+        voteHtml = '<span class="ds-rev-vote ds-rev-' + cls + '" title="' + (r.is_positive ? 'Le gustó' : 'No le gustó') + '">' + REVIEW_THUMB[cls] + '</span>'
+      }
+      var date = ''
+      var d = new Date(r.created_at || '')
+      if (!isNaN(d.getTime())) date = d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+      li.innerHTML = '<strong class="ds-rev-name">' + esc(r.name) + ' ' + esc(r.surname_initial || '') + '</strong>' +
+        '<time class="ds-rev-date">' + esc(date) + '</time>' + voteHtml +
+        (canComment && r.text ? '<p class="ds-rev-text">' + esc(r.text) + '</p>' : '')
+      return li
+    }
+    function refreshList() {
+      if (!revUrl || !list) return
+      fetch(revUrl).then(function (res) { return res.ok ? res.json() : [] })
+        .then(function (rows) {
+          list.innerHTML = ''
+          ;(rows || []).forEach(function (r) { list.appendChild(reviewItem(r)) })
+          send()
+        })
+        .catch(function () {})
+    }
+    ;[].forEach.call(form.querySelectorAll('.ds-rev-pick'), function (btn) {
+      btn.addEventListener('click', function () {
+        vote = btn.getAttribute('data-v')
+        ;[].forEach.call(form.querySelectorAll('.ds-rev-pick'), function (b) {
+          var on = b.getAttribute('data-v') === vote
+          b.setAttribute('aria-checked', on ? 'true' : 'false')
+          b.classList.toggle('is-on', on)
+        })
+      })
+    })
+    var reloadBtn = form.querySelector('[data-rev-reload]')
+    if (reloadBtn) reloadBtn.addEventListener('click', loadCaptcha)
+    form.addEventListener('submit', function (e) {
+      e.preventDefault()
+      if (busy || !revUrl) return
+      var fd = new FormData(form)
+      var payload = {
+        is_positive: canRate && vote ? (vote === 'up') : null,
+        text: canComment ? String(fd.get('text') || '').trim() : '',
+        name: String(fd.get('name') || '').trim(),
+        surname: String(fd.get('surname') || '').trim(),
+        email: String(fd.get('email') || '').trim(),
+        website: String(fd.get('website') || ''),
+        challenge_id: challenge ? challenge.challenge_id : '',
+        captcha_answer: String(fd.get('captcha_answer') || '').trim()
+      }
+      if (canRate && payload.is_positive === null && !(canComment && payload.text)) { say('Elegí si te gustó o escribí un comentario.'); return }
+      if (canComment && !canRate && !payload.text) { say('Escribí un comentario para publicar.'); return }
+      busy = true
+      say('')
+      fetch(revUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) {
+          return res.json().catch(function () { return {} }).then(function (data) { return { ok: res.ok, data: data } })
+        })
+        .then(function (out) {
+          if (!out.ok) {
+            var msg = ''
+            var data = out.data || {}
+            Object.keys(data).some(function (key) {
+              var val = data[key]
+              msg = Array.isArray(val) ? String(val[0]) : String(val)
+              return !!msg
+            })
+            say(msg || 'No se pudo publicar. Probá de nuevo.')
+            loadCaptcha()
+            return
+          }
+          form.reset()
+          vote = null
+          ;[].forEach.call(form.querySelectorAll('.ds-rev-pick'), function (b) {
+            b.setAttribute('aria-checked', 'false')
+            b.classList.remove('is-on')
+          })
+          say('Tu opinión fue publicada. ¡Gracias!', true)
+          loadCaptcha()
+          refreshList()
+        })
+        .catch(function () { say('Sin conexión. Probá de nuevo.') })
+        .finally(function () { busy = false; send() })
+    })
+    loadCaptcha()
+  }
   var sortSel = document.querySelector('[data-ds-sort]')
   if (sortSel) sortSel.addEventListener('change', applyCatalog)
   catalog()
@@ -723,6 +886,7 @@
   initSearch()
   initFilters()
   initView()
+  initReviews()
   syncFilterUI()
   applyCatalog()
   mountThemeToggle()

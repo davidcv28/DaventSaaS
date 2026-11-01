@@ -116,6 +116,37 @@
   .pdp-specs th{width:38%;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .pdp-rel{margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
   .pdp-rel h2{font-size:15px;letter-spacing:.06em;margin-bottom:4px}
+  .pdp-rev{margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
+  .pdp-rev:not(:has(.ds-reviews)){display:none}
+  .pdp-rev-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+  .pdp-rev-head h2{font-size:15px;letter-spacing:.06em}
+  .pdp-score{display:inline-flex;align-items:baseline;gap:6px;font-size:10px;color:var(--muted);letter-spacing:.08em}
+  .pdp-score b{font-size:14px;color:var(--cyan)}
+  .pdp-score:has(b:empty){display:none}
+  .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .ds-rev-item{border:1px solid var(--line);padding:10px 12px;font-size:11px}
+  .ds-rev-item .ds-rev-name{color:var(--cyan);letter-spacing:.04em;margin-right:8px}
+  .ds-rev-item .ds-rev-date{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
+  .ds-rev-item .ds-rev-vote{color:var(--cyan)}
+  .ds-rev-item .ds-rev-vote.ds-rev-down{color:var(--muted)}
+  .ds-rev-text{margin:7px 0 0;color:var(--muted)}
+  .ds-rev-form{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .ds-rev-fields{display:grid;gap:9px;font-size:11px}
+  .ds-rev-votes{display:flex;gap:8px}
+  .ds-rev-pick{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+  .ds-rev-pick.is-on{border-color:var(--cyan);color:var(--cyan)}
+  .ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .ds-rev-input{width:100%;font:inherit;font-size:11px;padding:8px 10px;border:1px solid var(--line);background:transparent;color:var(--ink);box-sizing:border-box}
+  .ds-rev-input:focus{outline:1px solid var(--cyan)}
+  .ds-rev-cap{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .ds-rev-q{font-size:10px;color:var(--muted);letter-spacing:.08em}
+  .ds-rev-cap .ds-rev-input{max-width:110px}
+  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:5px 8px;line-height:1}
+  .ds-rev-status{margin:0;font-size:10px;color:#ff6b6b;letter-spacing:.06em}
+  .ds-rev-status[data-ok="1"]{color:var(--cyan)}
+  .ds-rev-status:empty{display:none}
+  .ds-rev-send{justify-self:start;font:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:9px 16px;border:1px solid var(--cyan);background:transparent;color:var(--cyan);cursor:pointer}
+  .ds-rev-send:hover{background:var(--cyan);color:var(--void)}
   footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 0 30px;margin-top:26px;border-top:1px solid var(--line);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   footer span:empty{display:none}
   .reveal{opacity:0;transform:translateY(12px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
@@ -243,6 +274,13 @@
         <a class="pdp-cta" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
         <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
       </div>
+    </div>
+    <div class="pdp-rev">
+      <div class="pdp-rev-head">
+        <h2>Registro de opiniones</h2>
+        <p class="pdp-score"><b>{{product_rating_avg}}</b><span>score · {{product_rating_count}} reportes</span></p>
+      </div>
+      {{product_reviews}}
     </div>
     <div class="pdp-rel">
       <h2>Módulos relacionados</h2>

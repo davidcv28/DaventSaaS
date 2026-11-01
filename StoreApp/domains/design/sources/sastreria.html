@@ -240,6 +240,37 @@
   .pdp-specs th{width:34%;font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .pdp-rel{margin-top:52px;padding-top:20px;border-top:1px solid var(--line-strong)}
   .pdp-rel h2{margin:0 0 8px;font:300 clamp(24px,3vw,34px)/1 var(--display);letter-spacing:-.02em}
+  .pdp-rev{margin-top:52px;padding-top:20px;border-top:1px solid var(--line-strong)}
+  .pdp-rev:not(:has(.ds-reviews)){display:none}
+  .pdp-rev-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:16px}
+  .pdp-rev-head h2{margin:0;font:300 clamp(24px,3vw,34px)/1 var(--display);letter-spacing:-.02em}
+  .pdp-score{display:inline-flex;align-items:baseline;gap:7px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .pdp-score b{font:400 24px var(--display);color:var(--leather)}
+  .pdp-score:has(b:empty){display:none}
+  .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+  .ds-rev-item{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .ds-rev-item .ds-rev-name{font:600 12.5px var(--font);color:var(--ink)}
+  .ds-rev-item .ds-rev-date{grid-row:2;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .ds-rev-item .ds-rev-vote{grid-column:2;grid-row:1;justify-self:start;color:var(--leather)}
+  .ds-rev-item .ds-rev-vote.ds-rev-down{color:var(--muted)}
+  .ds-rev-text{grid-column:2;margin:4px 0 0;color:var(--ink-2)}
+  .ds-rev-form{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+  .ds-rev-fields{display:grid;gap:12px;font-size:13px}
+  .ds-rev-votes{display:flex;gap:10px}
+  .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+  .ds-rev-pick.is-on{border-color:var(--leather);color:var(--leather)}
+  .ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ds-rev-input{width:100%;font:400 13px var(--font);padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
+  .ds-rev-input:focus{outline:1px solid var(--leather);outline-offset:1px}
+  .ds-rev-cap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ds-rev-q{font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .ds-rev-cap .ds-rev-input{max-width:130px}
+  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 10px;line-height:1}
+  .ds-rev-status{margin:0;font:500 10.5px var(--mono);letter-spacing:.08em;color:#8a4b3a}
+  .ds-rev-status[data-ok="1"]{color:var(--leather)}
+  .ds-rev-status:empty{display:none}
+  .ds-rev-send{justify-self:start;font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
+  .ds-rev-send:hover{background:var(--leather)}
   .pdp-rel .lookbook{margin-top:8px}
   .foot{border-top:1px solid var(--line);padding:40px 0 34px}
   .foot-name{margin:0 0 22px;font:300 34px/1 var(--display);letter-spacing:-.02em}
@@ -635,6 +666,13 @@
         <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
       </div>
     </div>
+    <section class="pdp-rev" aria-label="Opiniones">
+      <div class="pdp-rev-head">
+        <h2>Opiniones de la clientela</h2>
+        <p class="pdp-score"><b>{{product_rating_avg}}</b><span>nota media · {{product_rating_count}} opiniones</span></p>
+      </div>
+      {{product_reviews}}
+    </section>
     <section class="pdp-rel" aria-label="También te puede interesar">
       <h2>Otras piezas del atelier</h2>
       <div class="lookbook">{{product_related}}</div>

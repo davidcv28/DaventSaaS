@@ -57,8 +57,11 @@ PATTERN_VARIABLES = {
     'product_brand':     {'type': 'text',  'label': 'Producto: marca'},
     'product_ref':       {'type': 'text',  'label': 'Producto: referencia'},
     'product_whatsapp_url': {'type': 'text', 'label': 'Producto: consulta por WhatsApp'},
+    'product_rating_avg':{'type': 'text',  'label': 'Producto: valoración promedio'},
+    'product_rating_count': {'type': 'text', 'label': 'Producto: cantidad de valoraciones'},
     'product_features':  {'type': 'list',  'label': 'Producto: características'},
     'product_related':   {'type': 'list',  'label': 'Producto: relacionados'},
+    'product_reviews':   {'type': 'list',  'label': 'Producto: opiniones'},
     'products':          {'type': 'list',  'label': 'Productos'},
     'categories':        {'type': 'list',  'label': 'Categorías'},
     'services':          {'type': 'list',  'label': 'Servicios'},
@@ -238,6 +241,93 @@ def _gallery_fragment(store, customization):
         )
     return ''.join(shots)
 
+MONTHS_ES = {
+    1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril', 5: 'mayo', 6: 'junio',
+    7: 'julio', 8: 'agosto', 9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre',
+}
+REVIEW_LIST_MAX = 50
+
+THUMB_UP_SVG = (
+    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" '
+    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>'
+)
+THUMB_DOWN_SVG = (
+    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" '
+    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    '<path d="M17 14V2"/><path d="m9 18.12 1 4.88H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
+)
+
+
+def _review_flags(store, customization):
+    """(can_rate, can_comment): mismas reglas que `product_reviews` —
+    el toggle del dueño Y el beneficio `has_product_comments` del plan."""
+    from StoreApp.domains.stores.services import profile_has_benefit
+
+    has_reviews = profile_has_benefit(store.user, 'has_product_comments')
+    can_rate = bool(getattr(customization, 'show_reviews', False) and has_reviews)
+    can_comment = bool(getattr(customization, 'show_comments', False) and has_reviews)
+    return can_rate, can_comment
+
+
+def _reviews_fragment(store, product, customization):
+    """
+    Opiniones del producto: lista renderizada + contenedor del formulario
+    que arma el puente (la API pública es la misma de la vista Vue).
+    Cadena vacía cuando el dueño apagó las opiniones o el plan no las
+    incluye: la sección del diseño se apaga sola con `:has()`.
+    """
+    can_rate, can_comment = _review_flags(store, customization)
+    if not (can_rate or can_comment):
+        return ''
+    items = []
+    for review in product.reviews.all()[:REVIEW_LIST_MAX]:
+        if review.is_positive is None and not (can_comment and review.text):
+            continue
+        surname = (review.surname or '').strip()
+        initial = f'{surname[0]}.' if surname else ''
+        vote = ''
+        if review.is_positive is not None:
+            cls = 'up' if review.is_positive else 'down'
+            vote = (
+                f'<span class="ds-rev-vote ds-rev-{cls}" title="{"Le gustó" if review.is_positive else "No le gustó"}">'
+                f'{THUMB_UP_SVG if review.is_positive else THUMB_DOWN_SVG}</span>'
+            )
+        text = (
+            f'<p class="ds-rev-text">{escape(_text(review.text, 600))}</p>'
+            if can_comment and review.text else ''
+        )
+        date = review.created_at.date()
+        items.append(
+            '<li class="ds-rev-item">'
+            f'<strong class="ds-rev-name">{escape(_text(review.name, 60))} {escape(initial)}</strong>'
+            f'<time class="ds-rev-date" datetime="{date.isoformat()}">'
+            f'{date.day} de {MONTHS_ES[date.month]} de {date.year}</time>'
+            f'{vote}{text}</li>'
+        )
+    return (
+        f'<div class="ds-reviews" data-rev-url="/api/stores/public/{store.slug}/products/{product.pk}/reviews/"'
+        f' data-cap-url="/api/stores/public/{store.slug}/reviews/captcha/"'
+        f' data-rate="{1 if can_rate else 0}" data-comment="{1 if can_comment else 0}">'
+        f'<ul class="ds-rev-list" data-ds-rev-list>{"".join(items)}</ul>'
+        '<div class="ds-rev-form" data-ds-rev-form></div>'
+        '</div>'
+    )
+
+
+def _rating_values(store, product, customization):
+    """('4.5', '12') cuando las valoraciones están habilitadas; ('', '') si no."""
+    can_rate, _ = _review_flags(store, customization)
+    if not can_rate:
+        return '', ''
+    votes = product.reviews.filter(is_positive__isnull = False)
+    count = votes.count()
+    if not count:
+        return '', ''
+    avg = round(votes.filter(is_positive = True).count() / count * 5, 1)
+    return f'{avg:g}', str(count)
+
+
 def _features_fragment(product):
     """Filas `<tr>` de la ficha técnica: primero las del schema de su
     categoría, después las libres (mismo criterio que la vista Vue)."""
@@ -291,8 +381,8 @@ def _product_values(store, product, customization, store_name):
         return {name: '' for name in (
             'product_name', 'product_description', 'product_price', 'product_old_price',
             'product_offer_pct', 'product_image', 'product_category', 'product_brand',
-            'product_ref', 'product_whatsapp_url',
-        )}, {'product_features': '', 'product_related': ''}
+            'product_ref', 'product_whatsapp_url', 'product_rating_avg', 'product_rating_count',
+        )}, {'product_features': '', 'product_related': '', 'product_reviews': ''}
     amount = product.offer_price if product.offer_price is not None else product.price
     old = ''
     pct = ''
@@ -300,6 +390,7 @@ def _product_values(store, product, customization, store_name):
         old = _money(product.price)
         pct = f'-{max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100))))}%'
     phone = _text(getattr(customization, 'whatsapp', ''), 30)
+    rating_avg, rating_count = _rating_values(store, product, customization)
     context = {
         'product_name':         _text(product.name, 120),
         'product_description':  _text(product.description, 600),
@@ -311,10 +402,13 @@ def _product_values(store, product, customization, store_name):
         'product_brand':        _text(getattr(product.brand, 'name', ''), 60),
         'product_ref':          str(product.pk),
         'product_whatsapp_url': _product_whatsapp_url(phone, product, store_name),
+        'product_rating_avg':   rating_avg,
+        'product_rating_count': rating_count,
     }
     raw = {
         'product_features': _features_fragment(product),
         'product_related':  _related_fragment(store, product),
+        'product_reviews':  _reviews_fragment(store, product, customization),
     }
     return context, raw
 
