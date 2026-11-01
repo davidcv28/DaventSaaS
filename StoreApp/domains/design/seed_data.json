@@ -1189,21 +1189,21 @@
       "slug": "gimnasio",
       "nombre": "Gimnasio",
       "categoria": "Deporte oscuro",
-      "descripcion": "Carbón y lima eléctrico: Barlow Condensed en mayúsculas, bordes duros y retícula de pista.",
+      "descripcion": "Negro oliva y lima: Barlow Condensed 800 en mayúsculas, Inter en cuerpo, bordes rectos y banda de disciplinas en acento.",
       "tier": "plus",
       "template": "gimnasio",
       "page_theme": "dark",
       "tokens": {
         "palette": {
-          "accent": "#A3E635",
-          "primary": "#EDF3E2",
-          "secondary": "#93A07E",
-          "bg": "#0D100B",
-          "surface": "#181E12",
-          "text": "#EDF3E2",
-          "muted": "#93A07E",
-          "border": "#2A3220",
-          "success": "#A3E635",
+          "accent": "#C8F169",
+          "primary": "#F2EFE8",
+          "secondary": "#A9A79E",
+          "bg": "#0E0F0C",
+          "surface": "#171914",
+          "text": "#F2EFE8",
+          "muted": "#A9A79E",
+          "border": "#2A2D25",
+          "success": "#C8F169",
           "danger": "#F45B4C"
         },
         "containers": {
@@ -1215,11 +1215,11 @@
         },
         "typography": {
           "heading": "barlow-condensed",
-          "subheading": "barlow",
-          "body": "barlow",
+          "subheading": "inter",
+          "body": "inter",
           "scale": "impact",
-          "weightHeading": 700,
-          "letterSpacing": "0.02em"
+          "weightHeading": 800,
+          "letterSpacing": "0"
         },
         "buttons": {
           "shape": "square",
@@ -1227,7 +1227,7 @@
           "size": "lg"
         },
         "background": {
-          "type": "grid",
+          "type": "solid",
           "value": null,
           "overlay": "none"
         },
@@ -1243,8 +1243,8 @@
         "preview": "",
         "icons": {
           "style": "line",
-          "stroke": "2.2",
-          "size": "18",
+          "stroke": "1.8",
+          "size": "20",
           "corners": "square"
         }
       },
@@ -1280,21 +1280,21 @@
       "slug": "gimnasio-dia",
       "nombre": "Gimnasio Día",
       "categoria": "Deporte claro",
-      "descripcion": "La versión diurna del gym: papel deportivo, tinta casi negra y lima apagado de pizarra.",
+      "descripcion": "La versión diurna del gym: papel hueso, tinta casi negra y lima apagado.",
       "tier": "plus",
       "template": "gimnasio",
       "page_theme": "light",
       "tokens": {
         "palette": {
-          "accent": "#5C9E0E",
-          "primary": "#151A0E",
-          "secondary": "#5A6650",
-          "bg": "#F2F4EA",
-          "surface": "#FBFCF6",
-          "text": "#151A0E",
-          "muted": "#5A6650",
-          "border": "#D9DFC9",
-          "success": "#5C9E0E",
+          "accent": "#6FA318",
+          "primary": "#0E0F0C",
+          "secondary": "#55534B",
+          "bg": "#F2EFE8",
+          "surface": "#FAF8F1",
+          "text": "#0E0F0C",
+          "muted": "#55534B",
+          "border": "#C9C5B8",
+          "success": "#6FA318",
           "danger": "#C2402F"
         },
         "containers": {
@@ -1306,11 +1306,11 @@
         },
         "typography": {
           "heading": "barlow-condensed",
-          "subheading": "barlow",
-          "body": "barlow",
+          "subheading": "inter",
+          "body": "inter",
           "scale": "impact",
-          "weightHeading": 700,
-          "letterSpacing": "0.02em"
+          "weightHeading": 800,
+          "letterSpacing": "0"
         },
         "buttons": {
           "shape": "square",
@@ -1915,7 +1915,7 @@
       "slug": "gimnasio",
       "nombre": "Gimnasio",
       "categoria": "deporte",
-      "descripcion": "Gimnasio y fitness: tinta carbón con retícula de pista, lima eléctrico, titulares Barlow condensada en mayúsculas, cinta de disciplinas y planes en tarjetas numeradas.",
+      "descripcion": "Gimnasio y fitness: negro oliva con hueso, lima eléctrico, titulares Barlow Condensed 800 en mayúsculas, banda de disciplinas en acento, clases en filas sobre papel y planes en tarjetas de precio.",
       "tier": "plus",
       "template": "gimnasio",
       "layout": {
@@ -2050,25 +2050,24 @@
         ]
       },
       "tokens": {
-        "accent": "#A3E635",
+        "accent": "#C8F169",
         "palette": {
-          "accent": "#A3E635",
-          "primary": "#EDF3E2",
-          "secondary": "#93A07E",
-          "bg": "#0D100B",
-          "surface": "#181E12",
-          "text": "#EDF3E2",
-          "muted": "#93A07E",
-          "border": "#2A3220",
-          "success": "#A3E635",
+          "accent": "#C8F169",
+          "primary": "#F2EFE8",
+          "secondary": "#A9A79E",
+          "bg": "#0E0F0C",
+          "surface": "#171914",
+          "text": "#F2EFE8",
+          "muted": "#A9A79E",
+          "border": "#2A2D25",
+          "success": "#C8F169",
           "danger": "#F45B4C"
         },
         "fonts": [
-          "barlow",
           "barlow-condensed",
-          "jetbrains-mono"
+          "inter"
         ],
-        "radius": "2px",
+        "radius": "0px",
         "anim": {
           "hero": "fade-up",
           "reveal": "fade-up",

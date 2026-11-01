@@ -131,11 +131,11 @@
 .tpl-thumb[data-tpl='clasico'] i b { border-radius: 4px; border-color: var(--tp-line); background-size: 34% 2px, 74% 2px, 100% 68%; }
 .tpl-thumb[data-tpl='clasico'] i b:nth-child(2) { background-image: linear-gradient(var(--tp-acc), var(--tp-acc)), linear-gradient(var(--tp-ink), var(--tp-ink)), linear-gradient(#E5DDCE, #E5DDCE); }
 
-/* Gimnasio: deporte y fitness — carbón, lima eléctrico y barras condensadas. */
-.tpl-thumb[data-tpl='gimnasio'] { --tp-bg: #0D100B; --tp-nav: #0D100B; --tp-line: rgba(163, 230, 53, .3); --tp-hero: linear-gradient(#141810, #141810); --tp-card: #181E12; --tp-img: #232B18; --tp-ink: #EDF3E2; --tp-mute: #4A5638; border-color: #2A3220; }
-.tpl-thumb[data-tpl='gimnasio']::before { left: 7%; top: 15%; width: 46%; height: 6%; background: var(--tp-acc); box-shadow: 0 12px 0 -2px #EDF3E2, 0 22px 0 -2px #EDF3E2; }
-.tpl-thumb[data-tpl='gimnasio']::after { right: 8%; top: 14%; width: 30%; height: 38%; border: 1px solid var(--tp-line); background: linear-gradient(#232B18, #232B18); box-shadow: -6px 6px 0 -2px var(--tp-acc); }
-.tpl-thumb[data-tpl='gimnasio'] i b { border-radius: 1px; border-color: var(--tp-line); }
+/* Gimnasio: deporte y fitness — negro oliva, lima y barras condensadas. */
+.tpl-thumb[data-tpl='gimnasio'] { --tp-bg: #0E0F0C; --tp-nav: #0E0F0C; --tp-line: rgba(200, 241, 105, .35); --tp-hero: linear-gradient(#131410, #131410); --tp-card: #171914; --tp-img: #1A1C16; --tp-ink: #F2EFE8; --tp-mute: #4A4D42; border-color: #2A2D25; }
+.tpl-thumb[data-tpl='gimnasio']::before { left: 7%; top: 15%; width: 46%; height: 6%; background: var(--tp-acc); box-shadow: 0 12px 0 -2px #F2EFE8, 0 22px 0 -2px #F2EFE8; }
+.tpl-thumb[data-tpl='gimnasio']::after { right: 8%; top: 14%; width: 30%; height: 38%; border: 1px dashed var(--tp-line); background: linear-gradient(#1A1C16, #1A1C16); box-shadow: -6px 6px 0 -2px var(--tp-acc); }
+.tpl-thumb[data-tpl='gimnasio'] i b { border-radius: 0; border-color: var(--tp-line); }
 
 /* Seguridad: bomberos e industrial — oscuro, rojo y franjas hazard. */
 .tpl-thumb[data-tpl='seguridad'] { --tp-bg: #F3F3F1; --tp-nav: #C8200E; --tp-line: rgba(18, 18, 18, .16); --tp-hero: linear-gradient(#121212, #121212); --tp-card: #fff; --tp-img: #D8D8D3; --tp-ink: #121212; --tp-mute: #8F8F8A; border-color: #D8D8D3; }

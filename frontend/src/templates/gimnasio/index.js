@@ -1,13 +1,13 @@
 import { landingViews, catalogViews, productViews, servicesViews, CATALOG_BLOCKS, SERVICES_BLOCKS } from '../_shared.js'
 
 // Template Definition 'gimnasio' — deporte / fitness (nivel plus).
-// Oscuro y energético: tinta carbón, acento lima, Barlow Condensed en
-// titulares y JetBrains Mono en etiquetas. Composición GENERATIVA:
+// Oscuro y energético: negro oliva, acento lima, Barlow Condensed 800 en
+// titulares e Inter en cuerpo y etiquetas. Composición GENERATIVA:
 // `blocks.landing` es la whitelist del Studio y el orden canónico por
 // defecto. Catálogo / ficha / servicios reutilizan Raíz bajo `.gy-skin`.
 export default {
   usesSectionOrder: false,
-  fonts: ['barlow', 'barlow-condensed', 'jetbrains-mono'],
+  fonts: ['barlow-condensed', 'inter'],
   surfaces: {
     landing: landingViews.gimnasio,
     catalog: catalogViews.gimnasio,

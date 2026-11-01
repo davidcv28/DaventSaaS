@@ -63,13 +63,15 @@ const meta = computed(() => {
 })
 const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
 const centered = computed(() => props.block?.variant === 'centered')
+const kicker = computed(() => `Gimnasio${location.value ? ` · ${location.value}` : ' · Centro de entrenamiento'}`)
+const metaIcon = { open: 'clock', loc: 'map-pin', years: 'flame' }
 </script>
 
 <template>
   <section class="gy-hero" :class="{ 'is-centered': centered }" aria-labelledby="gy-hero-title">
     <div class="gy-wrap gy-hero-grid">
       <div class="gy-hero-copy">
-        <p v-reveal class="gy-kicker">Gym — Centro de entrenamiento</p>
+        <p v-reveal class="gy-kicker">{{ kicker }}</p>
         <h1 id="gy-hero-title" v-reveal="50" class="gy-hero-title">
           <span v-if="titleParts.head">{{ titleParts.head }}</span>
           <span class="gy-hero-accent">{{ titleParts.accent }}</span>
@@ -92,12 +94,13 @@ const centered = computed(() => props.block?.variant === 'centered')
         <ul v-if="meta.length" v-reveal="230" class="gy-hero-meta">
           <li v-for="m in meta" :key="m.key" :class="{ 'is-open': m.state }">
             <span v-if="m.state" class="gy-dot" aria-hidden="true"></span>
+            <AppIcon v-else :name="metaIcon[m.key] || 'check'" :size="18" class="gy-meta-ic" aria-hidden="true" />
             {{ m.text }}
           </li>
         </ul>
       </div>
 
-      <figure v-reveal="130" class="gy-hero-plate">
+      <figure v-reveal="130" class="gy-hero-plate" :class="{ 'is-empty': !heroImage }">
         <img v-if="heroImage" :src="heroImage.url" :alt="heroImage.alt" loading="eager" decoding="async" fetchpriority="high" />
         <div v-else class="gy-hero-empty">
           <img v-if="custom.logo" :src="custom.logo" :alt="`Logo de ${shopName}`" />
@@ -105,17 +108,20 @@ const centered = computed(() => props.block?.variant === 'centered')
           <strong>{{ shopName }}</strong>
         </div>
         <figcaption class="gy-hero-badge">
-          <b>+{{ custom.about_years || '100' }}</b>
-          <span>{{ custom.about_years ? 'años de trayectoria' : '% de ganas' }}</span>
+          <template v-if="custom.about_years"><b>+{{ custom.about_years }}</b><span>años de trayectoria</span></template>
+          <span v-else>Sala principal</span>
         </figcaption>
       </figure>
     </div>
-    <div v-reveal="210" class="gy-wrap gy-strip" aria-hidden="true">
-      <span>Musculación</span><i></i>
-      <span>Funcional</span><i></i>
-      <span>Cardio</span><i></i>
-      <span>Clases grupales</span><i></i>
-      <span>Personalizado</span>
+    <div v-reveal="210" class="gy-strip" aria-hidden="true">
+      <div class="gy-wrap gy-strip-inner">
+        <span>Musculación</span>
+        <span>Funcional</span>
+        <span>Spinning</span>
+        <span>Boxeo</span>
+        <span>Yoga</span>
+        <span>HIIT</span>
+      </div>
     </div>
   </section>
 </template>
