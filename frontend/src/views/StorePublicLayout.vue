@@ -267,7 +267,8 @@ const TEMPLATE_CSS = {
   mercado:   () => import('../assets/store-mercado.css'),
   clasico:   () => import('../assets/store-clasico.css'),
   circuito:  () => import('../assets/store-circuito.css'),
-  seguridad: () => import('../assets/store-seguridad.css')
+  seguridad: () => import('../assets/store-seguridad.css'),
+  gimnasio:  () => import('../assets/store-gimnasio.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()

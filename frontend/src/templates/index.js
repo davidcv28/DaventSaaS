@@ -39,8 +39,9 @@ import mercado      from './mercado/index.js'
 import clasico      from './clasico/index.js'
 import circuito     from './circuito/index.js'
 import seguridad    from './seguridad/index.js'
+import gimnasio     from './gimnasio/index.js'
 
-export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, atelier, sastreria, mercado, clasico, circuito, seguridad }
+export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, atelier, sastreria, mercado, clasico, circuito, seguridad, gimnasio }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 

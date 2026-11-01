@@ -760,6 +760,7 @@ export const STORE_TEMPLATES = {
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   mercado:     { label: 'Bazar',       rubro: 'general',      tier: 'plus',     defaultAccent: '#2563EB', desc: 'Marketplace: masthead amarillo, buscador, tarjetas blancas densas y precios con descuento.' },
   clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
+  gimnasio:    { label: 'Gimnasio',    rubro: 'deporte',      tier: 'plus',     defaultAccent: '#A3E635', desc: 'Gimnasio y fitness: tinta carbón, lima eléctrico, Barlow condensada y tarjetas de planes numeradas.' },
   circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
   seguridad:   { label: 'Seguridad',   rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
 }
@@ -778,6 +779,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
   { key: 'boutique',     label: 'Boutique',     caption: 'Moda premium y deco',     templates: ['boutique'] },
   { key: 'clasico',      label: 'Clásico',      caption: 'Comercio y servicios',    templates: ['clasico'] },
+  { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',      templates: ['circuito'] },
   { key: 'seguridad',    label: 'Seguridad',    caption: 'Seguridad y bomberos',    templates: ['seguridad'] },
 ]
@@ -794,7 +796,8 @@ export const STORE_TEMPLATE_SKIN = {
   indumentaria: 'indumentaria', boutique: 'boutique', atelier: 'atelier',
   sastreria: 'sastreria',
   mercado: 'mercado',
-  circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico'
+  circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico',
+  gimnasio: 'gimnasio'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 

@@ -158,7 +158,8 @@ export const TEMPLATE_FAMILY = {
   clasico: 'craft',
   alimentos: 'craft',
   circuito: 'tech',
-  seguridad: 'brutal'
+  seguridad: 'brutal',
+  gimnasio: 'brutal'
 }
 
 // Ajuste fino por estilo: dentro de una familia, el rubro del estilo manda.
@@ -196,7 +197,8 @@ export const TEMPLATE_ICON_OVERRIDES = {
   indumentaria: { store: 'scissors', tag: 'percent' },
   circuito: { store: 'terminal', sparkles: 'zap' },
   seguridad: { store: 'shield-check', sparkles: 'hard-hat' },
-  clasico: { store: 'building-2' }
+  clasico: { store: 'building-2' },
+  gimnasio: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' }
 }
 
 export function familyOf({ styleId = '', template = '' } = {}) {

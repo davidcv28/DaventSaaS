@@ -1184,6 +1184,187 @@
         "corners": "rounded"
       },
       "concept": "Marketplace de ofertas: naranja y rojo sobre crema."
+    },
+    {
+      "slug": "gimnasio",
+      "nombre": "Gimnasio",
+      "categoria": "Deporte oscuro",
+      "descripcion": "Carbón y lima eléctrico: Barlow Condensed en mayúsculas, bordes duros y retícula de pista.",
+      "tier": "plus",
+      "template": "gimnasio",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#A3E635",
+          "primary": "#EDF3E2",
+          "secondary": "#93A07E",
+          "bg": "#0D100B",
+          "surface": "#181E12",
+          "text": "#EDF3E2",
+          "muted": "#93A07E",
+          "border": "#2A3220",
+          "success": "#A3E635",
+          "danger": "#F45B4C"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "barlow-condensed",
+          "subheading": "barlow",
+          "body": "barlow",
+          "scale": "impact",
+          "weightHeading": 700,
+          "letterSpacing": ".02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "lg"
+        },
+        "background": {
+          "type": "grid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "2.2",
+          "size": "18",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "funcional",
+        "clases"
+      ],
+      "preview": "",
+      "style": "Deporte oscuro",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "2.2",
+        "size": "18",
+        "corners": "square"
+      },
+      "concept": "Carbón + lima, titulares condensados y energía de pista."
+    },
+    {
+      "slug": "gimnasio-dia",
+      "nombre": "Gimnasio Día",
+      "categoria": "Deporte claro",
+      "descripcion": "La versión diurna del gym: papel deportivo, tinta casi negra y lima apagado de pizarra.",
+      "tier": "plus",
+      "template": "gimnasio",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#5C9E0E",
+          "primary": "#151A0E",
+          "secondary": "#5A6650",
+          "bg": "#F2F4EA",
+          "surface": "#FBFCF6",
+          "text": "#151A0E",
+          "muted": "#5A6650",
+          "border": "#D9DFC9",
+          "success": "#5C9E0E",
+          "danger": "#C2402F"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "barlow-condensed",
+          "subheading": "barlow",
+          "body": "barlow",
+          "scale": "impact",
+          "weightHeading": 700,
+          "letterSpacing": ".02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "lg"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "2.2",
+          "size": "18",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "clases"
+      ],
+      "preview": "",
+      "style": "Deporte claro",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "2.2",
+        "size": "18",
+        "corners": "square"
+      },
+      "concept": "Papel deportivo + tinta + lima de pizarra."
     }
   ],
   "patterns": [
@@ -1729,6 +1910,193 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "sastreria"
+    },
+    {
+      "slug": "gimnasio",
+      "nombre": "Gimnasio",
+      "categoria": "deporte",
+      "descripcion": "Gimnasio y fitness: tinta carbón con retícula de pista, lima eléctrico, titulares Barlow condensada en mayúsculas, cinta de disciplinas y planes en tarjetas numeradas.",
+      "tier": "plus",
+      "template": "gimnasio",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 11
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#A3E635",
+        "palette": {
+          "accent": "#A3E635",
+          "primary": "#EDF3E2",
+          "secondary": "#93A07E",
+          "bg": "#0D100B",
+          "surface": "#181E12",
+          "text": "#EDF3E2",
+          "muted": "#93A07E",
+          "border": "#2A3220",
+          "success": "#A3E635",
+          "danger": "#F45B4C"
+        },
+        "fonts": [
+          "barlow",
+          "barlow-condensed",
+          "jetbrains-mono"
+        ],
+        "radius": "2px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.2,.8,.2,1)",
+        "duration": "380ms",
+        "icons": {
+          "style": "line",
+          "stroke": "2.2",
+          "size": "18",
+          "corners": "square"
+        }
+      },
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "funcional",
+        "clases",
+        "crossfit"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": false,
+      "style": "gimnasio"
     }
   ]
 }
