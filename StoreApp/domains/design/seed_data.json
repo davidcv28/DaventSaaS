@@ -1219,7 +1219,7 @@
           "body": "barlow",
           "scale": "impact",
           "weightHeading": 700,
-          "letterSpacing": ".02em"
+          "letterSpacing": "0.02em"
         },
         "buttons": {
           "shape": "square",
@@ -1310,7 +1310,7 @@
           "body": "barlow",
           "scale": "impact",
           "weightHeading": 700,
-          "letterSpacing": ".02em"
+          "letterSpacing": "0.02em"
         },
         "buttons": {
           "shape": "square",
