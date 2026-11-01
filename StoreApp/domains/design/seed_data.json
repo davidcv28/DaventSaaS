@@ -546,6 +546,96 @@
       "concept": "Concreto + rojo de hilo, Space Grotesk y bordes duros."
     },
     {
+      "slug": "sastreria-ejecutiva",
+      "nombre": "Sastrería Ejecutiva",
+      "categoria": "Sastrería corporativa",
+      "descripcion": "Azul noche y gris acero: DM Serif Display y Figtree, minimalismo de oficina premium.",
+      "tier": "plus",
+      "template": "sastreria",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#2F4A7E",
+          "primary": "#101B2E",
+          "secondary": "#3C4657",
+          "bg": "#F4F5F7",
+          "surface": "#FFFFFF",
+          "text": "#13171E",
+          "muted": "#5C6470",
+          "border": "#D5DBE3",
+          "success": "#4C6B57",
+          "danger": "#A33B32"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "dm-serif-display",
+          "subheading": "figtree",
+          "body": "figtree",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "-0.015em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "underline",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "sastreria",
+        "ejecutivo",
+        "corporativo",
+        "oficina"
+      ],
+      "preview": "",
+      "style": "Sastrería corporativa",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "underline",
+        "button": "ink-fill"
+      },
+      "easing": "cubic-bezier(.2,.7,.2,1)",
+      "duration": "520ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Azul noche + gris acero: sastrería ejecutiva."
+    },
+    {
       "slug": "mercado-noche",
       "nombre": "Bazar Noche",
       "categoria": "Marketplace nocturno",

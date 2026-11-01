@@ -279,6 +279,8 @@
 }
 .ss-hero.is-centered .ss-hero-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; }
 .ss-hero.is-centered .ss-specs { justify-content: center; }
+.ss-hero.is-centered .ss-kicker { justify-content: center; }
+.ss-hero.is-centered .ss-kicker::after { display: none; }
 .ss-kicker {
   display: flex;
   align-items: center;
@@ -324,6 +326,8 @@
   padding: 0 26px;
   border: 1px solid var(--ss-ink);
   border-radius: 2px;
+  text-decoration: none;
+  cursor: pointer;
   font-family: var(--ss-mono);
   font-size: 11px;
   font-weight: 600;
@@ -372,7 +376,7 @@
   display: grid;
   place-items: center;
   font-family: var(--ss-display);
-  font-size: 180px;
+  font-size: clamp(96px, 22vw, 180px);
   font-weight: 300;
   color: color-mix(in srgb, var(--ss-ink) 8%, transparent);
 }
@@ -456,7 +460,8 @@
   color: var(--ss-leather);
 }
 .ss-lookbook { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; border-top: 1px solid var(--ss-line); }
-.ss-row { min-width: 0; border-bottom: 1px solid var(--ss-line); }
+.ss-row { min-width: 0; border-bottom: 1px solid var(--ss-line); transition: background .18s; }
+.ss-row:hover { background: var(--ss-card); }
 .ss-row-link {
   display: grid;
   grid-template-columns: 132px minmax(0, 1fr) auto;
@@ -464,6 +469,8 @@
   gap: 18px;
   min-height: 132px;
   padding: 18px 0;
+  color: inherit;
+  text-decoration: none;
 }
 .ss-row-img {
   width: 132px;
@@ -515,6 +522,7 @@
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--ss-leather);
+  text-decoration: none;
 }
 .ss-viewall:hover { text-decoration: underline; text-underline-offset: 4px; }
 
@@ -724,6 +732,7 @@
   .store-page[data-template='sastreria'] { --ss-gutter: 18px; }
   .store-page[data-template='sastreria'] .sp-top-inner { min-height: 64px; }
   .store-page[data-template='sastreria'] .sp-top-links {
+    flex-wrap: wrap;
     border-left: 0;
     border-top: 1px solid var(--ss-line);
   }
@@ -742,10 +751,12 @@
   .ss-specs div { padding: 12px 0; border-bottom: 1px solid var(--ss-line); }
   .ss-specs div + div { padding-left: 0; border-left: 0; }
   .ss-swatches { grid-template-columns: 1fr; margin-top: 36px; }
+  .ss-hero-note { right: -1px; }
   .ss-row-link { grid-template-columns: 104px minmax(0, 1fr); gap: 14px; min-height: 0; }
   .ss-row-img { width: 104px; height: 132px; }
   .ss-row-price {
     grid-row: auto;
+    grid-column: 2;
     flex-direction: row;
     align-items: baseline;
     justify-content: flex-start;
