@@ -18,7 +18,7 @@ export default {
   blocks: {
     landing: [
       'announcements', 'hero', 'highlights', 'categories', 'featured',
-      'services', 'aigrid', 'stats', 'brands', 'gallery', 'testimonials',
+      'services', 'plans', 'aigrid', 'stats', 'brands', 'gallery', 'testimonials',
       'faq', 'cta', 'contact'
     ],
     catalog: ['note', 'promo', ...CATALOG_BLOCKS],

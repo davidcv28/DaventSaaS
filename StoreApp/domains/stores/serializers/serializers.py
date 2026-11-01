@@ -155,6 +155,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     benefits                    =   serializers.JSONField(**CustomizationFields['benefits'])
     timeline                    =   serializers.JSONField(**CustomizationFields['timeline'])
     team                        =   serializers.JSONField(**CustomizationFields['team'])
+    plans                       =   serializers.JSONField(**CustomizationFields['plans'])
+    plans_title                 =   serializers.CharField(**CustomizationFields['plans_title'])
     service_steps               =   serializers.JSONField(**CustomizationFields['service_steps'])
     service_days                =   serializers.JSONField(**CustomizationFields['service_days'])
     service_slots               =   serializers.JSONField(**CustomizationFields['service_slots'])
@@ -183,6 +185,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'announcements', 'show_announcements', 'video_url', 'video_title', 'show_video',
             'catalog_note', 'footer_text',
             'benefits', 'show_benefits', 'timeline', 'show_timeline', 'team', 'show_team',
+            'plans', 'plans_title', 'show_plans',
             'show_offers', 'show_brands', 'show_countdown',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
@@ -330,6 +333,30 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             role                =   str(item.get('role') or '').strip()[:StoreCustomization.TEAM_ROLE_MAX]
             if name:
                 clean.append({'name': name, 'role': role})
+        return clean
+
+    def validate_plans(self, value):
+        #Planes publicitarios ({name, price, note?, items?[]}): el precio es
+        #texto libre (nunca se cobra por la plataforma) y sin precio la fila
+        #no informa nada — se descarta igual que en _clean_price_list.
+        clean                   =   []
+        for item in self._rows(value, StoreCustomization.PLANS_MAX, 'Debe ser una lista de planes.'):
+            name                =   str(item.get('name') or '').strip()[:StoreCustomization.PLAN_NAME_MAX]
+            price               =   str(item.get('price') or '').strip()[:StoreCustomization.PLAN_PRICE_MAX]
+            if not (name and price):
+                continue
+            plan                =   {'name': name, 'price': price}
+            note                =   str(item.get('note') or '').strip()[:StoreCustomization.PLAN_NOTE_MAX]
+            if note:
+                plan['note']    =   note
+            features            =   []
+            for feature in (item.get('items') or [])[:StoreCustomization.PLAN_FEATURES_MAX] if isinstance(item.get('items'), list) else []:
+                text            =   str(feature or '').strip()[:StoreCustomization.PLAN_FEATURE_MAX]
+                if text:
+                    features.append(text)
+            if features:
+                plan['items']   =   features
+            clean.append(plan)
         return clean
 
     def validate_service_days(self, value):

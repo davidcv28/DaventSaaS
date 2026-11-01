@@ -349,12 +349,21 @@ class StoreCustomization(models.Model):
     TEAM_MAX                    =   6
     TEAM_NAME_MAX               =   60
     TEAM_ROLE_MAX               =   60
+    #Planes de suscripción que el negocio ofrece a SUS clientes (membresías,
+    #clubs, packs mensuales): solo publicidad en la web, nunca se cobran por
+    #la plataforma — filas {name, price, note?, items?[text]}.
+    PLANS_MAX                   =   4
+    PLAN_NAME_MAX               =   40
+    PLAN_PRICE_MAX              =   20
+    PLAN_NOTE_MAX               =   80
+    PLAN_FEATURES_MAX           =   5
+    PLAN_FEATURE_MAX            =   60
     #Orden fijo de las secciones de la portada (claves cerradas): el hero
     #va primero y el contacto último siempre. La web pública aplica siempre
     #este orden canónico como CSS order sobre .sp-page-root (flex) — el
     #usuario ya no lo puede cambiar; el campo section_order queda como
     #dato histórico (el serializer sigue aceptándolo por compatibilidad).
-    SECTION_ORDER               =   ('about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta')
+    SECTION_ORDER               =   ('about', 'services', 'stats', 'benefits', 'offers', 'plans', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta')
     services                    =   models.JSONField(default = list, blank = True, verbose_name = 'Qué ofrecemos')
     services_title              =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Qué ofrecemos')
     show_services               =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Qué ofrecemos')
@@ -413,6 +422,12 @@ class StoreCustomization(models.Model):
     #Equipo: filas {name, role} — la web muestra tarjetas con iniciales.
     team                        =   models.JSONField(default = list, blank = True, verbose_name = 'Equipo')
     show_team                   =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Equipo')
+    #Planes de suscripción publicitados (membresías, clubs, packs): filas
+    #{name, price, note?, items?[]} — el precio es texto libre ("$15.000/mes")
+    #y NO hay cobro online; la sección es solo vidriera.
+    plans                       =   models.JSONField(default = list, blank = True, verbose_name = 'Planes de suscripción')
+    plans_title                 =   models.CharField(max_length = 80, blank = True, verbose_name = 'Título de la sección Planes')
+    show_plans                  =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Planes')
     #Bloques automáticos (sin contenido propio): la tira de ofertas sale
     #del catálogo, la marquesina de las marcas cargadas y la cuenta
     #regresiva del descuento vigente con fin más próximo.

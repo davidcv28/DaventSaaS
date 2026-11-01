@@ -15,6 +15,7 @@ import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkFeatured from '../../../components/store/blocks/BlkFeatured.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
+import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
 import BlkStats from '../../../components/store/blocks/BlkStats.vue'
 import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
 import BlkCountdown from '../../../components/store/blocks/BlkCountdown.vue'
@@ -59,6 +60,7 @@ const MAP = {
   featured: BlkFeatured,
   about: BqAbout,
   services: BlkServices,
+  plans: BlkPlans,
   stats: BlkStats,
   brands: BlkBrands,
   countdown: BlkCountdown,

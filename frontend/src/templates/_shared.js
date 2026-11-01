@@ -84,7 +84,7 @@ export const servicesViews = {
 // (SECTION_ORDER_KEYS — ver defaultLayout en index.js).
 export const SP_LANDING = [
   'hero', 'categories', 'highlights', 'featured', 'announcements',
-  'about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown',
+  'about', 'services', 'stats', 'benefits', 'offers', 'plans', 'brands', 'countdown',
   'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta', 'contact'
 ]
 
@@ -106,6 +106,7 @@ const lazy = (load) => defineAsyncComponent(load)
 export const landingExtras = {
   about:        lazy(() => import('../components/store/blocks/BlkAbout.vue')),
   services:     lazy(() => import('../components/store/blocks/BlkServices.vue')),
+  plans:        lazy(() => import('../components/store/blocks/BlkPlans.vue')),
   stats:        lazy(() => import('../components/store/blocks/BlkStats.vue')),
   benefits:     lazy(() => import('../components/store/blocks/BlkBenefits.vue')),
   offers:       lazy(() => import('../components/store/blocks/BlkOffers.vue')),

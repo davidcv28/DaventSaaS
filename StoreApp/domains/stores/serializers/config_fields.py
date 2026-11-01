@@ -185,6 +185,19 @@ CustomizationFields           =   {
         'max_length'        :   80,
         'error_messages'    :   {'max_length': 'El título admite hasta 80 caracteres'},
     },
+    'plans'                 :   {
+        'label'             :   'Planes de suscripción',
+        'required'          :   False,
+    },
+    'plans_title'           :   {
+        'label'             :   'Título de la sección Planes',
+        'style'             :   {'placeholder': 'Ej. Planes y membresías'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   80,
+        'error_messages'    :   {'max_length': 'El título admite hasta 80 caracteres'},
+    },
     'stats'                 :   {
         'label'             :   'Números del negocio',
         'required'          :   False,

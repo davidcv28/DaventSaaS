@@ -16,6 +16,7 @@ export const SP_LANDING_BLOCKS = {
   announcements: defineAsyncComponent(() => import('./BlkAnnouncements.vue')),
   about:         defineAsyncComponent(() => import('./BlkAbout.vue')),
   services:      defineAsyncComponent(() => import('./BlkServices.vue')),
+  plans:         defineAsyncComponent(() => import('./BlkPlans.vue')),
   stats:         defineAsyncComponent(() => import('./BlkStats.vue')),
   benefits:      defineAsyncComponent(() => import('./BlkBenefits.vue')),
   offers:        defineAsyncComponent(() => import('./BlkOffers.vue')),

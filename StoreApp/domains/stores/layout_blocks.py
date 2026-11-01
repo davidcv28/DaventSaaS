@@ -89,6 +89,7 @@ TEMPLATE_BLOCKS             =   {
         'featured':        {'label': 'Vitrina de productos',   'variants': ('grid', 'cols2', 'cols3', 'cols4', 'masonry', 'rail', 'lead', 'cats', 'quick'), 'props': _TITLE_PROPS},
         'about':           {'label': 'Sobre nosotros',         'props': _TITLE_PROPS},
         'services':        {'label': 'Qué ofrecemos',          'props': _TITLE_PROPS},
+        'plans':           {'label': 'Planes de suscripción',  'variants': ('cards', 'table'), 'props': _TITLE_PROPS},
         'stats':           {'label': 'Cifras del negocio',     'variants': ('band', 'cards'), 'props': _TITLE_PROPS},
         'benefits':        {'label': 'Garantías',              'variants': ('cards', 'bento'), 'props': _TITLE_PROPS},
         'offers':          {'label': 'Ofertas',                'variants': ('grid', 'rail', 'quick'), 'props': _TITLE_PROPS},

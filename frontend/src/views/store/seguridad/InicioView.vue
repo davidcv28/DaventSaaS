@@ -12,6 +12,7 @@ import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.
 import BlkHighlights from '../../../components/store/blocks/BlkHighlights.vue'
 import BlkAbout from '../../../components/store/blocks/BlkAbout.vue'
 import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
+import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
 import BlkCountdown from '../../../components/store/blocks/BlkCountdown.vue'
 import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
 import BlkGallery from '../../../components/store/blocks/BlkGallery.vue'
@@ -48,6 +49,7 @@ const MAP = {
   benefits: BlkBenefits,
   countdown: BlkCountdown,
   services: SgServicesBand,
+  plans: BlkPlans,
   aigrid: SgFireClasses,
   stats: SgStats,
   brands: BlkBrands,

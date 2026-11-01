@@ -10,6 +10,7 @@ import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkCategories from '../../../components/store/blocks/BlkCategories.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
+import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
 import BlkStats from '../../../components/store/blocks/BlkStats.vue'
 import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
 import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
@@ -42,6 +43,7 @@ const MAP = {
   featured: GyFeatured,
   about: BlkAbout,
   services: BlkServices,
+  plans: BlkPlans,
   stats: BlkStats,
   brands: BlkBrands,
   benefits: BlkBenefits,

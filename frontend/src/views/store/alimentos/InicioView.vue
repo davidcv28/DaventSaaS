@@ -24,6 +24,7 @@ import BlkCta from '../../../components/store/blocks/BlkCta.vue'
 import BlkContact from '../../../components/store/blocks/BlkContact.vue'
 import BlkOffers from '../../../components/store/blocks/BlkOffers.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
+import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
 import BlkGallery from '../../../components/store/blocks/BlkGallery.vue'
 import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
 import BlkVideo from '../../../components/store/blocks/BlkVideo.vue'
@@ -59,6 +60,7 @@ const MAP = {
   faq: BlkFaq,
   offers: BlkOffers,
   services: BlkServices,
+  plans: BlkPlans,
   brands: BlkBrands,
   gallery: BlkGallery,
   video: BlkVideo,

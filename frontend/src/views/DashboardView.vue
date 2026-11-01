@@ -1264,7 +1264,7 @@ async function saveBot() {
 // Las listas se inicializan frescas: el spread compartiría las instancias
 // de CUSTOMIZATION_DEFAULTS y editarlas antes de que llegue la tienda
 // ensuciaría los defaults del módulo.
-const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [], layout_config: {}, site_theme: {} })
+const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], plans: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [], layout_config: {}, site_theme: {} })
 const designTouched = reactive({})
 const designTab = ref('look')
 // Vista previa de la pestaña Diseño en mobile: la savebar sticky la abre.
@@ -1345,6 +1345,9 @@ watch(() => store.store, (s) => {
   }
   serverFlags.accept = false
   Object.assign(designForm, store.customization)
+  // Los beneficios de cada plan viajan como lista; en el formulario se
+  // editan como texto (uno por línea) y savePlans los vuelve a partir.
+  designForm.plans = (Array.isArray(designForm.plans) ? designForm.plans : []).map((p) => ({ ...p, items: Array.isArray(p.items) ? p.items.join('\n') : String(p.items || '') }))
   Object.assign(designForm, keep)
   lastServerDesign = Object.fromEntries(DESIGN_FIELDS.map((k) => [k, { ...CUSTOMIZATION_DEFAULTS, ...store.customization }[k]]))
   // La fuente guardada tiene que estar cargada cuando llega el valor:
@@ -1430,6 +1433,7 @@ function moveRow(list, index, direction) {
 const mkNav = [
   { id: 'mk-about', label: 'Sobre nosotros' },
   { id: 'mk-services', label: 'Qué ofrecemos' },
+  { id: 'mk-plans', label: 'Planes' },
   { id: 'mk-stats', label: 'Tus números' },
   { id: 'mk-testimonials', label: 'Testimonios' },
   { id: 'mk-faqs', label: 'Preguntas' },
@@ -1474,6 +1478,29 @@ async function saveServices() {
     services_title: designForm.services_title.trim(),
     show_services: Boolean(designForm.show_services),
     services: cleanRows(designForm.services, ['icon', 'title', 'text'], ['title', 'text'])
+  })
+  companyBusy.value = false
+}
+
+async function savePlans() {
+  companyErrs.plans = ''
+  if (validateSectionTitle(designForm.plans_title.trim())) { companyErrs.plans = 'El título admite hasta 80 caracteres.'; return }
+  if (hasPartialRow(designForm.plans, ['name', 'price'], ['name', 'price'])) {
+    companyErrs.plans = 'Cada plan necesita nombre y precio. Completá la fila o borrala con el tachito.'
+    return
+  }
+  companyBusy.value = true
+  await store.saveCustomization({
+    plans_title: designForm.plans_title.trim(),
+    show_plans: Boolean(designForm.show_plans),
+    plans: designForm.plans
+      .map((p) => ({
+        name: String(p.name || '').trim(),
+        price: String(p.price || '').trim(),
+        note: String(p.note || '').trim(),
+        items: String(p.items || '').split(/\r?\n/).map((f) => f.trim()).filter(Boolean)
+      }))
+      .filter((p) => p.name && p.price)
   })
   companyBusy.value = false
 }
@@ -4527,6 +4554,49 @@ async function changePassword() {
           </div>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveServices">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Planes de suscripción (publicidad, sin cobro online) ===== -->
+        <div id="mk-plans" class="card mk-card">
+          <h3><AppIcon name="crown" :size="18" /> Planes de suscripción</h3>
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_plans" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar en tu web</strong>
+                <small>Tarjetas con membresías, clubs o packs por suscripción que ofrecés a tus clientes. Es solo publicidad: no se cobran desde la plataforma. Se oculta sola si no cargás ninguno.</small>
+              </span>
+            </label>
+          </div>
+          <AppInput v-model="designForm.plans_title" label="Título de la sección" name="company_plans_title" placeholder="Planes y membresías" hint="Vacío: se muestra 'Planes y membresías'." maxlength="80" />
+          <div class="field">
+            <label>Planes <span class="hint-inline">({{ designForm.plans.length }}/{{ mkLimits.plans }})</span></label>
+            <div v-if="designForm.plans.length" class="qa-list">
+              <div v-for="(p, i) in designForm.plans" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <div class="mk-pair">
+                    <input v-model="p.name" class="input" type="text" :maxlength="mkLimits.planName" placeholder="Ej. Club mensual" :aria-label="`Nombre del plan ${i + 1}`" />
+                    <input v-model="p.price" class="input" type="text" :maxlength="mkLimits.planPrice" placeholder="Ej. $15.000/mes" :aria-label="`Precio del plan ${i + 1}`" />
+                  </div>
+                  <input v-model="p.note" class="input" type="text" :maxlength="mkLimits.planNote" placeholder="Detalle opcional. Ej. El más elegido — sin permanencia" :aria-label="`Detalle del plan ${i + 1}`" />
+                  <textarea v-model="p.items" class="textarea" rows="3" placeholder="Un beneficio por línea. Ej.&#10;2 visitas al mes&#10;Descuento en productos" :aria-label="`Beneficios del plan ${i + 1}`"></textarea>
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el plan ${i + 1}`" @click="moveRow(designForm.plans, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.plans.length - 1" :aria-label="`Bajar el plan ${i + 1}`" @click="moveRow(designForm.plans, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el plan ${i + 1}`" @click="designForm.plans.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto" :disabled="designForm.plans.length >= mkLimits.plans" @click="addRow(designForm.plans, mkLimits.plans, { name: '', price: '', note: '', items: '' })">
+              <AppIcon name="plus" :size="15" /> Agregar plan
+            </button>
+            <p class="hint">El precio es texto libre (ej. "$15.000/mes" o "Consultar"). Los interesados te escriben por WhatsApp o el formulario de contacto — acá no se cobra nada.</p>
+            <p v-if="companyErrs.plans" class="field-error" role="alert">{{ companyErrs.plans }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="savePlans">Guardar sección</AppButton>
           </div>
         </div>
 

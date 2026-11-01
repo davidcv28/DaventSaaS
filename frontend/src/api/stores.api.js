@@ -476,6 +476,11 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_timeline: true,
   team: [],
   show_team: true,
+  // Planes de suscripción publicitados ({name, price, note?, items?[]}) —
+  // solo vidriera: el precio es texto libre y no hay cobro online.
+  plans: [],
+  plans_title: '',
+  show_plans: true,
   show_offers: true,
   show_brands: true,
   show_countdown: true,
@@ -605,6 +610,7 @@ export const MARKETING_LIMITS = {
   benefits: 6, benefitTitle: 40, benefitText: 90,
   timeline: 6, timelineLabel: 24, timelineText: 160,
   team: 6, teamName: 60, teamRole: 60,
+  plans: 4, planName: 40, planPrice: 20, planNote: 80, planFeature: 60,
   ctaTitle: 120, ctaText: 280, ctaLabel: 40,
   announcements: 6, announcementText: 60,
   videoUrl: 300, videoTitle: 80,
@@ -679,7 +685,7 @@ export const serviceHue = (key) => SERVICE_HUES[key] ?? 250
 // Orden fijo de las secciones de la portada (espejo de SECTION_ORDER del
 // modelo): la web pública lo aplica siempre así — no es editable por el
 // usuario; el hero queda primero y el contacto último siempre.
-export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'benefits', 'offers', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta']
+export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'benefits', 'offers', 'plans', 'brands', 'countdown', 'gallery', 'testimonials', 'timeline', 'team', 'faq', 'video', 'cta']
 // Bloques automáticos (sin contenido propio en customization): la sección
 // Ofertas sale del catálogo (ítems con oferta efectiva), la marquesina de
 // las marcas cargadas y la cuenta regresiva del descuento vigente con fin
