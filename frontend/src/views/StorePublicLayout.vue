@@ -80,7 +80,8 @@ const patternDoc = ref(null)
 const patternSurface = computed(() => (
   route.name === 'store-catalog' ? 'catalog'
     : route.name === 'store-services' ? 'services'
-      : 'landing'
+      : route.name === 'store-product' ? 'product'
+        : 'landing'
 ))
 const usePattern = computed(() => Boolean(
   //También en el Studio: la vista previa tiene que mostrar el mismo
@@ -876,6 +877,7 @@ onBeforeUnmount(() => {
       :revision="patternRevision"
       :theme="pageTheme"
       :surface="patternSurface"
+      :product="patternSurface === 'product' ? route.params.productId : ''"
       :title="shopName"
       @navigate="onPatternNavigate"
       @toggle-theme="togglePageTheme"

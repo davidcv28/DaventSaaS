@@ -32,10 +32,36 @@
 - Tier declarado (`base`/`plus`/`advanced`); si es premium, el saneo recorta paleta
   igual que un diseño elegido a mano.
 - `preview` con imagen o `has_markup` + `iframe srcdoc` sandbox en "Ver este diseño".
-- **Alcance obligatorio**: el diseño se implementa siempre para las **tres superficies
-  del usuario**: landing page, catálogo y servicios. No se entrega con una sola vista
-  resuelta ni se reusa la vista de otro diseño sin adaptarla; las tres salen del mismo
-  `layout_config` y comparten piel, pero con composición propia en cada una.
+- **Alcance obligatorio**: el diseño se implementa siempre para las **cuatro superficies
+  del usuario**: landing page, catálogo, servicios **y ficha de producto**
+  (`data-surface="product"`). No se entrega con una sola vista resuelta ni se reusa la
+  vista de otro diseño sin adaptarla; las cuatro comparten piel y chrome, pero con
+  composición propia en cada una. La ficha nunca queda como "la vista Vue de Raíz":
+  sin `data-surface="product"` la ruta `/producto/<id>` cae a la plantilla genérica y
+  el diseño se considera **incompleto**.
+
+## 2.2 Ficha de producto (`data-surface="product"`, obligatorio)
+
+- El documento declara una sección propia para la ficha. El backend resuelve las
+  variables `product_*` cuando el iframe pide `?product=<id>`:
+  `product_name`, `product_description`, `product_price`, `product_old_price`,
+  `product_offer_pct` (ya formateado, ej. `-12%`), `product_image`,
+  `product_category`, `product_brand`, `product_ref`, `product_whatsapp_url`
+  (mensaje con el producto citado), `product_features` (filas `<tr>` de la tabla)
+  y `product_related` (hasta 4 tarjetas `.ds-product`, mismas clases que el
+  catálogo: navegan con `data-ds-product`).
+- Composición de publicación, no tarjeta ampliada: migas o retorno al catálogo
+  (`data-ds-route="catalog"`), media principal, precio con oferta tachada + badge
+  de ahorro, descripción, CTA de consulta por WhatsApp, tabla de características
+  (`<table class="…specs"><tbody>{{product_features}}</tbody></table>`) y
+  relacionados al cierre.
+- Toda parte opcional se apaga sola con `:empty{display:none}`: marca, precio
+  anterior, badge de oferta, descripción, tabla (envoltorio `:not(:has(tbody tr))`),
+  CTA sin WhatsApp (`[href=""]{display:none}`) e imagen sin foto (glifo/placeholder
+  del propio diseño vía `:not(:has(img))`, nunca un rectángulo gris).
+- La ficha hereda el menú propio del diseño: el `data-ds-product` de los
+  relacionados navega dentro del mismo documento y el visitante puede volver
+  al catálogo del diseño con un solo toque.
 
 ## 2.1 Anti-repetición (obligatorio)
 
@@ -65,7 +91,7 @@
 - Crear **al menos 3 `DesignStyle`** sobre el patrón, cada uno con identidad propia:
   distinto `categoria`, `layout`, `page_theme` y `tokens`; sin clones con un color cambiado.
 - Al menos uno `is_default` a nivel global (solo uno) y uno por categoría si aplica.
-- Los 3 estilos deben verse distintos en portada, catálogo y ficha de producto.
+- Los 3 estilos deben verse distintos en portada, catálogo, servicios y ficha de producto.
 
 ## 5. Móvil
 
@@ -126,7 +152,9 @@
 
 ## Checklist de cierre
 
-- [ ] Landing, catálogo y servicios implementados
+- [ ] Landing, catálogo, servicios y ficha de producto (`data-surface="product"`) implementados
+- [ ] Ficha con composición propia: migas/retorno, media, precio+oferta, descripción, CTA WhatsApp, tabla de características y relacionados navegables
+- [ ] Partes opcionales de la ficha apagadas con `:empty`/`:has()` (marca, oferta, specs, imagen, CTA)
 - [ ] Menú distinto al de las demás plantillas (sin patrones repetidos)
 - [ ] Preguntado al usuario por animaciones de fondo / cintas loop
 - [ ] Nombre y slug legales y únicos

@@ -47,6 +47,18 @@ PATTERN_VARIABLES = {
     'store_cover':       {'type': 'image', 'label': 'Portada'},
     'store_accent':      {'type': 'color', 'label': 'Color de acento'},
     'year':              {'type': 'number', 'label': 'Año'},
+    'product_name':      {'type': 'text',  'label': 'Producto: nombre'},
+    'product_description': {'type': 'text', 'label': 'Producto: descripción'},
+    'product_price':     {'type': 'text',  'label': 'Producto: precio'},
+    'product_old_price': {'type': 'text',  'label': 'Producto: precio antes de la oferta'},
+    'product_offer_pct': {'type': 'text',  'label': 'Producto: % de ahorro'},
+    'product_image':     {'type': 'image', 'label': 'Producto: imagen'},
+    'product_category':  {'type': 'text',  'label': 'Producto: categoría'},
+    'product_brand':     {'type': 'text',  'label': 'Producto: marca'},
+    'product_ref':       {'type': 'text',  'label': 'Producto: referencia'},
+    'product_whatsapp_url': {'type': 'text', 'label': 'Producto: consulta por WhatsApp'},
+    'product_features':  {'type': 'list',  'label': 'Producto: características'},
+    'product_related':   {'type': 'list',  'label': 'Producto: relacionados'},
     'products':          {'type': 'list',  'label': 'Productos'},
     'categories':        {'type': 'list',  'label': 'Categorías'},
     'services':          {'type': 'list',  'label': 'Servicios'},
@@ -127,15 +139,16 @@ def _whatsapp_url(phone):
 #=========================================
 # FRAGMENTOS (HTML generado acá, escapado)
 #=========================================
-def _product_fragment(store):
+def _product_fragment(store, products = None):
     from StoreApp.domains.catalog.models import Product
     from StoreApp.domains.stores.services.storage import object_url
 
-    products = (
-        Product.objects.filter(store = store, is_active = True)
-        .select_related('category', 'brand')
-        .order_by('-created_at')[:FRAGMENT_LIMIT]
-    )
+    if products is None:
+        products = (
+            Product.objects.filter(store = store, is_active = True)
+            .select_related('category', 'brand')
+            .order_by('-created_at')[:FRAGMENT_LIMIT]
+        )
     cards = []
     for product in products:
         image = object_url(product.image_key)
@@ -225,10 +238,90 @@ def _gallery_fragment(store, customization):
         )
     return ''.join(shots)
 
+def _features_fragment(product):
+    """Filas `<tr>` de la ficha técnica: primero las del schema de su
+    categoría, después las libres (mismo criterio que la vista Vue)."""
+    features = product.features if isinstance(product.features, dict) else {}
+    if not features:
+        return ''
+    schema = getattr(getattr(product, 'category', None), 'feature_schema', None) or []
+    order = {str(name).lower(): i for i, name in enumerate(schema)}
+    rows = sorted(
+        features.items(),
+        key = lambda item: (order.get(str(item[0]).lower(), len(schema)), str(item[0]).lower()),
+    )
+    return ''.join(
+        f'<tr class="ds-pdp-spec"><th scope="row">{escape(_text(key, 60))}</th>'
+        f'<td>{escape(_text(value, 200))}</td></tr>'
+        for key, value in rows
+    )
+
+def _related_fragment(store, product):
+    from StoreApp.domains.catalog.models import Product
+
+    base = Product.objects.filter(store = store, is_active = True).exclude(pk = product.pk).select_related('category', 'brand')
+    #Mismo criterio de sugerencia de un marketplace: categoría, marca y
+    #después el resto, hasta 4 tarjetas.
+    same_cat = list(base.filter(category_id = product.category_id)[:4]) if product.category_id else []
+    same_brand = list(base.filter(brand_id = product.brand_id).exclude(pk__in = [p.pk for p in same_cat])[:4 - len(same_cat)]) if product.brand_id and len(same_cat) < 4 else []
+    picked = same_cat + same_brand
+    if len(picked) < 4:
+        picked += list(base.exclude(pk__in = [p.pk for p in picked]).order_by('-created_at')[:4 - len(picked)])
+    return _product_fragment(store, picked)
+
+def _product_whatsapp_url(phone, product, store_name):
+    from urllib.parse import quote
+
+    digits = ''.join(ch for ch in str(phone or '') if ch.isdigit())
+    if not digits:
+        return ''
+    amount = product.offer_price if product.offer_price is not None else product.price
+    price = _money(amount) if _amount(amount) else ''
+    text = f'Hola {store_name}, me interesa "{_text(product.name, 80)}"'
+    if price:
+        text += f' ({price})'
+    text += ' que vi en tu catálogo.'
+    return f'https://wa.me/{digits}?text={quote(text)}'
+
+def _product_values(store, product, customization, store_name):
+    """Variables `product_*` del documento (ficha de producto)."""
+    from StoreApp.domains.stores.services.storage import object_url
+
+    if product is None:
+        return {name: '' for name in (
+            'product_name', 'product_description', 'product_price', 'product_old_price',
+            'product_offer_pct', 'product_image', 'product_category', 'product_brand',
+            'product_ref', 'product_whatsapp_url',
+        )}, {'product_features': '', 'product_related': ''}
+    amount = product.offer_price if product.offer_price is not None else product.price
+    old = ''
+    pct = ''
+    if product.offer_price is not None and _amount(product.price):
+        old = _money(product.price)
+        pct = f'-{max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100))))}%'
+    phone = _text(getattr(customization, 'whatsapp', ''), 30)
+    context = {
+        'product_name':         _text(product.name, 120),
+        'product_description':  _text(product.description, 600),
+        'product_price':        _money(amount) if _amount(amount) else 'Consultar',
+        'product_old_price':    old,
+        'product_offer_pct':    pct,
+        'product_image':        object_url(product.image_key) or '',
+        'product_category':     _text(getattr(product.category, 'name', ''), 60),
+        'product_brand':        _text(getattr(product.brand, 'name', ''), 60),
+        'product_ref':          str(product.pk),
+        'product_whatsapp_url': _product_whatsapp_url(phone, product, store_name),
+    }
+    raw = {
+        'product_features': _features_fragment(product),
+        'product_related':  _related_fragment(store, product),
+    }
+    return context, raw
+
 #=========================================
 # CONTEXTO DE LA TIENDA
 #=========================================
-def build_store_context(store):
+def build_store_context(store, product = None):
     """
     Devuelve `(context, raw)`: `context` son las variables de texto que
     interpola el patrón y `raw` los fragmentos HTML ya escapados.
@@ -281,6 +374,9 @@ def build_store_context(store):
         'services': _service_fragment(store),
         'gallery': _gallery_fragment(store, customization),
     }
+    product_ctx, product_raw = _product_values(store, product, customization, name)
+    context.update(product_ctx)
+    raw.update(product_raw)
     return context, raw
 
 #=========================================
@@ -390,18 +486,19 @@ def pattern_for_template(template):
             return by_template
     return DesignPattern.objects.filter(is_default = True, is_active = True).first()
 
-def render_store_pattern(store, customization = None):
+def render_store_pattern(store, customization = None, product = None):
     """
     Documento del patrón resuelto contra la tienda:
     `{slug, nombre, html, css, js, dark}`. `None` si el diseño no trae
-    markup (la web sigue con la plantilla Vue).
+    markup (la web sigue con la plantilla Vue). Con `product` resuelve
+    además las variables `product_*` (ficha del diseño).
     """
     customization = customization if customization is not None else getattr(store, 'customization', None)
     template = getattr(customization, 'template', '') if customization is not None else ''
     pattern = pattern_for_template(template)
     if pattern is None or not (pattern.html or '').strip():
         return None
-    context, raw = build_store_context(store)
+    context, raw = build_store_context(store, product)
     html = pattern.render(context, raw = raw)
     from StoreApp.domains.catalog.models import Product
 

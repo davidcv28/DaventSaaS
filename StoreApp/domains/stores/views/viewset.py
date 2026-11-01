@@ -528,14 +528,26 @@ class StoreViewSet(StoreBaseViewSet):
             override                        =   (request.query_params.get('template') or '').strip()
             if override:
                 customization.template      =   override
+        #La ficha del diseño pinta un producto concreto: ?product=<id> (solo
+        #activos de la tienda; un id ajeno o de baja rinde con el contexto
+        #vacío, nunca con datos de otro).
+        product             =   None
+        product_id          =   (request.query_params.get('product') or '').strip()
+        if product_id.isdigit():
+            from StoreApp.domains.catalog.models import Product
+            product         =   Product.objects.filter(
+                pk = int(product_id), store = store, is_active = True,
+            ).select_related('category', 'brand').first()
         from StoreApp.domains.design.services import render_store_pattern
         if preview:
-            return render_store_pattern(store, customization) or {}
+            return render_store_pattern(store, customization, product) or {}
         epoch, ver      =   public_cache_stamp(store.pk)
         cache_key       =   f'store:pattern:v2:{store.pk}:{epoch}:{ver}'
+        if product_id:
+            cache_key   +=  f':p{product.pk if product else product_id}'
         data            =   cache_get(cache_key)
         if data is None:
-            data        =   render_store_pattern(store, customization) or {}
+            data        =   render_store_pattern(store, customization, product) or {}
             cache_set(cache_key, data, PUBLIC_CACHE_TTL)
         return data
 

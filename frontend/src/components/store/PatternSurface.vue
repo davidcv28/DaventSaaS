@@ -20,9 +20,12 @@ const props = defineProps({
   revision: { type: String, default: '' },
   theme: { type: String, default: 'light' },
   title: { type: String, default: '' },
-  //Superficie visible del documento: landing | catalog | services. El
-  //diseño marca cada bloque con `data-surface` y el resto se oculta.
-  surface: { type: String, default: 'landing' }
+  //Superficie visible del documento: landing | catalog | services | product.
+  //El diseño marca cada bloque con `data-surface` y el resto se oculta.
+  surface: { type: String, default: 'landing' },
+  //Id del producto cuando la superficie es `product`: el backend resuelve
+  //las variables product_* del documento con esa ficha.
+  product: { type: [String, Number], default: '' }
 })
 
 const frame = ref(null)
@@ -33,6 +36,7 @@ const src = computed(() => {
   if (props.preview) params.set('preview', props.preview)
   if (props.preview && props.template) params.set('template', props.template)
   if (props.revision) params.set('v', props.revision)
+  if (props.product) params.set('product', String(props.product))
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 

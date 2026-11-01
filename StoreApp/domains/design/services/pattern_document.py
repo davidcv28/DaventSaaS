@@ -24,7 +24,8 @@ SURFACE_CSS = """
 [data-surface]{}
 html[data-ds-surface="landing"] [data-surface]:not([data-surface="landing"]),
 html[data-ds-surface="catalog"] [data-surface]:not([data-surface="catalog"]),
-html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]){display:none!important}
+html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]),
+html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){display:none!important}
 [hidden]{display:none!important}
 img[src=""]{display:none!important}
 [data-ds-filters] .ds-cat{font:inherit;cursor:pointer;background:none;border:0;color:inherit;padding:0}

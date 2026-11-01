@@ -296,6 +296,48 @@
   .svc-body:empty + .svc-cta{display:none}
   .svc-surface .svc-cta{display:inline-block;margin-top:22px;padding:12px 20px;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);font-size:13.5px;font-weight:700;letter-spacing:0;text-transform:none}
 
+  /* Ficha de producto: galería + panel de compra + tabla de
+     características, misma anatomía de publicación de marketplace. */
+  .pdp-surface{padding:0 0 46px}
+  .pdp-layout{display:grid;grid-template-columns:minmax(0,1.05fr) 340px;gap:20px;align-items:start}
+  .pdp-gallery{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;position:relative}
+  .pdp-gallery .pdp-shot{display:grid;place-items:center;aspect-ratio:4/3;background:var(--soft)}
+  .pdp-gallery img{width:100%;height:100%;object-fit:contain;display:block}
+  .pdp-gallery:not(:has(img)) .pdp-shot::after{content:"▣";font-size:96px;color:color-mix(in srgb,var(--ink) 18%,transparent)}
+  .pdp-media-tag{position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:4px;background:var(--green-soft);color:var(--green);font-size:12px;font-weight:800}
+  .pdp-media-tag:empty{display:none}
+  .pdp-info{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);position:sticky;top:16px}
+  .pdp-kicker{font-size:12px;color:var(--muted)}
+  .pdp-kicker span + span::before{content:" · "}
+  .pdp-kicker span:empty{display:none}
+  .pdp-info h1{margin:6px 0 0;font-size:22px;font-weight:500;line-height:1.3}
+  .pdp-ref{margin-top:6px;font-size:11.5px;color:var(--muted)}
+  .pdp-ref:empty{display:none}
+  .pdp-price{margin-top:14px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+  .pdp-price b{font-size:32px;font-weight:400;letter-spacing:-.02em}
+  .pdp-price s{font-size:14px;color:var(--muted)}
+  .pdp-price em{font-style:normal;font-size:13px;font-weight:800;color:var(--green)}
+  .pdp-price s:empty,.pdp-price em:empty{display:none}
+  .pdp-pay{margin:10px 0 0;font-size:12.5px;color:var(--muted)}
+  .pdp-buy{display:block;margin-top:16px;width:100%;min-height:46px;padding:12px;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);font-size:14.5px;font-weight:700;text-align:center}
+  .pdp-buy:hover{background:var(--blue-deep);color:var(--on-secondary)}
+  .pdp-buy[href=""]{display:none}
+  .pdp-back{display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:var(--link)}
+  .pdp-back:hover{text-decoration:underline;text-underline-offset:3px}
+  .pdp-seller{margin:16px 0 0;padding:12px 0 0;border-top:1px solid var(--line);display:grid;gap:7px;font-size:12.5px;color:var(--muted)}
+  .pdp-seller strong{color:var(--ink);font-weight:600}
+  .pdp-seller span:empty{display:none}
+  .pdp-desc{margin:0 0 14px;font-size:14px;line-height:1.55;color:var(--ink-2)}
+  .pdp-desc:empty{display:none}
+  .pdp-box{grid-column:1;margin-top:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+  .pdp-box h2{margin:0 0 8px;font-size:16px;font-weight:700}
+  .pdp-box:not(:has(tbody tr)){display:none}
+  .pdp-specs{width:100%;border-collapse:collapse;font-size:13px}
+  .pdp-specs th,.pdp-specs td{padding:9px 12px;text-align:left;vertical-align:top}
+  .pdp-specs th{width:34%;font-weight:600;color:var(--ink-2)}
+  .pdp-specs tr:nth-child(odd){background:var(--soft)}
+  .pdp-rel{margin-top:22px}
+  .pdp-rel h2{margin:0 0 12px;font-size:20px;font-weight:700}
   .foot{background:var(--surface);border-top:1px solid var(--line);padding:32px 0 26px}
   .foot-name{margin:0 0 18px;font-size:20px;font-weight:800;letter-spacing:-.02em}
   .foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;font-size:12.5px;color:var(--muted)}
@@ -370,6 +412,8 @@
     .f-clear{flex:1 1 auto;min-height:44px;margin:0;border:1px solid var(--line);border-radius:var(--radius);text-align:center;color:var(--ink)}
     .f-done{display:inline-flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:44px;padding:0 18px;border:0;border-radius:var(--radius);background:var(--blue);color:var(--on-primary);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
     .cat-filters-toggle{display:inline-flex;justify-self:start}
+    .pdp-layout{grid-template-columns:1fr}
+    .pdp-info{position:static}
     .cat-view{display:none}
     .cat-surface .grid[data-ds-view-mode="grid"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
@@ -594,6 +638,50 @@
     <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
     <div class="svc-body">{{services}}</div>
     <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+  </div>
+</section>
+
+<section class="pdp-surface" data-surface="product">
+  <div class="shell">
+    <h1 class="sr-only">{{product_name}} · {{store_name}}</h1>
+    <nav class="crumbs" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <strong aria-current="page">{{product_name}}</strong>
+    </nav>
+
+    <div class="pdp-layout">
+      <figure class="pdp-gallery">
+        <span class="pdp-media-tag">{{product_offer_pct}}</span>
+        <span class="pdp-shot"><img src="{{product_image}}" alt="{{product_name}}" fetchpriority="high"></span>
+      </figure>
+      <aside class="pdp-info" aria-label="Información del producto">
+        <p class="pdp-kicker"><span>{{product_category}}</span><span>{{product_brand}}</span></p>
+        <h1>{{product_name}}</h1>
+        <p class="pdp-ref">Ref. {{product_ref}} · Vendido por {{store_name}}</p>
+        <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
+        <p class="pdp-pay">Medios de pago, cuotas y envío se coordinan con el vendedor.</p>
+        <a class="pdp-buy" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
+        <a class="pdp-back" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
+        <div class="pdp-seller">
+          <span>Vendido por <strong>{{store_name}}</strong></span>
+          <span>{{store_location}}</span>
+          <span>{{store_hours}}</span>
+        </div>
+      </aside>
+      <section class="pdp-box" aria-label="Características">
+        <h2>Características del producto</h2>
+        <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+        <p class="pdp-desc">{{product_description}}</p>
+      </section>
+    </div>
+
+    <section class="pdp-rel" aria-label="También te puede interesar">
+      <h2>También te puede interesar</h2>
+      <div class="grid">{{product_related}}</div>
+    </section>
   </div>
 </section>
 

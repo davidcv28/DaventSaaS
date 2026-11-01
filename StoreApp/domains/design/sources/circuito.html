@@ -84,6 +84,38 @@
   .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:24px}
   .ds-shot{margin:0;border:1px solid var(--line)}
   .ds-shot img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;filter:saturate(.8) contrast(1.05)}
+  /* Ficha de producto: lectura de consola — serial, panel de telemetría
+     y tabla de especificaciones. */
+  .pdp-surface{padding:28px 0 34px}
+  .pdp-crumb{display:flex;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .pdp-crumb a{color:var(--cyan)}
+  .pdp-crumb a:hover{text-decoration:underline}
+  .pdp-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(18px,4vw,44px);margin-top:24px;align-items:start}
+  .pdp-media{margin:0;border:1px solid var(--line);background:var(--panel);position:relative}
+  .pdp-media:not(:has(img))::before{content:"▦";position:absolute;inset:0;display:grid;place-items:center;font-size:120px;color:#183244}
+  .pdp-media img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;filter:saturate(.85) contrast(1.05)}
+  .pdp-media figcaption{display:flex;justify-content:space-between;gap:8px;padding:9px 12px;border-top:1px solid var(--line);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .pdp-media figcaption span:empty{display:none}
+  .pdp-kicker{display:flex;flex-wrap:wrap;gap:8px;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pdp-kicker span{border:1px solid var(--line);padding:4px 8px}
+  .pdp-kicker span:empty{display:none}
+  .pdp-info h1{font-size:clamp(24px,3.4vw,40px);margin:14px 0 6px}
+  .pdp-ref{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pdp-price{display:flex;align-items:baseline;gap:12px;margin:18px 0;padding:12px 14px;border:1px solid var(--line);background:var(--panel)}
+  .pdp-price b{font-size:23px;color:var(--lime);font-weight:400}
+  .pdp-price s{font-size:12px;color:var(--muted)}
+  .pdp-price em{font-style:normal;font-size:10px;color:var(--cyan);border:1px solid var(--cyan);padding:2px 7px}
+  .pdp-price s:empty,.pdp-price em:empty{display:none}
+  .pdp-desc{font-size:12px;color:var(--muted);max-width:52ch}
+  .pdp-desc:empty{display:none}
+  .pdp-cta{display:inline-block;margin:16px 0;padding:11px 18px;border:1px solid var(--cyan);color:var(--cyan);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+  .pdp-cta:hover{background:var(--cyan);color:var(--void)}
+  .pdp-cta[href=""]{display:none}
+  .pdp-specs{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+  .pdp-specs th,.pdp-specs td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;font-weight:400;vertical-align:top}
+  .pdp-specs th{width:38%;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .pdp-rel{margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
+  .pdp-rel h2{font-size:15px;letter-spacing:.06em;margin-bottom:4px}
   footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 0 30px;margin-top:26px;border-top:1px solid var(--line);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   footer span:empty{display:none}
   .reveal{opacity:0;transform:translateY(12px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
@@ -97,6 +129,7 @@
     .diagnostic{padding-left:0}
     .rows{grid-template-columns:1fr}
     .status{grid-template-columns:1fr}
+    .pdp-grid{grid-template-columns:1fr}
     .top nav{display:none}
   }
   @media (max-width:560px){
@@ -189,6 +222,32 @@
     <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
     <div class="svc-body">{{services}}</div>
     <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+  </section>
+
+  <section class="pdp-surface" data-surface="product">
+    <nav class="pdp-crumb" aria-label="Ruta">
+      <a href="#modulos" data-ds-route="catalog">‹ Volver al catálogo</a>
+      <span>MOD-{{product_ref}}</span>
+    </nav>
+    <div class="pdp-grid">
+      <figure class="pdp-media">
+        <img src="{{product_image}}" alt="{{product_name}}">
+        <figcaption><span>{{product_category}}</span><span>ref {{product_ref}}</span></figcaption>
+      </figure>
+      <div class="pdp-info">
+        <div class="pdp-kicker"><span>{{product_category}}</span><span>{{product_brand}}</span></div>
+        <h1>{{product_name}}</h1>
+        <span class="pdp-ref">Serial · {{product_ref}}</span>
+        <div class="pdp-price"><b>{{product_price}}</b><s>{{product_old_price}}</s><em>{{product_offer_pct}}</em></div>
+        <p class="pdp-desc">{{product_description}}</p>
+        <a class="pdp-cta" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
+        <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+      </div>
+    </div>
+    <div class="pdp-rel">
+      <h2>Módulos relacionados</h2>
+      <div class="rows">{{product_related}}</div>
+    </div>
   </section>
 
 <footer><span>{{store_name}} · {{store_tagline}}</span><span>{{store_email}}</span><span>{{year}}</span></footer>

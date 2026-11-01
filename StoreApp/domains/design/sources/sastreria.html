@@ -206,6 +206,41 @@
   .svc-cta::after{content:"Escribinos por WhatsApp y coordinamos una primera consulta sin cargo.";font:400 12.5px/1.5 var(--body);letter-spacing:0;text-transform:none;color:color-mix(in srgb,var(--paper) 78%,transparent)}
   .svc-cta:hover{background:var(--leather-deep);color:var(--on-leather)}
 
+  /* Ficha de producto: editorial del atelier — índice numerado, marco de
+     sastre y tabla de características con hairlines. */
+  .pdp-surface{padding:44px 0 70px}
+  .pdp-crumb{display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line-strong);font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .pdp-crumb a{color:var(--leather)}
+  .pdp-crumb a:hover{text-decoration:underline;text-underline-offset:4px}
+  .pdp-crumb .sep{opacity:.55}
+  .pdp-grid{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:56px;margin-top:36px;align-items:start}
+  .pdp-media{position:relative;margin:0;background:var(--card);border:1px solid var(--line)}
+  .pdp-media:not(:has(img))::before{content:"✂";position:absolute;inset:0;display:grid;place-items:center;font-size:96px;color:color-mix(in srgb,var(--ink) 10%,transparent)}
+  .pdp-media img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;filter:saturate(.92)}
+  .pdp-media-tag{position:absolute;top:-1px;right:-1px;display:grid;place-items:center;min-width:64px;height:64px;padding:0 14px;background:var(--ink);color:var(--paper);font:500 12px var(--mono);letter-spacing:.06em}
+  .pdp-media-tag:empty{display:none}
+  .pdp-media figcaption{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-top:1px solid var(--line);font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pdp-media figcaption span:empty{display:none}
+  .pdp-kicker{display:flex;align-items:center;gap:12px;font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--leather)}
+  .pdp-kicker::after{content:"";flex:1 1 auto;height:1px;background:var(--line-strong);max-width:110px}
+  .pdp-info h1{margin:18px 0 0;font:300 clamp(30px,4vw,50px)/1.02 var(--display);letter-spacing:-.03em;text-wrap:balance}
+  .pdp-ref{margin-top:12px;font:500 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .pdp-ref:empty{display:none}
+  .pdp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 14px;margin-top:20px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .pdp-price b{font:400 30px var(--display);letter-spacing:-.02em}
+  .pdp-price s{font:400 13px var(--mono);color:var(--muted)}
+  .pdp-price em{font:600 10px var(--mono);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--paper);background:var(--leather);padding:4px 8px}
+  .pdp-price s:empty,.pdp-price em:empty{display:none}
+  .pdp-desc{margin:18px 0 0;max-width:52ch;font-size:14.5px;color:var(--ink-2)}
+  .pdp-desc:empty{display:none}
+  .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+  .pdp-ctas .btn[href=""]{display:none}
+  .pdp-specs{width:100%;border-collapse:collapse;margin-top:30px;font-size:13px}
+  .pdp-specs th,.pdp-specs td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-weight:400}
+  .pdp-specs th{width:34%;font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .pdp-rel{margin-top:52px;padding-top:20px;border-top:1px solid var(--line-strong)}
+  .pdp-rel h2{margin:0 0 8px;font:300 clamp(24px,3vw,34px)/1 var(--display);letter-spacing:-.02em}
+  .pdp-rel .lookbook{margin-top:8px}
   .foot{border-top:1px solid var(--line);padding:40px 0 34px}
   .foot-name{margin:0 0 22px;font:300 34px/1 var(--display);letter-spacing:-.02em}
   .foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;font-size:12.5px;color:var(--muted)}
@@ -347,6 +382,7 @@
   }
   @media(max-width:860px){
     .hero-grid{grid-template-columns:1fr;gap:34px}
+    .pdp-grid{grid-template-columns:1fr;gap:30px}
     .hero-media{min-height:340px}
     .hero-media img{min-height:340px}
     .lookbook,.cat-surface .lookbook{grid-template-columns:minmax(0,1fr)}
@@ -568,6 +604,41 @@
       {{services}}
       <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
     </div>
+  </div>
+</section>
+
+<section class="pdp-surface" data-surface="product">
+  <div class="shell">
+    <nav class="pdp-crumb" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span aria-current="page">{{product_name}}</span>
+    </nav>
+    <div class="pdp-grid">
+      <figure class="pdp-media reveal">
+        <img src="{{product_image}}" alt="{{product_name}}" loading="eager">
+        <span class="pdp-media-tag">{{product_offer_pct}}</span>
+        <figcaption><span>{{product_category}}</span><span>{{product_brand}}</span><span>N° {{product_ref}}</span></figcaption>
+      </figure>
+      <div class="pdp-info reveal">
+        <p class="pdp-kicker">Ficha — {{product_category}}</p>
+        <h1>{{product_name}}</h1>
+        <p class="pdp-ref">Pieza {{product_ref}}</p>
+        <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
+        <p class="pdp-desc">{{product_description}}</p>
+        <div class="pdp-ctas">
+          <a class="btn btn-primary" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
+          <a class="btn btn-ghost" href="#catalogo" data-ds-route="catalog">Volver al catálogo</a>
+        </div>
+        <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+      </div>
+    </div>
+    <section class="pdp-rel" aria-label="También te puede interesar">
+      <h2>Otras piezas del atelier</h2>
+      <div class="lookbook">{{product_related}}</div>
+    </section>
   </div>
 </section>
 
