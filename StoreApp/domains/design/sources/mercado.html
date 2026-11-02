@@ -80,11 +80,9 @@
   .tabs a:hover{color:var(--ink);background:var(--soft)}
   .tabs a.on{color:var(--ink);font-weight:700}
   html[data-ds-surface="landing"] .tabs a.on,
-  html[data-ds-surface="catalog"] .tabs a.on,
-  html[data-ds-surface="services"] .tabs a.on{color:var(--ink-2);font-weight:600;border-bottom-color:transparent}
+  html[data-ds-surface="catalog"] .tabs a.on{color:var(--ink-2);font-weight:600;border-bottom-color:transparent}
   html[data-ds-surface="landing"] .tabs a[data-ds-route="home"],
-  html[data-ds-surface="catalog"] .tabs a[data-ds-route="catalog"],
-  html[data-ds-surface="services"] .tabs a[data-ds-route="services"]{color:var(--ink);font-weight:700;border-bottom-color:var(--link)}
+  html[data-ds-surface="catalog"] .tabs a[data-ds-route="catalog"]{color:var(--ink);font-weight:700;border-bottom-color:var(--link)}
 
   /* Portada promocional sobre amarillo */
   .hero{background:var(--yellow);border-bottom:1px solid var(--yellow-deep);padding:38px 0 46px}
@@ -282,20 +280,6 @@
   .cat-surface .ds-empty{margin:18px 0 4px;padding:0;color:var(--muted);font-size:14px}
   .cat-surface .ds-empty:not([hidden]){padding:26px 0;text-align:center}
 
-  /* Servicios */
-  .svc-surface{background:var(--bg);padding:34px 0 46px}
-  .svc-surface .svc-head h1{margin:0;font-size:clamp(26px,3.4vw,38px);font-weight:700;letter-spacing:-.02em}
-  .svc-surface .svc-head p{margin:8px 0 0;font-size:13px;color:var(--muted);max-width:52ch}
-  .svc-surface .svc-head p:empty{display:none}
-  .ds-services-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0 0;padding:0;list-style:none}
-  .ds-service{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:grid;gap:5px;min-width:0}
-  .ds-service-name{font-size:15px;overflow-wrap:anywhere}
-  .ds-service-desc{font-size:12.5px;color:var(--muted)}
-  .ds-service-desc:empty{display:none}
-  .svc-body:empty::before{content:"Todavía no cargaste servicios: agregalos desde el panel y aparecen acá.";display:block;padding:18px;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted);font-size:13.5px}
-  .svc-body:empty + .svc-cta{display:none}
-  .svc-surface .svc-cta{display:inline-block;margin-top:22px;padding:12px 20px;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);font-size:13.5px;font-weight:700;letter-spacing:0;text-transform:none}
-
   /* Ficha de producto: galería + panel de compra + tabla de
      características, misma anatomía de publicación de marketplace. */
   .pdp-surface{padding:0 0 46px}
@@ -452,7 +436,6 @@
     .grid{grid-template-columns:minmax(0,1fr);gap:14px}
     .ds-product{width:100%;max-width:460px;margin-inline:auto}
     .ds-product-img{object-fit:contain}
-    .ds-services-list{grid-template-columns:1fr}
     .cat-surface .ds-product{width:auto;max-width:none;margin:0}
     .cat-results{padding:12px 14px 16px}
     .cat-bar{gap:8px 10px;padding-bottom:10px}
@@ -486,7 +469,6 @@
     .ds-product-copy{padding:3px 12px 0}
     .ds-product-name{font-size:13.5px}
     .ds-product-price{padding:8px 12px 12px;font-size:19px}
-    .ds-services-list{grid-template-columns:1fr}
     .foot-grid{grid-template-columns:1fr}
     .trust-grid{grid-template-columns:minmax(0,1fr)}
     .f-cat,.f-check{min-height:38px}
@@ -514,7 +496,6 @@
   <div class="shell tabs-in">
     <a class="on" href="#inicio" data-ds-route="home">Inicio</a>
     <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
-    <a href="#servicios" data-ds-route="services">Servicios</a>
     <a href="#contacto">Contacto</a>
   </div>
 </nav>
@@ -660,14 +641,6 @@
         <p class="ds-empty" data-ds-noresults hidden>No hay publicaciones que coincidan con tu búsqueda.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="svc-surface" data-surface="services">
-  <div class="shell">
-    <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
-    <div class="svc-body">{{services}}</div>
-    <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
   </div>
 </section>
 
