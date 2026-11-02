@@ -4,7 +4,11 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, clean_icon_set
+from StoreApp.domains.design.models import (
+    DesignIconStyle,
+    DesignPattern,
+    clean_icon_set,
+)
 
 """
 Carga (idempotente) el catálogo de estilos de iconos de los controles de

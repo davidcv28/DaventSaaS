@@ -1816,11 +1816,11 @@ class SiteThemeTests(TestCase):
         #de estilo se guarda igual en cualquier plan.
         client      =   self._client()
         response    =   self._patch(client, {'site_theme': {
-            'style': {'id': 'bento'}, 'styleColors': self._style_colors(),
+            'style': {'id': 'corporativo'}, 'styleColors': self._style_colors(),
         }})
         self.assertEqual(response.status_code, 200)
         theme       =   response.data['customization']['site_theme']
-        self.assertEqual(theme['style']['id'], 'bento')
+        self.assertEqual(theme['style']['id'], 'corporativo')
         self.assertIn('styleColors', theme)
 
     def test_basic_advanced_sections_discarded_or_rejected(self):
@@ -2219,7 +2219,7 @@ class StudioDraftPublishTests(TestCase):
         custom      =   public.data['customization']
         self.assertTrue(public.data['preview'])
         self.assertEqual(custom['site_theme'], {'palette': {'primary': '#112233'}})
-        self.assertEqual(custom['template'], 'raiz')
+        self.assertEqual(custom['template'], 'circuito')
         self.assertEqual(custom['layout_config']['landing']['blocks'][0]['id'], 'hero')
         self.assertNotIn('template_draft', custom)
         self.assertNotIn('site_theme_draft', custom)
@@ -2280,3 +2280,41 @@ class ObjectUrlPrivacyTests(TestCase):
             client.generate_presigned_url.assert_called_once()
             self.assertEqual(client.generate_presigned_url.call_args.kwargs['ExpiresIn'], 3600)
             self.assertEqual(storage.object_url('store/x.webp'), 'https://cdn.test/store/x.webp')
+
+
+class PatternDocumentSecurityTests(TestCase):
+    """
+    El documento del diseño (iframe same-origin de la web pública) sale con
+    CSP propia y con el markup ejecutable neutralizado: un handler en el
+    HTML del patrón correría con la sesión del visitante/dueño.
+    """
+
+    def setUp(self):
+        cache.clear()
+        from StoreApp.domains.design.models import DesignPattern
+        _, profile      =   _make_user(verified = True)
+        _grant(profile, has_public_link = True)
+        self.store      =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+        StoreCustomization.objects.create(store = self.store, template = 'raiz')
+        DesignPattern.objects.update_or_create(
+            slug    =   'raiz',
+            defaults =  {
+                'nombre'    :   'Raíz',
+                'template'  :   'raiz',
+                'is_active' :   True,
+                'html'      :   '<section data-surface="landing"><img src=x onerror="alert(1)">'
+                                "<a href='javascript:alert(2)'>x</a></section>",
+                'variables' :   {'store_name': {'type': 'text', 'default': 'Tienda'}},
+            },
+        )
+
+    def test_document_has_strict_csp_and_no_executable_markup(self):
+        response    =   APIClient().get(f'{STORES_URL}public/mi-tienda/pattern/document/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['X-Frame-Options'], 'SAMEORIGIN')
+        csp         =   response['Content-Security-Policy']
+        script_src  =   next(part for part in csp.split(';') if part.strip().startswith('script-src'))
+        self.assertNotIn('unsafe-inline', script_src)
+        body        =   response.content.decode('utf-8')
+        self.assertNotIn('onerror', body)
+        self.assertNotIn('javascript:', body)

@@ -8,15 +8,47 @@ producción solo permite `script-src 'self'`): el JS del diseño y el puente
 de medición/navegación viajan como `<script src>` del mismo origen.
 """
 
-from urllib.parse import urlencode
-
 import re
 from pathlib import Path
+from urllib.parse import urlencode
 
 #El CSP de producción no permite inline: se sacan handlers `on*=` y
 #`<script>` del markup (el JS del diseño viaja por `pattern.js`).
-INLINE_HANDLER_RE = re.compile(r'\son[a-z]+\s*=\s*"[^"]*"', re.I)
+#El handler se elimina con comillas dobles, simples o sin comillas: la
+#variante `onerror='…'` y `onbegin=alert(1)` sobrevivían al filtro y el
+#documento corre en el MISMO origen de la app (iframe `allow-same-origin`).
+INLINE_HANDLER_RE = re.compile(r"""\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", re.I)
 INLINE_SCRIPT_RE = re.compile(r'<script\b[^>]*>.*?</script>', re.I | re.S)
+#URL ejecutable en un atributo de navegación: `javascript:` en un href/src
+#corre código dentro del documento (y del origen de la app).
+SCRIPT_URL_RE = re.compile(
+    r"""(\s(?:href|src|action|formaction|xlink:href)\s*=\s*)"""
+    r"""(?:"\s*(?:javascript|vbscript|data:text/html)[^"]*"|'\s*(?:javascript|vbscript|data:text/html)[^']*'|(?:javascript|vbscript|data:text/html)[^\s>]*)""",
+    re.I,
+)
+#`<base>` reescribe TODAS las URLs relativas del documento (incluido el
+#`<script src>` del puente): un `<base href="//evil">` desvía el JS del
+#diseño a un host ajeno. Los embeds externos y el refresh por meta tampoco
+#tienen lugar en un diseño.
+DANGEROUS_TAG_RE = re.compile(r'<(?:base|object|embed|iframe|frame|frameset)\b[^>]*>', re.I)
+META_REFRESH_RE = re.compile(r'<meta\b[^>]*http-equiv\s*=\s*["\']?refresh[^>]*>', re.I)
+
+#CSP del documento del diseño. El iframe comparte el origen de la app
+#(`allow-same-origin`, necesario para el `fetch` del puente), así que la
+#política es la última línea: nada de script inline aunque un handler
+#sobreviva al saneo, sin frames anidados ni base-uri.
+DOCUMENT_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: https:; "
+    "font-src 'self' data: https:; "
+    "media-src 'self' https:; "
+    "connect-src 'self'; "
+    "frame-src 'none'; child-src 'none'; worker-src 'none'; "
+    "object-src 'none'; base-uri 'none'; form-action 'self'; "
+    "frame-ancestors 'self'"
+)
 
 #Reglas del host (no del diseño): una sola superficie visible y los
 #controles del catálogo con la tipografía del documento.
@@ -87,6 +119,20 @@ BRIDGE_SCRIPT = Path(__file__).with_name('pattern_bridge.js').read_text(encoding
 BRIDGE_URL = '../bridge.js/'
 
 
+def sanitize_markup(html):
+    """
+    Markup del diseño sin nada ejecutable: scripts, handlers `on*=` (con
+    cualquier comilla), URLs `javascript:`/`data:text/html`, `<base>`,
+    embeds y refresh por meta. El documento corre en el mismo origen de la
+    app, así que el saneo + el CSP son la barrera del iframe.
+    """
+    html = INLINE_SCRIPT_RE.sub('', html or '')
+    html = INLINE_HANDLER_RE.sub('', html)
+    html = SCRIPT_URL_RE.sub(r'\1="#"', html)
+    html = DANGEROUS_TAG_RE.sub('', html)
+    return META_REFRESH_RE.sub('', html)
+
+
 def pattern_document(html, css, theme, surface, preview = '', style = ''):
     """
     Documento completo listo para servir como `text/html`.
@@ -97,8 +143,12 @@ def pattern_document(html, css, theme, surface, preview = '', style = ''):
     if preview:
         query['preview'] = preview
     script = f'../script.js/?{urlencode(query)}'
-    html = INLINE_SCRIPT_RE.sub('', html or '')
-    html = INLINE_HANDLER_RE.sub('', html)
+    html = sanitize_markup(html)
+    #Tema/superficie van a atributos del `<html>`: se normalizan acá y no
+    #solo en la vista. `surfaces` sale del HTML del diseño (regex), así que
+    #un valor raro podía viajar de vuelta al documento y romper el atributo.
+    theme   = 'dark' if str(theme or '').lower() == 'dark' else 'light'
+    surface = re.sub(r'[^a-z0-9-]', '', str(surface or '').lower())[:40] or 'landing'
     #Solo slug ASCII: el atributo lo escriben selectores CSS, nunca HTML.
     style = re.sub(r'[^a-z0-9-]', '', str(style or '').lower())[:80]
     style_attr = f' data-ds-style="{style}"' if style else ''

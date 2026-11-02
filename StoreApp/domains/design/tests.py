@@ -9,7 +9,7 @@ from pathlib import Path
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
 from StoreApp.domains.design.models import DesignPattern, DesignStyle
@@ -290,6 +290,60 @@ class DesignContractTests(TestCase):
         data = self.client.get(CATALOG_URL).json()
         self.assertIn('icon_styles', data)
         self.assertEqual(data['default_icon_style']['slug'], 'catalog-set')
+
+
+class PatternDocumentSecurityTests(SimpleTestCase):
+    """
+    El documento del diseño se sirve en el MISMO origen de la app y se
+    embebe con `allow-same-origin`: cualquier markup ejecutable que
+    sobreviva al saneo corre con la sesión del dueño. Estas pruebas fijan
+    el contrato del saneo y del CSP del documento.
+    """
+
+    PAYLOAD = (
+        '<img src=x onerror="alert(1)">'
+        "<img src=x onerror='alert(2)'>"
+        '<svg><animate onbegin=alert(3)></animate></svg>'
+        '<p onclick = "alert(4)">texto</p>'
+        '<a href="javascript:alert(5)">a</a>'
+        "<a href='vbscript:msgbox(1)'>b</a>"
+        '<form action=javascript:alert(6)></form>'
+        '<script>alert(7)</script>'
+        '<base href="//evil.example/">'
+        '<meta http-equiv="refresh" content="0;url=//evil.example">'
+        '<iframe src="//evil.example"></iframe>'
+        '<object data="//evil.example"></object>'
+        '<img src="https://cdn.example/foto.png">'
+        '<a href="/api/stores/public/tienda/r/whatsapp/">ok</a>'
+    )
+
+    def test_sanitize_strips_every_executable_vector(self):
+        from StoreApp.domains.design.services.pattern_document import sanitize_markup
+        clean = sanitize_markup(self.PAYLOAD)
+        for needle in ('onerror', 'onbegin', 'onclick', 'javascript:', 'vbscript:',
+                       '<script', '<base', 'http-equiv', '<iframe', '<object'):
+            self.assertNotIn(needle, clean.lower())
+        #Lo legítimo sigue en pie: imágenes https y links internos.
+        self.assertIn('https://cdn.example/foto.png', clean)
+        self.assertIn('/api/stores/public/tienda/r/whatsapp/', clean)
+
+    def test_document_csp_forbids_inline_script(self):
+        from StoreApp.domains.design.services.pattern_document import DOCUMENT_CSP
+        script_src = next(part for part in DOCUMENT_CSP.split(';') if part.strip().startswith('script-src'))
+        self.assertNotIn('unsafe-inline', script_src)
+        self.assertNotIn('unsafe-eval', script_src)
+        self.assertIn("frame-ancestors 'self'", DOCUMENT_CSP)
+        self.assertIn("object-src 'none'", DOCUMENT_CSP)
+        self.assertIn("base-uri 'none'", DOCUMENT_CSP)
+
+    def test_theme_and_surface_cannot_break_html_attributes(self):
+        from StoreApp.domains.design.services.pattern_document import pattern_document
+        doc = pattern_document('<p>x</p>', '', 'dark"><script>alert(1)</script>',
+                               'landing"><img src=x onerror=alert(1)>', '', '')
+        self.assertNotIn('<script>alert(1)</script>', doc)
+        self.assertNotIn('<img src=x', doc)
+        self.assertIn('data-ds-theme="light"', doc)
+        self.assertIn('data-ds-surface="landingimgsrcxonerroralert1"', doc)
 
 
 class IconStyleSeedTests(TestCase):

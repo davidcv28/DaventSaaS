@@ -1524,8 +1524,8 @@ class Regresiones(_AiDesignBase):
         response    =   APIClient().get(reverse('Stores-public', kwargs = {'slug': store.slug}))
         self.assertEqual(response.status_code, 200, response.content[:400])
         body        =   response.json()
-        self.assertEqual(body['customization']['template'], 'raiz')
-        self.assertIn('raiz', body['allowed_templates'])
+        self.assertEqual(body['customization']['template'], 'sastreria')
+        self.assertIn('sastreria', body['allowed_templates'])
 
     def test_public_page_allowed_templates_match_the_plan(self):
         store       =   self._public_store('raiz')

@@ -604,7 +604,11 @@ class StoreViewSet(StoreBaseViewSet):
         #producción (`script-src 'self'`) bloquea los inline y el iframe
         #quedaba sin puente (alto roto, reveal oculto, toggle muerto).
         from django.http import HttpResponse
-        from StoreApp.domains.design.services.pattern_document import pattern_document
+
+        from StoreApp.domains.design.services.pattern_document import (
+            DOCUMENT_CSP,
+            pattern_document,
+        )
         data                =   self._pattern_doc(request, self._pattern_store(slug))
         if not data.get('html'):
             raise Http404
@@ -620,6 +624,10 @@ class StoreViewSet(StoreBaseViewSet):
         #El documento se embebe en la web (iframe same-origin): el default
         #`DENY` de Django lo bloqueaba.
         response['X-Frame-Options'] = 'SAMEORIGIN'
+        #CSP propia (sin `unsafe-inline` en script-src): el iframe comparte
+        #el origen de la app, así que un handler que sobreviva al saneo no
+        #puede ejecutar nada. El middleware no la pisa (solo rellena).
+        response['Content-Security-Policy'] = DOCUMENT_CSP
         patch_cache_control(response, private = True, no_store = True)
         return response
 
@@ -627,8 +635,10 @@ class StoreViewSet(StoreBaseViewSet):
     def public_pattern_bridge(self, request, slug = None):
         #Puente del documento (alto, tema, rutas y catálogo). Se sirve desde
         #la misma URL que el documento para no depender del host del front.
-        from django.http import HttpResponse
         from pathlib import Path
+
+        from django.http import HttpResponse
+
         from StoreApp.domains.design.services import pattern_document
         #Se lee el archivo en cada request: `BRIDGE_SCRIPT` queda cacheado al
         #importar el módulo y servía un puente viejo tras cada deploy/edición.

@@ -13,7 +13,7 @@ from rest_framework.test import APIClient
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Category, Product
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignPattern
 from StoreApp.domains.design.services import (
     build_store_context,
     pattern_for_template,
@@ -310,7 +310,9 @@ class PatternSourceTests(TestCase):
         self.assertIn('var a = 1', js)
 
     def test_variables_come_from_the_markup_only(self):
-        from StoreApp.domains.design.services.source_document import variables_from_markup
+        from StoreApp.domains.design.services.source_document import (
+            variables_from_markup,
+        )
         variables = variables_from_markup('<h1>{{store_name}}</h1><p>{{no_existe}}</p>')
         self.assertEqual(list(variables), ['store_name'])
 
@@ -338,6 +340,7 @@ class PatternSourceTests(TestCase):
 
     def test_converted_patterns_render_and_escape_store_data(self):
         from django.utils.html import escape
+
         from StoreApp.domains.design.services.source_document import load_source
         for slug in self.SLUGS:
             with self.subTest(slug = slug):

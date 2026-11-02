@@ -5,7 +5,6 @@ import random
 import re
 import secrets
 import time
-
 from urllib.parse import quote
 
 from django.conf import settings

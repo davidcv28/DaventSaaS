@@ -1075,3 +1075,64 @@ Hallazgos y veredicto:
   kwarg dinámico; se anotó `# nosec B113` con el motivo.
 - **F841 en `seed_data.py`** (bajo): variables `font`/`secondary` sin uso,
   eliminadas; sin cambio de markup.
+
+---
+
+## 7. Auditoría 2026-11-02 (ronda 5) — documento del diseño y prompts rotos
+
+Alcance: superficie nueva desde la ronda 4 (catálogo Design, documento de
+patrón servido como HTML, wizard/MCP de diseño) + verificación del gate de
+calidad (`ruff`, suite completa) y de los comandos que usan los agentes.
+
+| Control | Resultado |
+|---|---|
+| `manage.py check` | 0 issues |
+| `manage.py test` (completo, `--keepdb`) | 1058 tests — ver nota de línea base |
+| `ruff check .` | 10 hallazgos → 0 (I001 ×8, F401 ×2; preexistentes, el job `lint` estaba rojo) |
+| `bandit -r` (dominios, sin tests/migraciones) | 0 medios / 0 altos (19 bajos: `random` de semillas, `try/except/pass` de limpieza, `subprocess` de `pg_dump`) |
+
+### 7.1 Hallazgos
+
+| # | Severidad | Brecha | Fix aplicado |
+|---|-----------|--------|--------------|
+| 1 | **Alta** | **XSS same-origin en el documento del diseño.** `/api/stores/public/<slug>/pattern/document/` se embebe con `sandbox="allow-scripts allow-same-origin"` (necesario para el `fetch` del puente) y el saneo solo borraba handlers con **comillas dobles**: `onerror='…'`, `onbegin=alert(1)` (sin comillas), `href="javascript:…"`, `<base href="//evil">` y `<meta http-equiv=refresh>` sobrevivían. Un patrón importado desde HTML de terceros (`import_design_pattern`) o editado en el admin podía ejecutar JS con el origen de la app: leer el access token en memoria, llamar la API con la cookie httpOnly de refresh y manipular el DOM padre. | `sanitize_markup()` en `pattern_document.py`: handlers con cualquier comilla, URLs `javascript:`/`vbscript:`/`data:text/html`, `<base>`, `<iframe>`/`<object>`/`<embed>`/`<frame*>` y refresh por meta. La vista previa (`srcdoc` del modal) usa el mismo saneo. |
+| 2 | **Alta** | El documento del diseño **no tenía CSP propia**: heredaba la de respaldo del middleware (`script-src 'self' 'unsafe-inline'`), así que un handler inline que sobreviviera al saneo se ejecutaba. | `DOCUMENT_CSP` aplicada en la respuesta: `script-src 'self'` (sin `unsafe-inline` ni `unsafe-eval`), `object-src 'none'`, `base-uri 'none'`, `frame-src/child-src/worker-src 'none'`, `connect-src 'self'`, `frame-ancestors 'self'`. |
+| 3 | **Media** | `theme` y `surface` viajaban crudos a atributos del `<html>` del documento. `surface` se validaba contra `data['surfaces']`, que se extrae del HTML del patrón con una regex: un valor con `"><script>` podía volver al atributo (y `surfaces` es público en `GET /pattern`). | Normalización dentro de `pattern_document()` (no solo en la vista): `theme` ∈ {light, dark}, `surface` a `[a-z0-9-]{1,40}`, igual que ya se hacía con `style`. |
+| 4 | **Media (proceso)** | `SECURITY_SIMULATION_PROMPT.md` §5 ordenaba `manage.py test payments users stores` — **ese label no existe** (apps en namespace packages) y fallaba con `ModuleNotFoundError`: el bucle de verificación del prompt se cortaba antes del test real. `AGENTS.md` afirmaba lo contrario ("los labels `AdminApp.domains.x` no resuelven"). | Prompt y `AGENTS.md` corregidos con los labels verificados (`AdminApp.domains.payments`, `AdminApp.domains.users`, `StoreApp.domains.stores`, y clase suelta `AdminApp.domains.users.tests.PasswordPolicyTests`) + nota de `--keepdb` cuando el runner pregunta por la base de test existente. |
+| 5 | **Baja** | Suite en rojo (7 fallos + 1 error) por expectativas fijas contra el catálogo viejo: `CATALOG_TEMPLATES` sin `sastreria`/`circuito`, `allowed_templates_of` sin `sastreria`, `TEMPLATE_RETIRED_MAP['street']` esperado en `raiz` (hoy `sastreria`), `site_theme.style.id='bento'` (slug que ya no existe en el catálogo) y la vista previa esperando la plantilla publicada en vez de la del borrador. | Tests actualizados al catálogo vigente (`raiz`, `esencial`, `mercado`, `gimnasio`, `sastreria`, `moderntec`, `circuito`) y al comportamiento real del preview. Sin cambios de código de producto. |
+
+### 7.2 Regresión
+
+- `StoreApp.domains.design.tests.PatternDocumentSecurityTests` (3): saneo de
+  todos los vectores, `DOCUMENT_CSP` sin `unsafe-inline`, atributos del `<html>`
+  inquebrantables.
+- `StoreApp.domains.stores.tests.PatternDocumentSecurityTests` (1): el endpoint
+  real responde 200 con `X-Frame-Options: SAMEORIGIN`, CSP estricta y sin
+  `onerror`/`javascript:` en el cuerpo.
+
+### 7.3 Verificado como correcto (sin cambio)
+
+- `render_store_pattern` escapa **todas** las variables de tienda (`escape()`)
+  y los fragmentos de lista usan `_attr()`/`escape()`: nombre de producto,
+  descripción, categoría, marca, servicios, planes, reseñas y especificaciones.
+- El documento no acepta `preview` sin token válido (`TimestampSigner` +
+  `max_age` + pk de la tienda); el override `?template=` solo aplica en preview.
+- `theme_css()` solo emite valores de enums cerrados o `#hex` acotado a 7 chars.
+- `preview_pattern()` (modal) devuelve el markup saneado y se monta con
+  `sandbox="allow-scripts"` (origen opaco, sin `allow-same-origin`).
+- Uploads: toda imagen se re-codifica a WebP (`normalize_image`), así que no hay
+  SVG/políglotas servidos desde el bucket; `Image.MAX_IMAGE_PIXELS = 40M`.
+- `sync_design_neon._upsert` valida identificadores (`IDENT_RE`) y parametriza
+  valores; `sync_design_neon` es comando de staff, no endpoint.
+
+### 7.4 Residual honesto
+
+- El JS del patrón (`pattern/script.js`) es **staff-authored** y corre en el
+  mismo origen del iframe: un patrón malicioso seguiría teniendo la sesión del
+  visitante. La CSP no lo puede frenar (es `script-src 'self'` legítimo). Mitigación
+  real pendiente: servir el documento desde un subdominio de patrones
+  (`patterns.<dominio>`) y quitar `allow-same-origin`, lo que exige mover el
+  `fetch` del puente a una API con token y CORS explícito.
+- `import_design_pattern` sigue aceptando cualquier HTML del repo: el saneo es
+  en tiempo de servicio, no de importación (a propósito: el original queda como
+  fuente de verdad para re-importar).

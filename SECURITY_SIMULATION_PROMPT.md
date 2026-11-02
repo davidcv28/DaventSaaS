@@ -120,7 +120,7 @@ Además de lo que ya exista, verificar y dejar implementado:
 ```
 venv/Scripts/python.exe manage.py check
 ruff check .
-venv/Scripts/python.exe manage.py test payments users stores   # truncado
+venv/Scripts/python.exe manage.py test AdminApp.domains.payments AdminApp.domains.users StoreApp.domains.stores   # truncado
 ```
 Luego revisar `git diff --stat` para confirmar que no se tocó nada fuera del alcance.
 

@@ -620,7 +620,7 @@ class AiDesignV2Tests(AiDesignBase):
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
         self.assertEqual(sources, {'plan'})
         self.assertEqual(set(allowed_templates_of(store.user)),
-                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio'})
+                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria', 'circuito'})
 
     def test_ai_templates_never_outside_plan(self):
         #Sin has_ai_design los ai_* no están en la whitelist del plan y el
@@ -972,7 +972,7 @@ def _contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
-CATALOG_TEMPLATES   =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec'))
+CATALOG_TEMPLATES   =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
 
 
 class AiDesignV4Tests(AiDesignBase):
@@ -1043,7 +1043,7 @@ class AiDesignV4Tests(AiDesignBase):
         self.assertTrue(seen <= set(allowed_templates_of(store.user)))
 
     def test_standard_plan_never_gets_advanced_designs(self):
-        #Estándar = base + plus (4 diseños); circuito/seguridad quedan fuera.
+        #Estándar = base + plus; circuito/seguridad quedan fuera.
         _, profile =   _make_user('estandar')
         _grant(
             profile,
@@ -1055,7 +1055,7 @@ class AiDesignV4Tests(AiDesignBase):
         store       =   Store.objects.create(user = profile, slug = 'tienda-estandar')
         StoreCustomization.objects.create(store = store, site_templates = ['landing', 'catalog', 'services'])
         allowed     =   set(allowed_templates_of(store.user))
-        self.assertEqual(allowed, {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio'})
+        self.assertEqual(allowed, {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria'})
         data        =   self._client(store).post(AI_URL, {'rubro': 'seguridad'}, format = 'json').json()
         self.assertTrue(data['proposals'])
         for proposal in data['proposals']:
