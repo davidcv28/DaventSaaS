@@ -62,6 +62,7 @@ import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
+import McpChatModal from '../components/design/McpChatModal.vue'
 import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
@@ -1290,11 +1291,17 @@ const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_desig
 // "Asistencia con IA": mismo modal con dos contextos ('design' | 'business').
 // Candado = has_ai_design (mismo gate que el diseño asistido).
 const assistOpen = ref(false)
+const mcpChatOpen = ref(false)
 const assistOrigin = ref('design')
 function openAssist(origin) {
   if (navLocks.value.design_assisted) { openLocked('design_assisted'); return }
   assistOrigin.value = origin
   assistOpen.value = true
+}
+// Chat de diseño MCP: mismo candado (has_ai_design) que el asistido.
+function openMcpChat() {
+  if (navLocks.value.design_assisted) { openLocked('design_assisted'); return }
+  mcpChatOpen.value = true
 }
 function onAssistApplied() {
   Object.assign(designForm, store.customization)
@@ -4107,6 +4114,14 @@ async function changePassword() {
         </button>
       </div>
 
+      <div class="next-card assist-card">
+        <span class="next-icon"><AppIcon name="bot" :size="22" /></span>
+        <div><strong>Chat de diseño (MCP)</strong><small>Escribí cómo querés tu web en texto libre; el MCP elige el diseño y te muestra sus fuentes.</small></div>
+        <button class="btn btn-auto assist-btn" @click="openMcpChat">
+          <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="message-circle" :size="15" /> Abrir chat
+        </button>
+      </div>
+
       <DesignStylesTab
         :form="designForm" :benefits="plan?.benefits || {}"
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
@@ -5615,6 +5630,11 @@ async function changePassword() {
         @close="assistOpen = false"
         @applied="onAssistApplied"
         @navigate="assistOpen = false; section = $event"
+      />
+      <McpChatModal
+        v-if="mcpChatOpen"
+        @close="mcpChatOpen = false"
+        @applied="onAssistApplied"
       />
     </Teleport>
 

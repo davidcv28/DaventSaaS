@@ -294,9 +294,10 @@ export const storesApi = {
   // ({rubro, goals, tone, audience, must_have, notes}) y el MCP del backend
   // decide qué skill de diseño aplicar. Devuelve el mismo contrato que
   // aiDesign (proposals + seed + missing) más `mcp` con los estilos elegidos.
-  async aiDesignMcp({ prompt, history = [], seed = null }) {
+  async aiDesignMcp({ prompt, history = [], seed = null, message = '' }) {
     const payload = { prompt, history }
     if (seed) payload.seed = seed
+    if (message) payload.message = message
     const { data } = await http.post('/stores/ai-design/mcp/', payload)
     return data
   },
