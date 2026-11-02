@@ -33,12 +33,12 @@ describe('env', () => {
     expect(platform.storeHostSlug).toBe(null)
   })
 
-  it('storeUrl uses path aliases when subdomains are disabled', async () => {
+  it('storeUrl always builds the link as a path on the platform origin', async () => {
     vi.resetModules()
-    vi.stubEnv('VITE_STORE_SUBDOMAINS', '0')
-    vi.stubEnv('VITE_PLATFORM_DOMAIN', 'davent.com')
-    globalThis.window = { location: { protocol: 'https:', hostname: 'davent.com', port: '' } }
+    vi.stubEnv('VITE_PLATFORM_DOMAIN', 'davent.com.ar')
+    vi.stubEnv('VITE_APP_URL', 'https://www.davent.com.ar')
+    globalThis.window = { location: { protocol: 'https:', hostname: 'www.davent.com.ar', port: '' } }
     const { storeUrl } = await import('../src/config/env.js')
-    expect(storeUrl('mitienda')).toMatch(/\/mitienda$/)
+    expect(storeUrl('mitienda')).toBe('https://www.davent.com.ar/mitienda')
   })
 })

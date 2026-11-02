@@ -48,11 +48,11 @@ export const storeSubdomains = storeSubdomainsEnv
   ? !['0', 'false', 'no'].includes(storeSubdomainsEnv)
   : !platformDomain.endsWith('onrender.com')
 
-// Link público canónico de una tienda: subdominio propio (<slug>.<dominio>)
-// cuando el hosting lo soporta; si no, alias de path sobre el dominio de plataforma.
+// Link público canónico de una tienda: path sobre el origen de plataforma
+// (https://www.davent.com.ar/<slug>). Los subdominios <slug>.<dominio>
+// ya emitidos siguen resolviendo vía storeHostSlug.
 export function storeUrl(slug) {
-  if (!storeSubdomains) return `${env.appUrl}/${slug}`
-  return `${protocol}//${slug}.${platformHost}`
+  return `${env.appUrl}/${slug}`
 }
 
 export function apiUrl(path = '') {

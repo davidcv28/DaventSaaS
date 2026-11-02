@@ -43,7 +43,7 @@ import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
 import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
 import { extractApiError } from '../api/http.js'
-import { env, storeSubdomains } from '../config/env.js'
+import { env } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
   validateDocument, validateBusinessName, validatePhone, validateAddress,
@@ -650,11 +650,9 @@ function fmtDate(d) {
 }
 
 // --- Mi tienda: link público (copiar, abrir, pausar, renombrar) ---
-const platformHost = env.platformHost
-const scheme = `${window.location.protocol}//`
-// Sin wildcard (Render test) el link es path: https://host/[slug]; con dominio
-// propio el slug va de subdominio: https://[slug].host
-const slugPrefix = storeSubdomains ? scheme : `${scheme}${platformHost}/`
+// El link público es path sobre el dominio de plataforma:
+// https://www.davent.com.ar/[slug]
+const slugPrefix = `${env.appUrl}/`
 const renameSlug = ref('')
 const renameBusy = ref(false)
 const storeBusy = ref(false)
@@ -4045,7 +4043,7 @@ async function changePassword() {
                 autocomplete="off"
                 @input="onRenameInput"
               />
-              <span v-if="storeSubdomains" class="slug-suffix">.{{ platformHost }}</span>
+
             </div>
             <p class="hint">Ojo: la dirección anterior deja de funcionar, y tendrás que avisarle a tus clientes.</p>
             <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>

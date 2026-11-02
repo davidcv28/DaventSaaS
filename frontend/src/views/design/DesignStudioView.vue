@@ -11,7 +11,7 @@ import { useStoreStore } from '../../stores/store.store.js'
 import { useBillingStore } from '../../stores/billing.store.js'
 import { useCatalogStore } from '../../stores/catalog.store.js'
 import { useServicesStore } from '../../stores/services.store.js'
-import { CUSTOMIZATION_DEFAULTS } from '../../api/stores.api.js'
+import { CUSTOMIZATION_DEFAULTS, publicStoreUrl } from '../../api/stores.api.js'
 import { useStudioDesign, DESIGN_FIELDS } from '../../composables/useStudioDesign.js'
 
 const router = useRouter()
@@ -63,7 +63,7 @@ const {
 })
 
 const designShopName = computed(() => designForm.display_name || store.store?.business_name || 'Tu negocio')
-const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
+const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 const siteTemplates = computed(() => designForm.site_templates || [])
 
 function backToDashboard() {

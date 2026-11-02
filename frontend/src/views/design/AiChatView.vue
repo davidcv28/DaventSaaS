@@ -7,7 +7,7 @@ import { ref, computed, nextTick } from 'vue'
 import AppIcon from '../../components/AppIcon.vue'
 import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
 import { useStoreStore } from '../../stores/store.store.js'
-import { storesApi } from '../../api/stores.api.js'
+import { storesApi, publicStoreUrl } from '../../api/stores.api.js'
 import '../../assets/ai-design.css'
 
 const props = defineProps({
@@ -23,7 +23,7 @@ const shopName = computed(() => store.customization.display_name || store.store?
 const initial = computed(() => (shopName.value || 'T').slice(0, 1).toUpperCase())
 const logo = computed(() => store.customization.logo || '')
 const cover = computed(() => store.customization.cover || '')
-const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
+const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 
 const messages = ref([])
 const draft = ref('')

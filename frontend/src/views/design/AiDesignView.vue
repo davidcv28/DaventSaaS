@@ -12,7 +12,7 @@ import { authApi } from '../../api/auth.api.js'
 import { locationsApi } from '../../api/locations.api.js'
 import {
   storesApi, CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  resolveStoreTemplate, allowedTemplatesFor,
+  resolveStoreTemplate, allowedTemplatesFor, publicStoreUrl,
   validateLogoFile, validateImageFile, LOGO_ACCEPT
 } from '../../api/stores.api.js'
 import { http } from '../../api/http.js'
@@ -102,7 +102,7 @@ const description = computed(() => String(store.customization.description || '')
 const storeId = computed(() => store.store?.id || '')
 // La vista previa corre SIEMPRE en el mismo origen (alias /<slug>): la web
 // real, no una maqueta.
-const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
+const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
 const progressStep = computed(() => (phase.value === 'ask' ? step.value + 1 : STEPS.length))
 const selectedProposal = computed(() => proposals.value.find((p) => p.id === selectedId.value) || null)

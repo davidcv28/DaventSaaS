@@ -14,7 +14,7 @@ import { locationsApi } from '../../api/locations.api.js'
 import { http } from '../../api/http.js'
 import {
   storesApi, CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  resolveStoreTemplate, allowedTemplatesFor
+  resolveStoreTemplate, allowedTemplatesFor, publicStoreUrl
 } from '../../api/stores.api.js'
 import {
   RUBROS, GOALS, TONES, AUDIENCES, STYLE_HINTS, SECTIONS,
@@ -98,7 +98,7 @@ const shopName = computed(() =>
 const initial = computed(() => (shopName.value || 'T').slice(0, 1).toUpperCase())
 const logo = computed(() => store.customization.logo || '')
 const cover = computed(() => store.customization.cover || '')
-const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
+const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 const autofillDefault = computed(() => {
   const c = store.customization || {}
   const empty = (v) => !v || (Array.isArray(v) && !v.length) || (typeof v === 'string' && !v.trim())

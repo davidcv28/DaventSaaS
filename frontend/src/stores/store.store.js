@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { storesApi, CUSTOMIZATION_DEFAULTS } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
+import { env } from '../config/env.js'
 import { swrGet, swrSet } from '../utils/swr.js'
 
 // Tienda del cliente: link público (claim en el primer ingreso), rename y pausa.
@@ -338,7 +339,7 @@ export const useStoreStore = defineStore('store', () => {
     fieldErrors.value = {}
     try {
       const data = await storesApi.sharePreview()
-      const url = `${window.location.origin}${data.path}`
+      const url = `${env.appUrl}${data.path}`
       return { url, expiresAt: data.expires_at, ttl: data.ttl }
     } catch (e) {
       setApiError(e)

@@ -74,7 +74,7 @@ const summary = computed(() => {
             <span class="aidq-share-text">
               <strong>{{ name || 'Tu negocio' }}</strong>
               <small>{{ description || 'Todavía no cargaste una descripción: es lo que se lee al compartir la web.' }}</small>
-              <em>{{ urlLabel || 'tu-tienda.davent.com.ar' }}</em>
+              <em>{{ urlLabel || 'davent.com.ar/tu-tienda' }}</em>
             </span>
           </div>
           <p class="aidq-share-note">
