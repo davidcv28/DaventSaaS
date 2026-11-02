@@ -8,9 +8,12 @@ import AiAdjustPanel from '../../components/ai/AiAdjustPanel.vue'
 import AiPublishedPanel from '../../components/ai/AiPublishedPanel.vue'
 import AiDevicePreview from '../../components/ai/AiDevicePreview.vue'
 import { useStoreStore } from '../../stores/store.store.js'
+import { authApi } from '../../api/auth.api.js'
+import { locationsApi } from '../../api/locations.api.js'
 import {
   storesApi, CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  resolveStoreTemplate, allowedTemplatesFor
+  resolveStoreTemplate, allowedTemplatesFor,
+  validateLogoFile, validateImageFile, LOGO_ACCEPT
 } from '../../api/stores.api.js'
 import { http } from '../../api/http.js'
 import '../../assets/ai-design.css'
@@ -58,9 +61,6 @@ const AUDIENCES = [
   { id: 'empresas', label: 'Empresas', icon: 'building-2', desc: 'Negocios que te contratan' },
   { id: 'ambas', label: 'Las dos', icon: 'users', desc: 'Personas y empresas' }
 ]
-// "¿Qué te importa más?": matiz fino sobre el estilo. El motor solo entiende
-// `tone`, así que cada matiz vota por uno de los cuatro estilos (y el
-// elegido a mano siempre gana).
 const STYLE_HINTS = [
   { id: 'elegancia', label: 'Elegancia', icon: 'gem', tone: 'serio' },
   { id: 'energia', label: 'Energía', icon: 'flame', tone: 'audaz' },
@@ -70,21 +70,26 @@ const STYLE_HINTS = [
   { id: 'lujo', label: 'Lujo', icon: 'crown', tone: 'serio' }
 ]
 const HINT_TONE_ORDER = ['audaz', 'calido', 'moderno', 'serio']
-const MUST_HAVE = [
-  { id: 'whatsapp', label: 'Botón de WhatsApp', icon: 'whatsapp', desc: 'Para que te escriban al toque' },
-  { id: 'hours', label: 'Horarios', icon: 'clock', desc: 'Cuándo estás abierto' },
-  { id: 'map', label: 'Mapa y dirección', icon: 'map-pin', desc: 'Cómo llegar a tu local' },
-  { id: 'prices', label: 'Precios', icon: 'tag', desc: 'Cuánto sale cada cosa' },
-  { id: 'testimonials', label: 'Opiniones de clientes', icon: 'quote', desc: 'Lo que dicen de vos' },
-  { id: 'faqs', label: 'Preguntas frecuentes', icon: 'circle-help', desc: 'Las dudas que te preguntan siempre' }
+// Secciones que el dueño elige mostrar. Cada una escribe flags reales de la
+// customization (show_*/site_templates) Y aporta su must_have al pedido.
+const SECTIONS = [
+  { id: 'catalog', label: 'Catálogo', icon: 'tag', desc: 'Tus productos con foto y precio', must: 'prices', flag: 'show_catalog', site: 'catalog' },
+  { id: 'services', label: 'Servicios', icon: 'wrench', desc: 'Lo que hacés, con pedido por WhatsApp', site: 'services', flag: 'show_services', needs: 'has_services_site' },
+  { id: 'gallery', label: 'Galería de fotos', icon: 'images', desc: 'Fotos de tu local y tus trabajos', flag: 'show_gallery' },
+  { id: 'testimonials', label: 'Opiniones de clientes', icon: 'quote', desc: 'Lo que dicen de vos', must: 'testimonials', flag: 'show_testimonials' },
+  { id: 'map', label: 'Mapa y horarios', icon: 'map-pin', desc: 'Cómo llegar y cuándo abrís', must: 'map', flag: 'show_location', also: 'show_hours' },
+  { id: 'contact', label: 'Contacto y WhatsApp', icon: 'whatsapp', desc: 'Que te escriban al toque', must: 'whatsapp', flag: 'show_contact' },
+  { id: 'faqs', label: 'Preguntas frecuentes', icon: 'circle-help', desc: 'Las dudas que te preguntan siempre', must: 'faqs', flag: 'show_faq' },
+  { id: 'hours', label: 'Horarios de atención', icon: 'clock', desc: 'Cuándo estás abierto', must: 'hours', flag: 'show_hours' }
 ]
-// Los cuatro pasos del wizard. `icon`/`title`/`subtitle` encabezan cada
-// pantalla; `hint` es la ayuda corta debajo del título.
+// Los pasos del asistente: bienvenida + 4 preguntas en lenguaje llano.
+// `optional` habilita el botón "Saltar".
 const STEPS = [
-  { id: 'business', icon: 'store', title: 'Tu negocio', subtitle: 'Contanos qué hacés y te armamos una web', hint: 'Elegí el rubro que más se parezca al tuyo.' },
-  { id: 'goal', icon: 'flag', title: 'Qué buscás', subtitle: 'Para qué querés la web y a quién le hablás', hint: 'Podés marcar más de un objetivo.' },
-  { id: 'style', icon: 'palette', title: 'Tu estilo', subtitle: 'Cómo querés que se sienta tu web', hint: 'Se puede cambiar después sin rehacer nada.' },
-  { id: 'must', icon: 'checklist', title: 'Lo que no puede faltar', subtitle: 'Las secciones que tu cliente tiene que encontrar', hint: 'Todo lo que marques aparece en la propuesta.' }
+  { id: 'welcome', icon: 'sparkles', title: 'Bienvenida', subtitle: 'Te armamos tu web paso a paso', hint: '' },
+  { id: 'business', icon: 'store', title: 'Tu negocio', subtitle: 'Lo básico: nombre, rubro y cómo te contactan', hint: 'Esto queda guardado en tu web, no solo en el diseño.' },
+  { id: 'content', icon: 'file-text', title: 'Qué vendés', subtitle: 'Una descripción corta y tus fotos principales', hint: 'Todo se puede cambiar después.', optional: true },
+  { id: 'sections', icon: 'checklist', title: 'Qué mostrar', subtitle: 'Las secciones que tu cliente tiene que encontrar', hint: 'Lo que marques aparece en la web.', optional: true },
+  { id: 'style', icon: 'palette', title: 'Tu estilo', subtitle: 'Cómo querés que se sienta tu web', hint: 'Elegí sensaciones, no colores: el diseño se arma solo.' }
 ]
 // Tipografías que el motor sabe aplicar (ids de TYPE_PAIRS en el backend).
 const PAIR_OPTIONS = [
@@ -96,7 +101,17 @@ const PAIR_OPTIONS = [
   { id: 'warm-serif', label: 'Serif cálida', icon: 'type', desc: 'Cercana, con detalle' }
 ]
 
-const EMPTY = () => ({ rubro: '', goals: [], tone: '', style_hint: [], audience: '', must_have: [], content_hint: '' })
+const EMPTY = () => ({
+  // Paso negocio: escriben datos REALES (customization + perfil).
+  name: '', rubro: '', province: '', city: '', whatsapp: '', hours_label: '', hours_value: '',
+  // Paso contenido
+  description: '', highlights: '',
+  // Paso secciones (ids de SECTIONS)
+  sections: ['catalog', 'contact', 'hours'],
+  // Paso estilo
+  goals: [], tone: '', style_hint: [], audience: '',
+  content_hint: ''
+})
 const answers = reactive(EMPTY())
 
 // ask | loading | results | adjust | published | error
@@ -122,14 +137,23 @@ const hydrated = ref(false)
 // ---------- Wizard ----------
 const step = ref(0)
 const stepTitle = ref(null)
-// Claves del pedido que el dueño quitó a mano antes de enviar.
-const blockHidden = reactive({})
-const showJson = ref(false)
-// En pantallas chicas "Tu pedido" arranca plegado: primero la pregunta, el
-// resumen queda a un toque de distancia.
 const askOpen = ref(false)
-// Lo que decidió el MCP: skills de diseño aplicados a la tanda.
+const showJson = ref(false)
+// Lo que decidió el catálogo/MCP sobre la tanda.
 const mcp = ref(null)
+// Persistencia de datos del negocio (pasos 2-4 escriben de verdad).
+const savingStep = ref(false)
+const saveError = ref('')
+// Selects de ubicación (paso negocio).
+const provinces = ref([])
+const cities = ref([])
+const citiesLoading = ref(false)
+// Uploads inline (paso contenido).
+const logoInput = ref(null)
+const coverInput = ref(null)
+const logoBusy = ref(false)
+const coverBusy = ref(false)
+const mediaErr = ref('')
 
 let requestSeq = 0
 let timer = null
@@ -141,33 +165,18 @@ const benefits = computed(() => props.plan?.benefits || {})
 const hasDesignAdvanced = computed(() => Boolean(benefits.value.has_design_advanced))
 const canUse = computed(() => Boolean(props.plan?.isCurrent && benefits.value.has_customization && benefits.value.has_ai_design))
 const allowed = computed(() => allowedTemplatesFor(benefits.value))
-const shopName = computed(() => store.customization.display_name || store.store?.business_name || prefill.value?.name || 'Tu negocio')
+const shopName = computed(() => answers.name.trim() || store.customization.display_name || store.store?.business_name || prefill.value?.name || 'Tu negocio')
 const initial = computed(() => (shopName.value || 'T').slice(0, 1).toUpperCase())
 const logo = computed(() => store.customization.logo || '')
 const cover = computed(() => store.customization.cover || '')
 const description = computed(() => String(store.customization.description || '').trim())
 const storeId = computed(() => store.store?.id || '')
-// La vista previa corre SIEMPRE en el mismo origen (alias /<slug>): el
-// subdominio de la tienda puede no resolver (dev con *.localhost, Render sin
-// wildcard) y el iframe quedaba en blanco o caía al mockup estático. Mismo
-// origen = la landing real, con el mensaje del Studio aceptado por origen.
+// La vista previa corre SIEMPRE en el mismo origen (alias /<slug>): la web
+// real, no una maqueta.
 const publicUrl = computed(() => (store.store?.slug ? `${window.location.origin}/${store.store.slug}` : ''))
 const storageKey = computed(() => `davent:ai-design:${storeId.value || 'sin-tienda'}`)
 const progressStep = computed(() => (phase.value === 'ask' ? step.value + 1 : STEPS.length))
 const selectedProposal = computed(() => proposals.value.find((p) => p.id === selectedId.value) || null)
-// Cuántas familias visuales distintas trajo esta tanda (para avisarlo).
-const distinctFamilies = computed(() => {
-  const set = new Set()
-  proposals.value.forEach((p) => {
-    const family = p.skin?.family || p.variety?.family
-    if (family) set.add(family)
-  })
-  return set.size
-})
-const varietyNotice = computed(() => {
-  if (proposals.value.length < 2 || distinctFamilies.value < 2) return ''
-  return `${proposals.value.length} estilos distintos para tu rubro`
-})
 const adjustDirty = computed(() => JSON.stringify(constraints.value) !== JSON.stringify(initialConstraints.value))
 
 const autofillDefault = computed(() => {
@@ -177,9 +186,9 @@ const autofillDefault = computed(() => {
 })
 
 const liveMessage = computed(() => {
-  if (phase.value === 'loading') return 'Armando tus propuestas…'
-  if (phase.value === 'error') return 'No pudimos armar las propuestas.'
-  if (phase.value === 'results') return `${proposals.value.length} propuestas listas.`
+  if (phase.value === 'loading') return 'Armando tu propuesta…'
+  if (phase.value === 'error') return 'No pudimos armar la propuesta.'
+  if (phase.value === 'results') return 'Tu propuesta está lista.'
   if (phase.value === 'adjust') return 'Ajustando la propuesta elegida.'
   if (phase.value === 'published') return 'Tu web ya está publicada.'
   return `Paso ${step.value + 1} de ${STEPS.length}: ${STEPS[step.value].title}.`
@@ -187,83 +196,73 @@ const liveMessage = computed(() => {
 
 const currentStep = computed(() => STEPS[step.value])
 const stepValid = computed(() => {
-  if (step.value === 0) return Boolean(answers.rubro)
-  if (step.value === 1) return answers.goals.length > 0
-  if (step.value === 2) return Boolean(answers.tone)
+  const id = currentStep.value.id
+  if (id === 'welcome') return true
+  if (id === 'business') return Boolean(answers.name.trim() && answers.rubro)
+  if (id === 'content' || id === 'sections') return true
+  if (id === 'style') return Boolean(resolvedTone())
   return true
 })
-const canSubmit = computed(() => Boolean(answers.rubro && answers.goals.length && answers.tone))
-// Avance del wizard para la barra de progreso (paso actual + pasos hechos).
+const canSubmit = computed(() => Boolean(answers.rubro && resolvedTone()))
 const stepPct = computed(() => Math.round(((step.value + (stepValid.value ? 1 : 0)) / STEPS.length) * 100))
 const hasAnswers = computed(() => Boolean(
-  answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length ||
-  answers.audience || answers.must_have.length || answers.content_hint
+  answers.name || answers.rubro || answers.goals.length || answers.tone || answers.style_hint.length ||
+  answers.audience || answers.sections.length || answers.content_hint || answers.description
 ))
 
-// ---------- Prompt estructurado ----------
-// Cada respuesta del wizard es una clave del pedido que se manda al MCP.
-// `blockHidden` deja quitar una clave antes de enviar (volver a responder
-// ese paso la restaura).
+// ---------- Pedido estructurado ----------
+// Las secciones elegidas se traducen a los must_have del motor.
+const mustFromSections = computed(() => {
+  const list = []
+  SECTIONS.forEach((s) => {
+    if (answers.sections.includes(s.id) && s.must && !list.includes(s.must)) list.push(s.must)
+  })
+  return list
+})
 const rubroMeta = computed(() => RUBROS.find((r) => r.id === answers.rubro) || null)
 const toneMeta = computed(() => TONES.find((t) => t.id === answers.tone) || null)
 const audienceLabel = computed(() => AUDIENCES.find((a) => a.id === answers.audience)?.label || '')
 const goalLabels = computed(() => answers.goals.map((id) => GOALS.find((g) => g.id === id)?.label).filter(Boolean))
-const mustLabels = computed(() => answers.must_have.map((id) => MUST_HAVE.find((m) => m.id === id)?.label).filter(Boolean))
+const sectionLabels = computed(() => answers.sections.map((id) => SECTIONS.find((s) => s.id === id)?.label).filter(Boolean))
 
 const prompt = computed(() => {
   const p = {}
-  if (!blockHidden.rubro && answers.rubro) p.rubro = answers.rubro
-  if (!blockHidden.goals && answers.goals.length) p.goals = [...answers.goals]
-  if (!blockHidden.tone && answers.tone) p.tone = answers.tone
-  if (!blockHidden.audience && answers.audience) p.audience = answers.audience
-  if (!blockHidden.must_have && answers.must_have.length) p.must_have = [...answers.must_have]
-  const notes = String(answers.content_hint || '').trim()
-  if (!blockHidden.notes && notes) p.notes = notes
+  if (answers.rubro) p.rubro = answers.rubro
+  if (answers.goals.length) p.goals = [...answers.goals]
+  const tone = resolvedTone()
+  if (tone) p.tone = tone
+  if (answers.audience) p.audience = answers.audience
+  if (mustFromSections.value.length) p.must_have = [...mustFromSections.value]
+  const notes = String(answers.content_hint || answers.description || '').trim()
+  if (notes) p.notes = notes.slice(0, 160)
   return p
 })
 const promptJson = computed(() => JSON.stringify(prompt.value, null, 2))
 
 const BLOCK_ROWS = computed(() => [
-  { id: 'rubro', label: 'Rubro', key: 'rubro', icon: 'tag', value: rubroMeta.value?.label || '' },
-  { id: 'goals', label: 'Objetivo', key: 'goals', icon: 'flag', value: goalLabels.value.join(', ') },
-  { id: 'tone', label: 'Tono', key: 'tone', icon: 'palette', value: toneMeta.value?.label || '' },
-  { id: 'audience', label: 'Audiencia', key: 'audience', icon: 'users', value: audienceLabel.value },
-  { id: 'must_have', label: 'Imprescindible', key: 'must_have', icon: 'checklist', value: mustLabels.value.join(', ') },
-  { id: 'notes', label: 'Notas', key: 'notes', icon: 'file-text', value: String(answers.content_hint || '').trim() }
+  { id: 'rubro', label: 'Rubro', icon: 'tag', value: rubroMeta.value?.label || '' },
+  { id: 'goals', label: 'Objetivo', icon: 'flag', value: goalLabels.value.join(', ') },
+  { id: 'tone', label: 'Tono', icon: 'palette', value: toneMeta.value?.label || (resolvedTone() ? TONES.find((t) => t.id === resolvedTone())?.label : '') },
+  { id: 'audience', label: 'Audiencia', icon: 'users', value: audienceLabel.value },
+  { id: 'sections', label: 'Secciones', icon: 'checklist', value: sectionLabels.value.join(', ') },
+  { id: 'notes', label: 'Descripción', icon: 'file-text', value: String(answers.description || answers.content_hint || '').trim() }
 ])
-const blocks = computed(() => BLOCK_ROWS.value.filter((row) => row.id in prompt.value))
-
-function restoreBlock(id) {
-  delete blockHidden[id]
-}
-function removeBlock(block) {
-  blockHidden[block.id] = true
-  if (block.id === 'rubro') answers.rubro = ''
-  else if (block.id === 'goals') answers.goals = []
-  else if (block.id === 'tone') answers.tone = ''
-  else if (block.id === 'audience') answers.audience = ''
-  else if (block.id === 'must_have') answers.must_have = []
-  else if (block.id === 'notes') answers.content_hint = ''
-}
+const blocks = computed(() => BLOCK_ROWS.value.filter((row) => row.value))
 
 // ---------- Selección de cada paso ----------
 function pickRubro(id) {
   answers.rubro = answers.rubro === id ? '' : id
-  restoreBlock('rubro')
 }
 function toggleGoal(id) {
   const i = answers.goals.indexOf(id)
   if (i >= 0) answers.goals.splice(i, 1)
   else answers.goals.push(id)
-  restoreBlock('goals')
 }
 function pickTone(id) {
   answers.tone = answers.tone === id ? '' : id
-  restoreBlock('tone')
 }
 function pickAudience(id) {
   answers.audience = answers.audience === id ? '' : id
-  restoreBlock('audience')
 }
 function toggleHint(id) {
   const i = answers.style_hint.indexOf(id)
@@ -271,36 +270,10 @@ function toggleHint(id) {
   if (answers.style_hint.length >= 2) answers.style_hint.shift()
   answers.style_hint.push(id)
 }
-function toggleMustHave(id) {
-  const i = answers.must_have.indexOf(id)
-  if (i >= 0) answers.must_have.splice(i, 1)
-  else answers.must_have.push(id)
-  restoreBlock('must_have')
-}
-function onNotes() {
-  restoreBlock('notes')
-}
-
-function goStep(index) {
-  if (index < 0 || index >= STEPS.length) return
-  if (index > step.value && !stepValid.value) return
-  step.value = index
-  nextTick(() => stepTitle.value?.focus?.())
-}
-function nextStep() {
-  if (!stepValid.value) return
-  if (step.value < STEPS.length - 1) goStep(step.value + 1)
-  else submit()
-}
-function prevStep() {
-  goStep(step.value - 1)
-}
-function onStepKey(event) {
-  if (event.key !== 'Enter' || event.shiftKey) return
-  const tag = event.target?.tagName
-  if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A' || tag === 'INPUT') return
-  event.preventDefault()
-  nextStep()
+function toggleSection(id) {
+  const i = answers.sections.indexOf(id)
+  if (i >= 0) answers.sections.splice(i, 1)
+  else answers.sections.push(id)
 }
 
 // El estilo elegido a mano manda; si no eligió, deciden los "me importa más".
@@ -314,6 +287,107 @@ function resolvedTone() {
   const keys = Object.keys(votes)
   if (!keys.length) return ''
   return keys.sort((a, b) => (votes[b] - votes[a]) || (HINT_TONE_ORDER.indexOf(a) - HINT_TONE_ORDER.indexOf(b)))[0]
+}
+
+// ---------- Guardado real de los datos del negocio ----------
+// Los pasos 2-4 escriben en customization/perfil al avanzar. Un fallo no
+// frena el asistente: se avisa y se sigue (los datos quedan editables en el
+// dashboard igual).
+async function saveBusiness() {
+  const payload = {}
+  const name = answers.name.trim().slice(0, 60)
+  if (name && name !== (store.customization.display_name || '')) payload.display_name = name
+  const wsp = answers.whatsapp.trim().slice(0, 20)
+  if (wsp !== (store.customization.whatsapp || '')) payload.whatsapp = wsp
+  const hLabel = answers.hours_label.trim().slice(0, 60)
+  const hValue = answers.hours_value.trim().slice(0, 60)
+  if (hLabel && hValue) {
+    payload.hours = [{ label: hLabel, value: hValue }]
+    payload.show_hours = true
+  }
+  if (Object.keys(payload).length) await store.saveCustomization(payload)
+  const profile = {}
+  if (name) profile.business_name = name
+  if (answers.province) profile.province = answers.province
+  if (answers.city) profile.city = answers.city
+  if (Object.keys(profile).length) await authApi.updateProfile(profile).catch(() => {})
+}
+
+async function saveContent() {
+  const text = answers.description.trim().slice(0, 800)
+  if (text && text !== description.value) await store.saveCustomization({ description: text })
+}
+
+async function saveSections() {
+  const payload = {}
+  SECTIONS.forEach((s) => {
+    const on = answers.sections.includes(s.id)
+    if (s.flag) payload[s.flag] = on
+    if (s.also && on) payload[s.also] = true
+  })
+  const current = Array.isArray(store.customization.site_templates) ? [...store.customization.site_templates] : ['landing']
+  if (!current.includes('landing')) current.unshift('landing')
+  SECTIONS.forEach((s) => {
+    if (!s.site) return
+    const on = answers.sections.includes(s.id)
+    const at = current.indexOf(s.site)
+    if (on && at < 0) current.push(s.site)
+    if (!on && at >= 0) current.splice(at, 1)
+  })
+  payload.site_templates = current
+  await store.saveCustomization(payload)
+}
+
+// ---------- Uploads inline (logo + portada, con compresión) ----------
+async function compressImage(file, maxW = 1600) {
+  if (file.size <= 512 * 1024) return file
+  try {
+    const bmp = await createImageBitmap(file)
+    const scale = Math.min(1, maxW / bmp.width)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(bmp.width * scale))
+    canvas.height = Math.max(1, Math.round(bmp.height * scale))
+    canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height)
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.85))
+    return blob ? new File([blob], file.name.replace(/\.\w+$/, '') + '.webp', { type: 'image/webp' }) : file
+  } catch { return file }
+}
+
+async function onLogoPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  mediaErr.value = ''
+  logoBusy.value = true
+  const prepared = await compressImage(file, 800)
+  mediaErr.value = validateLogoFile(prepared)
+  if (!mediaErr.value) {
+    const ok = await store.uploadLogo(prepared)
+    if (!ok) mediaErr.value = store.fieldErrors.logo || store.lastError
+  }
+  logoBusy.value = false
+}
+
+async function onCoverPicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file || !hasDesignAdvanced.value) return
+  mediaErr.value = ''
+  coverBusy.value = true
+  const prepared = await compressImage(file, 1920)
+  mediaErr.value = validateImageFile(prepared)
+  if (!mediaErr.value) {
+    const ok = await store.uploadCover(prepared)
+    if (!ok) mediaErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
+  }
+  coverBusy.value = false
+}
+
+function suggestDescription() {
+  const name = shopName.value
+  const rubro = (rubroMeta.value?.label || 'negocio').toLowerCase()
+  const city = cities.value.find((c) => c.id === answers.city)?.name || ''
+  answers.description = `${name} es tu ${rubro} de confianza${city ? ` en ${city}` : ''}. Escribinos por WhatsApp y te asesoramos sin compromiso.`
 }
 
 const MISSING_ACTIONS = {
@@ -349,8 +423,17 @@ function hydrate() {
       ? saved.style_hint.filter((h) => STYLE_HINTS.some((o) => o.id === h)).slice(0, 2)
       : []
     answers.audience = AUDIENCES.some((a) => a.id === saved.audience) ? saved.audience : base.audience
-    answers.must_have = Array.isArray(saved.must_have) ? saved.must_have.filter((m) => MUST_HAVE.some((o) => o.id === m)) : []
+    answers.sections = Array.isArray(saved.sections)
+      ? saved.sections.filter((s) => SECTIONS.some((o) => o.id === s))
+      : base.sections
     answers.content_hint = typeof saved.content_hint === 'string' ? saved.content_hint.slice(0, 160) : ''
+    if (typeof saved.name === 'string') answers.name = saved.name.slice(0, 60)
+    if (typeof saved.whatsapp === 'string') answers.whatsapp = saved.whatsapp.slice(0, 20)
+    if (typeof saved.hours_label === 'string') answers.hours_label = saved.hours_label.slice(0, 60)
+    if (typeof saved.hours_value === 'string') answers.hours_value = saved.hours_value.slice(0, 60)
+    if (typeof saved.description === 'string') answers.description = saved.description.slice(0, 800)
+    if (saved.province) answers.province = saved.province
+    if (saved.city) answers.city = saved.city
   } catch { /* storage bloqueado o dato viejo */ }
   hydrated.value = true
 }
@@ -365,26 +448,47 @@ function persist() {
 watch(answers, persist, { deep: true })
 watch(storageKey, () => { if (storeId.value && !hydrated.value) hydrate() }, { immediate: true })
 
-// ---------- Prefill: lo que la IA ya sabe (paso 1) ----------
+// ---------- Prefill: lo que ya sabemos del negocio ----------
 async function loadPrefill() {
   if (!canUse.value || prefill.value) return
   try {
     const data = await storesApi.aiDesignPrefill()
     prefill.value = data
-    //La deducción solo rellena lo que el dueño no eligió: nunca pisa su
-    //respuesta guardada.
     if (!answers.rubro && RUBROS.some((r) => r.id === data?.rubro)) answers.rubro = data.rubro
     if (!answers.goals.length && Array.isArray(data?.goals)) {
       answers.goals = data.goals.filter((goal) => GOALS.some((o) => o.id === goal)).slice(0, 2)
     }
     if (Array.isArray(data?.checks)) checks.value = data.checks
-  } catch { /* sin prefill el wizard funciona igual */ }
+  } catch { /* sin prefill el asistente funciona igual */ }
+  // Lo que la tienda ya tiene cargado precarga el paso "Tu negocio".
+  const c = store.customization || {}
+  if (!answers.name && c.display_name) answers.name = c.display_name
+  if (!answers.whatsapp && c.whatsapp) answers.whatsapp = c.whatsapp
+  if (!answers.description && c.description) answers.description = String(c.description).slice(0, 800)
+  if (!answers.hours_label && Array.isArray(c.hours) && c.hours[0]) {
+    answers.hours_label = c.hours[0].label || ''
+    answers.hours_value = c.hours[0].value || ''
+  }
 }
 onMounted(loadPrefill)
 watch(canUse, (value) => { if (value) loadPrefill() })
 
-// ---------- Telemetría del funnel (5.1) ----------
-// Fire-and-forget: si falla (offline, throttle) la sección sigue igual.
+// Ubicación: provincias del catálogo; las ciudades se cargan al elegir.
+async function loadProvinces() {
+  if (provinces.value.length) return
+  provinces.value = await locationsApi.getProvinces()
+}
+watch(() => answers.province, async (id) => {
+  answers.city = ''
+  cities.value = []
+  if (!id) return
+  citiesLoading.value = true
+  cities.value = await locationsApi.getCities(id)
+  citiesLoading.value = false
+})
+watch(() => currentStep.value?.id, (id) => { if (id === 'business') loadProvinces() }, { immediate: true })
+
+// ---------- Telemetría del funnel ----------
 const sessionId = (() => {
   try {
     const key = 'davent:ai-design:session'
@@ -465,7 +569,7 @@ async function submit(extraSeed = 0) {
     if (e?.aidTimeout) requestSeq++
     errorMsg.value = e?.response?.data?.detail || (e?.aidTimeout
       ? 'Tardó más de la cuenta. Probá de nuevo.'
-      : 'No pudimos armar las propuestas. Probá de nuevo en un momento.')
+      : 'No pudimos armar la propuesta. Probá de nuevo en un momento.')
     phase.value = 'error'
   } finally {
     clearTimeout(timer)
@@ -484,7 +588,7 @@ function backToQuestions() {
   previewProposal.value = null
 }
 
-// ---------- Elegir / ajustar (pantallas 2 y 3) ----------
+// ---------- Elegir / ajustar ----------
 function constraintsOf(proposal) {
   const look = proposal?.look || {}
   return {
@@ -536,7 +640,6 @@ async function refine(next = constraints.value) {
 function resetAdjust() {
   const proposal = selectedProposal.value
   if (!proposal) return
-  //Sin constraints el motor devuelve la propuesta original de la tanda.
   constraints.value = { typography: '', cover: 'auto', air: '', color: '' }
   refine({})
 }
@@ -550,7 +653,6 @@ function startOver() {
   requestSeq++
   clearTimeout(timer)
   Object.assign(answers, EMPTY())
-  Object.keys(blockHidden).forEach((key) => delete blockHidden[key])
   try { localStorage.removeItem(storageKey.value) } catch { /* storage bloqueado */ }
   proposals.value = []
   missing.value = []
@@ -562,14 +664,14 @@ function startOver() {
   initialConstraints.value = {}
   actionError.value = ''
   errorMsg.value = ''
+  saveError.value = ''
   previewProposal.value = null
   phase.value = 'ask'
   step.value = 0
   nextTick(() => stepTitle.value?.focus?.())
 }
 
-// El contrato v3 aplica y publica en un solo request: ya no hay publish/discard
-// desde esta sección (siguen existiendo para el Studio).
+// El contrato v3 aplica y publica en un solo request.
 async function apply({ proposal, autofill, extras }) {
   if (!seed.value || busy.value) return
   busy.value = `apply:${proposal.id}`
@@ -579,9 +681,6 @@ async function apply({ proposal, autofill, extras }) {
       seed: seed.value,
       proposal_id: proposal.id,
       autofill: Boolean(autofill),
-      // Extras elegidos en la tarjeta: `offered` deja apagados los
-      // rechazados (sin borrarlos del borrador) y `applied` prende los
-      // aceptados. Sin extras, el backend usa los de la propuesta.
       ...(extras ? { extras } : {})
     })
     await store.refreshCustomization()
@@ -592,8 +691,6 @@ async function apply({ proposal, autofill, extras }) {
       meta: { template: proposal.template, family: proposal.skin?.family || '', style: proposal.variety?.style || '' }
     })
     emit('applied', { action: 'publish' })
-    //La lista de chequeo se recalcula con los datos que acaban de cambiar
-    //(el autofill puede haber escrito la descripción).
     storesApi.aiDesignPrefill().then((data) => {
       if (Array.isArray(data?.checks)) checks.value = data.checks
     }).catch(() => {})
@@ -604,8 +701,6 @@ async function apply({ proposal, autofill, extras }) {
   }
 }
 
-// "Todo cambio se puede deshacer": vuelve a la propuesta original de la
-// tanda y la republica (el ajuste se descarta, no la propuesta).
 async function revertPublished() {
   if (!selectedProposal.value || !seed.value || busy.value) return
   await refine({})
@@ -626,6 +721,49 @@ function openPreview(p) {
 function closePreview() {
   previewProposal.value = null
 }
+
+// ---------- Navegación del asistente ----------
+// Al salir de un paso con datos reales se guarda primero; si falla se avisa
+// y se avanza igual (el dueño puede completarlo después desde el panel).
+async function goStep(index) {
+  if (index < 0 || index >= STEPS.length || savingStep.value) return
+  if (index > step.value && !stepValid.value) return
+  if (index > step.value) await persistStep(step.value)
+  step.value = index
+  nextTick(() => stepTitle.value?.focus?.())
+}
+async function nextStep() {
+  if (!stepValid.value || savingStep.value) return
+  if (step.value < STEPS.length - 1) return goStep(step.value + 1)
+  await persistStep(step.value)
+  submit()
+}
+function prevStep() {
+  goStep(step.value - 1)
+}
+function skipStep() {
+  if (!currentStep.value.optional || savingStep.value) return
+  goStep(step.value + 1)
+}
+async function persistStep(index) {
+  const id = STEPS[index]?.id
+  saveError.value = ''
+  savingStep.value = true
+  try {
+    if (id === 'business') await saveBusiness()
+    else if (id === 'content') await saveContent()
+    else if (id === 'sections') await saveSections()
+    if (saveError.value === '' && store.lastError) saveError.value = store.lastError
+  } catch { saveError.value = 'No pudimos guardar esos datos. Los podés cargar después desde el panel.' }
+  savingStep.value = false
+}
+function onStepKey(event) {
+  if (event.key !== 'Enter' || event.shiftKey) return
+  const tag = event.target?.tagName
+  if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || tag === 'SELECT') return
+  event.preventDefault()
+  nextStep()
+}
 </script>
 
 <template>
@@ -633,7 +771,7 @@ function closePreview() {
     <header class="aid-head">
       <div class="aid-head-text">
         <h1><AppIcon name="sparkles" :size="20" /> Diseño asistido</h1>
-        <p>Contanos qué hacés y te armamos una web. Después la ajustás sin empezar de cero.</p>
+        <p>Te guiamos paso a paso para armar tu web completa: datos, fotos, secciones y diseño.</p>
         <span v-if="phase === 'published'" class="aid-pub-chip"><AppIcon name="circle-check" :size="13" /> Publicada</span>
       </div>
       <button v-if="phase !== 'ask' || hasAnswers" class="btn ghost btn-auto" type="button" @click="startOver">
@@ -651,10 +789,10 @@ function closePreview() {
     <template v-else>
       <p class="aid-live" aria-live="polite">{{ liveMessage }}</p>
 
-      <!-- PANTALLA 1 · WIZARD DE 4 PASOS + PEDIDO ACUMULADO -->
+      <!-- ASISTENTE PASO A PASO -->
       <div v-if="phase === 'ask'" class="aidw" @keydown="onStepKey">
         <div class="aidw-main">
-          <ol class="aidw-bar" aria-label="Progreso del pedido">
+          <ol class="aidw-bar" aria-label="Progreso del asistente">
             <li
               v-for="(s, i) in STEPS"
               :key="s.id"
@@ -678,7 +816,7 @@ function closePreview() {
             </li>
           </ol>
           <div class="aidw-progress">
-            <div class="aidw-progress-track" role="progressbar" :aria-valuenow="stepPct" aria-valuemin="0" aria-valuemax="100" :aria-label="`Avance del pedido: ${stepPct}%`">
+            <div class="aidw-progress-track" role="progressbar" :aria-valuenow="stepPct" aria-valuemin="0" aria-valuemax="100" :aria-label="`Avance: ${stepPct}%`">
               <span class="aidw-progress-fill" :style="{ width: `${stepPct}%` }"></span>
             </div>
             <span class="aidw-progress-txt">Paso {{ step + 1 }} de {{ STEPS.length }} · {{ stepPct }}%</span>
@@ -692,31 +830,157 @@ function closePreview() {
                 <p>{{ currentStep.subtitle }}</p>
               </div>
             </header>
-            <p class="aidw-step-hint">{{ currentStep.hint }}</p>
+            <p v-if="currentStep.hint" class="aidw-step-hint">{{ currentStep.hint }}</p>
+            <p v-if="saveError" class="aid-error" role="alert">{{ saveError }}</p>
 
-            <!-- PASO 1 · TU NEGOCIO -->
-            <div v-if="currentStep.id === 'business'" class="aidw-grid rubros" role="radiogroup" aria-label="Rubro de tu negocio">
-              <button
-                v-for="r in RUBROS"
-                :key="r.id"
-                type="button"
-                role="radio"
-                class="aidw-card"
-                :class="{ on: answers.rubro === r.id }"
-                :aria-checked="answers.rubro === r.id"
-                @click="pickRubro(r.id)"
-              >
-                <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="r.icon" :size="18" /></span>
-                <span class="aidw-card-txt">
-                  <strong>{{ r.label }}</strong>
-                  <small>{{ r.desc }}</small>
-                </span>
-                <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.rubro === r.id" name="check" :size="13" :stroke="2.5" /></span>
+            <!-- PASO 1 · BIENVENIDA -->
+            <div v-if="currentStep.id === 'welcome'" class="aidw-welcome">
+              <p class="aidw-welcome-text">
+                Te hacemos <strong>5 preguntas simples</strong> sobre tu negocio y te armamos la web completa:
+                tus datos, tus fotos, las secciones y el diseño.
+              </p>
+              <p class="aidw-welcome-text">No necesitás saber de diseño ni de computadoras: respondés, mirás el resultado y publicás.</p>
+              <button type="button" class="btn btn-auto aidw-cta" @click="nextStep">
+                <AppIcon name="sparkles" :size="18" /> Empezar ahora
               </button>
+              <p class="aidw-note">Lleva unos 2 minutos. Todo se puede cambiar después.</p>
             </div>
 
-            <!-- PASO 2 · QUÉ BUSCÁS -->
-            <template v-else-if="currentStep.id === 'goal'">
+            <!-- PASO 2 · DATOS DEL NEGOCIO (escribe customization + perfil) -->
+            <template v-else-if="currentStep.id === 'business'">
+              <label class="aidw-field">
+                <span class="aidw-field-title">¿Cómo se llama tu negocio?</span>
+                <input v-model="answers.name" class="aidw-input" type="text" maxlength="60" placeholder="Ej.: Ferretería El Tornillo" aria-label="Nombre del negocio" />
+              </label>
+              <p class="aidw-field-title">¿De qué es tu negocio?</p>
+              <div class="aidw-grid rubros" role="radiogroup" aria-label="Rubro de tu negocio">
+                <button
+                  v-for="r in RUBROS"
+                  :key="r.id"
+                  type="button"
+                  role="radio"
+                  class="aidw-card"
+                  :class="{ on: answers.rubro === r.id }"
+                  :aria-checked="answers.rubro === r.id"
+                  @click="pickRubro(r.id)"
+                >
+                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="r.icon" :size="18" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ r.label }}</strong>
+                    <small>{{ r.desc }}</small>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.rubro === r.id" name="check" :size="13" :stroke="2.5" /></span>
+                </button>
+              </div>
+              <div class="aidw-2col">
+                <label class="aidw-field">
+                  <span class="aidw-field-title">¿En qué provincia estás? <span class="aidw-opt">Opcional</span></span>
+                  <select v-model="answers.province" class="aidw-input" aria-label="Provincia">
+                    <option value="">Elegí una provincia</option>
+                    <option v-for="p in provinces" :key="p.id" :value="p.id">{{ p.name }}</option>
+                  </select>
+                </label>
+                <label class="aidw-field">
+                  <span class="aidw-field-title">¿En qué ciudad o zona? <span class="aidw-opt">Opcional</span></span>
+                  <select v-model="answers.city" class="aidw-input" :disabled="!answers.province || citiesLoading" aria-label="Ciudad o zona">
+                    <option value="">{{ citiesLoading ? 'Cargando…' : 'Elegí una ciudad' }}</option>
+                    <option v-for="c in cities" :key="c.id" :value="c.id">{{ c.name }}</option>
+                  </select>
+                </label>
+              </div>
+              <label class="aidw-field">
+                <span class="aidw-field-title">Tu WhatsApp <span class="aidw-opt">Opcional</span></span>
+                <input v-model="answers.whatsapp" class="aidw-input" type="tel" maxlength="20" placeholder="Ej.: 221 555 1234" aria-label="Número de WhatsApp" />
+                <small class="aidw-note">Con código de área. Es el botón verde que van a tocar tus clientes.</small>
+              </label>
+              <div class="aidw-2col">
+                <label class="aidw-field">
+                  <span class="aidw-field-title">¿Qué días abrís? <span class="aidw-opt">Opcional</span></span>
+                  <input v-model="answers.hours_label" class="aidw-input" type="text" maxlength="60" placeholder="Ej.: Lunes a viernes" aria-label="Días de atención" />
+                </label>
+                <label class="aidw-field">
+                  <span class="aidw-field-title">¿En qué horario? <span class="aidw-opt">Opcional</span></span>
+                  <input v-model="answers.hours_value" class="aidw-input" type="text" maxlength="60" placeholder="Ej.: 9 a 18 h" aria-label="Horario de atención" />
+                </label>
+              </div>
+            </template>
+
+            <!-- PASO 3 · CONTENIDO -->
+            <template v-else-if="currentStep.id === 'content'">
+              <label class="aidw-field">
+                <span class="aidw-field-title">Contanos qué vendés en una frase</span>
+                <textarea
+                  v-model="answers.description"
+                  class="aidw-input"
+                  rows="3"
+                  maxlength="800"
+                  aria-label="Descripción corta del negocio"
+                  placeholder="Ej.: vendemos herramientas y pintura para el que arregla su casa."
+                ></textarea>
+              </label>
+              <button type="button" class="aidw-json-btn" @click="suggestDescription">
+                <AppIcon name="sparkles" :size="14" /> Escribime una sugerencia
+              </button>
+              <label class="aidw-field">
+                <span class="aidw-field-title">¿Qué es lo que más vendés? <span class="aidw-opt">Opcional</span></span>
+                <input v-model="answers.content_hint" class="aidw-input" type="text" maxlength="160" placeholder="Ej.: arreglos de grifería y materiales eléctricos" aria-label="Productos o servicios destacados" />
+              </label>
+              <div class="aidw-2col">
+                <div class="aidw-field">
+                  <span class="aidw-field-title">Tu logo <span class="aidw-opt">Opcional</span></span>
+                  <div class="aidw-media">
+                    <img v-if="logo" :src="logo" alt="Tu logo" class="aidw-media-img" />
+                    <span v-else class="aidw-media-empty"><AppIcon name="image" :size="18" /></span>
+                    <div class="aidw-media-btns">
+                      <button type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="logoInput?.click()">
+                        <AppIcon name="upload" :size="15" /> {{ logoBusy ? 'Subiendo…' : (logo ? 'Cambiar logo' : 'Subir logo') }}
+                      </button>
+                      <input ref="logoInput" type="file" :accept="LOGO_ACCEPT" hidden @change="onLogoPicked" />
+                    </div>
+                  </div>
+                </div>
+                <div class="aidw-field">
+                  <span class="aidw-field-title">Foto de portada <span class="aidw-opt">Opcional{{ hasDesignAdvanced ? '' : ' · Plan Premium' }}</span></span>
+                  <div class="aidw-media" :class="{ off: !hasDesignAdvanced }">
+                    <img v-if="cover" :src="cover" alt="Tu foto de portada" class="aidw-media-img wide" />
+                    <span v-else class="aidw-media-empty"><AppIcon name="image" :size="18" /></span>
+                    <div class="aidw-media-btns">
+                      <button v-if="hasDesignAdvanced" type="button" class="btn ghost btn-auto" :disabled="coverBusy" @click="coverInput?.click()">
+                        <AppIcon name="upload" :size="15" /> {{ coverBusy ? 'Subiendo…' : (cover ? 'Cambiar foto' : 'Subir foto') }}
+                      </button>
+                      <span v-else class="aidw-note"><AppIcon name="lock" :size="13" /> Viene con el Plan Premium</span>
+                      <input ref="coverInput" type="file" :accept="LOGO_ACCEPT" hidden @change="onCoverPicked" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p v-if="mediaErr" class="aid-error" role="alert">{{ mediaErr }}</p>
+              <p class="aidw-note">Las fotos se achican solas antes de subir: cualquier imagen del celular sirve.</p>
+            </template>
+
+            <!-- PASO 4 · QUÉ MOSTRAR -->
+            <template v-else-if="currentStep.id === 'sections'">
+              <p class="aidw-field-title">Marcá lo que tiene que aparecer en tu web</p>
+              <div class="aidw-grid must" role="group" aria-label="Secciones de la web">
+                <button
+                  v-for="s in SECTIONS"
+                  :key="s.id"
+                  type="button"
+                  class="aidw-card"
+                  :class="{ on: answers.sections.includes(s.id) }"
+                  :aria-pressed="answers.sections.includes(s.id)"
+                  :disabled="s.needs && !benefits[s.needs]"
+                  @click="toggleSection(s.id)"
+                >
+                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="s.icon" :size="18" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ s.label }} <AppIcon v-if="s.needs && !benefits[s.needs]" name="lock" :size="12" /></strong>
+                    <small>{{ s.desc }}</small>
+                    <span class="aidw-mock" aria-hidden="true"><i></i><i></i><i></i></span>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.sections.includes(s.id)" name="check" :size="13" :stroke="2.5" /></span>
+                </button>
+              </div>
               <p class="aidw-field-title">¿Qué querés lograr con la web?</p>
               <div class="aidw-grid goals" role="group" aria-label="¿Qué querés lograr con la web?">
                 <button
@@ -734,6 +998,30 @@ function closePreview() {
                     <small>{{ g.desc }}</small>
                   </span>
                   <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.goals.includes(g.id)" name="check" :size="13" :stroke="2.5" /></span>
+                </button>
+              </div>
+            </template>
+
+            <!-- PASO 5 · ESTILO (tono/audiencia, nunca colores ni fuentes) -->
+            <template v-else>
+              <p class="aidw-field-title">¿Cómo se tiene que sentir tu web?</p>
+              <div class="aidw-grid tones" role="radiogroup" aria-label="¿Cómo se tiene que sentir tu web?">
+                <button
+                  v-for="t in TONES"
+                  :key="t.id"
+                  type="button"
+                  role="radio"
+                  class="aidw-card tone"
+                  :class="{ on: answers.tone === t.id }"
+                  :aria-checked="answers.tone === t.id"
+                  @click="pickTone(t.id)"
+                >
+                  <span class="aidw-card-ico big" aria-hidden="true"><AppIcon :name="t.icon" :size="22" /></span>
+                  <span class="aidw-card-txt">
+                    <strong>{{ t.label }}</strong>
+                    <small>{{ t.desc }}</small>
+                  </span>
+                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.tone === t.id" name="check" :size="13" :stroke="2.5" /></span>
                 </button>
               </div>
               <p class="aidw-field-title">¿A quién le hablás? <span class="aidw-opt">Opcional</span></p>
@@ -756,30 +1044,6 @@ function closePreview() {
                   <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.audience === a.id" name="check" :size="13" :stroke="2.5" /></span>
                 </button>
               </div>
-            </template>
-
-            <!-- PASO 3 · TU ESTILO -->
-            <template v-else-if="currentStep.id === 'style'">
-              <p class="aidw-field-title">¿Cómo se tiene que sentir?</p>
-              <div class="aidw-grid tones" role="radiogroup" aria-label="¿Cómo se tiene que sentir tu web?">
-                <button
-                  v-for="t in TONES"
-                  :key="t.id"
-                  type="button"
-                  role="radio"
-                  class="aidw-card tone"
-                  :class="{ on: answers.tone === t.id }"
-                  :aria-checked="answers.tone === t.id"
-                  @click="pickTone(t.id)"
-                >
-                  <span class="aidw-card-ico big" aria-hidden="true"><AppIcon :name="t.icon" :size="22" /></span>
-                  <span class="aidw-card-txt">
-                    <strong>{{ t.label }}</strong>
-                    <small>{{ t.desc }}</small>
-                  </span>
-                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.tone === t.id" name="check" :size="13" :stroke="2.5" /></span>
-                </button>
-              </div>
               <p class="aidw-field-title">¿Qué te importa más? <span class="aidw-opt">Opcional, hasta dos</span></p>
               <div class="aidw-chips" role="group" aria-label="¿Qué te importa más?">
                 <button
@@ -796,61 +1060,30 @@ function closePreview() {
               </div>
             </template>
 
-            <!-- PASO 4 · LO QUE NO PUEDE FALTAR -->
-            <template v-else>
-              <p class="aidw-field-title">Marcá lo que tu cliente tiene que encontrar</p>
-              <div class="aidw-grid must" role="group" aria-label="Lo que no puede faltar">
-                <button
-                  v-for="m in MUST_HAVE"
-                  :key="m.id"
-                  type="button"
-                  class="aidw-card"
-                  :class="{ on: answers.must_have.includes(m.id) }"
-                  :aria-pressed="answers.must_have.includes(m.id)"
-                  @click="toggleMustHave(m.id)"
-                >
-                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="m.icon" :size="18" /></span>
-                  <span class="aidw-card-txt">
-                    <strong>{{ m.label }}</strong>
-                    <small>{{ m.desc }}</small>
-                  </span>
-                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.must_have.includes(m.id)" name="check" :size="13" :stroke="2.5" /></span>
-                </button>
-              </div>
-              <p class="aidw-field-title">Contalo con tus palabras <span class="aidw-opt">Opcional</span></p>
-              <textarea
-                v-model="answers.content_hint"
-                class="aidw-input"
-                rows="3"
-                maxlength="160"
-                aria-label="Contanos en dos líneas qué hacés y a quién le vendés"
-                placeholder="Ej.: ferretería de barrio, vendemos herramientas y pintura; el que más nos escribe es el que arregla en su casa."
-                @input="onNotes"
-              ></textarea>
-              <p class="aidw-note">Lo usamos para escribir el texto de la web. No inventamos datos: solo lo que nos contás.</p>
-            </template>
-
             <div class="aidw-nav">
-              <button v-if="step > 0" type="button" class="btn ghost btn-auto" @click="prevStep">
+              <button v-if="step > 0" type="button" class="btn ghost btn-auto" :disabled="savingStep" @click="prevStep">
                 <AppIcon name="chevron-left" :size="16" /> Atrás
+              </button>
+              <button v-if="currentStep.optional && step < STEPS.length - 1" type="button" class="btn ghost btn-auto" :disabled="savingStep" @click="skipStep">
+                Saltar este paso
               </button>
               <button
                 v-if="step < STEPS.length - 1"
                 type="button"
                 class="btn btn-auto aidw-next"
-                :disabled="!stepValid"
+                :disabled="!stepValid || savingStep"
                 @click="nextStep"
               >
-                Siguiente <AppIcon name="chevron-right" :size="16" />
+                {{ savingStep ? 'Guardando…' : 'Siguiente' }} <AppIcon name="chevron-right" :size="16" />
               </button>
               <button
                 v-else
                 type="button"
                 class="btn btn-auto aidw-next"
-                :disabled="!canSubmit"
-                @click="submit()"
+                :disabled="!canSubmit || savingStep"
+                @click="nextStep"
               >
-                <AppIcon name="sparkles" :size="16" /> Generar propuesta
+                <AppIcon name="sparkles" :size="16" /> {{ savingStep ? 'Guardando…' : 'Generar mi web' }}
               </button>
               <span class="aidw-nav-note">{{ step + 1 }} de {{ STEPS.length }}</span>
             </div>
@@ -873,7 +1106,7 @@ function closePreview() {
           </header>
           <div id="aidw-ask-body" class="aidw-ask-body">
           <p v-if="!blocks.length" class="aidw-ask-empty">
-            Cada respuesta arma una clave del pedido. El MCP lee esta estructura y elige el estilo de diseño.
+            Cada respuesta arma una clave del pedido. El diseño se elige por mapeo directo: rubro + tono → patrón del catálogo.
           </p>
           <ul v-else class="aidw-bubbles">
             <li v-for="b in blocks" :key="b.id" class="aidw-bubble">
@@ -881,10 +1114,6 @@ function closePreview() {
               <div class="aidw-bubble-body">
                 <span class="aidw-bubble-label">{{ b.label }}</span>
                 <span class="aidw-bubble-text">{{ b.value }}</span>
-                <code class="aidw-bubble-key">{{ b.key }}: {{ b.key === 'goals' || b.key === 'must_have' ? '[]' : '""' }}</code>
-              </div>
-              <div class="aidw-bubble-actions">
-                <button type="button" class="aidw-icon-btn" :aria-label="`Quitar ${b.label}`" title="Quitar" @click="removeBlock(b)"><AppIcon name="trash" :size="14" /></button>
               </div>
             </li>
           </ul>
@@ -893,10 +1122,10 @@ function closePreview() {
             {{ showJson ? 'Ocultar' : 'Ver' }} la estructura de datos
           </button>
           <pre v-if="showJson && blocks.length" class="aidw-json" aria-label="Pedido en formato de datos">{{ promptJson }}</pre>
-          <button type="button" class="btn btn-auto aidw-send" :disabled="!canSubmit" @click="submit()">
-            <AppIcon name="send" :size="16" /> Generar propuesta
+          <button type="button" class="btn btn-auto aidw-send" :disabled="!canSubmit || savingStep" @click="nextStep">
+            <AppIcon name="send" :size="16" /> Generar mi web
           </button>
-          <p class="aidw-ask-note">El MCP elige el estilo de diseño a partir de este pedido.</p>
+          <p class="aidw-ask-note">El diseño sale de tus respuestas: mismo rubro + tono = mismo diseño, siempre.</p>
           </div>
         </aside>
       </div>
@@ -914,7 +1143,7 @@ function closePreview() {
         <p class="aid-loading-text">Estamos armando tu web… puede tardar unos segundos.</p>
       </div>
 
-      <!-- PANTALLA 2 · TRES IDEAS, NO TRES COLORES -->
+      <!-- RESULTADO: propuesta + vista previa real en iframe -->
       <div v-else-if="phase === 'results'" ref="resultsRef" class="aid-results">
         <p v-if="actionError" class="aid-error" role="alert">{{ actionError }}</p>
 
@@ -934,11 +1163,16 @@ function closePreview() {
           </ul>
         </div>
 
-        <p v-if="varietyNotice" class="aid-variety">
-          <AppIcon name="sparkles" :size="14" aria-hidden="true" /> {{ varietyNotice }}
-        </p>
-
-        <div v-if="mcp?.styles?.length" class="aid-mcp">
+        <div v-if="mcp?.pattern" class="aid-mcp">
+          <div class="aid-mcp-head">
+            <AppIcon name="gem" :size="16" aria-hidden="true" />
+            <strong>Elegimos el diseño «{{ mcp.pattern.nombre }}»{{ mcp.style ? ` con el estilo «${mcp.style.nombre}»` : '' }}</strong>
+          </div>
+          <ul class="aid-mcp-list">
+            <li><strong>{{ mcp.pattern.nombre }}</strong><span class="aid-mcp-cat">{{ mcp.pattern.categoria }}</span><span class="aid-mcp-tags">catálogo de diseños</span></li>
+          </ul>
+        </div>
+        <div v-else-if="mcp?.styles?.length" class="aid-mcp">
           <div class="aid-mcp-head">
             <AppIcon name="gem" :size="16" aria-hidden="true" />
             <strong>El MCP eligió {{ mcp.styles.length === 1 ? 'este patrón' : `${mcp.styles.length} patrones` }} de sus fuentes</strong>
@@ -965,7 +1199,7 @@ function closePreview() {
             :logo="logo"
             :cover="proposalCover(p)"
             :advanced="hasDesignAdvanced"
-            :show-map="answers.must_have.includes('map')"
+            :show-map="answers.sections.includes('map')"
             :name-font="proposalNameFont(p)"
             :busy="busy"
             :selected="selectedId === p.id"
@@ -977,7 +1211,16 @@ function closePreview() {
 
         <AiCompareTable :proposals="proposals" :selected-id="selectedId" @choose="choose" />
 
+        <div v-if="publicUrl" class="aid-live-preview">
+          <p class="aidw-field-title"><AppIcon name="eye" :size="14" /> Tu web ahora mismo</p>
+          <iframe :src="publicUrl" title="Vista previa real de tu web" loading="lazy"></iframe>
+          <p class="aidw-note">Cuando publiques, esta página se actualiza sola con el diseño nuevo.</p>
+        </div>
+
         <div class="aid-actions">
+          <button class="btn btn-auto" type="button" :disabled="busy" @click="choose(proposals[0]?.id)">
+            <AppIcon name="check" :size="16" /> Publicar así
+          </button>
           <button class="btn btn-auto" type="button" @click="anotherStyle">
             <AppIcon name="refresh" :size="16" /> Ver otro estilo
           </button>
@@ -987,7 +1230,7 @@ function closePreview() {
         </div>
       </div>
 
-      <!-- PANTALLA 3 · AJUSTAR SIN EMPEZAR DE CERO -->
+      <!-- AJUSTAR SIN EMPEZAR DE CERO -->
       <div v-else-if="phase === 'adjust' && selectedProposal" class="aid-results">
         <p v-if="actionError" class="aid-error" role="alert">{{ actionError }}</p>
         <p class="aid-keep-note">
@@ -1007,7 +1250,7 @@ function closePreview() {
               :logo="logo"
               :cover="proposalCover(selectedProposal)"
               :advanced="hasDesignAdvanced"
-              :show-map="answers.must_have.includes('map')"
+              :show-map="answers.sections.includes('map')"
               :name-font="proposalNameFont(selectedProposal)"
               :busy="busy"
               :public-url="publicUrl"
@@ -1036,7 +1279,7 @@ function closePreview() {
         </div>
       </div>
 
-      <!-- PANTALLA 4 · PUBLICADA, REVISADA Y COMPARTIBLE -->
+      <!-- PUBLICADA -->
       <AiPublishedPanel
         v-else-if="phase === 'published'"
         :checks="checks"
@@ -1054,7 +1297,7 @@ function closePreview() {
       <div v-else class="card aid-error-box" role="alert">
         <AppIcon name="circle-alert" :size="24" />
         <div>
-          <h2>No pudimos armar las propuestas</h2>
+          <h2>No pudimos armar la propuesta</h2>
           <p>{{ errorMsg }}</p>
           <div class="aid-actions">
             <button class="btn btn-auto" type="button" @click="submit()">Reintentar</button>
@@ -1076,7 +1319,7 @@ function closePreview() {
       :logo="logo"
       :cover="previewCover"
       :advanced="hasDesignAdvanced"
-      :show-map="answers.must_have.includes('map')"
+      :show-map="answers.sections.includes('map')"
       :name-font="previewNameFont"
       :night-mode="previewProposal.night_mode"
       :public-url="publicUrl"
@@ -1089,7 +1332,6 @@ function closePreview() {
 .aidw { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
 @media (max-width: 980px) {
   .aidw { grid-template-columns: minmax(0, 1fr); }
-  /* En mobile el resumen va arriba pero plegado: primero la pregunta. */
   .aidw-ask { order: -1; position: static; gap: 10px; }
   .aidw-ask-body { display: none; }
   .aidw-ask.is-open .aidw-ask-body { display: flex; flex-direction: column; gap: 12px; }
@@ -1158,8 +1400,34 @@ function closePreview() {
 .aidw-step-text h2:focus-visible { outline: var(--focus-ring); outline-offset: 3px; border-radius: 4px; }
 .aidw-step-text p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .aidw-step-hint { margin: 0; color: var(--muted); font-size: 12.5px; }
+.aidw-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .aidw-field-title { margin: 4px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .aidw-opt { font-weight: 500; color: var(--muted); font-size: 11.5px; }
+.aidw-2col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 720px) { .aidw-2col { grid-template-columns: minmax(0, 1fr); } }
+
+/* Bienvenida */
+.aidw-welcome { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.aidw-welcome-text { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-2); max-width: 52ch; }
+.aidw-cta { padding: 14px 26px; font-size: 15px; }
+
+/* Media (logo/portada inline) */
+.aidw-media { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.aidw-media.off { opacity: .65; }
+.aidw-media-img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+.aidw-media-img.wide { width: 96px; }
+.aidw-media-empty {
+  display: grid; place-items: center; width: 56px; height: 56px;
+  border: 1px dashed var(--line-strong); border-radius: 10px; color: var(--muted);
+}
+.aidw-media-btns { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+
+/* Mock visual de secciones */
+.aidw-mock { display: flex; gap: 3px; margin-top: 4px; }
+.aidw-mock i { display: block; height: 5px; border-radius: 3px; background: var(--line-strong); opacity: .6; }
+.aidw-mock i:nth-child(1) { width: 34px; }
+.aidw-mock i:nth-child(2) { width: 22px; }
+.aidw-mock i:nth-child(3) { width: 14px; }
 
 /* Grillas de selección */
 .aidw-grid { display: grid; gap: 10px; min-width: 0; }
@@ -1184,6 +1452,7 @@ function closePreview() {
 }
 .aidw-card:hover { border-color: var(--line-strong); background: var(--surface); }
 .aidw-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.aidw-card:disabled { opacity: .55; cursor: not-allowed; }
 .aidw-card.on {
   border-color: var(--brand-500);
   background: var(--brand-soft);
@@ -1197,7 +1466,7 @@ function closePreview() {
 .aidw-card-ico.big { width: 40px; height: 40px; border-radius: 12px; }
 .aidw-card.on .aidw-card-ico { background: var(--card); border-color: var(--brand-500); color: var(--brand-ink); }
 .aidw-card-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.aidw-card-txt strong { font-size: 13.5px; line-height: 1.3; }
+.aidw-card-txt strong { font-size: 13.5px; line-height: 1.3; display: inline-flex; align-items: center; gap: 4px; }
 .aidw-card-txt small { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
 .aidw-card-check {
   position: absolute; top: 9px; right: 9px;
@@ -1228,7 +1497,7 @@ function closePreview() {
   resize: vertical;
 }
 .aidw-input:focus-visible { outline: var(--focus-ring); outline-offset: 1px; border-color: var(--brand-500); }
-.aidw-note { margin: 0; color: var(--muted); font-size: 11.5px; }
+.aidw-note { margin: 0; color: var(--muted); font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; }
 
 /* Navegación del paso */
 .aidw-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
@@ -1238,7 +1507,6 @@ function closePreview() {
 /* Pedido acumulado */
 .aidw-ask {
   display: flex; flex-direction: column; gap: 12px; min-width: 0;
-  /* El cuerpo es el que scrollea/plega; la cabecera queda siempre visible. */
   padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg);
   background: var(--surface);
   position: sticky; top: 12px;
@@ -1262,10 +1530,6 @@ function closePreview() {
 .aidw-bubble-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
 .aidw-bubble-label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .aidw-bubble-text { font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
-.aidw-bubble-key {
-  margin-top: 2px; color: var(--muted); font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  font-size: 10.5px; overflow-wrap: anywhere;
-}
 .aidw-json-btn {
   display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
   padding: 4px 8px; border: 1px dashed var(--line-strong); border-radius: 8px;
@@ -1280,20 +1544,18 @@ function closePreview() {
   color: var(--ink-2); font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
   font-size: 11px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
 }
-.aidw-bubble-actions { display: flex; gap: 4px; margin-left: auto; }
-.aidw-icon-btn {
-  display: grid; place-items: center; width: 28px; height: 28px;
-  border: 1px solid transparent; border-radius: 8px;
-  background: transparent; color: var(--muted); cursor: pointer;
-  transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
-}
-.aidw-icon-btn:hover { background: var(--surface); color: var(--ink-2); border-color: var(--line); }
-.aidw-icon-btn:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
 .aidw-send { width: 100%; justify-content: center; }
 .aidw-send:disabled { opacity: .55; cursor: not-allowed; }
 .aidw-ask-note { margin: 0; color: var(--muted); font-size: 11.5px; text-align: center; }
 
-/* Decisión del MCP sobre la tanda */
+/* Vista previa real */
+.aid-live-preview { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.aid-live-preview iframe {
+  width: 100%; height: 480px; border: 1px solid var(--line);
+  border-radius: var(--radius-lg); background: var(--surface);
+}
+
+/* Decisión del catálogo/MCP sobre la tanda */
 .aid-mcp {
   display: flex; flex-direction: column; gap: 8px; min-width: 0;
   padding: 14px 16px; border: 1px solid var(--brand-soft-line); border-radius: var(--radius-lg);

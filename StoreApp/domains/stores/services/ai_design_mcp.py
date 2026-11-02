@@ -598,6 +598,208 @@ def overlay_of(store, seed, proposal_id = None):
 
 
 #=========================================
+# SELECCIÓN DETERMINISTA (catálogo Design)
+#=========================================
+#La propuesta NO es aleatoria: rubro + tono eligen UN patrón del catálogo
+#DesignPattern/DesignStyle por mapeo directo. Matriz de mapeo:
+#
+#  rubro   -> DesignPattern.tags contiene el id del rubro (+8) o
+#             DesignPattern.categoria está en _RUBRO_CATEGORIES[rubro] (+4)
+#  tone    -> cada término de _TONE_HINTS[tone] presente en
+#             slug/nombre/categoria/tags del patrón (+1 c/u)
+#  must_have (desempate)
+#          -> +2 por cada bloque requerido presente y habilitado en
+#             pattern.layout['landing'].blocks (ids de _MUST_BLOCK_IDS)
+#  orden   -> empate total: gana (position, pk) — salida estable
+#  fallback-> ningún candidato con score>0: patrón is_default
+#
+#El DesignStyle del patrón (FK style activo, si no el primer hijo activo,
+#si no el estilo is_default) aporta `tokens` (tema del contrato) que se
+#mergean sobre el site_theme del motor y se sanea con clean_site_theme.
+#El MCP (select_styles) queda solo como fuente opcional de overlay cuando
+#el catálogo no tiene patrones cargados.
+_MUST_BLOCK_IDS =   {
+    'whatsapp'      :   ('contact', 'cta', 'whatsapp'),
+    'hours'         :   ('hours', 'contact'),
+    'map'           :   ('map', 'contact'),
+    'prices'        :   ('featured', 'products', 'catalog'),
+    'testimonials'  :   ('testimonials',),
+    'faqs'          :   ('faq', 'faqs'),
+}
+
+
+def _landing_blocks(layout):
+    """Bloques de la landing: el layout puede ser lista plana o {landing: {blocks}}."""
+    rows =   []
+    if isinstance(layout, list):
+        rows    =   layout
+    elif isinstance(layout, dict):
+        landing =   layout.get('landing')
+        if isinstance(landing, list):
+            rows    =   landing
+        elif isinstance(landing, dict):
+            rows    =   landing.get('blocks') or []
+    return [block for block in rows if isinstance(block, dict)]
+
+
+def _layout_dict(layout):
+    """Normaliza el layout del patrón a {landing: {blocks: [...]}}."""
+    if isinstance(layout, dict):
+        return layout
+    return {'landing': {'blocks': _landing_blocks(layout)}}
+
+
+def resolve_design(prompt):
+    """
+    Mapeo directo rubro+tono -> (DesignPattern, DesignStyle) del catálogo.
+    Determinista: las mismas respuestas eligen siempre el mismo diseño.
+    Sin patrón elegible ni default devuelve None (cae al MCP).
+    """
+    try:
+        from StoreApp.domains.design.models import DesignPattern, DesignStyle
+    except Exception:
+        return None
+    rubro       =   prompt.get('rubro') or ''
+    tone        =   prompt.get('tone') or ''
+    must        =   set(prompt.get('must_have') or [])
+    categories  =   set(_RUBRO_CATEGORIES.get(rubro) or ())
+    tone_terms  =   set(_TONE_HINTS.get(tone) or ())
+    if tone:
+        tone_terms.add(tone)
+    best        =   None
+    for pattern in DesignPattern.objects.filter(is_active = True):
+        tags        =   set(pattern.tags or [])
+        score       =   0
+        if rubro and rubro in tags:
+            score   +=  8
+        if pattern.categoria in categories:
+            score   +=  4
+        haystack    =   f'{pattern.slug} {pattern.nombre} {pattern.categoria} {" ".join(tags)}'.lower()
+        score       +=  sum(1 for term in tone_terms if term and term in haystack)
+        #Desempate por bloques requeridos del pedido
+        blocks      =   _landing_blocks(pattern.layout)
+        enabled     =   {
+            block.get('id') for block in blocks
+            if isinstance(block, dict) and block.get('enabled', True)
+        }
+        for item in must:
+            if set(_MUST_BLOCK_IDS.get(item) or ()) & enabled:
+                score   +=  2
+        if best is None or score > best[0] or (
+            score == best[0] and (pattern.position, pattern.pk) < (best[1].position, best[1].pk)
+        ):
+            best    =   (score, pattern)
+    pattern     =   best[1] if best and best[0] > 0 else DesignPattern.objects.filter(is_default = True).first()
+    if pattern is None:
+        return None
+    style       =   pattern.style if pattern.style_id and pattern.style and pattern.style.is_active else None
+    if style is None:
+        style   =   pattern.styles.filter(is_active = True).first() or DesignStyle.objects.filter(is_default = True).first()
+    return {'pattern': pattern, 'style': style}
+
+
+def _deep_merge(base, overlay):
+    """Merge por sección: el overlay pisa clave a clave, el resto se conserva."""
+    merged  =   copy.deepcopy(base or {})
+    for key, value in (overlay or {}).items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key]   =   _deep_merge(merged[key], value)
+        else:
+            merged[key]   =   copy.deepcopy(value)
+    return merged
+
+
+def _catalog_tokens(tokens):
+    """
+    Sanea los tokens del catálogo contra el contrato de site_theme: se
+    queda solo con las secciones/claves conocidas y descarta los valores
+    fuera de los enums cerrados (el catálogo puede tener opciones propias,
+    p. ej. heroHeight 'medium' o hover 'magnetic').
+    """
+    from StoreApp.domains.stores.site_theme import _SECTION_SPECS
+
+    tokens  =   tokens if isinstance(tokens, dict) else {}
+    clean   =   {}
+    for section, spec in _SECTION_SPECS.items():
+        data    =   tokens.get(section)
+        if not isinstance(data, dict) or not isinstance(spec, dict):
+            continue
+        out =   {}
+        for key, descriptor in spec.items():
+            if key not in data or not isinstance(descriptor, tuple) or not descriptor:
+                continue
+            kind    =   descriptor[0]
+            value   =   data[key]
+            if kind == 'enum' and len(descriptor) > 1 and value not in descriptor[1]:
+                continue
+            out[key]    =   value
+        if out:
+            clean[section]  =   out
+    return clean
+
+
+def _decorate_catalog(store, seed, result, resolved, prompt):
+    """Aplica el patrón/estilo elegido por mapeo directo a cada propuesta."""
+    pattern     =   resolved['pattern']
+    style       =   resolved['style']
+    proposals   =   result.get('proposals') or []
+    overlays    =   {}
+    has_plus    =   _benefit(store, 'has_design_plus')
+    has_advanced =  _benefit(store, 'has_design_advanced')
+    has_style   =   _benefit(store, 'has_customization')
+    has_ai      =   _benefit(store, 'has_ai_design')
+    for proposal in proposals:
+        try:
+            from StoreApp.domains.stores.layout_blocks import clean_layout_config
+            from StoreApp.domains.stores.site_theme import clean_site_theme
+
+            theme   =   clean_site_theme(
+                _deep_merge(proposal.get('site_theme'), _catalog_tokens(style.tokens if style else None)),
+                has_plus        =   has_plus,
+                has_advanced    =   has_advanced,
+                has_style       =   has_style,
+                store           =   store,
+            )
+            layout  =   clean_layout_config(
+                _deep_merge(proposal.get('layout_config'), _layout_dict(pattern.layout)),
+                has_advanced, has_ai,
+            )
+        except serializers.ValidationError:
+            continue
+        if pattern.template:
+            proposal['template']    =   pattern.template
+        mcp_style   =   {
+            'slug'          :   pattern.slug,
+            'nombre'        :   pattern.nombre,
+            'categoria'     :   pattern.categoria,
+            'tags'          :   list(pattern.tags or [])[:6],
+            'source_repo'   :   'design-catalog',
+            'style'         :   style.slug if style else '',
+            'pattern'       :   [block.get('id') for block in _landing_blocks(pattern.layout)],
+        }
+        overlay =   {
+            'site_theme'    :   theme,
+            'layout_config' :   layout,
+            'theme'         :   _theme_mode(theme),
+            'theme_toggle'  :   True,
+            'accent'        :   (theme.get('palette') or {}).get('accent') or '',
+            'mcp_style'     :   mcp_style,
+        }
+        apply_design_overlay(proposal, overlay)
+        overlays[str(proposal.get('id'))]   =   overlay
+    if overlays:
+        save_overlays(store, seed, overlays)
+    return {
+        'source'    :   'catalog',
+        'query'     :   _style_query(prompt),
+        'pattern'   :   {'slug': pattern.slug, 'nombre': pattern.nombre, 'categoria': pattern.categoria},
+        'style'     :   {'slug': style.slug, 'nombre': style.nombre} if style else None,
+        'styles'    :   [{'slug': pattern.slug, 'nombre': pattern.nombre, 'categoria': pattern.categoria, 'source_repo': 'design-catalog'}],
+        'available' :   1,
+    }
+
+
+#=========================================
 # FLUJO
 #=========================================
 def _decorate(store, seed, result, styles, prompt):
@@ -693,8 +895,14 @@ def generate_from_prompt(store, prompt = None, history = None, seed = None, mess
         except (TypeError, ValueError):
             pass
     result  =   generate(store, payload)
-    styles  =   select_styles(clean_prompt)
-    mcp     =   _decorate(store, result.get('seed'), result, styles, clean_prompt)
+    #Selección determinista por mapeo directo del catálogo Design; el MCP
+    #queda como fuente opcional de overlay cuando el catálogo no resuelve.
+    resolved =  resolve_design(clean_prompt)
+    if resolved:
+        mcp =   _decorate_catalog(store, result.get('seed'), result, resolved, clean_prompt)
+    else:
+        styles  =   select_styles(clean_prompt)
+        mcp     =   _decorate(store, result.get('seed'), result, styles, clean_prompt)
     return {
         'proposals' :   result.get('proposals') or [],
         'seed'      :   result.get('seed'),

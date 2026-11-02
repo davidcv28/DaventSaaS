@@ -1,27 +1,24 @@
 <script setup>
-// Paneles por defecto del Studio (uno por herramienta del riel).
+// Paneles del Studio (uno por herramienta del riel).
 // Los controles escriben DOS capas según corresponda:
-//  - `form` (customization real: template, theme, name_font, accent_custom)
-//    -> persiste hoy por la API existente.
-//  - `theme` (siteTheme del contrato) -> viaja a la vista previa por
-//    studio:update y al payload site_theme.
-// Los paneles ricos (Diseño, Estilo, Iconos, Colores, Tipografía,
-// Contenedores, Fondo, Móvil y Movimiento) viven en ./panels/*; acá quedan
-// Folletos y Avanzado. La pestaña Estilos se retiró: ese flujo vive en la
-// sección Diseño del panel (EstilosPanel → DesignStylesTab).
+//  - `form` (customization real: template, theme, name_font, accent_custom,
+//    icon_style, cover_focus_*, logo_*): persiste por la API existente.
+//  - `theme` (siteTheme del contrato): viaja a la vista previa por
+//    studio:update y al payload site_theme del guardado.
+// `caps` son las capacidades del DesignStyle activo (vacío = todo): cada
+// panel oculta las opciones que el diseño no declara soportar.
 // Cada campo lleva data-focus con el target del contrato: el shell lo usa
 // para el anillo animado en la vista previa y para enfocar el control
 // cuando el usuario clickea el elemento correspondiente en el iframe.
 import AppIcon from '../AppIcon.vue'
 import DesignPanel from './panels/DesignPanel.vue'
 import StylePanel from './panels/StylePanel.vue'
-import IconsPanel from './panels/IconsPanel.vue'
+import MediaPanel from './panels/MediaPanel.vue'
 import ColorsPanel from './panels/ColorsPanel.vue'
 import TypographyPanel from './panels/TypographyPanel.vue'
 import ContainersPanel from './panels/ContainersPanel.vue'
-import BackgroundPanel from './panels/BackgroundPanel.vue'
+import AtmospherePanel from './panels/AtmospherePanel.vue'
 import MobilePanel from './panels/MobilePanel.vue'
-import MotionPanel from './panels/MotionPanel.vue'
 import HealthPanel from './panels/HealthPanel.vue'
 import PublishPanel from './panels/PublishPanel.vue'
 import '../../assets/studio-panels.css'
@@ -31,6 +28,7 @@ const props = defineProps({
   form: { type: Object, required: true },
   theme: { type: Object, required: true },
   benefits: { type: Object, default: () => ({}) },
+  caps: { type: Object, default: () => ({}) },
   siteTemplates: { type: Array, default: () => [] },
   layout: { type: Object, default: null },
   canFlyers: { type: Boolean, default: false },
@@ -65,12 +63,9 @@ function onImportFile(e) {
   reader.onerror = () => emit('import-theme', '')
   reader.readAsText(file)
 }
-
-// Anillos del contrato en la vista previa: los emite el panel que tenga el
-// control (Colores/Tipografía/Contenedores/Fondo) y el shell los dibuja.</script>
+</script>
 
 <template>
-  <!-- ===== Paneles ricos (fase Studio panels) ===== -->
   <DesignPanel
     v-if="tool === 'diseno'"
     :form="form" :benefits="benefits"
@@ -81,39 +76,35 @@ function onImportFile(e) {
     :form="form" :theme="theme" :benefits="benefits"
     @navigate="emit('navigate', $event)"
   />
-  <IconsPanel
-    v-else-if="tool === 'iconos'"
-    :form="form" :benefits="benefits"
+  <MediaPanel
+    v-else-if="tool === 'medios'"
+    :form="form" :theme="theme" :benefits="benefits"
+    :customization="customization" :caps="caps"
   />
   <ColorsPanel
     v-else-if="tool === 'colores'"
-    :theme="theme" :form="form" :benefits="benefits"
+    :theme="theme" :form="form" :benefits="benefits" :caps="caps"
     :customization="customization" :viewer="viewer" :shop-name="shopName"
     @navigate="emit('navigate', $event)" @set-viewer="emit('set-viewer', $event)"
   />
   <TypographyPanel
     v-else-if="tool === 'tipografia'"
-    :theme="theme" :form="form" :benefits="benefits" :shop-name="shopName"
+    :theme="theme" :form="form" :benefits="benefits" :caps="caps" :shop-name="shopName"
     @navigate="emit('navigate', $event)"
   />
   <ContainersPanel
     v-else-if="tool === 'contenedores'"
-    :theme="theme" :form="form" :benefits="benefits"
+    :theme="theme" :form="form" :benefits="benefits" :caps="caps"
     @navigate="emit('navigate', $event)"
   />
-  <BackgroundPanel
-    v-else-if="tool === 'fondo'"
-    :theme="theme" :form="form" :benefits="benefits" :customization="customization"
+  <AtmospherePanel
+    v-else-if="tool === 'ambiente'"
+    :theme="theme" :form="form" :benefits="benefits" :caps="caps" :customization="customization"
     @navigate="emit('navigate', $event)"
   />
   <MobilePanel
     v-else-if="tool === 'movil'"
-    :theme="theme" :form="form" :benefits="benefits"
-    @navigate="emit('navigate', $event)"
-  />
-  <MotionPanel
-    v-else-if="tool === 'movimiento'"
-    :theme="theme" :benefits="benefits"
+    :theme="theme" :form="form" :benefits="benefits" :caps="caps"
     @navigate="emit('navigate', $event)"
   />
   <HealthPanel
@@ -175,10 +166,3 @@ function onImportFile(e) {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* El historial del Studio (Ctrl+Z, botones del savebar) es el único dentro
-   del shell: se ocultan los controles de historial internos del LookTab. */
-.stp-look :deep(.dl-hbtn) { display: none; }
-.stp-look :deep(.dsg-card) { border: 0; box-shadow: none; padding: 0; border-radius: 0; background: transparent; }
-</style>

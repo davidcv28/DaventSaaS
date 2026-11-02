@@ -180,6 +180,14 @@ class AiDesignMcpEndpointTests(TestCase):
         #que con cualquier diseño elegido a mano.
         return self._client(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
 
+    def _catalog_design(self):
+        """El patrón/estilo que el mapeo directo resuelve para PROMPT:
+        rubro+tono puntúan y must_have desempata (determinista)."""
+        from StoreApp.domains.design.models import DesignStyle
+        from StoreApp.domains.stores.services.ai_design_mcp import resolve_design
+        resolved =  resolve_design(PROMPT) or {}
+        return resolved.get('pattern'), resolved.get('style') or DesignStyle.objects.filter(is_default = True).first()
+
     def test_structured_prompt_returns_proposals_with_mcp_style(self):
         client, _   =   self._premium()
         response    =   client.post(self.url, {'prompt': PROMPT, 'history': []}, format = 'json')
@@ -189,29 +197,42 @@ class AiDesignMcpEndpointTests(TestCase):
         self.assertIsInstance(body['seed'], int)
         self.assertEqual(body['prompt']['rubro'], 'gastronomia')
         self.assertEqual(body['prompt']['tone'], 'calido')
-        self.assertTrue(body['mcp']['styles'])
-        slugs = {style['slug'] for style in body['mcp']['styles']}
-        #Solo fuentes de repo: el preset curado nunca entra.
-        self.assertNotIn('organic-terracotta', slugs)
-        self.assertTrue(slugs <= {'bb-minimal-home', 'fc-grocery-home', 'ts-premium-home'})
-        for proposal in body['proposals']:
-            self.assertIn(proposal['mcp_style']['slug'], slugs)
-            self.assertIn('palette', proposal['site_theme'])
-            self.assertIn('containers', proposal['site_theme'])
-            self.assertTrue(proposal['mcp_style']['source_repo'])
+        #Mapeo directo: sin patrón del rubro en el catálogo, cae el default.
+        pattern, _ =  self._catalog_design()
+        if pattern is not None:
+            self.assertEqual(body['mcp']['source'], 'catalog')
+            self.assertEqual(body['mcp']['pattern']['slug'], pattern.slug)
+            slugs   =   {style['slug'] for style in body['mcp']['styles']}
+            self.assertEqual(slugs, {pattern.slug})
+            for proposal in body['proposals']:
+                self.assertEqual(proposal['mcp_style']['slug'], pattern.slug)
+                self.assertIn('palette', proposal['site_theme'])
+                self.assertIn('containers', proposal['site_theme'])
+        else:
+            #Sin catálogo: el MCP sigue siendo la fuente opcional de overlay.
+            slugs   =   {style['slug'] for style in body['mcp']['styles']}
+            self.assertNotIn('organic-terracotta', slugs)
+            self.assertTrue(slugs <= {'bb-minimal-home', 'fc-grocery-home', 'ts-premium-home'})
 
     def test_pattern_comes_from_repo_components(self):
         client, _   =   self._premium()
         body        =   client.post(self.url, {'prompt': PROMPT}, format = 'json').json()
         proposal    =   body['proposals'][0]
+        pattern, _  =   self._catalog_design()
+        if pattern is not None:
+            #El layout aplicado es el del patrón del catálogo (determinista).
+            self.assertEqual(proposal['mcp_style']['slug'], pattern.slug)
+            blocks  =   proposal['layout_config']['landing']['blocks']
+            self.assertTrue(blocks)
+            if pattern.template:
+                self.assertEqual(proposal['template'], pattern.template)
+            return
         pattern     =   proposal['mcp_style']['pattern']
         self.assertEqual(pattern[:3], ['hero', 'benefits', 'featured'])
         blocks      =   proposal['layout_config']['landing']['blocks']
         enabled     =   [block for block in blocks if block.get('enabled') is not False]
         ids         =   [block['id'] for block in enabled]
         self.assertEqual(ids[0], 'hero')
-        #Los bloques activos siguen el orden del repo (los que el motor no
-        #trae se conservan al final).
         in_pattern  =   [block_id for block_id in ids if block_id in pattern]
         self.assertEqual(in_pattern, [block_id for block_id in pattern if block_id in ids])
         hero        =   next(block for block in enabled if block['id'] == 'hero')
@@ -221,6 +242,13 @@ class AiDesignMcpEndpointTests(TestCase):
         client, _   =   self._premium()
         body        =   client.post(self.url, {'prompt': PROMPT}, format = 'json').json()
         proposal    =   body['proposals'][0]
+        pattern, style =  self._catalog_design()
+        if pattern is not None:
+            #Los tokens del estilo del patrón llegan al site_theme saneado.
+            self.assertEqual(proposal['mcp_style']['slug'], pattern.slug)
+            if style is not None and (style.tokens or {}).get('palette', {}).get('bg'):
+                self.assertEqual(proposal['site_theme']['palette']['bg'], style.tokens['palette']['bg'])
+            return
         style       =   next(s for s in body['mcp']['styles'] if s['slug'] == proposal['mcp_style']['slug'])
         tokens      =   next(s.tokens_diseno for s in DesignModelMcp.objects.all() if s.slug == style['slug'])
         palette     =   proposal['site_theme']['palette']
@@ -294,3 +322,70 @@ class AiDesignMcpEndpointTests(TestCase):
         client, _   =   self._client(*CUSTOMIZATION)
         response    =   client.post(self.url, {'prompt': PROMPT}, format = 'json')
         self.assertEqual(response.status_code, 403)
+
+
+class ResolveDesignTests(TestCase):
+    """Mapeo determinista rubro+tono -> DesignPattern (resolve_design):
+    tag del rubro (+8) > categoría del rubro (+4) > términos de tono (+1 c/u)
+    > must_have (+2 c/u); empate total gana (position, pk); sin score cae el
+    patrón is_default; inactivos no compiten."""
+
+    def _pattern(self, slug, *, tags = None, categoria = 'general', position = 0,
+                 landing = None, is_default = False, is_active = True):
+        from StoreApp.domains.design.models import DesignPattern
+        layout  =   {}
+        if landing is not None:
+            layout  =   {'landing': [{'id': i, 'enabled': True, 'order': n}
+                                     for n, i in enumerate(landing)]}
+        return DesignPattern.objects.create(
+            slug = slug, nombre = slug, categoria = categoria,
+            tags = tags or [], layout = layout, position = position,
+            is_default = is_default, is_active = is_active,
+        )
+
+    def _resolve(self, **kw):
+        from StoreApp.domains.stores.services.ai_design_mcp import resolve_design
+        out =   resolve_design(kw) or {}
+        return (out.get('pattern') or '').slug if out.get('pattern') else None
+
+    def test_rubro_tag_beats_rubro_category(self):
+        self._pattern('solo-categoria', categoria = 'alimentos')
+        self._pattern('con-tag', tags = ['gastronomia'])
+        self.assertEqual(self._resolve(rubro = 'gastronomia'), 'con-tag')
+
+    def test_rubro_category_scores_when_no_tag(self):
+        self._pattern('sin-match', categoria = 'moda')
+        self._pattern('del-rubro', categoria = 'alimentos')
+        self.assertEqual(self._resolve(rubro = 'gastronomia'), 'del-rubro')
+
+    def test_tone_terms_break_the_tie(self):
+        self._pattern('fria', tags = ['gastronomia'], position = 0)
+        self._pattern('calida', tags = ['gastronomia', 'calido', 'artesanal'], position = 1)
+        self.assertEqual(self._resolve(rubro = 'gastronomia', tone = 'calido'), 'calida')
+
+    def test_must_have_blocks_break_the_tie(self):
+        self._pattern('sin-contacto', tags = ['gastronomia'], landing = ['hero'])
+        self._pattern('con-cta', tags = ['gastronomia'], landing = ['hero', 'cta'], position = 1)
+        self.assertEqual(
+            self._resolve(rubro = 'gastronomia', must_have = ['whatsapp']),
+            'con-cta',
+        )
+
+    def test_position_breaks_full_ties(self):
+        self._pattern('segundo', tags = ['gastronomia'], position = 5)
+        self._pattern('primero', tags = ['gastronomia'], position = 1)
+        self.assertEqual(self._resolve(rubro = 'gastronomia'), 'primero')
+
+    def test_no_score_falls_back_to_default_pattern(self):
+        self._pattern('sin-match', categoria = 'moda')
+        self._pattern('el-default', categoria = 'general', is_default = True)
+        self.assertEqual(self._resolve(rubro = 'gastronomia'), 'el-default')
+
+    def test_inactive_patterns_never_win(self):
+        self._pattern('apagado', tags = ['gastronomia'], is_active = False)
+        self._pattern('el-default', is_default = True)
+        self.assertEqual(self._resolve(rubro = 'gastronomia'), 'el-default')
+
+    def test_same_prompt_resolves_same_pattern(self):
+        self._pattern('con-tag', tags = ['gastronomia'])
+        self.assertEqual(self._resolve(**PROMPT), self._resolve(**PROMPT))

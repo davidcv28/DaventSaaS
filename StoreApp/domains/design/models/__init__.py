@@ -4,5 +4,6 @@ from .models import (
     DesignStyle,
     clean_icon_set,
     clean_pattern_variables,
+    clean_style_capabilities,
     clean_style_effects,
 )

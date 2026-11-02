@@ -3662,6 +3662,23 @@ html{ scroll-behavior: smooth; }
   }
 }
 
+/* ---------- Tratamiento de imágenes (images.treatment del tema) ----------
+   Solo cuando el diseño lo declara en `capabilities`: el Studio filtra la
+   oferta y el atributo data-st-img viaja en el tema. 'none' no emite el
+   atributo (la web queda como siempre). */
+.store-page[data-st-img] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+  transition: filter var(--st-motion-dur, .3s) ease;
+}
+.store-page[data-st-img='soft'] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+  filter: saturate(.88) contrast(.97) brightness(1.03);
+}
+.store-page[data-st-img='grayscale'] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+  filter: grayscale(1) contrast(1.04);
+}
+.store-page[data-st-img='duotone'] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+  filter: grayscale(1) sepia(.55) hue-rotate(-12deg) contrast(1.05) brightness(.94) saturate(1.4);
+}
+
 /* ---------- Móvil: grilla, tarjetas, portada, navegación y CTA ---------- */
 @media (max-width: 768px){
   .store-page[data-st-grid='2'] .sp-grid{

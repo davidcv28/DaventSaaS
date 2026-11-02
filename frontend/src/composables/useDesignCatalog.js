@@ -33,6 +33,7 @@ export function styleToPreset(style) {
     theme: style.tokens || {},
     layout: style.layout || {},
     layoutSpec: style.layout_spec || {},
+    capabilities: style.capabilities || {},
     rubros: style.tags || []
   }
 }

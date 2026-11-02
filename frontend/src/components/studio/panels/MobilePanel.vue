@@ -8,14 +8,19 @@ import AppIcon from '../../AppIcon.vue'
 import PanelField from './PanelField.vue'
 import PanelLock from './PanelLock.vue'
 
+import { capOption, capSection } from '../../../studio/capabilities.js'
+
 const props = defineProps({
   theme: { type: Object, required: true },
   form: { type: Object, required: true },
-  benefits: { type: Object, default: () => ({}) }
+  benefits: { type: Object, default: () => ({}) },
+  caps: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['navigate'])
 
 const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
+const showMob = computed(() => capSection(props.caps, 'mobile'))
+const capMob = (key) => capOption(props.caps, 'mobile', key)
 const mob = computed(() => props.theme.mobile)
 const pal = computed(() => props.theme.palette)
 
@@ -47,7 +52,9 @@ const phoneVars = computed(() => ({
       el dibujito resume cada decisión.
     </p>
 
-    <div class="mphone" :style="phoneVars" role="img" :aria-label="`Vista previa móvil: navegación ${mob.nav}, ${mob.gridCols} columnas, tarjetas ${mob.cardStyle}, portada ${mob.heroHeight}${mob.stickyCta ? ', botón fijo' : ''}`">
+    <p v-if="!showMob" class="stp-hint">Este diseño ya trae su comportamiento móvil definido: no admite ajustes.</p>
+
+    <div v-else class="mphone" :style="phoneVars" role="img" :aria-label="`Vista previa móvil: navegación ${mob.nav}, ${mob.gridCols} columnas, tarjetas ${mob.cardStyle}, portada ${mob.heroHeight}${mob.stickyCta ? ', botón fijo' : ''}`">
       <span v-if="mob.nav !== 'bottom'" class="mphone-nav" :class="{ drawer: mob.nav === 'drawer' }" aria-hidden="true"><i></i><i></i><i></i></span>
       <span class="mphone-hero" :class="{ tall: mob.heroHeight === 'tall' }" aria-hidden="true"><b></b></span>
       <span class="mphone-grid" :class="{ cols2: mob.gridCols === 2 }" aria-hidden="true">
@@ -59,6 +66,7 @@ const phoneVars = computed(() => ({
     </div>
 
     <PanelField
+      v-if="capMob('nav')"
       label="Navegación"
       tip="¿Qué es esto? Dónde vive la barra de navegación en el celular: arriba fija, abajo tipo app o escondida detrás de un botón de menú."
       focus="chrome.nav" need="advanced" :benefits="benefits"
@@ -74,6 +82,7 @@ const phoneVars = computed(() => ({
     </PanelField>
 
     <PanelField
+      v-if="capMob('gridCols')"
       label="Columnas del catálogo"
       tip="¿Qué es esto? Cuántos productos entran por fila en el celular. Dos columnas muestran el catálogo más compacto."
       focus="card" need="advanced" :benefits="benefits"
@@ -88,6 +97,7 @@ const phoneVars = computed(() => ({
     </PanelField>
 
     <PanelField
+      v-if="capMob('cardStyle')"
       label="Estilo de tarjeta"
       tip="¿Qué es esto? Cómo se muestra cada producto en el celular: tarjeta completa, fila compacta o precio sobre la foto."
       focus="card" need="advanced" :benefits="benefits"
@@ -103,6 +113,7 @@ const phoneVars = computed(() => ({
     </PanelField>
 
     <PanelField
+      v-if="capMob('heroHeight')"
       label="Altura de la portada"
       tip="¿Qué es esto? Cuánto ocupa la imagen de portada en el celular: compacta deja el contenido a la vista, amplia la hace protagonista."
       focus="hero" need="advanced" :benefits="benefits"
@@ -117,6 +128,7 @@ const phoneVars = computed(() => ({
     </PanelField>
 
     <PanelField
+      v-if="capMob('stickyCta')"
       label="Botón de contacto fijo"
       tip="¿Qué es esto? Un botón de compra o contacto que queda siempre visible abajo del celular mientras se hace scroll."
       focus="chrome.nav" need="advanced" :benefits="benefits"

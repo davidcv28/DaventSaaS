@@ -13,12 +13,14 @@ import {
   NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX
 } from '../../../api/stores.api.js'
 import { FONT_PAIRS } from './panelShared.js'
+import { capOption, capSection } from '../../../studio/capabilities.js'
 
 const props = defineProps({
   theme: { type: Object, required: true },
   form: { type: Object, required: true },
   benefits: { type: Object, default: () => ({}) },
-  shopName: { type: String, default: '' }
+  shopName: { type: String, default: '' },
+  caps: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['navigate'])
 
@@ -30,9 +32,16 @@ const fonts = STORE_FONT_PICKER
 const fontLabel = (k) => STORE_FONTS[k]?.label || k
 const fontCss = (k) => ({ fontFamily: storeFontFamily(k) })
 
+const showTypo = computed(() => capSection(props.caps, 'typography'))
+const capTypo = (key) => capOption(props.caps, 'typography', key)
+
 function pickHeading(k) {
   ensureStoreFont(k)
   typo.value.heading = k
+}
+function pickSubheading(k) {
+  ensureStoreFont(k)
+  typo.value.subheading = k
 }
 function pickBody(k) {
   ensureStoreFont(k)
@@ -73,6 +82,7 @@ const nameSize = computed({
     </p>
 
     <PanelField
+      v-if="capTypo('heading') && capTypo('body')"
       label="Pares recomendados"
       tip="¿Qué es esto? Combinaciones de fuente de título + fuente de texto que ya funcionan juntas. Tocá una para aplicar las dos."
       focus="typo" need="advanced" :benefits="benefits"
@@ -91,6 +101,7 @@ const nameSize = computed({
     </PanelField>
 
     <PanelField
+      v-if="capTypo('heading')"
       label="Fuente de los títulos"
       tip="¿Qué es esto? La letra de los encabezados y el nombre de tu tienda. Cada tarjeta muestra la fuente real."
       focus="typo" need="advanced" :benefits="benefits"
@@ -109,6 +120,26 @@ const nameSize = computed({
     </PanelField>
 
     <PanelField
+      v-if="capTypo('subheading')"
+      label="Fuente de los subtítulos"
+      tip="¿Qué es esto? La letra de los subtítulos de las secciones (qué mostrar, servicios, catálogo). Sin elegir una, heredan la de los títulos."
+      focus="typo" need="advanced" :benefits="benefits"
+    >
+      <div class="dl-fonts" role="group" aria-label="Fuente de los subtítulos">
+        <button
+          v-for="k in fonts" :key="k" type="button" class="dl-font"
+          :class="{ active: typo.subheading === k }" :aria-pressed="typo.subheading === k"
+          @click="pickSubheading(k)"
+        >
+          <span class="dl-font-aa" :style="fontCss(k)" aria-hidden="true">Aa</span>
+          <span class="dl-font-name">{{ fontLabel(k) }}</span>
+          <span v-if="typo.subheading === k" class="dl-font-tick"><AppIcon name="check" :size="12" aria-hidden="true" /></span>
+        </button>
+      </div>
+    </PanelField>
+
+    <PanelField
+      v-if="capTypo('body')"
       label="Fuente del texto"
       tip="¿Qué es esto? La letra del cuerpo: descripciones, precios y menús. Se guarda como la fuente principal de tu página."
       focus="typo" need="advanced" :benefits="benefits"
@@ -127,6 +158,7 @@ const nameSize = computed({
     </PanelField>
 
     <PanelField
+      v-if="capTypo('scale')"
       label="Escala tipográfica"
       tip="¿Qué es esto? Qué tan grandes son los títulos respecto del texto. Editorial agranda los encabezados para un look de revista."
       focus="typo" need="advanced" :benefits="benefits"
@@ -142,6 +174,7 @@ const nameSize = computed({
     </PanelField>
 
     <PanelField
+      v-if="capTypo('weightHeading')"
       label="Peso de los títulos"
       tip="¿Qué es esto? El grosor de la letra en los encabezados: 300 es fino, 900 es el más pesado."
       focus="typo" need="advanced" :benefits="benefits"
@@ -153,6 +186,7 @@ const nameSize = computed({
     </PanelField>
 
     <PanelField
+      v-if="capTypo('letterSpacing')"
       label="Interletrado"
       tip="¿Qué es esto? El espacio entre letras de los títulos. Negativo las junta (look moderno), positivo las separa (look editorial)."
       focus="typo" need="advanced" :benefits="benefits"
@@ -177,7 +211,9 @@ const nameSize = computed({
       </label>
     </PanelField>
 
-    <div class="stp-sample" aria-label="Muestra con las fuentes elegidas">
+    <p v-if="!showTypo" class="stp-hint">Este diseño trae su propia tipografía fija: no admite cambios de fuente.</p>
+
+    <div v-if="showTypo" class="stp-sample" aria-label="Muestra con las fuentes elegidas">
       <span class="stp-sample-name" :style="headingStyle">{{ shopName || 'Tu negocio' }}</span>
       <span class="stp-sample-text" :style="bodyStyle">Así se ve el texto de tu página con estas fuentes. Las descripciones y precios usan la fuente del cuerpo.</span>
     </div>

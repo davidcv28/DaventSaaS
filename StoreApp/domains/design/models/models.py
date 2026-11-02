@@ -129,6 +129,48 @@ def clean_pattern_variables(raw):
     return clean
 
 
+#=========================================
+# CAPABILITIES DEL ESTILO (qué soporta cada diseño)
+#=========================================
+#Mapa cerrado: sección del Studio -> True (todo), False (nada) o lista de
+#opciones soportadas. Ausente = soporta todo (estilos viejos = como hoy).
+#El Studio oculta/deshabilita lo que el estilo activo no declara; el
+#backend no puede adivinar el estilo vigente al guardar, así que el
+#descarte real lo hace la UI (el saneo del tema corre igual).
+_STYLE_CAPABILITY_KEYS    =   {
+    'palette'       :   'bool',
+    'typography'    :   ('heading', 'subheading', 'body', 'scale', 'weightHeading', 'letterSpacing'),
+    'containers'    :   ('radius', 'shadow', 'border', 'density', 'surface'),
+    'buttons'       :   ('shape', 'style', 'size'),
+    'background'    :   ('solid', 'gradient', 'mesh', 'pattern', 'image', 'overlay'),
+    'motion'        :   ('reveal', 'hover', 'intensity'),
+    'mobile'        :   ('nav', 'gridCols', 'cardStyle', 'heroHeight', 'stickyCta'),
+    'icons'         :   'bool',
+    'images'        :   ('logo', 'focus', 'overlay', 'filters'),
+    'decorations'   :   'bool',
+}
+
+def clean_style_capabilities(raw):
+    """
+    Normaliza `capabilities` del estilo: {seccion: True|False|[ids]}.
+    Solo claves conocidas; una lista se recorta a las opciones válidas
+    (una vacía significa que la sección no ofrece nada).
+    """
+    if not isinstance(raw, dict):
+        return {}
+    out =   {}
+    for section, spec in _STYLE_CAPABILITY_KEYS.items():
+        value   =   raw.get(section)
+        if value is True:
+            out[section]    =   True
+        elif spec == 'bool':
+            if value is False:
+                out[section]    =   False
+        elif isinstance(value, list):
+            out[section]    =   [v for v in value if isinstance(v, str) and v in spec]
+    return out
+
+
 class DesignStyle(models.Model):
     slug                =   models.SlugField(max_length = 120, unique = True, db_index = True, verbose_name = 'Slug')
     nombre              =   models.CharField(max_length = 120, verbose_name = 'Nombre')
@@ -145,6 +187,9 @@ class DesignStyle(models.Model):
     #Solo bordes, colores y detalles basicos (ver clean_style_effects).
     #Nunca estructura ni composicion.
     effects             =   models.JSONField(default = dict, blank = True, verbose_name = 'Efectos permitidos')
+    #Qué ajustes del Studio soporta el estilo (vacío = todos): el Studio
+    #oculta las opciones que el diseño no declara.
+    capabilities        =   models.JSONField(default = dict, blank = True, verbose_name = 'Capacidades del Studio')
     tags                =   ArrayField(
         models.CharField(max_length = 50),
         default = list,
@@ -184,6 +229,7 @@ class DesignStyle(models.Model):
 
     def save(self, *args, **kwargs):
         self.effects = clean_style_effects(self.effects)
+        self.capabilities = clean_style_capabilities(self.capabilities)
         super().save(*args, **kwargs)
 
     def __str__(self):

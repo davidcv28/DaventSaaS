@@ -6,6 +6,7 @@ from StoreApp.domains.design.models import (
     DesignStyle,
     clean_icon_set,
     clean_pattern_variables,
+    clean_style_capabilities,
     clean_style_effects,
 )
 
@@ -64,13 +65,15 @@ class DesignStyleSerializer(serializers.ModelSerializer):
         fields          =   [
             'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
             'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'effects', 'tags',
-            'pattern', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
+            'capabilities', 'pattern', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
         ]
         read_only_fields    =   ['id', 'created_at', 'updated_at']
     def validate_tokens(self, value):
         return validate_tokens(value)
     def validate_effects(self, value):
         return clean_style_effects(value)
+    def validate_capabilities(self, value):
+        return clean_style_capabilities(value)
     def validate_layout(self, value):
         return validate_layout(value)
     def validate_page_theme(self, value):
@@ -87,7 +90,7 @@ class DesignStyleListSerializer(serializers.ModelSerializer):
         fields          =   [
             'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
             'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'effects', 'tags',
-            'pattern', 'is_default', 'is_active', 'position',
+            'capabilities', 'pattern', 'is_default', 'is_active', 'position',
         ]
 #=========================================
 # DESIGN PATTERN SERIALIZER (detalle: patrón aplicable)

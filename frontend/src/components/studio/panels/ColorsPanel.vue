@@ -18,15 +18,22 @@ import {
   normalizeHex, hexToHsl, hslToHex, hexToRgb
 } from './panelShared.js'
 
+import { capSection } from '../../../studio/capabilities.js'
+
 const props = defineProps({
   theme: { type: Object, required: true },
   form: { type: Object, required: true },
   benefits: { type: Object, default: () => ({}) },
   customization: { type: Object, default: () => ({}) },
   viewer: { type: String, default: 'light' },
-  shopName: { type: String, default: '' }
+  shopName: { type: String, default: '' },
+  caps: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['navigate', 'set-viewer'])
+
+// El diseño puede fijar su paleta: con capabilities.palette en false el
+// panel muestra solo el modo claro/oscuro (el resto lo decide el estilo).
+const showPalette = computed(() => capSection(props.caps, 'palette'))
 
 const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
 const pal = computed(() => props.theme.palette)
@@ -358,7 +365,9 @@ watch(() => JSON.stringify(pal.value), () => { fixMsg.value = ''; surpriseMsg.va
     </PanelField>
 
     <!-- ===== Paleta por rol ===== -->
+    <p v-if="!showPalette" class="stp-hint">Este diseño trae su propia paleta: los colores no se pueden tocar.</p>
     <PanelField
+      v-if="showPalette"
       label="Paleta por rol"
       tip="¿Qué es esto? Cada color tiene un trabajo: primario manda en botones, secundario lo acompaña en degradados, acento marca enlaces y detalles, fondos y texto ordenan la lectura, y los estados avisan si algo salió bien o mal."
       focus="buttons" need="advanced" :benefits="benefits"

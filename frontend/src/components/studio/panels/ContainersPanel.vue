@@ -8,11 +8,13 @@ import AppIcon from '../../AppIcon.vue'
 import PanelField from './PanelField.vue'
 import PanelLock from './PanelLock.vue'
 import { themeToCssVars } from '../../../studio/contract.js'
+import { capOption, capSection } from '../../../studio/capabilities.js'
 
 const props = defineProps({
   theme: { type: Object, required: true },
   form: { type: Object, required: true },
-  benefits: { type: Object, default: () => ({}) }
+  benefits: { type: Object, default: () => ({}) },
+  caps: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['navigate'])
 
@@ -55,16 +57,25 @@ const btnPreview = computed(() => {
 
 const lockedBasic = computed(() => !props.benefits?.has_design_plus)
 const lockedRest = computed(() => !props.benefits?.has_design_advanced)
+
+// Capacidades del diseño activo: campos ocultos cuando el estilo no los soporta.
+const showCon = computed(() => capSection(props.caps, 'containers'))
+const capCon = (key) => capOption(props.caps, 'containers', key)
+const showBtn = computed(() => capSection(props.caps, 'buttons'))
+const capBtn = (key) => capOption(props.caps, 'buttons', key)
 </script>
 
 <template>
   <div class="stp-fields">
+    <p v-if="!showCon && !showBtn" class="stp-hint">Este diseño trae sus tarjetas y botones fijos: no admiten cambios.</p>
+
     <p class="stp-hint">
       Cómo se ven las tarjetas y los botones de tu página: bordes, sombras y cuánto aire llevan.
       Las miniaturas muestran el resultado real.
     </p>
 
     <PanelField
+      v-if="capCon('radius')"
       label="Redondeo de las esquinas"
       tip="¿Qué es esto? Cuánto se curvan las esquinas de tarjetas, fotos y paneles. Píldora las deja completamente redondas."
       focus="card" need="plus" :benefits="benefits"
@@ -84,6 +95,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capCon('shadow')"
       label="Sombra"
       tip="¿Qué es esto? La profundidad de las tarjetas: sin sombra quedan planas; profunda las despega del fondo."
       focus="card" need="advanced" :benefits="benefits"
@@ -103,6 +115,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capCon('border')"
       label="Borde"
       tip="¿Qué es esto? El contorno de las tarjetas. Marcado las hace ver más definidas, sin borde quedan más limpias."
       focus="card" need="advanced" :benefits="benefits"
@@ -117,6 +130,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capCon('density')"
       label="Densidad"
       tip="¿Qué es esto? Cuánto aire hay dentro de las tarjetas y entre secciones. Compacta muestra más productos por pantalla."
       focus="card" need="plus" :benefits="benefits"
@@ -138,6 +152,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capCon('surface')"
       label="Superficie"
       tip="¿Qué es esto? El material de las tarjetas: plana (color liso), vidrio (translúcida sobre el fondo), elevada (con sombra) o contorno (solo borde)."
       focus="card" need="advanced" :benefits="benefits"
@@ -156,9 +171,10 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
       </div>
     </PanelField>
 
-    <p class="stp-sec">Botones</p>
+    <p v-if="showBtn" class="stp-sec">Botones</p>
 
     <PanelField
+      v-if="showBtn"
       label="Vista previa del botón"
       tip="¿Qué es esto? Así van a quedar los botones principales de tu página con la forma, el estilo y el tamaño que elijas."
       focus="buttons" need="advanced" :benefits="benefits"
@@ -169,6 +185,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capBtn('shape')"
       label="Forma"
       tip="¿Qué es esto? El contorno de los botones: recto, redondeado o píldora (totalmente curvo)."
       focus="buttons" need="advanced" :benefits="benefits"
@@ -183,6 +200,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capBtn('style')"
       label="Estilo"
       tip="¿Qué es esto? Cómo se rellena el botón: sólido usa tu color primario, contorno solo el borde, fantasma casi invisible, gradiente mezcla primario y secundario."
       focus="buttons" need="advanced" :benefits="benefits"
@@ -197,6 +215,7 @@ const lockedRest = computed(() => !props.benefits?.has_design_advanced)
     </PanelField>
 
     <PanelField
+      v-if="capBtn('size')"
       label="Tamaño"
       tip="¿Qué es esto? La altura y el texto de los botones. Grande llama más la atención en el llamado a la acción."
       focus="buttons" need="advanced" :benefits="benefits"

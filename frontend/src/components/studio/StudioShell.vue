@@ -37,10 +37,19 @@ import { palettePasses, repairPalette } from './health.js'
 import { allowedTemplatesFor, resolveStoreTemplate, ensureStoreFont, STORE_ACCENTS } from '../../api/stores.api.js'
 import { nearestAccent, hexToRgb, adaptPalette, deriveAccent } from '../../utils/colorTools.js'
 import { presetLock, layoutForTemplate } from '../../studio/presets/index.js'
+import { resolveCapabilities } from '../../studio/capabilities.js'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
 
-const { presets: designPresets, defaultPattern, load: loadDesignCatalog } = useDesignCatalog()
+const { presets: designPresets, defaultPattern, styles: designStyles, load: loadDesignCatalog } = useDesignCatalog()
+
+// Capacidades del estilo activo (DesignStyle.capabilities del catálogo):
+// cada panel oculta las opciones que el diseño no declara soportar.
+const caps = computed(() => {
+  const styleId = draft.theme?.style?.id
+  const style = designStyles.value.find((s) => s.slug === styleId)
+  return resolveCapabilities(style)
+})
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -793,16 +802,17 @@ const SEARCH_INDEX = [
   { tool: 'diseno',       focus: null,         label: 'Diseño de tu web',             hint: 'Diseño', kw: 'diseno patron estructura portada catalogo rubro plantilla' },
   { tool: 'estilo',       focus: 'page',       label: 'Estilo, bordes y colores',     hint: 'Estilo', kw: 'estilo piel bordes colores look modo noche' },
   { tool: 'estilo',       focus: 'page',       label: 'Modo noche',                   hint: 'Estilo', kw: 'oscuro claro modo noche dark toggle interruptor' },
-  { tool: 'iconos',       focus: null,         label: 'Iconos del menú',              hint: 'Iconos', kw: 'icono iconos menu set controles' },
+  { tool: 'medios',       focus: 'chrome.nav', label: 'Iconos del menú',              hint: 'Medios', kw: 'icono iconos menu set controles' },
+  { tool: 'medios',       focus: 'media',      label: 'Logo, portada y fotos',        hint: 'Medios', kw: 'logo portada foto imagen foco velo filtro duotono blanco negro' },
   { tool: 'colores',      focus: 'page',       label: 'Paleta y colores',             hint: 'Colores', kw: 'color paleta acento primario fondo texto' },
   { tool: 'colores',      focus: 'buttons',    label: 'Contraste accesible',          hint: 'Colores', kw: 'contraste aa legibilidad accesible' },
   { tool: 'tipografia',   focus: 'typo',       label: 'Fuentes y tipografía',         hint: 'Tipografía', kw: 'fuente letra tipografia texto peso escala' },
   { tool: 'contenedores', focus: 'card',       label: 'Bordes, sombras y tarjetas',   hint: 'Contenedores', kw: 'borde sombra radio tarjeta contenedor densidad' },
   { tool: 'contenedores', focus: 'buttons',    label: 'Botones',                      hint: 'Contenedores', kw: 'boton forma estilo cta' },
-  { tool: 'fondo',        focus: 'page',       label: 'Fondo de la página',           hint: 'Fondo', kw: 'fondo degradado imagen patron mesh' },
+  { tool: 'ambiente',     focus: 'page',       label: 'Fondo de la página',           hint: 'Ambiente', kw: 'fondo degradado imagen patron mesh' },
+  { tool: 'ambiente',     focus: 'page',       label: 'Animaciones y revelado',       hint: 'Ambiente', kw: 'animacion movimiento reveal hover efecto' },
   { tool: 'movil',        focus: 'chrome.nav', label: 'Navegación móvil',             hint: 'Móvil', kw: 'movil celular nav menu bottom drawer' },
   { tool: 'movil',        focus: 'hero',       label: 'Portada en celular',           hint: 'Móvil', kw: 'movil hero portada altura grilla' },
-  { tool: 'movimiento',   focus: 'page',       label: 'Animaciones y revelado',       hint: 'Movimiento', kw: 'animacion movimiento reveal hover efecto' },
   { tool: 'folletos',     focus: null,         label: 'Folletos imprimibles',         hint: 'Folletos', kw: 'folleto flyer imprimir qr' },
   { tool: 'avanzado',     focus: 'page',       label: 'Tema claro u oscuro',          hint: 'Avanzado', kw: 'oscuro claro modo dark light tema' },
   { tool: 'avanzado',     focus: null,         label: 'Importar o exportar el tema',  hint: 'Avanzado', kw: 'json importar exportar tema backup archivo' },
@@ -851,7 +861,7 @@ function importTheme(raw) {
     const data = JSON.parse(raw)
     const theme = data?.theme ?? data // acepta el formato exportado o un tema pelado
     if (!theme || typeof theme !== 'object' || Array.isArray(theme)) throw new Error('bad theme')
-    const known = ['palette', 'containers', 'typography', 'buttons', 'background', 'motion', 'mobile', 'styleColors', 'style']
+    const known = ['palette', 'containers', 'typography', 'buttons', 'background', 'motion', 'mobile', 'images', 'decorations', 'layout', 'skin', 'blocks', 'styleColors', 'style']
     if (!known.some((k) => theme[k] && typeof theme[k] === 'object')) throw new Error('empty theme')
     const resolved = resolveSiteTheme(theme)
     draft.theme = resolved
@@ -983,7 +993,7 @@ defineExpose({ markSaved, discardDraft, getTheme: () => clone(draft.theme) })
         @focusin="onPanelEvent" @input="onPanelEvent" @change="onPanelEvent" @click="onPanelEvent"
       >
         <StudioPanel
-          :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits"
+          :tool="tool" :form="form" :theme="draft.theme" :benefits="benefits" :caps="caps"
           :site-templates="siteTemplates" :layout="draft.layout || customization?.layout_config_draft || customization?.layout_config || null"
           :can-flyers="canFlyers" :shop-name="shopName"
           :customization="customization" :viewer="viewerTheme"

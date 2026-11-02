@@ -9,13 +9,12 @@ import { effectiveAccent } from '../../api/stores.api.js'
 export const STUDIO_TOOLS = [
   { id: 'diseno',       icon: 'layers',       label: 'Diseño',   desc: 'Elegí el diseño: portada, catálogo y servicios propios de tu rubro.' },
   { id: 'estilo',       icon: 'brush',        label: 'Estilo',       desc: 'Bordes, colores, tipografía y modo noche del diseño elegido.' },
-  { id: 'iconos',       icon: 'grid',         label: 'Iconos',       desc: 'Set de iconos del menú y los controles, sin tocar el diseño.' },
+  { id: 'medios',       icon: 'image',        label: 'Medios',       desc: 'Iconos del menú, logo, portada y tratamiento de las imágenes.' },
   { id: 'colores',      icon: 'palette',      label: 'Colores',      desc: 'Paleta por rol, armonías, logo y contraste accesible.' },
   { id: 'tipografia',   icon: 'type',         label: 'Tipografía',   desc: 'Fuentes, pares recomendados, escala y peso.' },
   { id: 'contenedores', icon: 'layout-grid',  label: 'Contenedores', desc: 'Bordes, sombras, densidad, superficie y botones.' },
-  { id: 'fondo',        icon: 'image',        label: 'Fondo',        desc: 'Color, degradado, malla, patrón o imagen de fondo.' },
+  { id: 'ambiente',     icon: 'sparkles',     label: 'Ambiente',     desc: 'Fondo de la página y cuánto se mueve: revelado, hover e intensidad.' },
   { id: 'movil',        icon: 'smartphone',   label: 'Móvil',        desc: 'Navegación, grilla y portada en pantallas chicas.' },
-  { id: 'movimiento',   icon: 'zap',          label: 'Movimiento',   desc: 'Revelado al bajar, reacción al mouse e intensidad.' },
   { id: 'folletos',     icon: 'printer',      label: 'Folletos',     desc: 'Piezas imprimibles con tu identidad (QR y ofertas).' },
   { id: 'avanzado',     icon: 'sliders',      label: 'Avanzado',     desc: 'Tema claro/oscuro y ajustes finos del diseño.' },
   { id: 'salud',        icon: 'shield-check', label: 'Salud',        desc: 'Revisión de tu web: contraste, imágenes, textos y secciones.' },
@@ -25,8 +24,8 @@ export const STUDIO_TOOLS = [
 // Agrupación visual del riel: diseño, look, estructura y entrega. Solo cambia
 // cómo se leen las herramientas (el orden de STUDIO_TOOLS manda el recorrido).
 export const STUDIO_TOOL_GROUPS = [
-  { id: 'design', label: 'Diseño', tools: ['diseno', 'estilo', 'iconos'] },
-  { id: 'look', label: 'Look', tools: ['colores', 'tipografia', 'contenedores', 'fondo', 'movimiento'] },
+  { id: 'design', label: 'Diseño', tools: ['diseno', 'estilo', 'medios'] },
+  { id: 'look', label: 'Look', tools: ['colores', 'tipografia', 'contenedores', 'ambiente'] },
   { id: 'structure', label: 'Estructura', tools: ['movil'] },
   { id: 'ship', label: 'Puesta a punto', tools: ['folletos', 'avanzado', 'salud', 'publicar'] }
 ]
@@ -108,12 +107,12 @@ export function toolForTarget(target) {
   // que es el único ajuste estructural que queda en el Studio.
   if (target.startsWith('blk:') || target.startsWith('sec:')) return 'movil'
   return {
-    hero: 'fondo',
+    hero: 'medios',
     typo: 'tipografia',
     card: 'contenedores',
     'chrome.nav': 'movil',
     buttons: 'colores',
-    media: 'fondo',
-    page: 'fondo'
+    media: 'medios',
+    page: 'ambiente'
   }[target] || 'colores'
 }
