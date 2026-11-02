@@ -1188,12 +1188,54 @@
 .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-feats svg {
   color: var(--gy-lime);
 }
-/* Con detalles: el plan completo pasa a primer plano — banda dorada,
-   sello "Más completo" y realce sutil del fondo. */
+/* Con detalles: el plan completo pasa a primer plano — haz de luz que
+   orbita el borde (nitido + halo), sello "Más completo" y fondo realzado. */
 .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats {
-  border-top-color: var(--gy-lime);
+  isolation: isolate;
+  border-color: transparent;
+  border-top-color: transparent;
   background: linear-gradient(165deg, #241F10 0%, var(--gy-card) 50%, #171510 100%);
-  box-shadow: var(--sp-shadow-md), inset 0 0 0 1px color-mix(in srgb, var(--gy-lime) 26%, transparent);
+  box-shadow: var(--sp-shadow-md);
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats::before {
+  content: '';
+  inset: -1px;
+  padding: 1.5px;
+  z-index: 1;
+  font-size: 0;
+  background: conic-gradient(
+    from var(--gy-beam),
+    transparent 0deg 220deg,
+    color-mix(in srgb, var(--gy-lime) 40%, transparent) 280deg,
+    var(--gy-lime) 322deg,
+    #FFF6DE 335deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: gy-beam-orbit 4s linear infinite;
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats::after {
+  inset: -1px;
+  padding: 8px;
+  z-index: 1;
+  border: 0;
+  background: conic-gradient(
+    from var(--gy-beam),
+    transparent 0deg 220deg,
+    color-mix(in srgb, var(--gy-lime) 40%, transparent) 280deg,
+    var(--gy-lime) 322deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: blur(14px);
+  opacity: .6;
+  animation: gy-beam-orbit 4s linear infinite;
 }
 .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats .sp-aipricing-name::after {
   content: 'Más completo';
@@ -1208,6 +1250,25 @@
   letter-spacing: .12em;
   text-transform: uppercase;
   vertical-align: 6px;
+}
+/* Grano de película sobre la vista elite: textura sutil, no genérica. */
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-home::after {
+  content: '';
+  position: fixed;
+  inset: -50%;
+  z-index: 60;
+  pointer-events: none;
+  opacity: .05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: gy-grain 1.2s steps(6) infinite;
+}
+@keyframes gy-grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3%, 2%); }
+  40% { transform: translate(2%, -4%); }
+  60% { transform: translate(-4%, 3%); }
+  80% { transform: translate(3%, -2%); }
+  100% { transform: translate(0, 0); }
 }
 
 /* ==========================================================================
