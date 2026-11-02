@@ -2080,22 +2080,22 @@
       "slug": "esencial-premium",
       "nombre": "Esencial Premium",
       "categoria": "general",
-      "descripcion": "La cara de gala del diseño base: negro humo, dorado, Playfair Display, superficies de vidrio y animaciones con presencia.",
+      "descripcion": "La cara de gala del diseño base: marfil cálido, dorado envejecido, Playfair Display, superficies de vidrio con filo dorado y animaciones con presencia.",
       "tier": "base",
       "template": "raiz",
-      "page_theme": "dark",
+      "page_theme": "light",
       "tokens": {
         "palette": {
-          "primary": "#b45309",
-          "secondary": "#92400e",
-          "accent": "#d4a017",
-          "bg": "#0c0a09",
-          "surface": "#1c1917",
-          "text": "#fafaf9",
-          "muted": "#a8a29e",
-          "border": "#292524",
-          "success": "#34d399",
-          "danger": "#f87171"
+          "primary": "#8a5a00",
+          "secondary": "#6b4600",
+          "accent": "#b8860b",
+          "bg": "#faf6ef",
+          "surface": "#fffdf8",
+          "text": "#1c1917",
+          "muted": "#78716c",
+          "border": "#e7ddc9",
+          "success": "#047857",
+          "danger": "#b91c1c"
         },
         "containers": {
           "radius": "lg",
@@ -2119,7 +2119,7 @@
         },
         "background": {
           "type": "mesh",
-          "value": "radial-gradient(ellipse at top, #292524, #0c0a09)",
+          "value": "radial-gradient(ellipse at top, #f3ead8, #faf6ef)",
           "overlay": "soft"
         },
         "motion": {
@@ -2412,7 +2412,10 @@
       "tags": [
         "general",
         "base",
-        "esencial"
+        "esencial",
+        "premium",
+        "gala",
+        "dia"
       ],
       "preview": "",
       "style": "Esencial Premium",
@@ -2430,7 +2433,20 @@
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Premium: humo, oro, serif editorial y motion bold."
+      "concept": "Premium de día: marfil, oro envejecido, serif editorial, vidrio y motion bold.",
+      "effects": {
+        "accent": "#b8860b",
+        "primary": "#8a5a00",
+        "secondary": "#6b4600",
+        "border": "#d9c48f",
+        "radius": "lg",
+        "border_width": 1,
+        "border_style": "solid",
+        "shadow": "strong",
+        "space": "spacious",
+        "button_shape": "pill",
+        "divider": "line"
+      }
     }
   ],
   "patterns": [

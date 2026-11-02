@@ -68,6 +68,7 @@ class Command(BaseCommand):
                     'layout_spec'   :   style.get('layout_spec') or {},
                     'page_theme'    :   style.get('page_theme', 'light'),
                     'tokens'        :   style.get('tokens') or {},
+                    'effects'       :   style.get('effects') or {},
                     'tags'          :   style.get('tags') or [],
                     'position'      :   position,
                 },
