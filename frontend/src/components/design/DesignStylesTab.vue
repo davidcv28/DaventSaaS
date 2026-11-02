@@ -472,12 +472,12 @@ onBeforeUnmount(() => {
 .dmenu-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .dmenu-live { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 .dmenu-card {
-  position: relative; overflow: hidden; padding: 18px;
+  position: relative; padding: 18px;
   display: flex; flex-direction: column; gap: 16px; container-type: inline-size;
   border: 1px solid color-mix(in srgb, var(--brand-500, #6366f1) 18%, var(--line, #e5e7eb));
 }
 .dmenu-card::before {
-  content: ''; position: absolute; inset: 0 0 auto; height: 3px;
+  content: ''; position: absolute; inset: 0 0 auto; height: 3px; border-radius: inherit;
   background: linear-gradient(90deg, var(--brand-500, #6366f1), var(--accent, #f59e0b) 55%, #8b5cf6);
 }
 .dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
