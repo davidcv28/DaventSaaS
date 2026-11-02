@@ -28,16 +28,19 @@
      estándar y una medianoche más honda (no existe versión de día).
    - esencial-premium: noche de gala — verde profundo, teal luminoso y el
      ámbar más presente en los acentos decorativos. */
+/* La paleta --ds-* siempre llega con los valores del estilo aplicado
+   (claro): la noche propia del diseño usa valores fijos y solo aclara
+   el acento elegido para que siga siendo legible sobre fondo oscuro. */
 html[data-ds-theme="dark"]:not([data-ds-style="esencial-noche"]),
 html[data-ds-style="esencial-noche"]{
-  --bg:var(--ds-bg,#0F1613);
-  --surface:var(--ds-surface,#18221E);
-  --ink:var(--ds-text,#E9EFEA);
-  --muted:var(--ds-muted,#9DB0A6);
-  --line:var(--ds-border,#2A3832);
-  --accent:var(--ds-accent,#5FC7B2);
-  --accent-ink:var(--ds-accent-ink,#0F1613);
-  --warm:var(--ds-secondary,#F0B55A);
+  --bg:#0F1613;
+  --surface:#18221E;
+  --ink:#E9EFEA;
+  --muted:#9DB0A6;
+  --line:#2A3832;
+  --accent:color-mix(in srgb,var(--ds-accent,#0E5A4F) 55%,#E9EFEA);
+  --accent-ink:#0F1613;
+  --warm:#F0B55A;
   color-scheme:dark;
 }
 /* Noche → medianoche (solo Esencial Noche con el toggle en oscuro). */
