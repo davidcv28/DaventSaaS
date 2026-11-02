@@ -13,7 +13,7 @@ import {
   allowedTemplatesFor, ensureStoreFont
 } from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
-import { normalizeLayoutConfig } from '../../templates/index.js'
+import { normalizeLayoutConfig, patternsForSiteTemplates } from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
 import DesignSelect from './DesignSelect.vue'
 import AppIcon from '../AppIcon.vue'
@@ -23,6 +23,9 @@ const props = defineProps({
   benefits: { type: Object, default: () => ({}) },
   shopName: { type: String, default: '' },
   canStudio: { type: Boolean, default: false },
+  // Páginas activas de la web ("Qué mostrar"): el catálogo de diseños se
+  // filtra a los patrones que cubren TODAS esas superficies.
+  siteTemplates: { type: Array, default: () => [] },
   // Estado del panel de vista previa: lo controla el padre para que la
   // savebar sticky también pueda abrirlo en mobile.
   previewOpen: { type: Boolean, default: false }
@@ -54,7 +57,17 @@ onMounted(() => {
 })
 
 const patternOptions = computed(() => (
-  modelPatterns.value.length ? modelPatterns.value : patterns.value
+  patternsForSiteTemplates(
+    modelPatterns.value.length ? modelPatterns.value : patterns.value,
+    props.siteTemplates
+  )
+))
+// La combinación de páginas no tiene ningún diseño: el toggle de "Qué
+// mostrar" ya lo bloquea, esto cubre un set guardado de otra época.
+const noPatternForCombo = computed(() => (
+  props.siteTemplates.length > 0
+  && (modelPatterns.value.length || patterns.value.length)
+  && !patternOptions.value.length
 ))
 // Cada diseño trae sus propios estilos (DesignStyle.pattern): con un diseño
 // elegido solo se listan los suyos (los sin vínculo siguen disponibles).
@@ -371,6 +384,9 @@ onMounted(() => {
           </p>
           <p v-else-if="status === 'success' && !patternOptions.length && !styleOptions.length" class="dmenu-alert" role="status">
             El catálogo está vacío: corré <code>manage.py seed_design_catalog</code> en el servidor.
+          </p>
+          <p v-if="noPatternForCombo" class="dmenu-alert" role="alert">
+            Ningún diseño cubre esa combinación de páginas: cambiala en «Qué mostrar».
           </p>
 
           <div v-if="!advanced" class="dmenu-lock">

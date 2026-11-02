@@ -132,6 +132,26 @@ export function resolveLayout(id, surface) {
   return templateBlocks(id, surface)
 }
 
+// Superficies que cubre un patrón de diseño (DesignPattern): las que
+// declara en `layout`; si no declara ninguna, hereda las del template base.
+export function patternSurfaces(pattern) {
+  const declared = Object.keys(normalizeLayoutConfig(pattern?.layout))
+  if (declared.length) return declared
+  const blocks = templateDef(templateOf(pattern?.template)).blocks || {}
+  return LAYOUT_SURFACES.filter((s) => Array.isArray(blocks[s]) && blocks[s].length)
+}
+
+// Filtra el catálogo a los patrones que cubren TODAS las páginas activas
+// de la tienda (site_templates: 'landing' | 'catalog' | 'services'). Si la
+// combinación no tiene ningún diseño compatible devuelve lista vacía y el
+// dashboard obliga a elegir otra combinación en "Qué mostrar".
+export function patternsForSiteTemplates(patterns, siteTemplates = []) {
+  const list = Array.isArray(patterns) ? patterns : []
+  const required = LAYOUT_SURFACES.filter((s) => siteTemplates.includes(s))
+  if (!required.length) return list
+  return list.filter((p) => required.every((s) => patternSurfaces(p).includes(s)))
+}
+
 // Etiquetas del catálogo para el panel (re-export cómodo).
 export const TEMPLATE_LABELS = Object.fromEntries(
   Object.entries(STORE_TEMPLATES).map(([key, meta]) => [key, meta.label])

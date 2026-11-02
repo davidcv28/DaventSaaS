@@ -70,7 +70,8 @@ import DesignPreview from '../components/design/DesignPreview.vue'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import AiDesignView from './design/AiDesignView.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
-import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef } from '../templates/index.js'
+import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, patternsForSiteTemplates } from '../templates/index.js'
+import { designApi } from '../api/design.api.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -1783,6 +1784,15 @@ function canToggleSiteTemplate(key) {
   if (on) return designSiteTemplates.value.length > 1 // la web nunca queda vacía
   return siteTemplatesMax.value === null || designSiteTemplates.value.length < siteTemplatesMax.value
 }
+// Diseños compatibles con la combinación de páginas: un patrón cubre una
+// superficie si su `layout` la declara (o la hereda su template). Si la
+// combinación elegida no tiene ningún diseño, el toggle se revierte y se
+// obliga a elegir otra — la sección Diseño filtra por el mismo criterio.
+let sitePatternPromise = null
+function loadSitePatterns() {
+  if (!sitePatternPromise) sitePatternPromise = designApi.listPatterns().catch(() => [])
+  return sitePatternPromise
+}
 async function toggleSiteTemplate(key) {
   if (!canToggleSiteTemplate(key)) return
   const current = [...designSiteTemplates.value]
@@ -1790,6 +1800,13 @@ async function toggleSiteTemplate(key) {
   if (i === -1) current.push(key)
   else current.splice(i, 1)
   const next = SITE_TEMPLATE_KEYS.filter((k) => current.includes(k))
+  if (next.length) {
+    const patterns = await loadSitePatterns()
+    if (patterns.length && !patternsForSiteTemplates(patterns, next).length) {
+      pushToast('Esa combinación no tiene diseños disponibles: elegí otra en «Qué mostrar».')
+      return
+    }
+  }
   const prev = normalizeSiteTemplates(designForm.site_templates)
   designForm.site_templates = next
   designForm.show_catalog = next.includes('catalog')
@@ -4194,6 +4211,7 @@ async function changePassword() {
             :benefits="plan?.benefits || {}"
             :shop-name="designShopName"
             :can-studio="canDesignAdvanced"
+            :site-templates="designSiteTemplates"
             @navigate="onDesignNav"
             @ring="lookRing = $event"
             @open-studio="openStudioRoute"
