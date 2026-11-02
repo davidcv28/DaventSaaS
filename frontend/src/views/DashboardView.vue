@@ -1508,7 +1508,6 @@ async function saveServices() {
 }
 
 async function savePlans() {
-  if (!supportsPlans.value) return
   companyErrs.plans = ''
   if (validateSectionTitle(designForm.plans_title.trim())) { companyErrs.plans = 'El título admite hasta 80 caracteres.'; return }
   if (hasPartialRow(designForm.plans, ['name', 'price'], ['name', 'price'])) {
@@ -1768,14 +1767,18 @@ const selectedSitePattern = computed(() => (
   || null
 ))
 const designSitePages = computed(() => {
-  if (!selectedSitePattern.value) return templatePages(designForm.template)
-  const covered = new Set(patternSurfaces(selectedSitePattern.value))
-  // Las claves que no son superficies de layout (p. ej. 'plans') las declara
-  // el template del patrón en `pages`, no su layout.
-  templatePages(selectedSitePattern.value.template)
-    .filter((k) => !LAYOUT_SURFACE_SET.has(k))
-    .forEach((k) => covered.add(k))
-  return [...covered]
+  const pages = !selectedSitePattern.value
+    ? new Set(templatePages(designForm.template))
+    : new Set([
+        ...patternSurfaces(selectedSitePattern.value),
+        // Las claves que no son superficies de layout (p. ej. 'plans') las
+        // declara el template del patrón en `pages`, no su layout.
+        ...templatePages(selectedSitePattern.value.template).filter((k) => !LAYOUT_SURFACE_SET.has(k))
+      ])
+  // 'plans' siempre se puede activar: si el diseño no la cubre, la web
+  // pública simplemente no la muestra.
+  pages.add('plans')
+  return [...pages]
 })
 const allowedSiteTemplates = computed(() =>
   allowedSiteTemplatesFor(plan.value?.benefits || {}).filter((k) => designSitePages.value.includes(k)))
@@ -4276,10 +4279,10 @@ async function changePassword() {
 
         <!-- ===== Planes de suscripción (publicidad, sin cobro online) ===== -->
         <div v-show="mkOpen === 'plans'" class="card mk-card">
-          <h3><AppIcon name="crown" :size="18" /> Planes de suscripción <span v-if="!supportsPlans" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
-          <p v-if="!supportsPlans" class="hint">La plantilla que elegiste no tiene apartado de suscripciones. Disponible en: {{ blockDesigns('plans') }}.</p>
+          <h3><AppIcon name="crown" :size="18" /> Planes de suscripción</h3>
+          <p v-if="!supportsPlans" class="hint">El diseño elegido no muestra este apartado en tu web, pero podés cargar los planes igual: se ven cuando cambies a un diseño que lo incluya ({{ blockDesigns('plans') }}).</p>
           <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Publicá membresías o clubs sin cobro online: los interesados te escriben por WhatsApp o el formulario.</span></p>
-          <fieldset class="mk-fieldset" :disabled="!supportsPlans">
+          <fieldset class="mk-fieldset">
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_plans" type="checkbox" />
