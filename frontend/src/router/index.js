@@ -25,6 +25,7 @@ const StorePublicLayout = () => import('../views/StorePublicLayout.vue')
 const StoreHomeView = () => import('../views/StoreHomeView.vue')
 const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreServicesView = () => import('../views/StoreServicesView.vue')
+const StorePlansView = () => import('../views/StorePlansView.vue')
 const StoreProductView = () => import('../views/StoreProductView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
@@ -53,6 +54,14 @@ const storeChildren = [
     name: 'store-services',
     component: StoreServicesView,
     meta: { title: 'Servicios' }
+  },
+  // Página "Suscripciones" (site_templates): membresías/clubs que el
+  // negocio ofrece a sus clientes — solo publicidad, sin cobro online.
+  {
+    path: 'suscripciones',
+    name: 'store-plans',
+    component: StorePlansView,
+    meta: { title: 'Suscripciones' }
   },
   // Publicación de producto estilo marketplace (ficha completa).
   {

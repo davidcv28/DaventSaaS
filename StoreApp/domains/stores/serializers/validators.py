@@ -15,7 +15,7 @@ RESERVED_SLUGS = {
     'catalog', 'contacto', 'dashboard', 'facturas', 'help', 'invoices',
     'legal', 'login', 'logout', 'mail', 'media', 'panel', 'pagos',
     'payments', 'planes', 'plans', 'privacidad', 'registro', 'register',
-    'soporte', 'static', 'store', 'suscriptions', 'terminos', 'tienda',
+    'soporte', 'static', 'store', 'suscripciones', 'suscriptions', 'terminos', 'tienda',
     'token', 'web', 'www',
 }
 SLUG_PATTERN   =   re.compile(r'^[a-z0-9](?:[a-z0-9-]{1,58}[a-z0-9])?$')

@@ -29,7 +29,7 @@ dict_benefits = {
     'has_discounts'     :   {'label': 'Descuentos programados del catálogo',  'kind': 'flag'},
     'has_support_chat'  :   {'label': 'Chat directo con el equipo de soporte',  'kind': 'flag'},
     'has_services_site' :   {'label': 'Página de servicios con pedidos por WhatsApp', 'kind': 'flag'},
-    'max_site_templates':   {'label': 'Páginas de la web (portada, servicios, catálogo)', 'kind': 'limit'},
+    'max_site_templates':   {'label': 'Páginas de la web (portada, servicios, catálogo, suscripciones)', 'kind': 'limit'},
     'has_ai_design'     :   {'label': 'Diseño web automático con IA propia', 'kind': 'flag'},
     'has_ai_chat'       :   {'label': 'Chat de diseño con IA (describí y se aplica)', 'kind': 'flag'},
 }

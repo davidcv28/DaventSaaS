@@ -251,6 +251,17 @@ class SiteTemplatesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['customization']['site_templates'], ['landing', 'services', 'catalog'])
 
+    def test_plans_page_needs_no_flag_but_counts_in_limit(self):
+        #'plans' no exige flag propio (a diferencia de 'services'), solo
+        #cuenta dentro del cupo max_site_templates del plan.
+        client, _, _    =   self._client(services = False, max_templates = 2)
+        response        =   self._patch(client, ['landing', 'plans'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['site_templates'], ['landing', 'plans'])
+        response        =   self._patch(client, ['landing', 'catalog', 'plans'])
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('site_templates', response.data)
+
     def test_empty_list_rejected(self):
         client, _, _    =   self._client()
         self.assertEqual(self._patch(client, []).status_code, 400)

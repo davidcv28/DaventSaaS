@@ -532,21 +532,25 @@ export const CUSTOMIZATION_DEFAULTS = {
 // ===== Páginas de la web (espejo de services/services.py del backend) =====
 // site_templates es multi-selección de catálogo cerrado: 'landing' =
 // portada de marketing, 'services' = página de servicios con pedidos por
-// WhatsApp, 'catalog' = catálogo de productos. El plan fija el cupo
-// (max_site_templates) y 'services' exige además el flag has_services_site;
-// el backend fuerza ambas reglas en el PATCH de customization (400) y la
-// web pública recibe el set EFECTIVO (guardado ∩ plan vigente).
-export const SITE_TEMPLATE_KEYS = ['landing', 'services', 'catalog']
+// WhatsApp, 'catalog' = catálogo de productos, 'plans' = página de
+// suscripciones/membresías del negocio (el JSON plans de "Mi empresa",
+// solo publicidad). El plan fija el cupo (max_site_templates) y
+// 'services' exige además el flag has_services_site — 'plans' no pide
+// flag, solo cuenta dentro del cupo; el backend fuerza ambas reglas en
+// el PATCH de customization (400) y la web pública recibe el set
+// EFECTIVO (guardado ∩ plan vigente).
+export const SITE_TEMPLATE_KEYS = ['landing', 'services', 'catalog', 'plans']
 export const SITE_TEMPLATES = {
-  landing:  { label: 'Portada',   icon: 'store',        desc: 'Tu página principal: presentación, secciones de marketing y contacto.' },
-  services: { label: 'Servicios', icon: 'wrench',       desc: 'Listá tus servicios con precios orientativos y recibí pedidos por WhatsApp. Sin pagos online.', benefit: 'has_services_site' },
-  catalog:  { label: 'Catálogo',  icon: 'package',      desc: 'Tu catálogo de productos con buscador, filtros y fichas.' }
+  landing:  { label: 'Portada',       icon: 'store',   desc: 'Tu página principal: presentación, secciones de marketing y contacto.' },
+  services: { label: 'Servicios',     icon: 'wrench',  desc: 'Listá tus servicios con precios orientativos y recibí pedidos por WhatsApp. Sin pagos online.', benefit: 'has_services_site' },
+  catalog:  { label: 'Catálogo',      icon: 'package', desc: 'Tu catálogo de productos con buscador, filtros y fichas.' },
+  plans:    { label: 'Suscripciones', icon: 'crown',   desc: 'Membresías, clubs o packs por suscripción que ofrecés a tus clientes (se cargan en «Mi empresa», sin cobro online).' }
 }
 // Web mínima por defecto (misma conducta que el viejo site_mode='both').
 export const DEFAULT_SITE_TEMPLATES = ['landing', 'catalog']
 
 // Tope de páginas según el plan: max_site_templates ausente -> 2 (piso
-// histórico portada+catálogo); null -> las tres.
+// histórico portada+catálogo); null -> todas.
 export function siteTemplatesLimit(benefits = {}) {
   if (!('max_site_templates' in benefits)) return 2
   return benefits.max_site_templates

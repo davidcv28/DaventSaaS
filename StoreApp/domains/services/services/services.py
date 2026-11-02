@@ -43,7 +43,7 @@ def services_enabled(profile):
 def site_templates_limit(profile):
     """
     Máximo de páginas de la web según el plan vigente. None = sin tope
-    (las tres). Sin el beneficio declarado queda el piso histórico: 2
+    (todas). Sin el beneficio declarado queda el piso histórico: 2
     (la web mínima siempre fue portada+catálogo).
     """
     benefits    =   _benefits_of(profile)
@@ -53,9 +53,9 @@ def site_templates_limit(profile):
 def allowed_site_templates(profile):
     """
     Claves de SITE_TEMPLATES que el plan vigente puede elegir: 'services'
-    exige el flag has_services_site; landing/catalog van con cualquier
-    suscripción activa (los planes sin has_customization tampoco llegan
-    acá: el PATCH de customization ya los frena antes).
+    exige el flag has_services_site; landing/catalog/plans van con
+    cualquier suscripción activa (los planes sin has_customization tampoco
+    llegan acá: el PATCH de customization ya los frena antes).
     """
     allowed     =   [key for key in SITE_TEMPLATES if key != 'services']
     if services_enabled(profile):
@@ -91,7 +91,7 @@ def validate_site_templates(profile, value):
         errors.append('La página de servicios está disponible desde el plan Estándar.')
     limit       =   site_templates_limit(profile)
     if limit is not None and len(templates) > limit:
-        errors.append(f'Tu plan admite hasta {limit} páginas en tu web. Pasate a un plan superior para sumar las tres.')
+        errors.append(f'Tu plan admite hasta {limit} páginas en tu web. Pasate a un plan superior para sumar más.')
     if errors:
         raise DjValidationError(errors)
     return templates

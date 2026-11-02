@@ -252,15 +252,19 @@ class StoreCustomization(models.Model):
     #Páginas que componen la web pública del cliente (catálogo cerrado y
     #multi-selección): 'landing' = portada de marketing, 'services' =
     #página de servicios con pedido por WhatsApp, 'catalog' = catálogo de
-    #productos. La cantidad máxima la fija el beneficio 'max_site_templates'
-    #del plan (básico/estándar = 2, premium/trial = ilimitado) y 'services'
-    #además exige el flag 'has_services_site' (estándar en adelante).
+    #productos, 'plans' = página de suscripciones/membresías que el negocio
+    #ofrece a sus clientes (el mismo JSON 'plans' de la sección de portada;
+    #solo publicidad, sin cobro online). La cantidad máxima la fija el
+    #beneficio 'max_site_templates' del plan (básico/estándar = 2,
+    #premium/trial = ilimitado) y 'services' además exige el flag
+    #'has_services_site' (estándar en adelante); 'plans' no pide flag —
+    #cualquier plan puede sumarla dentro de su cupo.
     #services.validate_site_templates fuerza ambas reglas en el serializer;
     #las filas viejas se migraron desde site_mode (marketing->['landing'],
     #catalog->['catalog'], both->['landing','catalog']). El serializer
     #mantiene show_catalog sincronizado ('catalog' presente -> True) y
     #expone site_mode derivado para compat con las plantillas del catálogo.
-    SITE_TEMPLATES              =   ('landing', 'services', 'catalog')
+    SITE_TEMPLATES              =   ('landing', 'services', 'catalog', 'plans')
     site_templates              =   models.JSONField(default = default_site_templates, blank = True, verbose_name = 'Páginas de la web')
     #===== Config de la página "Servicios" (dominio services) =====
     #Bloques del embudo de pedido: los pasos "cómo funciona" (filas

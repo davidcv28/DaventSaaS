@@ -1773,7 +1773,7 @@ const siteTemplatesMax = computed(() => siteTemplatesLimit(plan.value?.benefits 
 const designSiteTemplates = computed(() => resolveSiteTemplates(designForm.site_templates, plan.value?.benefits || {}))
 const siteTemplatesHint = computed(() => {
   const max = siteTemplatesMax.value
-  return max === null ? 'Tu plan permite tener las tres páginas activas.' : `Tu plan permite hasta ${max} ${max === 1 ? 'página' : 'páginas'} a la vez.`
+  return max === null ? 'Tu plan permite tener todas las páginas activas.' : `Tu plan permite hasta ${max} ${max === 1 ? 'página' : 'páginas'} a la vez.`
 })
 function siteTemplateLock(key) {
   return key === 'services' && !canServicesSite.value ? 'Desde Estándar' : ''
@@ -4127,7 +4127,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Plantillas de tu web</h1>
-          <p>Tu sitio puede tener hasta {{ siteTemplatesMax === null ? 'tres' : siteTemplatesMax }} páginas. Elegí cuáles mostrar: se guardan al instante.</p>
+          <p>Tu sitio puede tener hasta {{ siteTemplatesMax === null ? siteTemplateKeys.length : siteTemplatesMax }} páginas. Elegí cuáles mostrar: se guardan al instante.</p>
         </div>
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>

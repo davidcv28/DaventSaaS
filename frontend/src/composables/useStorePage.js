@@ -17,12 +17,13 @@ export function useStorePage() {
   const {
     slug, store, status, custom, shopName, nameFont, initial, location,
     hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact,
-    showCatalog, showServices, siteTemplates, loadPublicCatalog
+    showCatalog, showServices, showPlans, siteTemplates, loadPublicCatalog
   } = ctx
 
   const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
   const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
   const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
+  const plansTo = computed(() => ({ path: storeHostSlug ? '/suscripciones' : `/${slug.value}/suscripciones` }))
   const productTo = (p) => ({
     name: 'store-product',
     params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id }
@@ -147,8 +148,8 @@ export function useStorePage() {
   return {
     ctx, slug, store, status, custom, shopName, nameFont, initial, location,
     hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact,
-    showCatalog, showServices, siteTemplates,
-    homeTo, catalogTo, servicesTo, productTo, openProduct,
+    showCatalog, showServices, showPlans, siteTemplates,
+    homeTo, catalogTo, servicesTo, plansTo, productTo, openProduct,
     heroTitle, heroTitleIsName, cover, carousel, gallery, socials, year, collectionTag,
     now, openNow,
     catalog, catalogStatus, loadCatalog, products, categories, brands,

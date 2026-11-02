@@ -434,13 +434,16 @@ const showContact = computed(() => status.value === 'success' && custom.value.sh
 const showCatalog = computed(() => status.value === 'success' && custom.value.show_catalog !== false)
 // Páginas efectivas de la web (site_templates ya viene filtrado por el
 // plan desde el backend): 'landing' = portada, 'services' = servicios con
-// pedido por WhatsApp, 'catalog' = catálogo de productos.
+// pedido por WhatsApp, 'catalog' = catálogo de productos, 'plans' =
+// página de suscripciones/membresías.
 const siteTemplates = computed(() => {
   const list = Array.isArray(custom.value.site_templates) ? custom.value.site_templates : ['landing', 'catalog']
-  return ['landing', 'services', 'catalog'].filter((k) => list.includes(k))
+  return ['landing', 'services', 'catalog', 'plans'].filter((k) => list.includes(k))
 })
 // Página "Servicios": aparece solo si quedó en el set efectivo del plan.
 const showServices = computed(() => status.value === 'success' && siteTemplates.value.includes('services'))
+// Página "Suscripciones": ídem — sin flag propio, solo el cupo del plan.
+const showPlans = computed(() => status.value === 'success' && siteTemplates.value.includes('plans'))
 // Web sin portada: el home redirige a la primera página disponible
 // (Servicios si existe, si no el catálogo) y el menú no ofrece Inicio ni
 // las secciones de marketing. Cubre el viejo "modo solo catálogo" y la
@@ -463,6 +466,7 @@ const navMenuLinks = computed(() => {
   if (!landingOff.value) links.push({ to: homeTo.value, label: 'Inicio' })
   if (showServices.value) links.push({ to: servicesTo.value, label: 'Servicios' })
   if (showCatalog.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
+  if (showPlans.value) links.push({ to: plansTo.value, label: 'Suscripciones' })
   if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros', anchor: true })
   if (showGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
   if (showContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto', anchor: true })
@@ -476,9 +480,9 @@ const hasNavMenu = computed(() => status.value === 'success' && !isShop.value &&
 // (4 destinos + "Más") en lugar del burger; 'top' conserva el header con
 // burger + drawer lateral y 'drawer' deja solo marca + burger.
 const mobileNav = computed(() => pageAttrs.value['data-st-nav'] || 'bottom')
-// Prioridad de destinos en la tab bar: Inicio → Catálogo → Servicios → Contacto.
-const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Servicios', 'Contacto']
-const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Servicios: 'wrench', Contacto: 'message-circle' }
+// Prioridad de destinos en la tab bar: Inicio → Catálogo → Servicios → Suscripciones → Contacto.
+const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Servicios', 'Suscripciones', 'Contacto']
+const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Servicios: 'wrench', Suscripciones: 'crown', Contacto: 'message-circle' }
 const tabLinks = computed(() => {
   const byLabel = new Map(navMenuLinks.value.map((l) => [l.label, l]))
   return TAB_PRIORITY.filter((label) => byLabel.has(label)).slice(0, 4)
@@ -490,6 +494,7 @@ function isTabActive(label) {
   return (label === 'Inicio' && shopCurrent.value === 'home')
     || (label === 'Catálogo' && shopCurrent.value === 'catalog')
     || (label === 'Servicios' && shopCurrent.value === 'services')
+    || (label === 'Suscripciones' && shopCurrent.value === 'plans')
     || (label === 'Contacto' && shopCurrent.value === 'contacto')
 }
 
@@ -543,6 +548,7 @@ onBeforeUnmount(() => {
 })
 const isCatalog = computed(() => route.name === 'store-catalog')
 const isServices = computed(() => route.name === 'store-services')
+const isPlans = computed(() => route.name === 'store-plans')
 const isProduct = computed(() => route.name === 'store-product')
 const isHome = computed(() => route.name === 'store-public')
 // Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
@@ -551,6 +557,7 @@ const isHome = computed(() => route.name === 'store-public')
 const shopCurrent = computed(() => {
   if (isCatalog.value || isProduct.value) return 'catalog'
   if (isServices.value) return 'services'
+  if (isPlans.value) return 'plans'
   if (!isHome.value) return ''
   const hash = route.hash.replace('#', '')
   return ['nosotros', 'galeria', 'contacto'].includes(hash) ? hash : 'home'
@@ -558,9 +565,11 @@ const shopCurrent = computed(() => {
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
+const plansTo = computed(() => ({ path: storeHostSlug ? '/suscripciones' : `/${slug.value}/suscripciones` }))
 // Página de reemplazo cuando no hay portada: Servicios si está, si no el
-// catálogo (la web nunca queda sin destino — el backend siempre manda ≥1).
-const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : catalogTo.value))
+// catálogo, si no Suscripciones (la web nunca queda sin destino — el
+// backend siempre manda ≥1).
+const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : showCatalog.value ? catalogTo.value : plansTo.value))
 // Anclas de sección (#nosotros/#galeria/#contacto): van al inicio.
 const anchorTo = (hash) => ({ path: homeTo.value.path, hash })
 watch([landingOff, isHome], ([off, home]) => { if (off && home) router.replace(homeFallbackTo.value) }, { immediate: true })
@@ -585,7 +594,7 @@ const topCta = computed(() => {
     if (showServices.value && !isServices.value) return { to: servicesTo.value, icon: 'wrench', label: 'Servicios' }
     return null
   }
-  if (isServices.value) {
+  if (isServices.value || isPlans.value) {
     if (!landingOff.value) return { to: homeTo.value, icon: 'store', label: 'Inicio' }
     if (showCatalog.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
     return null
@@ -697,7 +706,7 @@ provide('storeIconContext', computed(() => ({
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, siteTemplates, ui,
+  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, showPlans, siteTemplates, ui,
   loadPublicCatalog
 })
 
@@ -708,6 +717,7 @@ watch([status, () => route.name], ([s, name]) => {
   if (s !== 'success') return
   document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
     : name === 'store-services' ? `${shopName.value} · Servicios`
+    : name === 'store-plans' ? `${shopName.value} · Suscripciones`
     : shopName.value
 }, { immediate: true })
 
@@ -917,6 +927,7 @@ onBeforeUnmount(() => {
           <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
           <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
+          <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
           <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
           <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
           <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
@@ -967,6 +978,7 @@ onBeforeUnmount(() => {
             <RouterLink v-if="!landingOff" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
             <RouterLink v-if="showServices" :to="servicesTo" :class="{ 'is-current': shopCurrent === 'services' }" :aria-current="shopCurrent === 'services' ? 'page' : null">Servicios</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
+            <RouterLink v-if="showPlans" :to="plansTo" :class="{ 'is-current': shopCurrent === 'plans' }" :aria-current="shopCurrent === 'plans' ? 'page' : null">Suscripciones</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
             <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
             <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
@@ -1117,6 +1129,7 @@ onBeforeUnmount(() => {
             <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
             <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
             <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
+            <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
             <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
             <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
