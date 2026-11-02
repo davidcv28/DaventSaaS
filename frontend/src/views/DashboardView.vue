@@ -4115,7 +4115,7 @@ async function changePassword() {
         </template>
         <template #actions>
           <div class="design-actions">
-            <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
+            <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
             <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
           </div>
           <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
