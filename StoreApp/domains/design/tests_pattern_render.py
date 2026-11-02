@@ -165,7 +165,10 @@ class PatternRenderServiceTests(TestCase):
             ),
         )
         doc = render_store_pattern(store)
-        self.assertEqual(doc['surfaces'], ['catalog', 'landing', 'services'])
+        #La tienda del test no tiene página Servicios (sin has_services_site
+        #en el plan): su superficie queda fuera del documento y la ruta sigue
+        #con la plantilla Vue.
+        self.assertEqual(doc['surfaces'], ['catalog', 'landing'])
         self.assertEqual(doc['products_total'], 1)
         self.assertEqual(doc['products_shown'], 24)
         #La tarjeta lleva sus datos: el catálogo filtra y ordena en el navegador.
@@ -187,6 +190,40 @@ class PatternRenderServiceTests(TestCase):
         store   =   _store()
         _pattern(slug = 'raiz', html = '')
         self.assertIsNone(render_store_pattern(store))
+
+    def test_disabled_pages_hide_flagged_zones_and_surfaces(self):
+        #Las páginas que el dueño apaga en "Qué mostrar" (site_templates)
+        #y los toggles show_* se respetan en el documento del diseño:
+        #superficie fuera del contrato + regla [data-flag] que apaga la
+        #zona marcada (sección, CTA y enlace del menú).
+        DesignPattern.objects.all().delete()
+        store   =   _store(
+            template        = 'raiz',
+            site_templates  = ['landing'],
+            show_catalog    = False,
+            show_contact    = False,
+        )
+        _pattern(
+            slug = 'raiz',
+            html = (
+                '<a data-flag="catalog">Catálogo</a>'
+                '<div data-surface="landing">{{products}}</div>'
+                '<div data-surface="catalog">{{products}}</div>'
+            ),
+        )
+        doc = render_store_pattern(store)
+        self.assertEqual(doc['surfaces'], ['landing'])
+        self.assertIn('[data-flag="catalog"]{display:none!important}', doc['css'])
+        self.assertIn('[data-flag="contact"]{display:none!important}', doc['css'])
+        self.assertNotIn('ds-empty', doc['html'])
+
+    def test_plans_section_follows_site_templates_and_toggle(self):
+        from StoreApp.domains.design.services.pattern_render import _plans_fragment
+
+        store   =   _store(site_templates = ['landing', 'catalog'], show_plans = True)
+        custom  =   store.customization
+        custom.plans = [{'name': 'Club', 'price': '$10.000'}]
+        self.assertEqual(_plans_fragment(store, custom), '')
 
 
 class ProductReviewFragmentTests(TestCase):

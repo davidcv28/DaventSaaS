@@ -621,10 +621,10 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </a>
     <nav class="nav" id="site-nav" aria-label="Principal">
       <a href="#inicio" data-ds-route="home">Inicio</a>
-      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
-      <a href="#servicios" data-ds-route="services">Servicios</a>
-      <a href="#suscripciones" data-ds-route="home" data-ds-anchor>Suscripciones</a>
-      <a href="#contacto" data-ds-route="home" data-ds-anchor>Contacto</a>
+      <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
+      <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+      <a href="#suscripciones" data-ds-route="home" data-ds-anchor data-flag="plans">Suscripciones</a>
+      <a href="#contacto" data-ds-route="home" data-ds-anchor data-flag="contact">Contacto</a>
     </nav>
   </div>
 </header>
@@ -634,11 +634,11 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
     <span>Inicio</span>
   </a>
-  <a class="m-tab" href="#catalogo" data-ds-route="catalog">
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
     <span>Catálogo</span>
   </a>
-  <a class="m-tab" href="#servicios" data-ds-route="services">
+  <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
     <span>Servicios</span>
   </a>
@@ -660,10 +660,10 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   </div>
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
-    <a href="#servicios" data-ds-route="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#suscripciones" data-m-close><span>Suscripciones</span><span aria-hidden="true">04</span></a>
-    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">05</span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
+    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true">03</span></a>
+    <a href="#suscripciones" data-m-close data-flag="plans"><span>Suscripciones</span><span aria-hidden="true">04</span></a>
+    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">05</span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -680,7 +680,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
         <h1 class="enter" style="--d:100ms">{{store_tagline}}</h1>
         <p class="lead enter" style="--d:200ms">{{store_description}}</p>
         <div class="hero-actions enter" style="--d:300ms">
-          <a class="btn" href="#catalogo" data-ds-route="catalog">Ver catálogo <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver catálogo <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           <a class="btn ghost" href="{{store_whatsapp_url}}">Consultar</a>
         </div>
       </div>
@@ -717,7 +717,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </div>
   </div>
 
-  <section class="section band" id="destacados">
+  <section class="section band" id="destacados" data-flag="catalog">
     <div class="wrap">
       <div class="section-head reveal">
         <p class="eyebrow">Catálogo</p>
@@ -728,7 +728,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </div>
   </section>
 
-  <section class="section" id="servicios-landing">
+  <section class="section" id="servicios-landing" data-flag="services">
     <div class="wrap">
       <div class="section-head reveal">
         <p class="eyebrow">Servicios</p>
@@ -740,7 +740,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </div>
   </section>
 
-  <section class="section band plans-sec" id="suscripciones">
+  <section class="section band plans-sec" id="suscripciones" data-flag="plans">
     <div class="wrap">
       <div class="section-head reveal">
         <p class="eyebrow">Suscripciones</p>
@@ -752,7 +752,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </div>
   </section>
 
-  <section class="section" id="contacto">
+  <section class="section" id="contacto" data-flag="contact">
     <div class="wrap contact-grid reveal">
       <div>
         <p class="eyebrow">Contacto</p>
@@ -771,7 +771,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 
 </div>
 
-<section class="section" data-surface="catalog" id="catalogo">
+<section class="section" data-surface="catalog" id="catalogo" data-flag="catalog">
   <div class="wrap">
     <h1 class="sr-only">Catálogo de {{store_name}}</h1>
     <nav class="cat-crumbs" aria-label="Ruta">
@@ -801,7 +801,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   </div>
 </section>
 
-<section class="section" data-surface="services" id="servicios">
+<section class="section" data-surface="services" id="servicios" data-flag="services">
   <div class="wrap">
     <h1 class="sr-only">Servicios de {{store_name}}</h1>
     <nav class="cat-crumbs" aria-label="Ruta">
@@ -819,7 +819,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   </div>
 </section>
 
-<section class="section" data-surface="product">
+<section class="section" data-surface="product" data-flag="catalog">
   <div class="wrap">
     <h1 class="sr-only">{{product_name}} · {{store_name}}</h1>
     <nav class="cat-crumbs" aria-label="Ruta">

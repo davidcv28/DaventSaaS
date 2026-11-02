@@ -545,8 +545,8 @@
 <nav class="tabs" aria-label="Secciones">
   <div class="shell tabs-in">
     <a class="on" href="#inicio" data-ds-route="home">Inicio</a>
-    <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
-    <a href="#contacto">Contacto</a>
+    <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
+    <a href="#contacto" data-flag="contact">Contacto</a>
   </div>
 </nav>
 
@@ -555,11 +555,11 @@
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
     <span>Inicio</span>
   </a>
-  <a class="m-tab" href="#catalogo" data-ds-route="catalog">
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
     <span>Catálogo</span>
   </a>
-  <a class="m-tab" href="#contacto">
+  <a class="m-tab" href="#contacto" data-flag="contact">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
     <span>Contacto</span>
   </a>
@@ -581,8 +581,8 @@
   </div>
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
-    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">03</span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
+    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">03</span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -595,7 +595,7 @@
         <h1>{{store_tagline}}</h1>
         <p class="lead">{{store_description}}</p>
         <div class="actions">
-          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog">Ver catálogo</a>
+          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver catálogo</a>
           <a class="btn btn-ghost" href="{{store_whatsapp_url}}">Consultar</a>
         </div>
         <ul class="facts">
@@ -616,14 +616,14 @@
     </div>
   </section>
 
-  <section class="band white">
+  <section class="band white" data-flag="catalog">
     <div class="shell">
       <div class="head"><h2>Categorías</h2><a href="#catalogo" data-ds-route="catalog">Ver todas</a></div>
       <div class="cats">{{categories}}</div>
     </div>
   </section>
 
-  <section class="band gray" id="ofertas">
+  <section class="band gray" id="ofertas" data-flag="catalog">
     <div class="shell">
       <div class="head"><h2>Destacados</h2><a href="#catalogo" data-ds-route="catalog">Ver catálogo</a></div>
       <div class="grid">{{products}}</div>
@@ -641,7 +641,7 @@
 
 </div>
 
-<section class="cat-surface" data-surface="catalog" id="catalogo">
+<section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog">
   <div class="shell">
     <h1 class="sr-only">Catálogo de {{store_name}}</h1>
     <nav class="crumbs" aria-label="Ruta">
@@ -731,7 +731,7 @@
   </div>
 </section>
 
-<section class="pdp-surface" data-surface="product">
+<section class="pdp-surface" data-surface="product" data-flag="catalog">
   <div class="shell">
     <h1 class="sr-only">{{product_name}} · {{store_name}}</h1>
     <nav class="crumbs" aria-label="Ruta">
@@ -788,7 +788,7 @@
     <p class="foot-name">{{store_name}}</p>
     <div class="foot-grid">
       <div><p class="foot-h">Encontranos</p><span>{{store_address}}</span><span>{{store_location}}</span></div>
-      <div><p class="foot-h">Contacto</p><span>{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
+      <div data-flag="contact"><p class="foot-h">Contacto</p><span>{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
       <div><p class="foot-h">El negocio</p><span>{{store_tagline}}</span></div>
     </div>
     <p class="foot-legal">© {{year}} {{store_name}} · Todos los derechos reservados</p>

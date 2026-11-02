@@ -488,8 +488,8 @@
     </button>
     <nav class="top-nav" aria-label="Secciones">
       <a href="#inicio" data-ds-route="home"><i>01</i> Inicio</a>
-      <a href="#catalogo" data-ds-route="catalog"><i>02</i> Catálogo</a>
-      <a href="#servicios" data-ds-route="services"><i>03</i> Servicios</a>
+      <a href="#catalogo" data-ds-route="catalog" data-flag="catalog"><i>02</i> Catálogo</a>
+      <a href="#servicios" data-ds-route="services" data-flag="services"><i>03</i> Servicios</a>
     </nav>
     <div class="top-meta">{{store_hours}}</div>
   </div>
@@ -500,11 +500,11 @@
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
     <span>Inicio</span>
   </a>
-  <a class="m-tab" href="#catalogo" data-ds-route="catalog">
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
     <span>Catálogo</span>
   </a>
-  <a class="m-tab" href="#servicios" data-ds-route="services">
+  <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
     <span>Servicios</span>
   </a>
@@ -526,9 +526,9 @@
   </div>
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
-    <a href="#servicios" data-ds-route="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
+    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true">03</span></a>
+    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">04</span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -541,7 +541,7 @@
         <h1>{{store_tagline}}</h1>
         <p class="lead">{{store_description}}</p>
         <div class="actions">
-          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog">Ver la colección</a>
+          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver la colección</a>
           <a class="btn btn-ghost" href="{{store_whatsapp_url}}">Pedir turno</a>
         </div>
         <dl class="specs">
@@ -568,14 +568,14 @@
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" data-flag="catalog">
     <div class="shell">
       <div class="head reveal"><h2>Categorías</h2><a href="#catalogo" data-ds-route="catalog">Ver todo</a></div>
       <div class="cats">{{categories}}</div>
     </div>
   </section>
 
-  <section class="band" id="coleccion">
+  <section class="band" id="coleccion" data-flag="catalog">
     <div class="shell">
       <div class="head reveal"><h2>La colección</h2><span>{{year}} · Otoño invierno</span></div>
       <div class="lookbook">{{products}}</div>
@@ -607,7 +607,7 @@
   </section>
 </div>
 
-<section class="cat-surface" data-surface="catalog" id="catalogo">
+<section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog">
   <div class="shell">
     <div class="cat-head reveal"><h1>Catálogo</h1><span data-ds-count></span></div>
     <div class="cat-tools">
@@ -637,7 +637,7 @@
   </div>
 </section>
 
-<section class="svc-surface" data-surface="services" id="servicios">
+<section class="svc-surface" data-surface="services" id="servicios" data-flag="services">
   <div class="shell">
     <div class="svc-head reveal"><h1>Servicios</h1><p>{{store_about}}</p></div>
     <div class="svc-body">
@@ -647,7 +647,7 @@
   </div>
 </section>
 
-<section class="pdp-surface" data-surface="product">
+<section class="pdp-surface" data-surface="product" data-flag="catalog">
   <div class="shell">
     <nav class="pdp-crumb" aria-label="Ruta">
       <a href="#inicio" data-ds-route="home">Inicio</a>
@@ -694,7 +694,7 @@
     <p class="foot-name">{{store_name}}</p>
     <div class="foot-grid">
       <div><p class="foot-h">Atelier</p><span>{{store_address}}</span><span>{{store_location}}</span></div>
-      <div><p class="foot-h">Contacto</p><span>{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
+      <div data-flag="contact"><p class="foot-h">Contacto</p><span>{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
       <div><p class="foot-h">El negocio</p><span>{{store_tagline}}</span></div>
     </div>
     <p class="foot-legal">© {{year}} {{store_name}} · Sastrería editorial</p>

@@ -226,7 +226,7 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 7h10v8H4z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="8" cy="17" r="2"/><circle cx="18" cy="17" r="2"/></svg>
       {{store_name}} <i aria-hidden="true"></i>
     </a>
-    <nav aria-label="Principal"><a href="#modulos" data-ds-route="catalog">Módulos</a><a href="#sistema" data-ds-route="services">Sistema</a><a href="#contacto">Contacto</a></nav>
+    <nav aria-label="Principal"><a href="#modulos" data-ds-route="catalog" data-flag="catalog">Módulos</a><a href="#sistema" data-ds-route="services" data-flag="services">Sistema</a><a href="#contacto" data-flag="contact">Contacto</a></nav>
   </header>
 
 <nav class="m-tabs" aria-label="Secciones principales">
@@ -234,11 +234,11 @@
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
     <span>Inicio</span>
   </a>
-  <a class="m-tab" href="#modulos" data-ds-route="catalog">
+  <a class="m-tab" href="#modulos" data-ds-route="catalog" data-flag="catalog">
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
     <span>Módulos</span>
   </a>
-  <a class="m-tab" href="#sistema" data-ds-route="services">
+  <a class="m-tab" href="#sistema" data-ds-route="services" data-flag="services">
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
     <span>Sistema</span>
   </a>
@@ -260,9 +260,9 @@
   </div>
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#modulos" data-ds-route="catalog" data-m-close><span>Módulos</span><span aria-hidden="true">02</span></a>
-    <a href="#sistema" data-ds-route="services" data-m-close><span>Sistema</span><span aria-hidden="true">03</span></a>
-    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    <a href="#modulos" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Módulos</span><span aria-hidden="true">02</span></a>
+    <a href="#sistema" data-ds-route="services" data-m-close data-flag="services"><span>Sistema</span><span aria-hidden="true">03</span></a>
+    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">04</span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -297,13 +297,13 @@
     </div>
   </section>
 
-  <section class="catalog" id="modulos">
+  <section class="catalog" id="modulos" data-flag="catalog">
     <div class="catalog-head"><h2>Módulos disponibles</h2><span>Stock real · precio final</span></div>
     <div class="tabs" id="lineas">{{categories}}</div>
     <div class="rows">{{products}}</div>
   </section>
 
-  <section class="status" id="sistema">
+  <section class="status" id="sistema" data-flag="services">
     <div>
       <h2>Sistema de atención</h2>
       <p>{{store_about}}</p>
@@ -312,11 +312,11 @@
     <div id="contacto">{{services}}</div>
   </section>
 
-  <div class="gallery">{{gallery}}</div>
+  <div class="gallery" data-flag="gallery">{{gallery}}</div>
 
     </div>
 
-  <section class="cat-surface" data-surface="catalog">
+  <section class="cat-surface" data-surface="catalog" data-flag="catalog">
     <div class="cat-head"><h1>Catálogo</h1><span data-ds-count></span></div>
     <div class="cat-tools">
       <div class="cat-filters" data-ds-filters></div>
@@ -333,13 +333,13 @@
     <p class="ds-empty" data-ds-noresults hidden>No hay productos en esta categoría.</p>
   </section>
 
-  <section class="svc-surface" data-surface="services">
+  <section class="svc-surface" data-surface="services" data-flag="services">
     <div class="svc-head"><h1>Servicios</h1><p>{{store_about}}</p></div>
     <div class="svc-body">{{services}}</div>
     <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
   </section>
 
-  <section class="pdp-surface" data-surface="product">
+  <section class="pdp-surface" data-surface="product" data-flag="catalog">
     <nav class="pdp-crumb" aria-label="Ruta">
       <a href="#modulos" data-ds-route="catalog">‹ Volver al catálogo</a>
       <span>MOD-{{product_ref}}</span>

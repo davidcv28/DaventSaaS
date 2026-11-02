@@ -140,10 +140,35 @@ def _contact_link(store, customization, kind, field, text = ''):
 #=========================================
 # FRAGMENTOS (HTML generado acá, escapado)
 #=========================================
-def _product_fragment(store, products = None):
+def _page_flags(store, customization):
+    """
+    Interruptores por sección/página del diseño: el `show_*` del dueño Y
+    el `site_templates` efectivo (guardado ∩ plan). El documento los
+    respeta dos veces: el fragmento sale vacío y, si el patrón marca la
+    zona con `data-flag="<nombre>"`, la regla `[data-flag]{display:none}`
+    la apaga entera (título, CTA y enlaces del menú incluidos).
+    """
+    from StoreApp.domains.services.services import effective_site_templates
+
+    pages = set(effective_site_templates(store))
+    def on(name, default = True):
+        return bool(getattr(customization, name, default))
+    return {
+        'catalog':  'catalog' in pages and on('show_catalog'),
+        'services': 'services' in pages and on('show_services'),
+        'plans':    'plans' in pages and on('show_plans'),
+        'contact':  on('show_contact'),
+        'gallery':  on('show_gallery'),
+    }
+
+def _product_fragment(store, products = None, flags = None):
     from StoreApp.domains.catalog.models import Product
     from StoreApp.domains.stores.services.storage import object_url
 
+    if flags is None:
+        flags = _page_flags(store, getattr(store, 'customization', None))
+    if not flags.get('catalog', True):
+        return ''
     if products is None:
         products = (
             Product.objects.filter(store = store, is_active = True)
@@ -196,9 +221,13 @@ def _product_fragment(store, products = None):
         )
     return ''.join(cards)
 
-def _category_fragment(store):
+def _category_fragment(store, flags = None):
     from StoreApp.domains.catalog.models import Category
 
+    if flags is None:
+        flags = _page_flags(store, getattr(store, 'customization', None))
+    if not flags.get('catalog', True):
+        return ''
     rows = Category.objects.filter(store = store).order_by('position', 'name')[:FRAGMENT_LIMIT]
     links = [
         f'<a class="ds-cat" href="#catalogo"><span>{escape(_text(row.name, 60))}</span></a>'
@@ -206,9 +235,13 @@ def _category_fragment(store):
     ]
     return ''.join(links)
 
-def _service_fragment(store):
+def _service_fragment(store, flags = None):
     from StoreApp.domains.services.models import StoreService
 
+    if flags is None:
+        flags = _page_flags(store, getattr(store, 'customization', None))
+    if not flags.get('services', True):
+        return ''
     rows = StoreService.objects.filter(store = store, is_active = True).order_by('position', 'name')[:FRAGMENT_LIMIT]
     items = [
         '<li class="ds-service">'
@@ -219,11 +252,16 @@ def _service_fragment(store):
     ]
     return f'<ul class="ds-services-list">{"".join(items)}</ul>' if items else ''
 
-def _plans_fragment(customization):
+def _plans_fragment(store, customization, flags = None):
     """Tarjetas de membresías/packs del negocio (customization.plans):
     solo publicidad — el alta se coordina por WhatsApp, nunca se cobra
-    online. Vacío cuando la sección está apagada o no hay planes."""
+    online. Vacío cuando la sección está apagada, la página Suscripciones
+    salió de site_templates o no hay planes."""
     if customization is None or not customization.show_plans:
+        return ''
+    if flags is None:
+        flags = _page_flags(store, customization)
+    if not flags.get('plans', True):
         return ''
     cards = []
     for plan in customization.plans or []:
@@ -393,7 +431,7 @@ def _product_whatsapp_url(store, customization, product, store_name):
     text += ' que vi en tu catálogo.'
     return _contact_link(store, customization, 'whatsapp', 'whatsapp', text)
 
-def _product_values(store, product, customization, store_name):
+def _product_values(store, product, customization, store_name, flags = None):
     """Variables `product_*` del documento (ficha de producto)."""
     from StoreApp.domains.stores.services.storage import object_url
 
@@ -426,7 +464,7 @@ def _product_values(store, product, customization, store_name):
     }
     raw = {
         'product_features': _features_fragment(product),
-        'product_related':  _related_fragment(store, product),
+        'product_related':  _related_fragment(store, product) if flags is None or flags.get('catalog', True) else '',
         'product_reviews':  _reviews_fragment(store, product, customization),
     }
     return context, raw
@@ -434,12 +472,13 @@ def _product_values(store, product, customization, store_name):
 #=========================================
 # CONTEXTO DE LA TIENDA
 #=========================================
-def build_store_context(store, product = None):
+def build_store_context(store, product = None, flags = None):
     """
     Devuelve `(context, raw)`: `context` son las variables de texto que
     interpola el patrón y `raw` los fragmentos HTML ya escapados.
     """
     customization = getattr(store, 'customization', None)
+    flags = flags if flags is not None else _page_flags(store, customization)
     user = store.user
     name = _text(
         getattr(customization, 'display_name', '') or getattr(user, 'business_name', ''),
@@ -485,13 +524,13 @@ def build_store_context(store, product = None):
         context['store_cover'] = object_url(customization.cover_key) or ''
         context['store_accent'] = _text(customization.accent_custom, 7) or ''
     raw = {
-        'products': _product_fragment(store),
-        'categories': _category_fragment(store),
-        'services': _service_fragment(store),
-        'plans': _plans_fragment(customization),
+        'products': _product_fragment(store, flags = flags),
+        'categories': _category_fragment(store, flags = flags),
+        'services': _service_fragment(store, flags = flags),
+        'plans': _plans_fragment(store, customization, flags = flags),
         'gallery': _gallery_fragment(store, customization),
     }
-    product_ctx, product_raw = _product_values(store, product, customization, name)
+    product_ctx, product_raw = _product_values(store, product, customization, name, flags = flags)
     context.update(product_ctx)
     raw.update(product_raw)
     return context, raw
@@ -615,12 +654,26 @@ def render_store_pattern(store, customization = None, product = None):
     pattern = pattern_for_template(template)
     if pattern is None or not (pattern.html or '').strip():
         return None
-    context, raw = build_store_context(store, product)
+    flags = _page_flags(store, customization)
+    context, raw = build_store_context(store, product, flags = flags)
     html = pattern.render(context, raw = raw)
     from StoreApp.domains.catalog.models import Product
 
     site_theme = customization.site_theme if customization is not None and isinstance(customization.site_theme, dict) else {}
     style = site_theme.get('style') if isinstance(site_theme.get('style'), dict) else {}
+    #Las páginas apagadas en "Qué mostrar" también se apagan en el
+    #documento: se quita la superficie (la ruta sigue con la plantilla
+    #Vue, que redirige) y las zonas marcadas `data-flag` se ocultan por
+    #CSS (sección, CTA y enlace del menú van con la misma marca).
+    surfaces = sorted(set(SURFACE_RE.findall(html)))
+    if not flags['catalog']:
+        surfaces = [name for name in surfaces if name not in ('catalog', 'product')]
+    if not flags['services']:
+        surfaces = [name for name in surfaces if name != 'services']
+    flags_css = ''.join(
+        f'[data-flag="{name}"]{{display:none!important}}'
+        for name, enabled in flags.items() if not enabled
+    )
     return {
         'slug': pattern.slug,
         'nombre': pattern.nombre,
@@ -632,14 +685,14 @@ def render_store_pattern(store, customization = None, product = None):
         'ready': bool(pattern.variables),
         #Superficies que el documento sabe pintar (`data-surface`): el host
         #solo usa el patrón en las rutas que el diseño cubre.
-        'surfaces': sorted(set(SURFACE_RE.findall(html))),
+        'surfaces': surfaces,
         #El catálogo del diseño trae los productos ya renderizados: si la
         #tienda tiene más de los que entran en el documento, esa ruta sigue
         #con la plantilla Vue (que pagina) para no esconder productos.
         'products_total': Product.objects.filter(store = store, is_active = True).count(),
         'products_shown': FRAGMENT_LIMIT,
         'html': html,
-        'css': f'{theme_css(customization, pattern)}\n{pattern.css or ""}',
+        'css': f'{theme_css(customization, pattern)}\n{flags_css}\n{pattern.css or ""}',
         'js': pattern.js or '',
         'dark': bool(pattern.supports_dark_mode),
     }
