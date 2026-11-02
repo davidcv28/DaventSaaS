@@ -14,10 +14,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@capacitor/android": "^7.6.9",
+    "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^7.1.2",
     "@capacitor/browser": "^7.0.5",
-    "@capacitor/core": "^7.6.9",
+    "@capacitor/core": "^8.5.3",
     "@capacitor/splash-screen": "^7.0.5",
     "@capacitor/status-bar": "^7.0.6",
     "@capgo/capacitor-social-login": "^7.20.0",
