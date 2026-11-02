@@ -1243,3 +1243,46 @@
 @media (prefers-reduced-motion: reduce) {
   .app--tabs .topbar { transition: none; }
 }
+
+/* ===== Pase mobile 2: pestañas en píldoras, tablas y jerarquía interna ===== */
+@media (max-width: 860px) {
+  /* Pestañas de sección: de underline a píldoras con snap, más intuitivas
+     para el pulgar y coherentes con la tab bar. */
+  .app--tabs .tabs {
+    gap: 8px; padding: 2px 2px 8px; margin-left: -2px; margin-right: -2px;
+    border-bottom: none; overflow-x: auto; scrollbar-width: none;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  }
+  .app--tabs .tabs::-webkit-scrollbar { display: none; }
+  .app--tabs .tab {
+    flex: none; min-height: 40px; padding: 8px 16px; scroll-snap-align: start;
+    border: 1px solid var(--line); border-radius: 99px; background: var(--card);
+  }
+  .app--tabs .tab.active {
+    border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink);
+    box-shadow: inset 0 0 0 1px var(--brand-500);
+  }
+
+  /* Cabecera de sección: título a la izquierda, acción principal full-width
+     abajo cuando no entra (la regla base ya centra todo <=640). */
+  .app--tabs .page-head { align-items: flex-start; text-align: left; }
+  .app--tabs .page-head h1 { letter-spacing: -.02em; }
+  .app--tabs .page-head > .btn, .app--tabs .page-head > .btn-auto { flex: none; }
+
+  /* Planes: la tarjeta destacada no se sale de pantalla y el CTA manda. */
+  .app--tabs .price-card { border-radius: 18px; }
+  .app--tabs .price-card .flag { position: static; transform: none; margin: -6px auto 8px; }
+
+  /* Toolbar de filtros a ancho completo apilado. */
+  .app--tabs .toolbar { flex-direction: column; }
+  .app--tabs .toolbar .input, .app--tabs .toolbar .select { flex: 1 1 100%; width: 100%; }
+
+  /* KV y filas clave: valores no pisan la etiqueta. */
+  .app--tabs .kv strong { text-align: right; }
+}
+@media (max-width: 640px) {
+  /* La regla base centra page-head; el dashboard lo quiere a la izquierda. */
+  .app--tabs .page-head { flex-direction: column; align-items: stretch; text-align: left; }
+  .app--tabs .card h3 { justify-content: flex-start; }
+  .app--tabs .card > p { text-align: left; }
+}
