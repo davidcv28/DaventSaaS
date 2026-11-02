@@ -100,9 +100,9 @@ class CatalogoCerrado(unittest.TestCase):
         self.assertGreater(len(TYPE.TYPE_PAIRS), 0)
 
     def test_public_catalog_is_one_design(self):
-        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec'))
-        self.assertEqual(len(R.PUBLIC_TEMPLATES), 5)
-        self.assertEqual(R.PUBLIC_TEMPLATE_MAP['boutique'], 'raiz')
+        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
+        self.assertEqual(len(R.PUBLIC_TEMPLATES), 7)
+        self.assertEqual(R.PUBLIC_TEMPLATE_MAP['boutique'], 'sastreria')
 
     def test_retired_ids_never_come_back_to_the_engine(self):
         #Ningún id retirado puede reaparecer como template propuesto: la
@@ -116,12 +116,11 @@ class CatalogoCerrado(unittest.TestCase):
             for template in recipe['templates']:
                 self.assertIn(template, R.PUBLIC_TEMPLATES, rubro)
 
-    def test_signature_styles_use_the_single_design(self):
-        #Catálogo de UN diseño: toda firma remapea a 'raiz' (la variedad
-        #queda en piel + par tipográfico).
+    def test_signature_styles_use_the_catalog(self):
+        #Catálogo por rubro: toda firma remapea a un diseño público.
         for rubro, styles in R.RUBRO_STYLES.items():
             for signature in styles:
-                self.assertEqual(signature['template'], 'raiz', rubro)
+                self.assertIn(signature['template'], R.PUBLIC_TEMPLATES, rubro)
         self.assertEqual(R.RUBRO_STYLES['comercio'][0]['template'], 'raiz')
 
 
