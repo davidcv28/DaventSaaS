@@ -753,6 +753,23 @@
   .store-page[data-template='moderntec'] .mt-hero { padding: 56px 0 40px; }
   .store-page[data-template='moderntec'] .mt-orb { width: 220px; height: 220px; }
   .store-page[data-template='moderntec'] .mt-device { animation: none; }
+  /* Meta-stats: tercios iguales — el flex las apretaba y los labels se
+     partían por letra ("PRODUC TOS"); el valor largo (ubicación) baja de
+     tamaño y corta por palabra, nunca desborda su tercio. */
+  .store-page[data-template='moderntec'] .mt-hero-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin-top: 36px;
+  }
+  .store-page[data-template='moderntec'] .mt-hero-meta div { min-width: 0; padding-right: 12px; }
+  .store-page[data-template='moderntec'] .mt-hero-meta div + div { padding-left: 16px; }
+  .store-page[data-template='moderntec'] .mt-hero-meta div:last-child { padding-right: 0; }
+  .store-page[data-template='moderntec'] .mt-hero-meta dt { font-size: 10px; }
+  .store-page[data-template='moderntec'] .mt-hero-meta dd {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
