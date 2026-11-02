@@ -181,7 +181,7 @@
 
 /* ===== Secciones guiadas (lenguaje simple, pestañas con ayuda) ===== */
 .lead { margin: -4px 0 14px; color: var(--muted); font-size: 14.5px; }
-.sec-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 0 0 22px; }
+.sec-tabs { display: flex; flex-direction: column; gap: 10px; margin: 0 0 22px; }
 .sec-tab { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); color: var(--ink-2); font: inherit; cursor: pointer; transition: transform .2s var(--ease-out), border-color .2s, background-color .2s, box-shadow .2s; }
 .sec-tab:hover { border-color: var(--brand-soft-line); transform: translateY(-1px); }
 .sec-tab .icon { flex: none; width: 36px; height: 36px; padding: 9px; box-sizing: border-box; border-radius: 10px; background: var(--brand-soft); color: var(--brand-ink); }
@@ -226,7 +226,7 @@
 .tab { font-size: 15px; }
 
 @media (max-width: 640px) {
-  .sec-tabs { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .sec-tabs { gap: 8px; }
   .next-card { flex-wrap: wrap; }
   .next-card .btn { width: 100%; }
   .tab-sub { display: none; }
@@ -1311,9 +1311,9 @@
   .app--tabs .check-list { border-radius: 14px; }
   .app--tabs .check-list label, .app--tabs .check-list > * { min-height: 48px; }
 
-  /* Sub-pestañas de sección (Mi página, Diseño): grilla compacta 2 cols,
+  /* Sub-pestañas de sección (Mi página, Diseño): en columna, compactas,
      sin el hint para no comerse el viewport. */
-  .app--tabs .sec-tabs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .app--tabs .sec-tabs { gap: 8px; }
   .app--tabs .sec-tab { padding: 10px 12px; border-radius: 14px; gap: 10px; }
   .app--tabs .sec-tab .icon { width: 32px; height: 32px; padding: 7px; border-radius: 9px; }
   .app--tabs .sec-tab small { display: none; }
