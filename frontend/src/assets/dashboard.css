@@ -1233,3 +1233,13 @@
    global). */
 .next-do .btn.ghost { color: #e0e7ff; border-color: rgba(255, 255, 255, .26); background: transparent; }
 .next-do .btn.ghost:hover { background: rgba(255, 255, 255, .09); }
+
+/* ===== Topbar móvil auto-ocultable + anclas bajo la barra sticky ===== */
+@media (max-width: 860px) {
+  .app--tabs .topbar { transition: transform .3s var(--ease-out); will-change: transform; }
+  .app--tabs.top-hidden .topbar { transform: translateY(calc(-100% - 16px)); }
+  .app--tabs .card, .app--tabs .sec-tabs, .app--tabs .page-head, .app--tabs .form-group { scroll-margin-top: 60px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app--tabs .topbar { transition: none; }
+}

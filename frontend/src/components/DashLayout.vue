@@ -65,6 +65,9 @@ const btnEls = new Map()
 const indicator = ref({ y: 0, h: 0, ready: false })
 
 const hasTabs = computed(() => props.tabs.length > 0)
+// La sección actual no está en la tab bar: "Más" queda marcado para que el
+// usuario sepa dónde está parado.
+const moreActive = computed(() => hasTabs.value && !props.tabs.some((t) => t.id === props.active))
 const current = computed(() => props.items.find((i) => i.id === props.active))
 const currentLabel = computed(() => props.title || current.value?.label || 'Resumen')
 const todayLabel = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -83,6 +86,19 @@ const setHeaderVar = () => {
 }
 const onResize = () => { if (window.innerWidth > 860) close(); moveIndicator() }
 
+// Topbar móvil auto-ocultable: baja scrolleando, vuelve al subir. Solo en
+// modo tab bar; con el sheet abierto queda quieta.
+const topHidden = ref(false)
+let lastScrollY = 0
+const onScroll = () => {
+  if (!hasTabs.value || open.value) { topHidden.value = false; lastScrollY = window.scrollY; return }
+  const y = window.scrollY
+  const dy = y - lastScrollY
+  if (dy > 5 && y > 80) topHidden.value = true
+  else if (dy < -5 || y <= 80) topHidden.value = false
+  lastScrollY = y
+}
+
 // Píldora activa: se mueve con transform (compositor), sin layout por frame.
 // El indicador vive dentro del <nav> scrolleable (position:absolute relativo
 // al nav), así que comparte el sistema de coordenadas del contenido: el
@@ -100,6 +116,7 @@ const titleEl = ref(null)
 watch(() => props.active, async (s, prev) => {
   await nextTick()
   moveIndicator()
+  topHidden.value = false
   window.scrollTo({ top: 0, behavior: 'smooth' })
   // Foco administrado: al cambiar de sección el título recibe el foco para
   // que teclado y lector de pantalla anuncien el destino.
@@ -117,18 +134,20 @@ onMounted(() => {
   if (sidebarEl.value) { headerObserver = new ResizeObserver(() => { setHeaderVar(); moveIndicator() }); headerObserver.observe(sidebarEl.value) }
   window.addEventListener('keydown', onKey)
   window.addEventListener('resize', onResize, { passive: true })
+  window.addEventListener('scroll', onScroll, { passive: true })
 })
 onBeforeUnmount(() => {
   theme.releaseTheme()
   headerObserver?.disconnect()
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('resize', onResize)
+  window.removeEventListener('scroll', onScroll)
   document.body.style.overflow = ''
 })
 </script>
 
 <template>
-  <div class="app" :class="{ 'app--tabs': hasTabs }">
+  <div class="app" :class="{ 'app--tabs': hasTabs, 'top-hidden': topHidden }">
     <aside ref="sidebarEl" class="sidebar">
       <div class="brand"><BrandLogo :size="34" /> <span>DAVENT</span></div>
       <div v-if="planName" class="plan-badge"><AppIcon name="dot" :size="12" /> {{ planName }}</div>
@@ -227,7 +246,7 @@ onBeforeUnmount(() => {
         <span>{{ t.label }}</span>
         <span v-if="t.badge" class="chat-badge tab-badge">{{ t.badge > 99 ? '99+' : t.badge }}</span>
       </button>
-      <button type="button" :class="{ active: open }" :aria-expanded="open" aria-controls="more-sheet" @click="open = !open">
+      <button type="button" :class="{ active: open || moreActive }" :aria-expanded="open" aria-controls="more-sheet" @click="open = !open">
         <AppIcon name="menu" :size="20" />
         <span>Más</span>
       </button>
