@@ -1367,6 +1367,98 @@
       "concept": "Papel deportivo + tinta + lima de pizarra."
     },
     {
+      "slug": "gimnasio-elite",
+      "nombre": "Gimnasio Elite",
+      "categoria": "Deporte premium",
+      "descripcion": "Club privado: carbón profundo y oro viejo, titulares condensados en mayúsculas, superficies elevadas y membresías numeradas.",
+      "tier": "advanced",
+      "template": "gimnasio",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#D9B45B",
+          "primary": "#F4EFE2",
+          "secondary": "#A89F8C",
+          "bg": "#0B0B09",
+          "surface": "#181712",
+          "text": "#F4EFE2",
+          "muted": "#A89F8C",
+          "border": "#332E1F",
+          "success": "#D9B45B",
+          "danger": "#F45B4C"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "barlow-condensed",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "impact",
+          "weightHeading": 800,
+          "letterSpacing": "0"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "lg"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "funcional",
+        "clases",
+        "premium"
+      ],
+      "preview": "",
+      "style": "Deporte premium",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Carbón + oro viejo, energía de club privado."
+    },
+    {
       "slug": "esencial",
       "nombre": "Esencial",
       "categoria": "general",

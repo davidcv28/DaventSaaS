@@ -1015,6 +1015,95 @@
 }
 
 /* ==========================================================================
+   PLANES (sp-aipricing) — membresías del gym.
+   Escritorio: tarjetas en fila (columnas iguales). Móvil: una columna.
+   Tarjeta premium: índice 01/02/03, banda superior lima, precio condensado.
+   ========================================================================== */
+.store-page[data-template='gimnasio'] .sp-aipricing { padding-top: 72px; }
+.store-page[data-template='gimnasio'] .sp-aipricing-list {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  counter-reset: gyplan;
+}
+@media (min-width: 768px) {
+  .store-page[data-template='gimnasio'] .sp-aipricing-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    align-items: stretch;
+  }
+}
+.store-page[data-template='gimnasio'] .sp-aipricing-card {
+  position: relative;
+  gap: 10px;
+  padding: 26px 22px 22px;
+  border: 1px solid var(--gy-line);
+  border-top: 3px solid var(--gy-lime);
+  border-radius: 0;
+  background: var(--gy-card);
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-aipricing-card::before {
+  counter-increment: gyplan;
+  content: counter(gyplan, decimal-leading-zero);
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-family: var(--st-font-heading, 'Barlow Condensed', sans-serif);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  color: color-mix(in srgb, var(--gy-lime) 60%, transparent);
+}
+.store-page[data-template='gimnasio'] .sp-aipricing-card:hover { border-color: var(--gy-lime); }
+.store-page[data-template='gimnasio'] .sp-aipricing-name {
+  font-family: var(--st-font-heading, 'Barlow Condensed', sans-serif);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.store-page[data-template='gimnasio'] .sp-aipricing-amount {
+  font-family: var(--st-font-heading, 'Barlow Condensed', sans-serif);
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  line-height: 1;
+  color: var(--gy-lime);
+}
+.store-page[data-template='gimnasio'] .sp-aipricing-note { color: var(--gy-muted); }
+.store-page[data-template='gimnasio'] .sp-aipricing-feats { margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--gy-line); }
+.store-page[data-template='gimnasio'] .sp-aipricing-feats svg { color: var(--gy-lime); }
+
+/* ==========================================================================
+   ESTILO ELITE — gimnasio-elite (advanced): carbón + oro viejo.
+   Sobreescribe los --gy-* de base; el resto de la piel hereda solo.
+   ========================================================================== */
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] {
+  --gy-ink: #0B0B09;
+  --gy-panel: #12110D;
+  --gy-card: #181712;
+  --gy-line: #332E1F;
+  --gy-line-strong: #56503A;
+  --gy-text: #F4EFE2;
+  --gy-text-2: #D8D2C0;
+  --gy-muted: #A89F8C;
+  --gy-deep: #8A6F2E;
+  --gy-plate: #15140F;
+  --gy-paper: #F4EFE2;
+  --gy-paper-ink: #0B0B09;
+  --gy-paper-muted: #6B6553;
+  --gy-paper-line: #D8D2C0;
+  --sp-shadow-sm: 0 10px 28px -18px rgb(0 0 0 / .7);
+  --sp-shadow-md: 0 26px 60px -30px rgb(0 0 0 / .8);
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card {
+  box-shadow: var(--sp-shadow-sm);
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card:hover {
+  border-color: var(--gy-lime);
+  box-shadow: var(--sp-shadow-md);
+}
+
+/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (max-width: 960px) {
