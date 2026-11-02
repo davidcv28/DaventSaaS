@@ -42,7 +42,7 @@ import AlFeatured from './AlFeatured.vue'
 import AlSteps from './AlSteps.vue'
 import AlHistory from './AlHistory.vue'
 
-const { pageTemplate } = useStorePage()
+const { pageTemplate, custom } = useStorePage()
 
 const MAP = {
   announcements: BlkAnnouncements,
@@ -83,7 +83,7 @@ const MAP = {
 // y en móvil se apilaba en varias líneas.
 const blockOf = (b) => (b.id === 'announcements' && !b.variant ? { ...b, variant: 'static' } : b)
 
-const visible = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const visible = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map((b) => ({ ...blockOf(b), comp: MAP[b.id] })))
 </script>

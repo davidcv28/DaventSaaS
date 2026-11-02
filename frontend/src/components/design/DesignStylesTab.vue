@@ -1,7 +1,10 @@
 <script setup>
 // Sub-sección "Diseño" (todos los planes con has_customization).
-// Menú compacto: siete selectboxes con las estructuras de datos del catálogo
-// (diseño, estilo, colores, color de fuente y las tres familias tipográficas).
+// Menú compacto de estructura: patrón de diseño, tema del diseño,
+// secciones por superficie (on/off según lo que el diseño declara),
+// decoraciones extra que el patrón ofrece y navegación móvil/CTA fijo.
+// Colores y fuentes son SOLO del Studio (has_design_advanced): acá no hay
+// ni un solo control de paleta o tipografía.
 // Sin subidas de imágenes: logo, portada y galería viven en la pestaña Fotos.
 // Escribe los mismos campos de `form` que el Studio y dispara los mismos
 // eventos (ring/navigate), así el guardado sigue siendo uno solo.
@@ -9,11 +12,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
 import {
-  STORE_FONTS, STORE_FONT_GROUPS, STORE_TEMPLATES,
+  STORE_TEMPLATES,
   allowedTemplatesFor, ensureStoreFont
 } from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
-import { normalizeLayoutConfig, patternsForSiteTemplates } from '../../templates/index.js'
+import { LAYOUT_SURFACES, SURFACE_LABELS, TEMPLATE_BLOCKS } from '../../templates/blocks.js'
+import {
+  normalizeLayoutConfig, patternsForSiteTemplates, templateBlocks
+} from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
 import DesignSelect from './DesignSelect.vue'
 import AppIcon from '../AppIcon.vue'
@@ -32,7 +38,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen'])
 
-const advanced = computed(() => Boolean(props.benefits?.has_design_advanced))
 const allowed = computed(() => allowedTemplatesFor(props.benefits || {}))
 const allowedTemplate = (tpl) => allowed.value.includes(tpl)
 const tierOf = (tpl) => STORE_TEMPLATES[tpl]?.tier || 'base'
@@ -41,7 +46,7 @@ const tierLabel = (tpl) => {
   return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Incluido'
 }
 
-const { patterns, styles, iconStyles, status, load } = useDesignCatalog()
+const { patterns, styles, status, load } = useDesignCatalog()
 // Revalidar contra la base al entrar: los diseños/estilos nuevos se ven sin
 // recargar la página.
 onMounted(() => load(true))
@@ -86,31 +91,98 @@ const currentPattern = computed(() => (
   || ''
 ))
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
-// Set de iconos de los controles (menú, buscador, carrito, tema): vacío =
-// hereda el que trae el diseño elegido.
-const iconStyleOptions = computed(() => [
-  { value: '', label: 'Heredar del diseño', icon: 'layout-grid' },
-  ...iconStyles.value.map((s) => ({ value: s.slug, label: s.nombre, icon: 'menu' }))
-])
-const currentIconStyle = computed(() => props.form.icon_style || '')
-function onIconStylePick(value) {
-  props.form.icon_style = value || ''
+const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
+
+// --- Secciones del diseño: on/off por superficie --------------------------
+// Cada DesignPattern declara su composición en `blocks.<superficie>` de su
+// template def; el toggle se ve solo si el bloque está ahí (los ids que el
+// diseño no trae no se muestran — ni deshabilitados). El estado sale del
+// layout efectivo (canónico del diseño ∪ layout_config guardado); los
+// bloques `locked` (grilla del catálogo, selector de servicios) se ven
+// prendidos pero no se pueden apagar.
+const sectionGroups = computed(() => {
+  const tpl = props.form.template
+  const surfaces = props.siteTemplates.length ? props.siteTemplates : LAYOUT_SURFACES
+  return surfaces
+    .filter((s) => LAYOUT_SURFACES.includes(s))
+    .map((surface) => {
+      const blocks = templateBlocks(tpl, surface, props.form.layout_config)
+        .filter((b) => TEMPLATE_BLOCKS[surface]?.[b.id])
+        .map((b) => ({ ...b, spec: TEMPLATE_BLOCKS[surface][b.id] }))
+      return { surface, label: SURFACE_LABELS[surface] || surface, blocks }
+    })
+    .filter((g) => g.blocks.length)
+})
+function onSectionToggle(surface, block, enabled) {
+  if (block.spec?.locked) return
+  const cfg = { ...(props.form.layout_config || {}) }
+  const surf = { ...(cfg[surface] || {}) }
+  const list = Array.isArray(surf.blocks) ? surf.blocks.map((b) => ({ ...b })) : []
+  const i = list.findIndex((b) => b.id === block.id)
+  const next = { ...(i >= 0 ? list[i] : { id: block.id, order: block.order }), enabled }
+  if (!next.variant && block.variant) next.variant = block.variant
+  if (i >= 0) list[i] = next
+  else list.push(next)
+  surf.blocks = list
+  cfg[surface] = surf
+  props.form.layout_config = cfg
 }
 
-// Adornos opcionales del diseño (cintas, marcos, brillos): apagados por
-// defecto — el dueño decide si el estilo los muestra.
-const decorationsOptions = [
-  { value: 'off', label: 'Sin decoraciones extra', icon: 'minus' },
-  { value: 'on', label: 'Con decoraciones extra', icon: 'sparkles' }
-]
-const currentDecorations = computed(() => (props.form.site_theme?.decorations?.extras === true ? 'on' : 'off'))
-function onDecorationsPick(value) {
+// --- Decoraciones extra ----------------------------------------------------
+// Adornos opcionales que OFRECE el diseño elegido: cada patrón declara sus
+// ids en `layout.decorations` (o `tokens.decorations`) — los no ofrecidos
+// ni se ven. Se guardan como mapa de bools en site_theme.decorations.
+const DECORATION_LABELS = {
+  extras: 'Cintas, marcos y brillos',
+  ribbon: 'Cintas y bandas',
+  frame: 'Marcos decorativos',
+  sparkles: 'Brillos y destellos',
+  badge: 'Sellos y distintivos',
+}
+const decorationsOffered = computed(() => {
+  const p = currentPatternMeta.value
+  const raw = p?.layout?.decorations || p?.tokens?.decorations
+  const list = Array.isArray(raw) ? raw : []
+  return [...new Set(list)]
+    .filter((id) => typeof id === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(id))
+    .slice(0, 8)
+    .map((id) => ({ id, label: DECORATION_LABELS[id] || id }))
+})
+const decorationOn = (id) => props.form.site_theme?.decorations?.[id] === true
+function onDecorationToggle(id, enabled) {
   withTheme((theme) => {
-    if (value === 'on') theme.decorations = { extras: true }
+    const decorations = { ...(theme.decorations || {}) }
+    if (enabled) decorations[id] = true
+    else delete decorations[id]
+    if (Object.keys(decorations).length) theme.decorations = decorations
     else delete theme.decorations
   })
 }
-const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
+
+// --- Navegación en móvil + CTA fijo ----------------------------------------
+const navOptions = [
+  { value: 'bottom', label: 'Barra inferior', icon: 'smartphone' },
+  { value: 'top', label: 'Barra superior', icon: 'panel-top' },
+  { value: 'drawer', label: 'Menú hamburguesa', icon: 'menu' }
+]
+const currentNav = computed(() => {
+  const nav = props.form.site_theme?.mobile?.nav
+  return navOptions.some((o) => o.value === nav) ? nav : 'bottom'
+})
+function onNavPick(value) {
+  if (!navOptions.some((o) => o.value === value)) return
+  withTheme((theme) => { theme.mobile = { ...(theme.mobile || {}), nav: value } })
+}
+const currentStickyCta = computed(() => props.form.site_theme?.mobile?.stickyCta === true)
+function onStickyCtaToggle(enabled) {
+  withTheme((theme) => {
+    const mobile = { ...(theme.mobile || {}) }
+    if (enabled) mobile.stickyCta = true
+    else delete mobile.stickyCta
+    if (Object.keys(mobile).length) theme.mobile = mobile
+    else delete theme.mobile
+  })
+}
 
 // Vista del HTML propio del patrón (el diseño fuente, con su menú y sus
 // animaciones), en un iframe aislado. El listado no trae el markup: se pide
@@ -282,56 +354,6 @@ function withTheme(mutate) {
   mutate(theme)
   props.form.site_theme = theme
 }
-
-// --- Tipografía: títulos y descripciones ---------------------------------
-// Las familias salen del selector del catálogo (mismas fuentes que la web).
-// Se guardan como slug: el contrato las resuelve a familia al render.
-const FONT_ROLES = [
-  { key: 'heading', label: 'Fuente de títulos', ring: 'typo' },
-  { key: 'body', label: 'Fuente de descripciones', ring: 'page' }
-]
-const fontGroups = computed(() => {
-  const groups = STORE_FONT_GROUPS.map((g) => ({ label: g.label, keys: g.keys.slice() }))
-  // Fuentes guardadas fuera del selector (estilos del catálogo que traen su
-  // propia familia): se muestran igual para no dejar el select en blanco.
-  const saved = FONT_ROLES
-    .map((r) => props.form.site_theme?.typography?.[r.key])
-    .filter((key) => key && !STORE_FONT_GROUPS.some((g) => g.keys.includes(key)))
-  if (saved.length) groups.push({ label: 'Actual', keys: [...new Set(saved)] })
-  return groups
-})
-const fontSelectGroups = computed(() => fontGroups.value.map((g) => ({
-  label: g.label,
-  options: g.keys.map((key) => ({
-    value: key,
-    label: STORE_FONTS[key]?.label || key,
-    icon: 'type'
-  }))
-})))
-const currentFont = (key) => props.form.site_theme?.typography?.[key] || ''
-
-function onFontPick(value, key) {
-  if (value) ensureStoreFont(value)
-  withTheme((theme) => {
-    const typography = { ...(theme.typography || {}) }
-    if (value) typography[key] = value
-    else delete typography[key]
-    theme.typography = typography
-  })
-  // La descripción es el texto corrido de toda la web: además del tema, se
-  // escribe `name_font` (el token que ya consumen las plantillas), si no las
-  // pieles de cada diseño mantienen su propia familia.
-  if (key === 'body' && value) props.form.name_font = value
-}
-
-// Fuentes ya elegidas: se cargan al entrar para que los selectboxes muestren
-// la familia real y la vista previa no quede en Inter.
-onMounted(() => {
-  FONT_ROLES.forEach((r) => {
-    const key = currentFont(r.key)
-    if (key) ensureStoreFont(key)
-  })
-})
 </script>
 
 <template>
@@ -373,32 +395,55 @@ onMounted(() => {
             </div>
 
             <div class="dmenu-field" @focusin="emit('ring', 'buttons')">
-              <label>Iconos del menú</label>
+              <label>Navegación en móvil</label>
               <DesignSelect
-                :model-value="currentIconStyle" :options="iconStyleOptions" icon="menu"
-                aria-label="Iconos del menú" placeholder="Heredar del diseño…"
-                :disabled="!iconStyles.length" @change="onIconStylePick"
+                :model-value="currentNav" :options="navOptions" icon="smartphone"
+                aria-label="Navegación en móvil" @change="onNavPick"
               />
-              <p class="dmenu-hint">Se pueden cambiar sin tocar el diseño.</p>
             </div>
 
             <div class="dmenu-field">
-              <label>Decoraciones extra</label>
-              <DesignSelect
-                :model-value="currentDecorations" :options="decorationsOptions" icon="sparkles"
-                aria-label="Decoraciones extra" placeholder="Sin decoraciones extra…"
-                @change="onDecorationsPick"
-              />
-              <p class="dmenu-hint">Cintas, marcos y brillos que el diseño ofrece de forma opcional.</p>
+              <label>Botón de contacto fijo</label>
+              <div class="dmenu-toggles">
+                <label class="dmenu-toggle">
+                  <input
+                    type="checkbox" :checked="currentStickyCta"
+                    @change="onStickyCtaToggle($event.target.checked)"
+                  />
+                  <span><AppIcon name="zap" :size="14" aria-hidden="true" /> Botón fijo de WhatsApp en móvil</span>
+                </label>
+              </div>
             </div>
 
-            <div v-for="r in FONT_ROLES" :key="r.key" class="dmenu-field" :class="{ locked: !advanced }" @focusin="emit('ring', r.ring)">
-              <label>{{ r.label }}</label>
-              <DesignSelect
-                :model-value="currentFont(r.key)" :groups="fontSelectGroups" icon="type"
-                :aria-label="r.label" placeholder="Elegí una fuente…"
-                :disabled="!advanced" @change="(value) => onFontPick(value, r.key)"
-              />
+            <div v-if="decorationsOffered.length" class="dmenu-field">
+              <label>Decoraciones extra</label>
+              <div class="dmenu-toggles">
+                <label v-for="d in decorationsOffered" :key="d.id" class="dmenu-toggle">
+                  <input
+                    type="checkbox" :checked="decorationOn(d.id)"
+                    @change="onDecorationToggle(d.id, $event.target.checked)"
+                  />
+                  <span><AppIcon name="sparkles" :size="14" aria-hidden="true" /> {{ d.label }}</span>
+                </label>
+              </div>
+              <p class="dmenu-hint">Adornos opcionales que este diseño ofrece.</p>
+            </div>
+          </div>
+
+          <div v-for="g in sectionGroups" :key="g.surface" class="dmenu-sections">
+            <label>Secciones · {{ g.label }}</label>
+            <div class="dmenu-toggles">
+              <label
+                v-for="b in g.blocks" :key="b.id" class="dmenu-toggle"
+                :class="{ fixed: b.spec.locked }"
+              >
+                <input
+                  type="checkbox" :checked="b.enabled !== false"
+                  :disabled="b.spec.locked === true"
+                  @change="onSectionToggle(g.surface, b, $event.target.checked)"
+                />
+                <span><AppIcon :name="b.spec.icon || 'layout-grid'" :size="14" aria-hidden="true" /> {{ b.spec.label || b.id }}</span>
+              </label>
             </div>
           </div>
 
@@ -412,12 +457,6 @@ onMounted(() => {
           <p v-if="noPatternForCombo" class="dmenu-alert" role="alert">
             Ningún diseño cubre esa combinación de páginas: cambiala en «Qué mostrar».
           </p>
-
-          <div v-if="!advanced" class="dmenu-lock">
-            <AppIcon name="lock" :size="16" aria-hidden="true" />
-            <span>Las fuentes vienen con el Plan premium.</span>
-            <button type="button" class="btn ghost btn-auto" @click="emit('navigate', 'plans')">Ver planes</button>
-          </div>
         </div>
       </div>
 
@@ -519,6 +558,29 @@ onMounted(() => {
   background: var(--surface-2, #f8fafc); border: 1px solid var(--line, #e5e7eb);
 }
 .dmenu-lock .btn { margin-left: auto; }
+/* Toggles de secciones/decoraciones/CTA: lista de interruptores compactos. */
+.dmenu-sections { display: grid; gap: 7px; min-width: 0; }
+.dmenu-sections > label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
+.dmenu-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.dmenu-toggle {
+  display: inline-flex; align-items: center; gap: 0; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+}
+.dmenu-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.dmenu-toggle span {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
+  border: 1px solid var(--line, #e5e7eb); border-radius: 999px;
+  background: var(--surface-2, #f8fafc);
+  transition: border-color .15s, background .15s, color .15s;
+}
+.dmenu-toggle span .icon { color: var(--muted, #64748b); }
+.dmenu-toggle input:checked + span {
+  border-color: var(--brand-soft-line, #c7d2fe); background: var(--brand-soft, #eef2ff);
+  color: var(--brand-ink, #4338ca);
+}
+.dmenu-toggle input:checked + span .icon { color: var(--brand-ink, #4338ca); }
+.dmenu-toggle input:focus-visible + span { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 2px; }
+.dmenu-toggle input:disabled + span { opacity: .6; cursor: not-allowed; }
 .dmenu-studio {
   display: flex; align-items: center; gap: 14px;
   padding: 16px 18px; border-radius: 14px;

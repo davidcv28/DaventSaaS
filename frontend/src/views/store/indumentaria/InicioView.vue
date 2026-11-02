@@ -76,7 +76,7 @@ function withDefaults(block) {
   return block
 }
 
-const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing')
+const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing', ctx.custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map((b) => {
     const next = b.variant ? b : { ...b, variant: FIRMA[b.id] }

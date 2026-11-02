@@ -57,8 +57,8 @@ const MAP = {
   contact: RhContact
 }
 
-const { pageTemplate } = inject('storePage')
-const visible = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const { pageTemplate, custom } = inject('storePage')
+const visible = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id]))
 </script>
 

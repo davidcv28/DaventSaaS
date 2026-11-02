@@ -33,7 +33,7 @@ import BlkAiMosaic from '../../../components/store/blocks/BlkAiMosaic.vue'
 import GyHero from './GyHero.vue'
 import GyFeatured from './GyFeatured.vue'
 
-const { pageTemplate } = useStorePage()
+const { pageTemplate, custom } = useStorePage()
 const pageEl = ref(null)
 
 const MAP = {
@@ -80,7 +80,7 @@ function withDefaults(block) {
   return block
 }
 
-const items = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const items = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>

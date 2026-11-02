@@ -120,24 +120,38 @@ export function normalizeLayoutConfig(raw) {
 }
 
 // Composición canónica de una superficie: la que declara el DISEÑO en
-// `blocks.<superficie>`. El sistema de bloques se retiró — `layout_config`
-// ya no reordena, apaga ni enciende secciones (se sigue aceptando y
-// guardando por compatibilidad, pero el render lo ignora).
-export function templateBlocks(id, surface) {
+// `blocks.<superficie>`. `saved` (layout_config de la tienda, ya saneado)
+// pisa enabled/variant/props de los bloques declarados — el orden lo fija el
+// diseño; un id que el diseño no trae no se agrega acá (los extra de la IA
+// los inserta el renderer). Cambiar de diseño descarta los ids ajenos vía
+// clean_layout_config del backend.
+export function templateBlocks(id, surface, saved = null) {
   const canonical = templateDef(id).blocks?.[surface] || []
+  const savedList = Array.isArray(saved?.[surface]?.blocks) ? saved[surface].blocks : []
+  const byId = new Map()
+  savedList.forEach((raw) => {
+    if (raw && raw.id != null && !byId.has(raw.id)) byId.set(String(raw.id), raw)
+  })
   return canonical.map((entry, i) => {
     const base = typeof entry === 'string' ? { id: entry } : { ...entry }
-    return { ...base, order: i, enabled: base.enabled !== false }
+    const block = { ...base, order: i, enabled: base.enabled !== false }
+    const s = byId.get(block.id)
+    if (s) {
+      block.enabled = s.enabled !== false
+      if (typeof s.variant === 'string' && s.variant) block.variant = s.variant
+      if (s.props && typeof s.props === 'object') block.props = s.props
+    }
+    return block
   })
 }
 
 // Estado de un bloque puntual de la composición (variant/props/enabled).
-export function templateBlock(id, surface, blockId) {
-  return templateBlocks(id, surface).find((b) => b.id === blockId) || { id: blockId, enabled: true }
+export function templateBlock(id, surface, blockId, saved = null) {
+  return templateBlocks(id, surface, saved).find((b) => b.id === blockId) || { id: blockId, enabled: true }
 }
 
-export function resolveLayout(id, surface) {
-  return templateBlocks(id, surface)
+export function resolveLayout(id, surface, saved = null) {
+  return templateBlocks(id, surface, saved)
 }
 
 // Superficies que cubre un patrón de diseño (DesignPattern): las que

@@ -68,7 +68,8 @@ export const STUDIO_ENUMS = {
   intensity:  ['subtle', 'medium', 'bold'],
   nav:        ['top', 'bottom', 'drawer'],
   cardStyle:  ['standard', 'compact', 'overlay'],
-  heroHeight: ['compact', 'tall']
+  heroHeight: ['compact', 'tall'],
+  imgTreat:   ['none', 'soft', 'grayscale', 'duotone']
 }
 
 // Defaults = look actual (tema claro, acento índigo, plantilla raiz):
@@ -132,6 +133,9 @@ export const SITE_THEME_DEFAULTS = deepFreeze({
   },
   decorations: {
     extras: false
+  },
+  images: {
+    treatment: 'none'
   }
 })
 
@@ -202,6 +206,15 @@ export function resolveSiteTheme(partial = {}) {
   const bg = p.background && typeof p.background === 'object' ? p.background : {}
   const mo = p.motion && typeof p.motion === 'object' ? p.motion : {}
   const mb = p.mobile && typeof p.mobile === 'object' ? p.mobile : {}
+  const dec = p.decorations && typeof p.decorations === 'object' ? p.decorations : {}
+  // Mapa abierto {id: bool}: los ids los declara cada patrón
+  // (DesignPattern.layout/tokens.decorations); acá se sanea la forma
+  // acotada (slug + bool, máx 8) igual que _clean_decorations del backend.
+  const decorations = { ...d.decorations }
+  for (const key of Object.keys(dec).slice(0, 8)) {
+    if (/^[a-z][a-z0-9-]{0,31}$/.test(key)) decorations[key] = dec[key] === true
+  }
+  const im = p.images && typeof p.images === 'object' ? p.images : {}
 
   const palette = {}
   for (const key of Object.keys(d.palette)) {
@@ -251,6 +264,10 @@ export function resolveSiteTheme(partial = {}) {
       cardStyle: pickEnum(STUDIO_ENUMS.cardStyle, mb.cardStyle, d.mobile.cardStyle),
       stickyCta: mb.stickyCta === true,
       heroHeight: pickEnum(STUDIO_ENUMS.heroHeight, mb.heroHeight, d.mobile.heroHeight)
+    },
+    decorations,
+    images: {
+      treatment: pickEnum(STUDIO_ENUMS.imgTreat, im.treatment, d.images.treatment)
     }
   }
   // Juego de colores del estilo: solo viaja si el tema lo trae (parcial,
@@ -269,9 +286,6 @@ export function resolveSiteTheme(partial = {}) {
     }
     if (Object.keys(block).length) resolved.styleColors = block
   }
-  // Adornos opcionales del diseño: apagados salvo que el tema los pida.
-  const dec = p.decorations && typeof p.decorations === 'object' ? p.decorations : {}
-  resolved.decorations = { extras: dec.extras === true }
   if (p.style && typeof p.style === 'object' && typeof p.style.id === 'string' && p.style.id.trim()) {
     resolved.style = { id: p.style.id.trim().slice(0, 60) }
     const paletteDef = STYLE_PALETTES.find((x) => x.id === p.style.palette)
@@ -564,7 +578,8 @@ const THEME_SECTION_KEYS = {
   background: Object.keys(SITE_THEME_DEFAULTS.background),
   motion: Object.keys(SITE_THEME_DEFAULTS.motion),
   mobile: Object.keys(SITE_THEME_DEFAULTS.mobile),
-  decorations: Object.keys(SITE_THEME_DEFAULTS.decorations)
+  decorations: Object.keys(SITE_THEME_DEFAULTS.decorations),
+  images: Object.keys(SITE_THEME_DEFAULTS.images)
 }
 
 export function themeExplicitKeys(partial) {
@@ -573,7 +588,10 @@ export function themeExplicitKeys(partial) {
   for (const [section, keys] of Object.entries(THEME_SECTION_KEYS)) {
     const content = partial[section]
     if (!content || typeof content !== 'object') continue
-    for (const key of keys) {
+    // decorations es un mapa abierto de ids (los declara el patrón): todas
+    // sus claves son explícitas, no solo las del default.
+    const keyList = section === 'decorations' ? Object.keys(content) : keys
+    for (const key of keyList) {
       if (content[key] !== undefined && content[key] !== null) out.add(`${section}.${key}`)
     }
   }
@@ -685,7 +703,8 @@ export function themeDataAttrs(theme, explicit = null, mode = 'light') {
     'data-st-nav': on('mobile.nav') ? t.mobile.nav : null,
     'data-st-card': on('mobile.cardStyle') ? t.mobile.cardStyle : null,
     'data-st-hero': on('mobile.heroHeight') ? t.mobile.heroHeight : null,
-    'data-st-sticky-cta': on('mobile.stickyCta') && t.mobile.stickyCta ? 'true' : null
+    'data-st-sticky-cta': on('mobile.stickyCta') && t.mobile.stickyCta ? 'true' : null,
+    'data-st-img': on('images.treatment') && t.images.treatment !== 'none' ? t.images.treatment : null
   }
 }
 

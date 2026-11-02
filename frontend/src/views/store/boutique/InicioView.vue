@@ -48,7 +48,7 @@ import { useCardTitles } from './useCardTitles.js'
 // selectores son más específicos, así que no compite con la piel.
 import '../../../assets/store-boutique-motion.css'
 
-const { pageTemplate } = useStorePage()
+const { pageTemplate, custom } = useStorePage()
 const pageEl = ref(null)
 useCardTitles(pageEl)
 
@@ -99,7 +99,7 @@ function withDefaults(block) {
   return block
 }
 
-const items = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const items = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>

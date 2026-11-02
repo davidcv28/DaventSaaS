@@ -26,7 +26,7 @@ const ctx = inject('storePage')
 // variantes de picker del Studio quedan fuera (composición fija, §3 del
 // prompt de corrección).
 // Composición fija de la superficie 'services' que declara el diseño.
-const servicesLayout = computed(() => templateBlocks(ctx.pageTemplate.value, 'services'))
+const servicesLayout = computed(() => templateBlocks(ctx.pageTemplate.value, 'services', ctx.custom.value?.layout_config))
 const servicesById = computed(() => new Map(servicesLayout.value.map((b) => [b.id, b])))
 const on = (id) => servicesById.value.get(id)?.enabled !== false
 const pos = (id) => servicesById.value.get(id)?.order ?? 999

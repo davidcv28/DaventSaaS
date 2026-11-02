@@ -24,7 +24,7 @@ import BlkAbout from '../../../components/store/blocks/BlkAbout.vue'
 import SastreriaHero from './SastreriaHero.vue'
 import SastreriaFeatured from './SastreriaFeatured.vue'
 
-const { pageTemplate } = useStorePage()
+const { pageTemplate, custom } = useStorePage()
 const pageEl = ref(null)
 
 const MAP = {
@@ -54,7 +54,7 @@ function withDefaults(block) {
   return block
 }
 
-const items = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const items = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>

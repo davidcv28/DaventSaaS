@@ -91,8 +91,8 @@ const FIRMA = {
   contact: 'card'
 }
 
-const { pageTemplate } = inject('storePage')
-const visible = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const { pageTemplate, custom } = inject('storePage')
+const visible = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map((b) => (b.variant ? b : { ...b, variant: FIRMA[b.id] })))
 </script>

@@ -75,6 +75,7 @@ _INTENSITY      =   ('subtle', 'medium', 'bold')
 _NAV            =   ('top', 'bottom', 'drawer')
 _CARD_STYLE     =   ('standard', 'compact', 'overlay')
 _HERO_HEIGHT    =   ('compact', 'tall')
+_IMG_TREATMENT  =   ('none', 'soft', 'grayscale', 'duotone')
 _BLOCK_ALIGN    =   ('left', 'center', 'right')
 #v2 del tema: layout cerrado (mismas claves/enums que el contrato del
 #frontend) y catálogo de pieles. `_DENSITY` se comparte con containers.
@@ -227,9 +228,14 @@ _SECTION_SPECS  =   {
         'family'        :   ('enum', tuple(sorted(_skin_families()))),
     },
     #Adornos opcionales del diseño (cintas, marcos, brillos decorativos):
-    #apagados por defecto; el dueño los prende desde el panel de Diseño.
-    'decorations'   :   {
-        'extras'        :   ('bool',),
+    #mapa ABIERTO {id: bool} — los ids los declara cada DesignPattern en su
+    #layout/tokens y se validan aparte (_clean_decorations), no por spec.
+    'decorations'   :   {},
+    #Tratamiento de las imágenes de la web (portada, tarjetas, galería):
+    #el Studio solo lo ofrece cuando el DesignStyle elegido lo declara en
+    #`capabilities`; el filtro viaja como atributo data-st-img.
+    'images'        :   {
+        'treatment'     :   ('enum', _IMG_TREATMENT),
     },
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
@@ -251,8 +257,13 @@ SITE_THEME_STYLE_KEYS   =   frozenset({
     ('skin', 'id'),
     ('skin', 'family'),
     #El interruptor de adornos no es un nivel de diseño: solo prende o apaga
-    #piezas que el diseño ya trae, así que entra en el piso de cualquier plan.
+    #piezas que el diseño ya trae, así que entra en el piso de cualquier plan
+    #(mapa abierto de ids — se filtra entero en clean/filter_site_theme).
     ('decorations', 'extras'),
+    #Navegación y CTA fijo en móvil: elección de uso, no de diseño fino —
+    #el dueño la decide desde la pestaña Diseño con cualquier plan.
+    ('mobile', 'nav'),
+    ('mobile', 'stickyCta'),
 })
 #=========================================
 # VALIDADORES DE VALOR
@@ -428,6 +439,24 @@ def _clean_skin(raw):
     return {'id': skin_id, 'family': family}
 
 
+#Sección `decorations`: mapa abierto {id: bool} — los ids válidos los
+#declara cada DesignPattern en su layout/tokens (el panel solo ofrece esos);
+#acá se valida la forma acotada (slug corto, máx 8, bool estricto).
+_DECO_ID_RE             =   re.compile(r'^[a-z][a-z0-9-]{0,31}$')
+_DECO_MAX               =   8
+
+def _clean_decorations(content):
+    if not isinstance(content, dict):
+        raise serializers.ValidationError('La sección "decorations" debe ser un objeto {adorno: bool}.')
+    if len(content) > _DECO_MAX:
+        raise serializers.ValidationError(f'Podés activar hasta {_DECO_MAX} decoraciones.')
+    out     =   {}
+    for key, raw in content.items():
+        if not isinstance(key, str) or not _DECO_ID_RE.match(key):
+            raise serializers.ValidationError(f'Decoración desconocida: "{key}".')
+        out[key]    =   _v_bool(raw, f'decorations.{key}')
+    return out
+
 def _store_image_urls(store):
     """URLs servibles de las imágenes propias de la tienda (logo, portada,
     carrusel, galería/decoración) — único origen válido de un fondo image."""
@@ -508,6 +537,15 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
             blocks  =   _clean_block_styles(content)
             if blocks:
                 clean['blocks'] =   blocks
+            continue
+        if section == 'decorations':
+            #Mapa abierto de adornos por diseño: cualquier plan con diseño lo
+            #persiste (es un interruptor, no un nivel); sin beneficio se va.
+            if not (has_advanced or has_plus or has_style):
+                continue
+            decorations =   _clean_decorations(content)
+            if decorations:
+                clean['decorations']    =   decorations
             continue
         spec    =   _SECTION_SPECS[section]
         #Los tres pisos del plan suman: Premium todo, Estándar = básico +
@@ -632,6 +670,11 @@ def filter_site_theme(theme, *, has_plus = False, has_advanced = False, has_styl
     out     =   {}
     for section, content in theme.items():
         if not isinstance(content, dict):
+            continue
+        #Mapa abierto de adornos: pasa entero (los ids ya se validaron al
+        #guardar; no se puede enumerar un set cerrado de claves acá).
+        if section == 'decorations':
+            out[section]    =   dict(content)
             continue
         keep    =   {key: val for key, val in content.items() if (section, key) in keep_set}
         if keep:

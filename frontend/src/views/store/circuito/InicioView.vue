@@ -82,7 +82,7 @@ const MAP = {
   contact: BlkContact
 }
 
-const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing')
+const visible = computed(() => templateBlocks(ctx.pageTemplate.value, 'landing', ctx.custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id]))
 </script>
 

@@ -36,7 +36,7 @@ import McFeatured from './McFeatured.vue'
 import McBenefits from './McBenefits.vue'
 import { useCardTitles } from './useCardTitles.js'
 
-const { pageTemplate } = useStorePage()
+const { pageTemplate, custom } = useStorePage()
 const pageEl = ref(null)
 useCardTitles(pageEl)
 
@@ -81,7 +81,7 @@ function withDefaults(block) {
   return block
 }
 
-const items = computed(() => templateBlocks(pageTemplate.value, 'landing')
+const items = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id])
   .map(withDefaults))
 </script>
