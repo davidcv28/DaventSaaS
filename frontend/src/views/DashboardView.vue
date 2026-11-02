@@ -4083,7 +4083,7 @@ async function changePassword() {
       <div class="next-card assist-card">
         <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
         <div><strong>Asistencia con IA</strong><small>Respondé unas preguntas y te armamos el diseño de tu web.</small></div>
-        <button class="btn btn-auto" @click="openAssist('design')">
+        <button class="btn btn-auto assist-btn" @click="openAssist('design')">
           <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
         </button>
       </div>
@@ -4133,7 +4133,7 @@ async function changePassword() {
       <div class="next-card assist-card">
         <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
         <div><strong>Asistencia con IA</strong><small>Te ayudamos a completar los datos de tu negocio, sin pisar lo que ya cargaste.</small></div>
-        <button class="btn btn-auto" @click="openAssist('business')">
+        <button class="btn btn-auto assist-btn" @click="openAssist('business')">
           <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
         </button>
       </div>
