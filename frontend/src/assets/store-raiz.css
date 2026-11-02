@@ -33,10 +33,10 @@
      ink/bg 16.0 · ink-2/bg 10.5 · muted/bg 5.48 · muted/surface-2 5.05
      accent-text 58% acento + ink ≥ 4.83 (bg/surface/surface-2/surface-3/soft)
      blanco sobre accent-deep (banda segura) ≥ 4.52 en los 8 acentos */
-  --rz-bg: #F4F3EE;
+  --rz-bg: #F7F6F2;
   --rz-surface: #FFFFFF;
-  --rz-surface-2: #EBEAE2;
-  --rz-surface-3: #E1DFD4;
+  --rz-surface-2: #EFEEE7;
+  --rz-surface-3: #E5E3DA;
   --rz-line: var(--st-border, #D8D6CA);
   --rz-line-strong: color-mix(in srgb, var(--rz-line) 62%, var(--rz-ink));
   --rz-line-ui: color-mix(in srgb, var(--rz-line) 42%, var(--rz-ink));
@@ -92,8 +92,11 @@
   --rz-rad-md: 12px;
   --rz-rad-lg: 18px;
   --rz-rad-pill: 999px;
-  --rz-shadow-1: 0 1px 0 rgb(16 26 22 / .04), 0 14px 32px -26px rgb(16 26 22 / .45);
-  --rz-shadow-2: 0 2px 3px -2px rgb(16 26 22 / .06), 0 34px 64px -40px rgb(16 26 22 / .5);
+  --rz-shadow-1: 0 1px 2px rgb(16 26 22 / .06), 0 16px 36px -28px rgb(16 26 22 / .42);
+  --rz-shadow-2: 0 2px 6px -2px rgb(16 26 22 / .08), 0 36px 68px -40px rgb(16 26 22 / .48);
+  /* Brillo interior para superficies de acento (botones sólidos): les da
+     cuerpo sin romper la dirección plana — lee "botón real", no rectángulo. */
+  --rz-btn-inset: inset 0 1px 0 rgb(255 255 255 / .16), inset 0 -1px 0 rgb(0 0 0 / .08);
 
   /* --- Movimiento --- */
   --rz-ease-out: cubic-bezier(.16, 1, .3, 1);
@@ -136,7 +139,7 @@
   /* Tarjeta de producto: defaults de la piel (el contrato --tpc-* sigue
      mandando su geometría; acá solo se tiñe). */
   --tpc-radius: var(--rz-rad-md);
-  --tpc-shadow: none;
+  --tpc-shadow: 0 1px 2px rgb(16 26 22 / .05);
   --tpc-media-bg: var(--rz-surface-2);
   --tpc-focus: var(--rz-focus);
   --tpc-flag-radius: 3px;
@@ -429,6 +432,7 @@ html:has(.store-page[data-template='raiz'])::-webkit-scrollbar-thumb { backgroun
   border-radius: var(--rz-rad-sm);
   background: var(--rz-accent-deep);
   color: #fff;
+  box-shadow: var(--rz-btn-inset), 0 1px 2px rgb(16 26 22 / .16);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -444,7 +448,7 @@ html:has(.store-page[data-template='raiz'])::-webkit-scrollbar-thumb { backgroun
     box-shadow var(--rz-dur-2) var(--rz-ease-out),
     transform var(--rz-dur-1) var(--rz-ease-out);
 }
-:where(.rz-btn:hover) { background: var(--rz-accent-deep-2); transform: translateY(-1px); box-shadow: var(--rz-shadow-1); }
+:where(.rz-btn:hover) { background: var(--rz-accent-deep-2); transform: translateY(-1px); box-shadow: var(--rz-btn-inset), var(--rz-shadow-1); }
 :where(.rz-btn:active) { transform: scale(.985); }
 :where(.rz-btn .icon) { transition: transform var(--rz-dur-2) var(--rz-ease-out); }
 :where(.rz-btn:hover .icon) { transform: translateX(2px); }
@@ -453,7 +457,8 @@ html:has(.store-page[data-template='raiz'])::-webkit-scrollbar-thumb { backgroun
   border-color: var(--rz-line-ui);
   color: var(--rz-ink);
 }
-:where(.rz-btn--ghost:hover) { background: var(--rz-surface-2); border-color: var(--rz-ink); color: var(--rz-ink); }
+:where(.rz-btn--ghost) { box-shadow: none; }
+:where(.rz-btn--ghost:hover) { background: var(--rz-surface-2); border-color: var(--rz-ink); color: var(--rz-ink); box-shadow: none; }
 :where(.rz-btn--ink) { background: var(--rz-ink); color: var(--rz-bg); }
 :where(.rz-btn--ink:hover) { background: var(--rz-ink-2); color: var(--rz-bg); }
 :where(.rz-btn--sm) { min-height: 38px; padding: 0 16px; font-size: 13px; }
@@ -647,10 +652,10 @@ select:where(.rz-field) {
   color: #fff;
   font-size: 13.5px;
   font-weight: 700;
-  box-shadow: none;
+  box-shadow: var(--rz-btn-inset), 0 1px 2px rgb(16 26 22 / .16);
   transition: background-color var(--rz-dur-2), transform var(--rz-dur-1), box-shadow var(--rz-dur-2);
 }
-.store-page[data-template='raiz'] .sp-top-cta:hover { background: var(--rz-accent-deep-2); color: #fff; transform: translateY(-1px); }
+.store-page[data-template='raiz'] .sp-top-cta:hover { background: var(--rz-accent-deep-2); color: #fff; transform: translateY(-1px); box-shadow: var(--rz-btn-inset), var(--rz-shadow-1); }
 .store-page[data-template='raiz'] .sp-top .sp-icon-btn {
   width: 40px;
   height: 40px;
@@ -661,7 +666,7 @@ select:where(.rz-field) {
   box-shadow: none;
 }
 .store-page[data-template='raiz'] .sp-top .sp-icon-btn:hover { border-color: var(--rz-ink); background: var(--rz-surface-2); color: var(--rz-ink); transform: none; }
-.store-page[data-template='raiz'] .sp-icon-btn.primary { background: var(--rz-accent-deep); color: #fff; border-color: transparent; }
+.store-page[data-template='raiz'] .sp-icon-btn.primary { background: var(--rz-accent-deep); color: #fff; border-color: transparent; box-shadow: var(--rz-btn-inset), 0 1px 2px rgb(16 26 22 / .16); }
 .store-page[data-template='raiz'] .sp-burger {
   width: 40px;
   height: 40px;
@@ -848,7 +853,7 @@ select:where(.rz-field) {
 .store-page[data-template='raiz'] .sp-boot-ctas .sp-sk-line { border-radius: var(--rz-rad-sm); }
 .store-page[data-template='raiz'] .sp-boot { background: var(--rz-bg); }
 .store-page[data-template='raiz'] .sp-state { color: var(--rz-ink); }
-.store-page[data-template='raiz'] .sp-state-icon { background: var(--rz-accent-soft); color: var(--rz-accent-text); border-radius: var(--rz-rad-sm); }
+.store-page[data-template='raiz'] .sp-state-icon { background: var(--rz-accent-soft); color: var(--rz-accent-text); border: 1px solid color-mix(in srgb, var(--rz-accent) 22%, var(--rz-line)); border-radius: var(--rz-rad-sm); }
 .store-page[data-template='raiz'] .sp-state p { color: var(--rz-muted); }
 .store-page[data-template='raiz'] .sp-empty { border-color: var(--rz-line-ui); border-radius: var(--rz-rad-md); background: var(--rz-surface); }
 .store-page[data-template='raiz'] .sp-empty strong { color: var(--rz-ink); }
@@ -948,7 +953,7 @@ select:where(.rz-field) {
 .store-page[data-template='raiz'][data-store-theme='dark'] .sp-faq-caret { background: var(--rz-surface-2); }
 .store-page[data-template='raiz'] .sp-card::before,
 .store-page[data-template='raiz'] .sp-about-card::before { content: none; }
-.store-page[data-template='raiz'] .sp-card { border-radius: var(--rz-rad-md); border-color: var(--rz-line); box-shadow: none; }
+.store-page[data-template='raiz'] .sp-card { border-radius: var(--rz-rad-md); border-color: var(--rz-line); box-shadow: 0 1px 2px rgb(16 26 22 / .05); }
 .store-page[data-template='raiz'] .sp-card:hover { transform: translateY(-2px); box-shadow: var(--rz-shadow-1); border-color: var(--rz-line-strong); }
 .store-page[data-template='raiz'] .sp-card .tpc-media,
 .store-page[data-template='raiz'] .sp-gallery-item { animation: none; background-image: none; background-color: var(--rz-surface-2); }
@@ -985,7 +990,7 @@ select:where(.rz-field) {
 }
 .store-page[data-template='raiz'] .sp-hal-title { color: var(--rz-ink); max-width: 22ch; }
 .store-page[data-template='raiz'] .sp-hal-sub { color: var(--rz-ink-2); font-size: var(--rz-fs-lead); line-height: 1.55; max-width: 52ch; }
-.store-page[data-template='raiz'] .sp-hal-btn { border-radius: var(--rz-rad-sm); background: var(--rz-accent-deep); color: #fff; min-height: 46px; padding-inline: 22px; }
+.store-page[data-template='raiz'] .sp-hal-btn { border-radius: var(--rz-rad-sm); background: var(--rz-accent-deep); color: #fff; min-height: 46px; padding-inline: 22px; box-shadow: var(--rz-btn-inset), 0 1px 2px rgb(16 26 22 / .16); }
 .store-page[data-template='raiz'] .sp-hal-btn.is-ghost { background: transparent; border-color: var(--rz-line-ui); color: var(--rz-ink); }
 .store-page[data-template='raiz'] .sp-hal-btn.is-ghost:hover { background: var(--rz-surface-2); }
 .store-page[data-template='raiz'] .sp-hal-media { border-radius: var(--rz-rad-lg); border-color: var(--rz-line); background: var(--rz-surface-2); box-shadow: var(--rz-shadow-1); }
@@ -1009,7 +1014,7 @@ select:where(.rz-field) {
 .store-page[data-template='raiz'] .sp-about { padding-top: 0; }
 .store-page[data-template='raiz'] .sp-about-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px 56px; align-items: start; }
 .store-page[data-template='raiz'] .sp-about-heading { font-family: var(--rz-display); font-weight: 700; letter-spacing: -.025em; }
-.store-page[data-template='raiz'] .sp-about-heading-icon { border-radius: var(--rz-rad-sm); background: var(--rz-accent-soft); color: var(--rz-accent-text); box-shadow: none; }
+.store-page[data-template='raiz'] .sp-about-heading-icon { border-radius: var(--rz-rad-sm); background: var(--rz-accent-soft); color: var(--rz-accent-text); border: 1px solid color-mix(in srgb, var(--rz-accent) 22%, var(--rz-line)); box-shadow: none; }
 .store-page[data-template='raiz'] .sp-about-text { color: var(--rz-ink-2); }
 .store-page[data-template='raiz'] .sp-about-list li { color: var(--rz-ink-2); }
 .store-page[data-template='raiz'] .sp-about-list .icon { color: var(--rz-accent-text); }
@@ -1059,7 +1064,7 @@ select:where(.rz-field) {
   box-shadow: none;
   padding: 20px 0;
 }
-.store-page[data-template='raiz'] .sp-service-icon { border-radius: var(--rz-rad-sm); background: var(--rz-accent-soft); color: var(--rz-accent-text); }
+.store-page[data-template='raiz'] .sp-service-icon { border-radius: var(--rz-rad-sm); background: var(--rz-accent-soft); color: var(--rz-accent-text); border: 1px solid color-mix(in srgb, var(--rz-accent) 22%, var(--rz-line)); }
 .store-page[data-template='raiz'] .sp-service-title { font-family: var(--rz-display); }
 
 /* --- Beneficios: banda a sangre de tinta --- */
