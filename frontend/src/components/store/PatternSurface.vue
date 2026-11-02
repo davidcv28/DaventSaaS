@@ -33,7 +33,14 @@ const props = defineProps({
 })
 
 const frame = ref(null)
-const height = ref(0)
+// El documento del patrón trae navs móviles con position: fixed (tab bar,
+// sheet, píldora): si el iframe se estira al alto del documento, ese fixed
+// queda anclado al fondo de toda la página y el menú no se ve. El iframe
+// ocupa el viewport real y el documento scrollea dentro.
+const frameHeight = ref(0)
+function measureViewport() {
+  frameHeight.value = Math.round(window.visualViewport?.height || window.innerHeight) || 800
+}
 
 const src = computed(() => {
   const params = new URLSearchParams({ theme: props.theme, surface: props.surface })
@@ -62,9 +69,6 @@ function onMessage(e) {
     }
     return
   }
-  if (e.data?.type !== 'davent:ds-height') return
-  const next = Number(e.data.height) || 0
-  if (next > 0) height.value = next
 }
 
 function post(type, payload) {
@@ -77,7 +81,6 @@ function syncTheme() {
 }
 
 function onLoad() {
-  height.value = 0
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
 }
@@ -88,8 +91,17 @@ watch(() => props.surface, () => {
   syncTheme()
 })
 
-if (typeof window !== 'undefined') window.addEventListener('message', onMessage)
-onBeforeUnmount(() => window.removeEventListener('message', onMessage))
+if (typeof window !== 'undefined') {
+  measureViewport()
+  window.addEventListener('message', onMessage)
+  window.addEventListener('resize', measureViewport)
+  window.visualViewport?.addEventListener('resize', measureViewport)
+}
+onBeforeUnmount(() => {
+  window.removeEventListener('message', onMessage)
+  window.removeEventListener('resize', measureViewport)
+  window.visualViewport?.removeEventListener('resize', measureViewport)
+})
 </script>
 
 <template>
@@ -98,7 +110,7 @@ onBeforeUnmount(() => window.removeEventListener('message', onMessage))
     class="ds-surface"
     :src="src"
     :title="title || 'Diseño de la web'"
-    :style="height ? { height: `${height}px` } : null"
+    :style="{ height: `${frameHeight}px` }"
     sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
     loading="lazy"
     @load="onLoad"
