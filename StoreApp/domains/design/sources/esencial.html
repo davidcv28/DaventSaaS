@@ -136,10 +136,12 @@ a{color:inherit}
 .nav a:hover::after{transform:scaleX(1)}
 html[data-ds-surface="landing"] .nav a[data-ds-route="home"]:not([data-ds-anchor]),
 html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"],
-html[data-ds-surface="services"] .nav a[data-ds-route="services"]{color:var(--ink)}
+html[data-ds-surface="services"] .nav a[data-ds-route="services"],
+html[data-ds-surface="plans"] .nav a[data-ds-route="plans"]{color:var(--ink)}
 html[data-ds-surface="landing"] .nav a[data-ds-route="home"]:not([data-ds-anchor])::after,
 html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"]::after,
-html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transform:scaleX(1)}
+html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after,
+html[data-ds-surface="plans"] .nav a[data-ds-route="plans"]::after{transform:scaleX(1)}
 
 /* Hero */
 .hero{position:relative;isolation:isolate;overflow:hidden;padding-block:clamp(56px,10vw,120px) clamp(48px,7vw,80px)}
@@ -269,6 +271,30 @@ a[href=""].btn{display:none}
 }
 .ds-service-name{grid-column:2;font-family:var(--font-display);font-size:1.35rem;line-height:1.2}
 .ds-service-desc{grid-column:2;color:var(--muted);display:block;margin-top:4px}
+
+/* Suscripciones (fragmento ds-plans-list) */
+.ds-plans-list{
+  list-style:none;margin:0;padding:0;display:grid;gap:20px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+}
+.ds-plan{
+  display:grid;gap:10px;align-content:start;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px;transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;
+}
+.ds-plan:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:var(--shadow,0 14px 30px rgba(0,0,0,.08))}
+.ds-plan-name{font-family:var(--font-display);font-size:1.25rem;line-height:1.2;margin:0}
+.ds-plan-price{color:var(--accent);font-family:var(--font-display);font-size:1.5rem;font-weight:700}
+.ds-plan-price:empty{display:none}
+.ds-plan-note{color:var(--muted);font-size:.95rem;margin:0}
+.ds-plan-note:empty{display:none}
+.ds-plan-feats{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+.ds-plan-feats:empty{display:none}
+.ds-plan-feats li{position:relative;padding-inline-start:20px;color:var(--muted);font-size:.95rem}
+.ds-plan-feats li::before{
+  content:"";position:absolute;left:0;top:.42em;width:9px;height:9px;border-radius:50%;
+  background:color-mix(in srgb,var(--accent) 55%,transparent);
+}
 
 /* Contacto */
 .contact-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
@@ -595,6 +621,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
       <a href="#servicios" data-ds-route="services">Servicios</a>
+      {{nav_plans}}
       <a href="#contacto" data-ds-route="home" data-ds-anchor>Contacto</a>
     </nav>
   </div>
@@ -613,6 +640,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
     <span>Servicios</span>
   </a>
+  {{nav_plans_tab}}
   <button class="m-tab" type="button" aria-expanded="false" aria-controls="m-sheet" data-m-open>
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     <span>Más</span>
@@ -633,7 +661,8 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
     <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
     <a href="#servicios" data-ds-route="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    {{nav_plans_sheet}}
+    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">05</span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -777,6 +806,24 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   </div>
 </section>
 
+<section class="section" data-surface="plans" id="suscripciones">
+  <div class="wrap">
+    <h1 class="sr-only">Suscripciones de {{store_name}}</h1>
+    <nav class="cat-crumbs" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <strong aria-current="page">Suscripciones</strong>
+    </nav>
+    <div class="section-head">
+      <p class="eyebrow">Suscripciones</p>
+      <h2>{{plans_title}}</h2>
+      <p class="lead">Elegí el plan que mejor te quede y escribinos para sumarte. La suscripción se coordina directo con el negocio — no se cobra por la web.</p>
+    </div>
+    {{plans}}
+    <div style="margin-top:24px"><a class="btn" href="{{store_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+  </div>
+</section>
+
 <section class="section" data-surface="product">
   <div class="wrap">
     <h1 class="sr-only">{{product_name}} · {{store_name}}</h1>
@@ -880,7 +927,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing';
     [].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function(tab){
       var route = tab.getAttribute('data-ds-route');
-      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services');
+      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services') || (surface === 'plans' && route === 'plans');
       tab.classList.toggle('is-on', on);
       if (on) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
