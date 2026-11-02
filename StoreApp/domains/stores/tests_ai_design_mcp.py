@@ -204,8 +204,11 @@ class AiDesignMcpEndpointTests(TestCase):
             self.assertEqual(body['mcp']['pattern']['slug'], pattern.slug)
             slugs   =   {style['slug'] for style in body['mcp']['styles']}
             self.assertEqual(slugs, {pattern.slug})
+            #El catálogo viste las propuestas; la última puede llevar la
+            #fuente #1 del MCP como alternativa real.
+            applied =   {p['mcp_style']['slug'] for p in body['proposals']}
+            self.assertIn(pattern.slug, applied)
             for proposal in body['proposals']:
-                self.assertEqual(proposal['mcp_style']['slug'], pattern.slug)
                 self.assertIn('palette', proposal['site_theme'])
                 self.assertIn('containers', proposal['site_theme'])
         else:

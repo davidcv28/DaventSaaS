@@ -1067,6 +1067,11 @@ function onStepKey(event) {
           </div>
           <ul class="aid-mcp-list">
             <li><strong>{{ mcp.pattern.nombre }}</strong><span class="aid-mcp-cat">{{ mcp.pattern.categoria }}</span><span class="aid-mcp-tags">catálogo de diseños</span></li>
+            <li v-for="s in mcp.alternatives || []" :key="s.slug">
+              <strong>{{ s.nombre }}</strong>
+              <span class="aid-mcp-cat">{{ s.categoria }}</span>
+              <span class="aid-mcp-tags">{{ s.source_repo || 'MCP' }}</span>
+            </li>
           </ul>
         </div>
         <div v-else-if="mcp?.styles?.length" class="aid-mcp">

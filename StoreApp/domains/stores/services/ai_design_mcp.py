@@ -740,8 +740,14 @@ def _catalog_tokens(tokens):
     return clean
 
 
-def _decorate_catalog(store, seed, result, resolved, prompt):
-    """Aplica el patrón/estilo elegido por mapeo directo a cada propuesta."""
+def _decorate_catalog(store, seed, result, resolved, prompt, repo_styles = None):
+    """Aplica el patrón/estilo elegido por mapeo directo a cada propuesta.
+
+    `repo_styles` (salida de `select_styles`, fuentes de repo del MCP):
+    la ÚLTIMA propuesta se viste con la fuente #1 para que la grilla
+    muestre una alternativa real del MCP junto al diseño del catálogo,
+    y todas las fuentes viajan como `alternatives` en el payload.
+    """
     pattern     =   resolved['pattern']
     style       =   resolved['style']
     proposals   =   result.get('proposals') or []
@@ -789,6 +795,22 @@ def _decorate_catalog(store, seed, result, resolved, prompt):
         }
         apply_design_overlay(proposal, overlay)
         overlays[str(proposal.get('id'))]   =   overlay
+    alternatives    =   []
+    if repo_styles and proposals:
+        #La última propuesta recibe la fuente #1 del MCP como alternativa
+        #real (tema + layout del repo, saneados igual que el catálogo).
+        alt_overlay, alt_style  =   _repo_overlay(proposals[-1], repo_styles[0], store)
+        if alt_overlay is not None:
+            overlays[str(proposals[-1].get('id'))]  =   alt_overlay
+        alternatives    =   [
+            {
+                'slug'          :   s.get('slug'),
+                'nombre'        :   s.get('nombre'),
+                'categoria'     :   s.get('categoria'),
+                'source_repo'   :   (s.get('tokens_diseno') or {}).get('source_repo') or '',
+            }
+            for s in repo_styles
+        ]
     if overlays:
         save_overlays(store, seed, overlays)
     return {
@@ -797,67 +819,77 @@ def _decorate_catalog(store, seed, result, resolved, prompt):
         'pattern'   :   {'slug': pattern.slug, 'nombre': pattern.nombre, 'categoria': pattern.categoria},
         'style'     :   {'slug': style.slug, 'nombre': style.nombre} if style else None,
         'styles'    :   [{'slug': pattern.slug, 'nombre': pattern.nombre, 'categoria': pattern.categoria, 'source_repo': 'design-catalog'}],
-        'available' :   1,
+        'alternatives'  :   alternatives,
+        'available' :   1 + len(alternatives),
     }
 
 
 #=========================================
 # FLUJO
 #=========================================
+def _repo_overlay(proposal, style, store):
+    """Overlay de UNA fuente de repo del MCP sobre UNA propuesta.
+
+    Devuelve (overlay, mcp_style) o (None, None) si la fuente no trae
+    tokens o algo queda fuera del contrato (la propuesta conserva lo que
+    tenga — nunca rompe por una fuente rara).
+    """
+    tokens  =   style.get('tokens_diseno') or {}
+    if not tokens:
+        return None, None
+    pattern =   pattern_from_components(style.get('html_componentes') or {})
+    layout  =   apply_pattern(copy.deepcopy(proposal.get('layout_config') or {}), pattern)
+    try:
+        from StoreApp.domains.stores.layout_blocks import clean_layout_config
+        from StoreApp.domains.stores.site_theme import clean_site_theme
+
+        theme   =   clean_site_theme(
+            theme_from_tokens(tokens, proposal.get('site_theme') or {}),
+            has_plus        =   _benefit(store, 'has_design_plus'),
+            has_advanced    =   _benefit(store, 'has_design_advanced'),
+            has_style       =   _benefit(store, 'has_customization'),
+            store           =   store,
+        )
+        if pattern.get('order'):
+            layout  =   clean_layout_config(layout, _benefit(store, 'has_design_advanced'), _benefit(store, 'has_ai_design'))
+    except serializers.ValidationError:
+        #Un token fuera de contrato nunca tumba la propuesta: se queda
+        #el patrón del motor.
+        return None, None
+    mcp_style   =   {
+        'slug'          :   style.get('slug'),
+        'nombre'        :   style.get('nombre'),
+        'categoria'     :   style.get('categoria'),
+        'tags'          :   list(style.get('tags') or [])[:6],
+        #Trazabilidad del patrón aplicado: de qué repo sale y qué
+        #secciones ordenó.
+        'source_repo'   :   tokens.get('source_repo') or '',
+        'pattern'       :   list(pattern.get('order') or []),
+    }
+    overlay =   {
+        'site_theme'    :   theme,
+        'layout_config' :   layout if pattern.get('order') else None,
+        'theme'         :   _theme_mode(theme),
+        'theme_toggle'  :   True,
+        'accent'        :   (theme.get('palette') or {}).get('accent') or '',
+        'mcp_style'     :   mcp_style,
+    }
+    apply_design_overlay(proposal, overlay)
+    return overlay, mcp_style
+
+
 def _decorate(store, seed, result, styles, prompt):
     """Aplica a cada propuesta un patrón de diseño distinto del MCP."""
     proposals   =   result.get('proposals') or []
     overlays    =   {}
     chosen      =   []
-    has_plus    =   _benefit(store, 'has_design_plus')
-    has_advanced =  _benefit(store, 'has_design_advanced')
-    has_style   =   _benefit(store, 'has_customization')
-    has_ai      =   _benefit(store, 'has_ai_design')
     for index, proposal in enumerate(proposals):
         if not styles:
             break
         style   =   styles[index % len(styles)]
-        tokens  =   style.get('tokens_diseno') or {}
-        if not tokens:
+        overlay, mcp_style  =   _repo_overlay(proposal, style, store)
+        if overlay is None:
             continue
-        pattern =   pattern_from_components(style.get('html_componentes') or {})
-        layout  =   apply_pattern(copy.deepcopy(proposal.get('layout_config') or {}), pattern)
-        try:
-            from StoreApp.domains.stores.layout_blocks import clean_layout_config
-            from StoreApp.domains.stores.site_theme import clean_site_theme
-
-            theme   =   clean_site_theme(
-                theme_from_tokens(tokens, proposal.get('site_theme') or {}),
-                has_plus        =   has_plus,
-                has_advanced    =   has_advanced,
-                has_style       =   has_style,
-                store           =   store,
-            )
-            if pattern.get('order'):
-                layout  =   clean_layout_config(layout, has_advanced, has_ai)
-        except serializers.ValidationError:
-            #Un token fuera de contrato nunca tumba la propuesta: se queda
-            #el patrón del motor.
-            continue
-        mcp_style   =   {
-            'slug'          :   style.get('slug'),
-            'nombre'        :   style.get('nombre'),
-            'categoria'     :   style.get('categoria'),
-            'tags'          :   list(style.get('tags') or [])[:6],
-            #Trazabilidad del patrón aplicado: de qué repo sale y qué
-            #secciones ordenó.
-            'source_repo'   :   tokens.get('source_repo') or '',
-            'pattern'       :   list(pattern.get('order') or []),
-        }
-        overlay =   {
-            'site_theme'    :   theme,
-            'layout_config' :   layout if pattern.get('order') else None,
-            'theme'         :   _theme_mode(theme),
-            'theme_toggle'  :   True,
-            'accent'        :   (theme.get('palette') or {}).get('accent') or '',
-            'mcp_style'     :   mcp_style,
-        }
-        apply_design_overlay(proposal, overlay)
         overlays[str(proposal.get('id'))]    =   overlay
         chosen.append(mcp_style)
     if overlays:
@@ -901,7 +933,11 @@ def generate_from_prompt(store, prompt = None, history = None, seed = None, mess
     #queda como fuente opcional de overlay cuando el catálogo no resuelve.
     resolved =  resolve_design(clean_prompt)
     if resolved:
-        mcp =   _decorate_catalog(store, result.get('seed'), result, resolved, clean_prompt)
+        #El catálogo decide el diseño; el MCP corre igual (select_styles)
+        #para aportar alternativas de repo: la última propuesta se viste
+        #con la fuente #1 y todas viajan como `alternatives`.
+        repo_styles =   select_styles(clean_prompt, limit = MAX_STYLES)
+        mcp =   _decorate_catalog(store, result.get('seed'), result, resolved, clean_prompt, repo_styles)
     else:
         styles  =   select_styles(clean_prompt)
         mcp     =   _decorate(store, result.get('seed'), result, styles, clean_prompt)
