@@ -545,9 +545,9 @@ const planProgress = computed(() => {
 })
 
 const nextSteps = computed(() => [
-  { title: 'Reservá tu link público', text: 'Es la dirección de tu tienda, gratis.', done: store.hasStore, target: 'store', cta: 'Reservar mi link' },
-  { title: 'Elegí un plan', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription, target: 'plans', cta: 'Elegir plan' },
-  { title: 'Cargá tus productos', text: 'Sumá fotos, precios y descripciones.', done: catalog.products.length > 0, target: 'catalogs', cta: 'Cargar producto' },
+  { title: 'Reservá tu link público', doneTitle: 'Link público reservado', text: 'Es la dirección de tu tienda, gratis.', done: store.hasStore, target: 'store', cta: 'Reservar mi link' },
+  { title: 'Elegí un plan', doneTitle: 'Plan elegido', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription, target: 'plans', cta: 'Elegir plan' },
+  { title: 'Cargá tus productos', doneTitle: 'Productos cargados', text: 'Sumá fotos, precios y descripciones.', done: catalog.products.length > 0, target: 'catalogs', cta: 'Cargar producto' },
   { title: 'Compartí tu link público', text: 'Mandáselo a tus clientes por WhatsApp.', done: false, target: 'store', cta: 'Copiar mi link', run: copyLink }
 ])
 const stepsDone = computed(() => nextSteps.value.filter((s) => s.done).length)
@@ -556,11 +556,27 @@ const nextStepIdx = computed(() => nextSteps.value.findIndex((s) => !s.done))
 const nextStep = computed(() => (nextStepIdx.value >= 0 ? nextSteps.value[nextStepIdx.value] : null))
 const pendingSteps = computed(() => nextSteps.value.filter((s) => !s.done))
 
-// Primera vez en el panel (todavía sin link público): la portada se arma
-// como bienvenida guiada — tres pasos, un solo CTA — y esconde los paneles
-// que aún no tienen datos (números en cero y actividad vacía).
+// Primera vez en el panel (todavía sin link público).
 const firstRun = computed(() => !store.hasStore)
-const welcomeSteps = computed(() => nextSteps.value.slice(0, 3))
+
+// Héroe de Inicio: una frase con el estado de la tienda + UN solo CTA.
+const statusInfo = computed(() => {
+  const go = (id) => () => { section.value = id }
+  if (plan.value && !plan.value.isCurrent && plan.value.status !== 'Pendiente de pago') {
+    return { kind: 'bad', title: 'Tu tienda está pausada', sub: 'Tu plan venció y la web pública se desactivó. La renovás en un minuto.', cta: 'Renovar mi plan', run: go('plans') }
+  }
+  if (nextStep.value) {
+    const n = pendingSteps.value.length
+    return { kind: 'warn', title: n === 1 ? 'Falta 1 paso para publicar' : `Faltan ${n} pasos para publicar`, sub: `${nextStep.value.title}: ${nextStep.value.text}`, cta: nextStep.value.cta, run: nextStep.value.run || go(nextStep.value.target) }
+  }
+  return { kind: 'ok', title: 'Tu tienda está en línea', sub: 'Todo listo. Compartí el link para sumar visitas y clientes.', cta: 'Compartir por WhatsApp', run: shareWhatsApp }
+})
+const planLine = computed(() => {
+  const p = plan.value
+  if (!p) return ''
+  if (!p.isCurrent) return `Tu plan está ${p.status.toLowerCase()}.`
+  return p.autoRenew ? `Tu plan se renueva solo el ${fmtDate(p.end)}.` : `A tu plan le quedan ${p.remaining} ${p.remaining === 1 ? 'día' : 'días'} (vence el ${fmtDate(p.end)}).`
+})
 
 // --- "Tu negocio hoy": alertas, números con contexto y actividad -----------
 
@@ -620,13 +636,9 @@ const activityFeed = computed(() => {
   return items.slice(0, 4)
 })
 
-// Vista previa viva de la web (mock con los datos reales: más liviana que un
-// iframe de la página entera — la CSP ya permite embeberla same-site y el
-// editor de Bloques lo hace; acá basta el resumen).
-const ovPreviewVars = computed(() => storeThemeVars(store.customization))
-const ovShopName = computed(() => store.customization?.display_name || business.value || 'Tu negocio')
-const ovCatalogOn = computed(() => store.customization?.show_catalog !== false)
-const ovCover = computed(() => store.customization?.cover || '')
+// (La vista previa viva de la web salió de Inicio en el rediseño: la portada
+// muestra una sola acción principal; editar/ver la web quedan en accesos
+// rápidos y en la sección Diseño.)
 
 function fmtDate(d) {
   if (!d) return '—'
@@ -3126,55 +3138,18 @@ async function changePassword() {
 
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
-      <div class="page-head ov-head">
-        <div>
-          <h1>{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></h1>
-          <p>{{ firstRun ? 'Este es tu panel: acá vas a ver tu web, tus productos y tus visitas. Empecemos.' : 'Tu negocio, de un vistazo.' }}</p>
-        </div>
-        <div v-if="billing.hasSubscription && store.hasStore" class="ov-actions">
-          <button class="btn btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="16" /> Editar mi web</button>
-          <a class="btn secondary btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="16" /> Ver mi tienda</a>
-        </div>
+      <!-- 1. Héroe: saludo + estado de la tienda en una frase + UN solo CTA -->
+      <div class="oh-hero">
+        <p class="oh-hi">{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></p>
+        <h1 class="oh-title">
+          <span class="oh-dot" :class="statusInfo.kind" aria-hidden="true"></span>{{ statusInfo.title }}
+        </h1>
+        <p class="oh-sub">{{ statusInfo.sub }}</p>
+        <button type="button" class="btn btn-auto oh-cta" @click="statusInfo.run">{{ statusInfo.cta }} <AppIcon name="arrow-right" :size="18" /></button>
+        <a v-if="store.hasStore" class="oh-visit" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi tienda como la ven mis clientes</a>
       </div>
 
-      <!-- Acciones rápidas: los 4 gestos más usados, al alcance del pulgar.
-           En móvil scrollean en horizontal sin romper el layout. -->
-      <div class="qa-row" role="group" aria-label="Acciones rápidas">
-        <button type="button" class="qa-chip" :disabled="!store.hasStore" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /> Compartir</button>
-        <button type="button" class="qa-chip" :disabled="!store.hasStore" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
-        <button type="button" class="qa-chip" @click="goAddProduct"><AppIcon name="plus" :size="16" /> Producto</button>
-        <button type="button" class="qa-chip" @click="section = 'design'"><AppIcon name="palette" :size="16" /> Editar web</button>
-        <button type="button" class="qa-chip" @click="section = 'tools'"><AppIcon name="qr-code" :size="16" /> Mi QR</button>
-      </div>
-
-      <!-- Franja de plan compacta: estado de la suscripción de un vistazo,
-           sin robarle el primer viewport a "Tu negocio hoy". -->
-      <div v-if="plan" class="plan-strip">
-        <span class="ps-dot" :class="{ ok: plan.isCurrent, warn: plan.status === 'Pendiente de pago', bad: !plan.isCurrent && plan.status !== 'Pendiente de pago' }" aria-hidden="true"></span>
-        <span class="ps-name">{{ plan.name }}</span>
-        <span class="ps-meta">
-          <template v-if="plan.isCurrent">{{ plan.autoRenew ? `Se renueva solo el ${fmtDate(plan.end)}` : `Quedan ${plan.remaining} ${plan.remaining === 1 ? 'día' : 'días'} · vence el ${fmtDate(plan.end)}` }}</template>
-          <template v-else>{{ plan.status }}</template>
-        </span>
-        <span class="ps-bar" role="progressbar" aria-label="Tiempo transcurrido de la suscripción" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="planProgress"><span :style="{ transform: `scaleX(${planProgress / 100})` }"></span></span>
-        <span class="ps-actions">
-          <button v-if="plan.autoRenew" type="button" class="chip-btn" @click="confirmCancel = true">Cancelar débito</button>
-          <button v-else-if="!plan.isTrial && plan.isCurrent" type="button" class="chip-btn" :disabled="renewBusy" @click="activateAutoRenew"><AppIcon name="refresh" :size="13" /> Activar débito</button>
-          <TipHint v-if="plan.isCurrent" text="Débito automático: Mercado Pago te cobra el plan solo cada mes, sin que tengas que acordarte. Podés darlo de baja cuando quieras." />
-          <button type="button" class="chip-btn strong" @click="section = 'plans'">{{ plan.isTrial ? 'Ver planes' : 'Cambiar plan' }}</button>
-        </span>
-      </div>
-
-      <div v-if="confirmCancel" class="card confirm-card">
-        <h3><AppIcon name="triangle-alert" :size="18" /> Cancelar la renovación automática</h3>
-        <p>Vas a dejar de pagar el débito mensual. Tu plan sigue vigente hasta el <strong>{{ fmtDate(plan?.end) }}</strong>; después tu web pública y tu catálogo se desactivan. Podés reactivar el débito cuando quieras.</p>
-        <div class="btn-row">
-          <button class="btn danger btn-auto" :disabled="renewBusy" @click="doCancelRenewal"><span v-if="renewBusy" class="spinner"></span>Sí, cancelar la renovación</button>
-          <button class="btn ghost btn-auto" :disabled="renewBusy" @click="confirmCancel = false">Mantener activa</button>
-        </div>
-      </div>
-
-      <!-- Cola de alertas: una franja con lo más urgente; el resto se despliega. -->
+      <!-- 2. Alertas: solo lo urgente, en una franja -->
       <div v-if="topAlert" class="aq" :class="`a-${topAlert.kind}`">
         <div class="aq-main" role="alert">
           <AppIcon :name="alertIcon(topAlert.kind)" :size="18" class="aq-icon" />
@@ -3204,153 +3179,111 @@ async function changePassword() {
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
-      <div class="today" :class="{ 'first-run': firstRun }">
-        <!-- Una sola decisión principal: el próximo paso de la puesta en marcha -->
-        <div class="card next-do" :class="{ 'first-run': firstRun }">
-          <span class="next-do-tag"><AppIcon name="sparkles" :size="13" /> {{ firstRun ? 'Bienvenido a DAVENT' : 'Qué hacer ahora' }}</span>
-          <template v-if="firstRun">
-            <h2>Tu tienda online, en tres pasos</h2>
-            <p>Reservá tu link, elegí un plan y cargá tus primeros productos. Te acompañamos en cada paso y podés volver a esta guía cuando quieras.</p>
-            <ol class="first-steps">
-              <li v-for="(s, i) in welcomeSteps" :key="s.title" :class="{ done: s.done }">
-                <span class="first-steps-num" aria-hidden="true">
-                  <AppIcon v-if="s.done" name="check" :size="13" />
-                  <template v-else>{{ i + 1 }}</template>
-                </span>
-                <span class="first-steps-txt"><strong>{{ s.title }}</strong><small>{{ s.text }}</small></span>
-              </li>
-            </ol>
-            <div class="first-cta">
-              <button type="button" class="btn btn-auto next-do-cta" @click="section = 'store'">
-                Empezar ahora <AppIcon name="arrow-right" :size="16" />
-              </button>
-              <button type="button" class="btn ghost btn-auto" @click="tourOpen = true">
-                <AppIcon name="graduation-cap" :size="16" /> Ver la guía
-              </button>
-            </div>
-          </template>
-          <template v-else-if="nextStep">
-            <h2>{{ nextStep.title }}</h2>
-            <p>{{ nextStep.text }}</p>
-            <button type="button" class="btn btn-auto next-do-cta" @click="nextStep.run ? nextStep.run() : (section = nextStep.target)">
-              {{ nextStep.cta }} <AppIcon name="arrow-right" :size="16" />
-            </button>
-            <span class="next-do-step">Paso {{ nextStepIdx + 1 }} de {{ nextSteps.length }}</span>
-          </template>
-          <template v-else>
-            <h2>Todo listo para vender</h2>
-            <p>Tu tienda está completa. Compartí el link para sumar visitas y clientes.</p>
-            <button type="button" class="btn btn-auto next-do-cta" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /> Compartir por WhatsApp</button>
-          </template>
-        </div>
+      <!-- 3. Checklist de puesta en marcha: lo hecho con tilde, lo que falta con botón -->
+      <div class="card oh-steps" :class="{ complete: !pendingSteps.length }">
+        <h3><AppIcon name="checklist" :size="18" /> {{ pendingSteps.length ? 'Para que tu tienda quede lista' : 'Tu tienda está lista' }} <span class="steps-count">{{ stepsDone }} de {{ nextSteps.length }}</span></h3>
+        <div class="steps-bar" role="progressbar" aria-label="Pasos completados" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
+        <ol class="oh-steps-list">
+          <li v-for="(s, i) in nextSteps" :key="s.title" :class="{ done: s.done, next: !s.done && i === nextStepIdx }">
+            <span class="oh-steps-mark" aria-hidden="true"><AppIcon v-if="s.done" name="check" :size="15" /><template v-else>{{ i + 1 }}</template></span>
+            <div class="oh-steps-txt"><strong>{{ s.done ? s.doneTitle || s.title : s.title }}</strong><small>{{ s.text }}</small></div>
+            <button v-if="!s.done" type="button" class="oh-steps-go" @click="s.run ? s.run() : (section = s.target)">{{ s.cta }}</button>
+          </li>
+        </ol>
+      </div>
 
-        <!-- Vista previa viva de la web con Editar / Compartir -->
-        <div class="card wp-card">
-          <h3><AppIcon name="store" :size="18" /> Tu página en vivo</h3>
-          <template v-if="store.hasStore">
-            <div class="wp-frame" aria-hidden="true">
-              <span class="wp-url"><AppIcon name="lock" :size="10" /> {{ publicUrl.replace(/^https?:\/\//, '') }}</span>
-              <div class="design-preview wp-mini" :data-store-theme="store.customization?.theme" :style="ovPreviewVars">
-                <div class="dp-nav">
-                  <span class="dp-nav-brand">
-                    <img v-if="currentLogo" class="dp-nav-logo" :src="currentLogo" alt="" />
-                    <span v-else class="dp-nav-mono">{{ businessInitial }}</span>
-                    <span class="dp-nav-name">{{ ovShopName }}</span>
-                  </span>
-                </div>
-                <div class="dp-hero" :class="{ 'has-cover': ovCover }" :style="ovCover ? { '--dp-cover': `url(${ovCover})` } : null">
-                  <img v-if="currentLogo" class="dp-logo" :src="currentLogo" alt="" />
-                  <span v-else class="dp-mono">{{ businessInitial }}</span>
-                  <strong class="dp-title is-name">{{ store.customization?.headline || ovShopName }}</strong>
-                  <span v-if="store.customization?.description" class="dp-desc">{{ store.customization.description }}</span>
-                  <div class="dp-cta"><span v-if="ovCatalogOn" class="dp-btn">Ver catálogo</span><span class="dp-btn ghost">Contáctanos</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="wp-actions">
-              <button type="button" class="btn btn-auto" @click="section = 'design'"><AppIcon name="palette" :size="15" /> Editar</button>
-              <button type="button" class="wp-icon" aria-label="Copiar link" title="Copiar link" @click="copyLink"><AppIcon name="copy" :size="16" /></button>
-              <button type="button" class="wp-icon" aria-label="Compartir por WhatsApp" title="Compartir por WhatsApp" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /></button>
-              <button type="button" class="wp-icon" aria-label="Abrir mi página" title="Abrir mi página" @click="openStore"><AppIcon name="external-link" :size="16" /></button>
-            </div>
-          </template>
-          <div v-else class="wp-empty">
-            <p>Todavía no tenés tu página. Reservá la dirección gratis y aparece acá en vivo.</p>
-            <button type="button" class="btn btn-auto" @click="section = 'store'">Reservar mi link</button>
-          </div>
-        </div>
+      <!-- 4. Accesos rápidos: 4 tarjetas grandes, icono + título + una línea -->
+      <div class="oh-quick" role="group" aria-label="Acciones rápidas">
+        <button type="button" class="oh-quick-card" @click="goAddProduct">
+          <span class="oh-quick-icon"><AppIcon name="plus" :size="22" /></span>
+          <strong>Cargar un producto</strong>
+          <small>Sumá algo para vender</small>
+        </button>
+        <button type="button" class="oh-quick-card" @click="section = 'design'">
+          <span class="oh-quick-icon"><AppIcon name="palette" :size="22" /></span>
+          <strong>Editar mi web</strong>
+          <small>Colores, fotos y textos</small>
+        </button>
+        <button type="button" class="oh-quick-card" :disabled="!store.hasStore" @click="shareWhatsApp">
+          <span class="oh-quick-icon"><AppIcon name="phone" :size="22" /></span>
+          <strong>Compartir mi tienda</strong>
+          <small>Mandá el link por WhatsApp</small>
+        </button>
+        <button type="button" class="oh-quick-card" :disabled="!store.hasStore" @click="section = 'tools'">
+          <span class="oh-quick-icon"><AppIcon name="qr-code" :size="22" /></span>
+          <strong>Mi código QR</strong>
+          <small>Para tu vidriera o tus bolsas</small>
+        </button>
+      </div>
 
-        <!-- Números con contexto: valor + variación + tendencia de 30 días -->
-        <div v-if="!firstRun" class="stats" aria-label="Números de tu negocio">
-          <button type="button" class="stat stat-link" @click="section = 'catalogs'">
-            <span class="stat-icon"><AppIcon name="package" :size="20" /></span>
-            <div class="stat-body">
-              <strong><CountUp :value="billing.hasSubscription ? catalog.products.length : 0" /></strong>
-              <small>Productos en tu web</small>
-            </div>
-            <AppIcon class="stat-go" name="arrow-up-right" :size="16" />
-          </button>
-          <button type="button" class="stat stat-link" :disabled="!canStats" @click="section = 'stats'">
-            <span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span>
-            <div class="stat-body">
-              <strong><CountUp :value="canStats ? visitWeek.now : '—'" /></strong>
-              <small>Visitas esta semana</small>
-              <span v-if="!canStats" class="stat-sub">Con plan superior</span>
-              <span v-else-if="visitWeek.delta !== null" class="stat-delta" :class="{ down: visitWeek.delta < 0 }">
-                <AppIcon :name="visitWeek.delta >= 0 ? 'trending-up' : 'chevron-down'" :size="12" /> {{ Math.abs(visitWeek.delta) }}%
-              </span>
-            </div>
-            <svg v-if="sparkline" class="stat-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
-              <polygon class="spk-area" :points="sparkline.area" /><polyline class="spk-line" :points="sparkline.line" fill="none" />
-            </svg>
-            <AppIcon class="stat-go" name="arrow-up-right" :size="16" />
-          </button>
-          <button type="button" class="stat stat-link" :disabled="!canStats" @click="section = 'stats'">
-            <span class="stat-icon"><AppIcon name="eye" :size="20" /></span>
-            <div class="stat-body">
-              <strong><CountUp :value="canStats ? (store.visitStats?.today ?? 0) : '—'" /></strong>
-              <small>Visitas hoy</small>
-              <span v-if="canStats" class="stat-sub">Ayer: {{ yesterdayVisits }}</span>
-              <span v-else class="stat-sub">Con plan superior</span>
-            </div>
-            <AppIcon class="stat-go" name="arrow-up-right" :size="16" />
-          </button>
-          <button type="button" class="stat stat-link" @click="section = 'plans'">
-            <span class="stat-icon"><AppIcon name="clock" :size="20" /></span>
-            <div class="stat-body">
-              <strong><CountUp :value="plan?.remaining ?? '—'" /></strong>
-              <small>{{ plan?.autoRenew ? 'Se renueva solo' : 'Días de plan' }}</small>
-            </div>
-            <AppIcon class="stat-go" name="arrow-up-right" :size="16" />
-          </button>
-        </div>
-
-        <!-- Checklist de activación: solo lo que falta, sin ruido -->
-        <div v-if="!firstRun" class="card steps-card" :class="{ complete: !pendingSteps.length }">
-          <h3><AppIcon name="checklist" :size="18" /> Puesta en marcha <span class="steps-count">{{ stepsDone }} de {{ nextSteps.length }}</span></h3>
-          <div class="steps-bar" role="progressbar" aria-label="Pasos completados" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
-          <ol v-if="pendingSteps.length" class="steps-list">
-            <li v-for="(s, i) in pendingSteps" :key="s.title" :class="{ next: i === 0 }" :style="{ '--i': i }">
-              <span class="steps-num" aria-hidden="true">{{ stepsDone + i + 1 }}</span>
-              <div><strong>{{ s.title }}</strong><small>{{ s.text }}</small></div>
-              <button type="button" class="steps-go" :aria-label="`Ir a: ${s.title}`" @click="s.run ? s.run() : (section = s.target)"><AppIcon name="arrow-right" :size="16" /></button>
-            </li>
-          </ol>
-          <p v-else class="steps-done-msg"><AppIcon name="check" :size="15" /> Todo listo. Compartí tu link para empezar a vender.</p>
-        </div>
-
-        <!-- Actividad reciente accionable + espacio de fotos -->
-        <div v-if="!firstRun" class="card feed-card">
-          <h3><AppIcon name="bell" :size="18" /> Actividad reciente</h3>
-          <ul v-if="activityFeed.length" class="feed-list">
-            <li v-for="(a, i) in activityFeed" :key="i">
-              <span class="feed-icon"><AppIcon :name="a.icon" :size="15" /></span>
-              <div class="feed-body"><strong>{{ a.title }}</strong><small v-if="a.text">{{ a.text }}</small></div>
-              <button type="button" class="feed-cta" @click="a.run">{{ a.cta }}</button>
-            </li>
+      <!-- 5. Resumen colapsable: números y plan en lenguaje llano -->
+      <details v-if="!firstRun" class="card oh-more">
+        <summary>
+          <AppIcon name="eye" :size="18" /> Cómo va tu tienda hoy
+          <AppIcon class="oh-more-chev" name="chevron-down" :size="16" />
+        </summary>
+        <div class="oh-more-body">
+          <ul class="oh-plain">
+            <li v-if="canStats"><AppIcon name="eye" :size="16" /> Hoy entraron <strong>{{ store.visitStats?.today ?? 0 }}</strong> {{ (store.visitStats?.today ?? 0) === 1 ? 'persona' : 'personas' }} a tu tienda (ayer: {{ yesterdayVisits }}).</li>
+            <li v-if="canStats"><AppIcon name="trending-up" :size="16" /> Esta semana tuviste <strong>{{ visitWeek.now }}</strong> visitas<template v-if="visitWeek.delta !== null"> — {{ visitWeek.delta >= 0 ? `${visitWeek.delta}% más` : `${Math.abs(visitWeek.delta)}% menos` }} que la anterior</template>.</li>
+            <li v-if="!canStats"><AppIcon name="trending-up" :size="16" /> Con un plan superior vas a ver cuánta gente entra a tu tienda. <button type="button" class="oh-link" @click="section = 'plans'">Ver planes</button></li>
+            <li><AppIcon name="package" :size="16" /> Tenés <strong>{{ billing.hasSubscription ? catalog.products.length : 0 }}</strong> productos en tu web.</li>
+            <li v-if="plan"><AppIcon name="clock" :size="16" /> {{ planLine }}</li>
           </ul>
-          <p v-else class="feed-empty">Sin novedades por ahora.</p>
+          <svg v-if="canStats && sparkline" class="stat-spark oh-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+            <polygon class="spk-area" :points="sparkline.area" /><polyline class="spk-line" :points="sparkline.line" fill="none" />
+          </svg>
+          <div v-if="activityFeed.length" class="oh-feed">
+            <h4>Últimas novedades</h4>
+            <ul class="feed-list">
+              <li v-for="(a, i) in activityFeed" :key="i">
+                <span class="feed-icon"><AppIcon :name="a.icon" :size="15" /></span>
+                <div class="feed-body"><strong>{{ a.title }}</strong><small v-if="a.text">{{ a.text }}</small></div>
+                <button type="button" class="feed-cta" @click="a.run">{{ a.cta }}</button>
+              </li>
+            </ul>
+          </div>
           <div v-if="store.hasStore" class="feed-storage"><StorageMeter /></div>
+          <button type="button" class="oh-link" @click="section = 'stats'">Ver todos los números</button>
+        </div>
+      </details>
+
+      <!-- Franja de plan compacta + confirmación de cancelar débito -->
+      <div v-if="plan" class="plan-strip">
+        <span class="ps-dot" :class="{ ok: plan.isCurrent, warn: plan.status === 'Pendiente de pago', bad: !plan.isCurrent && plan.status !== 'Pendiente de pago' }" aria-hidden="true"></span>
+        <span class="ps-name">{{ plan.name }}</span>
+        <span class="ps-meta">
+          <template v-if="plan.isCurrent">{{ plan.autoRenew ? `Se renueva solo el ${fmtDate(plan.end)}` : `Quedan ${plan.remaining} ${plan.remaining === 1 ? 'día' : 'días'} · vence el ${fmtDate(plan.end)}` }}</template>
+          <template v-else>{{ plan.status }}</template>
+        </span>
+        <span class="ps-bar" role="progressbar" aria-label="Tiempo transcurrido de la suscripción" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="planProgress"><span :style="{ transform: `scaleX(${planProgress / 100})` }"></span></span>
+        <span class="ps-actions">
+          <button v-if="plan.autoRenew" type="button" class="chip-btn" @click="confirmCancel = true">Cancelar débito</button>
+          <button v-else-if="!plan.isTrial && plan.isCurrent" type="button" class="chip-btn" :disabled="renewBusy" @click="activateAutoRenew"><AppIcon name="refresh" :size="13" /> Activar débito</button>
+          <TipHint v-if="plan.isCurrent" text="Débito automático: Mercado Pago te cobra el plan solo cada mes, sin que tengas que acordarte. Podés darlo de baja cuando quieras." />
+          <button type="button" class="chip-btn strong" @click="section = 'plans'">{{ plan.isTrial ? 'Ver planes' : 'Cambiar plan' }}</button>
+        </span>
+      </div>
+
+      <div v-if="confirmCancel" class="card confirm-card">
+        <h3><AppIcon name="triangle-alert" :size="18" /> Cancelar la renovación automática</h3>
+        <p>Vas a dejar de pagar el débito mensual. Tu plan sigue vigente hasta el <strong>{{ fmtDate(plan?.end) }}</strong>; después tu web pública y tu catálogo se desactivan. Podés reactivar el débito cuando quieras.</p>
+        <div class="btn-row">
+          <button class="btn danger btn-auto" :disabled="renewBusy" @click="doCancelRenewal"><span v-if="renewBusy" class="spinner"></span>Sí, cancelar la renovación</button>
+          <button class="btn ghost btn-auto" :disabled="renewBusy" @click="confirmCancel = false">Mantener activa</button>
+        </div>
+      </div>
+
+      <!-- 6. Ayuda: soporte + guía, siempre visible -->
+      <div class="card oh-help">
+        <span class="oh-help-icon"><AppIcon name="message-circle" :size="22" /></span>
+        <div class="oh-help-txt">
+          <strong>¿Necesitás ayuda?</strong>
+          <small>Escribinos y te respondemos, o mirá la guía paso a paso.</small>
+        </div>
+        <div class="oh-help-actions">
+          <button type="button" class="btn btn-auto" @click="onBellClick">Hablar con soporte</button>
+          <button type="button" class="btn ghost btn-auto" @click="tourOpen = true"><AppIcon name="graduation-cap" :size="16" /> Ver la guía</button>
         </div>
       </div>
     </div>
