@@ -1944,7 +1944,7 @@
             "order": 3
           },
           {
-            "id": "services",
+            "id": "plans",
             "enabled": true,
             "order": 4
           },
@@ -2014,38 +2014,6 @@
             "id": "grid",
             "enabled": true,
             "order": 4
-          }
-        ],
-        "services": [
-          {
-            "id": "hero",
-            "enabled": true,
-            "order": 0
-          },
-          {
-            "id": "band",
-            "enabled": true,
-            "order": 1
-          },
-          {
-            "id": "picker",
-            "enabled": true,
-            "order": 2
-          },
-          {
-            "id": "steps",
-            "enabled": true,
-            "order": 3
-          },
-          {
-            "id": "form",
-            "enabled": true,
-            "order": 4
-          },
-          {
-            "id": "faq",
-            "enabled": true,
-            "order": 5
           }
         ]
       },

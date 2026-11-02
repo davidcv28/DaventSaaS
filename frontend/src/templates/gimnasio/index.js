@@ -1,25 +1,25 @@
-import { landingViews, catalogViews, productViews, servicesViews, CATALOG_BLOCKS, SERVICES_BLOCKS } from '../_shared.js'
+import { landingViews, catalogViews, productViews, CATALOG_BLOCKS } from '../_shared.js'
 
 // Template Definition 'gimnasio' — deporte / fitness (nivel plus).
 // Oscuro y energético: negro oliva, acento lima, Barlow Condensed 800 en
 // titulares e Inter en cuerpo y etiquetas. Composición GENERATIVA:
 // `blocks.landing` es la whitelist del Studio y el orden canónico por
-// defecto. Catálogo / ficha / servicios reutilizan Raíz bajo `.gy-skin`.
+// defecto. Catálogo / ficha reutilizan Raíz bajo `.gy-skin`. El diseño no
+// cubre la página Servicios: la conversión del gimnasio es la suscripción
+// (bloque `plans` — membresías), no el pedido de servicios.
 export default {
   usesSectionOrder: false,
   fonts: ['barlow-condensed', 'inter'],
   surfaces: {
     landing: landingViews.gimnasio,
     catalog: catalogViews.gimnasio,
-    product: productViews.gimnasio,
-    services: servicesViews.gimnasio
+    product: productViews.gimnasio
   },
   blocks: {
     landing: [
-      'announcements', 'hero', 'categories', 'featured', 'services', 'plans',
+      'announcements', 'hero', 'categories', 'featured', 'plans',
       'benefits', 'stats', 'gallery', 'testimonials', 'faq', 'cta', 'contact'
     ],
-    catalog: [...new Set(['note', 'promo', ...CATALOG_BLOCKS])],
-    services: SERVICES_BLOCKS
+    catalog: [...new Set(['note', 'promo', ...CATALOG_BLOCKS])]
   }
 }

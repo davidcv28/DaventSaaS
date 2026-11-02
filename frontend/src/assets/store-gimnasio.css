@@ -729,12 +729,83 @@
   --sp-shadow-sm: none;
   --sp-shadow-md: none;
   --sp-chrome: #0E0F0C;
-  --gy-display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
-  --gy-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --gy-label: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-family: var(--gy-body);
-  background: #0E0F0C;
-  color: #F2EFE8;
+  --sp-top-h: var(--gy-top-h, 84px);
+
+  /* Paleta Raíz -> Gimnasio: los tokens --rz-* heredan el tema de las
+     --gy-* del .store-page padre ([data-template='gimnasio']), así que el
+     modo día invierte todo el subárbol sin reglas extra. */
+  --rz-bg: var(--gy-ink);
+  --rz-surface: var(--gy-card);
+  --rz-surface-2: var(--gy-plate);
+  --rz-surface-3: var(--gy-line);
+  --rz-line: var(--gy-line);
+  --rz-line-strong: var(--gy-line-strong);
+  --rz-line-ui: var(--gy-muted);
+  --rz-ink: var(--gy-text);
+  --rz-ink-2: var(--gy-text-2);
+  --rz-muted: var(--gy-muted);
+  --rz-accent: var(--gy-lime);
+  --rz-accent-soft: color-mix(in srgb, var(--gy-lime) 12%, transparent);
+  --rz-accent-text: var(--gy-lime);
+  --rz-accent-deep: var(--sp-band-base1, var(--gy-deep));
+  --rz-accent-deep-2: var(--sp-band-base2, var(--gy-deep));
+  --rz-band-1: var(--sp-band-base1, var(--gy-deep));
+  --rz-band-2: var(--sp-band-base2, var(--gy-deep));
+  --rz-on-band: #FFFFFF;
+  --rz-on-band-2: rgb(255 255 255 / .9);
+  --rz-on-band-muted: rgb(255 255 255 / .78);
+  --rz-ok: var(--gy-lime);
+  --rz-danger: #F45B4C;
+  --rz-focus: var(--gy-lime);
+  --rz-scrim: rgb(0 0 0 / .72);
+  --rz-selection: color-mix(in srgb, var(--gy-lime) 30%, transparent);
+  --rz-inverse-bg: #060806;
+  --rz-inverse-bg-2: #0E0F0C;
+  --rz-inverse-ink: #F2EFE8;
+  --rz-inverse-ink-2: #C9C7BE;
+  --rz-inverse-muted: #A9A79E;
+  --rz-inverse-line: rgb(242 239 232 / .14);
+  --rz-inverse-accent: var(--gy-lime);
+  --rz-display: var(--gy-display);
+  --rz-body: var(--gy-body);
+  --rz-rad-sm: 0;
+  --rz-rad-md: 0;
+  --rz-rad-lg: 0;
+  --rz-rad-pill: 0;
+  --rz-radius-card: 0;
+  --rz-radius-media: 0;
+  --rz-shadow-1: none;
+  --rz-shadow-2: none;
+  --rz-shadow: none;
+  --rz-theme-color: #0E0F0C;
+
+  /* Tarjeta de producto compartida en la noche del gimnasio. */
+  --tpc-bg: var(--gy-card);
+  --tpc-border: 1px solid var(--gy-line);
+  --tpc-radius: 0px;
+  --tpc-shadow: none;
+  --tpc-media-bg: var(--gy-panel);
+  --tpc-name-font: var(--gy-display);
+  --tpc-name-transform: uppercase;
+  --tpc-eyebrow-ink: var(--gy-muted);
+  --tpc-price-ink: var(--gy-lime);
+  --tpc-old-ink: var(--gy-muted);
+  --tpc-flag-radius: 0px;
+  --tpc-flag-bg: var(--gy-lime);
+  --tpc-flag-ink: var(--gy-on-lime);
+  --tpc-offer-bg: var(--gy-lime);
+  --tpc-offer-ink: var(--gy-on-lime);
+  --tpc-quick-bg: var(--gy-lime);
+  --tpc-add-radius: 0px;
+  --tpc-add-bg: var(--gy-lime);
+  --tpc-add-ink: var(--gy-on-lime);
+  --tpc-go-ink: var(--gy-lime);
+  --tpc-focus: var(--gy-lime);
+
+  color-scheme: dark;
+  font-family: var(--gy-body, 'Inter', system-ui, sans-serif);
+  background: var(--gy-ink, #0E0F0C);
+  color: var(--gy-text, #F2EFE8);
 }
 .store-page[data-template='raiz'].gy-skin .rz-cat-head,
 .store-page[data-template='raiz'].gy-skin .rz-sv-head,
@@ -772,6 +843,31 @@
   border-radius: 0;
   font-family: var(--gy-label);
   font-weight: 600;
+  background: var(--rz-accent-deep);
+  border-color: var(--rz-accent-deep);
+  color: #FFF;
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn:hover {
+  background: var(--rz-accent-deep-2);
+  border-color: var(--rz-accent-deep-2);
+  color: #FFF;
+  box-shadow: none;
+  transform: none;
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn--ghost {
+  background: transparent;
+  border-color: var(--gy-line-strong);
+  color: var(--gy-text);
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn--ghost:hover {
+  background: transparent;
+  border-color: var(--gy-lime);
+  color: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn--ink {
+  background: var(--rz-ink);
+  border-color: var(--rz-ink);
+  color: var(--rz-bg);
 }
 
 /* ==========================================================================
@@ -829,7 +925,11 @@
   background: var(--gy-ink);
   color: var(--gy-lime);
 }
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] {
+/* El data-store-theme vive en el .store-page padre ([data-template='gimnasio']),
+   no en el subárbol .gy-skin: el selector cuelga del ancestro. Las --rz-*
+   de color ya invierten solas vía var(--gy-*); acá solo van los ajustes que
+   no pueden heredarse (acento texto, inversos, scrim, selección). */
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin {
   --sp-bg: #F2EFE8;
   --sp-card: #FAF8F1;
   --sp-card-solid: #FAF8F1;
@@ -841,24 +941,41 @@
   --sp-line: #C9C5B8;
   --sp-accent-text: var(--store-accent-ink, #4E7410);
   --sp-chrome: #F2EFE8;
+  --rz-accent-text: var(--gy-lime-ink);
+  --rz-accent-soft: color-mix(in srgb, var(--gy-lime) 14%, #fff);
+  --rz-ok: var(--gy-lime-ink);
+  --rz-danger: #C2402F;
+  --rz-focus: var(--gy-lime-ink);
+  --rz-scrim: rgb(20 21 15 / .55);
+  --rz-selection: color-mix(in srgb, var(--gy-lime) 24%, #fff);
+  --rz-inverse-bg: #14150F;
+  --rz-inverse-bg-2: #0E0F0C;
+  --rz-inverse-ink: #F2EFE8;
+  --rz-inverse-ink-2: #B9B7AE;
+  --rz-inverse-muted: #B9B7AE;
+  --rz-inverse-line: rgb(242 239 232 / .16);
+  --rz-inverse-accent: var(--gy-lime);
+  --rz-theme-color: #F2EFE8;
+  --tpc-price-ink: var(--gy-lime-ink);
+  color-scheme: light;
   background: #F2EFE8;
   color: #0E0F0C;
 }
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-head,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-sv-head,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-pdp-sec-head {
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-head,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-head,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-sec-head {
   border-bottom-color: #A39E8E;
 }
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-eyebrow,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-kicker {
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-eyebrow,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-kicker {
   color: var(--store-accent-ink, #4E7410);
 }
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-rail,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-card,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-cat-products,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-sv-plate,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-pdp-pricebox,
-.store-page[data-template='raiz'].gy-skin[data-store-theme='light'] .rz-pdp-gallery {
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-rail,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-card,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-products,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-plate,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-pricebox,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-gallery {
   border-color: #C9C5B8;
   background: #FAF8F1;
 }
