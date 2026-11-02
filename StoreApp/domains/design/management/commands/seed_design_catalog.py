@@ -4,7 +4,7 @@ from pathlib import Path
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
 from StoreApp.domains.design.seed import (
     BASE_STYLE,
     DEFAULT_PATTERN,
@@ -91,32 +91,34 @@ class Command(BaseCommand):
             source = load_source(pattern['slug'])
             if source is not None:
                 html, css, js, variables = source
-            DesignPattern.objects.update_or_create(
-                slug = pattern['slug'],
-                defaults = {
-                    'nombre'        :   pattern['nombre'],
-                    'categoria'     :   pattern['categoria'],
-                    'descripcion'   :   pattern.get('descripcion', ''),
-                    'tier'          :   pattern.get('tier', 'base'),
-                    'template'      :   pattern.get('template', ''),
-                    'layout'        :   pattern.get('layout') or {},
-                    'html'          :   html,
-                    'css'           :   css,
-                    'js'            :   js,
-                    #Contrato de datos del patrón: sin `variables` el
-                    #markup es demo estático y la web sigue con la
-                    #plantilla Vue (ver services/pattern_render.py).
-                    'variables'     :   variables,
-                    'supports_dark_mode': pattern.get('supports_dark_mode', True),
-                    'tokens'        :   pattern.get('tokens') or {},
-                    'tags'          :   pattern.get('tags') or [],
-                    'preview'       :   pattern.get('preview', ''),
-                    #Estilo firma del patrón (FK opcional): permite que el
-                    #documento use `data-ds-style` aun sin estilo elegido.
-                    'style'         :   DesignStyle.objects.filter(slug = pattern.get('style')).first() if pattern.get('style') else None,
-                    'position'      :   position,
-                },
-            )
+            defaults = {
+                'nombre'        :   pattern['nombre'],
+                'categoria'     :   pattern['categoria'],
+                'descripcion'   :   pattern.get('descripcion', ''),
+                'tier'          :   pattern.get('tier', 'base'),
+                'template'      :   pattern.get('template', ''),
+                'layout'        :   pattern.get('layout') or {},
+                'html'          :   html,
+                'css'           :   css,
+                'js'            :   js,
+                #Contrato de datos del patrón: sin `variables` el
+                #markup es demo estático y la web sigue con la
+                #plantilla Vue (ver services/pattern_render.py).
+                'variables'     :   variables,
+                'supports_dark_mode': pattern.get('supports_dark_mode', True),
+                'tokens'        :   pattern.get('tokens') or {},
+                'tags'          :   pattern.get('tags') or [],
+                'preview'       :   pattern.get('preview', ''),
+                #Estilo firma del patrón (FK opcional): permite que el
+                #documento use `data-ds-style` aun sin estilo elegido.
+                'style'         :   DesignStyle.objects.filter(slug = pattern.get('style')).first() if pattern.get('style') else None,
+                'position'      :   position,
+            }
+            #Set de iconos propio del patrón (slug de DesignIconStyle): si no
+            #lo declara, conserva el que ya tenga (o el default de la app).
+            if pattern.get('icon_style'):
+                defaults['icon_style'] = DesignIconStyle.objects.filter(slug = pattern['icon_style']).first()
+            DesignPattern.objects.update_or_create(slug = pattern['slug'], defaults = defaults)
         return len(patterns)
 
     #ESTILOS PROPIOS DE CADA DISEÑO (FK DesignStyle.pattern)

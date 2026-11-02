@@ -37,9 +37,9 @@
   --rz-surface: #FFFFFF;
   --rz-surface-2: #EBEAE2;
   --rz-surface-3: #E1DFD4;
-  --rz-line: #D8D6CA;
-  --rz-line-strong: #B4B1A2;
-  --rz-line-ui: #8A8578;
+  --rz-line: var(--st-border, #D8D6CA);
+  --rz-line-strong: color-mix(in srgb, var(--rz-line) 62%, var(--rz-ink));
+  --rz-line-ui: color-mix(in srgb, var(--rz-line) 42%, var(--rz-ink));
   --rz-ink: #101A16;
   --rz-ink-2: #2F3B35;
   --rz-muted: #59655E;
@@ -1195,6 +1195,22 @@ select:where(.rz-field) {
 .store-page[data-template='raiz'] :is(.sp-card, .tpc):hover img { transform: scale(1.03); }
 .store-page[data-template='raiz'] :is(.sp-card, .tpc) img { transition: transform var(--rz-dur-3) var(--rz-ease-out); }
 .store-page[data-template='raiz'] :is(.sp-card, .tpc):focus-within { box-shadow: var(--rz-shadow-2); }
+
+/* Iconos: micro-movimiento al hover del control o de su tarjeta — un gesto
+   corto (escala + leve levantada), nunca bucles. Los SVG llevan su propia
+   transición para no heredar la del contenedor. */
+.store-page[data-template='raiz'] :is(.sp-icon-btn, .sp-hal-iconbtn, .sp-service-icon, .sp-about-heading-icon, .sp-state-icon) svg,
+.store-page[data-template='raiz'] :is(.sp-highlights li, .sp-about-list li, .sp-benefit, .sp-service) :is(svg, .icon) {
+  transition: transform var(--rz-dur-2) var(--rz-ease-out), color var(--rz-dur-2) var(--rz-ease-out);
+}
+.store-page[data-template='raiz'] :is(.sp-icon-btn, .sp-hal-iconbtn):hover svg { transform: scale(1.12); }
+.store-page[data-template='raiz'] :is(.sp-service-icon, .sp-about-heading-icon):hover { transform: translateY(-2px); }
+.store-page[data-template='raiz'] :is(.sp-service-icon, .sp-about-heading-icon) {
+  transition: transform var(--rz-dur-2) var(--rz-ease-out), background-color var(--rz-dur-2) var(--rz-ease-out), color var(--rz-dur-2) var(--rz-ease-out);
+}
+.store-page[data-template='raiz'] .sp-highlights li:hover :is(svg, .icon),
+.store-page[data-template='raiz'] .sp-service:hover .sp-service-icon,
+.store-page[data-template='raiz'] .sp-benefit:hover :is(.sp-benefit-icon, svg) { transform: translateY(-2px) scale(1.08); }
 
 /* Cinta: pausa al hover/foco (ya heredado del bloque compartido). */
 .store-page[data-template='raiz'] .sp-ann-track { transition: none; }

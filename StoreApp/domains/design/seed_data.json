@@ -2425,11 +2425,11 @@
         "hover": "glow",
         "button": "gradient-sheen"
       },
-      "easing": "cubic-bezier(.4,0,.2,1)",
-      "duration": "480ms",
+      "easing": "cubic-bezier(.16,1,.3,1)",
+      "duration": "560ms",
       "icons": {
         "style": "line",
-        "stroke": "1.5",
+        "stroke": "1.2",
         "size": "20",
         "corners": "rounded"
       },
@@ -3361,6 +3361,7 @@
       ],
       "preview": "",
       "supports_dark_mode": true,
+      "icon_style": "premium",
       "style": "esencial"
     }
   ]

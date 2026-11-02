@@ -146,7 +146,8 @@ export const STYLE_FAMILY = {
   'atelier-moda': 'luxury',
   'suizo-editorial': 'mono',
   'cobalto-nocturno': 'glass',
-  'daven-indumentaria': 'editorial'
+  'daven-indumentaria': 'editorial',
+  'esencial-premium': 'luxury'
 }
 
 // Plantilla -> familia por defecto (tienda sin estilo elegido).
@@ -181,6 +182,7 @@ export const STYLE_ICON_OVERRIDES = {
   'suizo-editorial': { store: 'building-2', menu: 'list-ordered', sparkles: 'hexagon' },
   'editorial-minima': { store: 'book', sparkles: 'star' },
   'lujo-serif': { store: 'crown', sparkles: 'diamond', tag: 'gem' },
+  'esencial-premium': { store: 'gem', sparkles: 'diamond', tag: 'gem', 'shield-check': 'badge-check' },
   'corporativo': { store: 'building-2', sparkles: 'layout-grid' },
   'retail-vibrante': { tag: 'percent', sparkles: 'star' },
   'aurora-degradada': { sparkles: 'zap', tag: 'percent' },
