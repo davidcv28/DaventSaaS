@@ -258,6 +258,14 @@ router.beforeEach(async (to) => {
   }
   const auth = useAuthStore()
   document.title = to.meta?.title ? `DAVENT · ${to.meta.title}` : 'DAVENT · Acceso'
+  // Landing: un usuario con sesión activa va directo a su panel (staff → /admin).
+  if (to.name === 'landing') {
+    await auth.ensureSession()
+    if (auth.isAuthenticated) {
+      if (!auth.user) await auth.fetchMe().catch(() => {})
+      return { name: auth.user?.is_staff ? 'admin' : 'dashboard' }
+    }
+  }
   if (to.meta?.requiresAuth && !auth.isAuthenticated) {
     // Tab recargado: el access en memoria se perdió pero puede quedar cookie.
     await auth.ensureSession()
