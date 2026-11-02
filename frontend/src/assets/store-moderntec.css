@@ -30,15 +30,15 @@
   --mt-ink: #eef3f8;
   --mt-ink-2: #9aa7b8;
   --mt-ink-3: #5d6b80;
-  --mt-accent: var(--store-accent, #3dd6ff);
-  --mt-accent-2: #7c5cff;
-  --mt-accent-ink: #04121a;
-  --mt-accent-soft: rgba(61, 214, 255, .10);
+  --mt-accent: var(--st-accent, var(--store-accent, #3dd6ff));
+  --mt-accent-2: var(--st-secondary, #7c5cff);
+  --mt-accent-ink: var(--st-accent-ink, #04121a);
+  --mt-accent-soft: color-mix(in srgb, var(--mt-accent) 10%, transparent);
   --mt-ok: #34e0a1;
   --mt-danger: #ff7a7a;
   --mt-focus: var(--mt-accent);
   --mt-scrim: rgba(2, 5, 9, .78);
-  --mt-selection: rgba(61, 214, 255, .85);
+  --mt-selection: color-mix(in srgb, var(--mt-accent) 85%, transparent);
 
   /* --- Tipografía --- */
   --mt-display: 'Outfit', var(--store-font, 'Inter'), system-ui, sans-serif;
@@ -65,7 +65,7 @@
   --mt-rad-pill: 999px;
   --mt-shadow-1: 0 1px 0 rgba(0, 0, 0, .35), 0 18px 42px -30px rgba(0, 0, 0, .9);
   --mt-shadow-device: 0 30px 80px rgba(0, 0, 0, .5);
-  --mt-glow: 0 0 0 1px rgba(61, 214, 255, .5), 0 8px 28px rgba(61, 214, 255, .22);
+  --mt-glow: 0 0 0 1px color-mix(in srgb, var(--mt-accent) 50%, transparent), 0 8px 28px color-mix(in srgb, var(--mt-accent) 22%, transparent);
 
   /* --- Movimiento --- */
   --mt-ease-out: cubic-bezier(.16, 1, .3, 1);
@@ -131,18 +131,18 @@
   --mt-ink: #0b1524;
   --mt-ink-2: #3d4c62;
   --mt-ink-3: #6b7a90;
-  --mt-accent: var(--store-accent, #0891b2);
-  --mt-accent-ink: #04121a;
-  --mt-accent-soft: rgba(8, 145, 178, .10);
+  --mt-accent: var(--st-accent, var(--store-accent, #0891b2));
+  --mt-accent-ink: var(--st-accent-ink, #04121a);
+  --mt-accent-soft: color-mix(in srgb, var(--mt-accent) 10%, transparent);
   --mt-ok: #0b7a55;
   --mt-danger: #b3402e;
   --mt-scrim: rgba(240, 244, 250, .82);
-  --mt-selection: rgba(8, 145, 178, .85);
+  --mt-selection: color-mix(in srgb, var(--mt-accent) 85%, transparent);
   --mt-shadow-1: 0 1px 2px rgba(11, 21, 36, .06), 0 16px 36px -28px rgba(11, 21, 36, .4);
   --mt-shadow-device: 0 30px 70px -20px rgba(11, 21, 36, .35);
-  --mt-glow: 0 0 0 1px rgba(8, 145, 178, .4), 0 8px 26px rgba(8, 145, 178, .18);
+  --mt-glow: 0 0 0 1px color-mix(in srgb, var(--mt-accent) 40%, transparent), 0 8px 26px color-mix(in srgb, var(--mt-accent) 18%, transparent);
   --mt-theme-color: #f2f5f9;
-  --mt-accent-2: #5b3df5;
+  --mt-accent-2: var(--st-secondary, #5b3df5);
   --mt-display: 'Outfit', var(--store-font, 'Inter'), system-ui, sans-serif;
   --mt-track-label: .12em;
 
@@ -182,8 +182,8 @@
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(900px 500px at 80% -10%, rgba(60, 120, 255, .14), transparent 60%),
-    radial-gradient(700px 500px at 10% 110%, rgba(124, 92, 255, .10), transparent 60%),
+    radial-gradient(900px 500px at 80% -10%, color-mix(in srgb, var(--mt-accent) 14%, transparent), transparent 60%),
+    radial-gradient(700px 500px at 10% 110%, color-mix(in srgb, var(--mt-accent-2) 10%, transparent), transparent 60%),
     var(--mt-bg);
 }
 .store-page[data-template='moderntec']::after {
@@ -212,6 +212,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  background: color-mix(in srgb, var(--mt-accent) 7%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mt-accent) 8%, transparent), 0 0 18px -6px color-mix(in srgb, var(--mt-accent) 35%, transparent);
   font-size: var(--mt-fs-label);
   letter-spacing: var(--mt-track-label);
   text-transform: uppercase;
@@ -627,6 +629,117 @@
   outline: none;
 }
 
+/* Chip con dot de estado vivo */
+.store-page[data-template='moderntec'] .mt-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--mt-accent);
+  box-shadow: 0 0 8px var(--mt-accent);
+  animation: mt-pulse 2.4s ease-in-out infinite;
+}
+
+/* Meta-stats del hero: separadores finos + label uppercase tabular */
+.store-page[data-template='moderntec'] .mt-hero-meta div + div {
+  border-left: 1px solid var(--mt-line);
+  padding-left: 28px;
+}
+.store-page[data-template='moderntec'] .mt-hero-meta dt {
+  text-transform: uppercase;
+  letter-spacing: var(--mt-track-label);
+}
+.store-page[data-template='moderntec'] .mt-hero-meta dd { font-variant-numeric: tabular-nums; }
+
+/* Foco visible en los botones píldora */
+.store-page[data-template='moderntec'] .mt-btn:focus-visible {
+  outline: 2px solid var(--mt-accent);
+  outline-offset: 3px;
+}
+
+/* Panel device: sheen superior + eyebrow de tarjeta en voz mono */
+.store-page[data-template='moderntec'] .mt-device-in {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.store-page[data-template='moderntec'] .tpc-eyebrow {
+  font-family: var(--mt-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mt-accent);
+  opacity: .85;
+}
+.store-page[data-template='moderntec'] .tpc-name { letter-spacing: -.01em; }
+.store-page[data-template='moderntec'] .tpc {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mt-surface-2) 55%, var(--mt-panel)), var(--mt-panel) 55%);
+}
+
+/* --- Haz de luz orbital detrás de las imágenes -----------------------------
+   Un segmento conic gira en loop rodeando el marco de la imagen. Vive en un
+   ::before con z-index -1 asomado 5px por fuera del marco (overflow visible),
+   así queda siempre DETRÁS de la imagen, nunca delante. */
+.store-page[data-template='moderntec'] :is(.tpc, .sp-gallery-item, .sp-about-photo, .sp-showcase-frame),
+.store-page.mt-skin :is(.tpc, .rz-pdp-frame) {
+  overflow: visible;
+  position: relative;
+  isolation: isolate;
+}
+.store-page[data-template='moderntec'] .tpc-media,
+.store-page.mt-skin .tpc-media {
+  border-radius: calc(var(--mt-rad-md) - 2px) calc(var(--mt-rad-md) - 2px) 0 0;
+}
+.store-page[data-template='moderntec'] .tpc-row .tpc-media,
+.store-page.mt-skin .tpc-row .tpc-media {
+  border-radius: calc(var(--mt-rad-md) - 2px) 0 0 calc(var(--mt-rad-md) - 2px);
+}
+.store-page[data-template='moderntec'] :is(.sp-gallery-item, .sp-about-photo, .sp-showcase-frame) img,
+.store-page[data-template='moderntec'] .sp-showcase-frame::after { border-radius: inherit; }
+
+.store-page[data-template='moderntec'] .tpc::before,
+.store-page.mt-skin .tpc::before,
+.store-page[data-template='moderntec'] :is(.sp-gallery-item, .sp-about-photo, .sp-showcase-frame)::before,
+.store-page.mt-skin .rz-pdp-frame::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -5px;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg,
+    transparent 0deg 62%,
+    color-mix(in srgb, var(--mt-accent) 50%, transparent) 76%,
+    var(--mt-accent) 85%,
+    var(--mt-accent-2) 92%,
+    transparent 100%);
+  filter: blur(13px);
+  opacity: .85;
+  animation: mt-spin 5.5s linear infinite;
+  pointer-events: none;
+}
+/* En la tarjeta de producto el haz rodea solo la media (el bloque superior) */
+.store-page[data-template='moderntec'] .tpc::before,
+.store-page.mt-skin .tpc::before {
+  inset: -5px -5px auto -5px;
+  aspect-ratio: var(--tpc-ratio, 1 / 1);
+  border-radius: var(--mt-rad-md);
+}
+.store-page[data-template='moderntec'] .tpc-row::before,
+.store-page.mt-skin .tpc-row::before {
+  inset: -5px auto -5px -5px;
+  width: calc(var(--tpc-row-media, 96px) + 10px);
+  aspect-ratio: auto;
+}
+/* En la ficha el haz vive dentro del marco, detrás de la imagen (contain) */
+.store-page.mt-skin .rz-pdp-frame { overflow: hidden; }
+.store-page.mt-skin .rz-pdp-frame::before {
+  z-index: 0;
+  inset: -35%;
+  border-radius: 0;
+  filter: blur(30px);
+  opacity: .9;
+}
+.store-page.mt-skin .rz-pdp-frame img { position: relative; z-index: 1; }
+
 /* Catálogo / ficha / servicios (.mt-skin): mismos acabados */
 .store-page.mt-skin :is(.rz-btn, button, a) { transition-timing-function: var(--mt-ease-out); }
 .store-page.mt-skin :is(.rz-cat-title, .rz-prod-title, .rz-svc-title, h1) {
@@ -662,7 +775,9 @@
   .store-page[data-template='moderntec'] .mt-device::before { animation: none; }
   .store-page[data-template='moderntec'] .mt-btn { transition: none; }
   .store-page[data-template='moderntec'] :is(.mt-orb, .mt-beam, .mt-particles, .mt-device, .mt-scan, .mt-device-badge, .mt-meter i, .mt-hero-title em),
-  .store-page[data-template='moderntec'] .sp-cta-inner::before { animation: none; }
+  .store-page[data-template='moderntec'] .sp-cta-inner::before,
+  .store-page[data-template='moderntec'] :is(.tpc, .sp-gallery-item, .sp-about-photo, .sp-showcase-frame)::before,
+  .store-page.mt-skin :is(.tpc, .rz-pdp-frame)::before { animation: none; }
   .store-page[data-template='moderntec'] :is(.tpc, .sp-card):hover { transform: none; }
   .store-page[data-template='moderntec'] .tpc:hover img { transform: none; }
 }

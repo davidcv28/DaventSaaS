@@ -2178,6 +2178,276 @@
       "concept": "Casi negro + cyan/violeta, mono labels y glow de hardware."
     },
     {
+      "slug": "moderntec-verde",
+      "nombre": "ModernTec Verde",
+      "categoria": "Tecnologia oscura",
+      "descripcion": "Oscuro tecnologico: fondo casi negro, acento dual esmeralda-lima, chips y specs en JetBrains Mono, titulares Outfit.",
+      "tier": "plus",
+      "template": "moderntec",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#34E0A1",
+          "primary": "#34E0A1",
+          "secondary": "#A3E635",
+          "bg": "#070D0B",
+          "surface": "#0E1A14",
+          "text": "#EDF8F2",
+          "muted": "#93B3A4",
+          "border": "#1D3529",
+          "success": "#34E0A1",
+          "danger": "#FF7A7A"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "outfit",
+          "subheading": "outfit",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.6",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "tecnologia",
+        "electronica",
+        "gaming",
+        "hardware",
+        "gadgets"
+      ],
+      "preview": "",
+      "style": "Tecnologia oscura",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.6",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Casi negro + esmeralda/lima, mono labels y glow de hardware."
+    },
+    {
+      "slug": "moderntec-azul",
+      "nombre": "ModernTec Azul",
+      "categoria": "Tecnologia oscura",
+      "descripcion": "Oscuro tecnologico: fondo casi negro, acento dual azul-hielo, chips y specs en JetBrains Mono, titulares Outfit.",
+      "tier": "plus",
+      "template": "moderntec",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#4D8DFF",
+          "primary": "#4D8DFF",
+          "secondary": "#7CD4FF",
+          "bg": "#070B12",
+          "surface": "#0E1626",
+          "text": "#EEF3FB",
+          "muted": "#93A7C4",
+          "border": "#1D2B45",
+          "success": "#34E0A1",
+          "danger": "#FF7A7A"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "outfit",
+          "subheading": "outfit",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.6",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "tecnologia",
+        "electronica",
+        "gaming",
+        "hardware",
+        "gadgets"
+      ],
+      "preview": "",
+      "style": "Tecnologia oscura",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.6",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Casi negro + azul/hielo, mono labels y glow de hardware."
+    },
+    {
+      "slug": "moderntec-ambar",
+      "nombre": "ModernTec Ambar",
+      "categoria": "Tecnologia oscura",
+      "descripcion": "Oscuro tecnologico: fondo casi negro calido, acento dual ambar-coral, chips y specs en JetBrains Mono, titulares Outfit.",
+      "tier": "plus",
+      "template": "moderntec",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#FFB84D",
+          "primary": "#FFB84D",
+          "secondary": "#FF7A59",
+          "bg": "#0D0A07",
+          "surface": "#1E160E",
+          "text": "#FBF3EA",
+          "muted": "#B8A78F",
+          "border": "#352A1D",
+          "success": "#34E0A1",
+          "danger": "#FF7A7A"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "outfit",
+          "subheading": "outfit",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.6",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "tecnologia",
+        "electronica",
+        "gaming",
+        "hardware",
+        "gadgets"
+      ],
+      "preview": "",
+      "style": "Tecnologia oscura",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.6",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Casi negro calido + ambar/coral, mono labels y glow de hardware."
+    },
+    {
       "slug": "sastreria",
       "nombre": "Sastrería",
       "categoria": "Sastrería editorial",
