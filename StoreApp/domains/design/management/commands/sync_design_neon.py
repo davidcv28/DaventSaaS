@@ -26,14 +26,14 @@ PATTERN_COLS    =   [
 ]
 STYLE_COLS      =   [
     'slug', 'nombre', 'categoria', 'descripcion', 'tier', 'template', 'layout',
-    'layout_spec', 'page_theme', 'tokens', 'effects', 'tags', 'is_default',
+    'layout_spec', 'page_theme', 'tokens', 'effects', 'capabilities', 'tags', 'is_default',
     'is_active', 'position', 'created_at', 'updated_at',
 ]
 ICON_COLS       =   [
     'slug', 'nombre', 'descripcion', 'categoria', 'icons', 'stroke_width',
     'preview', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
 ]
-JSON_COLS       =   {'layout', 'layout_spec', 'tokens', 'effects', 'variables', 'icons'}
+JSON_COLS       =   {'layout', 'layout_spec', 'tokens', 'effects', 'capabilities', 'variables', 'icons'}
 IDENT_RE        =   re.compile(r'^[a-z_][a-z0-9_]*$')
 
 #=========================================

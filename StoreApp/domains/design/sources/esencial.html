@@ -120,6 +120,16 @@ a{color:inherit}
 .brand .mark{position:relative}
 .brand:hover .mark{transform:rotate(-18deg) scale(1.08)}
 .nav{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
+.nav-toggle{
+  display:none;place-items:center;width:40px;height:40px;flex:none;
+  border:1px solid var(--line);border-radius:10px;background:var(--surface);
+  color:var(--ink);cursor:pointer;transition:border-color .2s,color .2s;
+}
+.nav-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.nav-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.nav-toggle .ic-close{display:none}
+.nav-toggle[aria-expanded="true"] .ic-close{display:block}
+.nav-toggle[aria-expanded="true"] .ic-open{display:none}
 .nav a{position:relative;text-decoration:none;color:var(--muted);font-size:.95rem;transition:color .2s}
 .nav a::after{
   content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;border-radius:2px;
@@ -127,10 +137,10 @@ a{color:inherit}
 }
 .nav a:hover{color:var(--ink)}
 .nav a:hover::after{transform:scaleX(1)}
-html[data-ds-surface="landing"] .nav a[data-ds-route="home"],
+html[data-ds-surface="landing"] .nav a[data-ds-route="home"]:not([data-ds-anchor]),
 html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"],
 html[data-ds-surface="services"] .nav a[data-ds-route="services"]{color:var(--ink)}
-html[data-ds-surface="landing"] .nav a[data-ds-route="home"]::after,
+html[data-ds-surface="landing"] .nav a[data-ds-route="home"]:not([data-ds-anchor])::after,
 html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"]::after,
 html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transform:scaleX(1)}
 
@@ -511,6 +521,30 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .hero-grid,.contact-grid,.pdp-layout{grid-template-columns:minmax(0,1fr)}
   .ds-service{grid-template-columns:44px minmax(0,1fr);gap:14px}
   .ds-service::before{width:44px;height:44px;border-radius:12px}
+
+  /* Menú móvil: burger + panel desplegable bajo la cabecera. */
+  .site-header .wrap{flex-wrap:nowrap;gap:10px}
+  .nav-toggle{display:grid}
+  .nav{
+    position:absolute;top:100%;left:0;right:0;z-index:6;
+    flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:2px;
+    padding:8px 4vw 12px;
+    background:color-mix(in srgb,var(--bg) 96%,transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    box-shadow:0 22px 34px -26px color-mix(in srgb,var(--ink) 55%,transparent);
+    transform:translateY(-6px);opacity:0;visibility:hidden;
+    transition:transform .22s var(--ease),opacity .22s,visibility .22s;
+  }
+  .nav.open{transform:none;opacity:1;visibility:visible}
+  .nav a{padding:12px 12px;font-size:1rem;border-radius:10px}
+  .nav a::after{display:none}
+  .nav a:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  html[data-ds-surface="landing"] .nav a[data-ds-route="home"]:not([data-ds-anchor]),
+  html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"],
+  html[data-ds-surface="services"] .nav a[data-ds-route="services"]{
+    background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--ink);font-weight:600;
+  }
 }
 
 @keyframes fadeUp{from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0}}
@@ -538,11 +572,15 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
       <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
       {{store_name}}
     </a>
-    <nav class="nav" aria-label="Principal">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Abrir menú">
+      <svg class="ic-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="ic-close" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <nav class="nav" id="site-nav" aria-label="Principal">
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
       <a href="#servicios" data-ds-route="services">Servicios</a>
-      <a href="#contacto" data-ds-route="home">Contacto</a>
+      <a href="#contacto" data-ds-route="home" data-ds-anchor>Contacto</a>
     </nav>
   </div>
 </header>
@@ -763,6 +801,31 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   if (header) addEventListener('scroll', function(){
     header.classList.toggle('scrolled', window.scrollY > 8);
   }, {passive: true});
+
+  // Menú móvil: burger abre/cierra el panel; se cierra al navegar, con Esc
+  // o al tocar fuera de la cabecera.
+  var navToggle = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('site-nav');
+  if (navToggle && nav) {
+    var setNav = function(open){
+      nav.classList.toggle('open', open);
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+    };
+    navToggle.addEventListener('click', function(e){
+      e.stopPropagation();
+      setNav(!nav.classList.contains('open'));
+    });
+    nav.addEventListener('click', function(e){
+      if (e.target && e.target.closest && e.target.closest('a')) setNav(false);
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') setNav(false);
+    });
+    document.addEventListener('click', function(e){
+      if (nav.classList.contains('open') && !(e.target && e.target.closest && e.target.closest('.site-header'))) setNav(false);
+    });
+  }
 
   // Tarjeta del hero: se inclina siguiendo el puntero (solo con mouse).
   var tilt = document.getElementById('hero-tilt');
