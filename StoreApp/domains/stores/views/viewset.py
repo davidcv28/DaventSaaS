@@ -628,10 +628,14 @@ class StoreViewSet(StoreBaseViewSet):
         #Puente del documento (alto, tema, rutas y catálogo). Se sirve desde
         #la misma URL que el documento para no depender del host del front.
         from django.http import HttpResponse
-        from StoreApp.domains.design.services.pattern_document import BRIDGE_SCRIPT
-        response            =   HttpResponse(BRIDGE_SCRIPT, content_type = 'application/javascript; charset=utf-8')
+        from pathlib import Path
+        from StoreApp.domains.design.services import pattern_document
+        #Se lee el archivo en cada request: `BRIDGE_SCRIPT` queda cacheado al
+        #importar el módulo y servía un puente viejo tras cada deploy/edición.
+        script              =   Path(pattern_document.__file__).with_name('pattern_bridge.js').read_text(encoding = 'utf-8')
+        response            =   HttpResponse(script, content_type = 'application/javascript; charset=utf-8')
         response['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        patch_cache_control(response, public = True, max_age = 3600)
+        patch_cache_control(response, public = True, max_age = 30)
         return response
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/script.js', throttle_classes = [PublicReadThrottle])
