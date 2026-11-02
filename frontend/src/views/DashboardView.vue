@@ -67,6 +67,7 @@ import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
+import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
 
@@ -1284,6 +1285,7 @@ async function saveBot() {
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], plans: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [], layout_config: {}, site_theme: {} })
 const designTouched = reactive({})
 const designTab = ref('look')
+const designPreviewOpen = ref(false)
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
@@ -4053,20 +4055,37 @@ async function changePassword() {
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
-      <div class="card">
-        <h3><AppIcon name="layout-grid" :size="18" /> Páginas de tu web</h3>
-        <p class="hint">Elegí qué páginas querés tener habilitadas. Al menos una tiene que quedar marcada; se guarda al instante.</p>
-        <div class="check-list" role="group" aria-label="Páginas de tu web">
-          <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
-            <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
-            <span class="check-text">
-              <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span> <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-              <small>{{ siteTemplates[key].desc }}</small>
-            </span>
-          </label>
-        </div>
-        <p class="hint">{{ siteTemplatesHint }}</p>
-      </div>
+
+      <DesignStylesTab
+        :form="designForm" :benefits="plan?.benefits || {}"
+        :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
+        :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
+        @navigate="section = $event" @open-studio="router.push({ name: 'design-studio' })"
+      >
+        <template #pages>
+          <div class="card">
+            <h3><AppIcon name="layout-grid" :size="18" /> Páginas de tu web</h3>
+            <p class="hint">Elegí qué páginas querés tener habilitadas. Al menos una tiene que quedar marcada; se guarda al instante.</p>
+            <div class="check-list" role="group" aria-label="Páginas de tu web">
+              <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
+                <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
+                <span class="check-text">
+                  <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span> <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                  <small>{{ siteTemplates[key].desc }}</small>
+                </span>
+              </label>
+            </div>
+            <p class="hint">{{ siteTemplatesHint }}</p>
+          </div>
+        </template>
+        <template #actions>
+          <div class="design-actions">
+            <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
+            <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+          </div>
+          <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
+        </template>
+      </DesignStylesTab>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">

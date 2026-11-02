@@ -461,10 +461,12 @@ function withTheme(mutate) {
             Ningún diseño cubre esa combinación de páginas: cambiala en «Qué mostrar».
           </p>
         </div>
+        <slot name="pages" />
       </div>
 
       <aside class="dmenu-live">
         <DesignLivePreview :form="form" />
+        <slot name="actions" />
       </aside>
     </div>
 
@@ -551,7 +553,7 @@ function withTheme(mutate) {
 .dmenu { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .dmenu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 .dmenu-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.dmenu-live { min-width: 0; }
+.dmenu-live { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 .dmenu-card { padding: 18px; display: flex; flex-direction: column; gap: 16px; container-type: inline-size; }
 .dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .dmenu-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: var(--ink); }
