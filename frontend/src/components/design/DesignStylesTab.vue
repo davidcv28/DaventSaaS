@@ -69,9 +69,10 @@ const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 
 const currentPattern = computed(() => {
   const tpl = normTemplate(props.form.template)
-  return patternOptions.value.find((p) => (
-    p.template === tpl && sameJson(patternLayout(p), props.form.layout_config)
-  ))?.slug
+  return patternOptions.value.find((p) => p.slug === tpl)?.slug
+    || patternOptions.value.find((p) => (
+      p.template === tpl && sameJson(patternLayout(p), props.form.layout_config)
+    ))?.slug
     || patternOptions.value.find((p) => p.template === tpl)?.slug
     || ''
 })
@@ -125,7 +126,9 @@ function applyStyle(s) {
 function onPatternPick(value) {
   const p = patternOptions.value.find((x) => x.slug === value)
   if (!p) return
-  props.form.template = normTemplate(p.template)
+  // El template guarda el SLUG del patrón (pattern_for_template del
+  // backend lo resuelve por slug primero): así cada diseño aplica el suyo.
+  props.form.template = p.slug
   props.form.layout_config = patternLayout(p)
   // Al cambiar de diseño el estilo siempre queda seleccionado: primero el
   // default del diseño (o su estilo vinculado), nunca el tema de otro

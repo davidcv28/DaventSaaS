@@ -859,7 +859,7 @@ BLOCK_TITLES                =   {
 PUBLIC_TEMPLATES            =   ('raiz',)
 PUBLIC_TEMPLATE_MAP         =   {
     'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
-    'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
+    'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
     'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz', 'shop': 'raiz',
     'atelier': 'raiz', 'lookbook': 'raiz',
     'signature': 'raiz', 'cobre': 'raiz', 'vitrina': 'raiz',
@@ -868,7 +868,7 @@ PUBLIC_TEMPLATE_MAP         =   {
     'lab': 'raiz', 'ai_lumen': 'raiz', 'ai_pulse': 'raiz',
     'alimentos': 'raiz', 'trama': 'raiz', 'indumentaria': 'raiz',
     'boutique': 'raiz', 'sastreria': 'raiz', 'clasico': 'raiz',
-    'gimnasio': 'raiz', 'circuito': 'raiz', 'seguridad': 'raiz',
+    'circuito': 'raiz', 'seguridad': 'raiz',
 }
 
 

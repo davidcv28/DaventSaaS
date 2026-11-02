@@ -74,6 +74,35 @@
     host.appendChild(themeToggle)
     paintThemeToggle()
   }
+  /* Barras fijas dentro del iframe estirado: el host manda el rectángulo
+   * del marco (`davent:ds-frame`) y acá se compensan con top/bottom — nunca
+   * transform, para no romper las hojas que animan translateY (.m-sheet).
+   * Se cachea la lista y se re-mide si el documento cambia de tamaño. */
+  var frameBox = null
+  var pinned = null
+  function collectFixed() {
+    pinned = []
+    if (!document.body || !window.getComputedStyle) return
+    ;[].forEach.call(document.body.querySelectorAll('*'), function (el) {
+      var cs = getComputedStyle(el)
+      if (cs.position !== 'fixed') return
+      var top = parseFloat(cs.top)
+      var bottom = parseFloat(cs.bottom)
+      if (!isNaN(top)) pinned.push({ el: el, prop: 'top', base: top })
+      else if (!isNaN(bottom)) pinned.push({ el: el, prop: 'bottom', base: bottom })
+    })
+  }
+  function pinFixed() {
+    if (!frameBox) return
+    if (!pinned) collectFixed()
+    var dyTop = Math.max(0, -frameBox.top)
+    var dyBot = Math.max(0, frameBox.bottom - frameBox.vh)
+    ;(pinned || []).forEach(function (p) {
+      p.el.style[p.prop] = (p.base + (p.prop === 'top' ? dyTop : dyBot)) + 'px'
+    })
+  }
+  window.addEventListener('resize', function () { pinned = null; pinFixed() })
+
   window.addEventListener('message', function (e) {
     var d = e.data || {}
     if (d.type === 'davent:ds-theme') {
@@ -90,11 +119,17 @@
         document.body.classList.remove('filters-open')
       }
       catalog()
+      pinned = null
+      pinFixed()
       window.scrollTo(0, 0)
       send()
       setTimeout(send, 120)
     }
     if (d.type === 'davent:ds-measure') send()
+    if (d.type === 'davent:ds-frame') {
+      frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
+      pinFixed()
+    }
   })
 
   document.addEventListener('click', function (e) {

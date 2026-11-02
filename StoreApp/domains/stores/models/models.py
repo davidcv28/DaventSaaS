@@ -136,15 +136,20 @@ class StoreCustomization(models.Model):
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
     #Catálogo de UN diseño: 'raiz' (Esencial) es el único — va con
     #cualquier has_customization; los niveles quedan vacíos.
-    TEMPLATE_BASE               =   ('raiz',)
-    TEMPLATE_PLUS               =   ()
+    TEMPLATE_BASE               =   ('raiz', 'esencial', 'moderntec')
+    TEMPLATE_PLUS               =   ('mercado', 'gimnasio')
     TEMPLATE_ADVANCED           =   ()
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
         ('raiz',          'Esencial'),
+        ('esencial',      'Esencial'),
+        ('mercado',       'Bazar'),
+        ('gimnasio',      'Gimnasio'),
+        ('moderntec',     'ModernTec'),
     ]
-    #Todo diseño retirado remapea a 'raiz' (el único del catálogo): una
-    #tienda vieja nunca cae al fallback ni rompe el render.
+    #Todo diseño retirado remapea a 'raiz': una tienda vieja nunca cae al
+    #fallback ni rompe el render. Los patrones del catálogo (mercado,
+    #gimnasio, moderntec) viajan por slug en `template` — no van en el mapa.
     TEMPLATE_RETIRED_MAP        =   {
         'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
         'studio': 'raiz', 'arena': 'raiz',
@@ -159,7 +164,7 @@ class StoreCustomization(models.Model):
         'ai_lumen': 'raiz', 'ai_pulse': 'raiz',
         'alimentos': 'raiz', 'trama': 'raiz', 'indumentaria': 'raiz',
         'boutique': 'raiz', 'atelier': 'raiz', 'sastreria': 'raiz',
-        'mercado': 'raiz', 'clasico': 'raiz', 'gimnasio': 'raiz',
+        'clasico': 'raiz',
         'circuito': 'raiz', 'seguridad': 'raiz',
     }
     NAME_SIZE_MIN               =   20

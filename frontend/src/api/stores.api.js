@@ -764,6 +764,10 @@ export const STORE_THEMES = {
 // (STORE_TEMPLATE_RETIRED_MAP).
 export const STORE_TEMPLATES = {
   raiz:        { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
+  esencial:    { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
+  mercado:     { label: 'Bazar',       rubro: 'bazar',        tier: 'plus',     defaultAccent: '#FFE600', desc: 'Bazar: marketplace con masthead amarillo, buscador y grilla densa de productos.' },
+  gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
+  moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'base',     defaultAccent: '#2563EB', desc: 'ModernTec: landing tech premium importada del boceto.' },
 }
 
 // Familia de diseño para el selector del dashboard: una sola (Esencial).
@@ -792,8 +796,8 @@ export const STORE_TEMPLATE_RETIRED_MAP = {
   perspective: 'raiz', circuit: 'raiz', terminal: 'raiz',
   lab: 'raiz', ai_lumen: 'raiz', ai_pulse: 'raiz',
   alimentos: 'raiz', trama: 'raiz', indumentaria: 'raiz', boutique: 'raiz',
-  atelier: 'raiz', sastreria: 'raiz', mercado: 'raiz', clasico: 'raiz',
-  gimnasio: 'raiz', circuito: 'raiz', seguridad: 'raiz',
+  atelier: 'raiz', sastreria: 'raiz', clasico: 'raiz',
+  circuito: 'raiz', seguridad: 'raiz',
 }
 
 // Patrones exclusivos del motor "Diseñar con IA": ya no existen (el motor

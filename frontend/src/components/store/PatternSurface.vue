@@ -75,6 +75,23 @@ function onLoad() {
   height.value = 0
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
+  postFrame()
+}
+
+/* El iframe se estira al alto del documento (ds-height): un `position:fixed`
+ * dentro queda clavado al documento completo, no al viewport — la barra y la
+ * tab bar del diseño terminan una arriba del todo y otra abajo del todo. El
+ * puente las corre con top/bottom según este rectángulo del marco. */
+let frameRaf = 0
+function postFrame() {
+  if (frameRaf) return
+  frameRaf = requestAnimationFrame(() => {
+    frameRaf = 0
+    const el = frame.value
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    post('davent:ds-frame', { top: r.top, bottom: r.bottom, vh: window.innerHeight })
+  })
 }
 
 watch(() => props.theme, syncTheme)
@@ -83,8 +100,17 @@ watch(() => props.surface, () => {
   syncTheme()
 })
 
-if (typeof window !== 'undefined') window.addEventListener('message', onMessage)
-onBeforeUnmount(() => window.removeEventListener('message', onMessage))
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', onMessage)
+  window.addEventListener('scroll', postFrame, { passive: true })
+  window.addEventListener('resize', postFrame)
+}
+onBeforeUnmount(() => {
+  window.removeEventListener('message', onMessage)
+  window.removeEventListener('scroll', postFrame)
+  window.removeEventListener('resize', postFrame)
+  if (frameRaf) cancelAnimationFrame(frameRaf)
+})
 </script>
 
 <template>
