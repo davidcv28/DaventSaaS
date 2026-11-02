@@ -2091,7 +2091,7 @@
       "slug": "moderntec",
       "nombre": "ModernTec",
       "categoria": "Tecnologia oscura",
-      "descripcion": "Oscuro tecnologico: fondo casi negro, acento dual cyan-violeta, chips y specs en JetBrains Mono, titulares Space Grotesk.",
+      "descripcion": "Oscuro tecnologico: fondo casi negro, acento dual cyan-violeta, chips y specs en JetBrains Mono, titulares Outfit.",
       "tier": "plus",
       "template": "moderntec",
       "page_theme": "dark",
@@ -2116,8 +2116,8 @@
           "surface": "flat"
         },
         "typography": {
-          "heading": "space-grotesk",
-          "subheading": "space-grotesk",
+          "heading": "outfit",
+          "subheading": "outfit",
           "body": "inter",
           "scale": "balanced",
           "weightHeading": 700,
