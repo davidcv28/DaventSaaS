@@ -3442,39 +3442,34 @@
             "order": 10
           },
           {
-            "id": "plans",
+            "id": "brands",
             "enabled": true,
             "order": 11
           },
           {
-            "id": "brands",
+            "id": "gallery",
             "enabled": true,
             "order": 12
           },
           {
-            "id": "gallery",
+            "id": "testimonials",
             "enabled": true,
             "order": 13
           },
           {
-            "id": "testimonials",
+            "id": "faq",
             "enabled": true,
             "order": 14
           },
           {
-            "id": "faq",
+            "id": "cta",
             "enabled": true,
             "order": 15
           },
           {
-            "id": "cta",
-            "enabled": true,
-            "order": 16
-          },
-          {
             "id": "contact",
             "enabled": true,
-            "order": 17
+            "order": 16
           }
         ],
         "catalog": [
