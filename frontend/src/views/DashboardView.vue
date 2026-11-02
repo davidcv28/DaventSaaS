@@ -282,6 +282,7 @@ const tabGroups = computed(() => {
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
     web.push(
+      { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Cómo se ve tu página' },
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
   }
@@ -4025,6 +4026,21 @@ async function changePassword() {
           <button class="btn secondary btn-auto" @click="section = 'catalogs'">Ir a mis productos <AppIcon name="arrow-right" :size="16" /></button>
         </div>
       </template>
+    </div>
+    <!-- ================= DISEÑO ================= -->
+    <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
+      <div class="page-head">
+        <div>
+          <h1>Diseño</h1>
+          <p>Acá vas a poder elegir cómo se ve tu página.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
+      <div class="empty">
+        <span class="empty-icon"><AppIcon name="palette" :size="28" /></span>
+        <h3>Diseño</h3>
+        <p>Esta sección todavía está vacía.</p>
+      </div>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
