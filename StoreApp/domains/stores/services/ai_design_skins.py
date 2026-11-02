@@ -777,30 +777,31 @@ SKIN_STYLE_PRESET   =   {
 #si su plantilla entra en el nivel del plan vigente. Los presets de familia
 #se mapean al diseño del catálogo que les da su aire: luxury -> boutique,
 #craft -> alimentos, bold -> seguridad.
-#Catálogo de UN diseño ('raiz' = Esencial): todo preset publica con ella.
+#Catálogo por rubro: cada preset publica con el diseño que mejor le da aire
+#(lujo/moda -> sastreria, oscuros/técnicos -> circuito, oficio -> mercado).
 STYLE_PRESET_TEMPLATES  =   {
     'editorial-minima'  :   'raiz',
-    'vidrio-nocturno'   :   'raiz',
-    'bento'             :   'raiz',
-    'neo-brutalista'    :   'raiz',
-    'lujo-serif'        :   'raiz',
+    'vidrio-nocturno'   :   'circuito',
+    'bento'             :   'sastreria',
+    'neo-brutalista'    :   'circuito',
+    'lujo-serif'        :   'sastreria',
     'pastel-suave'      :   'raiz',
-    'neon-tech'         :   'raiz',
-    'terracota'         :   'raiz',
+    'neon-tech'         :   'circuito',
+    'terracota'         :   'mercado',
     'monocromo'         :   'raiz',
-    'retail-vibrante'   :   'raiz',
-    'aurora-degradada'  :   'raiz',
-    'papel-riso'        :   'raiz',
+    'retail-vibrante'   :   'mercado',
+    'aurora-degradada'  :   'sastreria',
+    'papel-riso'        :   'sastreria',
     'corporativo'       :   'raiz',
-    'gourmet-calido'    :   'raiz',
-    'belleza-rosa'      :   'raiz',
-    'kids-ludico'       :   'raiz',
-    'urbano-sticker'    :   'raiz',
-    'consola-retro'     :   'raiz',
-    'denim-urbano'      :   'raiz',
-    'atelier-moda'      :   'raiz',
+    'gourmet-calido'    :   'mercado',
+    'belleza-rosa'      :   'sastreria',
+    'kids-ludico'       :   'gimnasio',
+    'urbano-sticker'    :   'circuito',
+    'consola-retro'     :   'circuito',
+    'denim-urbano'      :   'sastreria',
+    'atelier-moda'      :   'sastreria',
     'suizo-editorial'   :   'raiz',
-    'cobalto-nocturno'  :   'raiz',
+    'cobalto-nocturno'  :   'circuito',
 }
 #Par tipográfico por familia (ids de ai_design_typography.TYPE_PAIRS). Es el
 #par con el que arranca el motor para esa piel; la elección final la cierra

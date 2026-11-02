@@ -152,7 +152,12 @@ export const STYLE_FAMILY = {
 
 // Plantilla -> familia por defecto (tienda sin estilo elegido).
 export const TEMPLATE_FAMILY = {
-  raiz: 'editorial'
+  raiz: 'editorial',
+  sastreria: 'editorial',
+  mercado: 'editorial',
+  gimnasio: 'brutal',
+  circuito: 'tech',
+  moderntec: 'tech'
 }
 
 // Ajuste fino por estilo: dentro de una familia, el rubro del estilo manda.
@@ -185,7 +190,12 @@ export const STYLE_ICON_OVERRIDES = {
 }
 
 // Ajuste por plantilla (tienda sin estilo elegido): catálogo de UN diseño.
-export const TEMPLATE_ICON_OVERRIDES = {}
+export const TEMPLATE_ICON_OVERRIDES = {
+  sastreria: { store: 'scissors', tag: 'percent' },
+  circuito: { store: 'terminal', sparkles: 'zap' },
+  moderntec: { store: 'terminal', sparkles: 'zap' },
+  gimnasio: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' }
+}
 
 export function familyOf({ styleId = '', template = '' } = {}) {
   return STYLE_FAMILY[styleId] || TEMPLATE_FAMILY[template] || 'editorial'

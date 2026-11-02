@@ -203,7 +203,7 @@ class AiDesignGenerateTests(AiDesignBase):
         store, _    =   self._store(advanced = False, ai = False, products = 3)
         data        =   generate_ai_design(store, {})
         allowed     =   set(allowed_templates_of(store.user))
-        self.assertEqual(allowed, {'raiz', 'esencial', 'moderntec'})
+        self.assertEqual(allowed, {'raiz', 'esencial'})
         for proposal in data['proposals']:
             self.assertIn(proposal['template'], allowed)
 
@@ -1072,9 +1072,9 @@ class AiDesignV4Tests(AiDesignBase):
     def test_allowed_templates_grow_with_the_flag(self):
         premium, _  =   self._store()
         self.assertEqual(set(allowed_templates_of(premium.user)),
-                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio'})
+                         {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'})
         basic, _    =   self._store(advanced = False, username = 'basico')
-        self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz', 'esencial', 'moderntec'})
+        self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz', 'esencial'})
 
     def test_typography_roles_cover_the_thirteen_roles(self):
         store, _    =   self._store()

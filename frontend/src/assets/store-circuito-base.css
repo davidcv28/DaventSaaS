@@ -1,0 +1,318 @@
+/* ==========================================================================
+   Base de CIRCUITO: tokens, tipografía, primitivas y chrome compartido.
+Se importa PRIMERO: el resto de los parciales ajusta cada superficie.
+   ========================================================================== */
+
+/* ==========================================================================
+   DISEÑO CIRCUITO — tecnología / electrónica (nivel advanced)
+   Raíz de todo el CSS: [data-template="circuito"] (lo emite StorePublicLayout).
+   Paleta, tipografía, ritmo y formas de la referencia (§6.3 del prompt de
+   rediseño). El CSS de un diseño se carga solo cuando la tienda lo usa.
+   ========================================================================== */
+
+.store-page[data-template='circuito'] {
+  /* Paleta */
+  --ci-bg: #0A0E14;
+  --ci-surface: #111823;
+  --ci-surface-2: #0E141D;
+  --ci-line: #1F2933;
+  --ci-ink: #E6EDF3;
+  --ci-ink-2: #B6C2CF;
+  --ci-muted: #8FA1B3;
+  --ci-footer: #070A0F;
+  /* El acento del dueño manda, pero nunca se usa crudo: el texto de acento
+     se aclara hacia el blanco para pasar AA sobre el fondo oscuro, y las
+     superficies sólidas (botones, barra, badge -N%) se aclaran lo justo para
+     que la tinta oscura de arriba siga siendo legible con cualquier acento
+     del catálogo (índigo, violeta, rosa incluidos). */
+  --ci-accent: var(--store-accent, #22D3EE);
+  --ci-accent-text: color-mix(in srgb, var(--ci-accent) 72%, #fff);
+  --ci-accent-soft: color-mix(in srgb, var(--ci-accent) 14%, transparent);
+  --ci-solid: color-mix(in srgb, var(--ci-accent) 70%, #fff);
+  --ci-on-solid: #04141A;
+  --ci-danger: #FF8A80;
+  --ci-ok: #34D399;
+  /* Tipografía */
+  --ci-display: 'Space Grotesk', system-ui, sans-serif;
+  --ci-body: 'Space Grotesk', system-ui, sans-serif;
+  --ci-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Ritmo y formas */
+  --ci-container: 1200px;
+  --ci-gutter: 32px;
+  --ci-section: 80px;
+  --ci-radius: 10px;
+  --ci-radius-media: 14px;
+  --ci-radius-chip: 6px;
+
+  /* El layout base lee estas variables --sp-*: Circuito las reescribe para
+     que TODOS los bloques compartidos hereden la piel sin duplicar CSS. */
+  --sp-bg: var(--ci-bg);
+  --sp-card: var(--ci-surface);
+  --sp-card-solid: var(--ci-surface);
+  --sp-surface: var(--ci-surface-2);
+  --sp-soft: var(--ci-accent-soft);
+  --sp-ink: var(--ci-ink);
+  --sp-ink-2: var(--ci-ink-2);
+  --sp-muted: var(--ci-muted);
+  --sp-line: var(--ci-line);
+  --sp-radius: var(--ci-radius);
+  --sp-display: var(--ci-display);
+  --sp-accent-text: var(--ci-accent-text);
+  --sp-on-band: var(--ci-on-solid);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-shop-shadow: none;
+  --sp-shop-radius: var(--ci-radius);
+  --sp-top-h: 64px;
+
+  font-family: var(--ci-body);
+  background: var(--ci-bg);
+  color: var(--ci-ink);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: clip;
+}
+
+/* La barra superior se ve siempre, también en el inicio (el layout base la
+   esconde en is-home porque las landings viejas traían su propio hero). */
+.store-page[data-template='circuito'].is-home .sp-top { display: block; }
+
+/* --------------------------------------------------------------------------
+   TIPOGRAFÍA
+   -------------------------------------------------------------------------- */
+.store-page[data-template='circuito'] h1,
+.store-page[data-template='circuito'] h2,
+.store-page[data-template='circuito'] h3,
+.store-page[data-template='circuito'] .sp-section-title,
+.store-page[data-template='circuito'] .sp-shop-featured-title {
+  font-family: var(--ci-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--ci-ink);
+}
+.store-page[data-template='circuito'] h1 { font-size: clamp(40px, 6vw, 68px); line-height: 1.02; }
+.store-page[data-template='circuito'] h2,
+.store-page[data-template='circuito'] .sp-section-title,
+.store-page[data-template='circuito'] .sp-shop-featured-title {
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height: 1.1;
+  margin: 0;
+}
+.store-page[data-template='circuito'] h3 { font-size: 18px; line-height: 1.25; }
+.store-page[data-template='circuito'] .sp-section-title::after { display: none; }
+
+/* Etiqueta técnica ("// categorías"): mono, mayúsculas, tracking amplio. */
+.store-page[data-template='circuito'] :is(.ci-label, .sp-eyebrow, .sp-shop-featured-eyebrow) {
+  display: block;
+  margin: 0 0 10px;
+  font-family: var(--ci-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ci-accent-text);
+}
+.store-page[data-template='circuito'] .ci-label::before,
+.store-page[data-template='circuito'] .sp-shop-featured-eyebrow::before,
+.store-page[data-template='circuito'] .sp-eyebrow::before {
+  content: '// ';
+  /* El layout base dibuja una barra de acento de 26×2 en este pseudo: acá se
+     reemplaza por el prefijo tipográfico del diseño. */
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  opacity: .65;
+}
+
+/* Contenedor */
+.store-page[data-template='circuito'] .sp-container,
+.store-page[data-template='circuito'] .ci-container {
+  width: 100%;
+  max-width: var(--ci-container);
+  margin-inline: auto;
+  padding-inline: max(var(--ci-gutter), env(safe-area-inset-left)) max(var(--ci-gutter), env(safe-area-inset-right));
+}
+
+.sr-only,
+.store-page[data-template='circuito'] .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   PRIMITIVAS: botones, chips, tarjetas
+   -------------------------------------------------------------------------- */
+.store-page[data-template='circuito'] .ci-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: var(--ci-radius);
+  background: var(--ci-solid);
+  color: var(--ci-on-solid);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, translate .18s ease;
+}
+.store-page[data-template='circuito'] .ci-btn:hover { translate: 0 -1px; filter: brightness(1.04); }
+.store-page[data-template='circuito'] .ci-btn:active { translate: 0 0; }
+.store-page[data-template='circuito'] .ci-btn:disabled { opacity: .55; cursor: not-allowed; translate: 0; }
+.store-page[data-template='circuito'] .ci-btn.is-ghost,
+.store-page[data-template='circuito'] .ci-btn.ghost {
+  background: transparent;
+  border-color: var(--ci-line);
+  color: var(--ci-ink);
+}
+.store-page[data-template='circuito'] .ci-btn.is-ghost:hover,
+.store-page[data-template='circuito'] .ci-btn.ghost:hover {
+  border-color: var(--ci-accent);
+  color: var(--ci-accent-text);
+}
+.store-page[data-template='circuito'] .ci-iconbtn {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border: 1px solid var(--ci-line);
+  border-radius: var(--ci-radius);
+  background: var(--ci-surface);
+  color: var(--ci-ink-2);
+  cursor: pointer;
+  transition: border-color .18s, color .18s;
+}
+.store-page[data-template='circuito'] .ci-iconbtn:hover { border-color: var(--ci-accent); color: var(--ci-accent-text); }
+.store-page[data-template='circuito'] :is(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ci-accent);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   CHROME: barra superior, nav de tienda, barra móvil, pie
+   -------------------------------------------------------------------------- */
+.store-page[data-template='circuito'] .sp-top {
+  background: color-mix(in srgb, var(--ci-surface) 94%, #000);
+  color: var(--ci-ink);
+  border-bottom: 1px solid var(--ci-line);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.store-page[data-template='circuito'] .sp-top.scrolled { box-shadow: 0 10px 30px -20px #000; }
+.store-page[data-template='circuito'] .sp-top .sp-name,
+.store-page[data-template='circuito'] .sp-top .sp-brand { color: var(--ci-ink); font-family: var(--ci-display); font-weight: 700; }
+.store-page[data-template='circuito'] .sp-top .sp-mono {
+  background: var(--ci-solid);
+  color: var(--ci-on-solid);
+  border-radius: 8px;
+  font-family: var(--ci-display);
+  font-weight: 700;
+}
+.store-page[data-template='circuito'] .sp-shop-brand-meta { font-family: var(--ci-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ci-muted); }
+.store-page[data-template='circuito'] .sp-top-links a { color: var(--ci-ink-2); font-weight: 500; border-radius: 8px; }
+.store-page[data-template='circuito'] .sp-top-links a:hover { background: var(--ci-surface-2); color: var(--ci-ink); }
+.store-page[data-template='circuito'] .sp-top-links a.router-link-exact-active { background: var(--ci-surface-2); color: var(--ci-accent-text); }
+.store-page[data-template='circuito'] .sp-top-cta {
+  background: var(--ci-solid);
+  color: var(--ci-on-solid);
+  border: 0;
+  border-radius: 8px;
+  font-weight: 600;
+  min-height: 42px;
+}
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn,
+.store-page[data-template='circuito'] .sp-top .sp-burger {
+  background: var(--ci-surface-2);
+  border: 1px solid var(--ci-line);
+  border-radius: 8px;
+  color: var(--ci-ink-2);
+}
+.store-page[data-template='circuito'] .sp-top .sp-icon-btn:hover { border-color: var(--ci-accent); color: var(--ci-accent-text); }
+.store-page[data-template='circuito'] .sp-search {
+  background: var(--ci-bg);
+  border: 1px solid var(--ci-line);
+  border-radius: 8px;
+  color: var(--ci-ink);
+}
+.store-page[data-template='circuito'] .sp-search input { color: var(--ci-ink); font-family: var(--ci-body); }
+.store-page[data-template='circuito'] .sp-search input::placeholder { color: var(--ci-muted); }
+.store-page[data-template='circuito'] .sp-search .icon { color: var(--ci-muted); }
+.store-page[data-template='circuito'] .sp-progress { background: var(--ci-accent); }
+
+/* Nav de secciones de la tienda (segunda fila del header) */
+.store-page[data-template='circuito'] .sp-shop-nav { background: var(--ci-surface-2); border-bottom: 1px solid var(--ci-line); }
+.store-page[data-template='circuito'] .sp-shop-nav-links a {
+  color: var(--ci-ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+.store-page[data-template='circuito'] .sp-shop-nav-links a:hover { color: var(--ci-ink); background: var(--ci-surface); }
+.store-page[data-template='circuito'] .sp-shop-nav-links a.is-current { color: var(--ci-accent-text); }
+.store-page[data-template='circuito'] .sp-shop-nav-note { font-family: var(--ci-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ci-muted); }
+
+/* Barra inferior móvil */
+.store-page[data-template='circuito'] .sp-tabbar {
+  background: color-mix(in srgb, var(--ci-footer) 96%, transparent);
+  border-top: 1px solid var(--ci-line);
+  backdrop-filter: blur(10px);
+}
+.store-page[data-template='circuito'] .sp-tabbar .sp-tab { color: var(--ci-muted); font-size: 11px; }
+.store-page[data-template='circuito'] .sp-tabbar .sp-tab.active,
+.store-page[data-template='circuito'] .sp-tabbar .sp-tab:hover { color: var(--ci-accent-text); }
+
+/* Pie */
+.store-page[data-template='circuito'] .sp-foot {
+  background: var(--ci-footer);
+  color: var(--ci-ink-2);
+  border-top: 1px solid var(--ci-line);
+}
+.store-page[data-template='circuito'] .sp-foot::before { display: none; }
+.store-page[data-template='circuito'] .sp-foot-brand strong { color: var(--ci-ink); font-family: var(--ci-display); }
+.store-page[data-template='circuito'] .sp-foot-desc { color: var(--ci-muted); }
+.store-page[data-template='circuito'] .sp-foot-heading {
+  font-family: var(--ci-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ci-ink-2);
+}
+.store-page[data-template='circuito'] .sp-foot a { color: var(--ci-ink-2); }
+.store-page[data-template='circuito'] .sp-foot a:hover { color: var(--ci-accent-text); }
+.store-page[data-template='circuito'] .sp-foot-copy,
+.store-page[data-template='circuito'] .sp-foot-note { color: var(--ci-muted); font-family: var(--ci-mono); font-size: 11px; }
+.store-page[data-template='circuito'] .sp-davent-badge { color: var(--ci-ink-2); }
+.store-page[data-template='circuito'] .sp-foot-social .sp-icon-btn,
+.store-page[data-template='circuito'] .sp-foot-contact a { color: var(--ci-ink-2); }
+
+/* --------------------------------------------------------------------------
+   INICIO — barra de acento (anuncios), hero, garantías, secciones
+   -------------------------------------------------------------------------- */
+.store-page[data-template='circuito'] .sp-ann {
+  background: var(--ci-solid);
+  color: var(--ci-on-solid);
+  border: 0;
+  padding: 9px 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.store-page[data-template='circuito'] .sp-ann.is-static .sp-ann-item { padding-right: 34px; }
+.store-page[data-template='circuito'] .sp-ann * { color: inherit; }
+.store-page[data-template='circuito'] .sp-ann-item {
+  font-family: var(--ci-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ci-on-solid);
+}
+.store-page[data-template='circuito'] .sp-ann-item svg { color: var(--ci-on-solid); }
+.store-page[data-template='circuito'] .sp-ann-item + .sp-ann-item::before { content: '·'; margin-right: 34px; opacity: .55; }
+

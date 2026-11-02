@@ -3468,6 +3468,7 @@ html{ scroll-behavior: smooth; }
   --clc-body: var(--st-font-body) !important;
   --dpb-body: var(--st-font-body) !important;
   --fs-body: var(--st-font-body) !important;
+  --mt-body: var(--st-font-body) !important;
   --rz-body: var(--st-font-body) !important;
   --sg-body: var(--st-font-body) !important;
   --sv-body: var(--st-font-body) !important;

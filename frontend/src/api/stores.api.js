@@ -757,22 +757,33 @@ export const STORE_THEMES = {
   dark:  { label: 'Oscuro' }
 }
 
-// Diseño de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
-// catálogo de UNO — 'raiz' es el único diseño (Esencial). El backend
-// descarta del PATCH cualquier otro id y la web fuerza 'raiz' si el
-// guardado no está permitido. Todo id retirado se remapea a 'raiz'
-// (STORE_TEMPLATE_RETIRED_MAP).
+// Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
+// catálogo por RUBRO. `tier` marca qué beneficio lo habilita:
+//   'base'     -> todo plan con has_customization: raiz/esencial
+//   'plus'     -> has_design_plus (Estándar y Premium): mercado, gimnasio,
+//                 sastreria, moderntec
+//   'advanced' -> has_design_advanced (Premium): circuito
+// El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
+// 'raiz' (fallback global) si el guardado deja de estar permitido. Todo id
+// retirado se remapea al más cercano (STORE_TEMPLATE_RETIRED_MAP).
 export const STORE_TEMPLATES = {
   raiz:        { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
   esencial:    { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
   mercado:     { label: 'Bazar',       rubro: 'bazar',        tier: 'plus',     defaultAccent: '#FFE600', desc: 'Bazar: marketplace con masthead amarillo, buscador y grilla densa de productos.' },
   gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
-  moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'base',     defaultAccent: '#2563EB', desc: 'ModernTec: landing tech premium importada del boceto.' },
+  sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
+  moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
+  circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
 }
 
-// Familia de diseño para el selector del dashboard: una sola (Esencial).
+// Familias de diseño para el selector del dashboard.
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
+  { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
+  { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
+  { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
+  { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
+  { key: 'circuito',     label: 'Tecnología',   caption: 'Tech premium oscura',     templates: ['circuito'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
@@ -780,24 +791,26 @@ export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.tem
 // :data-skin="storeSkinOf(pageTemplate)" en .store-page y resuelve la hoja
 // desde TEMPLATE_CSS con esta misma clave.
 export const STORE_TEMPLATE_SKIN = {
-  raiz: 'raiz'
+  raiz: 'raiz', mercado: 'mercado', gimnasio: 'gimnasio',
+  sastreria: 'sastreria', circuito: 'circuito',
+  moderntec: 'moderntec'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
 // Mapa de retiro (espejo de StoreCustomization.TEMPLATE_RETIRED_MAP): una
-// tienda con un diseño viejo se sirve con 'raiz' — el único diseño.
+// tienda con un diseño viejo se sirve con el equivalente del catálogo.
 export const STORE_TEMPLATE_RETIRED_MAP = {
   classic: 'raiz', duo: 'raiz', minimal: 'raiz', calma: 'raiz',
   studio: 'raiz', arena: 'raiz', proceso: 'raiz',
   carta: 'raiz', terra: 'raiz', bloque: 'raiz', shop: 'raiz',
-  lookbook: 'raiz', signature: 'raiz',
-  cobre: 'raiz', vitrina: 'raiz', street: 'raiz', riso: 'raiz',
-  promo: 'raiz', aurora: 'raiz',
-  perspective: 'raiz', circuit: 'raiz', terminal: 'raiz',
-  lab: 'raiz', ai_lumen: 'raiz', ai_pulse: 'raiz',
-  alimentos: 'raiz', trama: 'raiz', indumentaria: 'raiz', boutique: 'raiz',
-  atelier: 'raiz', sastreria: 'raiz', clasico: 'raiz',
-  circuito: 'raiz', seguridad: 'raiz',
+  alimentos: 'raiz', clasico: 'raiz',
+  lookbook: 'sastreria', signature: 'sastreria',
+  cobre: 'sastreria', vitrina: 'sastreria', street: 'sastreria',
+  riso: 'sastreria', promo: 'sastreria', aurora: 'sastreria',
+  trama: 'sastreria', indumentaria: 'sastreria', boutique: 'sastreria',
+  atelier: 'sastreria', ai_pulse: 'sastreria',
+  perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',
+  lab: 'circuito', ai_lumen: 'circuito', seguridad: 'circuito',
 }
 
 // Patrones exclusivos del motor "Diseñar con IA": ya no existen (el motor

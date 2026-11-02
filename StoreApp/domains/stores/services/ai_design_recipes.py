@@ -855,20 +855,20 @@ BLOCK_TITLES                =   {
 #afinidad a los 6 diseños del catálogo al importar, así el motor propone
 #SOLO ids públicos sin reescribir cada receta a mano.
 #Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única):
-#catálogo de UN diseño — todo id viejo remapea a 'raiz' (Esencial).
-PUBLIC_TEMPLATES            =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec')
+#catálogo por rubro — todo id viejo remapea al diseño más cercano.
+PUBLIC_TEMPLATES            =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito')
 PUBLIC_TEMPLATE_MAP         =   {
     'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
     'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
     'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz', 'shop': 'raiz',
-    'atelier': 'raiz', 'lookbook': 'raiz',
-    'signature': 'raiz', 'cobre': 'raiz', 'vitrina': 'raiz',
-    'street': 'raiz', 'riso': 'raiz', 'promo': 'raiz', 'aurora': 'raiz',
-    'perspective': 'raiz', 'circuit': 'raiz', 'terminal': 'raiz',
-    'lab': 'raiz', 'ai_lumen': 'raiz', 'ai_pulse': 'raiz',
-    'alimentos': 'raiz', 'trama': 'raiz', 'indumentaria': 'raiz',
-    'boutique': 'raiz', 'sastreria': 'raiz', 'clasico': 'raiz',
-    'circuito': 'raiz', 'seguridad': 'raiz',
+    'alimentos': 'raiz', 'clasico': 'raiz',
+    'atelier': 'sastreria', 'lookbook': 'sastreria',
+    'signature': 'sastreria', 'cobre': 'sastreria', 'vitrina': 'sastreria',
+    'street': 'sastreria', 'riso': 'sastreria', 'promo': 'sastreria',
+    'aurora': 'sastreria', 'ai_pulse': 'sastreria',
+    'trama': 'sastreria', 'indumentaria': 'sastreria', 'boutique': 'sastreria',
+    'perspective': 'circuito', 'circuit': 'circuito', 'terminal': 'circuito',
+    'lab': 'circuito', 'ai_lumen': 'circuito', 'seguridad': 'circuito',
 }
 
 
@@ -908,9 +908,9 @@ TEMPLATE_LABELS.update({'raiz': 'Esencial'})
 TEMPLATE_GOAL_AFFINITY.update({
     #Cada objetivo tiene UN diseño que mejor cuenta esa historia (el resto
     #compite por tono/piel): así cambiar el objetivo mueve el puntaje.
-    'vender_online':        ('trama', 'alimentos'),
-    'mostrar_servicios':    ('raiz', 'seguridad'),
-    'conseguir_consultas':  ('raiz', 'seguridad'),
-    'dar_confianza':        ('raiz', 'circuito', 'seguridad'),
-    'mostrar_trabajos':     ('trama', 'boutique', 'circuito'),
+    'vender_online':        ('mercado', 'sastreria'),
+    'mostrar_servicios':    ('raiz', 'gimnasio'),
+    'conseguir_consultas':  ('raiz', 'sastreria'),
+    'dar_confianza':        ('raiz', 'circuito'),
+    'mostrar_trabajos':     ('sastreria', 'circuito'),
 })

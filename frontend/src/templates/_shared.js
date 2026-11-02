@@ -10,23 +10,39 @@
 // ===== Superficies por diseño =====
 // Inicio, Catálogo, Ficha de producto y Servicios viven en la carpeta del
 // diseño (views/store/<id>/). Un diseño nuevo solo agrega sus loaders acá.
-// 'indumentaria' comparte las vistas de catálogo/ficha/servicios con 'trama'
-// (misma piel, misma lógica). El bundler cachea el mismo módulo: no duplica
-// código ni CSS.
 export const landingViews = {
-  raiz:         () => import('../views/store/raiz/InicioView.vue')
+  raiz:         () => import('../views/store/raiz/InicioView.vue'),
+  mercado:      () => import('../views/store/mercado/InicioView.vue'),
+  gimnasio:     () => import('../views/store/gimnasio/InicioView.vue'),
+  sastreria:    () => import('../views/store/sastreria/InicioView.vue'),
+  circuito:     () => import('../views/store/circuito/InicioView.vue'),
+  moderntec:    () => import('../views/store/moderntec/InicioView.vue')
 }
 
 export const catalogViews = {
-  raiz:         () => import('../views/store/raiz/CatalogoView.vue')
+  raiz:         () => import('../views/store/raiz/CatalogoView.vue'),
+  mercado:      () => import('../views/store/mercado/CatalogoView.vue'),
+  gimnasio:     () => import('../views/store/gimnasio/CatalogoView.vue'),
+  sastreria:    () => import('../views/store/sastreria/CatalogoView.vue'),
+  circuito:     () => import('../views/store/circuito/CatalogoView.vue'),
+  moderntec:    () => import('../views/store/moderntec/CatalogoView.vue')
 }
 
 export const productViews = {
-  raiz:         () => import('../views/store/raiz/ProductoView.vue')
+  raiz:         () => import('../views/store/raiz/ProductoView.vue'),
+  mercado:      () => import('../views/store/mercado/ProductoView.vue'),
+  gimnasio:     () => import('../views/store/gimnasio/ProductoView.vue'),
+  sastreria:    () => import('../views/store/sastreria/ProductoView.vue'),
+  circuito:     () => import('../views/store/circuito/ProductoView.vue'),
+  moderntec:    () => import('../views/store/moderntec/ProductoView.vue')
 }
 
 export const servicesViews = {
-  raiz:         () => import('../views/store/raiz/ServiciosView.vue')
+  raiz:         () => import('../views/store/raiz/ServiciosView.vue'),
+  gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue'),
+  sastreria:    () => import('../views/store/sastreria/ServiciosView.vue'),
+  circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
+  moderntec:    () => import('../views/store/moderntec/ServiciosView.vue')
 }
 
 // ===== Listas canónicas de bloques =====

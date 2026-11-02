@@ -79,9 +79,10 @@ def profile_has_benefit(profile, code):
 #=========================================
 def allowed_templates_of(profile):
     """
-    Diseños de la web disponibles según el plan — catálogo de UN diseño:
-    TEMPLATE_BASE ('raiz', = Esencial) va con cualquier has_customization;
-    TEMPLATE_PLUS/ADVANCED quedan vacíos. La web pública lo usa como
+    Diseños de la web disponibles según el plan — catálogo por rubro:
+    TEMPLATE_BASE ('raiz'/'esencial') va con cualquier has_customization;
+    TEMPLATE_PLUS con has_design_plus y TEMPLATE_ADVANCED ('circuito') con
+    has_design_advanced. La web pública lo usa como
     whitelist para forzar el fallback si el dueño baja de plan, y el motor
     de IA propone solo PUBLIC_TEMPLATES (ai_design_recipes).
     """

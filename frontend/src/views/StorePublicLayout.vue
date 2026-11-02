@@ -257,7 +257,12 @@ const isShop = computed(() => false)
 // una sola vez. Al terminar la carga se re-sincroniza el SEO para tomar el
 // theme-color que declare la hoja.
 const TEMPLATE_CSS = {
-  raiz:      () => import('../assets/store-raiz.css')
+  raiz:      () => import('../assets/store-raiz.css'),
+  mercado:   () => import('../assets/store-mercado.css'),
+  gimnasio:  () => import('../assets/store-gimnasio.css'),
+  sastreria: () => import('../assets/store-sastreria.css'),
+  circuito:  () => import('../assets/store-circuito.css'),
+  moderntec: () => import('../assets/store-moderntec.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()

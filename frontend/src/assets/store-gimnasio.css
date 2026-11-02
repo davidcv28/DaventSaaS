@@ -1,0 +1,1034 @@
+/* ==========================================================================
+   DISEÑO GIMNASIO — deporte / fitness (nivel plus)
+   Raíz del CSS: [data-template="gimnasio"] (lo emite StorePublicLayout).
+   Basado en la landing "Forja": negro oliva #0E0F0C, hueso #F2EFE8, acento
+   lima del dueño, Barlow Condensed 800 en mayúsculas e Inter en cuerpo y
+   etiquetas. Todo recto (radio 0), bordes finos y una sección clara papel
+   para clases/servicios. Catálogo / ficha / servicios reutilizan Raíz bajo
+   `.gy-skin`: la hoja re-escribe los tokens --sp-*.
+   ========================================================================== */
+
+.store-page[data-template='gimnasio'] {
+  --gy-ink: #0E0F0C;
+  --gy-panel: #131410;
+  --gy-card: #171914;
+  --gy-line: #2A2D25;
+  --gy-line-strong: #4A4D42;
+  --gy-text: #F2EFE8;
+  --gy-text-2: #C9C7BE;
+  --gy-muted: #A9A79E;
+  --gy-lime: var(--store-accent, #C8F169);
+  --gy-lime-ink: var(--store-accent-ink, #8FBF2E);
+  --gy-deep: #557A12;
+  --gy-on-lime: #0E0F0C;
+  --gy-plate: #1A1C16;
+  --gy-paper: #F2EFE8;
+  --gy-paper-ink: #0E0F0C;
+  --gy-paper-muted: #55534B;
+  --gy-paper-line: #C9C5B8;
+  --gy-display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
+  --gy-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --gy-label: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --gy-wrap: 1200px;
+  --gy-gutter: 24px;
+  --gy-section: clamp(72px, 8vw, 96px);
+  --gy-top-h: 84px;
+
+  --sp-bg: var(--gy-ink);
+  --sp-card: var(--gy-card);
+  --sp-card-solid: var(--gy-card);
+  --sp-surface: var(--gy-panel);
+  --sp-soft: var(--gy-panel);
+  --sp-ink: var(--gy-text);
+  --sp-ink-2: var(--gy-text-2);
+  --sp-muted: var(--gy-muted);
+  --sp-line: var(--gy-line);
+  --sp-radius: 0px;
+  --sp-accent-text: var(--gy-lime);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-chrome: var(--gy-ink);
+
+  --tpc-bg: var(--gy-card);
+  --tpc-border: 1px solid var(--gy-line);
+  --tpc-radius: 0px;
+  --tpc-shadow: none;
+  --tpc-ratio: 4 / 5;
+  --tpc-media-bg: var(--gy-panel);
+  --tpc-pad: 14px 0 18px;
+  --tpc-gap: 4px;
+  --tpc-name-font: var(--gy-display);
+  --tpc-name-size: 22px;
+  --tpc-name-weight: 700;
+  --tpc-name-lh: 1.02;
+  --tpc-name-transform: uppercase;
+  --tpc-eyebrow-size: 11px;
+  --tpc-eyebrow-weight: 600;
+  --tpc-eyebrow-track: .16em;
+  --tpc-eyebrow-ink: var(--gy-muted);
+  --tpc-price-font: var(--gy-label);
+  --tpc-price-size: 15px;
+  --tpc-price-weight: 600;
+  --tpc-price-ink: var(--gy-lime);
+  --tpc-old-size: 12px;
+  --tpc-old-ink: var(--gy-muted);
+  --tpc-flag-radius: 0px;
+  --tpc-flag-bg: var(--gy-lime);
+  --tpc-flag-ink: var(--gy-on-lime);
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-flag-track: .1em;
+  --tpc-offer-bg: var(--gy-lime);
+  --tpc-offer-ink: var(--gy-on-lime);
+  --tpc-quick-bg: var(--gy-lime);
+  --tpc-add-radius: 0px;
+  --tpc-add-bg: var(--gy-lime);
+  --tpc-add-ink: var(--gy-on-lime);
+  --tpc-add-shadow: none;
+  --tpc-go-size: 11px;
+  --tpc-go-weight: 600;
+  --tpc-go-ink: var(--gy-lime);
+  --tpc-focus: var(--gy-lime);
+  --tpc-img-hover: scale(1.03);
+
+  font-family: var(--gy-body);
+  background: var(--gy-ink);
+  color: var(--gy-text);
+  font-size: 17px;
+  line-height: 1.55;
+  overflow-x: clip;
+}
+.store-page[data-template='gimnasio']::before,
+.store-page[data-template='gimnasio']::after { display: none; }
+
+/* ==========================================================================
+   TIPOGRAFÍA, CONTENEDOR, BOTONES
+   ========================================================================== */
+.store-page[data-template='gimnasio'] h1,
+.store-page[data-template='gimnasio'] h2,
+.store-page[data-template='gimnasio'] h3,
+.store-page[data-template='gimnasio'] .sp-section-title {
+  font-family: var(--gy-display);
+  font-weight: 800;
+  line-height: .98;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'] h1 em,
+.store-page[data-template='gimnasio'] h2 em,
+.store-page[data-template='gimnasio'] h3 em {
+  font-style: normal;
+  color: var(--gy-lime);
+}
+.store-page[data-template='gimnasio'] h2,
+.store-page[data-template='gimnasio'] .sp-section-title { font-size: clamp(44px, 6vw, 72px); }
+.store-page[data-template='gimnasio'] h3 { font-size: clamp(26px, 2.6vw, 30px); font-weight: 700; }
+.store-page[data-template='gimnasio'] p { color: var(--sp-ink-2); }
+.store-page[data-template='gimnasio'] .gy-wrap,
+.store-page[data-template='gimnasio'] .sp-container,
+.store-page[data-template='gimnasio'] .bq-container {
+  max-width: var(--gy-wrap);
+  margin-inline: auto;
+  padding-inline: var(--gy-gutter);
+}
+.store-page[data-template='gimnasio'] .sp-eyebrow,
+.store-page[data-template='gimnasio'] .bq-eyebrow {
+  font-family: var(--gy-label);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gy-lime);
+}
+.store-page[data-template='gimnasio'] .sp-btn,
+.store-page[data-template='gimnasio'] .bq-btn {
+  min-height: 52px;
+  padding: 0 30px;
+  border: 1.5px solid var(--gy-lime);
+  border-radius: 0;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+  font-family: var(--gy-body);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-btn:hover,
+.store-page[data-template='gimnasio'] .bq-btn:hover {
+  background: var(--gy-text);
+  border-color: var(--gy-text);
+  color: var(--gy-ink);
+}
+.store-page[data-template='gimnasio'] .sp-btn.ghost,
+.store-page[data-template='gimnasio'] .bq-btn--ghost {
+  background: transparent;
+  border-color: var(--gy-text);
+  color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'] .sp-btn.ghost:hover,
+.store-page[data-template='gimnasio'] .bq-btn--ghost:hover {
+  border-color: var(--gy-lime);
+  color: var(--gy-lime);
+  background: transparent;
+}
+.store-page[data-template='gimnasio'] :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--gy-lime);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   CHROME: cabecera oscura con links en Inter
+   ========================================================================== */
+.store-page[data-template='gimnasio'] { --sp-top-h: var(--gy-top-h); }
+.store-page[data-template='gimnasio'] .sp-top {
+  background: color-mix(in srgb, var(--gy-ink) 92%, transparent);
+  border-bottom: 1px solid var(--gy-line);
+  backdrop-filter: blur(10px);
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-top-inner {
+  max-width: var(--gy-wrap);
+  min-height: 72px;
+  gap: 26px;
+}
+.store-page[data-template='gimnasio'] .sp-brand .sp-name {
+  font-family: var(--gy-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'] .sp-brand .sp-mono {
+  font-family: var(--gy-label);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gy-muted);
+}
+.store-page[data-template='gimnasio'] .sp-brand .sp-logo {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gy-line-strong);
+  border-radius: 0;
+  background: var(--gy-panel);
+}
+.store-page[data-template='gimnasio'] .sp-top-links { gap: 4px; margin-left: auto; }
+.store-page[data-template='gimnasio'] .sp-top-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  font-family: var(--gy-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gy-text-2);
+}
+.store-page[data-template='gimnasio'] .sp-top-links a:hover { color: var(--gy-text); }
+.store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active { color: var(--gy-lime); }
+.store-page[data-template='gimnasio'] .sp-top-end .sp-icon-btn,
+.store-page[data-template='gimnasio'] .sp-top .sp-burger {
+  border: 1px solid var(--gy-line);
+  border-radius: 0;
+  color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'] .sp-top-end .sp-icon-btn:hover,
+.store-page[data-template='gimnasio'] .sp-top .sp-burger:hover {
+  border-color: var(--gy-lime);
+  color: var(--gy-lime);
+  background: var(--gy-panel);
+}
+.store-page[data-template='gimnasio'] .sp-foot {
+  background: var(--gy-panel);
+  border-top: 1px solid var(--gy-line);
+}
+.store-page[data-template='gimnasio'] .sp-foot-name {
+  font-family: var(--gy-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* ==========================================================================
+   PORTADA
+   ========================================================================== */
+.gy-hero { position: relative; padding: 72px 0 0; }
+.gy-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+  gap: 56px;
+  align-items: center;
+}
+.gy-hero.is-centered .gy-hero-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+.gy-hero.is-centered .gy-hero-meta { justify-content: center; }
+.gy-kicker {
+  margin: 0 0 20px;
+  font-family: var(--gy-label);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gy-lime);
+}
+.gy-hero-title {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: clamp(64px, 9vw, 118px);
+  font-weight: 800;
+  line-height: .92;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.gy-hero-accent { color: var(--gy-lime); }
+.gy-hero-lead {
+  max-width: 520px;
+  margin: 24px 0 0;
+  font-size: 20px;
+  color: var(--gy-text-2);
+}
+.gy-hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; }
+.gy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 30px;
+  border: 1.5px solid var(--gy-lime);
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: var(--gy-body);
+  font-size: 17px;
+  font-weight: 600;
+  transition: background .18s, color .18s, border-color .18s;
+}
+.gy-btn--solid { background: var(--gy-lime); color: var(--gy-on-lime); }
+.gy-btn--solid:hover { background: var(--gy-text); border-color: var(--gy-text); color: var(--gy-ink); }
+.gy-btn--ghost { background: transparent; border-color: var(--gy-text); color: var(--gy-text); }
+.gy-btn--ghost:hover { border-color: var(--gy-lime); color: var(--gy-lime); }
+.gy-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  color: var(--gy-text-2);
+}
+.gy-hero-meta li { display: inline-flex; align-items: center; gap: 10px; }
+.gy-hero-meta li.is-open { color: var(--gy-lime); }
+.gy-meta-ic { color: var(--gy-lime); flex: none; }
+.gy-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gy-lime);
+  box-shadow: 0 0 10px var(--gy-lime);
+}
+.gy-hero-plate {
+  position: relative;
+  margin: 0;
+  min-height: 560px;
+  overflow: hidden;
+  background: var(--gy-plate);
+  border: 1px solid var(--gy-line-strong);
+}
+.gy-hero-plate.is-empty { border-style: dashed; border-width: 1.5px; }
+.gy-hero-plate img {
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.05) contrast(1.04);
+}
+.gy-hero-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+}
+.gy-hero-empty img { width: 96px; height: 96px; min-height: 0; object-fit: contain; }
+.gy-hero-empty strong {
+  font-family: var(--gy-label);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gy-muted);
+}
+.gy-hero-initial {
+  font-family: var(--gy-display);
+  font-size: clamp(110px, 22vw, 190px);
+  font-weight: 800;
+  line-height: 1;
+  color: color-mix(in srgb, var(--gy-lime) 16%, transparent);
+}
+.gy-hero-badge {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+  font-size: 14px;
+  font-weight: 600;
+}
+.gy-hero-badge b {
+  font-family: var(--gy-display);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.gy-hero-badge span { font-weight: 600; }
+.gy-strip {
+  margin-top: 72px;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+  border-top: 1px solid var(--gy-ink);
+  border-bottom: 1px solid var(--gy-ink);
+}
+.gy-strip-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 28px;
+  padding-block: 22px;
+  font-family: var(--gy-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   VITRINA COMO PLANES (tarjetas de precio)
+   ========================================================================== */
+.gy-shop { padding: var(--gy-section) 0; }
+.gy-shop-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.gy-shop-head h2 { margin: 0; max-width: 640px; }
+.gy-shop-head span {
+  max-width: 360px;
+  font-size: 16px;
+  color: var(--gy-muted);
+}
+.gy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+}
+.gy-card {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  background: var(--gy-card);
+  border: 1px solid var(--gy-line);
+}
+.gy-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 40px 32px;
+  color: inherit;
+  text-decoration: none;
+}
+.gy-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gy-card-name {
+  font-family: var(--gy-display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.gy-card-flag {
+  background: var(--gy-ink);
+  color: var(--gy-text);
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.gy-card.is-offer .gy-card-flag { background: var(--gy-ink); color: var(--gy-lime); }
+.gy-card-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--gy-display);
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--gy-text);
+}
+.gy-card-price s {
+  font-family: var(--gy-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gy-muted);
+}
+.gy-card-cat {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gy-muted);
+}
+.gy-card-go {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  border: 1.5px solid var(--gy-text);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gy-text);
+  transition: background .18s, color .18s, border-color .18s;
+}
+.gy-card-link:hover .gy-card-go { border-color: var(--gy-lime); color: var(--gy-lime); }
+.gy-card.is-offer {
+  background: var(--gy-lime);
+  border-color: var(--gy-lime);
+  color: var(--gy-on-lime);
+}
+.gy-card.is-offer .gy-card-name,
+.gy-card.is-offer .gy-card-price { color: var(--gy-on-lime); }
+.gy-card.is-offer .gy-card-price s,
+.gy-card.is-offer .gy-card-cat { color: color-mix(in srgb, var(--gy-on-lime) 66%, transparent); }
+.gy-card.is-offer .gy-card-go { border-color: var(--gy-ink); color: var(--gy-on-lime); }
+.gy-card.is-offer .gy-card-link:hover .gy-card-go { background: var(--gy-ink); color: var(--gy-text); border-color: var(--gy-ink); }
+.gy-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 36px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gy-lime);
+  text-decoration: none;
+}
+.gy-viewall:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* ==========================================================================
+   CLASES / SERVICIOS — banda clara papel con filas de grilla
+   ========================================================================== */
+.store-page[data-template='gimnasio'] .sp-services {
+  background: var(--gy-paper);
+  color: var(--gy-paper-ink);
+}
+.store-page[data-template='gimnasio'] .sp-services .sp-eyebrow { color: var(--gy-deep); }
+.store-page[data-template='gimnasio'] .sp-services .sp-section-title { color: var(--gy-paper-ink); }
+.store-page[data-template='gimnasio'] .sp-services p { color: var(--gy-paper-muted); }
+.store-page[data-template='gimnasio'] .sp-services-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 40px;
+  border-top: 2px solid var(--gy-paper-ink);
+}
+.store-page[data-template='gimnasio'] .sp-service {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 26px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--gy-paper-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-service-title {
+  order: 1;
+  flex: 1 1 220px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--gy-display);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--gy-paper-ink);
+}
+.store-page[data-template='gimnasio'] .sp-service-text {
+  order: 2;
+  flex: 2 1 280px;
+  min-width: 0;
+  margin: 0;
+  font-size: 16px;
+  color: var(--gy-paper-muted);
+}
+.store-page[data-template='gimnasio'] .sp-service-ring {
+  order: 3;
+  flex: none;
+  width: auto;
+  height: auto;
+  padding: 8px 10px;
+  background: var(--gy-lime);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-service-glow { display: none; }
+.store-page[data-template='gimnasio'] .sp-service-icon { color: var(--gy-on-lime); }
+.store-page[data-template='gimnasio'] .sp-service-line { display: none; }
+.store-page[data-template='gimnasio'] .sp-services .sp-btn {
+  border-color: var(--gy-deep);
+  background: var(--gy-deep);
+  color: var(--gy-paper);
+}
+.store-page[data-template='gimnasio'] .sp-services .sp-btn:hover {
+  background: var(--gy-paper-ink);
+  border-color: var(--gy-paper-ink);
+}
+
+/* ==========================================================================
+   BENEFICIOS — tarjetas oscuras con ícono en acento
+   ========================================================================== */
+.store-page[data-template='gimnasio'] .sp-benefits-grid { gap: 20px; }
+.store-page[data-template='gimnasio'] .sp-benefit {
+  background: var(--gy-card);
+  border: 1px solid var(--gy-line);
+  border-radius: 0;
+  padding: 32px 28px;
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-benefit-icon { color: var(--gy-lime); }
+.store-page[data-template='gimnasio'] .sp-benefit-icon svg { width: 36px; height: 36px; }
+.store-page[data-template='gimnasio'] .sp-benefit strong,
+.store-page[data-template='gimnasio'] .sp-benefit-title {
+  font-family: var(--gy-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'] .sp-benefit-text {
+  font-size: 16px;
+  color: var(--gy-muted);
+}
+
+/* ==========================================================================
+   PROCESO — números gigantes en acento
+   ========================================================================== */
+.store-page[data-template='gimnasio'] .sp-aiprocess {
+  background: var(--gy-panel);
+  border-top: 1px solid var(--gy-line);
+  border-bottom: 1px solid var(--gy-line);
+}
+.store-page[data-template='gimnasio'] .sp-aiprocess-num {
+  font-family: var(--gy-display);
+  font-size: 96px;
+  font-weight: 800;
+  line-height: .9;
+  color: var(--gy-lime);
+  background: none;
+  -webkit-text-fill-color: var(--gy-lime);
+}
+.store-page[data-template='gimnasio'] .sp-aiprocess-step-title {
+  font-family: var(--gy-display);
+  font-size: 30px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'] .sp-aiprocess-text {
+  font-size: 16px;
+  color: var(--gy-muted);
+}
+
+/* ==========================================================================
+   BLOQUES COMPARTIDOS RE-SKINEADOS
+   ========================================================================== */
+.store-page[data-template='gimnasio'] .sp-block,
+.store-page[data-template='gimnasio'] .sp-section { padding-block: var(--gy-section); }
+.store-page[data-template='gimnasio'] .sp-card {
+  background: var(--gy-card);
+  border: 1px solid var(--gy-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+.store-page[data-template='gimnasio'] .sp-card:hover { border-color: var(--gy-line-strong); }
+.store-page[data-template='gimnasio'] .sp-shop-dept {
+  border: 1px solid var(--gy-line);
+  border-radius: 0;
+  background: var(--gy-card);
+}
+.store-page[data-template='gimnasio'] .sp-shop-dept:hover { border-color: var(--gy-lime); }
+.store-page[data-template='gimnasio'] .sp-shop-dept-count {
+  font-family: var(--gy-label);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gy-muted);
+}
+.store-page[data-template='gimnasio'] .sp-about { border-top: 1px solid var(--gy-line); }
+
+/* Testimonios: columnas con techo para que una sola tarjeta no se estire a
+   lo ancho, y cita acotada a 6 líneas — el resto lo absorbe el clamp. */
+.store-page[data-template='gimnasio'] .sp-testimonials-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 380px));
+  align-items: start;
+}
+.store-page[data-template='gimnasio'] .sp-testimonials.is-carousel .sp-testimonials-grid {
+  grid-template-columns: none;
+}
+.store-page[data-template='gimnasio'] .sp-testimonial {
+  padding: 26px 24px;
+}
+.store-page[data-template='gimnasio'] .sp-testimonial-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
+.store-page[data-template='gimnasio'] input,
+.store-page[data-template='gimnasio'] select,
+.store-page[data-template='gimnasio'] textarea {
+  border-radius: 0;
+}
+
+/* ==========================================================================
+   CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa gimnasio)
+   ========================================================================== */
+.store-page[data-template='raiz'].gy-skin {
+  --sp-bg: #0E0F0C;
+  --sp-card: #171914;
+  --sp-card-solid: #171914;
+  --sp-surface: #131410;
+  --sp-soft: #131410;
+  --sp-ink: #F2EFE8;
+  --sp-ink-2: #C9C7BE;
+  --sp-muted: #A9A79E;
+  --sp-line: #2A2D25;
+  --sp-radius: 0px;
+  --sp-accent-text: #C8F169;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-chrome: #0E0F0C;
+  --sp-top-h: var(--gy-top-h, 84px);
+
+  /* Paleta Raíz -> Gimnasio: los tokens --rz-* heredan el tema de las
+     --gy-* del .store-page padre ([data-template='gimnasio']), así que el
+     modo día invierte todo el subárbol sin reglas extra. */
+  --rz-bg: var(--gy-ink);
+  --rz-surface: var(--gy-card);
+  --rz-surface-2: var(--gy-plate);
+  --rz-surface-3: var(--gy-line);
+  --rz-line: var(--gy-line);
+  --rz-line-strong: var(--gy-line-strong);
+  --rz-line-ui: var(--gy-muted);
+  --rz-ink: var(--gy-text);
+  --rz-ink-2: var(--gy-text-2);
+  --rz-muted: var(--gy-muted);
+  --rz-accent: var(--gy-lime);
+  --rz-accent-soft: color-mix(in srgb, var(--gy-lime) 12%, transparent);
+  --rz-accent-text: var(--gy-lime);
+  --rz-accent-deep: var(--sp-band-base1, var(--gy-deep));
+  --rz-accent-deep-2: var(--sp-band-base2, var(--gy-deep));
+  --rz-band-1: var(--sp-band-base1, var(--gy-deep));
+  --rz-band-2: var(--sp-band-base2, var(--gy-deep));
+  --rz-on-band: #FFFFFF;
+  --rz-on-band-2: rgb(255 255 255 / .9);
+  --rz-on-band-muted: rgb(255 255 255 / .78);
+  --rz-ok: var(--gy-lime);
+  --rz-danger: #F45B4C;
+  --rz-focus: var(--gy-lime);
+  --rz-scrim: rgb(0 0 0 / .72);
+  --rz-selection: color-mix(in srgb, var(--gy-lime) 30%, transparent);
+  --rz-inverse-bg: #060806;
+  --rz-inverse-bg-2: #0E0F0C;
+  --rz-inverse-ink: #F2EFE8;
+  --rz-inverse-ink-2: #C9C7BE;
+  --rz-inverse-muted: #A9A79E;
+  --rz-inverse-line: rgb(242 239 232 / .14);
+  --rz-inverse-accent: var(--gy-lime);
+  --rz-display: var(--gy-display);
+  --rz-body: var(--gy-body);
+  --rz-rad-sm: 0;
+  --rz-rad-md: 0;
+  --rz-rad-lg: 0;
+  --rz-rad-pill: 0;
+  --rz-radius-card: 0;
+  --rz-radius-media: 0;
+  --rz-shadow-1: none;
+  --rz-shadow-2: none;
+  --rz-shadow: none;
+  --rz-theme-color: #0E0F0C;
+
+  /* Tarjeta de producto compartida en la noche del gimnasio. */
+  --tpc-bg: var(--gy-card);
+  --tpc-border: 1px solid var(--gy-line);
+  --tpc-radius: 0px;
+  --tpc-shadow: none;
+  --tpc-media-bg: var(--gy-panel);
+  --tpc-name-font: var(--gy-display);
+  --tpc-name-transform: uppercase;
+  --tpc-eyebrow-ink: var(--gy-muted);
+  --tpc-price-ink: var(--gy-lime);
+  --tpc-old-ink: var(--gy-muted);
+  --tpc-flag-radius: 0px;
+  --tpc-flag-bg: var(--gy-lime);
+  --tpc-flag-ink: var(--gy-on-lime);
+  --tpc-offer-bg: var(--gy-lime);
+  --tpc-offer-ink: var(--gy-on-lime);
+  --tpc-quick-bg: var(--gy-lime);
+  --tpc-add-radius: 0px;
+  --tpc-add-bg: var(--gy-lime);
+  --tpc-add-ink: var(--gy-on-lime);
+  --tpc-go-ink: var(--gy-lime);
+  --tpc-focus: var(--gy-lime);
+
+  color-scheme: dark;
+  font-family: var(--gy-body, 'Inter', system-ui, sans-serif);
+  background: var(--gy-ink, #0E0F0C);
+  color: var(--gy-text, #F2EFE8);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-head,
+.store-page[data-template='raiz'].gy-skin .rz-sv-head,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-sec-head {
+  border-bottom: 1px solid #4A4D42;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-title,
+.store-page[data-template='raiz'].gy-skin .rz-sv-hero-title,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-name,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-sec-title {
+  font-family: var(--gy-display);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].gy-skin .rz-eyebrow,
+.store-page[data-template='raiz'].gy-skin .rz-cat-kicker {
+  font-family: var(--gy-label);
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: #C8F169;
+}
+/* Marcos con aire: solo las piezas que Raíz dibuja desnudas y acá van como
+   placa (riel de filtros, caja de precio, placa de servicios). La grilla y
+   las tarjetas de producto quedan sin marco — con borde el texto pegaba al
+   filo porque el padding horizontal de --tpc-pad es 0. */
+.store-page[data-template='raiz'].gy-skin .rz-cat-rail,
+.store-page[data-template='raiz'].gy-skin .rz-sv-plate,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-pricebox {
+  border: 1px solid #2A2D25;
+  border-radius: 0;
+  background: #171914;
+  box-shadow: none;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-rail { padding: 20px 12px 20px 20px; }
+.store-page[data-template='raiz'].gy-skin .rz-pdp-pricebox { padding: 18px 20px; }
+.store-page[data-template='raiz'].gy-skin .rz-cat-card {
+  --tpc-name-font: var(--gy-display);
+  --tpc-name-transform: uppercase;
+  --tpc-name-size: 17px;
+  --tpc-name-weight: 700;
+  --tpc-name-lh: 1.1;
+  --tpc-price-ink: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-tags button,
+.store-page[data-template='raiz'].gy-skin .rz-cat-sort select {
+  border-radius: 0;
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn {
+  border-radius: 0;
+  font-family: var(--gy-label);
+  font-weight: 600;
+  background: var(--rz-accent-deep);
+  border-color: var(--rz-accent-deep);
+  color: #FFF;
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn:hover {
+  background: var(--rz-accent-deep-2);
+  border-color: var(--rz-accent-deep-2);
+  color: #FFF;
+  box-shadow: none;
+  transform: none;
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn--ghost {
+  background: transparent;
+  border-color: var(--gy-line-strong);
+  color: var(--gy-text);
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn--ghost:hover {
+  background: transparent;
+  border-color: var(--gy-lime);
+  color: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-btn--ink {
+  background: var(--rz-ink);
+  border-color: var(--rz-ink);
+  color: var(--rz-bg);
+}
+
+/* ==========================================================================
+   MODO DÍA — gimnasio-dia: papel hueso, tinta casi negra, lima apagado.
+   ========================================================================== */
+.store-page[data-template='gimnasio'][data-store-theme='light'] {
+  --gy-ink: #F2EFE8;
+  --gy-panel: #E9E5D9;
+  --gy-card: #FAF8F1;
+  --gy-line: #C9C5B8;
+  --gy-line-strong: #A39E8E;
+  --gy-text: #0E0F0C;
+  --gy-text-2: #3A382F;
+  --gy-muted: #55534B;
+  --gy-lime: var(--store-accent, #6FA318);
+  --gy-lime-ink: var(--store-accent-ink, #4E7410);
+  --gy-deep: var(--store-accent-ink, #4E7410);
+  --gy-on-lime: #0E0F0C;
+  --gy-plate: #E9E5D9;
+  --gy-paper: #14150F;
+  --gy-paper-ink: #F2EFE8;
+  --gy-paper-muted: #B9B7AE;
+  --gy-paper-line: #3A3D32;
+  --tpc-price-ink: var(--gy-lime-ink);
+  --tpc-eyebrow-ink: var(--gy-muted);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-hero-initial {
+  color: color-mix(in srgb, var(--gy-lime) 30%, transparent);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-hero-empty img {
+  background: var(--gy-ink);
+  padding: 10px;
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-services .sp-eyebrow {
+  color: var(--gy-lime);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-services .sp-btn {
+  background: var(--gy-lime);
+  border-color: var(--gy-lime);
+  color: var(--gy-on-lime);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-services .sp-btn:hover {
+  background: var(--gy-paper-ink);
+  border-color: var(--gy-paper-ink);
+  color: var(--gy-paper);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-strip {
+  border-color: var(--gy-text);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-card-flag {
+  border: 1px solid var(--gy-line-strong);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-card.is-offer .gy-card-flag {
+  border-color: transparent;
+  background: var(--gy-ink);
+  color: var(--gy-lime);
+}
+/* El data-store-theme vive en el .store-page padre ([data-template='gimnasio']),
+   no en el subárbol .gy-skin: el selector cuelga del ancestro. Las --rz-*
+   de color ya invierten solas vía var(--gy-*); acá solo van los ajustes que
+   no pueden heredarse (acento texto, inversos, scrim, selección). */
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin {
+  --sp-bg: #F2EFE8;
+  --sp-card: #FAF8F1;
+  --sp-card-solid: #FAF8F1;
+  --sp-surface: #E9E5D9;
+  --sp-soft: #E9E5D9;
+  --sp-ink: #0E0F0C;
+  --sp-ink-2: #3A382F;
+  --sp-muted: #55534B;
+  --sp-line: #C9C5B8;
+  --sp-accent-text: var(--store-accent-ink, #4E7410);
+  --sp-chrome: #F2EFE8;
+  --rz-accent-text: var(--gy-lime-ink);
+  --rz-accent-soft: color-mix(in srgb, var(--gy-lime) 14%, #fff);
+  --rz-ok: var(--gy-lime-ink);
+  --rz-danger: #C2402F;
+  --rz-focus: var(--gy-lime-ink);
+  --rz-scrim: rgb(20 21 15 / .55);
+  --rz-selection: color-mix(in srgb, var(--gy-lime) 24%, #fff);
+  --rz-inverse-bg: #14150F;
+  --rz-inverse-bg-2: #0E0F0C;
+  --rz-inverse-ink: #F2EFE8;
+  --rz-inverse-ink-2: #B9B7AE;
+  --rz-inverse-muted: #B9B7AE;
+  --rz-inverse-line: rgb(242 239 232 / .16);
+  --rz-inverse-accent: var(--gy-lime);
+  --rz-theme-color: #F2EFE8;
+  --tpc-price-ink: var(--gy-lime-ink);
+  color-scheme: light;
+  background: #F2EFE8;
+  color: #0E0F0C;
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-head,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-head,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-sec-head {
+  border-bottom-color: #A39E8E;
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-eyebrow,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-kicker {
+  color: var(--store-accent-ink, #4E7410);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-rail,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-plate,
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-pricebox {
+  border-color: #C9C5B8;
+  background: #FAF8F1;
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-card {
+  --tpc-price-ink: var(--gy-lime-ink);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 960px) {
+  .gy-hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .gy-hero-plate, .gy-hero-plate img { min-height: 340px; }
+  .gy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .gy-wrap { padding-inline: 20px; }
+  .gy-grid { grid-template-columns: 1fr; }
+  .gy-strip-inner { font-size: 22px; justify-content: flex-start; }
+  .gy-hero-title { font-size: clamp(48px, 14vw, 72px); }
+  .store-page[data-template='gimnasio'] .sp-service-title { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gy-btn, .gy-card-link, .gy-card-go { transition: none; }
+}

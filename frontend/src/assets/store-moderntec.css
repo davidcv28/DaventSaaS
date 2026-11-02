@@ -1,0 +1,409 @@
+/* ==========================================================================
+   MODERNTEC — PIEL DEL DISEÑO DE TECNOLOGÍA (DAVENT)
+   Oscuro tecnológico: fondo #07090d, panel #0e141e, líneas finas, acento
+   dual cyan #3dd6ff → violeta #7c5cff, chips/specs en JetBrains Mono y
+   display en Space Grotesk.
+
+   Esta hoja se carga SOLO cuando la tienda usa el diseño `moderntec`
+   (`TEMPLATE_CSS` en StorePublicLayout). Por eso:
+   - los tokens y las primitivas `mt-*` viven acá sin scope (namespace propio);
+   - todo override de una clase compartida (`sp-*`, `rh-*`, `rz-*`, `tpc`)
+     va con `.store-page[data-template='moderntec']`.
+
+   El diseño es oscuro por defecto (los dos temas usan la misma paleta:
+   "lumen" aclara solo superficies). El conic-spin del device y los glows
+   animados se apagan con prefers-reduced-motion.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. TOKENS — oscuro tecnológico
+   ========================================================================== */
+.store-page[data-template='moderntec'] {
+  /* --- Color --- */
+  --mt-bg: #07090d;
+  --mt-bg-2: #0b0f16;
+  --mt-panel: #0e141e;
+  --mt-surface-2: #131c2b;
+  --mt-line: rgba(255, 255, 255, .08);
+  --mt-line-soft: rgba(255, 255, 255, .05);
+  --mt-line-strong: rgba(255, 255, 255, .18);
+  --mt-ink: #eef3f8;
+  --mt-ink-2: #9aa7b8;
+  --mt-ink-3: #5d6b80;
+  --mt-accent: var(--store-accent, #3dd6ff);
+  --mt-accent-2: #7c5cff;
+  --mt-accent-ink: #04121a;
+  --mt-accent-soft: rgba(61, 214, 255, .10);
+  --mt-ok: #34e0a1;
+  --mt-danger: #ff7a7a;
+  --mt-focus: var(--mt-accent);
+  --mt-scrim: rgba(2, 5, 9, .78);
+  --mt-selection: rgba(61, 214, 255, .85);
+
+  /* --- Tipografía --- */
+  --mt-display: 'Space Grotesk', var(--store-font, 'Inter'), system-ui, sans-serif;
+  --mt-body: var(--store-font, 'Inter'), system-ui, sans-serif;
+  --mt-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --mt-fs-h1: clamp(40px, 6vw, 68px);
+  --mt-fs-h2: clamp(26px, 3.4vw, 38px);
+  --mt-fs-h3: clamp(18px, 2vw, 22px);
+  --mt-fs-lead: 17px;
+  --mt-fs-body: 15px;
+  --mt-fs-sm: 13.5px;
+  --mt-fs-xs: 12px;
+  --mt-fs-label: 11px;
+  --mt-track-label: .14em;
+
+  /* --- Estructura --- */
+  --mt-container: 1180px;
+  --mt-gutter: 24px;
+  --mt-section-y: 72px;
+  --mt-gap: 16px;
+  --mt-rad-sm: 8px;
+  --mt-rad-md: 14px;
+  --mt-rad-lg: 20px;
+  --mt-rad-pill: 999px;
+  --mt-shadow-1: 0 1px 0 rgba(0, 0, 0, .35), 0 18px 42px -30px rgba(0, 0, 0, .9);
+  --mt-shadow-device: 0 30px 80px rgba(0, 0, 0, .5);
+  --mt-glow: 0 0 0 1px rgba(61, 214, 255, .5), 0 8px 28px rgba(61, 214, 255, .22);
+
+  /* --- Movimiento --- */
+  --mt-ease-out: cubic-bezier(.16, 1, .3, 1);
+  --mt-dur-1: 140ms;
+  --mt-dur-2: 200ms;
+
+  /* --- Puente al layout compartido: --sp-* --- */
+  --sp-bg: var(--mt-bg);
+  --sp-card: var(--mt-panel);
+  --sp-card-solid: var(--mt-panel);
+  --sp-surface: var(--mt-bg-2);
+  --sp-soft: var(--mt-accent-soft);
+  --sp-ink: var(--mt-ink);
+  --sp-ink-2: var(--mt-ink-2);
+  --sp-muted: var(--mt-ink-3);
+  --sp-line: var(--mt-line);
+  --sp-radius: var(--mt-rad-md);
+  --sp-accent-text: var(--mt-accent);
+  --sp-shadow-sm: var(--mt-shadow-1);
+  --sp-shadow-md: var(--mt-shadow-device);
+  --sp-on-band: var(--mt-accent-ink);
+  --sp-on-band-2: var(--mt-accent-ink);
+  --sp-on-band-muted: rgba(4, 18, 26, .78);
+  --sp-ease: var(--mt-ease-out);
+  --sp-top-h: 64px;
+  --sp-tabbar-h: 64px;
+
+  /* Tarjeta de producto compartida (TplProductCard): vidrio oscuro con
+     borde fino; el precio y los tags mono los resuelve la piel. */
+  --tpc-radius: var(--mt-rad-md);
+  --tpc-shadow: none;
+  --tpc-media-bg: var(--mt-bg-2);
+  --tpc-focus: var(--mt-focus);
+  --tpc-flag-radius: var(--mt-rad-sm);
+  --tpc-offer-bg: var(--mt-accent);
+  --tpc-offer-ink: var(--mt-accent-ink);
+
+  /* Metadato del navegador (theme-color, hex explícito). */
+  --mt-theme-color: #07090d;
+
+  color-scheme: dark;
+  font-family: var(--mt-body);
+  font-size: var(--mt-fs-body);
+  line-height: 1.55;
+  background: var(--mt-bg);
+  color: var(--mt-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-color: var(--mt-line-strong) var(--mt-bg);
+}
+
+/* ==========================================================================
+   1b. Tema claro ("lumen"): mismo lenguaje, superficies de papel frío.
+   ========================================================================== */
+.store-page[data-template='moderntec'][data-store-theme='light'] {
+  --mt-bg: #f2f5f9;
+  --mt-bg-2: #e8edf4;
+  --mt-panel: #ffffff;
+  --mt-surface-2: #e3e9f2;
+  --mt-line: rgba(10, 22, 38, .10);
+  --mt-line-soft: rgba(10, 22, 38, .06);
+  --mt-line-strong: rgba(10, 22, 38, .22);
+  --mt-ink: #0b1524;
+  --mt-ink-2: #3d4c62;
+  --mt-ink-3: #6b7a90;
+  --mt-accent: var(--store-accent, #0891b2);
+  --mt-accent-ink: #04121a;
+  --mt-accent-soft: rgba(8, 145, 178, .10);
+  --mt-ok: #0b7a55;
+  --mt-danger: #b3402e;
+  --mt-scrim: rgba(240, 244, 250, .82);
+  --mt-selection: rgba(8, 145, 178, .85);
+  --mt-shadow-1: 0 1px 2px rgba(11, 21, 36, .06), 0 16px 36px -28px rgba(11, 21, 36, .4);
+  --mt-shadow-device: 0 30px 70px -20px rgba(11, 21, 36, .35);
+  --mt-glow: 0 0 0 1px rgba(8, 145, 178, .4), 0 8px 26px rgba(8, 145, 178, .18);
+  --mt-theme-color: #f2f5f9;
+
+  color-scheme: light;
+  background: var(--mt-bg);
+  color: var(--mt-ink);
+}
+
+/* ==========================================================================
+   2. BASE — tipografía, foco, selección
+   ========================================================================== */
+:where(.store-page[data-template='moderntec']) :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  font-family: var(--mt-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--mt-ink);
+}
+
+.store-page[data-template='moderntec'] ::selection {
+  background: var(--mt-selection);
+  color: var(--mt-accent-ink);
+}
+
+.store-page[data-template='moderntec'] .mono,
+.store-page[data-template='moderntec'] .mt-chip,
+.store-page[data-template='moderntec'] .mt-spec {
+  font-family: var(--mt-mono);
+}
+
+/* Fondo: grilla con máscara radial + blooms cyan/violeta (fijo, no roba
+   eventos). Vive en .store-page para cubrir chrome y páginas internas. */
+.store-page[data-template='moderntec']::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 80% -10%, rgba(60, 120, 255, .14), transparent 60%),
+    radial-gradient(700px 500px at 10% 110%, rgba(124, 92, 255, .10), transparent 60%),
+    var(--mt-bg);
+}
+.store-page[data-template='moderntec']::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--mt-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mt-line-soft) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(1000px 700px at 50% 0%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(1000px 700px at 50% 0%, #000 30%, transparent 75%);
+}
+
+/* ==========================================================================
+   3. PRIMITIVAS mt-* (hero del boceto)
+   ========================================================================== */
+.store-page[data-template='moderntec'] .mt-wrap {
+  max-width: var(--mt-container);
+  margin-inline: auto;
+  padding-inline: var(--mt-gutter);
+}
+.store-page[data-template='moderntec'] .mt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--mt-fs-label);
+  letter-spacing: var(--mt-track-label);
+  text-transform: uppercase;
+  color: var(--mt-accent);
+  border: 1px solid color-mix(in srgb, var(--mt-accent) 30%, transparent);
+  padding: 4px 10px;
+  border-radius: var(--mt-rad-pill);
+}
+.store-page[data-template='moderntec'] .mt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--mt-rad-pill);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--mt-ink);
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--mt-dur-1) ease, box-shadow var(--mt-dur-2) ease, border-color var(--mt-dur-2) ease, background var(--mt-dur-2) ease;
+}
+.store-page[data-template='moderntec'] .mt-btn:active { transform: translateY(1px); }
+.store-page[data-template='moderntec'] .mt-btn--primary {
+  background: var(--mt-accent);
+  color: var(--mt-accent-ink);
+  box-shadow: var(--mt-glow);
+}
+.store-page[data-template='moderntec'] .mt-btn--primary:hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--mt-accent) 70%, transparent), 0 10px 34px color-mix(in srgb, var(--mt-accent) 35%, transparent);
+}
+.store-page[data-template='moderntec'] .mt-btn--ghost {
+  background: transparent;
+  border-color: var(--mt-line);
+}
+.store-page[data-template='moderntec'] .mt-btn--ghost:hover {
+  border-color: var(--mt-line-strong);
+  background: rgba(255, 255, 255, .03);
+}
+.store-page[data-template='moderntec'][data-store-theme='light'] .mt-btn--ghost:hover {
+  background: rgba(10, 22, 38, .04);
+}
+
+/* --- Hero --- */
+.store-page[data-template='moderntec'] .mt-hero { padding: 88px 0 64px; position: relative; }
+.store-page[data-template='moderntec'] .mt-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 48px;
+  align-items: center;
+}
+.store-page[data-template='moderntec'] .mt-hero-title {
+  font-size: var(--mt-fs-h1);
+  line-height: 1.02;
+  margin-top: 18px;
+}
+.store-page[data-template='moderntec'] .mt-hero-title em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.store-page[data-template='moderntec'] .mt-hero-lead {
+  color: var(--mt-ink-2);
+  font-size: var(--mt-fs-lead);
+  max-width: 52ch;
+  margin: 22px 0 30px;
+}
+.store-page[data-template='moderntec'] .mt-hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+.store-page[data-template='moderntec'] .mt-hero-meta {
+  display: flex;
+  gap: 28px;
+  margin: 44px 0 0;
+  padding: 0;
+  font-size: var(--mt-fs-xs);
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'] .mt-hero-meta div { display: flex; flex-direction: column-reverse; }
+.store-page[data-template='moderntec'] .mt-hero-meta dt { font-size: inherit; }
+.store-page[data-template='moderntec'] .mt-hero-meta dd {
+  margin: 0;
+  color: var(--mt-ink);
+  font-family: var(--mt-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* --- Tarjeta device --- */
+.store-page[data-template='moderntec'] .mt-device {
+  position: relative;
+  border: 1px solid var(--mt-line);
+  border-radius: var(--mt-rad-lg);
+  background: linear-gradient(160deg, var(--mt-surface-2), var(--mt-bg-2));
+  padding: 26px;
+  overflow: hidden;
+  box-shadow: var(--mt-shadow-device);
+}
+.store-page[data-template='moderntec'] .mt-device::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 0deg, transparent 70%, color-mix(in srgb, var(--mt-accent) 12%, transparent), transparent 85%);
+  animation: mt-spin 9s linear infinite;
+}
+@keyframes mt-spin { to { transform: rotate(360deg); } }
+.store-page[data-template='moderntec'] .mt-device-in {
+  position: relative;
+  border: 1px solid var(--mt-line);
+  border-radius: 12px;
+  background: var(--mt-bg-2);
+  overflow: hidden;
+}
+.store-page[data-template='moderntec'] .mt-device-bar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--mt-line);
+}
+.store-page[data-template='moderntec'] .mt-device-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mt-line-strong);
+}
+.store-page[data-template='moderntec'] .mt-device-badge {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  background: rgba(4, 18, 26, .8);
+  border: 1px solid color-mix(in srgb, var(--mt-ok) 40%, transparent);
+  color: var(--mt-ok);
+  font-size: var(--mt-fs-label);
+  padding: 6px 10px;
+  border-radius: var(--mt-rad-sm);
+  backdrop-filter: blur(6px);
+}
+.store-page[data-template='moderntec'][data-store-theme='light'] .mt-device-badge {
+  background: rgba(240, 244, 250, .85);
+}
+.store-page[data-template='moderntec'] .mt-spec {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  font-size: var(--mt-fs-xs);
+  color: var(--mt-ink-2);
+  border-bottom: 1px solid var(--mt-line-soft);
+}
+.store-page[data-template='moderntec'] .mt-spec:last-child { border-bottom: 0; }
+.store-page[data-template='moderntec'] .mt-spec-v.is-accent { color: var(--mt-accent); }
+.store-page[data-template='moderntec'] .mt-spec-v.is-strike { text-decoration: line-through; color: var(--mt-ink-3); }
+
+/* ==========================================================================
+   4. AJUSTES SOBRE LAS PIEZAS RAÍZ REUSADAS (rh-*, rz-*, sp-*)
+   Solo tintes/acentos — la geometría la conserva cada bloque.
+   ========================================================================== */
+/* Botones y eyebrow de los bloques raíz toman la voz mono/píldora. */
+.store-page[data-template='moderntec'] .rz-btn { border-radius: var(--mt-rad-pill); }
+.store-page[data-template='moderntec'] .rz-eyebrow {
+  font-family: var(--mt-mono);
+  letter-spacing: var(--mt-track-label);
+}
+/* Cabezales de sección: título display + kicker mono "// sección". */
+.store-page[data-template='moderntec'] .rh-title,
+.store-page[data-template='moderntec'] .rz-cat-title { letter-spacing: -.02em; }
+.store-page[data-template='moderntec'] .rh-link { color: var(--mt-accent); }
+
+/* Tarjetas de producto: borde fino + lift con glow violeta al hover. */
+.store-page[data-template='moderntec'] .tpc {
+  border: 1px solid var(--mt-line);
+  background: var(--mt-panel);
+}
+.store-page[data-template='moderntec'] .tpc:hover {
+  border-color: color-mix(in srgb, var(--mt-accent-2) 50%, transparent);
+}
+
+/* Campos y selects del catálogo. */
+.store-page[data-template='moderntec'] .rz-field,
+.store-page[data-template='moderntec'] .rz-cat-sort select {
+  background: var(--mt-bg-2);
+  border-color: var(--mt-line);
+  color: var(--mt-ink);
+  border-radius: var(--mt-rad-sm);
+}
+
+/* ==========================================================================
+   5. RESPONSIVE + MOVIMIENTO
+   ========================================================================== */
+@media (max-width: 900px) {
+  .store-page[data-template='moderntec'] .mt-hero-grid { grid-template-columns: 1fr; }
+  .store-page[data-template='moderntec'] .mt-hero { padding: 56px 0 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='moderntec'] .mt-device::before { animation: none; }
+  .store-page[data-template='moderntec'] .mt-btn { transition: none; }
+}

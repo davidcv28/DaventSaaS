@@ -6,9 +6,9 @@
 //   - blocks:   composición canónica por superficie (la vista monta esos
 //               bloques en ese orden; ver templateBlocks/resolveLayout).
 //
-// Catálogo de UN diseño: 'raiz' (Esencial). Es a la vez el único y el
-// fallback global. Todo id retirado se remapea a 'raiz' con
-// STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
+// Catálogo por rubro: 'raiz' (Esencial) es el base y el fallback global.
+// Todo id retirado se remapea con STORE_TEMPLATE_RETIRED_MAP
+// (stores.api.js) antes de resolver.
 //
 // El sistema de bloques se retiró: cada plantilla declara su composición
 // única en `blocks.<superficie>` y esa es la que se monta, sin reordenar ni
@@ -20,8 +20,13 @@ import { LAYOUT_SURFACES } from './blocks.js'
 import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES, SITE_TEMPLATE_KEYS } from '../api/stores.api.js'
 
 import raiz         from './raiz/index.js'
+import mercado      from './mercado/index.js'
+import gimnasio     from './gimnasio/index.js'
+import sastreria    from './sastreria/index.js'
+import circuito     from './circuito/index.js'
+import moderntec    from './moderntec/index.js'
 
-export const TEMPLATE_DEFS = { raiz }
+export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, sastreria, circuito, moderntec }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 

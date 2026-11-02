@@ -126,46 +126,47 @@ class StoreCustomization(models.Model):
         ('barlow',               'Barlow'),
         ('barlow-condensed',     'Barlow Condensed'),
     ]
-    #Diseños de la web pública (catálogo cerrado) — UN solo diseño:
-    #'raiz' (Esencial) va con cualquier has_customization; los niveles
-    #PLUS/ADVANCED quedan vacíos. El viewset descarta del payload un id
-    #desconocido y la web fuerza 'raiz' (fallback global) si el guardado
-    #deja de estar permitido. Toda la identidad visual vive en el CSS del
-    #diseño (store-raiz.css).
+    #Diseños de la web pública (catálogo cerrado): 'raiz' (Esencial) es el
+    #base — va con cualquier has_customization; los niveles PLUS/ADVANCED
+    #suman diseños por beneficio del plan. El viewset descarta del payload
+    #un id desconocido y la web fuerza 'raiz' (fallback global) si el
+    #guardado deja de estar permitido. Toda la identidad visual vive en el
+    #CSS del diseño (store-<id>.css).
     TEMPLATE_RAIZ               =   'raiz'
+    TEMPLATE_MODERNTEC          =   'moderntec'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
-    #Catálogo de UN diseño: 'raiz' (Esencial) es el único — va con
-    #cualquier has_customization; los niveles quedan vacíos.
-    TEMPLATE_BASE               =   ('raiz', 'esencial', 'moderntec')
-    TEMPLATE_PLUS               =   ('mercado', 'gimnasio')
-    TEMPLATE_ADVANCED           =   ()
+    #Base: 'raiz'/'esencial' van con cualquier plan; Plus suma los diseños
+    #de rubro (has_design_plus, Estándar); Advanced queda para 'circuito'
+    #(has_design_advanced, Premium).
+    TEMPLATE_BASE               =   ('raiz', 'esencial')
+    TEMPLATE_PLUS               =   ('mercado', 'gimnasio', 'sastreria', 'moderntec')
+    TEMPLATE_ADVANCED           =   ('circuito',)
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
         ('raiz',          'Esencial'),
         ('esencial',      'Esencial'),
         ('mercado',       'Bazar'),
         ('gimnasio',      'Gimnasio'),
+        ('sastreria',     'Sastrería'),
         ('moderntec',     'ModernTec'),
+        ('circuito',      'Circuito'),
     ]
-    #Todo diseño retirado remapea a 'raiz': una tienda vieja nunca cae al
-    #fallback ni rompe el render. Los patrones del catálogo (mercado,
-    #gimnasio, moderntec) viajan por slug en `template` — no van en el mapa.
+    #Todo diseño retirado remapea al más cercano del catálogo: una tienda
+    #vieja nunca cae al fallback ni rompe el render.
     TEMPLATE_RETIRED_MAP        =   {
         'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
         'studio': 'raiz', 'arena': 'raiz',
         'proceso': 'raiz', 'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz',
-        'shop': 'raiz',
-        'lookbook': 'raiz',
-        'signature': 'raiz', 'cobre': 'raiz', 'vitrina': 'raiz',
-        'street': 'raiz', 'riso': 'raiz', 'promo': 'raiz',
-        'aurora': 'raiz',
-        'perspective': 'raiz', 'circuit': 'raiz',
-        'terminal': 'raiz', 'lab': 'raiz',
-        'ai_lumen': 'raiz', 'ai_pulse': 'raiz',
-        'alimentos': 'raiz', 'trama': 'raiz', 'indumentaria': 'raiz',
-        'boutique': 'raiz', 'atelier': 'raiz', 'sastreria': 'raiz',
-        'clasico': 'raiz',
-        'circuito': 'raiz', 'seguridad': 'raiz',
+        'shop': 'raiz', 'alimentos': 'raiz', 'clasico': 'raiz',
+        'lookbook': 'sastreria',
+        'signature': 'sastreria', 'cobre': 'sastreria', 'vitrina': 'sastreria',
+        'street': 'sastreria', 'riso': 'sastreria', 'promo': 'sastreria',
+        'aurora': 'sastreria', 'ai_pulse': 'sastreria',
+        'trama': 'sastreria', 'indumentaria': 'sastreria',
+        'boutique': 'sastreria', 'atelier': 'sastreria',
+        'perspective': 'circuito', 'circuit': 'circuito',
+        'terminal': 'circuito', 'lab': 'circuito',
+        'ai_lumen': 'circuito', 'seguridad': 'circuito',
     }
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64
