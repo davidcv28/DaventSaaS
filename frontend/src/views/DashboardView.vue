@@ -1745,6 +1745,7 @@ const canServicesSite = computed(() => Boolean(plan.value?.benefits?.has_service
 // las páginas que ofrece la plantilla base (Bazar no ofrece Servicios ni
 // Suscripciones — ver `pages` en templates/mercado).
 const sitePatternList = ref([])
+const LAYOUT_SURFACE_SET = new Set(['landing', 'catalog', 'services'])
 const sameLayout = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 const selectedSitePattern = computed(() => (
   sitePatternList.value.find((p) => (
@@ -1753,9 +1754,16 @@ const selectedSitePattern = computed(() => (
   || sitePatternList.value.find((p) => p.template === designForm.template)
   || null
 ))
-const designSitePages = computed(() => (
-  selectedSitePattern.value ? patternSurfaces(selectedSitePattern.value) : templatePages(designForm.template)
-))
+const designSitePages = computed(() => {
+  if (!selectedSitePattern.value) return templatePages(designForm.template)
+  const covered = new Set(patternSurfaces(selectedSitePattern.value))
+  // Las claves que no son superficies de layout (p. ej. 'plans') las declara
+  // el template del patrón en `pages`, no su layout.
+  templatePages(selectedSitePattern.value.template)
+    .filter((k) => !LAYOUT_SURFACE_SET.has(k))
+    .forEach((k) => covered.add(k))
+  return [...covered]
+})
 const allowedSiteTemplates = computed(() =>
   allowedSiteTemplatesFor(plan.value?.benefits || {}).filter((k) => designSitePages.value.includes(k)))
 const siteTemplatesMax = computed(() => siteTemplatesLimit(plan.value?.benefits || {}))
