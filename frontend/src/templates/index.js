@@ -40,8 +40,9 @@ import clasico      from './clasico/index.js'
 import circuito     from './circuito/index.js'
 import seguridad    from './seguridad/index.js'
 import gimnasio     from './gimnasio/index.js'
+import nexo         from './nexo/index.js'
 
-export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, atelier, sastreria, mercado, clasico, circuito, seguridad, gimnasio }
+export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, atelier, sastreria, mercado, clasico, circuito, seguridad, gimnasio, nexo }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 

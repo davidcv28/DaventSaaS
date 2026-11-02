@@ -25,7 +25,8 @@ export const landingViews = {
   clasico:      () => import('../views/store/clasico/InicioView.vue'),
   circuito:     () => import('../views/store/circuito/InicioView.vue'),
   seguridad:    () => import('../views/store/seguridad/InicioView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/InicioView.vue')
+  gimnasio:     () => import('../views/store/gimnasio/InicioView.vue'),
+  nexo:         () => import('../views/store/nexo/InicioView.vue')
 }
 
 export const catalogViews = {
@@ -40,7 +41,8 @@ export const catalogViews = {
   clasico:      () => import('../views/store/clasico/CatalogoView.vue'),
   circuito:     () => import('../views/store/circuito/CatalogoView.vue'),
   seguridad:    () => import('../views/store/seguridad/CatalogoView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/CatalogoView.vue')
+  gimnasio:     () => import('../views/store/gimnasio/CatalogoView.vue'),
+  nexo:         () => import('../views/store/nexo/CatalogoView.vue')
 }
 
 export const productViews = {
@@ -55,7 +57,8 @@ export const productViews = {
   clasico:      () => import('../views/store/clasico/ProductoView.vue'),
   circuito:     () => import('../views/store/circuito/ProductoView.vue'),
   seguridad:    () => import('../views/store/seguridad/ProductoView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/ProductoView.vue')
+  gimnasio:     () => import('../views/store/gimnasio/ProductoView.vue'),
+  nexo:         () => import('../views/store/nexo/ProductoView.vue')
 }
 
 export const servicesViews = {
@@ -70,7 +73,8 @@ export const servicesViews = {
   clasico:      () => import('../views/store/clasico/ServiciosView.vue'),
   circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
   seguridad:    () => import('../views/store/seguridad/ServiciosView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue')
+  gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue'),
+  nexo:         () => import('../views/store/nexo/ServiciosView.vue')
 }
 
 // ===== Listas canónicas de bloques =====

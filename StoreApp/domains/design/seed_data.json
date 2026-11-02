@@ -2538,6 +2538,187 @@
         "button_shape": "rounded",
         "divider": "line"
       }
+    },
+    {
+      "slug": "nexo",
+      "nombre": "Nexo",
+      "categoria": "Tecnología premium",
+      "descripcion": "Tinta casi negra, retícula técnica y acento teal: Space Grotesk, mono en etiquetas y tarjeta de producto flotante.",
+      "tier": "advanced",
+      "template": "nexo",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#5EEAD4",
+          "primary": "#5EEAD4",
+          "secondary": "#818CF8",
+          "bg": "#0A0C10",
+          "surface": "#131820",
+          "text": "#EDF1F7",
+          "muted": "#A7B2C4",
+          "border": "#232B38",
+          "success": "#34D399",
+          "danger": "#F45B4C"
+        },
+        "containers": {
+          "radius": "medium",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "gradient",
+          "value": "grid",
+          "overlay": "soft"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "tecnologia",
+        "nexo",
+        "premium",
+        "oscuro",
+        "teal"
+      ],
+      "preview": "",
+      "style": "Tecnología premium",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "glow"
+      },
+      "easing": "cubic-bezier(.2,.7,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Tinta casi negra, retícula técnica y acento teal: Space Grotesk, mono en etiquetas y tarjeta de producto flotante."
+    },
+    {
+      "slug": "nexo-ambar",
+      "nombre": "Nexo Ámbar",
+      "categoria": "Tecnología premium cálida",
+      "descripcion": "Misma tinta casi negra y retícula, con acento ámbar de oferta: más cálido y comercial.",
+      "tier": "advanced",
+      "template": "nexo",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#F59E0B",
+          "primary": "#F59E0B",
+          "secondary": "#FB923C",
+          "bg": "#0A0C10",
+          "surface": "#15120E",
+          "text": "#F4EFE6",
+          "muted": "#B0A694",
+          "border": "#2B251C",
+          "success": "#A3E635",
+          "danger": "#F45B4C"
+        },
+        "containers": {
+          "radius": "medium",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "gradient",
+          "value": "grid",
+          "overlay": "soft"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "tecnologia",
+        "nexo",
+        "premium",
+        "oscuro",
+        "ambar",
+        "noche"
+      ],
+      "preview": "",
+      "style": "Tecnología premium cálida",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "glow"
+      },
+      "easing": "cubic-bezier(.2,.7,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Misma tinta casi negra y retícula, con acento ámbar de oferta: más cálido y comercial."
     }
   ],
   "patterns": [
@@ -3203,6 +3384,216 @@
       "variables": {},
       "supports_dark_mode": false,
       "style": "gimnasio"
+    },
+    {
+      "slug": "nexo",
+      "nombre": "Nexo",
+      "categoria": "tecnologia",
+      "descripcion": "Tecnología premium: hero cinema con tarjeta de producto flotante y etiquetas, cinta de anuncios, departamentos en riel, vitrina 4-up, cifras en banda, garantías bento, oferta con cuenta regresiva, marcas en marquee, showroom en grilla, testimonios, FAQ y CTA final.",
+      "tier": "advanced",
+      "template": "nexo",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "enabled": true,
+            "order": 0,
+            "variant": "marquee"
+          },
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 3,
+            "variant": "rail"
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 4,
+            "variant": "cols4"
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 5,
+            "variant": "band"
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 6,
+            "variant": "bento"
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "offers",
+            "enabled": true,
+            "order": 8,
+            "variant": "rail"
+          },
+          {
+            "id": "countdown",
+            "enabled": true,
+            "order": 9,
+            "variant": "card"
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 10,
+            "variant": "marquee"
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 11,
+            "variant": "grid"
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 12,
+            "variant": "cards"
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 13,
+            "variant": "accordion"
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 14,
+            "variant": "band"
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 15
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#5EEAD4",
+        "palette": {
+          "accent": "#5EEAD4",
+          "primary": "#5EEAD4",
+          "secondary": "#818CF8",
+          "bg": "#0A0C10",
+          "surface": "#131820",
+          "text": "#EDF1F7",
+          "muted": "#A7B2C4",
+          "border": "#232B38",
+          "success": "#34D399",
+          "danger": "#F45B4C"
+        },
+        "fonts": [
+          "space-grotesk",
+          "inter",
+          "jetbrains-mono"
+        ],
+        "radius": "14px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "button": "glow"
+        },
+        "easing": "cubic-bezier(.2,.7,.2,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "tecnologia",
+        "electronica",
+        "premium",
+        "oscuro",
+        "hardware",
+        "gaming"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "nexo"
     }
   ]
 }

@@ -1,0 +1,562 @@
+/* ==========================================================================
+   DISEÑO NEXO — tecnología premium (nivel advanced)
+   Raíz del CSS: [data-template="nexo"] (lo emite StorePublicLayout).
+   Piel del boceto "tecnología premium": tinta casi negra, retícula técnica
+   tenue, acento teal (#5EEAD4, el del tema) con violeta de apoyo, Space
+   Grotesk en titulares y JetBrains Mono en etiquetas. Radios 10–14, bordes
+   finos y glows mesurados. El segundo tema (`nexo-ambar`) cambia el acento
+   a ámbar desde los tokens del estilo (--st-*) — la piel siempre lee el
+   acento del tema, nunca un hex propio.
+   Catálogo / ficha / servicios reutilizan Raíz bajo `.nx-skin`: la hoja
+   re-escribe los tokens --sp-* y los componentes .rz-* del subárbol.
+   ========================================================================== */
+
+.store-page[data-template='nexo'] {
+  --nx-bg: #0A0C10;
+  --nx-bg-2: #0E1218;
+  --nx-surface: #131820;
+  --nx-surface-2: #181F2A;
+  --nx-line: #232B38;
+  --nx-line-soft: #1B2230;
+  --nx-ink: #EDF1F7;
+  --nx-ink-2: #A7B2C4;
+  --nx-ink-3: #67718A;
+  /* Acento del tema (estilo elegido): teal en `nexo`, ámbar en `nexo-ambar`. */
+  --nx-acc: var(--st-accent, var(--store-accent, #5EEAD4));
+  --nx-acc-2: var(--st-secondary, #818CF8);
+  --nx-on-acc: var(--st-on-primary, #06231E);
+  --nx-display: 'Space Grotesk', var(--st-font-heading, system-ui), sans-serif;
+  --nx-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --nx-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --nx-wrap: 1240px;
+  --nx-gutter: 24px;
+  --nx-section: clamp(64px, 7vw, 96px);
+  --nx-radius: 14px;
+
+  --sp-bg: var(--nx-bg);
+  --sp-card: var(--nx-surface);
+  --sp-card-solid: var(--nx-surface);
+  --sp-surface: var(--nx-surface-2);
+  --sp-soft: var(--nx-bg-2);
+  --sp-ink: var(--nx-ink);
+  --sp-ink-2: var(--nx-ink-2);
+  --sp-muted: var(--nx-ink-3);
+  --sp-line: var(--nx-line);
+  --sp-radius: var(--nx-radius);
+  --sp-accent-text: var(--nx-acc);
+  --sp-shadow-sm: 0 1px 0 rgb(0 0 0 / .3);
+  --sp-shadow-md: 0 30px 60px -30px rgb(0 0 0 / .7);
+  --sp-chrome: var(--nx-bg);
+  --sp-display: var(--nx-display);
+
+  --tpc-bg: var(--nx-surface);
+  --tpc-border: 1px solid var(--nx-line);
+  --tpc-radius: var(--nx-radius);
+  --tpc-shadow: none;
+  --tpc-ratio: 1 / 1;
+  --tpc-media-bg: linear-gradient(150deg, #1A2230, #10151F);
+  --tpc-pad: 16px 18px 18px;
+  --tpc-gap: 6px;
+  --tpc-name-font: var(--nx-display);
+  --tpc-name-size: 15.5px;
+  --tpc-name-weight: 500;
+  --tpc-name-lh: 1.3;
+  --tpc-eyebrow-size: 11px;
+  --tpc-eyebrow-weight: 500;
+  --tpc-eyebrow-track: .1em;
+  --tpc-eyebrow-ink: var(--nx-ink-3);
+  --tpc-price-font: var(--nx-display);
+  --tpc-price-size: 17px;
+  --tpc-price-weight: 700;
+  --tpc-price-ink: var(--nx-ink);
+  --tpc-old-size: 13px;
+  --tpc-old-ink: var(--nx-ink-3);
+  --tpc-flag-radius: 6px;
+  --tpc-flag-bg: var(--nx-acc);
+  --tpc-flag-ink: var(--nx-on-acc);
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-flag-track: .1em;
+  --tpc-offer-bg: #F59E0B;
+  --tpc-offer-ink: #241A05;
+  --tpc-quick-bg: var(--nx-surface-2);
+  --tpc-add-radius: 10px;
+  --tpc-add-bg: var(--nx-acc);
+  --tpc-add-ink: var(--nx-on-acc);
+  --tpc-add-shadow: none;
+  --tpc-go-size: 11px;
+  --tpc-go-weight: 600;
+  --tpc-go-ink: var(--nx-acc);
+  --tpc-focus: var(--nx-acc);
+  --tpc-img-hover: scale(1.03);
+
+  font-family: var(--nx-body);
+  background: var(--nx-bg);
+  color: var(--nx-ink);
+  font-size: 16px;
+  line-height: 1.6;
+  color-scheme: dark;
+  overflow-x: clip;
+}
+
+/* Glows ambientales del layout base: en nexo el fondo manda la retícula. */
+.store-page[data-template='nexo']::before,
+.store-page[data-template='nexo']::after { display: none; }
+
+/* ==========================================================================
+   TIPOGRAFÍA, CONTENEDOR, BOTONES
+   ========================================================================== */
+.store-page[data-template='nexo'] h1,
+.store-page[data-template='nexo'] h2,
+.store-page[data-template='nexo'] h3,
+.store-page[data-template='nexo'] .sp-section-title {
+  font-family: var(--nx-display);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  color: var(--nx-ink);
+}
+.store-page[data-template='nexo'] h1 em,
+.store-page[data-template='nexo'] h2 em,
+.store-page[data-template='nexo'] h3 em { font-style: normal; color: var(--nx-acc); }
+.store-page[data-template='nexo'] h2,
+.store-page[data-template='nexo'] .sp-section-title { font-size: clamp(28px, 4vw, 44px); }
+.store-page[data-template='nexo'] h3 { font-size: clamp(18px, 2vw, 24px); }
+.store-page[data-template='nexo'] p { color: var(--nx-ink-2); }
+.store-page[data-template='nexo'] .nx-container,
+.store-page[data-template='nexo'] .sp-container {
+  max-width: var(--nx-wrap);
+  margin-inline: auto;
+  padding-inline: var(--nx-gutter);
+}
+.store-page[data-template='nexo'] .nx-eyebrow,
+.store-page[data-template='nexo'] .sp-eyebrow {
+  font-family: var(--nx-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--nx-acc);
+}
+.store-page[data-template='nexo'] .nx-btn,
+.store-page[data-template='nexo'] .sp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--nx-acc);
+  color: var(--nx-on-acc);
+  font-family: var(--nx-display);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+  transition: transform .2s, background .2s, border-color .2s, color .2s;
+}
+.store-page[data-template='nexo'] .nx-btn:hover,
+.store-page[data-template='nexo'] .sp-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+.store-page[data-template='nexo'] .nx-btn.is-ghost,
+.store-page[data-template='nexo'] .sp-btn.ghost {
+  background: transparent;
+  border-color: var(--nx-line);
+  color: var(--nx-ink);
+}
+.store-page[data-template='nexo'] .nx-btn.is-ghost:hover,
+.store-page[data-template='nexo'] .sp-btn.ghost:hover {
+  border-color: var(--nx-ink-3);
+  filter: none;
+}
+.store-page[data-template='nexo'] :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--nx-acc);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   CHROME: cabecera oscura con blur, marca con pip de acento
+   ========================================================================== */
+.store-page[data-template='nexo'] .sp-top {
+  background: rgb(10 12 16 / .82);
+  border-bottom: 1px solid var(--nx-line-soft);
+  backdrop-filter: blur(14px);
+  box-shadow: none;
+}
+.store-page[data-template='nexo'] .sp-brand .sp-name {
+  font-family: var(--nx-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--nx-ink);
+}
+.store-page[data-template='nexo'] .sp-brand .sp-mono {
+  font-family: var(--nx-mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--nx-ink-3);
+}
+.store-page[data-template='nexo'] .sp-top-links a {
+  font-size: 14px;
+  color: var(--nx-ink-2);
+}
+.store-page[data-template='nexo'] .sp-top-links a:hover { color: var(--nx-ink); }
+.store-page[data-template='nexo'] .sp-top-links a.router-link-exact-active { color: var(--nx-acc); }
+.store-page[data-template='nexo'] .sp-top-end .sp-icon-btn,
+.store-page[data-template='nexo'] .sp-top .sp-burger {
+  border: 1px solid var(--nx-line);
+  border-radius: 10px;
+  color: var(--nx-ink-2);
+}
+.store-page[data-template='nexo'] .sp-top-end .sp-icon-btn:hover,
+.store-page[data-template='nexo'] .sp-top .sp-burger:hover {
+  border-color: var(--nx-ink-3);
+  color: var(--nx-ink);
+}
+.store-page[data-template='nexo'] .sp-foot {
+  background: var(--nx-bg);
+  border-top: 1px solid var(--nx-line-soft);
+  color: var(--nx-ink-3);
+}
+.store-page[data-template='nexo'] .sp-foot-name {
+  font-family: var(--nx-display);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   PORTADA — HERO CINEMA
+   ========================================================================== */
+.nx-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: min(88vh, 860px);
+  padding: clamp(48px, 7vw, 80px) 0;
+  overflow: hidden;
+  background:
+    radial-gradient(1100px 500px at 75% 20%, color-mix(in srgb, var(--nx-acc-2) 14%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 15% 85%, color-mix(in srgb, var(--nx-acc) 10%, transparent), transparent 60%),
+    var(--nx-bg);
+}
+.nx-hero-bg { position: absolute; inset: 0; pointer-events: none; }
+.nx-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--nx-line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--nx-line-soft) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
+}
+.nx-hero-glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5; }
+.nx-hero-glow-a { width: 420px; height: 420px; top: -140px; right: 8%; background: color-mix(in srgb, var(--nx-acc-2) 22%, transparent); }
+.nx-hero-glow-b { width: 360px; height: 360px; bottom: -120px; left: 4%; background: color-mix(in srgb, var(--nx-acc) 16%, transparent); }
+.nx-hero-grid2 {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 64px;
+  align-items: center;
+}
+.nx-hero-title {
+  margin: 0 0 22px;
+  font-family: var(--nx-display);
+  font-size: clamp(42px, 5.4vw, 72px);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
+.nx-hero-title .nx-acc { color: var(--nx-acc); }
+.nx-hero-title.is-name { font-size: clamp(38px, 4.8vw, 60px); }
+.nx-hero-sub { max-width: 480px; margin: 0 0 34px; font-size: 17px; color: var(--nx-ink-2); }
+.nx-hero-ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.nx-hero-link {
+  font-family: var(--nx-mono);
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--nx-ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--nx-line);
+  padding-bottom: 3px;
+}
+.nx-hero-link:hover { color: var(--nx-acc); border-color: var(--nx-acc); }
+.nx-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin: 44px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--nx-mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--nx-ink-3);
+}
+.nx-hero-meta li { display: flex; align-items: center; gap: 8px; }
+.nx-hero-meta .nx-dot,
+.nx-tag i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nx-acc);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--nx-acc) 70%, transparent);
+}
+.nx-hero-stage { position: relative; }
+.nx-hero-card {
+  display: block;
+  padding: 14px;
+  background: linear-gradient(160deg, var(--nx-surface-2), var(--nx-surface));
+  border: 1px solid var(--nx-line);
+  border-radius: 20px;
+  box-shadow: 0 40px 80px -30px rgb(0 0 0 / .7);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .2s, transform .25s;
+}
+.nx-hero-card:hover { border-color: var(--nx-ink-3); transform: translateY(-4px); }
+.nx-hero-card-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(300px 200px at 70% 30%, color-mix(in srgb, var(--nx-acc) 22%, transparent), transparent 60%),
+    radial-gradient(260px 220px at 30% 75%, color-mix(in srgb, var(--nx-acc-2) 26%, transparent), transparent 60%),
+    linear-gradient(150deg, #1B2330, #0F1420);
+}
+.nx-hero-card-media img { width: 100%; height: 100%; object-fit: cover; }
+.nx-hero-card-ph {
+  font-family: var(--nx-display);
+  font-size: clamp(72px, 14vw, 120px);
+  font-weight: 700;
+  color: color-mix(in srgb, var(--nx-ink) 14%, transparent);
+}
+.nx-hero-card-off {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #F59E0B;
+  color: #241A05;
+  font-family: var(--nx-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+.nx-hero-card-body { display: grid; gap: 6px; padding: 16px 6px 4px; }
+.nx-hero-card-cat {
+  font-family: var(--nx-mono);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--nx-ink-3);
+}
+.nx-hero-card-name { font-family: var(--nx-display); font-size: 16px; font-weight: 600; }
+.nx-hero-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nx-hero-card-price { font-family: var(--nx-display); font-size: 17px; font-weight: 700; }
+.nx-hero-card-go { color: var(--nx-acc); }
+.nx-tag {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgb(19 24 32 / .9);
+  border: 1px solid var(--nx-line);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  font-family: var(--nx-mono);
+  font-size: 12px;
+  color: var(--nx-ink-2);
+  white-space: nowrap;
+}
+.nx-tag-a { top: 6%; left: -18px; }
+.nx-tag-b { bottom: 10%; right: -14px; }
+
+/* ==========================================================================
+   BLOQUES COMPARTIDOS RE-SKINEADOS
+   ========================================================================== */
+.store-page[data-template='nexo'] .sp-block,
+.store-page[data-template='nexo'] .sp-section { padding-block: var(--nx-section); }
+/* Cinta de anuncios: banda de acento con texto mono oscuro. */
+.store-page[data-template='nexo'] .sp-ann,
+.store-page[data-template='nexo'] .sp-announcements {
+  background: linear-gradient(90deg, var(--nx-acc), color-mix(in srgb, var(--nx-acc) 70%, #34D399));
+  color: var(--nx-on-acc);
+  font-family: var(--nx-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+/* Etiquetas destacadas: pills con borde fino. */
+.store-page[data-template='nexo'] .sp-hl-item,
+.store-page[data-template='nexo'] .sp-highlights li,
+.store-page[data-template='nexo'] .sp-chip {
+  border: 1px solid var(--nx-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--nx-ink-2);
+  font-family: var(--nx-mono);
+  font-size: 12.5px;
+  letter-spacing: .05em;
+}
+/* Departamentos: tarjetas oscuras con hover de elevación. */
+.store-page[data-template='nexo'] .sp-shop-dept {
+  border: 1px solid var(--nx-line);
+  border-radius: var(--nx-radius);
+  background: var(--nx-surface);
+  transition: border-color .2s, transform .2s;
+}
+.store-page[data-template='nexo'] .sp-shop-dept:hover {
+  border-color: var(--nx-ink-3);
+  transform: translateY(-3px);
+}
+.store-page[data-template='nexo'] .sp-shop-dept-count { color: var(--nx-ink-3); font-family: var(--nx-mono); font-size: 11px; letter-spacing: .1em; }
+/* Tarjetas y celdas genéricas. */
+.store-page[data-template='nexo'] .sp-card {
+  background: var(--nx-surface);
+  border: var(--tpc-border);
+  border-radius: var(--nx-radius);
+  box-shadow: none;
+  transition: border-color .2s, transform .2s;
+}
+.store-page[data-template='nexo'] .sp-card:hover { border-color: var(--nx-ink-3); transform: translateY(-3px); }
+/* Cifras: banda dividida por líneas finas. */
+.store-page[data-template='nexo'] .sp-stat-value,
+.store-page[data-template='nexo'] .sp-stats b { color: var(--nx-acc); font-family: var(--nx-display); }
+/* Garantías / servicios: iconos en placa de acento tenue. */
+.store-page[data-template='nexo'] .sp-benefit-ico,
+.store-page[data-template='nexo'] .sp-service-ico {
+  background: color-mix(in srgb, var(--nx-acc) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--nx-acc) 25%, transparent);
+  border-radius: 10px;
+  color: var(--nx-acc);
+}
+/* Marcas: logo wordmarks en tinta apagada. */
+.store-page[data-template='nexo'] .sp-brands-logo strong { font-family: var(--nx-display); letter-spacing: .02em; }
+/* Cuenta regresiva: celdas mono enmarcadas. */
+.store-page[data-template='nexo'] .sp-count-num,
+.store-page[data-template='nexo'] .sp-countdown b {
+  font-family: var(--nx-display);
+  background: var(--nx-bg);
+  border: 1px solid var(--nx-line);
+  border-radius: 10px;
+}
+/* Testimonios y FAQ. */
+.store-page[data-template='nexo'] .sp-testi,
+.store-page[data-template='nexo'] .sp-faq details {
+  background: var(--nx-surface);
+  border: 1px solid var(--nx-line);
+  border-radius: var(--nx-radius);
+}
+.store-page[data-template='nexo'] .sp-testi .stars,
+.store-page[data-template='nexo'] .sp-stars { color: var(--nx-acc); }
+/* CTA band: degradado del acento del tema hacia el secundario. */
+.store-page[data-template='nexo'] .sp-cta.is-band,
+.store-page[data-template='nexo'] .sp-cta {
+  background: linear-gradient(120deg, var(--nx-acc), color-mix(in srgb, var(--nx-acc) 60%, var(--nx-acc-2)));
+  border-radius: 20px;
+}
+/* Formularios y contacto. */
+.store-page[data-template='nexo'] :is(input, textarea, select) {
+  background: var(--nx-bg-2);
+  border: 1px solid var(--nx-line);
+  border-radius: 10px;
+  color: var(--nx-ink);
+}
+.store-page[data-template='nexo'] :is(input, textarea, select):focus {
+  border-color: var(--nx-acc);
+  outline: none;
+}
+.store-page[data-template='nexo'] .sp-about,
+.store-page[data-template='nexo'] .sp-benefits { border-top: 1px solid var(--nx-line-soft); }
+
+/* ==========================================================================
+   CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa nexo)
+   ========================================================================== */
+.store-page[data-template='raiz'].nx-skin {
+  --sp-bg: var(--nx-bg, #0A0C10);
+  --sp-card: #131820;
+  --sp-card-solid: #131820;
+  --sp-surface: #181F2A;
+  --sp-soft: #0E1218;
+  --sp-ink: #EDF1F7;
+  --sp-ink-2: #A7B2C4;
+  --sp-muted: #67718A;
+  --sp-line: #232B38;
+  --sp-radius: 14px;
+  --sp-accent-text: var(--st-accent, #5EEAD4);
+  --sp-shadow-sm: 0 1px 0 rgb(0 0 0 / .3);
+  --sp-shadow-md: 0 30px 60px -30px rgb(0 0 0 / .7);
+  --sp-chrome: #0A0C10;
+  --sp-display: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0A0C10;
+  color: #EDF1F7;
+  color-scheme: dark;
+}
+.store-page[data-template='raiz'].nx-skin .rz-cat-title,
+.store-page[data-template='raiz'].nx-skin .rz-sv-hero-title,
+.store-page[data-template='raiz'].nx-skin .rz-pdp-name,
+.store-page[data-template='raiz'].nx-skin .rz-pdp-sec-title {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.store-page[data-template='raiz'].nx-skin .rz-eyebrow,
+.store-page[data-template='raiz'].nx-skin .rz-cat-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .18em;
+  color: var(--st-accent, #5EEAD4);
+}
+.store-page[data-template='raiz'].nx-skin .rz-cat-rail,
+.store-page[data-template='raiz'].nx-skin .rz-cat-card,
+.store-page[data-template='raiz'].nx-skin .rz-cat-products,
+.store-page[data-template='raiz'].nx-skin .rz-sv-plate,
+.store-page[data-template='raiz'].nx-skin .rz-pdp-pricebox,
+.store-page[data-template='raiz'].nx-skin .rz-pdp-gallery {
+  border: 1px solid #232B38;
+  border-radius: 14px;
+  background: #131820;
+  box-shadow: none;
+}
+.store-page[data-template='raiz'].nx-skin .rz-btn {
+  border-radius: 10px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+}
+.store-page[data-template='raiz'].nx-skin .rz-cat-head,
+.store-page[data-template='raiz'].nx-skin .rz-sv-head,
+.store-page[data-template='raiz'].nx-skin .rz-pdp-sec-head {
+  border-bottom: 1px solid #1B2230;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 960px) {
+  .nx-hero-grid2 { grid-template-columns: 1fr; gap: 40px; }
+  .nx-tag-a { left: 0; }
+  .nx-tag-b { right: 0; }
+}
+@media (max-width: 560px) {
+  .nx-hero { min-height: 0; }
+  .nx-hero-meta { gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nx-hero-card, .store-page[data-template='nexo'] .sp-card,
+  .store-page[data-template='nexo'] .sp-shop-dept { transition: none; }
+}
