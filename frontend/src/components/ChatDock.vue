@@ -25,11 +25,14 @@ const vh = ref(window.innerHeight)
 const pos = ref(null) // {x, y} top-left en px; null = esquina por CSS (aún no medido)
 const dragging = ref(false)
 
+// En el panel móvil la tab bar ocupa el pie: la burbuja nace por encima y no
+// se puede arrastrar encima de "Más".
+const tabbarPad = () => (window.innerWidth <= 860 && document.querySelector('.app--tabs') ? 88 : 8)
 const clampPos = (p) => ({
   x: Math.min(Math.max(8, p.x), vw.value - SIZE - 8),
-  y: Math.min(Math.max(64, p.y), vh.value - SIZE - 8)
+  y: Math.min(Math.max(64, p.y), vh.value - SIZE - tabbarPad())
 })
-const defaultPos = () => ({ x: vw.value - SIZE - EDGE, y: vh.value - SIZE - EDGE })
+const defaultPos = () => ({ x: vw.value - SIZE - EDGE, y: vh.value - SIZE - Math.max(EDGE, tabbarPad() + 10) })
 const cur = () => pos.value || defaultPos()
 
 function onResize() {

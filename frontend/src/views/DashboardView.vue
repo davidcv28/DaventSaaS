@@ -1163,6 +1163,7 @@ const canStats = computed(() => Boolean(plan.value?.benefits?.has_stats))
 // Visitas de la web pública (endpoint /stores/stats/: 1 por visitante/día).
 const visitDays = computed(() => store.visitStats?.days || [])
 const visitMax = computed(() => Math.max(1, ...visitDays.value.map((d) => d.count)))
+const visitHasData = computed(() => visitDays.value.some((d) => d.count > 0))
 const visitAvg = computed(() => {
   if (!visitDays.value.length) return '0'
   const sum = visitDays.value.reduce((a, d) => a + d.count, 0)
@@ -3165,13 +3166,29 @@ async function changePassword() {
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
       <!-- 1. Héroe: saludo + estado de la tienda en una frase + UN solo CTA -->
       <div class="oh-hero">
-        <p class="oh-hi">{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></p>
-        <h1 class="oh-title">
-          <span class="oh-dot" :class="statusInfo.kind" aria-hidden="true"></span>{{ statusInfo.title }}
-        </h1>
-        <p class="oh-sub">{{ statusInfo.sub }}</p>
-        <button type="button" class="btn btn-auto oh-cta" @click="statusInfo.run">{{ statusInfo.cta }} <AppIcon name="arrow-right" :size="18" /></button>
-        <a v-if="store.hasStore" class="oh-visit" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi tienda como la ven mis clientes</a>
+        <div class="oh-hero-main">
+          <p class="oh-hi">{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></p>
+          <h1 class="oh-title">
+            <span class="oh-dot" :class="statusInfo.kind" aria-hidden="true"></span>{{ statusInfo.title }}
+          </h1>
+          <p class="oh-sub">{{ statusInfo.sub }}</p>
+          <button type="button" class="btn btn-auto oh-cta" @click="statusInfo.run">{{ statusInfo.cta }} <AppIcon name="arrow-right" :size="18" /></button>
+          <a v-if="store.hasStore" class="oh-visit" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi tienda como la ven mis clientes</a>
+        </div>
+        <dl v-if="plan" class="oh-hero-facts" aria-label="Tu tienda de un vistazo">
+          <div v-if="canStats">
+            <dt><AppIcon name="eye" :size="14" /> Visitas hoy</dt>
+            <dd>{{ store.visitStats?.today ?? 0 }}</dd>
+          </div>
+          <div>
+            <dt><AppIcon name="package" :size="14" /> Productos</dt>
+            <dd>{{ billing.hasSubscription ? catalog.products.length : 0 }}</dd>
+          </div>
+          <div>
+            <dt><AppIcon :name="plan.isTrial ? 'clock' : 'crown'" :size="14" /> {{ plan.isTrial ? 'Días de prueba' : 'Días de plan' }}</dt>
+            <dd>{{ plan.isCurrent ? plan.remaining : '—' }}</dd>
+          </div>
+        </dl>
       </div>
 
       <!-- 2. Alertas: solo lo urgente, en una franja -->
@@ -4017,6 +4034,17 @@ async function changePassword() {
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" :active="''" @select="section = $event" />
+      <div v-if="store.hasStore" class="web-live">
+        <span class="web-live-icon"><AppIcon name="external-link" :size="20" /></span>
+        <div class="web-live-txt">
+          <strong>Tu página está en vivo</strong>
+          <small>{{ publicUrl }}</small>
+        </div>
+        <div class="web-live-actions">
+          <button type="button" class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
+          <button type="button" class="btn btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Abrir mi página</button>
+        </div>
+      </div>
     </div>
     <!-- ================= MI TIENDA ================= -->
     <div v-if="seen.store" v-show="section === 'store' || (section === 'web' && tabGroups.web.length === 1)" :class="{ 'sec-on': section === 'store' }">
@@ -4811,7 +4839,7 @@ async function changePassword() {
         </div>
         <div class="card">
           <h3><AppIcon name="trending-up" :size="18" /> Visitas de los últimos 30 días</h3>
-          <div class="stats-chart" role="img" aria-label="Visitas por día">
+          <div v-if="visitHasData" class="stats-chart" role="img" aria-label="Visitas por día">
             <span
               v-for="d in visitDays" :key="d.date" class="stats-bar"
               :class="{ today: d.date === visitDays[visitDays.length - 1]?.date }"
@@ -4819,8 +4847,14 @@ async function changePassword() {
               :title="`${d.date}: ${d.count} visita${d.count === 1 ? '' : 's'}`"
             ></span>
           </div>
-          <div class="stats-chart-axis"><span>{{ visitDays[0]?.date?.slice(5) }}</span><span>{{ visitDays[visitDays.length - 1]?.date?.slice(5) }}</span></div>
-          <p class="hint">Cada barra es un día; cuanto más alta, más visitas. Contamos una visita por persona por día.</p>
+          <div v-if="visitHasData" class="stats-chart-axis"><span>{{ visitDays[0]?.date?.slice(5) }}</span><span>{{ visitDays[visitDays.length - 1]?.date?.slice(5) }}</span></div>
+          <div v-else class="stats-empty">
+            <span class="stats-empty-icon"><AppIcon name="eye" :size="24" /></span>
+            <strong>Todavía no hay visitas este mes</strong>
+            <p>Cuando alguien abra tu página lo vas a ver acá, día por día.</p>
+            <button type="button" class="btn btn-auto" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /> Compartir mi página</button>
+          </div>
+          <p v-if="visitHasData" class="hint">Cada barra es un día; cuanto más alta, más visitas. Contamos una visita por persona por día.</p>
         </div>
       </template>
       <div v-else class="empty">
