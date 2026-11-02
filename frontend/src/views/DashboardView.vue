@@ -4105,7 +4105,7 @@ async function changePassword() {
         <div v-if="mkOpen" class="mk-overlay" @click.self="mkOpen = null">
           <div class="mk-modal" role="dialog" aria-modal="true" :aria-label="mkOpenMeta?.label || 'Editar sección'">
             <header class="mk-modal-head">
-              <span class="mk-modal-ico"><AppIcon :name="mkOpenMeta?.icon || 'pencil'" :size="20" /></span>
+              <span class="mk-modal-ico" :class="`hue-${mkOpen}`"><AppIcon :name="mkOpenMeta?.icon || 'pencil'" :size="20" /></span>
               <div class="mk-modal-txt">
                 <h2>{{ mkOpenMeta?.label }}</h2>
                 <small>{{ mkOpenMeta?.desc }}</small>
@@ -4117,6 +4117,7 @@ async function changePassword() {
         <!-- ===== Sobre nosotros ===== -->
         <div v-show="mkOpen === 'about'" class="card mk-card">
           <h3><AppIcon name="building-2" :size="18" /> Sobre nosotros</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Contá quién sos y qué hace tu negocio. Lo que dejes vacío no se muestra en tu página.</span></p>
           <AppInput v-model="designForm.about_title" label="Título de la sección" name="company_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección en tu web. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
           <div class="field">
             <label for="company-about-text">Descripción de la empresa</label>
@@ -4162,6 +4163,7 @@ async function changePassword() {
         <div v-show="mkOpen === 'services'" class="card mk-card">
           <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos <span v-if="!supportsServices" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
           <p v-if="!supportsServices" class="hint">La plantilla que elegiste no tiene apartado de servicios. Disponible en: {{ blockDesigns('services') }}.</p>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Sumá tarjetas con ícono que resuman lo que ofrecés. Podés agregar varias y ordenarlas con las flechas.</span></p>
           <fieldset class="mk-fieldset" :disabled="!supportsServices">
           <div class="check-list">
             <label class="check-item">
@@ -4178,14 +4180,21 @@ async function changePassword() {
             <div v-if="designForm.services.length" class="qa-list">
               <div v-for="(s, i) in designForm.services" :key="i" class="qa-item">
                 <div class="qa-fields">
-                  <div class="mk-icon-field">
-                    <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[s.icon] ? s.icon : 'package'" :size="17" /></span>
-                    <select v-model="s.icon" class="select" :aria-label="`Ícono del servicio ${i + 1}`">
-                      <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                    </select>
-                  </div>
-                  <input v-model="s.title" class="input" type="text" :maxlength="mkLimits.serviceTitle" placeholder="Ej. Envíos a todo el país" :aria-label="`Título del servicio ${i + 1}`" />
-                  <textarea v-model="s.text" class="textarea" rows="2" :maxlength="mkLimits.serviceText" placeholder="Una línea que lo describa" :aria-label="`Descripción del servicio ${i + 1}`"></textarea>
+                  <span class="qa-num">Servicio {{ i + 1 }}</span>
+                  <label class="mk-mini"><span>Ícono que se muestra</span>
+                    <div class="mk-icon-field">
+                      <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[s.icon] ? s.icon : 'package'" :size="17" /></span>
+                      <select v-model="s.icon" class="select" :aria-label="`Ícono del servicio ${i + 1}`">
+                        <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                      </select>
+                    </div>
+                  </label>
+                  <label class="mk-mini"><span>Nombre</span>
+                    <input v-model="s.title" class="input" type="text" :maxlength="mkLimits.serviceTitle" placeholder="Ej. Envíos a todo el país" :aria-label="`Título del servicio ${i + 1}`" />
+                  </label>
+                  <label class="mk-mini"><span>Descripción corta</span>
+                    <textarea v-model="s.text" class="textarea" rows="2" :maxlength="mkLimits.serviceText" placeholder="Una línea que lo describa" :aria-label="`Descripción del servicio ${i + 1}`"></textarea>
+                  </label>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el servicio ${i + 1}`" @click="moveRow(designForm.services, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4194,7 +4203,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.services.length >= mkLimits.services" @click="addRow(designForm.services, mkLimits.services, { icon: 'package', title: '', text: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.services.length >= mkLimits.services" @click="addRow(designForm.services, mkLimits.services, { icon: 'package', title: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar servicio
             </button>
             <p class="hint">Se muestran como tarjetas con ícono. Ordenalas con las flechas.</p>
@@ -4210,6 +4219,7 @@ async function changePassword() {
         <div v-show="mkOpen === 'plans'" class="card mk-card">
           <h3><AppIcon name="crown" :size="18" /> Planes de suscripción <span v-if="!supportsPlans" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
           <p v-if="!supportsPlans" class="hint">La plantilla que elegiste no tiene apartado de suscripciones. Disponible en: {{ blockDesigns('plans') }}.</p>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Publicá membresías o clubs sin cobro online: los interesados te escriben por WhatsApp o el formulario.</span></p>
           <fieldset class="mk-fieldset" :disabled="!supportsPlans">
           <div class="check-list">
             <label class="check-item">
@@ -4226,12 +4236,21 @@ async function changePassword() {
             <div v-if="designForm.plans.length" class="qa-list">
               <div v-for="(p, i) in designForm.plans" :key="i" class="qa-item">
                 <div class="qa-fields">
+                  <span class="qa-num">Plan {{ i + 1 }}</span>
                   <div class="mk-pair">
-                    <input v-model="p.name" class="input" type="text" :maxlength="mkLimits.planName" placeholder="Ej. Club mensual" :aria-label="`Nombre del plan ${i + 1}`" />
-                    <input v-model="p.price" class="input" type="text" :maxlength="mkLimits.planPrice" placeholder="Ej. $15.000/mes" :aria-label="`Precio del plan ${i + 1}`" />
+                    <label class="mk-mini"><span>Nombre</span>
+                      <input v-model="p.name" class="input" type="text" :maxlength="mkLimits.planName" placeholder="Ej. Club mensual" :aria-label="`Nombre del plan ${i + 1}`" />
+                    </label>
+                    <label class="mk-mini"><span>Precio</span>
+                      <input v-model="p.price" class="input" type="text" :maxlength="mkLimits.planPrice" placeholder="Ej. $15.000/mes" :aria-label="`Precio del plan ${i + 1}`" />
+                    </label>
                   </div>
-                  <input v-model="p.note" class="input" type="text" :maxlength="mkLimits.planNote" placeholder="Detalle opcional. Ej. El más elegido — sin permanencia" :aria-label="`Detalle del plan ${i + 1}`" />
-                  <textarea v-model="p.items" class="textarea" rows="3" placeholder="Un beneficio por línea. Ej.&#10;2 visitas al mes&#10;Descuento en productos" :aria-label="`Beneficios del plan ${i + 1}`"></textarea>
+                  <label class="mk-mini"><span>Detalle <em>(opcional)</em></span>
+                    <input v-model="p.note" class="input" type="text" :maxlength="mkLimits.planNote" placeholder="Ej. El más elegido — sin permanencia" :aria-label="`Detalle del plan ${i + 1}`" />
+                  </label>
+                  <label class="mk-mini"><span>Beneficios, uno por línea</span>
+                    <textarea v-model="p.items" class="textarea" rows="3" placeholder="Un beneficio por línea. Ej.&#10;2 visitas al mes&#10;Descuento en productos" :aria-label="`Beneficios del plan ${i + 1}`"></textarea>
+                  </label>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el plan ${i + 1}`" @click="moveRow(designForm.plans, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4240,7 +4259,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.plans.length >= mkLimits.plans" @click="addRow(designForm.plans, mkLimits.plans, { name: '', price: '', note: '', items: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.plans.length >= mkLimits.plans" @click="addRow(designForm.plans, mkLimits.plans, { name: '', price: '', note: '', items: '' })">
               <AppIcon name="plus" :size="15" /> Agregar plan
             </button>
             <p class="hint">El precio es texto libre (ej. "$15.000/mes" o "Consultar"). Los interesados te escriben por WhatsApp o el formulario de contacto — acá no se cobra nada.</p>
@@ -4255,6 +4274,7 @@ async function changePassword() {
         <!-- ===== Tus números (cifras destacadas) ===== -->
         <div v-show="mkOpen === 'stats'" class="card mk-card">
           <h3><AppIcon name="trending-up" :size="18" /> Tus números</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Mostrá cifras que generan confianza: cuántos clientes, años de trayectoria o productos vendidos.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_stats" type="checkbox" />
@@ -4268,9 +4288,16 @@ async function changePassword() {
             <label>Cifras <span class="hint-inline">({{ designForm.stats.length }}/{{ mkLimits.stats }})</span></label>
             <div v-if="designForm.stats.length" class="qa-list">
               <div v-for="(s, i) in designForm.stats" :key="i" class="qa-item">
-                <div class="qa-fields mk-pair">
-                  <input v-model="s.value" class="input" type="text" :maxlength="mkLimits.statValue" placeholder="+500" :aria-label="`Valor de la cifra ${i + 1}`" />
-                  <input v-model="s.label" class="input" type="text" :maxlength="mkLimits.statLabel" placeholder="clientes que nos eligen" :aria-label="`Etiqueta de la cifra ${i + 1}`" />
+                <div class="qa-fields">
+                  <span class="qa-num">Cifra {{ i + 1 }}</span>
+                  <div class="mk-pair">
+                    <label class="mk-mini"><span>Número</span>
+                      <input v-model="s.value" class="input" type="text" :maxlength="mkLimits.statValue" placeholder="+500" :aria-label="`Valor de la cifra ${i + 1}`" />
+                    </label>
+                    <label class="mk-mini"><span>Qué significa</span>
+                      <input v-model="s.label" class="input" type="text" :maxlength="mkLimits.statLabel" placeholder="clientes que nos eligen" :aria-label="`Etiqueta de la cifra ${i + 1}`" />
+                    </label>
+                  </div>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4279,7 +4306,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.stats.length >= mkLimits.stats" @click="addRow(designForm.stats, mkLimits.stats, { value: '', label: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.stats.length >= mkLimits.stats" @click="addRow(designForm.stats, mkLimits.stats, { value: '', label: '' })">
               <AppIcon name="plus" :size="15" /> Agregar cifra
             </button>
             <p class="hint">Ej. "+500" y "clientes", o "15" y "años de trayectoria". Se ven en grande en una banda de tu portada.</p>
@@ -4293,6 +4320,7 @@ async function changePassword() {
         <!-- ===== Testimonios ===== -->
         <div v-show="mkOpen === 'testimonials'" class="card mk-card">
           <h3><AppIcon name="quote" :size="18" /> Testimonios</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Las opiniones de tus clientes convencen mejor que cualquier anuncio. Pediles permiso antes de publicarlas.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_testimonials" type="checkbox" />
@@ -4308,11 +4336,18 @@ async function changePassword() {
             <div v-if="designForm.testimonials.length" class="qa-list">
               <div v-for="(t, i) in designForm.testimonials" :key="i" class="qa-item">
                 <div class="qa-fields">
+                  <span class="qa-num">Testimonio {{ i + 1 }}</span>
                   <div class="mk-pair">
-                    <input v-model="t.name" class="input" type="text" :maxlength="mkLimits.testimonialName" placeholder="Nombre del cliente" :aria-label="`Nombre del testimonio ${i + 1}`" />
-                    <input v-model="t.detail" class="input" type="text" :maxlength="mkLimits.testimonialDetail" placeholder="Detalle opcional. Ej. Cliente desde 2019" :aria-label="`Detalle del testimonio ${i + 1}`" />
+                    <label class="mk-mini"><span>Nombre del cliente</span>
+                      <input v-model="t.name" class="input" type="text" :maxlength="mkLimits.testimonialName" placeholder="Ej. María Gómez" :aria-label="`Nombre del testimonio ${i + 1}`" />
+                    </label>
+                    <label class="mk-mini"><span>Detalle <em>(opcional)</em></span>
+                      <input v-model="t.detail" class="input" type="text" :maxlength="mkLimits.testimonialDetail" placeholder="Ej. Cliente desde 2019" :aria-label="`Detalle del testimonio ${i + 1}`" />
+                    </label>
                   </div>
-                  <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.testimonialText" placeholder="Lo que dijo de tu negocio" :aria-label="`Texto del testimonio ${i + 1}`"></textarea>
+                  <label class="mk-mini"><span>Su opinión</span>
+                    <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.testimonialText" placeholder="Lo que dijo de tu negocio" :aria-label="`Texto del testimonio ${i + 1}`"></textarea>
+                  </label>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4321,7 +4356,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.testimonials.length >= mkLimits.testimonials" @click="addRow(designForm.testimonials, mkLimits.testimonials, { name: '', detail: '', text: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.testimonials.length >= mkLimits.testimonials" @click="addRow(designForm.testimonials, mkLimits.testimonials, { name: '', detail: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar testimonio
             </button>
             <p class="hint">Publicá solo opiniones reales de clientes que te hayan autorizado a usarlas.</p>
@@ -4335,6 +4370,7 @@ async function changePassword() {
         <!-- ===== Preguntas frecuentes ===== -->
         <div v-show="mkOpen === 'faqs'" class="card mk-card">
           <h3><AppIcon name="message-circle" :size="18" /> Preguntas frecuentes</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Ahorrá consultas repetidas: escribí la pregunta tal como te la haría un cliente y su respuesta.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_faq" type="checkbox" />
@@ -4350,8 +4386,13 @@ async function changePassword() {
             <div v-if="designForm.faqs.length" class="qa-list">
               <div v-for="(f, i) in designForm.faqs" :key="i" class="qa-item">
                 <div class="qa-fields">
-                  <input v-model="f.q" class="input" type="text" :maxlength="mkLimits.faqQ" placeholder="Ej. ¿Hacen envíos?" :aria-label="`Pregunta ${i + 1}`" />
-                  <textarea v-model="f.a" class="textarea" rows="2" :maxlength="mkLimits.faqA" placeholder="Respuesta que ve la visita" :aria-label="`Respuesta ${i + 1}`"></textarea>
+                  <span class="qa-num">Pregunta {{ i + 1 }}</span>
+                  <label class="mk-mini"><span>La pregunta</span>
+                    <input v-model="f.q" class="input" type="text" :maxlength="mkLimits.faqQ" placeholder="Ej. ¿Hacen envíos?" :aria-label="`Pregunta ${i + 1}`" />
+                  </label>
+                  <label class="mk-mini"><span>La respuesta</span>
+                    <textarea v-model="f.a" class="textarea" rows="2" :maxlength="mkLimits.faqA" placeholder="Respuesta que ve la visita" :aria-label="`Respuesta ${i + 1}`"></textarea>
+                  </label>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4360,7 +4401,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.faqs.length >= mkLimits.faqs" @click="addRow(designForm.faqs, mkLimits.faqs, { q: '', a: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.faqs.length >= mkLimits.faqs" @click="addRow(designForm.faqs, mkLimits.faqs, { q: '', a: '' })">
               <AppIcon name="plus" :size="15" /> Agregar pregunta
             </button>
             <p v-if="companyErrs.faqs" class="field-error" role="alert">{{ companyErrs.faqs }}</p>
@@ -4373,6 +4414,7 @@ async function changePassword() {
         <!-- ===== Garantías y beneficios ===== -->
         <div v-show="mkOpen === 'benefits'" class="card mk-card">
           <h3><AppIcon name="shield-check" :size="18" /> Garantías y beneficios</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Envíos, garantía y medios de pago: lo que tranquiliza a quien está por comprar.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_benefits" type="checkbox" />
@@ -4387,14 +4429,21 @@ async function changePassword() {
             <div v-if="designForm.benefits.length" class="qa-list">
               <div v-for="(b, i) in designForm.benefits" :key="i" class="qa-item">
                 <div class="qa-fields">
-                  <div class="mk-icon-field">
-                    <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[b.icon] ? b.icon : 'shield-check'" :size="17" /></span>
-                    <select v-model="b.icon" class="select" :aria-label="`Ícono del beneficio ${i + 1}`">
-                      <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                    </select>
-                  </div>
-                  <input v-model="b.title" class="input" type="text" :maxlength="mkLimits.benefitTitle" placeholder="Ej. Garantía de 30 días" :aria-label="`Título del beneficio ${i + 1}`" />
-                  <textarea v-model="b.text" class="textarea" rows="2" :maxlength="mkLimits.benefitText" placeholder="Una línea que lo describa" :aria-label="`Descripción del beneficio ${i + 1}`"></textarea>
+                  <span class="qa-num">Beneficio {{ i + 1 }}</span>
+                  <label class="mk-mini"><span>Ícono que se muestra</span>
+                    <div class="mk-icon-field">
+                      <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[b.icon] ? b.icon : 'shield-check'" :size="17" /></span>
+                      <select v-model="b.icon" class="select" :aria-label="`Ícono del beneficio ${i + 1}`">
+                        <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                      </select>
+                    </div>
+                  </label>
+                  <label class="mk-mini"><span>Nombre</span>
+                    <input v-model="b.title" class="input" type="text" :maxlength="mkLimits.benefitTitle" placeholder="Ej. Garantía de 30 días" :aria-label="`Título del beneficio ${i + 1}`" />
+                  </label>
+                  <label class="mk-mini"><span>Descripción corta</span>
+                    <textarea v-model="b.text" class="textarea" rows="2" :maxlength="mkLimits.benefitText" placeholder="Una línea que lo describa" :aria-label="`Descripción del beneficio ${i + 1}`"></textarea>
+                  </label>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4403,7 +4452,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.benefits.length >= mkLimits.benefits" @click="addRow(designForm.benefits, mkLimits.benefits, { icon: 'shield-check', title: '', text: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.benefits.length >= mkLimits.benefits" @click="addRow(designForm.benefits, mkLimits.benefits, { icon: 'shield-check', title: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar beneficio
             </button>
             <p v-if="companyErrs.benefits" class="field-error" role="alert">{{ companyErrs.benefits }}</p>
@@ -4416,6 +4465,7 @@ async function changePassword() {
         <!-- ===== Línea de tiempo ===== -->
         <div v-show="mkOpen === 'timeline'" class="card mk-card">
           <h3><AppIcon name="flag" :size="18" /> Línea de tiempo</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Contá tu historia paso a paso: cuándo empezaste, el local nuevo, cada logro.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_timeline" type="checkbox" />
@@ -4430,8 +4480,13 @@ async function changePassword() {
             <div v-if="designForm.timeline.length" class="qa-list">
               <div v-for="(t, i) in designForm.timeline" :key="i" class="qa-item">
                 <div class="qa-fields">
-                  <input v-model="t.label" class="input" type="text" :maxlength="mkLimits.timelineLabel" placeholder="Ej. 2015 o Hoy" :aria-label="`Rótulo del hito ${i + 1}`" />
-                  <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.timelineText" placeholder="Qué pasó en ese momento" :aria-label="`Texto del hito ${i + 1}`"></textarea>
+                  <span class="qa-num">Hito {{ i + 1 }}</span>
+                  <label class="mk-mini"><span>Cuándo <em>(año o etapa)</em></span>
+                    <input v-model="t.label" class="input" type="text" :maxlength="mkLimits.timelineLabel" placeholder="Ej. 2015 o Hoy" :aria-label="`Rótulo del hito ${i + 1}`" />
+                  </label>
+                  <label class="mk-mini"><span>Qué pasó</span>
+                    <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.timelineText" placeholder="Qué pasó en ese momento" :aria-label="`Texto del hito ${i + 1}`"></textarea>
+                  </label>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4440,7 +4495,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.timeline.length >= mkLimits.timeline" @click="addRow(designForm.timeline, mkLimits.timeline, { label: '', text: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.timeline.length >= mkLimits.timeline" @click="addRow(designForm.timeline, mkLimits.timeline, { label: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar hito
             </button>
             <p v-if="companyErrs.timeline" class="field-error" role="alert">{{ companyErrs.timeline }}</p>
@@ -4453,6 +4508,7 @@ async function changePassword() {
         <!-- ===== Equipo ===== -->
         <div v-show="mkOpen === 'team'" class="card mk-card">
           <h3><AppIcon name="users" :size="18" /> Equipo</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Presentá a las personas detrás del negocio con su nombre y su rol.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_team" type="checkbox" />
@@ -4467,9 +4523,14 @@ async function changePassword() {
             <div v-if="designForm.team.length" class="qa-list">
               <div v-for="(m, i) in designForm.team" :key="i" class="qa-item">
                 <div class="qa-fields">
+                  <span class="qa-num">Integrante {{ i + 1 }}</span>
                   <div class="mk-pair">
-                    <input v-model="m.name" class="input" type="text" :maxlength="mkLimits.teamName" placeholder="Nombre" :aria-label="`Nombre del integrante ${i + 1}`" />
-                    <input v-model="m.role" class="input" type="text" :maxlength="mkLimits.teamRole" placeholder="Rol. Ej. Dueña, Técnica" :aria-label="`Rol del integrante ${i + 1}`" />
+                    <label class="mk-mini"><span>Nombre</span>
+                      <input v-model="m.name" class="input" type="text" :maxlength="mkLimits.teamName" placeholder="Ej. Laura" :aria-label="`Nombre del integrante ${i + 1}`" />
+                    </label>
+                    <label class="mk-mini"><span>Su rol</span>
+                      <input v-model="m.role" class="input" type="text" :maxlength="mkLimits.teamRole" placeholder="Ej. Dueña, Técnica" :aria-label="`Rol del integrante ${i + 1}`" />
+                    </label>
                   </div>
                 </div>
                 <div class="qa-actions">
@@ -4479,7 +4540,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.team.length >= mkLimits.team" @click="addRow(designForm.team, mkLimits.team, { name: '', role: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.team.length >= mkLimits.team" @click="addRow(designForm.team, mkLimits.team, { name: '', role: '' })">
               <AppIcon name="plus" :size="15" /> Agregar integrante
             </button>
             <p v-if="companyErrs.team" class="field-error" role="alert">{{ companyErrs.team }}</p>
@@ -4492,6 +4553,7 @@ async function changePassword() {
         <!-- ===== Horarios de atención ===== -->
         <div v-show="mkOpen === 'hours'" class="card mk-card">
           <h3><AppIcon name="clock" :size="18" /> Horarios de atención</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Indicá cuándo atendés: aparece junto a tus datos de contacto en la web.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_hours" type="checkbox" />
@@ -4505,9 +4567,16 @@ async function changePassword() {
             <label>Horarios <span class="hint-inline">({{ designForm.hours.length }}/{{ mkLimits.hours }})</span></label>
             <div v-if="designForm.hours.length" class="qa-list">
               <div v-for="(h, i) in designForm.hours" :key="i" class="qa-item">
-                <div class="qa-fields mk-pair">
-                  <input v-model="h.label" class="input" type="text" :maxlength="mkLimits.hourLabel" placeholder="Lunes a viernes" :aria-label="`Días del horario ${i + 1}`" />
-                  <input v-model="h.value" class="input" type="text" :maxlength="mkLimits.hourValue" placeholder="9 a 18 h" :aria-label="`Franja del horario ${i + 1}`" />
+                <div class="qa-fields">
+                  <span class="qa-num">Horario {{ i + 1 }}</span>
+                  <div class="mk-pair">
+                    <label class="mk-mini"><span>Días</span>
+                      <input v-model="h.label" class="input" type="text" :maxlength="mkLimits.hourLabel" placeholder="Lunes a viernes" :aria-label="`Días del horario ${i + 1}`" />
+                    </label>
+                    <label class="mk-mini"><span>Horario</span>
+                      <input v-model="h.value" class="input" type="text" :maxlength="mkLimits.hourValue" placeholder="9 a 18 h" :aria-label="`Franja del horario ${i + 1}`" />
+                    </label>
+                  </div>
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el horario ${i + 1}`" @click="moveRow(designForm.hours, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4516,7 +4585,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
               <AppIcon name="plus" :size="15" /> Agregar horario
             </button>
             <p class="hint">Si apagás la sección Contáctanos desde "Cómo se ve", los horarios también se ocultan.</p>
@@ -4530,6 +4599,7 @@ async function changePassword() {
         <!-- ===== Llamado a la acción ===== -->
         <div v-show="mkOpen === 'cta'" class="card mk-card">
           <h3><AppIcon name="megaphone" :size="18" /> Llamado a la acción</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>La banda final de tu portada: un título, una frase y un botón grande para que te escriban.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_cta" type="checkbox" />
@@ -4552,6 +4622,7 @@ async function changePassword() {
         <!-- ===== Cinta de anuncios (marquee bajo la portada) ===== -->
         <div v-show="mkOpen === 'ann'" class="card mk-card">
           <h3><AppIcon name="megaphone" :size="18" /> Cinta de anuncios</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Avisos cortos que corren en bucle debajo de tu portada: promos, envíos gratis, cuotas.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_announcements" type="checkbox" />
@@ -4565,14 +4636,21 @@ async function changePassword() {
             <label>Anuncios <span class="hint-inline">({{ designForm.announcements.length }}/{{ mkLimits.announcements }})</span></label>
             <div v-if="designForm.announcements.length" class="qa-list">
               <div v-for="(a, i) in designForm.announcements" :key="i" class="qa-item">
-                <div class="qa-fields mk-pair">
-                  <div class="mk-icon-field">
-                    <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[a.icon] ? a.icon : 'megaphone'" :size="17" /></span>
-                    <select v-model="a.icon" class="select" :aria-label="`Ícono del anuncio ${i + 1}`">
-                      <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                    </select>
+                <div class="qa-fields">
+                  <span class="qa-num">Anuncio {{ i + 1 }}</span>
+                  <div class="mk-pair">
+                    <label class="mk-mini"><span>Ícono</span>
+                      <div class="mk-icon-field">
+                        <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[a.icon] ? a.icon : 'megaphone'" :size="17" /></span>
+                        <select v-model="a.icon" class="select" :aria-label="`Ícono del anuncio ${i + 1}`">
+                          <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                        </select>
+                      </div>
+                    </label>
+                    <label class="mk-mini"><span>Texto del anuncio</span>
+                      <input v-model="a.text" class="input" type="text" :maxlength="mkLimits.announcementText" placeholder="Ej. Envíos gratis superando $80.000" :aria-label="`Texto del anuncio ${i + 1}`" />
+                    </label>
                   </div>
-                  <input v-model="a.text" class="input" type="text" :maxlength="mkLimits.announcementText" placeholder="Ej. Envíos gratis superando $80.000" :aria-label="`Texto del anuncio ${i + 1}`" />
                 </div>
                 <div class="qa-actions">
                   <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
@@ -4581,7 +4659,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
-            <button type="button" class="btn ghost btn-auto" :disabled="designForm.announcements.length >= mkLimits.announcements" @click="addRow(designForm.announcements, mkLimits.announcements, { icon: 'megaphone', text: '' })">
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.announcements.length >= mkLimits.announcements" @click="addRow(designForm.announcements, mkLimits.announcements, { icon: 'megaphone', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar anuncio
             </button>
             <p class="hint">Frases cortas con ícono que se repiten en bucle. Se ocultan solas si no cargás ninguna.</p>
@@ -4595,6 +4673,7 @@ async function changePassword() {
         <!-- ===== Video (embed YouTube/Vimeo) ===== -->
         <div v-show="mkOpen === 'video'" class="card mk-card">
           <h3><AppIcon name="eye" :size="18" /> Video</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Pegá el link completo de un video de YouTube o Vimeo y se muestra dentro de tu página.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_video" type="checkbox" />
@@ -4616,6 +4695,7 @@ async function changePassword() {
         <!-- ===== Extras (aviso del catálogo + texto del pie) ===== -->
         <div v-show="mkOpen === 'extras'" class="card mk-card">
           <h3><AppIcon name="plus" :size="18" /> Extras</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Dos detalles finales: un aviso arriba del catálogo y una frase al pie de tu página.</span></p>
           <AppInput v-model="designForm.catalog_note" label="Aviso del catálogo" name="company_catalog_note" placeholder="Ej. Envíos a todo el país · Aceptamos todos los medios de pago" hint="Tira informativa que aparece arriba de tu página de catálogo. Vacío: no se muestra." maxlength="160" />
           <AppInput v-model="designForm.footer_text" label="Frase del pie" name="company_footer_text" placeholder="Ej. Tienda familiar desde 1998" hint="Línea extra al final de tu web, debajo del copyright. Vacío: no se muestra." maxlength="160" />
           <p v-if="companyErrs.extras" class="field-error" role="alert">{{ companyErrs.extras }}</p>

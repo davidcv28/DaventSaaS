@@ -1113,6 +1113,16 @@ body{ transition: background-color .2s ease, color .2s ease; }
 @media (max-width: 560px){
   .mk-pair{ grid-template-columns: minmax(0, 1fr); }
 }
+/* Ayuda amigable dentro de cada formulario del modal: una frase en lenguaje
+   simple sobre fondo info + chip numerado por ítem + mini etiquetas que
+   nombran cada campo (los inputs sueltos confunden a usuarios no técnicos). */
+.mk-tip{ display: flex; align-items: flex-start; gap: 9px; margin: 0 0 14px; padding: 11px 13px; border: 1px solid var(--info-line); border-radius: 12px; background: var(--info-bg); color: var(--info-ink); font-size: 13px; line-height: 1.45; }
+.mk-tip .icon{ flex: none; margin-top: 1px; }
+.qa-num{ justify-self: start; display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--brand-soft-line); border-radius: 999px; background: var(--brand-soft); color: var(--brand-ink); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.mk-mini{ display: grid; gap: 5px; min-width: 0; font-weight: 400; }
+.mk-mini > span{ display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 650; color: var(--muted); }
+.mk-mini > span em{ font-style: normal; font-weight: 500; opacity: .8; }
+.mk-card .btn.mk-add{ width: 100%; justify-content: center; border-style: dashed; }
 /* Puntos de acento del Diseño web: cada .swatch pinta su color y escribe
    designForm.accent directo (1 tap; el estado se marca con check + ring). */
 .swatch[aria-disabled='true']{ opacity: .55; cursor: default; }
