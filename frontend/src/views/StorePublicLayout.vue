@@ -21,7 +21,8 @@ import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import { familyOf } from '../utils/styleIcons.js'
 import {
   studioPreviewVars, studioPreviewAttrs, applyFocusRing,
-  storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES
+  storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES,
+  sanitizeSiteTheme
 } from '../components/studio/previewBridge.js'
 import '../assets/store-page.css'
 // Capa de movimiento (keyframes + microinteracciones) por familia de piel.
@@ -67,7 +68,7 @@ let removeStudioGuard = null
 const studioCustom = ref(null)
 // Catálogo de diseño (patrones + estilos) desde la API: el patrón base y
 // su estilo son el fallback de la web cuando la tienda no eligió nada.
-const { defaultPattern, defaultStyle, iconStyles, defaultIconStyle, load: loadDesignCatalog } = useDesignCatalog()
+const { defaultPattern, defaultStyle, styles: catalogStyles, iconStyles, defaultIconStyle, load: loadDesignCatalog } = useDesignCatalog()
 // Layout del patrón de diseño de la base: única fuente de composición de las
 // tres superficies cuando la tienda no guardó su propio layout_config.
 const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?.layout))
@@ -118,6 +119,14 @@ const custom = computed(() => {
   // Mercado (Bazar) trae su propia piel: sin tema elegido no se le aplica la
   // paleta neutra del estilo base, que le pisaba el amarillo/azul firma.
   if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens && merged.template !== 'mercado') merged.site_theme = style.tokens
+  // Saneo contra el catálogo de la base: un estilo/fuente que ya no existe
+  // se descarta y cae al default en vez de renderizar un valor huérfano.
+  if (merged.site_theme && typeof merged.site_theme === 'object') {
+    merged.site_theme = sanitizeSiteTheme(
+      merged.site_theme,
+      catalogStyles.value.map((s) => s.slug)
+    )
+  }
   return merged
 })
 //El documento del diseño se sirve desde la base: logo/portada subidos en

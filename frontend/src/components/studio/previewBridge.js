@@ -157,6 +157,44 @@ export function layoutVars(theme) {
   return { vars, attrs }
 }
 
+// Saneo del site_theme guardado: la web publicada solo aplica lo que existe
+// en el catálogo servido por la base (estilos) y en el catálogo de fuentes.
+// Un id slug que ya no existe (estilo retirado, fuente fuera de catálogo) se
+// descarta y cae al default, nunca renderiza un valor huérfano.
+// - styleSlugs: slugs de DesignStyle del catálogo; si viene vacío (catálogo
+//   aún no cargado) no se toca `style` para evitar un flash del estilo base.
+// - typography.heading/subheading/body y roles[].font: solo slugs de
+//   STORE_FONTS; lo demás se borra del tema efectivo.
+// Devuelve SIEMPRE una copia: el objeto persistido no se muta.
+export function sanitizeSiteTheme(theme, styleSlugs = []) {
+  if (!theme || typeof theme !== 'object') return theme
+  const clean = { ...theme }
+  const styleId = clean.style && typeof clean.style === 'object' ? clean.style.id : null
+  if (styleId && styleSlugs.length && !styleSlugs.includes(String(styleId))) {
+    delete clean.style
+  }
+  const skin = skinOf(clean)
+  if (clean.skin && !skin) delete clean.skin
+  const ty = clean.typography && typeof clean.typography === 'object' ? { ...clean.typography } : null
+  if (ty) {
+    for (const key of ['heading', 'subheading', 'body']) {
+      if (ty[key] && !STORE_FONTS[ty[key]]) delete ty[key]
+    }
+    if (ty.roles && typeof ty.roles === 'object') {
+      ty.roles = Object.fromEntries(
+        Object.entries(ty.roles).map(([role, spec]) => [
+          role,
+          spec && typeof spec === 'object' && spec.font && !STORE_FONTS[spec.font]
+            ? { ...spec, font: undefined }
+            : spec
+        ])
+      )
+    }
+    clean.typography = ty
+  }
+  return clean
+}
+
 // skin del contrato: {id, family}. La familia manda (hoja skin-<family>.css).
 export function skinOf(theme) {
   const skin = theme?.skin
