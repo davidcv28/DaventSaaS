@@ -2742,7 +2742,7 @@
           "danger": "#DC2626"
         },
         "containers": {
-          "radius": "large",
+          "radius": "lg",
           "shadow": "soft",
           "border": "thin",
           "density": "comfortable",
@@ -2767,13 +2767,13 @@
           "overlay": "none"
         },
         "motion": {
-          "reveal": "fade-up",
-          "hover": "card-lift",
+          "reveal": "rise",
+          "hover": "lift",
           "intensity": "subtle"
         },
         "mobile": {
           "cardStyle": "standard",
-          "heroHeight": "standard"
+          "heroHeight": "compact"
         },
         "preview": "",
         "icons": {
@@ -2832,7 +2832,7 @@
           "danger": "#F45B4C"
         },
         "containers": {
-          "radius": "medium",
+          "radius": "md",
           "shadow": "deep",
           "border": "thin",
           "density": "spacious",
@@ -2857,13 +2857,13 @@
           "overlay": "none"
         },
         "motion": {
-          "reveal": "fade-up",
+          "reveal": "rise",
           "hover": "glow",
-          "intensity": "media"
+          "intensity": "medium"
         },
         "mobile": {
           "cardStyle": "standard",
-          "heroHeight": "standard"
+          "heroHeight": "tall"
         },
         "preview": "",
         "icons": {
