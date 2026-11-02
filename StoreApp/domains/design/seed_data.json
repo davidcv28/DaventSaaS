@@ -2080,56 +2080,56 @@
       "slug": "esencial-premium",
       "nombre": "Esencial Premium",
       "categoria": "general",
-      "descripcion": "La cara de gala del diseño base: marfil cálido, dorado envejecido, Playfair Display, superficies de vidrio con filo dorado y animaciones con presencia.",
+      "descripcion": "El diseño base en su versión con presencia: papel claro, tinta verde bosque, acento teal y un toque cálido ámbar. Bricolage en titulares, entradas escalonadas, revelado al hacer scroll, tarjeta con inclinación al puntero y cintas en marquesina.",
       "tier": "base",
       "template": "raiz",
       "page_theme": "light",
       "tokens": {
         "palette": {
-          "primary": "#8a5a00",
-          "secondary": "#6b4600",
-          "accent": "#b8860b",
-          "bg": "#faf6ef",
-          "surface": "#fffdf8",
-          "text": "#1c1917",
-          "muted": "#78716c",
-          "border": "#e7ddc9",
-          "success": "#047857",
-          "danger": "#b91c1c"
+          "primary": "#0e5a4f",
+          "secondary": "#0b453d",
+          "accent": "#0e5a4f",
+          "bg": "#f4f5f0",
+          "surface": "#ffffff",
+          "text": "#16201c",
+          "muted": "#5c6b64",
+          "border": "#d9ded6",
+          "success": "#0e7a55",
+          "danger": "#b3402e"
         },
         "containers": {
           "radius": "lg",
-          "shadow": "deep",
+          "shadow": "soft",
           "border": "thin",
-          "density": "spacious",
-          "surface": "glass"
+          "density": "comfortable",
+          "surface": "elevated"
         },
         "typography": {
-          "heading": "playfair-display",
+          "heading": "bricolage-grotesque",
           "subheading": "instrument-sans",
           "body": "instrument-sans",
-          "scale": "editorial",
-          "weightHeading": 600,
+          "scale": "balanced",
+          "weightHeading": 700,
           "letterSpacing": "-0.02em"
         },
         "buttons": {
-          "shape": "pill",
-          "style": "gradient",
-          "size": "lg"
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
         },
         "background": {
           "type": "mesh",
-          "value": "radial-gradient(ellipse at top, #f3ead8, #faf6ef)",
+          "value": "radial-gradient(ellipse at top, rgba(14,90,79,.14), transparent), radial-gradient(ellipse at bottom, rgba(233,162,59,.12), transparent), #f4f5f0",
           "overlay": "soft"
         },
         "motion": {
           "reveal": "stagger",
-          "hover": "glow",
+          "hover": "lift",
           "intensity": "bold"
         },
         "mobile": {
           "gridCols": 1,
-          "cardStyle": "overlay",
+          "cardStyle": "standard",
           "heroHeight": "tall"
         }
       },
@@ -2143,7 +2143,7 @@
           },
           {
             "id": "hero",
-            "variant": "centered",
+            "variant": "split",
             "enabled": true,
             "order": 1
           },
@@ -2363,7 +2363,7 @@
             "contact"
           ],
           "var": {
-            "hero": "centered",
+            "hero": "split",
             "announcements": "marquee",
             "featured": "grid",
             "categories": "row",
@@ -2414,7 +2414,6 @@
         "base",
         "esencial",
         "premium",
-        "gala",
         "dia"
       ],
       "preview": "",
@@ -2422,29 +2421,29 @@
       "anim": {
         "hero": "stagger-rise",
         "reveal": "stagger",
-        "hover": "glow",
-        "button": "gradient-sheen"
+        "hover": "lift",
+        "button": "soft-press"
       },
-      "easing": "cubic-bezier(.16,1,.3,1)",
-      "duration": "560ms",
+      "easing": "cubic-bezier(.2,.7,.2,1)",
+      "duration": "480ms",
       "icons": {
         "style": "line",
-        "stroke": "1.2",
+        "stroke": "1.8",
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Premium de día: marfil, oro envejecido, serif editorial, vidrio y motion bold.",
+      "concept": "Premium de día: papel, tinta bosque, teal + ámbar, entradas escalonadas y tilt al puntero.",
       "effects": {
-        "accent": "#b8860b",
-        "primary": "#8a5a00",
-        "secondary": "#6b4600",
-        "border": "#d9c48f",
+        "accent": "#0e5a4f",
+        "primary": "#0e5a4f",
+        "secondary": "#e9a23b",
+        "border": "#d9ded6",
         "radius": "lg",
         "border_width": 1,
         "border_style": "solid",
-        "shadow": "strong",
-        "space": "spacious",
-        "button_shape": "pill",
+        "shadow": "soft",
+        "space": "comfortable",
+        "button_shape": "rounded",
         "divider": "line"
       }
     }
