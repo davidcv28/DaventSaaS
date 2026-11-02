@@ -350,7 +350,7 @@ const navItems = computed(() => {
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
     { heading: 'Mi web' },
-    { id: 'store', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
+    { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
     { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
     { id: 'support', label: 'Asistente de diseño', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
@@ -370,12 +370,16 @@ const validIds = computed(() => {
   return ids
 })
 
+// Grupo de pestañas -> ítem de menú que lo representa cuando la primera
+// pestaña ya no tiene entrada propia ('web' es solo un índice de apartados,
+// no abre ninguna pestaña por defecto).
+const GROUP_NAV_ID = { web: 'web' }
 // Entrada del menú que corresponde a la sección actual (las pestañas comparten una).
 const navActive = computed(() => {
   const ids = new Set(navItems.value.filter((i) => i.id).map((i) => i.id))
   if (ids.has(section.value)) return section.value
-  for (const tabs of Object.values(tabGroups.value)) {
-    if (tabs.some((t) => t.id === section.value)) return tabs[0].id
+  for (const [key, tabs] of Object.entries(tabGroups.value)) {
+    if (tabs.some((t) => t.id === section.value)) return GROUP_NAV_ID[key] || tabs[0].id
   }
   return section.value
 })
@@ -392,10 +396,13 @@ const sectionTitle = computed(() => {
   return 'Inicio'
 })
 const navParent = computed(() => {
-  for (const tabs of Object.values(tabGroups.value)) {
+  for (const [key, tabs] of Object.entries(tabGroups.value)) {
     const idx = tabs.findIndex((t) => t.id === section.value)
-    if (idx > 0) return { id: tabs[0].id, label: tabs[0].label }
     if (idx === 0) return null
+    if (idx > 0) {
+      const pid = GROUP_NAV_ID[key] || tabs[0].id
+      return { id: pid, label: navItems.value.find((i) => i.id === pid)?.label || tabs[0].label }
+    }
   }
   return null
 })
@@ -489,7 +496,7 @@ const searchCommands = computed(() => {
 const mobileTabs = computed(() => [
   { id: 'overview', label: 'Inicio', icon: 'dashboard' },
   { id: 'catalogs', label: 'Vender', icon: 'package', locked: navLocks.value.catalogs },
-  { id: 'store', label: 'Mi web', icon: 'store' },
+  { id: 'web', label: 'Mi web', icon: 'store' },
   { id: 'chat', label: 'Mensajes', icon: 'message-circle', badge: chatUnread.value }
 ])
 
@@ -3641,7 +3648,7 @@ async function changePassword() {
                   </span>
                 </label>
               </div>
-              <p class="hint">{{ siteTemplatesHint }} Se guarda al instante — también podés administrarlas desde «Plantillas» en Mi página web.</p>
+              <p class="hint">{{ siteTemplatesHint }} Se guarda al instante — también podés administrarlas desde «Diseño» en Mi página.</p>
             </div>
             <div v-if="canDesignAdvanced" class="field">
               <label id="catalog-carousel-label">Carrusel de portada</label>
@@ -3949,8 +3956,18 @@ async function changePassword() {
         </div>
       </template>
     </div>
+    <!-- ================= MI PÁGINA (índice de apartados) ================= -->
+    <div v-if="seen.web" v-show="section === 'web'" :class="{ 'sec-on': section === 'web' }">
+      <div class="page-head">
+        <div>
+          <h1>Mi página</h1>
+          <p>Todo lo que tus clientes ven en internet. Elegí un apartado para empezar.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.web" :active="''" @select="section = $event" />
+    </div>
     <!-- ================= MI TIENDA ================= -->
-    <div v-if="seen.store" v-show="section === 'store'" :class="{ 'sec-on': section === 'store' }">
+    <div v-if="seen.store" v-show="section === 'store' || (section === 'web' && tabGroups.web.length === 1)" :class="{ 'sec-on': section === 'store' }">
       <div class="page-head">
         <div>
           <h1>Mi página web</h1>
@@ -4036,10 +4053,19 @@ async function changePassword() {
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
-      <div class="empty">
-        <span class="empty-icon"><AppIcon name="palette" :size="28" /></span>
-        <h3>Diseño</h3>
-        <p>Esta sección todavía está vacía.</p>
+      <div class="card">
+        <h3><AppIcon name="layout-grid" :size="18" /> Páginas de tu web</h3>
+        <p class="hint">Elegí qué páginas querés tener habilitadas. Al menos una tiene que quedar marcada; se guarda al instante.</p>
+        <div class="check-list" role="group" aria-label="Páginas de tu web">
+          <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
+            <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
+            <span class="check-text">
+              <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span> <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+              <small>{{ siteTemplates[key].desc }}</small>
+            </span>
+          </label>
+        </div>
+        <p class="hint">{{ siteTemplatesHint }}</p>
       </div>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
