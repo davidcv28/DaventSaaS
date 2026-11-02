@@ -81,6 +81,30 @@ const go = (i) => {
   emit('navigate', i.id)
 }
 const onKey = (e) => { if (e.key === 'Escape') close() }
+
+// Swipe lateral entre los 4 tabs: solo si el gesto empieza en contenido
+// "plano" (los carruseles internos — chips, pestañas, tablas — se excluyen
+// para no robarles el scroll horizontal).
+let swipeX = null, swipeY = null, swipeBlocked = false
+const SWIPE_SAFE = '.qa-row, .tabs, .dsg-tabs, .gs-list, .table-wrap, .stats-chart, .sheet-nav, [data-noswipe]'
+const onSwipeStart = (e) => {
+  swipeX = swipeY = null
+  if (!hasTabs.value || open.value || e.touches.length > 1) return
+  swipeBlocked = !!e.target.closest(SWIPE_SAFE)
+  swipeX = e.touches[0].clientX
+  swipeY = e.touches[0].clientY
+}
+const onSwipeEnd = (e) => {
+  if (swipeX === null) return
+  const dx = e.changedTouches[0].clientX - swipeX
+  const dy = e.changedTouches[0].clientY - swipeY
+  swipeX = swipeY = null
+  if (swipeBlocked || Math.abs(dx) < 72 || Math.abs(dy) > 64 || Math.abs(dx) < Math.abs(dy) * 1.6) return
+  const idx = props.tabs.findIndex((t) => t.id === props.active)
+  if (idx < 0) return
+  const next = props.tabs[idx + (dx < 0 ? 1 : -1)]
+  if (next) go(next)
+}
 const setHeaderVar = () => {
   if (sidebarEl.value) document.documentElement.style.setProperty('--header-h', `${sidebarEl.value.offsetHeight}px`)
 }
@@ -198,7 +222,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </aside>
-    <main class="main" aria-label="Contenido">
+    <main class="main" aria-label="Contenido" @touchstart.passive="onSwipeStart" @touchend="onSwipeEnd">
       <header class="topbar">
         <button
           v-if="parent"
