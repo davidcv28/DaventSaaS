@@ -6,7 +6,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import { STUDIO_MSG, isStudioMessage, studioUpdate, themeExplicitKeys } from '../../studio/contract.js'
-import { ensureStoreFont, storesApi } from '../../api/stores.api.js'
+import { ensureStoreFont, storesApi, STORE_TEMPLATE_RETIRED_MAP } from '../../api/stores.api.js'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -68,7 +68,7 @@ function buildUpdate() {
   const msg = studioUpdate({
     theme: clone(theme),
     layout: clone(props.form.layout_config || {}),
-    template: props.form.template
+    template: STORE_TEMPLATE_RETIRED_MAP[props.form.template] || props.form.template
   })
   msg.mode = props.form.theme === 'dark' ? 'dark' : 'light'
   msg.explicit = [...themeExplicitKeys(theme)]
@@ -76,6 +76,7 @@ function buildUpdate() {
   // Diseño (datos, fotos, qué mostrar, tipografía, colores) se refleja en
   // la vista previa sin guardar ni recargar.
   const custom = clone(props.form)
+  custom.template = STORE_TEMPLATE_RETIRED_MAP[custom.template] || custom.template
   custom.logo = store.customization?.logo || null
   custom.cover = store.customization?.cover || null
   custom.carousel = clone(store.customization?.carousel || [])

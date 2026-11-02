@@ -9,7 +9,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
-import { ensureStoreFont } from '../../api/stores.api.js'
+import { ensureStoreFont, STORE_TEMPLATE_RETIRED_MAP } from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
 import { normalizeLayoutConfig } from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
@@ -56,16 +56,22 @@ const styleOptions = computed(() => styles.value.filter((s) => (
   && (!currentPattern.value || !s.pattern || s.pattern === currentPattern.value)
 )))
 
+// La tienda puede tener guardado un diseño retirado (todavía no remapeado
+// por el backend): el select y la vista previa trabajan siempre con el id
+// nuevo al que apunta STORE_TEMPLATE_RETIRED_MAP.
+const normTemplate = (t) => STORE_TEMPLATE_RETIRED_MAP[t] || t
+
 const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 
-const currentPattern = computed(() => (
-  patternOptions.value.find((p) => (
-    p.template === props.form.template && sameJson(patternLayout(p), props.form.layout_config)
+const currentPattern = computed(() => {
+  const tpl = normTemplate(props.form.template)
+  return patternOptions.value.find((p) => (
+    p.template === tpl && sameJson(patternLayout(p), props.form.layout_config)
   ))?.slug
-  || patternOptions.value.find((p) => p.template === props.form.template)?.slug
-  || ''
-))
+    || patternOptions.value.find((p) => p.template === tpl)?.slug
+    || ''
+})
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
 
 // Opciones de los selectboxes con icono/color: el select nativo no puede
@@ -94,25 +100,15 @@ function patternTheme(p) {
   return theme
 }
 
-function onPatternPick(value) {
-  const p = patternOptions.value.find((x) => x.slug === value)
-  if (!p) return
-  props.form.template = p.template
-  props.form.layout_config = patternLayout(p)
-  if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
+function defaultStyleFor(patternSlug) {
+  const list = styleOptions.value.filter((s) => !s.pattern || s.pattern === patternSlug)
+  return list.find((s) => s.is_default) || list[0] || null
 }
 
-// Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
-// tema COMPLETO — paleta, tipografía, contenedores, botones, fondo, modo y
-// movimiento — para que la web publicada se vea igual que la vista previa.
-// El dueño ya no elige colores sueltos: los colores son del tema.
-function onStylePick(value) {
-  const s = styleOptions.value.find((x) => x.slug === value)
-  if (!s) return
+function applyStyle(s) {
   const theme = resolveSiteTheme(s.tokens || {})
   props.form.site_theme = { ...theme, style: { id: s.slug } }
   props.form.theme = s.page_theme || props.form.theme
-  // La paleta del tema manda: el acento suelto queda sin efecto.
   props.form.accent_custom = ''
   const heading = theme.typography?.heading
   const body = theme.typography?.body
@@ -122,6 +118,48 @@ function onStylePick(value) {
     ensureStoreFont(body)
   }
 }
+
+function onPatternPick(value) {
+  const p = patternOptions.value.find((x) => x.slug === value)
+  if (!p) return
+  props.form.template = normTemplate(p.template)
+  props.form.layout_config = patternLayout(p)
+  // Al cambiar de diseño el estilo siempre queda seleccionado: primero el
+  // default del diseño (o su estilo vinculado), nunca el tema de otro
+  // diseño ni un select vacío.
+  const linked = styles.value.find((s) => s.slug === p.style && s.is_active !== false)
+  const style = linked || defaultStyleFor(p.slug)
+  if (style) applyStyle(style)
+  else props.form.site_theme = patternTheme(p)
+}
+
+// Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
+// tema COMPLETO — paleta, tipografía, contenedores, botones, fondo, modo y
+// movimiento — para que la web publicada se vea igual que la vista previa.
+// El dueño ya no elige colores sueltos: los colores son del tema.
+function onStylePick(value) {
+  const s = styleOptions.value.find((x) => x.slug === value)
+  if (!s) return
+  applyStyle(s)
+}
+
+// Diseño y estilo nunca quedan vacíos: si el diseño guardado es retirado o
+// no está en el catálogo se cae al default (o al primero), y si el estilo
+// no pertenece al diseño elegido se selecciona el default de ese diseño.
+watch([patternOptions, styles], () => {
+  if (!patternOptions.value.length) return
+  const tpl = normTemplate(props.form.template)
+  if (STORE_TEMPLATE_RETIRED_MAP[props.form.template]) props.form.template = tpl
+  if (!currentPattern.value) {
+    const p = patternOptions.value.find((x) => x.is_default) || patternOptions.value[0]
+    if (p) { onPatternPick(p.slug); return }
+  }
+  const hasStyle = styleOptions.value.some((s) => s.slug === currentStyle.value)
+  if (!hasStyle) {
+    const s = defaultStyleFor(currentPattern.value)
+    if (s) applyStyle(s)
+  }
+}, { immediate: true })
 
 // --- Vista previa en móvil: overlay a demanda ---------------------------
 // En pantallas chicas no se muestra ningún panel embebido: la web real se
