@@ -19,7 +19,7 @@ export default {
   },
   blocks: {
     landing: [
-      'hero', 'categories', 'offers', 'featured', 'announcements', 'highlights',
+      'hero', 'categories', 'offers', 'featured', 'plans', 'announcements', 'highlights',
       'brands', 'about', 'stats', 'gallery', 'testimonials', 'faq',
       'cta', 'contact'
     ],

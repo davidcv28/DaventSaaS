@@ -3252,57 +3252,62 @@
             "order": 3
           },
           {
-            "id": "announcements",
-            "variant": "static",
+            "id": "plans",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "highlights",
+            "id": "announcements",
+            "variant": "static",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "brands",
+            "id": "highlights",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "stats",
+            "id": "about",
             "enabled": true,
             "order": 8
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 9
           },
           {
             "id": "gallery",
             "variant": "grid",
             "enabled": true,
-            "order": 9
+            "order": 10
           },
           {
             "id": "testimonials",
             "enabled": true,
-            "order": 10
+            "order": 11
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 11
+            "order": 12
           },
           {
             "id": "cta",
             "enabled": true,
-            "order": 12
+            "order": 13
           },
           {
             "id": "contact",
             "variant": "card",
             "enabled": true,
-            "order": 13
+            "order": 14
           }
         ],
         "catalog": [
@@ -3557,24 +3562,29 @@
           },
           {
             "enabled": true,
-            "id": "brands",
-            "variant": "logos",
+            "id": "plans",
             "order": 7
           },
           {
             "enabled": true,
-            "id": "testimonials",
+            "id": "brands",
+            "variant": "logos",
             "order": 8
           },
           {
             "enabled": true,
-            "id": "faq",
+            "id": "testimonials",
             "order": 9
           },
           {
             "enabled": true,
-            "id": "contact",
+            "id": "faq",
             "order": 10
+          },
+          {
+            "enabled": true,
+            "id": "contact",
+            "order": 11
           }
         ],
         "catalog": [
@@ -3719,33 +3729,38 @@
             "order": 4
           },
           {
+            "id": "plans",
+            "enabled": true,
+            "order": 5
+          },
+          {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "gallery",
             "variant": "grid",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "contact",
             "variant": "card",
             "enabled": true,
-            "order": 9
+            "order": 10
           }
         ],
         "catalog": [

@@ -1455,15 +1455,19 @@ html{ scroll-behavior: smooth; }
 /* Testimonios: tarjetas con la cita, el nombre y un detalle opcional. */
 .sp-testimonials{ padding-top: 72px; scroll-margin-top: calc(var(--sp-top-h) + 16px); }
 .sp-testimonials .sp-section-title{ margin: 6px 0 26px; }
-.sp-testimonials-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-.sp-testimonial{ position: relative; display: flex; flex-direction: column; gap: 14px; margin: 0; padding: 24px 22px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
-.sp-testimonial-quote{ display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--store-accent-soft); color: var(--sp-accent-text); }
+.sp-testimonials-grid{ display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 720px){
+  .sp-testimonials:not(.is-carousel):not(.is-masonry) .sp-testimonials-grid{ flex-direction: row; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; padding-bottom: 10px; }
+  .sp-testimonials:not(.is-carousel):not(.is-masonry) .sp-testimonial{ flex: 1 1 0; min-width: 280px; scroll-snap-align: start; }
+}
+.sp-testimonial{ position: relative; display: flex; flex-direction: column; gap: 14px; margin: 0; padding: var(--st-card-pad, 24px) var(--st-card-pad, 22px); border: var(--st-border-w, 1px) solid var(--st-border, var(--sp-line)); border-radius: var(--st-radius, var(--sp-radius)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); }
+.sp-testimonial-quote{ display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 12%, transparent); color: var(--st-accent, var(--sp-accent-text)); }
 .store-page[data-store-theme='dark'] .sp-testimonial-quote{ background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
 .sp-testimonial-text{ margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--sp-ink-2); overflow-wrap: anywhere; }
 /* La firma se ancla al pie de la tarjeta: todas las citas terminan en la
    misma línea y los separadores quedan simétricos entre columnas. */
 .sp-testimonial-by{ display: grid; gap: 1px; margin-top: auto; }
-.sp-testimonial-by strong{ font-size: 14px; font-weight: 700; }
+.sp-testimonial-by strong{ font-size: 14px; font-weight: 700; font-family: var(--st-font-subheading, inherit); }
 .sp-testimonial-by span{ font-size: 12.5px; color: var(--sp-muted); }
 
 /* Preguntas frecuentes: <details> nativos, el caret rota al abrir. */
@@ -4145,15 +4149,18 @@ html{ scroll-behavior: smooth; }
 
 /* --- Bloque 'aipricing' (solo IA): cards | table ------------------------ */
 .sp-aipricing{ padding: 64px 0 0; }
-.sp-aipricing-list{ list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 20px 0 0; padding: 0; }
-.sp-aipricing-card{ display: grid; gap: 8px; align-content: start; padding: 18px; border-radius: var(--r-md, 16px); border: 1px solid var(--sp-line); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow-wrap: anywhere; }
-.sp-aipricing-name{ margin: 0; font-size: 15px; font-weight: 700; color: var(--sp-ink); }
-.sp-aipricing-amount{ font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--sp-ink); }
-.sp-aipricing-note{ margin: 0; font-size: 13px; line-height: 1.6; color: var(--sp-muted); }
+.sp-aipricing-list{ list-style: none; display: flex; flex-direction: column; gap: 14px; margin: 20px 0 0; padding: 0; }
+@media (min-width: 720px){
+  .sp-aipricing:not(.is-table) .sp-aipricing-list{ flex-direction: row; gap: 18px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; padding-bottom: 8px; }
+  .sp-aipricing:not(.is-table) .sp-aipricing-card{ flex: 1 1 0; min-width: 230px; scroll-snap-align: start; }
+}
+.sp-aipricing-card{ display: grid; gap: 8px; align-content: start; padding: var(--st-card-pad, 18px); border-radius: var(--st-radius, var(--r-md, 16px)); border: var(--st-border-w, 1px) solid var(--st-border, var(--sp-line)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); overflow-wrap: anywhere; }
+.sp-aipricing-name{ margin: 0; font-size: 15px; font-weight: 700; color: var(--st-text, var(--sp-ink)); font-family: var(--st-font-subheading, inherit); }
+.sp-aipricing-amount{ font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--st-accent, var(--sp-ink)); font-family: var(--st-font-heading, inherit); }
+.sp-aipricing-note{ margin: 0; font-size: 13px; line-height: 1.6; color: var(--st-muted, var(--sp-muted)); }
 .sp-aipricing-feats{ list-style: none; display: grid; gap: 6px; margin: 6px 0 0; padding: 0; }
-.sp-aipricing-feats li{ display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--sp-ink-2); }
-.sp-aipricing-feats svg{ flex: none; margin-top: 2px; color: var(--sp-accent-text); }
-@media (min-width: 640px){ .sp-aipricing-list{ grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); } }
+.sp-aipricing-feats li{ display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--st-text, var(--sp-ink-2)); }
+.sp-aipricing-feats svg{ flex: none; margin-top: 2px; color: var(--st-accent, var(--sp-accent-text)); }
 /* Variante tabla: filas alineadas, sin tarjetas. */
 .sp-aipricing.is-table .sp-aipricing-list{ gap: 0; border-top: 1px solid var(--sp-line); }
 .sp-aipricing.is-table .sp-aipricing-card{ grid-template-columns: minmax(0, 1.2fr) minmax(0, .6fr) minmax(0, 1.4fr); align-items: center; gap: 12px 18px; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0; background: transparent; box-shadow: none; padding: 14px 0; }
