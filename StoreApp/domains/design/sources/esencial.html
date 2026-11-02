@@ -22,7 +22,14 @@
   --font-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --ease:cubic-bezier(.2,.7,.2,1);
 }
-html[data-ds-theme="dark"]{
+/* Modo oscuro por tema: cada estilo trae su propia noche.
+   - esencial: bosque nocturno con teal luminoso (misma paleta que Esencial Noche).
+   - esencial-noche: SIEMPRE oscuro; el interruptor alterna entre su noche
+     estándar y una medianoche más honda (no existe versión de día).
+   - esencial-premium: noche de gala — verde profundo, teal luminoso y el
+     ámbar más presente en los acentos decorativos. */
+html[data-ds-theme="dark"]:not([data-ds-style="esencial-noche"]),
+html[data-ds-style="esencial-noche"]{
   --bg:var(--ds-bg,#0F1613);
   --surface:var(--ds-surface,#18221E);
   --ink:var(--ds-text,#E9EFEA);
@@ -31,7 +38,22 @@ html[data-ds-theme="dark"]{
   --accent:var(--ds-accent,#5FC7B2);
   --accent-ink:var(--ds-accent-ink,#0F1613);
   --warm:var(--ds-secondary,#F0B55A);
+  color-scheme:dark;
 }
+/* Noche → medianoche (solo Esencial Noche con el toggle en oscuro). */
+html[data-ds-style="esencial-noche"][data-ds-theme="dark"]{
+  --bg:#0A0F0D;
+  --surface:#121A17;
+  --line:#243029;
+}
+/* Noche de gala (Esencial Premium): teal intacto, brillo ambiental dorado. */
+html[data-ds-style="esencial-premium"][data-ds-theme="dark"]{
+  --bg:#0D1310;
+  --surface:#17211D;
+  --warm:#F2BE6B;
+}
+html:not([data-ds-theme="dark"]):not([data-ds-style="esencial-noche"]){color-scheme:light}
+html[data-ds-style="esencial-noche"]{color-scheme:dark}
 
 *{box-sizing:border-box}
 body{
@@ -300,6 +322,117 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:#241a05}
 .ds-rev-vote{color:var(--accent)}
 .ds-rev-down{color:var(--muted)}
 .ds-rev-text{color:var(--muted)}
+
+/* ============================================
+   ESENCIAL PREMIUM — capa de gala.
+   Marco doble, filos dorados, brillo que viaja,
+   ornamentos tipográficos y micro-animaciones
+   extra que los otros estilos no tienen.
+   ============================================ */
+html[data-ds-style="esencial-premium"] .site-header .wrap{padding-block:16px}
+html[data-ds-style="esencial-premium"] .brand .mark{
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--warm) 55%,transparent),0 0 18px -4px color-mix(in srgb,var(--warm) 60%,transparent);
+}
+html[data-ds-style="esencial-premium"] .brand .mark::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 30%,color-mix(in srgb,#fff 55%,transparent) 50%,transparent 70%);
+  background-size:250% 100%;background-position:120% 0;
+  animation:sheen 4.5s var(--ease) infinite;
+}
+/* Eyebrow editorial: regla + rombo antes del texto. */
+html[data-ds-style="esencial-premium"] .eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+}
+html[data-ds-style="esencial-premium"] .eyebrow::before{
+  content:"";width:26px;height:1px;background:currentColor;opacity:.7;
+}
+html[data-ds-style="esencial-premium"] .eyebrow::after{content:"◆";font-size:.55em;opacity:.8}
+/* Titulares de sección con subrayado animado. */
+html[data-ds-style="esencial-premium"] .section-head h2{position:relative;padding-bottom:14px}
+html[data-ds-style="esencial-premium"] .section-head h2::after{
+  content:"";position:absolute;left:0;bottom:0;height:2px;width:64px;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+}
+/* CTA con brillo que viaja al pasar el cursor. */
+html[data-ds-style="esencial-premium"] .btn{overflow:hidden}
+html[data-ds-style="esencial-premium"] .btn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--accent-ink) 28%,transparent) 50%,transparent 65%);
+  background-size:250% 100%;background-position:130% 0;
+  transition:background-position .7s var(--ease);
+}
+html[data-ds-style="esencial-premium"] .btn:hover::before{background-position:-40% 0}
+/* Tarjeta del hero con marco doble y cantos dorados. */
+html[data-ds-style="esencial-premium"] .hero-card{
+  border-color:color-mix(in srgb,var(--warm) 55%,var(--line));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--warm) 30%,transparent),
+    var(--ds-shadow,0 30px 60px -40px color-mix(in srgb,var(--ink) 50%,transparent));
+}
+html[data-ds-style="esencial-premium"] .hero-card-wrap{position:relative}
+html[data-ds-style="esencial-premium"] .hero-card-wrap::before,
+html[data-ds-style="esencial-premium"] .hero-card-wrap::after{
+  content:"";position:absolute;width:26px;height:26px;z-index:1;pointer-events:none;
+  border:2px solid var(--warm);
+}
+html[data-ds-style="esencial-premium"] .hero-card-wrap::before{top:-8px;left:-8px;border-right:0;border-bottom:0}
+html[data-ds-style="esencial-premium"] .hero-card-wrap::after{bottom:-8px;right:-8px;border-left:0;border-top:0}
+/* Iconos de stat con anillo que respira. */
+html[data-ds-style="esencial-premium"] .stat .ico-box{
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 35%,transparent);
+  animation:float 4s ease-in-out infinite,pulse-ring 3.2s ease-out infinite;
+}
+/* Cinta: separadores de rombo entre beneficios. */
+html[data-ds-style="esencial-premium"] .ticker-item::after{
+  content:"✦";margin-left:38px;color:var(--warm);font-size:.8em;
+}
+/* Cards de producto con filo dorado al hover. */
+html[data-ds-style="esencial-premium"] .ds-product:hover{
+  border-color:color-mix(in srgb,var(--warm) 60%,var(--line));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--warm) 35%,transparent),
+    0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
+}
+/* Fila de servicio: el mosaico se vuelve rombo al hover. */
+html[data-ds-style="esencial-premium"] .ds-service::before{
+  transition:transform .45s var(--ease),background-color .3s;
+}
+html[data-ds-style="esencial-premium"] .ds-service:hover::before{
+  transform:rotate(45deg) scale(.82);
+  background:color-mix(in srgb,var(--warm) 22%,transparent);
+}
+/* Chips activos con punto dorado. */
+html[data-ds-style="esencial-premium"] .filters .ds-cat[aria-pressed="true"]{
+  background:var(--ink);color:var(--bg);border-color:var(--ink);
+}
+html[data-ds-style="esencial-premium"] .filters .ds-cat[aria-pressed="true"]::before{
+  content:"●";color:var(--warm);font-size:.6em;margin-right:7px;
+}
+/* Ficha: galería con marco interior doble. */
+html[data-ds-style="esencial-premium"] .pdp-gallery{
+  border-color:color-mix(in srgb,var(--warm) 50%,var(--line));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--warm) 25%,transparent);
+}
+/* Pie con filete doble. */
+html[data-ds-style="esencial-premium"] .site-footer{
+  border-top:0;
+  background:
+    linear-gradient(var(--line),var(--line)) top/100% 1px no-repeat,
+    linear-gradient(var(--warm),var(--warm)) top/100% 4px no-repeat;
+}
+/* Anillo decorativo girando detrás del hero (solo premium). */
+html[data-ds-style="esencial-premium"] .hero::after{
+  content:"";position:absolute;z-index:-1;right:-160px;top:-160px;
+  width:420px;height:420px;border-radius:50%;pointer-events:none;
+  border:1px dashed color-mix(in srgb,var(--warm) 50%,transparent);
+  animation:spin-slow 60s linear infinite;
+}
+/* En la noche de gala el ámbar toma más protagonismo. */
+html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .eyebrow{color:var(--warm)}
+html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{color:var(--warm)}
+
+@keyframes sheen{0%,55%{background-position:130% 0}90%,100%{background-position:-40% 0}}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 35%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes spin-slow{to{transform:rotate(360deg)}}
 
 /* Pie */
 .site-footer{padding-block:40px;border-top:1px solid var(--line);color:var(--muted);font-size:.92rem}
