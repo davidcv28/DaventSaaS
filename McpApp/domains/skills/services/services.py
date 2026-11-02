@@ -118,3 +118,60 @@ def clamp_limit(value) -> int:
     except (TypeError, ValueError):
         return DEFAULT_LIMIT
     return max(1, min(value, MAX_LIMIT))
+
+
+#=========================================
+# CATÁLOGO DESIGN (patrones reales del producto)
+#=========================================
+def pattern_payload(pattern, full : bool = False) -> dict:
+    data    =   {
+        'slug'      :   pattern.slug,
+        'nombre'    :   pattern.nombre,
+        'categoria' :   pattern.categoria,
+        'tier'      :   pattern.tier,
+        'template'  :   pattern.template,
+        'tags'      :   list(pattern.tags or []),
+        'has_markup':   bool((pattern.html or '').strip()),
+    }
+    if full:
+        data['layout']      =   pattern.layout or {}
+        data['tokens']      =   pattern.tokens or {}
+        data['style_slug']  =   pattern.style.slug if pattern.style_id and pattern.style else ''
+    return data
+
+
+def list_design_patterns(categoria : str = '', limit : int = DEFAULT_LIMIT) -> list:
+    from StoreApp.domains.design.models import DesignPattern
+    qs  =   DesignPattern.objects.filter(is_active = True).order_by('position', 'pk')
+    if categoria:
+        qs  =   qs.filter(categoria__iexact = categoria)
+    return list(qs[:clamp_limit(limit)])
+
+
+def get_design_pattern(slug : str):
+    from StoreApp.domains.design.models import DesignPattern
+    return DesignPattern.objects.select_related('style').filter(slug = slug, is_active = True).first()
+
+
+def propose_design(prompt : dict) -> dict | None:
+    """
+    El mismo mapeo determinista que usa el wizard "Diseño asistido"
+    (rubro/tags → DesignPattern + DesignStyle): expone por MCP la decisión
+    real del producto, no una copia.
+    """
+    from StoreApp.domains.stores.services.ai_design_mcp import resolve_design
+    resolved    =   resolve_design(prompt or {})
+    if not resolved:
+        return None
+    pattern     =   resolved['pattern']
+    style       =   resolved.get('style')
+    return {
+        'pattern'   :   pattern_payload(pattern, full = True),
+        'style'     :   {
+            'slug'      :   style.slug,
+            'nombre'    :   style.nombre,
+            'categoria' :   style.categoria,
+            'tier'      :   style.tier,
+            'tokens'    :   style.tokens or {},
+        } if style else None,
+    }

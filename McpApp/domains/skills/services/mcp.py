@@ -2,9 +2,13 @@ from McpApp.domains.skills.services.services import (
     apply_style,
     catalog_summary,
     design_payload,
+    get_design_pattern,
     get_design_style,
     list_categories,
+    list_design_patterns,
     list_design_styles,
+    pattern_payload,
+    propose_design,
     search_design_styles,
 )
 
@@ -79,6 +83,41 @@ TOOLS   =   [
             'properties':   {'limit': {'type': 'integer', 'minimum': 1, 'maximum': 50, 'default': 50}},
         },
     },
+    {
+        'name'          :   'list_design_patterns',
+        'description'   :   'Lista los patrones de diseño reales del producto (DesignPattern activos): plantilla, tier, tags y si tienen markup propio.',
+        'inputSchema'   :   {
+            'type'      :   'object',
+            'properties':   {
+                'categoria' :   {'type': 'string'},
+                'limit'     :   {'type': 'integer', 'minimum': 1, 'maximum': 50, 'default': 10},
+            },
+        },
+    },
+    {
+        'name'          :   'get_design_pattern',
+        'description'   :   'Devuelve un patrón completo por slug: layout por superficie, tokens del contrato y estilo asociado.',
+        'inputSchema'   :   {
+            'type'      :   'object',
+            'properties':   {'slug': {'type': 'string'}},
+            'required'  :   ['slug'],
+        },
+    },
+    {
+        'name'          :   'propose_design',
+        'description'   :   'Resuelve el diseño que elegiría el wizard "Diseño asistido" para un pedido {rubro, goals[], tone, audience, must_have[], notes}: patrón + estilo con layout y tokens.',
+        'inputSchema'   :   {
+            'type'      :   'object',
+            'properties':   {
+                'rubro'     :   {'type': 'string', 'description': 'Id del rubro (ej: gastronomia, moda, tecnologia).'},
+                'goals'     :   {'type': 'array', 'items': {'type': 'string'}},
+                'tone'      :   {'type': 'string'},
+                'audience'  :   {'type': 'string'},
+                'must_have' :   {'type': 'array', 'items': {'type': 'string'}},
+                'notes'     :   {'type': 'string'},
+            },
+        },
+    },
 ]
 
 
@@ -112,6 +151,22 @@ def call_tool(name : str, arguments : dict | None = None) -> dict:
         return {'categories': list_categories()}
     if name == 'design_catalog_summary':
         return {'catalog': catalog_summary(limit = args.get('limit', 50))}
+    if name == 'list_design_patterns':
+        return {'patterns': [
+            pattern_payload(p) for p in list_design_patterns(
+                categoria = args.get('categoria', ''), limit = args.get('limit', 10),
+            )
+        ]}
+    if name == 'get_design_pattern':
+        pattern =   get_design_pattern(args.get('slug', ''))
+        if pattern is None:
+            raise ValueError(f'No existe el patrón "{args.get("slug", "")}".')
+        return pattern_payload(pattern, full = True)
+    if name == 'propose_design':
+        proposal    =   propose_design(args)
+        if proposal is None:
+            raise ValueError('Sin patrón elegible para ese pedido (catálogo vacío).')
+        return proposal
     raise ValueError(f'Herramienta desconocida: {name}')
 
 

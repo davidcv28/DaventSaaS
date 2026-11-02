@@ -38,6 +38,7 @@ class McpProtocolTests(TestCase):
         self.assertEqual(names, {
             'list_design_styles', 'search_design_styles', 'get_design_style',
             'apply_design_style', 'list_design_categories', 'design_catalog_summary',
+            'list_design_patterns', 'get_design_pattern', 'propose_design',
         })
         for tool in tools:
             self.assertEqual(tool['inputSchema']['type'], 'object')
@@ -78,6 +79,38 @@ class McpProtocolTests(TestCase):
         self.assertIsNone(handle({
             'jsonrpc': '2.0', 'method': 'notifications/initialized', 'params': {},
         }))
+
+    def test_propose_design_returns_pattern_and_style(self):
+        #El tool corre el MISMO resolve_design del wizard: patrón + estilo
+        #del catálogo Design (seed cargado en migraciones del test DB).
+        response    =   self._rpc('tools/call', {
+            'name'      :   'propose_design',
+            'arguments' :   {'rubro': 'gastronomia', 'tone': 'calido', 'must_have': ['whatsapp']},
+        })
+        data        =   json.loads(response['result']['content'][0]['text'])
+        pattern     =   data['pattern']
+        self.assertTrue(pattern['slug'])
+        self.assertTrue(pattern['template'])
+        if data.get('style') is not None:
+            self.assertIsInstance(data['style']['tokens'], dict)
+
+    def test_list_and_get_design_patterns(self):
+        listed      =   self._rpc('tools/call', {'name': 'list_design_patterns', 'arguments': {'limit': 5}})
+        patterns    =   json.loads(listed['result']['content'][0]['text'])['patterns']
+        self.assertTrue(patterns)
+        self.assertIn('has_markup', patterns[0])
+        detail      =   self._rpc('tools/call', {
+            'name': 'get_design_pattern', 'arguments': {'slug': patterns[0]['slug']},
+        })
+        data        =   json.loads(detail['result']['content'][0]['text'])
+        self.assertIn('layout', data)
+        self.assertIn('tokens', data)
+
+    def test_get_design_pattern_unknown_slug_is_error(self):
+        response    =   self._rpc('tools/call', {
+            'name': 'get_design_pattern', 'arguments': {'slug': 'no-existe'},
+        })
+        self.assertEqual(response['error']['code'], -32602)
 
     def test_seed_data_is_queryable_over_the_protocol(self):
         #El catálogo seed responde por MCP: el prototipo corre contra la
