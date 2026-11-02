@@ -109,18 +109,19 @@ const tierBadge = (template, own) => {
 const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
   value: p.slug,
   label: `${p.nombre} · ${p.categoria}`,
-  icon: 'layout-grid',
-  badge: tierBadge(p.template, p.tier).text,
-  badgeTone: tierBadge(p.template, p.tier).tone
+  icon: 'layout-grid'
 })))
 const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
   value: s.slug,
   label: `${s.nombre} · ${s.categoria}`,
   icon: 'palette',
-  swatch: s.tokens?.palette?.accent || '',
-  badge: tierBadge(s.template, s.tier).text,
-  badgeTone: tierBadge(s.template, s.tier).tone
+  swatch: s.tokens?.palette?.accent || ''
 })))
+// Plan mínimo del diseño elegido: se muestra bajo el selector, no dentro.
+const currentPatternBadge = computed(() => {
+  const p = patternOptions.value.find((o) => o.slug === currentPattern.value)
+  return p ? tierBadge(p.template, p.tier) : null
+})
 
 // Un patrón sin tema elegido trae sus fuentes (tokens del DesignPattern).
 function patternTheme(p) {
@@ -339,6 +340,9 @@ onBeforeUnmount(() => {
                 aria-label="Diseño" placeholder="Elegí un diseño…"
                 :disabled="!patternOptions.length" @change="onPatternPick"
               />
+              <p v-if="currentPatternBadge" class="dmenu-plan">
+                <span class="dmenu-badge" :class="currentPatternBadge.tone">{{ currentPatternBadge.text }}</span>
+              </p>
             </div>
 
             <div class="dmenu-field">
@@ -351,12 +355,6 @@ onBeforeUnmount(() => {
               <p class="dmenu-hint">Cada diseño trae sus estilos: color, tipografía y modo.</p>
             </div>
           </div>
-
-          <p class="dmenu-legend" aria-label="Planes que habilitan cada diseño">
-            <span class="dmenu-legend-item"><i class="dot green" aria-hidden="true"></i> Todos los planes</span>
-            <span class="dmenu-legend-item"><i class="dot amber" aria-hidden="true"></i> Desde Estándar</span>
-            <span class="dmenu-legend-item"><i class="dot purple" aria-hidden="true"></i> Premium</span>
-          </p>
 
           <p v-if="status === 'error'" class="dmenu-alert" role="alert">
             No pudimos cargar el catálogo de diseño.
@@ -494,20 +492,16 @@ onBeforeUnmount(() => {
 .dmenu-field label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
-.dmenu-legend {
-  margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
-  padding: 8px 12px; border-radius: 10px; font-size: 11.5px; font-weight: 600;
-  color: var(--ink-2, #334155);
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--brand-500, #6366f1) 6%, transparent),
-    color-mix(in srgb, var(--accent, #f59e0b) 5%, transparent));
-  border: 1px dashed color-mix(in srgb, var(--brand-500, #6366f1) 25%, transparent);
+.dmenu-plan { margin: 0; display: flex; align-items: center; }
+.dmenu-badge {
+  display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 99px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .02em; line-height: 1.5;
+  border: 1px solid transparent;
 }
-.dmenu-legend-item { display: inline-flex; align-items: center; gap: 6px; }
-.dmenu-legend .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-.dmenu-legend .dot.green { background: #22c55e; box-shadow: 0 0 0 3px #dcfce7; }
-.dmenu-legend .dot.amber { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
-.dmenu-legend .dot.purple { background: #8b5cf6; box-shadow: 0 0 0 3px #ede9fe; }
+.dmenu-badge.green { background: var(--ok-bg, #dcfce7); border-color: var(--ok-line, #bbf7d0); color: var(--ok-ink, #15803d); }
+.dmenu-badge.amber { background: var(--warn-bg, #fef3c7); border-color: var(--warn-line, #fde68a); color: var(--warn-ink, #b45309); }
+.dmenu-badge.purple { background: #ede9fe; border-color: #ddd6fe; color: #6d28d9; }
+[data-theme='dark'] .dmenu-badge.purple { background: rgba(139, 92, 246, .16); border-color: rgba(167, 139, 250, .4); color: #c4b5fd; }
 .dmenu-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dmenu-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 @media (min-width: 1100px) {
