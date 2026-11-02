@@ -124,10 +124,8 @@ const metaIcon = { open: 'clock', loc: 'map-pin', years: 'flame' }
       </figure>
     </div>
     <div v-if="stripItems.length > 1" v-reveal="210" class="gy-strip" aria-hidden="true">
-      <div class="gy-strip-track">
-        <div v-for="copy in 2" :key="copy" class="gy-strip-inner">
-          <span v-for="(item, i) in stripItems" :key="i">{{ item }}</span>
-        </div>
+      <div class="gy-wrap gy-strip-inner">
+        <span v-for="(item, i) in stripItems" :key="i">{{ item }}</span>
       </div>
     </div>
   </section>

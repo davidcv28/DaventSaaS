@@ -555,15 +555,6 @@ class StoreViewSet(StoreBaseViewSet):
             override                        =   (request.query_params.get('template') or '').strip()
             if override:
                 customization.template      =   override
-            #El panel también prueba el estilo (DesignStyle) antes de
-            #guardarlo: ?style=<slug> re-templa el documento con los tokens
-            #de ese estilo (mismo shape que escribe el front al elegirlo).
-            style_slug                      =   (request.query_params.get('style') or '').strip()
-            if style_slug:
-                from StoreApp.domains.design.models import DesignStyle
-                ds                          =   DesignStyle.objects.filter(slug = style_slug, is_active = True).first()
-                if ds is not None:
-                    customization.site_theme    =   {**(ds.tokens or {}), 'style': {'id': ds.slug}}
         #La ficha del diseño pinta un producto concreto: ?product=<id> (solo
         #activos de la tienda; un id ajeno o de baja rinde con el contexto
         #vacío, nunca con datos de otro).

@@ -69,7 +69,6 @@ import TipHint from '../components/TipHint.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates, patternSurfaces, normalizeLayoutConfig } from '../templates/index.js'
-import { blockSpec } from '../templates/blocks.js'
 import { designApi } from '../api/design.api.js'
 
 const router = useRouter()
@@ -1396,63 +1395,6 @@ const templateLandingBlocks = computed(() => templateDef(designForm.template).bl
 const supportsBlock = (id) => templateLandingBlocks.value.some((b) => (typeof b === 'string' ? b : b.id) === id)
 const supportsServices = computed(() => supportsBlock('services'))
 const supportsPlans = computed(() => supportsBlock('plans'))
-
-// Modal "Qué mostrar" (botón de la tarjeta Diseño): interruptores de las
-// secciones de la portada con guardado instantáneo, como los toggles de
-// Opiniones. El orden sigue el de los bloques del diseño elegido; los
-// extras (horarios, ubicación, botón claro/oscuro) van al final.
-const showSectionsOpen = ref(false)
-const showToggleBusy = ref('')
-const SHOW_FLAG_BY_BLOCK = {
-  announcements: 'show_announcements',
-  highlights: 'show_highlights',
-  about: 'show_about',
-  services: 'show_services',
-  plans: 'show_plans',
-  stats: 'show_stats',
-  benefits: 'show_benefits',
-  countdown: 'show_countdown',
-  offers: 'show_offers',
-  brands: 'show_brands',
-  gallery: 'show_gallery',
-  testimonials: 'show_testimonials',
-  faq: 'show_faq',
-  timeline: 'show_timeline',
-  team: 'show_team',
-  video: 'show_video',
-  cta: 'show_cta',
-  contact: 'show_contact'
-}
-const SHOW_SECTION_EXTRAS = [
-  { id: 'hours', flag: 'show_hours', icon: 'clock', label: 'Horarios', desc: 'Cuándo atendés al público, junto a los datos de contacto.' },
-  { id: 'location', flag: 'show_location', icon: 'map-pin', label: 'Ubicación', desc: 'El mapa con la dirección de tu negocio.' },
-  { id: 'theme_toggle', flag: 'theme_toggle', icon: 'sun', label: 'Botón claro/oscuro', desc: 'El visitante puede cambiar tu web entre modo claro y oscuro.' }
-]
-const showSectionItems = computed(() => {
-  const items = []
-  for (const b of templateLandingBlocks.value) {
-    const id = typeof b === 'string' ? b : b.id
-    const flag = SHOW_FLAG_BY_BLOCK[id]
-    const spec = flag && blockSpec('landing', id)
-    if (spec) items.push({ id, flag, icon: spec.icon, label: spec.label, desc: spec.desc })
-  }
-  return items.concat(SHOW_SECTION_EXTRAS)
-})
-watch(showSectionsOpen, (on) => { document.body.style.overflow = on ? 'hidden' : '' })
-function onShowSectionsKey(e) { if (e.key === 'Escape' && showSectionsOpen.value) showSectionsOpen.value = false }
-onMounted(() => window.addEventListener('keydown', onShowSectionsKey))
-onUnmounted(() => window.removeEventListener('keydown', onShowSectionsKey))
-async function toggleShowFlag(item) {
-  if (showToggleBusy.value) return
-  const flag = item.flag
-  const prev = designForm[flag] !== false
-  designForm[flag] = !prev
-  showToggleBusy.value = flag
-  const ok = await store.saveCustomization({ [flag]: designForm[flag] })
-  if (!ok) designForm[flag] = prev
-  else pushToast(`${item.label} ${designForm[flag] ? 'se muestra' : 'se oculta'} en tu web`, () => toggleShowFlag(item))
-  showToggleBusy.value = ''
-}
 const blockDesigns = (id) => Object.entries(TEMPLATE_DEFS)
   .filter(([, def]) => (def.blocks?.landing || []).some((b) => (typeof b === 'string' ? b : b.id) === id))
   .map(([key]) => TEMPLATE_LABELS[key] || key)
@@ -4159,7 +4101,6 @@ async function changePassword() {
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
         :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
         @navigate="section = $event" @open-studio="router.push({ name: 'design-studio' })"
-        @open-sections="showSectionsOpen = true"
       >
         <template #pages>
           <div class="card">
@@ -4185,35 +4126,6 @@ async function changePassword() {
           <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
         </template>
       </DesignStylesTab>
-
-      <!-- ===== Modal "Qué mostrar": secciones visibles de la portada ===== -->
-      <div v-if="showSectionsOpen" class="mk-overlay" @click.self="showSectionsOpen = false">
-        <div class="mk-modal" role="dialog" aria-modal="true" aria-label="Qué mostrar en tu página">
-          <header class="mk-modal-head">
-            <span class="mk-modal-ico"><AppIcon name="checklist" :size="20" /></span>
-            <div class="mk-modal-txt">
-              <h2>Qué mostrar</h2>
-              <small>Elegí las secciones que se ven en tu página. Se guarda al instante.</small>
-            </div>
-            <button type="button" class="mk-modal-x" aria-label="Cerrar" @click="showSectionsOpen = false"><AppIcon name="x" :size="18" /></button>
-          </header>
-          <div class="mk-modal-body">
-            <div class="check-list" role="group" aria-label="Secciones de tu página">
-              <label v-for="item in showSectionItems" :key="item.id" class="check-item">
-                <input
-                  type="checkbox" :checked="designForm[item.flag] !== false"
-                  :disabled="showToggleBusy === item.flag" @change="toggleShowFlag(item)"
-                />
-                <span class="check-text">
-                  <strong><AppIcon :name="item.icon" :size="14" /> {{ item.label }}</strong>
-                  <small>{{ item.desc }}</small>
-                </span>
-              </label>
-            </div>
-            <p class="hint">Las secciones vacías se ocultan solas aunque estén activadas.</p>
-          </div>
-        </div>
-      </div>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">

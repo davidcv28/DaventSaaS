@@ -12,12 +12,9 @@ import { useStoreCatalog, SORT_OPTIONS } from '../../../composables/useStoreCata
 import TplProductCard from '../../../components/store/TplProductCard.vue'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
-import { useRzFx } from './useRzFx.js'
 
 const ctx = inject('storePage')
 const { custom, shopName, slug } = ctx
-const pageEl = ref(null)
-useRzFx(pageEl)
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const c = useStoreCatalog({ pageSize: 12 })
 const {
@@ -51,7 +48,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
 </script>
 
 <template>
-  <div ref="pageEl" class="sp-page-root rz-cat-page">
+  <div class="sp-page-root rz-cat-page">
     <!-- Encabezado: migas, título y contadores en una sola fila editorial -->
     <header class="rz-cat-head">
       <div class="rz-cat-wrap">

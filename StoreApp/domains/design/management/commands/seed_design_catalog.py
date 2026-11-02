@@ -141,6 +141,5 @@ class Command(BaseCommand):
             DesignStyle.objects.filter(is_default = True).exclude(slug = DEFAULT_STYLE).update(is_default = False)
             DesignStyle.objects.filter(slug = DEFAULT_STYLE).update(is_default = True)
         if patterns:
-            DesignPattern.objects.filter(is_default = True).update(is_default = False)
-            if DEFAULT_PATTERN:
-                DesignPattern.objects.filter(slug = DEFAULT_PATTERN).update(is_default = True)
+            DesignPattern.objects.filter(is_default = True).exclude(slug = DEFAULT_PATTERN).update(is_default = False)
+            DesignPattern.objects.filter(slug = DEFAULT_PATTERN).update(is_default = True)

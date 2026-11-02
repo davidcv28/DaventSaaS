@@ -3,16 +3,11 @@
 // (galería + panel de compra, CTA de WhatsApp, especificaciones, relacionados
 // y reseñas); sólo cambia la piel. Ver CatalogoView.vue.
 import '../../../assets/store-raiz.css'
-import { ref } from 'vue'
 import RaizProducto from '../raiz/ProductoView.vue'
-import { useMcFx } from './useMcFx.js'
-
-const pageEl = ref(null)
-useMcFx(pageEl)
 </script>
 
 <template>
-  <div ref="pageEl" class="store-page mc-skin mc-product" data-template="raiz">
+  <div class="store-page mc-skin mc-product" data-template="raiz">
     <RaizProducto />
   </div>
 </template>

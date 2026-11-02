@@ -4137,23 +4137,18 @@ html{ scroll-behavior: smooth; }
 
 /* --- Bloque 'aipricing' (solo IA): cards | table ------------------------ */
 .sp-aipricing{ padding: 64px 0 0; }
-.sp-aipricing-list{ list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin: 20px 0 0; padding: 0; align-items: stretch; }
-.sp-aipricing-card{ display: grid; gap: 8px; align-content: start; padding: 22px 20px; border-radius: var(--r-md, 16px); border: 1px solid var(--sp-line); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow-wrap: anywhere; position: relative; transition: transform .38s var(--sp-ease, cubic-bezier(.16,1,.3,1)), box-shadow .38s var(--sp-ease, cubic-bezier(.16,1,.3,1)), border-color .2s ease-out; }
-.sp-aipricing-card:hover{ transform: translateY(-5px); border-color: color-mix(in srgb, var(--sp-accent-text, var(--sp-ink)) 38%, var(--sp-line)); box-shadow: var(--sp-shadow-md, var(--sp-shadow-sm)); }
-.sp-aipricing-card::before{ content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; border-radius: var(--r-md, 16px) var(--r-md, 16px) 0 0; background: linear-gradient(90deg, var(--sp-accent-text, var(--sp-ink)), transparent 70%); opacity: 0; transition: opacity .3s ease-out; }
-.sp-aipricing-card:hover::before{ opacity: .9; }
-.sp-aipricing-name{ margin: 0; font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; color: var(--sp-ink); }
-.sp-aipricing-amount{ font-size: 27px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; color: var(--sp-ink); font-variant-numeric: tabular-nums; }
+.sp-aipricing-list{ list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 20px 0 0; padding: 0; }
+.sp-aipricing-card{ display: grid; gap: 8px; align-content: start; padding: 18px; border-radius: var(--r-md, 16px); border: 1px solid var(--sp-line); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); overflow-wrap: anywhere; }
+.sp-aipricing-name{ margin: 0; font-size: 15px; font-weight: 700; color: var(--sp-ink); }
+.sp-aipricing-amount{ font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--sp-ink); }
 .sp-aipricing-note{ margin: 0; font-size: 13px; line-height: 1.6; color: var(--sp-muted); }
-.sp-aipricing-feats{ list-style: none; display: grid; gap: 7px; margin: 8px 0 0; padding: 12px 0 0; border-top: 1px solid var(--sp-line); }
+.sp-aipricing-feats{ list-style: none; display: grid; gap: 6px; margin: 6px 0 0; padding: 0; }
 .sp-aipricing-feats li{ display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--sp-ink-2); }
 .sp-aipricing-feats svg{ flex: none; margin-top: 2px; color: var(--sp-accent-text); }
 @media (min-width: 640px){ .sp-aipricing-list{ grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); } }
 /* Variante tabla: filas alineadas, sin tarjetas. */
 .sp-aipricing.is-table .sp-aipricing-list{ gap: 0; border-top: 1px solid var(--sp-line); }
 .sp-aipricing.is-table .sp-aipricing-card{ grid-template-columns: minmax(0, 1.2fr) minmax(0, .6fr) minmax(0, 1.4fr); align-items: center; gap: 12px 18px; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0; background: transparent; box-shadow: none; padding: 14px 0; }
-.sp-aipricing.is-table .sp-aipricing-card::before{ content: none; }
-.sp-aipricing.is-table .sp-aipricing-card:hover{ transform: none; }
 .sp-aipricing.is-table .sp-aipricing-feats{ grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; }
 @media (max-width: 639px){
   .sp-aipricing.is-table .sp-aipricing-card{ grid-template-columns: minmax(0, 1fr); }

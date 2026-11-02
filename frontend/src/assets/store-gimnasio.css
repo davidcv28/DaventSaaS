@@ -404,17 +404,13 @@
   color: var(--gy-on-lime);
   border-top: 1px solid var(--gy-ink);
   border-bottom: 1px solid var(--gy-ink);
-  overflow: hidden;
-}
-.gy-strip-track {
-  display: flex;
-  width: max-content;
-  animation: gy-strip-loop 24s linear infinite;
 }
 .gy-strip-inner {
-  flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 10px 28px;
   padding-block: 22px;
   font-family: var(--gy-display);
   font-size: 28px;
@@ -422,22 +418,7 @@
   letter-spacing: .06em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-.gy-strip-inner span {
-  display: inline-flex;
-  align-items: center;
-}
-.gy-strip-inner span::after {
-  content: '';
-  width: 9px;
-  height: 9px;
-  margin-inline: 28px;
-  background: var(--gy-on-lime);
-  opacity: .45;
-  transform: rotate(45deg);
-}
-@keyframes gy-strip-loop {
-  to { transform: translateX(-50%); }
+  overflow: hidden;
 }
 
 /* ==========================================================================
@@ -1034,244 +1015,6 @@
 }
 
 /* ==========================================================================
-   PLANES (sp-aipricing) — membresías del gym.
-   Escritorio: tarjetas en fila (columnas iguales). Móvil: una columna.
-   Tarjeta premium: índice 01/02/03, banda superior lima, precio condensado.
-   ========================================================================== */
-.store-page[data-template='gimnasio'] .sp-aipricing { padding-top: 72px; }
-.store-page[data-template='gimnasio'] .sp-aipricing-list {
-  grid-template-columns: 1fr;
-  gap: 18px;
-  counter-reset: gyplan;
-}
-@media (min-width: 768px) {
-  .store-page[data-template='gimnasio'] .sp-aipricing-list {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    align-items: stretch;
-  }
-}
-.store-page[data-template='gimnasio'] .sp-aipricing-card {
-  position: relative;
-  gap: 10px;
-  padding: 26px 22px 22px;
-  border: 1px solid var(--gy-line);
-  border-top: 3px solid var(--gy-lime);
-  border-radius: 0;
-  background: var(--gy-card);
-  box-shadow: none;
-}
-.store-page[data-template='gimnasio'] .sp-aipricing-card::before {
-  counter-increment: gyplan;
-  content: counter(gyplan, decimal-leading-zero);
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  font-family: var(--st-font-heading, 'Barlow Condensed', sans-serif);
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: .14em;
-  color: color-mix(in srgb, var(--gy-lime) 60%, transparent);
-}
-.store-page[data-template='gimnasio'] .sp-aipricing-card:hover { border-color: var(--gy-lime); }
-.store-page[data-template='gimnasio'] .sp-aipricing-name {
-  font-family: var(--st-font-heading, 'Barlow Condensed', sans-serif);
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: .02em;
-  text-transform: uppercase;
-}
-.store-page[data-template='gimnasio'] .sp-aipricing-amount {
-  font-family: var(--st-font-heading, 'Barlow Condensed', sans-serif);
-  font-size: 40px;
-  font-weight: 800;
-  letter-spacing: -.01em;
-  line-height: 1;
-  color: var(--gy-lime);
-}
-.store-page[data-template='gimnasio'] .sp-aipricing-note { color: var(--gy-muted); }
-.store-page[data-template='gimnasio'] .sp-aipricing-feats { margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--gy-line); }
-.store-page[data-template='gimnasio'] .sp-aipricing-feats svg { color: var(--gy-lime); }
-
-/* ==========================================================================
-   ESTILO ELITE — gimnasio-elite (advanced): carbón + oro viejo.
-   Sobreescribe los --gy-* de base; el resto de la piel hereda solo.
-   ========================================================================== */
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] {
-  --gy-ink: #0B0B09;
-  --gy-panel: #12110D;
-  --gy-card: #181712;
-  --gy-line: #332E1F;
-  --gy-line-strong: #56503A;
-  --gy-text: #F4EFE2;
-  --gy-text-2: #D8D2C0;
-  --gy-muted: #A89F8C;
-  --gy-deep: #8A6F2E;
-  --gy-plate: #15140F;
-  --gy-paper: #F4EFE2;
-  --gy-paper-ink: #0B0B09;
-  --gy-paper-muted: #6B6553;
-  --gy-paper-line: #D8D2C0;
-  --sp-shadow-sm: 0 10px 28px -18px rgb(0 0 0 / .7);
-  --sp-shadow-md: 0 26px 60px -30px rgb(0 0 0 / .8);
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-btn--solid {
-  position: relative;
-  isolation: isolate;
-}
-@property --gy-beam {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-btn--solid::after {
-  content: '';
-  position: absolute;
-  inset: -2.5px;
-  z-index: -1;
-  background: conic-gradient(
-    from var(--gy-beam),
-    transparent 0deg 260deg,
-    color-mix(in srgb, var(--gy-lime) 45%, transparent) 300deg,
-    #FFF6DE 330deg,
-    #FFF 338deg,
-    transparent 360deg
-  );
-  animation: gy-beam-orbit 2.8s linear infinite;
-  pointer-events: none;
-}
-@keyframes gy-beam-orbit {
-  to { --gy-beam: 360deg; }
-}
-/* Cinta: en elite el loop pisa el acento con la banda dorada invertida. */
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-strip {
-  background: linear-gradient(90deg, #8A6F2E, var(--gy-lime) 40%, #B89A4A 80%);
-}
-/* Planes elite: tarjeta de membresía trabajada — gradiente profundo,
-   índice dorado, precio con filete y feats en lista caligráfica. */
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card {
-  padding: 30px 26px 26px;
-  border-color: var(--gy-line);
-  border-top: 3px solid var(--gy-line-strong);
-  background: linear-gradient(165deg, #1D1B14 0%, var(--gy-card) 55%, #14130E 100%);
-  box-shadow: var(--sp-shadow-sm);
-  transition: border-color .25s, box-shadow .25s, transform .25s;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card::before {
-  font-size: 17px;
-  color: color-mix(in srgb, var(--gy-lime) 70%, transparent);
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid color-mix(in srgb, var(--gy-lime) 10%, transparent);
-  pointer-events: none;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card:hover {
-  border-color: var(--gy-lime);
-  box-shadow: var(--sp-shadow-md);
-  transform: translateY(-4px);
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-amount {
-  font-size: 46px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--gy-line);
-  background: linear-gradient(100deg, #F4E6B8, var(--gy-lime) 60%, #8A6F2E);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-feats {
-  border-top: 0;
-  padding-top: 4px;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-feats svg {
-  color: var(--gy-lime);
-}
-/* Con detalles: el plan completo pasa a primer plano — haz de luz que
-   orbita el borde (nitido + halo), sello "Más completo" y fondo realzado. */
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats {
-  isolation: isolate;
-  border-color: transparent;
-  border-top-color: transparent;
-  background: linear-gradient(165deg, #241F10 0%, var(--gy-card) 50%, #171510 100%);
-  box-shadow: var(--sp-shadow-md);
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats::before {
-  content: '';
-  inset: -1px;
-  padding: 1.5px;
-  z-index: 1;
-  font-size: 0;
-  background: conic-gradient(
-    from var(--gy-beam),
-    transparent 0deg 220deg,
-    color-mix(in srgb, var(--gy-lime) 40%, transparent) 280deg,
-    var(--gy-lime) 322deg,
-    #FFF6DE 335deg,
-    transparent 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  animation: gy-beam-orbit 4s linear infinite;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats::after {
-  inset: -1px;
-  padding: 8px;
-  z-index: 1;
-  border: 0;
-  background: conic-gradient(
-    from var(--gy-beam),
-    transparent 0deg 220deg,
-    color-mix(in srgb, var(--gy-lime) 40%, transparent) 280deg,
-    var(--gy-lime) 322deg,
-    transparent 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  filter: blur(14px);
-  opacity: .6;
-  animation: gy-beam-orbit 4s linear infinite;
-}
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats .sp-aipricing-name::after {
-  content: 'Más completo';
-  display: inline-block;
-  margin-left: 10px;
-  padding: 3px 8px;
-  background: var(--gy-lime);
-  color: var(--gy-on-lime);
-  font-family: var(--gy-label);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  vertical-align: 6px;
-}
-/* Grano de película sobre la vista elite: textura sutil, no genérica. */
-.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-home::after {
-  content: '';
-  position: fixed;
-  inset: -50%;
-  z-index: 60;
-  pointer-events: none;
-  opacity: .05;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  animation: gy-grain 1.2s steps(6) infinite;
-}
-@keyframes gy-grain {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-3%, 2%); }
-  40% { transform: translate(2%, -4%); }
-  60% { transform: translate(-4%, 3%); }
-  80% { transform: translate(3%, -2%); }
-  100% { transform: translate(0, 0); }
-}
-
-/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (max-width: 960px) {
@@ -1287,8 +1030,5 @@
   .store-page[data-template='gimnasio'] .sp-service-title { font-size: 30px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gy-btn, .gy-card-link, .gy-card-go,
-  .store-page[data-template='gimnasio'] .sp-aipricing-card { transition: none; }
-  .gy-strip-track { animation: none; }
-  .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-btn--solid::after { animation: none; }
+  .gy-btn, .gy-card-link, .gy-card-go { transition: none; }
 }

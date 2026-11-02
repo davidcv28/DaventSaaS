@@ -15,16 +15,12 @@ const props = defineProps({
   //Diseño en ensayo del Studio: el backend solo lo acepta junto al token
   //de vista previa (la web pública nunca lo lee).
   template: { type: String, default: '' },
-  //Estilo en ensayo del panel Diseño (DesignStyle.slug): viaja como
-  //?style= para que el documento se re-renderice con sus tokens — el
-  //postMessage del Studio no entra a este iframe.
-  style: { type: String, default: '' },
   //Huella de lo que el documento pinta desde la base (logo/portada): al
   //cambiar, el iframe se recarga con los datos nuevos.
   revision: { type: String, default: '' },
   theme: { type: String, default: 'light' },
   title: { type: String, default: '' },
-  //Superficie visible del documento: landing | catalog | services | plans | product.
+  //Superficie visible del documento: landing | catalog | services | product.
   //El diseño marca cada bloque con `data-surface` y el resto se oculta.
   surface: { type: String, default: 'landing' },
   //Id del producto cuando la superficie es `product`: el backend resuelve
@@ -33,20 +29,12 @@ const props = defineProps({
 })
 
 const frame = ref(null)
-// El documento del patrón trae navs móviles con position: fixed (tab bar,
-// sheet, píldora): si el iframe se estira al alto del documento, ese fixed
-// queda anclado al fondo de toda la página y el menú no se ve. El iframe
-// ocupa el viewport real y el documento scrollea dentro.
-const frameHeight = ref(0)
-function measureViewport() {
-  frameHeight.value = Math.round(window.visualViewport?.height || window.innerHeight) || 800
-}
+const height = ref(0)
 
 const src = computed(() => {
   const params = new URLSearchParams({ theme: props.theme, surface: props.surface })
   if (props.preview) params.set('preview', props.preview)
   if (props.preview && props.template) params.set('template', props.template)
-  if (props.preview && props.style) params.set('style', props.style)
   if (props.revision) params.set('v', props.revision)
   if (props.product) params.set('product', String(props.product))
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
@@ -62,13 +50,16 @@ function onMessage(e) {
   }
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
-    if (['home', 'catalog', 'services', 'plans'].includes(route)) {
+    if (['home', 'catalog', 'services'].includes(route)) {
       emit('navigate', { route })
     } else if (route === 'product' && e.data.id) {
       emit('navigate', { route, id: String(e.data.id) })
     }
     return
   }
+  if (e.data?.type !== 'davent:ds-height') return
+  const next = Number(e.data.height) || 0
+  if (next > 0) height.value = next
 }
 
 function post(type, payload) {
@@ -81,6 +72,7 @@ function syncTheme() {
 }
 
 function onLoad() {
+  height.value = 0
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
 }
@@ -91,17 +83,8 @@ watch(() => props.surface, () => {
   syncTheme()
 })
 
-if (typeof window !== 'undefined') {
-  measureViewport()
-  window.addEventListener('message', onMessage)
-  window.addEventListener('resize', measureViewport)
-  window.visualViewport?.addEventListener('resize', measureViewport)
-}
-onBeforeUnmount(() => {
-  window.removeEventListener('message', onMessage)
-  window.removeEventListener('resize', measureViewport)
-  window.visualViewport?.removeEventListener('resize', measureViewport)
-})
+if (typeof window !== 'undefined') window.addEventListener('message', onMessage)
+onBeforeUnmount(() => window.removeEventListener('message', onMessage))
 </script>
 
 <template>
@@ -110,7 +93,7 @@ onBeforeUnmount(() => {
     class="ds-surface"
     :src="src"
     :title="title || 'Diseño de la web'"
-    :style="{ height: `${frameHeight}px` }"
+    :style="height ? { height: `${height}px` } : null"
     sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
     loading="lazy"
     @load="onLoad"

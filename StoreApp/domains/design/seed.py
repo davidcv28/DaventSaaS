@@ -53,8 +53,7 @@ BASE_STYLE = {
     'duration'      :   '480ms',
     'icons'         :   {'style': 'line', 'stroke': '1.5', 'size': '24', 'corners': 'rounded'},
 }
-#Sin patrón por defecto: la web sin elección usa la plantilla raíz.
-DEFAULT_PATTERN     =   None
+DEFAULT_PATTERN     =   'esencial'
 DEFAULT_STYLE       =   BASE_STYLE['slug']
 
 #=========================================

@@ -10,7 +10,6 @@ import ProductStars from '../../../components/ProductStars.vue'
 import ProductReviews from '../../../components/ProductReviews.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
-import { useRzFx } from './useRzFx.js'
 
 // Ficha de producto estilo marketplace (/<slug>/producto/<id>) con la
 // dirección de arte Raíz v2: galería 7/5, panel de compra sticky, ficha
@@ -38,8 +37,6 @@ watch(() => custom.value.show_catalog, (v) => {
 const catalog = ref({ categories: [], brands: [], products: [] })
 const status = ref('loading') // loading | ready | missing | error
 const copied = ref(false)
-const pageEl = ref(null)
-useRzFx(pageEl)
 
 // El glifo de la valoración acompaña la identidad del diseño (Raíz: estrella).
 const ratingIcon = computed(() => 'star')
@@ -106,7 +103,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div ref="pageEl" class="sp-page-root rz-pdp-page">
+  <div class="sp-page-root rz-pdp-page">
     <main class="rz-pdp-wrap rz-pdp-main">
       <nav v-reveal class="rz-pdp-crumbs" aria-label="Ruta">
         <RouterLink v-if="custom.site_mode !== 'catalog'" :to="homeTo">Inicio</RouterLink>

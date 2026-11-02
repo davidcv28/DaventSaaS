@@ -139,9 +139,9 @@ class StoreCustomization(models.Model):
     #(store-<id>.css).
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
-    TEMPLATE_BASE               =   ('raiz', 'alimentos', 'default')
+    TEMPLATE_BASE               =   ('raiz', 'alimentos')
     TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio')
-    TEMPLATE_ADVANCED           =   ('circuito', 'seguridad', 'nexo2')
+    TEMPLATE_ADVANCED           =   ('circuito', 'seguridad')
     #El motor "Diseñar con IA" no tiene patrones exclusivos ni propone los
     #diseños nuevos: sigue proponiendo solo los 6 de PUBLIC_TEMPLATES
     #(ai_design_recipes). El dueño sí puede elegirlos a mano desde el
@@ -150,7 +150,6 @@ class StoreCustomization(models.Model):
     TEMPLATE_CHOICES            =   [
         ('raiz',          'Raíz'),
         ('alimentos',     'Alimentos'),
-        ('default',       'Default'),
         ('trama',         'Trama'),
         ('indumentaria',  'Indumentaria'),
         ('boutique',      'Boutique'),
@@ -161,7 +160,6 @@ class StoreCustomization(models.Model):
         ('gimnasio',      'Gimnasio'),
         ('circuito',      'Circuito'),
         ('seguridad',     'Seguridad'),
-        ('nexo2',         'Nexo 2'),
     ]
     #Mapa de retirada -> diseño nuevo por afinidad de rubro (mig. 0053):
     #claros/neutros -> 'raiz', editoriales/moda -> 'trama', oscuros/
@@ -181,7 +179,6 @@ class StoreCustomization(models.Model):
         'perspective': 'circuito', 'circuit': 'circuito',
         'terminal': 'circuito', 'lab': 'circuito',
         'ai_lumen': 'circuito', 'ai_pulse': 'trama',
-        'nexo': 'nexo2',
     }
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

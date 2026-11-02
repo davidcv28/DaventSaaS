@@ -66,11 +66,6 @@ PATTERN_VARIABLES = {
     'categories':        {'type': 'list',  'label': 'Categorías'},
     'services':          {'type': 'list',  'label': 'Servicios'},
     'gallery':           {'type': 'list',  'label': 'Galería'},
-    'plans_title':       {'type': 'text',  'label': 'Título de suscripciones'},
-    'plans':             {'type': 'list',  'label': 'Suscripciones'},
-    'nav_plans':         {'type': 'list',  'label': 'Enlace de cabecera a Suscripciones'},
-    'nav_plans_tab':     {'type': 'list',  'label': 'Pestaña móvil de Suscripciones'},
-    'nav_plans_sheet':   {'type': 'list',  'label': 'Ítem del menú móvil de Suscripciones'},
 }
 SURFACE_RE = re.compile(r'data-surface="([a-z]+)"')
 LIST_VARIABLES = frozenset(name for name, spec in PATTERN_VARIABLES.items() if spec['type'] == 'list')
@@ -221,64 +216,6 @@ def _service_fragment(store):
         for row in rows
     ]
     return f'<ul class="ds-services-list">{"".join(items)}</ul>' if items else ''
-
-#=========================================
-# SUSCRIPCIONES (pagina 'plans' del site: membresias del negocio)
-#=========================================
-def _plans_enabled(store):
-    """La pagina Suscripciones viaja solo cuando quedo en los
-    site_templates efectivos (mismo criterio que la vista Vue)."""
-    from StoreApp.domains.services.services import effective_site_templates
-
-    return 'plans' in effective_site_templates(store)
-
-def _plans_fragment(store, customization):
-    if not _plans_enabled(store):
-        return ''
-    plans = getattr(customization, 'plans', None) if customization is not None else None
-    plans = plans if isinstance(plans, list) else []
-    items = []
-    for plan in plans[:4]:
-        if not isinstance(plan, dict):
-            continue
-        feats = ''.join(
-            f'<li>{escape(_text(item, 60))}</li>'
-            for item in (plan.get('items') or [])[:12]
-            if _text(item)
-        )
-        items.append(
-            '<li class="ds-plan">'
-            f'<h3 class="ds-plan-name">{escape(_text(plan.get("name"), 40))}</h3>'
-            f'<span class="ds-plan-price">{escape(_text(plan.get("price"), 20))}</span>'
-            f'<p class="ds-plan-note">{escape(_text(plan.get("note"), 80))}</p>'
-            f'<ul class="ds-plan-feats">{feats}</ul>'
-            '</li>'
-        )
-    if not items:
-        return (
-            '<p class="ds-empty" role="status">Todavia no hay suscripciones '
-            'publicadas: cargalas desde «Mi empresa» y aparecen aca.</p>'
-        )
-    return f'<ul class="ds-plans-list">{"".join(items)}</ul>'
-
-def _plans_nav(store):
-    """Enlaces del documento a la pagina Suscripciones (cabecera, barra y
-    hoja movil): vacios cuando la pagina no esta en el set efectivo."""
-    if not _plans_enabled(store):
-        return '', '', ''
-    link    = '<a href="#suscripciones" data-ds-route="plans">Suscripciones</a>'
-    tab     = (
-        '<a class="m-tab" href="#suscripciones" data-ds-route="plans">'
-        '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" '
-        'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-        '<path d="M3 8.5 5 17h14l2-8.5-5 3.5L12 5l-4 7z"/></svg>'
-        '<span>Suscripciones</span></a>'
-    )
-    sheet   = (
-        '<a href="#suscripciones" data-ds-route="plans" data-m-close>'
-        '<span>Suscripciones</span><span aria-hidden="true">04</span></a>'
-    )
-    return link, tab, sheet
 
 def _gallery_fragment(store, customization):
     from StoreApp.domains.stores.models import StoreGalleryImage
@@ -519,17 +456,11 @@ def build_store_context(store, product = None):
         context['store_logo'] = object_url(customization.logo_key) or ''
         context['store_cover'] = object_url(customization.cover_key) or ''
         context['store_accent'] = _text(customization.accent_custom, 7) or ''
-    context['plans_title'] = _text(getattr(customization, 'plans_title', ''), 80) or 'Suscripciones y membresías'
-    nav_plans, nav_plans_tab, nav_plans_sheet = _plans_nav(store)
     raw = {
         'products': _product_fragment(store),
         'categories': _category_fragment(store),
         'services': _service_fragment(store),
         'gallery': _gallery_fragment(store, customization),
-        'plans': _plans_fragment(store, customization),
-        'nav_plans': nav_plans,
-        'nav_plans_tab': nav_plans_tab,
-        'nav_plans_sheet': nav_plans_sheet,
     }
     product_ctx, product_raw = _product_values(store, product, customization, name)
     context.update(product_ctx)

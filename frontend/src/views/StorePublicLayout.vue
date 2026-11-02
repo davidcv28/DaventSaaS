@@ -81,9 +81,8 @@ const patternDoc = ref(null)
 const patternSurface = computed(() => (
   route.name === 'store-catalog' ? 'catalog'
     : route.name === 'store-services' ? 'services'
-      : route.name === 'store-plans' ? 'plans'
-        : route.name === 'store-product' ? 'product'
-          : 'landing'
+      : route.name === 'store-product' ? 'product'
+        : 'landing'
 ))
 const usePattern = computed(() => Boolean(
   //También en el Studio: la vista previa tiene que mostrar el mismo
@@ -135,7 +134,7 @@ function onPatternNavigate({ route, id } = {}) {
     router.push({ name: 'store-product', params: { slug: slug.value, productId: id } })
     return
   }
-  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value, plans: plansTo.value }[route]
+  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
   if (target) router.push(target)
 }
 function onLayoutMessage(e) {
@@ -270,9 +269,7 @@ const TEMPLATE_CSS = {
   clasico:   () => import('../assets/store-clasico.css'),
   circuito:  () => import('../assets/store-circuito.css'),
   seguridad: () => import('../assets/store-seguridad.css'),
-  gimnasio:  () => import('../assets/store-gimnasio.css'),
-  nexo2:      () => import('../assets/store-nexo2.css'),
-  default:   () => import('../assets/store-default.css')
+  gimnasio:  () => import('../assets/store-gimnasio.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
@@ -891,7 +888,6 @@ onBeforeUnmount(() => {
       :slug="slug"
       :preview="previewToken"
       :template="studioMode && studioTemplate ? studioTemplate : ''"
-      :style="studioMode ? (custom.site_theme?.style?.id || '') : ''"
       :revision="patternRevision"
       :theme="pageTheme"
       :surface="patternSurface"
