@@ -1,50 +1,51 @@
 <script setup>
 // Inicio del diseño MODERNTEC (tecnología / electrónica / gaming) —
-// generativa como Raíz: monta las secciones de useLayout('landing')
-// respetando enabled/variant/props. Las piezas firma son las Rh* de Raíz
-// eskinadas por store-moderntec.css ([data-template='moderntec']); el hero
-// se pisa con MtHero (chip mono + gradiente + tarjeta device con specs).
-// Los ids extra de la IA se resuelven con los Blk* compartidos.
+// generativa: monta las secciones del layout efectivo de la portada en su
+// orden. Pieza firma: MtHero (chip mono + gradiente cyan→violeta + tarjeta
+// device con specs); el resto son los bloques compartidos Blk* re-skineados
+// por store-moderntec.css (tokens --sp-* bajo [data-template='moderntec']).
 import { computed, inject } from 'vue'
 import { templateBlocks } from '../../../templates/index.js'
 import { landingExtras } from '../../../templates/_shared.js'
 import MtHero from '../../../components/store/blocks/moderntec/MtHero.vue'
-import RhAnnouncements from '../../../components/store/blocks/raiz/RhAnnouncements.vue'
-import RhGuarantees from '../../../components/store/blocks/raiz/RhGuarantees.vue'
-import RhCategories from '../../../components/store/blocks/raiz/RhCategories.vue'
-import RhRecent from '../../../components/store/blocks/raiz/RhRecent.vue'
-import RhAbout from '../../../components/store/blocks/raiz/RhAbout.vue'
-import RhStats from '../../../components/store/blocks/raiz/RhStats.vue'
-import RhServices from '../../../components/store/blocks/raiz/RhServices.vue'
-import RhBenefits from '../../../components/store/blocks/raiz/RhBenefits.vue'
-import RhCountdown from '../../../components/store/blocks/raiz/RhCountdown.vue'
-import RhOffers from '../../../components/store/blocks/raiz/RhOffers.vue'
-import RhBrands from '../../../components/store/blocks/raiz/RhBrands.vue'
-import RhGallery from '../../../components/store/blocks/raiz/RhGallery.vue'
-import RhTestimonials from '../../../components/store/blocks/raiz/RhTestimonials.vue'
-import RhFaq from '../../../components/store/blocks/raiz/RhFaq.vue'
-import RhCta from '../../../components/store/blocks/raiz/RhCta.vue'
-import RhContact from '../../../components/store/blocks/raiz/RhContact.vue'
+import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
+import BlkHighlights from '../../../components/store/blocks/BlkHighlights.vue'
+import BlkCategories from '../../../components/store/blocks/BlkCategories.vue'
+import BlkFeatured from '../../../components/store/blocks/BlkFeatured.vue'
+import BlkAbout from '../../../components/store/blocks/BlkAbout.vue'
+import BlkStats from '../../../components/store/blocks/BlkStats.vue'
+import BlkServices from '../../../components/store/blocks/BlkServices.vue'
+import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
+import BlkCountdown from '../../../components/store/blocks/BlkCountdown.vue'
+import BlkOffers from '../../../components/store/blocks/BlkOffers.vue'
+import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
+import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
+import BlkGallery from '../../../components/store/blocks/BlkGallery.vue'
+import BlkTestimonials from '../../../components/store/blocks/BlkTestimonials.vue'
+import BlkFaq from '../../../components/store/blocks/BlkFaq.vue'
+import BlkCta from '../../../components/store/blocks/BlkCta.vue'
+import BlkContact from '../../../components/store/blocks/BlkContact.vue'
 
 const MAP = {
   ...landingExtras,
-  announcements: RhAnnouncements,
+  announcements: BlkAnnouncements,
   hero: MtHero,
-  highlights: RhGuarantees,
-  categories: RhCategories,
-  featured: RhRecent,
-  about: RhAbout,
-  stats: RhStats,
-  services: RhServices,
-  benefits: RhBenefits,
-  countdown: RhCountdown,
-  offers: RhOffers,
-  brands: RhBrands,
-  gallery: RhGallery,
-  testimonials: RhTestimonials,
-  faq: RhFaq,
-  cta: RhCta,
-  contact: RhContact
+  highlights: BlkHighlights,
+  categories: BlkCategories,
+  featured: BlkFeatured,
+  about: BlkAbout,
+  stats: BlkStats,
+  services: BlkServices,
+  benefits: BlkBenefits,
+  countdown: BlkCountdown,
+  offers: BlkOffers,
+  plans: BlkPlans,
+  brands: BlkBrands,
+  gallery: BlkGallery,
+  testimonials: BlkTestimonials,
+  faq: BlkFaq,
+  cta: BlkCta,
+  contact: BlkContact
 }
 
 const { pageTemplate, custom } = inject('storePage')

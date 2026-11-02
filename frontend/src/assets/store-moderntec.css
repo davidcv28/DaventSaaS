@@ -363,6 +363,77 @@
 .store-page[data-template='moderntec'] .mt-spec-v.is-strike { text-decoration: line-through; color: var(--mt-ink-3); }
 
 /* ==========================================================================
+   3b. SUB-ÁRBOL RAÍZ (.mt-skin) — catálogo, ficha y servicios reusan las
+   vistas de Raíz montadas en <div class="store-page mt-skin"
+   data-template="raiz">. Las reglas rz-* quedan activas ahí pero sus
+   TOKENS siguen siendo los de Raíz (papel claro): se remapean a la paleta
+   ModernTec para que esas páginas salgan oscuras como el resto del diseño.
+   ========================================================================== */
+.store-page.mt-skin {
+  --rz-bg: var(--mt-bg);
+  --rz-surface: var(--mt-panel);
+  --rz-surface-2: var(--mt-surface-2);
+  --rz-surface-3: #1a2536;
+  --rz-line: var(--mt-line);
+  --rz-line-strong: var(--mt-line-strong);
+  --rz-line-ui: var(--mt-line-strong);
+  --rz-ink: var(--mt-ink);
+  --rz-ink-2: var(--mt-ink-2);
+  --rz-muted: var(--mt-ink-3);
+  --rz-accent: var(--mt-accent);
+  --rz-accent-soft: var(--mt-accent-soft);
+  --rz-accent-text: var(--mt-accent);
+  --rz-accent-deep: var(--mt-accent);
+  --rz-accent-deep-2: var(--mt-accent-2);
+  --rz-band-1: var(--mt-accent);
+  --rz-band-2: var(--mt-accent-2);
+  --rz-on-band: var(--mt-accent-ink);
+  --rz-on-band-2: var(--mt-accent-ink);
+  --rz-on-band-muted: rgba(4, 18, 26, .78);
+  --rz-ok: var(--mt-ok);
+  --rz-danger: var(--mt-danger);
+  --rz-warm: #f0b55a;
+  --rz-focus: var(--mt-focus);
+  --rz-scrim: var(--mt-scrim);
+  --rz-selection: var(--mt-accent-soft);
+  --rz-inverse-bg: #05070b;
+  --rz-inverse-bg-2: #0b1018;
+  --rz-inverse-ink: var(--mt-ink);
+  --rz-inverse-ink-2: var(--mt-ink-2);
+  --rz-inverse-muted: var(--mt-ink-3);
+  --rz-inverse-line: var(--mt-line);
+  --rz-inverse-accent: var(--mt-accent);
+  --rz-display: var(--mt-display);
+  --rz-body: var(--mt-body);
+  --rz-shadow-1: var(--mt-shadow-1);
+  --rz-shadow-2: var(--mt-shadow-device);
+  --rz-theme-color: #07090d;
+
+  --sp-bg: var(--mt-bg);
+  --sp-card: var(--mt-panel);
+  --sp-card-solid: var(--mt-panel);
+  --sp-surface: var(--mt-bg-2);
+  --sp-soft: var(--mt-accent-soft);
+  --sp-ink: var(--mt-ink);
+  --sp-ink-2: var(--mt-ink-2);
+  --sp-muted: var(--mt-ink-3);
+  --sp-line: var(--mt-line);
+  --sp-accent-text: var(--mt-accent);
+
+  --tpc-radius: var(--mt-rad-md);
+  --tpc-shadow: none;
+  --tpc-media-bg: var(--mt-bg-2);
+  --tpc-focus: var(--mt-focus);
+  --tpc-offer-bg: var(--mt-accent);
+  --tpc-offer-ink: var(--mt-accent-ink);
+
+  color-scheme: dark;
+  background: var(--mt-bg);
+  color: var(--mt-ink);
+  font-family: var(--mt-body);
+}
+
+/* ==========================================================================
    4. AJUSTES SOBRE LAS PIEZAS RAÍZ REUSADAS (rh-*, rz-*, sp-*)
    Solo tintes/acentos — la geometría la conserva cada bloque.
    ========================================================================== */

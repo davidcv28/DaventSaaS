@@ -1,9 +1,14 @@
 <script setup>
-// Catálogo de ModernTec: reusa la vista de Raíz — la piel la tiñe vía
-// .store-page[data-template='moderntec'] (store-moderntec.css).
+// Catálogo de ModernTec: la lógica de filtros/orden/búsqueda/paginado es la
+// de Raíz (useStoreCatalog), re-skineada. La hoja de Raíz está scopeada a
+// [data-template='raiz'], así que el lienzo se monta en un subárbol Raíz
+// (`.mt-skin`) y store-moderntec.css aplica la capa de tokens tech.
+import '../../../assets/store-raiz.css'
 import RaizCatalogo from '../raiz/CatalogoView.vue'
 </script>
 
 <template>
-  <RaizCatalogo />
+  <div class="store-page mt-skin" data-template="raiz">
+    <RaizCatalogo />
+  </div>
 </template>
