@@ -20,7 +20,10 @@ export function patternChoice(pattern, { allowed = [], hasStyle = false } = {}) 
   }
   const choice = {
     locked: false,
-    template: pattern.template,
+    // El template de la tienda guarda el SLUG del patrón (el backend lo
+    // resuelve por slug en pattern_for_template); el gate corre sobre el
+    // id de plantilla declarado por el diseño.
+    template: pattern.slug,
     layout_config: pattern.layout || {}
   }
   if (hasStyle) return choice

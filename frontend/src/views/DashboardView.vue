@@ -1759,7 +1759,8 @@ const sitePatternList = ref([])
 const LAYOUT_SURFACE_SET = new Set(['landing', 'catalog', 'services'])
 const sameLayout = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 const selectedSitePattern = computed(() => (
-  sitePatternList.value.find((p) => (
+  sitePatternList.value.find((p) => p.slug === designForm.template)
+  || sitePatternList.value.find((p) => (
     p.template === designForm.template && sameLayout(normalizeLayoutConfig(p.layout), designForm.layout_config)
   ))
   || sitePatternList.value.find((p) => p.template === designForm.template)

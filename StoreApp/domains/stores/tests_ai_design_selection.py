@@ -16,9 +16,9 @@ from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services import ai_design_skins as SKIN
 from StoreApp.domains.stores.services import ai_design_typography as TYPE
 
-PLAN_BASIC      =   ('raiz',)
-PLAN_PLUS       =   ('raiz',)
-PLAN_ADVANCED   =   ('raiz',)
+PLAN_BASIC      =   ('raiz', 'esencial', 'moderntec')
+PLAN_PLUS       =   PLAN_BASIC + ('mercado', 'gimnasio')
+PLAN_ADVANCED   =   PLAN_PLUS
 PLAN_AI         =   PLAN_ADVANCED
 
 FACT_KEYS       =   ('products', 'images', 'categories', 'brands', 'gallery', 'carousel',
@@ -100,8 +100,8 @@ class CatalogoCerrado(unittest.TestCase):
         self.assertGreater(len(TYPE.TYPE_PAIRS), 0)
 
     def test_public_catalog_is_one_design(self):
-        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz',))
-        self.assertEqual(len(R.PUBLIC_TEMPLATES), 1)
+        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec'))
+        self.assertEqual(len(R.PUBLIC_TEMPLATES), 5)
         self.assertEqual(R.PUBLIC_TEMPLATE_MAP['boutique'], 'raiz')
 
     def test_retired_ids_never_come_back_to_the_engine(self):
@@ -669,8 +669,9 @@ class ExploreSignatureTests(unittest.TestCase):
             A._explore_styles(self._pool(), seed, 3, signature = signature)[0]['template']
             for seed in range(6)
         }
-        #Catálogo de UN diseño: solo puede abrir 'raiz'.
-        self.assertEqual(openings, {'raiz'})
+        #La apertura siempre sale del catálogo público.
+        self.assertTrue(openings)
+        self.assertTrue(openings <= set(R.PUBLIC_TEMPLATES), openings)
 
     def test_exploration_slot_is_not_the_signature(self):
         #Con 4+ plantillas en el plan, la última tarjeta sale del resto del

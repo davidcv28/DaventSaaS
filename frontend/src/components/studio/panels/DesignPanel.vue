@@ -33,7 +33,8 @@ const tierLabel = (template) => {
 const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 const current = computed(() => (
-  options.value.find((p) => (
+  options.value.find((p) => p.slug === props.form.template)?.slug
+  || options.value.find((p) => (
     p.template === props.form.template && sameJson(patternLayout(p), props.form.layout_config)
   ))?.slug
   || options.value.find((p) => p.template === props.form.template)?.slug

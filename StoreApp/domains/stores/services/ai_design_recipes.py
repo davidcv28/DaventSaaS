@@ -856,7 +856,7 @@ BLOCK_TITLES                =   {
 #SOLO ids públicos sin reescribir cada receta a mano.
 #Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única):
 #catálogo de UN diseño — todo id viejo remapea a 'raiz' (Esencial).
-PUBLIC_TEMPLATES            =   ('raiz',)
+PUBLIC_TEMPLATES            =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec')
 PUBLIC_TEMPLATE_MAP         =   {
     'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
     'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',

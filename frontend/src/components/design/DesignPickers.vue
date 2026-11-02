@@ -42,7 +42,10 @@ const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 
 const currentPattern = computed(() => (
-  patternOptions.value.find((p) => (
+  // El template guarda el slug del patrón (el backend lo resuelve por slug
+  // primero): coincidencia directa antes que la heurística por plantilla.
+  patternOptions.value.find((p) => p.slug === props.form.template)?.slug
+  || patternOptions.value.find((p) => (
     p.template === props.form.template && sameJson(patternLayout(p), props.form.layout_config)
   ))?.slug
   // Un estilo aplica su propia estructura: si no hay patrón idéntico se
@@ -79,7 +82,7 @@ function onPatternPick(event) {
     event.target.value = currentPattern.value
     return
   }
-  props.form.template = p.template
+  props.form.template = p.slug
   props.form.layout_config = patternLayout(p)
   if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
 }
