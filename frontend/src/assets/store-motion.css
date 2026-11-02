@@ -514,6 +514,24 @@
   50%{ box-shadow: 0 12px 30px -14px color-mix(in srgb, var(--store-accent) 55%, transparent); }
 }
 
+/* --- Táctil: el :hover queda "pegado" tras el toque en mobile — se apagan
+   las elevaciones/transforms de hover para que nada quede flotando ------ */
+@media (hover: none){
+  .store-page :is(.sp-card, .sp-service, .sp-testimonial, .sp-faq-item,
+    .sp-btn, .sp-icon-btn, .sp-chip, .sp-top-links a):hover{ transform: none; }
+  .store-page[data-template] :is(
+    .rh-cat, .rh-offers-card, .rh-recent-card, .rh-benefit, .rh-testi-item,
+    .rh-gallery-item, .rh-service-row, .tr-trust-item, .bq-product, .al-card,
+    .cl-card, .sg-card, .sg-service, .ci-guar-item, .ci-services-item,
+    .ci-hero-card, .at-card, .at-tile, .tpc-card
+  ):hover{ transform: none; box-shadow: none; }
+  .store-page[data-template] :is(
+    .rh-cat-media img, .rh-gallery-item img, .al-card-media img, .sg-card img,
+    .at-card img, .at-tile img, .bq-product img, .cl-card img,
+    .ci-hero-card-media img, .tpc-media img
+  ){ transform: none !important; }
+}
+
 /* --- Accesibilidad: nada de esto corre si el visitante lo apagó ----------- */
 @media (prefers-reduced-motion: reduce){
   .store-page *,

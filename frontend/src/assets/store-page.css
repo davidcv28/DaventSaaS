@@ -441,6 +441,11 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
    permite reordenarlas con `order` desde el editor de bloques (los
    hijos sin order conservan el orden declarado en el markup). */
 .sp-page-root > main{ display: flex; flex-direction: column; min-width: 0; }
+/* Render diferido de los bloques de la portada: el navegador no pinta las
+   secciones fuera de pantalla (landings largas) y las materializa al
+   acercarse — recorta el costo del primer render sin tocar el layout.
+   `auto 480px` recuerda el alto real tras la primera pasada. */
+.sp-page-root > [data-blk]{ content-visibility: auto; contain-intrinsic-size: auto 480px; }
 /* La última sección del inicio (hero/about/galería/contacto, según estén
    activas) siempre respira antes del pie: sin este aire el contenido choca
    con el borde superior del footer. */

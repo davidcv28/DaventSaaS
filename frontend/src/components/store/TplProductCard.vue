@@ -12,7 +12,7 @@
 //        > .tpc-body(.tpc-eyebrow, .tpc-name, stars, .tpc-desc, tags,
 //                    .tpc-foot[.tpc-price+.tpc-save, .tpc-go|.tpc-add])
 // Filas (layout="row"): media en riel lateral fijo + body flex; mismo contrato.
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import OfferSeal from './OfferSeal.vue'
 import ProductStars from '../ProductStars.vue'
@@ -53,6 +53,18 @@ const eyebrow = computed(() => [props.cat, props.brand].filter(Boolean).join(' �
 const ariaLabel = computed(() =>
   offer.value != null ? `${props.p.name} — ${price.value} (antes ${oldPrice.value})` : `${props.p.name} — ${price.value}`
 )
+
+// Imagen: fade-in al cargar y placeholder amigable si la URL está rota —
+// una foto caída no muestra el ícono de imagen rota del navegador.
+const imgEl = ref(null)
+const imgOk = ref(false)
+const imgErr = ref(false)
+onMounted(() => {
+  if (imgEl.value?.complete) {
+    if (imgEl.value.naturalWidth) imgOk.value = true
+    else if (props.p.image) imgErr.value = true
+  }
+})
 </script>
 
 <template>
@@ -60,7 +72,8 @@ const ariaLabel = computed(() =>
     :aria-label="ariaLabel" @click="emit('open', p)"
     @keydown.enter.prevent="emit('open', p)" @keydown.space.prevent="emit('open', p)">
     <span class="tpc-media">
-      <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" decoding="async" />
+      <img v-if="p.image && !imgErr" ref="imgEl" :src="p.image" :alt="p.name" loading="lazy" decoding="async"
+        :class="{ 'is-in': imgOk }" @load="imgOk = true" @error="imgErr = true" />
       <span v-else class="tpc-ph" aria-hidden="true"><AppIcon :name="phIcon" :size="phSize" /></span>
       <span class="tpc-flags">
         <span v-if="!sealShape && offer != null" class="tpc-flag offer">-{{ pct }}%</span>

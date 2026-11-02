@@ -57,8 +57,10 @@
   width: 100%;
   height: 100%;
   object-fit: var(--tpc-fit, cover);
-  transition: transform .45s cubic-bezier(.23, 1, .32, 1);
+  opacity: 0;
+  transition: opacity .4s ease-out, transform .45s cubic-bezier(.23, 1, .32, 1);
 }
+.tpc-media img.is-in { opacity: 1; }
 @media (hover: hover) and (pointer: fine) {
   .tpc:hover .tpc-media img { transform: var(--tpc-img-hover, scale(1.04)); }
 }
@@ -308,4 +310,11 @@
 @media (prefers-reduced-motion: reduce) {
   .tpc-media img, .tpc-go svg, .tpc-add, .tpc-quick { transition: none; }
   .tpc:hover .tpc-media img { transform: none; }
+}
+/* En pantallas táctiles el :hover queda "pegado" tras el toque: se apagan
+   las elevaciones/zooms para que la tarjeta no quede flotando al volver. */
+@media (hover: none) {
+  .tpc:hover .tpc-media img { transform: none; }
+  .tpc:hover .tpc-go svg { transform: none; }
+  .tpc:hover .tpc-quick { opacity: 0; }
 }
