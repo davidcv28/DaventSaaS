@@ -12,19 +12,21 @@
    ========================================================================== */
 
 .store-page[data-template='nexo2'] {
-  --nx-bg: #0A0C10;
-  --nx-bg-2: #0E1218;
-  --nx-surface: #131820;
-  --nx-surface-2: #181F2A;
-  --nx-line: #232B38;
-  --nx-line-soft: #1B2230;
-  --nx-ink: #EDF1F7;
-  --nx-ink-2: #A7B2C4;
-  --nx-ink-3: #67718A;
+  /* Paleta derivada del estilo activo (--st-*): `nexo2` sale teal/grafito
+     y `nexo2-ambar` sale cálido sin una sola regla extra. */
+  --nx-bg: var(--st-bg, #0A0C10);
+  --nx-bg-2: color-mix(in srgb, var(--st-bg, #0A0C10) 82%, var(--st-text, #EDF1F7) 4%);
+  --nx-surface: var(--st-surface, #131820);
+  --nx-surface-2: color-mix(in srgb, var(--st-surface, #131820) 86%, var(--st-text, #EDF1F7) 7%);
+  --nx-line: var(--st-border, #232B38);
+  --nx-line-soft: color-mix(in srgb, var(--st-border, #232B38) 72%, var(--st-bg, #0A0C10));
+  --nx-ink: var(--st-text, #EDF1F7);
+  --nx-ink-2: var(--st-muted, #A7B2C4);
+  --nx-ink-3: color-mix(in srgb, var(--st-muted, #A7B2C4) 68%, var(--st-bg, #0A0C10));
   /* Acento del tema (estilo elegido): teal en `nexo2`, ámbar en `nexo2-ambar`. */
   --nx-acc: var(--st-accent, var(--store-accent, #5EEAD4));
   --nx-acc-2: var(--st-secondary, #818CF8);
-  --nx-on-acc: var(--st-on-primary, #06231E);
+  --nx-on-acc: var(--st-on-accent, var(--st-on-primary, #06231E));
   --nx-display: 'Space Grotesk', var(--st-font-heading, system-ui), sans-serif;
   --nx-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --nx-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
@@ -44,6 +46,8 @@
   --sp-line: var(--nx-line);
   --sp-radius: var(--nx-radius);
   --sp-accent-text: var(--nx-acc);
+  --sp-accent: var(--nx-acc);
+  --sp-accent-ink: var(--nx-on-acc);
   --sp-shadow-sm: 0 1px 0 rgb(0 0 0 / .3);
   --sp-shadow-md: 0 30px 60px -30px rgb(0 0 0 / .7);
   --sp-chrome: var(--nx-bg);
@@ -489,26 +493,104 @@
    ========================================================================== */
 .store-page[data-template='raiz'].nx-skin {
   --sp-bg: var(--nx-bg, #0A0C10);
-  --sp-card: #131820;
-  --sp-card-solid: #131820;
-  --sp-surface: #181F2A;
-  --sp-soft: #0E1218;
-  --sp-ink: #EDF1F7;
-  --sp-ink-2: #A7B2C4;
-  --sp-muted: #67718A;
-  --sp-line: #232B38;
+  --sp-card: var(--nx-surface, #131820);
+  --sp-card-solid: var(--nx-surface, #131820);
+  --sp-surface: var(--nx-surface-2, #181F2A);
+  --sp-soft: var(--nx-bg-2, #0E1218);
+  --sp-ink: var(--nx-ink, #EDF1F7);
+  --sp-ink-2: var(--nx-ink-2, #A7B2C4);
+  --sp-muted: var(--nx-ink-3, #67718A);
+  --sp-line: var(--nx-line, #232B38);
   --sp-radius: 14px;
-  --sp-accent-text: var(--st-accent, #5EEAD4);
+  --sp-accent-text: var(--nx-acc, #5EEAD4);
+  --sp-accent: var(--nx-acc, #5EEAD4);
+  --sp-accent-ink: var(--nx-on-acc, #06231E);
   --sp-shadow-sm: 0 1px 0 rgb(0 0 0 / .3);
   --sp-shadow-md: 0 30px 60px -30px rgb(0 0 0 / .7);
-  --sp-chrome: #0A0C10;
+  --sp-chrome: var(--nx-bg, #0A0C10);
   --sp-display: 'Space Grotesk', system-ui, sans-serif;
+
+  /* Paleta Raíz -> Nexo 2: el catálogo/ficha/servicios consumen tokens
+     --rz-*; sin este remap el subárbol quedaba en los defaults claros de
+     store-raiz.css y rompía el contraste en ambos estilos. Se derivan de
+     --nx-* (que a su vez leen --st-*) así `nexo2` y `nexo2-ambar`
+     heredan cada uno su paleta. */
+  --rz-bg: var(--nx-bg, #0A0C10);
+  --rz-surface: var(--nx-surface, #131820);
+  --rz-surface-2: var(--nx-surface-2, #181F2A);
+  --rz-surface-3: var(--nx-line, #232B38);
+  --rz-line: var(--nx-line, #232B38);
+  --rz-line-strong: color-mix(in srgb, var(--nx-line, #232B38) 45%, var(--nx-ink, #EDF1F7));
+  --rz-line-ui: var(--nx-ink-3, #67718A);
+  --rz-ink: var(--nx-ink, #EDF1F7);
+  --rz-ink-2: var(--nx-ink-2, #A7B2C4);
+  --rz-muted: var(--nx-ink-3, #67718A);
+  --rz-accent: var(--nx-acc, #5EEAD4);
+  --rz-accent-soft: color-mix(in srgb, var(--nx-acc, #5EEAD4) 12%, transparent);
+  --rz-accent-text: var(--nx-acc, #5EEAD4);
+  --rz-accent-deep: var(--sp-band-base1, var(--nx-acc, #5EEAD4));
+  --rz-accent-deep-2: var(--sp-band-base2, var(--nx-acc-2, #818CF8));
+  --rz-band-1: var(--sp-band-base1, var(--nx-acc, #5EEAD4));
+  --rz-band-2: var(--sp-band-base2, var(--nx-acc-2, #818CF8));
+  --rz-on-band: var(--nx-on-acc, #06231E);
+  --rz-on-band-2: color-mix(in srgb, var(--nx-on-acc, #06231E) 88%, transparent);
+  --rz-on-band-muted: color-mix(in srgb, var(--nx-on-acc, #06231E) 72%, transparent);
+  --rz-ok: var(--st-success, #34D399);
+  --rz-danger: var(--st-danger, #F45B4C);
+  --rz-warm: var(--nx-acc-2, #F59E0B);
+  --rz-focus: var(--nx-acc, #5EEAD4);
+  --rz-scrim: rgb(0 0 0 / .62);
+  --rz-selection: color-mix(in srgb, var(--nx-acc, #5EEAD4) 30%, transparent);
+  --rz-inverse-bg: var(--nx-surface, #131820);
+  --rz-inverse-bg-2: var(--nx-surface-2, #181F2A);
+  --rz-inverse-ink: var(--nx-ink, #EDF1F7);
+  --rz-inverse-ink-2: var(--nx-ink-2, #A7B2C4);
+  --rz-inverse-muted: var(--nx-ink-3, #67718A);
+  --rz-inverse-line: var(--nx-line, #232B38);
+  --rz-inverse-accent: var(--nx-acc, #5EEAD4);
+  --rz-display: 'Space Grotesk', system-ui, sans-serif;
+  --rz-body: 'Inter', system-ui, sans-serif;
+  --rz-shadow-1: none;
+  --rz-shadow-2: 0 30px 60px -30px rgb(0 0 0 / .7);
+
   font-family: 'Inter', system-ui, sans-serif;
-  background: #0A0C10;
-  color: #EDF1F7;
+  background: var(--nx-bg, #0A0C10);
+  color: var(--nx-ink, #EDF1F7);
   color-scheme: dark;
 }
+/* Acento claro (teal/ámbar) pide tinta oscura, no el #fff de Raíz. */
+.store-page[data-template='raiz'].nx-skin .rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink),
+.store-page[data-template='raiz'].nx-skin .rz-cat-apply {
+  background: var(--nx-acc, #5EEAD4);
+  border-color: transparent;
+  color: var(--nx-on-acc, #06231E);
+}
+.store-page[data-template='raiz'].nx-skin .rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink):hover {
+  background: color-mix(in srgb, var(--nx-acc, #5EEAD4) 86%, var(--nx-ink, #EDF1F7));
+}
+.store-page[data-template='raiz'].nx-skin .rz-field {
+  background: var(--nx-surface-2, #181F2A);
+  border-color: var(--nx-line, #232B38);
+  color: var(--nx-ink, #EDF1F7);
+}
+.store-page[data-template='raiz'].nx-skin .rz-field::placeholder { color: var(--nx-ink-3, #67718A); }
+.store-page[data-template='raiz'].nx-skin .rz-sv-hero,
+.store-page[data-template='raiz'].nx-skin .rz-sv-band {
+  background: var(--nx-surface, #131820);
+  border-color: var(--nx-line, #232B38);
+}
+.store-page[data-template='raiz'].nx-skin .rz-sv-hero-card,
+.store-page[data-template='raiz'].nx-skin .rz-sv-bar,
+.store-page[data-template='raiz'].nx-skin .rz-cat-results .tpc,
+.store-page[data-template='raiz'].nx-skin .rz-pdp-rel-card {
+  background: var(--nx-surface-2, #181F2A);
+  border-color: var(--nx-line, #232B38);
+  box-shadow: none;
+}
+.store-page[data-template='raiz'].nx-skin .rz-sv-hero-num,
+.store-page[data-template='raiz'].nx-skin .rz-sv-flow-num { color: var(--nx-acc, #5EEAD4); }
 .store-page[data-template='raiz'].nx-skin .rz-cat-title,
+.store-page[data-template='raiz'].nx-skin .rz-sv-title,
 .store-page[data-template='raiz'].nx-skin .rz-sv-hero-title,
 .store-page[data-template='raiz'].nx-skin .rz-pdp-name,
 .store-page[data-template='raiz'].nx-skin .rz-pdp-sec-title {
@@ -520,7 +602,7 @@
 .store-page[data-template='raiz'].nx-skin .rz-cat-kicker {
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: .18em;
-  color: var(--st-accent, #5EEAD4);
+  color: var(--nx-acc, #5EEAD4);
 }
 .store-page[data-template='raiz'].nx-skin .rz-cat-rail,
 .store-page[data-template='raiz'].nx-skin .rz-cat-card,
@@ -528,9 +610,9 @@
 .store-page[data-template='raiz'].nx-skin .rz-sv-plate,
 .store-page[data-template='raiz'].nx-skin .rz-pdp-pricebox,
 .store-page[data-template='raiz'].nx-skin .rz-pdp-gallery {
-  border: 1px solid #232B38;
+  border: 1px solid var(--nx-line, #232B38);
   border-radius: 14px;
-  background: #131820;
+  background: var(--nx-surface, #131820);
   box-shadow: none;
 }
 .store-page[data-template='raiz'].nx-skin .rz-btn {
@@ -541,7 +623,7 @@
 .store-page[data-template='raiz'].nx-skin .rz-cat-head,
 .store-page[data-template='raiz'].nx-skin .rz-sv-head,
 .store-page[data-template='raiz'].nx-skin .rz-pdp-sec-head {
-  border-bottom: 1px solid #1B2230;
+  border-bottom: 1px solid var(--nx-line-soft, #1B2230);
 }
 
 /* ==========================================================================
