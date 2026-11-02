@@ -1,25 +1,17 @@
 <script setup>
-// Sub-sección "Diseño" (todos los planes con has_customization).
-// Menú compacto de estructura: patrón de diseño, tema del diseño,
-// secciones por superficie (on/off según lo que el diseño declara),
-// decoraciones extra que el patrón ofrece y navegación móvil/CTA fijo.
-// Colores y fuentes son SOLO del Studio (has_design_advanced): acá no hay
-// ni un solo control de paleta o tipografía.
-// Sin subidas de imágenes: logo, portada y galería viven en la pestaña Fotos.
-// Escribe los mismos campos de `form` que el Studio y dispara los mismos
-// eventos (ring/navigate), así el guardado sigue siendo uno solo.
+// Sub-sección "Diseño": dos columnas — a la izquierda el selector de Diseño
+// (patrón) y el de Estilo (tema del diseño), debajo las plantillas de la
+// web; a la derecha la vista previa en vivo con Guardar/Ver web.
+// TODOS los diseños quedan habilitados para el usuario (sin recorte por
+// plan): es el diseño elegido el que bloquea las plantillas que no cubre.
+// Colores y fuentes sueltos son SOLO del Studio: acá no hay control de
+// paleta ni tipografía, y las imágenes viven en la pestaña Fotos.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
-import {
-  STORE_TEMPLATES,
-  allowedTemplatesFor, ensureStoreFont
-} from '../../api/stores.api.js'
+import { ensureStoreFont } from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
-import { LAYOUT_SURFACES, SURFACE_LABELS, TEMPLATE_BLOCKS } from '../../templates/blocks.js'
-import {
-  normalizeLayoutConfig, patternsForSiteTemplates, templateBlocks
-} from '../../templates/index.js'
+import { normalizeLayoutConfig } from '../../templates/index.js'
 import DesignLivePreview from './DesignLivePreview.vue'
 import DesignSelect from './DesignSelect.vue'
 import AppIcon from '../AppIcon.vue'
@@ -29,22 +21,12 @@ const props = defineProps({
   benefits: { type: Object, default: () => ({}) },
   shopName: { type: String, default: '' },
   canStudio: { type: Boolean, default: false },
-  // Páginas activas de la web ("Qué mostrar"): el catálogo de diseños se
-  // filtra a los patrones que cubren TODAS esas superficies.
   siteTemplates: { type: Array, default: () => [] },
   // Estado del panel de vista previa: lo controla el padre para que la
   // savebar sticky también pueda abrirlo en mobile.
   previewOpen: { type: Boolean, default: false }
 })
 const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen'])
-
-const allowed = computed(() => allowedTemplatesFor(props.benefits || {}))
-const allowedTemplate = (tpl) => allowed.value.includes(tpl)
-const tierOf = (tpl) => STORE_TEMPLATES[tpl]?.tier || 'base'
-const tierLabel = (tpl) => {
-  const tier = tierOf(tpl)
-  return tier === 'plus' ? 'Desde Estándar' : tier === 'advanced' ? 'Premium' : 'Incluido'
-}
 
 const { patterns, styles, status, load } = useDesignCatalog()
 // Revalidar contra la base al entrar: los diseños/estilos nuevos se ven sin
@@ -61,18 +43,11 @@ onMounted(() => {
     .catch(() => { modelPatterns.value = [] })
 })
 
+// Catálogo completo, sin filtros de plan ni de páginas: todas las opciones
+// se habilitan siempre.
 const patternOptions = computed(() => (
-  patternsForSiteTemplates(
-    modelPatterns.value.length ? modelPatterns.value : patterns.value,
-    props.siteTemplates
-  )
-))
-// La combinación de páginas no tiene ningún diseño: el toggle de "Qué
-// mostrar" ya lo bloquea, esto cubre un set guardado de otra época.
-const noPatternForCombo = computed(() => (
-  props.siteTemplates.length > 0
-  && (modelPatterns.value.length || patterns.value.length)
-  && !patternOptions.value.length
+  (modelPatterns.value.length ? modelPatterns.value : patterns.value)
+    .filter((p) => p.is_active !== false)
 ))
 // Cada diseño trae sus propios estilos (DesignStyle.pattern): con un diseño
 // elegido solo se listan los suyos (los sin vínculo siguen disponibles).
@@ -80,6 +55,7 @@ const styleOptions = computed(() => styles.value.filter((s) => (
   s.is_active !== false
   && (!currentPattern.value || !s.pattern || s.pattern === currentPattern.value)
 )))
+
 const patternLayout = (p) => normalizeLayoutConfig(p.layout)
 const sameJson = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
 
@@ -91,164 +67,61 @@ const currentPattern = computed(() => (
   || ''
 ))
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
-const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
 
-// --- Secciones del diseño: on/off por superficie --------------------------
-// Cada DesignPattern declara su composición en `blocks.<superficie>` de su
-// template def; el toggle se ve solo si el bloque está ahí (los ids que el
-// diseño no trae no se muestran — ni deshabilitados). El estado sale del
-// layout efectivo (canónico del diseño ∪ layout_config guardado); los
-// bloques `locked` (grilla del catálogo, selector de servicios) se ven
-// prendidos pero no se pueden apagar.
-const sectionGroups = computed(() => {
-  const tpl = props.form.template
-  const surfaces = props.siteTemplates.length ? props.siteTemplates : LAYOUT_SURFACES
-  return surfaces
-    .filter((s) => LAYOUT_SURFACES.includes(s))
-    .map((surface) => {
-      const blocks = templateBlocks(tpl, surface, props.form.layout_config)
-        .filter((b) => TEMPLATE_BLOCKS[surface]?.[b.id])
-        .map((b) => ({ ...b, spec: TEMPLATE_BLOCKS[surface][b.id] }))
-      return { surface, label: SURFACE_LABELS[surface] || surface, blocks }
-    })
-    .filter((g) => g.blocks.length)
-})
-function onSectionToggle(surface, block, enabled) {
-  if (block.spec?.locked) return
-  const cfg = { ...(props.form.layout_config || {}) }
-  const surf = { ...(cfg[surface] || {}) }
-  const list = Array.isArray(surf.blocks) ? surf.blocks.map((b) => ({ ...b })) : []
-  const i = list.findIndex((b) => b.id === block.id)
-  const next = { ...(i >= 0 ? list[i] : { id: block.id, order: block.order }), enabled }
-  if (!next.variant && block.variant) next.variant = block.variant
-  if (i >= 0) list[i] = next
-  else list.push(next)
-  surf.blocks = list
-  cfg[surface] = surf
-  props.form.layout_config = cfg
+// Opciones de los selectboxes con icono/color: el select nativo no puede
+// mostrar muestras, por eso el menú usa DesignSelect.
+const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
+  value: p.slug,
+  label: `${p.nombre} · ${p.categoria}`,
+  icon: 'layout-grid'
+})))
+const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
+  value: s.slug,
+  label: `${s.nombre} · ${s.categoria}`,
+  icon: 'palette',
+  swatch: s.tokens?.palette?.accent || ''
+})))
+
+// Un patrón sin tema elegido trae sus fuentes (tokens del DesignPattern).
+function patternTheme(p) {
+  const tokens = p.tokens || {}
+  const theme = { ...(props.form.site_theme || {}) }
+  const fonts = Array.isArray(tokens.fonts) ? tokens.fonts.filter(Boolean) : []
+  if (fonts.length) {
+    theme.typography = { ...(theme.typography || {}), body: fonts[0], heading: fonts[1] || fonts[0] }
+    fonts.forEach((f) => ensureStoreFont(f))
+  }
+  return theme
 }
 
-// --- Decoraciones extra ----------------------------------------------------
-// Adornos opcionales que OFRECE el diseño elegido: cada patrón declara sus
-// ids en `layout.decorations` (o `tokens.decorations`) — los no ofrecidos
-// ni se ven. Se guardan como mapa de bools en site_theme.decorations.
-const DECORATION_LABELS = {
-  extras: 'Cintas, marcos y brillos',
-  ribbon: 'Cintas y bandas',
-  frame: 'Marcos decorativos',
-  sparkles: 'Brillos y destellos',
-  badge: 'Sellos y distintivos',
-}
-const decorationsOffered = computed(() => {
-  const p = currentPatternMeta.value
-  const raw = p?.layout?.decorations || p?.tokens?.decorations
-  const list = Array.isArray(raw) ? raw : []
-  return [...new Set(list)]
-    .filter((id) => typeof id === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(id))
-    .slice(0, 8)
-    .map((id) => ({ id, label: DECORATION_LABELS[id] || id }))
-})
-const decorationOn = (id) => props.form.site_theme?.decorations?.[id] === true
-function onDecorationToggle(id, enabled) {
-  withTheme((theme) => {
-    const decorations = { ...(theme.decorations || {}) }
-    if (enabled) decorations[id] = true
-    else delete decorations[id]
-    if (Object.keys(decorations).length) theme.decorations = decorations
-    else delete theme.decorations
-  })
+function onPatternPick(value) {
+  const p = patternOptions.value.find((x) => x.slug === value)
+  if (!p) return
+  props.form.template = p.template
+  props.form.layout_config = patternLayout(p)
+  if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
 }
 
-// --- Navegación en móvil + CTA fijo ----------------------------------------
-const navOptions = [
-  { value: 'bottom', label: 'Barra inferior', icon: 'smartphone' },
-  { value: 'top', label: 'Barra superior', icon: 'panel-top' },
-  { value: 'drawer', label: 'Menú hamburguesa', icon: 'menu' }
-]
-const currentNav = computed(() => {
-  const nav = props.form.site_theme?.mobile?.nav
-  return navOptions.some((o) => o.value === nav) ? nav : 'bottom'
-})
-function onNavPick(value) {
-  if (!navOptions.some((o) => o.value === value)) return
-  withTheme((theme) => { theme.mobile = { ...(theme.mobile || {}), nav: value } })
-}
-const currentStickyCta = computed(() => props.form.site_theme?.mobile?.stickyCta === true)
-function onStickyCtaToggle(enabled) {
-  withTheme((theme) => {
-    const mobile = { ...(theme.mobile || {}) }
-    if (enabled) mobile.stickyCta = true
-    else delete mobile.stickyCta
-    if (Object.keys(mobile).length) theme.mobile = mobile
-    else delete theme.mobile
-  })
-}
-
-// Vista del HTML propio del patrón (el diseño fuente, con su menú y sus
-// animaciones), en un iframe aislado. El listado no trae el markup: se pide
-// el detalle recién al abrir.
-const patternPreview = ref(null) // { nombre, html, css, js, theme }
-const previewBusy = ref(false)
-const previewErr = ref('')
-// Tema de la vista previa: arranca con el de la tienda y se puede alternar
-// sin volver a pedir el patrón (la hoja ya trae las reglas de modo noche).
-const previewTheme = ref('light')
-// Móvil por defecto: el menú del diseño (tab bar + hoja "Más") solo existe
-// bajo 760px; a pantalla completa la vista previa no lo mostraría nunca.
-const previewDevice = ref('mobile')
-const previewAccent = computed(() => {
-  const hex = props.form?.accent_custom
-  return typeof hex === 'string' && hex.startsWith('#') ? hex : ''
-})
-const previewDoc = computed(() => (
-  patternPreview.value ? patternDoc(patternPreview.value) : ''
-))
-
-function patternDoc(p) {
-  const html = String(p.html || '')
-  if (/^\s*(<!doctype|<html)/i.test(html)) return html
-  const css = p.css ? `<style>${p.css}</style>` : ''
-  const js = p.js ? `<script>${p.js}<` + `/script>` : ''
-  const theme = p.theme === 'dark' ? 'dark' : 'light'
-  return `<!doctype html><html lang="es" data-ds-surface="landing" data-ds-theme="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}</head><body>${html}${js}</body></html>`
-}
-
-async function openPatternPreview() {
-  const meta = currentPatternMeta.value
-  if (!meta?.has_markup || previewBusy.value) return
-  previewBusy.value = true
-  previewErr.value = ''
-  previewTheme.value = props.form?.theme === 'dark' ? 'dark' : 'light'
-  try {
-    const detail = await designApi.patternPreview(meta.slug, {
-      theme: previewTheme.value,
-      accent: previewAccent.value,
-      style: props.form?.site_theme?.style?.id || '',
-    })
-    patternPreview.value = {
-      nombre: detail.nombre || meta.nombre,
-      html: detail.html || '',
-      css: detail.css || '',
-      js: detail.js || '',
-      theme: detail.theme || previewTheme.value,
-    }
-  } catch {
-    previewErr.value = 'No pudimos cargar el diseño del patrón.'
-  } finally {
-    previewBusy.value = false
+// Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
+// tema COMPLETO — paleta, tipografía, contenedores, botones, fondo, modo y
+// movimiento — para que la web publicada se vea igual que la vista previa.
+// El dueño ya no elige colores sueltos: los colores son del tema.
+function onStylePick(value) {
+  const s = styleOptions.value.find((x) => x.slug === value)
+  if (!s) return
+  const theme = resolveSiteTheme(s.tokens || {})
+  props.form.site_theme = { ...theme, style: { id: s.slug } }
+  props.form.theme = s.page_theme || props.form.theme
+  // La paleta del tema manda: el acento suelto queda sin efecto.
+  props.form.accent_custom = ''
+  const heading = theme.typography?.heading
+  const body = theme.typography?.body
+  if (heading) ensureStoreFont(heading)
+  if (body) {
+    props.form.name_font = body
+    ensureStoreFont(body)
   }
 }
-function setPreviewTheme(theme) {
-  previewTheme.value = theme === 'dark' ? 'dark' : 'light'
-  if (patternPreview.value) patternPreview.value.theme = previewTheme.value
-}
-function closePatternPreview() {
-  patternPreview.value = null
-  previewErr.value = ''
-}
-function onPreviewKey(e) { if (e.key === 'Escape') closePatternPreview() }
-onMounted(() => window.addEventListener('keydown', onPreviewKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onPreviewKey))
 
 // --- Vista previa en móvil: overlay a demanda ---------------------------
 // En pantallas chicas no se muestra ningún panel embebido: la web real se
@@ -286,77 +159,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', onViewport)
   if (props.previewOpen) document.body.style.overflow = ''
 })
-
-// Opciones de los selectboxes con icono/color: el select nativo no puede
-// mostrar muestras, por eso el menú usa DesignSelect.
-const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
-  value: p.slug,
-  label: `${p.nombre} · ${p.categoria} · ${tierLabel(p.template)}`,
-  icon: 'layout-grid',
-  disabled: !allowedTemplate(p.template)
-})))
-const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
-  value: s.slug,
-  label: `${s.nombre} · ${s.categoria} · ${tierLabel(s.template)}`,
-  icon: 'palette',
-  swatch: s.tokens?.palette?.accent || '',
-  disabled: !allowedTemplate(s.template)
-})))
-
-// Un patrón sin tema elegido trae sus fuentes (tokens del DesignPattern).
-function patternTheme(p) {
-  const tokens = p.tokens || {}
-  const theme = { ...(props.form.site_theme || {}) }
-  const fonts = Array.isArray(tokens.fonts) ? tokens.fonts.filter(Boolean) : []
-  if (fonts.length) {
-    theme.typography = { ...(theme.typography || {}), body: fonts[0], heading: fonts[1] || fonts[0] }
-    fonts.forEach((f) => ensureStoreFont(f))
-  }
-  return theme
-}
-
-function onPatternPick(value) {
-  const p = patternOptions.value.find((x) => x.slug === value)
-  if (!p) return
-  if (!allowedTemplate(p.template)) {
-    emit('navigate', 'plans')
-    return
-  }
-  props.form.template = p.template
-  props.form.layout_config = patternLayout(p)
-  if (!props.form.site_theme?.style?.id) props.form.site_theme = patternTheme(p)
-}
-
-// Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
-// tema COMPLETO — paleta, tipografía, contenedores, botones, fondo, modo y
-// movimiento — para que la web publicada se vea igual que la vista previa.
-// El dueño ya no elige colores sueltos: los colores son del tema.
-function onStylePick(value) {
-  const s = styleOptions.value.find((x) => x.slug === value)
-  if (!s) return
-  if (!allowedTemplate(s.template)) {
-    emit('navigate', 'plans')
-    return
-  }
-  const theme = resolveSiteTheme(s.tokens || {})
-  props.form.site_theme = { ...theme, style: { id: s.slug } }
-  props.form.theme = s.page_theme || props.form.theme
-  // La paleta del tema manda: el acento suelto queda sin efecto.
-  props.form.accent_custom = ''
-  const heading = theme.typography?.heading
-  const body = theme.typography?.body
-  if (heading) ensureStoreFont(heading)
-  if (body) {
-    props.form.name_font = body
-    ensureStoreFont(body)
-  }
-}
-
-function withTheme(mutate) {
-  const theme = { ...(props.form.site_theme || {}) }
-  mutate(theme)
-  props.form.site_theme = theme
-}
 </script>
 
 <template>
@@ -366,87 +168,27 @@ function withTheme(mutate) {
         <div class="card dmenu-card">
           <header class="dmenu-head">
             <strong><AppIcon name="palette" :size="17" aria-hidden="true" /> Diseño</strong>
-            <small>Elegí cada pieza de tu web desde una lista. Se guarda con el botón de abajo.</small>
+            <small>Elegí el diseño y el estilo de tu web. La vista previa muestra los cambios al instante.</small>
           </header>
 
           <div class="dmenu-fields">
-            <div class="dmenu-field" @focusin="emit('ring', 'hero')">
-              <label>Patrones de diseño</label>
+            <div class="dmenu-field">
+              <label>Diseño</label>
               <DesignSelect
                 :model-value="currentPattern" :options="patternSelectOptions" icon="layout-grid"
-                aria-label="Patrones de diseño" placeholder="Elegí un patrón…"
+                aria-label="Diseño" placeholder="Elegí un diseño…"
                 :disabled="!patternOptions.length" @change="onPatternPick"
-              />
-              <button
-                v-if="currentPatternMeta?.has_markup" type="button"
-                class="btn ghost btn-auto dmenu-preview" :disabled="previewBusy"
-                @click="openPatternPreview"
-              >
-                <AppIcon name="eye" :size="15" /> {{ previewBusy ? 'Cargando…' : 'Ver este diseño' }}
-              </button>
-              <p v-if="previewErr" class="dmenu-alert" role="alert">{{ previewErr }}</p>
-            </div>
-
-            <div class="dmenu-field" @focusin="emit('ring', 'typo')">
-              <label>Tema</label>
-              <DesignSelect
-                :model-value="currentStyle" :options="styleSelectOptions" icon="palette"
-                aria-label="Tema" placeholder="Elegí un tema…"
-                :disabled="!styleOptions.length" @change="onStylePick"
-              />
-              <p class="dmenu-hint">Cada diseño trae sus temas: color, tipografía y modo.</p>
-            </div>
-
-            <div class="dmenu-field" @focusin="emit('ring', 'buttons')">
-              <label>Navegación en móvil</label>
-              <DesignSelect
-                :model-value="currentNav" :options="navOptions" icon="smartphone"
-                aria-label="Navegación en móvil" @change="onNavPick"
               />
             </div>
 
             <div class="dmenu-field">
-              <label>Botón de contacto fijo</label>
-              <div class="dmenu-toggles">
-                <label class="dmenu-toggle">
-                  <input
-                    type="checkbox" :checked="currentStickyCta"
-                    @change="onStickyCtaToggle($event.target.checked)"
-                  />
-                  <span><AppIcon name="zap" :size="14" aria-hidden="true" /> Botón fijo de WhatsApp en móvil</span>
-                </label>
-              </div>
-            </div>
-
-            <div v-if="decorationsOffered.length" class="dmenu-field">
-              <label>Decoraciones extra</label>
-              <div class="dmenu-toggles">
-                <label v-for="d in decorationsOffered" :key="d.id" class="dmenu-toggle">
-                  <input
-                    type="checkbox" :checked="decorationOn(d.id)"
-                    @change="onDecorationToggle(d.id, $event.target.checked)"
-                  />
-                  <span><AppIcon name="sparkles" :size="14" aria-hidden="true" /> {{ d.label }}</span>
-                </label>
-              </div>
-              <p class="dmenu-hint">Adornos opcionales que este diseño ofrece.</p>
-            </div>
-          </div>
-
-          <div v-for="g in sectionGroups" :key="g.surface" class="dmenu-sections">
-            <label>Secciones · {{ g.label }}</label>
-            <div class="dmenu-toggles">
-              <label
-                v-for="b in g.blocks" :key="b.id" class="dmenu-toggle"
-                :class="{ fixed: b.spec.locked }"
-              >
-                <input
-                  type="checkbox" :checked="b.enabled !== false"
-                  :disabled="b.spec.locked === true"
-                  @change="onSectionToggle(g.surface, b, $event.target.checked)"
-                />
-                <span><AppIcon :name="b.spec.icon || 'layout-grid'" :size="14" aria-hidden="true" /> {{ b.spec.label || b.id }}</span>
-              </label>
+              <label>Estilo</label>
+              <DesignSelect
+                :model-value="currentStyle" :options="styleSelectOptions" icon="palette"
+                aria-label="Estilo" placeholder="Elegí un estilo…"
+                :disabled="!styleOptions.length" @change="onStylePick"
+              />
+              <p class="dmenu-hint">Cada diseño trae sus estilos: color, tipografía y modo.</p>
             </div>
           </div>
 
@@ -457,9 +199,6 @@ function withTheme(mutate) {
           <p v-else-if="status === 'success' && !patternOptions.length && !styleOptions.length" class="dmenu-alert" role="status">
             El catálogo está vacío: corré <code>manage.py seed_design_catalog</code> en el servidor.
           </p>
-          <p v-if="noPatternForCombo" class="dmenu-alert" role="alert">
-            Ningún diseño cubre esa combinación de páginas: cambiala en «Qué mostrar».
-          </p>
         </div>
         <slot name="pages" />
       </div>
@@ -468,17 +207,6 @@ function withTheme(mutate) {
         <DesignLivePreview :form="form" />
         <slot name="actions" />
       </aside>
-    </div>
-
-    <div v-if="canStudio" class="dmenu-studio">
-      <span class="dmenu-studio-ico" aria-hidden="true"><AppIcon name="layout-panel-left" :size="18" /></span>
-      <div class="dmenu-studio-txt">
-        <strong>Studio</strong>
-        <small>Control total con vista previa en vivo, en pantalla completa.</small>
-      </div>
-      <button type="button" class="btn secondary btn-auto" @click="emit('open-studio')">
-        Abrir Studio <AppIcon name="arrow-right" :size="16" />
-      </button>
     </div>
 
     <!-- Punto de acceso único a la vista previa en pantallas chicas. -->
@@ -512,41 +240,6 @@ function withTheme(mutate) {
       </div>
     </Transition>
   </Teleport>
-
-  <Teleport to="body">
-    <div v-if="patternPreview" class="dpv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
-      <div class="dpv-head">
-        <strong>{{ patternPreview.nombre }}</strong>
-        <div class="dpv-theme" role="group" aria-label="Tamaño de la vista previa">
-          <button
-            type="button" :aria-pressed="previewDevice === 'mobile'"
-            :class="{ on: previewDevice === 'mobile' }" @click="previewDevice = 'mobile'"
-          >Móvil</button>
-          <button
-            type="button" :aria-pressed="previewDevice === 'desktop'"
-            :class="{ on: previewDevice === 'desktop' }" @click="previewDevice = 'desktop'"
-          >PC</button>
-        </div>
-        <div class="dpv-theme" role="group" aria-label="Modo de la vista previa">
-          <button
-            type="button" :aria-pressed="previewTheme === 'light'"
-            :class="{ on: previewTheme === 'light' }" @click="setPreviewTheme('light')"
-          >Claro</button>
-          <button
-            type="button" :aria-pressed="previewTheme === 'dark'"
-            :class="{ on: previewTheme === 'dark' }" @click="setPreviewTheme('dark')"
-          >Noche</button>
-        </div>
-        <button type="button" class="dpv-close" aria-label="Cerrar la vista previa" @click="closePatternPreview">
-          <AppIcon name="x" :size="16" />
-        </button>
-      </div>
-      <iframe
-        class="dpv-frame" :class="{ 'is-mobile': previewDevice === 'mobile' }" :srcdoc="previewDoc" sandbox="allow-scripts"
-        :title="`Diseño ${patternPreview.nombre}`"
-      ></iframe>
-    </div>
-  </Teleport>
 </template>
 
 <style scoped>
@@ -563,59 +256,9 @@ function withTheme(mutate) {
 .dmenu-field { display: grid; gap: 7px; min-width: 0; align-content: start; }
 .dmenu-field label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
-.dmenu-field.locked .select { opacity: .6; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .dmenu-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dmenu-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.dmenu-lock {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
-  padding: 10px 12px; border-radius: 10px; font-size: 12.5px; color: var(--muted);
-  background: var(--surface-2, #f8fafc); border: 1px solid var(--line, #e5e7eb);
-}
-.dmenu-lock .btn { margin-left: auto; }
-/* Toggles de secciones/decoraciones/CTA: lista de interruptores compactos. */
-.dmenu-sections { display: grid; gap: 7px; min-width: 0; }
-.dmenu-sections > label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
-.dmenu-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
-.dmenu-toggle {
-  display: inline-flex; align-items: center; gap: 0; cursor: pointer;
-  font-size: 12px; font-weight: 600; color: var(--ink-2);
-}
-.dmenu-toggle input { position: absolute; opacity: 0; pointer-events: none; }
-.dmenu-toggle span {
-  display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px;
-  border: 1px solid var(--line, #e5e7eb); border-radius: 999px;
-  background: var(--surface-2, #f8fafc);
-  transition: border-color .15s, background .15s, color .15s;
-}
-.dmenu-toggle span .icon { color: var(--muted, #64748b); }
-.dmenu-toggle input:checked + span {
-  border-color: var(--brand-soft-line, #c7d2fe); background: var(--brand-soft, #eef2ff);
-  color: var(--brand-ink, #4338ca);
-}
-.dmenu-toggle input:checked + span .icon { color: var(--brand-ink, #4338ca); }
-.dmenu-toggle input:focus-visible + span { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 2px; }
-.dmenu-toggle input:disabled + span { opacity: .6; cursor: not-allowed; }
-.dmenu-studio {
-  display: flex; align-items: center; gap: 14px;
-  padding: 16px 18px; border-radius: 14px;
-  border: 1px solid var(--brand-soft-line, var(--line, #e5e7eb));
-  background:
-    radial-gradient(120% 160% at 0% 0%, var(--brand-soft, #eef2ff), transparent 65%),
-    var(--surface-2, #f8fafc);
-}
-.dmenu-studio-ico {
-  flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px;
-  background: var(--card, #fff); border: 1px solid var(--brand-soft-line, var(--line, #e5e7eb));
-  color: var(--brand-ink, #4f46e5);
-}
-.dmenu-studio-txt { flex: 1 1 auto; min-width: 0; }
-.dmenu-studio strong { display: block; font-size: 14px; letter-spacing: -.01em; }
-.dmenu-studio small { display: block; font-size: 12px; color: var(--muted, #64748b); }
-.dmenu-studio .btn { flex: none; }
-@container (min-width: 520px) {
-  .dmenu-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @media (min-width: 1100px) {
   .dmenu-grid { grid-template-columns: minmax(0, 1fr) minmax(440px, 620px); align-items: start; }
   .dmenu-live { position: sticky; top: 12px; }
@@ -627,40 +270,6 @@ function withTheme(mutate) {
 @media (min-width: 1100px) {
   .dmenu-fab { display: none; }
 }
-@media (max-width: 640px) {
-  .dmenu-studio { flex-wrap: wrap; align-items: flex-start; }
-  .dmenu-studio-txt { flex-basis: calc(100% - 52px); }
-  .dmenu-studio .btn { width: 100%; justify-content: center; }
-}
-.dmenu-preview { justify-self: start; width: auto; }
-/* Vista del HTML fuente del patrón: menú, composición y animaciones reales. */
-.dpv {
-  position: fixed; inset: 0; z-index: 1200; display: flex; flex-direction: column;
-  background: rgba(8, 12, 20, .72); backdrop-filter: blur(6px); padding: 3vh 3vw;
-}
-.dpv-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 0 2px 12px; color: #f8fafc;
-}
-.dpv-head strong { font-size: 15px; letter-spacing: -.01em; }
-.dpv-theme { display: inline-flex; gap: 4px; margin-left: auto; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .14); }
-.dpv-theme button {
-  border: 0; border-radius: 999px; padding: 6px 12px; background: transparent;
-  color: #e2e8f0; font-size: 12px; font-weight: 600; cursor: pointer;
-}
-.dpv-theme button.on { background: #fff; color: #111827; }
-.dpv-close {
-  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .12);
-  color: #fff; cursor: pointer;
-}
-.dpv-close:hover { background: rgba(255, 255, 255, .24); }
-.dpv-frame {
-  flex: 1 1 auto; width: 100%; border: 0; border-radius: 14px; background: #fff;
-  box-shadow: 0 30px 80px -30px #000;
-}
-/* Ancho de teléfono: dispara el menú móvil del diseño (tab bar + hoja). */
-.dpv-frame.is-mobile { max-width: 400px; margin-inline: auto; }
 
 /* Botón flotante de vista previa (solo < 1100px). Vive por encima de la
    savebar sticky y de la tab bar, sin tapar los controles del formulario. */

@@ -13,7 +13,6 @@ import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl, storesApi,
   CUSTOMIZATION_DEFAULTS, storeThemeVars,
-  allowedTemplatesFor,
   SITE_TEMPLATE_KEYS, SITE_TEMPLATES,
   siteTemplatesLimit, allowedSiteTemplatesFor, normalizeSiteTemplates, resolveSiteTemplates,
   ensureStoreFont, ensureStoreFontPicker,
@@ -68,7 +67,7 @@ import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
-import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates } from '../templates/index.js'
+import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates, patternSurfaces, normalizeLayoutConfig } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
 
 const router = useRouter()
@@ -1293,17 +1292,9 @@ const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_prod
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const IDENTITY_DEFAULTS = { accent_custom: '', logo_scale: 'm', logo_mode: 'logo_name', mono_style: 'accent', cover_overlay: 0, cover_focus_x: 50, cover_focus_y: 50 }
-// Plantillas elegibles por nivel de plan (espejo del backend): Básico
-// elige base, Estándar suma 'plus' y Premium todo el catálogo.
-const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
-// Si el guardado quedó fuera del nivel (baja de plan o una plantilla
-// retirada del catálogo) el select vuelve al primer diseño permitido.
-// Solo con beneficios ya resueltos: si el plan todavía no llegó la lista
-// queda en base y degradaría cualquier plantilla plus/advanced guardada
-// (dirty falso al montar y un save que pisa el template real).
-watch(allowedTemplates, (list) => {
-  if (plan.value?.benefits && !list.includes(designForm.template)) designForm.template = list[0] || 'raiz'
-})
+// Todos los diseños del catálogo quedan habilitados para el usuario (sin
+// recorte por plan): el diseño elegido es el que bloquea las plantillas de
+// la web que no cubre — ver designSitePages.
 // Si cambia la fuente elegida, traerla en el momento (cubre una "Guardada"
 // fuera del picker, que el link colectivo no incluye).
 watch(() => designForm.name_font, (f) => ensureStoreFont(f))
@@ -1335,11 +1326,6 @@ watch(() => store.store, (s) => {
   // La fuente guardada tiene que estar cargada cuando llega el valor:
   // la vista previa del panel y el picker la muestran con la tipografía real.
   ensureStoreFont(designForm.name_font)
-  // Si el plan ya estaba cargado y el diseño guardado quedó fuera de su
-  // nivel (baja de plan o plantilla retirada del catálogo), vuelve al
-  // primero permitido. Con beneficios aún sin resolver no se degrada:
-  // la lista vendría en base y pisaría una plantilla superior guardada.
-  if (plan.value?.benefits && !allowedTemplates.value.includes(designForm.template)) designForm.template = allowedTemplates.value[0] || 'raiz'
 }, { immediate: true })
 
 const designErrors = computed(() => {
@@ -1754,9 +1740,22 @@ const siteTemplateKeys = SITE_TEMPLATE_KEYS
 const siteTemplates = SITE_TEMPLATES
 const siteTemplatesBusy = ref(false)
 const canServicesSite = computed(() => Boolean(plan.value?.benefits?.has_services_site))
-// El diseño también puede recortar el catálogo de páginas (Bazar no ofrece
-// Servicios ni Suscripciones — ver `pages` en templates/mercado).
-const designSitePages = computed(() => templatePages(designForm.template))
+// El diseño elegido bloquea las plantillas que no cubre: si hay un patrón
+// seleccionado mandan sus superficies declaradas (patternSurfaces); si no,
+// las páginas que ofrece la plantilla base (Bazar no ofrece Servicios ni
+// Suscripciones — ver `pages` en templates/mercado).
+const sitePatternList = ref([])
+const sameLayout = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})
+const selectedSitePattern = computed(() => (
+  sitePatternList.value.find((p) => (
+    p.template === designForm.template && sameLayout(normalizeLayoutConfig(p.layout), designForm.layout_config)
+  ))
+  || sitePatternList.value.find((p) => p.template === designForm.template)
+  || null
+))
+const designSitePages = computed(() => (
+  selectedSitePattern.value ? patternSurfaces(selectedSitePattern.value) : templatePages(designForm.template)
+))
 const allowedSiteTemplates = computed(() =>
   allowedSiteTemplatesFor(plan.value?.benefits || {}).filter((k) => designSitePages.value.includes(k)))
 const siteTemplatesMax = computed(() => siteTemplatesLimit(plan.value?.benefits || {}))
@@ -1769,7 +1768,7 @@ const siteTemplatesHint = computed(() => {
   return max === null ? 'Tu plan permite tener todas las páginas activas.' : `Tu plan permite hasta ${max} ${max === 1 ? 'página' : 'páginas'} a la vez.`
 })
 function siteTemplateLock(key) {
-  if (!designSitePages.value.includes(key)) return 'Este diseño no la incluye'
+  if (!designSitePages.value.includes(key)) return 'No disponible para este diseño'
   return key === 'services' && !canServicesSite.value ? 'Desde Estándar' : ''
 }
 function canToggleSiteTemplate(key) {
@@ -1784,9 +1783,13 @@ function canToggleSiteTemplate(key) {
 // obliga a elegir otra — la sección Diseño filtra por el mismo criterio.
 let sitePatternPromise = null
 function loadSitePatterns() {
-  if (!sitePatternPromise) sitePatternPromise = designApi.listPatterns().catch(() => [])
+  if (!sitePatternPromise) {
+    sitePatternPromise = designApi.listPatterns().catch(() => [])
+    sitePatternPromise.then((list) => { sitePatternList.value = list })
+  }
   return sitePatternPromise
 }
+onMounted(() => loadSitePatterns())
 async function toggleSiteTemplate(key) {
   if (!canToggleSiteTemplate(key)) return
   const current = [...designSiteTemplates.value]
