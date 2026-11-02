@@ -42,8 +42,50 @@ const src = computed(() => {
 
 const emit = defineEmits(['navigate', 'toggle-theme'])
 
+//El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
+//puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
+//API pública (captcha y opiniones del producto) los pide por postMessage y
+//los busca este componente, que sí es mismo origen.
+//Whitelist cerrada: el documento no elige el endpoint. Solo estas dos
+//rutas de la tienda que embebe, y siempre con su slug (nunca el de otra).
+const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:reviews\/captcha|products\/\d+\/reviews)\/?$/
+
+function publicApiUrl(raw) {
+  const url = String(raw || '')
+  if (!PUBLIC_API_RE.test(url)) return ''
+  return url.replace(/^\/api\/stores\/public\/[a-z0-9-]+\//, `/api/stores/public/${props.slug}/`)
+}
+
+async function relayApi(event) {
+  const id = String(event.data?.id || '')
+  if (!id) return
+  const url = publicApiUrl(event.data.url)
+  let result = null
+  if (url) {
+    try {
+      const options = event.data.method === 'POST'
+        ? {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(event.data.body || {}),
+          }
+        : undefined
+      const res = await fetch(url, options)
+      const data = await res.json().catch(() => null)
+      result = { ok: res.ok, data }
+    } catch {
+      result = { ok: false, data: null }
+    }
+  }
+  frame.value?.contentWindow?.postMessage({ type: 'davent:ds-api-result', id, result }, '*')
+}
+
 function onMessage(e) {
   if (e.source !== frame.value?.contentWindow) return
+  if (e.data?.type === 'davent:ds-api') {
+    relayApi(e)
+    return
+  }
   if (e.data?.type === 'davent:ds-theme-toggle') {
     emit('toggle-theme')
     return
@@ -120,7 +162,7 @@ onBeforeUnmount(() => {
     :src="src"
     :title="title || 'Diseño de la web'"
     :style="height ? { height: `${height}px` } : null"
-    sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+    sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
     loading="lazy"
     @load="onLoad"
   ></iframe>

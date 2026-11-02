@@ -825,7 +825,7 @@ onMounted(async () => {
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
-  if (isHome.value || isCatalog.value || isServices.value) {
+  if (isHome.value || isCatalog.value || isServices.value || isProduct.value) {
     storesApi.publicPattern(slug.value, { preview: previewToken.value })
       .then((doc) => { patternDoc.value = doc && doc.html ? doc : null })
       .catch(() => { patternDoc.value = null })

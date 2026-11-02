@@ -1096,18 +1096,20 @@ calidad (`ruff`, suite completa) y de los comandos que usan los agentes.
 | # | Severidad | Brecha | Fix aplicado |
 |---|-----------|--------|--------------|
 | 1 | **Alta** | **XSS same-origin en el documento del diseño.** `/api/stores/public/<slug>/pattern/document/` se embebe con `sandbox="allow-scripts allow-same-origin"` (necesario para el `fetch` del puente) y el saneo solo borraba handlers con **comillas dobles**: `onerror='…'`, `onbegin=alert(1)` (sin comillas), `href="javascript:…"`, `<base href="//evil">` y `<meta http-equiv=refresh>` sobrevivían. Un patrón importado desde HTML de terceros (`import_design_pattern`) o editado en el admin podía ejecutar JS con el origen de la app: leer el access token en memoria, llamar la API con la cookie httpOnly de refresh y manipular el DOM padre. | `sanitize_markup()` en `pattern_document.py`: handlers con cualquier comilla, URLs `javascript:`/`vbscript:`/`data:text/html`, `<base>`, `<iframe>`/`<object>`/`<embed>`/`<frame*>` y refresh por meta. La vista previa (`srcdoc` del modal) usa el mismo saneo. |
-| 2 | **Alta** | El documento del diseño **no tenía CSP propia**: heredaba la de respaldo del middleware (`script-src 'self' 'unsafe-inline'`), así que un handler inline que sobreviviera al saneo se ejecutaba. | `DOCUMENT_CSP` aplicada en la respuesta: `script-src 'self'` (sin `unsafe-inline` ni `unsafe-eval`), `object-src 'none'`, `base-uri 'none'`, `frame-src/child-src/worker-src 'none'`, `connect-src 'self'`, `frame-ancestors 'self'`. |
+| 2 | **Alta** | El documento del diseño **no tenía CSP propia**: heredaba la de respaldo del middleware (`script-src 'self' 'unsafe-inline'`), así que un handler inline que sobreviviera al saneo se ejecutaba. | `document_csp(nonce)` en la respuesta: `script-src 'nonce-…'` (sin `unsafe-inline` ni `unsafe-eval`), `default-src 'none'`, `object-src 'none'`, `base-uri 'none'`, `frame-src/child-src/worker-src 'none'`, `form-action 'none'`. En 5.1 se sumó el origen opaco (ver §7.4). |
 | 3 | **Media** | `theme` y `surface` viajaban crudos a atributos del `<html>` del documento. `surface` se validaba contra `data['surfaces']`, que se extrae del HTML del patrón con una regex: un valor con `"><script>` podía volver al atributo (y `surfaces` es público en `GET /pattern`). | Normalización dentro de `pattern_document()` (no solo en la vista): `theme` ∈ {light, dark}, `surface` a `[a-z0-9-]{1,40}`, igual que ya se hacía con `style`. |
 | 4 | **Media (proceso)** | `SECURITY_SIMULATION_PROMPT.md` §5 ordenaba `manage.py test payments users stores` — **ese label no existe** (apps en namespace packages) y fallaba con `ModuleNotFoundError`: el bucle de verificación del prompt se cortaba antes del test real. `AGENTS.md` afirmaba lo contrario ("los labels `AdminApp.domains.x` no resuelven"). | Prompt y `AGENTS.md` corregidos con los labels verificados (`AdminApp.domains.payments`, `AdminApp.domains.users`, `StoreApp.domains.stores`, y clase suelta `AdminApp.domains.users.tests.PasswordPolicyTests`) + nota de `--keepdb` cuando el runner pregunta por la base de test existente. |
 | 5 | **Baja** | Suite en rojo (7 fallos + 1 error) por expectativas fijas contra el catálogo viejo: `CATALOG_TEMPLATES` sin `sastreria`/`circuito`, `allowed_templates_of` sin `sastreria`, `TEMPLATE_RETIRED_MAP['street']` esperado en `raiz` (hoy `sastreria`), `site_theme.style.id='bento'` (slug que ya no existe en el catálogo) y la vista previa esperando la plantilla publicada en vez de la del borrador. | Tests actualizados al catálogo vigente (`raiz`, `esencial`, `mercado`, `gimnasio`, `sastreria`, `moderntec`, `circuito`) y al comportamiento real del preview. Sin cambios de código de producto. |
 
 ### 7.2 Regresión
 
-- `StoreApp.domains.design.tests.PatternDocumentSecurityTests` (3): saneo de
-  todos los vectores, `DOCUMENT_CSP` sin `unsafe-inline`, atributos del `<html>`
-  inquebrantables.
+- `StoreApp.domains.design.tests.PatternDocumentSecurityTests` (5): saneo de
+  todos los vectores, CSP de nonce (sin `unsafe-inline` ni `'self'`), nonce
+  inválido ⇒ `script-src 'none'`, los dos `<script>` con el nonce y atributos
+  del `<html>` inquebrantables.
 - `StoreApp.domains.stores.tests.PatternDocumentSecurityTests` (1): el endpoint
-  real responde 200 con `X-Frame-Options: SAMEORIGIN`, CSP estricta y sin
+  real responde 200 con `X-Frame-Options: SAMEORIGIN`, CSP de nonce (el nonce
+  del header coincide con el de los `<script>` y cambia por request) y sin
   `onerror`/`javascript:` en el cuerpo.
 
 ### 7.3 Verificado como correcto (sin cambio)
@@ -1125,14 +1127,39 @@ calidad (`ruff`, suite completa) y de los comandos que usan los agentes.
 - `sync_design_neon._upsert` valida identificadores (`IDENT_RE`) y parametriza
   valores; `sync_design_neon` es comando de staff, no endpoint.
 
-### 7.4 Residual honesto
+### 7.4 Cierre del residual: origen opaco del documento (ronda 5.1)
 
-- El JS del patrón (`pattern/script.js`) es **staff-authored** y corre en el
-  mismo origen del iframe: un patrón malicioso seguiría teniendo la sesión del
-  visitante. La CSP no lo puede frenar (es `script-src 'self'` legítimo). Mitigación
-  real pendiente: servir el documento desde un subdominio de patrones
-  (`patterns.<dominio>`) y quitar `allow-same-origin`, lo que exige mover el
-  `fetch` del puente a una API con token y CORS explícito.
+La ronda 5 dejó abierto que el JS del patrón corría en el **mismo origen** de
+la app (`sandbox="allow-same-origin"`), porque el puente necesitaba `fetch` a
+la API pública y `sessionStorage`. Se cerró sin infraestructura nueva:
+
+| Pieza | Cambio |
+|---|---|
+| `PatternSurface.vue` | sandbox **sin `allow-same-origin`** → el documento tiene origen opaco (`self.origin === "null"`, `document.cookie` inaccesible, sin DOM del host). |
+| `pattern_bridge.js` | `fetch` reemplazado por un RPC `postMessage` (`davent:ds-api` → `davent:ds-api-result`, timeout 15 s). `sessionStorage` pasa por `storeGet`/`storeSet` con memoria de documento como fallback (en origen opaco el storage lanza). |
+| `PatternSurface.vue` (host) | resuelve el pedido con `fetch` mismo origen, validando la URL contra `PUBLIC_API_RE` (solo `reviews/captcha` y `products/<id>/reviews` de **esa** tienda): el documento no elige el endpoint. |
+| CSP | `document_csp(nonce)` con nonce por respuesta (`secrets.token_urlsafe(16)`) en los dos `<script>`: `default-src 'none'`, `script-src 'nonce-…'`, `form-action 'none'`, sin `frame-ancestors` (lo cubre `X-Frame-Options: SAMEORIGIN`, que compara el origen real del navegador y no el `Host` interno que ve Django detrás de un proxy). Sin nonce válido cae a `script-src 'none'`. |
+| `StorePublicLayout.vue` | el documento del patrón ahora también se pide en la ruta de producto (`isProduct`): sin eso `patternSurface === 'product'` era código muerto y la ficha siempre caía a la plantilla Vue. |
+
+Verificación en navegador real (Chromium headless, `bench-store`, superficie
+producto y landing):
+
+- `self.origin === "null"` y `document.cookie` bloqueado dentro del iframe.
+- `bridge.js` y `script.js` cargan (200) con el nonce; alto medido por
+  `postMessage` (`2067px` producto, `5278px` landing) y toggle de tema montado.
+- Captcha y opiniones llegan por el puente: la pregunta del captcha se pinta
+  (`¿Cuánto es 8 × 3?`) y un POST con captcha inválido devuelve el error del
+  backend en el formulario (400, sin crear la opinión).
+- Sin errores de consola ni violaciones de CSP.
+
+### 7.5 Residual honesto (post 5.1)
+
+- Un patrón **staff-authored** puede seguir ejecutando su propio JS: ahora en
+  un origen opaco, sin cookies, sin DOM del host y sin red (`connect-src
+  'none'`), así que el impacto máximo es contenido dentro de su propio iframe.
+- El puente solo expone captcha/opiniones de la tienda embebida; cualquier
+  necesidad futura de datos debe sumar su ruta a `PUBLIC_API_RE` (y su test),
+  nunca un `fetch` directo en el documento.
 - `import_design_pattern` sigue aceptando cualquier HTML del repo: el saneo es
-  en tiempo de servicio, no de importación (a propósito: el original queda como
-  fuente de verdad para re-importar).
+  en tiempo de servicio, no de importación (el original queda como fuente de
+  verdad para re-importar).

@@ -33,22 +33,38 @@ SCRIPT_URL_RE = re.compile(
 DANGEROUS_TAG_RE = re.compile(r'<(?:base|object|embed|iframe|frame|frameset)\b[^>]*>', re.I)
 META_REFRESH_RE = re.compile(r'<meta\b[^>]*http-equiv\s*=\s*["\']?refresh[^>]*>', re.I)
 
-#CSP del documento del diseño. El iframe comparte el origen de la app
-#(`allow-same-origin`, necesario para el `fetch` del puente), así que la
-#política es la última línea: nada de script inline aunque un handler
-#sobreviva al saneo, sin frames anidados ni base-uri.
+#CSP del documento del diseño. El iframe va SANDBOXEADO sin
+#`allow-same-origin`: el documento tiene origen opaco y no puede tocar el DOM
+#ni las cookies de la app. En un origen opaco `'self'` no matchea nada, así
+#que el JS del diseño y del puente se autoriza por NONCE (por request) y el
+#resto de la política no depende del host: el mismo documento funciona
+#detrás de un proxy que reescribe el `Host` (dev con vite, nginx, Render).
+#
+#`frame-ancestors` queda fuera a propósito: lo cubre `X-Frame-Options:
+#SAMEORIGIN` de la respuesta, que compara contra el origen real del
+#navegador y no contra el `Host` interno que ve Django.
 DOCUMENT_CSP = (
-    "default-src 'self'; "
-    "script-src 'self'; "
-    "style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: https:; "
-    "font-src 'self' data: https:; "
-    "media-src 'self' https:; "
-    "connect-src 'self'; "
+    "default-src 'none'; "
+    "script-src {scripts}; "
+    "style-src 'unsafe-inline'; "
+    "img-src https: data:; "
+    "font-src https: data:; "
+    "media-src https:; "
+    "connect-src 'none'; "
     "frame-src 'none'; child-src 'none'; worker-src 'none'; "
-    "object-src 'none'; base-uri 'none'; form-action 'self'; "
-    "frame-ancestors 'self'"
+    "object-src 'none'; base-uri 'none'; form-action 'none'"
 )
+
+
+def document_csp(nonce):
+    """
+    Política del documento para el nonce de ESTA respuesta. Sin nonce cae a
+    `script-src 'none'`: mejor una web sin JS que una política abierta.
+    """
+    nonce   =   str(nonce or '')
+    if not nonce or not re.fullmatch(r'[A-Za-z0-9_\-]{8,64}', nonce):
+        return DOCUMENT_CSP.format(scripts = "'none'")
+    return DOCUMENT_CSP.format(scripts = f"'nonce-{nonce}'")
 
 #Reglas del host (no del diseño): una sola superficie visible y los
 #controles del catálogo con la tipografía del documento.
@@ -133,7 +149,7 @@ def sanitize_markup(html):
     return META_REFRESH_RE.sub('', html)
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = ''):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = ''):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -152,6 +168,10 @@ def pattern_document(html, css, theme, surface, preview = '', style = ''):
     #Solo slug ASCII: el atributo lo escriben selectores CSS, nunca HTML.
     style = re.sub(r'[^a-z0-9-]', '', str(style or '').lower())[:80]
     style_attr = f' data-ds-style="{style}"' if style else ''
+    #Los dos `<script>` son los únicos ejecutables del documento: el nonce
+    #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
+    nonce   =   str(nonce or '')
+    nonce_attr = f' nonce="{nonce}"' if re.fullmatch(r'[A-Za-z0-9_\-]{8,64}', nonce) else ''
     return (
         f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}>'
         '<head><meta charset="utf-8">'
@@ -162,7 +182,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = ''):
         #estilo). El !important de las superficies sigue ganando igual.
         f'<style>html,body{{margin:0}}{SURFACE_CSS}{css}</style></head><body>'
         f'{html}'
-        f'<script src="{script}"></script>'
-        f'<script src="{BRIDGE_URL}"></script>'
+        f'<script src="{script}"{nonce_attr}></script>'
+        f'<script src="{BRIDGE_URL}"{nonce_attr}></script>'
         '</body></html>'
     )

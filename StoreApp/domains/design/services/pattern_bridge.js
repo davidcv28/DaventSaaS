@@ -24,6 +24,46 @@
   function go(route, id) {
     parent.postMessage({ type: 'davent:ds-route', route: route, id: id || '' }, '*')
   }
+  /* Datos de la API pública (captcha y opiniones del producto).
+   *
+   * El iframe va sandboxeado SIN `allow-same-origin`: el documento tiene
+   * origen opaco y un `fetch` propio a la API de la tienda sería
+   * cross-origin (bloqueado por CORS/CORP). El pedido viaja al host —que sí
+   * es mismo origen— y vuelve por `davent:ds-api-result`. El host valida la
+   * URL contra su propia tienda antes de pedirla: el documento nunca elige
+   * a qué endpoint se le pega.
+   *
+   * `api(url, {method, body})` resuelve `{ok, data}` o `null` (sin host o
+   * timeout). */
+  var apiSeq = 0
+  var apiPending = {}
+  function api(url, options) {
+    options = options || {}
+    return new Promise(function (resolve) {
+      if (!url || !window.parent || window.parent === window) { resolve(null); return }
+      var id = 'ds' + (++apiSeq)
+      apiPending[id] = resolve
+      parent.postMessage({
+        type: 'davent:ds-api',
+        id: id,
+        url: String(url),
+        method: options.method === 'POST' ? 'POST' : 'GET',
+        body: options.body || null
+      }, '*')
+      setTimeout(function () {
+        if (apiPending[id]) { delete apiPending[id]; resolve(null) }
+      }, 15000)
+    })
+  }
+  window.addEventListener('message', function (e) {
+    if (e.source !== window.parent) return
+    var data = e.data || {}
+    if (data.type !== 'davent:ds-api-result') return
+    var done = apiPending[data.id]
+    if (!done) return
+    delete apiPending[data.id]
+    done(data.result || null)
+  })
   /* Modo noche dentro de la barra de navegación: el interruptor vive en el
    * header del diseño (no flotando sobre la página) y avisa al host para
    * que el tema quede guardado para el visitante. */
@@ -181,12 +221,23 @@
     var n = parseFloat(value)
     return isFinite(n) ? n : null
   }
+  /* Estado de la sesión del documento (filtros del catálogo y vista).
+   * Con el iframe en origen opaco `sessionStorage` no existe y el acceso
+   * lanza: la memoria del documento cubre el lapso mientras la pestaña
+   * siga viva, sin romper nada cuando el storage sí está disponible. */
+  var memoryStore = {}
+  function storeGet(key) {
+    try { return sessionStorage.getItem(key) } catch (e) { return memoryStore[key] || null }
+  }
+  function storeSet(key, value) {
+    try { sessionStorage.setItem(key, value) } catch (e) { memoryStore[key] = value }
+  }
   function saveState() {
-    try { sessionStorage.setItem(STORE_KEY, JSON.stringify(state)) } catch (e) {}
+    storeSet(STORE_KEY, JSON.stringify(state))
   }
   function restoreState() {
     try {
-      var raw = sessionStorage.getItem(STORE_KEY)
+      var raw = storeGet(STORE_KEY)
       if (!raw) return
       var saved = JSON.parse(raw) || {}
       if (typeof saved.q === 'string') state.q = saved.q
@@ -555,8 +606,7 @@
     var host = document.querySelector('[data-ds-products]')
     var buttons = [].slice.call(document.querySelectorAll('[data-ds-view]'))
     if (!host || !buttons.length) return
-    var saved = ''
-    try { saved = sessionStorage.getItem(VIEW_KEY) || '' } catch (e) {}
+    var saved = storeGet(VIEW_KEY) || ''
     var modes = buttons.map(function (btn) { return btn.getAttribute('data-ds-view') })
     setView(modes.indexOf(saved) >= 0 ? saved : (host.getAttribute('data-ds-view-mode') || 'list'))
     buttons.forEach(function (btn) {
@@ -567,7 +617,7 @@
       buttons.forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.getAttribute('data-ds-view') === mode ? 'true' : 'false')
       })
-      try { sessionStorage.setItem(VIEW_KEY, mode) } catch (e) {}
+      storeSet(VIEW_KEY, mode)
       send()
     }
   }
@@ -805,14 +855,13 @@
       challenge = null
       if (question) question.textContent = 'Cargando…'
       if (!capUrl) { if (question) question.textContent = '—'; return }
-      fetch(capUrl).then(function (res) { return res.ok ? res.json() : null })
-        .then(function (data) {
-          challenge = data || null
-          if (question) question.textContent = (data && data.question) ? data.question : '—'
-          var capInput = form.querySelector('[name="captcha_answer"]')
-          if (capInput) capInput.value = ''
-        })
-        .catch(function () { if (question) question.textContent = '—' })
+      api(capUrl).then(function (out) {
+        var data = out && out.ok ? out.data : null
+        challenge = data || null
+        if (question) question.textContent = (data && data.question) ? data.question : '—'
+        var capInput = form.querySelector('[name="captcha_answer"]')
+        if (capInput) capInput.value = ''
+      })
     }
     function reviewItem(r) {
       var li = document.createElement('li')
@@ -832,13 +881,12 @@
     }
     function refreshList() {
       if (!revUrl || !list) return
-      fetch(revUrl).then(function (res) { return res.ok ? res.json() : [] })
-        .then(function (rows) {
-          list.innerHTML = ''
-          ;(rows || []).forEach(function (r) { list.appendChild(reviewItem(r)) })
-          send()
-        })
-        .catch(function () {})
+      api(revUrl).then(function (out) {
+        var rows = out && out.ok && Array.isArray(out.data) ? out.data : []
+        list.innerHTML = ''
+        rows.forEach(function (r) { list.appendChild(reviewItem(r)) })
+        send()
+      })
     }
     ;[].forEach.call(form.querySelectorAll('.ds-rev-pick'), function (btn) {
       btn.addEventListener('click', function () {
@@ -870,15 +918,9 @@
       if (canComment && !canRate && !payload.text) { say('Escribí un comentario para publicar.'); return }
       busy = true
       say('')
-      fetch(revUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-        .then(function (res) {
-          return res.json().catch(function () { return {} }).then(function (data) { return { ok: res.ok, data: data } })
-        })
+      api(revUrl, { method: 'POST', body: payload })
         .then(function (out) {
+          if (!out) { say('Sin conexión. Probá de nuevo.'); return }
           if (!out.ok) {
             var msg = ''
             var data = out.data || {}
@@ -901,7 +943,6 @@
           loadCaptcha()
           refreshList()
         })
-        .catch(function () { say('Sin conexión. Probá de nuevo.') })
         .finally(function () { busy = false; send() })
     })
     loadCaptcha()

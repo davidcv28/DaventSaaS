@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import re
+import secrets
 from datetime import timedelta
 
 from django.core.signing import BadSignature, TimestampSigner
@@ -606,7 +607,7 @@ class StoreViewSet(StoreBaseViewSet):
         from django.http import HttpResponse
 
         from StoreApp.domains.design.services.pattern_document import (
-            DOCUMENT_CSP,
+            document_csp,
             pattern_document,
         )
         data                =   self._pattern_doc(request, self._pattern_store(slug))
@@ -616,18 +617,21 @@ class StoreViewSet(StoreBaseViewSet):
         surface             =   request.query_params.get('surface') or 'landing'
         if surface not in (data.get('surfaces') or []):
             surface         =   'landing'
+        #Nonce por respuesta: único autorizador del JS del documento.
+        nonce               =   secrets.token_urlsafe(16)
         html                =   pattern_document(
             data['html'], data.get('css') or '', theme, surface,
             request.query_params.get('preview') or '', data.get('style') or '',
+            nonce   =   nonce,
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default
         #`DENY` de Django lo bloqueaba.
         response['X-Frame-Options'] = 'SAMEORIGIN'
-        #CSP propia (sin `unsafe-inline` en script-src): el iframe comparte
-        #el origen de la app, así que un handler que sobreviva al saneo no
-        #puede ejecutar nada. El middleware no la pisa (solo rellena).
-        response['Content-Security-Policy'] = DOCUMENT_CSP
+        #CSP propia con nonce: el iframe va sin `allow-same-origin` (origen
+        #opaco), así que `'self'` no matchea nada y el JS del diseño/puente
+        #se autoriza por nonce. El middleware no la pisa (solo rellena).
+        response['Content-Security-Policy'] = document_csp(nonce)
         patch_cache_control(response, private = True, no_store = True)
         return response
 

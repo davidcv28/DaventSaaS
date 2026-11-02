@@ -294,10 +294,9 @@ class DesignContractTests(TestCase):
 
 class PatternDocumentSecurityTests(SimpleTestCase):
     """
-    El documento del diseño se sirve en el MISMO origen de la app y se
-    embebe con `allow-same-origin`: cualquier markup ejecutable que
-    sobreviva al saneo corre con la sesión del dueño. Estas pruebas fijan
-    el contrato del saneo y del CSP del documento.
+    El documento del diseño se embebe en un iframe SANDBOXEADO sin
+    `allow-same-origin` (origen opaco): no puede tocar el DOM ni las cookies
+    de la app. Estas pruebas fijan el contrato del saneo y del CSP (nonce).
     """
 
     PAYLOAD = (
@@ -327,14 +326,34 @@ class PatternDocumentSecurityTests(SimpleTestCase):
         self.assertIn('https://cdn.example/foto.png', clean)
         self.assertIn('/api/stores/public/tienda/r/whatsapp/', clean)
 
-    def test_document_csp_forbids_inline_script(self):
-        from StoreApp.domains.design.services.pattern_document import DOCUMENT_CSP
-        script_src = next(part for part in DOCUMENT_CSP.split(';') if part.strip().startswith('script-src'))
+    def test_document_csp_authorizes_only_the_nonce(self):
+        from StoreApp.domains.design.services.pattern_document import document_csp
+        csp         =   document_csp('AbC123xyz_-9876')
+        script_src  =   next(part for part in csp.split(';') if part.strip().startswith('script-src'))
+        self.assertEqual(script_src.strip(), "script-src 'nonce-AbC123xyz_-9876'")
         self.assertNotIn('unsafe-inline', script_src)
         self.assertNotIn('unsafe-eval', script_src)
-        self.assertIn("frame-ancestors 'self'", DOCUMENT_CSP)
-        self.assertIn("object-src 'none'", DOCUMENT_CSP)
-        self.assertIn("base-uri 'none'", DOCUMENT_CSP)
+        self.assertNotIn("'self'", script_src)     #origen opaco: 'self' no matchea
+        self.assertIn("default-src 'none'", csp)
+        self.assertIn("object-src 'none'", csp)
+        self.assertIn("base-uri 'none'", csp)
+        self.assertIn("form-action 'none'", csp)
+        #El framing lo cubre X-Frame-Options (el origen interno no sirve acá).
+        self.assertNotIn('frame-ancestors', csp)
+
+    def test_document_csp_without_valid_nonce_blocks_scripts(self):
+        from StoreApp.domains.design.services.pattern_document import document_csp
+        for value in ('', 'corto', 'con espacio', 'x" onload="alert(1)'):
+            self.assertIn("script-src 'none'", document_csp(value), value)
+
+    def test_document_scripts_carry_the_nonce(self):
+        from StoreApp.domains.design.services.pattern_document import pattern_document
+        doc = pattern_document('<p>x</p>', '', 'light', 'landing', nonce = 'AbC123xyz_-9876')
+        self.assertEqual(doc.count('nonce="AbC123xyz_-9876"'), 2)
+        self.assertEqual(doc.count('<script'), 2)
+        #Sin nonce válido los `<script>` no se autorizan (CSP `script-src 'none'`).
+        self.assertNotIn('nonce=', pattern_document('<p>x</p>', '', 'light', 'landing'))
+        self.assertNotIn('nonce=', pattern_document('<p>x</p>', '', 'light', 'landing', nonce = 'x" onload="a'))
 
     def test_theme_and_surface_cannot_break_html_attributes(self):
         from StoreApp.domains.design.services.pattern_document import pattern_document

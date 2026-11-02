@@ -2284,9 +2284,9 @@ class ObjectUrlPrivacyTests(TestCase):
 
 class PatternDocumentSecurityTests(TestCase):
     """
-    El documento del diseño (iframe same-origin de la web pública) sale con
-    CSP propia y con el markup ejecutable neutralizado: un handler en el
-    HTML del patrón correría con la sesión del visitante/dueño.
+    El documento del diseño (iframe sandboxeado, origen opaco) sale con CSP
+    de nonce y con el markup ejecutable neutralizado: un handler en el HTML
+    del patrón no corre ni con la sesión del visitante ni con la del dueño.
     """
 
     def setUp(self):
@@ -2315,6 +2315,14 @@ class PatternDocumentSecurityTests(TestCase):
         csp         =   response['Content-Security-Policy']
         script_src  =   next(part for part in csp.split(';') if part.strip().startswith('script-src'))
         self.assertNotIn('unsafe-inline', script_src)
+        self.assertIn("script-src 'nonce-", script_src)
+        self.assertIn("default-src 'none'", csp)
         body        =   response.content.decode('utf-8')
         self.assertNotIn('onerror', body)
         self.assertNotIn('javascript:', body)
+        #El nonce del header es el de los dos `<script>` del documento.
+        nonce       =   script_src.strip().split("'nonce-")[1].split("'")[0]
+        self.assertEqual(body.count(f'nonce="{nonce}"'), 2)
+        #Nonce por respuesta: dos pedidos no comparten autorizador.
+        other       =   APIClient().get(f'{STORES_URL}public/mi-tienda/pattern/document/')
+        self.assertNotEqual(other['Content-Security-Policy'], csp)
