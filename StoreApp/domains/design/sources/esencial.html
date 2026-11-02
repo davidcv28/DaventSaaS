@@ -183,6 +183,12 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   box-shadow:0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
 }
 .ds-product-link{display:flex;flex-direction:column;height:100%;min-width:0;text-decoration:none;color:inherit}
+/* El fragmento llega img→copy→cat→price; el orden visual es media,
+   categoría, texto y precio. */
+.ds-product-link > .ds-product-cat{order:2}
+.ds-product-link > .ds-product-copy{order:3}
+.ds-product-link > .ds-product-price{order:4}
+.ds-product-link > .ds-product-img{order:1}
 .ds-product-img{
   display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
   background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);
@@ -206,6 +212,15 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:#241a05}
 .ds-empty{padding:22px 0;color:var(--muted)}
 .catalog-grid > .ds-empty{grid-column:1/-1}
+/* Sin WhatsApp/email/horario cargado, el dato y su CTA se apagan:
+   un href vacío recargaba el documento. */
+a[href=""]{pointer-events:none}
+a[href=""].btn{display:none}
+.contact-row:has(span:empty){display:none}
+.lead:empty,.eyebrow:empty{display:none}
+.stat .txt span:empty{display:none}
+.hero-card .shot:has(img[src=""]),.pdp-gallery:has(img[src=""]){display:grid}
+.hero-card .shot:has(img[src=""]){display:none}
 
 /* Chips de filtro (los arma el puente: data-cat + aria-pressed) */
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
@@ -242,8 +257,8 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:#241a05}
   content:"";width:56px;height:56px;border-radius:16px;
   background:color-mix(in srgb,var(--accent) 12%,transparent);
 }
-.ds-service-name{font-family:var(--font-display);font-size:1.35rem;line-height:1.2}
-.ds-service-desc{color:var(--muted);display:block;margin-top:8px}
+.ds-service-name{grid-column:2;font-family:var(--font-display);font-size:1.35rem;line-height:1.2}
+.ds-service-desc{grid-column:2;color:var(--muted);display:block;margin-top:4px}
 
 /* Contacto */
 .contact-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
@@ -479,7 +494,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
       <a href="#servicios" data-ds-route="services">Servicios</a>
-      <a href="#contacto">Contacto</a>
+      <a href="#contacto" data-ds-route="home">Contacto</a>
     </nav>
   </div>
 </header>
@@ -686,6 +701,14 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 <script>
 (function(){
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Anclas sin destino (placeholders vacíos o "#" pelado): no navegar.
+  document.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href === '' || href === '#') e.preventDefault();
+  });
 
   // Cabecera: sombra al hacer scroll.
   var header = document.getElementById('site-header');
