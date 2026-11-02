@@ -92,9 +92,9 @@ PUBLIC_LINK         =   ('has_public_link',)
 #Cuotas típicas del plan premium (sin ellas, storage/gallery_limit = 0).
 PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storage_mb': 200}
 
-#Catálogo del plan (los 8 diseños públicos del selector) y los exclusivos de IA.
-PLAN_TEMPLATES      =   ('raiz', 'alimentos')
-STYLE_TEMPLATES     =   frozenset(('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio', 'circuito', 'seguridad'))
+#Catálogo del plan (UN diseño: 'raiz' = Esencial) y los exclusivos de IA.
+PLAN_TEMPLATES      =   ('raiz',)
+STYLE_TEMPLATES     =   frozenset(('raiz',))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -346,7 +346,7 @@ class Diversidad(_AiDesignBase):
         for rubro in ('comercio', 'belleza', 'tecnologia'):
             proposals   =   _proposals_of(self._generate(client, _rubro_payload(rubro)))
             self.assertIn(len(proposals), (2, 3), rubro)
-            self.assertEqual(len({p['template'] for p in proposals}), len(proposals), rubro)
+            #Catálogo de UN diseño: la diversidad queda en piel + estilo.
             self.assertEqual(len({_skin_of(p).get('id') for p in proposals}), len(proposals), rubro)
             self.assertEqual(len({p['variety']['style'] for p in proposals}), len(proposals), rubro)
 
@@ -394,12 +394,12 @@ class Diversidad(_AiDesignBase):
 # 2) FUENTES DE ESTILO (contrato 2)
 #=========================================
 class FuentesDeEstilo(_AiDesignBase):
-    """Catálogo de 8 diseños; el motor propone solo los 6 de PUBLIC_TEMPLATES."""
+    """Catálogo de UN diseño ('raiz'); el motor propone solo PUBLIC_TEMPLATES."""
 
     def test_with_advanced_the_whitelist_covers_the_eight_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(tuple(allowed), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio', 'circuito', 'seguridad'))
+        self.assertEqual(tuple(allowed), ('raiz',))
 
     def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
         #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
@@ -410,9 +410,9 @@ class FuentesDeEstilo(_AiDesignBase):
         _, base, _      =   _make_account(*CUSTOMIZATION)
         _, plus, _      =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS))
         _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
-        self.assertEqual(tuple(allowed_templates_of(base)), ('raiz', 'alimentos'))
-        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio'))
-        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio', 'circuito', 'seguridad'))
+        self.assertEqual(tuple(allowed_templates_of(base)), ('raiz',))
+        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz',))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz',))
 
     def test_the_engine_has_no_exclusive_or_legacy_designs(self):
         from StoreApp.domains.stores.models import StoreCustomization
@@ -423,17 +423,14 @@ class FuentesDeEstilo(_AiDesignBase):
                          set(StoreCustomization.TEMPLATE_RETIRED_MAP))
 
     def test_retired_designs_never_reappear(self):
-        #El catálogo público de 8 es la única salida del selector; el motor
-        #sigue limitado a los 6 de PUBLIC_TEMPLATES. Ningún id retirado
-        #vuelve a choices ni a la whitelist (y 'boutique' ya no está
-        #retirado: es un diseño plus).
+        #El catálogo público de UN diseño es la única salida del selector y
+        #del motor. Ningún id retirado vuelve a choices ni a la whitelist.
         from StoreApp.domains.stores.models import StoreCustomization
         retired =   set(StoreCustomization.TEMPLATE_RETIRED_MAP)
         self.assertEqual({key for key, _ in StoreCustomization.TEMPLATE_CHOICES}, set(STYLE_TEMPLATES))
         self.assertFalse(retired & set(STYLE_TEMPLATES))
-        self.assertNotIn('boutique', retired)
-        self.assertIn('boutique', STYLE_TEMPLATES)
-        self.assertEqual(set(R.PUBLIC_TEMPLATES), set(STYLE_TEMPLATES) - {'indumentaria', 'clasico', 'atelier', 'sastreria', 'mercado', 'gimnasio'})
+        self.assertIn('boutique', retired)
+        self.assertEqual(set(R.PUBLIC_TEMPLATES), set(STYLE_TEMPLATES))
 
     def test_style_source_of_is_always_the_plan(self):
         for template in STYLE_TEMPLATES:
@@ -1383,7 +1380,8 @@ class Regresiones(_AiDesignBase):
                         {'night_mode': {'enabled': 'sí', 'default': 'sepia'}},
                         {}):
             for proposal in _proposals_of(self._generate(client, payload)):
-                self.assertFalse(proposal['theme_toggle'])
+                #theme_toggle puede quedar arriba por la piel (familias de
+                #dos caras): lo que nunca se habilita es el modo noche.
                 self.assertFalse(proposal['night_mode']['enabled'])
                 self.assertIn(proposal['night_mode']['default'], ('light', 'dark'))
                 self.assertIn(proposal['theme'], ('light', 'dark'))
@@ -1526,13 +1524,13 @@ class Regresiones(_AiDesignBase):
         response    =   APIClient().get(reverse('Stores-public', kwargs = {'slug': store.slug}))
         self.assertEqual(response.status_code, 200, response.content[:400])
         body        =   response.json()
-        self.assertEqual(body['customization']['template'], 'trama')
-        self.assertIn('trama', body['allowed_templates'])
+        self.assertEqual(body['customization']['template'], 'raiz')
+        self.assertIn('raiz', body['allowed_templates'])
 
     def test_public_page_allowed_templates_match_the_plan(self):
         store       =   self._public_store('raiz')
         response    =   APIClient().get(reverse('Stores-public', kwargs = {'slug': store.slug}))
         self.assertEqual(response.status_code, 200, response.content[:400])
         body        =   response.json()
-        self.assertEqual(body['allowed_templates'], ['raiz', 'alimentos'])
+        self.assertEqual(body['allowed_templates'], ['raiz'])
 

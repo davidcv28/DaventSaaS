@@ -247,29 +247,17 @@ const pageStyle = computed(() => {
   const id = custom.value?.site_theme?.style?.id
   return typeof id === 'string' && id ? id : 'base'
 })
-// Tienda Pro (Premium): masthead de marketplace — el buscador queda visible
-// en todas las páginas y fuera del catálogo envía a /catalogo?q=.
-const isShop = computed(() => pageTemplate.value === 'shop' || pageTemplate.value === 'mercado')
+// Masthead tipo marketplace: solo existía con 'mercado'/'shop' (retirados a
+// 'raiz' — el único diseño). Queda como flag apagado por compatibilidad del
+// template.
+const isShop = computed(() => false)
 
-// Hojas propias de un diseño: tiñen también el chrome (barra, pie, dock) en
-// páginas que no montan la portada (servicios, ficha). Todos se cargan
-// on-demand y una sola vez. Al terminar la carga se re-sincroniza el SEO para
-// tomar el theme-color que declare la hoja.
+// Hoja propia del diseño: tiñe también el chrome (barra, pie, dock) en
+// páginas que no montan la portada (servicios, ficha). Se carga on-demand y
+// una sola vez. Al terminar la carga se re-sincroniza el SEO para tomar el
+// theme-color que declare la hoja.
 const TEMPLATE_CSS = {
-  raiz:      () => import('../assets/store-raiz.css'),
-  alimentos: () => import('../assets/store-alimentos.css'),
-  trama:     () => import('../assets/store-trama.css'),
-  // `indumentaria` comparte la piel de Trama (misma hoja, mismo chunk
-  // cacheado); su composición distinta vive en views/store/indumentaria.
-  indumentaria: () => import('../assets/store-trama.css'),
-  boutique:  () => import('../assets/store-boutique.css'),
-  atelier:   () => import('../assets/store-atelier.css'),
-  sastreria: () => import('../assets/store-sastreria.css'),
-  mercado:   () => import('../assets/store-mercado.css'),
-  clasico:   () => import('../assets/store-clasico.css'),
-  circuito:  () => import('../assets/store-circuito.css'),
-  seguridad: () => import('../assets/store-seguridad.css'),
-  gimnasio:  () => import('../assets/store-gimnasio.css')
+  raiz:      () => import('../assets/store-raiz.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()

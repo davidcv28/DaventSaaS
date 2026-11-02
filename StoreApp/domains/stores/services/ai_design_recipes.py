@@ -854,18 +854,21 @@ BLOCK_TITLES                =   {
 #tono/objetivo, etc.) escritas con ids viejos. Acá se remapean por
 #afinidad a los 6 diseños del catálogo al importar, así el motor propone
 #SOLO ids públicos sin reescribir cada receta a mano.
-#Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única).
-PUBLIC_TEMPLATES            =   ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad')
+#Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única):
+#catálogo de UN diseño — todo id viejo remapea a 'raiz' (Esencial).
+PUBLIC_TEMPLATES            =   ('raiz',)
 PUBLIC_TEMPLATE_MAP         =   {
     'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
     'mercado': 'raiz', 'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
     'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz', 'shop': 'raiz',
-    'atelier': 'trama', 'lookbook': 'trama',
-    'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
-    'street': 'trama', 'riso': 'trama', 'promo': 'trama', 'aurora': 'trama',
-    'perspective': 'circuito', 'circuit': 'circuito', 'terminal': 'circuito',
-    'lab': 'circuito', 'ai_lumen': 'circuito', 'ai_pulse': 'trama',
-    #'boutique' NO va acá: es un diseño del catálogo (plus) desde el rediseño.
+    'atelier': 'raiz', 'lookbook': 'raiz',
+    'signature': 'raiz', 'cobre': 'raiz', 'vitrina': 'raiz',
+    'street': 'raiz', 'riso': 'raiz', 'promo': 'raiz', 'aurora': 'raiz',
+    'perspective': 'raiz', 'circuit': 'raiz', 'terminal': 'raiz',
+    'lab': 'raiz', 'ai_lumen': 'raiz', 'ai_pulse': 'raiz',
+    'alimentos': 'raiz', 'trama': 'raiz', 'indumentaria': 'raiz',
+    'boutique': 'raiz', 'sastreria': 'raiz', 'clasico': 'raiz',
+    'gimnasio': 'raiz', 'circuito': 'raiz', 'seguridad': 'raiz',
 }
 
 
@@ -901,10 +904,7 @@ TEMPLATE_TONE_AFFINITY.update({
     'circuito':  {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
     'seguridad': {'audaz': 3, 'serio': 3, 'moderno': 1, 'calido': 0},
 })
-TEMPLATE_LABELS.update({
-    'raiz': 'Raíz', 'alimentos': 'Alimentos', 'trama': 'Trama',
-    'boutique': 'Boutique', 'circuito': 'Circuito', 'seguridad': 'Seguridad',
-})
+TEMPLATE_LABELS.update({'raiz': 'Esencial'})
 TEMPLATE_GOAL_AFFINITY.update({
     #Cada objetivo tiene UN diseño que mejor cuenta esa historia (el resto
     #compite por tono/piel): así cambiar el objetivo mueve el puntaje.

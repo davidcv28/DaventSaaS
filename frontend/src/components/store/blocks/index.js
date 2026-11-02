@@ -1,5 +1,5 @@
 // Componentes de bloque de la superficie `landing` de la web pública
-// (raiz, trama y circuito). El mapa id -> componente async lo consume
+// (raiz = Esencial). El mapa id -> componente async lo consume
 // BlockRenderer: los ids son los del catálogo cerrado (templates/blocks.js)
 // y cada bloque recibe :block con {id, enabled, order, variant?, props?}
 // para aplicar su variante y el override de título (props.title).

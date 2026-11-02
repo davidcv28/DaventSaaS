@@ -502,9 +502,7 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_contact: true,
   theme: 'light',
   // Interruptor sol/luna para el visitante en la web pública (lo enciende el
-  // dueño desde "Cómo se ve" → Qué mostrar). Los diseños avanzados
-  // (circuito/seguridad) son oscuros por defecto: sin esto el visitante no
-  // puede pasar a claro.
+  // dueño desde "Cómo se ve" → Qué mostrar).
   theme_toggle: false,
   accent: 'indigo',
   accent_custom: '',
@@ -759,89 +757,48 @@ export const STORE_THEMES = {
   dark:  { label: 'Oscuro' }
 }
 
-// Diseños de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES)
-// — catálogo de 8, dos por nivel, organizado por RUBRO (no por "estilo de
-// autor"). `tier` marca qué beneficio lo habilita:
-//   'base'     -> todo plan con has_customization (Básico): raiz, alimentos
-//   'plus'     -> has_design_plus (Estándar y Premium): trama, indumentaria,
-//                 boutique, clasico
-//   'advanced' -> has_design_advanced (Premium): circuito, seguridad
-// El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
-// 'raiz' (fallback global) si el guardado deja de estar permitido (baja de
-// plan o una plantilla retirada). Todo diseño retirado se remapea por
-// afinidad de rubro al más cercano del catálogo (STORE_TEMPLATE_RETIRED_MAP).
-// El orden de las claves es el del catálogo (lo usan allowedTemplatesFor y
-// el selector del dashboard): mantiene base → plus → advanced.
-// `trama` e `indumentaria` comparten piel (data-skin='indumentaria'), pero
-// son composiciones distintas: ver STORE_TEMPLATE_SKIN.
+// Diseño de la web pública (espejo de StoreCustomization.TEMPLATE_CHOICES):
+// catálogo de UNO — 'raiz' es el único diseño (Esencial). El backend
+// descarta del PATCH cualquier otro id y la web fuerza 'raiz' si el
+// guardado no está permitido. Todo id retirado se remapea a 'raiz'
+// (STORE_TEMPLATE_RETIRED_MAP).
 export const STORE_TEMPLATES = {
-  raiz:        { label: 'Raíz',        rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
-  alimentos:   { label: 'Alimentos',   rubro: 'alimentos',    tier: 'base',     defaultAccent: '#C8321D', desc: 'Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».' },
-  trama:       { label: 'Trama',       rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.' },
-  indumentaria:{ label: 'Indumentaria',rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.' },
-  boutique:    { label: 'Boutique',    rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
-  atelier:     { label: 'Atelier',     rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#2D4A3E', desc: 'Indumentaria editorial: papel cálido, verde bosque, Bricolage y grilla de prendas con chips.' },
-  sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
-  mercado:     { label: 'Bazar',       rubro: 'general',      tier: 'plus',     defaultAccent: '#2563EB', desc: 'Marketplace: masthead amarillo, buscador, tarjetas blancas densas y precios con descuento.' },
-  clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
-  gimnasio:    { label: 'Gimnasio',    rubro: 'deporte',      tier: 'plus',     defaultAccent: '#A3E635', desc: 'Gimnasio y fitness: tinta carbón, lima eléctrico, Barlow condensada y tarjetas de planes numeradas.' },
-  circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
-  seguridad:   { label: 'Seguridad',   rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
+  raiz:        { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
 }
 
-// Familias de diseño para el selector del dashboard: una por RUBRO, con los
-// diseños de ese rubro. El orden espeja el del catálogo (STORE_TEMPLATES).
-// `indumentaria` (Trama) y `moda-pro` (Indumentaria) son dos opciones de la
-// misma familia de rubro: el select usa `templates[0]`.
+// Familia de diseño para el selector del dashboard: una sola (Esencial).
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
-  { key: 'alimentos',    label: 'Alimentos',    caption: 'Gastronomía y almacén',   templates: ['alimentos'] },
-  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',       templates: ['trama'] },
-  { key: 'moda-pro',     label: 'Indumentaria', caption: 'Moda profesional',        templates: ['indumentaria'] },
-  { key: 'atelier',      label: 'Indumentaria', caption: 'Editorial de temporada',   templates: ['atelier'] },
-  { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
-  { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
-  { key: 'boutique',     label: 'Boutique',     caption: 'Moda premium y deco',     templates: ['boutique'] },
-  { key: 'clasico',      label: 'Clásico',      caption: 'Comercio y servicios',    templates: ['clasico'] },
-  { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
-  { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',      templates: ['circuito'] },
-  { key: 'seguridad',    label: 'Seguridad',    caption: 'Seguridad y bomberos',    templates: ['seguridad'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
-// Piel (hoja de estilo) de cada diseño. `trama` e `indumentaria` comparten
-// `store-trama.css`/`store-trama-catalog.css` (scopados por data-skin, no por
-// data-template) y por eso declaran la misma piel: la composición distinta es
-// del InicioView, el look es compartido. StorePublicLayout pinta
+// Piel (hoja de estilo) del diseño. StorePublicLayout pinta
 // :data-skin="storeSkinOf(pageTemplate)" en .store-page y resuelve la hoja
 // desde TEMPLATE_CSS con esta misma clave.
 export const STORE_TEMPLATE_SKIN = {
-  raiz: 'raiz', alimentos: 'alimentos', trama: 'indumentaria',
-  indumentaria: 'indumentaria', boutique: 'boutique', atelier: 'atelier',
-  sastreria: 'sastreria',
-  mercado: 'mercado',
-  circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico',
-  gimnasio: 'gimnasio'
+  raiz: 'raiz'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
 // Mapa de retiro (espejo de StoreCustomization.TEMPLATE_RETIRED_MAP): una
-// tienda con un diseño viejo se sirve con el nuevo equivalente, nunca cae al
-// fallback ni rompe el render.
+// tienda con un diseño viejo se sirve con 'raiz' — el único diseño.
 export const STORE_TEMPLATE_RETIRED_MAP = {
   classic: 'raiz', duo: 'raiz', minimal: 'raiz', calma: 'raiz',
   studio: 'raiz', arena: 'raiz', proceso: 'raiz',
   carta: 'raiz', terra: 'raiz', bloque: 'raiz', shop: 'raiz',
-  lookbook: 'trama', signature: 'trama',
-  cobre: 'trama', vitrina: 'trama', street: 'trama', riso: 'trama',
-  promo: 'trama', aurora: 'trama',
-  perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',
-  lab: 'circuito', ai_lumen: 'circuito', ai_pulse: 'trama',
+  lookbook: 'raiz', signature: 'raiz',
+  cobre: 'raiz', vitrina: 'raiz', street: 'raiz', riso: 'raiz',
+  promo: 'raiz', aurora: 'raiz',
+  perspective: 'raiz', circuit: 'raiz', terminal: 'raiz',
+  lab: 'raiz', ai_lumen: 'raiz', ai_pulse: 'raiz',
+  alimentos: 'raiz', trama: 'raiz', indumentaria: 'raiz', boutique: 'raiz',
+  atelier: 'raiz', sastreria: 'raiz', mercado: 'raiz', clasico: 'raiz',
+  gimnasio: 'raiz', circuito: 'raiz', seguridad: 'raiz',
 }
 
 // Patrones exclusivos del motor "Diseñar con IA": ya no existen (el motor
-// propone los 3 diseños del catálogo). Se conservan vacíos por compatibilidad
-// con los consumidores que los importan.
+// propone el único diseño del catálogo). Se conservan vacíos por
+// compatibilidad con los consumidores que los importan.
 export const AI_ONLY_TEMPLATES = []
 export const AI_LEGACY_TEMPLATES = []
 export const AI_EXTRA_TEMPLATES = []

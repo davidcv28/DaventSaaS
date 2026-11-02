@@ -203,7 +203,7 @@ class AiDesignGenerateTests(AiDesignBase):
         store, _    =   self._store(advanced = False, ai = False, products = 3)
         data        =   generate_ai_design(store, {})
         allowed     =   set(allowed_templates_of(store.user))
-        self.assertEqual(allowed, {'raiz', 'alimentos'})
+        self.assertEqual(allowed, {'raiz'})
         for proposal in data['proposals']:
             self.assertIn(proposal['template'], allowed)
 
@@ -619,7 +619,7 @@ class AiDesignV2Tests(AiDesignBase):
         #del catálogo público y declaran fuente de estilo 'plan'.
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
         self.assertEqual(sources, {'plan'})
-        self.assertEqual(set(allowed_templates_of(store.user)), {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio', 'circuito', 'seguridad'})
+        self.assertEqual(set(allowed_templates_of(store.user)), {'raiz'})
 
     def test_ai_templates_never_outside_plan(self):
         #Sin has_ai_design los ai_* no están en la whitelist del plan y el
@@ -644,7 +644,7 @@ class AiDesignV2Tests(AiDesignBase):
         #v7: el motor propone solo los 6 diseños del catálogo, con la piel
         #compuesta por el rubro y el tono.
         proposal    =   data['proposals'][0]
-        self.assertIn(proposal['template'], ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'))
+        self.assertIn(proposal['template'], ('raiz',))
         landing     =   {block['id']: block for block in proposal['layout_config']['landing']['blocks']}
         self.assertIn(landing['hero'].get('variant'), ('full', 'split', 'centered', 'cinema', 'editorial'))
         #Los contenedores los dicta la PIEL elegida, no la plantilla.
@@ -971,7 +971,7 @@ def _contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
-CATALOG_TEMPLATES   =   frozenset(('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad'))
+CATALOG_TEMPLATES   =   frozenset(('raiz',))
 
 
 class AiDesignV4Tests(AiDesignBase):
@@ -1005,13 +1005,11 @@ class AiDesignV4Tests(AiDesignBase):
         store, _    =   self._store(products = 8)
         proposals   =   self._generate(store, {'rubro': 'comercio'})['proposals']
         self.assertIn(len(proposals), (2, 3))
-        self.assertEqual(len({proposal['template'] for proposal in proposals}), len(proposals))
+        #Catálogo de UN diseño: la diversidad queda en piel + par tipográfico.
         self.assertEqual(len({proposal['skin']['id'] for proposal in proposals}), len(proposals))
         #Los estilos también difieren (el invariante que sostiene la
         #variedad de la generación).
         self.assertEqual(len({proposal['variety']['style'] for proposal in proposals}), len(proposals))
-        for proposal in proposals:
-            self.assertEqual(proposal['variety']['differs_by'], ['template', 'skin', 'type-pair'])
 
     def test_all_proposals_come_from_the_public_catalog(self):
         #Ninguna propuesta sale del catálogo público y los diseños base del
@@ -1025,7 +1023,7 @@ class AiDesignV4Tests(AiDesignBase):
                 self.assertEqual(proposal['style_source'], 'plan')
                 templates.add(proposal['template'])
         self.assertTrue(templates <= CATALOG_TEMPLATES, templates - CATALOG_TEMPLATES)
-        self.assertTrue({'raiz', 'trama', 'circuito'} <= templates, templates)
+        self.assertTrue({'raiz'} <= templates, templates)
 
     def test_rubro_seguridad_proposes_the_security_design(self):
         #El rubro nuevo entra al entrenamiento: la matriz firma incluye
@@ -1040,7 +1038,7 @@ class AiDesignV4Tests(AiDesignBase):
             self.assertEqual(data, again)
             for proposal in data['proposals']:
                 self.assertIn(proposal['skin']['id'], SKIN_IDS)
-        self.assertIn('seguridad', seen)
+        self.assertIn('raiz', seen)
         self.assertTrue(seen <= set(allowed_templates_of(store.user)))
 
     def test_standard_plan_never_gets_advanced_designs(self):
@@ -1056,7 +1054,7 @@ class AiDesignV4Tests(AiDesignBase):
         store       =   Store.objects.create(user = profile, slug = 'tienda-estandar')
         StoreCustomization.objects.create(store = store, site_templates = ['landing', 'catalog', 'services'])
         allowed     =   set(allowed_templates_of(store.user))
-        self.assertEqual(allowed, {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio'})
+        self.assertEqual(allowed, {'raiz'})
         data        =   self._client(store).post(AI_URL, {'rubro': 'seguridad'}, format = 'json').json()
         self.assertTrue(data['proposals'])
         for proposal in data['proposals']:
@@ -1072,9 +1070,9 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_allowed_templates_grow_with_the_flag(self):
         premium, _  =   self._store()
-        self.assertEqual(set(allowed_templates_of(premium.user)), {'raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio', 'circuito', 'seguridad'})
+        self.assertEqual(set(allowed_templates_of(premium.user)), {'raiz'})
         basic, _    =   self._store(advanced = False, username = 'basico')
-        self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz', 'alimentos'})
+        self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz'})
 
     def test_typography_roles_cover_the_thirteen_roles(self):
         store, _    =   self._store()

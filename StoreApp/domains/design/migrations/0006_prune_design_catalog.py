@@ -3,17 +3,17 @@ from django.db import migrations
 """
 Limpia el catálogo de diseño y deja solo los diseños en uso.
 
-- Patrones: `mercado` (Bazar) y `circuito` (reservado para después).
-- Estilos: `base` (default de la plataforma) y `mercado` (Bazar).
+- Patrones: `esencial` (el único diseño).
+- Estilos: `base` (default de la plataforma) y los de Esencial.
 
 Los registros de estilos/patrones retirados se eliminan también de las
 bases ya migradas; sin esto, un deploy seguía mostrando el catálogo viejo
 aunque `seed_data.json` ya no los tuviera.
 """
 
-KEEP_PATTERNS = ('mercado', 'circuito')
-KEEP_STYLES = ('base', 'mercado')
-DEFAULT_PATTERN = 'mercado'
+KEEP_PATTERNS = ('esencial',)
+KEEP_STYLES = ('base', 'esencial', 'esencial-noche', 'esencial-premium')
+DEFAULT_PATTERN = 'esencial'
 DEFAULT_STYLE = 'base'
 
 

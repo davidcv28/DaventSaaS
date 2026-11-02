@@ -126,59 +126,41 @@ class StoreCustomization(models.Model):
         ('barlow',               'Barlow'),
         ('barlow-condensed',     'Barlow Condensed'),
     ]
-    #Diseños de la web pública (catálogo cerrado) por nivel de plan — 8
-    #diseños organizados por RUBRO (no por "estilo de autor"): los base
-    #(2) van con cualquier has_customization, TEMPLATE_PLUS (4) con
-    #has_design_plus (Estándar) y TEMPLATE_ADVANCED (2) con
-    #has_design_advanced (Premium). 'indumentaria' comparte la piel de
-    #'trama' con otra composición; 'clasico' es el clásico del catálogo
-    #(distinto del id retirado 'classic', que sigue remapeado a 'raiz').
-    #El viewset descarta del payload un diseño fuera del nivel del plan y
-    #la web fuerza 'raiz' (fallback global) si el guardado deja de estar
-    #permitido. Toda la identidad visual vive en el CSS del diseño
-    #(store-<id>.css).
+    #Diseños de la web pública (catálogo cerrado) — UN solo diseño:
+    #'raiz' (Esencial) va con cualquier has_customization; los niveles
+    #PLUS/ADVANCED quedan vacíos. El viewset descarta del payload un id
+    #desconocido y la web fuerza 'raiz' (fallback global) si el guardado
+    #deja de estar permitido. Toda la identidad visual vive en el CSS del
+    #diseño (store-raiz.css).
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
-    TEMPLATE_BASE               =   ('raiz', 'alimentos')
-    TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio')
-    TEMPLATE_ADVANCED           =   ('circuito', 'seguridad')
-    #El motor "Diseñar con IA" no tiene patrones exclusivos ni propone los
-    #diseños nuevos: sigue proponiendo solo los 6 de PUBLIC_TEMPLATES
-    #(ai_design_recipes). El dueño sí puede elegirlos a mano desde el
-    #selector del dashboard.
+    #Catálogo de UN diseño: 'raiz' (Esencial) es el único — va con
+    #cualquier has_customization; los niveles quedan vacíos.
+    TEMPLATE_BASE               =   ('raiz',)
+    TEMPLATE_PLUS               =   ()
+    TEMPLATE_ADVANCED           =   ()
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
-        ('raiz',          'Raíz'),
-        ('alimentos',     'Alimentos'),
-        ('trama',         'Trama'),
-        ('indumentaria',  'Indumentaria'),
-        ('boutique',      'Boutique'),
-        ('atelier',       'Atelier'),
-        ('sastreria',     'Sastrería'),
-        ('mercado',       'Bazar'),
-        ('clasico',       'Clásico'),
-        ('gimnasio',      'Gimnasio'),
-        ('circuito',      'Circuito'),
-        ('seguridad',     'Seguridad'),
+        ('raiz',          'Esencial'),
     ]
-    #Mapa de retirada -> diseño nuevo por afinidad de rubro (mig. 0053):
-    #claros/neutros -> 'raiz', editoriales/moda -> 'trama', oscuros/
-    #técnicos -> 'circuito'. Ninguna tienda existente pierde su web.
-    #'boutique' queda FUERA del mapa: desde el rediseño es un diseño del
-    #catálogo (plus), no un id retirado. Lo mismo vale para 'mercado', que
-    #pasó de id retirado a diseño plus del catálogo.
+    #Todo diseño retirado remapea a 'raiz' (el único del catálogo): una
+    #tienda vieja nunca cae al fallback ni rompe el render.
     TEMPLATE_RETIRED_MAP        =   {
         'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
         'studio': 'raiz', 'arena': 'raiz',
         'proceso': 'raiz', 'carta': 'raiz', 'terra': 'raiz', 'bloque': 'raiz',
         'shop': 'raiz',
-        'lookbook': 'trama',
-        'signature': 'trama', 'cobre': 'trama', 'vitrina': 'trama',
-        'street': 'trama', 'riso': 'trama', 'promo': 'trama',
-        'aurora': 'trama',
-        'perspective': 'circuito', 'circuit': 'circuito',
-        'terminal': 'circuito', 'lab': 'circuito',
-        'ai_lumen': 'circuito', 'ai_pulse': 'trama',
+        'lookbook': 'raiz',
+        'signature': 'raiz', 'cobre': 'raiz', 'vitrina': 'raiz',
+        'street': 'raiz', 'riso': 'raiz', 'promo': 'raiz',
+        'aurora': 'raiz',
+        'perspective': 'raiz', 'circuit': 'raiz',
+        'terminal': 'raiz', 'lab': 'raiz',
+        'ai_lumen': 'raiz', 'ai_pulse': 'raiz',
+        'alimentos': 'raiz', 'trama': 'raiz', 'indumentaria': 'raiz',
+        'boutique': 'raiz', 'atelier': 'raiz', 'sastreria': 'raiz',
+        'mercado': 'raiz', 'clasico': 'raiz', 'gimnasio': 'raiz',
+        'circuito': 'raiz', 'seguridad': 'raiz',
     }
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

@@ -14,63 +14,19 @@
 // (misma piel, misma lógica). El bundler cachea el mismo módulo: no duplica
 // código ni CSS.
 export const landingViews = {
-  raiz:         () => import('../views/store/raiz/InicioView.vue'),
-  alimentos:    () => import('../views/store/alimentos/InicioView.vue'),
-  trama:        () => import('../views/store/trama/InicioView.vue'),
-  indumentaria: () => import('../views/store/indumentaria/InicioView.vue'),
-  boutique:     () => import('../views/store/boutique/InicioView.vue'),
-  atelier:      () => import('../views/store/atelier/InicioView.vue'),
-  sastreria:    () => import('../views/store/sastreria/InicioView.vue'),
-  mercado:      () => import('../views/store/mercado/InicioView.vue'),
-  clasico:      () => import('../views/store/clasico/InicioView.vue'),
-  circuito:     () => import('../views/store/circuito/InicioView.vue'),
-  seguridad:    () => import('../views/store/seguridad/InicioView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/InicioView.vue')
+  raiz:         () => import('../views/store/raiz/InicioView.vue')
 }
 
 export const catalogViews = {
-  raiz:         () => import('../views/store/raiz/CatalogoView.vue'),
-  alimentos:    () => import('../views/store/alimentos/CatalogoView.vue'),
-  trama:        () => import('../views/store/trama/CatalogoView.vue'),
-  indumentaria: () => import('../views/store/trama/CatalogoView.vue'),
-  boutique:     () => import('../views/store/boutique/CatalogoView.vue'),
-  atelier:      () => import('../views/store/atelier/CatalogoView.vue'),
-  sastreria:    () => import('../views/store/sastreria/CatalogoView.vue'),
-  mercado:      () => import('../views/store/mercado/CatalogoView.vue'),
-  clasico:      () => import('../views/store/clasico/CatalogoView.vue'),
-  circuito:     () => import('../views/store/circuito/CatalogoView.vue'),
-  seguridad:    () => import('../views/store/seguridad/CatalogoView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/CatalogoView.vue')
+  raiz:         () => import('../views/store/raiz/CatalogoView.vue')
 }
 
 export const productViews = {
-  raiz:         () => import('../views/store/raiz/ProductoView.vue'),
-  alimentos:    () => import('../views/store/alimentos/ProductoView.vue'),
-  trama:        () => import('../views/store/trama/ProductoView.vue'),
-  indumentaria: () => import('../views/store/trama/ProductoView.vue'),
-  boutique:     () => import('../views/store/boutique/ProductoView.vue'),
-  atelier:      () => import('../views/store/atelier/ProductoView.vue'),
-  sastreria:    () => import('../views/store/sastreria/ProductoView.vue'),
-  mercado:      () => import('../views/store/mercado/ProductoView.vue'),
-  clasico:      () => import('../views/store/clasico/ProductoView.vue'),
-  circuito:     () => import('../views/store/circuito/ProductoView.vue'),
-  seguridad:    () => import('../views/store/seguridad/ProductoView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/ProductoView.vue')
+  raiz:         () => import('../views/store/raiz/ProductoView.vue')
 }
 
 export const servicesViews = {
-  raiz:         () => import('../views/store/raiz/ServiciosView.vue'),
-  alimentos:    () => import('../views/store/alimentos/ServiciosView.vue'),
-  trama:        () => import('../views/store/trama/ServiciosView.vue'),
-  indumentaria: () => import('../views/store/trama/ServiciosView.vue'),
-  boutique:     () => import('../views/store/boutique/ServiciosView.vue'),
-  atelier:      () => import('../views/store/atelier/ServiciosView.vue'),
-  sastreria:    () => import('../views/store/sastreria/ServiciosView.vue'),
-  // 'mercado' (Bazar) no tiene página Servicios: su def no declara la superficie.
-  clasico:      () => import('../views/store/clasico/ServiciosView.vue'),
-  circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
-  seguridad:    () => import('../views/store/seguridad/ServiciosView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue')
+  raiz:         () => import('../views/store/raiz/ServiciosView.vue')
 }
 
 // ===== Listas canónicas de bloques =====

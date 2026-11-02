@@ -1754,8 +1754,7 @@ const siteTemplatesBusy = ref(false)
 const canServicesSite = computed(() => Boolean(plan.value?.benefits?.has_services_site))
 // El diseño elegido bloquea las plantillas que no cubre: si hay un patrón
 // seleccionado mandan sus superficies declaradas (patternSurfaces); si no,
-// las páginas que ofrece la plantilla base (Bazar no ofrece Servicios ni
-// Suscripciones — ver `pages` en templates/mercado).
+// las páginas que ofrece la plantilla base (templates/raiz).
 const sitePatternList = ref([])
 const LAYOUT_SURFACE_SET = new Set(['landing', 'catalog', 'services'])
 const sameLayout = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {})

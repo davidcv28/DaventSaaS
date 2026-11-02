@@ -6,17 +6,8 @@
 //   - blocks:   composición canónica por superficie (la vista monta esos
 //               bloques en ese orden; ver templateBlocks/resolveLayout).
 //
-// Catálogo cerrado de 8 diseños, dos por nivel de plan:
-//   raiz         (base)     generalista / retail / servicios
-//   alimentos    (base)     gastronomía / almacén / panadería
-//   trama        (plus)     indumentaria / moda
-//   indumentaria (plus)     indumentaria / moda profesional (piel de trama,
-//                           composición propia)
-//   boutique     (plus)     moda premium / deco / joyería
-//   clasico      (plus)     comercio y servicios con oficio (marfil + serif)
-//   circuito     (advanced) tecnología / electrónica
-//   seguridad    (advanced) seguridad / bomberos / industrial
-// El fallback global es 'raiz'. Todo id retirado se remapea con
+// Catálogo de UN diseño: 'raiz' (Esencial). Es a la vez el único y el
+// fallback global. Todo id retirado se remapea a 'raiz' con
 // STORE_TEMPLATE_RETIRED_MAP (stores.api.js) antes de resolver.
 //
 // El sistema de bloques se retiró: cada plantilla declara su composición
@@ -29,19 +20,8 @@ import { LAYOUT_SURFACES } from './blocks.js'
 import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES, SITE_TEMPLATE_KEYS } from '../api/stores.api.js'
 
 import raiz         from './raiz/index.js'
-import alimentos    from './alimentos/index.js'
-import trama        from './trama/index.js'
-import indumentaria from './indumentaria/index.js'
-import boutique     from './boutique/index.js'
-import atelier      from './atelier/index.js'
-import sastreria    from './sastreria/index.js'
-import mercado      from './mercado/index.js'
-import clasico      from './clasico/index.js'
-import circuito     from './circuito/index.js'
-import seguridad    from './seguridad/index.js'
-import gimnasio     from './gimnasio/index.js'
 
-export const TEMPLATE_DEFS = { raiz, alimentos, trama, indumentaria, boutique, atelier, sastreria, mercado, clasico, circuito, seguridad, gimnasio }
+export const TEMPLATE_DEFS = { raiz }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 

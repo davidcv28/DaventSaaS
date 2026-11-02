@@ -48,7 +48,7 @@ BASE_STYLE  =   {
     'tags'          :   ['general', 'base', 'neutro'],
 }
 DEFAULT_STYLE       =   'base'
-DEFAULT_PATTERN     =   'mercado'
+DEFAULT_PATTERN     =   'esencial'
 
 
 def build_markup(pattern):

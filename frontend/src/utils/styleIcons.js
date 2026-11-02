@@ -152,15 +152,7 @@ export const STYLE_FAMILY = {
 
 // Plantilla -> familia por defecto (tienda sin estilo elegido).
 export const TEMPLATE_FAMILY = {
-  raiz: 'editorial',
-  trama: 'editorial',
-  indumentaria: 'editorial',
-  boutique: 'luxury',
-  clasico: 'craft',
-  alimentos: 'craft',
-  circuito: 'tech',
-  seguridad: 'brutal',
-  gimnasio: 'brutal'
+  raiz: 'editorial'
 }
 
 // Ajuste fino por estilo: dentro de una familia, el rubro del estilo manda.
@@ -192,16 +184,8 @@ export const STYLE_ICON_OVERRIDES = {
   'vidrio-nocturno': { store: 'layout-grid', sparkles: 'zap' }
 }
 
-// Ajuste por plantilla (tienda sin estilo elegido).
-export const TEMPLATE_ICON_OVERRIDES = {
-  alimentos: { store: 'coffee', sparkles: 'flame', tag: 'leaf' },
-  boutique: { store: 'gem', sparkles: 'diamond', tag: 'percent' },
-  indumentaria: { store: 'scissors', tag: 'percent' },
-  circuito: { store: 'terminal', sparkles: 'zap' },
-  seguridad: { store: 'shield-check', sparkles: 'hard-hat' },
-  clasico: { store: 'building-2' },
-  gimnasio: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' }
-}
+// Ajuste por plantilla (tienda sin estilo elegido): catálogo de UN diseño.
+export const TEMPLATE_ICON_OVERRIDES = {}
 
 export function familyOf({ styleId = '', template = '' } = {}) {
   return STYLE_FAMILY[styleId] || TEMPLATE_FAMILY[template] || 'editorial'

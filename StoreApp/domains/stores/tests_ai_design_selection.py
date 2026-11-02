@@ -16,9 +16,9 @@ from StoreApp.domains.stores.services import ai_design_recipes as R
 from StoreApp.domains.stores.services import ai_design_skins as SKIN
 from StoreApp.domains.stores.services import ai_design_typography as TYPE
 
-PLAN_BASIC      =   ('raiz', 'alimentos')
-PLAN_PLUS       =   ('raiz', 'alimentos', 'trama', 'boutique')
-PLAN_ADVANCED   =   ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad')
+PLAN_BASIC      =   ('raiz',)
+PLAN_PLUS       =   ('raiz',)
+PLAN_ADVANCED   =   ('raiz',)
 PLAN_AI         =   PLAN_ADVANCED
 
 FACT_KEYS       =   ('products', 'images', 'categories', 'brands', 'gallery', 'carousel',
@@ -99,13 +99,10 @@ class CatalogoCerrado(unittest.TestCase):
     def test_type_pairs_catalog_is_not_empty(self):
         self.assertGreater(len(TYPE.TYPE_PAIRS), 0)
 
-    def test_public_catalog_is_the_six_designs(self):
-        self.assertEqual(
-            R.PUBLIC_TEMPLATES,
-            ('raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad'),
-        )
-        self.assertEqual(len(R.PUBLIC_TEMPLATES), 6)
-        self.assertNotIn('boutique', R.PUBLIC_TEMPLATE_MAP)
+    def test_public_catalog_is_one_design(self):
+        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz',))
+        self.assertEqual(len(R.PUBLIC_TEMPLATES), 1)
+        self.assertEqual(R.PUBLIC_TEMPLATE_MAP['boutique'], 'raiz')
 
     def test_retired_ids_never_come_back_to_the_engine(self):
         #Ningún id retirado puede reaparecer como template propuesto: la
@@ -119,19 +116,12 @@ class CatalogoCerrado(unittest.TestCase):
             for template in recipe['templates']:
                 self.assertIn(template, R.PUBLIC_TEMPLATES, rubro)
 
-    def test_new_designs_are_the_signature_of_their_rubro(self):
-        #Cada diseño nuevo abre la matriz del rubro al que se lo asignó.
-        expected = {
-            'gastronomia': 'alimentos',
-            'indumentaria': 'boutique',
-            'belleza': 'boutique',
-            'arte': 'boutique',
-            'construccion': 'seguridad',
-            'seguridad': 'seguridad',
-        }
-        for rubro, template in expected.items():
-            templates = [signature['template'] for signature in R.RUBRO_STYLES[rubro]]
-            self.assertIn(template, templates, rubro)
+    def test_signature_styles_use_the_single_design(self):
+        #Catálogo de UN diseño: toda firma remapea a 'raiz' (la variedad
+        #queda en piel + par tipográfico).
+        for rubro, styles in R.RUBRO_STYLES.items():
+            for signature in styles:
+                self.assertEqual(signature['template'], 'raiz', rubro)
         self.assertEqual(R.RUBRO_STYLES['comercio'][0]['template'], 'raiz')
 
 
@@ -570,12 +560,14 @@ class CandidatesToSelectionTests(unittest.TestCase):
     """El combo que realmente usa `_build`, a 1200 combinaciones."""
 
     def test_generation_never_repeats_a_template_across_rubros_and_seeds(self):
+        #Catálogo de UN diseño: la selección puede traer una sola propuesta
+        #(todas comparten 'raiz'); lo importante es que nunca repita piel.
         for rubro in R.RUBROS:
             for seed in range(6):
                 candidates = A._style_candidates(facts_full(), stats_dense(), answers(rubro = rubro), PLAN_AI, seed)
                 chosen = A._select_styles(candidates, 3)
-                self.assertEqual(len({item['template'] for item in chosen}), len(chosen), (rubro, seed))
-                self.assertTrue(len(chosen) >= 2, (rubro, seed))
+                self.assertEqual(len({item['skin'] for item in chosen}), len(chosen), (rubro, seed))
+                self.assertTrue(len(chosen) >= 1, (rubro, seed))
 
     def test_plan_basico_gets_two_proposals_inside_the_plan(self):
         for seed in range(6):
@@ -597,7 +589,9 @@ class CandidatesToSelectionTests(unittest.TestCase):
         for seed in range(6):
             candidates = A._style_candidates(facts_full(), stats_dense(), answers(), PLAN_ADVANCED, seed)
             chosen = A._select_styles(candidates, 2)
-            self.assertEqual(len({item['style'] for item in chosen}), 2, seed)
+            #Catálogo de UN diseño: si solo salió una, con que declare su
+            #estilo alcanza.
+            self.assertGreaterEqual(len({item['style'] for item in chosen}), 1, seed)
 
 
 if __name__ == '__main__':
@@ -675,7 +669,8 @@ class ExploreSignatureTests(unittest.TestCase):
             A._explore_styles(self._pool(), seed, 3, signature = signature)[0]['template']
             for seed in range(6)
         }
-        self.assertGreater(len(openings), 1)
+        #Catálogo de UN diseño: solo puede abrir 'raiz'.
+        self.assertEqual(openings, {'raiz'})
 
     def test_exploration_slot_is_not_the_signature(self):
         #Con 4+ plantillas en el plan, la última tarjeta sale del resto del
