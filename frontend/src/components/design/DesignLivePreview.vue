@@ -256,7 +256,7 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
   border: 1px solid var(--line, #e5e7eb); border-radius: 14px;
   background:
     radial-gradient(120% 90% at 50% 0%, var(--brand-soft, #eef2ff), transparent 62%),
-    var(--surface-2, #f1f5f9);
+    var(--surface, #f1f5f9);
   display: flex; justify-content: center;
 }
 .dlp-stage::before {
@@ -289,7 +289,7 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
 .dlp-frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; background: #fff; }
 .dlp-stage.mobile { padding: 18px 0; background:
     radial-gradient(90% 70% at 50% 0%, var(--brand-soft, #eef2ff), transparent 60%),
-    var(--surface-3, #eef2f7); }
+    var(--surface, #eef2f7); }
 .dlp-stage.mobile .dlp-fit { width: 100%; height: 100%; display: flex; justify-content: center; }
 .dlp-stage.mobile .dlp-device {
   width: 392px; max-width: calc(100% - 32px); height: 100%;
@@ -308,6 +308,6 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
 .dlp-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 12px; opacity: .8; }
 .dlp-veil {
   position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  background: var(--surface-2, #f1f5f9); color: var(--muted, #64748b); font-size: 12px; font-weight: 600;
+  background: var(--surface, #f1f5f9); color: var(--muted, #64748b); font-size: 12px; font-weight: 600;
 }
 </style>

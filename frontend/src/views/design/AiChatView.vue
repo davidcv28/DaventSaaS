@@ -202,7 +202,7 @@ function resetChat() {
   display: flex; flex-direction: column; gap: 10px;
   min-height: 240px; max-height: 52vh; overflow-y: auto;
   padding: 14px; border-radius: 14px;
-  border: 1px solid var(--line, #e5e7eb); background: var(--surface-2, #f8fafc);
+  border: 1px solid var(--line, #e5e7eb); background: var(--surface, #f8fafc);
 }
 .aichat-empty { font-size: 14px; opacity: .8; }
 .aichat-empty ul { margin: 8px 0 0; padding-left: 18px; }

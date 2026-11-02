@@ -151,7 +151,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
   padding: 6px 9px; border: 0; border-radius: 8px; background: transparent;
   color: var(--ink, #0f172a); font: inherit; font-size: 13.5px; text-align: left; cursor: pointer;
 }
-.ds-option:hover:not(:disabled), .ds-option.active { background: var(--surface-2, #f1f5f9); }
+.ds-option:hover:not(:disabled), .ds-option.active { background: var(--surface, #f1f5f9); }
 .ds-option.disabled { opacity: .45; cursor: not-allowed; }
 .ds-option-label { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ds-option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -163,5 +163,6 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
 .ds-badge.green { background: var(--ok-bg, #dcfce7); border-color: var(--ok-line, #bbf7d0); color: var(--ok-ink, #15803d); }
 .ds-badge.amber { background: var(--warn-bg, #fef3c7); border-color: var(--warn-line, #fde68a); color: var(--warn-ink, #b45309); }
 .ds-badge.purple { background: #ede9fe; border-color: #ddd6fe; color: #6d28d9; }
+[data-theme='dark'] .ds-badge.purple { background: rgba(139, 92, 246, .16); border-color: rgba(167, 139, 250, .4); color: #c4b5fd; }
 .ds-check { flex: none; color: var(--brand-600, #4f46e5); }
 </style>
