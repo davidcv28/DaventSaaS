@@ -2736,8 +2736,8 @@
           "bg": "#EAEEF8",
           "surface": "#FFFFFF",
           "text": "#0F172A",
-          "muted": "#5B6678",
-          "border": "#DFE4F3",
+          "muted": "#4A5568",
+          "border": "#C5CDE3",
           "success": "#059669",
           "danger": "#DC2626"
         },
@@ -2826,8 +2826,8 @@
           "bg": "#0D0F14",
           "surface": "#14171F",
           "text": "#F2EFE8",
-          "muted": "#9AA0AE",
-          "border": "#2A2F3D",
+          "muted": "#AEB4C2",
+          "border": "#3A4054",
           "success": "#4ADE80",
           "danger": "#F45B4C"
         },
@@ -3913,8 +3913,8 @@
           "bg": "#EAEEF8",
           "surface": "#FFFFFF",
           "text": "#0F172A",
-          "muted": "#5B6678",
-          "border": "#DFE4F3",
+          "muted": "#4A5568",
+          "border": "#C5CDE3",
           "success": "#059669",
           "danger": "#DC2626"
         },
