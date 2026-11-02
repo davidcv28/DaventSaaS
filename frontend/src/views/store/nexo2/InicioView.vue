@@ -7,7 +7,7 @@
 // bento, servicios, oferta + cuenta regresiva, marcas, galería, testimonios,
 // FAQ, CTA y contacto). La pieza firma (NxHero) se monta con wrapper sin
 // `block`; el resto sale de los Blk* compartidos, eskinados por CSS.
-// La piel vive en assets/store-nexo.css con raíz [data-template="nexo"].
+// La piel vive en assets/store-nexo2.css con raíz [data-template="nexo2"].
 import { computed, inject } from 'vue'
 import { templateBlocks } from '../../../templates/index.js'
 import { firma, landingExtras } from '../../../templates/_shared.js'

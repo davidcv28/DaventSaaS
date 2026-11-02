@@ -2540,12 +2540,12 @@
       }
     },
     {
-      "slug": "nexo",
-      "nombre": "Nexo",
+      "slug": "nexo2",
+      "nombre": "Nexo 2",
       "categoria": "Tecnología premium",
       "descripcion": "Tinta casi negra, retícula técnica y acento teal: Space Grotesk, mono en etiquetas y tarjeta de producto flotante.",
       "tier": "advanced",
-      "template": "nexo",
+      "template": "nexo2",
       "page_theme": "dark",
       "tokens": {
         "palette": {
@@ -2606,7 +2606,7 @@
       "layout_spec": {},
       "tags": [
         "tecnologia",
-        "nexo",
+        "nexo2",
         "premium",
         "oscuro",
         "teal"
@@ -2630,12 +2630,12 @@
       "concept": "Tinta casi negra, retícula técnica y acento teal: Space Grotesk, mono en etiquetas y tarjeta de producto flotante."
     },
     {
-      "slug": "nexo-ambar",
-      "nombre": "Nexo Ámbar",
+      "slug": "nexo2-ambar",
+      "nombre": "Nexo 2",
       "categoria": "Tecnología premium cálida",
       "descripcion": "Misma tinta casi negra y retícula, con acento ámbar de oferta: más cálido y comercial.",
       "tier": "advanced",
-      "template": "nexo",
+      "template": "nexo2",
       "page_theme": "dark",
       "tokens": {
         "palette": {
@@ -2696,7 +2696,7 @@
       "layout_spec": {},
       "tags": [
         "tecnologia",
-        "nexo",
+        "nexo2",
         "premium",
         "oscuro",
         "ambar",
@@ -3567,12 +3567,12 @@
       "style": "gimnasio"
     },
     {
-      "slug": "nexo",
-      "nombre": "Nexo",
+      "slug": "nexo2",
+      "nombre": "Nexo 2",
       "categoria": "tecnologia",
       "descripcion": "Tecnología premium: hero cinema con tarjeta de producto flotante y etiquetas, cinta de anuncios, departamentos en riel, vitrina 4-up, cifras en banda, garantías bento, oferta con cuenta regresiva, marcas en marquee, showroom en grilla, testimonios, FAQ y CTA final.",
       "tier": "advanced",
-      "template": "nexo",
+      "template": "nexo2",
       "layout": {
         "landing": [
           {
@@ -3774,7 +3774,7 @@
       "preview": "",
       "variables": {},
       "supports_dark_mode": true,
-      "style": "nexo"
+      "style": "nexo2"
     },
     {
       "slug": "default",

@@ -26,7 +26,7 @@ export const landingViews = {
   circuito:     () => import('../views/store/circuito/InicioView.vue'),
   seguridad:    () => import('../views/store/seguridad/InicioView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/InicioView.vue'),
-  nexo:         () => import('../views/store/nexo/InicioView.vue'),
+  nexo2:         () => import('../views/store/nexo2/InicioView.vue'),
   default:      () => import('../views/store/default/InicioView.vue')
 }
 
@@ -43,7 +43,7 @@ export const catalogViews = {
   circuito:     () => import('../views/store/circuito/CatalogoView.vue'),
   seguridad:    () => import('../views/store/seguridad/CatalogoView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/CatalogoView.vue'),
-  nexo:         () => import('../views/store/nexo/CatalogoView.vue'),
+  nexo2:         () => import('../views/store/nexo2/CatalogoView.vue'),
   default:      () => import('../views/store/default/CatalogoView.vue')
 }
 
@@ -60,7 +60,7 @@ export const productViews = {
   circuito:     () => import('../views/store/circuito/ProductoView.vue'),
   seguridad:    () => import('../views/store/seguridad/ProductoView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/ProductoView.vue'),
-  nexo:         () => import('../views/store/nexo/ProductoView.vue'),
+  nexo2:         () => import('../views/store/nexo2/ProductoView.vue'),
   default:      () => import('../views/store/default/ProductoView.vue')
 }
 
@@ -77,7 +77,7 @@ export const servicesViews = {
   circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
   seguridad:    () => import('../views/store/seguridad/ServiciosView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue'),
-  nexo:         () => import('../views/store/nexo/ServiciosView.vue'),
+  nexo2:         () => import('../views/store/nexo2/ServiciosView.vue'),
   default:      () => import('../views/store/default/ServiciosView.vue')
 }
 

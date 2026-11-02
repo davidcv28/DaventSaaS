@@ -4,7 +4,7 @@
 // negocio real (horario, localidad, años) y a la derecha la tarjeta del
 // producto destacado con etiquetas flotantes. Reusa las piezas comunes
 // (AppIcon, vReveal, useFeaturedCatalog, helpers de precio/oferta y horario)
-// sin fetching nuevo; la piel vive en store-nexo.css.
+// sin fetching nuevo; la piel vive en store-nexo2.css.
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { openStatus } from '../../../utils/storeHours.js'

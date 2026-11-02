@@ -1,17 +1,17 @@
 /* ==========================================================================
    DISEÑO NEXO — tecnología premium (nivel advanced)
-   Raíz del CSS: [data-template="nexo"] (lo emite StorePublicLayout).
+   Raíz del CSS: [data-template="nexo2"] (lo emite StorePublicLayout).
    Piel del boceto "tecnología premium": tinta casi negra, retícula técnica
    tenue, acento teal (#5EEAD4, el del tema) con violeta de apoyo, Space
    Grotesk en titulares y JetBrains Mono en etiquetas. Radios 10–14, bordes
-   finos y glows mesurados. El segundo tema (`nexo-ambar`) cambia el acento
+   finos y glows mesurados. El segundo tema (`nexo2-ambar`) cambia el acento
    a ámbar desde los tokens del estilo (--st-*) — la piel siempre lee el
    acento del tema, nunca un hex propio.
    Catálogo / ficha / servicios reutilizan Raíz bajo `.nx-skin`: la hoja
    re-escribe los tokens --sp-* y los componentes .rz-* del subárbol.
    ========================================================================== */
 
-.store-page[data-template='nexo'] {
+.store-page[data-template='nexo2'] {
   --nx-bg: #0A0C10;
   --nx-bg-2: #0E1218;
   --nx-surface: #131820;
@@ -21,7 +21,7 @@
   --nx-ink: #EDF1F7;
   --nx-ink-2: #A7B2C4;
   --nx-ink-3: #67718A;
-  /* Acento del tema (estilo elegido): teal en `nexo`, ámbar en `nexo-ambar`. */
+  /* Acento del tema (estilo elegido): teal en `nexo2`, ámbar en `nexo2-ambar`. */
   --nx-acc: var(--st-accent, var(--store-accent, #5EEAD4));
   --nx-acc-2: var(--st-secondary, #818CF8);
   --nx-on-acc: var(--st-on-primary, #06231E);
@@ -99,38 +99,38 @@
   overflow-x: clip;
 }
 
-/* Glows ambientales del layout base: en nexo el fondo manda la retícula. */
-.store-page[data-template='nexo']::before,
-.store-page[data-template='nexo']::after { display: none; }
+/* Glows ambientales del layout base: en nexo2 el fondo manda la retícula. */
+.store-page[data-template='nexo2']::before,
+.store-page[data-template='nexo2']::after { display: none; }
 
 /* ==========================================================================
    TIPOGRAFÍA, CONTENEDOR, BOTONES
    ========================================================================== */
-.store-page[data-template='nexo'] h1,
-.store-page[data-template='nexo'] h2,
-.store-page[data-template='nexo'] h3,
-.store-page[data-template='nexo'] .sp-section-title {
+.store-page[data-template='nexo2'] h1,
+.store-page[data-template='nexo2'] h2,
+.store-page[data-template='nexo2'] h3,
+.store-page[data-template='nexo2'] .sp-section-title {
   font-family: var(--nx-display);
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -.02em;
   color: var(--nx-ink);
 }
-.store-page[data-template='nexo'] h1 em,
-.store-page[data-template='nexo'] h2 em,
-.store-page[data-template='nexo'] h3 em { font-style: normal; color: var(--nx-acc); }
-.store-page[data-template='nexo'] h2,
-.store-page[data-template='nexo'] .sp-section-title { font-size: clamp(28px, 4vw, 44px); }
-.store-page[data-template='nexo'] h3 { font-size: clamp(18px, 2vw, 24px); }
-.store-page[data-template='nexo'] p { color: var(--nx-ink-2); }
-.store-page[data-template='nexo'] .nx-container,
-.store-page[data-template='nexo'] .sp-container {
+.store-page[data-template='nexo2'] h1 em,
+.store-page[data-template='nexo2'] h2 em,
+.store-page[data-template='nexo2'] h3 em { font-style: normal; color: var(--nx-acc); }
+.store-page[data-template='nexo2'] h2,
+.store-page[data-template='nexo2'] .sp-section-title { font-size: clamp(28px, 4vw, 44px); }
+.store-page[data-template='nexo2'] h3 { font-size: clamp(18px, 2vw, 24px); }
+.store-page[data-template='nexo2'] p { color: var(--nx-ink-2); }
+.store-page[data-template='nexo2'] .nx-container,
+.store-page[data-template='nexo2'] .sp-container {
   max-width: var(--nx-wrap);
   margin-inline: auto;
   padding-inline: var(--nx-gutter);
 }
-.store-page[data-template='nexo'] .nx-eyebrow,
-.store-page[data-template='nexo'] .sp-eyebrow {
+.store-page[data-template='nexo2'] .nx-eyebrow,
+.store-page[data-template='nexo2'] .sp-eyebrow {
   font-family: var(--nx-mono);
   font-size: 12px;
   font-weight: 500;
@@ -138,8 +138,8 @@
   text-transform: uppercase;
   color: var(--nx-acc);
 }
-.store-page[data-template='nexo'] .nx-btn,
-.store-page[data-template='nexo'] .sp-btn {
+.store-page[data-template='nexo2'] .nx-btn,
+.store-page[data-template='nexo2'] .sp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -158,23 +158,23 @@
   box-shadow: none;
   transition: transform .2s, background .2s, border-color .2s, color .2s;
 }
-.store-page[data-template='nexo'] .nx-btn:hover,
-.store-page[data-template='nexo'] .sp-btn:hover {
+.store-page[data-template='nexo2'] .nx-btn:hover,
+.store-page[data-template='nexo2'] .sp-btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.1);
 }
-.store-page[data-template='nexo'] .nx-btn.is-ghost,
-.store-page[data-template='nexo'] .sp-btn.ghost {
+.store-page[data-template='nexo2'] .nx-btn.is-ghost,
+.store-page[data-template='nexo2'] .sp-btn.ghost {
   background: transparent;
   border-color: var(--nx-line);
   color: var(--nx-ink);
 }
-.store-page[data-template='nexo'] .nx-btn.is-ghost:hover,
-.store-page[data-template='nexo'] .sp-btn.ghost:hover {
+.store-page[data-template='nexo2'] .nx-btn.is-ghost:hover,
+.store-page[data-template='nexo2'] .sp-btn.ghost:hover {
   border-color: var(--nx-ink-3);
   filter: none;
 }
-.store-page[data-template='nexo'] :is(a, button, input, textarea, select, summary):focus-visible {
+.store-page[data-template='nexo2'] :is(a, button, input, textarea, select, summary):focus-visible {
   outline: 2px solid var(--nx-acc);
   outline-offset: 3px;
 }
@@ -182,48 +182,48 @@
 /* ==========================================================================
    CHROME: cabecera oscura con blur, marca con pip de acento
    ========================================================================== */
-.store-page[data-template='nexo'] .sp-top {
+.store-page[data-template='nexo2'] .sp-top {
   background: rgb(10 12 16 / .82);
   border-bottom: 1px solid var(--nx-line-soft);
   backdrop-filter: blur(14px);
   box-shadow: none;
 }
-.store-page[data-template='nexo'] .sp-brand .sp-name {
+.store-page[data-template='nexo2'] .sp-brand .sp-name {
   font-family: var(--nx-display);
   font-weight: 700;
   letter-spacing: -.02em;
   color: var(--nx-ink);
 }
-.store-page[data-template='nexo'] .sp-brand .sp-mono {
+.store-page[data-template='nexo2'] .sp-brand .sp-mono {
   font-family: var(--nx-mono);
   font-size: 10px;
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--nx-ink-3);
 }
-.store-page[data-template='nexo'] .sp-top-links a {
+.store-page[data-template='nexo2'] .sp-top-links a {
   font-size: 14px;
   color: var(--nx-ink-2);
 }
-.store-page[data-template='nexo'] .sp-top-links a:hover { color: var(--nx-ink); }
-.store-page[data-template='nexo'] .sp-top-links a.router-link-exact-active { color: var(--nx-acc); }
-.store-page[data-template='nexo'] .sp-top-end .sp-icon-btn,
-.store-page[data-template='nexo'] .sp-top .sp-burger {
+.store-page[data-template='nexo2'] .sp-top-links a:hover { color: var(--nx-ink); }
+.store-page[data-template='nexo2'] .sp-top-links a.router-link-exact-active { color: var(--nx-acc); }
+.store-page[data-template='nexo2'] .sp-top-end .sp-icon-btn,
+.store-page[data-template='nexo2'] .sp-top .sp-burger {
   border: 1px solid var(--nx-line);
   border-radius: 10px;
   color: var(--nx-ink-2);
 }
-.store-page[data-template='nexo'] .sp-top-end .sp-icon-btn:hover,
-.store-page[data-template='nexo'] .sp-top .sp-burger:hover {
+.store-page[data-template='nexo2'] .sp-top-end .sp-icon-btn:hover,
+.store-page[data-template='nexo2'] .sp-top .sp-burger:hover {
   border-color: var(--nx-ink-3);
   color: var(--nx-ink);
 }
-.store-page[data-template='nexo'] .sp-foot {
+.store-page[data-template='nexo2'] .sp-foot {
   background: var(--nx-bg);
   border-top: 1px solid var(--nx-line-soft);
   color: var(--nx-ink-3);
 }
-.store-page[data-template='nexo'] .sp-foot-name {
+.store-page[data-template='nexo2'] .sp-foot-name {
   font-family: var(--nx-display);
   font-weight: 600;
 }
@@ -388,11 +388,11 @@
 /* ==========================================================================
    BLOQUES COMPARTIDOS RE-SKINEADOS
    ========================================================================== */
-.store-page[data-template='nexo'] .sp-block,
-.store-page[data-template='nexo'] .sp-section { padding-block: var(--nx-section); }
+.store-page[data-template='nexo2'] .sp-block,
+.store-page[data-template='nexo2'] .sp-section { padding-block: var(--nx-section); }
 /* Cinta de anuncios: banda de acento con texto mono oscuro. */
-.store-page[data-template='nexo'] .sp-ann,
-.store-page[data-template='nexo'] .sp-announcements {
+.store-page[data-template='nexo2'] .sp-ann,
+.store-page[data-template='nexo2'] .sp-announcements {
   background: linear-gradient(90deg, var(--nx-acc), color-mix(in srgb, var(--nx-acc) 70%, #34D399));
   color: var(--nx-on-acc);
   font-family: var(--nx-mono);
@@ -402,9 +402,9 @@
   text-transform: uppercase;
 }
 /* Etiquetas destacadas: pills con borde fino. */
-.store-page[data-template='nexo'] .sp-hl-item,
-.store-page[data-template='nexo'] .sp-highlights li,
-.store-page[data-template='nexo'] .sp-chip {
+.store-page[data-template='nexo2'] .sp-hl-item,
+.store-page[data-template='nexo2'] .sp-highlights li,
+.store-page[data-template='nexo2'] .sp-chip {
   border: 1px solid var(--nx-line);
   border-radius: 999px;
   background: transparent;
@@ -414,78 +414,78 @@
   letter-spacing: .05em;
 }
 /* Departamentos: tarjetas oscuras con hover de elevación. */
-.store-page[data-template='nexo'] .sp-shop-dept {
+.store-page[data-template='nexo2'] .sp-shop-dept {
   border: 1px solid var(--nx-line);
   border-radius: var(--nx-radius);
   background: var(--nx-surface);
   transition: border-color .2s, transform .2s;
 }
-.store-page[data-template='nexo'] .sp-shop-dept:hover {
+.store-page[data-template='nexo2'] .sp-shop-dept:hover {
   border-color: var(--nx-ink-3);
   transform: translateY(-3px);
 }
-.store-page[data-template='nexo'] .sp-shop-dept-count { color: var(--nx-ink-3); font-family: var(--nx-mono); font-size: 11px; letter-spacing: .1em; }
+.store-page[data-template='nexo2'] .sp-shop-dept-count { color: var(--nx-ink-3); font-family: var(--nx-mono); font-size: 11px; letter-spacing: .1em; }
 /* Tarjetas y celdas genéricas. */
-.store-page[data-template='nexo'] .sp-card {
+.store-page[data-template='nexo2'] .sp-card {
   background: var(--nx-surface);
   border: var(--tpc-border);
   border-radius: var(--nx-radius);
   box-shadow: none;
   transition: border-color .2s, transform .2s;
 }
-.store-page[data-template='nexo'] .sp-card:hover { border-color: var(--nx-ink-3); transform: translateY(-3px); }
+.store-page[data-template='nexo2'] .sp-card:hover { border-color: var(--nx-ink-3); transform: translateY(-3px); }
 /* Cifras: banda dividida por líneas finas. */
-.store-page[data-template='nexo'] .sp-stat-value,
-.store-page[data-template='nexo'] .sp-stats b { color: var(--nx-acc); font-family: var(--nx-display); }
+.store-page[data-template='nexo2'] .sp-stat-value,
+.store-page[data-template='nexo2'] .sp-stats b { color: var(--nx-acc); font-family: var(--nx-display); }
 /* Garantías / servicios: iconos en placa de acento tenue. */
-.store-page[data-template='nexo'] .sp-benefit-ico,
-.store-page[data-template='nexo'] .sp-service-ico {
+.store-page[data-template='nexo2'] .sp-benefit-ico,
+.store-page[data-template='nexo2'] .sp-service-ico {
   background: color-mix(in srgb, var(--nx-acc) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--nx-acc) 25%, transparent);
   border-radius: 10px;
   color: var(--nx-acc);
 }
 /* Marcas: logo wordmarks en tinta apagada. */
-.store-page[data-template='nexo'] .sp-brands-logo strong { font-family: var(--nx-display); letter-spacing: .02em; }
+.store-page[data-template='nexo2'] .sp-brands-logo strong { font-family: var(--nx-display); letter-spacing: .02em; }
 /* Cuenta regresiva: celdas mono enmarcadas. */
-.store-page[data-template='nexo'] .sp-count-num,
-.store-page[data-template='nexo'] .sp-countdown b {
+.store-page[data-template='nexo2'] .sp-count-num,
+.store-page[data-template='nexo2'] .sp-countdown b {
   font-family: var(--nx-display);
   background: var(--nx-bg);
   border: 1px solid var(--nx-line);
   border-radius: 10px;
 }
 /* Testimonios y FAQ. */
-.store-page[data-template='nexo'] .sp-testi,
-.store-page[data-template='nexo'] .sp-faq details {
+.store-page[data-template='nexo2'] .sp-testi,
+.store-page[data-template='nexo2'] .sp-faq details {
   background: var(--nx-surface);
   border: 1px solid var(--nx-line);
   border-radius: var(--nx-radius);
 }
-.store-page[data-template='nexo'] .sp-testi .stars,
-.store-page[data-template='nexo'] .sp-stars { color: var(--nx-acc); }
+.store-page[data-template='nexo2'] .sp-testi .stars,
+.store-page[data-template='nexo2'] .sp-stars { color: var(--nx-acc); }
 /* CTA band: degradado del acento del tema hacia el secundario. */
-.store-page[data-template='nexo'] .sp-cta.is-band,
-.store-page[data-template='nexo'] .sp-cta {
+.store-page[data-template='nexo2'] .sp-cta.is-band,
+.store-page[data-template='nexo2'] .sp-cta {
   background: linear-gradient(120deg, var(--nx-acc), color-mix(in srgb, var(--nx-acc) 60%, var(--nx-acc-2)));
   border-radius: 20px;
 }
 /* Formularios y contacto. */
-.store-page[data-template='nexo'] :is(input, textarea, select) {
+.store-page[data-template='nexo2'] :is(input, textarea, select) {
   background: var(--nx-bg-2);
   border: 1px solid var(--nx-line);
   border-radius: 10px;
   color: var(--nx-ink);
 }
-.store-page[data-template='nexo'] :is(input, textarea, select):focus {
+.store-page[data-template='nexo2'] :is(input, textarea, select):focus {
   border-color: var(--nx-acc);
   outline: none;
 }
-.store-page[data-template='nexo'] .sp-about,
-.store-page[data-template='nexo'] .sp-benefits { border-top: 1px solid var(--nx-line-soft); }
+.store-page[data-template='nexo2'] .sp-about,
+.store-page[data-template='nexo2'] .sp-benefits { border-top: 1px solid var(--nx-line-soft); }
 
 /* ==========================================================================
-   CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa nexo)
+   CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa nexo2)
    ========================================================================== */
 .store-page[data-template='raiz'].nx-skin {
   --sp-bg: var(--nx-bg, #0A0C10);
@@ -557,6 +557,6 @@
   .nx-hero-meta { gap: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nx-hero-card, .store-page[data-template='nexo'] .sp-card,
-  .store-page[data-template='nexo'] .sp-shop-dept { transition: none; }
+  .nx-hero-card, .store-page[data-template='nexo2'] .sp-card,
+  .store-page[data-template='nexo2'] .sp-shop-dept { transition: none; }
 }

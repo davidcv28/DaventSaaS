@@ -271,7 +271,7 @@ const TEMPLATE_CSS = {
   circuito:  () => import('../assets/store-circuito.css'),
   seguridad: () => import('../assets/store-seguridad.css'),
   gimnasio:  () => import('../assets/store-gimnasio.css'),
-  nexo:      () => import('../assets/store-nexo.css'),
+  nexo2:      () => import('../assets/store-nexo2.css'),
   default:   () => import('../assets/store-default.css')
 }
 watch(pageTemplate, (tpl) => {

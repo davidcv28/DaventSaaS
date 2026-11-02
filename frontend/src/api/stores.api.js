@@ -787,7 +787,7 @@ export const STORE_TEMPLATES = {
   clasico:     { label: 'Clásico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#1F4D43', desc: 'Comercio y servicios con oficio: marfil, serif Playfair, fotos enmarcadas, reglas finas y verde profundo.' },
   gimnasio:    { label: 'Gimnasio',    rubro: 'deporte',      tier: 'plus',     defaultAccent: '#A3E635', desc: 'Gimnasio y fitness: tinta carbón, lima eléctrico, Barlow condensada y tarjetas de planes numeradas.' },
   circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
-  nexo:        { label: 'Nexo',        rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#5EEAD4', desc: 'Tecnología premium: tinta casi negra, retícula técnica, hero cinema con tarjeta flotante y acento teal/ámbar.' },
+  nexo2:        { label: 'Nexo 2',        rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#5EEAD4', desc: 'Tecnología premium: tinta casi negra, retícula técnica, hero cinema con tarjeta flotante y acento teal/ámbar.' },
   seguridad:   { label: 'Seguridad',   rubro: 'seguridad',    tier: 'advanced', defaultAccent: '#C8200E', desc: 'Seguridad y bomberos: Barlow condensada, bordes duros, franjas hazard y hero de alto impacto.' },
 }
 
@@ -808,7 +808,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'clasico',      label: 'Clásico',      caption: 'Comercio y servicios',    templates: ['clasico'] },
   { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y tech',      templates: ['circuito'] },
-  { key: 'nexo',         label: 'Tecnología',   caption: 'Premium oscuro',          templates: ['nexo'] },
+  { key: 'nexo2',         label: 'Tecnología',   caption: 'Premium oscuro',          templates: ['nexo2'] },
   { key: 'seguridad',    label: 'Seguridad',    caption: 'Seguridad y bomberos',    templates: ['seguridad'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
@@ -825,7 +825,7 @@ export const STORE_TEMPLATE_SKIN = {
   sastreria: 'sastreria',
   mercado: 'mercado',
   circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico',
-  gimnasio: 'gimnasio', nexo: 'nexo', default: 'default'
+  gimnasio: 'gimnasio', nexo2: 'nexo2', default: 'default'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
@@ -841,6 +841,7 @@ export const STORE_TEMPLATE_RETIRED_MAP = {
   promo: 'trama', aurora: 'trama',
   perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',
   lab: 'circuito', ai_lumen: 'circuito', ai_pulse: 'trama',
+  nexo: 'nexo2',
 }
 
 // Patrones exclusivos del motor "Diseñar con IA": ya no existen (el motor
