@@ -26,7 +26,7 @@ const props = defineProps({
   // savebar sticky también pueda abrirlo en mobile.
   previewOpen: { type: Boolean, default: false }
 })
-const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen'])
+const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen', 'open-sections'])
 
 const { patterns, styles, status, load } = useDesignCatalog()
 // Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
@@ -211,6 +211,9 @@ onBeforeUnmount(() => {
         <div class="card dmenu-card">
           <header class="dmenu-head">
             <strong><AppIcon name="palette" :size="17" aria-hidden="true" /> Diseño</strong>
+            <button type="button" class="dmenu-sections-btn" @click="emit('open-sections')">
+              <AppIcon name="checklist" :size="14" aria-hidden="true" /> Qué mostrar
+            </button>
             <small>Elegí el diseño y el estilo de tu web. La vista previa muestra los cambios al instante.</small>
           </header>
 
@@ -291,7 +294,20 @@ onBeforeUnmount(() => {
 .dmenu-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .dmenu-live { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 .dmenu-card { padding: 18px; display: flex; flex-direction: column; gap: 16px; container-type: inline-size; }
-.dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; position: relative; padding-right: 118px; }
+.dmenu-sections-btn {
+  position: absolute; top: 0; right: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line, #e5e7eb);
+  background: var(--card, #fff); color: var(--ink-2, #334155);
+  font: inherit; font-size: 12px; font-weight: 600; line-height: 1;
+  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.dmenu-sections-btn .icon { color: var(--brand-600, #4f46e5); }
+.dmenu-sections-btn:hover { border-color: var(--brand-soft-line, #c7d2fe); color: var(--brand-700, #4338ca); }
+.dmenu-sections-btn:focus-visible { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 2px; }
+@media (max-width: 520px) { .dmenu-head { padding-right: 0; } .dmenu-sections-btn { position: static; align-self: flex-start; margin: 4px 0 2px; } }
 .dmenu-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: var(--ink); }
 .dmenu-head strong .icon { color: var(--brand-600); flex: none; }
 .dmenu-head small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
