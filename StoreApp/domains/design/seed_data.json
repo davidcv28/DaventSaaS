@@ -2172,22 +2172,22 @@
       "slug": "esencial-premium",
       "nombre": "Esencial Premium",
       "categoria": "general",
-      "descripcion": "El diseño base en su versión con presencia: papel claro, tinta verde bosque, acento teal y un toque cálido ámbar. Bricolage en titulares, entradas escalonadas, revelado al hacer scroll, tarjeta con inclinación al puntero, borde de luz girando en la portada y cintas en marquesina.",
+      "descripcion": "El diseño base en su versión con presencia: papel marfil cálido, tinta profunda, acento dorado y sombras suaves. Bricolage en titulares, entradas escalonadas, revelado al hacer scroll, tarjeta con inclinación al puntero, borde de luz girando en la portada y cintas en marquesina.",
       "tier": "advanced",
       "template": "raiz",
       "page_theme": "light",
       "tokens": {
         "palette": {
-          "primary": "#0e5a4f",
-          "secondary": "#0b453d",
-          "accent": "#0e5a4f",
-          "bg": "#f4f5f0",
-          "surface": "#ffffff",
-          "text": "#16201c",
-          "muted": "#5c6b64",
-          "border": "#d9ded6",
-          "success": "#0e7a55",
-          "danger": "#b3402e"
+          "primary": "#211c14",
+          "secondary": "#4d4436",
+          "accent": "#a5812f",
+          "bg": "#f6f1e7",
+          "surface": "#fffdf6",
+          "text": "#211c14",
+          "muted": "#71665a",
+          "border": "#e2d8c4",
+          "success": "#2f6e4e",
+          "danger": "#a63c2b"
         },
         "containers": {
           "radius": "lg",
@@ -2211,7 +2211,7 @@
         },
         "background": {
           "type": "mesh",
-          "value": "radial-gradient(ellipse at top, rgba(14,90,79,.14), transparent), radial-gradient(ellipse at bottom, rgba(233,162,59,.12), transparent), #f4f5f0",
+          "value": "radial-gradient(ellipse at top, rgba(165,129,47,.12), transparent), radial-gradient(ellipse at bottom, rgba(33,28,20,.08), transparent), #f6f1e7",
           "overlay": "soft"
         },
         "motion": {
@@ -2524,12 +2524,12 @@
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Premium de día: papel, tinta bosque, teal + ámbar, entradas escalonadas y tilt al puntero.",
+      "concept": "Premium de día: papel marfil, tinta profunda, dorado, entradas escalonadas y tilt al puntero.",
       "effects": {
-        "accent": "#0e5a4f",
-        "primary": "#0e5a4f",
-        "secondary": "#e9a23b",
-        "border": "#d9ded6",
+        "accent": "#a5812f",
+        "primary": "#211c14",
+        "secondary": "#d9b66a",
+        "border": "#e2d8c4",
         "radius": "lg",
         "border_width": 1,
         "border_style": "solid",
