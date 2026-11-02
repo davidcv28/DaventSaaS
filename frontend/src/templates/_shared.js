@@ -66,7 +66,7 @@ export const servicesViews = {
   boutique:     () => import('../views/store/boutique/ServiciosView.vue'),
   atelier:      () => import('../views/store/atelier/ServiciosView.vue'),
   sastreria:    () => import('../views/store/sastreria/ServiciosView.vue'),
-  mercado:      () => import('../views/store/mercado/ServiciosView.vue'),
+  // 'mercado' (Bazar) no tiene página Servicios: su def no declara la superficie.
   clasico:      () => import('../views/store/clasico/ServiciosView.vue'),
   circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
   seguridad:    () => import('../views/store/seguridad/ServiciosView.vue'),

@@ -47,8 +47,8 @@
   /* Ritmo y formas */
   --mc-container: 1240px;
   --mc-gutter: 24px;
-  --mc-section: clamp(28px, 3.4vw, 44px);
-  --mc-radius: 6px;
+  --mc-section: clamp(36px, 4.2vw, 56px);
+  --mc-radius: 8px;
   --mc-top-h: 64px;
 
   /* El layout base lee estas variables --sp-*: mercado las reescribe para
@@ -62,18 +62,18 @@
   --sp-ink-2: var(--mc-ink-2);
   --sp-muted: var(--mc-muted);
   --sp-line: var(--mc-line);
-  --sp-radius: 6px;
+  --sp-radius: 8px;
   --sp-accent-text: var(--mc-accent);
-  --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .08);
-  --sp-shadow-md: 0 8px 22px -14px rgba(0, 0, 0, .35);
+  --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .06), 0 1px 4px -1px rgba(0, 0, 0, .08);
+  --sp-shadow-md: 0 2px 6px -2px rgba(0, 0, 0, .12), 0 12px 28px -16px rgba(0, 0, 0, .28);
   --sp-chrome: var(--mc-yellow);
   --sp-top-h: var(--mc-top-h);
 
   /* Tarjeta de producto compartida (TplProductCard): blanca, 1:1 y densa. */
   --tpc-bg: var(--mc-surface);
   --tpc-border: 0;
-  --tpc-radius: 6px;
-  --tpc-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+  --tpc-radius: 8px;
+  --tpc-shadow: 0 1px 2px rgba(0, 0, 0, .07), 0 2px 8px -3px rgba(0, 0, 0, .09);
   --tpc-ratio: 1 / 1;
   --tpc-media-bg: var(--mc-soft);
   --tpc-pad: 12px 14px 16px;
@@ -102,7 +102,7 @@
   --tpc-offer-bg: var(--mc-green);
   --tpc-offer-ink: var(--mc-on-green);
   --tpc-quick-bg: var(--mc-blue);
-  --tpc-add-radius: 6px;
+  --tpc-add-radius: 8px;
   --tpc-add-bg: var(--mc-blue);
   --tpc-add-ink: var(--mc-on-blue);
   --tpc-add-shadow: none;
@@ -195,7 +195,7 @@
 .store-page[data-template='mercado'] .sp-top .sp-search {
   background: #FFFFFF;
   border: 0;
-  border-radius: 4px;
+  border-radius: 6px;
   height: 40px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
   color: var(--mc-muted);
@@ -205,7 +205,7 @@
 .store-page[data-template='mercado'] .sp-search-go {
   width: 36px;
   height: 36px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--mc-blue);
   color: var(--mc-on-blue);
 }
@@ -214,7 +214,7 @@
   background: #FFFFFF;
   color: var(--mc-blue-deep);
   border-color: transparent;
-  border-radius: 4px;
+  border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
 }
 /* La fila de secciones ya navega: el CTA extra del masthead solo robaba

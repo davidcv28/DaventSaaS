@@ -70,7 +70,7 @@ import DesignPreview from '../components/design/DesignPreview.vue'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import AiDesignView from './design/AiDesignView.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
-import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, patternsForSiteTemplates } from '../templates/index.js'
+import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
 
 const router = useRouter()
@@ -1766,20 +1766,26 @@ const siteTemplateKeys = SITE_TEMPLATE_KEYS
 const siteTemplates = SITE_TEMPLATES
 const siteTemplatesBusy = ref(false)
 const canServicesSite = computed(() => Boolean(plan.value?.benefits?.has_services_site))
-const allowedSiteTemplates = computed(() => allowedSiteTemplatesFor(plan.value?.benefits || {}))
+// El diseño también puede recortar el catálogo de páginas (Bazar no ofrece
+// Servicios ni Suscripciones — ver `pages` en templates/mercado).
+const designSitePages = computed(() => templatePages(designForm.template))
+const allowedSiteTemplates = computed(() =>
+  allowedSiteTemplatesFor(plan.value?.benefits || {}).filter((k) => designSitePages.value.includes(k)))
 const siteTemplatesMax = computed(() => siteTemplatesLimit(plan.value?.benefits || {}))
-// Set que se muestra: guardado normalizado ∩ plan (el backend manda lo
-// guardado; acá se recorta igual que effective_site_templates).
-const designSiteTemplates = computed(() => resolveSiteTemplates(designForm.site_templates, plan.value?.benefits || {}))
+// Set que se muestra: guardado normalizado ∩ plan ∩ diseño (el backend manda
+// lo guardado; acá se recorta igual que effective_site_templates).
+const designSiteTemplates = computed(() =>
+  resolveSiteTemplates(designForm.site_templates, plan.value?.benefits || {}).filter((k) => designSitePages.value.includes(k)))
 const siteTemplatesHint = computed(() => {
   const max = siteTemplatesMax.value
   return max === null ? 'Tu plan permite tener todas las páginas activas.' : `Tu plan permite hasta ${max} ${max === 1 ? 'página' : 'páginas'} a la vez.`
 })
 function siteTemplateLock(key) {
+  if (!designSitePages.value.includes(key)) return 'Este diseño no la incluye'
   return key === 'services' && !canServicesSite.value ? 'Desde Estándar' : ''
 }
 function canToggleSiteTemplate(key) {
-  if (siteTemplatesBusy.value || !allowedSiteTemplates.value.includes(key)) return false
+  if (siteTemplatesBusy.value || !designSitePages.value.includes(key) || !allowedSiteTemplates.value.includes(key)) return false
   const on = designSiteTemplates.value.includes(key)
   if (on) return designSiteTemplates.value.length > 1 // la web nunca queda vacía
   return siteTemplatesMax.value === null || designSiteTemplates.value.length < siteTemplatesMax.value

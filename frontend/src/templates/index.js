@@ -26,7 +26,7 @@
 
 import { defineAsyncComponent } from 'vue'
 import { LAYOUT_SURFACES } from './blocks.js'
-import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../api/stores.api.js'
+import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES, SITE_TEMPLATE_KEYS } from '../api/stores.api.js'
 
 import raiz         from './raiz/index.js'
 import alimentos    from './alimentos/index.js'
@@ -64,6 +64,14 @@ export function surfaceComponent(id, surface) {
 
 export function templateFonts(id) {
   return templateDef(id).fonts || []
+}
+
+// Páginas (site_templates) que el diseño soporta: la def puede recortar el
+// catálogo cerrado con `pages` (Bazar no ofrece Servicios ni Suscripciones);
+// sin `pages` se asumen todas. El público y "Qué mostrar" filtran con esto.
+export function templatePages(id) {
+  const pages = templateDef(id).pages
+  return Array.isArray(pages) && pages.length ? pages : SITE_TEMPLATE_KEYS
 }
 
 // Un id retirado (payload viejo, borrador corrupto) se remapea antes de

@@ -14,7 +14,7 @@ import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
 import { schemaHours } from '../utils/storeHours.js'
-import { templateFonts, normalizeLayoutConfig } from '../templates/index.js'
+import { templateFonts, normalizeLayoutConfig, templatePages, templateOf } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import { familyOf } from '../utils/styleIcons.js'
@@ -438,7 +438,8 @@ const showCatalog = computed(() => status.value === 'success' && custom.value.sh
 // página de suscripciones/membresías.
 const siteTemplates = computed(() => {
   const list = Array.isArray(custom.value.site_templates) ? custom.value.site_templates : ['landing', 'catalog']
-  return ['landing', 'services', 'catalog', 'plans'].filter((k) => list.includes(k))
+  const pages = templatePages(templateOf(custom.value.template))
+  return ['landing', 'services', 'catalog', 'plans'].filter((k) => list.includes(k) && pages.includes(k))
 })
 // Página "Servicios": aparece solo si quedó en el set efectivo del plan.
 const showServices = computed(() => status.value === 'success' && siteTemplates.value.includes('services'))

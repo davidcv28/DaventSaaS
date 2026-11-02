@@ -10,8 +10,6 @@ import { templateBlocks } from '../../../templates/index.js'
 import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkAbout from '../../../components/store/blocks/BlkAbout.vue'
-import BlkServices from '../../../components/store/blocks/BlkServices.vue'
-import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
 import BlkStats from '../../../components/store/blocks/BlkStats.vue'
 import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
 import BlkCountdown from '../../../components/store/blocks/BlkCountdown.vue'
@@ -51,8 +49,6 @@ const MAP = {
   highlights: McBenefits,
   benefits: McBenefits,
   about: BlkAbout,
-  services: BlkServices,
-  plans: BlkPlans,
   stats: BlkStats,
   brands: BlkBrands,
   countdown: BlkCountdown,
