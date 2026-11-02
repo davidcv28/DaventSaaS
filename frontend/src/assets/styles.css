@@ -1054,35 +1054,38 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .qa-fields .textarea{ min-height: 60px; }
 .qa-actions{ display: flex; flex-direction: column; gap: 4px; flex: none; }
 .qa-actions .icon-btn{ width: 28px; height: 28px; border-radius: 7px; }
-/* ===== Sobre mi negocio: grilla de tarjetas-lanzador + modal por bloque.
-   Cada lanzador muestra ícono de color, nombre, qué hace y un sello con lo
-   cargado; abre el formulario correspondiente dentro de .mk-modal. ===== */
-.mk-launch{ display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-.mk-launcher{ display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); text-align: left; font: inherit; color: inherit; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; }
-.mk-launcher:hover{ border-color: var(--brand-500); box-shadow: 0 0 0 3px var(--brand-soft); transform: translateY(-1px); }
-.mk-launcher-ico{ flex: none; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; color: #fff; }
-.mk-launcher-txt{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.mk-launcher-txt strong{ font-size: 14.5px; }
-.mk-launcher-txt small{ color: var(--muted); font-size: 12px; }
-.mk-launcher-side{ flex: none; display: flex; align-items: center; gap: 8px; }
-.mk-done{ display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; background: var(--ok-bg); border: 1px solid var(--ok-line); color: var(--ok-ink); font-size: 11px; font-weight: 700; white-space: nowrap; }
-.mk-launcher-go{ color: var(--ink-3, var(--muted)); }
-.mk-launch-hint{ margin: -4px 0 18px; }
-/* Un color por tarjeta, fijo y reconocible. */
-.hue-about{ background: #4f46e5; }
-.hue-services{ background: #0ea5e9; }
-.hue-plans{ background: #b45309; }
-.hue-stats{ background: #059669; }
-.hue-testimonials{ background: #d97706; }
-.hue-faqs{ background: #7c3aed; }
-.hue-benefits{ background: #16a34a; }
-.hue-timeline{ background: #db2777; }
-.hue-team{ background: #0891b2; }
-.hue-hours{ background: #4d7c0f; }
-.hue-cta{ background: #ea580c; }
-.hue-ann{ background: #dc2626; }
-.hue-video{ background: #475569; }
-.hue-extras{ background: #6366f1; }
+/* ===== Sobre mi negocio: lista de secciones + modal por bloque.
+   Cada fila es un lanzador: ícono en pastilla teñida, título + descripción
+   a la izquierda, sello de estado y flecha a la derecha. ===== */
+.mk-launch{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.mk-launcher{ display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); text-align: left; font: inherit; color: inherit; cursor: pointer; transition: border-color .16s, background .16s, box-shadow .16s; }
+.mk-launcher:hover{ border-color: var(--brand-soft-line); background: linear-gradient(90deg, var(--brand-soft), transparent 45%), var(--card); }
+.mk-launcher:hover .mk-launcher-go{ background: var(--brand-soft); border-color: var(--brand-soft-line); color: var(--brand-ink); transform: translateX(2px); }
+.mk-launcher:focus-visible{ outline: none; border-color: var(--brand-500); box-shadow: var(--ring); }
+.mk-launcher-ico{ flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; }
+.mk-launcher-txt{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.mk-launcher-txt strong{ font-size: 14.5px; font-weight: 650; }
+.mk-launcher-txt small{ color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+.mk-launcher-side{ flex: none; display: flex; align-items: center; gap: 10px; }
+.mk-done{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--ok-bg); border: 1px solid var(--ok-line); color: var(--ok-ink); font-size: 11px; font-weight: 650; white-space: nowrap; }
+.mk-launcher-go{ display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); transition: background .16s, color .16s, border-color .16s, transform .16s; }
+.mk-launch-hint{ margin: 8px 0 18px; }
+/* Un color por sección: ícono teñido sobre fondo translúcido del mismo
+   tono (funciona igual en tema claro y oscuro). */
+.hue-about{ color: #6366f1; background: #6366f11f; }
+.hue-services{ color: #0ea5e9; background: #0ea5e91f; }
+.hue-plans{ color: #b45309; background: #b453091f; }
+.hue-stats{ color: #059669; background: #0596691f; }
+.hue-testimonials{ color: #d97706; background: #d977061f; }
+.hue-faqs{ color: #7c3aed; background: #7c3aed1f; }
+.hue-benefits{ color: #16a34a; background: #16a34a1f; }
+.hue-timeline{ color: #db2777; background: #db27771f; }
+.hue-team{ color: #0891b2; background: #0891b21f; }
+.hue-hours{ color: #4d7c0f; background: #4d7c0f1f; }
+.hue-cta{ color: #ea580c; background: #ea580c1f; }
+.hue-ann{ color: #dc2626; background: #dc26261f; }
+.hue-video{ color: #64748b; background: #64748b1f; }
+.hue-extras{ color: #4f46e5; background: #4f46e51f; }
 /* Modal de edición: cabecera fija + cuerpo con scroll. */
 .mk-overlay{ position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 15, 12, .5); backdrop-filter: blur(3px); }
 .mk-modal{ width: min(720px, 100%); max-height: min(88vh, 900px); display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(15, 23, 42, .45); overflow: hidden; }
