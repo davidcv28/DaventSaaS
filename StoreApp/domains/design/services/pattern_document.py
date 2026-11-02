@@ -106,7 +106,11 @@ def pattern_document(html, css, theme, surface, preview = '', style = ''):
         f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        f'<style>html,body{{margin:0}}{css}{SURFACE_CSS}</style></head><body>'
+        #La hoja base del host va ANTES de la del diseño: si va después,
+        #sus reglas genéricas (.ds-cat, .cat-sort) pisan la piel del patrón
+        #por empate de especificidad (los chips del catálogo quedaban sin
+        #estilo). El !important de las superficies sigue ganando igual.
+        f'<style>html,body{{margin:0}}{SURFACE_CSS}{css}</style></head><body>'
         f'{html}'
         f'<script src="{script}"></script>'
         f'<script src="{BRIDGE_URL}"></script>'

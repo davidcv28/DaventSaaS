@@ -341,6 +341,51 @@ a[href=""].btn{display:none}
 .ds-rev-down{color:var(--muted)}
 .ds-rev-text{color:var(--muted)}
 
+/* Formulario de opinión (lo arma el puente en [data-ds-rev-form]). */
+[data-ds-rev-form]{display:block;margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
+[data-ds-rev-form]:empty{display:none}
+.ds-rev-fields{display:grid;gap:12px}
+.ds-rev-votes{display:flex;flex-wrap:wrap;gap:8px}
+.ds-rev-pick{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 16px;
+  border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);color:var(--ink);font:inherit;font-size:.92rem;cursor:pointer;
+  transition:border-color .25s,color .25s,background-color .25s;
+}
+.ds-rev-pick:hover{border-color:var(--accent)}
+.ds-rev-pick.is-on{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.ds-rev-pick svg{width:16px;height:16px}
+.ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ds-rev-input{
+  width:100%;min-height:46px;padding:10px 12px;box-sizing:border-box;
+  border:1px solid var(--line);border-radius:var(--radius-btn);
+  background:var(--surface);color:var(--ink);font:inherit;
+  transition:border-color .25s,box-shadow .25s;
+}
+.ds-rev-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+.ds-rev-area{min-height:96px;resize:vertical}
+.ds-rev-cap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-rev-q{font-size:.92rem;font-weight:600;color:var(--muted)}
+.ds-rev-cap .ds-rev-input{max-width:130px}
+.ds-rev-reload{
+  font:inherit;cursor:pointer;line-height:1;
+  border:1px solid var(--line);border-radius:var(--radius-btn);
+  background:var(--surface);color:var(--ink);padding:10px 12px;
+  transition:border-color .25s,color .25s;
+}
+.ds-rev-reload:hover{border-color:var(--accent);color:var(--accent)}
+.ds-rev-status{margin:0;font-size:.9rem;color:var(--danger,#b3402e);min-height:1.4em}
+.ds-rev-status[data-ok="1"]{color:var(--accent)}
+.ds-rev-status:empty{display:none}
+.ds-rev-send{
+  justify-self:start;min-height:46px;padding:0 22px;border:1px solid var(--accent);
+  border-radius:var(--radius-btn);background:var(--accent);color:var(--accent-ink);
+  font:inherit;font-weight:600;cursor:pointer;
+  transition:transform .25s var(--ease),box-shadow .25s;
+}
+.ds-rev-send:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
+@media (max-width:560px){.ds-rev-row{grid-template-columns:1fr}}
+
 /* ============================================
    ESENCIAL PREMIUM — capa de gala.
    Marco doble, filos dorados, brillo que viaja,
