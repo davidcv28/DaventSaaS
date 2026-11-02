@@ -12,9 +12,9 @@ import { useThemeStore } from '../stores/theme.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import {
   normalizeSlug, publicStoreUrl, storesApi,
-  CUSTOMIZATION_DEFAULTS, storeThemeVars, storeFontFamily,
-  allowedTemplatesFor, resolveStoreTemplate,
-  SITE_TEMPLATE_KEYS, SITE_TEMPLATES, DEFAULT_SITE_TEMPLATES,
+  CUSTOMIZATION_DEFAULTS, storeThemeVars,
+  allowedTemplatesFor,
+  SITE_TEMPLATE_KEYS, SITE_TEMPLATES,
   siteTemplatesLimit, allowedSiteTemplatesFor, normalizeSiteTemplates, resolveSiteTemplates,
   ensureStoreFont, ensureStoreFontPicker,
   validateDisplayName, validateHeadline, validateDescription,
@@ -66,9 +66,6 @@ import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
-import DesignPreview from '../components/design/DesignPreview.vue'
-import DesignStylesTab from '../components/design/DesignStylesTab.vue'
-import AiDesignView from './design/AiDesignView.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
@@ -285,8 +282,6 @@ const tabGroups = computed(() => {
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
     web.push(
-      { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Estilos, Studio e IA' },
-      { id: 'pages', label: 'Plantillas', icon: 'layout-grid', hint: 'Qué páginas tiene tu web' },
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
   }
@@ -1281,41 +1276,6 @@ async function saveBot() {
 const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: [], testimonials: [], faqs: [], hours: [], benefits: [], timeline: [], team: [], plans: [], section_order: [], announcements: [], site_templates: [], service_steps: [], service_days: [], service_slots: [], layout_config: {}, site_theme: {} })
 const designTouched = reactive({})
 const designTab = ref('look')
-// Vista previa de la pestaña Diseño en mobile: la savebar sticky la abre.
-const lookPreview = ref(false)
-// Sub-secciones de "Diseño": las tres últimas se muestran con candado cuando
-// el plan no trae el beneficio (nunca se ocultan).
-const designTabs = [
-  { id: 'look', label: 'Diseño', icon: 'palette', desc: 'Estilo, colores y tipografía' },
-  { id: 'assisted', label: 'Diseño asistido', icon: 'sparkles', desc: 'La IA arma una propuesta', benefit: 'has_ai_design' },
-  { id: 'studio', label: 'Studio', icon: 'layout-panel-left', desc: 'Control total, pantalla completa', benefit: 'has_design_advanced' }
-]
-const designContentTabs = [
-  { id: 'content', label: 'Mis datos', icon: 'pencil' },
-  { id: 'images', label: 'Fotos', icon: 'images' },
-  { id: 'sections', label: 'Qué mostrar', icon: 'layout-grid' }
-]
-const DESIGN_TAB_LOCKS = { assisted: 'design_assisted', studio: 'design_studio' }
-function designTabLocked(tab) {
-  return Boolean(tab.benefit) && !plan.value?.benefits?.[tab.benefit]
-}
-function openDesignTab(tab) {
-  if (designTabLocked(tab)) { openLocked(DESIGN_TAB_LOCKS[tab.id] || 'design_studio'); return }
-  if (tab.id === 'studio') { openStudioRoute(); return }
-  designTab.value = tab.id
-}
-// Studio en pestaña/ventana exclusiva: ruta propia a pantalla completa.
-function openStudioRoute() {
-  if (!canDesignAdvanced.value) { openLocked('design_studio'); return }
-  router.push({ name: 'design-studio' })
-}
-// Navegación interna de las sub-secciones (Diseño asistido / IA): las
-// secciones reales del panel cambian `section`; "design" apunta a Fotos.
-function onDesignNav(target) {
-  if (target === 'design' || target === 'images') { designTab.value = 'images'; return }
-  if (validIds.value.has(target)) { section.value = target; return }
-  section.value = 'design'
-}
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
@@ -1323,11 +1283,9 @@ const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_prod
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
 const IDENTITY_DEFAULTS = { accent_custom: '', logo_scale: 'm', logo_mode: 'logo_name', mono_style: 'accent', cover_overlay: 0, cover_focus_x: 50, cover_focus_y: 50 }
-const designPreviewVars = computed(() => storeThemeVars(canDesignAdvanced.value ? designForm : { ...designForm, ...IDENTITY_DEFAULTS }))
 // Plantillas elegibles por nivel de plan (espejo del backend): Básico
 // elige base, Estándar suma 'plus' y Premium todo el catálogo.
 const allowedTemplates = computed(() => allowedTemplatesFor(plan.value?.benefits || {}))
-const designTemplate = computed(() => resolveStoreTemplate(designForm.template, allowedTemplates.value))
 // Si el guardado quedó fuera del nivel (baja de plan o una plantilla
 // retirada del catálogo) el select vuelve al primer diseño permitido.
 // Solo con beneficios ya resueltos: si el plan todavía no llegó la lista
@@ -1719,27 +1677,7 @@ const {
   }
 })
 
-// Diseñar con IA: la vista aplica/publica/descarta sobre el borrador y avisa
-// acá para refrescar el estado de la tienda y mover al usuario si pidió seguir
-// a mano. El banner de resultado vive dentro de la vista.
-async function onAiApplied(payload) {
-  await store.refreshCustomization()
-  const action = payload?.action
-  pushToast(action === 'publish' ? 'Publicado: tu web ya muestra los cambios ✓'
-    : action === 'discard' ? 'Borrador descartado'
-    : 'Diseño aplicado al borrador')
-  if (payload?.section) sectionInner.value = payload.section
-}
-const lookRing = ref(null)
-const previewSheet = ref(false)
-const previewBottom = ref(80)
-const dsgBar = ref(null)
 const leaveStay = ref(null)
-function measureSheet() {
-  const r = dsgBar.value?.getBoundingClientRect()
-  previewBottom.value = r ? Math.max(0, Math.round(window.innerHeight - r.top + 8)) : 80
-}
-watch(previewSheet, (on) => { if (on) nextTick(measureSheet) })
 const leaveGuard = reactive({ open: false, target: null, route: null })
 watch(() => leaveGuard.open, (on) => { if (on) nextTick(() => leaveStay.value?.focus()) })
 function onBeforeUnload(e) {
@@ -1762,12 +1700,9 @@ onBeforeRouteLeave((to) => {
   return false
 })
 window.addEventListener('beforeunload', onBeforeUnload)
-window.addEventListener('resize', measureSheet)
 onUnmounted(() => {
   window.removeEventListener('beforeunload', onBeforeUnload)
-  window.removeEventListener('resize', measureSheet)
 })
-
 // Páginas de la web (site_templates): multi-selección de catálogo cerrado
 // que reemplazó al site_mode (both/marketing/catalog). El plan fija el
 // cupo (max_site_templates: Básico/Estándar 2, Premium las tres) y la
@@ -2028,7 +1963,6 @@ const designShopName = computed(() => designForm.display_name || business.value 
 // Espejo del catálogo público (se apaga desde "Mi catálogo"): la vista previa
 // oculta el link, el CTA y la página Catálogo igual que la web real.
 const designCatalogOn = computed(() => designForm.show_catalog !== false)
-const designNameFont = computed(() => ({ fontFamily: storeFontFamily(designForm.name_font) }))
 
 async function onCarouselPicked(event) {
   const file = event.target.files?.[0]
@@ -3199,7 +3133,7 @@ async function changePassword() {
           <strong>Cargar un producto</strong>
           <small>Sumá algo para vender</small>
         </button>
-        <button type="button" class="oh-quick-card" @click="section = 'design'">
+        <button type="button" class="oh-quick-card" @click="section = 'company'">
           <span class="oh-quick-icon"><AppIcon name="palette" :size="22" /></span>
           <strong>Editar mi web</strong>
           <small>Colores, fotos y textos</small>
@@ -4052,7 +3986,7 @@ async function changePassword() {
         <div v-if="canCustomize" class="next-card">
           <span class="next-icon"><AppIcon name="palette" :size="22" /></span>
           <div><strong>Dale tu estilo a tu página</strong><small>Poné tu logo, tus colores y contá qué hacés.</small></div>
-          <button class="btn btn-auto" @click="section = 'design'">Personalizar <AppIcon name="arrow-right" :size="16" /></button>
+          <button class="btn btn-auto" @click="section = 'company'">Personalizar <AppIcon name="arrow-right" :size="16" /></button>
         </div>
         <div class="next-card">
           <span class="next-icon"><AppIcon name="package" :size="22" /></span>
@@ -4060,366 +3994,6 @@ async function changePassword() {
           <button class="btn secondary btn-auto" @click="section = 'catalogs'">Ir a mis productos <AppIcon name="arrow-right" :size="16" /></button>
         </div>
       </template>
-    </div>
-    <!-- ================= PLANTILLAS (páginas de la web) ================= -->
-    <div v-if="seen.pages" v-show="section === 'pages'" :class="{ 'sec-on': section === 'pages' }">
-      <div class="page-head">
-        <div>
-          <h1>Plantillas de tu web</h1>
-          <p>Tu sitio puede tener hasta {{ siteTemplatesMax === null ? siteTemplateKeys.length : siteTemplatesMax }} páginas. Elegí cuáles mostrar: se guardan al instante.</p>
-        </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" active="pages" @select="section = $event" />
-
-      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
-      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
-
-      <div class="card">
-        <h3><AppIcon name="layout-grid" :size="18" /> Páginas activas</h3>
-        <p class="lead">Cada página es una sección distinta de tu misma web. Desmarcar una la apaga sin borrar su contenido.</p>
-        <div class="check-list" role="group" aria-label="Páginas de tu web">
-          <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
-            <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
-            <span class="check-text">
-              <strong>
-                <AppIcon :name="siteTemplates[key].icon" :size="15" aria-hidden="true" /> {{ siteTemplates[key].label }}
-                <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span>
-                <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span>
-              </strong>
-              <small>{{ siteTemplates[key].desc }}</small>
-            </span>
-          </label>
-        </div>
-        <p class="hint">{{ siteTemplatesHint }} La web siempre conserva al menos una página.</p>
-        <p v-if="!canServicesSite" class="hint">La página <strong>Servicios</strong> se habilita desde el plan Estándar: tus clientes arman su presupuesto y te llega el pedido por WhatsApp, sin pagos online.</p>
-      </div>
-
-      <div v-if="canServicesSite" class="next-card">
-        <span class="next-icon"><AppIcon name="wrench" :size="22" /></span>
-        <div><strong>¿Tenés la página Servicios activa?</strong><small>Cargá tus servicios con precios orientativos y recibí pedidos por WhatsApp.</small></div>
-        <button class="btn btn-auto" @click="section = 'services'">Ir a mis servicios <AppIcon name="arrow-right" :size="16" /></button>
-      </div>
-      <div v-else class="next-card">
-        <span class="next-icon"><AppIcon name="crown" :size="22" /></span>
-        <div><strong>Servicios es un plan Estándar</strong><small>Sumala a tu web subiendo de plan: presupuestos orientativos y pedidos por WhatsApp.</small></div>
-        <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
-      </div>
-    </div>
-    <!-- ================= DISEÑO (4 sub-secciones) ================= -->
-    <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
-      <div class="page-head">
-        <div>
-          <h1>Diseño de mi página</h1>
-          <p>Elegí el estilo, ajustá todo en el Studio o dejá que la IA lo arme. Cuando guardás, tu página se actualiza al instante.</p>
-        </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
-
-      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
-      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
-
-      <template v-if="canCustomize">
-        <div class="dsg-wrap">
-          <div class="dsg-nav">
-            <nav class="dsg-cards" role="tablist" aria-label="Cómo querés diseñar">
-              <button
-                v-for="t in designTabs" :key="t.id" type="button" role="tab"
-                class="dsg-card-btn" :class="{ active: designTab === t.id, locked: designTabLocked(t) }"
-                :aria-selected="designTab === t.id" @click="openDesignTab(t)"
-              >
-                <span class="dsg-card-ico"><AppIcon :name="t.icon" :size="18" /></span>
-                <span class="dsg-card-txt">
-                  <strong>{{ t.label }}</strong>
-                  <small>{{ t.desc }}</small>
-                </span>
-                <span v-if="designTabLocked(t)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /></span>
-              </button>
-            </nav>
-            <nav class="dsg-tabs dsg-tabs-sub" role="tablist" aria-label="Contenido de mi web">
-              <button v-for="t in designContentTabs" :key="t.id" type="button" role="tab" class="dsg-tab" :class="{ active: designTab === t.id }" :aria-selected="designTab === t.id" @click="designTab = t.id">
-                <AppIcon :name="t.icon" :size="15" /> {{ t.label }}
-              </button>
-            </nav>
-          </div>
-        <template v-if="designTab === 'look'">
-          <DesignStylesTab
-            v-model:preview-open="lookPreview"
-            :form="designForm"
-            :benefits="plan?.benefits || {}"
-            :shop-name="designShopName"
-            :can-studio="canDesignAdvanced"
-            :site-templates="designSiteTemplates"
-            @navigate="onDesignNav"
-            @ring="lookRing = $event"
-            @open-studio="openStudioRoute"
-          />
-          <div class="dsg-savebar" :class="{ dirty: designDirty }">
-            <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
-              <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
-              <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
-            </p>
-            <div class="dsg-actions">
-              <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
-              <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
-            </div>
-          </div>
-        </template>
-        <div v-else-if="designTab === 'assisted'" class="dsg-ai">
-          <AiDesignView :plan="plan" @applied="onAiApplied" @navigate="onDesignNav" />
-        </div>
-        <div v-else class="dsg-layout">
-          <div class="dsg-main">
-          <div v-show="designTab === 'content'" class="card dsg-card">
-            <h3><AppIcon name="pencil" :size="18" /> Contenido</h3>
-            <section class="form-group">
-              <header class="form-group-head"><span class="fg-icon"><AppIcon name="store" :size="17" /></span><div><strong>Presentación</strong><small>Lo primero que ve tu cliente al entrar.</small></div></header>
-              <AppInput v-model="designForm.display_name" label="Nombre visible" name="design_display_name" icon="store" :placeholder="business || 'Tu negocio'" hint="El nombre que aparece junto a tu logo. Vacío: se usa tu nombre de negocio." :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
-              <AppInput v-model="designForm.headline" label="Titular" name="design_headline" icon="type" placeholder="Ej. Indumentaria y calzado en Salta" hint="Frase corta bajo el nombre de tu negocio (opcional, hasta 140 caracteres)." :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
-              <div class="field">
-                <label for="design-description"><AppIcon name="file-text" :size="14" class="label-icon" aria-hidden="true" />Descripción <span class="counter" :class="{ warn: designForm.description.length > 720 }">{{ designForm.description.length }}/800</span></label>
-                <textarea
-                  id="design-description"
-                  v-model="designForm.description"
-                  class="textarea"
-                  :class="{ invalid: designFieldErr('description') }"
-                  placeholder="Contale a tus clientes qué ofrecés"
-                  maxlength="800"
-                  rows="4"
-                  @blur="designTouched.description = true"
-                ></textarea>
-                <p class="hint">Aparece debajo del titular.</p>
-                <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
-              </div>
-            </section>
-            <section class="form-group">
-              <header class="form-group-head"><span class="fg-icon wa"><AppIcon name="message-circle" :size="17" /></span><div><strong>Contacto</strong><small>Por dónde te escriben tus clientes.</small></div></header>
-              <AppInput v-model="designForm.whatsapp" label="WhatsApp de contacto" name="design_whatsapp" icon="whatsapp" placeholder="+5493871551234" hint="Formato internacional. Genera un botón de chat en tu web." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
-              <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="design_contact_email" icon="mail" type="email" placeholder="contacto@tunegocio.com" hint="A esta casilla llegan los mensajes del formulario Contáctanos. Vacío: se usa el email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
-            </section>
-            <section class="form-group">
-              <header class="form-group-head"><span class="fg-icon ig"><AppIcon name="share-2" :size="17" /></span><div><strong>Redes sociales</strong><small>Se muestran como botones en tu web.</small></div></header>
-              <div class="grid-2">
-                <AppInput v-model="designForm.instagram" label="Instagram" name="design_instagram" icon="instagram" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
-                <AppInput v-model="designForm.tiktok" label="TikTok" name="design_tiktok" icon="tiktok" placeholder="tu.negocio" hint="Solo el usuario, sin @." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
-              </div>
-              <AppInput v-model="designForm.facebook" label="Facebook" name="design_facebook" icon="facebook" placeholder="tu.negocio o URL de tu página" hint="Nombre de tu página o pegá el link completo." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
-            </section>
-          </div>
-          <div v-show="designTab === 'images'" class="card dsg-card">
-            <h3><AppIcon name="images" :size="18" /> Imágenes</h3>
-            <div class="field">
-              <label id="design-logo-label">Logo</label>
-              <div class="carousel-box">
-                <div v-if="currentLogo" class="carousel-thumb">
-                  <img :src="currentLogo" alt="Logo de tu tienda" />
-                  <div class="carousel-thumb-actions">
-                    <button type="button" class="icon-btn danger" aria-label="Quitar logo" :disabled="logoBusy" @click="onRemoveLogo"><AppIcon name="trash" :size="13" /></button>
-                  </div>
-                </div>
-                <button type="button" class="carousel-add" :disabled="logoBusy" @click="logoInput?.click()">
-                  <span v-if="logoBusy" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="image" :size="20" />
-                  {{ currentLogo ? 'Cambiar logo' : 'Subir logo' }}
-                </button>
-              </div>
-              <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-logo-label" @change="onLogoPicked" />
-              <p class="hint">PNG, JPG, WebP o GIF de hasta 2 MB. Mejor si es cuadrado.</p>
-              <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
-            </div>
-            <div class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-cover-label">Foto de portada <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="carousel-box">
-                <div v-if="currentCover" class="carousel-thumb">
-                  <img :src="currentCover" alt="Portada actual de tu web" />
-                  <div class="carousel-thumb-actions">
-                    <button v-if="canDesignAdvanced" type="button" class="icon-btn danger" aria-label="Quitar portada" :disabled="coverBusy" @click="onRemoveCover"><AppIcon name="trash" :size="13" /></button>
-                  </div>
-                </div>
-                <button type="button" class="carousel-add" :disabled="coverBusy || !canDesignAdvanced" @click="coverInput?.click()">
-                  <span v-if="coverBusy" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="image" :size="20" />
-                  {{ currentCover ? 'Cambiar portada' : 'Subir portada' }}
-                </button>
-              </div>
-              <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-cover-label" :disabled="!canDesignAdvanced" @change="onCoverPicked" />
-              <p class="hint">Foto apaisada y luminosa de hasta 4 MB; la ajustamos sola.</p>
-              <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
-            </div>
-            <div class="field" :class="{ locked: !canGallery }">
-              <label id="design-gallery-label">Galería de imágenes <span v-if="!canGallery" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Con plan activo</span></label>
-              <div v-if="canGallery || galleryImages.length" class="carousel-box">
-                <div v-for="(img, i) in galleryImages" :key="img.id" class="carousel-thumb">
-                  <img :src="img.url" :alt="`Imagen ${i + 1} de la galería`" />
-                  <div class="carousel-thumb-actions">
-                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || galleryBusy" @click="onMoveGallery(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
-                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === galleryImages.length - 1 || galleryBusy" @click="onMoveGallery(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
-                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
-                  </div>
-                </div>
-                <button
-                  v-if="canAddGallery"
-                  type="button" class="carousel-add" :disabled="galleryBusy"
-                  @click="galleryInput?.click()"
-                >
-                  <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="images" :size="20" />
-                  Agregar
-                </button>
-              </div>
-              <input ref="galleryInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-gallery-label" @change="onGalleryPicked" />
-              <p class="hint">{{ galleryHint }}</p>
-              <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
-            </div>
-            <div v-if="canDesignAdvanced || decorImages.length" class="field" :class="{ locked: !canDesignAdvanced }">
-              <label id="design-decor-label">Imágenes decorativas de la portada <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></label>
-              <div class="carousel-box">
-                <div v-for="(img, i) in decorImages" :key="img.id" class="carousel-thumb">
-                  <img :src="img.url" :alt="`Imagen decorativa ${i + 1}`" />
-                  <div class="carousel-thumb-actions">
-                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
-                  </div>
-                </div>
-                <button v-if="canAddDecor" type="button" class="carousel-add" :disabled="galleryBusy" @click="decorInput?.click()">
-                  <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="images" :size="20" />
-                  Agregar
-                </button>
-              </div>
-              <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="design-decor-label" @change="onDecorPicked" />
-              <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} imágenes ilustrativas que decoran tu página principal: una enmarca Sobre nosotros, otra abre una banda a lo ancho y el resto va bajo la portada. Gastan cupo de tu galería ({{ galleryUsed }}{{ galleryMax === null ? '' : ` de ${galleryMax}` }} usadas).</p>
-            </div>
-          </div>
-          <div v-show="designTab === 'sections'" class="card dsg-card">
-            <h3><AppIcon name="layout-grid" :size="18" /> Secciones</h3>
-            <div class="field">
-              <label id="site-templates-label">¿Qué páginas tiene tu web?</label>
-              <div class="check-list" role="group" aria-labelledby="site-templates-label">
-                <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) }">
-                  <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
-                  <span class="check-text">
-                    <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span></strong>
-                    <small>{{ siteTemplates[key].desc }}</small>
-                  </span>
-                </label>
-              </div>
-              <p class="hint">{{ siteTemplatesHint }} Se guarda al instante.</p>
-            </div>
-            <div class="field">
-              <label id="design-theme-toggle-label"><AppIcon name="moon" :size="14" class="label-icon" aria-hidden="true" />Modo noche en tu web</label>
-              <label class="check-item">
-                <input v-model="designForm.theme_toggle" type="checkbox" aria-labelledby="design-theme-toggle-label" />
-                <span class="check-text">
-                  <strong>Mostrar botón claro/oscuro al visitante</strong>
-                  <small>Un botón sol/luna en la barra superior para alternar el tema. Circuito y Seguridad son oscuros por defecto: con esto el visitante puede pasarlos a claro.</small>
-                </span>
-              </label>
-              <p class="hint">Se guarda con el diseño.</p>
-            </div>
-            <div v-if="designSiteTemplates.includes('landing')" class="field">
-              <label id="design-sections-label">Secciones de tu web</label>
-              <div class="check-list" role="group" aria-labelledby="design-sections-label">
-                <label class="check-item">
-                  <input v-model="designForm.show_highlights" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Franja de etiquetas</strong>
-                    <small>Cuatro destacados breves bajo la portada (catálogo, consultas, ubicación, trayectoria).</small>
-                  </span>
-                </label>
-                <label class="check-item">
-                  <input v-model="designForm.show_about" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Sobre nosotros</strong>
-                    <small>Historia, especialidades y misión. El contenido se edita en "Sobre mi negocio".</small>
-                  </span>
-                </label>
-                <label class="check-item">
-                  <input v-model="designForm.show_gallery" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Galería</strong>
-                    <small>Grilla de imágenes del negocio. Se oculta sola si no hay ninguna cargada.</small>
-                  </span>
-                </label>
-                <label class="check-item">
-                  <input v-model="designForm.show_contact" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Contáctanos</strong>
-                    <small>Formulario con verificación antispam, tus canales y el mapa.</small>
-                  </span>
-                </label>
-                <label class="check-item">
-                  <input v-model="designForm.show_offers" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Ofertas</strong>
-                    <small>Tira de productos en oferta del catálogo. Se oculta sola si no hay ninguna vigente.</small>
-                  </span>
-                </label>
-                <label class="check-item">
-                  <input v-model="designForm.show_brands" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Marcas</strong>
-                    <small>Marquesina con las marcas cargadas en tu catálogo. Se oculta sola si no hay ninguna.</small>
-                  </span>
-                </label>
-                <label class="check-item">
-                  <input v-model="designForm.show_countdown" type="checkbox" />
-                  <span class="check-text">
-                    <strong>Cuenta regresiva</strong>
-                    <small>Contador hasta el fin del descuento vigente más próximo. Se oculta sola si no hay ninguno con fecha.</small>
-                  </span>
-                </label>
-                <label class="check-item" :class="{ disabled: !canLocationMap }">
-                  <input v-model="designForm.show_location" type="checkbox" :disabled="!canLocationMap" />
-                  <span class="check-text">
-                    <strong>Mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Desde Estándar</span></strong>
-                    <small>Tu domicilio dentro de Contáctanos. Se carga desde "Mi cuenta".</small>
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div ref="dsgBar" class="dsg-savebar" :class="{ dirty: designDirty }">
-            <p class="dsg-state" :class="{ dirty: designDirty }" role="status">
-              <span v-if="designDirty" class="dsg-dot" aria-hidden="true"></span>
-              <AppIcon v-else name="circle-check" :size="16" aria-hidden="true" />
-              <span>{{ designDirty ? 'Cambios sin guardar' : 'Todo guardado' }}</span>
-            </p>
-            <button type="button" class="btn ghost btn-auto dsg-preview-open" :aria-expanded="previewSheet" @click="previewSheet = !previewSheet"><AppIcon name="eye" :size="16" /> Ver vista previa</button>
-            <div class="dsg-actions">
-              <button v-if="designDirty" type="button" class="btn ghost btn-auto" :disabled="designBusy" @click="discardDesign"><AppIcon name="undo" :size="16" /> Descartar</button>
-              <AppButton :loading="designBusy" type="button" @click="saveDesign()">Guardar diseño</AppButton>
-            </div>
-          </div>
-          </div>
-
-        <DesignPreview
-          v-model:open="previewSheet"
-          :form="designForm"
-          :vars="designPreviewVars"
-          :template="designTemplate"
-          :shop-name="designShopName"
-          :initial="businessInitial"
-          :logo="currentLogo"
-          :cover="currentCover"
-          :advanced="canDesignAdvanced"
-          :catalog-on="designCatalogOn"
-          :show-map="canLocationMap && Boolean(designForm.show_location)"
-          :carousel="carouselImages"
-          :slide="previewSlide"
-          :name-font="designNameFont"
-          :ring="lookRing"
-          :sheet-bottom="previewBottom"
-        />
-        </div>
-        </div>
-      </template>
-      <div v-else class="empty">
-        <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
-        <h3>El diseño web viene con tu plan</h3>
-        <p>Activá una suscripción para personalizar el logo, el titular, la descripción y los botones de contacto de tu página pública.</p>
-        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
-      </div>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
