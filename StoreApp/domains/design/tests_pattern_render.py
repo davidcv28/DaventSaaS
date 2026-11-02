@@ -324,8 +324,10 @@ class PatternSourceTests(TestCase):
                 #Modo noche explícito: lo controla el interruptor del diseño,
                 #no el sistema operativo del visitante.
                 self.assertIn('data-ds-theme="dark"', css)
-                #Portada, catálogo y servicios son superficies del diseño.
-                for surface in ('landing', 'catalog', 'services'):
+                #Portada y catálogo son superficies del diseño; mercado dejó de
+                #exponer la superficie de servicios.
+                surfaces = ('landing', 'catalog') + (() if slug == 'mercado' else ('services',))
+                for surface in surfaces:
                     self.assertIn(f'data-surface="{surface}"', html)
                 self.assertIn('data-ds-products', html)
 

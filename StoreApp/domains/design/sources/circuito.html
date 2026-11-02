@@ -149,6 +149,9 @@
   .ds-rev-send:hover{background:var(--cyan);color:var(--void)}
   footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 0 30px;margin-top:26px;border-top:1px solid var(--line);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   footer span:empty{display:none}
+  footer a{color:var(--cyan);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  a.wa-link[href=""]{display:none}
   .reveal{opacity:0;transform:translateY(12px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
   .reveal.on{opacity:1;transform:none}
   /* Modo noche: el diseño ya es oscuro; la noche baja el fondo y sube el contraste. */
@@ -196,7 +199,7 @@
       <p>{{store_description}}</p>
       <div class="metrics">
         <div>Horario<b>{{store_hours}}</b></div>
-        <div>Contacto<b>{{store_phone}}</b></div>
+        <div>Contacto<b><a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a></b></div>
         <div>Base<b>{{store_address}}</b></div>
         <div>Red<b><a href="{{store_whatsapp_url}}">WhatsApp</a></b></div>
       </div>
@@ -288,7 +291,7 @@
     </div>
   </section>
 
-<footer><span>{{store_name}} · {{store_tagline}}</span><span>{{store_email}}</span><span>{{year}}</span></footer>
+<footer><span>{{store_name}} · {{store_tagline}}</span><a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a><span>© {{year}} {{store_name}}</span></footer>
 </div>
 <script>
 (function(){

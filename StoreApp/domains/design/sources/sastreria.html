@@ -274,10 +274,13 @@
   .pdp-rel .lookbook{margin-top:8px}
   .foot{border-top:1px solid var(--line);padding:40px 0 34px}
   .foot-name{margin:0 0 22px;font:300 34px/1 var(--display);letter-spacing:-.02em}
-  .foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;font-size:12.5px;color:var(--muted)}
+  .foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;font-size:12.5px;line-height:1.7;color:var(--muted)}
+  .foot-h{margin:0 0 8px;font:500 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
   .foot-grid span{display:block}
   .foot-grid span:empty{display:none}
-  .foot-grid a{font-weight:600;color:var(--ink-2)}
+  .foot-grid a{font-weight:600;color:var(--ink-2);text-decoration:none}
+  .foot-grid a:hover{text-decoration:underline}
+  a.wa-link[href=""],dd a.wa-link[href=""]{display:none}
   .foot-legal{margin-top:24px;padding-top:14px;border-top:1px solid var(--line);font:500 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 
   .reveal{opacity:0;transform:translateY(16px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
@@ -538,7 +541,7 @@
         <dl class="specs">
           <div><dt>Atelier</dt><dd>{{store_location}}</dd></div>
           <div><dt>Horarios</dt><dd>{{store_hours}}</dd></div>
-          <div><dt>Contacto</dt><dd>{{store_phone}}</dd></div>
+          <div><dt>Contacto</dt><dd><a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a></dd></div>
         </dl>
       </div>
       <figure class="hero-media reveal">
@@ -684,9 +687,9 @@
   <div class="shell">
     <p class="foot-name">{{store_name}}</p>
     <div class="foot-grid">
-      <div><span>{{store_address}}</span><span>{{store_location}}</span></div>
-      <div><span>{{store_hours}}</span><a href="{{store_whatsapp_url}}">{{store_phone}}</a></div>
-      <div><span>{{store_email}}</span><span>{{store_tagline}}</span></div>
+      <div><p class="foot-h">Atelier</p><span>{{store_address}}</span><span>{{store_location}}</span></div>
+      <div><p class="foot-h">Contacto</p><span>{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
+      <div><p class="foot-h">El negocio</p><span>{{store_tagline}}</span></div>
     </div>
     <p class="foot-legal">© {{year}} {{store_name}} · Sastrería editorial</p>
   </div>

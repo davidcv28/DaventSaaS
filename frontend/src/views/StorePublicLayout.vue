@@ -1117,13 +1117,16 @@ onBeforeUnmount(() => {
             <strong :style="nameFont">{{ shopName }}</strong>
             <span v-if="location"><AppIcon name="map-pin" :size="13" /> {{ location }}</span>
             <p v-if="isShop && custom.description" class="sp-foot-desc">{{ custom.description }}</p>
-            <ul v-if="status === 'success' && hasFootContact" class="sp-foot-contact" aria-label="Contacto">
-              <li v-if="footAddress"><AppIcon name="map-pin" :size="14" /> {{ footAddress }}</li>
-              <li v-if="whatsappUrl"><a :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="14" /> {{ custom.whatsapp }}</a></li>
-            </ul>
             <div v-if="status === 'success' && socials.length" class="sp-foot-social">
               <a v-for="s in socials" :key="s.key" :href="s.url" target="_blank" rel="noopener" :aria-label="`${s.label} de ${shopName}`" :title="s.label"><AppIcon :name="s.key" :size="17" /></a>
             </div>
+          </div>
+          <div v-if="status === 'success' && hasFootContact" class="sp-foot-col" aria-label="Contacto">
+            <p class="sp-foot-heading">Contacto</p>
+            <ul class="sp-foot-contact">
+              <li v-if="footAddress"><AppIcon name="map-pin" :size="14" /> <span>{{ footAddress }}</span></li>
+              <li v-if="whatsappUrl"><a :href="whatsappUrl" target="_blank" rel="noopener"><AppIcon name="whatsapp" :size="14" /> Escribinos por WhatsApp</a></li>
+            </ul>
           </div>
           <nav v-if="isShop && status === 'success'" class="sp-foot-col" aria-label="Secciones de la tienda">
             <p class="sp-foot-heading">Tienda</p>
