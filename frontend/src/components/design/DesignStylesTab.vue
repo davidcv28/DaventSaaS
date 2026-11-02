@@ -9,7 +9,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
-import { ensureStoreFont, STORE_TEMPLATE_RETIRED_MAP } from '../../api/stores.api.js'
+import { ensureStoreFont, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
 import { normalizeLayoutConfig, templateBlocks, templateOf } from '../../templates/index.js'
 import { LAYOUT_SURFACES, SURFACE_LABELS, blockSpec } from '../../templates/blocks.js'
@@ -83,17 +83,32 @@ const currentPattern = computed(() => {
 const currentStyle = computed(() => props.form.site_theme?.style?.id || '')
 
 // Opciones de los selectboxes con icono/color: el select nativo no puede
-// mostrar muestras, por eso el menú usa DesignSelect.
+// mostrar muestras, por eso el menú usa DesignSelect. Cada opción lleva un
+// chip con el plan mínimo que la habilita (verde = todos, amarillo =
+// Estándar, violeta = Premium).
+const TIER_BADGE = {
+  base: { text: 'Todos los planes', tone: 'green' },
+  plus: { text: 'Desde Estándar', tone: 'amber' },
+  advanced: { text: 'Premium', tone: 'purple' }
+}
+const tierBadge = (template, own) => {
+  const tier = STORE_TEMPLATES[template]?.tier || own || 'base'
+  return TIER_BADGE[tier] || TIER_BADGE.base
+}
 const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
   value: p.slug,
   label: `${p.nombre} · ${p.categoria}`,
-  icon: 'layout-grid'
+  icon: 'layout-grid',
+  badge: tierBadge(p.template, p.tier).text,
+  badgeTone: tierBadge(p.template, p.tier).tone
 })))
 const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
   value: s.slug,
   label: `${s.nombre} · ${s.categoria}`,
   icon: 'palette',
-  swatch: s.tokens?.palette?.accent || ''
+  swatch: s.tokens?.palette?.accent || '',
+  badge: tierBadge(s.template, s.tier).text,
+  badgeTone: tierBadge(s.template, s.tier).tone
 })))
 
 // Un patrón sin tema elegido trae sus fuentes (tokens del DesignPattern).
@@ -316,6 +331,12 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
+          <p class="dmenu-legend" aria-label="Planes que habilitan cada diseño">
+            <span class="dmenu-legend-item"><i class="dot green" aria-hidden="true"></i> Todos los planes</span>
+            <span class="dmenu-legend-item"><i class="dot amber" aria-hidden="true"></i> Desde Estándar</span>
+            <span class="dmenu-legend-item"><i class="dot purple" aria-hidden="true"></i> Premium</span>
+          </p>
+
           <p v-if="status === 'error'" class="dmenu-alert" role="alert">
             No pudimos cargar el catálogo de diseño.
             <button type="button" class="btn ghost btn-auto" @click="load(true)">Reintentar</button>
@@ -430,7 +451,15 @@ onBeforeUnmount(() => {
 .dmenu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 .dmenu-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .dmenu-live { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-.dmenu-card { padding: 18px; display: flex; flex-direction: column; gap: 16px; container-type: inline-size; }
+.dmenu-card {
+  position: relative; overflow: hidden; padding: 18px;
+  display: flex; flex-direction: column; gap: 16px; container-type: inline-size;
+  border: 1px solid color-mix(in srgb, var(--brand-500, #6366f1) 18%, var(--line, #e5e7eb));
+}
+.dmenu-card::before {
+  content: ''; position: absolute; inset: 0 0 auto; height: 3px;
+  background: linear-gradient(90deg, var(--brand-500, #6366f1), var(--accent, #f59e0b) 55%, #8b5cf6);
+}
 .dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .dmenu-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-width: 0; }
 .dmenu-head-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
@@ -443,6 +472,20 @@ onBeforeUnmount(() => {
 .dmenu-field label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.dmenu-legend {
+  margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+  padding: 8px 12px; border-radius: 10px; font-size: 11.5px; font-weight: 600;
+  color: var(--ink-2, #334155);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--brand-500, #6366f1) 6%, transparent),
+    color-mix(in srgb, var(--accent, #f59e0b) 5%, transparent));
+  border: 1px dashed color-mix(in srgb, var(--brand-500, #6366f1) 25%, transparent);
+}
+.dmenu-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.dmenu-legend .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dmenu-legend .dot.green { background: #22c55e; box-shadow: 0 0 0 3px #dcfce7; }
+.dmenu-legend .dot.amber { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+.dmenu-legend .dot.purple { background: #8b5cf6; box-shadow: 0 0 0 3px #ede9fe; }
 .dmenu-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dmenu-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 @media (min-width: 1100px) {

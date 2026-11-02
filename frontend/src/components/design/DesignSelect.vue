@@ -99,7 +99,10 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
         >
           <span v-if="o.swatch" class="ds-swatch" :style="{ background: o.swatch }" aria-hidden="true"></span>
           <AppIcon v-else-if="o.icon" :name="o.icon" :size="15" class="ds-opt-icon" aria-hidden="true" />
-          <span class="ds-option-label">{{ o.label }}</span>
+          <span class="ds-option-label">
+            <span class="ds-option-text">{{ o.label }}</span>
+            <span v-if="o.badge" class="ds-badge" :class="o.badgeTone || ''">{{ o.badge }}</span>
+          </span>
           <AppIcon v-if="String(o.value) === String(modelValue)" name="check" :size="14" :stroke="2.4" class="ds-check" aria-hidden="true" />
         </button>
       </template>
@@ -150,6 +153,15 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
 }
 .ds-option:hover:not(:disabled), .ds-option.active { background: var(--surface-2, #f1f5f9); }
 .ds-option.disabled { opacity: .45; cursor: not-allowed; }
-.ds-option-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-option-label { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ds-option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-badge {
+  align-self: flex-start; padding: 1px 8px; border-radius: 99px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .02em; line-height: 1.5;
+  border: 1px solid transparent;
+}
+.ds-badge.green { background: var(--ok-bg, #dcfce7); border-color: var(--ok-line, #bbf7d0); color: var(--ok-ink, #15803d); }
+.ds-badge.amber { background: var(--warn-bg, #fef3c7); border-color: var(--warn-line, #fde68a); color: var(--warn-ink, #b45309); }
+.ds-badge.purple { background: #ede9fe; border-color: #ddd6fe; color: #6d28d9; }
 .ds-check { flex: none; color: var(--brand-600, #4f46e5); }
 </style>
