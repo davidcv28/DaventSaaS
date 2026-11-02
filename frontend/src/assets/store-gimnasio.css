@@ -705,6 +705,25 @@
   color: var(--gy-muted);
 }
 .store-page[data-template='gimnasio'] .sp-about { border-top: 1px solid var(--gy-line); }
+
+/* Testimonios: columnas con techo para que una sola tarjeta no se estire a
+   lo ancho, y cita acotada a 6 líneas — el resto lo absorbe el clamp. */
+.store-page[data-template='gimnasio'] .sp-testimonials-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 380px));
+  align-items: start;
+}
+.store-page[data-template='gimnasio'] .sp-testimonials.is-carousel .sp-testimonials-grid {
+  grid-template-columns: none;
+}
+.store-page[data-template='gimnasio'] .sp-testimonial {
+  padding: 26px 24px;
+}
+.store-page[data-template='gimnasio'] .sp-testimonial-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
 .store-page[data-template='gimnasio'] input,
 .store-page[data-template='gimnasio'] select,
 .store-page[data-template='gimnasio'] textarea {
@@ -828,16 +847,31 @@
   letter-spacing: .16em;
   color: #C8F169;
 }
+/* Marcos con aire: solo las piezas que Raíz dibuja desnudas y acá van como
+   placa (riel de filtros, caja de precio, placa de servicios). La grilla y
+   las tarjetas de producto quedan sin marco — con borde el texto pegaba al
+   filo porque el padding horizontal de --tpc-pad es 0. */
 .store-page[data-template='raiz'].gy-skin .rz-cat-rail,
-.store-page[data-template='raiz'].gy-skin .rz-cat-card,
-.store-page[data-template='raiz'].gy-skin .rz-cat-products,
 .store-page[data-template='raiz'].gy-skin .rz-sv-plate,
-.store-page[data-template='raiz'].gy-skin .rz-pdp-pricebox,
-.store-page[data-template='raiz'].gy-skin .rz-pdp-gallery {
+.store-page[data-template='raiz'].gy-skin .rz-pdp-pricebox {
   border: 1px solid #2A2D25;
   border-radius: 0;
   background: #171914;
   box-shadow: none;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-rail { padding: 20px 12px 20px 20px; }
+.store-page[data-template='raiz'].gy-skin .rz-pdp-pricebox { padding: 18px 20px; }
+.store-page[data-template='raiz'].gy-skin .rz-cat-card {
+  --tpc-name-font: var(--gy-display);
+  --tpc-name-transform: uppercase;
+  --tpc-name-size: 17px;
+  --tpc-name-weight: 700;
+  --tpc-name-lh: 1.1;
+  --tpc-price-ink: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-tags button,
+.store-page[data-template='raiz'].gy-skin .rz-cat-sort select {
+  border-radius: 0;
 }
 .store-page[data-template='raiz'].gy-skin .rz-btn {
   border-radius: 0;
@@ -971,13 +1005,13 @@
   color: var(--store-accent-ink, #4E7410);
 }
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-rail,
-.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-card,
-.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-products,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-plate,
-.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-pricebox,
-.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-gallery {
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-pricebox {
   border-color: #C9C5B8;
   background: #FAF8F1;
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-card {
+  --tpc-price-ink: var(--gy-lime-ink);
 }
 
 /* ==========================================================================

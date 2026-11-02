@@ -1270,8 +1270,8 @@
       "duration": "380ms",
       "icons": {
         "style": "line",
-        "stroke": "2.2",
-        "size": "18",
+        "stroke": "1.8",
+        "size": "20",
         "corners": "square"
       },
       "concept": "Carbón + lima, titulares condensados y energía de pista."
@@ -1334,8 +1334,8 @@
         "preview": "",
         "icons": {
           "style": "line",
-          "stroke": "2.2",
-          "size": "18",
+          "stroke": "1.8",
+          "size": "20",
           "corners": "square"
         }
       },
@@ -1360,8 +1360,8 @@
       "duration": "380ms",
       "icons": {
         "style": "line",
-        "stroke": "2.2",
-        "size": "18",
+        "stroke": "1.8",
+        "size": "20",
         "corners": "square"
       },
       "concept": "Papel deportivo + tinta + lima de pizarra."
@@ -2046,8 +2046,8 @@
         "duration": "380ms",
         "icons": {
           "style": "line",
-          "stroke": "2.2",
-          "size": "18",
+          "stroke": "1.8",
+          "size": "20",
           "corners": "square"
         }
       },
