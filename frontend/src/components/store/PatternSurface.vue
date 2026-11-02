@@ -15,12 +15,16 @@ const props = defineProps({
   //Diseño en ensayo del Studio: el backend solo lo acepta junto al token
   //de vista previa (la web pública nunca lo lee).
   template: { type: String, default: '' },
+  //Estilo en ensayo del panel Diseño (DesignStyle.slug): viaja como
+  //?style= para que el documento se re-renderice con sus tokens — el
+  //postMessage del Studio no entra a este iframe.
+  style: { type: String, default: '' },
   //Huella de lo que el documento pinta desde la base (logo/portada): al
   //cambiar, el iframe se recarga con los datos nuevos.
   revision: { type: String, default: '' },
   theme: { type: String, default: 'light' },
   title: { type: String, default: '' },
-  //Superficie visible del documento: landing | catalog | services | product.
+  //Superficie visible del documento: landing | catalog | services | plans | product.
   //El diseño marca cada bloque con `data-surface` y el resto se oculta.
   surface: { type: String, default: 'landing' },
   //Id del producto cuando la superficie es `product`: el backend resuelve
@@ -35,6 +39,7 @@ const src = computed(() => {
   const params = new URLSearchParams({ theme: props.theme, surface: props.surface })
   if (props.preview) params.set('preview', props.preview)
   if (props.preview && props.template) params.set('template', props.template)
+  if (props.preview && props.style) params.set('style', props.style)
   if (props.revision) params.set('v', props.revision)
   if (props.product) params.set('product', String(props.product))
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
@@ -50,7 +55,7 @@ function onMessage(e) {
   }
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
-    if (['home', 'catalog', 'services'].includes(route)) {
+    if (['home', 'catalog', 'services', 'plans'].includes(route)) {
       emit('navigate', { route })
     } else if (route === 'product' && e.data.id) {
       emit('navigate', { route, id: String(e.data.id) })

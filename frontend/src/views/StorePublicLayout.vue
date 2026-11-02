@@ -81,8 +81,9 @@ const patternDoc = ref(null)
 const patternSurface = computed(() => (
   route.name === 'store-catalog' ? 'catalog'
     : route.name === 'store-services' ? 'services'
-      : route.name === 'store-product' ? 'product'
-        : 'landing'
+      : route.name === 'store-plans' ? 'plans'
+        : route.name === 'store-product' ? 'product'
+          : 'landing'
 ))
 const usePattern = computed(() => Boolean(
   //También en el Studio: la vista previa tiene que mostrar el mismo
@@ -134,7 +135,7 @@ function onPatternNavigate({ route, id } = {}) {
     router.push({ name: 'store-product', params: { slug: slug.value, productId: id } })
     return
   }
-  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
+  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value, plans: plansTo.value }[route]
   if (target) router.push(target)
 }
 function onLayoutMessage(e) {
@@ -888,6 +889,7 @@ onBeforeUnmount(() => {
       :slug="slug"
       :preview="previewToken"
       :template="studioMode && studioTemplate ? studioTemplate : ''"
+      :style="studioMode ? (custom.site_theme?.style?.id || '') : ''"
       :revision="patternRevision"
       :theme="pageTheme"
       :surface="patternSurface"
