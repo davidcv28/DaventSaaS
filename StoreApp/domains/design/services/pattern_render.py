@@ -123,21 +123,17 @@ def _hours_text(customization):
             parts.append(f'{day} {open_at} a {close_at}')
     return ' · '.join(parts[:7])
 
-def _social_url(network, handle):
-    handle = _text(handle, 60).lstrip('@')
-    if not handle:
-        return ''
-    if network == 'instagram':
-        return f'https://instagram.com/{handle}'
-    if network == 'facebook':
-        return f'https://facebook.com/{handle}'
-    if network == 'tiktok':
-        return f'https://tiktok.com/@{handle}'
-    return ''
+def _contact_link(store, customization, kind, field, text = ''):
+    """
+    Path del redirect público (/api/stores/public/<slug>/r/<kind>/): el
+    documento enlaza ahí y el dato real (número/usuario) nunca aparece en
+    el HTML servido — anti-scraping de contactos.
+    """
+    from StoreApp.domains.stores.services import contact_redirect_path
 
-def _whatsapp_url(phone):
-    digits = ''.join(ch for ch in str(phone or '') if ch.isdigit())
-    return f'https://wa.me/{digits}' if digits else ''
+    if not str(getattr(customization, field, '') or '').strip():
+        return ''
+    return contact_redirect_path(store, kind, text)
 
 #=========================================
 # FRAGMENTOS (HTML generado acá, escapado)
@@ -359,11 +355,8 @@ def _related_fragment(store, product):
         picked += list(base.exclude(pk__in = [p.pk for p in picked]).order_by('-created_at')[:4 - len(picked)])
     return _product_fragment(store, picked)
 
-def _product_whatsapp_url(phone, product, store_name):
-    from urllib.parse import quote
-
-    digits = ''.join(ch for ch in str(phone or '') if ch.isdigit())
-    if not digits:
+def _product_whatsapp_url(store, customization, product, store_name):
+    if not str(getattr(customization, 'whatsapp', '') or '').strip():
         return ''
     amount = product.offer_price if product.offer_price is not None else product.price
     price = _money(amount) if _amount(amount) else ''
@@ -371,7 +364,7 @@ def _product_whatsapp_url(phone, product, store_name):
     if price:
         text += f' ({price})'
     text += ' que vi en tu catálogo.'
-    return f'https://wa.me/{digits}?text={quote(text)}'
+    return _contact_link(store, customization, 'whatsapp', 'whatsapp', text)
 
 def _product_values(store, product, customization, store_name):
     """Variables `product_*` del documento (ficha de producto)."""
@@ -389,7 +382,6 @@ def _product_values(store, product, customization, store_name):
     if product.offer_price is not None and _amount(product.price):
         old = _money(product.price)
         pct = f'-{max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100))))}%'
-    phone = _text(getattr(customization, 'whatsapp', ''), 30)
     rating_avg, rating_count = _rating_values(store, product, customization)
     context = {
         'product_name':         _text(product.name, 120),
@@ -401,7 +393,7 @@ def _product_values(store, product, customization, store_name):
         'product_category':     _text(getattr(product.category, 'name', ''), 60),
         'product_brand':        _text(getattr(product.brand, 'name', ''), 60),
         'product_ref':          str(product.pk),
-        'product_whatsapp_url': _product_whatsapp_url(phone, product, store_name),
+        'product_whatsapp_url': _product_whatsapp_url(store, customization, product, store_name),
         'product_rating_avg':   rating_avg,
         'product_rating_count': rating_count,
     }
@@ -430,7 +422,7 @@ def build_store_context(store, product = None):
     province = _text(getattr(getattr(user, 'province', None), 'name_province', ''), 60)
     location = ', '.join(part for part in (city, province) if part)
     address = _text(getattr(user, 'address', ''), 160) if customization and customization.show_location else ''
-    phone = _text(getattr(customization, 'whatsapp', ''), 30)
+    has_whatsapp = bool(str(getattr(customization, 'whatsapp', '') or '').strip())
     description = _text(getattr(customization, 'description', ''), 400)
     headline = _text(getattr(customization, 'headline', ''), 140)
     about = _text(getattr(customization, 'about_text', ''), 400)
@@ -444,13 +436,15 @@ def build_store_context(store, product = None):
         'store_about': about,
         'store_location': location,
         'store_address': address,
-        'store_phone': phone,
-        'store_whatsapp_url': _whatsapp_url(phone),
-        'store_email': _text(getattr(customization, 'contact_email', ''), 120),
+        #El número y el email no viajan en el HTML: el canal se muestra por
+        #nombre ("WhatsApp") y los links pasan por el redirect público.
+        'store_phone': 'WhatsApp' if has_whatsapp else '',
+        'store_whatsapp_url': _contact_link(store, customization, 'whatsapp', 'whatsapp'),
+        'store_email': '',
         'store_hours': _hours_text(customization),
-        'store_instagram_url': _social_url('instagram', getattr(customization, 'instagram', '')),
-        'store_facebook_url': _social_url('facebook', getattr(customization, 'facebook', '')),
-        'store_tiktok_url': _social_url('tiktok', getattr(customization, 'tiktok', '')),
+        'store_instagram_url': _contact_link(store, customization, 'instagram', 'instagram'),
+        'store_facebook_url': _contact_link(store, customization, 'facebook', 'facebook'),
+        'store_tiktok_url': _contact_link(store, customization, 'tiktok', 'tiktok'),
         'store_logo': '',
         'store_cover': '',
         'store_accent': '',

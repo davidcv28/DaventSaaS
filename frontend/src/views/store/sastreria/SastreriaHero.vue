@@ -5,6 +5,7 @@
 // 01 y pie de foto. Debajo, un muestrario de materiales cierra el hueco.
 import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
@@ -21,7 +22,10 @@ const accent = computed(() => (words.value.length > 1 ? words.value[words.value.
 const text = computed(() => custom.value.description?.trim()
   || 'Prendas de lino, lana y algodón cortadas en el taller, con ajustes incluidos y encargos a medida.')
 const cover = computed(() => custom.value.cover || '')
-const phone = computed(() => custom.value.whatsapp || '')
+// El número no se muestra ni viaja en el DOM: el canal se nombra y el
+// link sale por el redirect de la API (anti-scraping).
+const hasWa = computed(() => hasContactChannel(custom.value, 'whatsapp'))
+const waUrl = computed(() => (hasWa.value ? storeContactLink(slug.value, 'whatsapp') : ''))
 const hours = computed(() => {
   const rows = Array.isArray(custom.value.hours) ? custom.value.hours.filter((h) => h && !h.closed) : []
   return rows.length ? 'Horarios en el local' : ''
@@ -43,12 +47,12 @@ const centered = computed(() => props.block?.variant === 'centered')
           <RouterLink v-if="showCatalog" class="ss-btn ss-btn-primary" :to="catalogTo">
             Ver la colección <AppIcon name="arrow-right" :size="15" />
           </RouterLink>
-          <a v-if="phone" class="ss-btn ss-btn-ghost" :href="`https://wa.me/${String(phone).replace(/\D/g, '')}`">Pedir turno</a>
+          <a v-if="waUrl" class="ss-btn ss-btn-ghost" :href="waUrl" target="_blank" rel="noopener">Pedir turno</a>
         </div>
         <dl v-reveal="160" class="ss-specs">
           <div><dt>Atelier</dt><dd>{{ location || shopName }}</dd></div>
           <div><dt>Horarios</dt><dd>{{ hours || 'Consultar' }}</dd></div>
-          <div><dt>Contacto</dt><dd>{{ phone || 'Consultar' }}</dd></div>
+          <div><dt>Contacto</dt><dd>{{ hasWa ? 'WhatsApp' : 'Consultar' }}</dd></div>
         </dl>
       </div>
       <figure v-reveal="60" class="ss-hero-media">
@@ -59,7 +63,7 @@ const centered = computed(() => props.block?.variant === 'centered')
           <span class="tag">Pieza de temporada</span>
           <strong>{{ shopName }}</strong>
           <span v-if="address">{{ address }}</span>
-          <a v-if="phone" :href="`https://wa.me/${String(phone).replace(/\D/g, '')}`">Consultar disponibilidad</a>
+          <a v-if="waUrl" :href="waUrl" target="_blank" rel="noopener">Consultar disponibilidad</a>
         </figcaption>
       </figure>
     </div>

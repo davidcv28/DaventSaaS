@@ -5,6 +5,7 @@
 // en cada sección.
 import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../../config/env.js'
+import { storeContactLink, hasContactChannel } from '../../../../api/stores.api.js'
 
 export function useRhLinks() {
   const ctx = inject('storePage')
@@ -27,10 +28,11 @@ export function useRhLinks() {
     name: 'store-product',
     params: storeHostSlug ? { productId: product.id } : { slug: slug.value, productId: product.id }
   })
-  // Canales directos que ya carga el dueño.
+  // Canal directo que ya carga el dueño: el link pasa por el redirect de
+  // la API — el número no viaja en payload ni en el DOM (anti-scraping).
   const whatsappUrl = computed(() => (
-    ctx.custom.value.whatsapp
-      ? `https://wa.me/${String(ctx.custom.value.whatsapp).replace(/\D/g, '')}`
+    hasContactChannel(ctx.custom.value, 'whatsapp')
+      ? storeContactLink(slug.value, 'whatsapp')
       : ''
   ))
 

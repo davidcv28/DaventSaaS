@@ -3,7 +3,7 @@
 // si no hay, datos reales de la tienda (catálogo, ubicación, WhatsApp y
 // trayectoria). Nunca inventa envíos, cuotas ni garantías.
 import { computed, inject } from 'vue'
-import { SERVICE_ICONS } from '../../../api/stores.api.js'
+import { SERVICE_ICONS, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
@@ -24,7 +24,7 @@ const items = computed(() => {
   }
   const list = []
   if (showCatalog.value) list.push({ key: 'catalog', icon: 'catalog', title: 'Catálogo online', text: 'Consultá precios y disponibilidad.' })
-  if (custom.value.whatsapp) list.push({ key: 'wa', icon: 'whatsapp', title: 'Atención por WhatsApp', text: 'Escribinos y te respondemos.' })
+  if (hasContactChannel(custom.value, 'whatsapp')) list.push({ key: 'wa', icon: 'whatsapp', title: 'Atención por WhatsApp', text: 'Escribinos y te respondemos.' })
   if (location.value) list.push({ key: 'loc', icon: 'map-pin', title: location.value, text: 'Punto de venta y retiro.' })
   if (custom.value.about_years) list.push({ key: 'years', icon: 'badge-check', title: `${custom.value.about_years} años de trayectoria`, text: '' })
   return list.slice(0, 4)

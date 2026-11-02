@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeHostSlug } from '../config/env.js'
 import { formatARS } from '../api/billing.api.js'
 import { productOffer } from '../api/catalog.api.js'
+import { storeContactLink, hasContactChannel } from '../api/stores.api.js'
 
 // Estado y lógica compartidos por todas las páginas de catálogo de la web
 // pública (/<slug>/catalogo): búsqueda de texto (compartida con el buscador
@@ -263,7 +264,7 @@ function buildCatalogState(ctx, { pageSize }) {
   })
   const openProduct = (p) => router.push(productTo(p))
 
-  const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+  const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
   const askUrl = (p) => (whatsappUrl.value ? `${whatsappUrl.value}?text=${encodeURIComponent(`Hola! Quiero consultar por "${p.name}"`)}` : '')
 
   onMounted(() => { if (custom.value.show_catalog !== false) loadCatalog() })

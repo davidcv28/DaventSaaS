@@ -10,6 +10,7 @@ import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 import { effectivePrice, offerPct, productOffer } from '../../../api/catalog.api.js'
 import { formatARS } from '../../../api/billing.api.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 
 const props = defineProps({ block: { type: Object, default: null } })
 
@@ -28,7 +29,7 @@ const headline = computed(() => custom.value.headline?.trim() || shopName.value 
 const text = computed(() => custom.value.description?.trim()
   || 'Explorá el catálogo completo, compará precios y consultá por lo que te interesa.')
 const ctaLabel = computed(() => (offers.value.length ? 'Ver ofertas' : 'Ver catálogo'))
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 const isCentered = computed(() => props.block?.variant === 'centered')
 
 const lead = computed(() => offers.value[0] || products.value[0] || null)

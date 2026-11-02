@@ -44,6 +44,7 @@ from StoreApp.domains.stores.serializers.validators import (
 )
 from StoreApp.domains.stores.services import (
     allowed_templates_of,
+    contact_redirect_url,
     contact_target,
     delete_carousel_image,
     delete_cover,
@@ -355,7 +356,7 @@ class AiDesignMcpThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
@@ -511,6 +512,32 @@ class StoreViewSet(StoreBaseViewSet):
         #Inicio/Catálogo/Producto ni al volver atrás. El conteo de visitas no
         #se ve afectado (la dedup por visitante/día ya corre en cache.add).
         patch_cache_control(response, public = True, max_age = 30)
+        return response
+    #=========================================
+    # PUBLIC CONTACT REDIRECT (canal directo sin exponer número/usuario)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/r/(?P<kind>[a-z]+)', throttle_classes = [PublicReadThrottle])
+    def public_contact(self, request, slug = None, kind = None):
+        #302 al canal real (wa.me / instagram.com / …): la web enlaza esta
+        #ruta y el dato sensible queda solo del lado del servidor — un
+        #scraper del payload o del HTML no cosecha número ni usuarios.
+        store       =   get_object_or_404(
+            Store.objects.select_related('user', 'customization'),
+            slug = slug, is_published = True, is_blocked = False,
+        )
+        if not profile_has_benefit(store.user, 'has_public_link'):
+            raise Http404
+        target      =   contact_redirect_url(
+            store,
+            getattr(store, 'customization', None),
+            kind,
+            request.query_params.get('text') if kind == 'whatsapp' else '',
+        )
+        if not target:
+            raise Http404
+        from django.http import HttpResponseRedirect
+        response    =   HttpResponseRedirect(target)
+        patch_cache_control(response, private = True, no_store = True)
         return response
     #=========================================
     # PUBLIC PATTERN (documento del DesignPattern con los datos de la tienda)

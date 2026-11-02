@@ -4,7 +4,7 @@
 // dueño lo habilitó. Misma lógica real del formulario (captcha firmado +
 // honeypot antispam) que el bloque compartido, sin exponer el email del dueño.
 import { ref, reactive, computed, onMounted } from 'vue'
-import { storesApi } from '../../../../api/stores.api.js'
+import { storesApi, storeContactLink, hasContactChannel } from '../../../../api/stores.api.js'
 import { extractApiError } from '../../../../api/http.js'
 import AppIcon from '../../../AppIcon.vue'
 import { vReveal } from '../../../../directives/reveal.js'
@@ -19,10 +19,11 @@ const title = computed(() => props.block?.props?.title?.trim() || 'Contáctanos'
 const hours = computed(() => (Array.isArray(custom.value.hours) ? custom.value.hours : []))
 const showHours = computed(() => custom.value.show_hours !== false && hours.value.length > 0)
 const socials = computed(() => [
-  { key: 'instagram', label: 'Instagram', url: custom.value.instagram && `https://instagram.com/${custom.value.instagram}` },
-  { key: 'tiktok', label: 'TikTok', url: custom.value.tiktok && `https://tiktok.com/@${custom.value.tiktok}` },
-  { key: 'facebook', label: 'Facebook', url: custom.value.facebook && `https://facebook.com/${custom.value.facebook}` }
-].filter((s) => s.url))
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'tiktok', label: 'TikTok' },
+  { key: 'facebook', label: 'Facebook' }
+].filter((s) => hasContactChannel(custom.value, s.key))
+  .map((s) => ({ ...s, url: storeContactLink(slug.value, s.key) })))
 const hasChannels = computed(() => Boolean(whatsappUrl.value || socials.value.length))
 
 // Mapa: el backend expone location_address solo con el beneficio activo y con

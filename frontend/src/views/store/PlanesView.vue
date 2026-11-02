@@ -10,6 +10,7 @@
 import { computed, inject, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../../config/env.js'
+import { storeContactLink, hasContactChannel } from '../../api/stores.api.js'
 import AppIcon from '../../components/AppIcon.vue'
 import { vReveal } from '../../directives/reveal.js'
 
@@ -35,7 +36,7 @@ watch([siteTemplates, status], () => {
 
 const items = computed(() => (Array.isArray(custom.value.plans) ? custom.value.plans : []))
 const title = computed(() => custom.value.plans_title?.trim() || 'Suscripciones y membresías')
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(ctx.slug.value, 'whatsapp') : ''))
 const hasLanding = computed(() => siteTemplates.value.includes('landing'))
 </script>
 

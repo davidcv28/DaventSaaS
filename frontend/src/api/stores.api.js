@@ -1,5 +1,5 @@
 import { http, publicHttp } from './http.js'
-import { storeUrl } from '../config/env.js'
+import { apiUrl, storeUrl } from '../config/env.js'
 import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
 
 // Dominio stores (StoreApp):
@@ -145,6 +145,20 @@ export function normalizeCatalogParams({ q = '', category = '', brand = '', min_
     new: is_new ? '1' : undefined
   }
 }
+
+// ===== Canales de contacto de la web pública (anti-scraping) =====
+// El número de WhatsApp y los usuarios de las redes NUNCA viajan en el
+// payload ni en el DOM: la web enlaca el redirect del backend y este
+// responde 302 al canal real. El payload solo trae flags has_<kind>.
+// kinds admitidos: 'whatsapp' | 'instagram' | 'tiktok' | 'facebook'.
+export function storeContactLink(slug, kind, text = '') {
+  const base = apiUrl(`stores/public/${slug}/r/${kind}/`)
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base
+}
+
+// El canal existe si el payload público manda el flag o (modo Studio, que
+// recibe el borrador crudo por postMessage) el valor en claro.
+export const hasContactChannel = (custom, kind) => Boolean(custom?.[`has_${kind}`] || custom?.[kind])
 
 export const storesApi = {
   async listMine() {

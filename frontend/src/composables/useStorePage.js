@@ -1,6 +1,7 @@
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../config/env.js'
+import { storeContactLink, hasContactChannel } from '../api/stores.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct } from '../api/catalog.api.js'
 import { openStatus } from '../utils/storeHours.js'
@@ -36,11 +37,14 @@ export function useStorePage() {
   const cover = computed(() => (hasDesignAdvanced.value ? custom.value.cover || '' : ''))
   const carousel = computed(() => (hasDesignAdvanced.value ? (custom.value.carousel || []) : []))
   const gallery = computed(() => (showGallery.value ? (custom.value.gallery || []) : []))
+  // Los enlaces pasan por el redirect de la API: el usuario de cada red no
+  // viaja ni en el payload ni en el DOM (anti-scraping).
   const socials = computed(() => [
-    { key: 'instagram', label: 'Instagram', url: custom.value.instagram && `https://instagram.com/${custom.value.instagram}` },
-    { key: 'tiktok', label: 'TikTok', url: custom.value.tiktok && `https://tiktok.com/@${custom.value.tiktok}` },
-    { key: 'facebook', label: 'Facebook', url: custom.value.facebook && `https://facebook.com/${custom.value.facebook}` }
-  ].filter((s) => s.url))
+    { key: 'instagram', label: 'Instagram' },
+    { key: 'tiktok', label: 'TikTok' },
+    { key: 'facebook', label: 'Facebook' }
+  ].filter((s) => hasContactChannel(custom.value, s.key))
+    .map((s) => ({ ...s, url: storeContactLink(slug.value, s.key) })))
   const year = new Date().getFullYear()
   // Colección corta para el sello vertical ("SS/26" estilo temporada).
   const collectionTag = computed(() => {
@@ -93,10 +97,11 @@ export function useStorePage() {
   const heroImage = computed(() => imagePool.value[0] || '')
 
   // ===== WhatsApp =====
-  const waNumber = computed(() => String(custom.value.whatsapp || '').replace(/\D/g, ''))
-  const waBase = computed(() => (waNumber.value ? `https://wa.me/${waNumber.value}` : ''))
+  // El número nunca sale del servidor: los links apuntan al redirect de la
+  // API y el ?text= (pedido, consulta) viaja en la query de esa ruta.
+  const waBase = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
   // Mensaje precargado: saludo + líneas arbitrarias (producto, talle,
-  // cantidad, nota). La web nunca persiste el pedido — solo abre wa.me.
+  // cantidad, nota). La web nunca persiste el pedido — solo abre el chat.
   const waLink = (lines) => {
     if (!waBase.value) return ''
     const text = [`Hola ${shopName.value},`, ...[].concat(lines).filter(Boolean)].join('\n')
@@ -154,7 +159,7 @@ export function useStorePage() {
     now, openNow,
     catalog, catalogStatus, loadCatalog, products, categories, brands,
     catOf, brandOf, deptTo, departments, offerCount, imagePool, heroImage,
-    waNumber, waBase, waLink, waProduct, waGeneral,
+    waBase, waLink, waProduct, waGeneral,
     featureRows, featureValues, related,
     stats, testimonials, faqs, aboutSpecialties, serviceItems, hours,
     formatARS, productOffer, effectivePrice, offerPct, isNewProduct

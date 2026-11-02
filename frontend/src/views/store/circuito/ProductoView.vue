@@ -9,6 +9,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import ProductStars from '../../../components/ProductStars.vue'
 import ProductReviews from '../../../components/ProductReviews.vue'
@@ -65,10 +66,9 @@ const related = computed(() => {
 })
 
 const whatsappUrl = computed(() => {
-  const num = String(custom.value.whatsapp || '').replace(/\D/g, '')
-  if (!num || !product.value) return ''
+  if (!hasContactChannel(custom.value, 'whatsapp') || !product.value) return ''
   const text = `Hola ${shopName.value}, me interesa "${product.value.name}" (${formatARS(effectivePrice(product.value))}) que vi en tu catálogo.`
-  return `https://wa.me/${num}?text=${encodeURIComponent(text)}`
+  return storeContactLink(slug.value, 'whatsapp', text)
 })
 
 async function share() {

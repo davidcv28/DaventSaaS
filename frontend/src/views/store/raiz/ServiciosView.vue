@@ -13,7 +13,7 @@ import { ref, computed, inject, watch, nextTick, onMounted, onBeforeUnmount } fr
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
 import { buildServiceRequestMessage, servicePriceLabel } from '../../../api/services.api.js'
-import { SERVICE_ICONS } from '../../../api/stores.api.js'
+import { SERVICE_ICONS, storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import { templateBlocks } from '../../../templates/index.js'
 import { resolveSiteTheme } from '../../../studio/contract.js'
@@ -126,8 +126,9 @@ const bandItems = computed(() => {
 })
 
 // ===== WhatsApp =====
-const whatsapp = computed(() => String(custom.value.whatsapp || '').replace(/\D/g, ''))
-const waBase = computed(() => (whatsapp.value ? `https://wa.me/${whatsapp.value}` : ''))
+// El número nunca viaja: el link es el redirect de la API y el mensaje del
+// pedido va en su ?text= (el backend lo reenvía a wa.me con el 302).
+const waBase = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(ctx.slug.value, 'whatsapp') : ''))
 // Botón flotante de WhatsApp (solo desktop: en móvil ya están el dock y la
 // barra de presupuesto). Posición y forma configurables vía
 // custom.service_wa_*; con chatbot el default es 'left' para no pisarlo.
@@ -168,9 +169,9 @@ function submit() {
   })
   const url = `${waBase.value}?text=${encodeURIComponent(message)}`
   // Con 'noopener' window.open devuelve SIEMPRE null aunque la pestaña se
-  // abra (spec) — el fallback navegaba la web a wa.me en todos los envíos.
+  // abra (spec) — el fallback navegaba la web al canal en todos los envíos.
   // Se abre sin noopener y se corta el opener a mano; null real = popup
-  // bloqueado → fallback a la misma pestaña (wa.me abre la app).
+  // bloqueado → fallback a la misma pestaña (el redirect abre la app).
   const w = window.open(url, '_blank')
   if (!w || w.closed) window.location.href = url
   else { try { w.opener = null } catch { /* cross-origin: no hace falta */ } }

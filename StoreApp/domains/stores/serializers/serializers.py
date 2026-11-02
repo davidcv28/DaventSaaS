@@ -537,9 +537,27 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
 class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
     #La web pública ve solo lo PUBLICADO: los borradores del Studio y su
     #estado de sincronía quedan para el dueño (Studio/panel).
+    #Los canales directos tampoco viajan en claro (número de WhatsApp y
+    #usuarios de redes): el visitante ve flags has_* y los enlaces salen
+    #por el redirect /api/stores/public/<slug>/r/<kind>/ — un scraper del
+    #payload o del DOM no cosecha datos de contacto.
+    has_whatsapp            =   serializers.SerializerMethodField()
+    has_instagram           =   serializers.SerializerMethodField()
+    has_tiktok              =   serializers.SerializerMethodField()
+    has_facebook            =   serializers.SerializerMethodField()
     class Meta(StoreCustomizationSerializer.Meta):
         fields              =   [f for f in StoreCustomizationSerializer.Meta.fields
-                                 if f not in ('contact_email', 'layout_config_draft', 'site_theme_draft', 'template_draft', 'has_unpublished')]
+                                 if f not in ('contact_email', 'layout_config_draft', 'site_theme_draft', 'template_draft', 'has_unpublished',
+                                              'whatsapp', 'instagram', 'tiktok', 'facebook')]
+        fields             +=   ['has_whatsapp', 'has_instagram', 'has_tiktok', 'has_facebook']
+    def get_has_whatsapp(self, customization):
+        return bool((customization.whatsapp or '').strip())
+    def get_has_instagram(self, customization):
+        return bool((customization.instagram or '').strip())
+    def get_has_tiktok(self, customization):
+        return bool((customization.tiktok or '').strip())
+    def get_has_facebook(self, customization):
+        return bool((customization.facebook or '').strip())
     def to_representation(self, customization):
         data                =   super().to_representation(customization)
         #Las opiniones (valoraciones y comentarios) son premium

@@ -2,8 +2,11 @@ import hashlib
 import hmac
 import logging
 import random
+import re
 import secrets
 import time
+
+from urllib.parse import quote
 
 from django.conf import settings
 from django.core import signing
@@ -108,6 +111,53 @@ def verify_captcha(slug : str, challenge_id : str, answer : str) -> bool:
 #=========================================
 # CONTACT MAIL
 #=========================================
+#=========================================
+# CONTACT REDIRECT (el número/usuario nunca viaja en payload ni HTML)
+#=========================================
+#La web pública enlaza /api/stores/public/<slug>/r/<kind>/ y este endpoint
+#responde 302 al destino real — un scraper que lee el payload o el DOM no
+#ve ni el número de WhatsApp ni los usuarios de las redes.
+CONTACT_REDIRECT_TEXT_MAX =   600
+CONTACT_REDIRECT_KINDS    =   ('whatsapp', 'instagram', 'tiktok', 'facebook')
+
+def _social_handle(value) -> str:
+    handle  =   re.sub(r'[^A-Za-z0-9._-]', '', str(value or '')).lstrip('@')
+    return handle[:60]
+
+def contact_redirect_url(store, customization, kind : str, text : str = '') -> str:
+    """
+    URL externa del canal pedido ('' si la tienda no lo cargó). El único
+    lugar del backend que materializa wa.me / instagram.com / etc.
+    """
+    if customization is None:
+        return ''
+    if kind == 'whatsapp':
+        digits  =   ''.join(ch for ch in str(customization.whatsapp or '') if ch.isdigit())
+        if not digits:
+            return ''
+        url     =   f'https://wa.me/{digits}'
+        message =   re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', str(text or '')).strip()[:CONTACT_REDIRECT_TEXT_MAX]
+        if message:
+            url +=  f'?text={quote(message)}'
+        return url
+    if kind == 'instagram':
+        handle  =   _social_handle(customization.instagram)
+        return f'https://instagram.com/{handle}' if handle else ''
+    if kind == 'tiktok':
+        handle  =   _social_handle(customization.tiktok)
+        return f'https://tiktok.com/@{handle}' if handle else ''
+    if kind == 'facebook':
+        handle  =   _social_handle(customization.facebook)
+        return f'https://facebook.com/{handle}' if handle else ''
+    return ''
+
+def contact_redirect_path(store, kind : str, text : str = '') -> str:
+    """Path same-origin del redirect (lo que viaja en href/src del HTML público)."""
+    path    =   f'/api/stores/public/{store.slug}/r/{kind}/'
+    if text:
+        path    +=  f'?text={quote(str(text)[:CONTACT_REDIRECT_TEXT_MAX])}'
+    return path
+
 def contact_target(store) -> str:
     """Destino de los mensajes: email de contacto elegido o el de la cuenta."""
     customization   =   getattr(store, 'customization', None)

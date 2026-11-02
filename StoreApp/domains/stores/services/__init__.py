@@ -1,4 +1,12 @@
-from .contact import contact_target, issue_captcha, send_contact_message, verify_captcha
+from .contact import (
+    CONTACT_REDIRECT_KINDS,
+    contact_redirect_path,
+    contact_redirect_url,
+    contact_target,
+    issue_captcha,
+    send_contact_message,
+    verify_captcha,
+)
 from .imaging import remove_background
 from .services import (
     allowed_templates_of,

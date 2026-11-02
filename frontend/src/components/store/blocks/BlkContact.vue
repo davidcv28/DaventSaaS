@@ -4,7 +4,7 @@
 // sección. Respeta show_contact del dueño; además carga el captcha al
 // montarse. props.title pisa el título de la sección.
 import { ref, reactive, computed, inject, onMounted } from 'vue'
-import { storesApi } from '../../../api/stores.api.js'
+import { storesApi, storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import { extractApiError } from '../../../api/http.js'
 import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
@@ -24,13 +24,15 @@ const contactTitle = computed(() => props.block?.props?.title?.trim() || 'Contá
 const contactHours = computed(() => (Array.isArray(custom.value.hours) ? custom.value.hours : []))
 const showHours = computed(() => custom.value.show_hours !== false && contactHours.value.length > 0)
 
-// Canales de contacto (solo dentro de esta sección, regla de diseño).
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+// Canales de contacto (solo dentro de esta sección, regla de diseño): el
+// link sale por el redirect de la API, sin exponer número ni usuarios.
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 const socials = computed(() => [
-  { key: 'instagram', label: 'Instagram', url: custom.value.instagram && `https://instagram.com/${custom.value.instagram}` },
-  { key: 'tiktok', label: 'TikTok', url: custom.value.tiktok && `https://tiktok.com/@${custom.value.tiktok}` },
-  { key: 'facebook', label: 'Facebook', url: custom.value.facebook && `https://facebook.com/${custom.value.facebook}` }
-].filter((s) => s.url))
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'tiktok', label: 'TikTok' },
+  { key: 'facebook', label: 'Facebook' }
+].filter((s) => hasContactChannel(custom.value, s.key))
+  .map((s) => ({ ...s, url: storeContactLink(slug.value, s.key) })))
 const hasContactChannels = computed(() => Boolean(whatsappUrl.value || socials.value.length))
 
 // Última imagen ilustrativa del pool cierra la columna de contacto

@@ -193,6 +193,9 @@ const previewErr = ref('')
 // Tema de la vista previa: arranca con el de la tienda y se puede alternar
 // sin volver a pedir el patrón (la hoja ya trae las reglas de modo noche).
 const previewTheme = ref('light')
+// Móvil por defecto: el menú del diseño (tab bar + hoja "Más") solo existe
+// bajo 760px; a pantalla completa la vista previa no lo mostraría nunca.
+const previewDevice = ref('mobile')
 const previewAccent = computed(() => {
   const hex = props.form?.accent_custom
   return typeof hex === 'string' && hex.startsWith('#') ? hex : ''
@@ -512,6 +515,16 @@ function withTheme(mutate) {
     <div v-if="patternPreview" class="dpv" role="dialog" aria-modal="true" :aria-label="`Vista previa de ${patternPreview.nombre}`">
       <div class="dpv-head">
         <strong>{{ patternPreview.nombre }}</strong>
+        <div class="dpv-theme" role="group" aria-label="Tamaño de la vista previa">
+          <button
+            type="button" :aria-pressed="previewDevice === 'mobile'"
+            :class="{ on: previewDevice === 'mobile' }" @click="previewDevice = 'mobile'"
+          >Móvil</button>
+          <button
+            type="button" :aria-pressed="previewDevice === 'desktop'"
+            :class="{ on: previewDevice === 'desktop' }" @click="previewDevice = 'desktop'"
+          >PC</button>
+        </div>
         <div class="dpv-theme" role="group" aria-label="Modo de la vista previa">
           <button
             type="button" :aria-pressed="previewTheme === 'light'"
@@ -527,7 +540,7 @@ function withTheme(mutate) {
         </button>
       </div>
       <iframe
-        class="dpv-frame" :srcdoc="previewDoc" sandbox="allow-scripts"
+        class="dpv-frame" :class="{ 'is-mobile': previewDevice === 'mobile' }" :srcdoc="previewDoc" sandbox="allow-scripts"
         :title="`Diseño ${patternPreview.nombre}`"
       ></iframe>
     </div>
@@ -644,6 +657,8 @@ function withTheme(mutate) {
   flex: 1 1 auto; width: 100%; border: 0; border-radius: 14px; background: #fff;
   box-shadow: 0 30px 80px -30px #000;
 }
+/* Ancho de teléfono: dispara el menú móvil del diseño (tab bar + hoja). */
+.dpv-frame.is-mobile { max-width: 400px; margin-inline: auto; }
 
 /* Botón flotante de vista previa (solo < 1100px). Vive por encima de la
    savebar sticky y de la tab bar, sin tapar los controles del formulario. */

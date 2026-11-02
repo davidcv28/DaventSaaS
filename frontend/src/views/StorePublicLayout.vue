@@ -2,7 +2,8 @@
 import { ref, reactive, computed, provide, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES, storeSkinOf
+  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES, storeSkinOf,
+  storeContactLink, hasContactChannel
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug } from '../config/env.js'
@@ -722,13 +723,16 @@ watch([status, () => route.name], ([s, name]) => {
     : shopName.value
 }, { immediate: true })
 
-// Canales de contacto (pie y barra fija móvil).
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+// Canales de contacto (pie y barra fija móvil): pasan por el redirect de
+// la API — el número y los usuarios de las redes no viajan en payload ni
+// en el DOM (anti-scraping).
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 const socials = computed(() => [
-  { key: 'instagram', label: 'Instagram', url: custom.value.instagram && `https://instagram.com/${custom.value.instagram}` },
-  { key: 'tiktok', label: 'TikTok', url: custom.value.tiktok && `https://tiktok.com/@${custom.value.tiktok}` },
-  { key: 'facebook', label: 'Facebook', url: custom.value.facebook && `https://facebook.com/${custom.value.facebook}` }
-].filter((s) => s.url))
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'tiktok', label: 'TikTok' },
+  { key: 'facebook', label: 'Facebook' }
+].filter((s) => hasContactChannel(custom.value, s.key))
+  .map((s) => ({ ...s, url: storeContactLink(slug.value, s.key) })))
 const footAddress = computed(() => store.value?.location_address || '')
 const hasFootContact = computed(() => Boolean(whatsappUrl.value || footAddress.value || socials.value.length))
 
@@ -758,7 +762,8 @@ function syncSeo() {
   const url = `${window.location.origin}${route.path}`
   const description = c.description?.trim() || `${shopName.value}${location.value ? ` en ${location.value}` : ''}. ${showCatalog.value ? 'Mirá el catálogo online y consultá por WhatsApp.' : 'Sitio oficial.'}`
   const image = (hasDesignAdvanced.value && c.cover) || c.carousel?.[0]?.url || c.logo || ''
-  const phone = c.whatsapp ? `+${c.whatsapp.replace(/\D/g, '')}` : undefined
+  // Sin telephone ni sameAs en el JSON-LD: el número y las redes no se
+  // exponen en el marcado estructurado (los bots también lo leen).
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': showCatalog.value ? 'Store' : 'LocalBusiness',
@@ -767,7 +772,6 @@ function syncSeo() {
     url,
     image: image ? new URL(image, window.location.origin).href : undefined,
     logo: c.logo ? new URL(c.logo, window.location.origin).href : undefined,
-    telephone: phone,
     address: location.value || s?.location_address ? {
       '@type': 'PostalAddress',
       streetAddress: s?.location_address || undefined,
@@ -776,10 +780,8 @@ function syncSeo() {
       addressCountry: 'AR'
     } : undefined,
     openingHoursSpecification: c.show_hours !== false ? schemaHours(c.hours) : [],
-    sameAs: socials.value.map((x) => x.url)
   }
   if (!jsonLd.openingHoursSpecification.length) delete jsonLd.openingHoursSpecification
-  if (!jsonLd.sameAs.length) delete jsonLd.sameAs
   clearSeo = applySeo({
     title: document.title,
     description,
