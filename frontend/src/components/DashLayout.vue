@@ -229,6 +229,7 @@ onBeforeUnmount(() => {
     </aside>
     <main class="main" aria-label="Contenido" @touchstart.passive="onSwipeStart" @touchend="onSwipeEnd">
       <header class="topbar">
+        <div class="top-brand"><BrandLogo :size="26" /> <strong>DAVENT</strong></div>
         <button
           v-if="parent"
           type="button"
@@ -320,6 +321,7 @@ onBeforeUnmount(() => {
           </template>
         </nav>
         <div class="sheet-foot">
+          <button class="link" @click="close(); emit('search')"><AppIcon name="search" :size="16" /> <span>Buscar en el panel</span></button>
           <RouterLink class="link" to="/terminos" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
           <RouterLink class="link" to="/denuncias" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
           <button class="link" @click="close(); emit('tour')"><AppIcon name="graduation-cap" :size="16" /> <span>Repetir la guía</span></button>

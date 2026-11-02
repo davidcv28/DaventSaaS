@@ -671,13 +671,17 @@
 .kbd { font: 600 10.5px/1 var(--font); color: var(--muted); background: var(--sunk); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 3px 5px; }
 .tab-badge { position: absolute; top: 6px; right: calc(50% - 22px); }
 
+/* Marca en la topbar móvil: solo logo + nombre; todo lo demás vive en "Más". */
+.top-brand { display: none; }
+
 /* Móvil con tab bar: el sidebar queda solo en desktop; el topbar pasa a ser
-   la barra contextual (volver + título + buscar + campana). */
+   solo la marca (logo + DAVENT). */
 @media (max-width: 860px) {
   .app--tabs .sidebar { display: none; }
   .app--tabs .topbar { display: flex; margin: -12px -16px 18px; padding: 10px 14px; gap: 10px; border-bottom: 1px solid var(--line-soft); box-shadow: 0 10px 26px -18px rgba(9, 12, 24, .3); }
-  .app--tabs .topbar-date, .app--tabs .top-search-label, .app--tabs .top-search .kbd { display: none; }
-  .app--tabs .top-search { width: 38px; padding: 0; justify-content: center; margin-left: auto; }
+  .app--tabs .topbar > :not(.top-brand) { display: none; }
+  .app--tabs .top-brand { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+  .app--tabs .top-brand strong { font-size: 15px; font-weight: 800; letter-spacing: .14em; }
   .app--tabs .main { padding-top: 12px; padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
   .app--tabs .nav-indicator { display: none; }
 }
