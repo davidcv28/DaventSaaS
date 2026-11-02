@@ -29,6 +29,9 @@ const props = defineProps({
 const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen'])
 
 const { patterns, styles, status, load } = useDesignCatalog()
+// Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
+// refresh real, no solo postMessage): contador que DesignLivePreview mira.
+const previewReload = ref(0)
 // Revalidar contra la base al entrar: los diseños/estilos nuevos se ven sin
 // recargar la página.
 onMounted(() => load(true))
@@ -131,6 +134,7 @@ function onPatternPick(value) {
   const style = linked || defaultStyleFor(p.slug)
   if (style) applyStyle(style)
   else props.form.site_theme = patternTheme(p)
+  previewReload.value++
 }
 
 // Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
@@ -141,6 +145,7 @@ function onStylePick(value) {
   const s = styleOptions.value.find((x) => x.slug === value)
   if (!s) return
   applyStyle(s)
+  previewReload.value++
 }
 
 // Diseño y estilo nunca quedan vacíos: si el diseño guardado es retirado o
@@ -242,7 +247,7 @@ onBeforeUnmount(() => {
       </div>
 
       <aside class="dmenu-live">
-        <DesignLivePreview :form="form" />
+        <DesignLivePreview :form="form" :reload-key="previewReload" />
         <slot name="actions" />
       </aside>
     </div>
@@ -273,7 +278,7 @@ onBeforeUnmount(() => {
           </button>
         </header>
         <div class="dmenu-pv-body">
-          <DesignLivePreview :form="form" initial-device="mobile" />
+          <DesignLivePreview :form="form" initial-device="mobile" :reload-key="previewReload" />
         </div>
       </div>
     </Transition>

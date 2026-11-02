@@ -12,7 +12,10 @@ import AppIcon from '../AppIcon.vue'
 const props = defineProps({
   form: { type: Object, required: true },
   // Dispositivo con el que arranca la vista: la hoja móvil abre en "móvil".
-  initialDevice: { type: String, default: 'desktop' }
+  initialDevice: { type: String, default: 'desktop' },
+  // Al cambiar este contador el iframe se recarga completo (recarga real,
+  // no solo postMessage): lo sube el padre cuando se elige diseño/estilo.
+  reloadKey: { type: Number, default: 0 }
 })
 
 const store = useStoreStore()
@@ -152,10 +155,14 @@ onBeforeUnmount(() => {
 })
 
 function reload() {
+  if (state.value === 'loading' && !src.value) return
   state.value = 'loading'
   const el = frame.value
   if (el) el.src = el.src
 }
+// Cambio de diseño/estilo: recargar el iframe para que la vista previa
+// renderice la plantilla nueva desde cero.
+watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
 </script>
 
 <template>
