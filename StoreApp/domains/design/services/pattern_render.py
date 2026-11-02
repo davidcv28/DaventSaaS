@@ -65,6 +65,8 @@ PATTERN_VARIABLES = {
     'products':          {'type': 'list',  'label': 'Productos'},
     'categories':        {'type': 'list',  'label': 'Categorías'},
     'services':          {'type': 'list',  'label': 'Servicios'},
+    'plans':             {'type': 'list',  'label': 'Planes de suscripción'},
+    'plans_title':       {'type': 'text',  'label': 'Título de la sección Planes'},
     'gallery':           {'type': 'list',  'label': 'Galería'},
 }
 SURFACE_RE = re.compile(r'data-surface="([a-z]+)"')
@@ -216,6 +218,31 @@ def _service_fragment(store):
         for row in rows
     ]
     return f'<ul class="ds-services-list">{"".join(items)}</ul>' if items else ''
+
+def _plans_fragment(customization):
+    """Tarjetas de membresías/packs del negocio (customization.plans):
+    solo publicidad — el alta se coordina por WhatsApp, nunca se cobra
+    online. Vacío cuando la sección está apagada o no hay planes."""
+    if customization is None or not customization.show_plans:
+        return ''
+    cards = []
+    for plan in customization.plans or []:
+        if not isinstance(plan, dict) or not _text(plan.get('name')):
+            continue
+        feats = ''.join(
+            f'<li>{escape(_text(item, 60))}</li>'
+            for item in (plan.get('items') or [])[:8]
+        )
+        feat_list = f'<ul class="ds-plan-feats">{feats}</ul>' if feats else ''
+        cards.append(
+            '<article class="ds-plan">'
+            f'<h3 class="ds-plan-name">{escape(_text(plan.get("name"), 40))}</h3>'
+            f'<span class="ds-plan-price">{escape(_text(plan.get("price"), 20))}</span>'
+            f'<p class="ds-plan-note">{escape(_text(plan.get("note"), 80))}</p>'
+            f'{feat_list}'
+            '</article>'
+        )
+    return ''.join(cards)
 
 def _gallery_fragment(store, customization):
     from StoreApp.domains.stores.models import StoreGalleryImage
@@ -448,6 +475,7 @@ def build_store_context(store, product = None):
         'store_logo': '',
         'store_cover': '',
         'store_accent': '',
+        'plans_title': _text(getattr(customization, 'plans_title', ''), 80) or 'Suscripciones y membresías',
         'year': str(timezone.now().year),
     }
     from StoreApp.domains.stores.services.storage import object_url
@@ -460,6 +488,7 @@ def build_store_context(store, product = None):
         'products': _product_fragment(store),
         'categories': _category_fragment(store),
         'services': _service_fragment(store),
+        'plans': _plans_fragment(customization),
         'gallery': _gallery_fragment(store, customization),
     }
     product_ctx, product_raw = _product_values(store, product, customization, name)

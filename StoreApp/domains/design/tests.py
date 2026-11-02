@@ -168,7 +168,7 @@ class DesignCatalogDefaultsTests(TestCase):
         self.assertEqual(DesignPattern.objects.filter(is_default = True).count(), 1)
         self.assertGreaterEqual(DesignStyle.objects.count(), 2)
         self.assertEqual(DesignPattern.objects.count(), len(_seed_data()['patterns']))
-        pattern = DesignPattern.objects.get(slug = 'mercado')
+        pattern = DesignPattern.objects.get(slug = 'esencial')
         self.assertIn('data-surface="landing"', pattern.html)
         self.assertTrue(pattern.layout.get('landing'))
         self.assertTrue(DesignStyle.objects.get(slug = 'base').tokens.get('palette'))

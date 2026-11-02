@@ -297,7 +297,7 @@ class PatternSourceTests(TestCase):
     las variables declaradas se derivan de los placeholders que usa.
     """
 
-    SLUGS = ('circuito', 'mercado')
+    SLUGS = ('esencial',)
 
     def test_split_document_returns_three_layers(self):
         from StoreApp.domains.design.services.source_document import split_document
@@ -323,15 +323,15 @@ class PatternSourceTests(TestCase):
                 html, css, js, variables = source
                 self.assertIn('store_name', variables)
                 self.assertIn('products', variables)
-                self.assertIn('categories', variables)
+                #Membresías del negocio: la sección Suscripciones de la portada.
+                self.assertIn('plans', variables)
                 #El estilo solo puede tocar colores/bordes: el diseño usa --ds-*.
                 self.assertIn('var(--ds-accent', css)
                 #Modo noche explícito: lo controla el interruptor del diseño,
                 #no el sistema operativo del visitante.
                 self.assertIn('data-ds-theme="dark"', css)
-                #Portada y catálogo son superficies del diseño; mercado dejó de
-                #exponer la superficie de servicios.
-                surfaces = ('landing', 'catalog') + (() if slug == 'mercado' else ('services',))
+                #Portada, catálogo y servicios son superficies del diseño.
+                surfaces = ('landing', 'catalog', 'services')
                 for surface in surfaces:
                     self.assertIn(f'data-surface="{surface}"', html)
                 self.assertIn('data-ds-products', html)

@@ -270,6 +270,33 @@ a[href=""].btn{display:none}
 .ds-service-name{grid-column:2;font-family:var(--font-display);font-size:1.35rem;line-height:1.2}
 .ds-service-desc{grid-column:2;color:var(--muted);display:block;margin-top:4px}
 
+/* Suscripciones / membresías (fragmento ds-plan): solo publicidad, el
+   alta se coordina por WhatsApp. Sin planes cargados la sección y sus
+   atajos de navegación se apagan solos. */
+.plans-sec:not(:has(.ds-plan)){display:none}
+body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
+.ds-plans{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.ds-plan{
+  display:grid;gap:10px;align-content:start;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .3s;
+}
+.ds-plan:hover{
+  transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
+  box-shadow:0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
+}
+.ds-plan-name{margin:0;font-size:1.2rem}
+.ds-plan-price{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--accent)}
+.ds-plan-price:empty{display:none}
+.ds-plan-note{color:var(--muted);font-size:.92rem}
+.ds-plan-note:empty{display:none}
+.ds-plan-feats{
+  list-style:none;margin:6px 0 0;padding:14px 0 0;border-top:1px solid var(--line);
+  display:grid;gap:8px;font-size:.92rem;color:var(--muted);
+}
+.ds-plan-feats li{display:flex;gap:8px;align-items:baseline}
+.ds-plan-feats li::before{content:"✓";color:var(--accent);font-weight:700}
+
 /* Contacto */
 .contact-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
 .contact-card{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
@@ -457,7 +484,8 @@ html[data-ds-style="esencial-premium"] .ticker-item::after{
   content:"✦";margin-left:38px;color:var(--warm);font-size:.8em;
 }
 /* Cards de producto con filo dorado al hover. */
-html[data-ds-style="esencial-premium"] .ds-product:hover{
+html[data-ds-style="esencial-premium"] .ds-product:hover,
+html[data-ds-style="esencial-premium"] .ds-plan:hover{
   border-color:color-mix(in srgb,var(--warm) 60%,var(--line));
   box-shadow:0 0 0 1px color-mix(in srgb,var(--warm) 35%,transparent),
     0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
@@ -595,6 +623,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
       <a href="#servicios" data-ds-route="services">Servicios</a>
+      <a href="#suscripciones" data-ds-route="home" data-ds-anchor>Suscripciones</a>
       <a href="#contacto" data-ds-route="home" data-ds-anchor>Contacto</a>
     </nav>
   </div>
@@ -633,7 +662,8 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
     <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
     <a href="#servicios" data-ds-route="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    <a href="#suscripciones" data-m-close><span>Suscripciones</span><span aria-hidden="true">04</span></a>
+    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">05</span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -710,7 +740,19 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </div>
   </section>
 
-  <section class="section band" id="contacto">
+  <section class="section band plans-sec" id="suscripciones">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Suscripciones</p>
+        <h2>{{plans_title}}</h2>
+        <p class="lead">Sumate a una membresía o pack: el alta se coordina por WhatsApp, sin cobros por la web.</p>
+      </div>
+      <div class="ds-plans reveal">{{plans}}</div>
+      <div style="margin-top:24px"><a class="btn ghost" href="{{store_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    </div>
+  </section>
+
+  <section class="section" id="contacto">
     <div class="wrap contact-grid reveal">
       <div>
         <p class="eyebrow">Contacto</p>
